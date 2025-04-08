@@ -30,24 +30,19 @@
 
 1. **Pre-Release Checklist**:
    ```markdown
-   ## Release 1.2.0 Checklist
+   ## Release Checklist
    
-   ### Code Quality
-   - [ ] All tests passing
-   - [ ] Code coverage >= 90%
-   - [ ] StandardRB checks pass
-   - [ ] Security audit complete
-   
-   ### Documentation
+   ### Required
+   - [ ] Version file updated
    - [ ] CHANGELOG.md updated
-   - [ ] README.md reviewed
-   - [ ] API documentation current
-   - [ ] Examples updated
+   - [ ] Release documentation in docs-dev/project/2-done/
+   - [ ] Git tag created
    
-   ### Dependencies
-   - [ ] Gemfile.lock reviewed
-   - [ ] CI pipeline green
-   - [ ] Compatibility tested
+   ### Optional (Based on Release Type)
+   - [ ] Tests passing
+   - [ ] Documentation updated
+   - [ ] Dependencies reviewed
+   - [ ] API documentation current
    ```
 
 2. **Version Update**:
