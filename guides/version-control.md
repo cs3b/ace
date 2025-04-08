@@ -152,6 +152,46 @@ Closes #123
    fi
    ```
 
+### 7. Practical Commit Workflow
+
+1. **Pre-Commit Review**:
+   ```bash
+   # Review changes
+   git status
+   git diff
+   
+   # Run validations
+   bundle exec rspec
+   bundle exec standardrb
+   ```
+
+2. **Stage Changes**:
+   ```bash
+   # Stage logically related changes
+   git add lib/ruby_ai_agent/agent.rb
+   git add spec/ruby_ai_agent/agent_spec.rb
+   git add docs-dev/guides/agent.md
+   
+   # Review staged changes
+   git diff --staged
+   ```
+
+3. **Create Commit**:
+   ```bash
+   # Use conventional commit format
+   git commit
+   ```
+
+4. **Post-Commit Steps**:
+   - Push changes: `git push origin <branch>`
+   - Update project board
+   - Open pull request if ready
+
+Common file groupings:
+- Core: `lib/ruby_ai_agent/*.rb`
+- Tests: `spec/**/*_spec.rb` 
+- Docs: `docs-dev/**/*.md`
+- Project: `*.gemspec`, `Gemfile`, etc.
 ### 7. Best Practices
 
 1. **Atomic Commits**:
