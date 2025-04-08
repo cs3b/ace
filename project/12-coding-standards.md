@@ -1,4 +1,4 @@
-# Coding Standards for Ruby AI Agent SDK
+# Coding Standards for AI Ruby Agent SDK
 
 ## Core Principles
 
@@ -41,7 +41,7 @@
 ### Directory Structure
 ```
 lib/
-  ruby_ai_agent/
+  aira/
     agent.rb         # Core agent class
     dsl.rb          # DSL implementation
     registry.rb     # Agent registry

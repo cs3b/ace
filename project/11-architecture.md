@@ -1,8 +1,8 @@
-# Ruby AI Agent SDK - Architecture
+# AI Ruby Agent SDK - Architecture
 
 ## Overview
 
-The Ruby AI Agent SDK is designed with simplicity and extensibility in mind, following Ruby's philosophy of providing a clean, elegant DSL while maintaining powerful capabilities underneath. The architecture follows a modular approach with clear separation of concerns.
+The AI Ruby Agent SDK is designed with simplicity and extensibility in mind, following Ruby's philosophy of providing a clean, elegant DSL while maintaining powerful capabilities underneath. The architecture follows a modular approach with clear separation of concerns.
 
 ## Core Components
 
@@ -117,7 +117,7 @@ end
 
 ```
 lib/
-├── ruby_ai_agent/
+├── aira/
 │   ├── agent.rb           # Core agent class
 │   ├── dsl.rb            # DSL implementation
 │   ├── registry.rb       # Agent registry

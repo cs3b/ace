@@ -1,4 +1,4 @@
-# Ruby AI Agent SDK - Project Overview
+# AI Ruby Agent SDK - Project Overview
 
 ## What We Build 🔍
 

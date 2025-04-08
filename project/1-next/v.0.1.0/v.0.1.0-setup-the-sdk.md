@@ -13,7 +13,7 @@ This document contains a checklist of all tasks for creating a RubyGem—includi
     - [x] Create Binstubs setup script
 
 **Feedback/Data Required:**
-- Provide the gem's name and initial version: 'ruby-ai-agent
+- Provide the gem's name and initial version: 'aidarb
 - Specify any additional folder requirements beyond the default
 - Confirm any custom version control or CI/CD configuration preferences: git / github actions
 
@@ -28,7 +28,7 @@ This document contains a checklist of all tasks for creating a RubyGem—includi
 
 ## 3. Ruby SDK Implementation
 - [x] Setup Core Modules and DSL:
-    - [x] Create main file (lib/ruby_ai_agent.rb)
+    - [x] Create main file (lib/aira.rb)
     - [ ] Implement DSL components
     - [ ] Use ERB templating for dynamic prompt generation
 - [ ] Integrate External Tools:

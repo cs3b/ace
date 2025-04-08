@@ -1,8 +1,8 @@
-# Ruby AI Agent SDK Documentation
+# AI Ruby Agent SDK Documentation
 
 ## Introduction
 
-This documentation provides an overview of the Ruby AI Agent SDK, focusing on its core concepts, structure, and usage. The SDK allows you to define agents that interact with both an LLM (using `ruby-llm`) and various system tools through MCP.
+This documentation provides an overview of the AI Ruby Agent SDK, focusing on its core concepts, structure, and usage. The SDK allows you to define agents that interact with both an LLM (using `ruby-llm`) and various system tools through MCP.
 
 ## Inspiration
 
