@@ -26,7 +26,7 @@
 
 ```ruby
 # Secure configuration
-RubyAIAgent.configure do |config|
+Aira.configure do |config|
   # Encrypt sensitive data
   config.encryption_key = ENV.fetch('ENCRYPTION_KEY')
   

@@ -84,9 +84,9 @@
      add_filter '/spec/'
      add_filter '/vendor/'
      
-     add_group 'Agents', 'lib/ruby_ai_agent/agents'
-     add_group 'Tools', 'lib/ruby_ai_agent/tools'
-     add_group 'Core', 'lib/ruby_ai_agent/core'
+     add_group 'Agents', 'lib/aira/agents'
+     add_group 'Tools', 'lib/aira/tools'
+     add_group 'Core', 'lib/aira/core'
      
      minimum_coverage 90
      minimum_coverage_by_file 80
@@ -105,8 +105,8 @@
    --------------------------|----------|----------|----------|----------|
    All files                |    92.34 |    89.47 |    91.82 |    92.34 |
     lib/                    |    100.0 |    100.0 |    100.0 |    100.0 |
-     ruby_ai_agent.rb       |    100.0 |    100.0 |    100.0 |    100.0 |
-    lib/ruby_ai_agent/     |     91.8 |     88.4 |     90.9 |     91.8 |
+     aira.rb              |    100.0 |    100.0 |    100.0 |    100.0 |
+    lib/aira/             |     91.8 |     88.4 |     90.9 |     91.8 |
      agent.rb              |     94.3 |     92.1 |     93.7 |     94.3 |
      tools.rb              |     89.2 |     84.7 |     88.1 |     89.2 |
    --------------------------|----------|----------|----------|----------|

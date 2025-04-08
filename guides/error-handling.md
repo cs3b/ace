@@ -3,7 +3,7 @@
 ### 1. Exception Hierarchy
 
 ```ruby
-module RubyAIAgent
+module Aira
   # Base error class for all SDK errors
   class Error < StandardError; end
 
@@ -79,7 +79,7 @@ end
 
 1. **Enable Debug Logging**:
 ```ruby
-RubyAIAgent.configure do |config|
+Aira.configure do |config|
   config.log_level = :debug
   config.log_formatter = proc do |severity, time, progname, msg|
     "[#{time}] #{severity}: #{msg}\n"

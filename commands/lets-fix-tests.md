@@ -1,6 +1,6 @@
 # Let's Fix Tests Command
 
-A systematic approach to diagnose and fix failing tests in the Ruby AI Agent SDK. For detailed testing practices and framework info, see [Testing Guide](../guides/testing.md).
+A systematic approach to diagnose and fix failing tests in the AI Ruby Agent SDK. For detailed testing practices and framework info, see [Testing Guide](../guides/testing.md).
 
 ## Process Steps
 
@@ -25,7 +25,7 @@ A systematic approach to diagnose and fix failing tests in the Ruby AI Agent SDK
 Test files are organized as:
 ```
 spec/
-├── ruby_ai_agent/      # Unit tests
+├── aira/      # Unit tests
 │   ├── agent_spec.rb
 │   ├── tools_spec.rb
 │   └── prompt_spec.rb

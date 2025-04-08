@@ -168,8 +168,8 @@ Closes #123
 2. **Stage Changes**:
    ```bash
    # Stage logically related changes
-   git add lib/ruby_ai_agent/agent.rb
-   git add spec/ruby_ai_agent/agent_spec.rb
+   git add lib/aira/agent.rb
+   git add spec/aira/agent_spec.rb
    git add docs-dev/guides/agent.md
    
    # Review staged changes
@@ -188,7 +188,7 @@ Closes #123
    - Open pull request if ready
 
 Common file groupings:
-- Core: `lib/ruby_ai_agent/*.rb`
+- Core: `lib/aira/*.rb`
 - Tests: `spec/**/*_spec.rb` 
 - Docs: `docs-dev/**/*.md`
 - Project: `*.gemspec`, `Gemfile`, etc.

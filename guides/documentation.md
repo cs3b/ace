@@ -69,19 +69,19 @@
 
 1. **README.md Structure**:
    ```markdown
-   # Ruby AI Agent SDK
+   # AI Ruby Agent SDK
    
    Build AI agents that interact with LLMs and system tools.
    
    ## Quick Start
    ```ruby
-   agent = RubyAIAgent.create(:assistant)
+   agent = Aira.create(:assistant)
    result = agent.execute(prompt: "Browse website")
    ```
    
    ## Installation
    ```bash
-   gem install ruby_ai_agent
+   gem install aidarb
    ```
    
    ## Documentation

@@ -12,12 +12,12 @@ require 'webmock/rspec'
 RSpec.configure do |config|
   config.before(:suite) do
     # Setup test environment
-    RubyAIAgent.env = :test
+    Aira.env = :test
   end
   
   config.around(:each) do |example|
     # Clear any cached data
-    RubyAIAgent.reset!
+    Aira.reset!
     example.run
   end
 end
@@ -65,8 +65,8 @@ prompts:
 
 ```ruby
 RSpec.describe "Agent Integration", :integration do
-  let(:agent) { RubyAIAgent::Agent.new }
-  let(:tool) { RubyAIAgent::Tools::Calculator.new }
+  let(:agent) { Aira::Agent.new }
+  let(:tool) { Aira::Tools::Calculator.new }
   
   around(:each) do |example|
     VCR.use_cassette("integration_#{example.description}") do
@@ -107,4 +107,3 @@ RSpec.describe "Performance", :performance do
     end
   end
 end
-```

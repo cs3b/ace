@@ -6,7 +6,7 @@
 # Use object pooling for frequently created objects
 require 'connection_pool'
 
-RubyAIAgent.configure do |config|
+Aira.configure do |config|
   config.llm_client_pool = ConnectionPool.new(size: 5, timeout: 3) do 
     LLMClient.new
   end
@@ -98,4 +98,3 @@ def execute(task)
     # Task execution
   end
 end
-```

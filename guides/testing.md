@@ -23,7 +23,7 @@
 2. **Test Types**:
    ```ruby
    # Unit test example
-   RSpec.describe RubyAIAgent::Agent do
+   RSpec.describe Aira::Agent do
      let(:agent) { described_class.new("test_agent") }
      
      it "validates tool configuration" do
@@ -35,8 +35,8 @@
 
    # Integration test example
    RSpec.describe "Agent-Tool Integration" do
-     let(:agent) { RubyAIAgent::Agent.new("browser_agent") }
-     let(:tool) { RubyAIAgent::Tools::Browser.new }
+     let(:agent) { Aira::Agent.new("browser_agent") }
+     let(:tool) { Aira::Tools::Browser.new }
 
      it "executes tools in workflow" do
        agent.add_tool(tool)
@@ -48,7 +48,7 @@
    # E2E test example
    RSpec.describe "Web Browsing Workflow" do
      it "completes full browsing task" do
-       result = RubyAIAgent.run_workflow(
+       result = Aira.run_workflow(
          agent: :browser,
          task: "Summarize webpage",
          input: { url: "https://example.com" }
@@ -62,7 +62,7 @@
 
 1. **Concurrent Operations**:
    ```ruby
-   RSpec.describe RubyAIAgent::ToolRegistry do
+   RSpec.describe Aira::ToolRegistry do
      it "handles concurrent tool registration" do
        registry = described_class.new
        tools = Array.new(10) { |i| TestTool.new("tool_#{i}") }
@@ -79,7 +79,7 @@
 
 2. **Resource Management**:
    ```ruby
-   RSpec.describe RubyAIAgent::Agent do
+   RSpec.describe Aira::Agent do
      it "cleans up resources after task" do
        agent = described_class.new
        agent.execute_task("test task")
@@ -96,7 +96,7 @@
    ```ruby
    # spec/support/shared_contexts.rb
    RSpec.shared_context "with test agent" do
-     let(:agent) { RubyAIAgent::Agent.new("test") }
+     let(:agent) { Aira::Agent.new("test") }
      let(:tools) { [:browser, :file_system] }
      
      before do
@@ -135,7 +135,7 @@
    ```ruby
    RSpec.describe "System Load" do
      it "handles multiple concurrent agents" do
-       agents = Array.new(50) { RubyAIAgent::Agent.new }
+       agents = Array.new(50) { Aira::Agent.new }
        
        Benchmark.bm do |bm|
          bm.report("concurrent operation") do
@@ -181,7 +181,7 @@ VCR.configure do |config|
   config.filter_sensitive_data('<API_KEY>') { ENV['API_KEY'] }
 end
 
-RSpec.describe RubyAIAgent::LLMClient do
+RSpec.describe Aira::LLMClient do
   it "handles API responses" do
     VCR.use_cassette("llm_response") do
       response = client.complete("test prompt")
@@ -195,7 +195,7 @@ end
 ```ruby
 require 'webmock/rspec'
 
-RSpec.describe RubyAIAgent::Tools::Browser do
+RSpec.describe Aira::Tools::Browser do
   before do
     stub_request(:get, "https://example.com")
       .to_return(status: 200, body: "Hello World")
@@ -214,7 +214,7 @@ end
 ```ruby
 require 'faker'
 
-RSpec.describe RubyAIAgent::Agent do
+RSpec.describe Aira::Agent do
   let(:test_data) do
     {
       name: Faker::Name.name,
@@ -244,7 +244,7 @@ require 'benchmark'
 
 RSpec.describe "Performance" do
   it "handles concurrent requests" do
-    agents = Array.new(100) { RubyAIAgent::Agent.new }
+    agents = Array.new(100) { Aira::Agent.new }
     
     Benchmark.bm do |bm|
       bm.report("parallel execution") do

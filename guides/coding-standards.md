@@ -1,4 +1,4 @@
-## Ruby AI Agent SDK Development Standards
+## AI Ruby Agent SDK Development Standards
 
 ### 1. Agent Definition Style
 
@@ -98,7 +98,7 @@ PROMPT
 
 1. **Agent-Specific Errors**:
    ```ruby
-   module RubyAIAgent
+   module Aira
      class AgentError < Error; end
      class PromptError < AgentError; end
      class ToolError < AgentError; end
@@ -155,7 +155,7 @@ PROMPT
 1. **Agent Definitions**:
 ```
 lib/
-  ruby_ai_agent/
+  aira/
     agents/
       web_extractor.rb
       markdown_summarizer.rb
