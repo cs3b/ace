@@ -7,7 +7,7 @@ This command guides reflection on coding sessions, commit history, and release a
 1. Session Analysis:
    - Review coding session artifacts in tmp/
    - Check recent commit history
-   - Assess release progress in release-template/
+   - Assess release progress in prepare-release/
 
 2. Review Areas:
 
@@ -54,7 +54,7 @@ This command guides reflection on coding sessions, commit history, and release a
    │   ├── 11-architecture.md      # Architecture documentation
    │   └── 1-next/      # Refine upcoming tasks
    ├── decisions/       # Architecture Decision Records
-   └── release-template/
+   └── prepare-release/
        └── v.x.x.x/     # Update release docs
    ```
 
@@ -165,7 +165,7 @@ This command guides reflection on coding sessions, commit history, and release a
 
 - [Documentation Guide](../guides/documentation.md)
 - [Version Control](../guides/version-control.md)
-- [Release Process](../guides/release.md)
+- [Release Process](../guides/ship-release.md)
 - [Quality Assurance](../guides/quality-assurance.md)
 - [Architecture](../project/11-architecture.md)
 - [Generate ADR](docs/generate-adr.md)

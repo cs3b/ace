@@ -5,7 +5,7 @@ This command helps create a new release following project guidelines.
 ## Essential Reading
 
 First review these key documents:
-- [Release Guide](../guides/release.md)
+- [Release Guide](../guides/ship-release.md)
 - [Project Management](../project/01-project-management.md)
 - [Version Control](../guides/version-control.md)
 
@@ -43,7 +43,7 @@ Release artifacts should be organized as:
 ```
 docs-dev/
 └── guides/
-    └── release-template/
+    └── prepare-release/
         └── v.x.x.x/
             ├── docs/
             ├── decisions/
@@ -53,7 +53,7 @@ docs-dev/
 
 ## Reference Documentation
 
-- [Release Process](../guides/release.md)
+- [Release Process](../guides/ship-release.md)
 - [Documentation Standards](../guides/documentation.md)
 - [Version Control](../guides/version-control.md)
 

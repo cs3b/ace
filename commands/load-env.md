@@ -82,7 +82,7 @@ ai-ruby-agent-sdk/
 - [Coding Standards](../guides/coding-standards.md)
 - [Testing Guidelines](../guides/testing.md)
 - [Documentation Standards](../guides/documentation.md)
-- [Release Process](../guides/release.md)
+- [Release Process](../guides/ship-release.md)
 
 ## Success Criteria
 

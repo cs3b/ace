@@ -15,7 +15,7 @@ Reference these guides for proper development workflows:
 
 - **Quality Assurance**: [Quality Assurance](../guides/quality-assurance.md)
 - **Documentation**: [Documentation](../guides/documentation.md)
-- **Release Process**: [Release](../guides/release.md)
+- **Release Process**: [Release](../guides/ship-release.md)
 
 ## Code Structure
 For technical implementation, consult:

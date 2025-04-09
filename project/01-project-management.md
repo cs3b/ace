@@ -83,7 +83,7 @@ When moving a task between states, use the following checklists:
 ### 5. Implementation Process
 
 1. **Planning Phase**:
-   - Create detailed [Implementation Plan](../guides/release-template/development/implementation-template.md)
+   - Create detailed [Implementation Plan](../guides/prepare-release/development/implementation-template.md)
    - Design interfaces and test structure
    - Set up necessary infrastructure
 
@@ -100,7 +100,7 @@ When moving a task between states, use the following checklists:
 
 ## Release Management
 
-For detailed release management procedures, see [Release Documentation Guide](../guides/release-template/prepare-release-documentation.md)
+For detailed release management procedures, see [Release Documentation Guide](../guides/prepare-release/prepare-release-documentation.md)
 
 Key aspects:
 - Version-based organization
@@ -113,7 +113,7 @@ Essential project standards and guidelines:
 - [Coding Standards](../guides/coding-standards.md)
 - [Testing Guidelines](../guides/testing.md)
 - [Documentation Standards](../guides/documentation.md)
-- [Release Process](../guides/release.md)
+- [Release Process](../guides/ship-release.md)
 - [Error Handling](../guides/error-handling.md)
 - [Performance](../guides/performance.md)
 - [Security](../guides/security.md)

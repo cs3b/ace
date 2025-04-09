@@ -25,8 +25,8 @@ Our development workflow centers around:
 - [Security](security.md) - Security best practices
 
 ### Release Management
-- [Release Process](release.md) - Release workflow and checklists
-- [Release Documentation Template](release-template/prepare-release-documentation.md) - Standard release documentation structure
+- [Release Process](ship-release.md) - Release workflow and checklists
+- [Release Documentation Template](prepare-release/prepare-release-documentation.md) - Standard release documentation structure
 
 ## Task Management
 
@@ -75,4 +75,4 @@ Each release version requires specific documentation based on type:
 - Detailed tutorials
 - In-depth retrospective
 
-For detailed release documentation structure, see [Release Documentation Guide](release-template/prepare-release-documentation.md)
+For detailed release documentation structure, see [Release Documentation Guide](prepare-release/prepare-release-documentation.md)
