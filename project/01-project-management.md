@@ -56,18 +56,18 @@ When moving a task between states, follow these guidelines:
   - Complete the specification using the template
   - Create an implementation plan
   - Ensure all dependencies are available
-  - Reference the [Transition Checklist](../project/template/transition-checklist.md)
+  - Reference the [Transition Checklist](../guides/release-template/development/transition-template.md)
 
 - **Next → Done**:
   - Verify all tests pass
   - Ensure documentation is complete
   - Code review is completed
-  - All items in [Transition Checklist](../project/template/transition-checklist.md) are satisfied
+  - All items in [Transition Checklist](../guides/release-template/development/transition-template.md) are satisfied
 
 ### 5. Implementation Process
 
 1. **Planning Phase**:
-   - Create detailed [Implementation Plan](../project/template/implementation-plan.md)
+   - Create detailed [Implementation Plan](../guides/release-template/development/implementation-template.md)
    - Design interfaces and test structure
    - Set up necessary infrastructure
 
