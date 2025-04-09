@@ -22,7 +22,7 @@ This command helps initialize your development session with proper context.
    - Test framework available and understood
    - Current tasks identified and prioritized
    - Implementation approach planned with TDD in mind
-```
+
 ai-ruby-agent-sdk/
 ├── lib/             # Main source code
 ├── spec/            # Test files
@@ -36,7 +36,6 @@ ai-ruby-agent-sdk/
     │   ├── 1-next/     # Current sprint/milestone tasks
     │   └── 2-done/     # Completed work
     └── prompts/     # Reusable AI interaction templates
-```
 
 ## Key Files
 
@@ -62,6 +61,6 @@ ai-ruby-agent-sdk/
 
 3. Task Identified:
    - Current milestone clear
-   - Next task selected
+   - Current task selected
    - Dependencies understood
    - Implementation approach planned

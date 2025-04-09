@@ -71,8 +71,8 @@ task-master parse-prd your-prd.txt
 # List all tasks
 task-master list
 
-# Show the next task to work on
-task-master next
+# Show the current task to work on
+task-master current
 
 # Generate task files
 task-master generate
@@ -170,10 +170,10 @@ What tasks are available to work on next?
 
 The agent will:
 - Run `task-master list` to see all tasks
-- Run `task-master next` to determine the next task to work on
+- Run `task-master current` to determine the current task to work on
 - Analyze dependencies to determine which tasks are ready to be worked on
 - Prioritize tasks based on priority level and ID order
-- Suggest the next task(s) to implement
+- Suggest the current task(s) to implement
 
 ### 2. Task Implementation
 
@@ -298,10 +298,10 @@ task-master list --with-subtasks
 task-master list --status=<status> --with-subtasks
 ```
 
-### Show Next Task
+### Show Current Task
 ```bash
-# Show the next task to work on based on dependencies and status
-task-master next
+# Show the current task to work on based on dependencies and status
+task-master current
 ```
 
 ### Show Specific Task
@@ -482,9 +482,9 @@ task-master expand --id=8
 task-master expand --all
 ```
 
-### Finding the Next Task
+### Finding the Current Task
 
-The `next` command:
+The `current` command:
 - Identifies tasks that are pending/in-progress and have all dependencies satisfied
 - Prioritizes tasks by priority level, dependency count, and task ID
 - Displays comprehensive information about the selected task:
@@ -536,7 +536,7 @@ Can you help me parse it and set up the initial tasks?
 
 ### Working on tasks
 ```
-What's the next task I should work on? Please consider dependencies and priorities.
+What's the current task I should work on? Please consider dependencies and priorities.
 ```
 
 ### Implementing a specific task

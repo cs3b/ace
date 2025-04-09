@@ -15,7 +15,7 @@ docs-dev/
 ├── guides/           # Development standards and practices
 ├── project/          # Project management and planning
 │   ├── 0-backlog/   # Future planned work
-│   ├── 1-next/      # Current sprint/milestone tasks
+│   ├── 1-current/      # Current sprint/milestone tasks
 │   └── 2-done/      # Completed work
 └── prompts/         # Reusable AI interaction templates
 ```
@@ -27,7 +27,7 @@ docs-dev/
 Tasks are managed through a Kanban-style directory system:
 
 - `0-backlog/`: Future planned work
-- `1-next/`: Current sprint tasks
+- `1-current/`: Current sprint tasks
 - `2-done/`: Completed work
 
 Each task should:
@@ -45,20 +45,20 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 ### 3. Task Workflow
 
 1. Start tasks in `0-backlog/` with version prefix
-2. Move prioritized work to `1-next/`
+2. Move prioritized work to `1-current/`
 3. Complete work and move to `2-done/`
 4. Document in appropriate release template
 ### 4. Task Transitions
 
 When moving a task between states, follow these guidelines:
 
-- **Backlog → Next**:
+- **Backlog → Current**:
   - Complete the specification using the template
   - Create an implementation plan
   - Ensure all dependencies are available
   - Reference the [Transition Checklist](../guides/release-template/development/transition-template.md)
 
-- **Next → Done**:
+- **Current → Done**:
   - Verify all tests pass
   - Ensure documentation is complete
   - Code review is completed

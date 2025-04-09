@@ -1,6 +1,6 @@
 # Transition Checklist
 
-## Moving from Backlog to Next
+## Moving from Backlog to Current
 
 - [ ] Feature specification complete using template
 - [ ] Dependencies identified and available
@@ -9,7 +9,7 @@
 - [ ] Acceptance criteria clear
 - [ ] Story points/complexity estimated
 
-## Moving from Next to Done
+## Moving from Current to Done
 
 - [ ] All tests passing (unit, integration, edge cases)
 - [ ] Code meets style guidelines (StandardRB check passed)

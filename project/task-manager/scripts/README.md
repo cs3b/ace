@@ -375,7 +375,7 @@ The output report structure is:
 }
 ```
 
-## Finding the Next Task
+## Finding the Current Task
 
 The `next` command helps you determine which task to work on next based on dependencies and status:
 
