@@ -54,7 +54,7 @@
 ### 2. Template Folder Consolidation and Task Manager Integration
 
 *   **Author:** cs3b
-*   **File:** `docs-dev/project/template/v.x.x.x/v.x.x.x-codename.md`
+*   **File:** `docs-dev/guides/release-template/v.x.x.x/v.x.x.x-codename.md`
 *   **Line:** 1
 *   **Comment:** "we should have only one template folder (guides & project are duplications)\r\n\r\nalso as mention before - incorporate task manager within the workflow"
 *   **Analysis:**
@@ -94,7 +94,7 @@
 ### 6. Dev Session Structure
 
 *   **Author:** cs3b
-*   **File:** `docs-dev/project/template/dev-session.md`
+*   **File:** `docs-dev/guides/release-template/development/session-template.md`
 *   **Line:** 3
 *   **Comment:** "dev session is per release, or per project ... not sure - or it should be part of let's start or lets develop"
 *   **Analysis:** Questions current dev session structure and suggests possible alternatives.
@@ -103,7 +103,7 @@
 ### 7. High Level Planning Requirements
 
 *   **Author:** cs3b
-*   **File:** `docs-dev/project/template/implementation-plan.md`
+*   **File:** `docs-dev/guides/release-template/development/implementation-template.md`
 *   **Line:** 8
 *   **Comment:** "we should always have high level plan and ui (dsl in context of ruby lib) and maybe responsibility and what libs should we use and what for"
 *   **Analysis:** Emphasizes need for comprehensive planning documentation including DSL design and library usage.
@@ -112,7 +112,7 @@
 ### 8. Workflow Simplification
 
 *   **Author:** cs3b
-*   **File:** `docs-dev/project/template/implementation-plan.md`
+*   **File:** `docs-dev/guides/release-template/development/implementation-template.md`
 *   **Line:** 25
 *   **Comment:** "let's think as a agent: analyze once again the env, analyze once again the workflows and work to simplify it"
 *   **Analysis:** Suggests agent-oriented approach to analyze and simplify workflows.
