@@ -6,7 +6,9 @@ Follow these steps to create well-structured commits. For detailed conventions a
 
 1. Review and prepare changes:
    - Review modified files
-   - Ensure tests pass
+   - Ensure all new code has corresponding tests
+   - Verify tests pass with `bin/rspec`
+   - Check test coverage with `COVERAGE=true bin/rspec`
    - Group related changes logically
 
 2. Create commit:

@@ -14,12 +14,17 @@ This command helps initialize your development session with proper context.
 
 3. Development Setup:
    - Review [Coding Standards](../guides/coding-standards.md)
-   - Check [Testing Guidelines](../guides/testing.md)
+   - Study [Testing Guidelines](../guides/testing.md) thoroughly
    - Follow [Version Control](../guides/version-control.md)
 
-4. Current Focus:
+4. Test-Driven Development:
+   - Create tests for each feature before implementation
+   - Run `bin/rspec` to verify test failures initially
+   - Add implementation to make tests pass
+
+5. Current Focus:
    - Check current tasks in `docs-dev/project/1-next/`
-   - Implement tasks in version order
+   - Implement tasks in version order with tests
 
 ## Success Criteria
 

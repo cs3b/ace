@@ -48,6 +48,39 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 2. Move prioritized work to `1-next/`
 3. Complete work and move to `2-done/`
 4. Document in appropriate release template
+### 4. Task Transitions
+
+When moving a task between states, follow these guidelines:
+
+- **Backlog → Next**:
+  - Complete the specification using the template
+  - Create an implementation plan
+  - Ensure all dependencies are available
+  - Reference the [Transition Checklist](../project/template/transition-checklist.md)
+
+- **Next → Done**:
+  - Verify all tests pass
+  - Ensure documentation is complete
+  - Code review is completed
+  - All items in [Transition Checklist](../project/template/transition-checklist.md) are satisfied
+
+### 5. Implementation Process
+
+1. **Planning Phase**:
+   - Create detailed [Implementation Plan](../project/template/implementation-plan.md)
+   - Design interfaces and test structure
+   - Set up necessary infrastructure
+
+2. **Development Phase**:
+   - Follow Test-Driven Development approach
+   - Create failing tests first
+   - Implement code to make tests pass
+   - Document design decisions
+
+3. **Review Phase**:
+   - Self-review using [Self-Reflect Command](../commands/self-reflect.md)
+   - Peer review with clear criteria
+   - Document learnings and improvements
 
 ## Release Management
 
