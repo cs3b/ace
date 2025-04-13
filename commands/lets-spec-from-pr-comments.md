@@ -10,7 +10,7 @@ This command processes GitHub pull request comments into organized specification
    - Create new version directory ine: `docs-dev/project/current/`
    - Set up release subdirectories (docs / tasks / README.md) e.g.:
      ```
-     docs-dev/project/current/v1.0.1-feedback-to-pr-21/ 
+     docs-dev/project/current/v1.0.1-feedback-to-pr-21/
      ├── docs/         # Raw feedback and analysis
      ├── tasks/        # Grouped implementation tasks
      └── README.md     # Release overview
@@ -23,7 +23,7 @@ This command processes GitHub pull request comments into organized specification
    - Store comments and reviews individually following naming convention:
      Comments: `docs/comments/comment-{created_at}-{id}.json`
      Reviews: `docs/reviews/review-{submitted_at}-{id}.json`
-     
+
      Example for comment with:
      ```json
      {
@@ -32,7 +32,7 @@ This command processes GitHub pull request comments into organized specification
      }
      ```
      Becomes: `docs/comments/comment-2025-04-10-0712-2036663266.json`
-     
+
      Example for review with:
      ```json
      {
@@ -41,7 +41,7 @@ This command processes GitHub pull request comments into organized specification
      }
      ```
      Becomes: `docs/reviews/review-2025-04-10-0824-2755584987.json`
-   
+
    - Validate data structures for each file
 
 3. **Process Feedback**:
@@ -52,18 +52,18 @@ This command processes GitHub pull request comments into organized specification
    - Group feedback by related scope/topic
    - Create task files in `tasks/` directory following naming convention:
      `tasks/{scope}-{action}-{target}.md`
-     
+
      Examples based on actual PR feedback:
      ```
      tasks/prompt-use-consistent-name-method.md
      # From: "I like the overridable prompt_name method, we can use it here..."
-     
+
      tasks/examples-add-to-demo-files.md
      # From: "Could you add this example to examples/server_with_stdio_transport.rb..."
-     
+
      tasks/image-fix-content-format.md
      # From: "The specification expects a constant value of base64-encoded-image-data..."
-     
+
      tasks/server-add-pagination-support.md
      # From: "We need to handle pagination and adapt the tools..."
      ```
@@ -79,6 +79,31 @@ This command processes GitHub pull request comments into organized specification
    - Summarize changes needed
    - Group tasks by priority/impact
    - Document dependencies
+
+  5. **Order Tasks by Dependencies**:
+    - Analyze each task's dependencies
+    - Create dependency graph to determine execution order
+    - Update task filenames to include sequence prefix: `tasks/{sequence}-{scope}-{action}-{target}.md`
+
+    Example dependency order from PR feedback:
+    ```
+    tasks/01-prompt-use-consistent-name-method.md # Must be done first as other tasks depend on prompt_name
+    tasks/02-image-fix-content-format.md          # Independent but simpler change
+    tasks/03-examples-add-to-demo-files.md        # Depends on prompt_name changes
+    tasks/04-server-add-pagination-support.md     # Larger change that should come last
+    ```
+
+    Each task file should include dependency metadata in frontmatter:
+    ```md
+    ---
+    sequence: 01
+    depends_on: []
+    required_for:
+      - 03-examples-add-to-demo-files
+    ---
+    # Use Consistent Prompt Name Method
+    ...
+    ```
 
 ## Success Criteria
 
@@ -106,11 +131,11 @@ docs-dev/project/current/v1.0.1-feedback-to-pr-21/
 │   │   ├── comment-2025-04-10-0715-2036668671.json    # Version bump request
 │   │   └── comment-2025-04-10-0719-2036678438.json    # Pagination feedback
 │   └── reviews/
-│       └── review-2025-04-10-0824-2755584987.json     # Main review feedback
+│       └── review-2025-04-10-0824-2755584987.json      # Main review feedback
 ├── tasks/
-│   ├── use-prompt-name-method.md      # Use consistent prompt_name method
-│   ├── add-prompt-examples.md         # Add prompt examples to demo files
-│   ├── fix-image-content-format.md    # Update image content mime type
-│   └── add-pagination-support.md      # Add pagination to prompts listing
-└── README.md                          # Implementation overview
+│   ├── 01-prompt-use-consistent-name-method.md         # Core change affecting other tasks
+│   ├── 02-image-fix-content-format.md                  # Independent formatting fix
+│   ├── 03-examples-add-to-demo-files.md                # Depends on prompt_name implementation
+│   └── 04-server-add-pagination-support.md             # Complex change to come last
+└── README.md                                            # Implementation overview
 ```
