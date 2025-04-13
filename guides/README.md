@@ -32,9 +32,9 @@ Our development workflow centers around:
 
 Tasks are managed through a Kanban-style system in the `project/` directory:
 
-- `0-backlog/`: Future planned work
-- `1-next/`: Current sprint tasks 
-- `2-done/`: Completed work
+- `backlog/`: Future planned work
+- `current/`: Current sprint tasks
+- `done/`: Completed work
 
 ### Version Naming
 
@@ -45,9 +45,9 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### Task Workflow
 
-1. Tasks begin in `0-backlog/` with version prefix
-2. Priority work moves to `1-next/` 
-3. Completed work moves to `2-done/`
+1. Tasks begin in `backlog/` with version prefix
+2. Priority work moves to `current/` 
+3. Completed work moves to `done/`
 4. Document in release template structure
 
 ## Release Documentation

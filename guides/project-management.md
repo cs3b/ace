@@ -18,9 +18,9 @@ docs-dev/
 ├── guides/           # Development standards and practices
 ├── commands/        # AI interaction commands and workflows
 ├── project/         # Project-specific materials
-│   ├── 0-backlog/   # Future planned work
-│   ├── 1-current/   # Current sprint/milestone tasks
-│   └── 2-done/      # Completed work
+│   ├── backlog/     # Future planned work
+│   ├── current/     # Current sprint/milestone tasks
+│   └── done/        # Completed work
 ```
 
 ## Task Management
@@ -29,9 +29,9 @@ docs-dev/
 
 Tasks are managed through a Kanban-style directory system:
 
-- `0-backlog/`: Future planned work
-- `1-current/`: Current sprint tasks
-- `2-done/`: Completed work
+- `backlog/`: Future planned work
+- `current/`: Current sprint tasks  
+- `done/`: Completed work
 
 Each task should:
 - Have a clear version number prefix (e.g., v.0.1.0)
@@ -47,9 +47,9 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### 3. Task Workflow
 
-1. Start tasks in `0-backlog/` with version prefix
-2. Move prioritized work to `1-current/`
-3. Complete work and move to `2-done/`
+1. Start tasks in `backlog/` with version prefix
+2. Move prioritized work to `current/`
+3. Complete work and move to `done/`
 4. Document in appropriate release template
 
 ### 4. Task Transitions

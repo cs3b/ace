@@ -1,0 +1,1 @@
+1. Check items in backlog/, current/ and done/

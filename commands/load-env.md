@@ -27,10 +27,10 @@ A systematic approach to load the project context, structure, and current develo
 3. Examine Current Tasks:
    ```bash
    # View current tasks
-   ls -la docs-dev/project/1-current/
+   ls -la docs-dev/project/current/
 
    # View current version tasks
-   ls -la docs-dev/project/1-current/v.0.1.0/
+   ls -la docs-dev/project/current/v.0.1.0/
    ```
 
 4. Check Recent Changes:
@@ -60,9 +60,9 @@ ai-ruby-agent-sdk/
 └── docs-dev/        # Development documentation
     ├── guides/      # Development standards and practices
     ├── project/     # Project management and planning
-    │   ├── 0-backlog/  # Future planned work
-    │   ├── 1-current/  # Current sprint/milestone tasks
-    │   └── 2-done/     # Completed work
+    │   ├── backlog/    # Future planned work
+    │   ├── current/    # Current sprint/milestone tasks
+    │   └── done/      # Completed work
     └── commands/    # AI interaction command patterns
 ```
 

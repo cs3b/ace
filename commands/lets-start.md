@@ -13,7 +13,7 @@ This command helps initialize your development session with proper context.
    - Add implementation to make tests pass
 
 3. Sprint Focus:
-   - Review current sprint tasks in `docs-dev/project/1-current/`
+- Review current sprint tasks in `docs-dev/project/current/`
    - Identify dependencies and blocked items
    - Plan implementation order
    - Set up development environment for current task
@@ -38,9 +38,9 @@ This command helps initialize your development session with proper context.
 └── docs-dev/        # Development documentation
     ├── guides/      # Development standards and practices
     ├── project/     # Project management and planning
-    │   ├── 0-backlog/  # Future planned work
-    │   ├── 1-next/     # Current sprint/milestone tasks
-    │   └── 2-done/     # Completed work
+    │   ├── backlog/    # Future planned work
+    │   ├── current/    # Current sprint/milestone tasks
+    │   └── done/       # Completed work
     └── commands/    # AI interaction command patterns
 
 ## Key Files

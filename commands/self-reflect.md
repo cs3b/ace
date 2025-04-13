@@ -50,9 +50,9 @@ This command guides reflection on coding sessions, commit history, and release a
    docs-dev/
    ├── guides/           # Update learned practices
    ├── project/
-   │   ├── 00-current-work.md      # Update progress
-   │   ├── 11-architecture.md      # Architecture documentation
-   │   └── 1-next/      # Refine upcoming tasks
+   │   ├── current-work.md         # Update progress
+   │   ├── architecture.md         # Architecture documentation
+   │   └── current/               # Current tasks
    ├── decisions/       # Architecture Decision Records
    └── prepare-release/
        └── v.x.x.x/     # Update release docs
