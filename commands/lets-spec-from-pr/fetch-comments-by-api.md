@@ -6,8 +6,12 @@ This command uses command-line tools to fetch pull request comments and reviews.
 
 1. **Initialize and Fetch Data**:
    - Accept PR URL as input and parse owner/repo/number
-   - Create new version bump (e.g.: v1.0.1-feedback-to-pr-21)
-   - Create new version directory: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/`
+   - Use the existing release path if one was provided or previously created
+   - If no release path exists yet:
+     - Determine current project version from appropriate files (e.g., `package.json`, `VERSION`, `lib/version.rb`)
+     - Create new version bump based on current version (use next patch version using semver)
+     - Create release path: `docs-dev/project/current/v{version}-feedback-to-pr-{number}/`
+     - Example: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/`
    - Call data fetching tool:
      ```bash
      ruby docs-dev/tools/get-github-pr-data.rb \
