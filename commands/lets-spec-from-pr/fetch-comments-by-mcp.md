@@ -7,14 +7,10 @@ This command uses GitHub MCP server to fetch pull request comments and reviews.
 1. **Initialize**:
    - Accept PR URL as input
    - Use the existing release path if one was provided or previously created
-   - If no release path exists yet:
-     - Determine current project version from appropriate files (e.g., `package.json`, `VERSION`, `lib/version.rb`)
-     - Create new version bump based on current version (use next patch version using semver)
-     - Create release path: `docs-dev/project/current/v{version}-feedback-to-pr-{number}/`
-     - Example: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/`
+   - If no release path exists yet - ask for it
    - Set up release subdirectories (docs / tasks / README.md) e.g.:
      ```
-     docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+     {release_path}/
      ├── docs/         # Raw feedback and analysis
      ├── tasks/        # Grouped implementation tasks
      └── README.md     # Release overview
@@ -62,7 +58,7 @@ This command uses GitHub MCP server to fetch pull request comments and reviews.
 fetch-pr-comments-by-mcp https://github.com/org/repo/pull/123
 
 # Creates directory structure:
-docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+docs-dev/project/current/v1.2.1-feedback-to-pr-21/
 ├── docs/
 │   ├── comments/
 │   │   ├── comment-2025-04-10-0712-2036663266.json    # Tool name feedback

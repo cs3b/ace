@@ -7,36 +7,32 @@ This command uses command-line tools to fetch pull request comments and reviews.
 1. **Initialize and Fetch Data**:
    - Accept PR URL as input and parse owner/repo/number
    - Use the existing release path if one was provided or previously created
-   - If no release path exists yet:
-     - Determine current project version from appropriate files (e.g., `package.json`, `VERSION`, `lib/version.rb`)
-     - Create new version bump based on current version (use next patch version using semver)
-     - Create release path: `docs-dev/project/current/v{version}-feedback-to-pr-{number}/`
-     - Example: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/`
+   - If no release path exists yet - ask for it
    - Call data fetching tool:
      ```bash
      ruby docs-dev/tools/get-github-pr-data.rb \
        --owner {owner} \
        --repo {repo} \
        --pr {number} \
-       --dir docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+       --dir {release_path}
      ```
    - Tool will create timestamped directory with JSON files:
      ```
      docs/
-     └── pr-21-20240410-071231/
+     └── {pr_path}
          ├── pr.json       # PR details
          ├── reviews.json  # Reviews with their comments
          └── comments.json # PR comments
      ```
      - You can find the exact directory path created by the tool using:
        ```bash
-       tree docs-dev/project/current/v1.0.1-feedback-to-pr-21/docs -I raw
+       tree {release_path}/docs -I raw
        ```
-       
+
        This will show the directory structure similar to:
        ```
-       docs-dev/project/current/v1.0.1-feedback-to-pr-21/docs
-       └── pr-21-20250413-183459
+       docs-dev/{release_path}/docs
+       └── {pr_path}
            ├── comments
            │   ├── comment-2025-04-10-0712-2036663266.json
            │   ├── comment-2025-04-10-0715-2036668671.json
@@ -50,19 +46,19 @@ This command uses command-line tools to fetch pull request comments and reviews.
 
    - Before proceeding with analysis, use the tree command to verify the exact location of PR data:
      ```bash
-     tree docs-dev/project/current/v1.0.1-feedback-to-pr-21/docs -I raw
+     tree {release_path}/docs -I raw
      ```
 
 2. **Process Individual Files**:
    - The tool has already prepared JSON files in separate directories:
    ```
-   docs-dev/project/current/v1.0.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
+   docs-dev/{release_path}/docs/{pr_path}/
    ├── comments/                                      # Individual PR comments
    │   ├── comment-2025-04-10-0712-2036663266.json   # Each comment in separate file
-   │   └── ...                                        
+   │   └── ...
    ├── reviews/                                       # PR review comments
    │   ├── review-2025-04-10-0824-2755584987.json    # Each review in separate file
-   │   └── ...                                        
+   │   └── ...
    └── pr/                                            # PR metadata
        └── pr-2025-04-01-0134-2430243692.json        # Basic PR information
    ```
@@ -86,7 +82,7 @@ This command uses command-line tools to fetch pull request comments and reviews.
 fetch-pr-comments-by-api https://github.com/org/repo/pull/123
 
 # Tool creates:
-docs-dev/project/current/v1.0.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
+docs-dev/project/current/v1.2.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
 ├── comments/                                      # Individual PR comments
 │   ├── comment-2025-04-10-0712-2036663266.json   # Tool name feedback
 │   ├── comment-2025-04-10-0715-2036668671.json   # Version bump request

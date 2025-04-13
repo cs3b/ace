@@ -22,22 +22,22 @@ This command processes GitHub pull request comments into organized specification
 - First READ the files at `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-api.md` and run the instructions from one of these files, before proceeding further
    - Ensure PR data is downloaded in the expected location:
      ```
-     docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+     {release_path}/
      └── docs/
-         └── pr-21-20250413-183459/
+         └── {pr_path}/
              ├── comments/
              ├── reviews/
              └── pr/
      ```
 
 3. **Create Tasks**:
-   - Scan all files (except raw directory) in the timestamped folder created by the tool:
-     - Individual PR comments from `docs/pr-XX-YYYYMMDD-HHMMSS/comments/*.json`
-     - Review comments and suggestions from `docs/pr-XX-YYYYMMDD-HHMMSS/reviews/*.json`
-     - Review status (approved, changes requested, etc) from `docs/pr-XX-YYYYMMDD-HHMMSS/pr/*.json`
-   - Group feedback by related scope/topic
-   - Create task files in `docs-dev/project/current/v1.0.1-feedback-to-pr-21/tasks/` directory following naming convention:
-     `tasks/{scope}-{action}-{target}.md` where:
+- Scan all files (except raw directory) in the timestamped folder created by the tool:
+  - Individual PR comments from `docs/{pr_path}/comments/*.json`
+  - Review comments and suggestions from `docs/{pr_path}/reviews/*.json`
+  - Review status (approved, changes requested, etc) from `docs/{pr_path}/pr/*.json`
+- Group feedback by related scope/topic
+- Create task files in `{release_path}/tasks/` directory following naming convention:
+  `tasks/{scope}-{action}-{target}.md` where:
        - `{scope}` indicates the component or feature area (prompt, image, server)
        - `{action}` is the change type (add, fix, update, remove)
        - `{target}` describes what's being modified
@@ -73,7 +73,7 @@ This command processes GitHub pull request comments into organized specification
 5. **Order Tasks by Dependencies**:
    - Analyze each task's dependencies
    - Create dependency graph to determine execution order
-   - Update task filenames to include sequence prefix: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/tasks/{sequence}-{scope}-{action}-{target}.md`
+   - Update task filenames to include sequence prefix: `{release_path}/tasks/{sequence}-{scope}-{action}-{target}.md`
 
    Example dependency order from PR feedback:
    ```
@@ -105,13 +105,13 @@ This command processes GitHub pull request comments into organized specification
      - Next steps for implementation
      - Use tree command to show the final directory structure:
        ```bash
-       tree docs-dev/project/current/v1.0.1-feedback-to-pr-21/ -L 2
+       tree {release_path} -L 2
        ```
        Example output:
        ```
-       docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+       {release_path}/
        ├── docs
-       │   └── pr-21-20250413-183459
+       │   └── {pr_path}
        ├── tasks
        │   ├── 01-prompt-use-consistent-name-method.md
        │   ├── 02-image-fix-content-format.md
@@ -165,12 +165,12 @@ fetch-comments-by-api https://github.com/org/repo/pull/123
 fetch-comments-by-mcp https://github.com/org/repo/pull/123
 
 # Then process PR comments with:
-lets-spec-from-pr-comments docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+lets-spec-from-pr-comments {release_path}/
 
 # Agent creates:
-docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+docs-dev/project/current/v1.2.1-feedback-to-pr-21/  # Example path
 ├── docs/                                              # Data from fetch command
-│   └── pr-21-20250413-183459/
+│   └── {pr_path}/
 │       ├── comments/
 │       ├── reviews/
 │       └── pr/
