@@ -1,3 +1,4 @@
+<!-- Read the project management guide first: docs-dev/project/README.md -->
 # PR Comments to Specification Command
 
 This command processes GitHub pull request comments into organized specifications and tasks, using command-line tools for data fetching.
@@ -54,6 +55,7 @@ This command processes GitHub pull request comments into organized specification
    - Summarize changes needed
    - Group tasks by priority/impact
    - Document dependencies
+   - Include references to PR comment IDs for traceability
 
 4. **Order Tasks by Dependencies**:
    - Analyze each task's dependencies
@@ -68,13 +70,16 @@ This command processes GitHub pull request comments into organized specification
    tasks/04-server-add-pagination-support.md     # Larger change that should come last
    ```
 
-   Each task file should include dependency metadata in frontmatter:
+   Each task file should include dependency metadata and comment references in frontmatter:
    ```md
    ---
    sequence: 01
    depends_on: []
    required_for:
      - 03-examples-add-to-demo-files
+   comment_ids:
+     - 1234567890  # ID of the GitHub comment that prompted this task
+     - 1234567891  # Additional comment ID if multiple comments address the same issue
    ---
    # Use Consistent Prompt Name Method
    ...
@@ -108,6 +113,7 @@ This command processes GitHub pull request comments into organized specification
   - PR comments fully captured from data provided by the fetch command
   - PR reviews and their comments included in analysis
   - Review status considered when prioritizing tasks
+  - Each task includes references to originating comment IDs for traceability
 - Feedback grouped logically by topic
 - Tasks properly scoped and prioritized
 - Clear implementation plan created with README.md
@@ -115,10 +121,20 @@ This command processes GitHub pull request comments into organized specification
 - Review concerns addressed in task descriptions
 - Complete directory structure created as specified
 
+## Prerequisites
+
+Before running this command:
+
+1. Read the project management guide: `docs-dev/project/README.md`
+2. Understand the current project structure and workflows
+3. Ensure you have appropriate GitHub permissions if using API-based fetching
 ## Usage Example
 
 ```bash
-# First fetch PR comments with either:
+# First, read the project management guide
+cat docs-dev/project/README.md
+
+# Then fetch PR comments with either:
 fetch-pr-comments-by-api https://github.com/org/repo/pull/123
 # OR
 fetch-pr-comments-by-mcp https://github.com/org/repo/pull/123
