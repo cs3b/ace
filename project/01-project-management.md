@@ -48,12 +48,7 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 2. Move prioritized work to `1-current/`
 3. Complete work and move to `2-done/`
 4. Document in appropriate release template
-
-### 4. Task Transitions
-
-When moving a task between states, use the following checklists:
-
-#### Moving from Backlog to Current
+usethefollowing checklists#### Moving from Backlog to Current
 - Feature specification complete using template
 - Dependencies identified and available
 - Technical approach agreed upon
@@ -79,11 +74,27 @@ When moving a task between states, use the following checklists:
 - Performance verified
 - Security reviewed
 - Backward compatibility confirmed (for minor/patch)
+guidesprepare-release/developmenttemplate
+### 4. Task Transitions
+
+When moving a task between states, follow these guidelines:
+
+- **Backlog → Next**:
+  - Complete the specification using the template
+  - Create an implementation plan
+  - Ensure all dependencies are available
+  - Reference the [Transition Checklist](../project/template/transition-checklist.md)
+
+- **Next → Done**:
+  - Verify all tests pass
+  - Ensure documentation is complete
+  - Code review is completed
+  - All items in [Transition Checklist](../project/template/transition-checklist.md) are satisfied
 
 ### 5. Implementation Process
 
 1. **Planning Phase**:
-   - Create detailed [Implementation Plan](../guides/prepare-release/development/implementation-template.md)
+   - Create detailed [Implementation Plan](../project/template/implementation-plan.md)
    - Design interfaces and test structure
    - Set up necessary infrastructure
 
