@@ -4,7 +4,7 @@
 Always begin by reviewing these key files to understand the project context:
 
 - **Project Objectives**: [What Do We Build](../project/10-what-do-we-build.md)
-- **Development Process**: [Project Management](../project/01-project-management.md)
+- **Development Process**: [Project Management](../guides/project-management.md)
 - **Architecture**: [Architecture](../project/11-architecture.md)
 - **Version Control Guidelines**: [Version Control](../guides/version-control.md)
 - **Development Environment**: [Coding Standards](../guides/coding-standards.md)
@@ -16,6 +16,7 @@ Reference these guides for proper development workflows:
 - **Quality Assurance**: [Quality Assurance](../guides/quality-assurance.md)
 - **Documentation**: [Documentation](../guides/documentation.md)
 - **Release Process**: [Release](../guides/ship-release.md)
+- **Command Workflows**: [Commands](../commands/) directory for AI interaction patterns
 
 ## Code Structure
 For technical implementation, consult:
