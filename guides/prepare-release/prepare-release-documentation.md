@@ -5,6 +5,12 @@ This document describes the standard structure for release documentation. Each r
 
 ## Core Directories
 Each release version (v.x.x.x) contains the following directories:
+Each release version follows semantic versioning (MAJOR.MINOR.PATCH) format with an incremental sequence number. For example:
+- v.0.1.0-001/
+- v.0.1.0-002/
+- v.0.1.1-003/
+
+This ensures proper chronological ordering of release documentation regardless of version numbers.
 
 - `codemods/`: Code migration scripts and transformation tools
 - `decisions/`: Architecture Decision Records (ADRs) and technical choices
