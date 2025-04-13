@@ -6,7 +6,7 @@ This command initializes the docs-dev directory structure and core documentation
 
 1. **Project Structure Setup**:
    - Create docs-dev directory if it doesn't exist
-   - Create project management directories (backlog, current, done)
+   - Create project management directories (backlog, current, done) inside the docs-dev/project directory
    - Set up versioning structure using semantic versioning with sequence numbers
    - Initialize version control if needed
 
