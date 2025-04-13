@@ -13,9 +13,9 @@ agent :web_extractor do
   description "Extract webpage content to markdown"
   input :url
   output :markdown_file
-  prompt <<~PROMPT
-    Extract content from <%= url %>
-  PROMPT
+  command :extract_content do |url|
+    "Extract content from #{url}"
+  end
   tools :web_browser
 end
 
@@ -45,13 +45,13 @@ prompt <<~PROMPT
 PROMPT
 
 # bad - complex logic in ERB
-prompt <<~PROMPT
-  <%= if complex_condition?
-        "Do complex thing with #{value}"
-      else
-        "Do simple thing with #{value}"
-      end %>
-PROMPT
+command :process_value do |value, condition|
+  if condition
+    "Do complex thing with #{value}"
+  else
+    "Do simple thing with #{value}"
+  end
+end
 ```
 
 ### 2. Tool Integration 
@@ -125,6 +125,20 @@ PROMPT
 ### 4. Testing Standards
 
 1. **Agent Testing**:
+## Outside-In Development
+- Start with the user-facing DSL and work inwards
+- Each layer should have clear boundaries and interfaces
+- Test-drive the implementation from the outside
+
+## Ruby Idioms
+- Follow Ruby community conventions and patterns
+- Use blocks and yield for configuration when appropriate
+- Leverage metaprogramming judiciously
+
+## Modular Architecture
+- Each component should have a single responsibility
+- Use composition over inheritance
+- Keep interfaces small and focused
    ```ruby
    RSpec.describe WebExtractor do
      let(:agent) { AgentRegistry.get(:web_extractor) }
