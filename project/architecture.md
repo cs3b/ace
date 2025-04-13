@@ -1,0 +1,1 @@
+# AI Ruby Agent SDK - Architecture

@@ -18,5 +18,3 @@ The goal is to keep agents simple for easy iteration while still providing power
 - **ERB Template Prompts** - Ruby-native variable interpolation in prompts
 - **Step-Based Workflows** - Support for multi-step agent processes
 - **Loop & Review** - Built-in validation and retry mechanisms
-
-The SDK aims to find the right balance between power and simplicity - making it easy to build basic agents while supporting more complex workflows when needed.
