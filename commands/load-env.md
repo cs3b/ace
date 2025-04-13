@@ -5,10 +5,9 @@ A systematic approach to load the project context, structure, and current develo
 ## Process Steps
 
 1. Load Project Context:
-   - Review project objectives: [What Do We Build](../project/10-what-do-we-build.md)
-   - Understand development process: [Project Management](../project/01-project-management.md)
-   - Examine architecture: [Architecture](../project/11-architecture.md)
-   - Check current work: [Current Work](../project/00-current-work.md)
+   - Review project objectives: [What Do We Build](../project/what-do-we-build.md)
+   - Understand development process: [Project Management](../guides/project-management.md)
+   - Examine architecture: [Architecture](../project/architecture.md)
 
 2. Explore Code Structure:
    ```bash
@@ -64,7 +63,7 @@ ai-ruby-agent-sdk/
     │   ├── 0-backlog/  # Future planned work
     │   ├── 1-current/  # Current sprint/milestone tasks
     │   └── 2-done/     # Completed work
-    └── prompts/     # Reusable AI interaction templates
+    └── commands/    # AI interaction command patterns
 ```
 
 ## Key Files
@@ -72,17 +71,21 @@ ai-ruby-agent-sdk/
 - `lib/aira.rb`: Main entry point for the SDK
 - `lib/aira/version.rb`: Current SDK version
 - `spec/spec_helper.rb`: Test configuration
-- `docs-dev/project/00-current-work.md`: Current development context
-- `docs-dev/project/10-what-do-we-build.md`: Project objectives
-- `docs-dev/project/11-architecture.md`: System architecture
+- `docs-dev/project/what-do-we-build.md`: Project objectives
+- `docs-dev/project/architecture.md`: System architecture
 
-## Reference Documentation
+## Core Documentation
 
-- [Project Management](../project/01-project-management.md)
+### Essential Guidelines
+- [Project Management](../guides/project-management.md)
 - [Coding Standards](../guides/coding-standards.md)
 - [Testing Guidelines](../guides/testing.md)
-- [Documentation Standards](../guides/documentation.md)
+- [Documentation](../guides/documentation.md)
+
+### Process Guides
 - [Release Process](../guides/ship-release.md)
+- [Version Control](../guides/version-control.md)
+- [Quality Assurance](../guides/quality-assurance.md)
 
 ## Success Criteria
 
