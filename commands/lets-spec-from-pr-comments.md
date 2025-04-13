@@ -1,57 +1,32 @@
 # PR Comments to Specification Command
 
-This command processes GitHub pull request comments into organized specifications and tasks.
+This command processes GitHub pull request comments into organized specifications and tasks, using command-line tools for data fetching.
 
 ## Process Steps
 
-1. **Initialize**:
-   - Accept PR URL as input
-   - Create new version bump based on current version for feedback implementation (use next patch version using semver), and pull request number (e.g.: v1.0.1-feedback-to-pr-21)
-   - Create new version directory ine: `docs-dev/project/current/`
-   - Set up release subdirectories (docs / tasks / README.md) e.g.:
+1. **Prepare Environment**:
+   - First use either `fetch-pr-comments-by-mcp` or `fetch-pr-comments-by-api` to fetch PR data
+   - Ensure PR data is downloaded in the expected location:
      ```
      docs-dev/project/current/v1.0.1-feedback-to-pr-21/
-     ├── docs/         # Raw feedback and analysis
-     ├── tasks/        # Grouped implementation tasks
-     └── README.md     # Release overview
+     └── docs/
+         └── pr-21-20250413-183459/
+             ├── comments/
+             ├── reviews/
+             └── pr/
      ```
 
-2. **Gather Feedback**:
-   - Use GitHub MCP server to fetch:
-     - PR comments via `get_pull_request_comments`
-     - PR reviews via `get_pull_request_reviews`
-   - Store comments and reviews individually following naming convention:
-     Comments: `docs/comments/comment-{created_at}-{id}.json`
-     Reviews: `docs/reviews/review-{submitted_at}-{id}.json`
-
-     Example for comment with:
-     ```json
-     {
-       "id": 2036663266,
-       "created_at": "2025-04-10T07:12:31Z"
-     }
-     ```
-     Becomes: `docs/comments/comment-2025-04-10-0712-2036663266.json`
-
-     Example for review with:
-     ```json
-     {
-       "id": 2755584987,
-       "submitted_at": "2025-04-10T08:24:37Z"
-     }
-     ```
-     Becomes: `docs/reviews/review-2025-04-10-0824-2755584987.json`
-
-   - Validate data structures for each file
-
-3. **Process Feedback**:
-   - Combine and analyze both:
-     - Individual PR comments
-     - Review comments and suggestions
-     - Review status (approved, changes requested, etc)
+2. **Create Tasks**:
+   - Scan all files (except raw directory) in the timestamped folder created by the tool:
+     - Individual PR comments from `docs/pr-XX-YYYYMMDD-HHMMSS/comments/*.json`
+     - Review comments and suggestions from `docs/pr-XX-YYYYMMDD-HHMMSS/reviews/*.json`
+     - Review status (approved, changes requested, etc) from `docs/pr-XX-YYYYMMDD-HHMMSS/pr/*.json`
    - Group feedback by related scope/topic
-   - Create task files in `tasks/` directory following naming convention:
-     `tasks/{scope}-{action}-{target}.md`
+   - Create task files in `docs-dev/project/current/v1.0.1-feedback-to-pr-21/tasks/` directory following naming convention:
+     `tasks/{scope}-{action}-{target}.md` where:
+       - `{scope}` indicates the component or feature area (prompt, image, server)
+       - `{action}` is the change type (add, fix, update, remove)
+       - `{target}` describes what's being modified
 
      Examples based on actual PR feedback:
      ```
@@ -74,68 +49,94 @@ This command processes GitHub pull request comments into organized specification
      - Related files/references
      - Review status context
 
-4. **Generate Release Document**:
+3. **Generate Release Document**:
    - Create overview in README.md
    - Summarize changes needed
    - Group tasks by priority/impact
    - Document dependencies
 
-  5. **Order Tasks by Dependencies**:
-    - Analyze each task's dependencies
-    - Create dependency graph to determine execution order
-    - Update task filenames to include sequence prefix: `tasks/{sequence}-{scope}-{action}-{target}.md`
+4. **Order Tasks by Dependencies**:
+   - Analyze each task's dependencies
+   - Create dependency graph to determine execution order
+   - Update task filenames to include sequence prefix: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/tasks/{sequence}-{scope}-{action}-{target}.md`
 
-    Example dependency order from PR feedback:
-    ```
-    tasks/01-prompt-use-consistent-name-method.md # Must be done first as other tasks depend on prompt_name
-    tasks/02-image-fix-content-format.md          # Independent but simpler change
-    tasks/03-examples-add-to-demo-files.md        # Depends on prompt_name changes
-    tasks/04-server-add-pagination-support.md     # Larger change that should come last
-    ```
+   Example dependency order from PR feedback:
+   ```
+   tasks/01-prompt-use-consistent-name-method.md # Must be done first as other tasks depend on prompt_name
+   tasks/02-image-fix-content-format.md          # Independent but simpler change
+   tasks/03-examples-add-to-demo-files.md        # Depends on prompt_name changes
+   tasks/04-server-add-pagination-support.md     # Larger change that should come last
+   ```
 
-    Each task file should include dependency metadata in frontmatter:
-    ```md
-    ---
-    sequence: 01
-    depends_on: []
-    required_for:
-      - 03-examples-add-to-demo-files
-    ---
-    # Use Consistent Prompt Name Method
-    ...
-    ```
+   Each task file should include dependency metadata in frontmatter:
+   ```md
+   ---
+   sequence: 01
+   depends_on: []
+   required_for:
+     - 03-examples-add-to-demo-files
+   ---
+   # Use Consistent Prompt Name Method
+   ...
+   ```
+5. **Communicate Results**:
+   - After processing is complete, inform the user about:
+     - Total number of comments processed
+     - Number of tasks created
+     - Location of generated files
+     - Next steps for implementation
+     - Use tree command to show the final directory structure:
+       ```bash
+       tree docs-dev/project/current/v1.0.1-feedback-to-pr-21/ -L 2
+       ```
+       Example output:
+       ```
+       docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+       ├── docs
+       │   └── pr-21-20250413-183459
+       ├── tasks
+       │   ├── 01-prompt-use-consistent-name-method.md
+       │   ├── 02-image-fix-content-format.md
+       │   ├── 03-examples-add-to-demo-files.md
+       │   └── 04-server-add-pagination-support.md
+       └── README.md
+       ```
 
 ## Success Criteria
 
 - All feedback processed:
-  - PR comments fully captured
-  - PR reviews and their comments included
-  - Review status considered
+  - PR comments fully captured from data provided by the fetch command
+  - PR reviews and their comments included in analysis
+  - Review status considered when prioritizing tasks
 - Feedback grouped logically by topic
 - Tasks properly scoped and prioritized
-- Clear implementation plan created
-- Dependencies identified
-- Review concerns addressed
+- Clear implementation plan created with README.md
+- Dependencies identified and task sequence determined
+- Review concerns addressed in task descriptions
+- Complete directory structure created as specified
 
 ## Usage Example
 
 ```bash
-# Process PR comments with:
-lets-spec-from-pr-comments https://github.com/org/repo/pull/123
+# First fetch PR comments with either:
+fetch-pr-comments-by-api https://github.com/org/repo/pull/123
+# OR
+fetch-pr-comments-by-mcp https://github.com/org/repo/pull/123
 
-# Creates new release directory:
+# Then process PR comments with:
+lets-spec-from-pr-comments docs-dev/project/current/v1.0.1-feedback-to-pr-21/
+
+# Agent creates:
 docs-dev/project/current/v1.0.1-feedback-to-pr-21/
-├── docs/
-│   ├── comments/
-│   │   ├── comment-2025-04-10-0712-2036663266.json    # Tool name feedback
-│   │   ├── comment-2025-04-10-0715-2036668671.json    # Version bump request
-│   │   └── comment-2025-04-10-0719-2036678438.json    # Pagination feedback
-│   └── reviews/
-│       └── review-2025-04-10-0824-2755584987.json      # Main review feedback
-├── tasks/
-│   ├── 01-prompt-use-consistent-name-method.md         # Core change affecting other tasks
-│   ├── 02-image-fix-content-format.md                  # Independent formatting fix
-│   ├── 03-examples-add-to-demo-files.md                # Depends on prompt_name implementation
-│   └── 04-server-add-pagination-support.md             # Complex change to come last
-└── README.md                                            # Implementation overview
+├── docs/                                              # Data from fetch command
+│   └── pr-21-20250413-183459/
+│       ├── comments/
+│       ├── reviews/
+│       └── pr/
+├── tasks/                                             # Generated task files
+│   ├── 01-prompt-use-consistent-name-method.md       # Core change affecting other tasks
+│   ├── 02-image-fix-content-format.md                # Independent formatting fix
+│   ├── 03-examples-add-to-demo-files.md              # Depends on prompt_name implementation
+│   └── 04-server-add-pagination-support.md           # Complex change to come last
+└── README.md                                          # Implementation overview
 ```
