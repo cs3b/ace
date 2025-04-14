@@ -22,6 +22,7 @@ Define a command and process for logging key information after each significant 
 - **Context Loading Prompt Generation:** Detail the requirements for generating the context loading prompt. It should reference key files/directories modified or discussed, and the current task/goal.
 - **Integration:** Describe how this command fits into the overall workflow defined in `docs/unified-workflow-guide.md`.
 - **Tooling (Optional):** Consider if any helper script is needed or if it's purely a documentation/manual process initially.
+*(Note: v0.2.0 scope is primarily focused on defining the command and process documentation. Implementation of helper scripts/tooling may be deferred.)*
 
 ## Acceptance Criteria / Test Strategy
 - A new command file (e.g., `docs-dev/commands/log-session.md`) exists, clearly defining the process.
