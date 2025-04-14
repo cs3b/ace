@@ -5,20 +5,20 @@ This release focuses exclusively on improving the internal development workflow 
 
 ## Release Information
 - **Type**: Feature (Process Improvement)
-- **Start Date**: YYYY-MM-DD
+Date: 2025-04-15
 - **Target Date**: YYYY-MM-DD
 - **Release Date**: YYYY-MM-DD
 - **Status**: Planning
 
 ## Goals &amp; Requirements
 
-*(Incorporating feedback received YYYY-MM-DD)*
+*(Incorporating feedback received 2025-04-15)*
 ### Primary Goals
-- [ ] **Goal 1: Solidify Unified Task Management**
+- [x] **Goal 1: Solidify Unified Task Management** *(Partially Complete: ADR Accepted, Guides/Commands Updated for structure)*
   - **Success Metrics:** Single, clear task management system within `docs-dev/project/` using structured Markdown task files; `project/task-manager` directory removed; PR feedback processing directly creates/updates structured tasks in the unified system.
   - **Acceptance Criteria:** Commands (`lets-start`, `lets-spec-from-pr-comments`, `_review-kanban-board`) reference the unified system; Standard task file format defined and used; `project/task-manager` removed.
   - **Implementation Strategy:** Finalize standard Markdown task format (keeping initial format simple but flexible for future needs). Update `lets-spec-from-pr-comments` workflow to *exclusively* handle PR feedback -> patch release task generation. Note the need for separate commands (`lets-spec-from-prd`, `lets-spec-from-frd`) for generating specs from higher-level documents (which may result in feature/major releases). Update guides and commands. Remove `project/task-manager`.
-  - **Dependencies &amp; Status:** Relies on clear decision documented in ADR. Status: Planning.
+  Status: In Progress
   - **Risks &amp; Mitigations:** Standard task format might become overly complex. Mitigation: Keep the initial format simple, allowing for future enhancements like subtasks or complexity fields if needed.
 
 - [ ] **Goal 2: Simplify Release Documentation Process**
@@ -55,13 +55,13 @@ Refer to tasks defined in `docs-dev/project/current/v.0.2.0/tasks/`. Key phases 
 - **Guide Review:** Ensure guides are clear, concise, and accurately reflect the streamlined process.
 
 ## Release Checklist
-- [ ] ADR for Unified Task Management finalized and accepted.
-- [ ] Task management system unified in `docs-dev/project/`.
-- [ ] `project/task-manager` deprecated/archived.
-- [ ] Release documentation guide (`prepare-release-documentation.md`) updated for clarity on release types.
-- [ ] Commands (`lets-start`, `lets-spec-from-pr-comments`, `_review-kanban-board`, etc.) updated for unified task system and consistency.
-- [ ] Guides (`project-management.md`, etc.) updated.
-- [ ] Terminology and references (Kanban board, task states) made consistent.
+- [x] ADR for Unified Task Management finalized and accepted. *(Task 01)*
+- [x] Task management system unified in `docs-dev/project/`. *(Task 01)*
+- [x] `project/task-manager` deprecated/archived. *(Task 01 - Requires manual deletion check)*
+- [ ] Release documentation guide (`prepare-release-documentation.md`) updated for clarity on release types. *(Task 03)*
+- [x] Commands (`lets-spec-from-pr-comments`) updated for unified task system. *(Task 01 - Specific command update)* (Other commands in Task 02)
+- [x] Guides (`project-management.md`) updated. *(Task 01 - Specific guide update)* (Other guides in Task 03)
+- [ ] Terminology and references (Kanban board, task states) made consistent. *(Tasks 01, 02, 03)*
 - [ ] Validation test cases passed.
 - [ ] CHANGELOG updated for v0.2.0 process changes.
 - [ ] Release notes prepared outlining the workflow improvements.

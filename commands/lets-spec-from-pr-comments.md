@@ -1,7 +1,7 @@
 <!-- Read the project management guide first: docs-dev/project/README.md -->
 # PR Comments to Specification Command
 
-This command processes GitHub pull request comments into organized specifications and tasks, using command-line tools for data fetching.
+This command processes GitHub pull request comments into organized, structured tasks within the unified task management system, using command-line tools for data fetching. It's typically used to generate tasks for a *Patch* release addressing specific feedback.
 
 ## Process Steps
 
@@ -35,9 +35,8 @@ This command processes GitHub pull request comments into organized specification
   - Individual PR comments from `docs/{pr_path}/comments/*.json`
   - Review comments and suggestions from `docs/{pr_path}/reviews/*.json`
   - Review status (approved, changes requested, etc) from `docs/{pr_path}/pr/*.json`
-- Group feedback by related scope/topic
-- Create task files in `{release_path}/tasks/` directory following naming convention:
-  `tasks/{scope}-{action}-{target}.md` where:
+  - Group feedback by related scope/topic
+  - Create/Update task files in `{release_path}/tasks/` directory using the standard Markdown format (see `guides/project-management.md`). Follow naming convention: `tasks/{sequence}-{scope}-{action}-{target}.md` where:
        - `{scope}` indicates the component or feature area (prompt, image, server)
        - `{action}` is the change type (add, fix, update, remove)
        - `{target}` describes what's being modified
@@ -56,12 +55,13 @@ This command processes GitHub pull request comments into organized specification
      tasks/server-add-pagination-support.md
      # From: "We need to handle pagination and adapt the tools..."
      ```
-   - Format each task with:
-     - Clear title and description
-     - Implementation notes
-     - Acceptance criteria
-     - Related files/references
-     - Review status context
+     - Populate each task file (`.md`) according to the standard format, including:
+       - Frontmatter (`id`, `status: pending`, `priority`, `dependencies: []`, `comment_ids: [...]`)
+       - Clear title (`# Task Title: ...`)
+       - Description (`## Description`)
+       - Implementation Details / Notes (`## Implementation Details / Notes`)
+       - Acceptance Criteria / Test Strategy (`## Acceptance Criteria / Test Strategy`)
+       - Incorporate review status context into the description or notes.
 
 4. **Generate Release Document**:
    - Create overview in README.md
@@ -73,28 +73,40 @@ This command processes GitHub pull request comments into organized specification
 5. **Order Tasks by Dependencies**:
    - Analyze each task's dependencies
    - Create dependency graph to determine execution order
-   - Update task filenames to include sequence prefix: `{release_path}/tasks/{sequence}-{scope}-{action}-{target}.md`
+   - Update task filenames to include a sequence prefix: `{release_path}/tasks/{sequence}-{scope}-{action}-{target}.md`
+   - Populate the `dependencies` key in the frontmatter for tasks that rely on others within this batch.
 
    Example dependency order from PR feedback:
    ```
-   tasks/01-prompt-use-consistent-name-method.md # Must be done first as other tasks depend on prompt_name
+   tasks/01-prompt-use-consistent-name-method.md # Must be done first
    tasks/02-image-fix-content-format.md          # Independent but simpler change
-   tasks/03-examples-add-to-demo-files.md        # Depends on prompt_name changes
+   tasks/03-examples-add-to-demo-files.md        # Depends on 01
    tasks/04-server-add-pagination-support.md     # Larger change that should come last
    ```
 
-   Each task file should include dependency metadata and comment references in frontmatter:
-   ```md
+   Example frontmatter for `01-prompt-use-consistent-name-method.md`:
+   ```yaml
    ---
-   sequence: 01
-   depends_on: []
-   required_for:
-     - 03-examples-add-to-demo-files
-   comment_ids:
-     - 1234567890  # ID of the GitHub comment that prompted this task
-     - 1234567891  # Additional comment ID if multiple comments address the same issue
+   id: 01
+   status: pending
+   priority: high
+   dependencies: [] # No dependencies for the first task
+   comment_ids: [1234567890] # ID of the GitHub comment
    ---
-   # Use Consistent Prompt Name Method
+   # Task Title: Use Consistent Prompt Name Method
+   ...
+   ```
+
+   Example frontmatter for `03-examples-add-to-demo-files.md`:
+   ```yaml
+   ---
+   id: 03
+   status: pending
+   priority: medium
+   dependencies: ["01"] # Depends on task 01
+   comment_ids: [1234567892] # ID of the GitHub comment
+   ---
+   # Task Title: Add Examples to Demo Files
    ...
    ```
    6. **Communicate Results**:
@@ -113,10 +125,10 @@ This command processes GitHub pull request comments into organized specification
        ├── docs
        │   └── {pr_path}
        ├── tasks
-       │   ├── 01-prompt-use-consistent-name-method.md
-       │   ├── 02-image-fix-content-format.md
-       │   ├── 03-examples-add-to-demo-files.md
-       │   └── 04-server-add-pagination-support.md
+       ├── 01-prompt-use-consistent-name-method.md # Standard .md format
+       │   ├── 02-image-fix-content-format.md          # Standard .md format
+       │   ├── 03-examples-add-to-demo-files.md        # Standard .md format
+       │   └── 04-server-add-pagination-support.md     # Standard .md format
        └── README.md
        ```
 
@@ -127,12 +139,14 @@ This command processes GitHub pull request comments into organized specification
   - PR reviews and their comments included in analysis
   - Review status considered when prioritizing tasks
   - Each task includes references to originating comment IDs for traceability
-- Feedback grouped logically by topic
-- Tasks properly scoped and prioritized
-- Clear implementation plan created with README.md
-- Dependencies identified and task sequence determined
-- Review concerns addressed in task descriptions
-- Complete directory structure created as specified
+  - Feedback grouped logically by topic
+  - Structured task files (`.md`) created/updated in `{release_path}/tasks/` using the standard format.
+  - Task frontmatter includes `id`, `status`, `priority`, `dependencies`, and linked `comment_ids`.
+  - Task filenames include sequence prefix.
+  - Clear implementation plan created with README.md.
+  - Dependencies between generated tasks identified and documented in frontmatter.
+  - Review concerns addressed in task descriptions/notes.
+  - Complete directory structure created as specified.
 
 ## Prerequisites
 
@@ -174,10 +188,10 @@ docs-dev/project/current/v1.2.1-feedback-to-pr-21/  # Example path
 │       ├── comments/
 │       ├── reviews/
 │       └── pr/
-├── tasks/                                             # Generated task files
-│   ├── 01-prompt-use-consistent-name-method.md       # Core change affecting other tasks
-│   ├── 02-image-fix-content-format.md                # Independent formatting fix
-│   ├── 03-examples-add-to-demo-files.md              # Depends on prompt_name implementation
-│   └── 04-server-add-pagination-support.md           # Complex change to come last
+├── tasks/                                             # Generated task files in standard .md format
+│   ├── 01-prompt-use-consistent-name-method.md       # Example task file
+│   ├── 02-image-fix-content-format.md                # Example task file
+│   ├── 03-examples-add-to-demo-files.md              # Example task file
+│   └── 04-server-add-pagination-support.md           # Example task file
 └── README.md                                          # Implementation overview
 ```

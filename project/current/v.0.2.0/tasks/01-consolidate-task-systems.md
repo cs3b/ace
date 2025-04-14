@@ -1,6 +1,6 @@
 ---
 id: 01
-status: pending
+status: done
 priority: high
 dependencies: []
 ---

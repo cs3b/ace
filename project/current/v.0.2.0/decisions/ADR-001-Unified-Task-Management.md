@@ -1,8 +1,8 @@
 # ADR-001: Unified Task Management System
 
 ## Status
-Proposed
-Date: YYYY-MM-DD
+Accepted
+Date: 2025-04-15
 
 ## Context
 The current `docs-dev` setup primarily uses a simple Kanban-style system (`docs-dev/project/{backlog,current,done}`). An experimental system (`docs-dev/project/task-manager`), inspired by Claude Task Master, was explored, containing scripts, rules, and feedback processing ideas. Valuable research (`task-master-ai-hlo.md`, `windsurf-tips.md`) was also conducted.
