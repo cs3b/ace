@@ -28,11 +28,11 @@ We will adopt a single, unified task management system based on the `docs-dev/pr
 - **Focus:** Leverages the simplicity of the directory-based Kanban while incorporating useful structure from Task Master.
 
 ### Negative
-- **Loss of Advanced Features:** Some specific automation or analysis features from `task-manager` scripts (like `analyze-complexity`) might be lost unless explicitly reimplemented or adapted.
-- **Migration Effort:** Existing tasks or data within `task-manager` might need manual migration if considered valuable.
+- **Loss of Specific Tooling:** Specific automation scripts from `task-manager` (like `analyze-complexity`) are lost unless explicitly reimplemented. (Consider adding an `analyze-complexity` command as part of release preparation).
+- **Migration Effort:** Any valuable unstructured data from `task-manager` would need manual migration.
 
 ### Neutral
-- Shifts complexity from managing separate systems to potentially more complex task file structures within the unified system (mitigated by simplification).
+- While simpler conceptually, a file-based system has its own management complexity. However, it keeps task/release management within the repository, is currently effective, and allows for future automation via helper tools or agents if needed.
 
 ## Alternatives Considered
 - **Keep Both Systems:** Maintain both systems, defining specific use cases for each. Rejected due to high complexity and confusion.
@@ -46,3 +46,5 @@ We will adopt a single, unified task management system based on the `docs-dev/pr
 - Claude Task Master: https://github.com/eyaltoledano/claude-task-master
 - Existing `docs-dev/project/` structure.
 - Existing `docs-dev/project/task-manager/` structure.
+## Final Decision
+Commit to the unified file-based task management system (`project/{backlog,current,done}` with structured `.md` files). Enhance this system with integrated feedback processing and clear commands/guides. Keep the possibility open for future helper tools or agents to interact with this structure if the value justifies the effort.

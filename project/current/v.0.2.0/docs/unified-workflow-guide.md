@@ -35,9 +35,44 @@ Briefly describe the goal of this task.
 - How to verify the task is complete.
 - Specific tests to write or run.
 - Expected outcomes.
+- Use Markdown checklists for sub-tasks:
+  - [ ] Sub-task 1
+  - [ ] Sub-task 2
 ```
 
-## Core Workflow Commands
+## Core Workflow Phases & Commands
+
+The development process involves several distinct phases, often looping as needed:
+
+**Phase 1: Task Implementation** (Repeats for each task)
+1.  **Load Environment (`load-env`)**: *Start here.* Understand project context, architecture, and identify current work in `docs-dev/project/current/`.
+2.  **Start Task (`lets-start`)**: Select a task from `docs-dev/project/current/`, review its details (using the structured format above), and prepare the environment.
+3.  **Implement &amp; Test (`lets-tests`, `lets-fix-tests`)**: Follow TDD. Write tests, implement code, ensure tests pass.
+4.  **Commit Changes (`lets-commit`)**: Create well-formed, atomic commits following the version control guide.
+5.  **Self-Reflect (`self-reflect`)**: *End of task implementation.* Review session progress, update documentation (guides, ADRs), and capture learnings. (Update task status in its `.md` file).
+
+**Phase 2: PR Feedback Integration** (Occurs after submitting code changes for review)
+1.  **Load Environment (`load-env`)**: Refresh context.
+2.  **Fetch PR Feedback (`fetch-comments-by-api` or `fetch-comments-by-mcp`)**:
+    - Fetch comments for a specific PR (e.g., `fetch-comments-by-api https://github.com/org/repo/pull/123`). This stores feedback in `docs-dev/project/current/{release_dir}/docs/{pr_path}`.
+3.  **Generate Tasks from Feedback (`lets-spec-from-pr-comments`)**:
+    - Run `lets-spec-from-pr-comments {release_path}`. This analyzes the fetched feedback and **creates or updates** structured task files (`.md`) directly within `docs-dev/project/current/{release_dir}/tasks/`, linking them via `comment_ids`. Dependencies between generated tasks should be determined. Task files should be sequence-prefixed.
+4.  **Review Progress (`_review-kanban-board`)**: Check the newly created/updated tasks within `docs-dev/project/current/`. Identify blockers or next steps.
+5.  **Self-Reflect (`self-reflect`)**: Review the feedback processing, plan next steps.
+6.  **-> Return to Phase 1** for each new task generated from feedback.
+
+**Phase 3: Release Preparation** (Occurs when all tasks for the release in `/current` are done)
+1.  **Load Environment (`load-env`)**: Refresh context.
+2.  **Review Progress (`_review-kanban-board`)**: *Confirm all tasks are 'done'.* Check the status of tasks within `docs-dev/project/current/` by examining the task files.
+3.  **Prepare Release Artifacts (`lets-release`)**: Follow the release process, using the `prepare-release` structure. Refer to the updated release guides for guidance on required artifacts based on release type (Patch, Feature, Major). Consider running complexity analysis if needed.
+4.  **Self-Reflect (`self-reflect`)**: Review the release preparation process.
+5.  **Final Release Actions**: Tagging, publishing, etc. (as per `guides/ship-release.md`).
+
+*(Note: Specification from PRD/FRD will involve similar steps but use different `lets-spec-*` commands, likely leading to Feature or Major releases.)*
+
+**General Commands Used Across Phases:**
+- **Commands for generating documentation:** `generate-adr`, `generate-api-docs`, etc.
+- **Logging:** `log-session` (defined in Task 04) should be used after significant interactions to capture context.
 
 1.  **Load Environment (`load-env`)**: Start here. Understand project context, architecture, and identify current work in `docs-dev/project/current/`.
 2.  **Start Task (`lets-start`)**: Select a task from `docs-dev/project/current/`, review its details (using the structured format above), and prepare the environment.

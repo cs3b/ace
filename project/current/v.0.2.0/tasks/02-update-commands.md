@@ -20,10 +20,14 @@ Modify existing command documentation (`.md` files in `docs-dev/commands/`) to a
 - **`lets-release`:** Ensure it points to the updated `prepare-release-documentation.md` for guidance.
 - **Command/Guide Linking:** Check that commands primarily *link* to relevant guides (e.g., `lets-commit` links to `guides/version-control.md`) rather than duplicating detailed standards. Remove redundant content from command descriptions.
 - **Terminology:** Ensure consistent use of "current" for the active work directory.
+- **Define New Spec Commands:** Create documentation (`.md` files) for `lets-spec-from-prd` and `lets-spec-from-frd`. These commands will parse higher-level requirement documents (Product Requirement Document, Feature Requirement Document) and generate the necessary release structure and tasks (potentially spanning multiple releases for a PRD).
+- **Integrate Release Doc Logic:** The logic currently outlined in `guides/prepare-release/prepare-release-documentation.md` (mapping requirements to release artifacts like docs, decisions, test cases based on complexity/type - Major, Feature) should be integrated into the process descriptions for `lets-spec-from-prd` and `lets-spec-from-frd`. The original guide file should eventually be removed.
+- **Handle Reference Docs:** Ensure the new spec commands can utilize non-sequenced reference documents provided by the developer within the release directory during the specification process.
 
 ## Acceptance Criteria / Test Strategy
 - All reviewed command `.md` files accurately reflect the unified task system (`project/current/`, standard task file format).
 - `_review-kanban-board.md` description is consistent with the `project/{backlog,current,done}` structure.
-- `lets-spec-from-pr-comments.md` accurately describes the input/output of the updated feedback processing workflow.
+- `lets-spec-from-pr-comments.md` accurately describes the input/output for PR feedback -> patch task generation.
+- New command docs for `lets-spec-from-prd` and `lets-spec-from-frd` are created and outline the process for generating feature/major release specs.
 - Commands link appropriately to guides, minimizing duplication.
 - Consistent terminology is used across all command files.
