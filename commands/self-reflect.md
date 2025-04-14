@@ -16,20 +16,29 @@ This command guides reflection on coding sessions, commit history, and release a
       - Solution quality assessment
       - Knowledge preservation
       - Pattern recognition
-   
+
    B. Commit Analysis:
       - Commit message clarity
       - Change atomicity
       - Documentation updates
       - Test coverage
-   
+
    C. Architecture Impact:
       - Design principles alignment
       - Component relationships
       - Interface contracts
       - Technical debt assessment
-      
-   D. Release Progress:
+
+   D. Collaboration Workflow Analysis:
+      - Task breakdown effectiveness
+      - Communication clarity
+      - Decision-making process
+      - Knowledge sharing practices
+      - Testing and validation approach
+      - Implementation planning quality
+      - Progress tracking methods
+
+   E. Release Progress:
       - Feature completeness
       - Documentation status
       - Test coverage
@@ -46,7 +55,7 @@ This command guides reflection on coding sessions, commit history, and release a
 ## Documentation Updates
 
 1. Session Artifacts:
-   ```bash 
+   ```bash
    docs-dev/
    ├── guides/           # Update learned practices
    ├── project/
@@ -84,7 +93,14 @@ This command guides reflection on coding sessions, commit history, and release a
    - ADRs created/updated
    - Technical debt tracked
 
-4. Release Progress Assessed:
+4. Collaboration Workflow Assessed:
+   - Strengths identified
+   - Improvement areas documented
+   - Process enhancement suggestions captured
+   - Implementation planning evaluated
+   - Knowledge sharing effectiveness measured
+
+5. Release Progress Assessed:
    - Features tracked
    - Docs maintained
    - Tests validated
@@ -95,7 +111,7 @@ This command guides reflection on coding sessions, commit history, and release a
 1. Session Entry Format:
    ```markdown
    ### YYYY-MM-DD Session Reflection
-   
+
    #### AI Interaction Review
    - Successful patterns:
      - [Pattern] Description and context
@@ -103,7 +119,7 @@ This command guides reflection on coding sessions, commit history, and release a
      - [Challenge] Description and resolution
    - Improvements identified:
      - [Action Item] Specific improvement task
-   
+
    #### Code Evolution
    - Architecture changes:
      - [Component] Change description and rationale
@@ -111,7 +127,19 @@ This command guides reflection on coding sessions, commit history, and release a
      - [Pattern] Implementation details and use case
    - Technical debt:
      - [Area] Description and mitigation plan
-   
+
+   #### Collaboration Workflow Analysis
+   - Strengths:
+     - [Area] Description of effective practice with examples
+   - Areas for improvement:
+     - [Process] Description of improvement opportunity with context
+   - Process enhancement suggestions:
+     - [Suggestion] Specific actionable process improvement with expected benefits
+   - Implementation planning insights:
+     - [Planning Method] Effectiveness assessment and recommendations
+   - Knowledge sharing practices:
+     - [Practice] Evaluation of effectiveness and suggestions for enhancement
+
    #### Documentation Updates
    - Updated files:
      - [Path] Change description
@@ -119,7 +147,7 @@ This command guides reflection on coding sessions, commit history, and release a
      - [Path] Content purpose
    - Process improvements:
      - [Area] Enhancement details
-   
+
    #### Next Steps
    - Immediate tasks:
      - [Task] Description and priority
@@ -169,3 +197,46 @@ This command guides reflection on coding sessions, commit history, and release a
 - [Quality Assurance](../guides/quality-assurance.md)
 - [Architecture](../project/11-architecture.md)
 - [Generate ADR](docs/generate-adr.md)
+- [Retrospective Template](../guides/prepare-release/v.x.x.x/reflections/_template.md)
+
+## Collaboration Workflow Reflection Guide
+
+When analyzing collaboration workflows, focus on these key dimensions:
+
+1. **Task Management**
+   - How effectively were tasks broken down?
+   - Was progress tracked transparently?
+   - Were dependencies and blockers identified early?
+
+2. **Communication Patterns**
+   - Was knowledge shared clearly and proactively?
+   - Were questions answered comprehensively?
+   - Was contextual information provided with changes?
+
+3. **Decision-Making Process**
+   - Were options explored before committing to solutions?
+   - Was rationale documented for key decisions?
+   - Were tradeoffs clearly articulated?
+
+4. **Implementation Approach**
+   - Was planning conducted before implementation?
+   - Were checkpoint reviews performed?
+   - Was the approach adjusted based on emerging information?
+
+5. **Testing and Validation**
+   - Were tests written/updated appropriately?
+   - Was validation conducted at key milestones?
+   - Were edge cases considered?
+
+6. **Knowledge Capture**
+   - Were insights documented during the process?
+   - Were reusable patterns identified?
+   - Was documentation updated to reflect new knowledge?
+
+For each dimension, identify:
+- What worked well (continue)
+- What could be improved (change)
+- What new practices to try (start)
+- What practices to eliminate (stop)
+
+This analysis should produce specific, actionable insights that can be applied to future collaboration sessions.
