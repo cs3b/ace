@@ -21,20 +21,20 @@ Date: 2025-04-15
   Status: In Progress
   - **Risks &amp; Mitigations:** Standard task format might become overly complex. Mitigation: Keep the initial format simple, allowing for future enhancements like subtasks or complexity fields if needed.
 
-- [ ] **Goal 2: Simplify Release Documentation Process**
+- [x] **Goal 2: Simplify Release Documentation Process**
   - **Success Metrics:** Clear guidelines on which parts of the `prepare-release` template are needed for different release types (patch, feature, major).
   - **Acceptance Criteria:** Updated `prepare-release-documentation.md` guide (or its content integrated into new spec commands); structure is simplified but documentation remains comprehensive and clear for required release types (e.g., PR feedback mapping to Patch, FRD to Feature, PRD to Major).
   - **Implementation Strategy:** Review the existing template and guide, explicitly stating requirements per release type.
   - **Dependencies &amp; Status:** None. Status: Planning.
   - **Risks &amp; Mitigations:** Oversimplification might lead to missing important documentation for complex releases. Mitigation: Ensure major releases still mandate comprehensive documentation.
 
-- [ ] **Goal 3: Ensure Workflow Consistency**
+- [x] **Goal 3: Ensure Workflow Consistency**
   - **Success Metrics:** Consistent terminology (e.g., `current` vs. `next`); aligned Kanban board references; commands consistently link to guides.
   - **Acceptance Criteria:** All references to task states (`backlog`, `current`, `done` - no `next`) are consistent; `review-kanban-board` command works and points to the correct structure; commands avoid duplicating guide content.
   - **Implementation Strategy:** Audit all `commands/` and `guides/` files for consistency. Update as needed.
   - **Dependencies &amp; Status:** Relies on Goal 1 (Unified Task Management). Status: Planning.
   - **Risks &amp; Mitigations:** Missing some inconsistencies during the audit. Mitigation: Peer review of updated documents.
-- [ ] **Goal 4: Integrate Workflow Best Practices from Research**
+- [x] **Goal 4: Integrate Workflow Best Practices from Research**
   - **Success Metrics:** Key principles like "planning before coding" and clear structure communication are explicitly mentioned in relevant guides. Consideration given to future enhancements like complexity analysis or task generation from high-level specs.
   - **Acceptance Criteria:** `guides/project-management.md` or `docs/unified-workflow-guide.md` emphasizes planning first; Recommendation to use `tree` command added; Task format allows for potential future complexity/subtask fields.
   - **Implementation Strategy:** Review `task-master-ai-hlo.md` and `windsurf-tips.md`. Extract actionable best practices and integrate them into the relevant guide updates (Task 03). Emphasize the feedback cycle (explore options -> select -> LLM feedback -> human feedback -> implement). Add notes about techniques/prompts for identifying missing requirements upfront. Add placeholder notes for future enhancements (e.g., defining a `lets-analyze-complexity` command for use during release prep).
@@ -65,6 +65,6 @@ Refer to tasks defined in `docs-dev/project/current/v.0.2.0/tasks/`. Key phases 
 - [x] Project Blueprint introduced and related commands/guides updated. *(Task 06)*
 - [x] Context Loading (`load-env`) and Task Execution (`lets-start`) roles clarified and separated. *(Task 07)*
 - [x] Release-specific backlog process defined. *(Task 05)*
-- [ ] Validation test cases passed.
+- [x] Validation test cases passed.
 - [ ] CHANGELOG updated for v0.2.0 process changes.
 - [ ] Release notes prepared outlining the workflow improvements.
