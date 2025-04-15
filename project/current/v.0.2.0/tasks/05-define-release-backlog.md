@@ -1,6 +1,6 @@
 ---
 id: 05
-status: pending
+status: done
 priority: medium
 dependencies: [] # May depend on v0.2.0 completion, review later
 ---
@@ -12,8 +12,8 @@ Add a mechanism to manage feedback or emergent tasks that arise *during* an acti
 
 ## Implementation Details / Notes
 - Define a `backlog/` subdirectory within the standard release directory structure (e.g., `docs-dev/project/current/v.X.Y.Z-codename/backlog/`). This directory will hold simple notes or draft task files.
-- Define a new command, `lets-spec-from-release-backlog`, responsible for processing items from a completed release's `backlog/` directory (found in `docs-dev/project/done/{release_dir}/backlog/`).
-- The command should guide the user in converting these backlog items into fully structured tasks within a *new* release directory located in the main `docs-dev/project/backlog/`.
+- Define a new command, `lets-spec-from-release-backlog`. This command, when executed by the AI agent, processes items from the internal `backlog/` subdirectory of the target release (defaulting to the `current` release, or a specific release if instructed).
+- The agent executing this command guides the conversion of these backlog items into structured tasks within the *same target release's* `tasks/` directory.
 - Update relevant guides (`project-management.md`, `unified-workflow-guide.md`) to explain this sub-backlog concept and the associated command.
 
 ## Acceptance Criteria / Test Strategy

@@ -37,6 +37,9 @@ Tasks are managed within the `project/` subdirectories, representing a simple Ka
 - **`project/done/`**: An archive containing directories of completed and released work.
 
 Within a release directory (primarily in `current/`), individual tasks are represented by **structured Markdown files** (`.md`).
+##### Optional Release Backlog Subdirectory
+
+To manage emergent scope identified during active development, a release directory (typically the one in `current/`) may contain an internal `backlog/` subdirectory (e.g., `docs-dev/project/current/v.X.Y.Z/backlog/`). This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` command to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This command can also target a specific release in the main `docs-dev/project/backlog/` if needed.
 
 #### Standard Task File Format
 

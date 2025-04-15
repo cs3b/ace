@@ -71,6 +71,7 @@ The development process involves several distinct phases, often looping as neede
 5.  **Final Release Actions**: Tagging, publishing, etc. (as per `guides/ship-release.md`).
 
 *(Note: Specification from PRD/FRD will involve similar steps but use different `lets-spec-*` commands, likely leading to Feature or Major releases.)*
+*(Note: Emergent items identified during a release can be placed in an internal `backlog/` subdirectory (e.g., `current/v.X.Y.Z/backlog/`). Instruct the agent to run the `lets-spec-from-release-backlog` command to process these items into structured tasks within the *same* release's `tasks/` directory. This command defaults to the current release but can target others if specified.)*
 
 **General Commands Used Across Phases:**
 - **Documentation Generation:** `generate-adr`, `generate-api-docs`, etc. (Use as needed).
