@@ -12,7 +12,7 @@
   - Verify that new/updated `.md` task files are created in `project/current/v.0.2.0/tasks/` with correct formatting, sequence prefixes, dependencies, and `comment_ids`.
 - [ ] **Scenario 3: Reviewing Progress**
   - Manually add/modify task files in `project/current/v.0.2.0/tasks/` (e.g., change status in frontmatter).
-  - Run `_review-kanban-board`. Verify its description guides checking the status within the task files in `project/current/`.
+  Run `review-kanban-board`. Verify its description guides checking the status within the task files in `project/current/`.
 - [ ] **Scenario 4: Preparing a Minor Release (Simulated)**
   - Review `guides/prepare-release/prepare-release-documentation.md`.
   - Verify it clearly states the *minimal* required documentation for a patch release using the `prepare-release/v.x.x.x/` structure.

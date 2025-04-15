@@ -15,8 +15,8 @@ Date: 2025-04-15
 *(Incorporating feedback received 2025-04-15)*
 ### Primary Goals
 - [x] **Goal 1: Solidify Unified Task Management** *(Partially Complete: ADR Accepted, Guides/Commands Updated for structure)*
-  - **Success Metrics:** Single, clear task management system within `docs-dev/project/` using structured Markdown task files; `project/task-manager` directory removed; PR feedback processing directly creates/updates structured tasks in the unified system.
-  - **Acceptance Criteria:** Commands (`lets-start`, `lets-spec-from-pr-comments`, `_review-kanban-board`) reference the unified system; Standard task file format defined and used; `project/task-manager` removed.
+- **Success Metrics:** Single, clear task management system within `docs-dev/project/` using structured Markdown task files; `project/task-manager` directory removed; PR feedback processing directly creates/updates structured tasks in the unified system.
+- **Acceptance Criteria:** Commands (`lets-start`, `lets-spec-from-pr-comments`, `review-kanban-board`) reference the unified system; Standard task file format defined and used; `project/task-manager` removed.
   - **Implementation Strategy:** Finalize standard Markdown task format (keeping initial format simple but flexible for future needs). Update `lets-spec-from-pr-comments` workflow to *exclusively* handle PR feedback -> patch release task generation. Note the need for separate commands (`lets-spec-from-prd`, `lets-spec-from-frd`) for generating specs from higher-level documents (which may result in feature/major releases). Update guides and commands. Remove `project/task-manager`.
   Status: In Progress
   - **Risks &amp; Mitigations:** Standard task format might become overly complex. Mitigation: Keep the initial format simple, allowing for future enhancements like subtasks or complexity fields if needed.
@@ -30,7 +30,7 @@ Date: 2025-04-15
 
 - [ ] **Goal 3: Ensure Workflow Consistency**
   - **Success Metrics:** Consistent terminology (e.g., `current` vs. `next`); aligned Kanban board references; commands consistently link to guides.
-  - **Acceptance Criteria:** All references to task states (`backlog`, `current`, `done` - no `next`) are consistent; `_review-kanban-board.md` command works and points to the correct structure; commands avoid duplicating guide content.
+  - **Acceptance Criteria:** All references to task states (`backlog`, `current`, `done` - no `next`) are consistent; `review-kanban-board` command works and points to the correct structure; commands avoid duplicating guide content.
   - **Implementation Strategy:** Audit all `commands/` and `guides/` files for consistency. Update as needed.
   - **Dependencies &amp; Status:** Relies on Goal 1 (Unified Task Management). Status: Planning.
   - **Risks &amp; Mitigations:** Missing some inconsistencies during the audit. Mitigation: Peer review of updated documents.
@@ -59,9 +59,12 @@ Refer to tasks defined in `docs-dev/project/current/v.0.2.0/tasks/`. Key phases 
 - [x] Task management system unified in `docs-dev/project/`. *(Task 01)*
 - [x] `project/task-manager` deprecated/archived. *(Task 01 - Requires manual deletion check)*
 - [x] Release documentation logic integrated into spec commands; `prepare-release-documentation.md` removed. *(Task 03)*
-- [x] Commands (`load-env`, `lets-start`, `lets-spec-from-pr-comments`, `_review-kanban-board`, `self-reflect`, `lets-release`, new spec commands, `log-session`) updated/created for unified task system. *(Tasks 01, 02, 04)*
-- [x] Guides (`project-management.md`, `README.md`, `ship-release.md`, `unified-workflow-guide.md`) updated and best practices integrated. *(Tasks 01, 03)*
+- [x] Commands (`load-env`, `lets-start`, `lets-spec-from-pr-comments`, `review-kanban-board`, `self-reflect`, `lets-release`, new spec commands, `log-session`, `generate-blueprint`, `lets-spec-from-release-backlog`) updated/created for unified task system. *(Tasks 01, 02, 04, 05, 06, 07)*
+- [x] Guides (`project-management.md`, `README.md`, `ship-release.md`, `unified-workflow-guide.md`, `coding-standards.md`, `testing.md`) updated and best practices integrated. *(Tasks 01, 03, 06)*
 - [x] Terminology and references (Kanban board, task states) made consistent across Commands and Guides. *(Tasks 01, 02, 03)*
+- [x] Project Blueprint introduced and related commands/guides updated. *(Task 06)*
+- [x] Context Loading (`load-env`) and Task Execution (`lets-start`) roles clarified and separated. *(Task 07)*
+- [x] Release-specific backlog process defined. *(Task 05)*
 - [ ] Validation test cases passed.
 - [ ] CHANGELOG updated for v0.2.0 process changes.
 - [ ] Release notes prepared outlining the workflow improvements.

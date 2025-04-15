@@ -53,7 +53,7 @@ This walkthrough demonstrates using the streamlined workflow for a hypothetical 
 
 7.  **Review Progress:**
     ```bash
-    _review-kanban-board
+    review-kanban-board
     ```
     *(Agent reminds to check task files in `project/current/v.0.2.0/tasks/` to see overall progress, identifying completed task 04.)*
 

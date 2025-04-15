@@ -1,6 +1,6 @@
 ---
 id: 06
-status: pending
+status: done
 priority: medium
 dependencies: []
 ---
@@ -11,19 +11,17 @@ dependencies: []
 Refactor the `docs-dev` structure and content to clearly distinguish between general development process documentation (applicable to any project using this system) and documentation specific to the `ai-ruby-agent-sdk` project itself. Ensure context-loading mechanisms handle both.
 
 ## Implementation Details / Notes
-- **Audit:** Review `docs-dev/guides/`, `docs-dev/commands/`, and `docs-dev/tools/` for content tightly coupled to `ai-ruby-agent-sdk` specifics (e.g., file paths like `lib/aira/version.rb`, tool names, SDK architectural details).
-- **Refactor Structure:** Decide on a structure for separating general vs. project-specific docs (e.g., parallel dirs like `docs-dev/project-guides/` or integration within `docs-dev/project/`).
-- **Move/Generalize:** Relocate project-specific docs and generalize content in main `guides/` and `commands/`.
+- **Audit:** Reviewed `docs-dev/guides/`, `docs-dev/commands/`. Identified project-specific paths and examples (e.g., `lib/aira/version.rb`, `spec/aira/`, gem-specific examples).
+- **Refactor Structure:** Project-specific documentation (`what-do-we-build.md`, `architecture.md`, `decisions/`) remains within `docs-dev/project/`. General guides and commands remain in `docs-dev/guides/` and `docs-dev/commands/`.
+- **Move/Generalize:** Generalized content in main `guides/` (`coding-standards.md`, `testing.md`) and `commands/` (`load-env.md`, `lets-start.md`, `lets-commit.md`, `lets-fix-tests.md`, `lets-release.md`) by removing specific paths/examples.
 - **Introduce Project Blueprint:**
-    - Define a standard location for a dynamically generated project overview, e.g., `docs-dev/project/blueprint.md`.
-    - This blueprint should summarize the project's structure (key directories/files) and potentially link to core project documents (`what-do-we-build.md`, `architecture.md`).
-    - Define a new command/utility (e.g., `generate-blueprint`) responsible for creating or refreshing this `blueprint.md` file based on the current project state.
-    - Determine the refresh strategy for the blueprint (e.g., run manually, after each release, triggered by `load-env` if changed).
-- **Update Context Loading:** Modify context loading commands (like `load-env`) to incorporate the `blueprint.md` file, alongside general and project-specific guides/commands based on the chosen structure.
+    - Created `docs-dev/project/blueprint.md` to hold project structure overview and key file list.
+    - Created `docs-dev/commands/generate-blueprint.md` documenting the manual process for updating the blueprint. Refresh strategy is manual for now.
+- **Update Context Loading:** Modified `docs-dev/commands/load-env.md` to load general guides/commands, project-specific docs from `docs-dev/project/`, and the new `docs-dev/project/blueprint.md`.
 
 ## Acceptance Criteria / Test Strategy
-- `docs-dev` structure clearly separates general vs. project-specific content.
-- A `generate-blueprint` command/utility documentation exists, explaining how to refresh `docs-dev/project/blueprint.md`.
-- `load-env` (or equivalent) documentation outlines loading of general docs, project-specific docs, and the project `blueprint.md`.
-- General guides/commands are free of hardcoded project specifics.
-- Project-specific documentation exists in its designated location.
+- `docs-dev` structure clearly separates general vs. project-specific content (Project-specific in `docs-dev/project/`, General in `docs-dev/guides/` & `docs-dev/commands/`).
+- `docs-dev/commands/generate-blueprint.md` exists, explaining how to refresh `docs-dev/project/blueprint.md`.
+- `docs-dev/commands/load-env.md` documentation outlines loading of general docs, project-specific docs (`what-do-we-build.md`, `architecture.md`), and the project `blueprint.md`.
+- General guides/commands (`coding-standards`, `testing`, `load-env`, `lets-start`, etc.) are free of hardcoded project specifics.
+- Project-specific documentation (`what-do-we-build.md`, `architecture.md`, `decisions/`) exists in `docs-dev/project/`.
