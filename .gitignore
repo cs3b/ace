@@ -1,3 +1,7 @@
 tools/.env
 
 .DS_Store
+
+# Avoid accidental subfolders inside docs-dev
+/docs-dev/docs-dev
+/docs-dev/docs-project
