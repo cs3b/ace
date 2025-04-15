@@ -73,19 +73,11 @@ The development process involves several distinct phases, often looping as neede
 *(Note: Specification from PRD/FRD will involve similar steps but use different `lets-spec-*` commands, likely leading to Feature or Major releases.)*
 
 **General Commands Used Across Phases:**
-- **Commands for generating documentation:** `generate-adr`, `generate-api-docs`, etc.
-- **Logging:** `log-session` (defined in Task 04) should be used after significant interactions to capture context.
+- **Documentation Generation:** `generate-adr`, `generate-api-docs`, etc. (Use as needed).
+- **Session Logging (`log-session`):** Use periodically (after significant work, before switching context) to capture the current state and generate a context loading prompt for session resumption. Saves logs to `project/current/{release}/sessions/`.
+- **Reflection (`self-reflect`):** Use at logical breakpoints (end of task, end of day) to analyze work, capture learnings, and identify actionable improvements (potentially creating new backlog tasks). Saves reflections to `project/current/{release}/reflections/`.
 
-1.  **Load Environment (`load-env`)**: Start here. Understand project context, architecture, and identify current work in `docs-dev/project/current/`.
-2.  **Start Task (`lets-start`)**: Select a task from `docs-dev/project/current/`, review its details (using the structured format above), and prepare the environment.
-3.  **Implement &amp; Test (`lets-tests`, `lets-fix-tests`)**: Follow TDD. Write tests, implement code, ensure tests pass.
-4.  **Commit Changes (`lets-commit`)**: Create well-formed, atomic commits following the version control guide.
-5.  **Process PR Feedback (`lets-spec-from-pr`, `lets-spec-from-pr-comments`)**:
-    - Fetch comments for a PR using `fetch-comments-by-api` (or `fetch-comments-by-mcp`). This stores feedback in `docs-dev/project/current/{release_dir}/docs/{pr_path}`.
-    - Run `lets-spec-from-pr-comments {release_path}`. This command analyzes the fetched feedback and **creates or updates** structured task files (`.md`) directly within `docs-dev/project/current/{release_dir}/tasks/`, linking them via `comment_ids` in the frontmatter. Dependencies between generated tasks should be determined and added to the `dependencies` frontmatter key. Task files should be sequence-prefixed (e.g., `01-fix-thing.md`).
-6.  **Review Progress (`_review-kanban-board`)**: Check the status of tasks within `docs-dev/project/current/` by examining the task files. Identify blockers or completed items.
-7.  **Self-Reflect (`self-reflect`)**: Review session progress, update documentation (guides, ADRs), and capture learnings.
-8.  **Prepare Release (`lets-release`)**: Follow the release process, using the `prepare-release` structure. Refer to the updated `prepare-release-documentation.md` for guidance on required artifacts based on release type.
+
 
 
 
