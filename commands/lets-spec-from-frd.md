@@ -16,7 +16,7 @@ Translate a higher-level feature description into a planned release structure wi
     *   Propose the next *Minor* version (e.g., v1.2.3 -> v1.3.0). Allow user override.
     *   Create the release directory structure, typically starting in `docs-project/backlog/`:
         ```
-        docs-dev/project/backlog/v{new_version}-{feature-name}/
+        docs-project/backlog/v{new_version}-{feature-name}/
         ├── docs/
         ├── decisions/
         ├── tasks/
@@ -70,7 +70,7 @@ Translate a higher-level feature description into a planned release structure wi
 # Example command invocation (conceptual)
 lets-spec-from-frd --frd-path path/to/my-feature.md --version v1.3.0 --name CoolNewFeature
 
-# Agent creates structure in docs-dev/project/backlog/v1.3.0-CoolNewFeature/
+# Agent creates structure in docs-project/backlog/v1.3.0-CoolNewFeature/
 # Populates tasks/, decisions/, etc., based on FRD analysis.
 # Generates README.md overview.
 # Reports results and location.

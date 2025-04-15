@@ -82,7 +82,7 @@ This command uses command-line tools to fetch pull request comments and reviews.
 fetch-pr-comments-by-api https://github.com/org/repo/pull/123
 
 # Tool creates:
-docs-dev/project/current/v1.2.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
+docs-project/current/v1.2.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
 ├── comments/                                      # Individual PR comments
 │   ├── comment-2025-04-10-0712-2036663266.json   # Tool name feedback
 │   ├── comment-2025-04-10-0715-2036668671.json   # Version bump request

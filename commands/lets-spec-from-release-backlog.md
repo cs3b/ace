@@ -1,14 +1,14 @@
 # Command: Process Release-Specific Backlog (lets-spec-from-release-backlog)
 
 ## Goal
-Process notes, ideas, or draft tasks captured in the internal `backlog/` subdirectory of the *current* release (or a specified target release in `docs-dev/project/backlog/`) and transform them into structured tasks *within that same release's* `tasks/` directory. This helps manage emergent scope identified during active development.
+Process notes, ideas, or draft tasks captured in the internal `backlog/` subdirectory of the *current* release (or a specified target release in `docs-project/backlog/`) and transform them into structured tasks *within that same release's* `tasks/` directory. This helps manage emergent scope identified during active development.
 
 ## Process Steps
 
 1.  **Identify Target Release and Source Backlog:**
-    *   Determine the target release directory. By default, this is the directory currently located in `docs-dev/project/current/`.
+    *   Determine the target release directory. By default, this is the directory currently located in `docs-project/current/`.
     *   If instructed otherwise (e.g., "process the backlog for release v1.3.0 in the main project backlog"), identify the specified target release directory within `docs-project/backlog/`.
-    *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-dev/project/current/{release_dir}/backlog/`).
+    *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-project/current/{release_dir}/backlog/`).
 
 2.  **Review Backlog Items:**
     *   List the files/notes within the source `backlog/` directory.
@@ -19,7 +19,7 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
 4.  **Generate Structured Tasks:**
     *   For each item reviewed from the source `backlog/` subdirectory:
         *   Guide the user/agent to transform the note/idea into a fully structured task file (`.md`) using the standard format (see `guides/project-management.md`).
-        *   Save the new task file into the `tasks/` subdirectory of the *target* release directory (e.g., `docs-dev/project/current/{release_dir}/tasks/NN-implement-idea-x.md`). Ensure tasks get appropriate sequence numbers.
+        *   Save the new task file into the `tasks/` subdirectory of the *target* release directory (e.g., `docs-project/current/{release_dir}/tasks/NN-implement-idea-x.md`). Ensure tasks get appropriate sequence numbers.
         *   Determine dependencies between the newly created tasks and existing tasks within the target release.
 
 5.  **Update Target Release Overview:**
@@ -41,7 +41,7 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
 
 ## Prerequisites
 
-*   A target release directory exists in `docs-dev/project/current/` or `docs-dev/project/backlog/`.
+*   A target release directory exists in `docs-project/current/` or `docs-project/backlog/`.
 *   The target release directory contains a `backlog/` subdirectory with items (notes, draft tasks) to process.
 *   Understanding of the [Project Management Guide](../guides/project-management.md) and standard task format.
 

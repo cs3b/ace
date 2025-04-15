@@ -1,6 +1,6 @@
 # General Coding Standards
 
-This document outlines general coding standards. Project-specific conventions or overrides should be documented in `docs-dev/project/coding-standards.md` (if it exists).
+This document outlines general coding standards. Project-specific conventions or overrides should be documented in `docs-project/coding-standards.md` (if it exists).
 
 ## General Principles
 

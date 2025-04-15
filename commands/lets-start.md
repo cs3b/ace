@@ -9,9 +9,9 @@
 
 1.  **Review Release Context & Select Task:**
     *   Identify the current release directory path (from `load-env`).
-    *   Read the release overview: `cat docs-dev/project/current/{release_dir}/README.md` (or equivalent main file).
-    *   List available tasks: `ls -1 docs-dev/project/current/{release_dir}/tasks/*.md`
-    *   Review task details as needed (e.g., `cat docs-dev/project/current/{release_dir}/tasks/NN-*.md`). Check `status`, `priority`, and `dependencies`.
+    *   Read the release overview: `cat docs-project/current/{release_dir}/README.md` (or equivalent main file).
+    *   List available tasks: `ls -1 docs-project/current/{release_dir}/tasks/*.md`
+    *   Review task details as needed (e.g., `cat docs-project/current/{release_dir}/tasks/NN-*.md`). Check `status`, `priority`, and `dependencies`.
     *   **User Action:** Choose the specific task `.md` file to work on (typically `status: pending` with met `dependencies`).
 
 2.  **Understand Task & Plan:**
@@ -35,7 +35,7 @@
 
 ## Success Criteria
 
-1.  **Task Selected:** A specific task `.md` file from `docs-dev/project/current/*/tasks/` is chosen by the user.
+1.  **Task Selected:** A specific task `.md` file from `docs-project/current/*/tasks/` is chosen by the user.
 2.  **Task Understood:** The selected task's description, implementation notes, and acceptance criteria are loaded and clear.
 3.  **Dependencies Confirmed:** Dependencies listed in the task's frontmatter are verified as met (status: done).
 4.  **Plan Formulated:** A basic plan for testing and implementation is outlined.

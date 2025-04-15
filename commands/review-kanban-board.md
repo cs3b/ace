@@ -17,7 +17,7 @@ This command helps review the overall state of project tasks across backlog, cur
         # Example: Find pending tasks in the current release
         grep -l 'status: pending' docs-project/current/*/tasks/*.md
         # Example: Count tasks by status
-        grep 'status:' docs-dev/project/current/*/tasks/*.md | sort | uniq -c
+        grep 'status:' docs-project/current/*/tasks/*.md | sort | uniq -c
         ```
     *   Identify tasks that are `in-progress`, `blocked`, or `done`.
     *   Check for dependencies between tasks using the `dependencies:` field.

@@ -1,7 +1,7 @@
 # Generate Project Blueprint Command
 
 ## Goal
-Create or update the `docs-dev/project/blueprint.md` file with a summary of the current project structure and links to core project documents.
+Create or update the `docs-project/blueprint.md` file with a summary of the current project structure and links to core project documents.
 
 ## Process (Initial - Manual/Semi-Automated)
 

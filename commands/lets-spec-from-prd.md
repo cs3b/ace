@@ -19,7 +19,7 @@ Translate a broad product vision into a structured project plan, potentially inv
 3.  **Create Initial Release Structures**:
 *   For each proposed release (starting with the first, e.g., v1.0.0), create the corresponding release directory structure in `docs-project/backlog/`:
         ```
-        docs-dev/project/backlog/v{version}-{codename}/
+        docs-project/backlog/v{version}-{codename}/
         ├── docs/
         ├── decisions/
         ├── tasks/
@@ -35,8 +35,8 @@ Translate a broad product vision into a structured project plan, potentially inv
     *   For the *initial* release (e.g., v1.0.0):
         *   **Create Setup Tasks**: Generate structured task files (`.md`) in `{release_path}/tasks/` for initial project setup, core architecture implementation, basic tooling, etc. Use the standard format.
         *   **Create Initial ADRs**: Identify critical early architectural decisions prompted by the PRD and create placeholder ADR files in `decisions/`.
-        *   **Generate `what-do-we-build.md`**: Populate `docs-dev/project/what-do-we-build.md` based on the PRD's vision and goals.
-        *   **Generate `architecture.md`**: Create an initial `docs-dev/project/architecture.md` outlining the high-level components identified.
+        *   **Generate `what-do-we-build.md`**: Populate `docs-project/what-do-we-build.md` based on the PRD's vision and goals.
+        *   **Generate `architecture.md`**: Create an initial `docs-project/architecture.md` outlining the high-level components identified.
     *   For subsequent planned releases identified in Step 2, create their directories in `backlog/` with a basic `README.md` outlining their high-level goal, deferring detailed task generation.
 
 5.  **Generate Overall Project Overview**:
@@ -71,9 +71,9 @@ Update the main `docs-project/README.md` (if it exists) or create one to summari
 lets-spec-from-prd --prd-path path/to/product-spec.md --initial-version v1.0.0 --name PhoenixProject
 
 # Agent analyzes PRD, proposes release plan (e.g., v1.0, v1.1).
-# Creates docs-dev/project/what-do-we-build.md, architecture.md.
-# Creates docs-dev/project/backlog/v1.0.0-PhoenixProject/ with setup tasks, ADR placeholders.
-# Creates docs-dev/project/backlog/v1.1.0-PhoenixProject-FeatureX/ with basic README.
+# Creates docs-project/what-do-we-build.md, architecture.md.
+# Creates docs-project/backlog/v1.0.0-PhoenixProject/ with setup tasks, ADR placeholders.
+# Creates docs-project/backlog/v1.1.0-PhoenixProject-FeatureX/ with basic README.
 # Reports results and locations.
 ```
 

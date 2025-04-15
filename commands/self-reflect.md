@@ -57,11 +57,11 @@ Based on the review, take the following actions:
     *   Refine code comments for clarity.
     *   Update relevant guides in `docs-dev/guides/` if standards or best practices need modification based on learnings.
     *   Update the specific task `.md` file in `docs-project/current/{release_dir}/tasks/` with final notes or implementation details if necessary.
-    *   Update `docs-dev/project/architecture.md` if the changes impacted the overall architecture.
-*   **Record Findings:** Add specific technical findings or research notes to `docs-dev/project/current/{release_dir}/researches/` if applicable.
+    *   Update `docs-project/architecture.md` if the changes impacted the overall architecture.
+*   **Record Findings:** Add specific technical findings or research notes to `docs-project/current/{release_dir}/researches/` if applicable.
 *   **Identify Process Improvements:** Note down specific ways the development process, commands, or collaboration could be improved.
 *   Crucially**, for any identified improvements (process changes, refactoring needs, non-trivial follow-up work) that aren't immediate fixes, **create new task `.md` files** in `docs-project/backlog/` (e.g., for a future `v.X.Y.Z-ProcessImprovements` release). This ensures reflections lead to action.
-*   **Log Reflection:** Create a reflection summary document for this session/task using the template below and save it within the current release's reflection directory (e.g., `docs-dev/project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`).
+*   **Log Reflection:** Create a reflection summary document for this session/task using the template below and save it within the current release's reflection directory (e.g., `docs-project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`).
 
 
 
@@ -71,7 +71,7 @@ Based on the review, take the following actions:
 2.  **Learnings Captured:** Key insights, successful patterns, and challenges encountered are documented in a reflection file within the release directory (`project/current/{release}/reflections/`).
 3.  **Documentation Updated:** Relevant code comments, guides, ADRs, or architecture documents have been updated based on the reflection.
 4.  **Actionable Improvements Identified:** Specific improvements for the codebase or development process are noted.
-5.  **Backlog Updated:** Necessary follow-up actions or process improvements have been converted into new tasks in `docs-dev/project/backlog/`.
+5.  **Backlog Updated:** Necessary follow-up actions or process improvements have been converted into new tasks in `docs-project/backlog/`.
 
 ## Reflection Log Template & Location
 
@@ -79,7 +79,7 @@ Based on the review, take the following actions:
 ```
 docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}.md
 ```
-    *Example:* `docs-dev/project/current/v.0.2.0-StreamlineWorkflow/reflections/20250415-Task02.md`
+    *Example:* `docs-project/current/v.0.2.0-StreamlineWorkflow/reflections/20250415-Task02.md`
 
 2.  **Template Format:** Use the following Markdown structure for each reflection file:
 
@@ -104,9 +104,9 @@ docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}
     - **Immediate Fixes/Updates Made:** (e.g., Updated guide X, added comment Y, created ADR Z)
     - **Process Improvements Identified:** (e.g., Suggest changing command X, need better template for Y)
     - **Code Refactoring / Tech Debt Noted:** (e.g., Module A needs refactoring, investigate performance issue B)
-    - **New Backlog Tasks Created:** (List any tasks created in `docs-dev/project/backlog/` based on this reflection. Include links.)
-      - `docs-dev/project/backlog/v.X.Y.Z-ProcessImprovements/tasks/NN-ImproveCommandX.md`
-      - `docs-dev/project/backlog/v.A.B.C-FeatureRefactor/tasks/MM-RefactorModuleA.md`
+    - **New Backlog Tasks Created:** (List any tasks created in `docs-project/backlog/` based on this reflection. Include links.)
+      - `docs-project/backlog/v.X.Y.Z-ProcessImprovements/tasks/NN-ImproveCommandX.md`
+      - `docs-project/backlog/v.A.B.C-FeatureRefactor/tasks/MM-RefactorModuleA.md`
 
     ## 5. AI Collaboration Notes (Optional)
     - Effective prompts or interaction patterns used.

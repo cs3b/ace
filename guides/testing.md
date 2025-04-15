@@ -1,6 +1,6 @@
 # General Testing Guidelines
 
-This document outlines general testing strategies and best practices. Project-specific configurations or conventions should be documented in `docs-dev/project/testing-guide.md` (if it exists).
+This document outlines general testing strategies and best practices. Project-specific configurations or conventions should be documented in `docs-project/testing-guide.md` (if it exists).
 
 ## 1. Testing Strategy
 
@@ -30,7 +30,7 @@ This document outlines general testing strategies and best practices. Project-sp
         │   └── helpers.rb
         └── spec_helper.rb # Or 'test_helper.rb' - Test configuration
     ```
-    *(Refer to `docs-dev/project/blueprint.md` for the project's actual structure)*
+    *(Refer to `docs-project/blueprint.md` for the project's actual structure)*
 
 3.  **Test Pyramid:** Aim for a healthy test pyramid: many fast unit tests at the base, fewer integration tests, and even fewer slow E2E tests at the top.
 

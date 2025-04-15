@@ -19,7 +19,7 @@ First review these key documents:
 2.  **Review Changes**:
     *   Review commits since the last release (`git log <last_tag>..HEAD`).
     *   Identify the scope of changes (bug fixes, features, breaking changes) to determine the correct version bump (Patch, Minor, Major) according to Semantic Versioning.
-    *   Check the current project version (location depends on project, e.g., `VERSION` file, `lib/.../version.rb`, `package.json`). Refer to `docs-dev/project/blueprint.md` if unsure.
+    *   Check the current project version (location depends on project, e.g., `VERSION` file, `lib/.../version.rb`, `package.json`). Refer to `docs-project/blueprint.md` if unsure.
 
 3.  **Prepare Release Documentation**:
     *   Update `CHANGELOG.md` with a new section for this release, summarizing changes based on commits and completed tasks.

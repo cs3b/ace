@@ -1,4 +1,4 @@
-<!-- Read the project management guide first: docs-dev/project/README.md -->
+<!-- Read the project management guide first: docs-project/README.md -->
 # PR Comments to Specification Command
 
 This command processes GitHub pull request comments into organized, structured tasks within the unified task management system, using command-line tools for data fetching. It's typically used to generate tasks for a *Patch* release addressing specific feedback.
@@ -152,7 +152,7 @@ This command processes GitHub pull request comments into organized, structured t
 
 Before running this command:
 
-1. Read the project management guide: `docs-dev/project/README.md`
+1. Read the project management guide: `docs-project/README.md`
 2. Read one of the PR comment fetching guides: `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-mcp.md`
 3. Understand the current project structure and workflows
 4. Determine the current project version from appropriate files
@@ -161,7 +161,7 @@ Before running this command:
 
 ```bash
 # First, read the project management guide
-cat docs-dev/project/README.md
+cat docs-project/README.md
 
 # Check current version from appropriate files
 cat VERSION # or

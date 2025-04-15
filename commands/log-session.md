@@ -82,4 +82,4 @@ This complements `self-reflect`, which focuses on deeper analysis and actionable
 
 ## Prerequisites
 - An active development session with recent interactions.
-- A defined current release directory (`docs-dev/project/current/{release_dir}/`).
+- A defined current release directory (`docs-project/current/{release_dir}/`).
