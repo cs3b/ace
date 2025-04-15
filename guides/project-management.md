@@ -135,7 +135,6 @@ Tasks and release structures are typically generated through one of three primar
     *   Refactor the code for clarity and efficiency while keeping tests green.
 3.  **Documentation & Committing**: Document design decisions within the code or task file. Commit changes frequently using atomic, well-formatted commit messages.
 4.  **Review & Reflection**: Use `self-reflect` or manual review to assess the implemented solution, update documentation, and capture learnings.
-*Note:* During AI-assisted implementation, code changes proposed by the AI agent may be presented in a structured XML format. Refer to the [Structured Code Edits Guide](structured-code-edits.md) for details on this format.
 
 ## Additional Resources
 
