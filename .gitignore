@@ -5,3 +5,5 @@ tools/.env
 # Avoid accidental subfolders inside docs-dev
 /docs-dev/docs-dev
 /docs-dev/docs-project
+
+tmp
