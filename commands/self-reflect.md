@@ -10,7 +10,7 @@ It is distinct from `log-session`, which primarily captures technical state for 
 
 1. Analysis Context:
    - Review recent commit history related to the completed work (`git log --since='...'`).
-   - Review the completed task file(s) in `docs-dev/project/current/{release_dir}/tasks/`.
+   - Review the completed task file(s) in `docs-project/current/{release_dir}/tasks/`.
    - Consider the associated code changes and test results.
 
 2. Review Areas (Focus on the recently completed work):
@@ -56,11 +56,11 @@ Based on the review, take the following actions:
 *   **Update Documentation:**
     *   Refine code comments for clarity.
     *   Update relevant guides in `docs-dev/guides/` if standards or best practices need modification based on learnings.
-    *   Update the specific task `.md` file in `docs-dev/project/current/{release_dir}/tasks/` with final notes or implementation details if necessary.
+    *   Update the specific task `.md` file in `docs-project/current/{release_dir}/tasks/` with final notes or implementation details if necessary.
     *   Update `docs-dev/project/architecture.md` if the changes impacted the overall architecture.
 *   **Record Findings:** Add specific technical findings or research notes to `docs-dev/project/current/{release_dir}/researches/` if applicable.
 *   **Identify Process Improvements:** Note down specific ways the development process, commands, or collaboration could be improved.
-*   **Create Backlog Tasks:** **Crucially**, for any identified improvements (process changes, refactoring needs, non-trivial follow-up work) that aren't immediate fixes, **create new task `.md` files** in `docs-dev/project/backlog/` (e.g., for a future `v.X.Y.Z-ProcessImprovements` release). This ensures reflections lead to action.
+*   Crucially**, for any identified improvements (process changes, refactoring needs, non-trivial follow-up work) that aren't immediate fixes, **create new task `.md` files** in `docs-project/backlog/` (e.g., for a future `v.X.Y.Z-ProcessImprovements` release). This ensures reflections lead to action.
 *   **Log Reflection:** Create a reflection summary document for this session/task using the template below and save it within the current release's reflection directory (e.g., `docs-dev/project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`).
 
 
@@ -76,9 +76,9 @@ Based on the review, take the following actions:
 ## Reflection Log Template & Location
 
 1.  **Location:** Reflection summaries should be saved within the corresponding release directory:
-    ```
-    docs-dev/project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}.md
-    ```
+```
+docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}.md
+```
     *Example:* `docs-dev/project/current/v.0.2.0-StreamlineWorkflow/reflections/20250415-Task02.md`
 
 2.  **Template Format:** Use the following Markdown structure for each reflection file:

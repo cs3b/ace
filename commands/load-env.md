@@ -12,7 +12,7 @@
         *   [Documentation Standards](../guides/documentation.md)
         *   [Version Control](../guides/version-control.md)
         *   [Release Process](../guides/ship-release.md)
-    *   List available general commands: `ls -1 docs-dev/commands/`
+        *   List available general commands: `ls -1 commands/`
 
 2.  **Load Project-Specific Context:**
     *   Review project objectives: `cat docs-dev/project/what-do-we-build.md`

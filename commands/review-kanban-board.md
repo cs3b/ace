@@ -4,25 +4,25 @@ This command helps review the overall state of project tasks across backlog, cur
 
 **Process:**
 
-1.  **Check Backlog (`docs-dev/project/backlog/`)**:
-    *   List directories: `ls -1 docs-dev/project/backlog/`
+1.  **Check Backlog (`docs-project/backlog/`)**:
+    *   List directories: `ls -1 docs-project/backlog/`
     *   Review planned releases and their task files (`.md`) if defined.
     *   Identify potential next releases to move to `current/`.
 
-2.  **Check Current Work (`docs-dev/project/current/`)**:
-    *   Identify the active release directory: `ls -1 docs-dev/project/current/`
-    *   List tasks within the active release: `ls -1 docs-dev/project/current/*/tasks/*.md`
+2.  **Check Current Work (`docs-project/current/`)**:
+    *   Identify the active release directory: `ls -1 docs-project/current/`
+    *   List tasks within the active release: `ls -1 docs-project/current/*/tasks/*.md`
     *   **Review Task Statuses**: Check the `status:` field in the frontmatter of each task `.md` file. Use tools like `grep` or manually inspect files:
         ```bash
         # Example: Find pending tasks in the current release
-        grep -l 'status: pending' docs-dev/project/current/*/tasks/*.md
+        grep -l 'status: pending' docs-project/current/*/tasks/*.md
         # Example: Count tasks by status
         grep 'status:' docs-dev/project/current/*/tasks/*.md | sort | uniq -c
         ```
     *   Identify tasks that are `in-progress`, `blocked`, or `done`.
     *   Check for dependencies between tasks using the `dependencies:` field.
 
-3.  **Check Done (`docs-dev/project/done/`)**:
+3.  **Check Done (`docs-project/done/`)**:
 docs-dev/commands/review-kanban-board.md
 
 **Goal:**

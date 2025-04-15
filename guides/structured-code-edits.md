@@ -47,4 +47,4 @@ This format can be used in various ways:
 2.  **AI Input:** A developer could potentially write an XML patch to provide very specific instructions to an AI agent, although this is less common for general development.
 3.  **Tooling:** Code editors or specialized tools could consume this format to apply changes automatically.
 
-Refer to the [Project Management Guide](project-management.md) and the [Unified Workflow Guide](../project/current/v.0.2.0/docs/unified-workflow-guide.md) to see where this format fits within the overall development process, particularly during the Task Implementation phase.
+Refer to the [Project Management Guide](project-management.md) and the [Unified Workflow Guide](../docs-project/current/v.0.2.0/docs/unified-workflow-guide.md) to see where this format fits within the overall development process, particularly during the Task Implementation phase.

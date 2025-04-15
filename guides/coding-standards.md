@@ -50,7 +50,7 @@ This document outlines general coding standards. Project-specific conventions or
 
 - Follow a logical directory structure (e.g., separating library code, tests, configuration, documentation).
 - Use clear and consistent file naming conventions.
-- Refer to the project's `docs-dev/project/blueprint.md` for the specific structure.
+Refer to the project's `docs-project/blueprint.md` for the specific structure.
 
 *(Example structure - adjust based on project)*
 ```

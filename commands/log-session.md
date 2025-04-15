@@ -18,7 +18,7 @@ Capture the state of the current development session, including user requests, a
     *   A concise summary of the agent's actions/responses (e.g., "Generated patch for Task 03", "Created ADR-002", "Answered question about X").
     *   A "Context Loading Prompt" designed to restore the current state in a new session.
 5.  **Determine Log Location:**
-    *   Identify the current release directory (e.g., `docs-dev/project/current/v.0.2.0-StreamlineWorkflow/`).
+*   Identify the current release directory (e.g., `docs-project/current/v.0.2.0-StreamlineWorkflow/`).
     *   Target the `sessions/` subdirectory within that release directory.
 6.  **Save Log File:**
     *   Create a filename using the timestamp (e.g., `YYYYMMDD-HHMMSS-log.md`).
@@ -50,11 +50,11 @@ Capture the state of the current development session, including user requests, a
 **Current State:**
 - Tasks 01, 02, 03 of v0.2.0 release are complete.
 - Files modified/reviewed recently: [List key files, e.g., `guides/ship-release.md`, `tasks/03-*.md`]
-- Current release directory: `docs-dev/project/current/v.0.2.0-StreamlineWorkflow/`
+- Current release directory: `docs-project/current/v.0.2.0-StreamlineWorkflow/`
 - Last action: Completed updates to guides as per Task 03.
 
 **Files/Directories to Load/Review:**
-- `docs-dev/project/current/v.0.2.0/` (Load this entire directory context)
+- `docs-project/current/v.0.2.0/` (Load this entire directory context)
   - `tasks/04-define-session-logging.md` (Next task)
   - `docs/unified-workflow-guide.md` (Recently modified)
   - Other relevant files based on recent interaction...

@@ -11,11 +11,11 @@ This command processes GitHub pull request comments into organized, structured t
      - Dedicated version files (e.g., `VERSION`, `lib/version.rb`)
      - Git tags or release notes
    - Use the existing release path created by the fetch command, following this pattern:
-     `docs-dev/project/current/v{version}-feedback-to-pr-{number}/`
+   `docs-project/current/v{version}-feedback-to-pr-{number}/`
    - If the release path doesn't exist yet, create it following the same convention:
      - Use current version + next patch version (e.g., v1.0.0 → v1.0.1)
      - Append `-feedback-to-pr-{number}` where number is the PR number
-     - Example: `docs-dev/project/current/v1.0.1-feedback-to-pr-21/`
+     - Example: `docs-project/current/v1.0.1-feedback-to-pr-21/`
    - This release path will be used for all further operations in this and subsequent commands
 
 2. **Prepare Environment**:
@@ -110,27 +110,27 @@ This command processes GitHub pull request comments into organized, structured t
    ...
    ```
    6. **Communicate Results**:
-   - After processing is complete, inform the user about:
-     - Total number of comments processed
-     - Number of tasks created
-     - Location of generated files
-     - Next steps for implementation
-     - Use tree command to show the final directory structure:
-       ```bash
-       tree {release_path} -L 2
-       ```
-       Example output:
-       ```
-       {release_path}/
-       ├── docs
-       │   └── {pr_path}
-       ├── tasks
-       ├── 01-prompt-use-consistent-name-method.md # Standard .md format
-       │   ├── 02-image-fix-content-format.md          # Standard .md format
-       │   ├── 03-examples-add-to-demo-files.md        # Standard .md format
-       │   └── 04-server-add-pagination-support.md     # Standard .md format
-       └── README.md
-       ```
+      - After processing is complete, inform the user about:
+        - Total number of comments processed
+        - Number of tasks created
+        - Location of generated files
+        - Next steps for implementation
+        - Use tree command to show the final directory structure:
+          ```bash
+          tree {release_path} -L 2
+          ```
+          Example output:
+          ```
+          {release_path}/
+          ├── docs
+          │   └── {pr_path}
+          ├── tasks
+          │   ├── 01-prompt-use-consistent-name-method.md # Standard .md format
+          │   ├── 02-image-fix-content-format.md          # Standard .md format
+          │   ├── 03-examples-add-to-demo-files.md        # Standard .md format
+          │   └── 04-server-add-pagination-support.md     # Standard .md format
+          └── README.md
+          ```
 
 ## Success Criteria
 
@@ -182,7 +182,7 @@ fetch-comments-by-mcp https://github.com/org/repo/pull/123
 lets-spec-from-pr-comments {release_path}/
 
 # Agent creates:
-docs-dev/project/current/v1.2.1-feedback-to-pr-21/  # Example path
+docs-project/current/v1.2.1-feedback-to-pr-21/  # Example path
 ├── docs/                                              # Data from fetch command
 │   └── {pr_path}/
 │       ├── comments/

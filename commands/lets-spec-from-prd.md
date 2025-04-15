@@ -17,7 +17,7 @@ Translate a broad product vision into a structured project plan, potentially inv
     *   **Identify Foundational Elements**: Determine core architectural components, initial setup tasks, and essential documentation needed.
 
 3.  **Create Initial Release Structures**:
-    *   For each proposed release (starting with the first, e.g., v1.0.0), create the corresponding release directory structure in `docs-dev/project/backlog/`:
+*   For each proposed release (starting with the first, e.g., v1.0.0), create the corresponding release directory structure in `docs-project/backlog/`:
         ```
         docs-dev/project/backlog/v{version}-{codename}/
         ├── docs/
@@ -40,7 +40,7 @@ Translate a broad product vision into a structured project plan, potentially inv
     *   For subsequent planned releases identified in Step 2, create their directories in `backlog/` with a basic `README.md` outlining their high-level goal, deferring detailed task generation.
 
 5.  **Generate Overall Project Overview**:
-    *   Update the main `docs-dev/project/README.md` (if it exists) or create one to summarize the multi-release plan derived from the PRD.
+Update the main `docs-project/README.md` (if it exists) or create one to summarize the multi-release plan derived from the PRD.
 
 6.  **Communicate Results**:
     *   Report the proposed release plan.
@@ -52,7 +52,7 @@ Translate a broad product vision into a structured project plan, potentially inv
 ## Success Criteria
 
 *   Project overview documents (`what-do-we-build.md`, `architecture.md`) created/updated.
-*   Initial release directory (e.g., v1.0.0) created in `docs-dev/project/backlog/` with standard subdirectories.
+*   Initial release directory (e.g., v1.0.0) created in `docs-project/backlog/` with standard subdirectories.
 *   Directories for subsequent planned releases created in `backlog/` with basic READMEs.
 *   Foundational tasks for the initial release generated as structured `.md` files in `tasks/`.
 *   Placeholder ADRs created for key initial decisions.

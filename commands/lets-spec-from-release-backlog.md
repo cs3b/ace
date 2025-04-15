@@ -7,7 +7,7 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
 
 1.  **Identify Target Release and Source Backlog:**
     *   Determine the target release directory. By default, this is the directory currently located in `docs-dev/project/current/`.
-    *   If instructed otherwise (e.g., "process the backlog for release v1.3.0 in the main project backlog"), identify the specified target release directory within `docs-dev/project/backlog/`.
+    *   If instructed otherwise (e.g., "process the backlog for release v1.3.0 in the main project backlog"), identify the specified target release directory within `docs-project/backlog/`.
     *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-dev/project/current/{release_dir}/backlog/`).
 
 2.  **Review Backlog Items:**
@@ -51,10 +51,10 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
 
 > "Run the `lets-spec-from-release-backlog` command to process items added to the current release's internal backlog."
 
-*(Agent identifies the release in `docs-dev/project/current/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*
+*(Agent identifies the release in `docs-project/current/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*
 
 **Example 2: Process backlog for a specific release in the main project backlog**
 
 > "Use the `lets-spec-from-release-backlog` command, targeting release `v1.3.0-Enhancements` located in the main project backlog."
 
-*(Agent identifies `docs-dev/project/backlog/v1.3.0-Enhancements/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*
+*(Agent identifies `docs-project/backlog/v1.3.0-Enhancements/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*

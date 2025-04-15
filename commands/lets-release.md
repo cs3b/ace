@@ -13,7 +13,7 @@ First review these key documents:
 ## Process Steps
 
 1.  **Confirm Task Completion**:
-    *   Use [`review-kanban-board`](./review-kanban-board.md) to check the status of tasks in the `docs-dev/project/current/{release_dir}/tasks/` directory and in `docs-dev/project/current/{release_dir}/README.md`.
+*   Use [`review-kanban-board`](./review-kanban-board.md) to check the status of tasks in the `docs-project/current/{release_dir}/tasks/` directory and in `docs-project/current/{release_dir}/README.md`.
     *   Ensure all tasks intended for this release have `status: done` and checkboxes are marked as complete `[x]` in their `.md` files.
 
 2.  **Review Changes**:
@@ -23,7 +23,7 @@ First review these key documents:
 
 3.  **Prepare Release Documentation**:
     *   Update `CHANGELOG.md` with a new section for this release, summarizing changes based on commits and completed tasks.
-    *   Finalize any release-specific documentation within the `docs-dev/project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). Refer to `guides/ship-release.md` for guidance on required artifacts based on release type.
+    *   Finalize any release-specific documentation within the `docs-project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). Refer to `guides/ship-release.md` for guidance on required artifacts based on release type.
     *   Generate or update API documentation if the public API has changed.
 
 4.  **Version Update**:
@@ -39,8 +39,8 @@ First review these key documents:
     *   Ensure all changes (including version bump and CHANGELOG) are committed.
 
 6.  **Archive Release Directory**:
-    *   Move the release directory from `docs-dev/project/current/` to `docs-dev/project/done/`: `mv docs-dev/project/current/{release_dir} docs-dev/project/done/`
-    *   Commit the project state change: `git add docs-dev/project/ && git commit -m "chore(project): Archive release vX.Y.Z"`
+*   Move the release directory from `docs-project/current/` to `docs-project/done/`: `mv docs-project/current/{release_dir} docs-project/done/`
+*   Commit the project state change: `git add docs-project/ && git commit -m "chore(project): Archive release vX.Y.Z"`
 
 7.  **Create Release**:
     *   Create an annotated Git tag: `git tag -a vX.Y.Z -m "Release version X.Y.Z"`

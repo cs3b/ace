@@ -6,17 +6,17 @@ This command initializes the docs-dev directory structure and core documentation
 
 1. **Project Structure Setup**:
    - Create docs-dev directory if it doesn't exist
-   - Create project management directories (backlog, current, done) inside the docs-dev/project directory
+   - Create project management directories (backlog, current, done) inside the docs-project directory
    - Set up versioning structure using semantic versioning with sequence numbers
    - Initialize version control if needed
 
 2. **Core Documentation Generation**:
-   
+
    A. From Existing README:
    - Extract core information from project's README.md
    - Transform into structured what-do-we-build.md format
    - Generate initial architecture.md based on project structure
-   
+
    B. Without README:
    - Gather project information through interactive prompts
    - Create what-do-we-build.md from responses

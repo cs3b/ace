@@ -7,11 +7,11 @@ Our development workflow is centered around:
 - Quality-driven releases
 - Command-driven AI interactions
 
-Our development workflow emphasizes planning before implementation ("Slow Vibe Coding"). We use a command-based approach for AI interactions, replacing the previous prompts-based system. Each command in the `commands/` directory represents a specific workflow or interaction pattern with clear inputs, processes, and success criteria.
+Our development workflow emphasizes planning before implementation ("Slow Vibe Coding"). We use a command-based approach for AI interactions. Each command in the `commands/` directory represents a specific workflow or interaction pattern with clear inputs, processes, and success criteria.
 
 ## Directory Structure
 
-The `docs-dev` directory organizes project documentation and management:
+The `docs-project` directory organizes project documentation and management:
 
 ```
 docs-dev/
@@ -24,7 +24,7 @@ docs-dev/
 ├── tools/            # Helper scripts (e.g., for fetching data)
 └── reflections/      # Session logs and learnings (Optional)
 ```
-(Use `tree docs-dev -L 2` to view the current structure)
+(Use `tree . -L 2` to view the current structure)
 
 ## Task Management
 
@@ -40,7 +40,7 @@ Within a release directory (primarily in `current/`), individual tasks are repre
 
 ##### Optional Release Backlog Subdirectory
 
-To manage emergent scope identified during active development, a release directory (typically the one in `current/`) may contain an internal `backlog/` subdirectory (e.g., `docs-dev/project/current/v.X.Y.Z/backlog/`). This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` command to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This command can also target a specific release in the main `docs-dev/project/backlog/` if needed.
+This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` command to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This command can also target a specific release in the main `docs-project/backlog/` if needed.
 
 #### Standard Task File Format
 

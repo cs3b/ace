@@ -14,7 +14,7 @@ Translate a higher-level feature description into a planned release structure wi
 2.  **Determine Release Version & Path**:
     *   Check the project's current version (e.g., from `lib/aira/version.rb` or Git tags).
     *   Propose the next *Minor* version (e.g., v1.2.3 -> v1.3.0). Allow user override.
-    *   Create the release directory structure, typically starting in `docs-dev/project/backlog/`:
+    *   Create the release directory structure, typically starting in `docs-project/backlog/`:
         ```
         docs-dev/project/backlog/v{new_version}-{feature-name}/
         ├── docs/
@@ -50,7 +50,7 @@ Translate a higher-level feature description into a planned release structure wi
 
 ## Success Criteria
 
-*   New release directory created in `docs-dev/project/backlog/` (or `current/` if specified).
+*   New release directory created in `docs-project/backlog/` (or `current/` if specified).
 *   Standard subdirectories (`docs`, `decisions`, `tasks`, etc.) are created.
 *   FRD content successfully analyzed.
 *   Structured task files (`.md`) generated in `{release_path}/tasks/` following the standard format.

@@ -5,7 +5,7 @@ For implementing tests using Test-Driven Development. See [Testing Guide](../gui
 ## Process Steps
 
 1. **Review Feature Specification**:
-   - Identify test requirements from the feature spec in `docs-dev/project/1-next/`
+- Identify test requirements from the feature spec in `docs-project/1-next/`
    - Create a test plan covering:
      - Class/method structure tests
      - Happy path scenarios
@@ -17,7 +17,7 @@ For implementing tests using Test-Driven Development. See [Testing Guide](../gui
    # Create a new test file if needed
    touch spec/aira/[component]_spec.rb
    ```
-   
+
    - Write failing tests first
    - Run tests to verify they fail with clear messages:
    ```bash
@@ -52,7 +52,7 @@ RSpec.describe Component do
       # Implementation
     end
   end
-  
+
   # Isolation from external services
   context "with external dependencies" do
     # Use mocks/stubs appropriately
@@ -61,7 +61,7 @@ RSpec.describe Component do
       allow(dependency).to receive(:call).and_return(result)
     end
   end
-  
+
   # Edge case testing
   context "with invalid inputs" do
     it "raises an appropriate error" do
