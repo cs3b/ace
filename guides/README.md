@@ -5,7 +5,7 @@ This directory contains comprehensive development guidelines and standards for t
 ## Core Development Process
 
 Our development workflow centers around:
-- Iterative, task-based development 
+- Iterative, task-based development
 - Clear documentation and knowledge preservation
 - Transparent progress tracking
 - Quality-driven releases
@@ -28,51 +28,13 @@ Our development workflow centers around:
 - [Release Process](ship-release.md) - Release workflow and checklists
 - [Release Documentation Template](prepare-release/prepare-release-documentation.md) - Standard release documentation structure
 
-## Task Management
+## Task & Release Management
 
-Tasks are managed through a Kanban-style system in the `project/` directory:
+Project tasks and release planning are managed within the `../project/` directory using a simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
 
-- `backlog/`: Future planned work
-- `current/`: Current sprint tasks
-- `done/`: Completed work
+Key guides for this process:
+- [Project Management Guide](project-management.md): Details the directory structure, task format, and core workflow.
+- [Unified Workflow Guide](../project/current/v.0.2.0/docs/unified-workflow-guide.md): Outlines the interaction phases and commands.
+- [Release Process](ship-release.md): Covers the steps for finalizing and publishing a release.
 
-### Version Naming
-
-We follow semantic versioning (MAJOR.MINOR.PATCH):
-- MAJOR: Breaking changes (x.0.0)
-- MINOR: New features (0.x.0) 
-- PATCH: Bug fixes (0.0.x)
-
-### Task Workflow
-
-1. Tasks begin in `backlog/` with version prefix
-2. Priority work moves to `current/` 
-3. Completed work moves to `done/`
-4. Document in release template structure
-
-## Release Documentation
-
-Each release version requires specific documentation based on type:
-
-### Bug Fix Release (v.0.0.x)
-- Bug description and fix details
-- Regression tests
-- Lessons learned
-
-### Feature Release (v.0.x.0)
-- Feature specification
-- Technical decisions
-- Feature validation
-- Usage examples
-- Release learnings
-
-### Major Release (v.x.0.0)
-- Migration tooling
-- Architectural changes
-- Complete feature documentation
-- Investigation results
-- Comprehensive test suite
-- Detailed tutorials
-- In-depth retrospective
-
-For detailed release documentation structure, see [Release Documentation Guide](prepare-release/prepare-release-documentation.md)
+The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are determined during the specification phase, guided by the `lets-spec-*` commands based on the release type (Patch, Feature, Major).

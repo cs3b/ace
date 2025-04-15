@@ -2,11 +2,13 @@
 
 ## Overview
 This guide outlines the streamlined development workflow using the unified task management system within `docs-dev/project/`. This replaces previous disparate systems.
+This workflow emphasizes planning before coding ("Slow Vibe Coding") and leverages structured documentation and commands for efficient collaboration with AI agents.
 
 ## Task Management Structure
 - **`/backlog`**: Contains directories for future planned work/releases (e.g., `v.0.3.0-feature-x/`). Tasks are planned here.
 - **`/current`**: Contains directories for the active release being worked on (e.g., `v.0.2.0-streamline-workflow/`). This is where active development happens. Task files within this directory represent work items.
 - **`/done`**: Contains directories for completed and released work, serving as an archive.
+*(Use `tree docs-dev/project -L 2` to quickly view the status across backlog, current, and done.)*
 
 ## Task File Structure
 Tasks within `/current` (and potentially planned in `/backlog`) should be `.md` files following this structure:
@@ -85,8 +87,7 @@ The development process involves several distinct phases, often looping as neede
 7.  **Self-Reflect (`self-reflect`)**: Review session progress, update documentation (guides, ADRs), and capture learnings.
 8.  **Prepare Release (`lets-release`)**: Follow the release process, using the `prepare-release` structure. Refer to the updated `prepare-release-documentation.md` for guidance on required artifacts based on release type.
 
-## Release Documentation
-- The structure in `docs-dev/guides/prepare-release/v.x.x.x/` remains, but its usage is clarified in `docs-dev/guides/prepare-release/prepare-release-documentation.md`. Not all directories are required for every release type (e.g., `codemods` likely only for major releases).
+
 
 ## Consistency
 - Use `backlog`, `current`, `done` consistently.

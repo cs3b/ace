@@ -31,56 +31,46 @@
 1. **Pre-Release Checklist**:
    ```markdown
    ## Release Checklist
-   
+
    ### Required
    - [ ] Version file updated
    - [ ] CHANGELOG.md updated
-   - [ ] Release documentation in docs-dev/project/2-done/
-   - [ ] Git tag created
-   
-   ### Optional (Based on Release Type)
-   - [ ] Tests passing
-   - [ ] Documentation updated
-   - [ ] Dependencies reviewed
-   - [ ] API documentation current
+   - Finalize any release-specific documentation within the `docs-dev/project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). The specific artifacts required (like ADRs, detailed docs, test cases, user guides) should align with the scope defined during the specification phase (using `lets-spec-from-pr-comments`, `lets-spec-from-frd`, or `lets-spec-from-prd`) which corresponds to the release type (Patch, Feature, Major). Ensure all necessary documents are complete and accurate.
    ```
 
 2. **Version Update**:
    ```ruby
    # Update version.rb
    VERSION = "1.2.0"
-   
+
    # Update gemspec
    s.version = Aira::VERSION
-   
+
    # Update CHANGELOG.md
    ## [1.2.0] - 2024-01-20
-   
+
    ### Added
    - New browser tool implementation
    - Enhanced error handling
-   
+
    ### Fixed
    - Thread safety in tool registry
    - Memory leak in long-running tasks
    ```
 
-3. **Release Commands**:
+3. **Tagging and Publishing**:
    ```bash
-   # Build and verify gem
-   gem build aidarb.gemspec
-   gem install ./aidarb-1.2.0.gem
-   
-   # Run final tests
-   bundle exec rake test
-   
-   # Push to RubyGems
-   gem push aidarb-1.2.0.gem
-   
-   # Create git tag
-   git tag -a v1.2.0 -m "Release version 1.2.0"
-   git push origin v1.2.0
+   # Ensure all changes are committed, including version bump and CHANGELOG
+
+   # Create annotated git tag
+   git tag -a vX.Y.Z -m "Release version X.Y.Z"
+   git push origin vX.Y.Z # Push the tag
+
+   # Publish the gem using the helper script
+   # This script builds, verifies, and pushes to RubyGems.org
+   bin/publish
    ```
+   *Note: Ensure you have push access and RubyGems credentials configured (`~/.gem/credentials`) before running `bin/publish`.*
 
 ### 3. Post-Release
 
@@ -88,7 +78,7 @@
    ```ruby
    # Example monitoring setup
    require 'appsignal'
-   
+
    AppSignal.monitor_transaction(
      'gem.release',
      'v1.2.0',
@@ -99,71 +89,38 @@
 2. **Communication**:
    ```markdown
    ## Release Announcement
-   
+
    Aira v1.2.0 is now available!
-   
+
    ### Highlights
    - New browser tool
    - Improved performance
    - Better error handling
-   
+
    ### Installation
    ```bash
    gem install aidarb
    ```
-   
-   ### Documentation
-   - [Release Notes](CHANGELOG.md)
-   - [Migration Guide](docs/migrations/1.2.0.md)
-   - [API Reference](https://rubydoc.info/gems/aidarb)
+
+## Reference Documentation
+
+- [Project Management](../guides/project-management.md) (Task flow, versioning)
+- [Documentation Standards](../guides/documentation.md)
+- [Version Control](../guides/version-control.md) (Tagging)
    ```
 
 3. **Issue Tracking**:
    ```markdown
    ## v1.2.0 Issue Template
-   
+
    ### Environment
    - Ruby version:
    - Aira version:
    - OS:
-   
+
    ### Expected Behavior
-   
+
    ### Actual Behavior
-   
+
    ### Steps to Reproduce
    ```
-
-### 4. Release Automation
-
-```yaml
-# .github/workflows/release.yml
-name: Release
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Build and test
-        run: |
-          bundle install
-          bundle exec rake test
-          
-      - name: Build gem
-        run: gem build *.gemspec
-        
-      - name: Push to RubyGems
-        run: |
-          mkdir -p $HOME/.gem
-          echo -e "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}" > $HOME/.gem/credentials
-          chmod 0600 $HOME/.gem/credentials
-          gem push *.gem
-        env:
-          RUBYGEMS_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
