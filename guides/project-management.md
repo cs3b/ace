@@ -37,6 +37,7 @@ Tasks are managed within the `project/` subdirectories, representing a simple Ka
 - **`project/done/`**: An archive containing directories of completed and released work.
 
 Within a release directory (primarily in `current/`), individual tasks are represented by **structured Markdown files** (`.md`).
+
 ##### Optional Release Backlog Subdirectory
 
 To manage emergent scope identified during active development, a release directory (typically the one in `current/`) may contain an internal `backlog/` subdirectory (e.g., `docs-dev/project/current/v.X.Y.Z/backlog/`). This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` command to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This command can also target a specific release in the main `docs-dev/project/backlog/` if needed.
@@ -134,6 +135,7 @@ Tasks and release structures are typically generated through one of three primar
     *   Refactor the code for clarity and efficiency while keeping tests green.
 3.  **Documentation & Committing**: Document design decisions within the code or task file. Commit changes frequently using atomic, well-formatted commit messages.
 4.  **Review & Reflection**: Use `self-reflect` or manual review to assess the implemented solution, update documentation, and capture learnings.
+*Note:* During AI-assisted implementation, code changes proposed by the AI agent may be presented in a structured XML format. Refer to the [Structured Code Edits Guide](structured-code-edits.md) for details on this format.
 
 ## Additional Resources
 

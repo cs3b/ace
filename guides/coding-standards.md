@@ -1,196 +1,69 @@
-## AI Ruby Agent SDK Development Standards
+# General Coding Standards
 
-### 1. Agent Definition Style
+This document outlines general coding standards. Project-specific conventions or overrides should be documented in `docs-dev/project/coding-standards.md` (if it exists).
 
-1. **DSL Structure**:
-   - One agent definition per file in clear contexts
-   - Related agents should be grouped in modules
-   - Keep agent definitions focused and minimal
+## General Principles
 
-```ruby
-# good
-agent :web_extractor do
-  description "Extract webpage content to markdown"
-  input :url
-  output :markdown_file
-  command :extract_content do |url|
-    "Extract content from #{url}"
-  end
-  tools :web_browser
-end
+- **Clarity & Readability:** Write code that is easy for others (and your future self) to understand. Use meaningful variable names, keep functions/methods short and focused, and add comments where logic is complex or non-obvious.
+- **Consistency:** Follow established patterns and conventions within the project. If using a style guide tool (like StandardRB, RuboCop), adhere to its rules.
+- **Simplicity (KISS):** Avoid unnecessary complexity. Prefer straightforward solutions unless a more complex approach offers significant, justifiable benefits (e.g., performance).
+- **Don't Repeat Yourself (DRY):** Abstract common logic into reusable functions, methods, or classes.
+- **Modularity:** Design components with clear responsibilities and well-defined interfaces. Aim for loose coupling and high cohesion.
+- **Testability:** Write code that is easy to test. Use dependency injection and avoid tight coupling to facilitate unit testing.
 
-# bad - too many responsibilities
-agent :do_everything do
-  description "Extracts, summarizes and translates content"
-  input :url, :language 
-  output :translation
-  prompt <<~PROMPT
-    Extract from <%= url %> 
-    Then summarize and translate to <%= language %>
-  PROMPT
-  tools :web_browser, :translator, :summarizer
-end
+## Language-Specific Idioms (Example: Ruby)
+
+- Follow community conventions (e.g., Ruby Style Guide).
+- Use blocks and `yield` for configuration and iteration where appropriate.
+- Leverage metaprogramming judiciously; prioritize clarity over cleverness.
+- Use standard library features where applicable.
+
+## Formatting & Style
+
+- **Indentation:** Use consistent indentation (e.g., 2 spaces for Ruby).
+- **Line Length:** Adhere to a reasonable line length limit (e.g., 100-120 characters) to improve readability.
+- **Whitespace:** Use whitespace effectively to separate logical blocks of code.
+- **Tooling:** Utilize automated formatters and linters (e.g., StandardRB, Prettier) to enforce consistency. Configure these tools via project configuration files (e.g., `.standard.yml`, `.prettierrc`).
+
+## Error Handling
+
+- Use specific, informative error classes. Define a base error class for the project/library.
+- Provide context with errors (e.g., relevant data, operation being performed).
+- Handle errors appropriately (log, retry, raise, return error values) based on the context.
+- See [Error Handling Guide](error-handling.md) for more details.
+
+## Testing
+
+- Write tests for new code (unit, integration, E2E as appropriate).
+- Ensure tests cover primary functionality, edge cases, and error conditions.
+- Keep tests independent and fast.
+- See [Testing Guidelines](testing.md) for more details.
+
+## Documentation
+
+- Document public APIs (classes, methods, modules) using standard documentation tools (e.g., YARD for Ruby).
+- Add comments to explain complex logic or non-obvious decisions within method bodies.
+- Keep documentation up-to-date with code changes.
+- See [Documentation Standards](documentation.md) for more details.
+
+## File Organization
+
+- Follow a logical directory structure (e.g., separating library code, tests, configuration, documentation).
+- Use clear and consistent file naming conventions.
+- Refer to the project's `docs-dev/project/blueprint.md` for the specific structure.
+
+*(Example structure - adjust based on project)*
 ```
-
-2. **Prompt Style**:
-   - Use heredoc (<<~PROMPT) for multi-line prompts
-   - Keep ERB interpolation simple and focused
-   - Add comments for complex variable interpolation
-
-```ruby
-# good
-prompt <<~PROMPT
-  Given the URL <%= url %>, extract main content.
-  Focus on <%= focus_areas.join(", ") %>.
-PROMPT
-
-# bad - complex logic in ERB
-command :process_value do |value, condition|
-  if condition
-    "Do complex thing with #{value}"
-  else
-    "Do simple thing with #{value}"
-  end
-end
-```
-
-### 2. Tool Integration 
-
-1. **Tool Registry Pattern**:
-   ```ruby
-   # good
-   agent :content_processor do
-     tools :web_browser, :markdown_converter
-   end
-
-   # bad - direct tool instantiation
-   agent :content_processor do
-     def initialize
-       @browser = Browser.new
-       @converter = MarkdownConverter.new
-     end
-   end
-   ```
-
-2. **Step Definition**:
-   ```ruby
-   # good - clear step definitions
-   steps do
-     step :download, using: :web_browser do |context|
-       context[:file] = download_file(context[:url])
-     end
-     
-     step :convert do |context|
-       context[:output] = process_file(context[:file])
-     end
-   end
-
-   # bad - unclear step responsibilities
-   steps do
-     step :do_stuff do |context|
-       # Multiple operations mixed together
-       download_and_process(context)
-     end
-   end
-   ```
-
-### 3. Error Handling
-
-1. **Agent-Specific Errors**:
-   ```ruby
-   module Aira
-     class AgentError < Error; end
-     class PromptError < AgentError; end
-     class ToolError < AgentError; end
-     class StepError < AgentError; end
-   end
-   ```
-
-2. **Context Preservation**:
-   ```ruby
-   # good
-   step :process do |context|
-     begin
-       result = tool.process(context[:input])
-       context[:output] = result
-     rescue ToolError => e
-       raise StepError.new("Failed to process: #{e.message}", 
-         step: :process,
-         input: context[:input],
-         cause: e)
-     end
-   end
-   ```
-
-### 4. Testing Standards
-
-1. **Agent Testing**:
-## Outside-In Development
-- Start with the user-facing DSL and work inwards
-- Each layer should have clear boundaries and interfaces
-- Test-drive the implementation from the outside
-
-## Ruby Idioms
-- Follow Ruby community conventions and patterns
-- Use blocks and yield for configuration when appropriate
-- Leverage metaprogramming judiciously
-
-## Modular Architecture
-- Each component should have a single responsibility
-- Use composition over inheritance
-- Keep interfaces small and focused
-   ```ruby
-   RSpec.describe WebExtractor do
-     let(:agent) { AgentRegistry.get(:web_extractor) }
-     
-     it "processes a webpage" do
-       context = { url: "http://example.com" }
-       expect(agent.render_prompt(context))
-         .to include("Extract content from http://example.com")
-     end
-   end
-   ```
-
-2. **Step Testing**:
-   ```ruby
-   RSpec.describe "YouTube processing steps" do
-     it "downloads audio correctly" do
-       context = { youtube_url: "http://youtube.com/xyz" }
-       step = Step.new(:download_audio, using: :youtube_downloader)
-       
-       step.run(context)
-       expect(context[:audio_file]).to exist
-     end
-   end
-   ```
-
-### 5. File Organization
-
-1. **Agent Definitions**:
-```
-lib/
-  aira/
-    agents/
-      web_extractor.rb
-      markdown_summarizer.rb
-    tools/
-      web_browser.rb
-      markdown_converter.rb
-    steps/
-      download_step.rb
-      convert_step.rb
-```
-
-2. **Supporting Files**:
-```
-spec/
-  agents/
-    web_extractor_spec.rb
-  tools/
-    web_browser_spec.rb
-  steps/
-    download_step_spec.rb
-examples/
-  web_extraction.rb
-  youtube_processing.rb
+project-root/
+├── lib/          # Core library code
+│   └── my_module/
+├── spec/         # Tests
+│   ├── unit/
+│   ├── integration/
+│   └── support/
+├── config/       # Configuration files
+├── docs/         # User-facing documentation
+├── docs-dev/     # Internal development documentation
+├── bin/          # Executable scripts
+└── Rakefile / Makefile / etc. # Build/task runner configuration
 ```

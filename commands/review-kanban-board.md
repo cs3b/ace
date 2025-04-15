@@ -23,8 +23,7 @@ This command helps review the overall state of project tasks across backlog, cur
     *   Check for dependencies between tasks using the `dependencies:` field.
 
 3.  **Check Done (`docs-dev/project/done/`)**:
-    *   List completed release directories: `ls -1 docs-dev/project/done/`
-    *   Review past releases for reference if needed.
+docs-dev/commands/review-kanban-board.md
 
 **Goal:**
 
