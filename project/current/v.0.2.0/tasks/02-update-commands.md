@@ -1,6 +1,6 @@
 ---
 id: 02
-status: pending
+status: done
 priority: high
 dependencies: [01] # Depends on task system consolidation
 ---
@@ -16,7 +16,7 @@ Modify existing command documentation (`.md` files in `docs-dev/commands/`) to a
 - **`lets-start`:** Ensure it references selecting tasks from `project/current/` using the standard task file format.
 - **`lets-spec-from-pr-comments`:** Update description to match the new output (structured `.md` files in `project/current/{release_dir}/tasks/`). Ensure prerequisites (running `fetch-comments-by-api`) are clear. Update success criteria.
 - **`_review-kanban-board`:** Align description with the `project/{backlog,current,done}` structure. Remove inconsistencies identified in analysis (references to `in-progress`, `next`, or `_dev/kanban/`). Ensure it describes checking task files within `project/current/`.
-- **ADR Location:** Decide and document whether ADRs in `decisions/` should be stored per-release (`project/current/{release}/decisions/`) or at the project root (`docs-dev/decisions/`). Update references accordingly.
+- **ADR Location:** ADRs will be stored globally in `docs-dev/decisions/` for project-wide visibility unless a decision is exceptionally specific to a single release's transient implementation detail. Update references in commands like `self-reflect` accordingly.
 - **`self-reflect`:** Ensure it correctly references the location for current tasks (`project/current/`) and ADRs (`decisions/` which might be per-release or project-level - clarify this).
 - **`lets-release`:** Ensure it points to the updated `prepare-release-documentation.md` for guidance.
 - **Command/Guide Linking:** Check that commands primarily *link* to relevant guides (e.g., `lets-commit` links to `guides/version-control.md`) rather than duplicating detailed standards. Remove redundant content from command descriptions.

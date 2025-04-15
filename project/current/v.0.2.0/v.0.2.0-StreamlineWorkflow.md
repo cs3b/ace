@@ -59,9 +59,9 @@ Refer to tasks defined in `docs-dev/project/current/v.0.2.0/tasks/`. Key phases 
 - [x] Task management system unified in `docs-dev/project/`. *(Task 01)*
 - [x] `project/task-manager` deprecated/archived. *(Task 01 - Requires manual deletion check)*
 - [ ] Release documentation guide (`prepare-release-documentation.md`) updated for clarity on release types. *(Task 03)*
-- [x] Commands (`lets-spec-from-pr-comments`) updated for unified task system. *(Task 01 - Specific command update)* (Other commands in Task 02)
+- [x] Commands (`load-env`, `lets-start`, `lets-spec-from-pr-comments`, `_review-kanban-board`, `self-reflect`, `lets-release`, new spec commands) updated/created for unified task system. *(Tasks 01, 02)*
 - [x] Guides (`project-management.md`) updated. *(Task 01 - Specific guide update)* (Other guides in Task 03)
-- [ ] Terminology and references (Kanban board, task states) made consistent. *(Tasks 01, 02, 03)*
+- [x] Terminology and references (Kanban board, task states) made consistent across Commands. *(Tasks 01, 02)* (Guide consistency in Task 03)
 - [ ] Validation test cases passed.
 - [ ] CHANGELOG updated for v0.2.0 process changes.
 - [ ] Release notes prepared outlining the workflow improvements.

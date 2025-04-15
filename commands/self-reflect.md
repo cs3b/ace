@@ -1,15 +1,19 @@
 # Self-Reflect Command
 
-This command guides reflection on coding sessions, commit history, and release artifacts.
+This command guides the process of **analyzing** a completed unit of work (e.g., a task, a feedback cycle, a development day) to capture learnings, assess quality, and identify actionable improvements for the codebase and the development process itself.
+
+**Run this command at logical breakpoints:** after completing a significant task, after implementing PR feedback, or at the end of a development session.
+
+It is distinct from `log-session`, which primarily captures technical state for session resumption.
 
 ## Process Steps
 
-1. Session Analysis:
-   - Review coding session artifacts in tmp/
-   - Check recent commit history
-   - Assess release progress in prepare-release/
+1. Analysis Context:
+   - Review recent commit history related to the completed work (`git log --since='...'`).
+   - Review the completed task file(s) in `docs-dev/project/current/{release_dir}/tasks/`.
+   - Consider the associated code changes and test results.
 
-2. Review Areas:
+2. Review Areas (Focus on the recently completed work):
 
    A. Coding Session Review:
       - AI interaction effectiveness
@@ -44,160 +48,85 @@ This command guides reflection on coding sessions, commit history, and release a
       - Test coverage
       - Release readiness
 
-3. Knowledge Capture:
-   - Document key decisions in `decisions/`
-   - Update best practices in `guides/`
-   - Record challenges in `researches/`
-   - Add test patterns to `test-cases/`
-   - Update architecture in `project/11-architecture.md`
-   - Create/update ADRs for significant changes
+3. Actionable Outcomes & Knowledge Capture:
 
-## Documentation Updates
+Based on the review, take the following actions:
 
-1. Session Artifacts:
-   ```bash
-   docs-dev/
-   ├── guides/           # Update learned practices
-   ├── project/
-   │   ├── current-work.md         # Update progress
-   │   ├── architecture.md         # Architecture documentation
-   │   └── current/               # Current tasks
-   ├── decisions/       # Architecture Decision Records
-   └── prepare-release/
-       └── v.x.x.x/     # Update release docs
-   ```
+*   **Document Decisions:** If significant architectural or design decisions were made, create or update an ADR in `docs-dev/decisions/`.
+*   **Update Documentation:**
+    *   Refine code comments for clarity.
+    *   Update relevant guides in `docs-dev/guides/` if standards or best practices need modification based on learnings.
+    *   Update the specific task `.md` file in `docs-dev/project/current/{release_dir}/tasks/` with final notes or implementation details if necessary.
+    *   Update `docs-dev/project/architecture.md` if the changes impacted the overall architecture.
+*   **Record Findings:** Add specific technical findings or research notes to `docs-dev/project/current/{release_dir}/researches/` if applicable.
+*   **Identify Process Improvements:** Note down specific ways the development process, commands, or collaboration could be improved.
+*   **Create Backlog Tasks:** **Crucially**, for any identified improvements (process changes, refactoring needs, non-trivial follow-up work) that aren't immediate fixes, **create new task `.md` files** in `docs-dev/project/backlog/` (e.g., for a future `v.X.Y.Z-ProcessImprovements` release). This ensures reflections lead to action.
+*   **Log Reflection:** Create a reflection summary document for this session/task using the template below and save it within the current release's reflection directory (e.g., `docs-dev/project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`).
 
-2. Focus Areas:
-   - Technical documentation improvements
-   - Process optimization insights
-   - Quality assurance enhancements
-   - Release preparation updates
+
 
 ## Success Criteria
 
-1. Session Review Complete:
-   - AI interactions analyzed
-   - Solutions validated
-   - Patterns documented
-   - Improvements identified
+1.  **Analysis Performed:** The completed work (code, tests, task execution) has been reviewed against the review areas (Coding Session, Commit, Architecture, Workflow).
+2.  **Learnings Captured:** Key insights, successful patterns, and challenges encountered are documented in a reflection file within the release directory (`project/current/{release}/reflections/`).
+3.  **Documentation Updated:** Relevant code comments, guides, ADRs, or architecture documents have been updated based on the reflection.
+4.  **Actionable Improvements Identified:** Specific improvements for the codebase or development process are noted.
+5.  **Backlog Updated:** Necessary follow-up actions or process improvements have been converted into new tasks in `docs-dev/project/backlog/`.
 
-2. Commit Quality Verified:
-   - Clear messages
-   - Proper scoping
-   - Documentation updated
-   - Tests included
+## Reflection Log Template & Location
 
-3. Architecture Maintained:
-   - Design principles followed
-   - Changes documented
-   - ADRs created/updated
-   - Technical debt tracked
+1.  **Location:** Reflection summaries should be saved within the corresponding release directory:
+    ```
+    docs-dev/project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}.md
+    ```
+    *Example:* `docs-dev/project/current/v.0.2.0-StreamlineWorkflow/reflections/20250415-Task02.md`
 
-4. Collaboration Workflow Assessed:
-   - Strengths identified
-   - Improvement areas documented
-   - Process enhancement suggestions captured
-   - Implementation planning evaluated
-   - Knowledge sharing effectiveness measured
+2.  **Template Format:** Use the following Markdown structure for each reflection file:
 
-5. Release Progress Assessed:
-   - Features tracked
-   - Docs maintained
-   - Tests validated
-   - Blockers identified
+    ```markdown
+    # Reflection: [Brief Title - e.g., Task 02 Implementation] - YYYY-MM-DD
 
-## Reflection Changelog
+    ## 1. Summary of Work Completed
+    - Briefly describe the task(s) or work unit being reflected upon.
+    - Link to relevant task files or commits.
 
-1. Session Entry Format:
-   ```markdown
-   ### YYYY-MM-DD Session Reflection
+    ## 2. Key Learnings & Observations
+    - **What went well?** (e.g., Effective AI interactions, good test coverage, clear task breakdown)
+    - **What was challenging?** (e.g., Ambiguous requirements, unexpected technical hurdles, inefficient workflow step)
+    - **Surprises or Discoveries:** (e.g., Found a useful library, uncovered hidden complexity)
 
-   #### AI Interaction Review
-   - Successful patterns:
-     - [Pattern] Description and context
-   - Challenges faced:
-     - [Challenge] Description and resolution
-   - Improvements identified:
-     - [Action Item] Specific improvement task
+    ## 3. Quality Assessment
+    - **Code Quality:** (e.g., Adherence to standards, readability, potential refactoring needs)
+    - **Test Quality:** (e.g., Coverage, clarity of tests, edge cases handled)
+    - **Documentation Quality:** (e.g., Clarity of comments, accuracy of updated guides/ADRs)
 
-   #### Code Evolution
-   - Architecture changes:
-     - [Component] Change description and rationale
-   - New patterns:
-     - [Pattern] Implementation details and use case
-   - Technical debt:
-     - [Area] Description and mitigation plan
+    ## 4. Actionable Improvements & Next Steps
+    - **Immediate Fixes/Updates Made:** (e.g., Updated guide X, added comment Y, created ADR Z)
+    - **Process Improvements Identified:** (e.g., Suggest changing command X, need better template for Y)
+    - **Code Refactoring / Tech Debt Noted:** (e.g., Module A needs refactoring, investigate performance issue B)
+    - **New Backlog Tasks Created:** (List any tasks created in `docs-dev/project/backlog/` based on this reflection. Include links.)
+      - `docs-dev/project/backlog/v.X.Y.Z-ProcessImprovements/tasks/NN-ImproveCommandX.md`
+      - `docs-dev/project/backlog/v.A.B.C-FeatureRefactor/tasks/MM-RefactorModuleA.md`
 
-   #### Collaboration Workflow Analysis
-   - Strengths:
-     - [Area] Description of effective practice with examples
-   - Areas for improvement:
-     - [Process] Description of improvement opportunity with context
-   - Process enhancement suggestions:
-     - [Suggestion] Specific actionable process improvement with expected benefits
-   - Implementation planning insights:
-     - [Planning Method] Effectiveness assessment and recommendations
-   - Knowledge sharing practices:
-     - [Practice] Evaluation of effectiveness and suggestions for enhancement
+    ## 5. AI Collaboration Notes (Optional)
+    - Effective prompts or interaction patterns used.
+    - Areas where AI assistance was less helpful or required significant guidance.
+    ```
 
-   #### Documentation Updates
-   - Updated files:
-     - [Path] Change description
-   - New documentation:
-     - [Path] Content purpose
-   - Process improvements:
-     - [Area] Enhancement details
+3.  **Usage:**
+    *   Create a new reflection file after completing a logical unit of work.
+    *   Focus on concise, actionable insights.
+    *   Use these reflections during release retrospectives or when planning future work.
+    *   Periodically review reflections across releases to identify broader patterns (a global `docs-dev/reflections/cross_release_insights.md` could summarize these).
 
-   #### Next Steps
-   - Immediate tasks:
-     - [Task] Description and priority
-   - Future considerations:
-     - [Topic] Details for future planning
-   ```
 
-2. Location:
-   ```bash
-   docs-dev/
-   └── reflections/
-       ├── YYYY-MM/             # Monthly reflection directory
-       │   ├── DD-summary.md    # Daily reflection entries
-       │   └── monthly.md       # Monthly summary
-       └── changelog.md         # Running changelog of key insights
-   ```
-
-3. Usage:
-   - Daily entries capture immediate insights
-   - Monthly summaries identify patterns
-   - Changelog tracks significant learnings
-   - Used for:
-     - Sprint planning
-     - Feature refinement
-     - Process improvement
-     - Knowledge sharing
-
-## Success Metrics
-
-1. Changelog Quality:
-   - Clear context provided
-   - Actionable insights
-   - Linked to artifacts
-   - Traceable outcomes
-
-2. Knowledge Impact:
-   - Referenced in planning
-   - Influences design
-   - Improves processes
-   - Reduces mistakes
 
 ## Reference Documentation
 
+- [Project Management Guide](../guides/project-management.md) (Task structure, workflow)
 - [Documentation Guide](../guides/documentation.md)
-- [Version Control](../guides/version-control.md)
-- [Release Process](../guides/ship-release.md)
-- [Quality Assurance](../guides/quality-assurance.md)
-- [Architecture](../project/11-architecture.md)
-- [Generate ADR](docs/generate-adr.md)
-- [Retrospective Template](../guides/prepare-release/v.x.x.x/reflections/_template.md)
+- [Generate ADR Command](./docs/generate-adr.md) (Referenced in Actions)
+- `log-session` command (for context capture - documentation to be created in Task 04)
 
 ## Collaboration Workflow Reflection Guide
 

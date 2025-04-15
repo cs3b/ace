@@ -26,12 +26,15 @@ A systematic approach to load the project context, structure, and current develo
 
 3. Examine Current Tasks:
    ```bash
-   # View current tasks
+   # View the active release directory
    ls -la docs-dev/project/current/
 
-   # View current version tasks
-   ls -la docs-dev/project/current/v.0.1.0/
+   # View the tasks within the active release directory
+   # (Tasks are structured .md files)
+   ls -la docs-dev/project/current/*/tasks/
+   # Example: ls -la docs-dev/project/current/v.0.2.0-StreamlineWorkflow/tasks/
    ```
+   - Review the `.md` files within the `tasks/` subdirectory of the current release for details, status, and dependencies.
 
 4. Check Recent Changes:
    ```bash
@@ -59,20 +62,21 @@ ai-ruby-agent-sdk/
 │   └── e2e/         # End-to-end tests
 └── docs-dev/        # Development documentation
     ├── guides/      # Development standards and practices
-    ├── project/     # Project management and planning
-    │   ├── backlog/    # Future planned work
-    │   ├── current/    # Current sprint/milestone tasks
-    │   └── done/      # Completed work
+    ├── project/     # Project Management (Kanban: backlog/current/done)
+    │   ├── backlog/    # Contains directories for future releases (e.g., v.0.3.0/)
+    │   ├── current/    # Contains the directory for the active release (e.g., v.0.2.0/)
+    │   └── done/       # Archive of completed release directories
+    ├── decisions/   # Architecture Decision Records (ADRs)
     └── commands/    # AI interaction command patterns
 ```
 
 ## Key Files
 
-- `lib/aira.rb`: Main entry point for the SDK
-- `lib/aira/version.rb`: Current SDK version
 - `spec/spec_helper.rb`: Test configuration
 - `docs-dev/project/what-do-we-build.md`: Project objectives
 - `docs-dev/project/architecture.md`: System architecture
+- `lib/aira.rb`: Main entry point for the SDK
+- `lib/aira/version.rb`: Current SDK version
 
 ## Core Documentation
 
@@ -90,9 +94,9 @@ ai-ruby-agent-sdk/
 ## Success Criteria
 
 1. Project Context Understood:
-   - Project objectives clear
-   - Development philosophy understood
-   - Current work identified
+   - Project objectives clear ([What Do We Build](../project/what-do-we-build.md))
+   - Development philosophy understood ([Project Management](../guides/project-management.md))
+   - Current release and its tasks identified in `docs-dev/project/current/`
 
 2. Code Structure Mapped:
    - Main components identified

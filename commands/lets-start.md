@@ -5,18 +5,29 @@ This command helps initialize your development session with proper context.
 ## Process Steps
 
 1. Load Environment:
-   - Run the [Load Environment](./load-env.md) command first to establish project context
+   - Run the [Load Environment](./load-env.md) command first to establish project context, including the current release directory in `docs-dev/project/current/`.
 
-2. Test-Driven Development Approach:
-   - Create tests for each feature before implementation
-   - Run `bin/rspec` to verify test failures initially
-   - Add implementation to make tests pass
+2. Identify and Select Task:
+   - List tasks in the current release directory: `ls -la docs-dev/project/current/*/tasks/`
+   - Review the task `.md` files (e.g., `cat docs-dev/project/current/*/tasks/02-*.md`). Pay attention to `status`, `priority`, and `dependencies`.
+   - Choose the next task to work on (typically `pending` status, with met `dependencies`).
 
-3. Sprint Focus:
-- Review current sprint tasks in `docs-dev/project/current/`
-   - Identify dependencies and blocked items
-   - Plan implementation order
-   - Set up development environment for current task
+3. Understand Task Details:
+   - Read the selected task's `.md` file carefully:
+     - `# Task Title`
+     - `## Description`
+     - `## Implementation Details / Notes`
+     - `## Acceptance Criteria / Test Strategy`
+   - Ensure the goal, steps, and verification methods are clear.
+
+4. Prepare Environment:
+   - Set up your local development environment for the specific task.
+   - Identify relevant code files based on the task description.
+
+5. Plan Implementation (TDD Approach):
+   - Outline the tests needed based on `Acceptance Criteria`.
+   - Plan the implementation steps, considering `Implementation Details / Notes`.
+   - Identify potential challenges or areas needing research.
 
 ## Success Criteria
 
@@ -26,30 +37,31 @@ This command helps initialize your development session with proper context.
    - Test framework available
    - Working directory clean
 
-2. Development Plan:
-   - Current task selected and understood
-   - Dependencies identified and resolved
-   - Test approach planned
-   - Implementation strategy defined
+2. Task Selected & Understood:
+   - A specific task `.md` file from `docs-dev/project/current/*/tasks/` is chosen.
+   - The task's description, implementation notes, and acceptance criteria are clear.
+   - Dependencies (from frontmatter) are confirmed to be met.
+   - A plan for testing and implementation is formulated.
 
 /
 ├── lib/             # Main source code
 ├── spec/            # Test files
 └── docs-dev/        # Development documentation
     ├── guides/      # Development standards and practices
-    ├── project/     # Project management and planning
-    │   ├── backlog/    # Future planned work
-    │   ├── current/    # Current sprint/milestone tasks
-    │   └── done/       # Completed work
-    └── commands/    # AI interaction command patterns
+    ├── project/     # Project Management (backlog/current/done release dirs)
+    │   ├── backlog/
+    │   ├── current/  # Active release directory is here
+    │   └── done/
+    ├── commands/    # AI interaction command patterns
+    ├── decisions/   # Architecture Decision Records (ADRs)
 
 ## Key Files
 
-- `lib/aira.rb`: Main entry point for the SDK
-- `lib/aira/version.rb`: Current SDK version
 - `spec/spec_helper.rb`: Test configuration
 - `docs-dev/project/what-do-we-build.md`: Project objectives
 - `docs-dev/project/architecture.md`: System architecture
+- `lib/aira.rb`: Main entry point for the SDK
+- `lib/aira/version.rb`: Current SDK version
 
 ## Success Criteria
 
