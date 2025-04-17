@@ -1,6 +1,6 @@
-# Fetch PR Comments by API Command
+# Fetch PR Comments by API Workflow Instruction
 
-This command uses command-line tools to fetch pull request comments and reviews.
+This workflow instruction uses command-line tools to fetch pull request comments and reviews.
 
 ## Process Steps
 
@@ -31,7 +31,7 @@ This command uses command-line tools to fetch pull request comments and reviews.
 
        This will show the directory structure similar to:
        ```
-       docs-dev/{release_path}/docs
+       docs-dev-workflow-instruction/{release_path}/docs
        └── {pr_path}
            ├── comments
            │   ├── comment-2025-04-10-0712-2036663266.json

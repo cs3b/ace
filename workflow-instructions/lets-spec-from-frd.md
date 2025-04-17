@@ -1,6 +1,6 @@
-# Feature Requirements to Specification Command (lets-spec-from-frd)
+# Feature Requirements to Specification Workflow Instruction (lets-spec-from-frd)
 
-This command processes a Feature Requirement Document (FRD) to set up the necessary structure and initial tasks for a new feature release within the unified task management system.
+This workflow instruction processes a Feature Requirement Document (FRD) to set up the necessary structure and initial tasks for a new feature release within the unified task management system.
 
 ## Goal
 Translate a higher-level feature description into a planned release structure with actionable, traceable tasks. This typically results in a *Feature* release (Minor version bump).
@@ -16,7 +16,7 @@ Translate a higher-level feature description into a planned release structure wi
     *   Propose the next *Minor* version (e.g., v1.2.3 -> v1.3.0). Allow user override.
     *   Create the release directory structure, typically starting in `docs-project/backlog/`:
         ```
-        docs-project/backlog/v{new_version}-{feature-name}/
+        docs-project/backlog-workflow-instruction/v{new_version}-{feature-name}/
         ├── docs/
         ├── decisions/
         ├── tasks/
@@ -77,5 +77,5 @@ lets-spec-from-frd --frd-path path/to/my-feature.md --version v1.3.0 --name Cool
 ```
 
 ## Notes
-- This command focuses on *generating the initial plan*. Tasks will likely require refinement before and during implementation.
+- This workflow instruction focuses on *generating the initial plan*. Tasks will likely require refinement before and during implementation.
 - It integrates the principles previously found in `guides/prepare-release/prepare-release-documentation.md` regarding the artifacts needed for a Feature release.

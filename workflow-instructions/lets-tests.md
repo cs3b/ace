@@ -1,4 +1,4 @@
-# Let's Test Command
+# Let's Test Workflow Instruction
 
 For implementing tests using Test-Driven Development. See [Testing Guide](../guides/testing.md) for details.
 

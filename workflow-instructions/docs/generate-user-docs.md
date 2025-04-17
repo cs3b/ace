@@ -1,6 +1,6 @@
-# Generate User Documentation Command
+# Generate User Documentation Workflow Instruction
 
-This command creates user-focused feature documentation.
+This workflow instruction creates user-focused feature documentation.
 
 ## Process Steps
 

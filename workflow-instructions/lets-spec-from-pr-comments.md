@@ -1,7 +1,7 @@
 <!-- Read the project management guide first: docs-project/README.md -->
-# PR Comments to Specification Command
+# PR Comments to Specification Workflow Instruction
 
-This command processes GitHub pull request comments into organized, structured tasks within the unified task management system, using command-line tools for data fetching. It's typically used to generate tasks for a *Patch* release addressing specific feedback.
+This workflow instruction processes GitHub pull request comments into organized, structured tasks within the unified task management system, using command-line tools for data fetching. It's typically used to generate tasks for a *Patch* release addressing specific feedback.
 
 ## Process Steps
 
@@ -19,7 +19,7 @@ This command processes GitHub pull request comments into organized, structured t
    - This release path will be used for all further operations in this and subsequent commands
 
 2. **Prepare Environment**:
-- First READ the files at `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-api.md` and run the instructions from one of these files, before proceeding further
+- First READ the files at `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` and run the instructions from one of these files, before proceeding further
    - Ensure PR data is downloaded in the expected location:
      ```
      {release_path}/
@@ -153,7 +153,7 @@ This command processes GitHub pull request comments into organized, structured t
 Before running this command:
 
 1. Read the project management guide: `docs-project/README.md`
-2. Read one of the PR comment fetching guides: `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/commands/lets-spec-from-pr/fetch-comments-by-mcp.md`
+2. Read one of the PR comment fetching guides: `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md`
 3. Understand the current project structure and workflows
 4. Determine the current project version from appropriate files
 5. Ensure you have appropriate GitHub permissions for API-based fetching
@@ -168,10 +168,10 @@ cat VERSION # or
 cat lib/version.rb # or
 grep -A 3 "version" package.json
 
-# Read the fetch command documentation first (choose one method)
-cat docs-dev/commands/lets-spec-from-pr/fetch-comments-by-api.md
+# Read the fetch workflow instruction documentation first (choose one method)
+cat docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md
 # or
-cat docs-dev/commands/lets-spec-from-pr/fetch-comments-by-mcp.md
+cat docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md
 
 # Then fetch PR comments using your preferred method
 fetch-comments-by-api https://github.com/org/repo/pull/123
@@ -182,8 +182,8 @@ fetch-comments-by-mcp https://github.com/org/repo/pull/123
 lets-spec-from-pr-comments {release_path}/
 
 # Agent creates:
-docs-project/current/v1.2.1-feedback-to-pr-21/  # Example path
-├── docs/                                              # Data from fetch command
+docs-project/current/v1.2.1-feedback-to-pr-21-workflow-instruction/  # Example path
+├── docs/                                              # Data from fetch workflow instruction
 │   └── {pr_path}/
 │       ├── comments/
 │       ├── reviews/

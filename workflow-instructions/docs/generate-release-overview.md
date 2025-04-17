@@ -1,6 +1,6 @@
-# Generate Release Overview Command
+# Generate Release Overview Workflow Instruction
 
-This command helps create comprehensive release documentation.
+This workflow instruction helps create comprehensive release documentation.
 
 ## Process Steps
 

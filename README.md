@@ -14,7 +14,7 @@ The Coding Agent Workflow Toolkit addresses the unique challenges of AI-assisted
 ## Key Components
 
 ### 1. Command Structure
-Standardized commands in `commands/` define common workflow patterns:
+Standardized commands in `workflow instructions/` define common workflow patterns:
 - **Environment Setup**: `load-env`, `init-project`
 - **Task Management**: `lets-start`, `self-reflect`, `review-kanban-board`
 - **Implementation**: `lets-tests`, `lets-fix-tests`, `lets-commit`

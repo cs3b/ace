@@ -1,6 +1,6 @@
-# Generate API Documentation Command
+# Generate API Documentation Workflow Instruction
 
-This command creates detailed API documentation.
+This workflow instruction creates detailed API documentation.
 
 ## Process Steps
 

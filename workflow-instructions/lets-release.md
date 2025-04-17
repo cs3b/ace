@@ -1,6 +1,6 @@
-# Let's Release Command
+# Let's Release Workflow Instruction
 
-This command guides the process of finalizing and publishing a new release.
+This workflow instruction guides the process of finalizing and publishing a new release.
 
 ## Essential Reading
 

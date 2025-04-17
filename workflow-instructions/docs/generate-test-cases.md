@@ -1,6 +1,6 @@
-# Generate Test Cases Command
+# Generate Test Cases Workflow Instruction
 
-This command helps create comprehensive test coverage.
+This workflow instruction helps create comprehensive test coverage.
 
 ## Process Steps
 

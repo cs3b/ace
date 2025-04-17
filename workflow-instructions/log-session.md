@@ -1,11 +1,11 @@
-# Log Session Command (log-session)
+# Log Session Workflow Instruction (log-session)
 
 ## Goal
 Capture the state of the current development session, including user requests, agent actions, and key context, to facilitate session resumption and process review.
 
 ## Process Steps
 
-1.  **Trigger Command:** The user invokes `log-session` typically after a significant interaction or at the end of a work segment.
+1. **Trigger Workflow Instruction:** The user invokes `log-session` typically after a significant interaction or at the end of a work segment.
 2.  **Agent Summarization:** The AI agent analyzes the recent interaction history within the current chat/session.
 3.  **Identify Key Elements:** The agent identifies:
     *   The primary user request(s) in the segment.
@@ -66,7 +66,7 @@ Capture the state of the current development session, including user requests, a
 ```
 
 ## Integration into Workflow
-The `log-session` command should be used periodically, especially:
+The `log-session` workflow instruction should be used periodically, especially:
 - Before switching context to a different task.
 - After complex interactions or generating significant artifacts (code, documentation).
 - At the end of a development session.

@@ -1,9 +1,9 @@
-# Let's Start Command
+# Let's Start Workflow Instruction
 
 **Goal:** Initiate the workflow for implementing a specific task after the environment context has been loaded using `load-env`.
 
 **Prerequisites:**
-- Run the [`load-env`](./load-env.md) command first to load project context, general guides, project specifics, and identify the current release/tasks.
+- Run the [`load-env`](./load-env.md) workflow instruction first to load project context, general guides, project specifics, and identify the current release/tasks.
 
 ## Process Steps
 

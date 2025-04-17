@@ -1,6 +1,6 @@
-# Generate Code Review Checklist Command
+# Generate Code Review Checklist Workflow Instruction
 
-This command creates comprehensive code review guidelines.
+This workflow instruction creates comprehensive code review guidelines.
 
 ## Process Steps
 

@@ -34,7 +34,7 @@ Project tasks and release planning are managed within the `docs-project` directo
 
 Key guides for this process:
 - [Project Management Guide](project-management.md): Details the directory structure, task format, and core workflow.
-- [Unified Workflow Guide](../project/current/v.0.2.0/docs/unified-workflow-guide.md): Outlines the interaction phases and commands.
+- [Unified Workflow Guide](../project/current/v.0.2.0/docs/unified-workflow-guide.md): Outlines the interaction phases and workflow instructions.
 - [Release Process](ship-release.md): Covers the steps for finalizing and publishing a release.
 
-The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are determined during the specification phase, guided by the `lets-spec-*` commands based on the release type (Patch, Feature, Major).
+The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are determined during the specification phase, guided by the `lets-spec-*` workflow instructions based on the release type (Patch, Feature, Major).

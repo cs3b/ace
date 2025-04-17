@@ -1,4 +1,4 @@
-# Let's Fix Tests Command
+# Let's Fix Tests Workflow Instruction
 
 A systematic approach to diagnose and fix failing tests. For detailed testing practices and framework info, see [Testing Guide](../guides/testing.md).
 

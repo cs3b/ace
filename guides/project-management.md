@@ -5,9 +5,9 @@ Our development workflow is centered around:
 - Clear documentation and knowledge preservation
 - Transparent progress tracking
 - Quality-driven releases
-- Command-driven AI interactions
+- Workflow Instructions driven AI interactions
 
-Our development workflow emphasizes planning before implementation ("Slow Vibe Coding"). We use a command-based approach for AI interactions. Each command in the `commands/` directory represents a specific workflow or interaction pattern with clear inputs, processes, and success criteria.
+Our development workflow emphasizes planning before implementation ("Slow Vibe Coding"). We use a workflow instruction-based approach for AI interactions. Each workflow instruction in the `workflow-instructions/` directory represents a specific workflow or interaction pattern with clear inputs, processes, and success criteria.
 
 ## Directory Structure
 
@@ -16,7 +16,7 @@ The `docs-project` directory organizes project documentation and management:
 ```
 docs-dev/
 ├── guides/           # Development standards and practices
-├── commands/         # AI interaction commands and workflows
+├── workflow-instructions/ # AI interaction workflow instructions
 ├── project/          # Project-specific materials (Task Management)
 │   ├── backlog/      # Future planned work (release dirs: e.g., v.0.3.0/)
 │   ├── current/      # Current release/sprint tasks (release dir: e.g., v.0.2.0/)
@@ -40,7 +40,7 @@ Within a release directory (primarily in `current/`), individual tasks are repre
 
 ##### Optional Release Backlog Subdirectory
 
-This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` command to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This command can also target a specific release in the main `docs-project/backlog/` if needed.
+This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` workflow instruction to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This workflow instruction can also target a specific release in the main `docs-project/backlog/` if needed.
 
 #### Standard Task File Format
 
@@ -120,7 +120,7 @@ Moving a whole release directory follows the same logic: ensure all contained ta
 
 #### Specification Workflows
 
-Tasks and release structures are typically generated through one of three primary workflows, facilitated by `lets-spec-*` commands:
+Tasks and release structures are typically generated through one of three primary workflows, facilitated by `lets-spec-*` workflow instructions:
 
 1.  **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific, actionable tasks (usually resulting in a *Patch* release) aimed at addressing the feedback. Tasks are created directly in the `current/` release directory.
 2.  **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `backlog/` first.

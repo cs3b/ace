@@ -1,8 +1,8 @@
-# Self-Reflect Command
+# Self-Reflect Workflow Instruction
 
-This command guides the process of **analyzing** a completed unit of work (e.g., a task, a feedback cycle, a development day) to capture learnings, assess quality, and identify actionable improvements for the codebase and the development process itself.
+This workflow instruction guides the process of **analyzing** a completed unit of work (e.g., a task, a feedback cycle, a development day) to capture learnings, assess quality, and identify actionable improvements for the codebase and the development process itself.
 
-**Run this command at logical breakpoints:** after completing a significant task, after implementing PR feedback, or at the end of a development session.
+**Run this workflow instruction at logical breakpoints:** after completing a significant task, after implementing PR feedback, or at the end of a development session.
 
 It is distinct from `log-session`, which primarily captures technical state for session resumption.
 
@@ -125,8 +125,8 @@ docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}
 
 - [Project Management Guide](../guides/project-management.md) (Task structure, workflow)
 - [Documentation Guide](../guides/documentation.md)
-- [Generate ADR Command](./docs/generate-adr.md) (Referenced in Actions)
-- `log-session` command (for context capture - documentation to be created in Task 04)
+- [Generate ADR Workflow Instruction](./docs/generate-adr.md) (Referenced in Actions)
+- `log-session` workflow instruction (for context capture - documentation to be created in Task 04)
 
 ## Collaboration Workflow Reflection Guide
 

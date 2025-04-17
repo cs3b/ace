@@ -1,4 +1,4 @@
-# Command: Process Release-Specific Backlog (lets-spec-from-release-backlog)
+# Workflow Instruction: Process Release-Specific Backlog (lets-spec-from-release-backlog)
 
 ## Goal
 Process notes, ideas, or draft tasks captured in the internal `backlog/` subdirectory of the *current* release (or a specified target release in `docs-project/backlog/`) and transform them into structured tasks *within that same release's* `tasks/` directory. This helps manage emergent scope identified during active development.
@@ -8,13 +8,13 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
 1.  **Identify Target Release and Source Backlog:**
     *   Determine the target release directory. By default, this is the directory currently located in `docs-project/current/`.
     *   If instructed otherwise (e.g., "process the backlog for release v1.3.0 in the main project backlog"), identify the specified target release directory within `docs-project/backlog/`.
-    *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-project/current/{release_dir}/backlog/`).
+    *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-project/current/{release_dir}-workflow-instruction/backlog/`).
 
 2.  **Review Backlog Items:**
     *   List the files/notes within the source `backlog/` directory.
     *   Present each item (e.g., a simple `.md` note) to the user/agent for review.
 
-3.  **(Step Removed)** The target release directory already exists (either in `current/` or `backlog/`). No new release directory is created by this command.
+No new release directory is created by this workflow instruction.
 
 4.  **Generate Structured Tasks:**
     *   For each item reviewed from the source `backlog/` subdirectory:

@@ -1,6 +1,6 @@
-# Product Requirements to Specification Command (lets-spec-from-prd)
+# Product Requirements to Specification Workflow Instruction (lets-spec-from-prd)
 
-This command processes a high-level Product Requirement Document (PRD) to establish the initial project structure, potentially spanning multiple releases, and generate foundational tasks within the unified task management system.
+This workflow instruction processes a high-level Product Requirement Document (PRD) to establish the initial project structure, potentially spanning multiple releases, and generate foundational tasks within the unified task management system.
 
 ## Goal
 Translate a broad product vision into a structured project plan, potentially involving multiple Major and Feature releases, setting the stage for iterative development.
@@ -19,7 +19,7 @@ Translate a broad product vision into a structured project plan, potentially inv
 3.  **Create Initial Release Structures**:
 *   For each proposed release (starting with the first, e.g., v1.0.0), create the corresponding release directory structure in `docs-project/backlog/`:
         ```
-        docs-project/backlog/v{version}-{codename}/
+        docs-project/backlog-workflow-instruction/v{version}-{codename}/
         ├── docs/
         ├── decisions/
         ├── tasks/
@@ -80,4 +80,4 @@ lets-spec-from-prd --prd-path path/to/product-spec.md --initial-version v1.0.0 -
 ## Notes
 - This command initiates the project structure based on a high-level vision. Significant refinement of tasks and plans within each release will be necessary.
 - It integrates principles from `guides/prepare-release/prepare-release-documentation.md` regarding artifacts needed for Major releases (like `codemods`, comprehensive docs).
-- Consider if this command should *replace* or *complement* the `init-project` command. It seems more comprehensive for starting from a PRD.
+- Consider if this workflow instruction should *replace* or *complement* the `init-project` workflow instruction. It seems more comprehensive for starting from a PRD.

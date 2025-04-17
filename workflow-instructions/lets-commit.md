@@ -1,4 +1,4 @@
-# Let's Commit Command
+# Let's Commit Workflow Instruction
 
 Follow these steps to create well-structured commits. For detailed conventions and practical examples, first read [Version Control Guide](../guides/version-control.md).
 

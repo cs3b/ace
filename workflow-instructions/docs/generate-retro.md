@@ -1,6 +1,6 @@
-# Generate Retrospective Template Command
+# Generate Retrospective Template Workflow Instruction
 
-This command creates release cycle retrospective documentation.
+This workflow instruction creates release cycle retrospective documentation.
 
 ## Process Steps
 

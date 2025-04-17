@@ -35,7 +35,7 @@
    ### Required
    - [ ] Version file updated
    - [ ] CHANGELOG.md updated
-   - Finalize any release-specific documentation within the `docs-project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). The specific artifacts required (like ADRs, detailed docs, test cases, user guides) should align with the scope defined during the specification phase (using `lets-spec-from-pr-comments`, `lets-spec-from-frd`, or `lets-spec-from-prd`) which corresponds to the release type (Patch, Feature, Major). Ensure all necessary documents are complete and accurate.
+   - Finalize any release-specific documentation within the `docs-project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). The specific artifacts required (like ADRs, detailed docs, test cases, user guides) should align with the scope defined during the specification phase (using `lets-spec-from-pr-comments`, `lets-spec-from-frd`, or `lets-spec-from-prd` workflow instructions) which corresponds to the release type (Patch, Feature, Major). Ensure all necessary documents are complete and accurate.
    ```
 
 2. **Version Update**:

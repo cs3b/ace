@@ -1,6 +1,6 @@
-# Git Diff to Specification Command (lets-spec-from-diff)
+# Git Diff to Specification Workflow Instruction (lets-spec-from-diff)
 
-This command processes a Git diff file (or direct Git command output) to generate structured analysis and actionable tasks. It follows an "Outside-In" approach, first analyzing high-level interfaces and designs before examining implementation details.
+This workflow instruction processes a Git diff file (or direct Git command output) to generate structured analysis and actionable tasks. It follows an "Outside-In" approach, first analyzing high-level interfaces and designs before examining implementation details.
 
 ## Goal
 Transform Git diff content into a comprehensive analysis with prioritized, actionable tasks that follow the unified task management system. This helps in understanding changes, identifying improvements, and creating a structured implementation plan.
@@ -13,7 +13,7 @@ Transform Git diff content into a comprehensive analysis with prioritized, actio
      ```bash
      # Default: use active release in docs-project/current/
      # Option: specify target release
-     lets-spec-from-diff changes.diff --release-path docs-project/current/v1.2.0-hotfix/
+     lets-spec-from-diff changes.diff --release-path docs-project/current/v1.2.0-hotfix-workflow-instruction/
      ```
    - Create standard directory structure:
      ```
@@ -151,7 +151,7 @@ lets-spec-from-diff "git diff main feature/auth-refactor"
 lets-spec-from-diff "git diff HEAD~3 HEAD"
 
 # Agent produces:
-docs-project/current/v1.2.0-hotfix/
+docs-project/current/v1.2.0-hotfix-workflow-instruction/
 ├── backlog/
 │   ├── high-level/
 │   │   └── auth-service-analysis.md
@@ -185,9 +185,9 @@ For optimal diff analysis:
    - Look for patterns across similar changes
    - Detect potential issues (error handling, edge cases)
 
-### Integration with Other Commands
+### Integration with Other Workflow Instructions
 
-This command complements:
+This workflow instruction complements:
 - `lets-spec-from-pr-comments`: Similar structure but different input source
 - `lets-spec-from-release-backlog`: Uses the same task generation format
 - `self-reflect`: Can be used after analysis to capture additional insights

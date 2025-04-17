@@ -1,6 +1,6 @@
-# Fetch PR Comments by MCP Command
+# Fetch PR Comments by MCP Workflow Instruction
 
-This command uses GitHub MCP server to fetch pull request comments and reviews.
+This workflow instruction uses GitHub MCP server to fetch pull request comments and reviews.
 
 ## Process Steps
 
@@ -58,7 +58,7 @@ This command uses GitHub MCP server to fetch pull request comments and reviews.
 fetch-pr-comments-by-mcp https://github.com/org/repo/pull/123
 
 # Creates directory structure:
-docs-project/current/v1.2.1-feedback-to-pr-21/
+docs-project/current/v1.2.1-feedback-to-pr-21-workflow-instruction/
 ├── docs/
 │   ├── comments/
 │   │   ├── comment-2025-04-10-0712-2036663266.json    # Tool name feedback

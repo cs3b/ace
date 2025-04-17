@@ -1,6 +1,6 @@
-# Generate Architecture Decision Record Command
+# Generate Architecture Decision Record Workflow Instruction
 
-This command creates structured architecture decision documentation.
+This workflow instruction creates structured architecture decision documentation.
 
 ## Process Steps
 

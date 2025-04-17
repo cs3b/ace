@@ -1,6 +1,6 @@
-## Review Project State Command
+## Review Project State Workflow Instruction
 
-This command helps review the overall state of project tasks across backlog, current work, and completed items.
+This workflow instruction helps review the overall state of project tasks across backlog, current work, and completed items.
 
 **Process:**
 
@@ -23,7 +23,7 @@ This command helps review the overall state of project tasks across backlog, cur
     *   Check for dependencies between tasks using the `dependencies:` field.
 
 3.  **Check Done (`docs-project/done/`)**:
-docs-dev/commands/review-kanban-board.md
+docs-dev/workflow instructions/review-kanban-board.md
 
 **Goal:**
 

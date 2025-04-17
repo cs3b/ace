@@ -1,6 +1,6 @@
-# Load Environment Command
+# Load Environment Workflow Instruction
 
-**Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This command focuses *only* on loading context, not initiating task execution (see `lets-start`).
+**Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This workflow instruction focuses *only* on loading context, not initiating task execution (see `lets-start`).
 
 ## Process Steps
 
@@ -12,7 +12,7 @@
         *   [Documentation Standards](../guides/documentation.md)
         *   [Version Control](../guides/version-control.md)
         *   [Release Process](../guides/ship-release.md)
-        *   List available general commands: `ls -1 commands/`
+        *   List available general workflow instructions: `ls -1 workflow-instructions/`
 
 2.  **Load Project-Specific Context:**
     *   Review project objectives: `cat docs-project/what-do-we-build.md`

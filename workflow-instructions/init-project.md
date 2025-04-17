@@ -1,6 +1,6 @@
-# Init Project Command
+# Init Project Workflow Instruction
 
-This command initializes the docs-dev directory structure and core documentation for AI-driven development.
+This workflow instruction initializes the docs-dev directory structure and core documentation for AI-driven development.
 
 ## Process Steps
 
@@ -28,7 +28,7 @@ This command initializes the docs-dev directory structure and core documentation
 
 ## User Input (if README not present)
 
-The command will prompt for:
+The workflow instruction will prompt for:
 
 1. **Project Overview**:
    - Project name and purpose
@@ -44,7 +44,7 @@ The command will prompt for:
 
 ### what-do-we-build.md
 
-The command generates this file with:
+The workflow instruction generates this file with:
 - Project overview and goals
 - Key features and capabilities
 - Core design principles
@@ -70,7 +70,7 @@ Example structure:
 
 ### architecture.md
 
-The command analyzes the project structure and generates:
+The workflow instruction analyzes the project structure and generates:
 - High-level architecture overview
 - Component relationships
 - Data flow diagrams
@@ -110,7 +110,7 @@ Example structure:
    - Technical boundaries defined
    - Extension points identified
 
-## Command Context
+## Workflow Instruction Context
 
 Initialize an AI-driven development environment by creating necessary documentation structure and core architectural documents. This command sets up the foundation for effective AI agent collaboration.
 
@@ -129,7 +129,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 
 ## Notes
 
-- The command preserves existing documentation if found
+- The workflow instruction preserves existing documentation if found
 - Merges information from README.md if available
 - Creates consistent structure for AI-driven development
 - Sets up proper git integration for documentation
