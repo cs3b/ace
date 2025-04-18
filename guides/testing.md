@@ -35,6 +35,17 @@ This document outlines general testing strategies and best practices. Project-sp
 3.  **Test Pyramid:** Aim for a healthy test pyramid: many fast unit tests at the base, fewer integration tests, and even fewer slow E2E tests at the top.
 
 ## 2. Writing Good Tests
+### Designing for Testability (Especially with AI)
+
+Writing testable code is even more important when using AI, as it simplifies verification and makes it easier to guide the AI effectively.
+
+- **Explicit Dependencies:** Pass dependencies (services, configurations, clients) into functions or classes rather than relying on global state or singletons. This makes mocking easier for unit tests.
+- **Pure Functions:** Prefer functions that always return the same output for the same input and have no side effects. These are the easiest to test.
+- **Separate Logic from I/O:** Isolate core business logic from operations that interact with external systems (files, network, databases). Test the logic separately from the I/O.
+- **Clear Interfaces:** Define clear, well-documented public interfaces for modules and classes. This clarifies boundaries for testing and for AI interaction.
+- **Stateless Components:** Where possible, favor stateless components or functions, as state management adds complexity to testing.
+
+Following these principles makes it easier to write focused unit tests and provide clearer instructions to an AI agent when generating or modifying code.
 
 1.  **Clarity:**
     *   Use descriptive names for test files, contexts/describe blocks, and individual tests (`it "should..."`).

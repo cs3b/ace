@@ -14,6 +14,7 @@ Follow these steps to create well-structured commits. For detailed conventions a
 2.  **Create Commit:**
     *   Stage *only* the related changes for this commit (`git add <files...>`).
     *   Review staged changes (`git diff --staged`).
+    *   **Review AI Changes:** If changes were generated or assisted by AI, review them rigorously against requirements and coding standards before proceeding. Check for correctness, edge cases, and adherence to patterns.
     *   Write a clear conventional commit message (follow format in guide). Use `git commit`.
     *   Verify commit scope and content.
 

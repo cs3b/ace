@@ -14,24 +14,29 @@
     *   Review task details as needed (e.g., `cat docs-project/current/{release_dir}/tasks/NN-*.md`). Check `status`, `priority`, and `dependencies`.
     *   **User Action:** Choose the specific task `.md` file to work on (typically `status: pending` with met `dependencies`).
 
-2.  **Understand Task & Plan:**
+2.  **Understand Task & Plan (Planning Before Prompting):**
     *   Load the selected task's `.md` file content.
-    *   Review thoroughly:
+    *   **Thorough Review:** Carefully review all sections:
         *   `# Task Title`
-        *   `## Description`
-        *   `## Implementation Details / Notes`
-        *   `## Acceptance Criteria / Test Strategy` (including checklists)
-    *   **Clarify:** Ensure the goal, implementation steps, and verification methods are clear. Ask questions if needed.
-    *   **Plan (TDD):** Outline tests based on Acceptance Criteria. Plan implementation steps based on Details/Notes. Identify relevant code files.
+        *   `## Description` (Understand the *what* and *why*)
+        *   `## Implementation Details / Notes` (Initial *how*)
+        *   `## Acceptance Criteria / Test Strategy` (Define *done*)
+    *   **Clarify:** Ensure the goal, implementation steps, and verification methods are unambiguous. Ask clarifying questions *before* proceeding.
+    *   **Plan (Prepare for AI Collaboration):**
+        *   **Detailed Steps:** Break down the implementation into smaller, specific steps. Consider writing pseudocode or outlining the logic flow. This plan will guide the AI.
+        *   **TDD Planning:** Outline specific tests based on Acceptance Criteria. Think about inputs, outputs, and edge cases for each test.
+        *   **Context Gathering:** Identify relevant existing code files, patterns, or conventions in the codebase that the AI should follow. Refer to `docs-project/blueprint.md` and `docs-project/architecture.md`.
+        *   **Define AI Role (Optional but Recommended):** Briefly define the AI's objective for the *first* implementation step (e.g., "Generate the initial failing test structure for function X", "Implement the core logic for Y based on this pseudocode").
 
-3.  **Initiate Implementation Cycle:**
-    *   Begin the standard task cycle (refer to `guides/project-management.md`):
-        *   Write Tests (`lets-tests`)
-        *   Implement Code
-        *   Verify Tests (`bin/rspec`, `lets-fix-tests` if needed)
-        *   Commit Changes (`lets-commit`)
-        *   Reflect (`self-reflect`)
-        *   Update task status in its `.md` file.
+3.  **Initiate Implementation Cycle (Guided AI Execution):**
+    *   Begin the standard task cycle (refer to `guides/project-management.md`), using the plan from Step 2 to guide the AI:
+        *   **Write Tests (`lets-tests`):** Provide the AI with the planned test structure and acceptance criteria. Review the generated test code carefully.
+        *   **Implement Code:** Provide the AI with the detailed implementation step (e.g., pseudocode, specific function signature, relevant context). Use clear, concise instructions. Consider using prompts like "ONLY IMPLEMENT EXACTLY THIS STEP."
+        *   **Verify Tests (`bin/rspec`, `lets-fix-tests` if needed):** Run tests. If they fail, provide the AI with the error message and relevant code snippets for debugging.
+        *   **Commit Changes (`lets-commit`):** Ensure commits are atomic and follow project conventions. Review the commit message generated or suggested by the AI.
+        *   **Reflect (`self-reflect`):** Analyze the implementation process, the AI's contribution, and capture learnings.
+        *   **Update Task Status:** Update the task status in its `.md` file.
+    *   **Review Rigorously:** Treat AI-generated code as if it were written by a junior developer. Review it thoroughly for correctness, adherence to standards, and potential issues before committing.
 
 ## Success Criteria
 

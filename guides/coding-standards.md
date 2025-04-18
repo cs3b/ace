@@ -51,6 +51,20 @@ This document outlines general coding standards. Project-specific conventions or
 - Follow a logical directory structure (e.g., separating library code, tests, configuration, documentation).
 - Use clear and consistent file naming conventions.
 Refer to the project's `docs-project/blueprint.md` for the specific structure.
+## AI-Assisted Development Collaboration
+
+When working with AI coding agents (like Cursor, Claude, etc.), treat them as collaborative partners, often akin to a junior developer needing clear guidance.
+
+- **Plan Before Prompting:** Thoroughly plan the task, including outlining steps, defining requirements, and identifying relevant context *before* asking the AI to generate or modify code. This aligns with the "Slow Vibe Coding" principle mentioned in Project Management.
+- **Provide Context:** Give the AI sufficient context, including relevant code snippets, project structure (`blueprint.md`), architecture (`architecture.md`), existing patterns, and the specific task definition (`.md` file).
+- **Use Specific, Concise Instructions:** Avoid vague requests. Break down complex tasks into smaller, well-defined steps. Use clear action verbs and specify the desired outcome. Consider using "prompt hygiene" like "ONLY IMPLEMENT EXACTLY THIS STEP" for focused changes.
+- **Structured Prompts:** Structure prompts clearly, defining the AI's role, the objective, step-by-step instructions, and the desired output format (XML is often preferred by models like GPT-4.1). Include examples (few-shot learning) where appropriate.
+- **Review Rigorously:** Review AI-generated code with the same scrutiny as human-written code. Check for correctness, adherence to standards, edge cases, security, and performance implications. Do not blindly trust AI output.
+- **Iterate and Refine:** Expect to iterate. Provide constructive feedback on the AI's output to guide it towards the desired solution. Ask for explanations of its logic to learn and verify understanding.
+- **Leverage Strengths:** Use AI for tasks it excels at (e.g., boilerplate code, implementing well-defined algorithms, refactoring based on clear rules) but rely on human oversight for complex design decisions and architectural planning.
+- **Avoid "Hacky" Prompts:** Modern models respond better to clear instructions than tricks like excessive capitalization or emotional appeals.
+
+Refer to the [Project Management Guide](project-management.md) for how AI collaboration fits into the task workflow.
 
 *(Example structure - adjust based on project)*
 ```

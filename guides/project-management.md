@@ -74,7 +74,7 @@ Briefly describe the goal of this task. What should be achieved?
   - [ ] Sub-task or step 1
   - [ ] Sub-task or step 2
 ```
-This structured format ensures clarity for both humans and AI agents interacting with the tasks.
+This structured format ensures clarity for both humans and AI agents interacting with the tasks. Providing comprehensive details in the "Implementation Details / Notes" and "Acceptance Criteria" is key for effective AI collaboration.
 
 ### 2. Version Naming
 
@@ -126,15 +126,21 @@ Tasks and release structures are typically generated through one of three primar
 2.  **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `backlog/` first.
 3.  **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually starting in `backlog/`.
 
-#### General Implementation Process (per task)
+#### General Implementation Process (per task) - Integrating AI Collaboration
 
-1.  **Planning & Understanding**: Before writing code, thoroughly understand the task requirements (from the `.md` file), plan the implementation approach, and identify potential challenges. Design interfaces and test structures.
-2.  **Test-Driven Development**:
-    *   Write failing tests that capture the acceptance criteria.
-    *   Implement the minimal code required to make the tests pass.
-    *   Refactor the code for clarity and efficiency while keeping tests green.
-3.  **Documentation & Committing**: Document design decisions within the code or task file. Commit changes frequently using atomic, well-formatted commit messages.
-4.  **Review & Reflection**: Use `self-reflect` or manual review to assess the implemented solution, update documentation, and capture learnings.
+1.  **Planning & Understanding (Planning Before Prompting)**: Before involving the AI in coding, *thoroughly* understand the task requirements (from the `.md` file). Plan the implementation approach:
+    *   Break down the task into smaller, logical steps.
+    *   Identify potential challenges or areas needing clarification.
+    *   Outline the intended design, interfaces, and test structures.
+    *   Gather necessary context (relevant existing code, patterns, `blueprint.md`, `architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
+2.  **Test-Driven Development (AI-Assisted)**:
+    *   **Write Tests (`lets-tests`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria. *Review generated tests carefully.*
+    *   **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
+    *   **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
+3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions. *Review commit messages.* Commit changes frequently.
+4.  **Review & Reflection (`self-reflect`)**: Use the `self-reflect` workflow instruction to analyze the implemented solution, the effectiveness of the AI collaboration, update documentation, and capture learnings or necessary process improvements.
+
+**Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `guides/coding-standards.md` for more on AI collaboration best practices.
 
 ## Additional Resources
 
