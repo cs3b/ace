@@ -1,4 +1,9 @@
-## Error Handling Guidelines
+# Error Handling Guidelines
+
+## Goal
+This guide outlines best practices and standard patterns for handling errors consistently and effectively throughout the project, ensuring robustness, debuggability, and a good user experience.
+
+# Error Handling Guidelines
 
 ### 1. Exception Hierarchy
 
@@ -125,3 +130,8 @@ agent.execution_trace # Returns execution history
 - LLM timeouts: Check network and retry settings
 - Memory issues: Review resource cleanup
 - Thread deadlocks: Check lock ordering
+
+## Related Documentation
+- [Coding Standards](coding-standards.md)
+- [Quality Assurance](quality-assurance.md) (Logging, Monitoring)
+- [Writing Guides Guide](writing-guides-guide.md)

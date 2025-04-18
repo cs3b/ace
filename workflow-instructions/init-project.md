@@ -1,6 +1,7 @@
 # Init Project Workflow Instruction
 
-This workflow instruction initializes the docs-dev directory structure and core documentation for AI-driven development.
+## Goal
+Initialize the `docs-dev` and `docs-project` directory structures and create core documentation files (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) to establish the foundation for an AI-assisted development workflow in a new or existing project.
 
 ## Process Steps
 
@@ -26,6 +27,11 @@ This workflow instruction initializes the docs-dev directory structure and core 
    - Add .gitignore patterns for docs-dev
    - Create initial commit for docs structure
 
+## Prerequisites
+
+- Project root directory must be accessible with write permissions.
+- Optional: An existing `README.md` can provide information for extraction.
+- Optional: Git repository initialized (the workflow instruction can add to `.gitignore`).
 ## User Input (if README not present)
 
 The workflow instruction will prompt for:
@@ -93,7 +99,7 @@ Example structure:
 [Customization and extension capabilities]
 ```
 
-## Success Criteria
+## Output / Success Criteria
 
 1. **Directory Structure**:
    - All required directories created
@@ -120,6 +126,12 @@ Initialize an AI-driven development environment by creating necessary documentat
 - Extracts project information from README.md when available
 - Creates consistent structure for AI-driven development
 - Sets up version control integration for documentation
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Explains the created structure)
+- [What We Build Example](../docs-project/what-do-we-build.md)
+- [Architecture Example](../docs-project/architecture.md)
+- [Blueprint Example](../docs-project/blueprint.md)
 
 ## Prerequisites
 

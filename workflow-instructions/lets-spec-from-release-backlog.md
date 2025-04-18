@@ -10,6 +10,9 @@ Process notes, ideas, or draft tasks captured in the internal `backlog/` subdire
     *   If instructed otherwise (e.g., "process the backlog for release v1.3.0 in the main project backlog"), identify the specified target release directory within `docs-project/backlog/`.
     *   Verify the existence of the target release directory and its internal `backlog/` subdirectory (e.g., `docs-project/current/{release_dir}-workflow-instruction/backlog/`).
 
+## Input
+- Target release directory path (defaults to the single directory in `docs-project/current/`, otherwise requires explicit path like `docs-project/backlog/v1.3.0-Enhancements/`).
+- Items (notes, draft tasks as `.md` files) within the `{target_release_path}/backlog/` directory.
 2.  **Review Backlog Items:**
     *   List the files/notes within the source `backlog/` directory.
     *   Present each item (e.g., a simple `.md` note) to the user/agent for review.
@@ -31,7 +34,15 @@ No new release directory is created by this workflow instruction.
     *   Show the path to the target release directory where tasks were added.
     *   Suggest next steps (review the newly added tasks within the target release).
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- Structured task files (`.md`) created or updated in the *target* release's `tasks/` directory.
+- Task dependencies (relative to other tasks in the target release) identified and populated.
+- The *target* release's `README.md` file updated with the newly added tasks.
+- Confirmation message summarizing items processed, tasks created, and target release location.
+
+**Success Criteria:**
 
 *   Target release directory (in `current/` or `backlog/`) identified.
 *   Items from the target release's internal `backlog/` subdirectory reviewed.
@@ -58,3 +69,6 @@ No new release directory is created by this workflow instruction.
 > "Use the `lets-spec-from-release-backlog` command, targeting release `v1.3.0-Enhancements` located in the main project backlog."
 
 *(Agent identifies `docs-project/backlog/v1.3.0-Enhancements/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Standard task format, release structure)

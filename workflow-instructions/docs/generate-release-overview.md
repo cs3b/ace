@@ -1,31 +1,42 @@
 # Generate Release Overview Workflow Instruction
 
-This workflow instruction helps create comprehensive release documentation.
+## Goal
+Create or update the main release overview document (e.g., `docs-project/current/{release_dir}/README.md` or `v.X.Y.Z-Codename.md`) summarizing the release goals, key changes, requirements, and plan.
+
+## Prerequisites
+- A release directory exists (e.g., in `docs-project/current/`).
+- Tasks for the release are defined or becoming clear.
+- The release type (Patch, Feature, Major) is known.
 
 ## Process Steps
 
-1. Review Changes:
-   - Collect commit history
-   - Identify feature additions
-   - Note breaking changes
-   - Document migration steps 
+1.  **Identify Target Release:** Confirm the release directory path.
+2.  **Gather Context:**
+    *   Review the tasks defined within the release (`tasks/*.md`).
+    *   Review relevant source documents (e.g., PRD, FRD, PR comments that initiated the release).
+    *   Review recent commit history if the release is already in progress.
+3.  **Draft/Update Overview Document:** Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release. Use the structure from the template (`guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide. Key sections include:
+    *   **Release Overview:** Brief summary.
+    *   **Release Information:** Type, Dates, Status.
+    *   **Goals & Requirements:** High-level objectives, metrics, acceptance criteria.
+    *   **Implementation Plan:** High-level phases, components, dependencies.
+    *   **Quality Assurance:** Testing strategy outline.
+    *   **Release Checklist:** Standard pre-release checks.
+4.  **Populate Content:** Fill in the sections based on the gathered context and the release scope.
+5.  **Review & Refine:** Ensure the overview is clear, accurate, and aligned with the release goals and tasks.
+6.  **Save:** Save the updated overview document.
 
-2. Document Impact:
-   - Key benefits
-   - Performance impacts
-   - Security considerations
-   - Backward compatibility
+## Input
+- Release directory path.
+- Related tasks, source documents, and potentially commit history.
 
-3. Formatting:
-   - Clear sections
-   - Prioritized content
-   - Actionable steps
-   - Version references
+## Output / Success Criteria
+- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the release directory is created or updated.
+- [x] The document accurately reflects the release's goals, scope, and plan.
+- [x] Key sections (Overview, Info, Goals, Plan, QA, Checklist) are present and populated appropriately.
 
-## Success Criteria
-
-- Comprehensive feature coverage
-- Clear migration path
-- Impact assessment complete
-- Documentation is actionable
-- All key areas addressed
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
+- [Release Overview Template](../../guides/prepare-release/v.x.x.x/v.x.x.x-codename.md)
+- [Project Management Guide](../../guides/project-management.md)
+- [Release Process Guide](../../guides/ship-release.md)

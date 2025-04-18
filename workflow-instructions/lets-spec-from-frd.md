@@ -11,6 +11,10 @@ Translate a higher-level feature description into a planned release structure wi
     *   Provide the path to the FRD file (e.g., `.md`, `.txt`, `.pdf`).
     *   Alternatively, paste the content directly.
 
+## Input
+- Feature Requirement Document (FRD) content (file path or pasted text).
+- Proposed release version number and codename (optional, can be derived).
+- Target location (defaults to `docs-project/backlog/`).
 2.  **Determine Release Version & Path**:
     *   Check the project's current version (e.g., from `lib/aira/version.rb` or Git tags).
     *   Propose the next *Minor* version (e.g., v1.2.3 -> v1.3.0). Allow user override.
@@ -48,7 +52,16 @@ Translate a higher-level feature description into a planned release structure wi
     *   Indicate the location of the new release directory (usually in `backlog/`).
     *   Suggest next steps (review tasks, refine plan, move to `current/` when ready).
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- New release directory created in `docs-project/backlog/` (or specified location).
+- Standard subdirectories (`docs`, `decisions`, `tasks`, `test-cases`, `user-experience`, `researches`, `README.md`) created within the release directory.
+- Structured task files (`.md`) generated in `{release_path}/tasks/`.
+- Release overview (`README.md`) created.
+- Placeholder files for potential ADRs (`decisions/`) or research (`researches/`).
+
+**Success Criteria:**
 
 *   New release directory created in `docs-project/backlog/` (or `current/` if specified).
 *   Standard subdirectories (`docs`, `decisions`, `tasks`, etc.) are created.
@@ -79,3 +92,8 @@ lets-spec-from-frd --frd-path path/to/my-feature.md --version v1.3.0 --name Cool
 ## Notes
 - This workflow instruction focuses on *generating the initial plan*. Tasks will likely require refinement before and during implementation.
 - It integrates the principles previously found in `guides/prepare-release/prepare-release-documentation.md` regarding the artifacts needed for a Feature release.
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Standard task format, release structure)
+- [Release Process Guide](../guides/ship-release.md) (Artifacts per release type)
+- Release directory templates in `guides/prepare-release/v.x.x.x/`

@@ -3,6 +3,14 @@
 ## Goal
 Capture the state of the current development session, including user requests, agent actions, and key context, to facilitate session resumption and process review.
 
+## Prerequisites
+- An active development session with recent interactions between user and AI agent.
+- A defined current release directory (`docs-project/current/{release_dir}/`).
+- The `sessions/` subdirectory exists or can be created within the current release directory.
+
+## Input
+- User request to log the current session.
+- Access to the recent chat/interaction history for the AI agent to summarize.
 ## Process Steps
 
 1. **Trigger Workflow Instruction:** The user invokes `log-session` typically after a significant interaction or at the end of a work segment.
@@ -72,8 +80,12 @@ The `log-session` workflow instruction should be used periodically, especially:
 - At the end of a development session.
 
 This complements `self-reflect`, which focuses on deeper analysis and actionable improvements, while `log-session` focuses on capturing the immediate state for context restoration.
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md)
+- `self-reflect` Workflow Instruction (for comparison)
 
-## Success Criteria
+## Output / Success Criteria
 
 - The process for logging a session is clearly defined.
 - The standard format for the session log file (including the Context Loading Prompt) is documented.

@@ -1,4 +1,9 @@
-## Version Control Guidelines
+# Version Control Guide
+
+## Goal
+This guide establishes the standards and workflow for using Git version control within this project, focusing on commit message conventions, branching strategies, and pull request processes to ensure a clean, understandable, and collaborative development history.
+
+# Version Control Guide
 
 ### 1. Commit Message Structure
 
@@ -213,3 +218,9 @@ Common file groupings:
    - Update docs with code changes
    - Include example updates
    - Keep CHANGELOG current
+   ## Related Documentation
+   - [Project Management Guide](project-management.md) (Task workflow integration)
+   - [Release Process Guide](ship-release.md) (Tagging, Changelog)
+   - [Quality Assurance Guide](quality-assurance.md) (PR Template, Code Review)
+   - [Writing Guides Guide](writing-guides-guide.md)
+   - Relevant Workflow Instructions: `lets-commit`

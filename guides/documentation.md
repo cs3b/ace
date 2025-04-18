@@ -1,4 +1,9 @@
-## Documentation Guidelines
+# Documentation Standards
+
+## Goal
+This guide defines the standards and best practices for documenting code and project artifacts within this toolkit, ensuring clarity, maintainability, and effective knowledge sharing for both human developers and AI agents.
+
+# Documentation Standards
 
 ### 1. Code Documentation
 
@@ -140,3 +145,8 @@
    - **Code Comments:** Use comments to explain the "why" behind complex logic, not just the "what". This helps the AI understand intent.
    - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link to a relevant ADR or guide section.
    ```
+   ## Related Documentation
+   - [Coding Standards](coding-standards.md)
+   - [Project Management Guide](project-management.md) (Task format, ADRs)
+   - [ADR Template](prepare-release/v.x.x.x/decisions/_template.md)
+   - [Writing Guides Guide](writing-guides-guide.md)

@@ -1,4 +1,9 @@
-## Quality Assurance Guidelines
+# Quality Assurance Guidelines
+
+## Goal
+This guide outlines the processes, tools, and standards used to ensure the quality, reliability, and maintainability of the codebase throughout the development lifecycle.
+
+# Quality Assurance Guidelines
 
 ### 1. Code Quality Tools
 
@@ -148,3 +153,9 @@
    - [ ] Optimize memory usage in large operations
    - [ ] Enhance logging granularity
    ```
+   ## Related Documentation
+   - [Coding Standards](coding-standards.md)
+   - [Testing Guidelines](testing.md)
+   - [Version Control](version-control.md) (PR Templates)
+   - [Security](security.md)
+   - [Writing Guides Guide](writing-guides-guide.md)

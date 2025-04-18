@@ -12,6 +12,8 @@ Our development workflow centers around:
 
 ## Guide Organization
 
+### Meta-Guides
+- [Writing Development Guides](writing-guides-guide.md) - How to write effective guides for this toolkit
 ### Essential Guidelines
 - [Coding Standards](coding-standards.md) - Code style and best practices
 - [Testing Guidelines](testing.md) - Testing approach and frameworks
@@ -27,6 +29,7 @@ Our development workflow centers around:
 ### Release Management
 - [Release Process](ship-release.md) - Release workflow and checklists
 - [Release Documentation Template](prepare-release/prepare-release-documentation.md) - Standard release documentation structure
+- [Writing Workflow Instructions](writing-workflow-instructions.md) - How to define AI workflows
 
 ## Task & Release Management
 

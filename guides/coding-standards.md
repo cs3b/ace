@@ -1,6 +1,10 @@
 # General Coding Standards
 
-This document outlines general coding standards. Project-specific conventions or overrides should be documented in `docs-project/coding-standards.md` (if it exists).
+## Goal
+This guide outlines the fundamental principles and standards for writing clean, readable, maintainable, and consistent code within this project. Adhering to these standards facilitates collaboration (human-human and human-AI) and long-term project health.
+# General Coding Standards
+
+This document outlines general coding standards applicable across the project. Project-specific conventions or language-specific rules beyond these general principles may be documented in the relevant `docs-project/` directory or linked from the `docs-project/blueprint.md`.
 
 ## General Principles
 
@@ -81,3 +85,9 @@ project-root/
 ├── bin/          # Executable scripts
 └── Rakefile / Makefile / etc. # Build/task runner configuration
 ```
+## Related Documentation
+- [Error Handling Guide](error-handling.md)
+- [Testing Guidelines](testing.md)
+- [Documentation Standards](documentation.md)
+- [Project Management Guide](project-management.md) (AI Collaboration context)
+- [Writing Guides Guide](writing-guides-guide.md)

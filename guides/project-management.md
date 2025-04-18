@@ -1,4 +1,9 @@
-# Development Philosophy and Project Management
+# Project Management Guide
+
+## Goal
+This guide defines the core development philosophy, project structure, task management system, and standard workflows used within this toolkit. It serves as the central reference for how work is organized, tracked, and executed, enabling effective collaboration between human developers and AI agents.
+
+# Project Management Guide
 
 Our development workflow is centered around:
 - Iterative, task-based development
@@ -112,7 +117,7 @@ Key checks when updating a task's `status` field:
     - Relevant documentation (code comments, guides, examples) has been updated.
     - Changes have been committed following version control guidelines.
     - If applicable, the Pull Request incorporating the changes has been reviewed and merged.
-    - Any decisions made or significant learnings are documented (e.g., in the task file, ADR, or `self-reflect` log).
+    - Any decisions made or significant learnings are documented (e.g., in the task file, an ADR in `docs-dev/decisions/`, or a `self-reflect` log).
 
 Moving a whole release directory follows the same logic: ensure all contained tasks meet the criteria for the next state (`backlog` -> `current`, `current` -> `done`).
 
@@ -142,7 +147,7 @@ Tasks and release structures are typically generated through one of three primar
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `guides/coding-standards.md` for more on AI collaboration best practices.
 
-## Additional Resources
+## Related Documentation
 
 Essential standards and guidelines:
 - [Coding Standards](coding-standards.md)
@@ -152,3 +157,4 @@ Essential standards and guidelines:
 - [Error Handling](error-handling.md)
 - [Performance](performance.md)
 - [Security](security.md)
+- [Writing Guides Guide](writing-guides-guide.md)

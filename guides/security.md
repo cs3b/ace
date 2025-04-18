@@ -1,4 +1,9 @@
-## Security Guidelines
+# Security Guidelines
+
+## Goal
+This guide outlines essential security practices, checklists, and procedures to follow during development to minimize vulnerabilities and protect project assets and user data.
+
+# Security Guidelines
 
 ### 1. Security Review Checklist
 
@@ -72,3 +77,8 @@ end
    - High: Data exposure
    - Medium: Limited impact
    - Low: Minor issues
+   ## Related Documentation
+   - [Coding Standards](coding-standards.md)
+   - [Quality Assurance](quality-assurance.md) (Code Review)
+   - [Error Handling](error-handling.md) (Avoid leaking sensitive info)
+   - [Writing Guides Guide](writing-guides-guide.md)

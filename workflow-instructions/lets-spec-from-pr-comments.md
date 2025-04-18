@@ -1,7 +1,17 @@
-<!-- Read the project management guide first: docs-project/README.md -->
+<!-- Read the project management guide first: docs-project/project-management.md -->
 # PR Comments to Specification Workflow Instruction
 
-This workflow instruction processes GitHub pull request comments into organized, structured tasks within the unified task management system, using command-line tools for data fetching. It's typically used to generate tasks for a *Patch* release addressing specific feedback.
+## Goal
+Process fetched GitHub Pull Request comments and reviews (stored as individual JSON files) to generate or update structured, actionable task files (`.md`) within the corresponding release directory's `tasks/` folder. This facilitates addressing PR feedback in a *Patch* release.
+
+## Prerequisites
+- **Run Fetch Command First:** Successfully run either `fetch-comments-by-api` or `fetch-comments-by-mcp` workflow instruction.
+- Fetched PR data (individual JSON files for comments, reviews, PR details) exists in the expected location: `{release_path}/docs/{pr_path}/`.
+- The target release directory exists (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
+- Familiarity with the project's standard task format.
+
+## Input
+- Path to the release directory containing the fetched PR data (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
 
 ## Process Steps
 
@@ -132,7 +142,16 @@ This workflow instruction processes GitHub pull request comments into organized,
           └── README.md
           ```
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- Structured task files (`.md`) created or updated in `{release_path}/tasks/`.
+- Task filenames include sequence prefixes and follow the `{sequence}-{scope}-{action}-{target}.md` convention.
+- Task frontmatter includes `id`, `status`, `priority`, `dependencies` (relative to other tasks in this batch), and `comment_ids` linking back to GitHub comments.
+- `{release_path}/README.md` updated with a summary of the generated tasks.
+- Confirmation message including the number of comments processed, tasks created/updated, and the final directory structure shown via `tree`.
+
+**Success Criteria:**
 
 - All feedback processed:
   - PR comments fully captured from data provided by the fetch command
@@ -148,50 +167,33 @@ This workflow instruction processes GitHub pull request comments into organized,
   - Review concerns addressed in task descriptions/notes.
   - Complete directory structure created as specified.
 
-## Prerequisites
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Standard task format)
+- `fetch-comments-by-api` Workflow Instruction
+- `fetch-comments-by-mcp` Workflow Instruction
 
-Before running this command:
-
-1. Read the project management guide: `docs-project/README.md`
-2. Read one of the PR comment fetching guides: `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md`
-3. Understand the current project structure and workflows
-4. Determine the current project version from appropriate files
-5. Ensure you have appropriate GitHub permissions for API-based fetching
 ## Usage Example
 
 ```bash
-# First, read the project management guide
-cat docs-project/README.md
+# 0. Ensure project state is ready (version known, project structure understood)
+# 1. Fetch PR comments (Choose one method):
+fetch-comments-by-api https://github.com/org/repo/pull/123 --dir docs-project/current/v1.0.1-feedback-to-pr-123/
+# OR
+fetch-comments-by-mcp https://github.com/org/repo/pull/123 --dir docs-project/current/v1.0.1-feedback-to-pr-123/
 
-# Check current version from appropriate files
-cat VERSION # or
-cat lib/version.rb # or
-grep -A 3 "version" package.json
+# 2. Process the fetched comments to generate tasks:
+lets-spec-from-pr-comments docs-project/current/v1.0.1-feedback-to-pr-123/
 
-# Read the fetch workflow instruction documentation first (choose one method)
-cat docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md
-# or
-cat docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md
-
-# Then fetch PR comments using your preferred method
-fetch-comments-by-api https://github.com/org/repo/pull/123
-# or
-fetch-comments-by-mcp https://github.com/org/repo/pull/123
-
-# Then process PR comments with:
-lets-spec-from-pr-comments {release_path}/
-
-# Agent creates:
-docs-project/current/v1.2.1-feedback-to-pr-21-workflow-instruction/  # Example path
-├── docs/                                              # Data from fetch workflow instruction
-│   └── {pr_path}/
-│       ├── comments/
-│       ├── reviews/
-│       └── pr/
-├── tasks/                                             # Generated task files in standard .md format
-│   ├── 01-prompt-use-consistent-name-method.md       # Example task file
-│   ├── 02-image-fix-content-format.md                # Example task file
-│   ├── 03-examples-add-to-demo-files.md              # Example task file
-│   └── 04-server-add-pagination-support.md           # Example task file
-└── README.md                                          # Implementation overview
+# 3. Agent confirms task creation and shows the directory structure:
+# ✅ Processed 5 comments, created 3 tasks.
+# tree docs-project/current/v1.0.1-feedback-to-pr-123/ -L 2
+# docs-project/current/v1.0.1-feedback-to-pr-123/
+# ├── docs
+# │   └── pr-123-YYYYMMDD-HHMMSS
+# ├── tasks
+# │   ├── 01-fix-typo-in-readme.md
+# │   ├── 02-refactor-auth-logic.md
+# │   └── 03-add-unit-test-for-helper.md
+# └── README.md
 ```

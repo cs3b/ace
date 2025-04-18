@@ -1,4 +1,9 @@
-## Release Management Guidelines
+# Release Process Guide
+
+## Goal
+This guide details the standard process for preparing, validating, tagging, and publishing project releases, ensuring consistency and quality control. It covers versioning, Git workflow, checklists, and post-release activities.
+
+# Release Process Guide
 
 ### 1. Version Control
 
@@ -102,7 +107,50 @@
    gem install aidarb
    ```
 
-## Reference Documentation
+## Related Documentation
+- [Project Management Guide](project-management.md) (Task flow, versioning)
+- [Documentation Standards Guide](documentation.md)
+- [Version Control Guide](version-control.md) (Tagging, Commit Messages)
+- [Writing Guides Guide](writing-guides-guide.md)
+- Relevant Workflow Instructions: `lets-release`, `generate-api-docs`, `review-kanban-board`
+
+## Reference Templates
+- Release checklist items are often included in the main release overview template (`prepare-release/v.x.x.x/v.x.x.x-codename.md`).
+
+## Helper Scripts
+- `bin/publish` (Assumed script for building and publishing the artifact)
+
+## Post-Release
+
+1. **Monitoring**:
+   ```ruby
+   # Example monitoring setup
+   require 'appsignal'
+
+   AppSignal.monitor_transaction(
+     'gem.release',
+     'v1.2.0',
+     environment: ENV['RACK_ENV']
+   )
+   ```
+
+2. **Communication**:
+   ```markdown
+   ## Release Announcement
+
+   Aira v1.2.0 is now available!
+
+   ### Highlights
+   - New browser tool
+   - Improved performance
+   - Better error handling
+
+   ### Installation
+   ```bash
+   gem install aidarb
+   ```
+
+   ## Reference Documentation
 
 - [Project Management](../guides/project-management.md) (Task flow, versioning)
 - [Documentation Standards](../guides/documentation.md)

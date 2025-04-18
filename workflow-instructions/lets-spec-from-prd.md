@@ -11,6 +11,9 @@ Translate a broad product vision into a structured project plan, potentially inv
     *   Provide the path to the PRD file (e.g., `.md`, `.txt`, `.pdf`).
     *   Alternatively, paste the content directly.
 
+## Input
+- Product Requirement Document (PRD) content (file path or pasted text).
+- Proposed initial release version number and codename (optional, can be derived).
 2.  **Analyze PRD & High-Level Planning**:
     *   Parse the PRD to identify core product goals, key features, target audience, and high-level architecture concepts.
     *   **Propose Release Strategy**: Based on the scope, suggest a potential breakdown into major milestones or releases (e.g., v1.0.0 for MVP, v1.1.0 for Feature X, v1.2.0 for Feature Y). Allow user confirmation or modification.
@@ -49,7 +52,18 @@ Update the main `docs-project/README.md` (if it exists) or create one to summari
     *   Indicate the location of the new release directories in `backlog/`.
     *   Suggest next steps (review initial tasks, refine architecture, start implementation of the first release).
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- Core project documents (`docs-project/what-do-we-build.md`, `docs-project/architecture.md`) created or updated.
+- Initial release directory created in `docs-project/backlog/` with standard subdirectories and templates.
+- Foundational task files (`.md`) generated in the initial release's `tasks/` directory.
+- Placeholder ADR files created in the initial release's `decisions/` directory.
+- *Optional:* Directories for subsequent planned releases created in `docs-project/backlog/` with basic `README.md` files.
+- Overall project overview (`docs-project/README.md`) potentially updated.
+- Confirmation message summarizing the release plan, tasks created, and directory locations.
+
+**Success Criteria:**
 
 *   Project overview documents (`what-do-we-build.md`, `architecture.md`) created/updated.
 *   Initial release directory (e.g., v1.0.0) created in `docs-project/backlog/` with standard subdirectories.
@@ -81,3 +95,9 @@ lets-spec-from-prd --prd-path path/to/product-spec.md --initial-version v1.0.0 -
 - This command initiates the project structure based on a high-level vision. Significant refinement of tasks and plans within each release will be necessary.
 - It integrates principles from `guides/prepare-release/prepare-release-documentation.md` regarding artifacts needed for Major releases (like `codemods`, comprehensive docs).
 - Consider if this workflow instruction should *replace* or *complement* the `init-project` workflow instruction. It seems more comprehensive for starting from a PRD.
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Standard task format, release structure)
+- [Release Process Guide](../guides/ship-release.md) (Artifacts per release type)
+- Release directory templates in `guides/prepare-release/v.x.x.x/`
+- `init-project` Workflow Instruction (Potentially complementary)

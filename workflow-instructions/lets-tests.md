@@ -1,5 +1,18 @@
 # Let's Test Workflow Instruction
 
+## Goal
+Guide the developer through writing and running automated tests (unit, integration) following Test-Driven Development (TDD) principles.
+
+## Prerequisites
+- A specific feature or piece of functionality requires testing (often defined in a task `.md` file).
+- Development environment is set up with the testing framework configured (e.g., RSpec, Jest).
+- Understanding of the project's testing guidelines and conventions.
+
+## Input
+- Feature/task requirements and acceptance criteria.
+- Optional: Existing code that needs tests.
+# Let's Test Workflow Instruction
+
 For implementing tests using Test-Driven Development. See [Testing Guide](../guides/testing.md) for details.
 
 ## Process Steps
@@ -71,7 +84,14 @@ RSpec.describe Component do
 end
 ```
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- New or updated test files (e.g., `spec/..._spec.rb`).
+- Passing test suite execution results.
+- Optional: Updated code coverage reports.
+
+**Success Criteria:**
 
 - All tests pass
 - Tests written before implementation
@@ -79,3 +99,8 @@ end
 - Thread safety verified
 - Clear test names that document behavior
 - Tests run in under 5 seconds (or are tagged as slow)
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Testing Guidelines Guide](../guides/testing.md)
+- [Testing Frameworks Guide](../guides/testing/frameworks.md) (If applicable)
+- [Coding Standards Guide](../guides/coding-standards.md)

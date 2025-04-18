@@ -1,5 +1,14 @@
 # Let's Fix Tests Workflow Instruction
 
+## Goal
+Systematically diagnose and fix failing automated tests (unit, integration, etc.).
+
+## Prerequisites
+- Test suite has been run and failures have been identified.
+- Access to test output (error messages, stack traces).
+- Development environment is set up correctly (dependencies installed, services running if needed).
+# Let's Fix Tests Workflow Instruction
+
 A systematic approach to diagnose and fix failing tests. For detailed testing practices and framework info, see [Testing Guide](../guides/testing.md).
 
 ## Process Steps
@@ -47,7 +56,7 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
 - [Testing Frameworks](../guides/testing/frameworks.md) (if applicable)
 - [Coding Standards](../guides/coding-standards.md)
 
-## Success Criteria
+## Output / Success Criteria
 
 1.  **All Tests Pass:** The full test suite runs without failures (e.g., `bundle exec rspec`).
 2.  **Targeted Fix:** The fix addresses the root cause of the failure.

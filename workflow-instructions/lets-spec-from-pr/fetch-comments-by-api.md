@@ -1,5 +1,20 @@
 # Fetch PR Comments by API Workflow Instruction
 
+## Goal
+Fetch Pull Request details, comments, and reviews (including review comments) from GitHub using the API via the `docs-dev/tools/get-github-pr-data.rb` script, and store them in a structured format within a specified release path.
+
+## Prerequisites
+- Ruby environment installed to run the script.
+- Required gems (`json`, `net/http`, `uri`, `dotenv`, `optparse`, `fileutils`, `time`) installed.
+- A `.env` file in `docs-dev/tools/` containing a valid `GITHUB_TOKEN`.
+- A target release directory path provided or determined.
+- A valid GitHub Pull Request URL.
+
+## Input
+- GitHub Pull Request URL (e.g., `https://github.com/owner/repo/pull/123`).
+- Target release directory path (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
+# Fetch PR Comments by API Workflow Instruction
+
 This workflow instruction uses command-line tools to fetch pull request comments and reviews.
 
 ## Process Steps
@@ -68,7 +83,17 @@ This workflow instruction uses command-line tools to fetch pull request comments
      - Comment/review content
      - Context (file, line numbers if applicable)
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- A timestamped subdirectory created within `{release_path}/docs/` (e.g., `pr-123-YYYYMMDD-HHMMSS/`).
+- Inside the timestamped directory:
+    - `raw/` subdirectory containing `pr.json`, `reviews.json`, `comments.json`.
+    - `pr/` subdirectory containing individual PR details JSON.
+    - `reviews/` subdirectory containing individual review JSON files.
+    - `comments/` subdirectory containing individual comment JSON files (from PR and reviews).
+
+**Success Criteria:**
 
 - PR URL correctly parsed into owner, repo, and number
 - Tool successfully executed and data fetched
@@ -95,4 +120,8 @@ docs-project/current/v1.2.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
     ├── comments.json
     ├── reviews.json
     └── pr.json
+    ## Reference Documentation
+    - [Writing Workflow Instructions Guide](../../../guides/writing-workflow-instructions.md)
+    - [`get-github-pr-data.rb` script](../../../tools/get-github-pr-data.rb)
+    - [GitHub REST API Documentation](https://docs.github.com/en/rest/pulls)
 ```

@@ -1,4 +1,9 @@
-# General Testing Guidelines
+# Testing Guidelines
+
+## Goal
+This guide defines the project's overall testing strategy, outlines best practices for writing effective tests, and explains conventions for organizing and executing tests to ensure code quality and reliability.
+
+# Testing Guidelines
 
 This document outlines general testing strategies and best practices. Project-specific configurations or conventions should be documented in `docs-project/testing-guide.md` (if it exists).
 
@@ -95,3 +100,11 @@ Following these principles makes it easier to write focused unit tests and provi
 - **Benchmarking:** Use benchmarking tools to measure the performance of critical code sections.
 - **Load Testing:** Simulate concurrent users or operations to test system behavior under load.
 - **Concurrency:** Write specific tests to verify thread safety if components are expected to be used concurrently (e.g., test shared resources under concurrent access using multiple threads).
+
+## Related Documentation
+- [Testing Frameworks Guide](testing/frameworks.md) (Setup details)
+- [Coding Standards Guide](coding-standards.md)
+- [Quality Assurance Guide](quality-assurance.md) (Test Coverage, CI)
+- [Performance Tuning Guide](performance.md) (Performance Testing)
+- [Writing Guides Guide](writing-guides-guide.md)
+- Relevant Workflow Instructions: `lets-tests`, `lets-fix-tests`

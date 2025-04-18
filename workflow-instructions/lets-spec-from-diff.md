@@ -1,10 +1,17 @@
 # Git Diff to Specification Workflow Instruction (lets-spec-from-diff)
 
+## Goal
+Analyze a Git diff (provided as a file or command output) using an "Outside-In" approach (interfaces first, then implementation) to generate structured analysis documents (`backlog/high-level/`, `backlog/technical/`) and actionable, prioritized task files (`tasks/`) within a specified release directory.
+
 This workflow instruction processes a Git diff file (or direct Git command output) to generate structured analysis and actionable tasks. It follows an "Outside-In" approach, first analyzing high-level interfaces and designs before examining implementation details.
 
 ## Goal
 Transform Git diff content into a comprehensive analysis with prioritized, actionable tasks that follow the unified task management system. This helps in understanding changes, identifying improvements, and creating a structured implementation plan.
 
+## Prerequisites
+- Git diff content available either as a file or directly from a `git diff` command.
+- Target release directory exists or needs to be created (usually in `docs-project/current/` or `docs-project/backlog/`).
+- Familiarity with the project's standard task format.
 ## Process Steps
 
 1. **Input Preparation**:
@@ -25,6 +32,9 @@ Transform Git diff content into a comprehensive analysis with prioritized, actio
      └── README.md            # Release overview
      ```
 
+## Input
+- Git diff content (file path, git command string, or pasted text).
+- Target release directory path (defaults to `docs-project/current/{active_release}/` if not specified).
 2. **Diff Analysis**:
    - Parse changes by file and change type (additions, modifications, deletions)
    - Group related changes by component/module/feature
@@ -127,7 +137,15 @@ Transform Git diff content into a comprehensive analysis with prioritized, actio
      - Tasks generated
    - Recommend next steps
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- High-level analysis file(s) in `{release_path}/backlog/high-level/`.
+- Technical analysis file(s) in `{release_path}/backlog/technical/`.
+- Structured task file(s) in `{release_path}/tasks/`.
+- Updated `{release_path}/README.md` with task summary.
+
+**Success Criteria:**
 
 - **Complete Coverage**: All significant changes in diff are analyzed
 - **Outside-In Approach**: Interface and design analysis precedes implementation details
@@ -198,3 +216,7 @@ This workflow instruction complements:
 2. **Examining Legacy Code**: Understand existing codebase structure
 3. **Preparing Refactoring**: Identify patterns and pain points
 4. **Pre-Implementation Planning**: Convert design changes to concrete tasks
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Standard task format)
+- [Version Control Guide](../guides/version-control.md) (Git commands)

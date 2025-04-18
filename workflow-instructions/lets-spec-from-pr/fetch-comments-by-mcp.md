@@ -1,5 +1,19 @@
 # Fetch PR Comments by MCP Workflow Instruction
 
+## Goal
+Fetch Pull Request details, comments, and reviews from GitHub using the Model Context Protocol (MCP) server functions (`get_pull_request_comments`, `get_pull_request_reviews`), and store them as individual JSON files in a structured format within a specified release path.
+
+## Prerequisites
+- Access to an MCP server with GitHub integration enabled.
+- MCP server functions `get_pull_request_comments` and `get_pull_request_reviews` are available.
+- A target release directory path provided or determined.
+- A valid GitHub Pull Request URL.
+
+## Input
+- GitHub Pull Request URL (e.g., `https://github.com/owner/repo/pull/123`).
+- Target release directory path (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
+# Fetch PR Comments by MCP Workflow Instruction
+
 This workflow instruction uses GitHub MCP server to fetch pull request comments and reviews.
 
 ## Process Steps
@@ -44,7 +58,14 @@ This workflow instruction uses GitHub MCP server to fetch pull request comments 
 
    - Validate data structures for each file
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- Release directory structure created: `{release_path}/docs/comments/`, `{release_path}/docs/reviews/`.
+- Individual JSON files for each comment saved in `docs/comments/` using format `comment-{YYYY-MM-DD-HHMM}-{id}.json`.
+- Individual JSON files for each review saved in `docs/reviews/` using format `review-{YYYY-MM-DD-HHMM}-{id}.json`.
+
+**Success Criteria:**
 
 - All PR comments successfully fetched and stored
 - All PR reviews successfully fetched and stored
@@ -67,4 +88,7 @@ docs-project/current/v1.2.1-feedback-to-pr-21-workflow-instruction/
 │   └── reviews/
 │       └── review-2025-04-10-0824-2755584987.json     # Main review feedback
 └── README.md                                           # Empty release overview
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../../../guides/writing-workflow-instructions.md)
+- MCP Server Documentation (specific to the implementation being used)
 ```

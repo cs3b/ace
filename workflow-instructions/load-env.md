@@ -2,6 +2,13 @@
 
 **Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This workflow instruction focuses *only* on loading context, not initiating task execution (see `lets-start`).
 
+## Prerequisites
+- Executed within the project's root directory.
+- `docs-dev/` and `docs-project/` directories exist and are populated according to project standards.
+- `docs-project/blueprint.md` exists and is reasonably up-to-date (consider running `generate-blueprint` if not).
+
+## Input
+- User request to load the environment context.
 ## Process Steps
 
 1.  **Load General Process & Guides:**
@@ -29,10 +36,23 @@
     *   View recent commits: `git log -n 5 --oneline`
     *   View recent file changes: `git diff --name-status HEAD~5..HEAD`
 
-## Success Criteria
+## Output / Success Criteria
 
 1.  **General Process Understood:** Core development guides and available commands are known.
 2.  **Project Context Loaded:** Project goals (`what-do-we-build.md`), architecture (`architecture.md`), and structure (`blueprint.md`) are understood.
 3.  **Current State Identified:** The active release directory in `docs-project/current/` and its tasks are known. Recent code changes are reviewed.
 4.  **Environment Ready:** Working directory clean, dependencies installed, latest code pulled.
 5.  **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `lets-start`.
+## Reference Documentation
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md)
+- [Coding Standards Guide](../guides/coding-standards.md)
+- [Testing Guidelines Guide](../guides/testing.md)
+- [Documentation Standards Guide](../guides/documentation.md)
+- [Version Control Guide](../guides/version-control.md)
+- [Release Process Guide](../guides/ship-release.md)
+- `docs-project/what-do-we-build.md`
+- `docs-project/architecture.md`
+- `docs-project/blueprint.md`
+- `generate-blueprint` Workflow Instruction
+- `lets-start` Workflow Instruction

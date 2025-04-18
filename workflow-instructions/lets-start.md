@@ -5,6 +5,10 @@
 **Prerequisites:**
 - Run the [`load-env`](./load-env.md) workflow instruction first to load project context, general guides, project specifics, and identify the current release/tasks.
 
+## Prerequisites
+- `load-env` workflow instruction has been successfully executed, loading project context.
+- The current release directory (`docs-project/current/{release_dir}/`) and its tasks are identified.
+- Developer is ready to select and begin working on a specific task.
 ## Process Steps
 
 1.  **Review Release Context & Select Task:**
@@ -37,11 +41,22 @@
         *   **Reflect (`self-reflect`):** Analyze the implementation process, the AI's contribution, and capture learnings.
         *   **Update Task Status:** Update the task status in its `.md` file.
     *   **Review Rigorously:** Treat AI-generated code as if it were written by a junior developer. Review it thoroughly for correctness, adherence to standards, and potential issues before committing.
+    ## Reference Documentation
+    - [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+    - [Project Management Guide](../guides/project-management.md) (Task format, implementation cycle)
+    - [Testing Guidelines Guide](../guides/testing.md)
+    - [Coding Standards Guide](../guides/coding-standards.md) (AI Collaboration Principles)
+    - `load-env` Workflow Instruction
+    - `lets-tests` Workflow Instruction
+    - `lets-commit` Workflow Instruction
+    - `self-reflect` Workflow Instruction
 
-## Success Criteria
+## Input
+- User selection of a specific task `.md` file from `docs-project/current/{release_dir}/tasks/`.
 
-1.  **Task Selected:** A specific task `.md` file from `docs-project/current/*/tasks/` is chosen by the user.
-2.  **Task Understood:** The selected task's description, implementation notes, and acceptance criteria are loaded and clear.
-3.  **Dependencies Confirmed:** Dependencies listed in the task's frontmatter are verified as met (status: done).
-4.  **Plan Formulated:** A basic plan for testing and implementation is outlined.
-5.  **Ready to Implement:** The user is ready to begin the TDD cycle for the selected task.
+## Output / Success Criteria
+- Confirmation that the selected task is understood and its dependencies are met.
+- A high-level plan for implementing the task (including testing strategy) is established.
+- Developer is ready to begin the TDD cycle for the selected task, potentially using `lets-tests`.
+
+

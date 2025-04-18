@@ -1,5 +1,18 @@
 # Self-Reflect Workflow Instruction
 
+## Goal
+Analyze a completed unit of work (task, feedback cycle, session) to capture learnings, assess quality, update documentation, identify actionable improvements for code and process, and create new backlog tasks for non-trivial follow-up actions.
+
+## Prerequisites
+- A logical unit of work (e.g., task implementation, PR feedback cycle) has been completed.
+- Relevant artifacts (code changes, test results, completed task file, potentially session logs) are available for review.
+- The current release directory (`docs-project/current/{release_dir}/`) exists.
+
+## Input
+- User request to perform self-reflection, potentially specifying the scope (e.g., "reflect on Task 02 completion").
+- Access to recent commits, completed task file(s), and related documentation.
+# Self-Reflect Workflow Instruction
+
 This workflow instruction guides the process of **analyzing** a completed unit of work (e.g., a task, a feedback cycle, a development day) to capture learnings, assess quality, and identify actionable improvements for the codebase and the development process itself.
 
 **Run this workflow instruction at logical breakpoints:** after completing a significant task, after implementing PR feedback, or at the end of a development session.
@@ -65,7 +78,15 @@ Based on the review, take the following actions:
 
 
 
-## Success Criteria
+## Output / Success Criteria
+
+**Output:**
+- A new reflection log file created in `docs-project/current/{release_dir}/reflections/` following the standard template.
+- Potentially updated documentation (code comments, guides, ADRs, architecture docs).
+- Potentially updated task file(s) with final notes.
+- Potentially new task files created in `docs-project/backlog/` for identified improvements or refactoring needs.
+
+**Success Criteria:**
 
 1.  **Analysis Performed:** The completed work (code, tests, task execution) has been reviewed against the review areas (Coding Session, Commit, Architecture, Workflow).
 2.  **Learnings Captured:** Key insights, successful patterns, and challenges encountered are documented in a reflection file within the release directory (`project/current/{release}/reflections/`).
@@ -122,11 +143,12 @@ docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}
 
 
 ## Reference Documentation
-
-- [Project Management Guide](../guides/project-management.md) (Task structure, workflow)
-- [Documentation Guide](../guides/documentation.md)
-- [Generate ADR Workflow Instruction](./docs/generate-adr.md) (Referenced in Actions)
-- `log-session` workflow instruction (for context capture - documentation to be created in Task 04)
+- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
+- [Project Management Guide](../guides/project-management.md) (Task structure, workflow, backlog)
+- [Documentation Standards Guide](../guides/documentation.md)
+- [ADR Template](../../guides/prepare-release/v.x.x.x/decisions/_template.md)
+- `generate-adr` Workflow Instruction
+- `log-session` Workflow Instruction (for session context)
 
 ## Collaboration Workflow Reflection Guide
 

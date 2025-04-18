@@ -1,4 +1,9 @@
-## Performance Tuning Guidelines
+# Performance Tuning Guidelines
+
+## Goal
+This guide provides standard practices and techniques for identifying, measuring, and optimizing performance aspects (memory usage, execution speed, concurrency) within the project.
+
+# Performance Tuning Guidelines
 
 ### 1. Memory Management
 
@@ -75,6 +80,10 @@ def process_batch(tasks)
   futures.map(&:value!)
 end
 ```
+## Related Documentation
+- [Testing Guidelines](testing.md) (Benchmarking, Load Testing)
+- [Quality Assurance](quality-assurance.md) (Monitoring)
+- [Writing Guides Guide](writing-guides-guide.md)
 
 ### 4. Monitoring Points
 
