@@ -19,15 +19,18 @@ Our development workflow emphasizes planning before implementation ("Slow Vibe C
 The `docs-project` directory organizes project documentation and management:
 
 ```
-docs-dev/
-├── guides/           # Development standards and practices
-├── workflow-instructions/ # AI interaction workflow instructions
-├── project/          # Project-specific materials (Task Management)
-│   ├── backlog/      # Future planned work (release dirs: e.g., v.0.3.0/)
-│   ├── current/      # Current release/sprint tasks (release dir: e.g., v.0.2.0/)
-│   └── done/         # Completed work (archive of release dirs)
-├── tools/            # Helper scripts (e.g., for fetching data)
-└── reflections/      # Session logs and learnings (Optional)
+docs-project
+├── architecture.md
+├── backlog
+│   └── v.x.y.z-preflight-for-coding-agent
+├── blueprint.md
+├── current
+├── done
+│   ├── v.0.0.1
+│   ├── v.0.2.0-dev-docs-review
+│   └── v.0.2.1-spec-form-diff
+│   ├── v.0.2.2-feedback-to-process
+└── what-do-we-build.md
 ```
 (Use `tree . -L 2` to view the current structure)
 
@@ -35,11 +38,11 @@ docs-dev/
 
 ### 1. Task Organization
 
-Tasks are managed within the `project/` subdirectories, representing a simple Kanban-style flow:
+Tasks are managed within the `docs-project/` subdirectories, representing a simple Kanban-style flow:
 
-- **`project/backlog/`**: Contains directories for future, planned releases (e.g., `v.0.3.0-feature-x/`). Tasks are defined and planned here.
-- **`project/current/`**: Contains the directory for the currently active release (e.g., `v.0.2.0-streamline-workflow/`). Active development happens here.
-- **`project/done/`**: An archive containing directories of completed and released work.
+- **`docs-project/backlog/`**: Contains directories for future, planned releases (e.g., `v.0.3.0-feature-x/`). Tasks are defined and planned here.
+- **`docs-project/current/`**: Contains the directory for the currently active release (e.g., `v.0.2.0-streamline-workflow/`). Active development happens here.
+- **`docs-project/done/`**: An archive containing directories of completed and released work.
 
 Within a release directory (primarily in `current/`), individual tasks are represented by **structured Markdown files** (`.md`).
 
