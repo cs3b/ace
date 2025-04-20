@@ -11,18 +11,18 @@ This guide outlines essential security practices, checklists, and procedures to 
   - All user inputs are sanitized
   - File paths are sanitized
   - URLs are validated
-  
-- [ ] Authentication & Authorization  
+
+- [ ] Authentication & Authorization
   - API keys are securely stored
   - Access tokens are rotated
   - Permissions are checked
-  
+
 - [ ] Data Protection
   - Sensitive data is encrypted
   - No secrets in logs
   - Secure data deletion
-  
-- [ ] Network Security  
+
+- [ ] Network Security
   - TLS for all connections
   - Certificate validation
   - Timeouts configured
@@ -34,11 +34,11 @@ This guide outlines essential security practices, checklists, and procedures to 
 Aira.configure do |config|
   # Encrypt sensitive data
   config.encryption_key = ENV.fetch('ENCRYPTION_KEY')
-  
+
   # Set timeouts
   config.request_timeout = 30
   config.connection_timeout = 10
-  
+
   # Configure TLS
   config.ssl_verify = true
   config.ssl_version = :TLSv1_2
@@ -78,7 +78,7 @@ end
    - Medium: Limited impact
    - Low: Minor issues
    ## Related Documentation
-   - [Coding Standards](coding-standards.md)
-   - [Quality Assurance](quality-assurance.md) (Code Review)
-   - [Error Handling](error-handling.md) (Avoid leaking sensitive info)
-   - [Writing Guides Guide](writing-guides-guide.md)
+   - [Coding Standards](docs-dev/guides/coding-standards.md)
+   - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Code Review)
+   - [Error Handling](docs-dev/guides/error-handling.md) (Avoid leaking sensitive info)
+   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

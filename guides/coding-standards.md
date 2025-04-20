@@ -34,21 +34,21 @@ This document outlines general coding standards applicable across the project. P
 - Use specific, informative error classes. Define a base error class for the project/library.
 - Provide context with errors (e.g., relevant data, operation being performed).
 - Handle errors appropriately (log, retry, raise, return error values) based on the context.
-- See [Error Handling Guide](error-handling.md) for more details.
+- See [Error Handling Guide](docs-dev/guides/error-handling.md) for more details.
 
 ## Testing
 
 - Write tests for new code (unit, integration, E2E as appropriate).
 - Ensure tests cover primary functionality, edge cases, and error conditions.
 - Keep tests independent and fast.
-- See [Testing Guidelines](testing.md) for more details.
+- See [Testing Guidelines](docs-dev/guides/testing.md) for more details.
 
 ## Documentation
 
 - Document public APIs (classes, methods, modules) using standard documentation tools (e.g., YARD for Ruby).
 - Add comments to explain complex logic or non-obvious decisions within method bodies.
 - Keep documentation up-to-date with code changes.
-- See [Documentation Standards](documentation.md) for more details.
+- See [Documentation Standards](docs-dev/guides/documentation.md) for more details.
 
 ## File Organization
 
@@ -60,7 +60,7 @@ Refer to the project's `docs-project/blueprint.md` for the specific structure.
 When working with AI coding agents (like Cursor, Claude, etc.), treat them as collaborative partners, often akin to a junior developer needing clear guidance.
 
 - **Plan Before Prompting:** Thoroughly plan the task, including outlining steps, defining requirements, and identifying relevant context *before* asking the AI to generate or modify code. This aligns with the "Slow Vibe Coding" principle mentioned in Project Management.
-- **Provide Context:** Give the AI sufficient context, including relevant code snippets, project structure (`blueprint.md`), architecture (`architecture.md`), existing patterns, and the specific task definition (`.md` file).
+- **Provide Context:** Give the AI sufficient context, including relevant code snippets, project structure (`docs-project/blueprint.md`), architecture (`docs-project/architecture.md`), existing patterns, and the specific task definition (`.md` file within `docs-project`).
 - **Use Specific, Concise Instructions:** Avoid vague requests. Break down complex tasks into smaller, well-defined steps. Use clear action verbs and specify the desired outcome. Consider using "prompt hygiene" like "ONLY IMPLEMENT EXACTLY THIS STEP" for focused changes.
 - **Structured Prompts:** Structure prompts clearly, defining the AI's role, the objective, step-by-step instructions, and the desired output format (XML is often preferred by models like GPT-4.1). Include examples (few-shot learning) where appropriate.
 - **Review Rigorously:** Review AI-generated code with the same scrutiny as human-written code. Check for correctness, adherence to standards, edge cases, security, and performance implications. Do not blindly trust AI output.
@@ -68,7 +68,7 @@ When working with AI coding agents (like Cursor, Claude, etc.), treat them as co
 - **Leverage Strengths:** Use AI for tasks it excels at (e.g., boilerplate code, implementing well-defined algorithms, refactoring based on clear rules) but rely on human oversight for complex design decisions and architectural planning.
 - **Avoid "Hacky" Prompts:** Modern models respond better to clear instructions than tricks like excessive capitalization or emotional appeals.
 
-Refer to the [Project Management Guide](project-management.md) for how AI collaboration fits into the task workflow.
+Refer to the [Project Management Guide](docs-dev/guides/project-management.md) for how AI collaboration fits into the task workflow.
 
 *(Example structure - adjust based on project)*
 ```
@@ -86,8 +86,8 @@ project-root/
 └── Rakefile / Makefile / etc. # Build/task runner configuration
 ```
 ## Related Documentation
-- [Error Handling Guide](error-handling.md)
-- [Testing Guidelines](testing.md)
-- [Documentation Standards](documentation.md)
-- [Project Management Guide](project-management.md) (AI Collaboration context)
-- [Writing Guides Guide](writing-guides-guide.md)
+- [Error Handling Guide](docs-dev/guides/error-handling.md)
+- [Testing Guidelines](docs-dev/guides/testing.md)
+- [Documentation Standards](docs-dev/guides/documentation.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (AI Collaboration context)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

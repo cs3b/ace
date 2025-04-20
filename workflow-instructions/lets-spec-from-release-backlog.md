@@ -21,7 +21,7 @@ No new release directory is created by this workflow instruction.
 
 4.  **Generate Structured Tasks:**
     *   For each item reviewed from the source `backlog/` subdirectory:
-        *   Guide the user/agent to transform the note/idea into a fully structured task file (`.md`) using the standard format (see `guides/project-management.md`).
+    (see `docs-dev/guides/project-management.md`).
         *   Save the new task file into the `tasks/` subdirectory of the *target* release directory (e.g., `docs-project/current/{release_dir}/tasks/NN-implement-idea-x.md`). Ensure tasks get appropriate sequence numbers.
         *   Determine dependencies between the newly created tasks and existing tasks within the target release.
 
@@ -54,7 +54,7 @@ No new release directory is created by this workflow instruction.
 
 *   A target release directory exists in `docs-project/current/` or `docs-project/backlog/`.
 *   The target release directory contains a `backlog/` subdirectory with items (notes, draft tasks) to process.
-*   Understanding of the [Project Management Guide](../guides/project-management.md) and standard task format.
+Understanding of the [Project Management Guide](docs-dev/guides/project-management.md) and standard task format.
 
 ## Agent Instruction Examples
 
@@ -70,5 +70,5 @@ No new release directory is created by this workflow instruction.
 
 *(Agent identifies `docs-project/backlog/v1.3.0-Enhancements/`, reads items from its `backlog/` subdirectory, guides creation of tasks within its `tasks/` subdirectory, updates its `README.md`, and reports results.)*
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Standard task format, release structure)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Standard task format, release structure)

@@ -45,7 +45,7 @@ Capture the state of the current development session, including user requests, a
 
 ## Agent Action Summary
 [Concise summary of the primary actions taken by the agent.]
-(E.g., "Generated patch updating guides/README.md and guides/ship-release.md, deleted guides/prepare-release/prepare-release-documentation.md, and added notes to docs/unified-workflow-guide.md.")
+(E.g., "Generated patch updating `docs-dev/guides/README.md` and `docs-dev/guides/ship-release.md`, deleted `docs-dev/guides/prepare-release/prepare-release-documentation.md`, and added notes to `docs/unified-workflow-guide.md`.")
 
 ## Context Loading Prompt (Copy and paste to resume session)
 
@@ -81,9 +81,9 @@ The `log-session` workflow instruction should be used periodically, especially:
 
 This complements `self-reflect`, which focuses on deeper analysis and actionable improvements, while `log-session` focuses on capturing the immediate state for context restoration.
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md)
-- `self-reflect` Workflow Instruction (for comparison)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md)
+- [`self-reflect` Workflow Instruction](docs-dev/workflow-instructions/self-reflect.md)
 
 ## Output / Success Criteria
 

@@ -87,11 +87,11 @@ Following these principles makes it easier to write focused unit tests and provi
 
 - Use test data factories (e.g., `FactoryBot` for Ruby) or fixtures to create consistent and realistic test data.
 - Use libraries like `Faker` to generate realistic-looking fake data.
-- Store larger sets of test data in fixture files (e.g., YAML, JSON) within the test directory.
+- Store larger sets of test data in fixture files (e.g., YAML, JSON) within the test directory (e.g., `spec/fixtures/`).
 
 ## 6. Running Tests
 
-- Configure a default task to run the full suite (e.g., `bin/rspec`).
+- Configure a default task to run the full suite (e.g., `bin/rspec` from project root).
 - Provide ways to run specific files or individual tests for faster feedback during development.
 - Integrate tests into the CI/CD pipeline.
 
@@ -102,9 +102,9 @@ Following these principles makes it easier to write focused unit tests and provi
 - **Concurrency:** Write specific tests to verify thread safety if components are expected to be used concurrently (e.g., test shared resources under concurrent access using multiple threads).
 
 ## Related Documentation
-- [Testing Frameworks Guide](testing/frameworks.md) (Setup details)
-- [Coding Standards Guide](coding-standards.md)
-- [Quality Assurance Guide](quality-assurance.md) (Test Coverage, CI)
-- [Performance Tuning Guide](performance.md) (Performance Testing)
-- [Writing Guides Guide](writing-guides-guide.md)
-- Relevant Workflow Instructions: `lets-tests`, `lets-fix-tests`
+- [Testing Frameworks Guide](docs-dev/guides/testing/frameworks.md) (Setup details)
+- [Coding Standards Guide](docs-dev/guides/coding-standards.md)
+- [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (Test Coverage, CI)
+- [Performance Tuning Guide](docs-dev/guides/performance.md) (Performance Testing)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+- Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-tests.md`, `docs-dev/workflow-instructions/lets-fix-tests.md`

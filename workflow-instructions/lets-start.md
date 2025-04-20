@@ -3,12 +3,15 @@
 **Goal:** Initiate the workflow for implementing a specific task after the environment context has been loaded using `load-env`.
 
 **Prerequisites:**
-- Run the [`load-env`](./load-env.md) workflow instruction first to load project context, general guides, project specifics, and identify the current release/tasks.
+
+*   Run the [`load-env`](docs-dev/workflow-instructions/load-env.md) workflow instruction first to load project context, general guides, project specifics, and identify the current release/tasks.
 
 ## Prerequisites
-- `load-env` workflow instruction has been successfully executed, loading project context.
-- The current release directory (`docs-project/current/{release_dir}/`) and its tasks are identified.
-- Developer is ready to select and begin working on a specific task.
+
+*   `load-env` workflow instruction has been successfully executed, loading project context.
+*   The current release directory (`docs-project/current/{release_dir}/`) and its tasks are identified.
+*   Developer is ready to select and begin working on a specific task.
+
 ## Process Steps
 
 1.  **Review Release Context & Select Task:**
@@ -33,7 +36,7 @@
         *   **Define AI Role (Optional but Recommended):** Briefly define the AI's objective for the *first* implementation step (e.g., "Generate the initial failing test structure for function X", "Implement the core logic for Y based on this pseudocode").
 
 3.  **Initiate Implementation Cycle (Guided AI Execution):**
-    *   Begin the standard task cycle (refer to `guides/project-management.md`), using the plan from Step 2 to guide the AI:
+    *   Begin the standard task cycle (refer to `docs-dev/guides/project-management.md`), using the plan from Step 2 to guide the AI:
         *   **Write Tests (`lets-tests`):** Provide the AI with the planned test structure and acceptance criteria. Review the generated test code carefully.
         *   **Implement Code:** Provide the AI with the detailed implementation step (e.g., pseudocode, specific function signature, relevant context). Use clear, concise instructions. Consider using prompts like "ONLY IMPLEMENT EXACTLY THIS STEP."
         *   **Verify Tests (`bin/rspec`, `lets-fix-tests` if needed):** Run tests. If they fail, provide the AI with the error message and relevant code snippets for debugging.
@@ -41,22 +44,24 @@
         *   **Reflect (`self-reflect`):** Analyze the implementation process, the AI's contribution, and capture learnings.
         *   **Update Task Status:** Update the task status in its `.md` file.
     *   **Review Rigorously:** Treat AI-generated code as if it were written by a junior developer. Review it thoroughly for correctness, adherence to standards, and potential issues before committing.
-    ## Reference Documentation
-    - [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-    - [Project Management Guide](../guides/project-management.md) (Task format, implementation cycle)
-    - [Testing Guidelines Guide](../guides/testing.md)
-    - [Coding Standards Guide](../guides/coding-standards.md) (AI Collaboration Principles)
-    - `load-env` Workflow Instruction
-    - `lets-tests` Workflow Instruction
-    - `lets-commit` Workflow Instruction
-    - `self-reflect` Workflow Instruction
+
+## Reference Documentation
+
+*   [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+*   [Project Management Guide](docs-dev/guides/project-management.md) (Task format, implementation cycle)
+*   [Testing Guidelines Guide](docs-dev/guides/testing.md)
+*   [Coding Standards Guide](docs-dev/guides/coding-standards.md) (AI Collaboration Principles)
+*   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
+*   [`lets-tests` Workflow Instruction](docs-dev/workflow-instructions/lets-tests.md)
+*   [`lets-commit` Workflow Instruction](docs-dev/workflow-instructions/lets-commit.md)
+*   [`self-reflect` Workflow Instruction](docs-dev/workflow-instructions/self-reflect.md)
 
 ## Input
-- User selection of a specific task `.md` file from `docs-project/current/{release_dir}/tasks/`.
+
+*   User selection of a specific task `.md` file from `docs-project/current/{release_dir}/tasks/`.
 
 ## Output / Success Criteria
-- Confirmation that the selected task is understood and its dependencies are met.
-- A high-level plan for implementing the task (including testing strategy) is established.
-- Developer is ready to begin the TDD cycle for the selected task, potentially using `lets-tests`.
 
-
+*   Confirmation that the selected task is understood and its dependencies are met.
+*   A high-level plan for implementing the task (including testing strategy) is established.
+*   Developer is ready to begin the TDD cycle for the selected task, potentially using `lets-tests`.

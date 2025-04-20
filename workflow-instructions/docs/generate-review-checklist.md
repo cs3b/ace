@@ -13,7 +13,7 @@ Generate a context-specific code review checklist based on the nature of the cha
     *   The purpose and scope of the changes.
     *   Affected components or modules.
     *   Potential impacts (breaking changes, dependencies, performance, security).
-2.  **Select Base Checklist:** Start with the standard review checklist template found in `guides/quality-assurance.md` (under "Review Checklist").
+2.  **Select Base Checklist:** Start with the standard review checklist template found in `docs-dev/guides/quality-assurance.md` (under "Review Checklist").
 3.  **Tailor Checklist:** Adapt the base checklist based on the specific changes:
     *   Add checks relevant to the modified areas (e.g., "Verify new API endpoint follows REST principles").
     *   Remove checks that are not applicable.
@@ -26,10 +26,10 @@ Generate a context-specific code review checklist based on the nature of the cha
 
 ## Output / Success Criteria
 - [x] A code review checklist tailored to the specific changes is generated.
-- [x] The checklist is based on the project's standard checklist (`guides/quality-assurance.md`).
+- [x] The checklist is based on the project's standard checklist (`docs-dev/guides/quality-assurance.md`).
 - [x] The checklist highlights relevant areas for review based on the changes' scope and potential impact.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
-- [Quality Assurance Guide](../../guides/quality-assurance.md) (Contains base checklist and PR template)
-- [Coding Standards Guide](../../guides/coding-standards.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (Contains base checklist and PR template)
+- [Coding Standards Guide](docs-dev/guides/coding-standards.md)

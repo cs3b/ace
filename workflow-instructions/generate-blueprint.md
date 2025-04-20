@@ -28,15 +28,15 @@ Create or update the `docs-project/blueprint.md` file with a summary of the curr
 - [x] The file contains correct links to `what-do-we-build.md` and `architecture.md`.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 - `docs-project/what-do-we-build.md`
 - `docs-project/architecture.md`
 
 ## Usage Example
 Invoke this workflow instruction when:
 - Significant structural changes have occurred in the project.
-- Before starting a major planning phase (`lets-spec-from-prd/frd`).
-- If the context loaded by `load-env` seems inaccurate regarding project structure.
+- Before starting a major planning phase (`docs-dev/workflow-instructions/lets-spec-from-prd.md` or `docs-dev/workflow-instructions/lets-spec-from-frd.md`).
+- If the context loaded by `docs-dev/workflow-instructions/load-env.md` seems inaccurate regarding project structure.
 
 Example Invocation:
 > "Run the `generate-blueprint` workflow instruction to update the project blueprint."

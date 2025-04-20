@@ -9,17 +9,18 @@
 
 ## Input
 - User request to load the environment context.
+
 ## Process Steps
 
 1.  **Load General Process & Guides:**
-    *   Understand the overall development process: [Project Management Guide](../guides/project-management.md)
+Understand the overall development process: [Project Management Guide](docs-dev/guides/project-management.md)
     *   Review core development standards (link to specific guides as needed):
-        *   [Coding Standards](../guides/coding-standards.md)
-        *   [Testing Guidelines](../guides/testing.md)
-        *   [Documentation Standards](../guides/documentation.md)
-        *   [Version Control](../guides/version-control.md)
-        *   [Release Process](../guides/ship-release.md)
-        *   List available general workflow instructions: `ls -1 workflow-instructions/`
+    *   [Coding Standards](docs-dev/guides/coding-standards.md)
+    *   [Testing Guidelines](docs-dev/guides/testing.md)
+    *   [Documentation Standards](docs-dev/guides/documentation.md)
+    *   [Version Control](docs-dev/guides/version-control.md)
+    *   [Release Process](docs-dev/guides/ship-release.md)
+    List available general workflow instructions: `ls -1 docs-dev/workflow-instructions/`
 
 2.  **Load Project-Specific Context:**
     *   Review project objectives: `cat docs-project/what-do-we-build.md`
@@ -43,16 +44,17 @@
 3.  **Current State Identified:** The active release directory in `docs-project/current/` and its tasks are known. Recent code changes are reviewed.
 4.  **Environment Ready:** Working directory clean, dependencies installed, latest code pulled.
 5.  **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `lets-start`.
+
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md)
-- [Coding Standards Guide](../guides/coding-standards.md)
-- [Testing Guidelines Guide](../guides/testing.md)
-- [Documentation Standards Guide](../guides/documentation.md)
-- [Version Control Guide](../guides/version-control.md)
-- [Release Process Guide](../guides/ship-release.md)
-- `docs-project/what-do-we-build.md`
-- `docs-project/architecture.md`
-- `docs-project/blueprint.md`
-- `generate-blueprint` Workflow Instruction
-- `lets-start` Workflow Instruction
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md)
+- [Coding Standards Guide](docs-dev/guides/coding-standards.md)
+- [Testing Guidelines Guide](docs-dev/guides/testing.md)
+- [Documentation Standards Guide](docs-dev/guides/documentation.md)
+- [Version Control Guide](docs-dev/guides/version-control.md)
+- [Release Process Guide](docs-dev/guides/ship-release.md)
+- [What do we build](docs-project/what-do-we-build.md)
+- [What is our architecture](docs-project/architecture.md)
+- [What is our blueprint](docs-project/blueprint.md)
+- [`generate-blueprint` Workflow Instruction](docs-dev/workflow-instructions/generate-blueprint.md)
+- [`lets-start` Workflow Instruction](docs-dev/workflow-instructions/lets-start.md)

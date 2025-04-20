@@ -89,6 +89,6 @@ docs-project/current/v1.2.1-feedback-to-pr-21-workflow-instruction/
 │       └── review-2025-04-10-0824-2755584987.json     # Main review feedback
 └── README.md                                           # Empty release overview
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../../guides/writing-workflow-instructions.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 - MCP Server Documentation (specific to the implementation being used)
 ```

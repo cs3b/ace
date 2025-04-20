@@ -1,6 +1,6 @@
 # Writing Development Guides
 
-This guide outlines best practices for creating and maintaining the development guides located within the `coding-agent-workflow-toolkit/guides/` directory. These guides serve as the primary reference for project standards, processes, and technical approaches, intended for both human developers and AI agents collaborating on the project.
+This guide outlines best practices for creating and maintaining the development guides located within the `docs-dev/guides/` directory. These guides serve as the primary reference for project standards, processes, and technical approaches, intended for both human developers and AI agents collaborating on the project.
 
 ## Goal of Guides
 
@@ -16,7 +16,7 @@ The primary goal of these guides is to:
 2.  **Accuracy & Up-to-Date:** Ensure information is correct and reflects the current project state and decisions. Update guides promptly when processes or standards change.
 3.  **Actionability:** Focus on providing practical, actionable advice and instructions. Explain the "how" and the "why".
 4.  **Structure & Scanability:** Use clear headings, subheadings, lists, and code blocks to organize information logically. Make it easy for readers (human or AI) to quickly find relevant sections.
-5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main `project-management.md`.
+5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main `docs-dev/guides/project-management.md`.
 6.  **Examples:** Provide concrete examples (code snippets, file structures, command outputs) to illustrate concepts and instructions.
 7.  **Target Audience:** Write for both human developers (potentially new to the project) and AI agents. This means being explicit, structured, and providing sufficient context.
 
@@ -32,14 +32,14 @@ While the specific sections will vary based on the guide's topic, aim for a gene
     *   Detail standards or rules with rationale.
 4.  **Examples:** Include well-formatted code blocks, file structure examples, or command outputs where appropriate. Use realistic (but potentially simplified) examples relevant to the toolkit's domain.
 5.  **Best Practices/Tips:** Offer actionable advice or highlight common pitfalls.
-6.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using relative paths (e.g., `[Project Management Guide](project-management.md)`).
+6.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](docs-dev/guides/project-management.md)`).
 
 ## Writing for Humans and AI
 
 - **Structure is Key:** Use Markdown headings (`#`, `##`, `###`), lists (`*`, `-`, `1.`), and code blocks (```) consistently. AI agents parse structure effectively.
 - **Explicit Instructions:** Use action verbs and clearly define steps.
-- **Define Terminology:** If introducing a specific term, define it clearly or link to where it's defined.
-- **Contextual Links:** Link to related guides or specific sections where appropriate to build a connected knowledge graph.
+- **Define Terminology:** If introducing a specific term, define it clearly or link to where it's defined (using root-relative paths).
+- **Contextual Links:** Link to related guides or specific sections where appropriate using root-relative paths to build a connected knowledge graph.
 - **Code Examples:** Use clear, minimal, and correct code examples. Specify the language in fenced code blocks (e.g., ```ruby).
 
 ## Maintaining Guides

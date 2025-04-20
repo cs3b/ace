@@ -5,7 +5,7 @@ Create a structured Architecture Decision Record (ADR) document in the `docs-dev
 
 ## Prerequisites
 - A clear architectural problem or choice needs to be documented.
-- The standard ADR template (`guides/prepare-release/v.x.x.x/decisions/_template.md`) should be used as a base.
+- The standard ADR template (`dev-docs/guides/prepare-release/v.x.x.x/decisions/_template.md`) should be used as a base.
 
 ## Process Steps
 
@@ -33,6 +33,6 @@ Create a structured Architecture Decision Record (ADR) document in the `docs-dev
 - [x] Consequences and alternatives are considered and recorded.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
-- [ADR Template](../../guides/prepare-release/v.x.x.x/decisions/_template.md)
-- [Documentation Standards Guide](../../guides/documentation.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [Documentation Standards Guide](docs-dev/guides/documentation.md)

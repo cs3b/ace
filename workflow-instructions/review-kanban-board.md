@@ -44,8 +44,8 @@ Review the overall state of project tasks across the `docs-project/backlog/`, `d
 - [x] Next steps are identified (e.g., next task to start, readiness for release, moving a release from backlog).
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../../guides/project-management.md) (Describes the directory structure and task format)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Describes the directory structure and task format)
 - Standard Task `.md` file format.
 
 ## Usage Example

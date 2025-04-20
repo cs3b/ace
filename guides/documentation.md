@@ -90,9 +90,9 @@ This guide defines the standards and best practices for documenting code and pro
    ```
 
    ## Documentation
-   - [API Reference](docs/api.md)
-   - [Tutorials](docs/tutorials/)
-   - [Examples](examples/)
+   - [API Reference](docs/api.md) <!-- Assuming 'docs' is a root dir for user docs -->
+   - [Tutorials](docs/tutorials/) <!-- Assuming 'docs' is a root dir for user docs -->
+   - [Examples](examples/) <!-- Assuming 'examples' is a root dir -->
    ```
 
 2. **Architecture Documentation**:
@@ -139,14 +139,14 @@ This guide defines the standards and best practices for documenting code and pro
    Clear documentation is crucial for effective AI collaboration.
 
    - **Structured Project Docs:** Maintain core documents like `docs-project/what-do-we-build.md`, `docs-project/architecture.md`, and `docs-project/blueprint.md`. Keep them up-to-date as they provide essential high-level context for the AI.
-   - **Task Definitions:** Use the structured `.md` format for tasks (see `guides/project-management.md`) with clear descriptions, implementation notes, and acceptance criteria.
+   - **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.md`) with clear descriptions, implementation notes, and acceptance criteria.
    - **ADRs:** Document significant architectural decisions in `docs-dev/decisions/` to provide rationale and context for the AI.
-   - **Workflow Instructions:** Write clear, specific workflow instructions (`workflow-instructions/*.md`) outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code: focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
+   - **Workflow Instructions:** Write clear, specific workflow instructions (`docs-dev/workflow-instructions/*.md`) outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code: focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
    - **Code Comments:** Use comments to explain the "why" behind complex logic, not just the "what". This helps the AI understand intent.
-   - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link to a relevant ADR or guide section.
+   - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link to a relevant ADR or guide section using root-relative paths like `docs-dev/decisions/ADR-001.md` or `docs-dev/guides/coding-standards.md`.
    ```
    ## Related Documentation
-   - [Coding Standards](coding-standards.md)
-   - [Project Management Guide](project-management.md) (Task format, ADRs)
-   - [ADR Template](prepare-release/v.x.x.x/decisions/_template.md)
-   - [Writing Guides Guide](writing-guides-guide.md)
+   - [Coding Standards](docs-dev/guides/coding-standards.md)
+   - [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
+   - [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

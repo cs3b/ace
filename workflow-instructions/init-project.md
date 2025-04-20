@@ -20,17 +20,17 @@ Initialize the `docs-dev` and `docs-project` directory structures and create cor
 
    B. Without README:
    - Gather project information through interactive prompts
-   - Create what-do-we-build.md from responses
-   - Generate architecture.md based on available information
+   - Create `docs-project/what-do-we-build.md` from responses
+   - Generate initial `docs-project/architecture.md` based on available information
 
 3. **Initialize Version Control**:
-   - Add .gitignore patterns for docs-dev
+   - Add patterns to `.gitignore` (e.g., `docs-dev/tools/.env`)
    - Create initial commit for docs structure
 
 ## Prerequisites
 
 - Project root directory must be accessible with write permissions.
-- Optional: An existing `README.md` can provide information for extraction.
+- Optional: An existing `README.md` at the project root can provide information for extraction.
 - Optional: Git repository initialized (the workflow instruction can add to `.gitignore`).
 ## User Input (if README not present)
 
@@ -48,7 +48,7 @@ The workflow instruction will prompt for:
 
 ## Generated Documentation
 
-### what-do-we-build.md
+### docs-project/what-do-we-build.md
 
 The workflow instruction generates this file with:
 - Project overview and goals
@@ -74,7 +74,7 @@ Example structure:
 [...]
 ```
 
-### architecture.md
+### docs-project/architecture.md
 
 The workflow instruction analyzes the project structure and generates:
 - High-level architecture overview
@@ -102,46 +102,47 @@ Example structure:
 ## Output / Success Criteria
 
 1. **Directory Structure**:
-   - All required directories created
-   - Proper permissions set
-   - Git integration configured
+   - `docs-dev` and `docs-project` directories created with standard structure.
+   - Proper permissions set.
+   - Git integration configured (`.gitignore` updated).
 
 2. **Core Documentation**:
-   - what-do-we-build.md created with clear project vision
-   - architecture.md reflects actual project structure
-   - Documentation is concise yet complete
+   - `docs-project/what-do-we-build.md` created with clear project vision.
+   - `docs-project/architecture.md` reflects actual project structure.
+   - `docs-project/blueprint.md` generated (or placeholder created).
+   - Documentation is concise yet complete.
 
 3. **Project Context**:
-   - Development philosophy established
-   - Technical boundaries defined
-   - Extension points identified
+   - Development philosophy established.
+   - Technical boundaries defined.
+   - Extension points identified.
 
 ## Workflow Instruction Context
 
-Initialize an AI-driven development environment by creating necessary documentation structure and core architectural documents. This command sets up the foundation for effective AI agent collaboration.
+Initialize an AI-driven development environment by creating necessary documentation structure (`docs-dev`, `docs-project`) and core architectural documents. This command sets up the foundation for effective AI agent collaboration.
 
 ## Behavior
 
-- Preserves existing documentation if found
-- Extracts project information from README.md when available
-- Creates consistent structure for AI-driven development
-- Sets up version control integration for documentation
+- Preserves existing documentation if found.
+- Extracts project information from `README.md` when available.
+- Creates consistent structure for AI-driven development.
+- Sets up version control integration for documentation.
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Explains the created structure)
-- [What We Build Example](../docs-project/what-do-we-build.md)
-- [Architecture Example](../docs-project/architecture.md)
-- [Blueprint Example](../docs-project/blueprint.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Explains the created structure)
+- [What We Build Example](docs-project/what-do-we-build.md) (Actual generated file)
+- [Architecture Example](docs-project/architecture.md) (Actual generated file)
+- [Blueprint Example](docs-project/blueprint.md) (Actual generated file)
 
 ## Prerequisites
 
-- Project root directory must be accessible
-- Write permissions for docs-dev directory
-- README.md (optional) for project information extraction
+- Project root directory must be accessible.
+- Write permissions for `docs-dev` and `docs-project` directories.
+- `README.md` (optional) for project information extraction.
 
 ## Notes
 
-- The workflow instruction preserves existing documentation if found
-- Merges information from README.md if available
-- Creates consistent structure for AI-driven development
-- Sets up proper git integration for documentation
+- The workflow instruction preserves existing documentation if found.
+- Merges information from `README.md` if available.
+- Creates consistent structure for AI-driven development.
+- Sets up proper git integration for documentation.

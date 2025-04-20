@@ -12,7 +12,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 ## Process Steps
 
 1.  **Confirm Task Completion & Readiness:**
-    *   Run `review-kanban-board` to verify all tasks in `docs-project/current/{release_dir}/tasks/` are `done`.
+    *   Run `docs-dev/workflow-instructions/review-kanban-board.md` to verify all tasks in `docs-project/current/{release_dir}/tasks/` are `done`.
     *   Ensure the main branch is up-to-date and all related code PRs are merged.
 
 2.  **Review Changes & Determine Version:**
@@ -21,16 +21,16 @@ Guide the developer through the process of finalizing, validating, tagging, and 
     *   Identify the current version from the project's version file (see `docs-project/blueprint.md`).
 
 3.  **Prepare Release Documentation:**
-    *   Update `CHANGELOG.md` with a new entry summarizing changes for the determined version.
-    *   Finalize any release-specific documentation in `docs-project/current/{release_dir}/` (e.g., `docs/`, `user-experience/`) as required by the release type (see `guides/ship-release.md`).
-    *   Generate/update API documentation if needed (`generate-api-docs`).
+    *   Update `CHANGELOG.md` (at project root) with a new entry summarizing changes for the determined version.
+    *   Finalize any release-specific documentation in `docs-project/current/{release_dir}/` (e.g., `docs/`, `user-experience/`) as required by the release type (see `docs-dev/guides/ship-release.md`).
+    *   Generate/update API documentation if needed (`docs-dev/workflow-instructions/docs/generate-api-docs.md`).
 
 4.  **Update Version & Commit:**
     *   Update the version number in the designated project file(s).
     *   Commit the version bump and documentation changes (e.g., `git commit -am "chore(release): Bump version to vX.Y.Z"`).
 
 5.  **Final Validation:**
-    *   Run the full test suite (`lets-tests` or equivalent).
+    *   Run the full test suite (`docs-dev/workflow-instructions/lets-tests.md` or equivalent, e.g., `bin/rspec`).
     *   Run linters/static analysis.
     *   Perform any required manual smoke tests.
     *   Review the `CHANGELOG.md` entry for accuracy.
@@ -60,7 +60,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 8.  **Publish Release Artifact:**
     *   Build and publish the package using the project's helper script or standard commands:
         ```bash
-        # Example for RubyGems using a helper script
+        # Example for RubyGems using a helper script (at root)
         bin/publish
         ```
         *(Ensure credentials are configured)*.
@@ -74,18 +74,18 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 - Determined version number.
 
 ## Output / Success Criteria
-- [x] All tasks for the release in `docs-project/current/` confirmed `done`.
+- [x] All tasks for the release in `docs-project/current/{release_dir}/` confirmed `done`.
 - [x] `CHANGELOG.md` and other required release documentation updated.
 - [x] Project version file updated and committed.
 - [x] Final validation checks (tests, linters) pass.
-- [x] Release documentation directory moved from `current/` to `done/` and committed.
+- [x] Release documentation directory moved from `docs-project/current/` to `docs-project/done/` and committed.
 - [x] Annotated Git tag created and pushed successfully.
 - [x] Release artifact (e.g., gem, package) built and published successfully.
 
 ## Reference Documentation
-- [Release Process Guide](../guides/ship-release.md) (Primary Guide)
-- [Project Management Guide](../guides/project-management.md) (Task flow, versioning)
-- [Version Control Guide](../guides/version-control.md) (Tagging, commit messages)
-- [Documentation Standards Guide](../guides/documentation.md)
-- [Project Blueprint](../docs-project/blueprint.md) (For project-specific file locations)
-- Workflow Instructions: `review-kanban-board`, `generate-api-docs`
+- [Release Process Guide](docs-dev/guides/ship-release.md) (Primary Guide)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Task flow, versioning)
+- [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, commit messages)
+- [Documentation Standards Guide](docs-dev/guides/documentation.md)
+- [Project Blueprint](docs-project/blueprint.md) (For project-specific file locations)
+- Workflow Instructions: `docs-dev/workflow-instructions/review-kanban-board.md`, `docs-dev/workflow-instructions/docs/generate-api-docs.md`

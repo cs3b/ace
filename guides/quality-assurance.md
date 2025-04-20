@@ -25,18 +25,18 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    ```yaml
    # .github/workflows/quality.yml
    name: Quality Checks
-   
+
    on: [push, pull_request]
-   
+
    jobs:
      quality:
        runs-on: ubuntu-latest
        steps:
          - uses: actions/checkout@v3
-         
+
          - name: Linting
            run: bundle exec standardrb
-           
+
          - name: Coverage Report
            run: bundle exec rake coverage
    ```
@@ -48,12 +48,12 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    ## Changes
    - List key changes
    - Impact on existing features
-   
+
    ## Testing
    - [ ] Unit tests added
    - [ ] Integration tests updated
    - [ ] Test coverage maintained
-   
+
    ## Quality
    - [ ] Follows coding standards
    - [ ] Documentation updated
@@ -66,12 +66,12 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - [ ] Follows SDK patterns
    - [ ] Error handling complete
    - [ ] Thread safety considered
-   
+
    ### Implementation
    - [ ] Clean code principles
    - [ ] No code smells
    - [ ] Efficient algorithms
-   
+
    ### Testing
    - [ ] Test cases cover edge cases
    - [ ] Mocks used appropriately
@@ -84,15 +84,15 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    ```ruby
    # spec/spec_helper.rb
    require 'simplecov'
-   
+
    SimpleCov.start do
      add_filter '/spec/'
      add_filter '/vendor/'
-     
+
      add_group 'Agents', 'lib/aira/agents'
      add_group 'Tools', 'lib/aira/tools'
      add_group 'Core', 'lib/aira/core'
-     
+
      minimum_coverage 90
      minimum_coverage_by_file 80
    end
@@ -124,13 +124,13 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    # Rakefile
    require 'rake/notes'
    require 'flog'
-   
+
    task :metrics do
      puts "=== Code Complexity ==="
      flog = Flog.new
      flog.flog_directory('lib')
      flog.report
-     
+
      puts "\n=== TODO/FIXME Notes ==="
      Rake::Notes.new(:todo, :fixme).execute
    end
@@ -144,18 +144,18 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 3. **Technical Debt**:
    ```markdown
    ## Technical Debt Log
-   
+
    ### High Priority
    - [ ] Refactor tool registry for better concurrency
    - [ ] Improve error context in agent responses
-   
+
    ### Medium Priority
    - [ ] Optimize memory usage in large operations
    - [ ] Enhance logging granularity
    ```
    ## Related Documentation
-   - [Coding Standards](coding-standards.md)
-   - [Testing Guidelines](testing.md)
-   - [Version Control](version-control.md) (PR Templates)
-   - [Security](security.md)
-   - [Writing Guides Guide](writing-guides-guide.md)
+   - [Coding Standards](docs-dev/guides/coding-standards.md)
+   - [Testing Guidelines](docs-dev/guides/testing.md)
+   - [Version Control](docs-dev/guides/version-control.md) (PR Templates)
+   - [Security](docs-dev/guides/security.md)
+   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

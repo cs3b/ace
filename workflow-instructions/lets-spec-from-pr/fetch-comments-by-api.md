@@ -121,7 +121,7 @@ docs-project/current/v1.2.1-feedback-to-pr-21/docs/pr-21-20250413-183459/
     ├── reviews.json
     └── pr.json
     ## Reference Documentation
-    - [Writing Workflow Instructions Guide](../../../guides/writing-workflow-instructions.md)
-    - [`get-github-pr-data.rb` script](../../../tools/get-github-pr-data.rb)
+    - [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+    - [`get-github-pr-data.rb` script](docs-dev/tools/get-github-pr-data.rb)
     - [GitHub REST API Documentation](https://docs.github.com/en/rest/pulls)
 ```

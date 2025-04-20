@@ -5,10 +5,10 @@
 Process fetched GitHub Pull Request comments and reviews (stored as individual JSON files) to generate or update structured, actionable task files (`.md`) within the corresponding release directory's `tasks/` folder. This facilitates addressing PR feedback in a *Patch* release.
 
 ## Prerequisites
-- **Run Fetch Command First:** Successfully run either `fetch-comments-by-api` or `fetch-comments-by-mcp` workflow instruction.
+- **Run Fetch Command First:** Successfully run either `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md` workflow instruction.
 - Fetched PR data (individual JSON files for comments, reviews, PR details) exists in the expected location: `{release_path}/docs/{pr_path}/`.
 - The target release directory exists (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
-- Familiarity with the project's standard task format.
+- Familiarity with the project's standard task format defined in `docs-dev/guides/project-management.md`.
 
 ## Input
 - Path to the release directory containing the fetched PR data (e.g., `docs-project/current/v1.0.1-feedback-to-pr-123/`).
@@ -16,7 +16,7 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
 ## Process Steps
 
 1. **Establish Current Version and Release Path**:
-   - Check the project's current version by examining:
+   - Check the project's current version by examining locations specified in `docs-project/blueprint.md`:
      - Project configuration files in root directory (e.g., `package.json`, `Gemfile`, etc.)
      - Dedicated version files (e.g., `VERSION`, `lib/version.rb`)
      - Git tags or release notes
@@ -29,7 +29,7 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
    - This release path will be used for all further operations in this and subsequent commands
 
 2. **Prepare Environment**:
-- First READ the files at `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` and run the instructions from one of these files, before proceeding further
+- First READ the instructions in `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md` or `docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md` and run one of them before proceeding further.
    - Ensure PR data is downloaded in the expected location:
      ```
      {release_path}/
@@ -41,12 +41,12 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
      ```
 
 3. **Create Tasks**:
-- Scan all files (except raw directory) in the timestamped folder created by the tool:
+- Scan all files (except raw directory) in the timestamped folder created by the fetch tool (`{release_path}/docs/{pr_path}/`):
   - Individual PR comments from `docs/{pr_path}/comments/*.json`
   - Review comments and suggestions from `docs/{pr_path}/reviews/*.json`
   - Review status (approved, changes requested, etc) from `docs/{pr_path}/pr/*.json`
   - Group feedback by related scope/topic
-  - Create/Update task files in `{release_path}/tasks/` directory using the standard Markdown format (see `guides/project-management.md`). Follow naming convention: `tasks/{sequence}-{scope}-{action}-{target}.md` where:
+  - Create/Update task files in `{release_path}/tasks/` directory using the standard Markdown format (see `docs-dev/guides/project-management.md`). Follow naming convention: `tasks/{sequence}-{scope}-{action}-{target}.md` where:
        - `{scope}` indicates the component or feature area (prompt, image, server)
        - `{action}` is the change type (add, fix, update, remove)
        - `{target}` describes what's being modified
@@ -74,16 +74,16 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
        - Incorporate review status context into the description or notes.
 
 4. **Generate Release Document**:
-   - Create overview in README.md
-   - Summarize changes needed
-   - Group tasks by priority/impact
-   - Document dependencies
-   - Include references to PR comment IDs for traceability
+   - Create overview in `{release_path}/README.md`.
+   - Summarize changes needed based on generated tasks.
+   - Group tasks by priority/impact.
+   - Document dependencies between tasks.
+   - Include references to PR comment IDs for traceability.
 
 5. **Order Tasks by Dependencies**:
-   - Analyze each task's dependencies
-   - Create dependency graph to determine execution order
-   - Update task filenames to include a sequence prefix: `{release_path}/tasks/{sequence}-{scope}-{action}-{target}.md`
+   - Analyze each task's dependencies.
+   - Create dependency graph to determine execution order.
+   - Update task filenames to include a sequence prefix: `{release_path}/tasks/{sequence}-{scope}-{action}-{target}.md`.
    - Populate the `dependencies` key in the frontmatter for tasks that rely on others within this batch.
 
    Example dependency order from PR feedback:
@@ -94,7 +94,7 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
    tasks/04-server-add-pagination-support.md     # Larger change that should come last
    ```
 
-   Example frontmatter for `01-prompt-use-consistent-name-method.md`:
+   Example frontmatter for `{release_path}/tasks/01-prompt-use-consistent-name-method.md`:
    ```yaml
    ---
    id: 01
@@ -107,7 +107,7 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
    ...
    ```
 
-   Example frontmatter for `03-examples-add-to-demo-files.md`:
+   Example frontmatter for `{release_path}/tasks/03-examples-add-to-demo-files.md`:
    ```yaml
    ---
    id: 03
@@ -123,7 +123,7 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
       - After processing is complete, inform the user about:
         - Total number of comments processed
         - Number of tasks created
-        - Location of generated files
+        - Location of generated files (`{release_path}`)
         - Next steps for implementation
         - Use tree command to show the final directory structure:
           ```bash
@@ -168,10 +168,10 @@ Process fetched GitHub Pull Request comments and reviews (stored as individual J
   - Complete directory structure created as specified.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Standard task format)
-- `fetch-comments-by-api` Workflow Instruction
-- `fetch-comments-by-mcp` Workflow Instruction
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Standard task format)
+- [Fetch Comments by API Workflow Instruction](docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-api.md)
+- [Fetch Comments by MCP Workflow Instruction](docs-dev/workflow-instructions/lets-spec-from-pr/fetch-comments-by-mcp.md)
 
 ## Usage Example
 

@@ -22,7 +22,7 @@ Translate a broad product vision into a structured project plan, potentially inv
 3.  **Create Initial Release Structures**:
 *   For each proposed release (starting with the first, e.g., v1.0.0), create the corresponding release directory structure in `docs-project/backlog/`:
         ```
-        docs-project/backlog-workflow-instruction/v{version}-{codename}/
+        docs-project/backlog/v{version}-{codename}/
         ├── docs/
         ├── decisions/
         ├── tasks/
@@ -32,15 +32,15 @@ Translate a broad product vision into a structured project plan, potentially inv
         ├── codemods/ # Likely for major versions involving migrations
         └── README.md   # Release overview (v.X.Y.Z-Codename.md format)
         ```
-    *   Copy standard templates into relevant subdirectories.
+    *   Copy standard templates (e.g., from `docs-dev/guides/prepare-release/v.x.x.x/`) into relevant subdirectories.
 
 4.  **Generate Foundational Tasks & Documentation**:
-    *   For the *initial* release (e.g., v1.0.0):
-        *   **Create Setup Tasks**: Generate structured task files (`.md`) in `{release_path}/tasks/` for initial project setup, core architecture implementation, basic tooling, etc. Use the standard format.
-        *   **Create Initial ADRs**: Identify critical early architectural decisions prompted by the PRD and create placeholder ADR files in `decisions/`.
+    *   For the *initial* release (e.g., v1.0.0 in `{release_path}`):
+        *   **Create Setup Tasks**: Generate structured task files (`.md`) in `{release_path}/tasks/` for initial project setup, core architecture implementation, basic tooling, etc. Use the standard format from `docs-dev/guides/project-management.md`.
+        *   **Create Initial ADRs**: Identify critical early architectural decisions prompted by the PRD and create placeholder ADR files in `{release_path}/decisions/`.
         *   **Generate `what-do-we-build.md`**: Populate `docs-project/what-do-we-build.md` based on the PRD's vision and goals.
         *   **Generate `architecture.md`**: Create an initial `docs-project/architecture.md` outlining the high-level components identified.
-    *   For subsequent planned releases identified in Step 2, create their directories in `backlog/` with a basic `README.md` outlining their high-level goal, deferring detailed task generation.
+    *   For subsequent planned releases identified in Step 2, create their directories in `docs-project/backlog/` with a basic `README.md` outlining their high-level goal, deferring detailed task generation.
 
 5.  **Generate Overall Project Overview**:
 Update the main `docs-project/README.md` (if it exists) or create one to summarize the multi-release plan derived from the PRD.
@@ -48,8 +48,8 @@ Update the main `docs-project/README.md` (if it exists) or create one to summari
 6.  **Communicate Results**:
     *   Report the proposed release plan.
     *   Report the number of initial tasks and documents created for the first release.
-    *   Show the generated directory structure using `tree`.
-    *   Indicate the location of the new release directories in `backlog/`.
+    *   Show the generated directory structure using `tree docs-project/backlog/`.
+    *   Indicate the location of the new release directories in `docs-project/backlog/`.
     *   Suggest next steps (review initial tasks, refine architecture, start implementation of the first release).
 
 ## Output / Success Criteria
@@ -65,9 +65,9 @@ Update the main `docs-project/README.md` (if it exists) or create one to summari
 
 **Success Criteria:**
 
-*   Project overview documents (`what-do-we-build.md`, `architecture.md`) created/updated.
+*   Project overview documents (`docs-project/what-do-we-build.md`, `docs-project/architecture.md`) created/updated.
 *   Initial release directory (e.g., v1.0.0) created in `docs-project/backlog/` with standard subdirectories.
-*   Directories for subsequent planned releases created in `backlog/` with basic READMEs.
+*   Directories for subsequent planned releases created in `docs-project/backlog/` with basic READMEs.
 *   Foundational tasks for the initial release generated as structured `.md` files in `tasks/`.
 *   Placeholder ADRs created for key initial decisions.
 *   Overall release strategy communicated.
@@ -75,8 +75,8 @@ Update the main `docs-project/README.md` (if it exists) or create one to summari
 ## Prerequisites
 
 *   A Product Requirement Document (PRD) available as a file or text.
-*   Understanding of the [Project Management Guide](../guides/project-management.md).
-*   Potentially requires `init-project` to have been run previously, or this command might incorporate parts of its functionality.
+*   Understanding of the [Project Management Guide](docs-dev/guides/project-management.md).
+*   Potentially requires `docs-dev/workflow-instructions/init-project.md` to have been run previously, or this command might incorporate parts of its functionality.
 
 ## Usage Example
 
@@ -93,11 +93,11 @@ lets-spec-from-prd --prd-path path/to/product-spec.md --initial-version v1.0.0 -
 
 ## Notes
 - This command initiates the project structure based on a high-level vision. Significant refinement of tasks and plans within each release will be necessary.
-- It integrates principles from `guides/prepare-release/prepare-release-documentation.md` regarding artifacts needed for Major releases (like `codemods`, comprehensive docs).
-- Consider if this workflow instruction should *replace* or *complement* the `init-project` workflow instruction. It seems more comprehensive for starting from a PRD.
+- It integrates principles regarding artifacts needed for Major releases (like `codemods`, comprehensive docs) outlined in `docs-dev/guides/ship-release.md`.
+- Consider if this workflow instruction should *replace* or *complement* the `docs-dev/workflow-instructions/init-project.md` workflow instruction. It seems more comprehensive for starting from a PRD.
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Standard task format, release structure)
-- [Release Process Guide](../guides/ship-release.md) (Artifacts per release type)
-- Release directory templates in `guides/prepare-release/v.x.x.x/`
-- `init-project` Workflow Instruction (Potentially complementary)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Standard task format, release structure)
+- [Release Process Guide](docs-dev/guides/ship-release.md) (Artifacts per release type)
+- Release directory templates in `docs-dev/guides/prepare-release/v.x.x.x/`
+- [`init-project` Workflow Instruction](docs-dev/workflow-instructions/init-project.md) (Potentially complementary)

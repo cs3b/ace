@@ -28,11 +28,11 @@ docs-project
 ├── done
 │   ├── v.0.0.1
 │   ├── v.0.2.0-dev-docs-review
-│   └── v.0.2.1-spec-form-diff
+│   ├── v.0.2.1-spec-form-diff
 │   ├── v.0.2.2-feedback-to-process
 └── what-do-we-build.md
 ```
-(Use `tree . -L 2` to view the current structure)
+(Use `tree docs-project -L 2` from the project root to view the current structure)
 
 ## Task Management
 
@@ -40,15 +40,15 @@ docs-project
 
 Tasks are managed within the `docs-project/` subdirectories, representing a simple Kanban-style flow:
 
-- **`docs-project/backlog/`**: Contains directories for future, planned releases (e.g., `v.0.3.0-feature-x/`). Tasks are defined and planned here.
-- **`docs-project/current/`**: Contains the directory for the currently active release (e.g., `v.0.2.0-streamline-workflow/`). Active development happens here.
+- **`docs-project/backlog/`**: Contains directories for future, planned releases (e.g., `docs-project/backlog/v.0.3.0-feature-x/`). Tasks are defined and planned here.
+- **`docs-project/current/`**: Contains the directory for the currently active release (e.g., `docs-project/current/v.0.2.0-streamline-workflow/`). Active development happens here.
 - **`docs-project/done/`**: An archive containing directories of completed and released work.
 
-Within a release directory (primarily in `current/`), individual tasks are represented by **structured Markdown files** (`.md`).
+Within a release directory (primarily in `docs-project/current/`), individual tasks are represented by **structured Markdown files** (`.md`).
 
 ##### Optional Release Backlog Subdirectory
 
-This holds notes or draft tasks. The AI agent can be instructed to run the `lets-spec-from-release-backlog` workflow instruction to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This workflow instruction can also target a specific release in the main `docs-project/backlog/` if needed.
+This holds notes or draft tasks. The AI agent can be instructed to run the `docs-dev/workflow-instructions/lets-spec-from-release-backlog.md` workflow instruction to process items from this internal backlog and integrate them as structured tasks into the *same* release's `tasks/` directory. This workflow instruction can also target a specific release in the main `docs-project/backlog/` if needed.
 
 #### Standard Task File Format
 
@@ -72,7 +72,7 @@ Briefly describe the goal of this task. What should be achieved?
 - Specific steps required for implementation.
 - Pointers to relevant code sections or files.
 - Design considerations, constraints, or decisions made.
-- Links to relevant documentation, ADRs, or external resources.
+- Links to relevant documentation (e.g., `docs-dev/guides/...`), ADRs (`docs-dev/decisions/...`), or external resources.
 
 ## Acceptance Criteria / Test Strategy
 - How will we know this task is successfully completed?
@@ -93,11 +93,11 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### 3. Task Workflow
 
-1. **Planning**: Tasks are defined in the appropriate release directory within `backlog/` (e.g., `backlog/v.0.3.0/tasks/01-new-feature.md`).
-2. **Activation**: When a release becomes active, its directory is moved from `backlog/` to `current/` (e.g., `mv project/backlog/v.0.2.0 project/current/`).
-3. **Execution**: Developers work on tasks within `current/{release_dir}/tasks/`, updating the status in the task file's frontmatter as they progress (`pending` -> `in-progress` -> `done`).
-4. **Completion**: Once all tasks for a release in `current/` are marked `done`, the release process begins.
-5. **Archiving**: After a release is successfully shipped, its directory is moved from `current/` to `done/` (e.g., `mv project/current/v.0.2.0 project/done/`).
+1. **Planning**: Tasks are defined in the appropriate release directory within `docs-project/backlog/` (e.g., `docs-project/backlog/v.0.3.0/tasks/01-new-feature.md`).
+2. **Activation**: When a release becomes active, its directory is moved from `docs-project/backlog/` to `docs-project/current/` (e.g., `mv docs-project/backlog/v.0.2.0 docs-project/current/`).
+3. **Execution**: Developers work on tasks within `docs-project/current/{release_dir}/tasks/`, updating the status in the task file's frontmatter as they progress (`pending` -> `in-progress` -> `done`).
+4. **Completion**: Once all tasks for a release in `docs-project/current/` are marked `done`, the release process begins.
+5. **Archiving**: After a release is successfully shipped, its directory is moved from `docs-project/current/` to `docs-project/done/` (e.g., `mv docs-project/current/v.0.2.0 docs-project/done/`).
 
 ### 4. Task Transitions
 
@@ -128,11 +128,11 @@ Moving a whole release directory follows the same logic: ensure all contained ta
 
 #### Specification Workflows
 
-Tasks and release structures are typically generated through one of three primary workflows, facilitated by `lets-spec-*` workflow instructions:
+Tasks and release structures are typically generated through one of three primary workflows, facilitated by `lets-spec-*` workflow instructions (located in `docs-dev/workflow-instructions/`):
 
-1.  **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific, actionable tasks (usually resulting in a *Patch* release) aimed at addressing the feedback. Tasks are created directly in the `current/` release directory.
-2.  **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `backlog/` first.
-3.  **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually starting in `backlog/`.
+1.  **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific, actionable tasks (usually resulting in a *Patch* release) aimed at addressing the feedback. Tasks are created directly in the `docs-project/current/` release directory.
+2.  **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `docs-project/backlog/` first.
+3.  **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually starting in `docs-project/backlog/`.
 
 #### General Implementation Process (per task) - Integrating AI Collaboration
 
@@ -140,24 +140,24 @@ Tasks and release structures are typically generated through one of three primar
     *   Break down the task into smaller, logical steps.
     *   Identify potential challenges or areas needing clarification.
     *   Outline the intended design, interfaces, and test structures.
-    *   Gather necessary context (relevant existing code, patterns, `blueprint.md`, `architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
+    *   Gather necessary context (relevant existing code, patterns, `docs-project/blueprint.md`, `docs-project/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
 2.  **Test-Driven Development (AI-Assisted)**:
-    *   **Write Tests (`lets-tests`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria. *Review generated tests carefully.*
+    *   **Write Tests (`lets-tests`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria using the `docs-dev/workflow-instructions/lets-tests.md` workflow. *Review generated tests carefully.*
     *   **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
     *   **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
-3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions. *Review commit messages.* Commit changes frequently.
-4.  **Review & Reflection (`self-reflect`)**: Use the `self-reflect` workflow instruction to analyze the implemented solution, the effectiveness of the AI collaboration, update documentation, and capture learnings or necessary process improvements.
+3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions using the `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
+4.  **Review & Reflection (`self-reflect`)**: Use the `docs-dev/workflow-instructions/self-reflect.md` workflow instruction to analyze the implemented solution, the effectiveness of the AI collaboration, update documentation, and capture learnings or necessary process improvements.
 
-**Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `guides/coding-standards.md` for more on AI collaboration best practices.
+**Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `docs-dev/guides/coding-standards.md` for more on AI collaboration best practices.
 
 ## Related Documentation
 
 Essential standards and guidelines:
-- [Coding Standards](coding-standards.md)
-- [Testing Guidelines](testing.md)
-- [Documentation Standards](documentation.md)
-- [Release Process](ship-release.md)
-- [Error Handling](error-handling.md)
-- [Performance](performance.md)
-- [Security](security.md)
-- [Writing Guides Guide](writing-guides-guide.md)
+- [Coding Standards](docs-dev/guides/coding-standards.md)
+- [Testing Guidelines](docs-dev/guides/testing.md)
+- [Documentation Standards](docs-dev/guides/documentation.md)
+- [Release Process](docs-dev/guides/ship-release.md)
+- [Error Handling](docs-dev/guides/error-handling.md)
+- [Performance](docs-dev/guides/performance.md)
+- [Security](docs-dev/guides/security.md)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

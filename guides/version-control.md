@@ -46,7 +46,7 @@ Closes #123
    ```git
    # Good
    feat(agent): Add support for concurrent tool execution
-   
+
    # Bad
    Added some new features to make tools run faster
    ```
@@ -58,7 +58,7 @@ Closes #123
    - Add mutex protection for registry operations
    - Implement atomic tool updates
    - Add specs for concurrent access
-   
+
    This change ensures thread safety when multiple agents
    access the tool registry simultaneously.
 
@@ -83,10 +83,10 @@ Closes #123
    ```bash
    # Feature branches
    git checkout -b feature/browser-tool
-   
+
    # Bug fixes
    git checkout -b fix/memory-leak
-   
+
    # Documentation
    git checkout -b docs/api-reference
    ```
@@ -95,15 +95,15 @@ Closes #123
    ```bash
    # Start new feature
    git checkout -b feature/new-tool develop
-   
+
    # Regular commits
    git commit -m "feat(tool): Add basic implementation"
    git commit -m "test(tool): Add integration specs"
-   
+
    # Prepare for PR
    git fetch origin
    git rebase origin/develop
-   
+
    # Push for review
    git push origin feature/new-tool
    ```
@@ -135,13 +135,13 @@ Closes #123
 1. **Pre-commit Hook**:
    ```bash
    #!/bin/sh
-   
+
    # Run tests
    bundle exec rspec
-   
+
    # Check style
    bundle exec standardrb
-   
+
    # Verify docs
    bundle exec yard doc --fail-on-warning
    ```
@@ -149,7 +149,7 @@ Closes #123
 2. **Commit-msg Hook**:
    ```bash
    #!/bin/sh
-   
+
    # Verify conventional commit format
    if ! grep -qE '^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+$' "$1"; then
      echo "Invalid commit message format"
@@ -164,7 +164,7 @@ Closes #123
    # Review changes
    git status
    git diff
-   
+
    # Run validations
    bundle exec rspec
    bundle exec standardrb
@@ -176,7 +176,7 @@ Closes #123
    git add lib/aira/agent.rb
    git add spec/aira/agent_spec.rb
    git add docs-dev/guides/agent.md
-   
+
    # Review staged changes
    git diff --staged
    ```
@@ -194,7 +194,7 @@ Closes #123
 
 Common file groupings:
 - Core: `lib/aira/*.rb`
-- Tests: `spec/**/*_spec.rb` 
+- Tests: `spec/**/*_spec.rb`
 - Docs: `docs-dev/**/*.md`
 - Project: `*.gemspec`, `Gemfile`, etc.
 ### 7. Best Practices
@@ -219,8 +219,8 @@ Common file groupings:
    - Include example updates
    - Keep CHANGELOG current
    ## Related Documentation
-   - [Project Management Guide](project-management.md) (Task workflow integration)
-   - [Release Process Guide](ship-release.md) (Tagging, Changelog)
-   - [Quality Assurance Guide](quality-assurance.md) (PR Template, Code Review)
-   - [Writing Guides Guide](writing-guides-guide.md)
-   - Relevant Workflow Instructions: `lets-commit`
+   - [Project Management Guide](docs-dev/guides/project-management.md) (Task workflow integration)
+   - [Release Process Guide](docs-dev/guides/ship-release.md) (Tagging, Changelog)
+   - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (PR Template, Code Review)
+   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+   - Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-commit.md`

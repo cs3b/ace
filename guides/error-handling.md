@@ -132,6 +132,6 @@ agent.execution_trace # Returns execution history
 - Thread deadlocks: Check lock ordering
 
 ## Related Documentation
-- [Coding Standards](coding-standards.md)
-- [Quality Assurance](quality-assurance.md) (Logging, Monitoring)
-- [Writing Guides Guide](writing-guides-guide.md)
+- [Coding Standards](docs-dev/guides/coding-standards.md)
+- [Quality Assurance](docs-dev/guides/quality-assurance.md) (Logging, Monitoring)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

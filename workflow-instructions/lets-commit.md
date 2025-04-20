@@ -9,7 +9,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 - Familiarity with the project's version control guidelines.
 # Let's Commit Workflow Instruction
 
-Follow these steps to create well-structured commits. For detailed conventions and practical examples, first read [Version Control Guide](../guides/version-control.md).
+Follow these steps to create well-structured commits. For detailed conventions and practical examples, first read [Version Control Guide](docs-dev/guides/version-control.md)
 
 ## Process Steps
 
@@ -38,6 +38,6 @@ Follow these steps to create well-structured commits. For detailed conventions a
 - [x] The commit message follows the conventional commit format outlined in the Version Control Guide.
 - [x] Project tracking (e.g., task `.md` status) is updated if the commit completes a task.
 ## Reference Guides
-- [Version Control Guide](../guides/version-control.md)
-- [Documentation Guide](../guides/documentation.md)
-- [Project Management Guide](../guides/project-management.md) (Task status updates)
+- [Version Control Guide](docs-dev/guides/version-control.md)
+- [Documentation Guide](docs-dev/guides/documentation.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Task status updates)

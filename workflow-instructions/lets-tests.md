@@ -13,7 +13,7 @@ Guide the developer through writing and running automated tests (unit, integrati
 - Optional: Existing code that needs tests.
 # Let's Test Workflow Instruction
 
-For implementing tests using Test-Driven Development. See [Testing Guide](../guides/testing.md) for details.
+For implementing tests using Test-Driven Development. See [Testing Guide](docs-dev/guides/testing.md) for details.
 
 ## Process Steps
 
@@ -100,7 +100,7 @@ end
 - Clear test names that document behavior
 - Tests run in under 5 seconds (or are tagged as slow)
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Testing Guidelines Guide](../guides/testing.md)
-- [Testing Frameworks Guide](../guides/testing/frameworks.md) (If applicable)
-- [Coding Standards Guide](../guides/coding-standards.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Testing Guidelines Guide](docs-dev/guides/testing.md)
+- [Testing Frameworks Guide](docs-dev/guides/testing/frameworks.md) (If applicable)
+- [Coding Standards Guide](docs-dev/guides/coding-standards.md)

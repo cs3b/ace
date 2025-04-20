@@ -9,12 +9,12 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 - Development environment is set up correctly (dependencies installed, services running if needed).
 # Let's Fix Tests Workflow Instruction
 
-A systematic approach to diagnose and fix failing tests. For detailed testing practices and framework info, see [Testing Guide](../guides/testing.md).
+A systematic approach to diagnose and fix failing tests. For detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.md).
 
 ## Process Steps
 
 1.  **Initial Analysis:**
-    *   Run the test suite (e.g., `bundle exec rspec`).
+    *   Run the test suite (e.g., `bundle exec rspec` from project root).
     *   Identify failing tests from the output.
     *   Gather error messages and stack traces.
 
@@ -24,7 +24,7 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
     *   Handle end-to-end tests last.
 
 3.  **Fix and Verify:**
-    *   Isolate one failure at a time. Run only the failing test or file (e.g., `bundle exec rspec spec/path/to/failing_spec.rb:line_number`).
+    *   Isolate one failure at a time. Run only the failing test or file (e.g., `bundle exec rspec spec/path/to/failing_spec.rb:line_number` from project root).
     *   Analyze the code related to the failure.
     *   Implement a fix.
     *   Re-run the specific test to confirm it passes.
@@ -35,9 +35,9 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
 
 1.  **Environment Setup:**
     *   Ensure correct language version (e.g., `ruby -v`).
-    *   Verify dependencies are installed and up-to-date (`bundle install`).
-    *   Check for required environment variables or configuration files.
-    *   Clear temporary files or caches if applicable (`rm -rf tmp/*`, `rake tmp:clear`).
+    *   Verify dependencies are installed and up-to-date (`bundle install` from project root).
+    *   Check for required environment variables or configuration files (e.g., `.env`).
+    *   Clear temporary files or caches if applicable (`rm -rf tmp/*`, `rake tmp:clear` from project root).
 
 2.  **Test Isolation:**
     *   Review test helper files (e.g., `spec/spec_helper.rb`).
@@ -52,9 +52,9 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
 
 ## Reference Documentation
 
-- [Testing Guide](../guides/testing.md)
-- [Testing Frameworks](../guides/testing/frameworks.md) (if applicable)
-- [Coding Standards](../guides/coding-standards.md)
+- [Testing Guide](docs-dev/guides/testing.md)
+- [Testing Frameworks](docs-dev/guides/testing/frameworks.md) (if applicable)
+- [Coding Standards](docs-dev/guides/coding-standards.md)
 
 ## Output / Success Criteria
 

@@ -12,7 +12,7 @@ This guide provides standard practices and techniques for identifying, measuring
 require 'connection_pool'
 
 Aira.configure do |config|
-  config.llm_client_pool = ConnectionPool.new(size: 5, timeout: 3) do 
+  config.llm_client_pool = ConnectionPool.new(size: 5, timeout: 3) do
     LLMClient.new
   end
 end
@@ -38,15 +38,15 @@ require 'benchmark/ips'
 def benchmark_operations
   Benchmark.ips do |x|
     x.config(time: 5, warmup: 2)
-    
+
     x.report("single thread") do
       agent.execute(task)
     end
-    
+
     x.report("multi thread") do
       parallel_execute(task)
     end
-    
+
     x.compare!
   end
 end
@@ -81,9 +81,9 @@ def process_batch(tasks)
 end
 ```
 ## Related Documentation
-- [Testing Guidelines](testing.md) (Benchmarking, Load Testing)
-- [Quality Assurance](quality-assurance.md) (Monitoring)
-- [Writing Guides Guide](writing-guides-guide.md)
+- [Testing Guidelines](docs-dev/guides/testing.md) (Benchmarking, Load Testing)
+- [Quality Assurance](docs-dev/guides/quality-assurance.md) (Monitoring)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
 
 ### 4. Monitoring Points
 

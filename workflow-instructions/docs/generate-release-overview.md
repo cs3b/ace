@@ -10,12 +10,12 @@ Create or update the main release overview document (e.g., `docs-project/current
 
 ## Process Steps
 
-1.  **Identify Target Release:** Confirm the release directory path.
+1.  **Identify Target Release:** Confirm the release directory path (e.g., `docs-project/current/v1.2.3-myfeature`).
 2.  **Gather Context:**
-    *   Review the tasks defined within the release (`tasks/*.md`).
+    *   Review the tasks defined within the release (`{release_path}/tasks/*.md`).
     *   Review relevant source documents (e.g., PRD, FRD, PR comments that initiated the release).
     *   Review recent commit history if the release is already in progress.
-3.  **Draft/Update Overview Document:** Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release. Use the structure from the template (`guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide. Key sections include:
+3.  **Draft/Update Overview Document:** Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release. Use the structure from the template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide. Key sections include:
     *   **Release Overview:** Brief summary.
     *   **Release Information:** Type, Dates, Status.
     *   **Goals & Requirements:** High-level objectives, metrics, acceptance criteria.
@@ -27,16 +27,16 @@ Create or update the main release overview document (e.g., `docs-project/current
 6.  **Save:** Save the updated overview document.
 
 ## Input
-- Release directory path.
+- Release directory path (root-relative).
 - Related tasks, source documents, and potentially commit history.
 
 ## Output / Success Criteria
-- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the release directory is created or updated.
+- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the specified release directory is created or updated.
 - [x] The document accurately reflects the release's goals, scope, and plan.
 - [x] Key sections (Overview, Info, Goals, Plan, QA, Checklist) are present and populated appropriately.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
-- [Release Overview Template](../../guides/prepare-release/v.x.x.x/v.x.x.x-codename.md)
-- [Project Management Guide](../../guides/project-management.md)
-- [Release Process Guide](../../guides/ship-release.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Release Overview Template](docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md)
+- [Project Management Guide](docs-dev/guides/project-management.md)
+- [Release Process Guide](docs-dev/guides/ship-release.md)

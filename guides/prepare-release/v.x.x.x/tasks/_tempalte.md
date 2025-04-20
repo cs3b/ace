@@ -12,12 +12,12 @@ Short and descriptive, e.g. "Implement API pagination logic"
 - Related Feature: [Feature #3 – User List Export](#)
 - Design Reference: [Figma](#) / [Spec Doc](#)
 - Files/Modules Involved: `users_controller.rb`, `export_service.rb`
-- Dependencies: Feature #2 must be complete
+_template.md
 
 ---
 
 ## 📌 Session Focus
-What specific part of the feature will be tackled in this session?  
+What specific part of the feature will be tackled in this session?
 _E.g., "Implement pagination backend logic"_
 
 ---
@@ -53,10 +53,10 @@ _E.g., "Implement pagination backend logic"_
 ---
 
 ## ⏱ Time Plan (Ideal)
-- Code implementation: 60 min  
-- Testing & validation: 30 min  
-- Documentation & clean-up: 15 min  
-- Buffer / troubleshooting: 15 min  
+- Code implementation: 60 min
+- Testing & validation: 30 min
+- Documentation & clean-up: 15 min
+- Buffer / troubleshooting: 15 min
 
 ---
 

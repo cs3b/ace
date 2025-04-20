@@ -21,13 +21,13 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
     *   API Reference (if applicable, link to generated API docs)
     *   Integration Examples
     *   Migration Guide (if applicable)
-    *   *(Refer to `guides/prepare-release/v.x.x.x/docs/_template.md` for a template)*
+    *   *(Refer to `docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md` for a template)*
 4.  **Draft Content:** Write the documentation content, focusing on clarity, accuracy, and practical examples.
     *   Include code snippets for examples.
     *   Explain the "why" as well as the "how".
     *   Use formatting (headings, lists, code blocks) effectively.
 5.  **Review & Refine:** Check the draft for clarity, completeness, technical accuracy, grammar, and spelling. Ensure examples work.
-6.  **Save/Commit:** Save the documentation in the appropriate location (e.g., `docs/`, `examples/`, `README.md`, or within a release directory `docs-project/current/{release_dir}/user-experience/` or `docs-project/current/{release_dir}/docs/`). Commit the changes.
+6.  **Save/Commit:** Save the documentation in the appropriate location (e.g., `docs/`, `examples/`, `README.md` at project root, or within a release directory `docs-project/current/{release_dir}/user-experience/` or `docs-project/current/{release_dir}/docs/`). Commit the changes.
 
 ## Input
 - Description of the feature/change to be documented.
@@ -38,11 +38,11 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
 - [x] User documentation for the specified feature/change is created or updated.
 - [x] Documentation is clear, accurate, and appropriate for the target audience.
 - [x] Key aspects (usage, configuration, examples) are covered.
-- [x] Documentation follows project standards (`guides/documentation.md`).
+- [x] Documentation follows project standards (`docs-dev/guides/documentation.md`).
 - [x] Documentation is saved in the correct location.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../../guides/writing-workflow-instructions.md)
-- [Documentation Standards Guide](../../guides/documentation.md)
-- [User Docs Template](../../guides/prepare-release/v.x.x.x/docs/_template.md)
-- [User Experience Template](../../guides/prepare-release/v.x.x.x/user-expierience/_template.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Documentation Standards Guide](docs-dev/guides/documentation.md)
+- [User Docs Template](docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md)
+- [User Experience Template](docs-dev/guides/prepare-release/v.x.x.x/user-expierience/_template.md)

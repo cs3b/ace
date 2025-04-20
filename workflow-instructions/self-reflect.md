@@ -143,12 +143,12 @@ docs-project/{current|done}/{release_dir}/reflections/YYYYMMDD-{taskID_or_topic}
 
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Task structure, workflow, backlog)
-- [Documentation Standards Guide](../guides/documentation.md)
-- [ADR Template](../../guides/prepare-release/v.x.x.x/decisions/_template.md)
-- `generate-adr` Workflow Instruction
-- `log-session` Workflow Instruction (for session context)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Task structure, workflow, backlog)
+- [Documentation Standards Guide](docs-dev/guides/documentation.md)
+- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [`generate-adr` Workflow Instruction](docs-dev/workflow-instructions/docs/generate-adr.md)
+- [`log-session` Workflow Instruction](docs-dev/workflow-instructions/log-session.md)
 
 ## Collaboration Workflow Reflection Guide
 

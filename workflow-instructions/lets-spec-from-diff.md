@@ -206,9 +206,9 @@ For optimal diff analysis:
 ### Integration with Other Workflow Instructions
 
 This workflow instruction complements:
-- `lets-spec-from-pr-comments`: Similar structure but different input source
-- `lets-spec-from-release-backlog`: Uses the same task generation format
-- `self-reflect`: Can be used after analysis to capture additional insights
+- `docs-dev/workflow-instructions/lets-spec-from-pr-comments.md`: Similar structure but different input source
+- `docs-dev/workflow-instructions/lets-spec-from-release-backlog.md`: Uses the same task generation format
+- `docs-dev/workflow-instructions/self-reflect.md`: Can be used after analysis to capture additional insights
 
 ## Common Usage Patterns
 
@@ -217,6 +217,6 @@ This workflow instruction complements:
 3. **Preparing Refactoring**: Identify patterns and pain points
 4. **Pre-Implementation Planning**: Convert design changes to concrete tasks
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](../guides/writing-workflow-instructions.md)
-- [Project Management Guide](../guides/project-management.md) (Standard task format)
-- [Version Control Guide](../guides/version-control.md) (Git commands)
+- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Standard task format)
+- [Version Control Guide](docs-dev/guides/version-control.md) (Git commands)
