@@ -1,6 +1,7 @@
 # Writing Effective Workflow Instructions
 
 This guide explains how to create and structure the Markdown-based workflow instructions used by the AI agent within this project. Effective instructions are clear, specific, and provide sufficient context for the AI to perform tasks accurately and efficiently. This approach is based on principles outlined in `research/how-to-write-cursor-rules.md` and `research/the-future-of-prompting.md` (assuming these exist at the project root).
+**Important:** These instructions are designed to be *read and followed by the AI agent*. They are not scripts to be executed directly in a shell. The user typically invokes a workflow by asking the agent to follow the steps outlined in a specific instruction file, often providing necessary inputs like file paths.
 
 ## Core Principles
 
