@@ -23,6 +23,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 3.  **Prepare Release Documentation:**
     *   Update `CHANGELOG.md` (at project root) with a new entry summarizing changes for the determined version.
     *   Finalize any release-specific documentation in `docs-project/current/{release_dir}/` (e.g., `docs/`, `user-experience/`) as required by the release type (see `docs-dev/guides/ship-release.md`).
+    *   **Ensure the root documentation file within `docs-project/current/{release_dir}/` is named according to the standard `v.x.y.z-codename.md` (matching the directory name).**
     *   Generate/update API documentation if needed (`docs-dev/workflow-instructions/docs/generate-api-docs.md`).
 
 4.  **Update Version & Commit:**
@@ -76,6 +77,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 ## Output / Success Criteria
 - [x] All tasks for the release in `docs-project/current/{release_dir}/` confirmed `done`.
 - [x] `CHANGELOG.md` and other required release documentation updated.
+- [x] **The root documentation file within the release directory uses the standard `v.x.y.z-codename.md` naming convention.**
 - [x] Project version file updated and committed.
 - [x] Final validation checks (tests, linters) pass.
 - [x] Release documentation directory moved from `docs-project/current/` to `docs-project/done/` and committed.

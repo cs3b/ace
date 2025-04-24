@@ -3,7 +3,19 @@
 ## Goal
 This guide details the standard process for preparing, validating, tagging, and publishing project releases, ensuring consistency and quality control. It covers versioning, Git workflow, checklists, and post-release activities.
 
-# Release Process Guide
+## Standard: Release Documentation Naming
+
+To ensure consistency and predictability, all release-specific documentation directories (typically managed under `docs-project/current/` during development and archived to `docs-project/done/`) **must** contain a root documentation file named according to the following convention:
+
+**`v.x.y.z-codename.md`**
+
+- **`v.x.y.z`**: Matches the semantic version of the release (e.g., `v.0.2.3`).
+- **`codename`**: A short (ideally 1-4 words), descriptive name for the release, usually reflecting its primary goal or theme (e.g., `feedback-after-zed-extension`). If no specific codename is assigned, use a concise description.
+- **`.md`**: The file extension.
+
+**Example:** For a release version `0.2.3` with the codename `feedback-after-zed-extension`, the root file within its directory (`docs-project/current/v.0.2.3-feedback-after-zed-extension/`) must be named `v.0.2.3-feedback-after-zed-extension.md`.
+
+This convention applies to the main overview document for the release. Other files and subdirectories within the release directory can follow project-specific structures.
 
 ### 1. Version Control
 
@@ -40,6 +52,7 @@ This guide details the standard process for preparing, validating, tagging, and 
    - [ ] Version file updated
    - [ ] CHANGELOG.md updated
    - Finalize any release-specific documentation within the `docs-project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). The specific artifacts required (like ADRs, detailed docs, test cases, user guides) should align with the scope defined during the specification phase (using `docs-dev/workflow-instructions/lets-spec-from-pr-comments.md`, `docs-dev/workflow-instructions/lets-spec-from-frd.md`, or `docs-dev/workflow-instructions/lets-spec-from-prd.md` workflow instructions) which corresponds to the release type (Patch, Feature, Major). Ensure all necessary documents are complete and accurate.
+   - [ ] **Ensure the root documentation file within the release directory (`docs-project/current/{release_dir}/`) is named according to the standard `v.x.y.z-codename.md` (matching the directory name).**
    ```
 
 2. **Version Update**:
