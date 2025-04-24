@@ -16,8 +16,8 @@ Follow these steps to create well-structured commits. For detailed conventions a
 1.  **Review and Prepare Changes:**
     *   Review modified files (`git status`, `git diff`).
     *   Ensure new code has corresponding tests.
-    *   Verify tests pass (e.g., `bundle exec rspec`, adjust command as needed).
-    *   Check test coverage if applicable (e.g., `COVERAGE=true bundle exec rspec`).
+    *   Verify tests pass (using your project's standard test command, e.g., `your_test_runner_command`. See `docs-dev/guides/testing/<your_lang>.md` or `docs-dev/guides/task-cycle/<your_lang>.md` for details).
+    *   Check test coverage if applicable (using your project's standard coverage command, e.g., `your_coverage_command`. See testing guides for details).
     *   Group related changes logically (e.g., feature implementation + tests + docs).
 
 2.  **Create Commit:**
@@ -41,3 +41,4 @@ Follow these steps to create well-structured commits. For detailed conventions a
 - [Version Control Guide](docs-dev/guides/version-control.md)
 - [Documentation Guide](docs-dev/guides/documentation.md)
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task status updates)
+- [Testing Guides](docs-dev/guides/testing)

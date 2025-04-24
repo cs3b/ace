@@ -38,15 +38,32 @@ Follow the mirrored structure of `lib/` when placing unit tests. Keep integratio
 
 ## 6. Running Tests
 
+Typically, you run your RSpec tests using Bundler to ensure the correct gem versions are used:
+
 ```bash
-bundle exec rspec            # full suite
-bundle exec rspec spec/unit  # subset
+# Run all specs
+bundle exec rspec
+
+# Run specs in a specific file
+bundle exec rspec spec/models/user_spec.rb
+
+# Run a specific example (by line number)
+bundle exec rspec spec/models/user_spec.rb:25
 ```
 
-Add `bin/rspec` wrapper for convenience.
+## 7. Checking Test Coverage
 
-## 7. CI Integration
+If you have set up a coverage tool like SimpleCov, you might run it via an environment variable:
+
+```bash
+# Run specs and generate coverage report
+COVERAGE=true bundle exec rspec
+```
+
+Refer to your project's specific setup (e.g., `spec_helper.rb` or `rails_helper.rb`) and the coverage tool's documentation for configuration details.
+
+## 8. CI Integration
 - Ensure the CI pipeline runs `bundle exec rspec` and uploads coverage.
 
-## 8. Linting Specs
+## 9. Linting Specs
 Use `rubocop-rspec` to enforce spec style.

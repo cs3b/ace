@@ -12,6 +12,17 @@ This guide explains how to create and structure the Markdown-based workflow inst
 5.  **Examples**: Provide concrete examples of inputs, outputs, or expected results, especially for complex instructions. Few-shot learning helps the AI understand the desired format and behavior.
 6.  **Planning Before Prompting**: Just like coding, plan the workflow instruction before writing it. Define the goal, the steps involved, the necessary inputs, and how to measure success.
 
+## Handling Technology-Specific Content
+
+Workflow instructions should aim to be technology-agnostic, describing the *process* rather than specific commands for every language or tool.
+
+If you encounter technology-specific examples (like exact commands for RSpec, Cargo, npm, etc.) within a workflow instruction during review or refactoring:
+
+1.  **Prioritize Merging into Main Guides:** The preferred approach is to move the specific example(s) into the relevant existing language-specific *guide* located in `docs-dev/guides/` (e.g., add RSpec examples to `docs-dev/guides/testing/ruby-rspec.md`, add Cargo commands to `docs-dev/guides/ship-release/rust.md`). In the workflow instruction, replace the removed example with a generic placeholder (e.g., `your_test_command`) and add a clear reference to the main guide where the specific details can be found.
+2.  **Fallback: Create Sub-Instructions:** If the technology-specific content is substantial, highly specific to the workflow's context, and doesn't fit naturally into any of the main guides, you can create language-specific *sub-instructions*. Place these in a sub-directory named after the main instruction (e.g., `docs-dev/workflow-instructions/lets-fix-tests/ruby.md`). The main workflow instruction should then link to these sub-instructions for the technology-specific steps.
+
+This approach keeps the core workflow instructions clean and focused on the process, while ensuring that technology-specific details are available and maintainable in the appropriate location.
+
 ## Standard Workflow Instruction Structure
 
 While the exact sections may vary slightly depending on the instruction's purpose, aim for a structure similar to this:

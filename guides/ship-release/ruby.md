@@ -30,6 +30,31 @@ git tag -a vX.Y.Z -m "Release version X.Y.Z"
 # Push changes and tags
 git push origin main vX.Y.Z
 
+## Publishing the Gem
+
+Once the version is bumped, tagged, and pushed, you can publish the gem to RubyGems.org.
+
+Ensure you have the necessary credentials configured (typically in `~/.gem/credentials`).
+
+```bash
+# Build the gem
+gem build your_gem_name.gemspec
+
+# Push the built .gem file
+gem push your_gem_name-X.Y.Z.gem
+```
+
+### Using Helper Scripts
+
+Many projects use helper scripts (e.g., `bin/publish`, Rake tasks) to automate the build and push steps. Check your project's conventions.
+
+Example using a hypothetical script:
+
+```bash
+# Assumes the script handles building and pushing
+bin/publish
+```
+
 # Push the gem
 gem push <your_gem>-X.Y.Z.gem
 ```

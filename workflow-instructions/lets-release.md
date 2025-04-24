@@ -31,7 +31,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
     *   Commit the version bump and documentation changes (e.g., `git commit -am "chore(release): Bump version to vX.Y.Z"`).
 
 5.  **Final Validation:**
-    *   Run the full test suite (`docs-dev/workflow-instructions/lets-tests.md` or equivalent, e.g., `bin/rspec`).
+    *   Run the full test suite (using your project's standard test command, e.g., `your_test_runner_command`. See `docs-dev/guides/testing/<your_lang>.md` or `docs-dev/guides/task-cycle/<your_lang>.md` for details).
     *   Run linters/static analysis.
     *   Perform any required manual smoke tests.
     *   Review the `CHANGELOG.md` entry for accuracy.
@@ -59,12 +59,8 @@ Guide the developer through the process of finalizing, validating, tagging, and 
         ```
 
 8.  **Publish Release Artifact:**
-    *   Build and publish the package using the project's helper script or standard commands:
-        ```bash
-        # Example for RubyGems using a helper script (at root)
-        bin/publish
-        ```
-        *(Ensure credentials are configured)*.
+    *   Build and publish the package using the project's helper script or standard commands (e.g., `your_publish_command`).
+        *(Refer to `docs-dev/guides/ship-release/<your_lang>.md` for technology-specific publishing details and ensure credentials are configured)*.
 
 9.  **Post-Release Actions:**
     *   Announce the release (optional).
