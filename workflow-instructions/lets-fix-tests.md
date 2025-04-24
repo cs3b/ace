@@ -53,7 +53,6 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
 ## Reference Documentation
 
 - [Testing Guide](docs-dev/guides/testing.md)
-- [Testing Frameworks](docs-dev/guides/testing/frameworks.md) (if applicable)
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 
 ## Output / Success Criteria

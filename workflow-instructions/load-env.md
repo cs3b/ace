@@ -13,7 +13,7 @@
 ## Process Steps
 
 1.  **Load General Process & Guides:**
-    * Understand the overall development process: [Project Management Guide](docs-dev/guides/project-management.md)
+    * Understand the overall development process: [docs-dev/guides/project-management.md](docs-dev/guides/project-management.md)
     *   Review core development standards (link to specific guides as needed):
     *   [Coding Standards](docs-dev/guides/coding-standards.md)
     *   [Testing Guidelines](docs-dev/guides/testing.md)
@@ -26,7 +26,6 @@
     *   Review project objectives: [docs-project/what-do-we-build.md](docs-project/what-do-we-build.md)
     *   Examine high-level architecture: [docs-project/architecture.md](docs-project/architecture.md)
     *   Check project structure and key files: [docs-project/blueprint.md](docs-project/blueprint.md) (Note: Run `generate-blueprint` if this seems outdated).
-    *   Review project-specific decisions: [docs-dev/decisions/](docs-dev/decisions/)
 
 3.  **Determine Current Work State:**
     *   Identify active release directory: [docs-project/current/](docs-project/current/)

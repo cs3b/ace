@@ -102,5 +102,4 @@ end
 ## Reference Documentation
 - [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 - [Testing Guidelines Guide](docs-dev/guides/testing.md)
-- [Testing Frameworks Guide](docs-dev/guides/testing/frameworks.md) (If applicable)
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)
