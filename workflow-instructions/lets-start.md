@@ -1,6 +1,6 @@
 # Let's Start Workflow Instruction
 
-**Goal:** Initiate the workflow for implementing a specific task after the environment context has been loaded using `load-env`.
+**Goal:** Initiate the workflow for implementing a specific task by guiding the selection of the task, ensuring full understanding of its requirements, and preparing a plan for implementation. This prepares the developer (human or AI) to begin the standard development cycle.
 
 **Prerequisites:**
 
@@ -35,26 +35,17 @@
         *   **Context Gathering:** Identify relevant existing code files, patterns, or conventions in the codebase that the AI should follow. Refer to `docs-project/blueprint.md` and `docs-project/architecture.md`.
         *   **Define AI Role (Optional but Recommended):** Briefly define the AI's objective for the *first* implementation step (e.g., "Generate the initial failing test structure for function X", "Implement the core logic for Y based on this pseudocode").
 
-3.  **Initiate Implementation Cycle (Guided AI Execution):**
-    *   Begin the standard task cycle (refer to `docs-dev/guides/project-management.md`), using the plan from Step 2 to guide the AI:
-        *   **Write Tests (`lets-tests`):** Provide the AI with the planned test structure and acceptance criteria. Review the generated test code carefully.
-        *   **Implement Code:** Provide the AI with the detailed implementation step (e.g., pseudocode, specific function signature, relevant context). Use clear, concise instructions. Consider using prompts like "ONLY IMPLEMENT EXACTLY THIS STEP."
-        *   **Verify Tests (`bin/rspec`, `lets-fix-tests` if needed):** Run tests. If they fail, provide the AI with the error message and relevant code snippets for debugging.
-        *   **Commit Changes (`lets-commit`):** Ensure commits are atomic and follow project conventions. Review the commit message generated or suggested by the AI.
-        *   **Reflect (`self-reflect`):** Analyze the implementation process, the AI's contribution, and capture learnings.
-        *   **Update Task Status:** Update the task status in its `.md` file.
-    *   **Review Rigorously:** Treat AI-generated code as if it were written by a junior developer. Review it thoroughly for correctness, adherence to standards, and potential issues before committing.
+3.  **Proceed to Implementation Cycle:**
+    *   With the task understood and a plan in place, proceed to the main development workflow.
+    *   Follow the steps outlined in the **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)** for Test-Driven Development, committing changes, and self-reflection.
 
 ## Reference Documentation
 
 *   [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 *   [Project Management Guide](docs-dev/guides/project-management.md) (Task format, implementation cycle)
-*   [Testing Guidelines Guide](docs-dev/guides/testing.md)
 *   [Coding Standards Guide](docs-dev/guides/coding-standards.md) (AI Collaboration Principles)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
-*   [`lets-tests` Workflow Instruction](docs-dev/workflow-instructions/lets-tests.md)
-*   [`lets-commit` Workflow Instruction](docs-dev/workflow-instructions/lets-commit.md)
-*   [`self-reflect` Workflow Instruction](docs-dev/workflow-instructions/self-reflect.md)
+*   **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)** (The main guide for Test -> Code -> Commit -> Reflect)
 
 ## Input
 
@@ -64,4 +55,4 @@
 
 *   Confirmation that the selected task is understood and its dependencies are met.
 *   A high-level plan for implementing the task (including testing strategy) is established.
-*   Developer is ready to begin the TDD cycle for the selected task, potentially using `lets-tests`.
+*   Developer is ready to begin the implementation cycle following the **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)**.

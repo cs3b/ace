@@ -44,7 +44,7 @@ guides
 | **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]` |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
-| **References & Risks** | Links to style guides, ADRs; mitigations | Any scripts to run? |
+| **References & Risks** | Links to style guides, ADRs; mitigations | Any scripts to run? **Use root-relative links: `[link text](path/from/root/file.md)`** |
 
 ---
 
@@ -53,7 +53,7 @@ guides
 ~~~markdown
 ---
 id: <ticket-id>
-status: pending
+status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: <high/medium/low>
 estimate: <n>h
 dependencies: [<ticket-ids>]

@@ -1,105 +1,62 @@
 # Let's Test Workflow Instruction
 
+**Context:** This instruction details the "Test" phase of the overall development workflow described in the **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)**.
+
 ## Goal
 Guide the developer through writing and running automated tests (unit, integration) following Test-Driven Development (TDD) principles.
 
 ## Prerequisites
-- A specific feature or piece of functionality requires testing (often defined in a task `.md` file).
-- Development environment is set up with the testing framework configured (e.g., RSpec, Jest).
-- Understanding of the project's testing guidelines and conventions.
+- A specific feature or piece of functionality requires testing (often defined in a task `.md` file after completing the [Let's Start](./lets-start.md) instruction).
+- Development environment is set up with the testing framework configured.
+- Understanding of the project's testing guidelines and conventions, including technology-specific details found in the **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)** sub-sections.
 
 ## Input
-- Feature/task requirements and acceptance criteria.
+- Feature/task requirements and acceptance criteria (from the task `.md` file).
 - Optional: Existing code that needs tests.
-# Let's Test Workflow Instruction
-
-For implementing tests using Test-Driven Development. See [Testing Guide](docs-dev/guides/testing.md) for details.
 
 ## Process Steps
 
-1. **Review Feature Specification**:
-- Identify test requirements from the feature spec in `docs-project/1-next/`
-   - Create a test plan covering:
-     - Class/method structure tests
-     - Happy path scenarios
-     - Edge cases and error conditions
-     - Integration points
+1.  **Review Task & Plan Tests**:
+    *   Revisit the selected task's `.md` file (`docs-project/current/{release_dir}/tasks/NN-*.md`).
+    *   Focus on the `## Acceptance Criteria / Test Strategy` section.
+    *   Plan specific tests covering:
+        *   Core functionality (happy paths)
+        *   Edge cases and known boundary conditions
+        *   Error handling and expected failures
+        *   Integration points (if applicable)
 
-2. **Implement Test First**:
-   ```bash
-   # Create a new test file if needed
-   touch spec/aira/[component]_spec.rb
-   ```
+2.  **Write Failing Test First**:
+    *   Create a new test file or locate the relevant existing one, following project conventions (e.g., naming, location).
+    *   Write the simplest possible test case for a small piece of the required functionality according to your plan.
+    *   **Ensure the test fails** for the *expected reason*. Run the test suite using the appropriate command for your project's tech stack.
+        *   *(Example Action: `Execute test runner command`)*
+        *   *(Refer to the technology-specific sub-guide in [Implementing the Task Cycle](../guides/implementing-task-cycle.md) for exact commands if unsure.)*
 
-   - Write failing tests first
-   - Run tests to verify they fail with clear messages:
-   ```bash
-   bin/rspec spec/aira/[component]_spec.rb
-   ```
+3.  **Write Code to Pass Test**:
+    *   Write the minimum amount of application code necessary to make the failing test pass.
+    *   Focus *only* on passing the current test; avoid adding extra functionality.
 
-3. **Implementation & Verification Cycle**:
-   - Implement minimal code to make tests pass
-   - Run tests again to verify:
-   ```bash
-   bin/rspec spec/aira/[component]_spec.rb
-   ```
-   - Refactor code while keeping tests green
-   - Document any design decisions or edge cases
+4.  **Run Tests & Verify**:
+    *   Run the test suite again.
+        *   *(Example Action: `Execute test runner command`)*
+    *   Verify that the new test passes and no existing tests have broken.
 
-4. **Coverage Validation**:
-   ```bash
-   COVERAGE=true bin/rspec
-   ```
-   - Review coverage/index.html
-   - Add tests for any uncovered code paths
-   - Document any intentionally uncovered paths
+5.  **Refactor (Optional but Recommended)**:
+    *   With the safety net of passing tests, look for opportunities to improve the code you just wrote *and* the test code.
+    *   Examples: Improve clarity, remove duplication, adhere to coding standards.
+    *   Run tests again after refactoring to ensure nothing was broken.
 
-## Test Structure Guidelines
-
-```ruby
-RSpec.describe Component do
-  # Context blocks for different scenarios
-  context "when initializing" do
-    # Examples with clear descriptions
-    it "sets default values" do
-      # Implementation
-    end
-  end
-
-  # Isolation from external services
-  context "with external dependencies" do
-    # Use mocks/stubs appropriately
-    let(:dependency) { instance_double("Dependency") }
-    before do
-      allow(dependency).to receive(:call).and_return(result)
-    end
-  end
-
-  # Edge case testing
-  context "with invalid inputs" do
-    it "raises an appropriate error" do
-      expect { subject.method(invalid_input) }.to raise_error(ExpectedError)
-    end
-  end
-end
-```
+6.  **Repeat:**
+    *   Repeat steps 2-5 for the next piece of functionality identified in your test plan until all acceptance criteria are met by passing tests.
 
 ## Output / Success Criteria
 
-**Output:**
-- New or updated test files (e.g., `spec/..._spec.rb`).
-- Passing test suite execution results.
-- Optional: Updated code coverage reports.
+*   A suite of automated tests exists for the implemented feature/fix.
+*   All tests related to the completed functionality are passing.
+*   The developer is ready to proceed to the "Commit" phase, detailed in the [Let's Commit](./lets-commit.md) instruction.
 
-**Success Criteria:**
-
-- All tests pass
-- Tests written before implementation
-- Coverage targets met (95% for core components)
-- Thread safety verified
-- Clear test names that document behavior
-- Tests run in under 5 seconds (or are tagged as slow)
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
-- [Testing Guidelines Guide](docs-dev/guides/testing.md)
-- [Coding Standards Guide](docs-dev/guides/coding-standards.md)
+
+*   **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)** (Overall workflow)
+*   [Quality Assurance Guide](../guides/quality-assurance.md) (General testing principles)
+*   Technology-specific sub-guides under `../guides/implementing-task-cycle/` (For specific commands and framework details)
