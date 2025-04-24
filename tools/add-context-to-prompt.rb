@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
+
 # -----------------------------------------------------------------------------
 # add-context-to-prompt.rb  – v0.5  (2025‑04‑22)
 #
@@ -23,24 +24,26 @@
 #   • By default only .md files are parsed for links; adjust EXT_FILTER if needed.
 # -----------------------------------------------------------------------------
 
-require 'optparse'
-require 'pathname'
-require 'set'
+require "optparse"
+require "pathname"
 
 # -------- CLI options --------------------------------------------------------
-opts = { delete_unreferenced: false }
+opts = {delete_unreferenced: false}
 OptionParser.new do |o|
-  o.banner = 'Usage: add-context-to-prompt.rb [options] <prompt_path | all>'
-  o.on('-d', '--delete-not-referenced',
-       'Delete /file lines in <context> that are not referenced') { opts[:delete_unreferenced] = true }
-  o.on('-h', '--help', 'Show this help') { puts o; exit }
+  o.banner = "Usage: add-context-to-prompt.rb [options] <prompt_path | all>"
+  o.on("-d", "--delete-not-referenced",
+    "Delete /file lines in <context> that are not referenced") { opts[:delete_unreferenced] = true }
+  o.on("-h", "--help", "Show this help") {
+    puts o
+    exit
+  }
 end.parse!
 selector = ARGV.shift or abort 'ERROR: supply a prompt path or "all"'
 
 # -------- project paths ------------------------------------------------------
-SCRIPT_DIR  = Pathname.new(__dir__).freeze
-ROOT        = (SCRIPT_DIR + '..' + '..').cleanpath.freeze
-PROMPTS_DIR = ROOT + 'docs-dev/zed/prompts'
+SCRIPT_DIR = Pathname.new(__dir__).freeze
+ROOT = (SCRIPT_DIR + ".." + "..").cleanpath.freeze
+PROMPTS_DIR = ROOT + "docs-dev/zed/prompts"
 
 def resolve_prompt(arg)
   [
@@ -52,17 +55,17 @@ def resolve_prompt(arg)
 end
 
 # -------- regexes ------------------------------------------------------------
-SEED_RX      = /^\s*\/file\s+(.+?)\s*$/
-LINK_RX      = /!?\[[^\]]+\]\(([^)]+)\)/
+SEED_RX = /^\s*\/file\s+(.+?)\s*$/
+LINK_RX = /!?\[[^\]]+\]\(([^)]+)\)/
 CTX_BLOCK_RX = /<context>(.*?)<\/context>/m
-CTX_FILE_RX  = /^\s*\/file\s+(.+?)\s*$/
+CTX_FILE_RX = /^\s*\/file\s+(.+?)\s*$/
 
 # -------- helper functions ---------------------------------------------------
-EXT_FILTER = ['.md'].freeze   # only files with these extensions are parsed for links
+EXT_FILTER = [".md"].freeze   # only files with these extensions are parsed for links
 
 def markdown_links(text)
   text.scan(LINK_RX).flatten.reject do |h|
-    h =~ %r{^\w+://} || h.start_with?('#', 'mailto:')
+    h =~ %r{^\w+://} || h.start_with?("#", "mailto:")
   end
 end
 
@@ -86,19 +89,19 @@ def crawl(seed_paths)
     end
   end
 
-  seed_paths.each { walker.call(_1) }
+  seed_paths.each { walker.call(it) }
   order
 end
 
 def ctx_paths(body)
   body.lines.filter_map { |l| l[CTX_FILE_RX, 1] }
-            .map { |p| Pathname.new(p).cleanpath }
+    .map { |p| Pathname.new(p).cleanpath }
 end
 
 def rebuild_context(orig_body, final_paths)
   preserved = orig_body.lines
-                       .reject { |l| l =~ CTX_FILE_RX }    # drop old /file lines
-                       .reject { |l| l.strip.empty? }      # drop pure blank lines
+    .reject { |l| l =~ CTX_FILE_RX }    # drop old /file lines
+    .reject { |l| l.strip.empty? }      # drop pure blank lines
   (preserved + final_paths.map { |p| "/file #{p}\n" })
     .join.rstrip + "\n"
 end
@@ -107,8 +110,8 @@ def update_prompt(prompt_path, delete_unref:)
   raw = prompt_path.read
 
   # ------ grab seed paths (outside <context>)
-  seeds = raw.gsub(CTX_BLOCK_RX, '').scan(SEED_RX)
-             .flatten.map { |p| Pathname.new(p).cleanpath }
+  seeds = raw.gsub(CTX_BLOCK_RX, "").scan(SEED_RX)
+    .flatten.map { |p| Pathname.new(p).cleanpath }
   if seeds.empty?
     warn "WARN: no /file lines found in #{prompt_path}"
     return
@@ -124,7 +127,7 @@ def update_prompt(prompt_path, delete_unref:)
   required = crawl(seeds) - seeds    # exclude seeds themselves
 
   missing = required - existing
-  extras  = existing - required
+  extras = existing - required
 
   puts "• #{prompt_path.relative_path_from(ROOT)}  (+#{missing.size}, -#{extras.size})" \
        unless missing.empty? && extras.empty?
@@ -140,11 +143,11 @@ end
 
 # -------- run ----------------------------------------------------------------
 prompt_files =
-  if selector == 'all'
-    Dir.glob((PROMPTS_DIR + '**/*').to_s)
-       .select { |f| File.file?(f) }
-       .sort
-       .map { Pathname.new(_1) }
+  if selector == "all"
+    Dir.glob((PROMPTS_DIR + "**/*").to_s)
+      .select { |f| File.file?(f) }
+      .sort
+      .map { Pathname.new(it) }
   else
     [resolve_prompt(selector) || abort("ERROR: prompt '#{selector}' not found")]
   end
