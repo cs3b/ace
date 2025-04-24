@@ -37,7 +37,7 @@
 
 3.  **Proceed to Implementation Cycle:**
     *   With the task understood and a plan in place, proceed to the main development workflow.
-    *   Follow the steps outlined in the **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)** for Test-Driven Development, committing changes, and self-reflection.
+    *   Follow the steps outlined in the **[Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md)** for Test-Driven Development, committing changes, and self-reflection.
 
 ## Reference Documentation
 
@@ -45,7 +45,7 @@
 *   [Project Management Guide](docs-dev/guides/project-management.md) (Task format, implementation cycle)
 *   [Coding Standards Guide](docs-dev/guides/coding-standards.md) (AI Collaboration Principles)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
-*   **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)** (The main guide for Test -> Code -> Commit -> Reflect)
+*   **[Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md)** (The main guide for Test -> Code -> Commit -> Reflect)
 
 ## Input
 
@@ -55,4 +55,4 @@
 
 *   Confirmation that the selected task is understood and its dependencies are met.
 *   A high-level plan for implementing the task (including testing strategy) is established.
-*   Developer is ready to begin the implementation cycle following the **[Implementing the Task Cycle Guide](docs-dev/guides/implementing-task-cycle.md)**.
+*   Developer is ready to begin the implementation cycle following the **[Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md)**.

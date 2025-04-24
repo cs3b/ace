@@ -1,6 +1,6 @@
 # Let's Test Workflow Instruction
 
-**Context:** This instruction details the "Test" phase of the overall development workflow described in the **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)**.
+**Context:** This instruction details the "Test" phase of the overall development workflow described in the **[Implementing the Task Cycle Guide](../guides/task-cycle.md)**.
 
 ## Goal
 Guide the developer through writing and running automated tests (unit, integration) following Test-Driven Development (TDD) principles.
@@ -8,7 +8,7 @@ Guide the developer through writing and running automated tests (unit, integrati
 ## Prerequisites
 - A specific feature or piece of functionality requires testing (often defined in a task `.md` file after completing the [Let's Start](./lets-start.md) instruction).
 - Development environment is set up with the testing framework configured.
-- Understanding of the project's testing guidelines and conventions, including technology-specific details found in the **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)** sub-sections.
+- Understanding of the project's testing guidelines and conventions, including technology-specific details found in the **[Implementing the Task Cycle Guide](../guides/task-cycle.md)** sub-sections.
 
 ## Input
 - Feature/task requirements and acceptance criteria (from the task `.md` file).
@@ -30,7 +30,7 @@ Guide the developer through writing and running automated tests (unit, integrati
     *   Write the simplest possible test case for a small piece of the required functionality according to your plan.
     *   **Ensure the test fails** for the *expected reason*. Run the test suite using the appropriate command for your project's tech stack.
         *   *(Example Action: `Execute test runner command`)*
-        *   *(Refer to the technology-specific sub-guide in [Implementing the Task Cycle](../guides/implementing-task-cycle.md) for exact commands if unsure.)*
+        *   *(Refer to the technology-specific sub-guide in [Implementing the Task Cycle](../guides/task-cycle.md) for exact commands if unsure.)*
 
 3.  **Write Code to Pass Test**:
     *   Write the minimum amount of application code necessary to make the failing test pass.
@@ -57,6 +57,6 @@ Guide the developer through writing and running automated tests (unit, integrati
 
 ## Reference Documentation
 
-*   **[Implementing the Task Cycle Guide](../guides/implementing-task-cycle.md)** (Overall workflow)
+*   **[Implementing the Task Cycle Guide](../guides/task-cycle.md)** (Overall workflow)
 *   [Quality Assurance Guide](../guides/quality-assurance.md) (General testing principles)
-*   Technology-specific sub-guides under `../guides/implementing-task-cycle/` (For specific commands and framework details)
+*   Technology-specific sub-guides under `../guides/task-cycle/` (For specific commands and framework details)
