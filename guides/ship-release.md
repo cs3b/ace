@@ -8,14 +8,13 @@ This guide details the standard process for preparing, validating, tagging, and 
 ### 1. Version Control
 
 1. **Semantic Versioning**:
-   ```ruby
-   # lib/aira/version.rb
-   module Aira
-     VERSION = "1.2.3"  # MAJOR.MINOR.PATCH
-     # MAJOR: Breaking changes
-     # MINOR: New features, backwards compatible
-     # PATCH: Bug fixes, backwards compatible
-   end
+   Maintain the project's version number according to Semantic Versioning (MAJOR.MINOR.PATCH) in a designated location (e.g., a dedicated version file, `package.json`, build script, etc.).
+   ```plaintext
+   // Example: path/to/version/file or relevant package manifest
+   const VERSION = "1.2.3"; // Or similar declaration
+   // MAJOR: Breaking changes
+   // MINOR: New features, backwards compatible
+   // PATCH: Bug fixes, backwards compatible
    ```
 
 2. **Git Flow Model**:
@@ -44,68 +43,86 @@ This guide details the standard process for preparing, validating, tagging, and 
    ```
 
 2. **Version Update**:
-   ```ruby
-   # Update version file (e.g., lib/aira/version.rb)
-   VERSION = "1.2.0"
+   Increment the version number in the designated version file(s) and any relevant package manifests.
+   Update the `CHANGELOG.md` (typically at the project root) with details for the new version.
+   ```plaintext
+   // Example: path/to/version/file
+   VERSION = "1.2.0";
 
-   # Update gemspec (if applicable)
-   s.version = Aira::VERSION
+   // Example: package.json
+   "version": "1.2.0",
 
-   # Update CHANGELOG.md (root level)
-   ## [1.2.0] - 2024-01-20
+   // Example: CHANGELOG.md (root level)
+   ## [1.2.0] - YYYY-MM-DD
 
    ### Added
-   - New browser tool implementation
-   - Enhanced error handling
+   - Description of new feature A
+   - Description of new feature B
 
    ### Fixed
-   - Thread safety in tool registry
-   - Memory leak in long-running tasks
+   - Description of bug fix C
+   - Description of bug fix D
    ```
 
 3. **Tagging and Publishing**:
+   Ensure all changes, including the version bump and `CHANGELOG.md` update, are committed to version control.
+   Create an annotated Git tag for the release version.
+   Push the commit(s) and the tag to the remote repository.
+   Publish the package to the relevant registry using standard commands or helper scripts for your ecosystem.
    ```bash
-   # Ensure all changes are committed, including version bump and CHANGELOG
+   # Ensure all changes are committed
+   git commit -am "chore: Prepare release vX.Y.Z"
 
    # Create annotated git tag
    git tag -a vX.Y.Z -m "Release version X.Y.Z"
-   git push origin vX.Y.Z # Push the tag
 
-   # Publish the gem using the helper script (located at root)
-   # This script builds, verifies, and pushes to RubyGems.org
-   bin/publish
+   # Push commits and tag
+   git push origin <branch_name> # e.g., main or develop
+   git push origin vX.Y.Z
+
+   # Publish the package using appropriate ecosystem commands
+   # (See language-specific examples)
+   # Or run a custom publish script: ./scripts/publish.sh
    ```
-   *Note: Ensure you have push access and RubyGems credentials configured (`~/.gem/credentials`) before running `bin/publish`.*
+   *Note: Ensure you have the necessary credentials and permissions configured for the target package registry.*
 
 ### 3. Post-Release
 
 1. **Monitoring**:
-   ```ruby
-   # Example monitoring setup
-   require 'appsignal'
-
-   AppSignal.monitor_transaction(
-     'gem.release',
-     'v1.2.0',
-     environment: ENV['RACK_ENV']
-   )
+   Monitor the application/library's performance and error rates after release using configured monitoring tools (e.g., application performance monitoring (APM) systems, error tracking services).
+   ```plaintext
+   // Example conceptual monitoring integration
+   monitoringTool.trackEvent(
+     'deployment.success',
+     {
+       version: 'v1.2.0',
+       environment: getEnvironmentName()
+     }
+   );
    ```
 
 2. **Communication**:
+   Announce the release to users and stakeholders through appropriate channels (e.g., release notes page, blog post, email, Slack/Discord).
+   Include highlights, key changes, and installation/update instructions.
    ```markdown
    ## Release Announcement
 
-   Aira v1.2.0 is now available!
+   Version vX.Y.Z is now available!
 
    ### Highlights
-   - New browser tool
-   - Improved performance
-   - Better error handling
+   - Feature A description
+   - Performance improvement B
+   - Bug fix C
 
-   ### Installation
+   ### Installation / Update
    ```bash
-   gem install aidarb
+   # Example installation commands using appropriate package manager
+   # (See language-specific examples)
    ```
+
+## Language/Environment-Specific Examples
+
+For specific commands, scripts, or configurations related to building, tagging, and publishing packages in different ecosystems (e.g., npm, RubyGems, PyPI, Maven, Cargo), please refer to the examples in the [./ship-release/](./ship-release/) sub-directory.
 
 ## Related Documentation
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task flow, versioning)
@@ -118,15 +135,14 @@ This guide details the standard process for preparing, validating, tagging, and 
 - Release checklist items are often included in the main release overview template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`).
 
 ## Helper Scripts
-- `bin/publish` (Assumed script for building and publishing the artifact, located at project root)
+- Consider using helper scripts (e.g., `scripts/publish.sh`, `scripts/release.sh`) to automate parts of the release process like building, testing, tagging, and publishing.
 
 3. **Issue Tracking**:
    ```markdown
-   ## v1.2.0 Issue Template
+   ## vX.Y.Z Issue Template
 
    ### Environment
-   - Ruby version:
-   - Aira version:
+   - Version:
    - OS:
 
    ### Expected Behavior

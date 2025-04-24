@@ -7,96 +7,107 @@ This guide defines the standards and best practices for documenting code and pro
 
 ### 1. Code Documentation
 
-1. **YARD Documentation**:
-   ```ruby
-   # The main Agent class that executes AI tasks with given tools
-   #
-   # @example Basic usage
-   #   agent = Agent.new("assistant")
-   #   result = agent.execute(prompt: "Summarize text", tools: [:browser])
-   #
-   # @example With error handling
-   #   begin
-   #     agent.execute(prompt: "Process file", tools: [:file_reader])
-   #   rescue ConfigError => e
-   #     logger.error("Configuration error: #{e.message}")
-   #   end
-   class Agent
-     # Executes an AI agent task with given tools
-     #
-     # @param task [Hash] The task configuration
-     # @option task [String] :prompt The task prompt
-     # @option task [Array<Symbol>] :tools Available tools
-     # @return [Result] Task execution result
-     # @raise [ConfigError] If configuration is invalid
-     # @raise [ToolError] If a tool fails during execution
-     # @note This method is thread-safe
-     def execute(task)
-       # Implementation
-     end
-   end
+1. **API Documentation (using standard tools/conventions)**:
+   Use standard documentation tools and conventions for your language/framework to document public APIs (classes, methods, modules, functions).
+   - Include a clear summary of the item's purpose.
+   - Document parameters (`@param name [Type] description`).
+   - Document return values (`@return [Type] description`).
+   - Provide clear usage examples (`@example`).
+   - Note any exceptions or errors raised (`@raise [ErrorType] description`).
+   - Indicate important notes like thread-safety (`@note`).
+
+   ```
+   // Example API documentation structure (adapt to your language/tool)
+   /**
+    * @summary Executes an AI agent task with given tools.
+    *
+    * @param {object} task - The task configuration.
+    * @param {string} task.prompt - The task prompt.
+    * @param {string[]} task.tools - Available tools.
+    * @returns {Result} Task execution result.
+    * @throws {ConfigError} If configuration is invalid.
+    * @throws {ToolError} If a tool fails during execution.
+    * @note This method is thread-safe.
+    */
+   function execute(task) {
+     // Implementation
+   }
    ```
 
 2. **Class and Module Documentation**:
-   ```ruby
-   # Manages the registration and lookup of agent tools
-   #
-   # @example Registering a custom tool
-   #   registry = ToolRegistry.new
-   #   registry.register(:browser, BrowserTool.new)
-   #
-   # @thread-safety This class is thread-safe
-   class ToolRegistry
-     # @return [Hash<Symbol, Tool>] The registered tools
-     attr_reader :tools
+   Document the purpose and usage of classes, modules, or other major code structures.
+   - Include examples of instantiation or typical usage.
+   - Note important characteristics like thread-safety if applicable.
+   - Document public attributes or properties.
 
-     # @private
-     def initialize
-       @tools = {}
-       @mutex = Mutex.new
-     end
-   end
+   ```
+   // Example class documentation structure (adapt to your language)
+   /**
+    * @summary Manages the registration and lookup of agent tools.
+    *
+    * @example Registering a custom tool
+    *   const registry = new ToolRegistry();
+    *   registry.register('browser', new BrowserTool());
+    *
+    * @thread-safety This class is thread-safe.
+    */
+   class ToolRegistry {
+     /** @property {Map<string, Tool>} tools - The registered tools */
+     get tools() { /* ... */ }
+
+     /** @private */
+     constructor() {
+       // ...
+     }
+   }
    ```
 
 3. **Performance Documentation**:
-   ```ruby
-   # Processes files in parallel with controlled concurrency
-   #
-   # @complexity O(n) where n is the number of files
-   # @performance Processes up to 10 files concurrently
-   # @memory Uses ~10MB per file being processed
-   def process_files(files)
-     # Implementation
-   end
+   Document performance-critical sections of code.
+   - Note algorithmic complexity (e.g., `@complexity O(n)`).
+   - Specify performance characteristics (e.g., `@performance Processes up to X items concurrently`).
+   - Indicate expected memory usage (e.g., `@memory Uses ~Y MB per item`).
+
+   ```
+   // Example performance documentation (adapt as needed)
+   /**
+    * Processes items in parallel with controlled concurrency.
+    *
+    * @complexity O(n) where n is the number of items.
+    * @performance Processes up to 10 items concurrently.
+    * @memory Uses ~10MB per item being processed.
+    */
+   function processItems(items) {
+     // Implementation
+   }
    ```
 
 ### 2. Project Documentation
 
 1. **README.md Structure**:
-   ```markdown
-   # AI Ruby Agent SDK
+   ```
+   # Your Project Name
 
-   Build AI agents that interact with LLMs and system tools.
+   Briefly describe your project.
 
    ## Quick Start
-   ```ruby
-   agent = Aira.create(:assistant)
-   result = agent.execute(prompt: "Browse website")
+   ```
+   // Your Quick Start code here
+   // Example: Initialize and run a basic task
    ```
 
    ## Installation
    ```bash
-   gem install aidarb
+   your-package-manager install your-package-name
    ```
 
    ## Documentation
    - [API Reference](docs/api.md) <!-- Assuming 'docs' is a root dir for user docs -->
    - [Tutorials](docs/tutorials/) <!-- Assuming 'docs' is a root dir for user docs -->
    - [Examples](examples/) <!-- Assuming 'examples' is a root dir -->
-   ```
 
 2. **Architecture Documentation**:
-   ```markdown
+   ```
    # Architecture Overview
 
    ## Components
@@ -117,7 +128,7 @@ This guide defines the standards and best practices for documenting code and pro
    ```
 
 3. **Tutorial Structure**:
-   ```markdown
+   ```
    # Building Your First Agent
 
    1. Create agent
@@ -126,27 +137,48 @@ This guide defines the standards and best practices for documenting code and pro
    4. Handle results
 
    ## Example Implementation
-   ```ruby
-   # Complete working example
+   ```
+   // Complete working example relevant to the tutorial step
    ```
 
    ## Common Patterns
    - Error handling
    - Tool composition
    - State management
-   ### 3. Documenting for AI Collaboration
 
-   Clear documentation is crucial for effective AI collaboration.
+### 3. Documenting for AI Collaboration
 
-   - **Structured Project Docs:** Maintain core documents like `docs-project/what-do-we-build.md`, `docs-project/architecture.md`, and `docs-project/blueprint.md`. Keep them up-to-date as they provide essential high-level context for the AI.
-   - **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.md`) with clear descriptions, implementation notes, and acceptance criteria.
-   - **ADRs:** Document significant architectural decisions in `docs-dev/decisions/` to provide rationale and context for the AI.
-   - **Workflow Instructions:** Write clear, specific workflow instructions (`docs-dev/workflow-instructions/*.md`) outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code: focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
-   - **Code Comments:** Use comments to explain the "why" behind complex logic, not just the "what". This helps the AI understand intent.
-   - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link to a relevant ADR or guide section using root-relative paths like `docs-dev/decisions/ADR-001.md` or `docs-dev/guides/coding-standards.md`.
-   ```
-   ## Related Documentation
-   - [Coding Standards](docs-dev/guides/coding-standards.md)
-   - [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
-   - [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
-   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+Clear documentation is crucial for effective AI collaboration.
+
+- **Structured Project Docs:** Maintain core documents like `docs-project/what-do-we-build.md`, `docs-project/architecture.md`, and `docs-project/blueprint.md`. Keep them up-to-date as they provide essential high-level context for the AI.
+- **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.md`) with clear descriptions, implementation notes, and acceptance criteria.
+- **ADRs:** Document significant architectural decisions in `docs-dev/decisions/` to provide rationale and context for the AI.
+- **Workflow Instructions:** Write clear, specific workflow instructions (`docs-dev/workflow-instructions/*.md`) outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code: focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
+- **Code Comments:** Use comments to explain the "why" behind complex logic, not just the "what". This helps the AI understand intent.
+- **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link to a relevant ADR or guide section using root-relative paths like `docs-dev/decisions/ADR-001.md` or `docs-dev/guides/coding-standards.md`.
+
+## Code Comments
+
+Code comments should explain the *why*, not the *what* (unless the *what* is particularly complex or non-obvious). Well-written code should be largely self-documenting regarding *what* it does.
+
+**Good Comment (Explains Why):**
+```
+// Reset the counter due to edge case X discovered during testing.
+counter = 0;
+```
+
+**Bad Comment (Explains What):**
+```
+// Increment the counter by one.
+counter++;
+```
+
+## Language/Environment-Specific Examples
+
+For specific examples of documentation generation tools, comment styles, or conventions tailored to particular languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to the examples in the [./documentation/](./documentation/) sub-directory.
+
+## Related Documentation
+- [Coding Standards](docs-dev/guides/coding-standards.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
+- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

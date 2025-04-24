@@ -15,12 +15,13 @@ This document outlines general coding standards applicable across the project. P
 - **Modularity:** Design components with clear responsibilities and well-defined interfaces. Aim for loose coupling and high cohesion.
 - **Testability:** Write code that is easy to test. Use dependency injection and avoid tight coupling to facilitate unit testing.
 
-## Language-Specific Idioms (Example: Ruby)
+## Language-Specific Coding Standards
 
-- Follow community conventions (e.g., Ruby Style Guide).
-- Use blocks and `yield` for configuration and iteration where appropriate.
-- Leverage metaprogramming judiciously; prioritize clarity over cleverness.
-- Use standard library features where applicable.
+Language-specific idioms, conventions, and tool recommendations have been moved to dedicated sub-guides. Please refer to the relevant guide for your language:
+
+- [Ruby Coding Standards](./coding-standards/ruby.md)
+- [TypeScript Coding Standards](./coding-standards/typescript.md)
+- [Rust Coding Standards](./coding-standards/rust.md)
 
 ## Formatting & Style
 

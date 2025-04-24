@@ -7,38 +7,58 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 
 ### 1. Code Quality Tools
 
-1. **Static Analysis Setup**:
-   ```ruby
-   # .standard.yml
-   ruby_version: 3.2
-   fix: true  # Auto-fix when possible
-   parallel: true  # Parallel processing
-   format: progress  # Progress format
+1. **Static Analysis & Linting Setup**:
+   Configure static analysis and linting tools appropriate for your project's language(s).
+   - Configuration typically involves specifying language versions, enabling/disabling rules, setting formatting preferences, and defining paths to ignore.
+   ```yaml
+   # Example conceptual configuration (e.g., for a linter)
+   language_version: "X.Y"
+   fix_on_save: true
+   parallel_processing: true
+   output_format: "progress"
 
-   ignore:  # Paths to ignore
+   ignore_paths:
      - 'bin/*'
      - 'vendor/**/*'
-     - 'tmp/**/*'
+     - 'build/*'
+     - 'tmp/*'
+
+   rules:
+     # Specific rule configuration...
+     rule_name: enabled
    ```
 
 2. **CI Integration**:
+   Integrate static analysis, linting, and code coverage checks into the Continuous Integration (CI) pipeline (e.g., using GitHub Actions, GitLab CI, Jenkins).
+   - Ensure these checks run automatically on pushes and pull requests.
+   - Fail the build if quality checks do not pass.
    ```yaml
-   # .github/workflows/quality.yml
+   # Example conceptual CI workflow snippet
    name: Quality Checks
 
    on: [push, pull_request]
 
    jobs:
      quality:
-       runs-on: ubuntu-latest
+       runs-on: ubuntu-latest # Or your preferred runner
        steps:
-         - uses: actions/checkout@v3
+         - uses: actions/checkout@vX # Use appropriate version
 
-         - name: Linting
-           run: bundle exec standardrb
+         # Add steps for setting up the environment (language, dependencies)
+         # - name: Setup Language Environment
+         #   uses: actions/setup-node@vX # Or setup-ruby, setup-python, etc.
+         # - name: Install Dependencies
+         #   run: your-package-manager install
 
-         - name: Coverage Report
-           run: bundle exec rake coverage
+         - name: Run Linter
+           run: your-linter-command --options # e.g., 
+
+         - name: Run Tests & Coverage
+           run: your-test-runner-command --coverage # e.g., 
+
+         # Optional: Upload coverage reports
+         # - name: Upload Coverage Report
+         #   uses: codecov/codecov-action@vX
    ```
 
 ### 2. Code Review Process
@@ -81,21 +101,36 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 ### 3. Test Coverage
 
 1. **Coverage Configuration**:
-   ```ruby
-   # spec/spec_helper.rb
-   require 'simplecov'
-
-   SimpleCov.start do
-     add_filter '/spec/'
-     add_filter '/vendor/'
-
-     add_group 'Agents', 'lib/aira/agents'
-     add_group 'Tools', 'lib/aira/tools'
-     add_group 'Core', 'lib/aira/core'
-
-     minimum_coverage 90
-     minimum_coverage_by_file 80
-   end
+   Configure your code coverage tool to:
+   - Exclude test files, vendor directories, and other non-source code paths from the report.
+   - Optionally group coverage results by logical components or modules.
+   - Define minimum coverage thresholds (overall, per-file) to enforce standards. Failing to meet thresholds should ideally fail the build.
+   ```
+   // Example conceptual coverage tool setup
+   configureCoverageTool({
+     exclude: [
+       '/tests/',
+       '/specs/',
+       '/vendor/'
+     ],
+     groups: {
+       'Core Logic': 'src/core',
+       'Utilities': 'src/utils',
+       'API Endpoints': 'src/api'
+     },
+     thresholds: {
+       global: {
+         statements: 90,
+         branches: 85,
+         functions: 90,
+         lines: 90
+       },
+       perFile: {
+         statements: 80,
+         lines: 80
+       }
+     }
+   });
    ```
 
 2. **Coverage Goals**:
@@ -104,6 +139,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - Integration Points: 85%+ coverage
 
 3. **Coverage Report Example**:
+   (Coverage reports typically show percentage of statements, branches, functions, and lines covered. The exact format varies by tool. File paths will reflect project structure.)
    ```
    --------------------------|----------|----------|----------|----------|
    File                     |  % Stmts |% Branches|  % Funcs |  % Lines |
@@ -120,20 +156,15 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 ### 4. Continuous Improvement
 
 1. **Code Metrics**:
-   ```ruby
-   # Rakefile
-   require 'rake/notes'
-   require 'flog'
-
-   task :metrics do
-     puts "=== Code Complexity ==="
-     flog = Flog.new
-     flog.flog_directory('lib')
-     flog.report
-
-     puts "\n=== TODO/FIXME Notes ==="
-     Rake::Notes.new(:todo, :fixme).execute
-   end
+   Regularly measure code metrics to identify potential areas for refactoring or improvement. Use tools appropriate for your stack.
+   - **Complexity:** Measure cyclomatic complexity or cognitive complexity using relevant analysis tools.
+   - **Code Size:** Track lines of code (LOC) per module/component using code counting tools.
+   - **TODO/FIXME Notes:** Use tools or scripts to track outstanding `TODO`, `FIXME`, or similar annotations in the codebase.
+   ```bash
+   # Example conceptual commands
+   run-complexity-analyzer src/
+   run-lines-of-code-counter src/
+   find-todo-notes src/
    ```
 
 2. **Quality Monitoring**:
@@ -153,9 +184,14 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - [ ] Optimize memory usage in large operations
    - [ ] Enhance logging granularity
    ```
-   ## Related Documentation
-   - [Coding Standards](docs-dev/guides/coding-standards.md)
-   - [Testing Guidelines](docs-dev/guides/testing.md)
-   - [Version Control](docs-dev/guides/version-control.md) (PR Templates)
-   - [Security](docs-dev/guides/security.md)
-   - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+
+## Language/Environment-Specific Examples
+
+For specific examples of tool configurations (e.g., linters, static analyzers, coverage tools), CI/CD pipeline snippets, or code review checklist details relevant to particular languages or frameworks, please refer to the examples in the [./quality-assurance/](./quality-assurance/) sub-directory.
+
+## Related Documentation
+- [Coding Standards](docs-dev/guides/coding-standards.md)
+- [Testing Guidelines](docs-dev/guides/testing.md)
+- [Version Control](docs-dev/guides/version-control.md) (PR Templates)
+- [Security](docs-dev/guides/security.md)
+- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)

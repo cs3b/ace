@@ -20,20 +20,20 @@ This document outlines general testing strategies and best practices. Project-sp
     *(Example structure - adjust based on project)*
     ```
     project-root/
-    └── spec/  # Or 'tests/'
+    └── tests/  # Or 'spec/'
         ├── unit/
         │   └── my_module/
-        │       └── my_class_spec.rb
+        │       └── my_class_tests.ext # Use appropriate extension
         ├── integration/
-        │   └── service_integration_spec.rb
+        │   └── service_integration_tests.ext
         ├── e2e/
-        │   └── user_workflow_spec.rb
+        │   └── user_workflow_tests.ext
         ├── performance/
-        │   └── load_test.rb
+        │   └── load_test.ext
         ├── fixtures/ # Test data files (e.g., YAML, JSON)
         ├── support/  # Test helpers, shared contexts, custom matchers
-        │   └── helpers.rb
-        └── spec_helper.rb # Or 'test_helper.rb' - Test configuration
+        │   └── helpers.ext
+        └── test_helper.ext # Or 'spec_helper.ext' - Test configuration
     ```
     *(Refer to `docs-project/blueprint.md` for the project's actual structure)*
 
@@ -73,25 +73,25 @@ Following these principles makes it easier to write focused unit tests and provi
 ## 3. Test Coverage
 
 - **Goal:** Aim for meaningful coverage, not just high percentages. Ensure critical paths, complex logic, edge cases, and error handling are tested.
-- **Tools:** Use coverage tools (e.g., SimpleCov for Ruby) to identify untested code.
+- **Tools:** Use code coverage tools suitable for your language/framework (e.g., SimpleCov for Ruby, `bun test --coverage` for Bun/TS) to identify untested code.
 - **Review:** Analyze coverage reports to find gaps, but don't blindly chase 100%. Some code (e.g., simple getters/setters, third-party library wrappers) may not require dedicated tests. Set reasonable project coverage targets.
 
 ## 4. Mocking & Stubbing
 
-- Use mocking/stubbing libraries (e.g., `rspec-mocks`, `WebMock`, `VCR` for Ruby) effectively.
+- Use mocking/stubbing libraries appropriate for your stack (e.g., `rspec-mocks`, `jest.fn()`) effectively.
 - **Stubs:** Provide canned answers to method calls. Use when you need to control the return value of a dependency.
 - **Mocks:** Set expectations on method calls (e.g., assert a method was called with specific arguments). Use sparingly, primarily when testing interactions/collaborations.
-- **External Services:** Use libraries like `WebMock` or `VCR` to stub HTTP requests in unit/integration tests, making them faster and more reliable.
+- **External Services:** Use relevant libraries (e.g., `WebMock`+`VCR` for Ruby HTTP requests, `msw` for JS) to stub external interactions in unit/integration tests, making them faster and more reliable.
 
 ## 5. Test Data Management
 
-- Use test data factories (e.g., `FactoryBot` for Ruby) or fixtures to create consistent and realistic test data.
-- Use libraries like `Faker` to generate realistic-looking fake data.
-- Store larger sets of test data in fixture files (e.g., YAML, JSON) within the test directory (e.g., `spec/fixtures/`).
+- Use test data factories (e.g., `FactoryBot` for Ruby, fixture libraries in other languages) or simple fixtures to create consistent and realistic test data.
+- Use data generation libraries (e.g., `Faker`) to generate realistic-looking fake data.
+- Store larger sets of test data in fixture files (e.g., YAML, JSON) within the test directory (e.g., `tests/fixtures/`).
 
 ## 6. Running Tests
 
-- Configure a default task to run the full suite (e.g., `bin/rspec` from project root).
+- Configure a default task to run the full suite (e.g., `bundle exec rspec`, `npm test`, `cargo test`, `bun test`).
 - Provide ways to run specific files or individual tests for faster feedback during development.
 - Integrate tests into the CI/CD pipeline.
 
@@ -102,7 +102,7 @@ Following these principles makes it easier to write focused unit tests and provi
 - **Concurrency:** Write specific tests to verify thread safety if components are expected to be used concurrently (e.g., test shared resources under concurrent access using multiple threads).
 
 ## Related Documentation
-- [Testing Frameworks Guide](docs-dev/guides/testing/frameworks.md) (Setup details)
+- [Testing Framework Configuration Examples](docs-dev/guides/testing/ruby-rspec-config-examples.md) (Setup details for specific stacks)
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (Test Coverage, CI)
 - [Performance Tuning Guide](docs-dev/guides/performance.md) (Performance Testing)
