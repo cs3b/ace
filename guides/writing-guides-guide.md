@@ -33,7 +33,7 @@ While the specific sections will vary based on the guide's topic, aim for a gene
     *   Detail standards or rules with rationale.
 4.  **Examples:** Include well-formatted code blocks, file structure examples, or command outputs where appropriate. Use realistic (but potentially simplified) examples relevant to the toolkit's domain.
 5.  **Best Practices/Tips:** Offer actionable advice or highlight common pitfalls.
-6.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](docs-dev/guides/project-management.md)`).
+6.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](docs-dev/guides/project-management.md)`), **not** relative to the current file (e.g., `../project-management.md`).
 
 ## Language‑Specific Sub‑Guides
 

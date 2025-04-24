@@ -70,7 +70,7 @@ Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 
 *   **Use Action Verbs:** Start steps with clear verbs (e.g., "Create", "Update", "Verify", "Parse", "Generate").
 *   **Be Concise:** Avoid unnecessary jargon or overly long explanations.
-*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., [Coding Standards](docs-dev/guides/coding-standards.md), [Load Environment Workflow](docs-dev/workflow-instructions/load-env.md)).
+*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `[Coding Standards](docs-dev/guides/coding-standards.md)`, `[Load Environment Workflow](docs-dev/workflow-instructions/load-env.md)`), **not** file-relative paths (e.g., `../guides/coding-standards.md`).
 *   **Treat AI as a "Junior Developer":** Provide clear, step-by-step guidance, but also reference established project standards and expect the AI to follow them once pointed to them. Avoid ambiguity.
 
 By following these guidelines, we can create a robust set of workflow instructions that effectively guide the AI agent, leading to more predictable and efficient development outcomes.

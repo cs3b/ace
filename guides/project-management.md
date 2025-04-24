@@ -72,7 +72,7 @@ Briefly describe the goal of this task. What should be achieved?
 - Specific steps required for implementation.
 - Pointers to relevant code sections or files.
 - Design considerations, constraints, or decisions made.
-- Links to relevant documentation (e.g., `docs-dev/guides/...`), ADRs (`docs-dev/decisions/...`), or external resources.
+- Links to relevant documentation (e.g., `docs-dev/guides/coding-standards.md`), ADRs (`docs-dev/decisions/...`), or external resources. **Always use root-relative paths (starting from the project root), not paths relative to the task file (e.g., `../../guides/coding-standards.md`).**
 
 ## Acceptance Criteria / Test Strategy
 - How will we know this task is successfully completed?
