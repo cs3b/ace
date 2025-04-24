@@ -1,7 +1,9 @@
-
-
 # 📑 Writing Clear, Actionable Dev Tasks  
 *A playbook for documentation‑oriented tickets, with a complete worked example*
+
+## Introduction & Goal
+
+This guide provides a structured approach and template for writing effective development tasks, particularly those focused on documentation changes within this toolkit. Following these steps ensures tasks are clear, scoped correctly, actionable, and easily understood by both human developers and AI agents contributing to the project. The goal is to minimize ambiguity and streamline the process of defining and executing documentation work.
 
 ---
 
@@ -48,7 +50,7 @@ guides
 
 ## 2. Re‑usable Markdown Template
 
-```markdown
+~~~markdown
 ---
 id: <ticket-id>
 status: pending
@@ -98,7 +100,7 @@ Why are we doing this?
 
 ## References
 - [writing-guides-guide.md](docs-dev/guides/writing-guides-guide.md)
-```
+~~~
 
 Copy ➜ fill ➜ ship.
 
@@ -106,7 +108,7 @@ Copy ➜ fill ➜ ship.
 
 ## 3. **Full Worked Example** – “Tailor Guides to Tech Stack”
 
-```markdown
+~~~markdown
 ---
 id: DOC-01
 status: pending
@@ -201,7 +203,7 @@ Split language‑specific snippets out of *every* general guide so developers ca
 
 ## Risks & Mitigations
 - **Broken links after moves** → run `md-link-check` & add redirects if needed.
-```
+~~~
 
 ---
 
