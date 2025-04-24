@@ -161,3 +161,4 @@ Essential standards and guidelines:
 - [Performance](docs-dev/guides/performance.md)
 - [Security](docs-dev/guides/security.md)
 - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+- [Troubleshooting Workflow](docs-dev/guides/troubleshooting-workflow.md)

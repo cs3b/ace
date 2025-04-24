@@ -30,6 +30,7 @@ Our development workflow centers around:
   - [Ruby RSpec Guide](./testing/ruby-rspec.md)
   - [Rust Testing Guide](./testing/rust.md)
   - [TypeScript (Bun) Guide](./testing/typescript-bun.md)
+- **[Troubleshooting Workflow](./troubleshooting-workflow.md)** - High-level workflow for debugging and problem-solving.
 - **[Version Control](./version-control.md)** - Git workflow and commit standards.
 
 ### Release Management
