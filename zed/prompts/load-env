@@ -1,0 +1,38 @@
+<command>
+READ the workflow instructions:
+
+/file docs-dev/workflow-instructions/load-env.md
+
+and all files referenced
+
+</command>
+
+<context>
+/file docs-dev/guides/project-management.md
+/file docs-dev/guides/coding-standards.md
+/file docs-dev/guides/error-handling.md
+/file docs-dev/guides/quality-assurance.md
+/file docs-dev/guides/testing.md
+/file docs-dev/guides/testing/frameworks.md
+/file docs-dev/guides/performance.md
+/file docs-dev/guides/writing-guides-guide.md
+/file docs-dev/guides/version-control.md
+/file docs-dev/guides/ship-release.md
+/file docs-dev/guides/documentation.md
+/file docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md
+/file docs-dev/guides/security.md
+/file docs-project/what-do-we-build.md
+/file docs-project/architecture.md
+/file docs-project/blueprint.md
+/file docs-dev/guides/README.md
+/file docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md
+/file docs-dev/guides/writing-workflow-instructions.md
+/file docs-dev/tools/get-github-pr-data.rb
+/file docs-dev/workflow-instructions/generate-blueprint.md
+/file docs-dev/workflow-instructions/lets-start.md
+/file docs-dev/workflow-instructions/lets-tests.md
+/file docs-dev/workflow-instructions/lets-commit.md
+/file docs-dev/workflow-instructions/self-reflect.md
+/file docs-dev/workflow-instructions/docs/generate-adr.md
+/file docs-dev/workflow-instructions/log-session.md
+</context>
