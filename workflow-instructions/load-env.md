@@ -13,25 +13,25 @@
 ## Process Steps
 
 1.  **Load General Process & Guides:**
-Understand the overall development process: [Project Management Guide](docs-dev/guides/project-management.md)
+    * Understand the overall development process: [Project Management Guide](docs-dev/guides/project-management.md)
     *   Review core development standards (link to specific guides as needed):
     *   [Coding Standards](docs-dev/guides/coding-standards.md)
     *   [Testing Guidelines](docs-dev/guides/testing.md)
     *   [Documentation Standards](docs-dev/guides/documentation.md)
     *   [Version Control](docs-dev/guides/version-control.md)
     *   [Release Process](docs-dev/guides/ship-release.md)
-    List available general workflow instructions: `ls -1 docs-dev/workflow-instructions/`
+    List available general workflow instructions: [docs-dev/workflow-instructions/](docs-dev/workflow-instructions/)
 
 2.  **Load Project-Specific Context:**
-    *   Review project objectives: `cat docs-project/what-do-we-build.md`
-    *   Examine high-level architecture: `cat docs-project/architecture.md`
-    *   Check project structure and key files: `cat docs-project/blueprint.md` (Note: Run `generate-blueprint` if this seems outdated).
-    *   Review project-specific decisions: `ls -1 docs-dev/decisions/`
+    *   Review project objectives: [docs-project/what-do-we-build.md](docs-project/what-do-we-build.md)
+    *   Examine high-level architecture: [docs-project/architecture.md](docs-project/architecture.md)
+    *   Check project structure and key files: [docs-project/blueprint.md](docs-project/blueprint.md) (Note: Run `generate-blueprint` if this seems outdated).
+    *   Review project-specific decisions: [docs-dev/decisions/](docs-dev/decisions/)
 
 3.  **Determine Current Work State:**
-    *   Identify active release directory: `ls -1 docs-project/current/`
-    *   List tasks within the active release: `ls -1 docs-project/current/*/tasks/*.md`
-    *   Review task details as needed (e.g., `cat docs-project/current/*/tasks/NN-*.md`).
+    *   Identify active release directory: [docs-project/current/](docs-project/current/)
+    *   List tasks within the active release: [docs-project/current/*/tasks/*.md](docs-project/current/)
+    *   Review task details as needed (e.g., [docs-project/current/*/tasks/NN-*.md](docs-project/current/)).
 
 4.  **Check Recent Changes:**
     *   View recent commits: `git log -n 5 --oneline`
