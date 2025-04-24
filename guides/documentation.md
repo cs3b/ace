@@ -85,7 +85,8 @@ This guide defines the standards and best practices for documenting code and pro
 ### 2. Project Documentation
 
 1. **README.md Structure**:
-   ```
+
+   ~~~markdown
    # Your Project Name
 
    Briefly describe your project.
@@ -106,8 +107,11 @@ This guide defines the standards and best practices for documenting code and pro
    - [Tutorials](docs/tutorials/) <!-- Assuming 'docs' is a root dir for user docs -->
    - [Examples](examples/) <!-- Assuming 'examples' is a root dir -->
 
+   ~~~
+
 2. **Architecture Documentation**:
-   ```
+
+   ~~~markdown
    # Architecture Overview
 
    ## Components
@@ -125,10 +129,10 @@ This guide defines the standards and best practices for documenting code and pro
    - Custom tools
    - Prompt templates
    - Result processors
-   ```
+   ~~~
 
 3. **Tutorial Structure**:
-   ```
+   ~~~markdown
    # Building Your First Agent
 
    1. Create agent
@@ -145,6 +149,7 @@ This guide defines the standards and best practices for documenting code and pro
    - Error handling
    - Tool composition
    - State management
+   ~~~
 
 ### 3. Documenting for AI Collaboration
 

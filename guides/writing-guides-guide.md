@@ -19,6 +19,7 @@ The primary goal of these guides is to:
 5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main `docs-dev/guides/project-management.md`.
 6.  **Examples:** Provide concrete examples (code snippets, file structures, command outputs) to illustrate concepts and instructions.
 7.  **Target Audience:** Write for both human developers (potentially new to the project) and AI agents. This means being explicit, structured, and providing sufficient context.
+8.  **Language Modularity:** When a guide mixes language‑specific details with general advice, extract each language's specifics into a dedicated sub‑guide (e.g., `testing/ruby-rspec.md`, `security/rust.md`). Keep the parent guide language‑agnostic.
 
 ## Standard Guide Structure
 
@@ -34,6 +35,36 @@ While the specific sections will vary based on the guide's topic, aim for a gene
 5.  **Best Practices/Tips:** Offer actionable advice or highlight common pitfalls.
 6.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](docs-dev/guides/project-management.md)`).
 
+## Language‑Specific Sub‑Guides
+
+When splitting language‑dependent examples out of a general guide, follow these rules:
+
+1. **Directory & File Names**  
+   * Place sub‑guides in a directory that matches the parent guide’s slug.  
+   * Use lower‑case filenames that match the language, e.g. `ruby.md`, `rust.md`, `typescript.md`.  
+   * For testing, prefer more descriptive names such as `ruby-rspec.md` or `typescript-bun.md` when tool‑specific.
+
+2. **Cross‑Linking**  
+   * At the top of each sub‑guide add a short note:  
+     ```markdown
+     > This page is a language‑specific companion to [../testing.md](../testing.md)
+     ```  
+   * Add reciprocal links from the parent guide to its sub‑guides.
+
+3. **Index Updates**  
+   * Whenever you add or delete a sub‑guide, update `docs-dev/guides/README.md` (or `index.md`) so the navigation tree stays accurate.
+
+4. **Example Tree**
+
+   ```
+   guides
+   ├── security.md
+   └── security
+       ├── ruby.md
+       ├── rust.md
+       └── typescript.md
+   ```
+
 ## Writing for Humans and AI
 
 - **Structure is Key:** Use Markdown headings (`#`, `##`, `###`), lists (`*`, `-`, `1.`), and code blocks (```) consistently. AI agents parse structure effectively.
@@ -45,6 +76,7 @@ While the specific sections will vary based on the guide's topic, aim for a gene
 ## Maintaining Guides
 
 - **Review Regularly:** Periodically review guides for accuracy and relevance, especially when related processes change.
+- **Run a Directory Audit before Large Refactors:** Use `tree -L 2 docs-dev/guides` (or similar) to list the current structure, paste the excerpt into your refactor ticket, and build an explicit file‑manifest from it.
 - **Update After Decisions:** If an ADR changes a standard or process, update the corresponding guide(s).
 - **Refactor When Needed:** Don't hesitate to restructure or rewrite sections for clarity as the project evolves.
 
