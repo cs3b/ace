@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 
-require 'optparse'
-require 'json'
-require 'net/http'
-require 'uri'
-require 'dotenv'
-require 'time'
-require 'fileutils'
+require "optparse"
+require "json"
+require "net/http"
+require "uri"
+require "dotenv"
+require "time"
+require "fileutils"
 
 # Determine the project root directory
-PROJECT_ROOT = File.expand_path('../../..', __FILE__)
+PROJECT_ROOT = File.expand_path("../../..", __FILE__)
 
 # Load .env from the same directory as the script
-env_file = File.join(File.dirname(__FILE__), '.env')
+env_file = File.join(File.dirname(__FILE__), ".env")
 Dotenv.load(env_file)
 
-GITHUB_TOKEN = ENV['GITHUB_TOKEN']
+GITHUB_TOKEN = ENV["GITHUB_TOKEN"]
 abort("❌ Missing GITHUB_TOKEN in #{env_file}") unless GITHUB_TOKEN
 # Start tracking execution time
 script_start_time = Time.now
@@ -40,38 +40,37 @@ end.parse!
 def github_get_paginated(url)
   all_results = []
   next_url = url
-  
+
   while next_url
     uri = URI(next_url)
     req = Net::HTTP::Get.new(uri)
-    req['Authorization'] = "Bearer #{GITHUB_TOKEN}"
-    req['Accept'] = "application/vnd.github+json"
-    
+    req["Authorization"] = "Bearer #{GITHUB_TOKEN}"
+    req["Accept"] = "application/vnd.github+json"
+
     response = nil
     Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       response = http.request(req)
     end
-    
+
     unless response.is_a?(Net::HTTPSuccess)
       return github_get(next_url) # Fallback to regular method which has retry logic
     end
-    
+
     page_results = JSON.parse(response.body)
     all_results.concat(page_results)
-    
+
     # Extract next page URL from Link header
-    link_header = response['Link']
+    link_header = response["Link"]
     next_url = nil
-    
+
     if link_header
       matches = link_header.match(/<([^>]*)>;\s*rel="next"/)
       next_url = matches[1] if matches
     end
   end
-  
+
   JSON.generate(all_results)
 end
-
 
 def log(message, verbose_only = false)
   puts message unless verbose_only && !options[:verbose]
@@ -83,7 +82,7 @@ end
 
 # Resolve output directory path
 output_dir = options[:output]
-output_dir = File.join(PROJECT_ROOT, output_dir) unless output_dir.start_with?('/')
+output_dir = File.join(PROJECT_ROOT, output_dir) unless output_dir.start_with?("/")
 
 # Create timestamped directory
 timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
@@ -112,8 +111,8 @@ pr_file = File.join(raw_dir, "pr.json")
 def github_get(url, retries = 3)
   uri = URI(url)
   req = Net::HTTP::Get.new(uri)
-  req['Authorization'] = "Bearer #{GITHUB_TOKEN}"
-  req['Accept'] = "application/vnd.github+json"
+  req["Authorization"] = "Bearer #{GITHUB_TOKEN}"
+  req["Accept"] = "application/vnd.github+json"
 
   begin
     Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
@@ -125,7 +124,7 @@ def github_get(url, retries = 3)
       when Net::HTTPTooManyRequests
         if retries > 0
           # Get retry after time or default to 5 seconds
-          retry_after = response['Retry-After']&.to_i || 5
+          retry_after = response["Retry-After"]&.to_i || 5
           puts "Rate limited. Retrying after #{retry_after} seconds..."
           sleep retry_after
           return github_get(url, retries - 1)
@@ -136,11 +135,11 @@ def github_get(url, retries = 3)
         abort("❌ GitHub API error (#{response.code}): #{response.body}")
       end
     end
-  rescue StandardError => e
+  rescue => e
     if retries > 0
       puts "Network error: #{e.message}. Retrying..."
       sleep 2
-      return github_get(url, retries - 1)
+      github_get(url, retries - 1)
     else
       abort("❌ Network error after multiple retries: #{e.message}")
     end
@@ -177,7 +176,7 @@ FileUtils.mkdir_p(reviews_dir)
 # Sanitize a filename to ensure it's safe across platforms
 def sanitize_filename(filename)
   # Remove characters that cause issues in filenames
-  filename.gsub(/[\/\\:*?"<>|]/, '_').gsub(/\s+/, '_')
+  filename.gsub(/[\/\\:*?"<>|]/, "_").gsub(/\s+/, "_")
 end
 
 def save_file_with_feedback(path, data, type)
@@ -260,16 +259,16 @@ if pr_data["id"] && pr_data["created_at"]
   puts "  - Saved #{File.basename(pr_info_filename)}"
 end
 puts "✅ Done! Files stored in: #{pr_dir}"
-puts "Raw data files (in #{raw_dir.gsub(pr_dir + '/', '')}):"
+puts "Raw data files (in #{raw_dir.gsub(pr_dir + "/", "")}):"
 puts "- #{File.basename(pr_file)}"
 puts "- #{File.basename(reviews_file)}"
 puts "- #{File.basename(comments_file)}"
 puts "\nProcessed individual files:"
-puts "- #{Dir[File.join(pr_info_dir, "*.json")].count} PR info in #{pr_info_dir.gsub(pr_dir + '/', '')}"
-puts "- #{Dir[File.join(comments_dir, "*.json")].count} comments in #{comments_dir.gsub(pr_dir + '/', '')}"
-puts "- #{Dir[File.join(reviews_dir, "*.json")].count} reviews in #{reviews_dir.gsub(pr_dir + '/', '')}"
+puts "- #{Dir[File.join(pr_info_dir, "*.json")].count} PR info in #{pr_info_dir.gsub(pr_dir + "/", "")}"
+puts "- #{Dir[File.join(comments_dir, "*.json")].count} comments in #{comments_dir.gsub(pr_dir + "/", "")}"
+puts "- #{Dir[File.join(reviews_dir, "*.json")].count} reviews in #{reviews_dir.gsub(pr_dir + "/", "")}"
 puts "\nAbsolute path: #{File.expand_path(pr_dir)}"
-puts "Relative to project root: #{pr_dir.gsub(PROJECT_ROOT + '/', '')}"
+puts "Relative to project root: #{pr_dir.gsub(PROJECT_ROOT + "/", "")}"
 
 # Calculate and display execution time
 execution_time = Time.now - script_start_time
