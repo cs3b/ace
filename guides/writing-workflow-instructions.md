@@ -6,7 +6,7 @@ This guide explains how to create and structure the Markdown-based workflow inst
 ## Core Principles
 
 1.  **Clarity & Specificity**: Instructions should be unambiguous. Use clear action verbs and define expected inputs and outputs precisely. Avoid vague language.
-2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., `docs-dev/guides/coding-standards.md`), project documents (`docs-project/blueprint.md`, `docs-project/architecture.md`), or existing code patterns using root-relative paths.
+2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., [Coding Standards](docs-dev/guides/coding-standards.md)), project documents ([Blueprint](docs-project/blueprint.md), [Architecture](docs-project/architecture.md)), or existing code patterns using root-relative paths.
 3.  **Structured Format**: Use Markdown sections (like `## Goal`, `## Process Steps`, `## Success Criteria`) to organize the instruction logically. This helps both humans and AI parse the information.
 4.  **Focus**: Each workflow instruction should address a single, well-defined process or goal. Break down complex workflows into smaller, composable instructions if possible.
 5.  **Examples**: Provide concrete examples of inputs, outputs, or expected results, especially for complex instructions. Few-shot learning helps the AI understand the desired format and behavior.
@@ -30,7 +30,7 @@ While the exact sections may vary slightly depending on the instruction's purpos
 *   Outline the sequence of actions the AI agent (guided by the user) should take.
 *   Use numbered or bulleted lists for clarity.
 *   Be specific about actions, inputs, and expected intermediate results.
-*   Reference other guides or commands where necessary (e.g., "Refer to `docs-dev/guides/version-control.md` for commit message format").
+*   Reference other guides or commands where necessary (e.g., "Refer to the [Version Control Guide](docs-dev/guides/version-control.md) for commit message format").
 
 ## Input (If applicable)
 *   Specify the required inputs for the instruction (e.g., file paths, user confirmation, specific data).
@@ -51,7 +51,7 @@ While the exact sections may vary slightly depending on the instruction's purpos
 
 Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 *   `docs-dev/workflow-instructions/load-env.md`: Focuses on context gathering.
-*   `docs-dev/workflow-instructions/lets-spec-from-pr-comments.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
+*   `docs-dev/workflow-instructions/lets-prepare-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
 *   `docs-dev/workflow-instructions/lets-commit.md`: Guides a specific, common developer action referencing external standards.
 *   `docs-dev/workflow-instructions/self-reflect.md`: Defines a meta-process for analysis and improvement.
 
@@ -59,7 +59,7 @@ Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 
 *   **Use Action Verbs:** Start steps with clear verbs (e.g., "Create", "Update", "Verify", "Parse", "Generate").
 *   **Be Concise:** Avoid unnecessary jargon or overly long explanations.
-*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `docs-dev/guides/coding-standards.md`, `docs-dev/workflow-instructions/load-env.md`).
+*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., [Coding Standards](docs-dev/guides/coding-standards.md), [Load Environment Workflow](docs-dev/workflow-instructions/load-env.md)).
 *   **Treat AI as a "Junior Developer":** Provide clear, step-by-step guidance, but also reference established project standards and expect the AI to follow them once pointed to them. Avoid ambiguity.
 
 By following these guidelines, we can create a robust set of workflow instructions that effectively guide the AI agent, leading to more predictable and efficient development outcomes.

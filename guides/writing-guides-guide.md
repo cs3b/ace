@@ -16,7 +16,7 @@ The primary goal of these guides is to:
 2.  **Accuracy & Up-to-Date:** Ensure information is correct and reflects the current project state and decisions. Update guides promptly when processes or standards change.
 3.  **Actionability:** Focus on providing practical, actionable advice and instructions. Explain the "how" and the "why".
 4.  **Structure & Scanability:** Use clear headings, subheadings, lists, and code blocks to organize information logically. Make it easy for readers (human or AI) to quickly find relevant sections.
-5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main `docs-dev/guides/project-management.md`.
+5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main [Project Management Guide](docs-dev/guides/project-management.md).
 6.  **Examples:** Provide concrete examples (code snippets, file structures, command outputs) to illustrate concepts and instructions.
 7.  **Target Audience:** Write for both human developers (potentially new to the project) and AI agents. This means being explicit, structured, and providing sufficient context.
 8.  **Language Modularity:** When a guide mixes language‑specific details with general advice, extract each language's specifics into a dedicated sub‑guide (e.g., `testing/ruby-rspec.md`, `security/rust.md`). Keep the parent guide language‑agnostic.
@@ -47,7 +47,7 @@ When splitting language‑dependent examples out of a general guide, follow thes
 2. **Cross‑Linking**  
    * At the top of each sub‑guide add a short note:  
      ```markdown
-     > This page is a language‑specific companion to [../testing.md](../testing.md)
+     > This page is a language‑specific companion to [Testing Guide](docs-dev/guides/testing.md)
      ```  
    * Add reciprocal links from the parent guide to its sub‑guides.
 
@@ -71,6 +71,7 @@ When splitting language‑dependent examples out of a general guide, follow thes
 - **Explicit Instructions:** Use action verbs and clearly define steps.
 - **Define Terminology:** If introducing a specific term, define it clearly or link to where it's defined (using root-relative paths).
 - **Contextual Links:** Link to related guides or specific sections where appropriate using root-relative paths to build a connected knowledge graph.
+- **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format: `[Descriptive Link Text](path/to/document.md)`. Avoid using just the path in backticks unless discussing the path itself.
 - **Code Examples:** Use clear, minimal, and correct code examples. Specify the language in fenced code blocks (e.g., ```ruby).
 
 ## Maintaining Guides
