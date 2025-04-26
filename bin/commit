@@ -1,0 +1,16 @@
+#!/usr/bin/env fish
+
+echo "Commit changes in submodule: docs-dev..."
+pushd docs-dev
+gcama
+popd
+
+echo "Commit changes in submodule: docs-project..."
+pushd docs-project
+gcama
+popd
+
+echo "Commit changes in main repository..."
+gcama
+
+echo "All repositories committed successfully."
