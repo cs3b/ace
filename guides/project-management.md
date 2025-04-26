@@ -56,7 +56,7 @@ Each task `.md` file should follow this structure:
 
 ```markdown
 ---
-id: <unique_task_id> # e.g., 01, 02-subtask-a, etc. (Sequence prefix is common)
+id: <unique_task_id> # e.g., v.0.2.3-1, v.0.3.0-5 (See 'Task ID Convention' below)
 status: [pending | in-progress | done | blocked]
 priority: [high | medium | low]
 dependencies: [<task_id_1>, <task_id_2>] # List of IDs this task depends on
@@ -83,6 +83,23 @@ Briefly describe the goal of this task. What should be achieved?
   - [ ] Sub-task or step 2
 ```
 This structured format ensures clarity for both humans and AI agents interacting with the tasks. Providing comprehensive details in the "Implementation Details / Notes" and "Acceptance Criteria" is key for effective AI collaboration.
+
+#### Task ID Convention
+
+The `id` field in the task file's frontmatter serves as a unique identifier for the task across the entire project history. The convention is:
+
+`v.X.Y.Z-<task-number-in-release>`
+
+Where:
+- `v.X.Y.Z` is the semantic version of the release the task belongs to.
+- `<task-number-in-release>` is a sequential number (starting from 1) assigned to the task within that specific release.
+
+**Rationale:**
+- **Unique Identification:** This format ensures every task has a globally unique ID, preventing conflicts when referencing tasks from different releases.
+- **Cross-Release Referencing:** Allows unambiguous linking to tasks from past or future releases (e.g., in dependency lists or documentation).
+- **Intra-Release Referencing:** Within the context of a single release, tasks can often be referred to more simply by their `<task-number-in-release>` (e.g., "depends on task 5"), as the release version is implied.
+
+**Important Note:** This ID convention applies only to the `id` field in the frontmatter. The **filename convention** for task files remains `NN-task-name.md` (where `NN` is a zero-padded number reflecting the order within the release's `tasks/` directory), ensuring simple alphabetical sorting and quick identification within the file system.
 
 ### 2. Version Naming
 

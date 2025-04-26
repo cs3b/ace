@@ -52,7 +52,7 @@ guides
 
 ~~~markdown
 ---
-id: <ticket-id>
+id: v.X.Y.Z-<task_number> # REQUIRED - Unique ID (e.g., v.0.2.3-1). See docs-dev/guides/project-management.md#task-id-convention
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: <high/medium/low>
 estimate: <n>h
