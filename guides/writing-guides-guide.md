@@ -71,7 +71,7 @@ When splitting language‑dependent examples out of a general guide, follow thes
 - **Explicit Instructions:** Use action verbs and clearly define steps.
 - **Define Terminology:** If introducing a specific term, define it clearly or link to where it's defined (using root-relative paths).
 - **Contextual Links:** Link to related guides or specific sections where appropriate using root-relative paths to build a connected knowledge graph.
-- **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format: `[Descriptive Link Text](path/to/document.md)`. Avoid using just the path in backticks unless discussing the path itself.
+- **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format e.g.: `[Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)`. Avoid using just the path in backticks unless discussing the path itself.
 - **Code Examples:** Use clear, minimal, and correct code examples. Specify the language in fenced code blocks (e.g., ```ruby).
 
 ## Maintaining Guides
