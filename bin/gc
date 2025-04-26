@@ -2,13 +2,17 @@
 
 set intention ""
 
-for arg in $argv
+set i 1
+while test $i -le (count $argv)
+    set arg $argv[$i]
     switch $arg
         case '-i' '--intention'
-            set intention (next $argv)
+            set i (math $i + 1)
+            set intention $argv[$i]
         case '*'
-            # Ignore other arguments
+            # Ignore other arguments for now
     end
+    set i (math $i + 1)
 end
 
 echo "Commit changes in submodule: docs-dev..."

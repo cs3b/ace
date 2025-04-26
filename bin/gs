@@ -1,0 +1,10 @@
+#!/usr/bin/env fish
+
+echo "Git status for docs-dev..."
+git -C docs-dev status
+
+echo "Git status for docs-project..."
+git -C docs-project status
+
+echo "Git status for main repository..."
+git status
