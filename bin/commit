@@ -1,16 +1,39 @@
 #!/usr/bin/env fish
 
+set intention ""
+
+for arg in $argv
+    switch $arg
+        case '-i' '--intention'
+            set intention (next $argv)
+        case '*'
+            # Ignore other arguments
+    end
+end
+
 echo "Commit changes in submodule: docs-dev..."
 pushd docs-dev
-gcama
+if test -n "$intention"
+    gcama "$intention"
+else
+    gcama
+end
 popd
 
 echo "Commit changes in submodule: docs-project..."
 pushd docs-project
-gcama
+if test -n "$intention"
+    gcama "$intention"
+else
+    gcama
+end
 popd
 
 echo "Commit changes in main repository..."
-gcama
+if test -n "$intention"
+    gcama "$intention"
+else
+    gcama
+end
 
 echo "All repositories committed successfully."
