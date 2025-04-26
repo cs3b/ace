@@ -1,6 +1,4 @@
-#!/bin/bash
-
-set -e
+#!/usr/bin/env fish
 
 echo "Pushing main repository..."
 git push
