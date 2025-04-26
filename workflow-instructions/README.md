@@ -7,7 +7,7 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 ## Core Workflow
 
 -   [Load Environment](./load-env.md): Load project context, guides, and task information.
--   [Let's Start](./lets-start.md): Select and understand a task before implementation.
+-   [Work on Task](./work-on-task.md): Select and understand a task before implementation.
 -   [Let's Tests](./lets-tests.md): Write and run tests (TDD Cycle).
 -   [Let's Commit](./lets-commit.md): Create well-structured Git commits.
 -   [Let's Fix Tests](./lets-fix-tests.md): Debug and fix failing tests.

@@ -31,7 +31,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
     *   Identify relevant existing code, patterns, or documentation.
     *   Break down the task into smaller, manageable implementation steps.
     *   Outline the required tests based on acceptance criteria.
-*   **Workflow:** See [`lets-start.md`](docs-dev/workflow-instructions/lets-start.md)
+*   **Workflow:** See [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md)
 
 ### Step 2: Write Tests (TDD - Red)
 
@@ -119,7 +119,7 @@ While the core cycle remains the same, specific commands and tools vary by techn
 ## 6. Related Documentation
 
 *   **Workflow Instructions:**
-    *   [`lets-start.md`](docs-dev/workflow-instructions/lets-start.md)
+    *   [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md)
     *   [`lets-tests.md`](docs-dev/workflow-instructions/lets-tests.md)
     *   [`lets-commit.md`](docs-dev/workflow-instructions/lets-commit.md)
     *   [`self-reflect.md`](docs-dev/workflow-instructions/self-reflect.md)

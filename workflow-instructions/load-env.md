@@ -1,6 +1,6 @@
 # Load Environment Workflow Instruction
 
-**Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This workflow instruction focuses *only* on loading context, not initiating task execution (see `lets-start`).
+**Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This workflow instruction focuses *only* on loading context, not initiating task execution (see `work-on-task`).
 
 ## Prerequisites
 - Executed within the project's root directory.
@@ -42,7 +42,7 @@
 2.  **Project Context Loaded:** Project goals (`what-do-we-build.md`), architecture (`architecture.md`), and structure (`blueprint.md`) are understood.
 3.  **Current State Identified:** The active release directory in `docs-project/current/` and its tasks are known. Recent code changes are reviewed.
 4.  **Environment Ready:** Working directory clean, dependencies installed, latest code pulled.
-5.  **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `lets-start`.
+5.  **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `work-on-task`.
 
 ## Reference Documentation
 - [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
@@ -56,4 +56,4 @@
 - [What is our architecture](docs-project/architecture.md)
 - [What is our blueprint](docs-project/blueprint.md)
 - [`generate-blueprint` Workflow Instruction](docs-dev/workflow-instructions/generate-blueprint.md)
-- [`lets-start` Workflow Instruction](docs-dev/workflow-instructions/lets-start.md)
+- [`Work on Task` Workflow Instruction](docs-dev/workflow-instructions/work-on-task.md)

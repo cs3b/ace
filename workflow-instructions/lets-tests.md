@@ -6,7 +6,7 @@
 Guide the developer through writing and running automated tests (unit, integration) following Test-Driven Development (TDD) principles.
 
 ## Prerequisites
-- A specific feature or piece of functionality requires testing (often defined in a task `.md` file after completing the [Let's Start](./lets-start.md) instruction).
+- A specific feature or piece of functionality requires testing (often defined in a task `.md` file after completing the [Work on Task](./work-on-task.md) instruction).
 - Development environment is set up with the testing framework configured.
 - Understanding of the project's testing guidelines and conventions, including technology-specific details found in the **[Implementing the Task Cycle Guide](../guides/task-cycle.md)** sub-sections.
 

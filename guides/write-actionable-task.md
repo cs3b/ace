@@ -42,6 +42,7 @@ guides
 | **Scope of Work** | *What* to touch | Which guides/folders? |
 | **Deliverables / Manifest** | Exact files to create / modify / delete | Could a newcomer do it with just this? |
 | **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
+| **Implementation Plan** | **Detailed execution steps** | **Checklist (`- [ ]`) of actions to perform?** |
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]` |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
 | **References & Risks** | Links to style guides, ADRs; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
@@ -90,6 +91,12 @@ Why are we doing this?
 1. Audit
 2. Extract …
 3. Refactor …
+
+## Implementation Plan
+*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format.*
+- [ ] Step 1: Describe the first action.
+- [ ] Step 2: Describe the second action.
+- [ ] ... Add more steps as needed.
 
 ## Acceptance Criteria
 - [ ] AC 1 …
@@ -184,6 +191,17 @@ Split language‑specific snippets out of *every* general guide so developers ca
 3. **Refactor General Guides** – ensure only language‑agnostic material.  
 4. **Index & Cleanup** – update README; run `md-link-check`.  
 5. **PR Review** – assign to @docs-maintainers.
+
+## Implementation Plan
+- [ ] **Audit:** Add `<!--LANG:Ruby-->`, `<!--LANG:Rust-->`, `<!--LANG:TypeScript-->` comments to relevant blocks in all 9 general guides.
+- [ ] **Create Sub-directories:** Create the language-specific sub-directories (`coding-standards/`, `documentation/`, etc.) if they don't exist.
+- [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or `ruby-rspec.md` for testing).
+- [ ] **Extract & Create (Rust):** Move Rust blocks from general guides to `guides/<category>/rust.md`.
+- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to `guides/<category>/typescript.md` (or `typescript-bun.md` for testing).
+- [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
+- [ ] **Tag Obsolete:** Tag any remaining unmapped examples with `<!--TODO:Delete-->`.
+- [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created language-specific guides.
+- [ ] **Review & Check:** Run `md-link-check` and ensure local site build passes.
 
 ## Acceptance Criteria
 - [ ] Sub‑guides exist for all nine categories above.  
