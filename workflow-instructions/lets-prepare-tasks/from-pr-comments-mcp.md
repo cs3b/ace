@@ -43,11 +43,14 @@ To utilize MCP server functions (`get_pull_request_comments`, `get_pull_request_
     *   Note the original comment/review IDs associated with each requirement for traceability.
     *   Identify any dependencies between the identified requirements based on the feedback.
 
-5.  **Proceed to Task Definition:**
-    *   With the structured requirements extracted from the PR comments, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+5.  **Proceed to Task Creation:**
+    *   With the structured requirements extracted from the PR comments, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use this analysis (including comment IDs and dependencies) as input to define clear, actionable task(s) adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
 
 ## Output
 *   Fetched PR data stored in structured JSON files within `{release_path}/docs/comments/` and `{release_path}/docs/reviews/`.
 *   A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
-*   This summary serves as direct input for the task creation process defined in `../lets-prepare-tasks.md`.
+*   This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
+
+## Considerations
+{{ ... }}

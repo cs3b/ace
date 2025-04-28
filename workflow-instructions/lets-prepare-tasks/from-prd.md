@@ -38,7 +38,7 @@ To translate a broad product vision from a PRD into a structured analysis, inclu
         *   High-level goals for subsequent planned releases.
 
 5.  **Proceed to Task Definition:**
-    *   With the structured analysis derived from the PRD, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+    *   With the structured analysis derived from the PRD, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use this analysis as input to:
         *   Create the necessary release directory structures.
         *   Generate/update core project documentation (`what-do-we-build.md`, `architecture.md`, etc.).
@@ -50,4 +50,4 @@ To translate a broad product vision from a PRD into a structured analysis, inclu
     *   The confirmed high-level release strategy.
     *   A list of foundational requirements (setup, architecture, decisions, documentation) for the initial release.
     *   High-level goals for subsequent planned releases.
-*   This summary serves as direct input for the project structure and task creation process defined in `../lets-prepare-tasks.md`.
+*   This summary serves as direct input for the project structure and task creation process defined in `../prepare-tasks.md`.

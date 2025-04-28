@@ -41,7 +41,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
     *   Write a specific test case that captures one aspect of the requirement.
     *   Ensure the test clearly describes the expected outcome.
     *   Run the test and confirm that it **fails** (this is the "Red" phase).
-*   **Workflow:** See [`lets-tests.md`](docs-dev/workflow-instructions/lets-tests.md)
+*   **Workflow:** See [`run-tests.md`](docs-dev/workflow-instructions/run-tests.md)
 
 ### Step 3: Implement Code (TDD - Green)
 
@@ -75,7 +75,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
     *   Review staged changes (`git diff --staged`).
     *   **Critically review any AI-generated code before committing.**
     *   Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard.
-*   **Workflow:** See [`lets-commit.md`](docs-dev/workflow-instructions/lets-commit.md)
+*   **Workflow:** See [`commit.md`](docs-dev/workflow-instructions/commit.md)
 *   **Reference:** [Version Control Guide](docs-dev/guides/version-control.md)
 
 ### Step 7: Self-Reflection
@@ -120,8 +120,8 @@ While the core cycle remains the same, specific commands and tools vary by techn
 
 *   **Workflow Instructions:**
     *   [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md)
-    *   [`lets-tests.md`](docs-dev/workflow-instructions/lets-tests.md)
-    *   [`lets-commit.md`](docs-dev/workflow-instructions/lets-commit.md)
+    *   [`run-tests.md`](docs-dev/workflow-instructions/run-tests.md)
+    *   [`commit.md`](docs-dev/workflow-instructions/commit.md)
     *   [`self-reflect.md`](docs-dev/workflow-instructions/self-reflect.md)
 *   **Core Guides:**
     *   [Testing Guide](docs-dev/guides/testing.md)

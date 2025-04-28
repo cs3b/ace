@@ -47,11 +47,19 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
     *   Note the original comment/review IDs associated with each requirement for traceability.
     *   Identify any dependencies between the identified requirements based on the feedback.
 
-5.  **Proceed to Task Definition:**
-    *   With the structured requirements extracted from the PR comments, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+5.  **Proceed to Task Creation:**
+    *   With the structured requirements extracted from the PR comments, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use this analysis (including comment IDs and dependencies) as input to define clear, actionable task(s) adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
 
 ## Output
 *   Fetched PR data stored in structured JSON files within `{release_path}/docs/{pr_path}/`.
 *   A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
-*   This summary serves as direct input for the task creation process defined in `../lets-prepare-tasks.md`.
+*   This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
+
+### Deliverables
+
+*   A structured summary document (`PR_ANALYSIS_summary.md`) outlining key requirements, scope, and acceptance criteria derived from the PR comments.
+*   This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
+
+## Considerations
+{{ ... }}

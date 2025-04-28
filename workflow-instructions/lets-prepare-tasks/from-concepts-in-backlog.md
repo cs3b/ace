@@ -42,9 +42,9 @@ To take an initial, often ambiguous, concept note and, through analysis and user
     *   Compile the original concept, research findings, and user answers into a clear set of requirements for *each* potential task derived from the concept(s).
 
 6.  **Proceed to Task Definition:**
-    *   With the clarified requirements, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow to structure and create the actual task file(s) based on the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
+    *   With the clarified requirements, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow to structure and create the actual task file(s) based on the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
     *   **Note:** The handling (deletion/archiving) of the original `xx-*.md` file should occur *after* the corresponding actionable task(s) have been successfully created in the main workflow, based on user confirmation.
 
 ## Output
-*   A set of clarified requirements (objective, scope, features, acceptance criteria) for each concept, ready to be used as input for the main task creation process defined in `../lets-prepare-tasks.md`.
+*   A set of clarified requirements (objective, scope, features, acceptance criteria) for each concept, ready to be used as input for the main task creation process defined in `../prepare-tasks.md`.
 *   User confirmation regarding the disposition of the original `xx-*.md` files (to be acted upon later).

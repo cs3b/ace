@@ -8,10 +8,10 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 -   [Load Environment](./load-env.md): Load project context, guides, and task information.
 -   [Work on Task](./work-on-task.md): Select and understand a task before implementation.
--   [Let's Tests](./lets-tests.md): Write and run tests (TDD Cycle).
--   [Let's Commit](./lets-commit.md): Create well-structured Git commits.
--   [Let's Fix Tests](./lets-fix-tests.md): Debug and fix failing tests.
--   [Let's Release](./lets-release.md): Finalize, tag, and publish a release.
+-   [Run Tests](./run-tests.md): Write and run tests (TDD Cycle).
+-   [Commit](./commit.md): Create well-structured Git commits.
+-   [Fix Tests](./fix-tests.md): Debug and fix failing tests.
+-   [Release](./release.md): Finalize, tag, and publish a release.
 
 ## Project Initialization & Setup
 
@@ -20,7 +20,7 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 ## Task Preparation
 
--   [Let's Prepare Tasks](./lets-prepare-tasks.md): Overview of task preparation.
+-   [Prepare Tasks](./prepare-tasks.md): Overview of task preparation.
     -   [From Concepts in Backlog](./lets-prepare-tasks/from-concepts-in-backlog.md)
     -   [From Diff](./lets-prepare-tasks/from-diff.md)
     -   [From FRD](./lets-prepare-tasks/from-frd.md)

@@ -53,7 +53,7 @@ Guide the developer through writing and running automated tests (unit, integrati
 
 *   A suite of automated tests exists for the implemented feature/fix.
 *   All tests related to the completed functionality are passing.
-*   The developer is ready to proceed to the "Commit" phase, detailed in the [Let's Commit](./lets-commit.md) instruction.
+*   The developer is ready to proceed to the "Commit" phase, detailed in the [Commit](./commit.md) instruction.
 
 ## Reference Documentation
 

@@ -36,7 +36,7 @@ To review and structure informal backlog items associated with a specific releas
     *   Group related backlog items into single, more comprehensive requirements if appropriate.
 
 4.  **Proceed to Task Definition:**
-    *   With the structured requirements derived from the release-specific backlog, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+    *   With the structured requirements derived from the release-specific backlog, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use this analysis as input to:
         *   Define clear, actionable task(s) within the *target release's* `tasks/` directory, adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
         *   Ensure correct sequencing and dependency linking within the target release.
@@ -46,4 +46,4 @@ To review and structure informal backlog items associated with a specific releas
 *   A structured analysis containing:
     *   The identified target release path.
     *   A list of requirements derived from the internal backlog items, including potential dependencies within the release.
-*   This summary serves as direct input for creating tasks specifically within the target release via the `../lets-prepare-tasks.md` workflow.
+*   This summary serves as direct input for creating tasks specifically within the target release via the `../prepare-tasks.md` workflow.

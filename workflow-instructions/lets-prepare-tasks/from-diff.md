@@ -41,11 +41,11 @@ To process Git diff content using an "Outside-In" approach (interfaces first, th
             *   Suggest concrete actions, potential refactorings, or improvement options (with pros/cons).
             *   Include specific file paths and line numbers.
 
-5.  **Proceed to Task Definition:**
-    *   With the analysis documents generated, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+5.  **Proceed to Task Creation:**
+    *   With the analysis documents generated, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use the high-level and technical analysis as the primary input to define clear, actionable task(s) according to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
 
 ## Output
 *   High-level analysis file(s) created in `{release_path}/backlog/high-level/`.
 *   Technical analysis file(s) created in `{release_path}/backlog/technical/`.
-*   These documents serve as input for the task creation process in `../lets-prepare-tasks.md`.
+*   These documents serve as input for the task creation process in `../prepare-tasks.md`.

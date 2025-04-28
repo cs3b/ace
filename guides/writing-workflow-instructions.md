@@ -58,6 +58,24 @@ While the exact sections may vary slightly depending on the instruction's purpos
 *   Provide a conceptual example of how the command might be invoked or used in a typical scenario.
 ```
 
+## Naming Convention
+
+Workflow instruction files located directly within the `docs-dev/workflow-instructions/` directory should follow a consistent naming convention to ensure clarity and predictability.
+
+-   **Format:** Use the pattern `<verb>-<context>.md`.
+    -   `<verb>`: Represents the primary action or purpose of the workflow (e.g., `commit`, `fix`, `prepare`, `release`, `run`, `work-on`).
+    -   `<context>`: Provides specific context for the action (e.g., `tests`, `tasks`, `task`).
+-   **Prefix:** Avoid prefixes like `lets-`. Files previously using this prefix should be renamed.
+-   **Examples:**
+    -   `commit.md`
+    -   `fix-tests.md`
+    -   `prepare-tasks.md`
+    -   `release.md`
+    -   `run-tests.md`
+    -   `work-on-task.md`
+
+This convention helps users quickly understand the purpose of a workflow file from its name.
+
 ## Examples from This Project
 
 Review existing workflow instructions in `docs-dev/workflow-instructions/` like:

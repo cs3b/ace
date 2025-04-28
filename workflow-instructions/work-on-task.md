@@ -34,7 +34,7 @@
     *   **Iterate through Checklist:** Address each `- [ ]` item sequentially.
     *   **Follow Task Cycle Principles:** For each item involving code changes, generally follow the [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) principles (Test -> Code -> Refactor -> Verify).
     *   **Update Checklist:** After successfully completing the action for a checklist item, update its status in the task file: `- [x] Action description...`
-    *   **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (checklist item) or group of related items, following [`lets-commit.md`](docs-dev/workflow-instructions/lets-commit.md) (or renamed equivalent).
+    *   **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (checklist item) or group of related items, following [`commit.md`](docs-dev/workflow-instructions/commit.md) (or renamed equivalent).
     *   Continue until all checklist items in the plan are marked `- [x]`.
 
 5.  **Final Review & Status Update:**
@@ -47,7 +47,7 @@
 
 *   [Writing Actionable Task Guide](docs-dev/guides/write-actionable-task.md) (Defines the required embedded plan structure)
 *   [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) (Core TDD loop)
-*   [Let's Commit Workflow](docs-dev/workflow-instructions/lets-commit.md) (or renamed equivalent - Git workflow)
+*   [Commit Workflow](docs-dev/workflow-instructions/commit.md) (or renamed equivalent - Git workflow)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
 *   Project-specific guides (Coding Standards, Architecture, etc.) as identified in Step 3.
 

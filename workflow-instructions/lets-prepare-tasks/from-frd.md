@@ -40,11 +40,18 @@ To parse an FRD, identify key requirements, user stories, acceptance criteria, a
     *   This structured output will form the basis for defining individual tasks.
     *   Highlight dependencies between different requirements identified in the FRD.
 
-5.  **Proceed to Task Definition:**
-    *   With the structured requirements extracted from the FRD, proceed to the main [../lets-prepare-tasks.md](../lets-prepare-tasks.md) workflow.
+5.  **Proceed to Task Creation:**
+    *   With the structured requirements extracted from the FRD, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
     *   Use this analysis as input to define clear, actionable task(s) adhering to the [docs-dev/guides/write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
     *   Decisions about release structure (directory creation) and specific task file generation will happen in the main workflow.
 
+### Deliverables
+
+*   A structured summary document (`FRD_ANALYSIS_summary.md`) outlining key requirements, scope, constraints, and acceptance criteria.
+*   This summary serves as direct input for the project structure and task creation process defined in `../prepare-tasks.md`.
+
 ## Output
 *   A structured summary of requirements, potential decisions, and research areas extracted from the FRD.
-*   This summary serves as direct input for the project structure and task creation process defined in `../lets-prepare-tasks.md`.
+*   This summary serves as direct input for the project structure and task creation process defined in `../prepare-tasks.md`.
+
+## Considerations
