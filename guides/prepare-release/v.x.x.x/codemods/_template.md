@@ -1,17 +1,50 @@
-Here's a fish command to downcase all files and directories under docs-dev:
+# Codemod Template
 
-```fish
-for file in (find docs-dev -depth)
-    set lower (string lower $file)
-    if test "$file" != "$lower"
-        mv "$file" "$lower"
-    end
-end
+## Purpose
+Brief description of what this codemod aims to achieve.
+
+## Target Files
+- Glob pattern or specific files this codemod will modify
+- Example: `src/**/*.js` or `lib/specific_module.rb`
+
+## Transformation Details
+
+### Before
+```
+// Example code before transformation
+function oldFunction() {
+  // old implementation
+}
 ```
 
-This command:
-1. Uses `find docs-dev -depth` to list all files and directories (processes deeper items first)
-2. For each path, creates a lowercase version using `string lower`
-3. If the original and lowercase versions differ, renames using `mv`
+### After
+```
+// Example code after transformation
+function newFunction() {
+  // new implementation
+}
+```
 
-The `-depth` option is important because it processes deeper paths first, preventing issues when renaming parent directories.
+## Implementation
+
+### Script
+```
+// Your codemod script here - replace with appropriate language
+// This could be JavaScript, Ruby, Python, etc. depending on your tooling
+```
+
+### Manual Steps
+If the codemod requires manual intervention at certain points:
+1. Step 1 description
+2. Step 2 description
+
+## Testing
+- How to verify the codemod works correctly
+- Test cases or validation steps
+
+## Reversal Process
+If needed, how to revert the changes made by this codemod.
+
+## References
+- [Related Documentation](docs-dev/path/to/docs.md)
+- [Tool Documentation](https://link-to-tool-docs)
