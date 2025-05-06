@@ -7,8 +7,7 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 ## Core Workflow
 
 -   [Load Environment](./load-env.md): Load project context, guides, and task information.
--   [Work on Task](./work-on-task.md): Select and understand a task before implementation.
--   [Run Tests](./run-tests.md): Write and run tests (TDD Cycle).
+-   [Work on Task](./work-on-task.md): Select and understand a task before implementation (includes TDD cycle).
 -   [Commit](./commit.md): Create well-structured Git commits.
 -   [Fix Tests](./fix-tests.md): Debug and fix failing tests.
 -   [Release](./release.md): Finalize, tag, and publish a release.

@@ -71,7 +71,6 @@ Workflow instruction files located directly within the `docs-dev/workflow-instru
     -   `fix-tests.md`
     -   `prepare-tasks.md`
     -   `release.md`
-    -   `run-tests.md`
     -   `work-on-task.md`
 
 This convention helps users quickly understand the purpose of a workflow file from its name.

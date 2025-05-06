@@ -41,7 +41,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
     *   Write a specific test case that captures one aspect of the requirement.
     *   Ensure the test clearly describes the expected outcome.
     *   Run the test and confirm that it **fails** (this is the "Red" phase).
-*   **Workflow:** See [`run-tests.md`](docs-dev/workflow-instructions/run-tests.md)
+*   **Workflow:** See the testing section in [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md)
 
 ### Step 3: Implement Code (TDD - Green)
 
@@ -119,8 +119,7 @@ While the core cycle remains the same, specific commands and tools vary by techn
 ## 6. Related Documentation
 
 *   **Workflow Instructions:**
-    *   [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md)
-    *   [`run-tests.md`](docs-dev/workflow-instructions/run-tests.md)
+    *   [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md) (includes testing guidance)
     *   [`commit.md`](docs-dev/workflow-instructions/commit.md)
     *   [`self-reflect.md`](docs-dev/workflow-instructions/self-reflect.md)
 *   **Core Guides:**

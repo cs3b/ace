@@ -1,15 +1,27 @@
-# Let's Fix Tests Workflow Instruction
+# Fix Tests Workflow Instruction
 
 ## Goal
-Systematically diagnose and fix failing automated tests (unit, integration, etc.).
+Systematically diagnose and fix failing automated tests (unit, integration, etc.) - focusing specifically on test failures rather than general application bugs.
 
 ## Prerequisites
 - Test suite has been run and failures have been identified.
 - Access to test output (error messages, stack traces).
 - Development environment is set up correctly (dependencies installed, services running if needed).
-# Let's Fix Tests Workflow Instruction
+# Fix Tests Workflow Instruction
 
-A systematic approach to diagnose and fix failing tests. For detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.md).
+A systematic approach to diagnose and fix failing tests - distinct from general bug fixing. This workflow focuses specifically on test failures, which often require specialized knowledge of testing frameworks and patterns. For detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.md).
+
+## When to Use This Workflow
+
+- When automated tests are failing in your test suite
+- When you need to systematically address test-specific issues
+- When failures are related to test setup, isolation, or execution
+- When test infrastructure needs repair
+
+This workflow is NOT intended for:
+- Fixing general application bugs that aren't causing test failures
+- Feature development or implementation of new requirements
+- Performance optimization unrelated to tests
 
 ## Process Steps
 
@@ -31,7 +43,7 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
     *   Run the broader suite (e.g., the whole file or component) to check for unintended side effects.
     *   Document the root cause and fix if non-trivial (e.g., in commit message or code comments).
 
-## Common Issues
+## Test-Specific Issues
 
 1.  **Environment Setup:**
     *   Ensure correct language version (e.g., `ruby -v`).
@@ -58,6 +70,18 @@ A systematic approach to diagnose and fix failing tests. For detailed testing pr
 ## Output / Success Criteria
 
 1.  **All Tests Pass:** The full test suite runs without failures (e.g., `bundle exec rspec`).
-2.  **Targeted Fix:** The fix addresses the root cause of the failure.
+2.  **Targeted Fix:** The fix addresses the root cause of the test failure.
 3.  **No Regressions:** The fix does not introduce new failures.
 4.  **Quality Metrics:** Failing tests are addressed promptly; fixes are documented.
+5.  **Learning:** The underlying cause of test failures is understood and documented to prevent similar issues.
+
+## Relationship to Bug Fixing
+
+While this workflow shares some similarities with general bug fixing, it is specifically focused on test-related issues which often require:
+
+- Specialized knowledge of testing frameworks and patterns
+- Understanding of test isolation and data dependencies
+- Familiarity with mocking, stubbing, and test doubles
+- Awareness of test infrastructure and execution environment
+
+If the issue you're addressing is primarily an application bug that happens to be revealed by tests (rather than an issue with the tests themselves), consider following a more general bug-fixing approach after understanding the test failure.

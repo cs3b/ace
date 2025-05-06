@@ -32,7 +32,18 @@
 4.  **Execute Task Plan Step-by-Step:**
     *   Focus on the checklist items (`- [ ] ...`) within the task file's `## Implementation Plan` section.
     *   **Iterate through Checklist:** Address each `- [ ]` item sequentially.
-    *   **Follow Task Cycle Principles:** For each item involving code changes, generally follow the [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) principles (Test -> Code -> Refactor -> Verify).
+    *   **Follow Task Cycle Principles:** For each item involving code changes, follow the [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) principles (Test -> Code -> Refactor -> Verify):
+        *   **Test (Red):** Write a failing test first that defines the expected behavior or functionality.
+            *   Create a new test file or add to an existing one following project conventions.
+            *   Write a test case for the specific functionality you're implementing.
+            *   Run the test and confirm it fails for the expected reason.
+        *   **Code (Green):** Write the minimum code necessary to make the test pass.
+            *   Focus only on passing the current test without adding extra functionality.
+            *   Run tests frequently until they pass.
+        *   **Refactor:** Improve code design while ensuring tests still pass.
+            *   Look for opportunities to remove duplication, improve names, or simplify logic.
+            *   Run tests after each refactoring step.
+        *   **Verify:** Run all relevant tests to ensure your changes don't break existing functionality.
     *   **Update Checklist:** After successfully completing the action for a checklist item, update its status in the task file: `- [x] Action description...`
     *   **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (checklist item) or group of related items, following [`commit.md`](docs-dev/workflow-instructions/commit.md) (or renamed equivalent).
     *   Continue until all checklist items in the plan are marked `- [x]`.
@@ -49,6 +60,7 @@
 *   [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) (Core TDD loop)
 *   [Commit Workflow](docs-dev/workflow-instructions/commit.md) (or renamed equivalent - Git workflow)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
+*   [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.md) (For diagnosing and fixing failing tests)
 *   Project-specific guides (Coding Standards, Architecture, etc.) as identified in Step 3.
 
 ## Input

@@ -112,4 +112,4 @@ Following these principles makes it easier to write focused unit tests and provi
 - [Performance Tuning Guide](docs-dev/guides/performance.md) (Performance Testing)
 - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
 - [Troubleshooting Workflow](docs-dev/guides/troubleshooting-workflow.md)
-- Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-tests.md`, `docs-dev/workflow-instructions/lets-fix-tests.md`
+- Relevant Workflow Instructions: `docs-dev/workflow-instructions/work-on-task.md` (includes testing guidance), `docs-dev/workflow-instructions/fix-tests.md` (for diagnosing and fixing failing tests)

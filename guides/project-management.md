@@ -159,7 +159,7 @@ Tasks and release structures are typically generated through one of three primar
     *   Outline the intended design, interfaces, and test structures.
     *   Gather necessary context (relevant existing code, patterns, `docs-project/blueprint.md`, `docs-project/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
 2.  **Test-Driven Development (AI-Assisted)**:
-    *   **Write Tests (`lets-tests`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria using the `docs-dev/workflow-instructions/lets-tests.md` workflow. *Review generated tests carefully.*
+    *   **Write Tests (Test Phase in `work-on-task`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria using the testing phase described in the `docs-dev/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
     *   **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
     *   **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
 3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions using the `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
