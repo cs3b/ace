@@ -27,7 +27,7 @@ Review and refine a task definition, potentially proposing an implementation app
     *   Based on the review, determine if the task file needs updates due to:
         *   Ambiguity in description or requirements.
         *   Inconsistencies with project standards ([Coding Standards](../guides/coding-standards.md), [Documentation Standards](../guides/documentation.md), etc.).
-        *   Impact from recent code changes or architectural decisions ([ADRs](docs-dev/decisions/)).
+        *   Impact from recent code changes or architectural decisions ([ADRs](docs-project/decisions/)).
         *   Missing or unclear Implementation Plan steps.
         *   Inadequate or unverifiable Acceptance Criteria.
     *   Note down specific areas requiring refinement.

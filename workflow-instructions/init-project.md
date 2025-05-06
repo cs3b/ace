@@ -8,6 +8,7 @@ Initialize the `docs-dev` and `docs-project` directory structures and create cor
 1.  **Project Structure Setup**:
     - **Submodule Branch**: Verify the `docs-dev` submodule is checked out to a branch other than `main` or `master`. If it's on `main`/`master`, create and switch to a new branch (e.g., `git checkout -b project-specific-docs`) to allow for project-specific tailoring without affecting the upstream repository.
     - Create project management directories (`backlog`, `current`, `done`) inside the `docs-project` directory.
+    - Create the `docs-project/decisions/` directory and an empty `.keep` file within it (`docs-project/decisions/.keep`).
     - Determine initial version (e.g., `v0.0.1` with codename setup-the-infrastructure).
     - Create initial version directory structure: `docs-project/backlog/<initial_version>/docs/`.
     - Initialize version control if needed.
@@ -114,7 +115,7 @@ Example structure:
 ## Output / Success Criteria
 
 1. **Directory Structure**:
-   - `docs-dev` and `docs-project` directories created with standard structure.
+   - `docs-dev`, `docs-project`, and `docs-project/decisions` directories created with standard structure.
    - Proper permissions set.
    - Git integration configured (`.gitignore` updated).
 
