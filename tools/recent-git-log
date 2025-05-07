@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+# recent-git-log: Show recent git log for one or more repos, with options for submodules
+require 'optparse'
+require 'time'
+
+# Parse --last and --include flags
+def parse_last_arg(arg)
+  case arg
+  when /([0-9]+)\.(hour|hours)/
+    $1.to_i * 3600
+  when /([0-9]+)\.(day|days)/
+    $1.to_i * 86400
+  when /([0-9]+)\.(min|minute|minutes)/
+    $1.to_i * 60
+  else
+    86400 # default 1 day
+  end
+end
+
+opts = {include_docs_dev: false, include_docs_project: false}
+OptionParser.new do |opt|
+  opt.on('--last PERIOD', '-last PERIOD', 'Time window (e.g. 2.hours, 1.day)') { |v| opts[:last] = v }
+  opt.on('--include-docs-dev', 'Include docs-dev submodule') { opts[:include_docs_dev] = true }
+  opt.on('--include-docs-project', 'Include docs-project submodule') { opts[:include_docs_project] = true }
+end.parse!(ARGV)
+
+since_seconds = parse_last_arg(opts[:last] || '1.day')
+since_time = Time.now - since_seconds
+since_str = since_time.strftime('%Y-%m-%dT%H:%M:%S')
+
+# Discover submodule paths if needed
+docs_dev_path = nil
+docs_project_path = nil
+if File.exist?('.gitmodules')
+  File.readlines('.gitmodules').each do |line|
+    docs_dev_path = $1.strip if line =~ /path = (docs-dev)/
+    docs_project_path = $1.strip if line =~ /path = (docs-project)/
+  end
+end
+
+repos = [['.', 'main']]
+repos << [docs_dev_path, 'docs-dev'] if opts[:include_docs_dev] && docs_dev_path
+repos << [docs_project_path, 'docs-project'] if opts[:include_docs_project] && docs_project_path
+
+entries = []
+repos.each do |path, label|
+  Dir.chdir(path) do
+    log = `git log --since='#{since_str}' --pretty=format:'%ct|%h|%an|%B<<END>>'`
+    log.split('<<END>>').each do |entry|
+      next if entry.strip.empty?
+      header, *msg_lines = entry.strip.lines
+      next unless header
+      ts, sha, author = header.strip.split('|', 3)
+      msg = msg_lines.join.strip
+      entries << {repo: label, ts: ts.to_i, sha: sha, author: author, msg: msg}
+    end
+  end
+end
+
+entries.sort_by! { |e| -e[:ts] }
+
+entries.each do |e|
+  t = Time.at(e[:ts]).strftime('%Y-%m-%d %H:%M')
+  puts "[#{e[:repo]}] #{t} #{e[:sha]} #{e[:author]}:\n#{e[:msg]}\n---"
+end
