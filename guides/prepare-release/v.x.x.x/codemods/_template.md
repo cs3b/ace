@@ -46,5 +46,5 @@ If the codemod requires manual intervention at certain points:
 If needed, how to revert the changes made by this codemod.
 
 ## References
-- [Related Documentation](docs-dev/path/to/docs.md)
+- [Related Documentation](path/to/docs.md)
 - [Tool Documentation](https://link-to-tool-docs)

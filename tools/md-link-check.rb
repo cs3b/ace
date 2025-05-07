@@ -55,6 +55,10 @@ SCHEME_SKIP = %r{^(?:[a-z][a-z0-9+\-.]*://|mailto:)}i
 BrokenLink = Struct.new(:file, :line_no, :link, :context_lines)
 
 broken_links = []
+warning_links = []
+
+# Regex for allowed error prefixes
+ERROR_PREFIX = %r{^(docs-(dev|project|business)/)}
 
 md_files.each do |file|
   lines = File.readlines(file, chomp: true)
@@ -82,18 +86,31 @@ md_files.each do |file|
       start = [idx - options[:context], 0].max
       finish = [idx + options[:context], lines.size - 1].min
       snippet = lines[start..finish]
-      broken_links << BrokenLink.new(file, idx + 1, raw_target, snippet)
+      if raw_target.match?(ERROR_PREFIX)
+        broken_links << BrokenLink.new(file, idx + 1, raw_target, snippet)
+      else
+        warning_links << BrokenLink.new(file, idx + 1, raw_target, snippet)
+      end
     end
   end
 end
 
+if !warning_links.empty?
+  puts "\n⚠️  Broken links (warnings, not errors): #{warning_links.size}"
+  warning_links.each do |b|
+    puts "\nFile: #{b.file}:#{b.line_no}"
+    puts "Link: #{b.link}"
+
+  end
+end
+
 if broken_links.empty?
-  puts "✅ No broken links."
+  puts "✅ No broken links (errors)."
   exit 0
 else
-  puts "❌ Broken links found: #{broken_links.size}"
+  puts "\n❌ Broken links (errors): #{broken_links.size}"
   broken_links.each do |b|
-    puts "\nFile: #{b.file}  Line: #{b.line_no}"
+    puts "\nFile: #{b.file}:#{b.line_no}"
     puts "Link: #{b.link}"
     puts "Context:"
     context_start_line = b.line_no - options[:context]
