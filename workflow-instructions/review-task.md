@@ -20,7 +20,11 @@ Review and refine a task definition, potentially proposing an implementation app
 2.  **Review Task Against Context:**
     *   Compare the task's Objective and Description against the project's overall goals as defined in [What We Build](docs-project/what-do-we-build.md).
     *   Evaluate the proposed Implementation Details, Scope, and Deliverables in light of the project [Architecture](docs-project/architecture.md) and [Blueprint](docs-project/blueprint.md). Identify any potential architectural conflicts or structural challenges.
-    *   **Review Recent Git History:** Explicitly consider recent code changes as identified during the `load-env` workflow (e.g., by reviewing recent commits and file changes) to see if they impact the task's assumptions, requirements, or implementation plan. Look for changes in related code areas or foundational parts of the project.
+    *   **Review Recent Git and Task History:**
+        * Use the `bin/gl` tool (powered by `docs-dev/tools/recent-git-log`) to view recent commits across the main repo and submodules, sorted by date. This helps identify changes that may impact the task.
+        * Use the `bin/tr` tool (powered by `docs-dev/utils/recent-tasks`) to quickly summarize recently updated or completed tasks. This helps track project progress and find related or recently finished work.
+        * Both tools support the `--last` argument to filter by time window (e.g., `--last 2.days`).
+        * Consider recent code and task changes when reviewing assumptions, requirements, and implementation plans. Look for changes in related code areas or foundational parts of the project.
     *   Review the task's dependencies against the current project status (as understood from `review-kanban-board` or `load-env`) to confirm they are met or identify blockers.
 
 3.  **Identify Needs for Update:**
