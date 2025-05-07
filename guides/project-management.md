@@ -34,6 +34,10 @@ docs-project
 ```
 (Use `tree docs-project -L 2` from the project root to view the current structure)
 
+> **Strategic vs Operational Planning**  
+> High-level direction is captured in the [Project Roadmap](docs-project/roadmap.md) and detailed in the [Strategic Planning Guide](docs-dev/guides/strategic-planning-guide.md).  
+> Release planning and day-to-day execution described in this guide must align with the roadmap’s objectives and timelines.
+
 ## Task Management
 
 ### 1. Task Organization
@@ -179,3 +183,5 @@ Essential standards and guidelines:
 - [Security](docs-dev/guides/security.md)
 - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
 - [Troubleshooting Workflow](docs-dev/guides/troubleshooting-workflow.md)
+- [Strategic Planning Guide](docs-dev/guides/strategic-planning-guide.md)
+- [Project Roadmap](docs-project/roadmap.md)
