@@ -10,7 +10,8 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 -   [Work on Task](./work-on-task.md): Select and understand a task before implementation (includes TDD cycle).
 -   [Commit](./commit.md): Create well-structured Git commits.
 -   [Fix Tests](./fix-tests.md): Debug and fix failing tests.
--   [Prepare Release](./prepare-release.md): Finalize, tag, and publish a release.
+-   [Prepare Release](./prepare-release.md): Prepare content, documentation, and perform pre-flight checks for a release.
+-   [Ship Release](./ship-release.md): Execute the release process (versioning, tagging, building, publishing).
 
 ## Project Initialization & Setup
 

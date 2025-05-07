@@ -14,14 +14,14 @@ This guide explains how to create and structure the Markdown-based workflow inst
 
 ## Handling Technology-Specific Content
 
-Workflow instructions should aim to be technology-agnostic, describing the *process* rather than specific commands for every language or tool.
+Workflow instructions should aim to be technology-agnostic, describing the *process* rather than embedding specific commands, file names, or paths for every language or tool.
 
-If you encounter technology-specific examples (like exact commands for RSpec, Cargo, npm, etc.) within a workflow instruction during review or refactoring:
+If you encounter technology-specific details (like exact commands for RSpec, specific file names such as `Cargo.toml` or `package.json`, or typical paths like `lib/your_gem/version.rb`) within a workflow instruction during review or refactoring:
 
-1.  **Prioritize Merging into Main Guides:** The preferred approach is to move the specific example(s) into the relevant existing language-specific *guide* located in `docs-dev/guides/` (e.g., add RSpec examples to `docs-dev/guides/testing/ruby-rspec.md`, add Cargo commands to `docs-dev/guides/ship-release/rust.md`). In the workflow instruction, replace the removed example with a generic placeholder (e.g., `your_test_command`) and add a clear reference to the main guide where the specific details can be found.
+1.  **Prioritize Merging into Main Guides:** The preferred approach is to move these specific details into the relevant existing language-specific *guide* located in `docs-dev/guides/` (e.g., add RSpec examples to `docs-dev/guides/testing/ruby-rspec.md`, list `Cargo.toml` as the version file in `docs-dev/guides/ship-release/rust.md`). In the workflow instruction, replace the removed specifics with a generic description (e.g., "run your project's test suite", "update the language-specific version file") and add a clear reference to the main guide or language-specific sub-guide where the concrete details can be found.
 2.  **Fallback: Create Sub-Instructions:** If the technology-specific content is substantial, highly specific to the workflow's context, and doesn't fit naturally into any of the main guides, you can create language-specific *sub-instructions*. Place these in a sub-directory named after the main instruction (e.g., `docs-dev/workflow-instructions/lets-fix-tests/ruby.md`). The main workflow instruction should then link to these sub-instructions for the technology-specific steps.
 
-This approach keeps the core workflow instructions clean and focused on the process, while ensuring that technology-specific details are available and maintainable in the appropriate location.
+This approach keeps the core workflow instructions clean and focused on the process, while ensuring that technology-specific details (commands, file names, paths) are available and maintainable in the appropriate guides or sub-instructions.
 
 ## Standard Workflow Instruction Structure
 

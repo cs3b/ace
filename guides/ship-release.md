@@ -29,75 +29,25 @@ This convention applies to the main overview document for the release. Other fil
    // PATCH: Bug fixes, backwards compatible
    ```
 
-2. **Git Flow Model**:
-   ```bash
-   # Feature development
-   git checkout -b feature/new-tool develop
-   git commit -m "feat: Add new browser tool"
-   git push origin feature/new-tool
-
-   # Release preparation
-   git checkout -b release/1.2.0 develop
-   git commit -m "chore: Bump version to 1.2.0"
-   git tag -a v1.2.0 -m "Release version 1.2.0"
-   ```
+2. **Git Workflow for Releases**:
+   The project typically follows a Pull Request (PR) based workflow for contributions.
+   - **From a Feature Branch:** If release preparations (version bumping, changelog updates) are done on a feature branch or a dedicated release preparation branch, these changes should be integrated into the main branch (e.g., `main` or `master`) via a Pull Request. Once merged, the release (tagging and publishing) is performed from the main branch.
+   - **Directly on Main Branch:** For smaller releases or hotfixes, versioning, tagging, and publishing might occur directly on the main branch.
+   The key is that the main branch reflects the state of all releases. For detailed procedural steps for creating tags, commits, and handling branches, refer to the [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md) and the [Version Control Guide](./version-control.md). Project architecture documents may further specify contribution models, especially for external contributions (e.g., from forks).
 
 ### 2. Release Process
 
-1. **Pre-Release Checklist**:
-   ```markdown
-   ## Release Checklist
+1. **Pre-Release Considerations**:
+   Before initiating a release, it's crucial to have a pre-release checklist. This typically includes verifying that version files and the `CHANGELOG.md` are ready for updates, all release-specific documentation (e.g., in `docs-project/current/{release_dir}/`) is finalized and correctly named (e.g., `v.x.y.z-codename.md`), and all planned features/fixes are merged and tested.
+   The actionable pre-release checklist is detailed in the [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md).
 
-   ### Required
-   - [ ] Version file updated
-   - [ ] CHANGELOG.md updated
-   - Finalize any release-specific documentation within the `docs-project/current/{release_dir}/` subdirectories (e.g., `docs/`, `user-experience/`). The specific artifacts required (like ADRs, detailed docs, test cases, user guides) should align with the scope defined during the specification phase (using `docs-dev/workflow-instructions/lets-spec-from-pr-comments.md`, `docs-dev/workflow-instructions/lets-spec-from-frd.md`, or `docs-dev/workflow-instructions/lets-spec-from-prd.md` workflow instructions) which corresponds to the release type (Patch, Feature, Major). Ensure all necessary documents are complete and accurate.
-   - [ ] **Ensure the root documentation file within the release directory (`docs-project/current/{release_dir}/`) is named according to the standard `v.x.y.z-codename.md` (matching the directory name).**
-   ```
+2. **Version Update Concepts**:
+   Updating the version involves incrementing the semantic version number in all designated project files (like `package.json`, `Cargo.toml`, or custom version files) and detailing the changes in the `CHANGELOG.md`. The `CHANGELOG.md` should clearly list additions, fixes, and other changes for the new version.
+   The [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md) provides steps for performing these updates.
 
-2. **Version Update**:
-   Increment the version number in the designated version file(s) and any relevant package manifests.
-   Update the `CHANGELOG.md` (typically at the project root) with details for the new version.
-   ```plaintext
-   // Example: path/to/version/file
-   VERSION = "1.2.0";
-
-   // Example: package.json
-   "version": "1.2.0",
-
-   // Example: CHANGELOG.md (root level)
-   ## [1.2.0] - YYYY-MM-DD
-
-   ### Added
-   - Description of new feature A
-   - Description of new feature B
-
-   ### Fixed
-   - Description of bug fix C
-   - Description of bug fix D
-   ```
-
-3. **Tagging and Publishing**:
-   Ensure all changes, including the version bump and `CHANGELOG.md` update, are committed to version control.
-   Create an annotated Git tag for the release version.
-   Push the commit(s) and the tag to the remote repository.
-   Publish the package to the relevant registry using standard commands or helper scripts for your ecosystem.
-   ```bash
-   # Ensure all changes are committed
-   git commit -am "chore: Prepare release vX.Y.Z"
-
-   # Create annotated git tag
-   git tag -a vX.Y.Z -m "Release version X.Y.Z"
-
-   # Push commits and tag
-   git push origin <branch_name> # e.g., main or develop
-   git push origin vX.Y.Z
-
-   # Publish the package using appropriate ecosystem commands
-   # (See language-specific examples)
-   # Or run a custom publish script: ./scripts/publish.sh
-   ```
-   *Note: Ensure you have the necessary credentials and permissions configured for the target package registry.*
+3. **Tagging and Publishing Concepts**:
+   After version updates are committed, an annotated Git tag is created to mark the specific release point in history. Subsequently, the updated code and the new tag are pushed to the remote repository. The final step is publishing the package to the relevant registry (e.g., npm, RubyGems, crates.io). This often requires appropriate credentials.
+   For detailed commands and language-specific instructions, consult the [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md) and the language-specific guides in the [`./ship-release/`](./ship-release/) subdirectory.
 
 ### 3. Post-Release
 
@@ -128,10 +78,7 @@ This convention applies to the main overview document for the release. Other fil
    - Bug fix C
 
    ### Installation / Update
-   ```bash
-   # Example installation commands using appropriate package manager
-   # (See language-specific examples)
-   ```
+   Information on how to install or update to the new version is typically provided, often linking to package manager instructions or language-specific guides.
 
 ## Language/Environment-Specific Examples
 
@@ -142,13 +89,13 @@ For specific commands, scripts, or configurations related to building, tagging, 
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, Commit Messages)
 - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
-- Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-release.md`, `docs-dev/workflow-instructions/docs/generate-api-docs.md`, `docs-dev/workflow-instructions/review-kanban-board.md`
+- Relevant Workflow Instructions: [`docs-dev/workflow-instructions/ship-release.md`](../workflow-instructions/ship-release.md) (this guide's actionable counterpart), [`docs-dev/workflow-instructions/prepare-release.md`](../workflow-instructions/prepare-release.md), `docs-dev/workflow-instructions/docs/generate-api-docs.md`, `docs-dev/workflow-instructions/review-kanban-board.md`
 
 ## Reference Templates
 - Release checklist items are often included in the main release overview template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`).
 
-## Helper Scripts
-- Consider using helper scripts (e.g., `scripts/publish.sh`, `scripts/release.sh`) to automate parts of the release process like building, testing, tagging, and publishing.
+## Automation with Helper Scripts
+Helper scripts (e.g., `scripts/publish.sh`, `scripts/release.sh`) can be highly beneficial for automating repetitive parts of the release process, such as building, testing, tagging, and publishing. This can reduce manual error and improve consistency. The [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md) may reference or incorporate such scripts if they exist in the project.
 
 3. **Issue Tracking**:
    ```markdown

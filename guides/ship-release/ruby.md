@@ -54,7 +54,3 @@ Example using a hypothetical script:
 # Assumes the script handles building and pushing
 bin/publish
 ```
-
-# Push the gem
-gem push <your_gem>-X.Y.Z.gem
-```
