@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+# gl: Show git log for main repo and submodules, sorted by date, with --last window
+require 'optparse'
+require 'time'
+
+def parse_last_arg(arg)
+  # Accepts '2.hours', '1.day', etc. Returns seconds
+  case arg
+  when /([0-9]+)\.(hour|hours)/
+    $1.to_i * 3600
+  when /([0-9]+)\.(day|days)/
+    $1.to_i * 86400
+  when /([0-9]+)\.(min|minute|minutes)/
+    $1.to_i * 60
+  else
+    86400 # default 1 day
+  end
+end
+
+opts = {}
+OptionParser.new do |opt|
+  opt.on('--last PERIOD', '-last PERIOD', 'Time window (e.g. 2.hours, 1.day)') { |v| opts[:last] = v }
+end.parse!(ARGV)
+
+since_seconds = parse_last_arg(opts[:last] || '1.day')
+since_time = Time.now - since_seconds
+since_str = since_time.strftime('%Y-%m-%dT%H:%M:%S')
+
+# Get submodule paths
+gitmodules = '.gitmodules'
+submodules = []
+if File.exist?(gitmodules)
+  File.readlines(gitmodules).each do |line|
+    if line =~ /path = (.+)/
+      submodules << $1.strip
+    end
+  end
+end
+
+repos = [['.', 'main']] + submodules.map { |path| [path, path] }
+
+entries = []
+repos.each do |path, label|
+  Dir.chdir(path) do
+    log = `git log --since='#{since_str}' --pretty=format:'%ct|%h|%an|%B<<END>>'`
+    # Split by <<END>> marker
+    log.split('<<END>>').each do |entry|
+      next if entry.strip.empty?
+      header, *msg_lines = entry.strip.lines
+      next unless header
+      ts, sha, author = header.strip.split('|', 3)
+      msg = msg_lines.join.strip
+      entries << {repo: label, ts: ts.to_i, sha: sha, author: author, msg: msg}
+    end
+  end
+end
+
+entries.sort_by! { |e| -e[:ts] }
+
+entries.each do |e|
+  t = Time.at(e[:ts]).strftime('%Y-%m-%d %H:%M')
+  puts "[#{e[:repo]}] #{t} #{e[:sha]} #{e[:author]}:\n#{e[:msg]}\n---"
+end
