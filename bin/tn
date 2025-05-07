@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+# bin/tn: Thin wrapper for task-next utility
+exec(File.expand_path('../docs-dev/utils/task-next', __dir__))
