@@ -9,29 +9,35 @@ Review the overall state of project tasks across the `docs-project/backlog/`, `d
 
 ## Process Steps
 
-1.  **Check Backlog (`docs-project/backlog/`)**:
-    *   List directories/releases planned for the future: `ls -1 docs-project/backlog/`
-    *   *Optional:* Briefly review the `README.md` or tasks within a specific planned release if needed for context.
-    *   Identify potential next releases ready to be moved to `current/`.
+The following CLI tools make it fast and reliable to review the project state and plan next actions:
 
-2.  **Check Current Work (`docs-project/current/`)**:
-    *   Identify the active release directory: `ls -1 docs-project/current/` (Should typically contain only one).
-    *   List tasks within the active release: `ls -1 docs-project/current/*/tasks/*.md`
-    *   **Review Task Statuses**: Check the `status:` field in the frontmatter of each task `.md` file within the current release.
-        *   Use `grep 'status:' docs-project/current/*/tasks/*.md | sort | uniq -c` to get counts.
-        *   Identify specific tasks that are `pending`, `in-progress`, `done`, or `blocked`.
-    *   **Check Dependencies**: Review the `dependencies:` field in `pending` or `in-progress` tasks to ensure prerequisites are met (i.e., dependent tasks have `status: done`). Identify blockers.
-    *   Determine overall progress towards completing the current release.
+1. **Summarize Recent Task Progress:**
+   - Run `bin/tr` to see a table of recently updated or completed tasks (status: done or in-progress), with their IDs, titles, status, update times, and file paths. Use `--last` to filter by time window (e.g., `bin/tr --last 3.days`).
 
-3.  **Check Done (`docs-project/done/`)**:
-    *   List archived/completed release directories: `ls -1 docs-project/done/`
-    *   *Optional:* Review contents of a past release if needed for historical context.
+2. **Find the Next Actionable Task:**
+   - Run `bin/tn` to automatically identify the next task in the current release that is not done and has all dependencies met. This helps you focus on the next logical step without manually checking dependencies.
 
-4.  **Synthesize & Plan**:
-    *   Summarize the overall project status.
-    *   Identify the next task(s) to work on within the `current/` release based on priority and dependencies.
-    *   Determine if the `current/` release is ready for the release process (all tasks `done`).
-    *   Determine if a release from `backlog/` should be moved to `current/`.
+3. **Check Recent Code Changes:**
+   - Run `bin/gl` to review recent git commits across the main repo and submodules. This can help you see what has changed recently and spot work that may impact pending tasks.
+
+4. **Review Backlog and Done Releases:**
+   - List planned/future releases: `ls -1 docs-project/backlog/`
+   - List completed/archived releases: `ls -1 docs-project/done/`
+
+5. **Synthesize & Plan:**
+   - Use the outputs of the above tools to:
+     - Understand overall progress and what’s left in the current release
+     - Identify blockers or unmet dependencies
+     - Decide if the current release is ready to ship (all tasks done)
+     - Plan when to activate a new release from the backlog
+
+## Example Usage
+
+- At the start of a work session, run `bin/tr` and `bin/tn` to get a snapshot of progress and your next task.
+- Before shipping a release, use `bin/tr` to ensure all tasks are done.
+- Use `bin/gl` if you need to check for recent code changes that may affect your work.
+
+These tools automate what used to require manual grepping and inspection, making kanban/project review much faster and less error-prone.
 
 ## Input
 - User request to review the project state.

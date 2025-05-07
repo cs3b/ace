@@ -122,6 +122,10 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### 4. Task Transitions
 
+#### Tooling for Task Progression
+
+- Use `bin/tn` (task-next) to quickly identify the next actionable task in the current release. This tool checks all tasks and their dependencies, skipping those that are done or blocked, and surfaces the next one ready to be worked on.
+
 When moving a task between states, follow these guidelines:
 
 #### Task State Transitions
