@@ -1,4 +1,4 @@
-# Init Project Workflow Instruction
+# Initialize Project Structure Workflow Instruction
 
 ## Goal
 Initialize the `docs-dev` and `docs-project` directory structures and create core documentation files (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) to establish the foundation for an AI-assisted development workflow in a new or existing project.

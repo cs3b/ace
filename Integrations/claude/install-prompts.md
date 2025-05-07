@@ -10,7 +10,7 @@ docs-dev/workflow-instructions
 │   ├── generate-test-cases.md
 │   └── generate-user-docs.md
 ├── generate-blueprint.md
-├── init-project.md
+├── initialize-project-structure.md
 ├── lets-commit.md
 ├── lets-fix-tests.md
 ├── lets-release.md
