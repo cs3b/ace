@@ -98,9 +98,7 @@ end
 if !warning_links.empty?
   puts "\n⚠️  Broken links (warnings, not errors): #{warning_links.size}"
   warning_links.each do |b|
-    puts "\nFile: #{b.file}:#{b.line_no}"
-    puts "Link: #{b.link}"
-
+    puts "* (#{b.link}) #{b.file}:#{b.line_no}"
   end
 end
 
