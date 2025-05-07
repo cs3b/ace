@@ -79,7 +79,7 @@ This convention helps users quickly understand the purpose of a workflow file fr
 
 Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 *   `docs-dev/workflow-instructions/load-env.md`: Focuses on context gathering.
-*   `docs-dev/workflow-instructions/lets-prepare-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
+*   `docs-dev/workflow-instructions/breakdown-notes-into-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
 *   `docs-dev/workflow-instructions/lets-commit.md`: Guides a specific, common developer action referencing external standards.
 *   `docs-dev/workflow-instructions/self-reflect.md`: Defines a meta-process for analysis and improvement.
 
