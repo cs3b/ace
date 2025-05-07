@@ -3,7 +3,7 @@
 This document outlines the steps to refine vague concept notes (typically files starting with `xx-` in a release `backlog/` directory) into clear requirements, preparing them for transformation into actionable development tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To take an initial, often ambiguous, concept note and, through analysis and user interaction, elicit the necessary details (goals, requirements, scope, criteria) to define a concrete task.
+To process vague concept notes into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, eliciting necessary details through analysis and user interaction.
 
 ## Prerequisites
 *   A target release directory with a `backlog/` subfolder containing `xx-*.md` concept files.
@@ -41,10 +41,10 @@ To take an initial, often ambiguous, concept note and, through analysis and user
 5.  **Synthesize Requirements:**
     *   Compile the original concept, research findings, and user answers into a clear set of requirements for *each* potential task derived from the concept(s).
 
-6.  **Proceed to Task Definition:**
-    *   With the clarified requirements, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow to structure and create the actual task file(s) based on the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
-    *   **Note:** The handling (deletion/archiving) of the original `xx-*.md` file should occur *after* the corresponding actionable task(s) have been successfully created in the main workflow, based on user confirmation.
+6.  **Prepare Output for Breakdown Workflow:**
+    *   With the clarified requirements, structure the extracted information into a clear format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   **Note:** The handling (deletion/archiving) of the original `xx-*.md` file should occur *after* the corresponding actionable task(s) have been successfully created using the output of this workflow, based on user confirmation.
 
 ## Output
-*   A set of clarified requirements (objective, scope, features, acceptance criteria) for each concept, ready to be used as input for the main task creation process defined in `../prepare-tasks.md`.
+*   A set of structured notes for each concept, containing clarified requirements (objective, scope, features, acceptance criteria), ready to be used as input for the `breakdown-notes-into-tasks` workflow.
 *   User confirmation regarding the disposition of the original `xx-*.md` files (to be acted upon later).

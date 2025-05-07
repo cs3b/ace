@@ -3,7 +3,7 @@
 This document outlines the steps to fetch GitHub Pull Request comments and reviews using Model Context Protocol (MCP) server functions and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To utilize MCP server functions (`get_pull_request_comments`, `get_pull_request_reviews`) for retrieving PR feedback and process it into a structured format suitable for task definition, typically for a Patch release addressing the feedback.
+To utilize MCP server functions (`get_pull_request_comments`, `get_pull_request_reviews`) for retrieving PR feedback and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.
 
 ## Prerequisites
 *   Access to an MCP server with GitHub integration and necessary functions enabled.
@@ -43,14 +43,13 @@ To utilize MCP server functions (`get_pull_request_comments`, `get_pull_request_
     *   Note the original comment/review IDs associated with each requirement for traceability.
     *   Identify any dependencies between the identified requirements based on the feedback.
 
-5.  **Proceed to Task Creation:**
-    *   With the structured requirements extracted from the PR comments, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
-    *   Use this analysis (including comment IDs and dependencies) as input to define clear, actionable task(s) adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
+5.  **Prepare Output for Breakdown Workflow:**
+    *   With the structured requirements extracted from the PR comments, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   Include the analysis (groupings, associated comment IDs, and identified dependencies) as input for the next step.
 
 ## Output
-*   Fetched PR data stored in structured JSON files within `{release_path}/docs/comments/` and `{release_path}/docs/reviews/`.
-*   A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
-*   This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
+*   Fetched PR data stored in structured JSON files within `{release_path}/docs/comments/` and `{release_path}/docs/reviews/`.\n*   A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
+*   This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
 
 ## Considerations
 {{ ... }}

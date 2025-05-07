@@ -3,7 +3,7 @@
 This document outlines the steps to analyze a Feature Requirements Document (FRD) and extract structured requirements. This information serves as input for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To parse an FRD, identify key requirements, user stories, acceptance criteria, and potential areas needing further clarification (decisions, research) to prepare for task definition.
+To parse an FRD, identify key requirements, user stories, acceptance criteria, and potential areas needing further clarification, producing structured notes suitable for the `breakdown-notes-into-tasks` workflow.
 
 ## Prerequisites
 *   An FRD available (file path or pasted content).
@@ -52,6 +52,6 @@ To parse an FRD, identify key requirements, user stories, acceptance criteria, a
 
 ## Output
 *   A structured summary of requirements, potential decisions, and research areas extracted from the FRD.
-*   This summary serves as direct input for the project structure and task creation process defined in `../prepare-tasks.md`.
+*   This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
 
 ## Considerations

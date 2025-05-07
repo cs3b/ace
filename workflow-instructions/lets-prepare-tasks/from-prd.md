@@ -3,7 +3,7 @@
 This document outlines the steps to analyze a high-level Product Requirements Document (PRD) to extract the product vision, propose a potential release strategy, and identify foundational requirements. This analysis serves as input for creating the necessary project structure and initial tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To translate a broad product vision from a PRD into a structured analysis, including a suggested release plan and key initial requirements, preparing the ground for detailed task definition.
+To translate a broad product vision from a PRD into a structured analysis, including a suggested release plan and key initial requirements, producing structured notes suitable for use as input for the `breakdown-notes-into-tasks` workflow.
 
 ## Prerequisites
 *   A PRD available (file path or pasted content).
@@ -37,17 +37,14 @@ To translate a broad product vision from a PRD into a structured analysis, inclu
         *   List of foundational requirements (setup, architecture, decisions, docs) for the initial release.
         *   High-level goals for subsequent planned releases.
 
-5.  **Proceed to Task Definition:**
-    *   With the structured analysis derived from the PRD, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
-    *   Use this analysis as input to:
-        *   Create the necessary release directory structures.
-        *   Generate/update core project documentation (`what-do-we-build.md`, `architecture.md`, etc.).
-        *   Define clear, actionable task(s) for the foundational requirements of the initial release, adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
-        *   Create placeholder ADRs.
+5.  **Prepare Output for Breakdown Workflow:**
+    *   With the structured analysis derived from the PRD, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   Include the analysis (release strategy, foundational requirements, high-level goals for subsequent releases) as input for the next step.
+*   This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
 
 ## Output
 *   A structured analysis document containing:
     *   The confirmed high-level release strategy.
     *   A list of foundational requirements (setup, architecture, decisions, documentation) for the initial release.
     *   High-level goals for subsequent planned releases.
-*   This summary serves as direct input for the project structure and task creation process defined in `../prepare-tasks.md`.
+*   This analysis serves as structured input for the `breakdown-notes-into-tasks` workflow.

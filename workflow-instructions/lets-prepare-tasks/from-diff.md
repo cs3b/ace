@@ -3,7 +3,7 @@
 This document outlines the steps to analyze a Git diff (provided as a file, command output, or commit range) to generate structured analysis documents. This analysis serves as the foundation for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To process Git diff content using an "Outside-In" approach (interfaces first, then implementation), producing high-level and technical analysis documents that clearly articulate the required changes and potential improvements.
+To analyze Git diff content and produce structured analysis documents that serve as input for the `breakdown-notes-into-tasks` workflow, using an "Outside-In" approach (interfaces first, then implementation).
 
 ## Prerequisites
 *   Git diff content available (file, command output, commit range).
@@ -41,11 +41,11 @@ To process Git diff content using an "Outside-In" approach (interfaces first, th
             *   Suggest concrete actions, potential refactorings, or improvement options (with pros/cons).
             *   Include specific file paths and line numbers.
 
-5.  **Proceed to Task Creation:**
-    *   With the analysis documents generated, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
-    *   Use the high-level and technical analysis as the primary input to define clear, actionable task(s) according to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
+5.  **Prepare Output for Breakdown Workflow:**
+    *   With the analysis documents generated, structure the extracted information into a clear format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   Use the high-level and technical analysis as the primary input.
 
 ## Output
 *   High-level analysis file(s) created in `{release_path}/backlog/high-level/`.
 *   Technical analysis file(s) created in `{release_path}/backlog/technical/`.
-*   These documents serve as input for the task creation process in `../prepare-tasks.md`.
+*   These documents serve as structured input for the `breakdown-notes-into-tasks` workflow.

@@ -3,7 +3,7 @@
 This document outlines the steps to analyze notes, ideas, or draft tasks found within the internal `backlog/` subdirectory of a specific target release (either the current release or one specified in the main project backlog). The goal is to structure these items into requirements suitable for creating formal tasks within that *same* release.
 
 ## Goal
-To review and structure informal backlog items associated with a specific release, preparing them for conversion into actionable tasks managed within that release's scope.
+To review and structure informal backlog items associated with a specific release, preparing them as structured notes suitable for use as input for the `breakdown-notes-into-tasks` workflow.
 
 ## Prerequisites
 *   A target release directory exists (either in `docs-project/current/` or `docs-project/backlog/`).
@@ -35,10 +35,9 @@ To review and structure informal backlog items associated with a specific releas
     *   Identify potential dependencies on other tasks *within the target release*.
     *   Group related backlog items into single, more comprehensive requirements if appropriate.
 
-4.  **Proceed to Task Definition:**
-    *   With the structured requirements derived from the release-specific backlog, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
-    *   Use this analysis as input to:
-        *   Define clear, actionable task(s) within the *target release's* `tasks/` directory, adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
+4.  **Prepare Output for Breakdown Workflow:**
+    *   With the structured requirements derived from the release-specific backlog, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   Include this analysis (requirements, dependencies, estimated effort) as input for the next step.
         *   Ensure correct sequencing and dependency linking within the target release.
         *   Update the target release's `README.md` to reflect the newly added tasks.
 
@@ -46,4 +45,4 @@ To review and structure informal backlog items associated with a specific releas
 *   A structured analysis containing:
     *   The identified target release path.
     *   A list of requirements derived from the internal backlog items, including potential dependencies within the release.
-*   This summary serves as direct input for creating tasks specifically within the target release via the `../prepare-tasks.md` workflow.
+*   This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.

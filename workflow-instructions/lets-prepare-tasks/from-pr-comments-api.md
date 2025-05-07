@@ -3,7 +3,7 @@
 This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/get-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
 
 ## Goal
-To automate the retrieval of PR feedback using the GitHub API and process it into a structured format suitable for task definition, typically for a Patch release addressing the feedback.
+To automate the retrieval of PR feedback using the GitHub API and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.
 
 ## Prerequisites
 *   Ruby environment and required gems installed (for the `get-github-pr-data.rb` script).
@@ -47,14 +47,14 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
     *   Note the original comment/review IDs associated with each requirement for traceability.
     *   Identify any dependencies between the identified requirements based on the feedback.
 
-5.  **Proceed to Task Creation:**
-    *   With the structured requirements extracted from the PR comments, proceed to the main [../prepare-tasks.md](../prepare-tasks.md) workflow.
-    *   Use this analysis (including comment IDs and dependencies) as input to define clear, actionable task(s) adhering to the [write-actionable-task.md](docs-dev/guides/write-actionable-task.md) guide.
+5.  **Prepare Output for Breakdown Workflow:**
+    *   With the structured requirements extracted from the PR comments, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    *   Include the analysis (groupings, associated comment IDs, and identified dependencies) as input for the next step.
 
 ## Output
 *   Fetched PR data stored in structured JSON files within `{release_path}/docs/{pr_path}/`.
 *   A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
-*   This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
+*   This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
 
 ### Deliverables
 
