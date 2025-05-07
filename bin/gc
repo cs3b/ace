@@ -41,19 +41,3 @@ else
 end
 
 echo "All repositories committed successfully."
-
-echo "\nRecent changes across all repos (last 1 day by default):"
-set last_arg ""
-for i in (seq (count $argv))
-    if test $argv[$i] = "--last" -o $argv[$i] = "-last"
-        set last_arg "$argv[$i] $argv[(math $i + 1)]"
-    end
-end
-
-# Show recent git logs using the extracted tool
-set script_path (dirname (status --current-filename))/../docs-dev/tools/recent-git-log
-if test -n "$last_arg"
-    $script_path --include-docs-dev --include-docs-project $last_arg
-else
-    $script_path --include-docs-dev --include-docs-project
-end
