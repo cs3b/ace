@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# task-next: Find the next actionable task in the current release (not done, all deps met)
+require 'yaml'
+require 'set'
+
+# Find all task files in current release
+task_files = Dir.glob('docs-project/current/*/tasks/*.md')
+
+tasks = {}
+# Parse all tasks for id, status, dependencies, title, path
+
+task_files.each do |f|
+  content = File.read(f)
+  if content =~ /^---\s*\n(.*?)\n---/m
+    fm = YAML.safe_load($1)
+    id = fm['id']
+    status = fm['status']
+    deps = fm['dependencies'] || []
+    # handle string or array
+    deps = deps.is_a?(String) ? deps.scan(/\w[\w\.-]*/) : deps
+    title = content.sub(/^---.*?---/m, '').match(/^#\s+(.+)/)&.captures&.first || '(No Title)'
+    tasks[id] = {id: id, status: status, deps: deps, title: title, path: f}
+  end
+end
+
+done_ids = tasks.select { |_, t| t[:status] == 'done' }.keys.to_set
+
+# Select candidates: not done, all deps met (or missing dep is not present in this release)
+candidates = tasks.values.select do |t|
+  next if t[:status] == 'done'
+  unmet = t[:deps].any? { |dep| tasks[dep] && tasks[dep][:status] != 'done' }
+  !unmet
+end
+
+# Sort by id (natural order)
+candidates.sort_by! { |t| t[:id].to_s }
+
+if candidates.empty?
+  puts "No actionable tasks found!"
+else
+  t = candidates.first
+  puts "Next task to work on:"
+  puts "  ID:    #{t[:id]}"
+  puts "  Title: #{t[:title]}"
+  puts "  Path:  #{t[:path]}"
+  puts "  Status: #{t[:status]}"
+  puts "  Dependencies: #{t[:deps].join(', ')}"
+end
