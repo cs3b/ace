@@ -18,7 +18,7 @@ end
 echo "Commit changes in submodule: docs-dev..."
 pushd docs-dev
 if test -n "$intention"
-    gcama "$intention"
+    gcama -i "$intention"
 else
     gcama
 end
@@ -27,7 +27,7 @@ popd
 echo "Commit changes in submodule: docs-project..."
 pushd docs-project
 if test -n "$intention"
-    gcama "$intention"
+    gcama -i "$intention"
 else
     gcama
 end
@@ -35,7 +35,7 @@ popd
 
 echo "Commit changes in main repository..."
 if test -n "$intention"
-    gcama "$intention"
+    gcama -i "$intention"
 else
     gcama
 end
