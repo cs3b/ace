@@ -1,6 +1,6 @@
 # Prepare Tasks: From PR Comments (MCP Fetch)
 
-This document outlines the steps to fetch GitHub Pull Request comments and reviews using Model Context Protocol (MCP) server functions and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
+This document outlines the steps to fetch GitHub Pull Request comments and reviews using Model Context Protocol (MCP) server functions and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
 
 ## Goal
 To utilize MCP server functions (`get_pull_request_comments`, `get_pull_request_reviews`) for retrieving PR feedback and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.

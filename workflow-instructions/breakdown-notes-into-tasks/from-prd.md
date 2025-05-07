@@ -1,6 +1,6 @@
 # Prepare Tasks: From Product Requirements Document (PRD)
 
-This document outlines the steps to analyze a high-level Product Requirements Document (PRD) to extract the product vision, propose a potential release strategy, and identify foundational requirements. This analysis serves as input for creating the necessary project structure and initial tasks using the main `lets-prepare-tasks` workflow.
+This document outlines the steps to analyze a high-level Product Requirements Document (PRD) to extract the product vision, propose a potential release strategy, and identify foundational requirements. This analysis serves as input for creating the necessary project structure and initial tasks using the main `breakdown-notes-into-tasks` workflow.
 
 ## Goal
 To translate a broad product vision from a PRD into a structured analysis, including a suggested release plan and key initial requirements, producing structured notes suitable for use as input for the `breakdown-notes-into-tasks` workflow.

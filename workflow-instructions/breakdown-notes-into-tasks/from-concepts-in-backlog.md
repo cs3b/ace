@@ -1,6 +1,6 @@
 # Prepare Tasks: From Concepts in Backlog
 
-This document outlines the steps to refine vague concept notes (typically files starting with `xx-` in a release `backlog/` directory) into clear requirements, preparing them for transformation into actionable development tasks using the main `lets-prepare-tasks` workflow.
+This document outlines the steps to refine vague concept notes (typically files starting with `xx-` in a release `backlog/` directory) into clear requirements, preparing them as input for the main `breakdown-notes-into-tasks` workflow.
 
 ## Goal
 To process vague concept notes into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, eliciting necessary details through analysis and user interaction.

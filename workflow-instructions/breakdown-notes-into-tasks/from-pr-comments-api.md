@@ -1,6 +1,6 @@
 # Prepare Tasks: From PR Comments (API Fetch)
 
-This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/get-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `lets-prepare-tasks` workflow.
+This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/get-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
 
 ## Goal
 To automate the retrieval of PR feedback using the GitHub API and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.
