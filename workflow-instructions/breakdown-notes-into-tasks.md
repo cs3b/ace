@@ -1,18 +1,33 @@
 # Workflow Instruction: Breakdown Notes into Tasks
 
 ## Goal
-To process unstructured notes or miscellaneous information, identify actionable items, and structure them into a format suitable for creating formal task files.
+To orchestrate the processing of various raw inputs (like PRDs, git diffs, backlog notes) by guiding the selection of an appropriate sub-workflow, and then to take the structured output from that sub-workflow, refine it further, and prepare it for formal task creation.
 
 ## Input
-*   One or more sources of unstructured notes (e.g., `notes.txt`, meeting minutes, feedback).
+*   The initial raw input material (e.g., a PRD file, git diff output, PR comments, unstructured backlog notes).
+*   The type of this input, to help select the correct sub-workflow.
 
 ## Process Steps
 
-1.  **Consolidate Notes:** Gather information from various sources into a single, temporary notes document if necessary.
-2.  **Review and Identify Actionable Items:** Read through the notes, highlighting or extracting distinct points that represent potential tasks, decisions, or documentation updates.
-3.  **Group Related Information:** Cluster related notes or items together to form logical task units.
-4.  **Extract Key Information:** For each potential task unit, identify the core objective, brief description, and any relevant context or details mentioned in the notes.
-5.  **Structure for Task Creation:** Format the extracted information clearly, perhaps as a simple list, where each item represents a potential task with its core elements (objective, key details, source reference). This structured output will serve as input for the `write-actionable-task` workflow.
+1.  **Select and Execute Input Processing Sub-Workflow:**
+    *   Based on the nature of your initial raw input, navigate to the `breakdown-notes-into-tasks/` subdirectory.
+    *   Choose and execute the appropriate sub-workflow from this directory (e.g., `from-prd.md` if your input is a Product Requirements Document, `from-diff.md` for a git diff, etc.).
+    *   **Input to Sub-Workflow:** Your raw input material.
+    *   **Output of Sub-Workflow:** A set of structured notes or analysis, specific to the input type.
+
+2.  **Receive and Review Structured Input from Sub-Workflow:**
+    *   Take the structured notes/analysis produced by the selected sub-workflow.
+    *   Review this input to understand the items, their initial structuring, and any preliminary analysis performed by the sub-workflow.
+
+3.  **Further Breakdown and Refinement (if necessary):**
+    *   Analyze the structured input from the sub-workflow. Determine if any of the identified items need to be broken down into smaller, more distinct actionable units.
+    *   For each unit (original or newly broken down), refine its objective, scope, and key details.
+    *   Group related units if they logically form a single, cohesive piece of work for a task.
+
+4.  **Finalize Structure for Task Creation:**
+    *   Organize the refined units into a clear, itemized list.
+    *   Ensure each item in the list represents a potential task and includes its core elements (objective, key details, source references from the sub-workflow's output or original input).
+    *   This final structured list will serve as the direct input for the `write-actionable-task` workflow to create formal task files.
 
 ## Output / Success Criteria
 
@@ -27,30 +42,3 @@ To process unstructured notes or miscellaneous information, identify actionable 
 
 ## Reference Documentation
 *   [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
-    *   Report the number of tasks created and their location(s).
-    *   List any new release directories created.
-    *   Mention any core project documents updated.
-    *   Suggest next steps (e.g., review created tasks, begin implementation).
-
-## Output / Success Criteria
-
-**Output:**
-*   Structured task files (`.md`) created in the appropriate release `tasks/` directories.
-*   Release directory structures created or updated in `docs-project/backlog/` or `docs-project/current/`.
-*   Release `README.md` files updated.
-*   Potentially updated core project documents (`what-do-we-build.md`, `architecture.md`, `docs-project/README.md`).
-*   Placeholder ADR files created if needed.
-*   Confirmation message summarizing actions taken.
-
-**Success Criteria:**
-*   All requirements from the input analysis are transformed into tasks or artifacts.
-*   Tasks are correctly formatted and placed in the designated release directories.
-*   Directory structures are created according to standards.
-*   Relevant documentation is updated accurately.
-
-## Reference Documentation
-*   [Project Management Guide](docs-dev/guides/project-management.md)
-*   [Strategic Planning Guide](docs-dev/guides/strategic-planning-guide.md)
-*   [Roadmap](docs-project/roadmap.md)
-*   [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
-*   Individual analysis workflows linked in Phase 1 above.
