@@ -66,7 +66,7 @@ Templates and structures for:
 
 2. Initialize the project structure:
    - Run your coding agent (Claude, Zed Assistant, Windsurf Cascade, etc.)
-   - Enter the instruction: `READ commands/init-project.md and follow the instructions inside`
+   - Enter the instruction: `READ commands/initialize-project-structure.md and follow the instructions inside`
 
 TODO: record screencast and write examples
 
