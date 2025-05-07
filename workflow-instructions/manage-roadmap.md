@@ -39,5 +39,5 @@
 
 ## Reference Documentation
 * [Strategic Planning Guide](../guides/strategic-planning-guide.md)
-* [`prepare-tasks.md` Workflow](prepare-tasks.md)
+* [`breakdown-notes-into-tasks.md` Workflow](breakdown-notes-into-tasks.md)
 * [Commit Workflow](commit.md)

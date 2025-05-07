@@ -20,14 +20,14 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 ## Task Preparation
 
--   [Prepare Tasks](./prepare-tasks.md): Overview of task preparation.
-    -   [From Concepts in Backlog](./lets-prepare-tasks/from-concepts-in-backlog.md)
-    -   [From Diff](./lets-prepare-tasks/from-diff.md)
-    -   [From FRD](./lets-prepare-tasks/from-frd.md)
-    -   [From PR Comments (API)](./lets-prepare-tasks/from-pr-comments-api.md)
-    -   [From PR Comments (MCP)](./lets-prepare-tasks/from-pr-comments-mcp.md)
-    -   [From PRD](./lets-prepare-tasks/from-prd.md)
-    -   [From Release Backlog](./lets-prepare-tasks/from-release-backlog.md)
+-   [Breakdown Notes into Tasks](./breakdown-notes-into-tasks.md): Orchestrates processing of various inputs into structured notes for task creation.
+    -   [From Concepts in Backlog](./breakdown-notes-into-tasks/from-concepts-in-backlog.md)
+    -   [From Diff](./breakdown-notes-into-tasks/from-diff.md)
+    -   [From FRD](./breakdown-notes-into-tasks/from-frd.md)
+    -   [From PR Comments (API)](./breakdown-notes-into-tasks/from-pr-comments-api.md)
+    -   [From PR Comments (MCP)](./breakdown-notes-into-tasks/from-pr-comments-mcp.md)
+    -   [From PRD](./breakdown-notes-into-tasks/from-prd.md)
+    -   [From Release Backlog](./breakdown-notes-into-tasks/from-release-backlog.md)
 
 ## Documentation Generation
 

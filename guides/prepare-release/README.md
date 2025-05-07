@@ -62,9 +62,9 @@ These templates are referenced directly from the `prepare-tasks.md` workflow ins
 4. Documenting architectural decisions
 
 For more details on how these templates integrate with the project management workflow, refer to:
-- [Project Management Guide](docs-dev/guides/project-management.md)
-- [Prepare Tasks Workflow](docs-dev/workflow-instructions/prepare-tasks.md)
-- [Ship Release Guide](docs-dev/guides/ship-release.md)
+65 | - [Project Management Guide](docs-dev/guides/project-management.md)
+66 | - [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
+67 | - [Ship Release Guide](docs-dev/guides/ship-release.md)
 
 ## Customization
 
