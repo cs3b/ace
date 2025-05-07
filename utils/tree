@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# tree utility script - Enhanced tree command with project-specific filters
+#
+# This script runs the standard 'tree' command but applies
+# filters to exclude temporary directories, backlog items,
+# and other non-essential files to create a cleaner overview
+# of the project structure.
+
+set -e
+
+# Default settings
+DEFAULT_DEPTH=3
+DEFAULT_EXCLUDES=(
+  "docs-project/backlog"
+  "docs-project/done" 
+  "docs-project/sessions"
+  "tmp"
+  "node_modules"
+  ".git"
+)
+
+# Function to print usage instructions
+print_usage() {
+  echo "Usage: docs-dev/utils/tree [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  -L, --depth DEPTH       Specify the maximum display depth of the directory tree (default: $DEFAULT_DEPTH)"
+  echo "  -e, --exclude PATTERN   Additional pattern to exclude (can be used multiple times)"
+  echo "  -i, --include PATTERN   Pattern to include despite exclusions (can be used multiple times)"
+  echo "  -a, --all               Show all files (ignore default exclusions)"
+  echo "  -h, --help              Display this help message"
+  echo ""
+  echo "Default excluded patterns: ${DEFAULT_EXCLUDES[*]}"
+}
+
+# Process arguments
+DEPTH=$DEFAULT_DEPTH
+EXCLUDES=("${DEFAULT_EXCLUDES[@]}")
+INCLUDES=()
+SHOW_ALL=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -L|--depth)
+      DEPTH="$2"
+      shift 2
+      ;;
+    -e|--exclude)
+      EXCLUDES+=("$2")
+      shift 2
+      ;;
+    -i|--include)
+      INCLUDES+=("$2")
+      shift 2
+      ;;
+    -a|--all)
+      SHOW_ALL=true
+      shift
+      ;;
+    -h|--help)
+      print_usage
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown option '$1'"
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+# Check if tree command exists
+if ! command -v tree &>/dev/null; then
+  echo "Error: 'tree' command not found. Please install it first."
+  echo "macOS: brew install tree"
+  echo "Ubuntu/Debian: apt-get install tree"
+  echo "Fedora/RHEL: dnf install tree"
+  exit 1
+fi
+
+# Build the command
+CMD="tree -L $DEPTH"
+
+# Apply exclusions if not showing all
+if [ "$SHOW_ALL" = false ]; then
+  # Create temp file for pattern matching
+  TEMP_FILE=$(mktemp)
+  trap 'rm -f "$TEMP_FILE"' EXIT
+
+  # Run tree and filter output
+  tree -L "$DEPTH" > "$TEMP_FILE"
+
+  # Apply exclusions and inclusions
+  for pattern in "${EXCLUDES[@]}"; do
+    grep -v "$pattern" "$TEMP_FILE" > "$TEMP_FILE.new"
+    mv "$TEMP_FILE.new" "$TEMP_FILE"
+  done
+
+  # Apply inclusions (restore matching lines)
+  for pattern in "${INCLUDES[@]}"; do
+    if [ -n "$pattern" ]; then
+      grep "$pattern" <(tree -L "$DEPTH") >> "$TEMP_FILE"
+    fi
+  done
+
+  # Display filtered output
+  sort -u "$TEMP_FILE"
+  
+  echo ""
+  echo "Note: This is a filtered view that excludes: ${EXCLUDES[*]}"
+  echo "For a complete listing, use the --all option or the standard 'tree' command directly."
+else
+  # Show all without filtering
+  tree -L "$DEPTH"
+fi

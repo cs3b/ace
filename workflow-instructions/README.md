@@ -16,7 +16,7 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 ## Project Initialization & Setup
 
 -   [Initialize Project Structure](./initialize-project-structure.md): Initialize `docs-dev` and `docs-project` structures.
--   [Generate Blueprint](./generate-blueprint.md): Generate the initial `docs-project/blueprint.md`.
+-   [Update Blueprint](./update-blueprint.md): Update the `docs-project/blueprint.md` project overview.
 
 ## Task Preparation
 

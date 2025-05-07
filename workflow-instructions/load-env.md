@@ -5,7 +5,7 @@
 ## Prerequisites
 - Executed within the project's root directory.
 - `docs-dev/` and `docs-project/` directories exist and are populated according to project standards.
-- `docs-project/blueprint.md` exists and is reasonably up-to-date (consider running `generate-blueprint` if not).
+- `docs-project/blueprint.md` exists and is reasonably up-to-date.
 
 ## Input
 - User request to load the environment context.
@@ -25,7 +25,7 @@
 2.  **Load Project-Specific Context:**
     *   Review project objectives: [docs-project/what-do-we-build.md](docs-project/what-do-we-build.md)
     *   Examine high-level architecture: [docs-project/architecture.md](docs-project/architecture.md)
-    *   Check project structure and key files: [docs-project/blueprint.md](docs-project/blueprint.md) (Note: Run `generate-blueprint` if this seems outdated).
+    *   Check project structure and key files: [docs-project/blueprint.md](docs-project/blueprint.md).
 
 3.  **Determine Current Work State:**
     *   Identify active release directory: [docs-project/current/](docs-project/current/)
@@ -55,5 +55,4 @@
 - [What do we build](docs-project/what-do-we-build.md)
 - [What is our architecture](docs-project/architecture.md)
 - [What is our blueprint](docs-project/blueprint.md)
-- [`generate-blueprint` Workflow Instruction](docs-dev/workflow-instructions/generate-blueprint.md)
 - [`Work on Task` Workflow Instruction](docs-dev/workflow-instructions/work-on-task.md)
