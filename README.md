@@ -1,53 +1,94 @@
-# Coding Agent Workflow Toolkit
+# Coding Agent Workflow Toolkit (Meta)
 
-The Coding Agent Workflow Toolkit provides a structured approach to AI-assisted software development. It helps standardize development processes, manage project-specific documentation, and integrate AI capabilities effectively.
+This repository (`coding-agent-workflow-toolkit-meta`) provides the overarching documentation and guidance for setting up and using a comprehensive, AI-assisted development workflow. It explains how to integrate the `docs-dev` toolkit (which contains standardized development guides and workflow instructions) with a `docs-project` structure (for your project-specific documentation and task management).
 
-The toolkit is primarily composed of two key directories:
--   `docs-dev/`: Contains standardized development guides, workflow instructions, and templates to ensure consistency and best practices.
--   `docs-project/`: Houses all project-specific documentation, including architectural blueprints, task management, and decision logs, tailored to your current project.
+The goal is to create a consistent, efficient, and AI-friendly development environment.
+
+## Core Components
+
+1.  **`docs-dev` Toolkit**:
+    *   A specialized toolkit, ideally consumed from its own repository: `https://github.com/cs3b/coding-agent-workflow-toolkit`. It provides standardized development guides, workflow instructions, templates, and utilities.
+    *   You integrate `docs-dev` into your project, typically as a Git submodule, into a local `docs-dev/` directory.
+    *   The `docs-dev/` folder within *this* meta-repository contains an *example* of such a toolkit's README and structure, primarily for illustrative purposes here. For actual use and the latest version, always refer to the dedicated `docs-dev` toolkit repository.
+
+2.  **`docs-project` Structure**:
+    *   A standardized directory structure for all your project-specific documentation (e.g., `what-do-we-build.md`, `architecture.md`, `blueprint.md`), task management (`backlog/`, `current/`, `done/`), and decision logs.
+    *   This structure is typically initialized and managed by workflows found in the `docs-dev` toolkit.
+    *   The `docs-project/` folder within *this* meta-repository contains an *example* README detailing the `docs-project` specification and an example of its structure.
 
 ## Getting Started / Setup
 
-To integrate the Coding Agent Workflow Toolkit into your existing project:
+To establish this workflow in your project:
 
 **Prerequisites:**
 -   Git installed on your system.
 
-**Step 1: Add `docs-dev` to Your Project**
+**Step 1: Integrate the `docs-dev` Toolkit**
 
-You can integrate the `docs-dev` component into your project using Git submodules. This allows you to keep `docs-dev` updated with the latest from its source repository.
+The `docs-dev` toolkit contains all the standard guides, workflow instructions, and templates. It is highly recommended to add it to your project as a Git submodule from its dedicated repository.
+
+*   **Canonical `docs-dev` repository**: `https://github.com/cs3b/coding-agent-workflow-toolkit`
 
 In your project's root directory, run:
-
+```sh
+git submodule add https://github.com/cs3b/coding-agent-workflow-toolkit.git docs-dev
+git submodule update --init --recursive
 ```
-git submodule add git@github.com:cs3b/coding-agent-workflow-toolkit docs-dev
-```
+This will clone the `docs-dev` toolkit into a `docs-dev/` directory in your project, ready for use.
 
-This will clone the `coding-agent-workflow-toolkit-meta` repository into a directory named `workflow-toolkit` in your project. The `docs-dev` content will then be available at `workflow-toolkit/docs-dev/`.
+**Advanced: Forking `docs-dev` for Customization**
 
-Alternatively, you can manually copy the `docs-dev/` directory from this repository into your project.
+If you need to customize the `docs-dev` toolkit (e.g., tailor guides/workflows, create technology-specific branches for your projects):
 
-**Step 2: Initialize Project Structure**
+1.  **Fork**: Fork the canonical `docs-dev` repository (i.e., `https://github.com/cs3b/coding-agent-workflow-toolkit`) on GitHub.
+2.  **Add Your Fork as Submodule**: In your project's root, add your personal fork as the submodule:
+    ```sh
+    git submodule add <URL_OF_YOUR_FORKED_DOCS_DEV_REPO> docs-dev
+    git submodule update --init --recursive
+    ```
+    (Replace `<URL_OF_YOUR_FORKED_DOCS_DEV_REPO>` with the URL of your fork).
+3.  **Customize**: Navigate into your local `docs-dev` submodule (`cd docs-dev`), create a new branch (e.g., `git checkout -b my-project-specific-branch`), and make your modifications.
+4.  **Stay Updated**: To incorporate updates from the original `docs-dev` toolkit, periodically fetch and merge changes from the upstream repository into your fork's main branch, and then merge those updates into your custom branches.
 
-Once `docs-dev` is part of your project (e.g., at `workflow-toolkit/docs-dev/` if you used the submodule method, or simply `docs-dev/` if you copied it), you need to initialize your project-specific documentation structure.
+**Step 2: Initialize Your `docs-project` Structure**
 
-The `initialize-project-structure.md` workflow, located at `workflow-toolkit/docs-dev/workflow-instructions/initialize-project-structure.md` (adjust path if you copied `docs-dev` differently), guides you through this setup. Follow the steps outlined in that document. This process will create and populate the `docs-project/` directory with essential files like `what-do-we-build.md`, `architecture.md`, and `blueprint.md`.
+Once the `docs-dev` toolkit is integrated (i.e., you have a `docs-dev/` directory in your project containing the toolkit), use its `initialize-project-structure.md` workflow to set up your project-specific `docs-project/` directory.
+
+This is typically done by instructing an AI coding assistant. See the "Using Workflow Instructions with a Chat Interface" section below for how to do this.
 
 ## Understanding `docs-project/`
 
-The `docs-project/` directory is the heart of your project's specific documentation and operational context. It contains:
--   **Core Documents**: `what-do-we-build.md` (project vision), `architecture.md` (technical design), `blueprint.md` (file and directory structure).
--   **Task Management**: Directories like `backlog/`, `current/`, and `done/` for tracking development tasks.
--   **Decision Log**: The `decisions/` directory for recording important architectural and technical decisions.
+The `docs-project/` directory, once initialized in your project, becomes the central hub for its living documentation and operational context. It includes:
+-   Core documents defining the project: `what-do-we-build.md`, `architecture.md`, `blueprint.md`.
+-   Task management system: `backlog/`, `current/`, `done/` directories.
+-   Decision log: `decisions/` directory.
 
-This directory and its contents are primarily managed and utilized by the workflows and guides found in `docs-dev/`.
+For a detailed explanation of the `docs-project` specification and structure, refer to the example `README.md` located at `coding-agent-workflow-toolkit-meta/docs-project/README.md`.
+
+## Using Workflow Instructions with a Chat Interface
+
+Most interactions with the `docs-dev` workflows are designed to be performed via an AI-powered chat interface or coding assistant that can read files and execute commands. To run a workflow:
+
+1.  Ensure the `docs-dev` toolkit is present in your project at the `docs-dev/` path.
+2.  Instruct your AI assistant to read and execute the desired workflow instruction file.
+
+**Example: Initializing the project structure**
+Provide the following instruction to your chat assistant:
+```
+Read and execute the workflow instruction located at `docs-dev/workflow-instructions/initialize-project-structure.md`.
+```
+
+The assistant should then parse the Markdown file and follow the steps described, potentially asking for clarifications or performing file operations as required by the workflow.
 
 ## Integration Examples
 
-To see how the Coding Agent Workflow Toolkit can be integrated with various coding tools and for examples of specific workflows, please refer to the `coding-agent-workflow-toolkit-meta/examples/` directory.
-*(This directory will be populated with concrete examples as the toolkit evolves.)*
+To see how the Coding Agent Workflow Toolkit can be integrated with various coding tools and for examples of specific workflows, please refer to the `coding-agent-workflow-toolkit-meta/examples/` directory within this repository.
 
-## Further Information
+## Purpose of This Meta-Repository
 
--   For more details on the standardized guides and workflow instructions, see the `README.md` inside the `docs-dev/` directory (`workflow-toolkit/docs-dev/README.md`).
--   For more information on the structure and purpose of the project-specific documentation, see the `README.md` inside the `docs-project/` directory (once initialized).
+This `coding-agent-workflow-toolkit-meta` repository serves to:
+1.  Explain the overall philosophy, architecture, and integration strategy of the `docs-dev` toolkit and the `docs-project` specification.
+2.  Provide illustrative examples of README files and directory structures for both `docs-dev` and `docs-project`. These are for guidance; the canonical `docs-dev` toolkit should be sourced from its own repository.
+3.  Offer a centralized place for high-level discussions, issues, and examples related to the entire AI-assisted development workflow ecosystem.
+
+For the actual `docs-dev` toolkit, its most current version, and its own issue tracking, please refer to its dedicated repository: `https://github.com/cs3b/coding-agent-workflow-toolkit`.
