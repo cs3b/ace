@@ -43,3 +43,4 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 -   [Review Tasks Board Status](./review-tasks-board-status.md): Review current task statuses, dependencies, and priorities on the board.
 -   [Log Compact Session](./log-compact-session.md): Log a compact summary of the current session for context saving/reloading.
+-   [Create Reflection Note](./create-reflection-note.md): Capture individual observations and learnings using the standard reflection template.
