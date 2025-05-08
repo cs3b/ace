@@ -1,4 +1,4 @@
-# Generate Test Cases Workflow Instruction
+# Create Test Cases Workflow Instruction
 
 ## Goal
 Generate a structured list of test cases (unit, integration, performance, etc.) for a specific feature, task, or code change based on requirements and project testing guidelines.

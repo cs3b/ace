@@ -89,7 +89,7 @@ For specific commands, scripts, or configurations related to building, tagging, 
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, Commit Messages)
 - [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
-- Relevant Workflow Instructions: [`docs-dev/workflow-instructions/ship-release.md`](../workflow-instructions/ship-release.md) (this guide's actionable counterpart), [`docs-dev/workflow-instructions/prepare-release.md`](../workflow-instructions/prepare-release.md), `docs-dev/workflow-instructions/docs/generate-api-docs.md`, `docs-dev/workflow-instructions/review-kanban-board.md`
+- Relevant Workflow Instructions: [`docs-dev/workflow-instructions/ship-release.md`](../workflow-instructions/ship-release.md) (this guide's actionable counterpart), [`docs-dev/workflow-instructions/prepare-release.md`](../workflow-instructions/prepare-release.md), [`docs-dev/workflow-instructions/create-api-docs.md`](../workflow-instructions/create-api-docs.md), `docs-dev/workflow-instructions/review-kanban-board.md`
 
 ## Reference Templates
 - Release checklist items are often included in the main release overview template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`).

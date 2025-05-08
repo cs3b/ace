@@ -1,4 +1,4 @@
-# Generate Code Review Checklist Workflow Instruction
+# Create Code Review Checklist Workflow Instruction
 
 ## Goal
 Generate a context-specific code review checklist based on the nature of the changes being reviewed (e.g., new feature, bug fix, refactoring) and project standards.

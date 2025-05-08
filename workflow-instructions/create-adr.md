@@ -1,4 +1,4 @@
-# Generate Architecture Decision Record Workflow Instruction
+# Create Architecture Decision Record Workflow Instruction
 
 ## Goal
 Create a structured Architecture Decision Record (ADR) document in the `docs-dev/decisions/` directory to capture a significant architectural decision, its context, rationale, and consequences.

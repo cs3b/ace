@@ -31,14 +31,13 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 ## Documentation Generation
 
--   Docs Generation (`docs/`):
-    -   [Generate ADR](./docs/generate-adr.md)
-    -   [Generate API Docs](./docs/generate-api-docs.md)
-    -   [Generate Release Overview](./docs/generate-release-overview.md)
-    -   [Generate Retro](./docs/generate-retro.md)
-    -   [Generate Review Checklist](./docs/generate-review-checklist.md)
-    -   [Generate Test Cases](./docs/generate-test-cases.md)
-    -   [Generate User Docs](./docs/generate-user-docs.md)
+-   [Create ADR](./create-adr.md)
+-   [Create API Docs](./create-api-docs.md)
+-   [Create Release Overview](./create-release-overview.md)
+-   [Create Retrospective Document](./create-retrospective-document.md)
+-   [Create Review Checklist](./create-review-checklist.md)
+-   [Create Test Cases](./create-test-cases.md)
+-   [Create User Docs](./create-user-docs.md)
 
 ## Project Management & Reflection
 

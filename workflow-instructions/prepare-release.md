@@ -84,4 +84,4 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 - [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, commit messages)
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Project Blueprint](docs-project/blueprint.md) (For project-specific file locations)
-- Workflow Instructions: `docs-dev/workflow-instructions/review-kanban-board.md`, `docs-dev/workflow-instructions/docs/generate-api-docs.md`
+- Workflow Instructions: `docs-dev/workflow-instructions/review-kanban-board.md`, `docs-dev/workflow-instructions/create-api-docs.md`

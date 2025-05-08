@@ -1,4 +1,4 @@
-# Generate Release Overview Workflow Instruction
+# Create Release Overview Workflow Instruction
 
 ## Goal
 Create or update the main release overview document (e.g., `docs-project/current/{release_dir}/README.md` or `v.X.Y.Z-Codename.md`) summarizing the release goals, key changes, requirements, and plan.

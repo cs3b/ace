@@ -1,4 +1,4 @@
-# Generate Retrospective Template Workflow Instruction
+# Create Retrospective Document Workflow Instruction
 
 ## Goal
 Create a retrospective document for a completed release cycle using the standard template, facilitating analysis of what went well, what didn't, and identifying actionable improvements.

@@ -1,4 +1,4 @@
-# Generate API Documentation Workflow Instruction
+# Create API Documentation Workflow Instruction
 
 ## Goal
 Generate or update API documentation for public interfaces (classes, modules, methods) using standard documentation tools (e.g., YARD for Ruby) and adhering to project documentation standards.

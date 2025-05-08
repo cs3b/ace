@@ -1,4 +1,4 @@
-# Generate User Documentation Workflow Instruction
+# Create User Documentation Workflow Instruction
 
 ## Goal
 Create or update user-facing documentation (e.g., README additions, tutorials, usage examples) for a new feature or significant change.
