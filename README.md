@@ -1,6 +1,6 @@
 # Coding Agent Workflow Toolkit (`docs-dev`)
 
-Welcome to the `docs-dev` Coding Agent Workflow Toolkit! This toolkit provides a comprehensive suite of standardized development guides, workflow instructions, templates, and utilities to enhance AI-assisted software development. It's designed to bring consistency, efficiency, and best practices to your projects when working with coding agents or large language models.
+Welcome to the `docs-dev` Coding Agent Workflow Toolkit! This toolkit provides a comprehensive suite of standardized development guides, workflow instructions, and utilities to enhance AI-assisted software development. It's designed to bring consistency, efficiency, and best practices to your projects when working with coding agents or large language models.
 
 You typically integrate this toolkit into your project by adding it as a Git submodule into a `docs-dev/` directory.
 
@@ -9,8 +9,7 @@ You typically integrate this toolkit into your project by adding it as a Git sub
 *   **Standardized Guides (`guides/`)**: A collection of best practices for various aspects of software development, including coding standards, testing procedures, documentation strategies, version control, and release management.
 *   **Actionable Workflow Instructions (`workflow-instructions/`)**: Step-by-step Markdown-based procedures for common development tasks (e.g., initializing a new project's documentation structure, creating user docs, onboarding a new task). These are designed to be interpreted and executed by AI coding assistants or followed by human developers.
 *   **Project Management Facilitation**: Defines structures and workflows that help manage the development lifecycle, particularly for initializing and maintaining a `docs-project/` directory in your main project for task tracking, architectural documents, and decision logs.
-*   **Reusable Templates (`templates/`)**: (If applicable, list specific templates here, e.g., for PRs, issues, ADRs) Standardized templates to ensure consistency in project artifacts. *This section will be updated as templates are formalized.*
-*   **Tools & Utilities (`tools/`)**: (If applicable, list specific tools/scripts here) A collection of helper scripts and utilities to support the development workflow, such as linters for documentation, validation scripts, or code generation helpers. *(Currently, this section is a placeholder; tools will be added as they are developed and formalized within this toolkit.)*
+*   **Tools & Utilities (`tools/`)**: A collection of helper scripts and utilities to support the development workflow (e.g., for task management, documentation validation, or code generation assistance). *(Currently, this section is a placeholder; tools will be added as they are developed and formalized within this toolkit.)*
 
 ## Directory Structure
 
@@ -30,11 +29,11 @@ Here's a breakdown of the core directories within this toolkit:
     *   `create-user-docs.md`: Guides the creation of user-facing documentation for features.
     *   `load-env.md`: Instructs on loading the development environment context.
     *   `work-on-task.md`: Defines the process for starting, working on, and completing a development task.
+    *   `review-task.md`: Guides the review and refinement of a task definition.
+    *   `breakdown-notes-into-tasks/`: Contains sub-workflows to process various inputs (FRDs, PRDs, diffs, etc.) into structured notes for task creation.
     *   *(Other workflow instructions as developed, e.g., `refactor-codebase.md`, `run-tests-and-report.md`)*
-*   **`templates/`**: (This directory might be added if standardized file templates become a core part of the toolkit)
-    *   Example: `templates/adr_template.md` (for Architecture Decision Records).
 *   **`tools/`**: (This directory might be added for utility scripts)
-    *   Example: `tools/validate_doc_links.sh` (a script to check for broken links in documentation).
+    *   Example: `tools/tn` (a script to help identify or suggest the next task to work on, often by querying the `docs-project` structure).
 
 ## How to Integrate and Use
 
@@ -49,7 +48,7 @@ This `docs-dev` toolkit is designed to be integrated into your main software pro
     If you need to customize this toolkit extensively, consider forking it on GitHub first and then adding your fork as the submodule. This allows you to pull updates from this upstream repository while maintaining your own versions.
 
 2.  **Usage**:
-    *   **Workflow Execution**: Instruct your AI coding assistant to read and execute specific workflow files from your project's `docs-dev/workflow-instructions/` directory. For example:
+    *   **Workflow Execution**: Instruct your AI coding assistant to read and execute specific workflow files from your project's `docs-dev/workflow-instructions/` directory. For example, in your coding agent chat, you would write:
         ```
         Read and execute the workflow instruction `docs-dev/workflow-instructions/initialize-project-structure.md`.
         ```
@@ -58,7 +57,7 @@ This `docs-dev` toolkit is designed to be integrated into your main software pro
 
 ## Relationship with `docs-project`
 
-This `docs-dev` toolkit provides the *engine* – the standardized workflows, guides, and templates for managing a software project. The *output* and *project-specific context* (such as your project's unique architecture document, your current tasks, or your team's decision log) reside in a separate `docs-project/` directory, which should be at the root of your main project. Many workflows within `docs-dev` are designed to operate on or help create and manage the content within `docs-project`.
+This `docs-dev` toolkit provides the *engine* – the standardized workflows, guides, and utilities for managing a software project. The *output* and *project-specific context* (such as your project's unique architecture document, your current tasks, or your team's decision log) reside in a separate `docs-project/` directory, which should be at the root of your main project. Many workflows within `docs-dev` are designed to operate on or help create and manage the content within `docs-project`.
 
 ## Overall Workflow Ecosystem
 
@@ -66,4 +65,4 @@ For a complete understanding of how this `docs-dev` toolkit fits into the broade
 
 ## Contributing
 
-Contributions to this `docs-dev` toolkit are highly welcome! If you have suggestions for new guides, workflows, templates, or tools, or improvements to existing ones, please open an issue or submit a pull request to the [upstream repository](https://github.com/cs3b/coding-agent-workflow-toolkit). Ensure you follow any contribution guidelines outlined in `CONTRIBUTING.md` (if present).
+Contributions to this `docs-dev` toolkit are highly welcome! If you have suggestions for new guides, workflows, utilities, or improvements to existing ones, please open an issue or submit a pull request to the [upstream repository](https://github.com/cs3b/coding-agent-workflow-toolkit). Ensure you follow any contribution guidelines outlined in `CONTRIBUTING.md` (if present).
