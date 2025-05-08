@@ -69,16 +69,50 @@ For a detailed explanation of the `docs-project` specification and structure, re
 
 Most interactions with the `docs-dev` workflows are designed to be performed via an AI-powered chat interface or coding assistant that can read files and execute commands. To run a workflow:
 
-1.  Ensure the `docs-dev` toolkit is present in your project at the `docs-dev/` path.
-2.  Instruct your AI assistant to read and execute the desired workflow instruction file.
+1.  Ensure the `docs-dev` toolkit is present in your project at the `docs-dev/` path (see Step 1 in "Getting Started / Setup").
+2.  Instruct your AI assistant to read and execute the desired workflow instruction file, providing any necessary inputs like file paths.
 
-**Example: Initializing the project structure**
-Provide the following instruction to your chat assistant:
+Here are some common examples:
+
+**1. Initialize Project Structure**
+To set up your project's documentation and task management structure, often using a Product Requirements Document (PRD) as initial input:
 ```
-Read and execute the workflow instruction located at `docs-dev/workflow-instructions/initialize-project-structure.md`.
+Read and execute the workflow instruction `docs-dev/workflow-instructions/initialize-project-structure.md`.
+(The AI will likely ask for the location of a PRD or prompt for project details if one isn't found.)
 ```
 
-The assistant should then parse the Markdown file and follow the steps described, potentially asking for clarifications or performing file operations as required by the workflow.
+**2. Breakdown Ideas/Notes into Actionable Tasks**
+To convert various inputs (like Feature Requirements Documents, raw notes, or PR feedback) into well-defined, actionable tasks:
+This often involves a preparatory step to structure the input, followed by task creation. For instance, to process an FRD:
+```
+1. Prepare an analysis from your Feature Requirements Document (FRD):
+   Read and execute the workflow instruction `docs-dev/workflow-instructions/breakdown-notes-into-tasks/from-frd.md`.
+   (The AI will prompt for the FRD content or path).
+
+2. Create tasks from the structured analysis:
+   Instruct the AI to use the output from the previous step to define and create individual task files in `docs-project/backlog/{release_version}/tasks/`, following the guidelines in `docs-dev/guides/write-actionable-task.md`.
+```
+*(Note: The `docs-dev/workflow-instructions/breakdown-notes-into-tasks/` directory contains various sub-workflows like `from-frd.md`, `from-prd.md`, `from-diff.md`, etc., to handle different input sources for task creation.)*
+
+**3. Review a Task**
+To thoroughly review an existing task definition (e.g., the next one suggested by a script like `bin/tn`) against project goals, architecture, and recent changes, and to propose refinements:
+```
+1. Identify the task to review. You might use a helper script (e.g., `bin/tn` if available in your `docs-dev/tools/` or project `bin/`) via the terminal tool, or manually select a task from `docs-project/current/{release_version}/tasks/`.
+
+2. Instruct the agent with the task's file path:
+   Read and execute the workflow instruction `docs-dev/workflow-instructions/review-task.md` using the task file <path_to_identified_task.md>.
+```
+(The agent will then guide you through the review process as per the workflow, checking against project context and recent changes.)
+
+**4. Work on a Task**
+To implement a defined and reviewed task (e.g., the next one suggested by `bin/tn`), following its embedded step-by-step plan:
+```
+1. Identify the task to work on. (Similar to reviewing a task, use `bin/tn` or manual selection).
+
+2. Instruct the agent with the task's file path:
+   Read and execute the workflow instruction `docs-dev/workflow-instructions/work-on-task.md` using the task file <path_to_identified_task.md>.
+```
+(The agent will then follow the implementation plan within the task file, guiding you through the test-code-refactor cycle for each step.)
 
 ## Integration Examples
 
