@@ -84,5 +84,4 @@ Review and refine a task definition, potentially proposing an implementation app
 *   [What We Build](docs-project/what-do-we-build.md)
 *   [Architecture](docs-project/architecture.md)
 *   [Blueprint](docs-project/blueprint.md)
-*   [Self-Reflect Workflow Instruction](./self-reflect.md) (Process analysis and identifying improvements)
 *   [Version Control Guide](../guides/version-control.md) (For understanding Git history review)

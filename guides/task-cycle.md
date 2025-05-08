@@ -85,8 +85,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
     *   Review the implementation process, challenges, and successes.
     *   Update documentation (guides, ADRs, comments) if necessary.
     *   Identify any follow-up actions (e.g., refactoring needs, process improvements) and create backlog tasks if needed.
-    *   Log the reflection summary.
-*   **Workflow:** See [`self-reflect.md`](docs-dev/workflow-instructions/self-reflect.md)
+    *   Log the reflection summary. Individual reflections can serve as input to the [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) workflow.
 
 ### Step 8: Update Task Status
 
@@ -121,7 +120,8 @@ While the core cycle remains the same, specific commands and tools vary by techn
 *   **Workflow Instructions:**
     *   [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md) (includes testing guidance)
     *   [`commit.md`](docs-dev/workflow-instructions/commit.md)
-    *   [`self-reflect.md`](docs-dev/workflow-instructions/self-reflect.md)
+    *   [`log-compact-session.md`](docs-dev/workflow-instructions/log-compact-session.md) (for saving session context)
+    *   [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) (for broader reflection and learning synthesis)
 *   **Core Guides:**
     *   [Testing Guide](docs-dev/guides/testing.md)
     *   [Version Control Guide](docs-dev/guides/version-control.md)

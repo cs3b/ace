@@ -12,7 +12,7 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 ## Process Steps
 
 1.  **Confirm Task Completion & Readiness:**
-    *   Run `docs-dev/workflow-instructions/review-kanban-board.md` to verify all tasks in `docs-project/current/{release_dir}/tasks/` are `done`.
+    *   Run `docs-dev/workflow-instructions/review-tasks-board-status.md` to verify all tasks in `docs-project/current/{release_dir}/tasks/` are `done`.
     *   Ensure the main branch is up-to-date and all related code PRs are merged.
 
 2.  **Review Changes & Determine Version:**
@@ -84,4 +84,4 @@ Guide the developer through the process of finalizing, validating, tagging, and 
 - [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, commit messages)
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Project Blueprint](docs-project/blueprint.md) (For project-specific file locations)
-- Workflow Instructions: `docs-dev/workflow-instructions/review-kanban-board.md`, `docs-dev/workflow-instructions/create-api-docs.md`
+- Workflow Instructions: `docs-dev/workflow-instructions/review-tasks-board-status.md`, `docs-dev/workflow-instructions/create-api-docs.md`

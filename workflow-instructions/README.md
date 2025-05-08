@@ -41,6 +41,5 @@ Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-w
 
 ## Project Management & Reflection
 
--   [Review Kanban Board](./review-kanban-board.md): Review task status in the project.
--   [Log Session](./log-session.md): Log the current session details.
--   [Self Reflect](./self-reflect.md): Perform self-reflection on a completed task or session.
+-   [Review Tasks Board Status](./review-tasks-board-status.md): Review current task statuses, dependencies, and priorities on the board.
+-   [Log Compact Session](./log-compact-session.md): Log a compact summary of the current session for context saving/reloading.

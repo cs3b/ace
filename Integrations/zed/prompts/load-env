@@ -32,7 +32,6 @@ and all files referenced
 /file docs-dev/workflow-instructions/lets-start.md
 /file docs-dev/workflow-instructions/lets-tests.md
 /file docs-dev/workflow-instructions/lets-commit.md
-/file docs-dev/workflow-instructions/self-reflect.md
 /file docs-dev/workflow-instructions/docs/generate-adr.md
-/file docs-dev/workflow-instructions/log-session.md
+/file docs-dev/workflow-instructions/log-compact-session.md
 </context>

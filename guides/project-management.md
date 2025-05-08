@@ -171,7 +171,7 @@ Tasks and release structures are typically generated through one of three primar
     *   **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
     *   **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
 3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions using the `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
-4.  **Review & Reflection (`self-reflect`)**: Use the `docs-dev/workflow-instructions/self-reflect.md` workflow instruction to analyze the implemented solution, the effectiveness of the AI collaboration, update documentation, and capture learnings or necessary process improvements.
+4.  **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection. Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and capture learnings. These individual reflections (e.g., saved as `docs-project/.../reflections/YYYYMMDD-taskID.md`) serve as valuable input for the [`create-retrospective-document.md`](../workflow-instructions/create-retrospective-document.md) workflow.
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `docs-dev/guides/coding-standards.md` for more on AI collaboration best practices.
 

@@ -26,7 +26,7 @@ docs-dev/workflow-instructions
 ├── lets-tests.md
 ├── load-env.md
 ├── log-session.md
-├── review-kanban-board.md
+├── review-tasks-board-status.md
 └── self-reflect.md
 
 .claude/commands
