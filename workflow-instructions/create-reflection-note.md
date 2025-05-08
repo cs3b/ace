@@ -27,13 +27,13 @@ To capture individual or team observations, learnings, and ideas for improvement
 
 3.  **Populate from Template:**
     *   The agent reads the content of the standard reflection template: `docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`.
-    *   The agent creates the new reflection note file (using the full path determined in Step 2) and populates it with the template's content.
+    *   The agent creates the new reflection note file (using the full path determined in Step 2) and populates it with the template's content (which includes level 1 headings for sections).
 
 4.  **User Fills Reflection:**
     *   The agent informs the user that the reflection note file has been created with the template and is ready to be filled (providing the path to the new file).
-    *   The agent prompts the user to provide their thoughts for the "Stop Doing", "Continue Doing", and "Start Doing" sections.
+    *   The agent prompts the user to provide their thoughts for the "Stop Doing", "Continue Doing", and "Start Doing" sections, indicating that they will be added as bullet points.
     *   The user provides the content for these sections.
-    *   The agent assists the user by editing the newly created reflection note file to insert the user's content into the appropriate sections.
+    *   The agent assists the user by editing the newly created reflection note file to insert the user's content as bullet points under the appropriate level 1 headings. Empty sections (those for which the user provided no content) are skipped.
 
 5.  **Save & Confirm:**
     *   The agent ensures the reflection note file is saved with the user's input.
@@ -49,8 +49,9 @@ To capture individual or team observations, learnings, and ideas for improvement
 ## Output / Success Criteria
 - [ ] A new Markdown file is created within the `reflections/` subdirectory of the target release (e.g., `docs-project/current/{release_dir}/reflections/` or `docs-project/backlog/{release_dir}/reflections/`) with a name following the `YYYYMMDD-brief-description.md` convention.
 - [ ] The `reflections/` subdirectory within the target release directory is created if it did not previously exist.
-- [ ] The new file is populated with the content from the standard reflection template (`docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`).
-- [ ] The user's reflections are captured in the "Stop Doing", "Continue Doing", and "Start Doing" sections of the note.
+- [ ] The new file is populated with user-provided reflections.
+- [ ] Only sections (Stop Doing, Continue Doing, Start Doing) for which the user provided content are included in the file.
+- [ ] User reflections within included sections are formatted as bullet points under their respective level 1 headings.
 - [ ] The user is informed that the reflection note has been successfully saved and its intended use for future retrospectives.
 
 ## Reference Documentation
