@@ -21,8 +21,9 @@
 *   [ ] **Run Tests & Linters:** Execute all automated tests and code linters to ensure the codebase is stable and meets quality standards. Address any failures before proceeding.
     *   _Refer to language-specific testing commands in [`docs-dev/guides/ship-release/`](../guides/ship-release/) (e.g., `rust.md`, `ruby.md`, `typescript.md`)._
     *   _If tests fail, use the [`fix-tests`](./fix-tests.md) workflow._
+*   [ ] **Verify Task Completion:** Ensure all project management tasks, issues, or tickets slated for this release are marked as "done" or resolved.
 *   [ ] **Confirm Feature Completion:** Verify that all features, bug fixes, and improvements planned for this specific release have been merged into the current branch.
-*   [ ] **Verify Release Documentation:** Check that all release-specific documentation artifacts (e.g., ADRs, detailed design docs, test case summaries, user experience notes) within the `docs-project/current/{release_dir}/` directory are complete, reviewed, and accurate according to the release scope.
+*   [ ] **Verify Release Documentation:** Check that all release-specific documentation artifacts (e.g., ADRs, detailed design docs, test case summaries, user experience notes) within the `docs-project/current/{release_dir}/` directory (where `{release_dir}` is the specific directory for the current release, e.g., `v.0.3.0-new-feature-release`) are complete, reviewed, and accurate according to the release scope.
 *   [ ] **Critical: Validate Root Release Document Name:** Ensure the main documentation file for this release, located in `docs-project/current/{release_dir}/`, is correctly named `v.x.y.z-codename.md` (e.g., `v.0.3.0-new-feature-release.md`).
     *   _Refer to naming standard: [`docs-dev/guides/ship-release.md#standard-release-documentation-naming`](../guides/ship-release.md#standard-release-documentation-naming)._
 
@@ -33,7 +34,7 @@
     *   _User Input: New version number: \_\_\_\_\_\_\_\_\_\_ (e.g., `v.0.2.4` or `1.3.0`)_
 *   [ ] **Update Version in Project Files:** Modify all designated files where the project version is stored.
     *   _Refer to [`docs-dev/guides/ship-release.md#2-version-update`](../guides/ship-release.md#2-version-update) and language-specific guides in [`docs-dev/guides/ship-release/`](../guides/ship-release/) for typical file locations._
-*   [ ] **Update CHANGELOG.md:** Add a new entry to the `CHANGELOG.md` file (usually at the project root) detailing the changes in this release. Follow existing format and conventions (e.g., Keep a Changelog).
+*   [ ] **Update CHANGELOG.md:** Add a new entry to the `CHANGELOG.md` file (usually at the project root) detailing the changes in this release. If `CHANGELOG.md` does not exist, create it, typically starting with a header for this first release. Follow existing format and conventions (e.g., Keep a Changelog) if the file already exists.
     *   _Refer to [`docs-dev/guides/ship-release.md#2-version-update`](../guides/ship-release.md#2-version-update) for CHANGELOG best practices._
 
 ### 3. Committing Version Changes
