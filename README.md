@@ -118,6 +118,14 @@ To implement a defined and reviewed task (e.g., the next one suggested by `bin/t
 
 To see how the Coding Agent Workflow Toolkit can be integrated with various coding tools and for examples of specific workflows, please refer to the `coding-agent-workflow-toolkit-meta/examples/` directory within this repository.
 
+## FAQ
+
+| Question | Answer |
+|----------|--------|
+| **What’s the difference between `docs-dev` and `docs-project`?** | `docs-dev` is reusable, language-agnostic guidance; `docs-project` holds your project-specific artefacts. (in this case the meta project, where we use it to improve itself) |
+
+---
+
 ## Purpose of This Meta-Repository
 
 This `coding-agent-workflow-toolkit-meta` repository serves to:
