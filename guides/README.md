@@ -1,3 +1,5 @@
+[← Back to docs-dev root](../README.md) ▸ Guides
+
 # Development Guides
 
 This directory contains comprehensive development guidelines and standards for the project.
