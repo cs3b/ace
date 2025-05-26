@@ -1,12 +1,12 @@
 # Prepare Tasks: From PR Comments (API Fetch)
 
-This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/get-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
+This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/fetch-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
 
 ## Goal
 To automate the retrieval of PR feedback using the GitHub API and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.
 
 ## Prerequisites
-*   Ruby environment and required gems installed (for the `get-github-pr-data.rb` script).
+*   Ruby environment and required gems installed (for the `fetch-github-pr-data.rb` script).
 *   A `.env` file in `docs-dev/tools/` with a valid `GITHUB_TOKEN`.
 *   A valid GitHub Pull Request URL.
 *   A target release directory path identified (e.g., `docs-project/current/vX.Y.Z-feedback-to-pr-NNN/`).
@@ -25,7 +25,7 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
     *   Parse the PR URL to get the owner, repository, and PR number.
     *   Execute the fetching script:
         ```bash
-        ruby docs-dev/tools/get-github-pr-data.rb \
+        ruby docs-dev/tools/fetch-github-pr-data.rb \
           --owner {owner} \
           --repo {repo} \
           --pr {number} \

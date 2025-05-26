@@ -27,7 +27,7 @@ and all files referenced
 /file docs-dev/guides/README.md
 /file docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md
 /file docs-dev/guides/writing-workflow-instructions.md
-/file docs-dev/tools/get-github-pr-data.rb
+/file docs-dev/tools/fetch-github-pr-data.rb
 /file docs-dev/workflow-instructions/generate-blueprint.md
 /file docs-dev/workflow-instructions/lets-start.md
 /file docs-dev/workflow-instructions/lets-tests.md

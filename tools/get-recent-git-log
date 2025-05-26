@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# recent-git-log: Show recent git log for one or more repos, with options for submodules
+# get-recent-git-log: Show recent git log for one or more repos, with options for submodules
 require 'optparse'
 require 'time'
 

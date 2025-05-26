@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# recent-tasks: Summarize recently updated tasks (done/in-progress) from docs-project
+# get-recent-tasks: Summarize recently updated tasks (done/in-progress) from docs-project
 require 'optparse'
 require 'yaml'
 require 'time'

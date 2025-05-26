@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# task-next: Find the next actionable task in the current release (not done, all deps met)
+# get-next-task: Find the next actionable task in the current release (not done, all deps met)
 require 'yaml'
 require 'set'
 

@@ -22,7 +22,7 @@ DEFAULT_EXCLUDES=(
 
 # Function to print usage instructions
 print_usage() {
-  echo "Usage: docs-dev/utils/tree [OPTIONS]"
+  echo "Usage: docs-dev/tools/show-directory-tree [OPTIONS]"
   echo ""
   echo "Options:"
   echo "  -L, --depth DEPTH       Specify the maximum display depth of the directory tree (default: $DEFAULT_DEPTH)"

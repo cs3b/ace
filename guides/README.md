@@ -35,6 +35,9 @@ Our development workflow centers around:
 - **[Troubleshooting Workflow](./troubleshooting-workflow.md)** - High-level workflow for debugging and problem-solving.
 - **[Version Control](./version-control.md)** - Git workflow and commit standards.
 
+### Development Tools
+- **[Development Tools Guide](./tools-guide.md)** - Best practices for creating, maintaining, and using development tools.
+
 ### Release Management
 - **[Release Process](./ship-release.md)** - Release workflow, versioning, and checklists.
 - **[Release Documentation Template](./prepare-release/v.x.x.x/docs/_template.md)** - Standard release documentation structure.

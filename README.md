@@ -33,7 +33,7 @@ Here's a breakdown of the core directories within this toolkit:
     *   `breakdown-notes-into-tasks/`: Contains sub-workflows to process various inputs (FRDs, PRDs, diffs, etc.) into structured notes for task creation.
     *   *(Other workflow instructions as developed, e.g., `refactor-codebase.md`, `run-tests-and-report.md`)*
 *   **`tools/`**: (This directory might be added for utility scripts)
-    *   Example: `tools/tn` (a script to help identify or suggest the next task to work on, often by querying the `docs-project` structure).
+    *   Example: `docs-dev/tools/get-next-task` (a script to help identify or suggest the next task to work on, often by querying the `docs-project` structure).
 
 ## How to Integrate and Use
 
