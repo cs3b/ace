@@ -1,0 +1,102 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## Unreleased
+
+---
+
+## 2025-05-26
+
+### Changed
+- Updated submodules for documentation.
+- Rewrote `prepare-release` workflow.
+- Scaffolded `v.x.y.z-ideas-after-toolkit-meta` release.
+- Marked preflight task as "someday".
+- Prepared release `v0.2.22`.
+
+## 2025-05-09
+
+### Added
+- FAQ section to `README.md`.
+- `package-lock.json` to track dependencies.
+- `package.json` to define devDependencies.
+
+### Changed
+- Updated submodule commits.
+
+## 2025-05-08
+
+### Added
+- `create-reflection-note` workflow.
+
+### Changed
+- Reviewed and restructured project management workflows.
+- Split Task `v.0.2.3-18` (Review and Restructure Project Management Workflows) into Plan & Execute phases.
+- Improved usage examples in `README.md` including initializing project structure, breaking down ideas into tasks, reviewing tasks, and working on tasks.
+- Drafted initial `README.md` content for the Coding Agent Workflow Toolkit, explaining key components, purpose, and setup.
+- Updated documentation subprojects.
+
+## 2025-05-07
+
+### Changed
+- Updated `docs-project` to `v0.2.3-17` which refactored documentation generation workflows. This includes:
+    - Flattening the `docs-dev/workflow-instructions/docs/` subdirectory.
+    - Renaming documentation generation workflows to `create-<context>.md` (e.g., `create-adr.md`, `create-api-docs.md`).
+    - Updating H1 titles and internal links.
+- Corrected introductory sentences in documentation to reference `breakdown-notes-into-tasks.md`.
+- Updated references to old workflow names.
+
+---
+
+## Prior to 2025-05-07 (Based on Release Summaries)
+
+Changes in this period are summarized by their release version.
+
+### Release v.0.2.3 (Feedback After Zed Extension)
+*(Corresponds to tasks completed around and before 2025-05-07, many of which are reflected in the 2025-05-07 and 2025-05-08 git logs)*
+- **Documentation Standardization:**
+    - Refactored developer guides and workflow instructions by technology stack (Ruby, Rust, TypeScript). (Task `01-tailor-guides-tech-stack`, `07-tailor-workflow-instructions-tech-stack`)
+    - Implemented consistent naming conventions for release documents (`02-release-doc-naming-consistency`), workflow instructions (`09-define-apply-workflow-naming-convention`), and task IDs (`08-define-task-id-convention`).
+- **Workflow Streamlining:**
+    - Consolidated task specification workflows (`lets-spec-*`) into `prepare-tasks` (now `breakdown-notes-into-tasks`). (Task `03-consolidate-spec-workflows`, `16-review-simplify-prepare-tasks-workflow`)
+    - Reviewed, refined, and renamed core workflows:
+        - `lets-start` to `work-on-task`. (Task `10-review-rename-lets-start-workflow`)
+        - `lets-tests` (merged into `work-on-task`). (Task `11-review-lets-tests-workflow`)
+        - `lets-fix-tests` to `fix-tests`. (Task `12-review-lets-fix-tests-workflow`)
+        - `lets-release` reviewed (Task `13-review-lets-release-workflow`), leading to new `ship-release` workflow.
+        - `init-project` to `initialize-project-structure`. (Task `14-review-rename-init-project-workflow`)
+        - `generate-blueprint` reviewed and renamed. (Task `15-review-rename-generate-blueprint-workflow`)
+    - Clarified and restructured project management (`review-tasks-board-status`) and reflection (`log-compact-session`, `create-retrospective-document`) workflows. (Task `18-review-restructure-project-management-workflows`)
+    - Reviewed and restructured documentation generation workflows (Task `17-review-documentation-generation-workflows` - details in 2025-05-07 log).
+- **Project Planning & Execution Enhancements:**
+    - Defined and implemented a project roadmap (`docs-project/roadmap.md`) and strategic planning process (`docs-dev/guides/strategic-planning-guide.md`, `docs-dev/workflow-instructions/manage-roadmap.md`). (Task `20-define-roadmap-and-strategic-planning`)
+    - Mandated and defined a structured "Implementation Plan" section within task files (`docs-dev/guides/write-actionable-task.md`). (Task `21-define-embedded-plan-structure`)
+    - Created a new `ship-release` workflow. (Task `22-create-ship-release-workflow`)
+- **Documentation Quality & Structure Improvements:**
+    - Created guides for troubleshooting (`docs-dev/guides/troubleshooting-workflow.md`). (Task `04-high-level-dev-debug-workflow`)
+    - Created guide for task implementation cycle (`docs-dev/guides/task-cycle.md`). (Task `05-support-writing-workflow-guide`)
+    - Split testing guides by technology. (Task `06-split-testing-guides-by-tech`)
+    - Reviewed and improved `prepare-release` templates. (Task `19-review-prepare-release-templates`)
+
+### Release v-0.2.2 (Feedback to Process)
+- Clarified "Command" terminology in documentation, replacing it with "Workflow Instruction".
+- Updated development guides with research insights on AI-assisted development, prompting, and general best practices.
+- Created a new guide on "Writing Workflow Instructions".
+
+### Release v.0.2.1 (Spec from Diff)
+- Introduced the `lets-spec-from-git-diff` workflow instruction to analyze git diffs and generate structured feedback and task specifications.
+
+### Release v.0.2.0 (Dev Docs Review - Streamline Workflow)
+- **Unified Task Management:** Solidified a single task management system using structured Markdown files in `docs-project/{backlog,current,done}`. Removed the experimental `project/task-manager`.
+- **Simplified Release Documentation:** Provided clearer guidelines for documentation required for different release types (Patch, Feature, Major).
+- **Workflow Consistency:** Ensured consistent terminology and aligned Kanban board references. Commands were updated to link to guides rather than duplicating content.
+- **Integrated Best Practices:** Incorporated research on "planning before coding" and structured task details into guides.
+- Updated and created various workflow instructions (`load-env`, `lets-start`, `lets-spec-from-pr-comments`, `review-kanban-board`, `self-reflect`, `lets-release`, `log-session`, `generate-blueprint`, `lets-spec-from-release-backlog`) to align with the unified system.
+- Updated core guides (`project-management.md`, `ship-release.md`, `unified-workflow-guide.md`) and introduced a project blueprint.
+- Separated context loading (`load-env`) from task execution (`lets-start`).
+
+### Release v.0.0.1 (Initial Release)
+- Established initial project infrastructure.
+- Set up the project structure and documentation framework.
+- Documented the initial release process.
