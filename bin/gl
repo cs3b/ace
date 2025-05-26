@@ -9,4 +9,4 @@ ARGV.each_with_index do |arg, idx|
   end
 end
 
-exec(File.expand_path('../docs-dev/tools/recent-git-log', __dir__), '--include-docs-dev', '--include-docs-project', *args)
+exec(File.expand_path('../docs-dev/tools/get-recent-git-log', __dir__), '--include-docs-dev', '--include-docs-project', *args)

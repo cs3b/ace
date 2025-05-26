@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+- Merged `docs-dev/utils` directory into `docs-dev/tools`.
+- Renamed scripts in `docs-dev/tools` to follow a verb-prefix naming convention (e.g., `recent-tasks` to `get-recent-tasks`).
+- Updated all internal and external references to the old script paths and names.
+
 ---
 
 ## 2025-05-26
