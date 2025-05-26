@@ -1,0 +1,22 @@
+#!/bin/sh
+# Wrapper for project testing.
+# For this project, testing primarily involves linting and other checks.
+# This script executes bin/lint.
+
+set -e
+cd "$(dirname "$0")"/.. # Ensure execution from project root
+
+echo "INFO: Running 'bin/test' from project root: $(pwd)"
+echo "INFO: This script will execute 'bin/lint' to perform project checks."
+
+# Execute bin/lint, passing along any arguments
+echo "INFO: Executing bin/lint..."
+if [ -x "./bin/lint" ]; then
+  ./bin/lint "$@"
+else
+  echo "ERROR: bin/lint not found or not executable."
+  exit 1
+fi
+
+echo "INFO: 'bin/test' completed."
+exit 0

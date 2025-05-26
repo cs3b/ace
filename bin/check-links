@@ -1,3 +1,0 @@
-#!/usr/bin/env fish
-
-docs-dev/tools/lint-md-links.rb docs-dev/**/*.md
