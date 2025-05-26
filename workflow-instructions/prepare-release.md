@@ -1,87 +1,95 @@
 # Prepare Release Workflow Instruction
 
 ## Goal
-Guide the developer through the process of finalizing, validating, tagging, and publishing a new project release based on the work completed in the `docs-project/current/` directory.
+Guide the AI agent and developer through **drafting a new release** in the project backlog.
+This includes creating the initial release directory structure under `docs-project/backlog/`,
+copying the standard templates from `docs-dev/guides/prepare-release/`, and breaking the
+user-provided release scope into actionable tasks.
 
 ## Prerequisites
-- All tasks intended for the release in `docs-project/current/{release_dir}/tasks/` have `status: done`.
-- Code changes associated with the release are merged into the main branch.
-- Developer has necessary permissions to push tags and publish releases (e.g., to RubyGems, npm).
-- Familiarity with the project's release process, versioning, and documentation standards.
+* Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
+* The current project version is known or can be discovered from the project’s version file.
+* Familiarity with the task writing standards and template structure (see
+  [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)).
 
 ## Process Steps
 
-1.  **Confirm Task Completion & Readiness:**
-    *   Run `docs-dev/workflow-instructions/review-tasks-board-status.md` to verify all tasks in `docs-project/current/{release_dir}/tasks/` are `done`.
-    *   Ensure the main branch is up-to-date and all related code PRs are merged.
+1. **Load Context**  
+   * Read this instruction file and all referenced guides:
+     * [Writing Workflow Instructions](docs-dev/guides/writing-workflow-instructions.md)
+     * [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
+     * Language-specific sub-guides in `docs-dev/guides/prepare-release/` as needed.
 
-2.  **Review Changes & Determine Version:**
-    *   Review changes since the last release tag (e.g., `git log <last_tag>..HEAD`).
-    *   Determine the correct semantic version bump (Patch, Minor, Major).
-    *   Identify the current version from the project's version file. (See [Project Blueprint](docs-project/blueprint.md) for file location).
+2. **Gather Release Metadata**  
+   * Ask the user for:
+     * Desired semantic version (default to `x.y.z` if omitted).
+     * Release codename (derive from user input if not explicitly given).
+     * Raw scope notes (bullet list, document paths, or free-form text).
 
-3.  **Prepare Release Documentation:**
-    *   Update `CHANGELOG.md` (at project root) with a new entry summarizing changes for the determined version.
-    *   Finalize any release-specific documentation in `docs-project/current/{release_dir}/`. (See [Release Process Guide](docs-dev/guides/ship-release.md) for details on required documents).
-    *   Ensure the root documentation file within the release directory uses the standard `v.x.y.z-codename.md` naming convention matching the directory name. (See [Release Process Guide](docs-dev/guides/ship-release.md)).
+3. **Create Release Directory**  
+   * Target path: `docs-project/backlog/v.<semver>-<codename>/`
+   * Copy the entire template tree from
+     `docs-dev/guides/prepare-release/v.x.x.x/` into the new directory,
+     preserving sub-folders (`tasks/`, `docs/`, `decisions/`, etc.).
+   * Rename the root overview file to `v.<semver>-<codename>.md`.
 
-4.  **Update Version & Commit:**
-    *   Update the version number in the designated project file(s).
-    *   Commit the version bump and documentation changes (e.g., `git commit -am "chore(release): Bump version to vX.Y.Z"`).
+4. **Populate Overview Document**  
+   * Open the new overview file and fill in:
+     * Release title, goals, and **Collected Notes** section containing the raw user input.
+     * Initial high-level implementation plan (checkbox list) to be refined later.
 
-5.  **Final Validation:**
-    *   Run the full test suite (using your project's standard test command, e.g., `your_test_runner_command`. See `docs-dev/guides/testing/<your_lang>.md` or `docs-dev/guides/task-cycle/<your_lang>.md` for details).
-    *   Run linters/static analysis.
-    *   Perform any required manual smoke tests.
-    *   Review the `CHANGELOG.md` entry for accuracy.
+5. **Break Down Scope Into Tasks**  
+   * For each distinct item in the user input:
+     1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
+     2. Create a new file by copying the corresponding `_template.md`.
+     3. Replace placeholder fields:
+        * `id`: `v.<semver>-<sequential_number>`
+        * `status`: `pending`
+        * Title and content derived from the user note.
+     4. In the original user note (file or pasted text), append a comment with the created task id for traceability.
 
-6.  **Archive Release & Commit State:**
-    *   Move the completed release directory from `docs-project/current/` to `docs-project/done/`:
-        ```bash
-        mv docs-project/current/{release_dir} docs-project/done/
-        ```
-    *   Commit the archiving of the release documentation:
-        ```bash
-        git add docs-project/
-        git commit -m "chore(project): Archive release vX.Y.Z docs"
-        ```
+6. **Ensure Completeness**  
+   * Verify that **every sentence or bullet** from the user input maps to at least one
+     task file. Highlight any ambiguous or under-specified note in the chat and request
+     clarification.
 
-7.  **Tag and Push:**
-    *   Create an annotated Git tag:
-        ```bash
-        git tag -a vX.Y.Z -m "Release version X.Y.Z"
-        ```
-    *   Push the main branch commits and the new tag:
-        ```bash
-        git push origin <main_branch>
-        git push origin vX.Y.Z
-        ```
+7. **Prepare Commit Message (Do NOT Execute)**  
+   * Output the following command **verbatim** for the user’s convenience:
 
-8.  **Publish Release Artifact:**
-    *   Build and publish the package using project-specific commands or scripts. (See [Release Process Guide](docs-dev/guides/ship-release.md) and language-specific sub-guides for details).
+     ```bash
+     bin/gc -i "chore(backlog): scaffold release v.<semver>-<codename> – initial structure and tasks"
+     ```
+   * Do **not** run the command automatically.
 
-9.  **Post-Release Actions:**
-    *   Announce the release (optional).
-    *   Monitor for any immediate issues.
+8. **Review With User**  
+   * List all newly created files and their ids.
+   * Ask the user to confirm or adjust:
+     * Version and codename
+     * Any task titles or descriptions that are unclear.
+   * Iterate until the user is satisfied.
 
 ## Input
-- Confirmation that all tasks are done and code is merged.
-- Determined version number.
+* Semantic version and codename (may be requested interactively).
+* Raw release scope notes (features, fixes, refactors, docs, etc.).
 
 ## Output / Success Criteria
-- [ ] All tasks for the release in `docs-project/current/{release_dir}/` confirmed `done`.
-- [ ] `CHANGELOG.md` and other required release documentation updated.
-- [ ] The root documentation file within the release directory uses the standard `v.x.y.z-codename.md` naming convention.
-- [ ] Project version file updated and committed.
-- [ ] Final validation checks (tests, linters) pass.
-- [ ] Release documentation directory moved from `docs-project/current/` to `docs-project/done/` and committed.
-- [ ] Annotated Git tag created and pushed successfully.
-- [ ] Release artifact (e.g., gem, package) built and published successfully.
+- [ ] A new directory `docs-project/backlog/v.<semver>-<codename>/` exists.
+- [ ] Standard template sub-directories and root overview document are in place.
+- [ ] All user notes have corresponding task/ADR/doc files with unique ids.
+- [ ] Git commit message is displayed in chat ready.
+- [ ] User has confirmed that tasks are sufficiently concrete or provided clarifications.
 
 ## Reference Documentation
-- [Release Process Guide](docs-dev/guides/ship-release.md) (Primary Guide)
-- [Project Management Guide](docs-dev/guides/project-management.md) (Task flow, versioning)
-- [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, commit messages)
-- [Documentation Standards Guide](docs-dev/guides/documentation.md)
-- [Project Blueprint](docs-project/blueprint.md) (For project-specific file locations)
-- Workflow Instructions: `docs-dev/workflow-instructions/review-tasks-board-status.md`, `docs-dev/workflow-instructions/create-api-docs.md`
+- [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
+- [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
+- [Project Management Guide](docs-dev/guides/project-management.md)
+- [Version Control Guide](docs-dev/guides/version-control.md)
+- [Writing Workflow Instructions](docs-dev/guides/writing-workflow-instructions.md)
+
+## Usage Example
+> “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.  
+> Expected version: `0.3.0`, codename: `atlas`.”
+
+---
+
+This workflow focuses on **drafting** a release in the backlog.
