@@ -26,12 +26,11 @@ user-provided release scope into actionable tasks.
      * Release codename (derive from user input if not explicitly given).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-3. **Create Release Directory**  
-   * Target path: `docs-project/backlog/v.<semver>-<codename>/`
-   * Copy the entire template tree from
-     `docs-dev/guides/prepare-release/v.x.x.x/` into the new directory,
-     preserving sub-folders (`tasks/`, `docs/`, `decisions/`, etc.).
-   * Rename the root overview file to `v.<semver>-<codename>.md`.
+3. **Create Release Directory and Overview File**  
+   * Create the target release directory: `docs-project/backlog/v.<semver>-<codename>/`.
+   * Create standard sub-directories within the new release directory (e.g., `tasks/`, `docs/`, `decisions/`, `codemods/`, `reflections/`, `researches/`, `test-cases/`, `user-experience/`) mirroring the structure found in `docs-dev/guides/prepare-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these subdirectories at this stage.
+   * Copy the main release overview template file from `docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md` to `docs-project/backlog/v.<semver>-<codename>/v.x.x.x-codename.md`.
+   * Rename the newly copied overview file in the target directory to `v.<semver>-<codename>.md`.
 
 4. **Populate Overview Document**  
    * Open the new overview file and fill in:
@@ -42,7 +41,7 @@ user-provided release scope into actionable tasks.
    * Use the [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md) if the raw notes are lengthy or unstructured.
    * For each distinct item in the (possibly refined) user input:
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
-     2. Create a new file by copying the corresponding `_template.md`.
+     2. Create a new file in the appropriate subdirectory of `docs-project/backlog/v.<semver>-<codename>/` (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from `docs-dev/guides/prepare-release/v.x.x.x/[template-family]/_template.md`.
      3. Replace placeholder fields:
         * `id`: `v.<semver>-<sequential_number>`
         * `status`: `pending`
@@ -75,7 +74,7 @@ user-provided release scope into actionable tasks.
 
 ## Output / Success Criteria
 - [ ] A new directory `docs-project/backlog/v.<semver>-<codename>/` exists.
-- [ ] Standard template sub-directories and root overview document are in place.
+- [ ] Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the new release directory.
 - [ ] All user notes have corresponding task/ADR/doc files with unique ids.
 - [ ] Git commit message is displayed in chat ready.
 - [ ] User has confirmed that tasks are sufficiently concrete or provided clarifications.
