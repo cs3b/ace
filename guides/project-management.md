@@ -103,7 +103,7 @@ Where:
 - **Cross-Release Referencing:** Allows unambiguous linking to tasks from past or future releases (e.g., in dependency lists or documentation).
 - **Intra-Release Referencing:** Within the context of a single release, tasks can often be referred to more simply by their `<task-number-in-release>` (e.g., "depends on task 5"), as the release version is implied.
 
-**Important Note:** This ID convention applies only to the `id` field in the frontmatter. The **filename convention** for task files remains `NN-task-name.md` (where `NN` is a zero-padded number reflecting the order within the release's `tasks/` directory), ensuring simple alphabetical sorting and quick identification within the file system.
+**Important Note:** This ID convention applies only to the `id` field in the frontmatter. The **filename convention** for task files is `NNN-task-name.md` (where `NNN` is a zero-padded, three-digit number reflecting the order within the release's `tasks/` directory, e.g., `001-task-name.md`, `010-another-task.md`), ensuring simple alphabetical sorting and quick identification within the file system.
 
 ### 2. Version Naming
 
