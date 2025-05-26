@@ -39,7 +39,8 @@ user-provided release scope into actionable tasks.
      * Initial high-level implementation plan (checkbox list) to be refined later.
 
 5. **Break Down Scope Into Tasks**  
-   * For each distinct item in the user input:
+   * Use the [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md) if the raw notes are lengthy or unstructured.
+   * For each distinct item in the (possibly refined) user input:
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
      2. Create a new file by copying the corresponding `_template.md`.
      3. Replace placeholder fields:
@@ -57,7 +58,7 @@ user-provided release scope into actionable tasks.
    * Output the following command **verbatim** for the user’s convenience:
 
      ```bash
-     bin/gc -i "chore(backlog): scaffold release v.<semver>-<codename> – initial structure and tasks"
+    "chore(backlog): scaffold release v.<semver>-<codename> – initial structure and tasks"
      ```
    * Do **not** run the command automatically.
 
@@ -81,10 +82,10 @@ user-provided release scope into actionable tasks.
 
 ## Reference Documentation
 - [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
+- [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
 - [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
 - [Project Management Guide](docs-dev/guides/project-management.md)
 - [Version Control Guide](docs-dev/guides/version-control.md)
-- [Writing Workflow Instructions](docs-dev/guides/writing-workflow-instructions.md)
 
 ## Usage Example
 > “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.  
