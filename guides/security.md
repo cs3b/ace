@@ -1,6 +1,7 @@
 # Security Guidelines
 
 ## Goal
+
 This guide outlines essential security practices, checklists, and procedures to follow during development to minimize vulnerabilities and protect project assets and user data.
 
 # Security Guidelines
@@ -38,6 +39,7 @@ This guide outlines essential security practices, checklists, and procedures to 
 
 **Secure Configuration:**
 Load sensitive configuration like API keys, encryption keys, and database credentials from secure sources (environment variables, secrets management systems) rather than hardcoding them. Configure security settings like TLS versions and timeouts appropriately.
+
 ```plaintext
 // Pseudocode for loading configuration securely
 config = loadConfiguration();
@@ -56,6 +58,7 @@ applyConfiguration(config);
 
 **Secure File Handling:**
 When handling file paths provided by users or external systems, always validate and sanitize them. Canonicalize the path (resolve `..`, symbolic links) and ensure it falls within permitted base directories to prevent path traversal attacks.
+
 ```plaintext
 // Pseudocode for safe file path validation
 function getSafeFilePath(untrustedPath, allowedBaseDir) {
@@ -81,6 +84,7 @@ function getSafeFilePath(untrustedPath, allowedBaseDir) {
 
 **Secure Process Execution:**
 Avoid executing external commands based directly on user input. If dynamic command execution is necessary, use an allowlist of permitted commands and strictly sanitize any arguments passed to them. Execute commands with the minimum required privileges and within restricted environments (e.g., specific working directory, chroot jail if applicable).
+
 ```plaintext
 // Pseudocode for safer command execution
 function executeAllowedCommand(commandName, arguments) {
@@ -110,7 +114,7 @@ For specific code examples demonstrating security best practices, configuration 
 ### 4. Security Disclosure Process
 
 1. **Reporting**
-   - Email: security@example.com
+   - Email: <security@example.com>
    - Include detailed reproduction steps
    - Provide impact assessment
 
@@ -126,7 +130,7 @@ For specific code examples demonstrating security best practices, configuration 
    - Low: Minor issues
 
 ## Related Documentation
+
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Code Review)
 - [Error Handling](docs-dev/guides/error-handling.md) (Avoid leaking sensitive info)
-

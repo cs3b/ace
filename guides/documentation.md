@@ -205,7 +205,8 @@ For specific examples of documentation generation tools, comment styles, or conv
 languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to the examples in the
 [./documentation/](./documentation/) sub-directory.
 
--   [Coding Standards](docs-dev/guides/coding-standards.md)
--   [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
--   [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [Coding Standards](docs-dev/guides/coding-standards.md)
+- [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
+- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+
 ```

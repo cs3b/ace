@@ -2,12 +2,13 @@
 
 This file provides TypeScript-specific examples related to the main [Quality Assurance Guide](../quality-assurance.md).
 
-*   **Linters/Formatters:** `eslint` (with `@typescript-eslint/parser`), `prettier`
-*   **Static Analysis:** TypeScript compiler (`tsc --noEmit`), `sonarjs` (plugin for ESLint)
-*   **Test Coverage:** `istanbul` (often via `jest` or `vitest`)
-*   **CI Configuration:** Examples for GitHub Actions, GitLab CI using Node.js/TypeScript setup actions.
+* **Linters/Formatters:** `eslint` (with `@typescript-eslint/parser`), `prettier`
+* **Static Analysis:** TypeScript compiler (`tsc --noEmit`), `sonarjs` (plugin for ESLint)
+* **Test Coverage:** `istanbul` (often via `jest` or `vitest`)
+* **CI Configuration:** Examples for GitHub Actions, GitLab CI using Node.js/TypeScript setup actions.
 
 **Example `.eslintrc.js` (ESLint with TypeScript):**
+
 ```javascript
 module.exports = {
   root: true,
@@ -27,6 +28,7 @@ module.exports = {
 ```
 
 **Example Jest config for coverage (`jest.config.js`):**
+
 ```javascript
 module.exports = {
   preset: 'ts-jest',

@@ -2,10 +2,10 @@
 
 This file provides TypeScript-specific examples related to the main [Security Guide](../security.md).
 
-*   **Dependency Scanning:** `npm audit`, `yarn audit`, Snyk, GitHub Dependabot
-*   **Static Analysis (SAST):** ESLint security plugins (e.g., `eslint-plugin-security`), SonarQube/SonarCloud
-*   **Input Validation:** Libraries like `zod`, `joi`, `class-validator`.
-*   **Secure Configuration:** Environment variables, secrets management services (e.g., AWS Secrets Manager, HashiCorp Vault).
+* **Dependency Scanning:** `npm audit`, `yarn audit`, Snyk, GitHub Dependabot
+* **Static Analysis (SAST):** ESLint security plugins (e.g., `eslint-plugin-security`), SonarQube/SonarCloud
+* **Input Validation:** Libraries like `zod`, `joi`, `class-validator`.
+* **Secure Configuration:** Environment variables, secrets management services (e.g., AWS Secrets Manager, HashiCorp Vault).
 
 ```typescript
 import path from 'path';

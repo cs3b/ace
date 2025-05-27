@@ -1,6 +1,7 @@
 # Release Process Guide
 
 ## Goal
+
 This guide details the standard process for preparing, validating, tagging, and publishing project releases, ensuring consistency and quality control. It covers versioning, Git workflow, checklists, and post-release activities.
 
 ## Standard: Release Documentation Naming
@@ -21,6 +22,7 @@ This convention applies to the main overview document for the release. Other fil
 
 1. **Semantic Versioning**:
    Maintain the project's version number according to Semantic Versioning (MAJOR.MINOR.PATCH) in a designated location (e.g., a dedicated version file, `package.json`, build script, etc.).
+
    ```plaintext
    // Example: path/to/version/file or relevant package manifest
    const VERSION = "1.2.3"; // Or similar declaration
@@ -53,6 +55,7 @@ This convention applies to the main overview document for the release. Other fil
 
 1. **Monitoring**:
    Monitor the application/library's performance and error rates after release using configured monitoring tools (e.g., application performance monitoring (APM) systems, error tracking services).
+
    ```plaintext
    // Example conceptual monitoring integration
    monitoringTool.trackEvent(
@@ -67,6 +70,7 @@ This convention applies to the main overview document for the release. Other fil
 2. **Communication**:
    Announce the release to users and stakeholders through appropriate channels (e.g., release notes page, blog post, email, Slack/Discord).
    Include highlights, key changes, and installation/update instructions.
+
    ```markdown
    ## Release Announcement
 
@@ -85,18 +89,22 @@ This convention applies to the main overview document for the release. Other fil
 For specific commands, scripts, or configurations related to building, tagging, and publishing packages in different ecosystems (e.g., npm, RubyGems, PyPI, Maven, Cargo), please refer to the examples in the [./ship-release/](./ship-release/) sub-directory.
 
 ## Related Documentation
+
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task flow, versioning)
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Version Control Guide](docs-dev/guides/version-control.md) (Tagging, Commit Messages)
 - Relevant Workflow Instructions: [`docs-dev/workflow-instructions/ship-release.md`](../workflow-instructions/ship-release.md) (this guide\'s actionable counterpart), [`docs-dev/workflow-instructions/prepare-release.md`](../workflow-instructions/prepare-release.md), [`docs-dev/workflow-instructions/create-api-docs.md`](../workflow-instructions/create-api-docs.md), `docs-dev/workflow-instructions/review-tasks-board-status.md`
 
 ## Reference Templates
+
 - Release checklist items are often included in the main release overview template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`).
 
 ## Automation with Helper Scripts
+
 Helper scripts (e.g., `scripts/publish.sh`, `scripts/release.sh`) can be highly beneficial for automating repetitive parts of the release process, such as building, testing, tagging, and publishing. This can reduce manual error and improve consistency. The [`ship-release.md` workflow instruction](../workflow-instructions/ship-release.md) may reference or incorporate such scripts if they exist in the project.
 
 3. **Issue Tracking**:
+
    ```markdown
    ## vX.Y.Z Issue Template
 

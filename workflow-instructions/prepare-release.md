@@ -1,12 +1,14 @@
 # Prepare Release Workflow Instruction
 
 ## Goal
+
 Guide the AI agent and developer through **drafting a new release** in the project backlog.
 This includes creating the initial release directory structure under `docs-project/backlog/`,
 copying the standard templates from `docs-dev/guides/prepare-release/`, and breaking the
 user-provided release scope into actionable tasks.
 
 ## Prerequisites
+
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project’s version file.
 * Familiarity with the task writing standards and template structure (see
@@ -56,7 +58,9 @@ user-provided release scope into actionable tasks.
    * Output the following command **verbatim** for the user’s convenience, ensuring `v.X.Y.Z` is the specific version:
 
      ```bash
+
     "chore(backlog): scaffold release v.X.Y.Z-<codename> – initial structure and tasks"
+
      ```
    * Do **not** run the command automatically.
 
@@ -68,24 +72,28 @@ user-provided release scope into actionable tasks.
    * Iterate until the user is satisfied.
 
 ## Input
+
 * Semantic version and codename (may be requested interactively).
 * Raw release scope notes (features, fixes, refactors, docs, etc.).
 
 ## Output / Success Criteria
-- [ ] A new directory `docs-project/backlog/v.X.Y.Z-<codename>/` exists (where `v.X.Y.Z` is the specific version).
-- [ ] Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the new release directory.
-- [ ] All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
-- [ ] Git commit message is displayed in chat ready.
-- [ ] User has confirmed that tasks are sufficiently concrete or provided clarifications.
+
+* [ ] A new directory `docs-project/backlog/v.X.Y.Z-<codename>/` exists (where `v.X.Y.Z` is the specific version).
+* [ ] Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the new release directory.
+* [ ] All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
+* [ ] Git commit message is displayed in chat ready.
+* [ ] User has confirmed that tasks are sufficiently concrete or provided clarifications.
 
 ## Reference Documentation
-- [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
-- [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
-- [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
-- [Project Management Guide](docs-dev/guides/project-management.md)
-- [Version Control Guide](docs-dev/guides/version-control.md)
+
+* [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
+* [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
+* [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
+* [Project Management Guide](docs-dev/guides/project-management.md)
+* [Version Control Guide](docs-dev/guides/version-control.md)
 
 ## Usage Example
+>
 > “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.
 > Expected version: `v.0.3.0`, codename: `atlas`.”
 

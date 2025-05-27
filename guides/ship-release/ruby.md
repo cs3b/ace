@@ -2,11 +2,11 @@
 
 This file provides Ruby-specific examples related to the main [Release Process Guide](../ship-release.md).
 
-*   **Packaging:** Gemspec (`.gemspec` file)
-*   **Building:** `gem build <your_gem>.gemspec`
-*   **Publishing:** `gem push <your_gem>-<version>.gem` (to RubyGems.org or private gem server)
-*   **Versioning:** Update version in `lib/<your_gem>/version.rb`, `CHANGELOG.md`
-*   **Tagging:** `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
+* **Packaging:** Gemspec (`.gemspec` file)
+* **Building:** `gem build <your_gem>.gemspec`
+* **Publishing:** `gem push <your_gem>-<version>.gem` (to RubyGems.org or private gem server)
+* **Versioning:** Update version in `lib/<your_gem>/version.rb`, `CHANGELOG.md`
+* **Tagging:** `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
 
 ```bash
 # Example release workflow steps

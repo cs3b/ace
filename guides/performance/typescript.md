@@ -2,9 +2,9 @@
 
 This file provides TypeScript-specific examples related to the main [Performance Guide](../performance.md).
 
-*   **Benchmarking:** `console.time`/`console.timeEnd`, `performance.now()` (Node.js/Browser), libraries like `benchmark.js`.
-*   **Profiling:** Node.js inspector (`node --inspect`), Chrome DevTools profiler.
-*   **Memory Analysis:** Node.js inspector, Chrome DevTools memory tab.
+* **Benchmarking:** `console.time`/`console.timeEnd`, `performance.now()` (Node.js/Browser), libraries like `benchmark.js`.
+* **Profiling:** Node.js inspector (`node --inspect`), Chrome DevTools profiler.
+* **Memory Analysis:** Node.js inspector, Chrome DevTools memory tab.
 
 ```typescript
 // Simple benchmarking using console.time

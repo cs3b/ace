@@ -38,6 +38,7 @@ class ExternalServiceError extends MyAppError {
 1. **Rich Context**:
    When catching and logging errors, include as much relevant context as possible without logging sensitive data.
    This aids debugging.
+
    ```javascript
    // Pseudo-code example
    try {
@@ -60,6 +61,7 @@ class ExternalServiceError extends MyAppError {
 
 2. **Recovery Strategies**:
    Implement strategies to recover from transient errors, especially network-related issues.
+
    ```javascript
    // Pseudo-code example: Retry with exponential backoff
    function executeWithRetry(task) {
@@ -83,6 +85,7 @@ class ExternalServiceError extends MyAppError {
 
 3. **Clean Resource Management**:
    Ensure resources (files, network connections, locks) are properly released, even if errors occur. Use\n   `try...finally` or equivalent language constructs (like Python\'s `with` statement or Go\'s `defer`).
+
    ```javascript
    // Pseudo-code example
    let resource = acquireResource();
@@ -101,6 +104,7 @@ class ExternalServiceError extends MyAppError {
 Consider these patterns for more robust applications:
 
 - **Structured Error Objects:** Define custom error classes/types that include relevant context (e.g., status codes, internal error codes, request IDs). This helps in programmatic error handling and monitoring.
+
   ```javascript
   // Pseudo-code example
   class ApiError extends Error {
@@ -116,17 +120,18 @@ Consider these patterns for more robust applications:
   ```
 
 - **Error Categorization:** Distinguish between:
-    - **Operational Errors:** Expected issues (e.g., invalid input, resource not found) that can often be handled gracefully.
-    - **Programming Errors:** Bugs in the code that need fixing (e.g., type errors, null references).
-    - **System Errors:** External issues (e.g., database unavailable, network failure).
+  - **Operational Errors:** Expected issues (e.g., invalid input, resource not found) that can often be handled gracefully.
+  - **Programming Errors:** Bugs in the code that need fixing (e.g., type errors, null references).
+  - **System Errors:** External issues (e.g., database unavailable, network failure).
 - **Recovery Strategies:** Implement strategies for transient failures:
-    - **Retry with Backoff:** Automatically retry failed operations (especially network requests) with increasing delays.
-    - **Circuit Breaker:** Prevent repeated calls to a failing service by temporarily blocking requests after a certain number of failures.
-    - **Fallbacks:** Provide a degraded but functional experience if a primary operation fails (e.g., return cached data if a live fetch fails).
+  - **Retry with Backoff:** Automatically retry failed operations (especially network requests) with increasing delays.
+  - **Circuit Breaker:** Prevent repeated calls to a failing service by temporarily blocking requests after a certain number of failures.
+  - **Fallbacks:** Provide a degraded but functional experience if a primary operation fails (e.g., return cached data if a live fetch fails).
 - **Contextual Logging:** Ensure logs capture sufficient context (user ID, request ID, operation parameters) to diagnose errors effectively, while avoiding sensitive data.
 
 1. **Enable Debug Logging**:
    Configure your application's logger to output detailed debug messages when needed. This often involves setting a log level via configuration.
+
    ```javascript
    // Example: Conceptual configuration
    MyApp.configure({
@@ -139,6 +144,7 @@ Consider these patterns for more robust applications:
 
 2. **Inspect State**:
    Provide mechanisms to inspect the internal state of key components during debugging, if feasible and safe.
+
    ```javascript
    // Example: Conceptual methods (actual implementation depends on language/design)
    let debugInfo = agent.getDebugInfo();
@@ -165,8 +171,8 @@ logError(\"Failed to process user data\", error, { userId: 123, operation: \'upd
 throw new UserProcessingError(\"Failed to update profile for user 123\", { originalError: error, userId: 123 });
 ```
 
-
 **Avoid Generic Messages:**
+
 ```plaintext
 // Less helpful
 logError("An error occurred", error);
@@ -182,4 +188,3 @@ in different languages (e.g., Ruby\'s `begin/rescue`, Python\'s `try/except`, Ja
 
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Logging, Monitoring)
-

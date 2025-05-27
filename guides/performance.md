@@ -27,10 +27,12 @@ performance aspects (memory usage, execution speed, concurrency) within the proj
     }
   }
   ```
+
 - **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use\n  language-specific tools (profilers, heap analyzers) to detect and fix leaks.\`
   - Explicitly release resources when done.
   - Break circular references if using languages with reference counting or specific GC patterns.
   - Consider explicit garbage collection triggers *judiciously* if needed, but prefer designing code to be GC-friendly.
+
   ```
   // Conceptual example of resource cleanup
   function executeBatch(batch) {
@@ -111,6 +113,7 @@ Optimize concurrent operations carefully.
     fallbackPolicy: 'callerRuns' // Policy if queue is full
   });
   ```
+
 - **Asynchronous Operations:** Prefer non-blocking I/O and asynchronous patterns (`async/await`,
   Promises, Futures, callbacks, etc.) where possible, especially for I/O-bound tasks.
 - **Batch Processing:** Process tasks in batches using available concurrency mechanisms.
@@ -161,6 +164,7 @@ function execute(task) {
     // Original task execution logic
   });
 }
+
 ```
 
 ### 5. Performance Testing
@@ -189,6 +193,6 @@ if (duration > baselineDuration * 1.1) {
 For specific examples of profiling tools, benchmarking libraries, memory analysis techniques, or language-specific performance optimizations (e.g., Ruby's `benchmark` module, Python's `cProfile`, Go's `pprof`, Node.js performance hooks), please refer to the examples in the [./performance/](./performance/) sub-directory.
 
 ## Related Documentation
+
 - [Testing Guidelines](docs-dev/guides/testing.md) (Benchmarking, Load Testing)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Monitoring)
-

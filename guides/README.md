@@ -7,6 +7,7 @@ This directory contains comprehensive development guidelines and standards for t
 ## Core Development Process
 
 Our development workflow centers around:
+
 - Iterative, task-based development
 - Clear documentation and knowledge preservation
 - Transparent progress tracking
@@ -15,7 +16,6 @@ Our development workflow centers around:
 ## Guide Organization
 
 ### Meta & Process Guides
-
 
 - [Project Management Guide](./project-management.md): Details task management, directory structure, and core workflow.
 
@@ -36,9 +36,8 @@ Our development workflow centers around:
 - **[Troubleshooting Workflow](./troubleshooting-workflow.md)** - High-level workflow for debugging and problem-solving.
 - **[Version Control](./version-control.md)** - Git workflow and commit standards.
 
-
-
 ### Release Management
+
 - **[Release Process](./ship-release.md)** - Release workflow, versioning, and checklists.
 - **[Release Documentation Template](./prepare-release/v.x.x.x/docs/_template.md)** - Standard release documentation structure.
 
@@ -47,6 +46,7 @@ Our development workflow centers around:
 Project tasks and release planning are managed within the `docs-project` directory using a simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
 
 Key guides for this process:
+
 - [Project Management Guide](./project-management.md): Details the directory structure, task format, and core workflow.
 - [Release Process](./ship-release.md): Covers the steps for finalizing and publishing a release.
 

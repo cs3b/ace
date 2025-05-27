@@ -2,10 +2,10 @@
 
 This file provides Ruby-specific examples related to the main [Security Guide](../security.md).
 
-*   **Dependency Scanning:** `bundler-audit`, GitHub Dependabot/Security Alerts
-*   **Static Analysis (SAST):** `brakeman` (for Rails)
-*   **Input Validation:** ActiveModel validations (Rails), custom validation logic.
-*   **Secure Configuration:** Using environment variables, Rails credentials.
+* **Dependency Scanning:** `bundler-audit`, GitHub Dependabot/Security Alerts
+* **Static Analysis (SAST):** `brakeman` (for Rails)
+* **Input Validation:** ActiveModel validations (Rails), custom validation logic.
+* **Secure Configuration:** Using environment variables, Rails credentials.
 
 ```ruby
 # Example: Secure file path handling (avoiding directory traversal)

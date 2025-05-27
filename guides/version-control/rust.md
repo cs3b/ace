@@ -2,10 +2,10 @@
 
 This file provides Rust-specific examples and considerations related to the main [Version Control Guide](../version-control.md).
 
-*   **.gitignore:** Ensure the standard Rust build directory (`target/`) is ignored. Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) are helpful.
-*   **Pre-commit Hooks:** Use tools like `husky` (if in a mixed project or preferred) or simple shell script hooks (`.git/hooks/pre-commit`) to run the formatter (`cargo fmt --check`) and linter (`cargo clippy -- -D warnings`) before committing.
-*   **Dependency Locking:** Always commit `Cargo.lock` to ensure reproducible builds and consistent dependencies.
-*   **Branching Strategy:** Standard Git workflows apply.
+* **.gitignore:** Ensure the standard Rust build directory (`target/`) is ignored. Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) are helpful.
+* **Pre-commit Hooks:** Use tools like `husky` (if in a mixed project or preferred) or simple shell script hooks (`.git/hooks/pre-commit`) to run the formatter (`cargo fmt --check`) and linter (`cargo clippy -- -D warnings`) before committing.
+* **Dependency Locking:** Always commit `Cargo.lock` to ensure reproducible builds and consistent dependencies.
+* **Branching Strategy:** Standard Git workflows apply.
 
 ```sh
 #!/bin/sh

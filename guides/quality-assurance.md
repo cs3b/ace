@@ -1,6 +1,7 @@
 # Quality Assurance Guidelines
 
 ## Goal
+
 This guide outlines the processes, tools, and standards used to ensure the quality, reliability, and maintainability of the codebase throughout the development lifecycle.
 
 # Quality Assurance Guidelines
@@ -10,6 +11,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 1. **Static Analysis & Linting Setup**:
    Configure static analysis and linting tools appropriate for your project's language(s).
    - Configuration typically involves specifying language versions, enabling/disabling rules, setting formatting preferences, and defining paths to ignore.
+
    ```yaml
    # Example conceptual configuration (e.g., for a linter)
    language_version: "X.Y"
@@ -32,6 +34,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    Integrate static analysis, linting, and code coverage checks into the Continuous Integration (CI) pipeline (e.g., using GitHub Actions, GitLab CI, Jenkins).
    - Ensure these checks run automatically on pushes and pull requests.
    - Fail the build if quality checks do not pass.
+
    ```yaml
    # Example conceptual CI workflow snippet
    name: Quality Checks
@@ -64,6 +67,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 ### 2. Code Review Process
 
 1. **Pull Request Template**:
+
    ```markdown
    ## Changes
    - List key changes
@@ -81,6 +85,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    ```
 
 2. **Review Checklist**:
+
    ```markdown
    ### Design
    - [ ] Follows SDK patterns
@@ -105,6 +110,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - Exclude test files, vendor directories, and other non-source code paths from the report.
    - Optionally group coverage results by logical components or modules.
    - Define minimum coverage thresholds (overall, per-file) to enforce standards. Failing to meet thresholds should ideally fail the build.
+
    ```
    // Example conceptual coverage tool setup
    configureCoverageTool({
@@ -140,6 +146,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 
 3. **Coverage Report Example**:
    (Coverage reports typically show percentage of statements, branches, functions, and lines covered. The exact format varies by tool. File paths will reflect project structure.)
+
    ```
    --------------------------|----------|----------|----------|----------|
    File                     |  % Stmts |% Branches|  % Funcs |  % Lines |
@@ -160,6 +167,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - **Complexity:** Measure cyclomatic complexity or cognitive complexity using relevant analysis tools.
    - **Code Size:** Track lines of code (LOC) per module/component using code counting tools.
    - **TODO/FIXME Notes:** Use tools or scripts to track outstanding `TODO`, `FIXME`, or similar annotations in the codebase.
+
    ```bash
    # Example conceptual commands
    run-complexity-analyzer src/
@@ -173,6 +181,7 @@ This guide outlines the processes, tools, and standards used to ensure the quali
    - Review dependency updates
 
 3. **Technical Debt**:
+
    ```markdown
    ## Technical Debt Log
 
@@ -190,8 +199,8 @@ This guide outlines the processes, tools, and standards used to ensure the quali
 For specific examples of tool configurations (e.g., linters, static analyzers, coverage tools), CI/CD pipeline snippets, or code review checklist details relevant to particular languages or frameworks, please refer to the examples in the [./quality-assurance/](./quality-assurance/) sub-directory.
 
 ## Related Documentation
+
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Testing Guidelines](docs-dev/guides/testing.md)
 - [Version Control](docs-dev/guides/version-control.md) (PR Templates)
 - [Security](docs-dev/guides/security.md)
-

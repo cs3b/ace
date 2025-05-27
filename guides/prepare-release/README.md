@@ -1,6 +1,7 @@
 # Release Templates Guide
 
 ## Overview
+
 This directory contains standard templates for creating structured release documentation artifacts. These templates ensure consistency and completeness across all project releases and serve as a starting point when creating new release directories.
 
 ## Template Directory Structure
@@ -69,6 +70,7 @@ For more details on how these templates integrate with the project management wo
 ## Customization
 
 While maintaining consistent structure is important, feel free to adapt these templates to your specific release needs by:
+
 - Adding additional sections where needed
 - Expanding on the provided sections with more detailed questions or prompts
 - Including release-specific context or requirements

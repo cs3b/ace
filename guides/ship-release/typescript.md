@@ -2,11 +2,11 @@
 
 This file provides TypeScript/Node.js specific examples related to the main [Release Process Guide](../ship-release.md).
 
-*   **Packaging:** `package.json`
-*   **Building:** `npm run build` or `yarn build` (depends on project setup, often involves `tsc`)
-*   **Publishing:** `npm publish` or `yarn publish` (to npm registry or private registry)
-*   **Versioning:** `npm version <patch|minor|major>` or `yarn version --<patch|minor|major>`, update `CHANGELOG.md`
-*   **Tagging:** `npm version` usually creates tags automatically, or `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
+* **Packaging:** `package.json`
+* **Building:** `npm run build` or `yarn build` (depends on project setup, often involves `tsc`)
+* **Publishing:** `npm publish` or `yarn publish` (to npm registry or private registry)
+* **Versioning:** `npm version <patch|minor|major>` or `yarn version --<patch|minor|major>`, update `CHANGELOG.md`
+* **Tagging:** `npm version` usually creates tags automatically, or `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
 
 ```bash
 # Example release workflow steps (using npm)

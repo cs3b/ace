@@ -37,8 +37,6 @@ Below is a template for one commmand:
 READ and RUN INSTRUCTIONS in docs-dev/workflow-instructions/lets-commit.md (also read internally linked other documents within this document)
 ```
 
-
 # instructions to claude
-
 
 - using cp & rm istead of git mv

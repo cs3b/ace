@@ -2,12 +2,12 @@
 
 This file provides Rust-specific examples related to the main [Release Process Guide](../ship-release.md).
 
-*   **Packaging:** `Cargo.toml`
-*   **Building:** `cargo build --release` (compiles optimized binary)
-*   **Publishing:** `cargo publish` (to crates.io or private registry)
-*   **Versioning:** Update version in `Cargo.toml`, `CHANGELOG.md`
-*   **Tagging:** `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
-*   **Linting/Formatting:** `cargo fmt`, `cargo clippy`
+* **Packaging:** `Cargo.toml`
+* **Building:** `cargo build --release` (compiles optimized binary)
+* **Publishing:** `cargo publish` (to crates.io or private registry)
+* **Versioning:** Update version in `Cargo.toml`, `CHANGELOG.md`
+* **Tagging:** `git tag -a vX.Y.Z -m "Release version X.Y.Z"`
+* **Linting/Formatting:** `cargo fmt`, `cargo clippy`
 
 ```bash
 # Example release workflow steps

@@ -3,6 +3,7 @@
 Specific tools and techniques for debugging Ruby applications.
 
 ### Core tools & tips
+
 * **Read the stack trace first** – top line shows the crash site, lower lines show the call chain.  
 * **Interactive debuggers**  
   * `binding.pry` for a REPL‑style breakpoint.  
@@ -13,6 +14,7 @@ Specific tools and techniques for debugging Ruby applications.
 * **Memory leaks** – Valgrind & gems like `memory_profiler`, `derailed_benchmarks`.
 
 ### Quick diagnostic checklist
+
 1. Re‑run failing test with `--backtrace` for full context.  
 2. Drop `binding.pry` at suspect line, inspect locals, call `ls` to list methods.  
 3. If timing‑related, add `Rails.logger.debug` statements and compare dev vs prod logs.  

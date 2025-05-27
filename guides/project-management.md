@@ -1,11 +1,13 @@
 # Project Management Guide
 
 ## Goal
+
 This guide defines the core development philosophy, project structure, task management system, and standard workflows used within this toolkit. It serves as the central reference for how work is organized, tracked, and executed, enabling effective collaboration between human developers and AI agents.
 
 # Project Management Guide
 
 Our development workflow is centered around:
+
 - Iterative, task-based development
 - Clear documentation and knowledge preservation
 - Transparent progress tracking
@@ -32,6 +34,7 @@ docs-project
 │   ├── v.0.2.2-feedback-to-process
 └── what-do-we-build.md
 ```
+
 (Use `tree docs-project -L 2` from the project root to view the current structure)
 
 > **Strategic vs Operational Planning**  
@@ -86,6 +89,7 @@ Briefly describe the goal of this task. What should be achieved?
   - [ ] Sub-task or step 1
   - [ ] Sub-task or step 2
 ```
+
 This structured format ensures clarity for both humans and AI agents interacting with the tasks. Providing comprehensive details in the "Implementation Details / Notes" and "Acceptance Criteria" is key for effective AI collaboration.
 
 #### Task ID Convention
@@ -95,10 +99,12 @@ The `id` field in the task file's frontmatter serves as a unique identifier for 
 `v.X.Y.Z+task.<sequential_number>`
 
 Where:
+
 - `v.X.Y.Z` is the specific semantic version of the release the task belongs to (e.g., `v.0.3.0`). The patch version `Z` must be explicit and not a placeholder like `x`.
 - `+task.<sequential_number>` is build metadata, as per SemVer, indicating the task sequence within that specific release, starting from 1 (e.g., `+task.1`, `+task.12`).
 
 **Rationale:**
+
 - **Unique Identification:** This format ensures every task has a globally unique ID, preventing conflicts when referencing tasks from different releases.
 - **Cross-Release Referencing:** Allows unambiguous linking to tasks from past or future releases (e.g., in dependency lists or documentation).
 - **Intra-Release Referencing:** Within the context of a single release, tasks can often be referred to more simply by their `<task-number-in-release>` (e.g., "depends on task 5"), as the release version is implied.
@@ -108,6 +114,7 @@ Where:
 ### 2. Version Naming
 
 We follow semantic versioning (MAJOR.MINOR.PATCH):
+
 - MAJOR: Breaking changes (x.0.0)
 - MINOR: New features (0.x.0)
 - PATCH: Bug fixes (0.0.x)
@@ -137,19 +144,19 @@ When moving a task between states, follow these guidelines:
 Key checks when updating a task's `status` field:
 
 - **`pending` → `in-progress`**:
-    - Task specification (Description, Implementation Details, Acceptance Criteria) is clear.
-    - Dependencies listed in `dependencies` are met (i.e., those tasks are `done`).
-    - Implementation plan is understood.
-    - Test strategy is defined.
+  - Task specification (Description, Implementation Details, Acceptance Criteria) is clear.
+  - Dependencies listed in `dependencies` are met (i.e., those tasks are `done`).
+  - Implementation plan is understood.
+  - Test strategy is defined.
 - **`in-progress` → `done`**:
-    - All implementation steps (including Markdown checklist items) are completed.
-    - All acceptance criteria are met.
-    - Corresponding tests (unit, integration) are passing.
-    - Code adheres to project coding standards.
-    - Relevant documentation (code comments, guides, examples) has been updated.
-    - Changes have been committed following version control guidelines.
-    - If applicable, the Pull Request incorporating the changes has been reviewed and merged.
-    - Any decisions made or significant learnings are documented (e.g., in the task file, an ADR in `docs-dev/decisions/`, or a `self-reflect` log).
+  - All implementation steps (including Markdown checklist items) are completed.
+  - All acceptance criteria are met.
+  - Corresponding tests (unit, integration) are passing.
+  - Code adheres to project coding standards.
+  - Relevant documentation (code comments, guides, examples) has been updated.
+  - Changes have been committed following version control guidelines.
+  - If applicable, the Pull Request incorporating the changes has been reviewed and merged.
+  - Any decisions made or significant learnings are documented (e.g., in the task file, an ADR in `docs-dev/decisions/`, or a `self-reflect` log).
 
 Moving a whole release directory follows the same logic: ensure all contained tasks meet the criteria for the next state (`backlog` -> `current`, `current` -> `done`).
 
@@ -159,23 +166,23 @@ Moving a whole release directory follows the same logic: ensure all contained ta
 
 Tasks and release structures are typically generated through one of three primary workflows, facilitated by `lets-spec-*` workflow instructions (located in `docs-dev/workflow-instructions/`):
 
-1.  **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific, actionable tasks (usually resulting in a *Patch* release) aimed at addressing the feedback. Tasks are created directly in the `docs-project/current/` release directory.
-2.  **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `docs-project/backlog/` first.
-3.  **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually starting in `docs-project/backlog/`.
+1. **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific, actionable tasks (usually resulting in a *Patch* release) aimed at addressing the feedback. Tasks are created directly in the `docs-project/current/` release directory.
+2. **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new capability. This typically generates tasks for a *Feature* release, potentially planned in `docs-project/backlog/` first.
+3. **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually starting in `docs-project/backlog/`.
 
 #### General Implementation Process (per task) - Integrating AI Collaboration
 
-1.  **Planning & Understanding (Planning Before Prompting)**: Before involving the AI in coding, *thoroughly* understand the task requirements (from the `.md` file). Plan the implementation approach:
-    *   Break down the task into smaller, logical steps.
-    *   Identify potential challenges or areas needing clarification.
-    *   Outline the intended design, interfaces, and test structures.
-    *   Gather necessary context (relevant existing code, patterns, `docs-project/blueprint.md`, `docs-project/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
-2.  **Test-Driven Development (AI-Assisted)**:
-    *   **Write Tests (Test Phase in `work-on-task`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria using the testing phase described in the `docs-dev/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
-    *   **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
-    *   **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
-3.  **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions using the `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
-4.  **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection. Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and capture learnings. Use the [`create-reflection-note.md`](../workflow-instructions/create-reflection-note.md) workflow to capture these insights. These individual reflection notes (e.g., saved in `docs-project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`) serve as valuable input for the [`create-retrospective-document.md`](../workflow-instructions/create-retrospective-document.md) workflow.
+1. **Planning & Understanding (Planning Before Prompting)**: Before involving the AI in coding, *thoroughly* understand the task requirements (from the `.md` file). Plan the implementation approach:
+    - Break down the task into smaller, logical steps.
+    - Identify potential challenges or areas needing clarification.
+    - Outline the intended design, interfaces, and test structures.
+    - Gather necessary context (relevant existing code, patterns, `docs-project/blueprint.md`, `docs-project/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
+2. **Test-Driven Development (AI-Assisted)**:
+    - **Write Tests (Test Phase in `work-on-task`):** Guide the AI to generate failing tests based on the planned structure and acceptance criteria using the testing phase described in the `docs-dev/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
+    - **Implement Code:** Provide the AI with specific, small steps from your plan (e.g., implement function X based on this signature and pseudocode). *Review generated code rigorously.*
+    - **Refactor:** Guide the AI in refactoring for clarity and efficiency once tests pass.
+3. **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the AI to generate or help format commit messages according to conventions using the `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
+4. **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection. Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and capture learnings. Use the [`create-reflection-note.md`](../workflow-instructions/create-reflection-note.md) workflow to capture these insights. These individual reflection notes (e.g., saved in `docs-project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`) serve as valuable input for the [`create-retrospective-document.md`](../workflow-instructions/create-retrospective-document.md) workflow.
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `docs-dev/guides/coding-standards.md` for more on AI collaboration best practices.
 
@@ -191,6 +198,7 @@ By adhering to these rules, the agent can operate more safely and efficiently wi
 ## Related Documentation
 
 Essential standards and guidelines:
+
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Testing Guidelines](docs-dev/guides/testing.md)
 - [Documentation Standards](docs-dev/guides/documentation.md)

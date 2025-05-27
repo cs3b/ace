@@ -2,12 +2,13 @@
 
 This file provides Ruby-specific examples related to the main [Quality Assurance Guide](../quality-assurance.md).
 
-*   **Linters/Formatters:** `rubocop`, `standardrb`
-*   **Static Analysis:** `brakeman` (Security), `reek` (Code Smells)
-*   **Test Coverage:** `simplecov`
-*   **CI Configuration:** Examples for GitHub Actions, GitLab CI, etc. using Ruby setup actions.
+* **Linters/Formatters:** `rubocop`, `standardrb`
+* **Static Analysis:** `brakeman` (Security), `reek` (Code Smells)
+* **Test Coverage:** `simplecov`
+* **CI Configuration:** Examples for GitHub Actions, GitLab CI, etc. using Ruby setup actions.
 
 **Example `.standard.yml` (StandardRB config):**
+
 ```yaml
 fix: true               # default: false
 parallel: true          # default: false
@@ -18,6 +19,7 @@ ignore:
 ```
 
 **Example `simplecov` setup (in `spec/spec_helper.rb` or `test/test_helper.rb`):**
+
 ```ruby
 require 'simplecov'
 SimpleCov.start do

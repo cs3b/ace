@@ -2,11 +2,11 @@
 
 This file provides Rust-specific examples related to the main [Security Guide](../security.md).
 
-*   **Dependency Scanning:** `cargo audit`, GitHub Dependabot
-*   **Static Analysis (SAST):** `cargo clippy` (catches some security issues), potentially external SAST tools.
-*   **Input Validation:** Using Rust's type system, crates like `validator`.
-*   **Secure Configuration:** Environment variables, configuration files with restricted permissions, secrets management services.
-*   **Memory Safety:** Rust's core safety features prevent many common vulnerabilities (e.g., buffer overflows, use-after-free).
+* **Dependency Scanning:** `cargo audit`, GitHub Dependabot
+* **Static Analysis (SAST):** `cargo clippy` (catches some security issues), potentially external SAST tools.
+* **Input Validation:** Using Rust's type system, crates like `validator`.
+* **Secure Configuration:** Environment variables, configuration files with restricted permissions, secrets management services.
+* **Memory Safety:** Rust's core safety features prevent many common vulnerabilities (e.g., buffer overflows, use-after-free).
 
 ```rust
 use std::path::{Path, PathBuf};

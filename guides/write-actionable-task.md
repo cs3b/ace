@@ -1,4 +1,5 @@
 # 📑 Writing Clear, Actionable Dev Tasks  
+
 *A playbook for documentation‑oriented tickets, with a complete worked example*
 
 ## Introduction & Goal
@@ -8,7 +9,9 @@ This guide provides a structured approach and template for writing effective dev
 ---
 
 ## 0. Directory Audit Step ✅  
+
 **Always start by discovering what actually exists in the repo.**  
+
 1. Run a tree or ls command (exclude `node_modules`, `vendor`, etc.).  
 2. Copy the relevant excerpt into the ticket.  
 3. From that listing, build the deliverable manifest.  
@@ -244,6 +247,7 @@ Split language‑specific snippets out of *every* general guide so developers ca
 ---
 
 ### 4. Quick “Ship‑It” Checklist 🚦
+
 1. Is the **Directory Audit** present?  
 2. Could a newcomer complete the work using only the manifest?  
 3. Do the Acceptance Criteria read like QA steps?  

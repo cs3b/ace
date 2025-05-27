@@ -1,6 +1,7 @@
 # Version Control Guide
 
 ## Goal
+
 This guide establishes the standards and workflow for using Git version control within this project, focusing on commit message conventions, branching strategies, and pull request processes to ensure a clean, understandable, and collaborative development history.
 
 # Version Control Guide
@@ -16,6 +17,7 @@ This guide establishes the standards and workflow for using Git version control 
 ```
 
 Example:
+
 ```git
 feat(ui): Add dark mode toggle
 
@@ -29,7 +31,7 @@ References #123
 
 ### 2. Commit Types
 
-| Type     | Description                        | Example | 
+| Type     | Description                        | Example |
 |----------|------------------------------------|---------|
 | feat     | New features                       | `feat(api): Add user profile endpoint` |
 | fix      | Bug fixes                          | `fix(parser): Handle malformed input correctly` |
@@ -42,6 +44,7 @@ References #123
 ### 3. Commit Guidelines
 
 1. **Subject Line**:
+
    ```git
    # Good
    feat(agent): Add support for concurrent tool execution
@@ -51,6 +54,7 @@ References #123
    ```
 
 2. **Body Format**:
+
    ```git
    feat(registry): Implement thread-safe tool registration
 
@@ -65,6 +69,7 @@ References #123
    ```
 
 3. **References**:
+
    ```git
    fix(agent): Handle LLM timeout errors
 
@@ -79,6 +84,7 @@ References #123
 ### 4. Branching Strategy
 
 1. **Branch Types**:
+
    ```bash
    # Feature branches
    git checkout -b feature/browser-tool
@@ -91,6 +97,7 @@ References #123
    ```
 
 2. **Branch Flow**:
+
    ```bash
    # Start new feature
    git checkout -b feature/new-tool develop
@@ -135,6 +142,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
 
 1. **Pre-commit Hook Example**:
    Runs before a commit is created. Useful for running linters, formatters, and quick tests.
+
    ```bash
    #!/bin/sh
 
@@ -158,10 +166,12 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
    echo "Pre-commit checks passed."
    exit 0
    ```
-   *Note: Setting up Git hooks often involves placing executable scripts in the `.git/hooks/` directory or using specialized hook management tools.* 
+
+   *Note: Setting up Git hooks often involves placing executable scripts in the `.git/hooks/` directory or using specialized hook management tools.*
 
 2. **Commit-msg Hook Example**:
    Runs after the commit message is entered but before the commit is created. Useful for validating the commit message format.
+
    ```bash
    #!/bin/sh
 
@@ -183,6 +193,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
 
 1. **Pre-Commit Review**:
    Before committing, review your changes and run local validation checks.
+
    ```bash
    # Review changes
    git status
@@ -197,6 +208,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
 
 2. **Stage Changes**:
    Stage logically related changes together in chunks. Avoid overly large commits.
+
    ```bash
    # Stage specific files or directories
    git add src/feature-a/
@@ -212,6 +224,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
 
 3. **Create Commit**:
    Write a clear and concise commit message following the Conventional Commits standard.
+
    ```bash
    # Opens your editor to write the commit message
    git commit
@@ -226,6 +239,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
    - Open pull request if ready
 
 Common file groupings (examples):
+
 - Source code: `src/`, `lib/`, `app/`
 - Tests: `tests/`, `spec/`, `__tests__/`
 - Documentation: `docs/`, `docs-dev/`
@@ -259,6 +273,7 @@ Common file groupings (examples):
 For specific examples of setting up Git hooks with specialized hook management tools, please refer to the examples in the [./version-control/](./version-control/) sub-directory.
 
 ## Related Documentation
+
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task workflow integration)
 - [Release Process Guide](docs-dev/guides/ship-release.md) (Tagging, Changelog)
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (PR Template, Code Review)

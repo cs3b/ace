@@ -101,7 +101,6 @@ The AI agent should:
 
 ### Simple, Fast Feedback Tests
 
-
 **Example 1: Check if a file was created**
 
 ## Step 2: Generate Configuration File
@@ -109,17 +108,17 @@ The AI agent should:
 The agent will generate `config.json` based on the inputs.
 
 > TEST: Config File Created
->   Type: Post-condition Check
->   Assert: The `config.json` file exists in the output directory.
->   File: output/config.json
->   Command: bin/test --check-file-exists output/config.json
-
+> Type: Post-condition Check
+> Assert: The `config.json` file exists in the output directory.
+> File: output/config.json
+> Command: bin/test --check-file-exists output/config.json
 
 **Example 2: Check if a file contains specific text**
 
 ## Step 3: Update README
 
 The agent will add a "## Usage" section to `README.md`.
+
 ```
 
 > TEST: README Usage Section Added
@@ -143,11 +142,10 @@ The agent will run the project's code formatter on all `.py` files.
 >   Assert: The code formatter reports no changes are needed, indicating formatting was successful.
 >   Command: black --check .  # (Assumes 'black' exits non-zero if changes are needed)
 ```
+
 *Note: For commands like linters or formatters that exit 0 if successful (or no changes needed) and non-zero
 if issues are found/changes would be made, the agent might need to interpret the exit code accordingly.
 A wrapper script via `bin/test` could invert this if needed (e.g. `bin/test --expect-exit-code 0 \\\"black --check .\\\"`).*
-
-
 
 **Example 4: User verification of generated content**
 
@@ -156,9 +154,10 @@ A wrapper script via `bin/test` could invert this if needed (e.g. `bin/test --ex
 The agent will write a summary of the project to `docs/summary.md`.
 
 > VERIFY: Summary Accuracy
->   Type: User Feedback
->   Prompt: Please review `docs/summary.md`. Does it accurately reflect the project's current state and goals?
->   Options: (Yes, Accurate / No, Needs Revision)
+> Type: User Feedback
+> Prompt: Please review `docs/summary.md`. Does it accurately reflect the project's current state and goals?
+> Options: (Yes, Accurate / No, Needs Revision)
+
 ```
 
 
