@@ -32,6 +32,23 @@ Initialize the `docs-dev` and `docs-project` directory structures and create cor
     - **Create Review Task**: Create a new task file (e.g., `docs-project/backlog/<initial_version>/tasks/01-identify-stack-specific-guides.md`) prompting an analysis of the project's needs against the current `docs-dev` guides and workflows. The goal is to identify any **missing** guidance or the need for **new, project-specific** documentation (e.g., guides for a specific library, custom deployment steps) tailored to the chosen technology stack.
         - *Example Task Title*: `Identify Need for Project-Specific [Stack] Guides/Workflows`
 
+5.  **Setup Project `bin/` Scripts from Binstubs**:
+    - **Create Project `bin/` Directory**:
+        - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
+    - **Identify Binstub Templates**:
+        - The standard binstub templates are located in `docs-dev/tools/_binstubs/`. These typically include `test`, `lint`, `build`, `run`, `tn`, `tr`, and `tree`.
+    - **Copy Binstubs to Project `bin/`**:
+        - For each file in `docs-dev/tools/_binstubs/`:
+            - Let `binstub_name` be the name of the file (e.g., `test`).
+            - Check if `bin/{binstub_name}` already exists in the project.
+            - If `bin/{binstub_name}` does **not** exist, copy `docs-dev/tools/_binstubs/{binstub_name}` to `bin/{binstub_name}`.
+            - If `bin/{binstub_name}` **does** exist, skip it to avoid overwriting existing project-specific scripts. Inform the user which scripts were skipped.
+    - **Make Copied Scripts Executable**:
+        - For all scripts newly copied into `bin/`, make them executable: `chmod +x bin/*`.
+    - **Guidance on Binstubs**:
+        - Remind the user that scripts like `bin/test`, `bin/lint`, `bin/build`, and `bin/run` are general placeholders. They will need to be tailored with project-specific commands based on the technology stack chosen for the project. This customization is typically handled in a subsequent setup task.
+        - Scripts like `bin/tn`, `bin/tr`, and `bin/tree` are often thin wrappers for tools in `docs-dev/tools/`. They should function if the underlying tools are present and correctly referenced within the wrappers.
+
 ## Prerequisites
 
 - Project root directory must be accessible with write permissions.
@@ -130,7 +147,13 @@ Example structure:
    - Guides irrelevant to the project's confirmed technology stack have been removed.
    - A backlog task has been created prompting identification of any missing or required new project-specific guides/workflows for the stack.
 
-4. **Project Context**:
+4. **Basic `bin/` Scripts Initialized**:
+   - The project's `bin/` directory exists.
+   - Binstubs from `docs-dev/tools/_binstubs/` (like `test`, `lint`, `build`, `run`, `tn`, `tr`, `tree`) have been copied to the project's `bin/` directory if they didn't already exist.
+   - Copied scripts in `bin/` are executable.
+   - User is aware that some `bin/` scripts (`test`, `lint`, `build`, `run`) are placeholders needing project-specific implementation.
+
+5. **Project Context**:
    - Development philosophy established.
    - Technical boundaries defined.
    - Extension points identified.
