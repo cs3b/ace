@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+task.18 - 2025-05-27 - Add Tool for Getting Current Release Path and Version
+
+- **Created New Development Tools:**
+    - Added `docs-dev/tools/get-current-release-path.sh` - Main tool script that determines the appropriate directory for storing newly created tasks and returns version information.
+    - Added `bin/rc` - Thin wrapper script for easy access to the get-current-release-path utility.
+    - Added `docs-dev/tools/test-get-current-release-path.sh` - Comprehensive test suite with 13 test assertions covering 5 test scenarios.
+
+- **Tool Functionality:**
+    - Returns path to current release directory (e.g., `docs-project/current/v.X.Y.Z-codename`) and version string (e.g., `v.X.Y.Z`) when a current release exists.
+    - Returns backlog tasks path (`docs-dev/backlog/tasks`) and empty version when no current release is detected.
+    - Handles edge cases like multiple release directories gracefully.
+    - Includes help option and proper error handling for invalid arguments.
+
+- **Workflow Integration:**
+    - Updated `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md` to utilize the new `bin/rc` tool in Step 6 for determining task storage location.
+    - Added instructions for creating necessary directories before saving task files.
+    - Integrated version information access for potential use in task metadata or naming.
+
+- **Quality Assurance:**
+    - All automated tests pass, covering current release detection, backlog fallback, multiple directories, help functionality, and error handling.
+    - Tool correctly identifies and works with the actual project structure (`docs-project/current/v.0.3.0-feedback-after-meta.v.0.2`).
+
 #### v.0.3.x-fix - 2025-05-27 - Update Breakdown Notes to Tasks Workflow
 
 - Updated the `breakdown-notes-into-tasks.md` workflow instructions.
