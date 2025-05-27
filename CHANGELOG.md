@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+task.7 - 2025-05-27 - Add .meta/ Subdirectories for Self-Referential Workflows and Guides
+
+- Created the `.meta/` subdirectories within `docs-dev/guides/` and `docs-dev/workflow-instructions/`.
+- Moved the `writing-guides-guide.md`, `writing-workflow-instructions.md` (and renamed it to `writing-workflow-instructions-guide.md`), and `tools-guide.md` files into `docs-dev/guides/.meta/`.
+- Updated all internal links within the project that pointed to these moved guide files.
+- Added documentation explaining the purpose and usage of the `.meta/` directories in `docs-dev/README.md`.
+- Verified internal links using the lint tool.
+
 #### v.0.3.0+task.5 - 2025-05-27 - Ensure Uniqueness and Consistency of Task IDs and Release Versioning (and Tooling Fixes)
 
 - **Task ID and Release Versioning Standardization**:
