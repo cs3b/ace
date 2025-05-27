@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.x-fix - 2025-05-27 - Update Breakdown Notes to Tasks Workflow
+
+- Updated the `breakdown-notes-into-tasks.md` workflow instructions.
+- Added clarification on where formal task files should be stored (current release `tasks/` directory or `docs-dev/backlog/tasks/`).
+- Introduced a new Step 6 to formalize the task structure according to the `write-actionable-task.md` guide after user verification.
+- Reviewed and updated the workflow's goal, inputs, process steps, output, and success criteria for consistency.
+
 #### v.0.3.0+task.7 - 2025-05-27 - Add .meta/ Subdirectories for Self-Referential Workflows and Guides
 
 - Created the `.meta/` subdirectories within `docs-dev/guides/` and `docs-dev/workflow-instructions/`.
