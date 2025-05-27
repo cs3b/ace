@@ -58,6 +58,7 @@
 *   [Commit Workflow](docs-dev/workflow-instructions/commit.md) (or renamed equivalent - Git workflow)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
 *   [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.md) (For diagnosing and fixing failing tests)
+*   [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.md)
 *   Project-specific guides (Coding Standards, Architecture, etc.) as identified in Step 3.
 
 ## Input

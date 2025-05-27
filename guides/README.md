@@ -25,6 +25,7 @@ Our development workflow centers around:
   - [Ruby Coding Standards](./coding-standards/ruby.md)
 - **[Documentation Standards](./documentation.md)** - Documentation requirements and structure.
 - **[Error Handling](./error-handling.md)** - Error handling patterns and strategies.
+- **[Temporary File Management Guidelines](./temporary-file-management.md)** - Guidelines for AI agent temporary file usage.
 - **[Performance](./performance.md)** - Performance optimization guidelines.
 - **[Quality Assurance](./quality-assurance.md)** - Quality control processes and standards.
 - **[Security](./security.md)** - Security best practices and considerations.
