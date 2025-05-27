@@ -42,10 +42,16 @@ To orchestrate the processing of various raw inputs (like PRDs, git diffs, backl
     *   Once the user approves the structured tasks, for each item:
         *   Formalize its structure according to the template and guidelines in the [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md). This includes populating sections such as Front-matter, Directory Audit, Scope of Work, Deliverables, Phases, Implementation Plan (with embedded tests where appropriate), and Acceptance Criteria.
     *   **Task Storage:**
-        *   Determine the appropriate storage location for the formalized task file(s):
-            *   **Current Release:** If a current release directory is identified (e.g., `docs-project/current/vX.Y.Z/`), create a `tasks/` subdirectory within it (if one doesn't already exist). Store the formalized task file(s) there.
-            *   **Backlog:** If no specific current release is identified, or if the task is explicitly for the backlog, create a `tasks/` subdirectory within `docs-dev/backlog/` (e.g., `docs-dev/backlog/tasks/`) if it doesn't exist. Store the formalized task file(s) there.
-        *   Ensure all necessary directories are created before attempting to save files.
+        *   Determine the appropriate storage location for the formalized task file(s) using the `bin/rc` tool:
+            ```bash
+            # Get the current release path and version
+            output=$(bin/rc)
+            task_dir=$(echo "$output" | sed -n '1p')
+            version=$(echo "$output" | sed -n '2p')
+            ```
+            *   **Current Release:** If the tool returns a current release directory path (e.g., `docs-project/current/v.X.Y.Z-codename`), create a `tasks/` subdirectory within it if one doesn't already exist. Store the formalized task file(s) there. The version information can be used for task metadata or naming if needed.
+            *   **Backlog:** If the tool returns the backlog path (`docs-dev/backlog/tasks`), store the formalized task file(s) there. Create the directory if it doesn't exist.
+        *   Ensure all necessary directories (including the base task directory and any subdirectories) are created before attempting to save files.
     *   The output of this step is one or more formal task files, each adhering to the specified format and stored in the correct location.
 
 ## Output / Success Criteria
