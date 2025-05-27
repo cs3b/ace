@@ -9,8 +9,8 @@ echo "INFO: Running 'bin/lint' from project root: $(pwd)"
 
 LINT_SUCCESS=true
 
-Run markdownlint for all Markdown files, ignoring node_modules
-Pass any arguments received by this script to markdownlint
+# Run markdownlint for all Markdown files, ignoring node_modules
+# Pass any arguments received by this script to markdownlint
 echo "INFO: Running markdownlint..."
 if npx markdownlint-cli '**/*.md' --ignore node_modules "$@"; then
   echo "INFO: markdownlint passed."
@@ -33,6 +33,22 @@ if [ -f "$LINK_CHECKER_SCRIPT" ]; then
 else
   echo "WARNING: Link checker script not found at $LINK_CHECKER_SCRIPT. Skipping."
   # Decide if this should be a failure. For now, it's a warning.
+  # LINT_SUCCESS=false
+fi
+
+# Run the custom task metadata linter script
+TASK_METADATA_LINTER_SCRIPT="docs-dev/tools/lint-task-metadata"
+echo "INFO: Running task metadata linter script: $TASK_METADATA_LINTER_SCRIPT..."
+if [ -f "$TASK_METADATA_LINTER_SCRIPT" ]; then
+  if ruby "$TASK_METADATA_LINTER_SCRIPT"; then
+    echo "INFO: Task metadata linter ($TASK_METADATA_LINTER_SCRIPT) passed."
+  else
+    echo "ERROR: Task metadata linter ($TASK_METADATA_LINTER_SCRIPT) found issues."
+    LINT_SUCCESS=false
+  fi
+else
+  echo "WARNING: Task metadata linter script not found at $TASK_METADATA_LINTER_SCRIPT. Skipping."
+  # Consider if this should be a failure. For now, it's a warning.
   # LINT_SUCCESS=false
 fi
 

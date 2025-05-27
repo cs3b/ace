@@ -4,9 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### Added
+#### v.0.3.0+task.5 - 2025-05-27 - Ensure Uniqueness and Consistency of Task IDs and Release Versioning (and Tooling Fixes)
 
-- **Minor Fix:**
+- **Task ID and Release Versioning Standardization**:
+    - Implemented new task ID convention: `v.X.Y.Z+task.<sequential_number>`.
+    - Standardized release directory naming to `v.X.Y.Z-codename`.
+- **Tooling Enhancements & Fixes**:
+    - Added `bin/tnid` (`docs-dev/tools/get-next-task-id`) to generate the next unique task ID.
+    - Added `bin/gat` (`docs-dev/tools/get-all-tasks`) to list all tasks in a release, sorted by dependencies and highlighting the next actionable one.
+    - Added `docs-dev/tools/lint-task-metadata` script (integrated into `bin/lint`) to validate task metadata against new conventions.
+    - Modified `bin/tn` (`docs-dev/tools/get-next-task`) to correctly sort task IDs numerically and prioritize `in-progress` tasks.
+    - Updated `docs-dev/guides/tools-guide.md` with refined principles for path conventions, testing, and binstub simplicity.
+    - Corrected path usage, regexes for version parsing, and fixed bugs in the newly created/modified tools (`get-next-task-id`, `get-all-tasks`, `lint-task-metadata`) and their binstubs (`bin/tnid`, `bin/gat`).
+    - Fixed minor errors in `bin/lint` script.
+- **Documentation Updates**:
+    - Updated `docs-dev/guides/project-management.md` with new task ID convention, release folder naming, and tool information.
+    - Updated `docs-dev/guides/write-actionable-task.md` with new task ID format in templates/examples.
+    - Updated `docs-dev/workflow-instructions/prepare-release.md` to reflect new ID generation and versioning.
+
+#### **Minor Fix:**
     - Bring back the directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`, deleted in 33af0d94cb0598baa4b5d36b8ffd273d3b8ebcc8
 
 #### v.0.3.x-4 - 2025-05-27 - Implement Immutability Rules for Specified Paths via Agent Blueprint
