@@ -107,13 +107,13 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
 
 While the core cycle remains the same, specific commands and tools vary by technology stack. Refer to the relevant sub-guide for details:
 
-*   [Ruby Application](docs-dev/guides/task-cycle/ruby-application.md)
-*   [Ruby Gem](docs-dev/guides/task-cycle/ruby-gem.md)
-*   [Rust CLI](docs-dev/guides/task-cycle/rust-cli.md)
-*   [Rust→Wasm Zed Extension](docs-dev/guides/task-cycle/rust-wasm-zed.md)
-*   [TypeScript + Vue](docs-dev/guides/task-cycle/typescript-vue.md)
-*   [TypeScript + Nuxt](docs-dev/guides/task-cycle/typescript-nuxt.md)
-*   [Meta (Documentation)](docs-dev/guides/task-cycle/meta-documentation.md)
+*   [Ruby Application](docs-dev/guides/test-driven-development-cycle/ruby-application.md)
+*   [Ruby Gem](docs-dev/guides/test-driven-development-cycle/ruby-gem.md)
+*   [Rust CLI](docs-dev/guides/test-driven-development-cycle/rust-cli.md)
+*   [Rust→Wasm Zed Extension](docs-dev/guides/test-driven-development-cycle/rust-wasm-zed.md)
+*   [TypeScript + Vue](docs-dev/guides/test-driven-development-cycle/typescript-vue.md)
+*   [TypeScript + Nuxt](docs-dev/guides/test-driven-development-cycle/typescript-nuxt.md)
+*   [Meta (Documentation)](docs-dev/guides/test-driven-development-cycle/meta-documentation.md)
 
 ## 6. Related Documentation
 

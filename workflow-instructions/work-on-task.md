@@ -25,27 +25,23 @@
 
 3.  **Load Context:**
     *   Identify relevant project context needed for execution:
-        *   **General Guides:** (e.g., `coding-standards.md`, `testing.md`, `architecture.md`). These might be standard context or explicitly mentioned in the task file.
+        *   **General Guides:** (e.g., `coding-standards.md`, `testing.md`, `architecture.md`, [Embedding Tests in AI Agent Workflows](docs-dev/guides/embedding-tests-in-workflows.md)). These might be standard context or explicitly mentioned in the task file.
         *   **Specific Code Files:** Identify key files/modules likely to be modified based on the embedded plan (if listed in the task file or inferable).
     *   **AI Action:** Ensure this context (guides, relevant code snippets) is loaded and considered during execution.
 
 4.  **Execute Task Plan Step-by-Step:**
-    *   Focus on the checklist items (`- [ ] ...`) within the task file's `## Implementation Plan` section.
-    *   **Iterate through Checklist:** Address each `- [ ]` item sequentially.
-    *   **Follow Task Cycle Principles:** For each item involving code changes, follow the [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) principles (Test -> Code -> Refactor -> Verify):
-        *   **Test (Red):** Write a failing test first that defines the expected behavior or functionality.
-            *   Create a new test file or add to an existing one following project conventions.
-            *   Write a test case for the specific functionality you're implementing.
-            *   Run the test and confirm it fails for the expected reason.
-        *   **Code (Green):** Write the minimum code necessary to make the test pass.
-            *   Focus only on passing the current test without adding extra functionality.
-            *   Run tests frequently until they pass.
-        *   **Refactor:** Improve code design while ensuring tests still pass.
-            *   Look for opportunities to remove duplication, improve names, or simplify logic.
-            *   Run tests after each refactoring step.
-        *   **Verify:** Run all relevant tests to ensure your changes don't break existing functionality.
-    *   **Update Checklist:** After successfully completing the action for a checklist item, update its status in the task file: `- [x] Action description...`
-    *   **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (checklist item) or group of related items, following [`commit.md`](docs-dev/workflow-instructions/commit.md) (or renamed equivalent).
+    *   Focus on the checklist items (`- [ ] ...`) and any associated embedded test blocks (`> TEST: ...`, `> VERIFY: ...`) within the task file's `## Implementation Plan` section.
+    *   **Iterate through Checklist:** For each `- [ ]` item:
+        1.  **Perform Action:** Execute the primary action described by the checklist item.
+        2.  **Execute Embedded Tests/Verifications:**
+            *   After performing the action, check for any `> TEST:` or `> VERIFY:` blocks associated with the current checklist item (e.g., these blocks might be immediately following the checklist item, or indented under it).
+            *   If found, process these blocks as defined in the [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/embedding-tests-in-workflows.md).
+            *   **Handle Outcomes:**
+                *   **Pass:** If all associated embedded tests pass (or user verification is positive), proceed to the next step for this checklist item.
+                *   **Fail:** If any automated test fails, or user verification is negative/abortive, STOP processing the current checklist item. Report the failure (including test name, assertion, command output if any, and the failing checklist item) to the user and await further instructions. Do NOT mark the checklist item as complete.
+        3.  **Follow Task Cycle Principles (for code changes):** If the primary action of the checklist item involved writing or modifying code that creates new functionality or behaviors (and this was not already covered by an embedded test that, for example, ran a full test suite for the component), consider following the [Implementing the Task Cycle Guide](docs-dev/guides/test-driven-development-cycle.md) principles (Test -> Code -> Refactor -> Verify) for that specific code. This applies more to traditional unit/integration testing of the software components being built or modified.
+        4.  **Update Checklist:** Only after the primary action is complete AND all associated embedded tests/verifications pass, update its status in the task file: `- [x] Action description...`
+    *   **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (i.e., a checklist item and its successfully passed tests) or group of related items, following [`commit.md`](docs-dev/workflow-instructions/commit.md) (or renamed equivalent).
     *   Continue until all checklist items in the plan are marked `- [x]`.
 
 5.  **Final Review & Status Update:**
@@ -57,7 +53,8 @@
 ## Reference Documentation
 
 *   [Writing Actionable Task Guide](docs-dev/guides/write-actionable-task.md) (Defines the required embedded plan structure)
-*   [Implementing the Task Cycle Guide](docs-dev/guides/task-cycle.md) (Core TDD loop)
+*   [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/embedding-tests-in-workflows.md) (Details how to write and interpret embedded tests)
+*   [Implementing the Task Cycle Guide](docs-dev/guides/test-driven-development-cycle.md) (Core TDD loop for code development)
 *   [Commit Workflow](docs-dev/workflow-instructions/commit.md) (or renamed equivalent - Git workflow)
 *   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.md)
 *   [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.md) (For diagnosing and fixing failing tests)

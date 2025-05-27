@@ -29,16 +29,26 @@ To orchestrate the processing of various raw inputs (like PRDs, git diffs, backl
     *   Ensure each item in the list represents a potential task and includes its core elements (objective, key details, source references from the sub-workflow's output or original input).
     *   This final structured list will serve as the direct input for the `write-actionable-task` workflow to create formal task files.
 
+5.  **User Verification of Structured Tasks:**
+    *   Before proceeding to formal task creation, present the structured list of potential tasks to the user for review.
+    > VERIFY: Structured Task Review
+    >   Type: User Feedback
+    >   Prompt: Please review the following list of structured potential tasks. Do they accurately capture the actionable items from the input, are they logically grouped, and are the key details sufficient for creating formal tasks?
+    >   Options: (Yes, proceed / No, needs revision)
+    *   If the user indicates revisions are needed, return to step 3 (Further Breakdown and Refinement) with the user's feedback.
+
 ## Output / Success Criteria
 
 **Output:**
-*   A structured representation of potential tasks derived from unstructured notes, ready to be used as input for the `write-actionable-task` workflow.
+*   A user-verified, structured representation of potential tasks derived from unstructured notes, ready to be used as input for the `write-actionable-task` workflow.
 
 **Success Criteria:**
 *   All relevant actionable items from the notes are identified.
 *   Information is grouped logically.
 *   Key details for each potential task are extracted.
 *   The output is clearly structured for easy task file creation.
+*   The user has verified the structured list of potential tasks.
 
 ## Reference Documentation
 *   [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
+*   [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/embedding-tests-in-workflows.md)

@@ -42,10 +42,10 @@ guides
 | **Scope of Work** | *What* to touch | Which guides/folders? |
 | **Deliverables / Manifest** | Exact files to create / modify / delete | Could a newcomer do it with just this? |
 | **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
-| **Implementation Plan** | **Detailed execution steps** | **Checklist (`- [ ]`) of actions to perform?** |
-| **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]` |
+| **Implementation Plan** | **Detailed execution steps** | **Checklist (`- [ ]`) of actions to perform? Consider embedding automated test/verification steps directly. See [Embedding Tests Guide](./embedding-tests-in-workflows.md).** |
+| **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
-| **References & Risks** | Links to style guides, ADRs; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
+| **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](./embedding-tests-in-workflows.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
 
 ---
 
@@ -93,20 +93,27 @@ Why are we doing this?
 3. Refactor …
 
 ## Implementation Plan
-*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format.*
+*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format. Consider embedding verification steps directly after an action, using the [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md).*
 - [ ] Step 1: Describe the first action.
-- [ ] Step 2: Describe the second action.
+- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
+  > TEST: Verify Action 2 Outcome
+  >   Type: Action Validation
+  >   Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
+  >   Command: bin/test --check-something path/to/relevant_artifact_from_step_2
 - [ ] ... Add more steps as needed.
 
 ## Acceptance Criteria
-- [ ] AC 1 …
-- [ ] AC 2 …
+*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan. Refer to the [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md) for automating checks.*
+- [ ] AC 1: All specified deliverables created/modified.
+- [ ] AC 2: Key functionalities (if applicable) are working as described.
+- [ ] AC 3: All automated checks in the Implementation Plan pass.
 
 ## Out of Scope
 - ❌ …
 
 ## References
 - [writing-guides-guide.md](docs-dev/guides/writing-guides-guide.md)
+- [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md)
 ~~~
 
 Copy ➜ fill ➜ ship.
@@ -195,20 +202,34 @@ Split language‑specific snippets out of *every* general guide so developers ca
 ## Implementation Plan
 - [ ] **Audit:** Add `<!--LANG:Ruby-->`, `<!--LANG:Rust-->`, `<!--LANG:TypeScript-->` comments to relevant blocks in all 9 general guides.
 - [ ] **Create Sub-directories:** Create the language-specific sub-directories (`coding-standards/`, `documentation/`, etc.) if they don't exist.
+  > TEST: Coding Standards Sub-directory Created
+  >   Type: Post-condition Check
+  >   Assert: The `docs-dev/guides/coding-standards` directory exists.
+  >   Command: bin/test --check-file-exists docs-dev/guides/coding-standards --type d
 - [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or `ruby-rspec.md` for testing).
+  > TEST: Ruby Coding Standard File Created
+  >   Type: Post-condition Check
+  >   Assert: The `docs-dev/guides/coding-standards/ruby.md` file exists and is not empty.
+  >   Command: bin/test --check-file-exists-not-empty docs-dev/guides/coding-standards/ruby.md
 - [ ] **Extract & Create (Rust):** Move Rust blocks from general guides to `guides/<category>/rust.md`.
-- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to `guides/<category>/typescript.md` (or `typescript-bun.md` for testing).
+- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to `guides/<category}/typescript.md` (or `typescript-bun.md` for testing).
 - [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
 - [ ] **Tag Obsolete:** Tag any remaining unmapped examples with `<!--TODO:Delete-->`.
 - [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created language-specific guides.
-- [ ] **Review & Check:** Run `md-link-check` and ensure local site build passes.
+- [ ] **Review & Check:** Run `md-link-check`.
+  > TEST: Markdown Links Check
+  >   Type: Guardrail
+  >   Assert: All markdown links are valid in the `docs-dev/guides` directory.
+  >   Command: md-link-check docs-dev/guides # Or a more specific path / project-wide lint command
+- [ ] Ensure local site build passes (if applicable, this might be a manual step or a separate command).
 
 ## Acceptance Criteria
 - [ ] Sub‑guides exist for all nine categories above.  
 - [ ] General guides contain no Ruby/Rust/TS blocks.  
 - [ ] Deprecated files removed or tagged.  
 - [ ] README (or index) lists every guide with working links.  
-- [ ] `md-link-check` passes; local site build OK.
+- [ ] All automated tests defined in the Implementation Plan pass (e.g., directory/file creation, link checks).
+- [ ] Local site build OK (if applicable and checked manually or via separate command).
 
 ## Out of Scope
 - No additional stacks (Python, Go, …).  
@@ -216,11 +237,12 @@ Split language‑specific snippets out of *every* general guide so developers ca
 
 ## References
 - [`writing-guides-guide.md`](docs-dev/guides/writing-guides-guide.md)  
+- [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md)
 - ADR‑010 “Documentation Structure”  
 - `.remarkrc` for lint rules
 
 ## Risks & Mitigations
-- **Broken links after moves** → run `md-link-check` & add redirects if needed.
+- **Broken links after moves** → run `md-link-check` (as included in Implementation Plan) & add redirects if needed.
 ~~~
 
 ---
