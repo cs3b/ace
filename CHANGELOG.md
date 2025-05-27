@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Minor Cleanup:**
+- **Minor Fix:**
     - Bring back the directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`, deleted in 33af0d94cb0598baa4b5d36b8ffd273d3b8ebcc8
 
 #### v.0.3.x-4 - 2025-05-27 - Implement Immutability Rules for Specified Paths via Agent Blueprint
