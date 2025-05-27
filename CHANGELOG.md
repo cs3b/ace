@@ -5,30 +5,55 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- Merged `docs-dev/utils` directory into `docs-dev/tools`.
-- Renamed scripts in `docs-dev/tools` to follow a verb-prefix naming convention (e.g., `recent-tasks` to `get-recent-tasks`).
-- Updated all internal and external references to the old script paths and names.
-- **Workflow Testing Standard:**
-    - Defined a standard for embedding tests (`> TEST:`, `> VERIFY:`) in workflow instruction files.
-    - Created `docs-dev/guides/embedding-tests-in-workflows.md` detailing the standard.
-    - Updated `docs-dev/guides/writing-workflow-instructions.md` to reference the new testing guide.
-    - Added a proposed `bin/test` script to `docs-project/architecture.md`.
-    - Integrated the testing standard into `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/work-on-task.md`, and `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`.
-    - Completed task `v.0.3.x-2` (Design a Standard for Incorporating Tests into AI Agent Workflows).
-- **Development Cycle Documentation Refinement:**
-    - Renamed `docs-dev/guides/task-cycle.md` to `docs-dev/guides/test-driven-development-cycle.md`.
-    - Renamed directory `docs-dev/guides/task-cycle/` to `docs-dev/guides/test-driven-development-cycle/`.
-    - Updated all internal references to these renamed paths.
-    - Deleted redundant `docs-dev/guides/testing/test-cycle.md`.
-- **Minor Cleanup:**
-    - Deleted duplicate directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`.
+
+#### v.0.3.x-4 - 2025-05-27 - Implement Immutability Rules for Specified Paths via Agent Blueprint
+
 - **Agent Operational Boundaries:**
     - Added "Read-Only Paths" and "Ignored Paths" sections to `docs-project/blueprint.md` to define file access rules for the agent.
         - Populated "Ignored Paths" with default common patterns (e.g., `docs-project/done/**/*`, `**/node_modules/**`).
         - Added project-specific "Read-Only Paths" (e.g., `docs-project/releases/**/*`, `docs-project/decisions/**/*`).
     - Updated `docs-dev/workflow-instructions/initialize-project-structure.md` to include these new sections and their default content when generating a new `blueprint.md`.
     - Added a new "Agent Operational Boundaries" section to `docs-dev/guides/project-management.md` to explain the purpose of these blueprint configurations and refer to `docs-project/blueprint.md` for details.
-    - Completed task `v.0.3.x-4` (Implement Immutability Rules for Specified Paths via Agent Blueprint).
+
+#### v.0.3.x-3 - 2025-05-27 - Establish Guidelines for Temporary File Usage by AI Agent
+
+- **Temporary File Usage Guidelines:**
+    - Defined criteria for appropriate use of temporary files by the agent.
+    - Specified recommended locations, naming conventions, and cleanup responsibilities for temporary files.
+    - Documented these guidelines in `docs-dev/guides/temporary-file-management.md` and updated relevant links.
+
+- **Development Cycle Documentation Refinement:**
+    - Renamed `docs-dev/guides/task-cycle.md` to `docs-dev/guides/test-driven-development-cycle.md`.
+    - Renamed directory `docs-dev/guides/task-cycle/` to `docs-dev/guides/test-driven-development-cycle/`.
+    - Updated all internal references to these renamed paths.
+    - Deleted redundant `docs-dev/guides/testing/test-cycle.md`.
+
+#### v.0.3.x-2 - 2025-05-27 - Design a Standard for Incorporating Tests into AI Agent Workflows
+
+- **Workflow Testing Standard:**
+    - Defined a standard for embedding tests (`> TEST:`, `> VERIFY:`) in workflow instruction files.
+    - Created `docs-dev/guides/embedding-tests-in-workflows.md` detailing the standard.
+    - Updated `docs-dev/guides/writing-workflow-instructions.md` to reference the new testing guide.
+    - Added a proposed `bin/test` script to `docs-project/architecture.md`.
+    - Integrated the testing standard into `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/work-on-task.md`, and `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`.
+
+#### v.0.3.x-13 - 2025-05-26 - Create `bin/` Aliases for Common Development Commands
+
+- **Standardized `bin/` Commands:**
+    - Introduced top-level `bin/test`, `bin/lint`, `bin/build`, and `bin/run` alias scripts.
+    - These scripts wrap underlying project-specific commands for consistent developer experience.
+    - Created placeholder binstub templates in `docs-dev/tools/_binstubs/` for new projects.
+    - Documented the new `bin/` aliases.
+
+#### v.0.3.x-6 - 2025-05-26 - Merge tools and utils Directories
+
+- **Tooling Structure Refinement:**
+    - Merged `docs-dev/utils` directory into `docs-dev/tools`.
+    - Renamed scripts in `docs-dev/tools` to follow a verb-prefix naming convention (e.g., `recent-tasks` to `get-recent-tasks`).
+    - Updated all internal and external references to the old script paths and names.
+
+- **Minor Cleanup:**
+    - Deleted duplicate directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`.
 
 ---
 
