@@ -1,0 +1,146 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+
+# --- Configuration ---
+# These paths are relative to the project root where the script is expected to be run from.
+BASE_PATH = Pathname.new("docs-project")
+CURRENT_RELEASES_DIR = BASE_PATH / "current"
+BACKLOG_RELEASES_DIR = BASE_PATH / "backlog"
+TASKS_SUBDIR_NAME = "tasks"
+
+# Regex to validate a pure version string like "v.0.1.0"
+VERSION_REGEX = /^v\.\d+\.\d+\.\d+$/
+# Regex to extract "v.X.Y.Z" from a directory name like "v.X.Y.Z-codename"
+# This regex asserts that the version is at the beginning of the string.
+RELEASE_DIR_VERSION_REGEX = /^(v\.\d+\.\d+\.\d+)/
+
+# --- Helper Functions ---
+
+# Finds a release directory (e.g., vX.Y.Z-codename) given a version string (e.g., vX.Y.Z)
+# Searches in specified search_paths.
+# Returns an array [Pathname_object, version_string_found] or nil.
+def find_release_dir_by_version(version_str_to_find, search_paths)
+  search_paths.each do |base_dir|
+    next unless base_dir.exist? && base_dir.directory?
+    
+    matching_dirs = base_dir.children.select do |child|
+      child.directory? && child.basename.to_s.start_with?(version_str_to_find)
+    end
+
+    if matching_dirs.size > 1
+      warn "Warning: Multiple release directories found starting with '#{version_str_to_find}' in #{base_dir}: #{matching_dirs.map(&:basename).join(', ')}. Using the first one found: #{matching_dirs.first.basename}."
+      # The version_str_to_find is confirmed as the prefix, so it's the authoritative version.
+      return [matching_dirs.first, version_str_to_find]
+    elsif matching_dirs.size == 1
+      return [matching_dirs.first, version_str_to_find]
+    end
+  end
+  nil # Not found in any search path
+end
+
+# Gets the current release directory from CURRENT_RELEASES_DIR.
+# Expects exactly one subdirectory in CURRENT_RELEASES_DIR.
+# Returns an array [Pathname_object, extracted_version_string] or aborts.
+def get_current_release_dir_and_version
+  unless CURRENT_RELEASES_DIR.exist? && CURRENT_RELEASES_DIR.directory?
+    abort "Error: Current releases directory does not exist: #{CURRENT_RELEASES_DIR}"
+  end
+
+  subdirs = CURRENT_RELEASES_DIR.children.select(&:directory?)
+  
+  if subdirs.size == 1
+    dir_path = subdirs.first
+    dir_basename = dir_path.basename.to_s
+    match = dir_basename.match(RELEASE_DIR_VERSION_REGEX)
+    unless match
+      abort "Error: Could not parse leading version (vX.Y.Z) from current release directory name: '#{dir_basename}'. Expected format like 'vX.Y.Z-codename'."
+    end
+    return [dir_path, match[1]] # match[1] is the captured vX.Y.Z
+  elsif subdirs.empty?
+    abort "Error: No release directories found in #{CURRENT_RELEASES_DIR}."
+  else
+    abort "Error: Multiple release directories found in #{CURRENT_RELEASES_DIR}: #{subdirs.map(&:basename).join(', ')}. Please specify a release version or path."
+  end
+end
+
+# --- Argument Parsing and Directory Identification ---
+input_arg = ARGV[0]
+release_dir_path = nil
+# authoritative_version_str will be the "vX.Y.Z" part of the new ID.
+authoritative_version_str = nil 
+
+if input_arg.nil?
+  # Default: Use the single directory in CURRENT_RELEASES_DIR
+  release_dir_path, authoritative_version_str = get_current_release_dir_and_version # Aborts on error/ambiguity
+  
+elsif input_arg.include?('/') || input_arg.include?('\\') # Argument is a path
+  release_dir_path = Pathname.new(input_arg).expand_path # Resolve relative paths
+  unless release_dir_path.exist? && release_dir_path.directory?
+    abort "Error: Specified release path does not exist or is not a directory: #{release_dir_path}"
+  end
+  
+  dir_basename = release_dir_path.basename.to_s
+  dir_name_match = dir_basename.match(RELEASE_DIR_VERSION_REGEX)
+  unless dir_name_match
+    abort "Error: Could not parse leading version (v.X.Y.Z) from specified directory name: '#{dir_basename}'. Expected format like 'v.X.Y.Z-codename'."
+  end
+  authoritative_version_str = dir_name_match[1]
+
+elsif input_arg.match?(VERSION_REGEX) # Argument is a version string like "v.0.1.0"
+  target_version_str = input_arg
+  # Search in current, then backlog.
+  result = find_release_dir_by_version(target_version_str, [CURRENT_RELEASES_DIR, BACKLOG_RELEASES_DIR])
+  unless result
+    abort "Error: Could not find a release directory starting with version '#{target_version_str}' in #{CURRENT_RELEASES_DIR} or #{BACKLOG_RELEASES_DIR}."
+  end
+  release_dir_path, authoritative_version_str = result
+else
+  abort "Usage: #{$PROGRAM_NAME} [version (v.X.Y.Z) | path/to/release/folder (e.g., docs-project/current/v.X.Y.Z-codename)]\\n       (No arguments defaults to the unique release in #{CURRENT_RELEASES_DIR})"
+end
+
+# --- Scan Task Files ---
+tasks_dir = release_dir_path / TASKS_SUBDIR_NAME
+max_task_number = 0
+
+if tasks_dir.exist? && tasks_dir.directory?
+  # Regex to find "id: vX.Y.Z+task.N" where vX.Y.Z matches the authoritative_version_str
+  # This ensures we only count tasks belonging to the target release version.
+  task_id_regex = /^\s*id:\s*#{Regexp.quote(authoritative_version_str)}\+task\.(\d+)/i # case-insensitive for 'id:'
+
+  Dir.glob(tasks_dir / "*.md").each do |task_file_path_str|
+    task_file_path = Pathname.new(task_file_path_str)
+    begin
+      content = task_file_path.read(encoding: "UTF-8") # Specify encoding
+
+      # Split content by '---' lines. Expects:
+      # parts[0]: content before first '---' (should be empty/whitespace for valid frontmatter)
+      # parts[1]: content between first and second '---' (the frontmatter)
+      # parts[2]: content after second '---'
+      parts = content.split(/^---\s*$/m, 3)
+
+      if parts.length > 2 && (parts[0].nil? || parts[0].strip.empty?)
+        frontmatter_text = parts[1]
+        frontmatter_text.each_line do |line|
+          match = line.match(task_id_regex)
+          if match
+            task_num_str = match[1] # The N in +task.N (group 1 of task_id_regex due to non-capturing group for version)
+                                   # Corrected: match[1] is the (\d+) part
+            task_num = task_num_str.to_i
+            max_task_number = task_num if task_num > max_task_number
+            break # Found ID for this file, move to next file
+          end
+        end
+      end
+    rescue StandardError => e
+      warn "Warning: Could not read or parse #{task_file_path.basename}: #{e.message}. Skipping this file."
+    end
+  end
+else
+  # If tasks_dir doesn't exist, it's fine, means this is the first task.
+  # No warning needed unless verbosity is on.
+end
+
+# --- Output New Task ID ---
+next_task_number = max_task_number + 1
+puts "#{authoritative_version_str}+task.#{next_task_number}"

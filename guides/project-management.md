@@ -22,7 +22,7 @@ The `docs-project` directory organizes project documentation and management:
 docs-project
 ├── architecture.md
 ├── backlog
-│   └── v.x.y.z-preflight-for-coding-agent
+│   └── v.0.1.0-preflight-for-coding-agent
 ├── blueprint.md
 ├── current
 ├── done
@@ -44,9 +44,9 @@ docs-project
 
 Tasks are managed within the `docs-project/` subdirectories, representing a simple Kanban-style flow:
 
-- **`docs-project/backlog/`**: Contains directories for future, planned releases (e.g., `docs-project/backlog/v.0.3.0-feature-x/`). Tasks are defined and planned here.
-- **`docs-project/current/`**: Contains the directory for the currently active release (e.g., `docs-project/current/v.0.2.0-streamline-workflow/`). Active development happens here.
-- **`docs-project/done/`**: An archive containing directories of completed and released work.
+- **`docs-project/backlog/`**: Contains directories for future, planned releases. Release directories must use specific semantic versions, including the patch level, followed by a descriptive codename (e.g., `docs-project/backlog/v.0.3.0-new-feature-suite/`). Tasks are defined and planned here.
+- **`docs-project/current/`**: Contains the directory for the currently active release, following the same naming convention: a specific semantic version (including patch level) and a codename (e.g., `docs-project/current/v.0.2.0-streamline-workflow/`). Active development happens here.
+- **`docs-project/done/`**: An archive containing directories of completed and released work, with release directories also following the `v.X.Y.Z-codename` convention (e.g., `docs-project/done/v.0.1.0-initial-setup/`).
 
 Within a release directory (primarily in `docs-project/current/`), individual tasks are represented by **structured Markdown files** (`.md`).
 
@@ -60,9 +60,9 @@ Each task `.md` file should follow this structure:
 
 ```markdown
 ---
-id: <unique_task_id> # e.g., v.0.2.3-1, v.0.3.0-5 (See 'Task ID Convention' below)
-status: [pending | in-progress | done | blocked]
-priority: [high | medium | low]
+id: <unique_task_id> # e.g., v.0.2.3+task.1, v.0.3.0+task.5 (See 'Task ID Convention' below)
+status: [pending | in-progress | done | blocked] # See also VALID_STATUSES in lint-task-metadata for more
+priority: [high | medium | low] # See also VALID_PRIORITIES in lint-task-metadata
 dependencies: [<task_id_1>, <task_id_2>] # List of IDs this task depends on
 comment_ids: [<github_comment_id_1>] # Optional: Links back to PR comments
 ---
@@ -92,11 +92,11 @@ This structured format ensures clarity for both humans and AI agents interacting
 
 The `id` field in the task file's frontmatter serves as a unique identifier for the task across the entire project history. The convention is:
 
-`v.X.Y.Z-<task-number-in-release>`
+`v.X.Y.Z+task.<sequential_number>`
 
 Where:
-- `v.X.Y.Z` is the semantic version of the release the task belongs to.
-- `<task-number-in-release>` is a sequential number (starting from 1) assigned to the task within that specific release.
+- `v.X.Y.Z` is the specific semantic version of the release the task belongs to (e.g., `v.0.3.0`). The patch version `Z` must be explicit and not a placeholder like `x`.
+- `+task.<sequential_number>` is build metadata, as per SemVer, indicating the task sequence within that specific release, starting from 1 (e.g., `+task.1`, `+task.12`).
 
 **Rationale:**
 - **Unique Identification:** This format ensures every task has a globally unique ID, preventing conflicts when referencing tasks from different releases.
@@ -114,17 +114,20 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### 3. Task Workflow
 
-1. **Planning**: Tasks are defined in the appropriate release directory within `docs-project/backlog/` (e.g., `docs-project/backlog/v.0.3.0/tasks/01-new-feature.md`).
-2. **Activation**: When a release becomes active, its directory is moved from `docs-project/backlog/` to `docs-project/current/` (e.g., `mv docs-project/backlog/v.0.2.0 docs-project/current/`).
+1. **Planning**: Tasks are defined in the appropriate release directory (e.g., `v.0.3.0-example-feature/`) within `docs-project/backlog/`. For example, a task file might be `docs-project/backlog/v.0.3.0-example-feature/tasks/001-new-feature.md`.
+2. **Activation**: When a release becomes active, its directory (e.g., `v.0.2.0-active-sprint`) is moved from `docs-project/backlog/` to `docs-project/current/`. For example: `mv docs-project/backlog/v.0.2.0-active-sprint docs-project/current/`.
 3. **Execution**: Developers work on tasks within `docs-project/current/{release_dir}/tasks/`, updating the status in the task file's frontmatter as they progress (`pending` -> `in-progress` -> `done`).
 4. **Completion**: Once all tasks for a release in `docs-project/current/` are marked `done`, the release process begins.
-5. **Archiving**: After a release is successfully shipped, its directory is moved from `docs-project/current/` to `docs-project/done/` (e.g., `mv docs-project/current/v.0.2.0 docs-project/done/`).
+5. **Archiving**: After a release is successfully shipped, its directory (e.g., `v.0.2.0-active-sprint`) is moved from `docs-project/current/` to `docs-project/done/`. For example: `mv docs-project/current/v.0.2.0-active-sprint docs-project/done/`.
 
 ### 4. Task Transitions
 
 #### Tooling for Task Progression
 
-- Use `bin/tn` (get-next-task) to quickly identify the next actionable task in the current release. This tool checks all tasks and their dependencies, skipping those that are done or blocked, and surfaces the next one ready to be worked on.
+- **`bin/tn` (`get-next-task`)**: Identifies the next actionable task in the current release (by default, or a specified release). This tool considers task dependencies, prioritizes `in-progress` tasks over `pending` ones, and sorts tasks numerically by their sequential ID number (e.g., `+task.2` before `+task.10`).
+- **`bin/tnid` (`get-next-task-id`)**: Generates the next available full task ID (e.g., `v.X.Y.Z+task.N+1`) for a specified release (or the current release by default). This helps in creating new task files with correctly formatted and unique IDs.
+- **`bin/gat` (`get-all-tasks`)**: Lists all tasks within a specified release (or the current release by default). Tasks are topologically sorted based on their dependencies, and then secondarily by their task ID's sequential number. The output for each task includes its ID, status, title, and dependencies. The "next actionable task" (as would be identified by `bin/tn`) is highlighted in the list.
+- **`bin/lint`**: Includes a task metadata linter (`docs-dev/tools/lint-task-metadata`) that validates task files in `docs-project/backlog` and `docs-project/current` for correct ID format, required fields (status, priority), valid values, and other conventions.
 
 When moving a task between states, follow these guidelines:
 

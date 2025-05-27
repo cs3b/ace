@@ -53,7 +53,7 @@ guides
 
 ~~~markdown
 ---
-id: v.X.Y.Z-<task_number> # REQUIRED - Unique ID (e.g., v.0.2.3-1). See docs-dev/guides/project-management.md#task-id-convention
+id: v.X.Y.Z+task.<sequential_number> # REQUIRED - Unique ID (e.g., v.0.2.3+task.1). See docs-dev/guides/project-management.md#task-id-convention
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: <high/medium/low>
 estimate: <n>h
@@ -124,7 +124,7 @@ Copy ➜ fill ➜ ship.
 
 ~~~markdown
 ---
-id: DOC-01
+id: v.0.1.0+task.1 # Example ID, replace with actual generated ID
 status: pending
 priority: high
 estimate: 8 h
