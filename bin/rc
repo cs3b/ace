@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# bin/rc: Thin wrapper for get-current-release-path utility
+exec "$(dirname "$0")/../docs-dev/tools/get-current-release-path.sh" "$@"
