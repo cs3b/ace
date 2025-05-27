@@ -12,7 +12,7 @@ LINT_SUCCESS=true
 # Run markdownlint for all Markdown files, ignoring node_modules
 # Pass any arguments received by this script to markdownlint
 echo "INFO: Running markdownlint..."
-if npx markdownlint-cli '**/*.md' --ignore node_modules --ignore docs-project/done --ignore docs-project/sessions "$@"; then
+if npx markdownlint-cli '**/*.md' --config .markdownlint.json --ignore node_modules --ignore docs-project/done --ignore docs-project/sessions "$@"; then
   echo "INFO: markdownlint passed."
 else
   echo "ERROR: markdownlint found issues."
