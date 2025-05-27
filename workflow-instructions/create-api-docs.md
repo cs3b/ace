@@ -29,6 +29,6 @@ Generate or update API documentation for public interfaces (classes, modules, me
 - [x] Documentation covers key aspects: purpose, params, returns, examples, exceptions, notes.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Documentation Standards Guide](docs-dev/guides/documentation.md) (Provides specific examples and tag usage)
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)

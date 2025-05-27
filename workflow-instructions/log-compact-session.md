@@ -84,7 +84,6 @@ The `log-session` workflow instruction should be used periodically, especially:
 
 This workflow is designed for quick state capture. For deeper analysis and synthesis of session activities into actionable improvements or project retrospectives, refer to the [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) workflow, which may use these compact session logs as one of its inputs.
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 - [Project Management Guide](docs-dev/guides/project-management.md)
 - [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) (For synthesizing session data into broader reflections)
 

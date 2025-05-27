@@ -42,7 +42,7 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
 - [x] Documentation is saved in the correct location.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [User Docs Template](docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md)
 - [User Experience Template](docs-dev/guides/prepare-release/v.x.x.x/user-experience/_template.md)

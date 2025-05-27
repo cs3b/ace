@@ -175,4 +175,4 @@ For specific code examples demonstrating error handling patterns, custom error c
 ## Related Documentation
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Logging, Monitoring)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+

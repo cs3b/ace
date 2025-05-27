@@ -92,4 +92,4 @@ project-root/
 - [Documentation Standards](docs-dev/guides/documentation.md)
 - [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.md)
 - [Project Management Guide](docs-dev/guides/project-management.md) (AI Collaboration context)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+

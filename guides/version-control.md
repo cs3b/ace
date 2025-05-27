@@ -262,5 +262,4 @@ For specific examples of setting up Git hooks with specialized hook management t
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task workflow integration)
 - [Release Process Guide](docs-dev/guides/ship-release.md) (Tagging, Changelog)
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (PR Template, Code Review)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
 - Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-commit.md`

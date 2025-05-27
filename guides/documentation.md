@@ -186,4 +186,4 @@ For specific examples of documentation generation tools, comment styles, or conv
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
 - [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+

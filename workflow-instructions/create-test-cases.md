@@ -38,6 +38,6 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 - [x] Generated tests align with principles in `docs-dev/guides/testing.md`.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Testing Guidelines Guide](docs-dev/guides/testing.md)
 - [Test Cases Template](docs-dev/guides/prepare-release/v.x.x.x/test-cases/_template.md)

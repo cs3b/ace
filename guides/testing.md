@@ -110,6 +110,6 @@ Following these principles makes it easier to write focused unit tests and provi
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (Test Coverage, CI)
 - [Performance Tuning Guide](docs-dev/guides/performance.md) (Performance Testing)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+
 - [Troubleshooting Workflow](docs-dev/guides/troubleshooting-workflow.md)
 - Relevant Workflow Instructions: `docs-dev/workflow-instructions/work-on-task.md` (includes testing guidance), `docs-dev/workflow-instructions/fix-tests.md` (for diagnosing and fixing failing tests)

@@ -30,6 +30,6 @@ Generate a context-specific code review checklist based on the nature of the cha
 - [x] The checklist highlights relevant areas for review based on the changes' scope and potential impact.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (Contains base checklist and PR template)
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)

@@ -243,7 +243,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 - Sets up version control integration for documentation.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Project Management Guide](docs-dev/guides/project-management.md) (Explains the created structure)
 - [What We Build Example](docs-project/what-do-we-build.md) (Actual generated file)
 - [Architecture Example](docs-project/architecture.md) (Actual generated file)

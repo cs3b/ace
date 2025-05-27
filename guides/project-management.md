@@ -197,7 +197,7 @@ Essential standards and guidelines:
 - [Error Handling](docs-dev/guides/error-handling.md)
 - [Performance](docs-dev/guides/performance.md)
 - [Security](docs-dev/guides/security.md)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+
 - [Troubleshooting Workflow](docs-dev/guides/troubleshooting-workflow.md)
 - [Strategic Planning Guide](docs-dev/guides/strategic-planning-guide.md)
 - [Project Roadmap](docs-project/roadmap.md)

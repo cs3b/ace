@@ -14,30 +14,29 @@ user-provided release scope into actionable tasks.
 
 ## Process Steps
 
-1. **Load Context**  
+1. **Load Context**
    * Read this instruction file and all referenced guides:
-     * [Writing Workflow Instructions](docs-dev/guides/writing-workflow-instructions.md)
      * [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
      * Language-specific sub-guides in `docs-dev/guides/prepare-release/` as needed.
 
-2. **Gather Release Metadata**  
+2. **Gather Release Metadata**
    * Ask the user for:
      * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
      * Release codename (derive from user input if not explicitly given).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-3. **Create Release Directory and Overview File**  
+3. **Create Release Directory and Overview File**
    * Create the target release directory using the specific semantic version: `docs-project/backlog/v.X.Y.Z-<codename>/` (e.g., `docs-project/backlog/v.0.3.0-new-feature/`).
    * Create standard sub-directories within the new release directory (e.g., `tasks/`, `docs/`, `decisions/`, `codemods/`, `reflections/`, `researches/`, `test-cases/`, `user-experience/`) mirroring the structure found in `docs-dev/guides/prepare-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these subdirectories at this stage.
    * Copy the main release overview template file from `docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md` to `docs-project/backlog/v.X.Y.Z-<codename>/v.x.x.x-codename.md`.
    * Rename the newly copied overview file in the target directory to `v.X.Y.Z-<codename>.md` (matching the directory's version and codename).
 
-4. **Populate Overview Document**  
+4. **Populate Overview Document**
    * Open the new overview file and fill in:
      * Release title, goals, and **Collected Notes** section containing the raw user input.
      * Initial high-level implementation plan (checkbox list) to be refined later.
 
-5. **Break Down Scope Into Tasks**  
+5. **Break Down Scope Into Tasks**
    * Use the [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md) if the raw notes are lengthy or unstructured.
    * For each distinct item in the (possibly refined) user input:
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
@@ -48,12 +47,12 @@ user-provided release scope into actionable tasks.
         * Title and content derived from the user note.
      4. In the original user note (file or pasted text), append a comment with the created task id for traceability.
 
-6. **Ensure Completeness**  
+6. **Ensure Completeness**
    * Verify that **every sentence or bullet** from the user input maps to at least one
      task file. Highlight any ambiguous or under-specified note in the chat and request
      clarification.
 
-7. **Prepare Commit Message (Do NOT Execute)**  
+7. **Prepare Commit Message (Do NOT Execute)**
    * Output the following command **verbatim** for the user’s convenience, ensuring `v.X.Y.Z` is the specific version:
 
      ```bash
@@ -61,7 +60,7 @@ user-provided release scope into actionable tasks.
      ```
    * Do **not** run the command automatically.
 
-8. **Review With User**  
+8. **Review With User**
    * List all newly created files and their ids.
    * Ask the user to confirm or adjust:
      * Version and codename
@@ -87,7 +86,7 @@ user-provided release scope into actionable tasks.
 - [Version Control Guide](docs-dev/guides/version-control.md)
 
 ## Usage Example
-> “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.  
+> “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.
 > Expected version: `v.0.3.0`, codename: `atlas`.”
 
 ---

@@ -194,4 +194,4 @@ For specific examples of tool configurations (e.g., linters, static analyzers, c
 - [Testing Guidelines](docs-dev/guides/testing.md)
 - [Version Control](docs-dev/guides/version-control.md) (PR Templates)
 - [Security](docs-dev/guides/security.md)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+

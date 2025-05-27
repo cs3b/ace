@@ -42,7 +42,7 @@ guides
 | **Scope of Work** | *What* to touch | Which guides/folders? |
 | **Deliverables / Manifest** | Exact files to create / modify / delete | Could a newcomer do it with just this? |
 | **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
-| **Implementation Plan** | **Detailed execution steps** | **Checklist (`- [ ]`) of actions to perform? Consider embedding automated test/verification steps directly. See [Embedding Tests Guide](./embedding-tests-in-workflows.md).** |
+**Checklist (`- [ ]`) of actions to perform? Consider embedding automated test/verification steps directly.**
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
 | **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](./embedding-tests-in-workflows.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
@@ -93,7 +93,7 @@ Why are we doing this?
 3. Refactor …
 
 ## Implementation Plan
-*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format. Consider embedding verification steps directly after an action, using the [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md).*
+*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format. Consider embedding verification steps directly after an action.*
 - [ ] Step 1: Describe the first action.
 - [ ] Step 2: Describe the second action, which produces a verifiable outcome.
   > TEST: Verify Action 2 Outcome
@@ -103,7 +103,7 @@ Why are we doing this?
 - [ ] ... Add more steps as needed.
 
 ## Acceptance Criteria
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan. Refer to the [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md) for automating checks.*
+*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan.*
 - [ ] AC 1: All specified deliverables created/modified.
 - [ ] AC 2: Key functionalities (if applicable) are working as described.
 - [ ] AC 3: All automated checks in the Implementation Plan pass.
@@ -112,8 +112,6 @@ Why are we doing this?
 - ❌ …
 
 ## References
-- [writing-guides-guide.md](docs-dev/guides/writing-guides-guide.md)
-- [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md)
 ~~~
 
 Copy ➜ fill ➜ ship.
@@ -236,9 +234,7 @@ Split language‑specific snippets out of *every* general guide so developers ca
 - Do not rewrite existing examples—only relocate.
 
 ## References
-- [`writing-guides-guide.md`](docs-dev/guides/writing-guides-guide.md)  
-- [Embedding Tests in AI Agent Workflows Guide](./embedding-tests-in-workflows.md)
-- ADR‑010 “Documentation Structure”  
+- ADR‑010 “Documentation Structure”
 - `.remarkrc` for lint rules
 
 ## Risks & Mitigations

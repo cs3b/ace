@@ -127,4 +127,4 @@ While the core cycle remains the same, specific commands and tools vary by techn
     *   [Version Control Guide](docs-dev/guides/version-control.md)
     *   [Coding Standards](docs-dev/guides/coding-standards.md)
     *   [Project Management Guide](docs-dev/guides/project-management.md)
-    *   [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md) (Style reference)
+

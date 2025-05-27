@@ -16,14 +16,16 @@ You typically integrate this toolkit into your project by adding it as a Git sub
 Here's a breakdown of the core directories within this toolkit:
 
 *   **`guides/`**: Contains detailed guides on various development practices.
-    *   `coding-standards.md`: Guidelines for writing clean, maintainable code.
-    *   `documentation.md`: Standards for creating and maintaining project documentation.
-    *   `project-management.md`: Overview of the project management approach facilitated by this toolkit, explaining the use of `docs-project` for tasks, backlog, etc.
-    *   `ship-release.md`: Procedures for releasing new versions of software.
-    *   `testing.md`: Strategies and best practices for software testing.
-    *   `version-control.md`: Best practices for using Git and managing branches.
-    *   `writing-workflow-instructions.md`: A guide on how to write new workflow instructions compatible with this toolkit.
-    *   *(Other guides as developed, e.g., API Design, Security Best Practices)*
+    *   **`guides/`**: Conceptual guides, best practices, and standards for development within this project. These explain _how_ we do things. This directory includes a `.meta/` subdirectory for guides that are self-referential, describing the process of creating or maintaining the documentation and workflows themselves.
+        *   `README.md`: Index for all guides.
+        *   `coding-standards.md`: Guidelines for writing clean, maintainable code.
+        *   `documentation.md`: Standards for creating and maintaining project documentation.
+        *   `project-management.md`: Overview of the project management approach facilitated by this toolkit, explaining the use of `docs-project` for tasks, backlog, etc.
+        *   `ship-release.md`: Procedures for releasing new versions of software.
+        *   `testing.md`: Strategies and best practices for software testing.
+        *   `version-control.md`: Best practices for using Git and managing branches.
+        *   `docs-dev/guides/.meta/writing-workflow-instructions-guide.md`: A guide on how to write new workflow instructions compatible with this toolkit.
+        *   *(Other guides as developed, e.g., API Design, Security Best Practices)*
 *   **`workflow-instructions/`**: Provides step-by-step instructions for specific development tasks, intended for AI or human execution.
     *   `initialize-project-structure.md`: Sets up the `docs-project/` directory and core documents in a new or existing project.
     *   `create-user-docs.md`: Guides the creation of user-facing documentation for features.

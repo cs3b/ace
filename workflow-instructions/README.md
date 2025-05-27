@@ -4,8 +4,6 @@
 
 This directory contains detailed, step-by-step instructions designed to be followed by an AI agent (often guided by a user) to perform common development and project management tasks.
 
-Refer to the [Writing Effective Workflow Instructions Guide](../guides/writing-workflow-instructions.md) for details on structure and best practices.
-
 ## Core Workflow
 
 -   [Load Environment](./load-env.md): Load project context, guides, and task information.

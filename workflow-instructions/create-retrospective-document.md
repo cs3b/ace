@@ -66,7 +66,7 @@ To create a comprehensive retrospective document for a completed release cycle (
 - [x] Actionable improvements are identified.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+
 - [Retrospective Template](docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md)
 - [`log-compact-session` Workflow Instruction](docs-dev/workflow-instructions/log-compact-session.md) (Potential input for retrospectives)
 - [Project Management Guide](docs-dev/guides/project-management.md) (For context on tasks, releases)

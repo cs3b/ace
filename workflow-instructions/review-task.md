@@ -77,7 +77,6 @@ Review and refine a task definition, potentially proposing an implementation app
 
 ## Reference Documentation
 
-*   [Writing Effective Workflow Instructions Guide](../guides/writing-workflow-instructions.md) (How to structure workflows)
 *   [Write Actionable Task Guide](../guides/write-actionable-task.md) (Format for task files)
 *   [Project Management Guide](../guides/project-management.md) (Task status, dependencies, overall workflow)
 *   [Load Environment Workflow Instruction](./load-env.md) (Provides necessary context including recent changes)

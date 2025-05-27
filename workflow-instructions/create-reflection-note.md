@@ -57,4 +57,4 @@ To capture individual or team observations, learnings, and ideas for improvement
 ## Reference Documentation
 - [Reflection Template (`_template.md`)](docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md)
 - [`create-retrospective-document.md` Workflow Instruction](./create-retrospective-document.md)
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
+- [Writing Workflow Instructions Guide](docs-dev/guides/.meta/writing-workflow-instructions-guide.md)

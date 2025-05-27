@@ -129,4 +129,4 @@ For specific code examples demonstrating security best practices, configuration 
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Code Review)
 - [Error Handling](docs-dev/guides/error-handling.md) (Avoid leaking sensitive info)
-- [Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)
+

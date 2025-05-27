@@ -45,7 +45,6 @@
 5.  **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `work-on-task`.
 
 ## Reference Documentation
-- [Writing Workflow Instructions Guide](docs-dev/guides/writing-workflow-instructions.md)
 - [Project Management Guide](docs-dev/guides/project-management.md)
 - [Coding Standards Guide](docs-dev/guides/coding-standards.md)
 - [Testing Guidelines Guide](docs-dev/guides/testing.md)
