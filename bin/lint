@@ -9,8 +9,8 @@ echo "INFO: Running 'bin/lint' from project root: $(pwd)"
 
 LINT_SUCCESS=true
 
-# Run markdownlint for all Markdown files, ignoring node_modules
-# Pass any arguments received by this script to markdownlint
+Run markdownlint for all Markdown files, ignoring node_modules
+Pass any arguments received by this script to markdownlint
 echo "INFO: Running markdownlint..."
 if npx markdownlint-cli '**/*.md' --ignore node_modules "$@"; then
   echo "INFO: markdownlint passed."
@@ -24,7 +24,7 @@ LINK_CHECKER_SCRIPT="docs-dev/tools/lint-md-links.rb"
 echo "INFO: Running link checker script: $LINK_CHECKER_SCRIPT..."
 if [ -f "$LINK_CHECKER_SCRIPT" ]; then
   # Assuming the script takes no arguments or handles them internally
-  if ruby "$LINK_CHECKER_SCRIPT"; then
+  if ruby "$LINK_CHECKER_SCRIPT" docs-dev/**/*; then
     echo "INFO: Link checker ($LINK_CHECKER_SCRIPT) passed."
   else
     echo "ERROR: Link checker ($LINK_CHECKER_SCRIPT) found issues."

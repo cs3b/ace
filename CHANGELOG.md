@@ -8,6 +8,20 @@ All notable changes to this project will be documented in this file.
 - Merged `docs-dev/utils` directory into `docs-dev/tools`.
 - Renamed scripts in `docs-dev/tools` to follow a verb-prefix naming convention (e.g., `recent-tasks` to `get-recent-tasks`).
 - Updated all internal and external references to the old script paths and names.
+- **Workflow Testing Standard:**
+    - Defined a standard for embedding tests (`> TEST:`, `> VERIFY:`) in workflow instruction files.
+    - Created `docs-dev/guides/embedding-tests-in-workflows.md` detailing the standard.
+    - Updated `docs-dev/guides/writing-workflow-instructions.md` to reference the new testing guide.
+    - Added a proposed `bin/test` script to `docs-project/architecture.md`.
+    - Integrated the testing standard into `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/work-on-task.md`, and `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`.
+    - Completed task `v.0.3.x-2` (Design a Standard for Incorporating Tests into AI Agent Workflows).
+- **Development Cycle Documentation Refinement:**
+    - Renamed `docs-dev/guides/task-cycle.md` to `docs-dev/guides/test-driven-development-cycle.md`.
+    - Renamed directory `docs-dev/guides/task-cycle/` to `docs-dev/guides/test-driven-development-cycle/`.
+    - Updated all internal references to these renamed paths.
+    - Deleted redundant `docs-dev/guides/testing/test-cycle.md`.
+- **Minor Cleanup:**
+    - Deleted duplicate directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`.
 
 ---
 
@@ -80,7 +94,7 @@ Changes in this period are summarized by their release version.
     - Created a new `ship-release` workflow. (Task `22-create-ship-release-workflow`)
 - **Documentation Quality & Structure Improvements:**
     - Created guides for troubleshooting (`docs-dev/guides/troubleshooting-workflow.md`). (Task `04-high-level-dev-debug-workflow`)
-    - Created guide for task implementation cycle (`docs-dev/guides/task-cycle.md`). (Task `05-support-writing-workflow-guide`)
+    - Created guide for task implementation cycle (`docs-dev/guides/test-driven-development-cycle.md`). (Task `05-support-writing-workflow-guide`)
     - Split testing guides by technology. (Task `06-split-testing-guides-by-tech`)
     - Reviewed and improved `prepare-release` templates. (Task `19-review-prepare-release-templates`)
 
