@@ -22,6 +22,13 @@ All notable changes to this project will be documented in this file.
     - Deleted redundant `docs-dev/guides/testing/test-cycle.md`.
 - **Minor Cleanup:**
     - Deleted duplicate directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`.
+- **Agent Operational Boundaries:**
+    - Added "Read-Only Paths" and "Ignored Paths" sections to `docs-project/blueprint.md` to define file access rules for the agent.
+        - Populated "Ignored Paths" with default common patterns (e.g., `docs-project/done/**/*`, `**/node_modules/**`).
+        - Added project-specific "Read-Only Paths" (e.g., `docs-project/releases/**/*`, `docs-project/decisions/**/*`).
+    - Updated `docs-dev/workflow-instructions/initialize-project-structure.md` to include these new sections and their default content when generating a new `blueprint.md`.
+    - Added a new "Agent Operational Boundaries" section to `docs-dev/guides/project-management.md` to explain the purpose of these blueprint configurations and refer to `docs-project/blueprint.md` for details.
+    - Completed task `v.0.3.x-4` (Implement Immutability Rules for Specified Paths via Agent Blueprint).
 
 ---
 
