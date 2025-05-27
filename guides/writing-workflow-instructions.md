@@ -1,5 +1,6 @@
 # Writing Effective Workflow Instructions
 
+
 This guide explains how to create and structure the Markdown-based workflow instructions used by the AI agent within this project. Effective instructions are clear, specific, and provide sufficient context for the AI to perform tasks accurately and efficiently.
 **Important:** These instructions are designed to be *read and followed by the AI agent*. They are not scripts to be executed directly in a shell. The user typically invokes a workflow by asking the agent to follow the steps outlined in a specific instruction file, often providing necessary inputs like file paths.
 
@@ -81,6 +82,10 @@ Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 *   `docs-dev/workflow-instructions/load-env.md`: Focuses on context gathering.
 *   `docs-dev/workflow-instructions/breakdown-notes-into-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
 *   `docs-dev/workflow-instructions/lets-commit.md`: Guides a specific, common developer action referencing external standards.
+
+## See Also
+
+- [Embedding Tests in AI Agent Workflows](./embedding-tests-in-workflows.md)
 
 ## Writing Style Tips
 

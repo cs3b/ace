@@ -91,7 +91,7 @@ Following these principles makes it easier to write focused unit tests and provi
 
 ## 6. Running Tests
 
-- Configure a default task to run the full suite (e.g., `bundle exec rspec`, `npm test`, `cargo test`, `bun test`).
+- To run the full suite use `bin/test`.
 - Provide ways to run specific files or individual tests for faster feedback during development.
 - Integrate tests into the CI/CD pipeline.
 
