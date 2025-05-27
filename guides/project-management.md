@@ -175,6 +175,15 @@ Tasks and release structures are typically generated through one of three primar
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance. Provide detailed context and specific instructions derived from your planning phase. Review all AI output critically. Refer to `docs-dev/guides/coding-standards.md` for more on AI collaboration best practices.
 
+## Agent Operational Boundaries
+
+To ensure project integrity and prevent unintentional modifications to critical or archived areas, the AI agent's operations are guided by path-based restrictions defined in the project's `docs-project/blueprint.md` file. These restrictions specify:
+
+- **Read-Only Paths**: Files and directories that the agent should not attempt to modify. This is useful for protecting completed work (like released tasks or documentation) or sensitive configuration files.
+- **Ignored Paths**: Files, directories, or glob patterns that the agent should disregard entirely during its operations (e.g., search, read, edit). This typically includes build artifacts, version control directories, temporary files, and other non-essential items.
+
+By adhering to these rules, the agent can operate more safely and efficiently within the project. For the specific configurations of these paths for this project, please refer to the "Read-Only Paths" and "Ignored Paths" sections in `docs-project/blueprint.md`.
+
 ## Related Documentation
 
 Essential standards and guidelines:

@@ -129,6 +129,79 @@ Example structure:
 [Customization and extension capabilities]
 ```
 
+### docs-project/blueprint.md
+
+The workflow instruction generates this file, which serves as a quick reference for project structure and key operational guidelines for an AI agent. It includes sections for read-only and ignored paths to guide agent behavior.
+
+Example structure:
+```markdown
+# Project Blueprint: [Project Name]
+
+## What is a Blueprint?
+
+This document provides a concise overview of the project's structure and organization, highlighting key directories and files to help developers (especially AI assistants) quickly understand how to navigate the codebase. It should be updated periodically using the `update-blueprint` workflow.
+
+## Core Project Documents
+- [What We Build](docs-project/what-do-we-build.md) - Project vision and goals
+- [Architecture](docs-project/architecture.md) - System design and implementation principles
+
+## Project Organization
+
+This project follows a documentation-first approach with these primary directories:
+
+- **docs-dev/** - Development resources for the toolkit itself
+  - **guides/** - Best practices and standards for various aspects of development
+  - **tools/** - Utility scripts to support development workflows
+  - **workflow-instructions/** - Structured commands for AI agents to execute common tasks
+  - **zed/** - Integration with Zed editor
+
+- **docs-project/** - Project-specific documentation
+  - **current/** - Active release cycle work
+  - **backlog/** - Pending tasks for future releases
+  - **done/** - Completed releases and tasks
+  - **decisions/** - Architecture Decision Records (ADRs)
+
+- **bin/** - Executable scripts for project management and automation
+
+## View Complete Directory Structure
+
+To see the complete filtered directory structure, run:
+
+` ``bash
+bin/tree
+` ``
+
+This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
+
+## Key Project-Specific Files
+
+- [Workflow Instructions](docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](docs-dev/guides/README.md) - Development standards and best practices
+
+## Read-Only Paths
+
+This section lists files and directories that the agent should treat as read-only. Attempts to modify these paths should be flagged or prevented.
+
+- *Add project-specific read-only globs here (e.g., `docs-project/releases/**/*`)*
+
+## Ignored Paths
+
+This section lists files, directories, or glob patterns that the agent should ignore entirely during its operations (e.g., when searching, reading, or editing files).
+
+- `docs-project/done/**/*` # Default: Protects completed tasks and releases
+- `**/node_modules/**`
+- `**/.git/**`
+- `**/__pycache__/**`
+- `*.session.log`
+- `*.lock`
+- `*.tmp`
+- `*~` # Backup files
+
+## Submodules
+
+The project currently has no Git submodules. All code is contained within this single repository.
+```
+
 ## Output / Success Criteria
 
 1. **Directory Structure**:
@@ -139,7 +212,7 @@ Example structure:
 2. **Core Documentation**:
    - `docs-project/what-do-we-build.md` created with clear project vision.
    - `docs-project/architecture.md` reflects actual project structure and includes the primary technology stack.
-   - `docs-project/blueprint.md` generated (or placeholder created).
+   - `docs-project/blueprint.md` generated with sections for "Read-Only Paths" (including a placeholder for project-specific rules) and "Ignored Paths" (pre-populated with defaults like `docs-project/done/**/*` and common examples).
    - Documentation is concise yet complete.
 
 3. **Tailored Guides**:
