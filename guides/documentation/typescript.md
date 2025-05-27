@@ -2,8 +2,8 @@
 
 This file provides TypeScript-specific examples related to the main [Documentation Standards Guide](../documentation.md).
 
-*   **Tools:** JSDoc (with TypeScript syntax), TypeDoc
-*   **Conventions:** [Add relevant TypeScript documentation conventions here]
+* **Tools:** JSDoc (with TypeScript syntax), TypeDoc
+* **Conventions:** [Add relevant TypeScript documentation conventions here]
 
 ```typescript
 /**

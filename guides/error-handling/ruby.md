@@ -2,8 +2,8 @@
 
 This file provides Ruby-specific examples related to the main [Error Handling Guide](../error-handling.md).
 
-*   **Mechanism:** `begin`/`rescue`/`ensure`/`raise`
-*   **Standard Library:** StandardError hierarchy
+* Mechanism: begin/rescue/ensure/raise
+* Standard Library: StandardError hierarchy
 
 ```ruby
 class CustomError < StandardError

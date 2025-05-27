@@ -1,19 +1,19 @@
-> This page is a language-specific companion to [../coding-standards.md](../coding-standards.md)
-
 # Rust Coding Standards
+
+> This page is a language-specific companion to [../coding-standards.md](../coding-standards.md)
 
 ## Formatting & Style
 
-(Add Rust-specific formatting rules, e.g., `rustfmt` usage)
+- (Add Rust-specific formatting rules, e.g., `rustfmt` usage)
 
 ## Naming Conventions
 
-(Add Rust-specific naming conventions following Rust API guidelines)
+- (Add Rust-specific naming conventions following Rust API guidelines)
 
 ## Best Practices
 
-(Add Rust-specific best practices, e.g., ownership, lifetimes, error handling with `Result`)
+- (Add Rust-specific best practices, e.g., ownership, lifetimes, error handling with `Result`)
 
 ## Tooling
 
-(Mention relevant Rust linters like `clippy`, formatters like `rustfmt`)
+- (Mention relevant Rust linters like `clippy`, formatters like `rustfmt`)

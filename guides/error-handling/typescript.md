@@ -2,8 +2,8 @@
 
 This file provides TypeScript-specific examples related to the main [Error Handling Guide](../error-handling.md).
 
-*   **Mechanism:** `try`/`catch`/`finally`/`throw`
-*   **Custom Errors:** Extend the built-in `Error` class.
+* **Mechanism:** try/catch/finally/throw
+* **Custom Errors:** Extend the built-in Error class.
 
 ```typescript
 class CustomError extends Error {

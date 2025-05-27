@@ -2,9 +2,9 @@
 
 This file provides Rust-specific examples related to the main [Performance Guide](../performance.md).
 
-*   **Benchmarking:** `cargo bench` (requires nightly toolchain or stable with `criterion` crate), `std::time::Instant`.
-*   **Profiling:** `perf` (Linux), Instruments (macOS), `cargo flamegraph`, `pprof` crate.
-*   **Memory Analysis:** Valgrind (with caution), `dhat` crate, platform-specific tools.
+* **Benchmarking:** `cargo bench` (requires nightly toolchain or stable with `criterion` crate), `std::time::Instant`.
+* **Profiling:** `perf` (Linux), Instruments (macOS), `cargo flamegraph`, `pprof` crate.
+* **Memory Analysis:** Valgrind (with caution), `dhat` crate, platform-specific tools.
 
 ```rust
 use std::time::Instant;

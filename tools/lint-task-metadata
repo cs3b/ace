@@ -62,9 +62,9 @@ def validate_frontmatter(fm, file_path, errors)
     id_val = fm['id']
     if id_val.is_a?(String)
       unless id_val.match?(VALID_ID_REGEX)
-        errors << "#{file_path}: ERROR: Invalid 'id' format: '#{id_val}'. Expected format like 'vX.Y.Z+task.N'."
+        errors << "#{file_path}: ERROR: Invalid 'id' format: '#{id_val}'. Expected format like 'v.X.Y.Z+task.N'."
       end
-    else
+    elsif !(id_val.integer? && file_path.to_s.include?('backlog'))
       errors << "#{file_path}: ERROR: 'id' field must be a string. Found: #{id_val.class} ('#{id_val}')."
     end
   end

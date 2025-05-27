@@ -1,13 +1,14 @@
 # Error Handling Guidelines
 
 ## Goal
-This guide outlines best practices and standard patterns for handling errors consistently and effectively throughout the project, ensuring robustness, debuggability, and a good user experience.
 
-# Error Handling Guidelines
+This guide outlines the fundamental principles and standards for handling errors consistently and effectively
+throughout the project, ensuring robustness, debuggability, and a good user experience.
 
-### 1. Exception Hierarchy
+## Exception Hierarchy
 
-Establish a clear hierarchy for custom exceptions or error types specific to your application or library. This allows for more granular error handling.
+Establish a clear hierarchy for custom exceptions or error types specific to your application or
+library. This allows for more granular error handling.
 
 - Define a base error class/type for your application (e.g., `MyAppError`).
 - Create specific error subclasses that inherit from the base error (e.g., `ConfigurationError`, `ApiError`, `DatabaseError`).
@@ -32,10 +33,11 @@ class ExternalServiceError extends MyAppError {
 }
 ```
 
-### 2. Best Practices
+## Best Practices
 
 1. **Rich Context**:
-   When catching and logging errors, include as much relevant context as possible without logging sensitive data. This aids debugging.
+   When catching and logging errors, include as much relevant context as possible without logging sensitive data.
+   This aids debugging.
    ```javascript
    // Pseudo-code example
    try {
@@ -80,7 +82,7 @@ class ExternalServiceError extends MyAppError {
    ```
 
 3. **Clean Resource Management**:
-   Ensure resources (files, network connections, locks) are properly released, even if errors occur. Use `try...finally` or equivalent language constructs (like Python's `with` statement or Go's `defer`).
+   Ensure resources (files, network connections, locks) are properly released, even if errors occur. Use\n   `try...finally` or equivalent language constructs (like Python\'s `with` statement or Go\'s `defer`).
    ```javascript
    // Pseudo-code example
    let resource = acquireResource();
@@ -92,9 +94,9 @@ class ExternalServiceError extends MyAppError {
    }
    ```
 
-### 3. Debugging Guide
+## Debugging Guide
 
-### 4. Advanced Error Handling Patterns
+## Advanced Error Handling Patterns
 
 Consider these patterns for more robust applications:
 
@@ -144,22 +146,25 @@ Consider these patterns for more robust applications:
    ```
 
 3. **Common Issues**:
+
 - LLM timeouts: Check network and retry settings
 - Memory issues: Review resource cleanup
 - Thread deadlocks: Check lock ordering
 
-### 5. Error Context
+## Error Context
 
 Always include relevant context when raising or logging errors. This aids debugging significantly.
 
 **Good Context:**
+
 ```plaintext
 // Log the error with context
-logError("Failed to process user data", error, { userId: 123, operation: 'updateProfile' });
+logError(\"Failed to process user data\", error, { userId: 123, operation: \'updateProfile\' });
 
 // Raise error with context
-throw new UserProcessingError("Failed to update profile for user 123", { originalError: error, userId: 123 });
+throw new UserProcessingError(\"Failed to update profile for user 123\", { originalError: error, userId: 123 });
 ```
+
 
 **Avoid Generic Messages:**
 ```plaintext
@@ -170,9 +175,11 @@ throw new Error("Something went wrong");
 
 ## Language/Environment-Specific Examples
 
-For specific code examples demonstrating error handling patterns, custom error classes, or library integrations in different languages (e.g., Ruby's `begin/rescue`, Python's `try/except`, JavaScript's `try/catch`, Rust's `Result/panic`), please refer to the examples in the [./error-handling/](./error-handling/) sub-directory.
+For specific code examples demonstrating error handling patterns, custom error classes, or library integrations
+in different languages (e.g., Ruby\'s `begin/rescue`, Python\'s `try/except`, JavaScript\'s `try/catch`,
 
 ## Related Documentation
+
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Quality Assurance](docs-dev/guides/quality-assurance.md) (Logging, Monitoring)
 

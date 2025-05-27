@@ -2,8 +2,8 @@
 
 This file provides Rust-specific examples related to the main [Documentation Standards Guide](../documentation.md).
 
-*   **Tools:** `cargo doc`, `rustdoc`
-*   **Conventions:** Markdown within `///` or `//!` comments.
+* **Tools:** `cargo doc`, `rustdoc`
+* **Conventions:** Markdown within `///` or `//!` comments.
 
 ```rust
 /// Creates a new user.

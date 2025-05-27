@@ -2,8 +2,8 @@
 
 This file provides Rust-specific examples related to the main [Error Handling Guide](../error-handling.md).
 
-*   **Mechanisms:** `Result<T, E>` enum for recoverable errors, `panic!` macro for unrecoverable errors.
-*   **Libraries:** `thiserror`, `anyhow` for custom error types and convenience.
+* **Mechanisms:** `Result<T, E>` enum for recoverable errors, `panic!` macro for unrecoverable errors.
+* **Libraries:** `thiserror`, `anyhow` for custom error types and convenience.
 
 ```rust
 use std::fmt;

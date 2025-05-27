@@ -1,10 +1,11 @@
 # Ruby Coding Standards
 
-This sub-guide captures conventions and idioms specific to Ruby development in this project. Follow these in addition to the generic standards in `../coding-standards.md`.
+This sub-guide captures conventions and idioms specific to Ruby development in this project. Follow these in
+addition to the generic standards in `../coding-standards.md`.
 
 ## Idioms & Best Practices
 
-- Follow the community Ruby Style Guide (https://rubystyle.guide/) unless overridden here.
+- Follow the community Ruby Style Guide (<https://rubystyle.guide/>) unless overridden here.
 - Prefer blocks and `yield` for configurability and iteration when appropriate.
 - Use metaprogramming judiciously; prioritize clarity over cleverness.
 - Leverage standard library features instead of reinventing the wheel.

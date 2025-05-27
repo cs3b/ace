@@ -2,9 +2,9 @@
 
 This file provides Ruby-specific examples related to the main [Performance Guide](../performance.md).
 
-*   **Benchmarking:** `Benchmark` standard library module.
-*   **Profiling:** `stackprof`, `ruby-prof` gems.
-*   **Memory Analysis:** `memory_profiler` gem.
+* **Benchmarking:** `Benchmark` standard library module.
+* **Profiling:** `stackprof`, `ruby-prof` gems.
+* **Memory Analysis:** `memory_profiler` gem.
 
 ```ruby
 require 'benchmark'

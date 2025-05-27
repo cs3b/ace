@@ -1,14 +1,16 @@
 # Performance Tuning Guidelines
 
 ## Goal
-This guide provides standard practices and techniques for identifying, measuring, and optimizing performance aspects (memory usage, execution speed, concurrency) within the project.
 
-# Performance Tuning Guidelines
+This guide provides standard practices and techniques for identifying, measuring, and optimizing
+performance aspects (memory usage, execution speed, concurrency) within the project.
 
-### 1. Memory Management
+## 1. Memory Management
 
-- **Object Pooling:** Use pooling for expensive or frequently created/destroyed objects (e.g., database connections, threads, large buffers) if your language/framework provides suitable libraries.
-  ```
+- **Object Pooling:** Use pooling for expensive or frequently created/destroyed objects (e.g.,
+  database connections, threads, large buffers) if your language/framework provides suitable libraries.
+
+```javascript
   // Pseudo-code example: Using a generic connection pool
   const connectionPool = createPool({
     create: () => new DatabaseConnection(),
@@ -25,7 +27,7 @@ This guide provides standard practices and techniques for identifying, measuring
     }
   }
   ```
-- **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use language-specific tools (profilers, heap analyzers) to detect and fix leaks.
+- **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use\n  language-specific tools (profilers, heap analyzers) to detect and fix leaks.\`
   - Explicitly release resources when done.
   - Break circular references if using languages with reference counting or specific GC patterns.
   - Consider explicit garbage collection triggers *judiciously* if needed, but prefer designing code to be GC-friendly.
@@ -50,9 +52,10 @@ This guide provides standard practices and techniques for identifying, measuring
   }
   ```
 
-### 2. Benchmarking
+## 2. Benchmarking
 
 Use appropriate benchmarking libraries for your language/stack to measure the performance of critical code paths.
+
 - **Micro-benchmarks:** Measure the speed of small functions or operations using dedicated benchmarking tools.
 - **Memory Profiling:** Measure memory allocation and identify potential leaks using memory analysis tools.
 
@@ -77,6 +80,11 @@ suite
 
 // Pseudo-code example: Memory profiling concept
 startMemoryProfiling();
+```
+
+```javascript
+// Pseudo-code example: Memory profiling concept
+startMemoryProfiling();
 
 for (let i = 0; i < 100; i++) {
   agent.execute(someTask);
@@ -86,11 +94,15 @@ const report = stopMemoryProfiling();
 printMemoryReport(report); // Analyze allocations, retained objects, etc.
 ```
 
-### 3. Threading & Concurrency Optimization
+## 3. Threading & Concurrency Optimization
 
 Optimize concurrent operations carefully.
-- **Thread Pools:** Use thread pools to manage a fixed number of threads, reducing the overhead of thread creation/destruction and controlling resource usage using libraries appropriate for your language.
-  ```javascript
+
+- **Thread Pools:** Use thread pools to manage a fixed number of threads, reducing the overhead of
+  thread creation/destruction and controlling resource usage using libraries appropriate for your
+  language.
+
+```javascript
   // Pseudo-code example: Thread pool configuration
   const threadPool = createThreadPool({
     minThreads: 2,
@@ -99,9 +111,11 @@ Optimize concurrent operations carefully.
     fallbackPolicy: 'callerRuns' // Policy if queue is full
   });
   ```
-- **Asynchronous Operations:** Prefer non-blocking I/O and asynchronous patterns (`async/await`, Promises, Futures, callbacks, etc.) where possible, especially for I/O-bound tasks.
+- **Asynchronous Operations:** Prefer non-blocking I/O and asynchronous patterns (`async/await`,
+  Promises, Futures, callbacks, etc.) where possible, especially for I/O-bound tasks.
 - **Batch Processing:** Process tasks in batches using available concurrency mechanisms.
-  ```javascript
+
+```javascript
   // Pseudo-code example: Batch processing with async/await and promises
   async function processBatch(tasks) {
     const promises = tasks.map(task => {
@@ -113,9 +127,11 @@ Optimize concurrent operations carefully.
   }
   ```
 
-### 4. Monitoring Points
+## 4. Monitoring Points
 
-Instrument your code to send performance metrics (timing, counts, gauges) to a monitoring system (e.g., StatsD, Prometheus, Datadog).
+Instrument your code to send performance metrics (timing, counts, gauges) to a monitoring system
+(e.g., StatsD, Prometheus, Datadog).
+
 - Wrap critical operations or external calls with timing measurements.
 - Track queue sizes, pool usage, error rates.
 
@@ -137,6 +153,7 @@ function measureOperation(operationName, func) {
     throw error;
   }
 }
+```
 
 // Usage
 function execute(task) {

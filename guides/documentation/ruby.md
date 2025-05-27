@@ -2,8 +2,8 @@
 
 This file provides Ruby-specific examples related to the main [Documentation Standards Guide](../documentation.md).
 
-*   **Tools:** RDoc, YARD
-*   **Conventions:** [Add relevant Ruby documentation conventions here]
+* **Tools:** RDoc, YARD
+* **Conventions:** [Add relevant Ruby documentation conventions here]
 
 ```ruby
 # Example Ruby documentation comment (YARD)
