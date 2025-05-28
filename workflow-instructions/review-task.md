@@ -2,12 +2,15 @@
 
 ## Goal
 
-Review and refine a task definition, potentially proposing an implementation approach or solution, ensuring it aligns with project goals, architecture, and recent changes. Identify areas requiring user feedback or further clarification.
+Review and refine a task definition, potentially proposing an implementation approach or solution, ensuring it aligns
+with project goals, architecture, and recent changes. Identify areas requiring user feedback or further clarification.
 
 ## Prerequisites
 
-- The project environment has been loaded using the `load-env` workflow instruction to provide necessary context (guides, architecture, blueprint), including a review of recent code changes.
-- The task to be reviewed exists as a Markdown file, ideally following the structure defined in the [Write Actionable Task Guide](../guides/write-actionable-task.md).
+- The project environment has been loaded using the `load-env` workflow instruction to provide necessary context
+  (guides, architecture, blueprint), including a review of recent code changes.
+- The task to be reviewed exists as a Markdown file, ideally following the structure defined in the
+  [Write Actionable Task Guide](../guides/write-actionable-task.md).
 - The task file is located within the `docs-project/{backlog|current}/{release_dir}/tasks/` directory.
 
 ## Input
@@ -18,33 +21,47 @@ Review and refine a task definition, potentially proposing an implementation app
 
 1. **Load Task Content:**
     - Read the content of the provided task `.md` file.
-    - Parse the frontmatter (id, status, priority, dependencies) and sections (Objective, Description, Scope, Deliverables, Implementation Plan, Acceptance Criteria, Out of Scope, References).
+    - Parse the frontmatter (id, status, priority, dependencies) and sections (Objective, Description, Scope,
+      Deliverables, Implementation Plan, Acceptance Criteria, Out of Scope, References).
 
 2. **Review Task Against Context:**
-    - Compare the task's Objective and Description against the project's overall goals as defined in [What We Build](docs-project/what-do-we-build.md).
-    - Evaluate the proposed Implementation Details, Scope, and Deliverables in light of the project [Architecture](docs-project/architecture.md) and [Blueprint](docs-project/blueprint.md). Identify any potential architectural conflicts or structural challenges.
+    - Compare the task's Objective and Description against the project's overall goals as defined in
+      [What We Build](docs-project/what-do-we-build.md).
+    - Evaluate the proposed Implementation Details, Scope, and Deliverables in light of the project
+      [Architecture](docs-project/architecture.md) and [Blueprint](docs-project/blueprint.md). Identify any
+      potential architectural conflicts or structural challenges.
     - **Review Recent Git and Task History:**
-        - Use the `bin/gl` tool (powered by `docs-dev/tools/get-recent-git-log`) to view recent commits across the main repo and submodules, sorted by date. This helps identify changes that may impact the task.
-        - Use the `bin/tr` tool (powered by `docs-dev/tools/get-recent-tasks`) to quickly summarize recently updated or completed tasks. This helps track project progress and find related or recently finished work.
+        - Use the `bin/gl` tool (powered by `docs-dev/tools/get-recent-git-log`) to view recent commits across the
+          main repo and submodules, sorted by date. This helps identify changes that may impact the task.
+        - Use the `bin/tr` tool (powered by `docs-dev/tools/get-recent-tasks`) to quickly summarize recently updated
+          or completed tasks. This helps track project progress and find related or recently finished work.
         - Both tools support the `--last` argument to filter by time window (e.g., `--last 2.days`).
-        - Consider recent code and task changes when reviewing assumptions, requirements, and implementation plans. Look for changes in related code areas or foundational parts of the project.
-    - Review the task's dependencies against the current project status (as understood from `review-kanban-board` or `load-env`) to confirm they are met or identify blockers.
+        - Consider recent code and task changes when reviewing assumptions, requirements, and implementation plans.
+          Look for changes in related code areas or foundational parts of the project.
+    - Review the task's dependencies against the current project status (as understood from `review-kanban-board`
+      or `load-env`) to confirm they are met or identify blockers.
 
 3. **Identify Needs for Update:**
     - Based on the review, determine if the task file needs updates due to:
         - Ambiguity in description or requirements.
-        - Inconsistencies with project standards ([Coding Standards](../guides/coding-standards.md), [Documentation Standards](../guides/documentation.md), etc.).
+        - Inconsistencies with project standards ([Coding Standards](../guides/coding-standards.md),
+          [Documentation Standards](../guides/documentation.md), etc.).
         - Impact from recent code changes or architectural decisions ([ADRs](docs-project/decisions/)).
         - Missing or unclear Implementation Plan steps.
         - Inadequate or unverifiable Acceptance Criteria.
     - Note down specific areas requiring refinement.
 
 4. **Think and Propose Solution/Refinement:**
-    - Use the `thinking` tool to analyze the task requirements, existing plan, and project context, incorporating the understanding of recent changes.
-    - Brainstorm potential implementation approaches or refinements to the existing plan, ensuring compatibility with recent work.
-    - If the task is complex or underspecified, propose a high-level solution structure or a more detailed implementation plan checklist.
-    - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs-project/architecture.md) principles).
-    - Identify specific code files or guides that will be relevant during implementation, noting if recent changes in those files need particular attention.
+    - Use the `thinking` tool to analyze the task requirements, existing plan, and project context, incorporating
+      the understanding of recent changes.
+    - Brainstorm potential implementation approaches or refinements to the existing plan, ensuring compatibility
+      with recent work.
+    - If the task is complex or underspecified, propose a high-level solution structure or a more detailed
+      implementation plan checklist.
+    - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs-project/architecture.md)
+      principles).
+    - Identify specific code files or guides that will be relevant during implementation, noting if recent changes
+      in those files need particular attention.
 
 5. **Formulate User Feedback / Clarification Points:**
     - Clearly articulate any questions, ambiguities, or decisions that require user input before proceeding with implementation.
@@ -67,15 +84,18 @@ Review and refine a task definition, potentially proposing an implementation app
 
 **Output:**
 
-- A summary of the task review, highlighting inconsistencies or areas for improvement, particularly in light of recent code changes.
-- A proposed solution approach or refined implementation plan for the task (if applicable), potentially adjusted based on recent work.
+- A summary of the task review, highlighting inconsistencies or areas for improvement, particularly in light of
+  recent code changes.
+- A proposed solution approach or refined implementation plan for the task (if applicable), potentially adjusted
+  based on recent work.
 - A clear list of questions or points requiring user feedback.
 - A suggestion for the next step in the workflow.
 
 **Success Criteria:**
 
 - The task definition has been thoroughly reviewed against project context and recent changes in Git history.
-- Potential issues or ambiguities in the task definition, especially those arising from or impacted by recent work, are identified.
+- Potential issues or ambiguities in the task definition, especially those arising from or impacted by recent work,
+  are identified.
 - A viable approach to implementing the task is considered and potentially proposed, taking recent changes into account.
 - All points requiring user decision or clarification are explicitly stated.
 - The path forward for the task is clearly defined (e.g., requires feedback, ready for implementation).

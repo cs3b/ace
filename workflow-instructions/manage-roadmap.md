@@ -1,6 +1,7 @@
 # Workflow Instruction: Manage Roadmap
 
-**Goal:** Propose, review, and apply updates to `docs-project/roadmap.md` ensuring the roadmap remains an accurate strategic guide.
+**Goal:** Propose, review, and apply updates to `docs-project/roadmap.md` ensuring the roadmap remains an accurate
+strategic guide.
 
 ## Prerequisites
 
@@ -16,7 +17,8 @@
     * Verify required sections/tables (Vision, Objectives, Themes, Releases, Dependencies, Update History).
     * If missing, stop and raise an issue.
 3. **Draft Changes**
-    * Source proposed changes from the **input document or prompt** (very often a PRD) to ensure alignment with new strategic information.
+    * Source proposed changes from the **input document or prompt** (very often a PRD) to ensure alignment with
+      new strategic information.
     * Use a markdown checklist to outline proposed changes, e.g.:
 
     ```markdown

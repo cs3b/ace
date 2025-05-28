@@ -2,8 +2,11 @@
 
 This file provides TypeScript/Node.js specific examples and considerations related to the main [Version Control Guide](../version-control.md).
 
-* **.gitignore:** Ensure standard Node.js/TypeScript files are ignored (e.g., `node_modules/`, `dist/`, `build/`, `.env`, `*.tsbuildinfo`, `coverage/`). Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) can generate good starting points.
-* **Pre-commit Hooks:** Use tools like `husky` with `lint-staged` to run linters (`ESLint`), formatters (`Prettier`), type checkers (`tsc --noEmit`), and tests (`Jest`, `Mocha`) on staged files before committing.
+* **.gitignore:** Ensure standard Node.js/TypeScript files are ignored (e.g., `node_modules/`, `dist/`, `build/`,
+  `.env`, `*.tsbuildinfo`, `coverage/`). Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) can
+  generate good starting points.
+* **Pre-commit Hooks:** Use tools like `husky` with `lint-staged` to run linters (`ESLint`), formatters (`Prettier`),
+  type checkers (`tsc --noEmit`), and tests (`Jest`, `Mocha`) on staged files before committing.
 * **Dependency Locking:** Always commit `package-lock.json` (for npm) or `yarn.lock` (for Yarn) to ensure consistent dependencies.
 * **Branching Strategy:** Standard Git workflows apply.
 

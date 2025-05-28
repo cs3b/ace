@@ -84,7 +84,8 @@ class ExternalServiceError extends MyAppError {
    ```
 
 3. **Clean Resource Management**:
-   Ensure resources (files, network connections, locks) are properly released, even if errors occur. Use\n   `try...finally` or equivalent language constructs (like Python\'s `with` statement or Go\'s `defer`).
+   Ensure resources (files, network connections, locks) are properly released, even if errors occur. Use
+   `try...finally` or equivalent language constructs (like Python\'s `with` statement or Go\'s `defer`).
 
    ```javascript
    // Pseudo-code example
@@ -103,7 +104,8 @@ class ExternalServiceError extends MyAppError {
 
 Consider these patterns for more robust applications:
 
-- **Structured Error Objects:** Define custom error classes/types that include relevant context (e.g., status codes, internal error codes, request IDs). This helps in programmatic error handling and monitoring.
+- **Structured Error Objects:** Define custom error classes/types that include relevant context (e.g., status codes,
+  internal error codes, request IDs). This helps in programmatic error handling and monitoring.
 
   ```javascript
   // Pseudo-code example
@@ -120,17 +122,23 @@ Consider these patterns for more robust applications:
   ```
 
 - **Error Categorization:** Distinguish between:
-  - **Operational Errors:** Expected issues (e.g., invalid input, resource not found) that can often be handled gracefully.
+  - **Operational Errors:** Expected issues (e.g., invalid input, resource not found) that can often be handled
+    gracefully.
   - **Programming Errors:** Bugs in the code that need fixing (e.g., type errors, null references).
   - **System Errors:** External issues (e.g., database unavailable, network failure).
 - **Recovery Strategies:** Implement strategies for transient failures:
-  - **Retry with Backoff:** Automatically retry failed operations (especially network requests) with increasing delays.
-  - **Circuit Breaker:** Prevent repeated calls to a failing service by temporarily blocking requests after a certain number of failures.
-  - **Fallbacks:** Provide a degraded but functional experience if a primary operation fails (e.g., return cached data if a live fetch fails).
-- **Contextual Logging:** Ensure logs capture sufficient context (user ID, request ID, operation parameters) to diagnose errors effectively, while avoiding sensitive data.
+  - **Retry with Backoff:** Automatically retry failed operations (especially network requests) with increasing
+    delays.
+  - **Circuit Breaker:** Prevent repeated calls to a failing service by temporarily blocking
+    requests after a certain number of failures.
+  - **Fallbacks:** Provide a degraded but functional experience if a primary operation
+    fails (e.g., return cached data if a live fetch fails).
+- **Contextual Logging:** Ensure logs capture sufficient context (user ID, request ID,
+  operation parameters) to diagnose errors effectively, while avoiding sensitive data.
 
 1. **Enable Debug Logging**:
-   Configure your application's logger to output detailed debug messages when needed. This often involves setting a log level via configuration.
+   Configure your application\'s logger to output detailed debug messages when needed.
+   This often involves setting a log level via configuration.
 
    ```javascript
    // Example: Conceptual configuration

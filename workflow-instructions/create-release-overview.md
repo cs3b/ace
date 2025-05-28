@@ -2,7 +2,8 @@
 
 ## Goal
 
-Create or update the main release overview document (e.g., `docs-project/current/{release_dir}/README.md` or `v.X.Y.Z-Codename.md`) summarizing the release goals, key changes, requirements, and plan.
+Generate or update the main release overview document (e.g., `docs-project/current/{release_dir}/README.md` or
+`v.X.Y.Z-Codename.md`) summarizing the release goals, key changes, requirements, and plan.
 
 ## Prerequisites
 
@@ -17,16 +18,20 @@ Create or update the main release overview document (e.g., `docs-project/current
     - Review the tasks defined within the release (`{release_path}/tasks/*.md`).
     - Review relevant source documents (e.g., PRD, FRD, PR comments that initiated the release).
     - Review recent commit history if the release is already in progress.
-3. **Draft/Update Overview Document:** Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release. Use the structure from the template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide. Key sections include:
-    - **Release Overview:** Brief summary.
-    - **Release Information:** Type, Dates, Status.
-    - **Goals & Requirements:** High-level objectives, metrics, acceptance criteria.
-    - **Implementation Plan:** High-level phases, components, dependencies.
-    - **Quality Assurance:** Testing strategy outline.
-    - **Release Checklist:** Standard pre-release checks.
-4. **Populate Content:** Fill in the sections based on the gathered context and the release scope.
-5. **Review & Refine:** Ensure the overview is clear, accurate, and aligned with the release goals and tasks.
-6. **Save:** Save the updated overview document.
+
+- Draft/Update Overview Document: Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release.
+  Use the structure from the template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide.
+  Key sections include:
+  - **Release Overview:** Brief summary.
+  - **Release Information:** Type, Dates, Status.
+  - **Goals & Requirements:** High-level objectives, metrics, acceptance criteria.
+  - **Implementation Plan:** High-level phases, components, dependencies.
+  - **Quality Assurance:** Testing strategy outline.
+  - **Release Checklist:** Standard pre-release checks.
+
+1. **Populate Content:** Fill in the sections based on the gathered context and the release scope.
+2. **Review & Refine:** Ensure the overview is clear, accurate, and aligned with the release goals and tasks.
+3. **Save:** Save the updated overview document.
 
 ## Input
 
@@ -35,7 +40,8 @@ Create or update the main release overview document (e.g., `docs-project/current
 
 ## Output / Success Criteria
 
-- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the specified release directory is created or updated.
+- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the specified release directory
+  is created or updated.
 - [x] The document accurately reflects the release's goals, scope, and plan.
 - [x] Key sections (Overview, Info, Goals, Plan, QA, Checklist) are present and populated appropriately.
 

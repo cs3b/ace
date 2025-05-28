@@ -1,10 +1,18 @@
 # Prepare Tasks: From PR Comments (API Fetch)
 
-This document outlines the steps to fetch GitHub Pull Request comments and reviews using the API (via the `docs-dev/tools/fetch-github-pr-data.rb` script) and then analyze this data to extract structured requirements. These requirements serve as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
+This document outlines steps to:
+
+1. Fetch GitHub Pull Request (PR) comments and reviews using the API
+   (via `docs-dev/tools/fetch-github-pr-data.rb`).
+2. Analyze this data to extract structured requirements.
+These requirements serve as input for creating actionable development tasks using the main
+`breakdown-notes-into-tasks` workflow.
 
 ## Goal
 
-To automate the retrieval of PR feedback using the GitHub API and process it into a structured format suitable for use as input for the `breakdown-notes-into-tasks` workflow, typically for a Patch release addressing the feedback.
+To automate retrieving PR feedback using the GitHub API and process it into a structured format.
+This format is suitable as input for the `breakdown-notes-into-tasks` workflow,
+typically for a Patch release addressing the feedback.
 
 ## Prerequisites
 
@@ -22,7 +30,10 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
 
 1. **Determine Release Path:**
     * Use the provided target release directory path.
-    * If not provided, determine the appropriate path (e.g., based on current project version and PR number, typically `docs-project/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`). Confirm with the user and create if necessary.
+    * If not provided, determine the appropriate path. For example, based on the current project
+      version and PR number, this might be
+      `docs-project/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`.
+      Confirm with the user and create if necessary.
 
 2. **Fetch PR Data via API:**
     * Parse the PR URL to get the owner, repository, and PR number.
@@ -36,7 +47,10 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
           --dir {release_path}
         ```
 
-    * Verify the script successfully created the timestamped subdirectory (e.g., `pr-{number}-YYYYMMDD-HHMMSS/`) within `{release_path}/docs/` containing the `comments/`, `reviews/`, and `pr/` subdirectories with individual JSON files.
+    * Verify the script successfully created a timestamped subdirectory
+      (e.g., `pr-{number}-YYYYMMDD-HHMMSS/`) within `{release_path}/docs/`.
+      This directory should contain `comments/`, `reviews/`, and `pr/` subdirectories
+      with individual JSON files.
 
         ```bash
         tree {release_path}/docs -L 3 -I raw # Verify structure
@@ -54,18 +68,21 @@ To automate the retrieval of PR feedback using the GitHub API and process it int
     * Identify any dependencies between the identified requirements based on the feedback.
 
 5. **Prepare Output for Breakdown Workflow:**
-    * With the structured requirements extracted from the PR comments, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    * With structured requirements from PR comments, prepare the output in a format
+      suitable for the `breakdown-notes-into-tasks` workflow.
     * Include the analysis (groupings, associated comment IDs, and identified dependencies) as input for the next step.
 
 ## Output
 
 * Fetched PR data stored in structured JSON files within `{release_path}/docs/{pr_path}/`.
-* A structured summary of requirements derived from the PR feedback, including groupings, associated comment IDs, and identified dependencies.
-* This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
+* A structured summary of requirements from PR feedback. This includes groupings,
+  associated comment IDs, and identified dependencies.
+* This document serves as structured input for the `breakdown-notes-into-tasks` workflow.
 
 ### Deliverables
 
-* A structured summary document (`PR_ANALYSIS_summary.md`) outlining key requirements, scope, and acceptance criteria derived from the PR comments.
+* A structured summary document (`PR_ANALYSIS_summary.md`) outlining key requirements,
+  scope, and acceptance criteria derived from PR comments.
 * This summary serves as direct input for the task creation process defined in `../prepare-tasks.md`.
 
 ## Considerations

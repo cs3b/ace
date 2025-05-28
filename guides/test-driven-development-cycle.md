@@ -2,7 +2,9 @@
 
 ## 1. Introduction
 
-This guide outlines the standard development cycle used for implementing tasks within this project. Following this cycle ensures consistency, promotes quality through testing, and facilitates effective collaboration, especially when working with AI agents. It integrates principles of Test-Driven Development (TDD) and emphasizes continuous reflection.
+This guide outlines the standard development cycle used for implementing tasks within this project. Following this cycle
+ensures consistency, promotes quality through testing, and facilitates effective collaboration, especially when working
+with AI agents. It integrates principles of Test-Driven Development (TDD) and emphasizes continuous reflection.
 
 ## 2. The Core Cycle Overview
 
@@ -35,7 +37,8 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
 
 ### Step 2: Write Tests (TDD - Red)
 
-* **Goal:** Define the desired behavior or functionality by writing an automated test *before* writing the implementation code.
+* **Goal:** Define the desired behavior or functionality by writing an automated test *before* writing the
+  implementation code.
 * **Actions:**
   * Create a new test file or add to an existing one.
   * Write a specific test case that captures one aspect of the requirement.
@@ -55,7 +58,8 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
 
 * **Goal:** Improve the design, clarity, and structure of the code *now that it works* (tests are passing).
 * **Actions:**
-  * Look for opportunities to remove duplication, improve variable names, simplify logic, or adhere better to coding standards.
+  * Look for opportunities to remove duplication, improve variable names, simplify logic, or adhere better to coding
+    standards.
   * Run tests after each small refactoring step to ensure no behavior was broken.
 * **Reference:** [Coding Standards](docs-dev/guides/coding-standards.md)
 
@@ -74,7 +78,8 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Stage only the files related to the logical change being committed (atomic commits).
   * Review staged changes (`git diff --staged`).
   * **Critically review any AI-generated code before committing.**
-  * Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard.
+  * Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+    standard.
 * **Workflow:** See [`commit.md`](docs-dev/workflow-instructions/commit.md)
 * **Reference:** [Version Control Guide](docs-dev/guides/version-control.md)
 
@@ -84,28 +89,33 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
 * **Actions:**
   * Review the implementation process, challenges, and successes.
   * Update documentation (guides, ADRs, comments) if necessary.
-  * Identify any follow-up actions (e.g., refactoring needs, process improvements) and create backlog tasks if needed.
-  * Log the reflection summary. Individual reflections can serve as input to the [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) workflow.
+  * Identify any follow-up actions (e.g., refactoring needs, process improvements) and create backlog tasks if
+    needed.
+  * Log the reflection summary. Individual reflections can serve as input to the
+    [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) workflow.
 
 ### Step 8: Update Task Status
 
 * **Goal:** Keep project tracking up-to-date.
 * **Actions:**
   * Update the status field (e.g., to `done`) in the task's `.md` file.
-  * Move the task file to the appropriate `done` directory if applicable (refer to project management specifics).
+  * Move the task file to the appropriate `done` directory if applicable (refer to project management
+    specifics).
 * **Reference:** [Project Management Guide](docs-dev/guides/project-management.md)
 
 ## 4. Key Principles & Best Practices
 
 * **Test-Driven Development:** Writing tests first drives design and ensures testability.
 * **Atomic Commits:** Each commit should represent a single, logical change.
-* **Review AI Contributions:** Treat AI-generated code with the same rigor as code from any other source. Verify its correctness and adherence to standards.
+* **Review AI Contributions:** Treat AI-generated code with the same rigor as code from any other source. Verify its
+  correctness and adherence to standards.
 * **Incremental Progress:** Build functionality in small, testable steps.
 * **Continuous Improvement:** Use the self-reflection step to actively improve code and processes.
 
 ## 5. Technology-Specific Variations
 
-While the core cycle remains the same, specific commands and tools vary by technology stack. Refer to the relevant sub-guide for details:
+While the core cycle remains the same, specific commands and tools vary by technology stack. Refer to the relevant
+sub-guide for details:
 
 * [Ruby Application](docs-dev/guides/test-driven-development-cycle/ruby-application.md)
 * [Ruby Gem](docs-dev/guides/test-driven-development-cycle/ruby-gem.md)
@@ -121,7 +131,8 @@ While the core cycle remains the same, specific commands and tools vary by techn
   * [`work-on-task.md`](docs-dev/workflow-instructions/work-on-task.md) (includes testing guidance)
   * [`commit.md`](docs-dev/workflow-instructions/commit.md)
   * [`log-compact-session.md`](docs-dev/workflow-instructions/log-compact-session.md) (for saving session context)
-  * [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) (for broader reflection and learning synthesis)
+  * [`create-retrospective-document.md`](docs-dev/workflow-instructions/create-retrospective-document.md) (for broader
+    reflection and learning synthesis)
 * **Core Guides:**
   * [Testing Guide](docs-dev/guides/testing.md)
   * [Version Control Guide](docs-dev/guides/version-control.md)

@@ -2,7 +2,7 @@
 
 Specific tools and techniques for debugging Rust applications.
 
-### Core tools & tips
+## Core tools & tips
 
 * **Turn on backtraces**: `RUST_BACKTRACE=1 cargo run` prints a full panic trace.  
 * **Native debuggers**  
@@ -12,7 +12,7 @@ Specific tools and techniques for debugging Rust applications.
 * **Build in debug mode** (`cargo build`) to keep symbols; switch to `--release` only after reproducing.  
 * **Common probes**: `dbg!()` macro, `println!("{:?}", var)`; run unit tests with `cargo test -- --nocapture`.
 
-### Quick diagnostic checklist
+## Quick diagnostic checklist
 
 1. Run failing binary with `RUST_BACKTRACE=full`.  
 2. In LLDB: `break set -n function_name`, `run`, `frame variable`, `next`.  

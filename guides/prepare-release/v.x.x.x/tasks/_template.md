@@ -3,7 +3,8 @@ id: v.X.Y.Z-<task_number> # REQUIRED - Unique ID (e.g., v.0.2.3-1)
 status: pending # pending | in-progress | done | blocked
 priority: <high/medium/low>
 estimate: <n>h
-dependencies: [<task-ids>] # e.g., [v.0.2.3-1, v.0.2.3-2]
+dependencies: [<task-ids>] # e.g., [v.0.2.3-1,
+              #             v.0.2.3-2]
 ---
 
 # <Verb + Object> - Clear Task Title
@@ -16,10 +17,13 @@ _Command run:_
 tree -L 2 <relevant-directory> | sed 's/^/    /'
 ```
 
+```text
+
 _Result excerpt:_
 
-```
-<insert tree output here>
+```text
+
+<!-- insert tree output here -->
 ```
 
 ## Objective
@@ -35,7 +39,8 @@ Brief description of why this task is necessary and what problem it solves.
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format._
+*This section details the specific steps required to complete the task, intended to be followed sequentially.
+Use a checklist format._
 
 - [ ] Step 1: Describe the first action.
 - [ ] Step 2: Describe the second action.

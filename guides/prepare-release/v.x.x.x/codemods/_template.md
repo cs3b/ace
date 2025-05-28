@@ -13,7 +13,7 @@ Brief description of what this codemod aims to achieve.
 
 ### Before
 
-```
+```javascript
 // Example code before transformation
 function oldFunction() {
   // old implementation
@@ -22,7 +22,7 @@ function oldFunction() {
 
 ### After
 
-```
+```javascript
 // Example code after transformation
 function newFunction() {
   // new implementation
@@ -33,7 +33,7 @@ function newFunction() {
 
 ### Script
 
-```
+```javascript
 // Your codemod script here - replace with appropriate language
 // This could be JavaScript, Ruby, Python, etc. depending on your tooling
 ```

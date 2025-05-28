@@ -1,10 +1,14 @@
+<!-- markdownlint-disable -->
 # 📑 Writing Clear, Actionable Dev Tasks  
 
-*A playbook for documentation‑oriented tickets, with a complete worked example*
+## A playbook for documentation‑oriented tickets, with a complete worked example
 
 ## Introduction & Goal
 
-This guide provides a structured approach and template for writing effective development tasks, particularly those focused on documentation changes within this toolkit. Following these steps ensures tasks are clear, scoped correctly, actionable, and easily understood by both human developers and AI agents contributing to the project. The goal is to minimize ambiguity and streamline the process of defining and executing documentation work.
+This guide provides a structured approach and template for writing effective development tasks, particularly those
+focused on documentation changes within this toolkit. Following these steps ensures tasks are clear, scoped correctly,
+actionable, and easily understood by both human developers and AI agents contributing to the project. The goal is to
+minimize ambiguity and streamline the process of defining and executing documentation work.
 
 ---
 
@@ -45,7 +49,7 @@ guides
 | **Scope of Work** | *What* to touch | Which guides/folders? |
 | **Deliverables / Manifest** | Exact files to create / modify / delete | Could a newcomer do it with just this? |
 | **Phases** | Bite‑sized plan | Audit → Extract → Refactor → Index |
-**Checklist (`- [ ]`) of actions to perform? Consider embedding automated test/verification steps directly.**
+| **Implementation Plan** | Checklist (`- [ ]`) of actions to perform? Consider embedding automated test/verification steps directly. | |
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
 | **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](./embedding-tests-in-workflows.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
@@ -54,7 +58,7 @@ guides
 
 ## 2. Re‑usable Markdown Template
 
-~~~markdown
+```markdown
 ---
 id: v.X.Y.Z+task.<sequential_number> # REQUIRED - Unique ID (e.g., v.0.2.3+task.1). See docs-dev/guides/project-management.md#task-id-convention
 status: pending # See [Project Management Guide](project-management.md) for all possible values
@@ -115,15 +119,15 @@ Why are we doing this?
 - ❌ …
 
 ## References
-~~~
+```
 
-Copy ➜ fill ➜ ship.
+Copy → fill → ship.
 
 ---
 
 ## 3. **Full Worked Example** – “Tailor Guides to Tech Stack”
 
-~~~markdown
+```markdown
 ---
 id: v.0.1.0+task.1 # Example ID, replace with actual generated ID
 status: pending
@@ -201,27 +205,33 @@ Split language‑specific snippets out of *every* general guide so developers ca
 5. **PR Review** – assign to @docs-maintainers.
 
 ## Implementation Plan
-- [ ] **Audit:** Add `<!--LANG:Ruby-->`, `<!--LANG:Rust-->`, `<!--LANG:TypeScript-->` comments to relevant blocks in all 9 general guides.
+- [ ] **Audit:** Add `<!--LANG:Ruby-->`, `<!--LANG:Rust-->`, `<!--LANG:TypeScript-->` comments to relevant blocks
+  in all 9 general guides.
 - [ ] **Create Sub-directories:** Create the language-specific sub-directories (`coding-standards/`, `documentation/`, etc.) if they don't exist.
   > TEST: Coding Standards Sub-directory Created
   >   Type: Post-condition Check
   >   Assert: The `docs-dev/guides/coding-standards` directory exists.
   >   Command: bin/test --check-file-exists docs-dev/guides/coding-standards --type d
-- [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or `ruby-rspec.md` for testing).
+- [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or
+  `ruby-rspec.md` for testing).
   > TEST: Ruby Coding Standard File Created
   >   Type: Post-condition Check
   >   Assert: The `docs-dev/guides/coding-standards/ruby.md` file exists and is not empty.
   >   Command: bin/test --check-file-exists-not-empty docs-dev/guides/coding-standards/ruby.md
 - [ ] **Extract & Create (Rust):** Move Rust blocks from general guides to `guides/<category>/rust.md`.
-- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to `guides/<category}/typescript.md` (or `typescript-bun.md` for testing).
-- [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
+- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to
+  `guides/<category}/typescript.md` (or `typescript-bun.md` for testing).
+- [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific
+  blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
 - [ ] **Tag Obsolete:** Tag any remaining unmapped examples with `<!--TODO:Delete-->`.
-- [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created language-specific guides.
+- [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created
+  language-specific guides.
 - [ ] **Review & Check:** Run `md-link-check`.
   > TEST: Markdown Links Check
   >   Type: Guardrail
   >   Assert: All markdown links are valid in the `docs-dev/guides` directory.
-  >   Command: md-link-check docs-dev/guides # Or a more specific path / project-wide lint command
+  >   Command: md-link-check docs-dev/guides
+  >   # Or a more specific path / project-wide lint command
 - [ ] Ensure local site build passes (if applicable, this might be a manual step or a separate command).
 
 ## Acceptance Criteria
@@ -242,7 +252,7 @@ Split language‑specific snippets out of *every* general guide so developers ca
 
 ## Risks & Mitigations
 - **Broken links after moves** → run `md-link-check` (as included in Implementation Plan) & add redirects if needed.
-~~~
+```
 
 ---
 
@@ -254,4 +264,4 @@ Split language‑specific snippets out of *every* general guide so developers ca
 4. Is scope creep prevented by an **Out of Scope** section?  
 5. Are references & scripts one click away?  
 
-Tick them all ➜ merge the ticket.
+Tick them all → merge the ticket.

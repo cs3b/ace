@@ -2,11 +2,10 @@
 
 ## Goal
 
-This guide outlines essential security practices, checklists, and procedures to follow during development to minimize vulnerabilities and protect project assets and user data.
+This guide outlines essential security practices, checklists, and procedures to follow during development to
+minimize vulnerabilities and protect project assets and user data.
 
-# Security Guidelines
-
-### 1. Security Review Checklist
+## 1. Security Review Checklist
 
 - [ ] Input Validation
   - All user inputs are sanitized (e.g., against injection attacks like SQLi, XSS)
@@ -14,7 +13,8 @@ This guide outlines essential security practices, checklists, and procedures to 
   - URLs are validated and checked against allowlists if applicable
 
 - [ ] Authentication & Authorization
-  - Secrets (API keys, passwords, tokens) are securely stored (e.g., using vaults, environment variables, not hardcoded)
+  - Secrets (API keys, passwords, tokens) are securely stored (e.g., using vaults, environment variables, not
+    hardcoded)
   - Access tokens have appropriate lifespans and are rotated/refreshed securely
   - Permissions and roles are correctly enforced for all actions
 
@@ -29,7 +29,8 @@ This guide outlines essential security practices, checklists, and procedures to 
   - Configure reasonable network timeouts to prevent resource exhaustion
 
 - [ ] Dependency Management
-  - Regularly scan dependencies for known vulnerabilities using appropriate tools for your language/ecosystem (e.g., GitHub Dependabot or language-specific scanners)
+  - Regularly scan dependencies for known vulnerabilities using appropriate tools for your language/ecosystem
+    (e.g., GitHub Dependabot or language-specific scanners)
   - Keep dependencies updated
 
 - [ ] Secure Defaults
@@ -38,7 +39,9 @@ This guide outlines essential security practices, checklists, and procedures to 
 ### 2. Best Practices Examples (Conceptual)
 
 **Secure Configuration:**
-Load sensitive configuration like API keys, encryption keys, and database credentials from secure sources (environment variables, secrets management systems) rather than hardcoding them. Configure security settings like TLS versions and timeouts appropriately.
+Load sensitive configuration like API keys, encryption keys, and database credentials from secure sources
+(environment variables, secrets management systems) rather than hardcoding them. Configure security settings
+like TLS versions and timeouts appropriately.
 
 ```plaintext
 // Pseudocode for loading configuration securely
@@ -57,7 +60,9 @@ applyConfiguration(config);
 ```
 
 **Secure File Handling:**
-When handling file paths provided by users or external systems, always validate and sanitize them. Canonicalize the path (resolve `..`, symbolic links) and ensure it falls within permitted base directories to prevent path traversal attacks.
+When handling file paths provided by users or external systems, always validate and sanitize them.
+Canonicalize the path (resolve `..`, symbolic links) and ensure it falls within permitted base directories
+to prevent path traversal attacks.
 
 ```plaintext
 // Pseudocode for safe file path validation
@@ -83,7 +88,10 @@ function getSafeFilePath(untrustedPath, allowedBaseDir) {
 ```
 
 **Secure Process Execution:**
-Avoid executing external commands based directly on user input. If dynamic command execution is necessary, use an allowlist of permitted commands and strictly sanitize any arguments passed to them. Execute commands with the minimum required privileges and within restricted environments (e.g., specific working directory, chroot jail if applicable).
+Avoid executing external commands based directly on user input. If dynamic command execution is necessary, use
+an allowlist of permitted commands and strictly sanitize any arguments passed to them. Execute commands with the
+minimum required privileges and within restricted environments (e.g., specific working directory, chroot jail
+if applicable).
 
 ```plaintext
 // Pseudocode for safer command execution
@@ -109,7 +117,9 @@ function executeAllowedCommand(commandName, arguments) {
 
 ### 3. Language/Environment-Specific Examples
 
-For specific code examples demonstrating security best practices, configuration of security tools (e.g., dependency scanners, static analysis security testing - SAST), or framework-specific security features, please refer to the examples in the [./security/](./security/) sub-directory.
+For specific code examples demonstrating security best practices, configuration of security tools (e.g.,
+dependency scanners, static analysis security testing - SAST), or framework-specific security features, please
+refer to the examples in the [./security/](./security/) sub-directory.
 
 ### 4. Security Disclosure Process
 

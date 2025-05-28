@@ -2,7 +2,8 @@
 
 ## Goal
 
-Generate a context-specific code review checklist based on the nature of the changes being reviewed (e.g., new feature, bug fix, refactoring) and project standards.
+Generate a context-specific code review checklist based on the nature of the changes being
+reviewed (e.g., new feature, bug fix, refactoring) and project standards.
 
 ## Prerequisites
 
@@ -15,12 +16,16 @@ Generate a context-specific code review checklist based on the nature of the cha
     - The purpose and scope of the changes.
     - Affected components or modules.
     - Potential impacts (breaking changes, dependencies, performance, security).
-2. **Select Base Checklist:** Start with the standard review checklist template found in `docs-dev/guides/quality-assurance.md` (under "Review Checklist").
+2. **Select Base Checklist:** Start with the standard review checklist template found in
+   `docs-dev/guides/quality-assurance.md` (under "Review Checklist").
 3. **Tailor Checklist:** Adapt the base checklist based on the specific changes:
-    - Add checks relevant to the modified areas (e.g., "Verify new API endpoint follows REST principles").
+    - Add checks relevant to the modified areas (e.g., "Verify new API endpoint follows REST
+      principles").
     - Remove checks that are not applicable.
-    - Emphasize areas of higher risk (e.g., "Pay close attention to security aspects of authentication changes").
-4. **Generate Checklist:** Present the tailored checklist (e.g., as Markdown). This checklist can be added as a comment to a PR or used directly by the reviewer.
+    - Emphasize areas of higher risk
+      (e.g., "Pay close attention to security aspects of authentication changes").
+4. **Generate Checklist:** Present the tailored checklist (e.g., as Markdown). This checklist can be
+   added as a comment to a PR or used directly by the reviewer.
 
 ## Input
 

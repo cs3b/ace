@@ -1,10 +1,14 @@
 # Prepare Tasks: From Release-Specific Backlog
 
-This document outlines the steps to analyze notes, ideas, or draft tasks found within the internal `backlog/` subdirectory of a specific target release (either the current release or one specified in the main project backlog). The goal is to structure these items into requirements suitable for creating formal tasks within that *same* release.
+This document outlines steps to analyze notes, ideas, or draft tasks from the internal `backlog/`
+subdirectory of a specific target release. This release can be the current one or one specified in
+the main project backlog. The goal is to structure these items into requirements for creating
+formal tasks within that *same* release.
 
 ## Goal
 
-To review and structure informal backlog items associated with a specific release, preparing them as structured notes suitable for use as input for the `breakdown-notes-into-tasks` workflow.
+To review and structure informal backlog items for a specific release. This prepares them
+as structured notes, suitable as input for the `breakdown-notes-into-tasks` workflow.
 
 ## Prerequisites
 
@@ -14,7 +18,8 @@ To review and structure informal backlog items associated with a specific releas
 
 ## Input
 
-* Target release directory path (defaults to the single directory in `docs-project/current/`, otherwise requires explicit path like `docs-project/backlog/v1.3.0-Enhancements/`).
+* Target release directory path (defaults to the single directory in `docs-project/current/`,
+  otherwise requires an explicit path like `docs-project/backlog/v1.3.0-Enhancements/`).
 * Content of the items within the `{target_release_path}/backlog/` directory.
 
 ## Process Steps
@@ -39,7 +44,8 @@ To review and structure informal backlog items associated with a specific releas
     * Group related backlog items into single, more comprehensive requirements if appropriate.
 
 4. **Prepare Output for Breakdown Workflow:**
-    * With the structured requirements derived from the release-specific backlog, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow.
+    * With structured requirements from the release-specific backlog, prepare the output
+      in a format suitable for the `breakdown-notes-into-tasks` workflow.
     * Include this analysis (requirements, dependencies, estimated effort) as input for the next step.
         * Ensure correct sequencing and dependency linking within the target release.
         * Update the target release's `README.md` to reflect the newly added tasks.

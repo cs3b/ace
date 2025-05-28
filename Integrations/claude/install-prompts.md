@@ -1,3 +1,5 @@
+# Claude Integration Install Prompts
+
 For each workflow instruction write a claude command
 
 docs-dev/workflow-instructions
@@ -34,9 +36,10 @@ docs-dev/workflow-instructions
 Below is a template for one commmand:
 
 ```md .claude/commands/lets-commit.md
-READ and RUN INSTRUCTIONS in docs-dev/workflow-instructions/lets-commit.md (also read internally linked other documents within this document)
+READ and RUN INSTRUCTIONS in docs-dev/workflow-instructions/lets-commit.md
+(also read internally linked other documents within this document)
 ```
 
-# instructions to claude
+## Instructions to Claude
 
 - using cp & rm istead of git mv

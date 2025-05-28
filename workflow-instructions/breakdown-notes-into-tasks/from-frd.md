@@ -1,10 +1,14 @@
 # Prepare Tasks: From Feature Requirements Document (FRD)
 
-This document outlines the steps to analyze a Feature Requirements Document (FRD) and extract structured requirements. This information serves as input for creating actionable development tasks using the main `breakdown-notes-into-tasks` workflow.
+This document outlines the steps to analyze a Feature Requirements Document (FRD) and extract structured \
+requirements. This information serves as input for creating actionable development tasks using the main \
+`breakdown-notes-into-tasks` workflow.
 
 ## Goal
 
-To parse an FRD, identify key requirements, user stories, acceptance criteria, and potential areas needing further clarification, producing structured notes suitable for the `breakdown-notes-into-tasks` workflow.
+To parse an FRD, identify key requirements, user stories, acceptance criteria, and potential areas \
+needing further clarification, producing structured notes suitable for the `breakdown-notes-into-tasks` \
+workflow.
 
 ## Prerequisites
 
@@ -20,7 +24,8 @@ To parse an FRD, identify key requirements, user stories, acceptance criteria, a
 
 1. **Load and Parse FRD:**
     * Access and read the content of the provided FRD.
-    * Parse the document to identify distinct sections like goals, user stories, functional requirements, non-functional requirements, acceptance criteria, scope, etc.
+    * Parse the document to identify distinct sections like goals, user stories, functional requirements, \
+      non-functional requirements, acceptance criteria, scope, etc.
 
 2. **Extract Key Information:**
     * Systematically extract and list:
@@ -44,18 +49,22 @@ To parse an FRD, identify key requirements, user stories, acceptance criteria, a
     * Highlight dependencies between different requirements identified in the FRD.
 
 5. **Prepare Output for Breakdown Workflow:**
-    * With the structured requirements extracted from the FRD, prepare the output in a format suitable for the `breakdown-notes-into-tasks` workflow (which is one level up, i.e., `../breakdown-notes-into-tasks.md`).
+    * With the structured requirements extracted from the FRD, prepare the output in a format suitable for the \
+      `breakdown-notes-into-tasks` workflow (which is one level up, i.e., `../breakdown-notes-into-tasks.md`).
     * This analysis will serve as the input for the next stage of processing.
 
 ### Deliverables
 
-* A structured summary document (`FRD_ANALYSIS_summary.md`) outlining key requirements, scope, constraints, and acceptance criteria.
-* This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
+* A structured summary document (`FRD_ANALYSIS_summary.md`) outlining
+  key requirements, scope, constraints, and acceptance criteria.
+* This summary serves as structured input for the
+  \\\\`breakdown-notes-into-tasks\\\\`\\\\workflow.
+  workflow.
 
 ## Output
 
-* A structured summary of requirements, potential decisions, and research areas extracted from the FRD.
-* This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
-* This summary serves as structured input for the `breakdown-notes-into-tasks` workflow.
+* A structured summary of requirements,
+  potential decisions, and research areas extracted from the FRD.
+* This summary serves as structured input for the \`breakdown-notes-into-tasks\` workflow.
 
 ## Considerations

@@ -1,4 +1,4 @@
-[← Back to docs-dev root](../README.md) ▸ Guides
+<!-- ← Back to docs-dev root -->
 
 # Development Guides
 
@@ -17,7 +17,8 @@ Our development workflow centers around:
 
 ### Meta & Process Guides
 
-- [Project Management Guide](./project-management.md): Details task management, directory structure, and core workflow.
+- [Project Management Guide](./project-management.md): Details task management, directory
+- structure, and core workflow.
 
 ### Technical & Language Guides
 
@@ -25,7 +26,9 @@ Our development workflow centers around:
   - [Ruby Coding Standards](./coding-standards/ruby.md)
 - **[Documentation Standards](./documentation.md)** - Documentation requirements and structure.
 - **[Error Handling](./error-handling.md)** - Error handling patterns and strategies.
-- **[Temporary File Management Guidelines](./temporary-file-management.md)** - Guidelines for AI agent temporary file usage.
+- [Temporary File Management Guidelines](./temporary-file-management.md): Guidelines for AI
+- agent temporary file usage.
+
 - **[Performance](./performance.md)** - Performance optimization guidelines.
 - **[Quality Assurance](./quality-assurance.md)** - Quality control processes and standards.
 - **[Security](./security.md)** - Security best practices and considerations.
@@ -33,21 +36,27 @@ Our development workflow centers around:
   - [Ruby RSpec Guide](./testing/ruby-rspec.md)
   - [Rust Testing Guide](./testing/rust.md)
   - [TypeScript (Bun) Guide](./testing/typescript-bun.md)
-- **[Troubleshooting Workflow](./troubleshooting-workflow.md)** - High-level workflow for debugging and problem-solving.
+- [Troubleshooting Workflow](./troubleshooting-workflow.md): High-level workflow for debugging
+- and problem-solving.
+
 - **[Version Control](./version-control.md)** - Git workflow and commit standards.
 
 ### Release Management
 
 - **[Release Process](./ship-release.md)** - Release workflow, versioning, and checklists.
-- **[Release Documentation Template](./prepare-release/v.x.x.x/docs/_template.md)** - Standard release documentation structure.
+- [Release Documentation Template](./prepare-release/v.x.x.x/docs/_template.md): Standard
+- release documentation structure.
 
 ## Task & Release Management
 
-Project tasks and release planning are managed within the `docs-project` directory using a simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
+Project tasks and release planning are managed within the `docs-project` directory using a
++simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
 
 Key guides for this process:
 
 - [Project Management Guide](./project-management.md): Details the directory structure, task format, and core workflow.
 - [Release Process](./ship-release.md): Covers the steps for finalizing and publishing a release.
 
-The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are determined during the specification phase, guided by the `lets-spec-*` workflow instructions based on the release type (Patch, Feature, Major).
+The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are
++determined during the specification phase, guided by the `lets-spec-*` workflow instructions based on the
++release type (Patch, Feature, Major).

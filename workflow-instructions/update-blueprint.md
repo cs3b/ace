@@ -2,11 +2,15 @@
 
 ## Goal
 
-Update the `docs-project/blueprint.md` file with a concise summary of the current project structure, key files, and links to core project documents. The blueprint provides essential orientation for developers and AI agents to quickly understand the project organization.
+Update the `docs-project/blueprint.md` file with a concise summary of the current project structure, key files, and
+links to core project documents. The blueprint provides essential orientation for developers and AI agents to quickly
+understand the project organization.
 
 ## Definition
 
-A "blueprint" in this context is a concise overview document that provides orientation to the project's structure and organization, highlighting key directories and files to help developers (especially AI assistants) quickly understand how to navigate the codebase.
+A "blueprint" in this context is a concise overview document that provides orientation to the project's structure and
+organization, highlighting key directories and files to help developers (especially AI assistants) quickly understand
+how to navigate the codebase.
 
 ## Prerequisites
 
@@ -15,7 +19,8 @@ A "blueprint" in this context is a concise overview document that provides orien
 
 ## Process Steps
 
-1. **Identify Core Project Documents:** Verify `docs-project/what-do-we-build.md` and `docs-project/architecture.md` are present.
+1. **Identify Core Project Documents:** Verify `docs-project/what-do-we-build.md` and `docs-project/architecture.md`
+   are present.
 
 2. **Update High-Level Structure Overview:**
     - Include a brief description of main directories and their purpose.

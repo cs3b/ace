@@ -1,6 +1,8 @@
 
-# Stop Doing
+# Reflections Template
 
-# Continue Doing
+## Stop Doing
 
-# Start Doing
+## Continue Doing
+
+## Start Doing

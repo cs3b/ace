@@ -44,9 +44,10 @@ gem build your_gem_name.gemspec
 gem push your_gem_name-X.Y.Z.gem
 ```
 
-### Using Helper Scripts
+## Using Helper Scripts
 
-Many projects use helper scripts (e.g., `bin/publish`, Rake tasks) to automate the build and push steps. Check your project's conventions.
+Many projects use helper scripts (e.g., `bin/publish`, Rake tasks) to automate the build and push steps.
+Check your project's conventions.
 
 Example using a hypothetical script:
 

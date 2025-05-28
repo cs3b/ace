@@ -28,12 +28,13 @@ performance aspects (memory usage, execution speed, concurrency) within the proj
   }
   ```
 
-- **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use\n  language-specific tools (profilers, heap analyzers) to detect and fix leaks.\`
+- **Memory Leaks:** Be vigilant about memory leaks in long-running processes or applications. Use
+  language-specific tools (profilers, heap analyzers) to detect and fix leaks.
   - Explicitly release resources when done.
   - Break circular references if using languages with reference counting or specific GC patterns.
   - Consider explicit garbage collection triggers *judiciously* if needed, but prefer designing code to be GC-friendly.
 
-  ```
+  ```javascript
   // Conceptual example of resource cleanup
   function executeBatch(batch) {
     // Optional: trigger GC before potentially large allocation/operation
@@ -156,7 +157,7 @@ function measureOperation(operationName, func) {
     throw error;
   }
 }
-```
+```javascript
 
 // Usage
 function execute(task) {
@@ -174,7 +175,8 @@ function execute(task) {
 - **Profiling in CI:** Integrate basic performance checks into CI to catch regressions early.
 
 **Example Benchmarking (Conceptual):**
-```plaintext
+
+```javascript
 // Pseudocode for benchmarking
 startTime = getCurrentTime();
 runCriticalFunction(testData);
@@ -190,7 +192,9 @@ if (duration > baselineDuration * 1.1) {
 
 ## Language/Environment-Specific Examples
 
-For specific examples of profiling tools, benchmarking libraries, memory analysis techniques, or language-specific performance optimizations (e.g., Ruby's `benchmark` module, Python's `cProfile`, Go's `pprof`, Node.js performance hooks), please refer to the examples in the [./performance/](./performance/) sub-directory.
+For specific examples of profiling tools, benchmarking libraries, memory analysis techniques, or language-specific
+performance optimizations (e.g., Ruby's `benchmark` module, Python's `cProfile`, Go's `pprof`, Node.js performance
+hooks), please refer to the examples in the [./performance/](./performance/) sub-directory.
 
 ## Related Documentation
 

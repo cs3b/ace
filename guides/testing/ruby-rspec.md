@@ -1,10 +1,11 @@
 # Ruby RSpec Testing Guide
 
-This guide provides best practices and conventions for writing tests in Ruby using RSpec, tailored for the coding-agent-workflow-toolkit project.
+This guide provides best practices and conventions for writing tests in Ruby using RSpec, tailored for the
+coding-agent-workflow-toolkit project.
 
 ## 1. Directory Structure
 
-```
+```text
 project-root/
 └── spec/
     ├── unit/
@@ -13,7 +14,8 @@ project-root/
     └── support/
 ```
 
-Follow the mirrored structure of `lib/` when placing unit tests. Keep integration and E2E tests in their respective folders.
+Follow the mirrored structure of `lib/` when placing unit tests. Keep integration and E2E tests in their respective
+folders.
 
 ## 2. Configuration (`spec/spec_helper.rb`)
 
@@ -64,7 +66,8 @@ If you have set up a coverage tool like SimpleCov, you might run it via an envir
 COVERAGE=true bundle exec rspec
 ```
 
-Refer to your project's specific setup (e.g., `spec_helper.rb` or `rails_helper.rb`) and the coverage tool's documentation for configuration details.
+Refer to your project's specific setup (e.g., `spec_helper.rb` or `rails_helper.rb`) and the coverage tool's
+documentation for configuration details.
 
 ## 8. CI Integration
 

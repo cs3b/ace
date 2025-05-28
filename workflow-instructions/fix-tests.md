@@ -2,7 +2,8 @@
 
 ## Goal
 
-Systematically diagnose and fix failing automated tests (unit, integration, etc.) - focusing specifically on test failures rather than general application bugs.
+Systematically diagnose and fix failing automated tests (unit, integration, etc.) - focusing specifically on test failures
+rather than general application bugs.
 
 ## Prerequisites
 
@@ -10,9 +11,9 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 - Access to test output (error messages, stack traces).
 - Development environment is set up correctly (dependencies installed, services running if needed).
 
-# Fix Tests Workflow Instruction
-
-A systematic approach to diagnose and fix failing tests - distinct from general bug fixing. This workflow focuses specifically on test failures, which often require specialized knowledge of testing frameworks and patterns. For detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.md).
+A systematic approach to diagnose and fix failing tests - distinct from general bug fixing. This workflow focuses
+specifically on test failures, which often require specialized knowledge of testing frameworks and patterns. For
+detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.md).
 
 ## When to Use This Workflow
 
@@ -40,7 +41,8 @@ This workflow is NOT intended for:
     - Handle end-to-end tests last.
 
 3. **Fix and Verify:**
-    - Isolate one failure at a time. Run only the failing test or file (e.g., `bundle exec rspec spec/path/to/failing_spec.rb:line_number` from project root).
+    - Isolate one failure at a time. Run only the failing test or file (e.g.,
+      `bundle exec rspec spec/path/to/failing_spec.rb:line_number` from project root).
     - Analyze the code related to the failure.
     - Implement a fix.
     - Re-run the specific test to confirm it passes.
@@ -81,11 +83,14 @@ This workflow is NOT intended for:
 
 ## Relationship to Bug Fixing
 
-While this workflow shares some similarities with general bug fixing, it is specifically focused on test-related issues which often require:
+While this workflow shares some similarities with general bug fixing, it is specifically focused on test-related issues
+which often require:
 
 - Specialized knowledge of testing frameworks and patterns
 - Understanding of test isolation and data dependencies
 - Familiarity with mocking, stubbing, and test doubles
 - Awareness of test infrastructure and execution environment
 
-If the issue you're addressing is primarily an application bug that happens to be revealed by tests (rather than an issue with the tests themselves), consider following a more general bug-fixing approach after understanding the test failure.
+If the issue you're addressing is primarily an application bug that happens to be revealed by tests
+(rather than an issue with the tests themselves), consider following a more general bug-fixing
+approach after understanding the test failure.

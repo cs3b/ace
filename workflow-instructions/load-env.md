@@ -1,6 +1,8 @@
 # Load Environment Workflow Instruction
 
-**Goal:** Load the necessary context for development, including general process documentation, project-specific details, and the current project state. This workflow instruction focuses *only* on loading context, not initiating task execution (see `work-on-task`).
+**Goal:** Load the necessary context for development, including general process documentation,
+project-specific details, and the current project state. This workflow instruction focuses *only*
+on loading context, not initiating task execution (see `work-on-task`).
 
 ## Prerequisites
 
@@ -41,10 +43,13 @@
 ## Output / Success Criteria
 
 1. **General Process Understood:** Core development guides and available commands are known.
-2. **Project Context Loaded:** Project goals (`what-do-we-build.md`), architecture (`architecture.md`), and structure (`blueprint.md`) are understood.
-3. **Current State Identified:** The active release directory in `docs-project/current/` and its tasks are known. Recent code changes are reviewed.
+2. **Project Context Loaded:** Project goals (`what-do-we-build.md`), architecture
+   (`architecture.md`), and structure (`blueprint.md`) are understood.
+3. **Current State Identified:** The active release directory in `docs-project/current/` and its
+   tasks are known. Recent code changes are reviewed.
 4. **Environment Ready:** Working directory clean, dependencies installed, latest code pulled.
-5. **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task and initiating work using `work-on-task`.
+5. **Ready for Next Step:** Context is loaded, allowing the user to proceed with selecting a task
+   and initiating work using `work-on-task`.
 
 ## Reference Documentation
 

@@ -2,13 +2,13 @@
 
 ## Goal
 
-This guide establishes the standards and workflow for using Git version control within this project, focusing on commit message conventions, branching strategies, and pull request processes to ensure a clean, understandable, and collaborative development history.
+This guide establishes the standards and workflow for using Git version control within this project, focusing on
+commit message conventions, branching strategies, and pull request processes to ensure a clean, understandable, and
+collaborative development history.
 
-# Version Control Guide
+## 1. Commit Message Structure
 
-### 1. Commit Message Structure
-
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -29,7 +29,7 @@ Implement a user-configurable dark mode setting.
 References #123
 ```
 
-### 2. Commit Types
+## 2. Commit Types
 
 | Type     | Description                        | Example |
 |----------|------------------------------------|---------|
@@ -41,7 +41,7 @@ References #123
 | test     | Testing                           | `test(utils): Add unit tests for helper functions` |
 | chore    | Maintenance                        | `chore(deps): Update framework to v2.5` |
 
-### 3. Commit Guidelines
+## 3. Commit Guidelines
 
 1. **Subject Line**:
 
@@ -81,7 +81,7 @@ References #123
    Related: #235, #236
    ```
 
-### 4. Branching Strategy
+## 4. Branching Strategy
 
 1. **Branch Types**:
 
@@ -114,7 +114,7 @@ References #123
    git push origin feature/new-tool
    ```
 
-### 5. Pull Request Template
+## 5. Pull Request Template
 
 ```markdown
 ## Changes
@@ -136,9 +136,10 @@ References #123
 - Tool initialization now requires explicit configuration
 ```
 
-### 6. Git Hooks
+## 6. Git Hooks
 
-Git hooks (client-side scripts that run automatically at certain points, like pre-commit or commit-msg) can help enforce standards.
+Git hooks (client-side scripts that run automatically at certain points, like pre-commit or commit-msg) can help
+enforce standards.
 
 1. **Pre-commit Hook Example**:
    Runs before a commit is created. Useful for running linters, formatters, and quick tests.
@@ -167,7 +168,8 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
    exit 0
    ```
 
-   *Note: Setting up Git hooks often involves placing executable scripts in the `.git/hooks/` directory or using specialized hook management tools.*
+   *Note: Setting up Git hooks often involves placing executable scripts in the `.git/hooks/` directory or using
+   specialized hook management tools.*
 
 2. **Commit-msg Hook Example**:
    Runs after the commit message is entered but before the commit is created. Useful for validating the commit message format.
@@ -189,7 +191,7 @@ Git hooks (client-side scripts that run automatically at certain points, like pr
    exit 0
    ```
 
-### 7. Practical Commit Workflow
+## 7. Practical Commit Workflow
 
 1. **Pre-Commit Review**:
    Before committing, review your changes and run local validation checks.
@@ -246,7 +248,7 @@ Common file groupings (examples):
 - Configuration: `config/`, `*.json`, `*.yaml`, `*.toml`
 - Build/Package: `Makefile`, `Dockerfile`, `package.json`, `pom.xml`, `setup.py`, `Cargo.toml`
 
-### 7. Best Practices
+## 8. Best Practices
 
 1. **Atomic Commits**:
    - One logical change per commit
@@ -270,7 +272,8 @@ Common file groupings (examples):
 
 ## Language/Environment-Specific Examples
 
-For specific examples of setting up Git hooks with specialized hook management tools, please refer to the examples in the [./version-control/](./version-control/) sub-directory.
+For specific examples of setting up Git hooks with specialized hook management tools, please refer to the examples in
+the [./version-control/](./version-control/) sub-directory.
 
 ## Related Documentation
 

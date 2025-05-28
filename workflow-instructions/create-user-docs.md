@@ -2,7 +2,8 @@
 
 ## Goal
 
-Create or update user-facing documentation (e.g., README additions, tutorials, usage examples) for a new feature or significant change.
+Create or update user-facing documentation (e.g., README additions, tutorials, usage examples) for a new feature
+or significant change.
 
 ## Prerequisites
 
@@ -12,8 +13,10 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
 
 ## Process Steps
 
-1. **Identify Scope & Audience:** Determine what needs to be documented and who the documentation is for (e.g., end-users, other developers integrating the feature).
-2. **Analyze Feature:** Review the feature's functionality, configuration, use cases, API (if applicable), and potential integration points. Refer to task files, code, and examples.
+1. **Identify Scope & Audience:** Determine what needs to be documented and who the documentation is for
+   (e.g., end-users, other developers integrating the feature).
+2. **Analyze Feature:** Review the feature\'s functionality, configuration, use cases, API (if applicable), and
+   potential integration points. Refer to task files, code, and examples.
 3. **Outline Documentation:** Plan the structure of the documentation. Consider sections like:
     - Quick Start / Basic Usage Example
     - Key Concepts / How it Works
@@ -28,8 +31,12 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
     - Include code snippets for examples.
     - Explain the "why" as well as the "how".
     - Use formatting (headings, lists, code blocks) effectively.
-5. **Review & Refine:** Check the draft for clarity, completeness, technical accuracy, grammar, and spelling. Ensure examples work.
-6. **Save/Commit:** Save the documentation in the appropriate location (e.g., `docs/`, `examples/`, `README.md` at project root, or within a release directory `docs-project/current/{release_dir}/user-experience/` or `docs-project/current/{release_dir}/docs/`). Commit the changes.
+5. **Review & Refine:** Check the draft for clarity, completeness, technical accuracy, grammar, and
+   spelling. Ensure examples work.
+6. **Save/Commit:** Save the documentation in the appropriate location (e.g., `docs/`, `examples/`,
+   `README.md` at project root, or within a release directory
+   `docs-project/current/{release_dir}/user-experience/` or `docs-project/current/{release_dir}/docs/`).
+   Commit the changes.
 
 ## Input
 

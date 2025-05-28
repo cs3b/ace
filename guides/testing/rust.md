@@ -10,7 +10,7 @@ This guide provides best practices for testing Rust code in the context of the c
 
 ## 2. Directory Layout
 
-```
+```text
 project-root/
 ├── src/
 │   └── lib.rs

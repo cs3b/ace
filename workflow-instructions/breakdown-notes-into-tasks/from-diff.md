@@ -1,10 +1,14 @@
 # Prepare Tasks: From Git Diff
 
-This document outlines the steps to analyze a Git diff (provided as a file, command output, or commit range) to generate structured analysis documents. This analysis serves as input for the main `breakdown-notes-into-tasks` workflow.
+This document outlines the steps to analyze a Git diff (provided as a file, command output, or commit\\\
+range) to generate structured analysis documents. This analysis serves as input for the main\\\
+`breakdown-notes-into-tasks` workflow.
 
 ## Goal
 
-To analyze Git diff content and produce structured analysis documents that serve as input for the `breakdown-notes-into-tasks` workflow, using an "Outside-In" approach (interfaces first, then implementation).
+To analyze Git diff content and produce structured analysis documents that serve as input for the\\\
+`breakdown-notes-into-tasks` workflow, using an "Outside-In" approach (interfaces first, then\\\
+implementation).
 
 ## Prerequisites
 
@@ -28,8 +32,10 @@ To analyze Git diff content and produce structured analysis documents that serve
     * Group related changes based on component, module, feature, or directory structure.
 
 3. **"Outside-In" Analysis:**
-    * **First Pass (Interfaces & High-Level):** Analyze changes to interfaces, public APIs, DSLs, configuration, high-level tests, and usage examples. Focus on the 'what' and 'why' of the changes.
-    * **Second Pass (Implementation Details):** Examine the internal logic, algorithms, private methods, and specific implementation choices. Focus on the 'how'.
+    * **First Pass (Interfaces & High-Level):** Analyze changes to interfaces, public APIs, DSLs,\\\
+      configuration, high-level tests, and usage examples. Focus on the \'what\' and \'why\' of the changes.
+    * **Second Pass (Implementation Details):** Examine the internal logic, algorithms, private methods,\\\
+      and specific implementation choices. Focus on the \'how\'.
 
 4. **Generate Layered Analysis Documents:**
     * For each logical component or significant area of change identified:
@@ -45,7 +51,8 @@ To analyze Git diff content and produce structured analysis documents that serve
             * Include specific file paths and line numbers.
 
 5. **Prepare Output for Breakdown Workflow:**
-    * With the analysis documents generated, structure the extracted information into a clear format suitable for the `breakdown-notes-into-tasks` workflow.
+    * With the analysis documents generated, structure the extracted information into a clear format\\\
+      suitable for the `breakdown-notes-into-tasks` workflow.
     * Use the high-level and technical analysis as the primary input.
 
 ## Output

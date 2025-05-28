@@ -8,7 +8,7 @@ Use `bun test` with built-in expect API.
 
 ## 2. Directory Structure
 
-```
+```text
 project-root/
 └── tests/
     └── utils.test.ts

@@ -6,7 +6,7 @@ This guide explains **why** and **how** we maintain a living roadmap that aligns
 
 ## 1. Conceptual Model
 
-```
+```text
 Vision → Strategic Objectives → Roadmap (Themes/Epics → Releases) → Tasks
 ```
 
@@ -54,4 +54,7 @@ See `/docs-project/roadmap.md`. Key sections:
 * Keep roadmap lightweight—update tables, not essays.
 
 ---
-*Last updated: 2025-05-07*
+
+## Last Updated
+
+2025-05-07
