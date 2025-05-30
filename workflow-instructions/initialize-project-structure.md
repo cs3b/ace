@@ -61,6 +61,13 @@ AI-assisted development workflow in a new or existing project.
           `docs-dev/tools/`. They should function if the underlying tools are present and correctly
           referenced within the wrappers.
 
+4. **Review and Update Project Source Documentation**:
+    - Review the information extracted or gathered through interactive prompts in Step 2.
+    - Identify the primary source document (`PRD.md` or `README.md`) determined in Step 2.
+    - Update the primary source document with the gathered project information (name, purpose, technology stack, key features, etc.).
+    - For any information that was not fully gathered or requires further detail, add clear notes or placeholders within the document indicating where more information is needed.
+    - Ensure the updated document aligns with the structure of the relevant template (`docs-dev/guides/initialize-project-templates/PRD.md` or `docs-dev/guides/initialize-project-templates/README.md`) if templates were used to initially populate the file.
+
 ## Prerequisites
 
 - Project root directory must be accessible with write permissions.
