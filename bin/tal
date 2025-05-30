@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# bin/gat: Thin wrapper for get-all-tasks utility
+# bin/tal: Thin wrapper for get-all-tasks utility
 
 # This script assumes it is located in <project_root>/bin/
 # The target script is in <project_root>/docs-dev/tools/
@@ -9,12 +9,6 @@
 
 target_script = File.expand_path('../docs-dev/tools/get-all-tasks', __dir__)
 
-if File.exist?(target_script)
-  # Replace the current process with the Ruby interpreter running the target script
-  # Pass all original arguments ($*) from this binstub to the target script
-  exec(Gem.ruby, target_script, *ARGV)
-else
-  warn "Error: Target script not found at #{target_script}"
-  warn "Ensure 'docs-dev/tools/get-all-tasks' exists."
-  exit 1
-end
+# Use exec to replace the current process with the target script.
+# *ARGV passes all command-line arguments to the target script.
+exec(target_script, *ARGV)

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+#### v.0.3.x - 2025-05-30 - Standardize Binstub Location and Rename gat to tal
+
+- Renamed the `bin/gat` wrapper script to `bin/tal`.
+- Updated documentation and task references for the `bin/gat` -> `bin/tal` rename.
+- Added binstub scripts for `tnid`, `rc`, and `tal` to `docs-dev/tools/_binstubs/`.
+
 #### v.0.3.x - 2025-05-30 - Incorporate Codename Picking Guide into Prepare Release Workflow
 
 #### v.0.3.x+task.20 - 2025-05-30 - Improve Initialize Project Structure Workflow
