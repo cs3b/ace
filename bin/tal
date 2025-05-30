@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# tal: Thin wrapper for get-all-tasks utility
+
+# This script assumes it is located in <project_root>/docs-dev/tools/_binstubs/
+# The target script is in <project_root>/docs-dev/tools/
+
+# __dir__ gives the directory of the current script (docs-dev/tools/_binstubs/).
+# '../get-all-tasks' navigates from docs-dev/tools/_binstubs/ up to docs-dev/tools/ and then selects the target script.
+
+target_script = File.expand_path('../get-all-tasks', __dir__)
+
+# Use exec to replace the current process with the target script.
+# *ARGV passes all command-line arguments to the target script.
+exec(target_script, *ARGV)
