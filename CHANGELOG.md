@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.x - 2025-05-30 - Improve Initialize Project Structure Workflow
+
+- **Refactored `initialize-project-structure.md` Workflow:**
+    - Added explicit idempotency statement to clarify rerun behavior.
+    - Streamlined the workflow by removing the redundant "Initialize Version Control" (formerly Step 3) and the "Tailor Development Guides" (formerly Step 4) steps.
+    - Renumbered the steps to reflect the removal of the two steps.
+    - Enhanced the "Core Documentation Generation" step to reference new templates and include improved example questions for interactive prompts.
+    - Updated the "Setup Project `bin/` Scripts" step (now Step 3) to refer to the `docs-project/architecture.md` for binstub explanations.
+- **Created New Project Initialization Templates:**
+    - Added `docs-dev/guides/initialize-project-templates/PRD.md` with a basic PRD structure.
+    - Added `docs-dev/guides/initialize-project-templates/README.md` with a basic README structure.
+    - Added `docs-dev/guides/initialize-project-templates/blueprint.md` based on the current project's blueprint structure.
+    - Added `docs-dev/guides/initialize-project-templates/architecture.md` based on the current project's architecture structure, including binstub explanations.
+    - Added `docs-dev/guides/initialize-project-templates/what-do-we-build.md` based on the current project's what-do-we-build structure.
+- **Created New Guide for Codenames:**
+    - Added `docs-dev/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
+
 #### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
 
 - **Task ID Generation Standardization:**
