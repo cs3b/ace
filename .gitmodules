@@ -1,0 +1,3 @@
+[submodule "docs-dev"]
+	path = docs-dev
+	url = git@github.com:cs3b/coding-agent-workflow-toolkit.git
