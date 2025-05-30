@@ -17,14 +17,10 @@ AI-assisted development workflow in a new or existing project.
       without affecting the upstream repository.
     - Create project management directories (`backlog`, `current`, `done`) inside the `docs-project` directory.
     - Create the `docs-project/decisions/` directory and an empty `.keep` file within it (`docs-project/decisions/.keep`).
-    - Determine initial version (e.g., `v0.0.1` with codename setup-the-infrastructure). For guidance on selecting appropriate codenames, see [Picking Codenames Guide](../guides/picking-codenames.md).
-    - Create initial version directory structure: `docs-project/backlog/<initial_version>/docs/`.
-    - Initialize version control if needed.
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
-        - If yes: **Move** `PRD.md` to `docs-project/backlog/<initial_version>/docs/PRD.md`. Use this
-          file as the primary source. If the existing `PRD.md` lacks structure, populate it using the template from `docs-dev/guides/initialize-project-templates/PRD.md`.
+        - If yes: Use this file as the primary source. If the existing `PRD.md` lacks structure, populate it using the template from `docs-dev/guides/initialize-project-templates/PRD.md`.
         - If no: Check if `README.md` exists at the project root. Use this file as the primary
           source. If the existing `README.md` lacks project information, enhance it using the template from `docs-dev/guides/initialize-project-templates/README.md`.
         - If neither exists: Create initial `PRD.md` and `README.md` files using the templates in `docs-dev/guides/initialize-project-templates/` and prepare to use interactive prompts to populate them.
