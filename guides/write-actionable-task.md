@@ -1,5 +1,5 @@
 <!-- markdownlint-disable -->
-# 📑 Writing Clear, Actionable Dev Tasks  
+# 📑 Writing Clear, Actionable Dev Tasks
 
 ## A playbook for documentation‑oriented tickets, with a complete worked example
 
@@ -12,16 +12,16 @@ minimize ambiguity and streamline the process of defining and executing document
 
 ---
 
-## 0. Directory Audit Step ✅  
+## 0. Directory Audit Step ✅
 
-**Always start by discovering what actually exists in the repo.**  
+**Always start by discovering what actually exists in the repo.**
 
-1. Run a tree or ls command (exclude `node_modules`, `vendor`, etc.).  
-2. Copy the relevant excerpt into the ticket.  
-3. From that listing, build the deliverable manifest.  
+1. Run a tree or ls command (exclude `node_modules`, `vendor`, etc.).
+2. Copy the relevant excerpt into the ticket.
+3. From that listing, build the deliverable manifest.
 
-> **Tip:**  
-> • If you don’t have repo access, create a tiny *pre‑ticket* titled “Generate Guide‑Audit Manifest”.  
+> **Tip:**
+> • If you don’t have repo access, create a tiny *pre‑ticket* titled “Generate Guide‑Audit Manifest”.
 > • Commit the tree output as a comment or markdown file, then reference it in the main ticket.
 
 Example audit snippet to embed:
@@ -56,72 +56,12 @@ guides
 
 ---
 
-## 2. Re‑usable Markdown Template
+## 2. Task Template
 
-```markdown
----
-id: <run bin/tnid to generate ID> # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see docs-dev/guides/project-management.md#task-id-convention.
-status: pending # See [Project Management Guide](project-management.md) for all possible values
-priority: <high/medium/low>
-estimate: <n>h
-dependencies: [<ticket-ids>]
----
+A re-usable Markdown template for tasks is available at:
+[`docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`](./prepare-release/v.x.x.x/tasks/_template.md)
 
-# <Verb + Object>
-
-## 0. Directory Audit ✅
-_Command run:_
-```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
-```
-_Result excerpt:_
-```
-<insert tree here>
-```
-
-## Objective
-Why are we doing this?
-
-## Scope of Work
-- Bullet 1 …
-- Bullet 2 …
-
-### Deliverables
-#### Create
-- path/to/file.ext
-#### Modify
-- path/to/other.ext
-#### Delete
-- path/to/obsolete.ext
-
-## Phases
-1. Audit
-2. Extract …
-3. Refactor …
-
-## Implementation Plan
-*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format. Consider embedding verification steps directly after an action.*
-- [ ] Step 1: Describe the first action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  >   Type: Action Validation
-  >   Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  >   Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more steps as needed.
-
-## Acceptance Criteria
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan.*
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
-
-## Out of Scope
-- ❌ …
-
-## References
-```
-
-Copy → fill → ship.
+This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `bin/tnid` to generate the task ID.
 
 > **Tip: Generating Task IDs with `bin/tnid`**
 > Always use the `bin/tnid` command (run from the project root, e.g., `coding-agent-workflow-toolkit-meta`)
@@ -132,143 +72,21 @@ Copy → fill → ship.
 
 ---
 
-## 3. **Full Worked Example** – “Tailor Guides to Tech Stack”
+## 3. **Full Worked Example**
 
-```markdown
----
-id: v.0.1.0+task.1 # Example ID, replace with actual generated ID
-status: pending
-priority: high
-estimate: 8 h
-dependencies: []
----
+A full worked example of a task, "Tailor Guides to Tech Stack," has been moved to a separate file:
+[`docs-dev/guides/prepare-release/v.x.x.x/tasks/_example.md`](./prepare-release/v.x.x.x/tasks/_example.md)
 
-# Refactor Developer Guides by Language (Ruby, Rust, TypeScript)
-
-## 0. Directory Audit ✅
-_Command run 2025‑04‑24:_
-```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
-```
-_Result excerpt (irrelevant folders omitted):_
-```
-guides
-├── coding-standards.md
-├── documentation.md
-├── error-handling.md
-├── performance.md
-├── quality-assurance.md
-├── security.md
-├── ship-release.md
-├── testing.md
-├── version-control.md
-└── ...
-```
-
-🔍 **General guides requiring language splits:**  
-`coding-standards.md`, `documentation.md`, `error-handling.md`, `performance.md`,  
-`quality-assurance.md`, `security.md`, `ship-release.md`, `testing.md`,  
-`version-control.md`
+This example demonstrates how to fill out the template for a real-world scenario.
 
 ---
 
-## Objective
-Split language‑specific snippets out of *every* general guide so developers can jump straight to the rules for their stack.
+### 4. Quick Checklist 🚦
 
-## Scope of Work
-1. **Audit** each general guide above.  
-2. **Extract** Ruby, Rust, and TypeScript blocks into per‑language sub‑guides.  
-   - *Testing* uses `ruby-rspec.md` & `typescript-bun.md`.  
-3. **Clean** general guides so only polyglot advice remains.  
-4. **Index** – add links for all new files to `docs-dev/guides/README.md` (or create `index.md`).  
-5. **Review** – run `md-link-check`; ensure docs build passes.
-
-### Deliverables
-
-| General guide | Sub‑directory → files to **create / update**                |
-|---------------|-------------------------------------------------------------|
-| coding-standards.md | coding-standards/ruby.md · rust.md · typescript.md |
-| documentation.md    | documentation/ruby.md · rust.md · typescript.md |
-| error-handling.md   | error-handling/ruby.md · rust.md · typescript.md |
-| performance.md      | performance/ruby.md · rust.md · typescript.md |
-| quality-assurance.md| quality-assurance/ruby.md · rust.md · typescript.md |
-| security.md         | security/ruby.md · rust.md · typescript.md |
-| ship-release.md     | ship-release/ruby.md · rust.md · typescript.md |
-| testing.md          | testing/ruby-rspec.md · rust.md · typescript-bun.md |
-| version-control.md  | version-control/ruby.md · rust.md · typescript.md |
-
-**Delete / Flag**
-
-- Remove `testing/frameworks.md` (superseded).  
-- Tag any unmapped obsolete examples with `<!--TODO:Delete-->`.
-
----
-
-## Phases
-1. **Audit** – add `<!--LANG:Ruby-->` etc. comments.  
-2. **Extract & Create** – move content into sub‑guides.  
-3. **Refactor General Guides** – ensure only language‑agnostic material.  
-4. **Index & Cleanup** – update README; run `md-link-check`.  
-5. **PR Review** – assign to @docs-maintainers.
-
-## Implementation Plan
-- [ ] **Audit:** Add `<!--LANG:Ruby-->`, `<!--LANG:Rust-->`, `<!--LANG:TypeScript-->` comments to relevant blocks
-  in all 9 general guides.
-- [ ] **Create Sub-directories:** Create the language-specific sub-directories (`coding-standards/`, `documentation/`, etc.) if they don't exist.
-  > TEST: Coding Standards Sub-directory Created
-  >   Type: Post-condition Check
-  >   Assert: The `docs-dev/guides/coding-standards` directory exists.
-  >   Command: bin/test --check-file-exists docs-dev/guides/coding-standards --type d
-- [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or
-  `ruby-rspec.md` for testing).
-  > TEST: Ruby Coding Standard File Created
-  >   Type: Post-condition Check
-  >   Assert: The `docs-dev/guides/coding-standards/ruby.md` file exists and is not empty.
-  >   Command: bin/test --check-file-exists-not-empty docs-dev/guides/coding-standards/ruby.md
-- [ ] **Extract & Create (Rust):** Move Rust blocks from general guides to `guides/<category>/rust.md`.
-- [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to
-  `guides/<category}/typescript.md` (or `typescript-bun.md` for testing).
-- [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific
-  blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
-- [ ] **Tag Obsolete:** Tag any remaining unmapped examples with `<!--TODO:Delete-->`.
-- [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created
-  language-specific guides.
-- [ ] **Review & Check:** Run `md-link-check`.
-  > TEST: Markdown Links Check
-  >   Type: Guardrail
-  >   Assert: All markdown links are valid in the `docs-dev/guides` directory.
-  >   Command: md-link-check docs-dev/guides
-  >   # Or a more specific path / project-wide lint command
-- [ ] Ensure local site build passes (if applicable, this might be a manual step or a separate command).
-
-## Acceptance Criteria
-- [ ] Sub‑guides exist for all nine categories above.  
-- [ ] General guides contain no Ruby/Rust/TS blocks.  
-- [ ] Deprecated files removed or tagged.  
-- [ ] README (or index) lists every guide with working links.  
-- [ ] All automated tests defined in the Implementation Plan pass (e.g., directory/file creation, link checks).
-- [ ] Local site build OK (if applicable and checked manually or via separate command).
-
-## Out of Scope
-- No additional stacks (Python, Go, …).  
-- Do not rewrite existing examples—only relocate.
-
-## References
-- ADR‑010 “Documentation Structure”
-- `.remarkrc` for lint rules
-
-## Risks & Mitigations
-- **Broken links after moves** → run `md-link-check` (as included in Implementation Plan) & add redirects if needed.
-```
-
----
-
-### 4. Quick “Ship‑It” Checklist 🚦
-
-1. Is the **Directory Audit** present?  
-2. Could a newcomer complete the work using only the manifest?  
-3. Do the Acceptance Criteria read like QA steps?  
-4. Is scope creep prevented by an **Out of Scope** section?  
-5. Are references & scripts one click away?  
+1. Is the **Directory Audit** present?
+2. Could a newcomer complete the work using only the manifest?
+3. Do the Acceptance Criteria read like QA steps?
+4. Is scope creep prevented by an **Out of Scope** section?
+5. Are references & scripts one click away?
 
 Tick them all → merge the ticket.
