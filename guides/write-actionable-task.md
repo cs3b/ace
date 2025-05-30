@@ -43,7 +43,7 @@ guides
 
 | Section | Purpose | Key Questions |
 |---------|---------|---------------|
-| **Front‑matter** | Helps tooling & humans filter | id, status, priority, estimate, dependencies |
+| **Front‑matter** | Helps tooling & humans filter | id (use `bin/tnid` to generate), status, priority, estimate, dependencies |
 | **Objective / Problem** | *Why* are we doing this? | What pain are we fixing? |
 | **Directory Audit (0)** | Source‑of‑truth for scope | Did we include the current tree? |
 | **Scope of Work** | *What* to touch | Which guides/folders? |
@@ -60,7 +60,7 @@ guides
 
 ```markdown
 ---
-id: v.X.Y.Z+task.<sequential_number> # REQUIRED - Unique ID (e.g., v.0.2.3+task.1). See docs-dev/guides/project-management.md#task-id-convention
+id: <run bin/tnid to generate ID> # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see docs-dev/guides/project-management.md#task-id-convention.
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: <high/medium/low>
 estimate: <n>h
@@ -122,6 +122,13 @@ Why are we doing this?
 ```
 
 Copy → fill → ship.
+
+> **Tip: Generating Task IDs with `bin/tnid`**
+> Always use the `bin/tnid` command (run from the project root, e.g., `coding-agent-workflow-toolkit-meta`)
+> to generate the task ID for the `id` field in the front-matter.
+> This script ensures the ID is unique, correctly formatted, and uses the next sequential
+> number for the current release, as per the conventions in
+> `docs-dev/guides/project-management.md#task-id-convention`.
 
 ---
 
