@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
+
+- **Task ID Generation Standardization:**
+    - Updated `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`, and `docs-dev/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
+- **Task Template and Example Consolidation:**
+    - Moved the canonical task template to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`.
+    - Relocated the full worked task example to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_example.md`.
+    - Updated `docs-dev/guides/write-actionable-task.md` to remove the embedded template and example, now linking to these new centralized locations. This streamlines task creation and ensures a single source of truth for the task structure.
+
 ### v.0.3.0+task.19 - 2025-05-28 - Fix Markdown Lint Errors
 
 - **Documentation Quality Improvements:**
