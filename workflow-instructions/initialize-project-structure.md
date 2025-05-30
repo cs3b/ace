@@ -6,6 +6,8 @@ Initialize the `docs-dev` and `docs-project` directory structures and create cor
 (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) to establish the foundation for an
 AI-assisted development workflow in a new or existing project.
 
+**Idempotency**: This workflow is designed to be idempotent. Rerunning it will skip already completed steps or safely update existing files without overwriting customized content.
+
 ## Process Steps
 
 1. **Project Structure Setup**:
@@ -15,45 +17,31 @@ AI-assisted development workflow in a new or existing project.
       without affecting the upstream repository.
     - Create project management directories (`backlog`, `current`, `done`) inside the `docs-project` directory.
     - Create the `docs-project/decisions/` directory and an empty `.keep` file within it (`docs-project/decisions/.keep`).
-    - Determine initial version (e.g., `v0.0.1` with codename setup-the-infrastructure).
+    - Determine initial version (e.g., `v0.0.1` with codename setup-the-infrastructure). For guidance on selecting appropriate codenames, see [Picking Codenames Guide](../guides/picking-codenames.md).
     - Create initial version directory structure: `docs-project/backlog/<initial_version>/docs/`.
     - Initialize version control if needed.
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
         - If yes: **Move** `PRD.md` to `docs-project/backlog/<initial_version>/docs/PRD.md`. Use this
-          file as the primary source.
+          file as the primary source. If the existing `PRD.md` lacks structure, populate it using the template from `docs-dev/guides/initialize-project-templates/PRD.md`.
         - If no: Check if `README.md` exists at the project root. Use this file as the primary
-          source.
-          source.
-        - If neither exists: Prepare to use interactive prompts.
+          source. If the existing `README.md` lacks project information, enhance it using the template from `docs-dev/guides/initialize-project-templates/README.md`.
+        - If neither exists: Create initial `PRD.md` and `README.md` files using the templates in `docs-dev/guides/initialize-project-templates/` and prepare to use interactive prompts to populate them.
     - **Extract/Prompt**: Extract core information **including primary technology stack**
       (e.g., Ruby, Rust, TypeScript) from the identified source file (`PRD.md` or `README.md`).
-      If no source file, use interactive prompts to gather this information.
+      If no source file or incomplete information, use interactive prompts to gather missing details.
+    - **Interactive Prompts**: When using interactive prompts, ask comprehensive questions such as:
+        - "What is the project's name and primary purpose?"
+        - "What is the main technology stack (e.g., Node.js, Python, Ruby, Rust)?"
+        - "What are 2-3 key features this project will provide?"
+        - "Who are the primary users or target audience?"
+        - "What external APIs or services will this project integrate with?"
     - **Generate**: Create/update `docs-project/what-do-we-build.md`, `docs-project/architecture.md`
       (ensuring it includes a 'Technology Stack' section), and `docs-project/blueprint.md`
-      (typically placed directly in `docs-project/`) based on the gathered information.
+      (typically placed directly in `docs-project/`) based on the gathered information and templates from `docs-dev/guides/initialize-project-templates/`.
 
-3. **Initialize Version Control**:
-   - Add relevant patterns to `.gitignore` (e.g., `docs-dev/tools/.env`)
-   - Create initial commit for docs structure
-
-4. **Tailor Development Guides**:
-    - **Review `docs-dev/guides/`**: Identify sub-directories or files containing language-specific
-      guidance (e.g., `coding-standards/ruby.md`, `testing/rust.md`).
-    - **Identify Project Stack**: Confirm the primary technologies used in the project **by
-      referencing the 'Technology Stack' section in `docs-project/architecture.md`**.
-    - **Remove Irrelevant Guides**: Delete the language-specific guide files or directories
-      that do **not** match the project's confirmed technology stack.
-    - **Create Review Task**: Create a new task file (e.g.,
-      `docs-project/backlog/<initial_version>/tasks/01-identify-stack-specific-guides.md`)
-      prompting an analysis of the project's needs against the current `docs-dev` guides and
-      workflows. The goal is to identify any **missing** guidance or the need for **new,
-      project-specific** documentation (e.g., guides for a specific library, custom deployment
-      steps) tailored to the chosen technology stack.
-        - *Example Task Title*: `Identify Need for Project-Specific [Stack] Guides/Workflows`
-
-5. **Setup Project `bin/` Scripts from Binstubs**:
+3. **Setup Project `bin/` Scripts from Binstubs**:
     - **Create Project `bin/` Directory**:
         - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
     - **Identify Binstub Templates**:
@@ -72,8 +60,7 @@ AI-assisted development workflow in a new or existing project.
     - **Guidance on Binstubs**:
         - Remind the user that scripts like `bin/test`, `bin/lint`, `bin/build`, and `bin/run` are
           general placeholders. They will need to be tailored with project-specific commands based
-          on the technology stack chosen for the project. This customization is typically handled
-          in a subsequent setup task.
+          on the technology stack chosen for the project. For detailed explanations of each binstub's purpose and common implementations, refer to the 'Command-line Tools (bin/)' section in `docs-project/architecture.md`.
         - Scripts like `bin/tn`, `bin/tr`, and `bin/tree` are often thin wrappers for tools in
           `docs-dev/tools/`. They should function if the underlying tools are present and correctly
           referenced within the wrappers.
@@ -84,7 +71,7 @@ AI-assisted development workflow in a new or existing project.
 - Optional: An existing `PRD.md` (within `docs-project`) or `README.md` (at project root) can provide information for extraction.
 - Optional: Git repository initialized (the workflow instruction can add to `.gitignore`).
 
-## User Input (if PRD.md or README.md not present)
+## User Input (if PRD.md or README.md not present or incomplete)
 
 The workflow instruction will prompt for:
 
@@ -110,24 +97,7 @@ The workflow instruction generates this file with:
 - Core design principles
 - Target use cases
 
-Example structure:
-
-```coding-agent-workflow-toolkit-meta/docs-dev/workflow-instructions/initialize-project-structure.md#L139-150
-# Project Name
-
-## What We Build 🔍
-[Concise description of the project purpose]
-
-## ✨ Key Features
-- Feature 1: Description
-- Feature 2: Description
-[...]
-
-## Core Design Principles
-- Principle 1
-- Principle 2
-[...]
-```
+The generated file follows the template structure from `docs-dev/guides/initialize-project-templates/what-do-we-build.md` with sections for project overview, key features, design principles, and target use cases.
 
 ### docs-project/architecture.md
 
@@ -139,28 +109,7 @@ The workflow instruction analyzes the project structure and gathered info to gen
 - Data flow diagrams (if inferrable)
 - Extension points
 
-Example structure:
-
-```coding-agent-workflow-toolkit-meta/docs-dev/workflow-instructions/initialize-project-structure.md#L162-180
-# Architecture
-
-## Overview
-[High-level architectural description]
-
-## Technology Stack
-- Language: [e.g., Ruby 3.2]
-- Framework: [e.g., Rails 7]
-- Key Libraries: [e.g., RSpec, Sidekiq]
-
-## Core Components
-[Component breakdown with relationships]
-
-## Data Flow
-[Data flow between components]
-
-## Extension Points
-[Customization and extension capabilities]
-```
+The generated file follows the template structure from `docs-dev/guides/initialize-project-templates/architecture.md` with sections for technology stack, system architecture, command-line tools, and development patterns.
 
 ### docs-project/blueprint.md
 
@@ -168,81 +117,7 @@ The workflow instruction generates this file, which serves as a quick reference 
 and key operational guidelines for an AI agent. It includes sections for read-only and ignored paths
 to guide agent behavior.
 
-Example structure:
-
-```coding-agent-workflow-toolkit-meta/docs-dev/workflow-instructions/initialize-project-structure.md#L195-259
-# Project Blueprint: [Project Name]
-
-## What is a Blueprint?
-
-This document provides a concise overview of the project's structure and organization, highlighting
-key directories and files to help developers (especially AI assistants) quickly understand how to
-navigate the codebase. It should be updated periodically using the `update-blueprint` workflow.
-
-## Core Project Documents
-- [What We Build](docs-project/what-do-we-build.md) - Project vision and goals
-- [Architecture](docs-project/architecture.md) - System design and implementation principles
-
-## Project Organization
-
-This project follows a documentation-first approach with these primary directories:
-
-- **docs-dev/** - Development resources for the toolkit itself
-  - **guides/** - Best practices and standards for various aspects of development
-  - **tools/** - Utility scripts to support development workflows
-  - **workflow-instructions/** - Structured commands for AI agents to execute common tasks
-  - **zed/** - Integration with Zed editor
-
-- **docs-project/** - Project-specific documentation
-  - **current/** - Active release cycle work
-  - **backlog/** - Pending tasks for future releases
-  - **done/** - Completed releases and tasks
-  - **decisions/** - Architecture Decision Records (ADRs)
-
-- **bin/** - Executable scripts for project management and automation
-
-## View Complete Directory Structure
-
-To see the complete filtered directory structure, run:
-
-` ``bash
-bin/tree
-` ``
-
-This will show all project files while filtering out temporary files, session logs, and other
-non-essential directories.
-
-## Key Project-Specific Files
-
-- [Workflow Instructions](docs-dev/workflow-instructions/README.md) - Entry point for understanding
-  available AI workflows
-- [Project Guides](docs-dev/guides/README.md) - Development standards and best practices
-
-## Read-Only Paths
-
-This section lists files and directories that the agent should treat as read-only. Attempts to
-modify these paths should be flagged or prevented.
-
-- *Add project-specific read-only globs here (e.g., `docs-project/releases/**/*`)*
-
-## Ignored Paths
-
-This section lists files, directories, or glob patterns that the agent should ignore entirely during
-its operations (e.g., when searching, reading, or editing files).
-
-- `docs-project/done/**/*` # Default: Protects completed tasks and releases
-- `**/node_modules/**`
-- `**/.git/**`
-- `**/__pycache__/**`
-- `*.session.log`
-- `*.lock`
-- `*.tmp`
-- `*~` # Backup files
-
-## Submodules
-
-The project currently has no Git submodules. All code is contained within this single repository.
-```
+The generated file follows the template structure from `docs-dev/guides/initialize-project-templates/blueprint.md` with sections for project organization, technology stack, read-only paths, and ignored paths.
 
 ## Output / Success Criteria
 
@@ -252,21 +127,15 @@ The project currently has no Git submodules. All code is contained within this s
    - Git integration configured (`.gitignore` updated).
 
 2. **Core Documentation**:
-   - `docs-project/what-do-we-build.md` created with clear project vision.
+   - `docs-project/what-do-we-build.md` created with clear project vision using the template structure.
    - `docs-project/architecture.md` reflects actual project structure and includes the primary
-     technology stack.
+     technology stack with command-line tools documentation.
    - `docs-project/blueprint.md` generated with sections for "Read-Only Paths" (including a
      placeholder for project-specific rules) and "Ignored Paths" (pre-populated with defaults like
      `docs-project/done/**/*` and common examples).
-   - Documentation is concise yet complete.
+   - Documentation is concise yet complete and follows established templates.
 
-3. **Tailored Guides**:
-   - Language-specific guides within `docs-dev/guides/` have been reviewed.
-   - Guides irrelevant to the project's confirmed technology stack have been removed.
-   - A backlog task has been created prompting identification of any missing or required new
-     project-specific guides/workflows for the stack.
-
-4. **Basic `bin/` Scripts Initialized**:
+3. **Basic `bin/` Scripts Initialized**:
    - The project's `bin/` directory exists.
    - Binstubs from `docs-dev/tools/_binstubs/` (like `test`, `lint`, `build`, `run`, `tn`, `tr`,
      `tree`) have been copied to the project's `bin/` directory if they didn't already exist.
@@ -274,40 +143,43 @@ The project currently has no Git submodules. All code is contained within this s
    - User is aware that some `bin/` scripts (`test`, `lint`, `build`, `run`) are placeholders
      needing project-specific implementation.
 
-5. **Project Context**:
-   - Development philosophy established.
-   - Technical boundaries defined.
-   - Extension points identified.
+4. **Project Context**:
+   - Development philosophy established using templates.
+   - Technical boundaries defined in generated documentation.
+   - Extension points identified and documented.
 
 ## Workflow Instruction Context
 
 Initialize an AI-driven development environment by creating necessary documentation structure
-(`docs-dev`, `docs-project`) and core architectural documents. This command sets up the foundation
-for effective AI agent collaboration.
+(`docs-dev`, `docs-project`) and core architectural documents using standardized templates. This command sets up the foundation for effective AI agent collaboration with consistent, well-structured project documentation.
 
 ## Behavior
 
-- Preserves existing documentation if found.
-- Extracts project information from `PRD.md` or `README.md` when available.
-- Creates consistent structure for AI-driven development.
-- Sets up version control integration for documentation.
+- Preserves existing documentation if found, enhancing it with template structure when needed.
+- Extracts project information from `PRD.md` or `README.md` when available, using templates for missing sections.
+- Creates consistent structure for AI-driven development using established templates.
+- Uses interactive prompts with comprehensive example questions when source documents are unavailable.
 
 ## Reference Documentation
 
 - [Project Management Guide](docs-dev/guides/project-management.md) (Explains the created structure)
-- [What We Build Example](docs-project/what-do-we-build.md) (Actual generated file)
-- [Architecture Example](docs-project/architecture.md) (Actual generated file)
-- [Blueprint Example](docs-project/blueprint.md) (Actual generated file)
+- [Picking Codenames Guide](docs-dev/guides/picking-codenames.md) (Guidance for selecting appropriate codenames)
+- [PRD Template](docs-dev/guides/initialize-project-templates/PRD.md) (Template for Product Requirements Documents)
+- [README Template](docs-dev/guides/initialize-project-templates/README.md) (Template for project README files)
+- [What We Build Template](docs-dev/guides/initialize-project-templates/what-do-we-build.md) (Template for project vision)
+- [Architecture Template](docs-dev/guides/initialize-project-templates/architecture.md) (Template for technical architecture)
+- [Blueprint Template](docs-dev/guides/initialize-project-templates/blueprint.md) (Template for project structure overview)
 
 ## Setup Requirements
 
 - Project root directory must be accessible.
 - Write permissions for `docs-dev` and `docs-project` directories.
 - `README.md` or `PRD.md` (optional) for project information extraction.
+- Access to template files in `docs-dev/guides/initialize-project-templates/`.
 
 ## Notes
 
-- The workflow instruction preserves existing documentation if found.
-- Merges information from `README.md` or `PRD.md` if available.
-- Creates consistent structure for AI-driven development.
-- Sets up proper git integration for documentation.
+- The workflow instruction preserves existing documentation if found, enhancing it with template structure.
+- Uses templates to ensure consistent, comprehensive documentation across projects.
+- Provides interactive prompts with example questions when source documents are unavailable.
+- Creates idempotent workflow that can be safely rerun without overwriting customizations.
