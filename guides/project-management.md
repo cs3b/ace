@@ -184,9 +184,9 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 - **`bin/tnid` (`get-next-task-id`)**: Generates the next available full task ID (e.g., `v.X.Y.Z+task.N+1`) for a
   specified release (or the current release by default). This helps in creating new task files with correctly
   formatted and unique IDs.
-- **`bin/gat` (`get-all-tasks`)**: Lists all tasks within a specified release (or the current release by default).
+- **`bin/tal` (`get-all-tasks`)**: Lists all tasks within a specified release (or the current release by default).
   Tasks are topologically sorted based on their dependencies, and then secondarily by their task ID\'s sequential
-  number. The output for each task includes its ID, status, title, and dependencies. The \\\"next actionable task\\\"
+  number. The output for each task includes its ID, status, title, and dependencies. The \"next actionable task\"
   (as would be identified by `bin/tn`) is highlighted in the list.
 - **`bin/rc` (`get-current-release-path`)**: Determines the appropriate directory for storing newly created
   tasks and returns version information. Returns the path to the current release directory (e.g.,
