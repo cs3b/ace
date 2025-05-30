@@ -24,7 +24,7 @@ user-provided release scope into actionable tasks.
 2. **Gather Release Metadata**
    * Ask the user for:
      * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
-     * Release codename (derive from user input if not explicitly given).
+     * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](docs-dev/guides/picking-codenames.md) for inspiration).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
 3. **Create Release Directory and Overview File**
@@ -37,7 +37,7 @@ user-provided release scope into actionable tasks.
    * Copy the main release overview template file from `docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`
      to `docs-project/backlog/v.X.Y.Z-codename/v.x.x.x-codename.md`.
    * Rename the newly copied overview file in the target directory to `v.X.Y.Z-codename.md` (matching the
-     directory's version and codename).
+     directory’s version and codename).
 
 4. **Populate Overview Document**
    * Open the new overview file and fill in:
@@ -101,6 +101,7 @@ user-provided release scope into actionable tasks.
 * [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
 * [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
 * [Project Management Guide](docs-dev/guides/project-management.md)
+* [Picking Project Codenames Guide](docs-dev/guides/picking-codenames.md)
 * [Version Control Guide](docs-dev/guides/version-control.md)
 
 ## Usage Example
