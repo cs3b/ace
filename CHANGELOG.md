@@ -3,8 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+#### v.0.3.x - 2025-05-30 - Incorporate Codename Picking Guide into Prepare Release Workflow
 
-#### v.0.3.x - 2025-05-30 - Improve Initialize Project Structure Workflow
+#### v.0.3.x+task.20 - 2025-05-30 - Improve Initialize Project Structure Workflow
 
 - **Refactored `initialize-project-structure.md` Workflow:**
     - Added explicit idempotency statement to clarify rerun behavior.
