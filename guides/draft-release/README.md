@@ -9,7 +9,7 @@ release directories.
 ## Template Directory Structure
 
 ```text
-prepare-release/
+draft-release/
 └── v.x.x.x/                     # Base template directory
     ├── codemods/                # Scripts for automated code modifications
     │   └── _template.md
@@ -64,11 +64,11 @@ prepare-release/
 3. Create appropriate subdirectories in your release directory (tasks, docs, decisions, etc.)
 4. Copy the needed specialized templates to their respective subdirectories.
 5. When referencing these templates from workflows, use the path
-   `docs-dev/guides/prepare-release/v.x.x.x/[template-category]/_template.md`.
+   `docs-dev/guides/draft-release/v.x.x.x/[template-category]/_template.md`.
 
 ## Integration with Workflows
 
-These templates are referenced directly from the `prepare-tasks.md` workflow instruction and should be used when:
+These templates are referenced directly from the `draft-release.md` workflow instruction and should be used when:
 
 1. Creating a new release directory structure in the backlog
 2. Generating task files for requirements

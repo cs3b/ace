@@ -8,7 +8,7 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Prerequisites
 
-- The reflection template is available at `docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`.
+- The reflection template is available at `docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`.
 - Understanding of the proposed naming convention
   and location for reflection notes:
   - **Location:** Within a specific release directory, e.g.,
@@ -44,7 +44,7 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 3. **Populate from Template:**
     - The agent reads the content of the standard reflection template:
-      `docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`.
+      `docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`.
     - The agent creates the new reflection note file (using the full path determined in Step 2) and
       populates it with the template's content (which includes level 1 headings for sections).
 
@@ -85,6 +85,6 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Reference Documentation
 
-- [Reflection Template (`_template.md`)](docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md)
+- [Reflection Template (`_template.md`)](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
 - [`create-retrospective-document.md` Workflow Instruction](./create-retrospective-document.md)
 - [Writing Workflow Instructions Guide](docs-dev/guides/.meta/writing-workflow-instructions-guide.md)

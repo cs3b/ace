@@ -368,7 +368,6 @@ Track key metrics to improve the release process:
 
 ## Related Documentation
 
-- [Prepare Release Workflow](../workflow-instructions/prepare-release.md) (Release preparation and validation)
 - [Changelog Guide](./changelog-guide.md) (Changelog writing standards)
 - [Version Control Guide](./version-control.md) (Git workflow and tagging)
 - [Project Management Guide](./project-management.md) (Task and release coordination)

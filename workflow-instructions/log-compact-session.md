@@ -60,7 +60,7 @@ key). Remove deeper analytical/reflection components.
 ## Agent Action Summary
 [Brief summary of the primary actions taken by the agent, focusing on outcomes and key files.]
 (E.g., "Updated `guides/README.md` & `guides/publish-release.md` for Task 03. Deleted
-`guides/prepare-release/prepare-release-documentation.md`.")
+`guides/draft-release/draft-release-documentation.md`.")
 
 ## Context Loading Prompt (Copy and paste to resume session)
 

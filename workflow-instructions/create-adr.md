@@ -8,7 +8,7 @@ capture a significant architectural decision, its context, rationale, and conseq
 ## Prerequisites
 
 - A clear architectural problem or choice needs to be documented.
-- The standard ADR template (`dev-docs/guides/prepare-release/v.x.x.x/decisions/_template.md`) should be used as
+- The standard ADR template (`dev-docs/guides/draft-release/v.x.x.x/decisions/_template.md`) should be used as
   a base.
 
 ## Process Steps
@@ -42,5 +42,5 @@ capture a significant architectural decision, its context, rationale, and conseq
 
 ## Reference Documentation
 
-- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [ADR Template](docs-dev/guides/draft-release/v.x.x.x/decisions/_template.md)
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)

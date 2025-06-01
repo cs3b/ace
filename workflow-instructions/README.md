@@ -8,19 +8,21 @@ user) to perform common development and project management tasks.
 ## Core Workflow
 
 - [Load Environment](./load-env.md): Load project context, guides, and task information.
+- [Review Task](./review-task.md): Review and analyze a task before implementation.
 - [Work on Task](./work-on-task.md): Select and understand a task before implementation (includes TDD cycle).
 - [Commit](./commit.md): Create well-structured Git commits.
-- [Fix Tests](./fix-tests.md): Debug and fix failing tests.
-- [Prepare Release](./prepare-release.md): Prepare content, documentation, and perform pre-flight checks for a
-  release.
-- [Publish Release](./publish-release.md): Execute the release process (versioning, tagging, building, publishing).
 
 ## Project Initialization & Setup
 
 - [Initialize Project Structure](./initialize-project-structure.md): Initialize `docs-dev` and `docs-project` structures.
 - [Update Blueprint](./update-blueprint.md): Update the `docs-project/blueprint.md` project overview.
 
-## Task Preparation
+## Draft Releases
+
+- [Draft Release](./draft-release.md): Prepare content, documentation, and perform pre-flight checks for a
+  release.
+
+### Creating Tasks
 
 - [Breakdown Notes into Tasks](./breakdown-notes-into-tasks.md): Orchestrates processing of various inputs into
   structured notes for task creation.
@@ -42,11 +44,20 @@ user) to perform common development and project management tasks.
 - [Create Test Cases](./create-test-cases.md)
 - [Create User Docs](./create-user-docs.md)
 
+## Testing
+
+- [Fix Tests](./fix-tests.md): Debug and fix failing tests.
+
 ## Project Management & Reflection
 
+- [Manage Roadmap](./manage-roadmap.md): Manage project roadmap and task priorities.
 - [Review Tasks Board Status](./review-tasks-board-status.md): Review current task statuses, dependencies, and
   priorities on the board.
 - [Log Compact Session](./log-compact-session.md): Log a compact summary of the current session for context
   saving/reloading.
 - [Create Reflection Note](./create-reflection-note.md): Capture individual observations and learnings using the
   standard reflection template.
+
+## Publish Release
+
+- [Publish Release](./publish-release.md): Execute the release process (versioning, tagging, building, publishing).

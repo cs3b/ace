@@ -20,7 +20,7 @@ Generate or update the main release overview document (e.g., `docs-project/curre
     - Review recent commit history if the release is already in progress.
 
 - Draft/Update Overview Document: Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release.
-  Use the structure from the template (`docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`) as a guide.
+  Use the structure from the template (`docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`) as a guide.
   Key sections include:
   - **Release Overview:** Brief summary.
   - **Release Information:** Type, Dates, Status.
@@ -48,6 +48,6 @@ Generate or update the main release overview document (e.g., `docs-project/curre
 ## Reference Documentation
 
 - [Writing Workflow Instructions Guide](docs-dev/guides/.meta/writing-workflow-instructions-guide.md)
-- [Release Overview Template](docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md)
+- [Release Overview Template](docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md)
 - [Project Management Guide](docs-dev/guides/project-management.md)
 - [Release Process Guide](docs-dev/guides/publish-release.md)

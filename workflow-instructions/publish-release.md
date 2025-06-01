@@ -5,7 +5,7 @@
 **Prerequisites:**
 
 * The [`load-env`](./load-env.md) workflow instruction has been run to load project context.
-* The [`prepare-release`](./prepare-release.md) workflow (or equivalent preparation process) has been completed, meaning all features, documentation, and initial release preparations are finalized.
+* All features, documentation, and initial release preparations are finalized.
 * All planned tasks for the release are completed (`status: done`) or explicitly deferred with documented rationale.
 * You have necessary permissions to modify project documentation structure and create final release artifacts.
 * The main conceptual guide [`docs-dev/guides/publish-release.md`](../guides/publish-release.md) has been reviewed for understanding the overall philosophy and process.
@@ -201,7 +201,7 @@ Stop the process and consider rollback if:
 * **Changelog Standards:** [`docs-dev/guides/changelog-guide.md`](../guides/changelog-guide.md)
 * **Version Control Workflow:** [`docs-dev/guides/version-control.md`](../guides/version-control.md)
 * **Project Management Integration:** [`docs-dev/guides/project-management.md`](../guides/project-management.md)
-* **Release Preparation:** [`docs-dev/workflow-instructions/prepare-release.md`](./prepare-release.md)
+
 * **Quality Assurance:** [`docs-dev/guides/quality-assurance.md`](../guides/quality-assurance.md)
 * **Language-Specific Guides:** [`docs-dev/guides/publish-release/`](../guides/publish-release/) (if available)
 

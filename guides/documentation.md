@@ -213,4 +213,4 @@ languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to th
 
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task format, ADRs)
-- [ADR Template](docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md)
+- [ADR Template](docs-dev/guides/draft-release/v.x.x.x/decisions/_template.md)

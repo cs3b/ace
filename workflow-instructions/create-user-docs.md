@@ -26,7 +26,7 @@ or significant change.
     - API Reference (if applicable, link to generated API docs)
     - Integration Examples
     - Migration Guide (if applicable)
-    - *(Refer to `docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md` for a template)*
+    - *(Refer to `docs-dev/guides/draft-release/v.x.x.x/docs/_template.md` for a template)*
 4. **Draft Content:** Write the documentation content, focusing on clarity, accuracy, and practical examples.
     - Include code snippets for examples.
     - Explain the "why" as well as the "how".
@@ -55,5 +55,5 @@ or significant change.
 ## Reference Documentation
 
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
-- [User Docs Template](docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md)
-- [User Experience Template](docs-dev/guides/prepare-release/v.x.x.x/user-experience/_template.md)
+- [User Docs Template](docs-dev/guides/draft-release/v.x.x.x/docs/_template.md)
+- [User Experience Template](docs-dev/guides/draft-release/v.x.x.x/user-experience/_template.md)

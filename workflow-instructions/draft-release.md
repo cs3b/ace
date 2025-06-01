@@ -1,10 +1,10 @@
-# Prepare Release Workflow Instruction
+# Draft Release Workflow Instruction
 
 ## Goal
 
 Guide the AI agent and developer through **drafting a new release** in the project backlog.
 This includes creating the initial release directory structure under `docs-project/backlog/`,
-copying the standard templates from `docs-dev/guides/prepare-release/`, and breaking the
+copying the standard templates from `docs-dev/guides/draft-release/`, and breaking the
 user-provided release scope into actionable tasks.
 
 ## Prerequisites
@@ -18,8 +18,8 @@ user-provided release scope into actionable tasks.
 
 1. **Load Context**
    * Read this instruction file and all referenced guides:
-     * [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
-     * Language-specific sub-guides in `docs-dev/guides/prepare-release/` as needed.
+     * [Draft Release Templates](docs-dev/guides/draft-release/README.md)
+     * Language-specific sub-guides in `docs-dev/guides/draft-release/` as needed.
 
 2. **Gather Release Metadata**
    * Ask the user for:
@@ -32,9 +32,9 @@ user-provided release scope into actionable tasks.
      `docs-project/backlog/v.X.Y.Z-codename/` (e.g., `docs-project/backlog/v.0.3.0-new-feature/`).
    * Create standard sub-directories within the new release directory (e.g., `tasks/`, `docs/`, `decisions/`,
      `codemods/`, `reflections/`, `researches/`, `test-cases/`, `user-experience/`) mirroring the structure found
-     in `docs-dev/guides/prepare-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these
+     in `docs-dev/guides/draft-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these
      subdirectories at this stage.
-   * Copy the main release overview template file from `docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md`
+   * Copy the main release overview template file from `docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`
      to `docs-project/backlog/v.X.Y.Z-codename/v.x.x.x-codename.md`.
    * Rename the newly copied overview file in the target directory to `v.X.Y.Z-codename.md` (matching the
      directory’s version and codename).
@@ -51,7 +51,7 @@ user-provided release scope into actionable tasks.
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
      2. Create a new file in the appropriate subdirectory of `docs-project/backlog/v.X.Y.Z-codename/`
         (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from
-        `docs-dev/guides/prepare-release/v.x.x.x/[template-family]/_template.md`.
+        `docs-dev/guides/draft-release/v.x.x.x/[template-family]/_template.md`.
      3. Replace placeholder fields:
         * `id`: Use `bin/tnid v.X.Y.Z` (where `v.X.Y.Z` is the specific version of the current release being
           prepared) to generate the next task ID in the format `v.X.Y.Z+task.<sequential_number>`.
@@ -97,7 +97,7 @@ user-provided release scope into actionable tasks.
 
 ## Reference Documentation
 
-* [Prepare Release Templates](docs-dev/guides/prepare-release/README.md)
+* [Draft Release Templates](docs-dev/guides/draft-release/README.md)
 * [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
 * [Write Actionable Task Guide](docs-dev/guides/write-actionable-task.md)
 * [Project Management Guide](docs-dev/guides/project-management.md)
@@ -111,4 +111,4 @@ user-provided release scope into actionable tasks.
 
 ---
 
-This workflow focuses on **drafting** a release in the backlog.
+This workflow focuses on **drafting** a release in the backlog. For information on finalizing and publishing a completed release, see the [Publish Release Guide](docs-dev/guides/publish-release.md).

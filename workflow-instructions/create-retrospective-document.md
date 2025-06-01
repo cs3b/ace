@@ -19,7 +19,7 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
   - Compact session logs (`docs-project/current/{release_dir}/sessions/*.md` or
     `docs-project/done/{release_dir}/sessions/*.md`).
   - Commit history (`git log`).
-  - The standard retrospective template (`docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`).
+  - The standard retrospective template (`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`).
 
 ## Process Steps
 
@@ -33,7 +33,7 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
     `docs-project/retrospectives/YYYYMMDD-retrospective.md` if not tied to a specific release
     `done` directory.
     - Apply the standard retrospective template
-      (`docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`) to this new file.
+      (`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`) to this new file.
 
 3. **Gather & Synthesize Information:**
     - **Completed Tasks:** Review task files (`.md`) for objectives, outcomes, challenges, and time taken.
@@ -81,13 +81,13 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
 
 - A `retrospective.md` file is created within the completed release directory.
 The file uses the standard retrospective template structure
-(`docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`).
+(`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`).
 - Key insights (Stop/Continue/Start) are captured based on the release cycle.
 - Actionable improvements are identified.
 
 ## Reference Documentation
 
-- [Retrospective Template](docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md)
+- [Retrospective Template](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
 - [`log-compact-session` Workflow Instruction](docs-dev/workflow-instructions/log-compact-session.md)
   (Potential input for retrospectives)
 - [Project Management Guide](docs-dev/guides/project-management.md) (For context on tasks, releases)

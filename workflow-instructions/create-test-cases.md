@@ -31,7 +31,7 @@ task, or code change based on requirements and project testing guidelines.
     - **Steps:** Actions to perform.
     - **Expected Result:** The anticipated outcome or verification point.
 5. **Structure Output:** Format the test cases clearly, potentially using a table or list structure.
-   Use the template `docs-dev/guides/prepare-release/v.x.x.x/test-cases/_template.md` as a reference
+   Use the template `docs-dev/guides/draft-release/v.x.x.x/test-cases/_template.md` as a reference
    for structure.
 6. **Save (Optional):** Save the generated test cases to the appropriate location, often within the
    release directory (e.g., `docs-project/current/{release_dir}/test-cases/feature-x-tests.md`).
@@ -52,4 +52,4 @@ task, or code change based on requirements and project testing guidelines.
 ## Reference Documentation
 
 - [Testing Guidelines Guide](docs-dev/guides/testing.md)
-- [Test Cases Template](docs-dev/guides/prepare-release/v.x.x.x/test-cases/_template.md)
+- [Test Cases Template](docs-dev/guides/draft-release/v.x.x.x/test-cases/_template.md)
