@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.16 - 2025-06-02 - Implement Agreed Naming Conventions for Guides and Workflow Instructions
+
+- **Implemented file extension conventions** to establish clear distinction between guides and workflow instructions:
+  - Applied `.wf.md` suffix to all 21 workflow instruction files (breakdown-notes-into-tasks, commit, create-adr, create-api-docs, create-reflection-note, create-release-overview, create-retrospective-document, create-review-checklist, create-test-cases, create-user-docs, draft-release, fix-tests, initialize-project-structure, load-env, log-compact-session, manage-roadmap, publish-release, review-task, review-tasks-board-status, update-blueprint, work-on-task)
+  - Applied `.g.md` suffix to all guide files with noun-based naming (changelog, coding-standards, documentation, error-handling, performance, project-management, quality-assurance, security, strategic-planning, temporary-file-management, testing, release-codenames, release-publish, testing-tdd-cycle, debug-troubleshooting, version-control-system, task-definition)
+  - Moved and renamed workflow-specific guides: embedding-tests-in-workflows → .meta/workflow-embedding-tests.g.md, tools-guide → .meta/tools.g.md
+- **Updated meta-documentation** to reflect new naming conventions:
+  - Enhanced `docs-dev/guides/.meta/writing-guides-guide.md` with `.g.md` convention documentation and noun-based naming examples
+  - Enhanced `docs-dev/guides/.meta/writing-workflow-instructions-guide.md` with `.wf.md` convention documentation and verb-first naming pattern
+- **Fixed internal documentation links** throughout the codebase:
+  - Updated all cross-references in workflow instructions and guides to use new `.wf.md` and `.g.md` filenames
+  - Corrected relative paths in test-driven-development-cycle documentation
+  - Verified link integrity with zero critical broken links remaining
+- **Created Zed editor rule mapping documentation** for manual updates to development environment integration
+
 #### v.0.3.0+tasks.15 - 2025-06-01 - Rename "Prepare Release" to "Draft Release" and Ensure Independence from "Publish Release"
 
 - **Renamed prepare-release to draft-release throughout codebase** for clearer separation from publish-release process:
