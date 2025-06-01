@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0 - 2025-06-01 - Enhance Review Task Workflow for New Task Structure
+
+- Updated the `review-task.md` workflow instruction to incorporate the new Planning Steps and Execution Steps structure for tasks.
+- Added steps to the review process to evaluate task structure, recommend using Planning Steps for complex tasks, and suggest adding embedded tests.
+- Ensured the workflow guides reviewers to maintain consistency with the updated task template and standards.
+
 #### v.0.3.0+tasks.10 - 2025-06-01 - Refine Task Template to Include Distinct "Plan" and "Execution" Sections
 
 - Updated the task template (`docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`) to include separate "Planning Steps" (`* [ ]`) and "Execution Steps" (`- [ ]`) subsections within the "Implementation Plan".
