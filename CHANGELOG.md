@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.10 - 2025-06-01 - Refine Task Template to Include Distinct "Plan" and "Execution" Sections
+
+- Updated the task template (`docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`) to include separate "Planning Steps" (`* [ ]`) and "Execution Steps" (`- [ ]`) subsections within the "Implementation Plan".
+- Updated the `write-actionable-task.md` guide to document the new structure, explaining the rationale, visual distinction, when to use planning steps, and how it relates to workflow phases (review vs. work).
+- Added examples to the guide demonstrating tasks with only execution steps and tasks with both planning and execution steps, including embedded tests in both sections.
+
 #### v.0.3.x+task.8 - 2025-06-01 - Refine Initialize Project Test Task and Create Review Roadmap Task
 
 - Updated `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/008-test-initialize-project.md` to align its scope with the "Initialize Project Structure" workflow, specifically excluding the creation of `roadmap.md` and initial release scaffolding.
