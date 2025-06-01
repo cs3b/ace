@@ -22,7 +22,7 @@ Our development workflow centers around:
 - **[Strategic Planning Guide](./strategic-planning.g.md)**: High-level strategic planning and roadmap management.
 - **[Changelog Guide](./changelog.g.md)**: Standards for maintaining project changelogs.
 - **[Picking Codenames Guide](./release-codenames.g.md)**: Guidelines for selecting project codenames.
-- **[Embedding Tests in Workflows](./.meta/workflow-embedding-tests.g.md)**: Standard for incorporating tests in workflow instructions.
+- **[Embedding Tests in Workflows](./.meta/workflow-instructions-embeding-tests.g.md)**: Standard for incorporating tests in workflow instructions.
 - **[Test-Driven Development Cycle](./testing-tdd-cycle.g.md)**: Core TDD practices and implementation cycle.
   - [Meta Documentation TDD](./test-driven-development-cycle/meta-documentation.md)
   - [Ruby Application TDD](./test-driven-development-cycle/ruby-application.md)

@@ -1,6 +1,6 @@
 # Rust Quality Assurance Examples
 
-This file provides Rust-specific examples related to the main [Quality Assurance Guide](../quality-assurance.md).
+This file provides Rust-specific examples related to the main [Quality Assurance Guide](../quality-assurance.g.md).
 
 * **Linters/Formatters:** `rustfmt`, `clippy` (run via `cargo fmt` and `cargo clippy`)
 * **Static Analysis:** Rust compiler itself catches many issues; `cargo audit` for security vulnerabilities in dependencies.

@@ -1,6 +1,6 @@
 # TypeScript Performance Examples
 
-This file provides TypeScript-specific examples related to the main [Performance Guide](../performance.md).
+This file provides TypeScript-specific examples related to the main [Performance Guide](../performance.g.md).
 
 * **Benchmarking:** `console.time`/`console.timeEnd`, `performance.now()` (Node.js/Browser), libraries like `benchmark.js`.
 * **Profiling:** Node.js inspector (`node --inspect`), Chrome DevTools profiler.

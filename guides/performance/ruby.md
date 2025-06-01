@@ -1,6 +1,6 @@
 # Ruby Performance Examples
 
-This file provides Ruby-specific examples related to the main [Performance Guide](../performance.md).
+This file provides Ruby-specific examples related to the main [Performance Guide](../performance.g.md).
 
 * **Benchmarking:** `Benchmark` standard library module.
 * **Profiling:** `stackprof`, `ruby-prof` gems.

@@ -85,6 +85,6 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Reference Documentation
 
-- [Reflection Template (`_template.md`)](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
-- [`create-retrospective-document.wf.md` Workflow Instruction](./create-retrospective-document.wf.md)
-- [Writing Workflow Instructions Guide](docs-dev/guides/.meta/writing-workflow-instructions-guide.md)
+88 | - [Reflection Template (`_template.md`)](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
+89 | - [`create-retrospective-document.wf.md` Workflow Instruction](./create-retrospective-document.wf.md)
+90 | - [Writing Workflow Instructions Guide](docs-dev/guides/.meta/workflow-instructions-definition.g.md)

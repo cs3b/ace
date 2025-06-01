@@ -1,6 +1,6 @@
 # TypeScript Quality Assurance Examples
 
-This file provides TypeScript-specific examples related to the main [Quality Assurance Guide](../quality-assurance.md).
+This file provides TypeScript-specific examples related to the main [Quality Assurance Guide](../quality-assurance.g.md).
 
 * **Linters/Formatters:** `eslint` (with `@typescript-eslint/parser`), `prettier`
 * **Static Analysis:** TypeScript compiler (`tsc --noEmit`), `sonarjs` (plugin for ESLint)

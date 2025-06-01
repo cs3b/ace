@@ -52,7 +52,7 @@ guides
 | **Implementation Plan** | Divided into Planning Steps (`* [ ]`) for analysis/design and Execution Steps (`- [ ]`) for implementation actions. Consider embedding automated test/verification steps directly. | |
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan's Planning and Execution sections or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
-| **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](docs-dev/guides/.meta/workflow-embedding-tests.g.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
+| **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
 
 ---
 

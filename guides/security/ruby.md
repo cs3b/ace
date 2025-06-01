@@ -1,6 +1,6 @@
 # Ruby Security Examples
 
-This file provides Ruby-specific examples related to the main [Security Guide](../security.md).
+This file provides Ruby-specific examples related to the main [Security Guide](../security.g.md).
 
 * **Dependency Scanning:** `bundler-audit`, GitHub Dependabot/Security Alerts
 * **Static Analysis (SAST):** `brakeman` (for Rails)

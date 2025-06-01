@@ -1,6 +1,6 @@
 # Ruby Quality Assurance Examples
 
-This file provides Ruby-specific examples related to the main [Quality Assurance Guide](../quality-assurance.md).
+This file provides Ruby-specific examples related to the main [Quality Assurance Guide](../quality-assurance.g.md).
 
 * **Linters/Formatters:** `rubocop`, `standardrb`
 * **Static Analysis:** `brakeman` (Security), `reek` (Code Smells)

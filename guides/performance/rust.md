@@ -1,6 +1,6 @@
 # Rust Performance Examples
 
-This file provides Rust-specific examples related to the main [Performance Guide](../performance.md).
+This file provides Rust-specific examples related to the main [Performance Guide](../performance.g.md).
 
 * **Benchmarking:** `cargo bench` (requires nightly toolchain or stable with `criterion` crate), `std::time::Instant`.
 * **Profiling:** `perf` (Linux), Instruments (macOS), `cargo flamegraph`, `pprof` crate.

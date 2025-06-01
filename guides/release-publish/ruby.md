@@ -1,6 +1,6 @@
 # Ruby Release Process Examples
 
-This file provides Ruby-specific examples related to the main [Publish Release Process Guide](../publish-release.md).
+This file provides Ruby-specific examples related to the main [Publishing Release Guide](../release-publish.g.md).
 
 * **Packaging:** Gemspec (`.gemspec` file)
 * **Building:** `gem build <your_gem>.gemspec`

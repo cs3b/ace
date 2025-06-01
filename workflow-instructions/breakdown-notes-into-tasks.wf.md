@@ -94,5 +94,5 @@ sub-workflow, refine it, verify it with the user, and ultimately create formal, 
 ## Reference Documentation
 
 * [Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
-* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-embedding-tests.g.md)
+* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md)
 * Sub-workflow documents within the `breakdown-notes-into-tasks/` directory.

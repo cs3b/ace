@@ -1,6 +1,6 @@
 # TypeScript Release Process Examples
 
-This file provides TypeScript/Node.js specific examples related to the main [Publish Release Process Guide](../publish-release.md).
+This file provides TypeScript-specific examples related to the main [Publishing Release Guide](../release-publish.g.md).
 
 * **Packaging:** `package.json`
 * **Building:** `npm run build` or `yarn build` (depends on project setup, often involves `tsc`)
