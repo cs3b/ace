@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.15 - 2025-06-01 - Rename "Prepare Release" to "Draft Release" and Ensure Independence from "Publish Release"
+
+- **Renamed prepare-release to draft-release throughout codebase** for clearer separation from publish-release process:
+  - Renamed `docs-dev/workflow-instructions/prepare-release.md` to `docs-dev/workflow-instructions/draft-release.md`
+  - Renamed `docs-dev/guides/prepare-release/` directory to `docs-dev/guides/draft-release/`
+  - Updated 147+ references across workflow instructions, guides, session files, and current tasks
+- **Established complete independence between draft-release and publish-release processes**:
+  - Removed inappropriate references to draft-release from publish-release documentation
+  - Removed draft-release prerequisites from publish-release workflow instructions
+  - Added clarifying note in draft-release.md explaining scope distinction from publish-release
+- **Reorganized documentation structure** for better logical organization:
+  - Split guides README.md into separate "Draft Release Management" and "Publish Release Management" sections
+  - Restructured workflow instructions README.md with improved section hierarchy (Core Workflow, Project Initialization, Draft Releases, Testing, Project Management, Publish Release)
+  - Added all missing guides to guides README.md including language-specific sub-guides and project initialization templates
+- **Clarified process separation**: Draft Release focuses on creating and planning new releases in backlog, while Publish Release handles finalizing and deploying completed releases
+
 #### v.0.3.0+tasks.14 - 2025-06-01 - Define and Document "Publish Release" Process and Guide
 
 - **Created comprehensive publish release process** replacing ship-release terminology:
