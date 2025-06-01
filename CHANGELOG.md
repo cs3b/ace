@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+#### v.0.3.x+task.8 - 2025-06-01 - Refine Initialize Project Test Task and Create Review Roadmap Task
+
+- Updated `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/008-test-initialize-project.md` to align its scope with the "Initialize Project Structure" workflow, specifically excluding the creation of `roadmap.md` and initial release scaffolding.
+- Created new task `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/v.0.3.0+task.21.md` to review the `manage-roadmap.md` workflow instruction, following the guide for writing actionable tasks.
+
 #### v.0.3.x - 2025-05-30 - Standardize Binstub Location and Rename gat to tal
 
 - Renamed the `bin/gat` wrapper script to `bin/tal`.
