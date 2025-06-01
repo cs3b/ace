@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.12 - 2025-06-01 - Remove Checkboxes from Guides and Workflow Instructions; Clarify Use of Acceptance Criteria
+
+- **Converted inappropriate interactive checklists to bullet points** in guides:
+  - `docs-dev/guides/version-control.md` - Changed PR template example from checkboxes to bullet points
+  - `docs-dev/guides/security.md` - Converted security review checklist from interactive checkboxes to informational bullet points with bold headers
+- **Enhanced meta documentation** with comprehensive checkbox usage guidelines:
+  - `docs-dev/guides/.meta/writing-guides-guide.md` - Added detailed section on appropriate vs inappropriate checkbox usage, with examples of when checkboxes are legitimate (templates, examples) vs inappropriate (interactive checklists)
+  - `docs-dev/guides/.meta/writing-workflow-instructions-guide.md` - Added "List Formatting in Workflows" section clarifying that Success Criteria should use simple bullet points, Process Steps should use numbered lists, and checkboxes are only appropriate in templates/examples
+- **Standardized all workflow instruction Success Criteria** to use simple bullet points instead of checkboxes across 11 workflow files: `create-user-docs.md`, `create-test-cases.md`, `create-retrospective-document.md`, `create-release-overview.md`, `create-api-docs.md`, `create-adr.md`, `commit.md`, `create-review-checklist.md`, `review-tasks-board-status.md`, `create-reflection-note.md`, `prepare-release.md`
+- **Converted Process Steps in ship-release.md** from checkboxes to numbered steps (1-24) for better sequential execution guidance
+- **Established clear distinction** between reference documentation (guides) and actionable content (tasks), preventing AI agents from treating guides as interactive checklists while preserving legitimate checkbox usage in templates and examples
+
 #### v.0.3.0+tasks.11 - 2025-06-01 - Clarify Policy on Updating "Done" Tasks if Referenced Files Change
 
 - Added comprehensive policy section to `docs-dev/guides/project-management.md` under Agent Operational Boundaries
