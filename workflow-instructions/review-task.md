@@ -23,6 +23,8 @@ with project goals, architecture, and recent changes. Identify areas requiring u
     - Read the content of the provided task `.md` file.
     - Parse the frontmatter (id, status, priority, dependencies) and sections (Objective, Description, Scope,
       Deliverables, Implementation Plan, Acceptance Criteria, Out of Scope, References).
+    - Examine the Implementation Plan structure, noting whether it uses the new Planning Steps and Execution Steps
+      subsections or the legacy single-section format.
 
 2. **Review Task Against Context:**
     - Compare the task's Objective and Description against the project's overall goals as defined in
@@ -48,7 +50,9 @@ with project goals, architecture, and recent changes. Identify areas requiring u
           [Documentation Standards](../guides/documentation.md), etc.).
         - Impact from recent code changes or architectural decisions ([ADRs](docs-project/decisions/)).
         - Missing or unclear Implementation Plan steps.
+        - Implementation Plan not following the current Planning Steps/Execution Steps structure.
         - Inadequate or unverifiable Acceptance Criteria.
+        - Missing embedded tests in Planning or Execution steps where appropriate.
     - Note down specific areas requiring refinement.
 
 4. **Think and Propose Solution/Refinement:**
@@ -58,6 +62,11 @@ with project goals, architecture, and recent changes. Identify areas requiring u
       with recent work.
     - If the task is complex or underspecified, propose a high-level solution structure or a more detailed
       implementation plan checklist.
+    - **Evaluate Implementation Plan Structure:**
+        - For complex tasks requiring research or design decisions, recommend adding Planning Steps (`* [ ]`) to
+          cover analysis, research, and design activities.
+        - Ensure Execution Steps (`- [ ]`) focus on concrete implementation actions.
+        - Suggest embedded tests where verification or validation would be beneficial.
     - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs-project/architecture.md)
       principles).
     - Identify specific code files or guides that will be relevant during implementation, noting if recent changes
@@ -74,6 +83,10 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 6. **Present Findings and Next Steps:**
     - Summarize the task review findings, highlighting any impacts from recent Git history and areas for improvement or clarification.
     - Present the proposed solution approach or refined implementation plan (if generated).
+    - **Specifically address Implementation Plan structure:**
+        - If the task uses legacy single-section format, recommend updating to Planning/Execution structure if appropriate.
+        - Highlight where Planning Steps would be beneficial for complex tasks requiring analysis or design.
+        - Suggest locations for embedded tests to improve task verification.
     - Explicitly list the points requiring user feedback.
     - Suggest the next logical step, which might be:
         - User provides feedback/clarification.
@@ -87,7 +100,7 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 - A summary of the task review, highlighting inconsistencies or areas for improvement, particularly in light of
   recent code changes.
 - A proposed solution approach or refined implementation plan for the task (if applicable), potentially adjusted
-  based on recent work.
+  based on recent work and following the current Planning Steps/Execution Steps structure.
 - A clear list of questions or points requiring user feedback.
 - A suggestion for the next step in the workflow.
 
@@ -96,7 +109,8 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 - The task definition has been thoroughly reviewed against project context and recent changes in Git history.
 - Potential issues or ambiguities in the task definition, especially those arising from or impacted by recent work,
   are identified.
-- A viable approach to implementing the task is considered and potentially proposed, taking recent changes into account.
+- A viable approach to implementing the task is considered and potentially proposed, taking recent changes into account
+  and following current task structure standards.
 - All points requiring user decision or clarification are explicitly stated.
 - The path forward for the task is clearly defined (e.g., requires feedback, ready for implementation).
 
