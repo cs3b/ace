@@ -287,8 +287,50 @@ file. These restrictions specify:
   temporary files, and other non-essential items.
 
 By adhering to these rules, the agent can operate more safely and efficiently within the project. For the
-specific configurations of these paths for this project, please refer to the \\\"Read-Only Paths\\\" and
-\\\"Ignored Paths\\\" sections in `docs-project/blueprint.md`.
+specific configurations of these paths for this project, please refer to the \"Read-Only Paths\" and
+\"Ignored Paths\" sections in `docs-project/blueprint.md`.
+
+### Policy on Done Tasks with Changing Referenced Files
+
+While agents are automatically prevented from modifying done tasks via the `docs-project/done/**/*` ignore rule,
+there are edge cases where human intervention may be necessary when referenced files change. This policy clarifies
+when such updates are acceptable:
+
+#### Prohibited Modifications (Never Allowed)
+- **Content Changes**: Modifying task scope, objectives, implementation details, or completion status
+- **Historical Revision**: Changing decisions, rationale, or outcomes documented in the task
+- **Status Changes**: Altering completion status, priority, or dependencies after the task is done
+
+#### Allowed Reference Updates (Human Oversight Required)
+- **Broken Link Fixes**: Updating file paths when referenced files are moved or renamed
+- **Security Annotations**: Adding critical security notices or deprecation warnings as addendum notes
+- **Accessibility Improvements**: Fixing broken links that prevent navigation or reference resolution
+- **Metadata Additions**: Adding clarifying notes that preserve historical context while improving usability
+
+#### Process for Human Updates
+When human updates to done tasks are necessary:
+
+1. **Justification Required**: Document the specific reason (security, broken links, accessibility)
+2. **Additive Approach**: Prefer adding clarifying notes rather than modifying original content
+3. **Preserve History**: Maintain original context and decision-making rationale
+4. **Clear Attribution**: Mark human modifications with timestamps and reasons
+5. **Minimal Scope**: Limit changes to the specific issue being addressed
+
+#### Examples
+
+**Acceptable**: Adding a note that a referenced file has moved: 
+```
+> **Update Note (2024-01-15)**: Referenced file `old/path/file.md` has been moved to `new/path/file.md`
+```
+
+**Acceptable**: Adding a security notice:
+```
+> **Security Notice (2024-01-15)**: The library referenced in this task has known vulnerabilities. See [security advisory](#link) for details.
+```
+
+**Unacceptable**: Changing the task's implementation approach or completion criteria after it's marked done.
+
+This policy maintains the balance between preserving historical accuracy and ensuring practical usability of project documentation.
 
 ## Related Documentation
 
