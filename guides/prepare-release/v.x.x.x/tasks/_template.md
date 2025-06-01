@@ -39,14 +39,29 @@ Why are we doing this?
 3. Refactor …
 
 ## Implementation Plan
-*This section details the specific steps required to complete the task, intended to be followed sequentially. Use a checklist format. Consider embedding verification steps directly after an action.*
-- [ ] Step 1: Describe the first action.
+*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work.*
+
+### Planning Steps
+*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins.*
+
+* [ ] Analyze current system/codebase to understand existing patterns
+  > TEST: Understanding Check
+  >   Type: Pre-condition Check
+  >   Assert: Key components and their relationships are identified
+  >   Command: bin/test --check-analysis-complete
+* [ ] Research best practices and design approach
+* [ ] Plan detailed implementation strategy
+
+### Execution Steps
+*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state.*
+
+- [ ] Step 1: Describe the first implementation action.
 - [ ] Step 2: Describe the second action, which produces a verifiable outcome.
   > TEST: Verify Action 2 Outcome
   >   Type: Action Validation
   >   Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
   >   Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more steps as needed.
+- [ ] ... Add more implementation steps as needed.
 
 ## Acceptance Criteria
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan.*
