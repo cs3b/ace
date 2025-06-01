@@ -16,11 +16,11 @@
 ## Technology Stack
 
 <!-- List the main technologies, frameworks, and tools used -->
-- **Language**: 
-- **Framework**: 
-- **Database**: 
-- **Key Dependencies**: 
-- **Development Tools**: 
+- **Language**:
+- **Framework**:
+- **Database**:
+- **Key Dependencies**:
+- **Development Tools**:
 
 ## Quick Start
 
@@ -149,9 +149,11 @@ bin/test
 ### Common Issues
 
 **Issue 1**: Problem description
+
 - **Solution**: How to fix it
 
 **Issue 2**: Problem description
+
 - **Solution**: How to fix it
 
 ## Documentation

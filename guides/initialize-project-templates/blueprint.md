@@ -104,6 +104,7 @@ This section lists files, directories, or glob patterns that the agent should ig
 <!-- Document the main ways to start or interact with the project -->
 
 ### Development
+
 ```bash
 # Start development server
 bin/run
@@ -116,6 +117,7 @@ bin/build
 ```
 
 ### Common Workflows
+
 - **New Feature**: Use `bin/tn` to find next task, follow task workflow
 - **Bug Fix**: Create task in backlog, prioritize, implement
 - **Documentation**: Update relevant files in `docs-project/`
@@ -125,24 +127,25 @@ bin/build
 <!-- List major external dependencies and their purposes -->
 
 ### Runtime Dependencies
+
 - [Library 1]: Purpose and version constraints
 - [Library 2]: Purpose and version constraints
 
 ### Development Dependencies
-- [Tool 1]: Purpose (e.g., testing, linting)
-- [Tool 2]: Purpose (e.g., building, formatting)
 
 ## Submodules
 
 <!-- Document any Git submodules used -->
 
 ### docs-dev (if applicable)
+
 - Path: `docs-dev`
 - Repository: [Repository URL]
 - Purpose: Development workflows and guides
 - **Important**: Commits for this submodule must be made from within the submodule directory
 
 ### [Other Submodules]
+
 - Path: `[path]`
 - Repository: [Repository URL]
 - Purpose: [Description]

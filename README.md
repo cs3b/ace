@@ -45,7 +45,7 @@ Here's a breakdown of the core directories within this toolkit:
     * `project-management.md`: Overview of the project management approach
     facilitated by this toolkit, explaining the use of `docs-project` for tasks,
     backlog, etc.
-    * `ship-release.md`: Procedures for releasing new versions of software.
+    * `publish-release.md`: Procedures for releasing new versions of software.
     * `testing.md`: Strategies and best practices for software testing.
     * `version-control.md`: Best practices for using Git and managing branches.
     * `docs-dev/guides/.meta/writing-workflow-instructions-guide.md`: A guide on

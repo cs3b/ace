@@ -170,9 +170,13 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 1. **Completion**: Once all tasks for a release in `docs-project/current/` are marked `done`, the release
    process begins.
 
-1. **Archiving**: After a release is successfully shipped, its directory (e.g., `v.0.2.0-active-sprint`) is moved
-   from `docs-project/current/` to `docs-project/done/`. For example:
+1. **Archiving**: After a release is successfully published, its directory (e.g., `v.0.2.0-active-sprint`) is moved
+   from `docs-project/current/` to `docs-project/done/` as part of the publish release process. This archival step
+   signifies the completion of the release lifecycle and preserves the complete development context. For example:
    `mv docs-project/current/v.0.2.0-active-sprint docs-project/done/`.
+
+   The archival process is detailed in the [Publish Release Guide](docs-dev/guides/publish-release.md) and
+   executed through the [Publish Release Workflow](docs-dev/workflow-instructions/publish-release.md).
 
 ### 4. Task Transitions
 
@@ -297,17 +301,20 @@ there are edge cases where human intervention may be necessary when referenced f
 when such updates are acceptable:
 
 #### Prohibited Modifications (Never Allowed)
+
 - **Content Changes**: Modifying task scope, objectives, implementation details, or completion status
 - **Historical Revision**: Changing decisions, rationale, or outcomes documented in the task
 - **Status Changes**: Altering completion status, priority, or dependencies after the task is done
 
 #### Allowed Reference Updates (Human Oversight Required)
+
 - **Broken Link Fixes**: Updating file paths when referenced files are moved or renamed
 - **Security Annotations**: Adding critical security notices or deprecation warnings as addendum notes
 - **Accessibility Improvements**: Fixing broken links that prevent navigation or reference resolution
 - **Metadata Additions**: Adding clarifying notes that preserve historical context while improving usability
 
 #### Process for Human Updates
+
 When human updates to done tasks are necessary:
 
 1. **Justification Required**: Document the specific reason (security, broken links, accessibility)
@@ -318,12 +325,14 @@ When human updates to done tasks are necessary:
 
 #### Examples
 
-**Acceptable**: Adding a note that a referenced file has moved: 
+**Acceptable**: Adding a note that a referenced file has moved:
+
 ```
 > **Update Note (2024-01-15)**: Referenced file `old/path/file.md` has been moved to `new/path/file.md`
 ```
 
 **Acceptable**: Adding a security notice:
+
 ```
 > **Security Notice (2024-01-15)**: The library referenced in this task has known vulnerabilities. See [security advisory](#link) for details.
 ```
@@ -339,7 +348,7 @@ Essential standards and guidelines:
 - [Coding Standards](docs-dev/guides/coding-standards.md)
 - [Testing Guidelines](docs-dev/guides/testing.md)
 - [Documentation Standards](docs-dev/guides/documentation.md)
-- [Release Process](docs-dev/guides/ship-release.md)
+- [Publish Release Process](docs-dev/guides/publish-release.md) (Final deployment and archival)
 - [Error Handling](docs-dev/guides/error-handling.md)
 - [Performance](docs-dev/guides/performance.md)
 - [Security](docs-dev/guides/security.md)

@@ -50,4 +50,4 @@ Generate or update the main release overview document (e.g., `docs-project/curre
 - [Writing Workflow Instructions Guide](docs-dev/guides/.meta/writing-workflow-instructions-guide.md)
 - [Release Overview Template](docs-dev/guides/prepare-release/v.x.x.x/v.x.x.x-codename.md)
 - [Project Management Guide](docs-dev/guides/project-management.md)
-- [Release Process Guide](docs-dev/guides/ship-release.md)
+- [Release Process Guide](docs-dev/guides/publish-release.md)

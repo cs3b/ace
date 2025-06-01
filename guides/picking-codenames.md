@@ -19,27 +19,32 @@ Select a consistent theme that resonates with your project's identity:
 ### Popular Theme Categories
 
 **Nature & Geography**
+
 - Mountains (Alpine, Everest, Denali)
 - Rivers (Amazon, Nile, Thames)
 - Islands (Maui, Sicily, Bali)
 - Weather phenomena (Aurora, Tempest, Zephyr)
 
 **Space & Astronomy**
+
 - Planets and moons (Europa, Titan, Kepler)
 - Constellations (Orion, Cassiopeia, Draco)
 - Space missions (Voyager, Pioneer, Hubble)
 
 **Mythology & Literature**
+
 - Greek/Roman gods (Apollo, Athena, Mercury)
 - Literary characters (Gatsby, Hermione, Sherlock)
 - Mythical creatures (Phoenix, Griffin, Kraken)
 
 **Technology & Innovation**
+
 - Inventors (Tesla, Edison, Curie)
 - Computing pioneers (Turing, Lovelace, Hopper)
 - Scientific concepts (Quantum, Fusion, Photon)
 
 **Abstract Concepts**
+
 - Qualities (Velocity, Clarity, Harmony)
 - Emotions (Serenity, Vigor, Wisdom)
 - Actions (Forge, Launch, Discover)
@@ -47,17 +52,20 @@ Select a consistent theme that resonates with your project's identity:
 ## Naming Conventions
 
 ### Length Guidelines
+
 - **Ideal**: 2-3 syllables for easy pronunciation
 - **Maximum**: 4 syllables to maintain usability
 - **Minimum**: Avoid single syllables (too short, potential conflicts)
 
 ### Character Guidelines
+
 - Use only letters (avoid numbers, special characters)
 - Start with a capital letter
 - Consider international pronunciation
 - Avoid trademark conflicts
 
 ### Examples by Length
+
 - **Perfect**: Aurora, Phoenix, Harmony
 - **Good**: Velocity, Cassiopeia, Discovery
 - **Acceptable**: Serendipity, Constantinople
@@ -66,22 +74,26 @@ Select a consistent theme that resonates with your project's identity:
 ## Best Practices
 
 ### Theme Consistency
+
 - Stick to your chosen theme across releases
 - Document your theme choice for team reference
 - Consider theme longevity (will it work for 10+ releases?)
 
 ### Alphabetical Progression
+
 - Consider using alphabetical order within your theme
 - Example: Apollo → Artemis → Atlas → Aurora
 - Helps with chronological ordering
 
 ### Avoid Problematic Names
+
 - Names with negative connotations
 - Difficult pronunciations in your team's languages
 - Names that might become dated or inappropriate
 - Overly long or complex names
 
 ### Cultural Sensitivity
+
 - Research names in relevant cultures
 - Avoid appropriation of sacred or sensitive terms
 - Consider international team members' perspectives
@@ -90,6 +102,7 @@ Select a consistent theme that resonates with your project's identity:
 ## Implementation Strategy
 
 ### Getting Started
+
 1. **Brainstorm Sessions**: Involve the whole team
 2. **Theme Selection**: Vote on preferred theme category
 3. **Name Banking**: Create a list of 20-30 potential names
@@ -97,6 +110,7 @@ Select a consistent theme that resonates with your project's identity:
 5. **Documentation**: Record chosen theme and rationale
 
 ### Ongoing Management
+
 - Maintain a "future names" list
 - Review names before each release
 - Document any naming decisions or changes
@@ -105,16 +119,19 @@ Select a consistent theme that resonates with your project's identity:
 ## Examples from Popular Projects
 
 ### Ubuntu Linux
+
 - **Theme**: African concepts and animals
 - **Examples**: Warty Warthog, Hoary Hedgehog, Breezy Badger
 - **Pattern**: Adjective + Animal (alphabetical progression)
 
 ### Android
+
 - **Theme**: Desserts and sweets (legacy)
 - **Examples**: Cupcake, Donut, Eclair, Froyo, Gingerbread
 - **Pattern**: Alphabetical dessert names
 
 ### macOS
+
 - **Theme**: California landmarks
 - **Examples**: Yosemite, El Capitan, Sierra, Mojave, Catalina
 - **Pattern**: Geographic locations within California
@@ -122,12 +139,14 @@ Select a consistent theme that resonates with your project's identity:
 ## Tools and Resources
 
 ### Name Generators
+
 - Mythology databases
 - Geographic name lists
 - Scientific terminology glossaries
 - Random name generators with themes
 
 ### Validation Tools
+
 - Pronunciation guides (Forvo, Google Translate)
 - Translation services for meaning checks
 - Trademark search databases

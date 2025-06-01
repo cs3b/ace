@@ -1,6 +1,6 @@
 # Rust Release Process Examples
 
-This file provides Rust-specific examples related to the main [Release Process Guide](../ship-release.md).
+This file provides Rust-specific examples related to the main [Publish Release Process Guide](../publish-release.md).
 
 * **Packaging:** `Cargo.toml`
 * **Building:** `cargo build --release` (compiles optimized binary)

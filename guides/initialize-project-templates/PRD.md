@@ -43,11 +43,11 @@
 
 ### Technology Stack
 <!-- Preferred programming languages, frameworks, databases, etc. -->
-- **Primary Language**: 
-- **Framework/Runtime**: 
-- **Database**: 
-- **Key Libraries**: 
-- **Deployment**: 
+- **Primary Language**:
+- **Framework/Runtime**:
+- **Database**:
+- **Key Libraries**:
+- **Deployment**:
 
 ### Architecture Requirements
 <!-- High-level architectural constraints or preferences -->
@@ -67,20 +67,24 @@
 <!-- Describe the main user journeys through your application -->
 
 #### User Story 1
+
 **As a** [type of user]  
 **I want** [goal/desire]  
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
 #### User Story 2
+
 **As a** [type of user]  
 **I want** [goal/desire]  
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
+
 - [ ] Criterion 1
 - [ ] Criterion 2
 
@@ -120,6 +124,7 @@
 <!-- List key stakeholders who need to approve this PRD -->
 
 ### Approval Status
+
 - [ ] Technical Lead Approval
 - [ ] Product Owner Approval
 - [ ] Architecture Review Complete

@@ -11,18 +11,21 @@ This document outlines the architectural design and technical implementation det
 <!-- List the primary technologies, frameworks, and tools -->
 
 ### Core Technologies
+
 - **Primary Language**: [e.g., JavaScript, Python, Rust, Ruby]
 - **Runtime/Framework**: [e.g., Node.js, Django, Rails, Actix]
 - **Database**: [e.g., PostgreSQL, MySQL, MongoDB, SQLite]
 - **Package Manager**: [e.g., npm, pip, cargo, bundler]
 
 ### Development Tools
+
 - **Build System**: [e.g., Webpack, Vite, Cargo, Make]
 - **Testing Framework**: [e.g., Jest, PyTest, RSpec, Criterion]
 - **Linting/Formatting**: [e.g., ESLint/Prettier, Black, RuboCop, rustfmt]
 - **Type System**: [e.g., TypeScript, mypy, Sorbet, native]
 
 ### Infrastructure & Deployment
+
 - **Containerization**: [e.g., Docker, Podman]
 - **Cloud Platform**: [e.g., AWS, GCP, Azure, Heroku]
 - **CI/CD**: [e.g., GitHub Actions, GitLab CI, Jenkins]
@@ -51,6 +54,7 @@ This document outlines the architectural design and technical implementation det
 ### Component Descriptions
 
 #### [Component 1 - e.g., Frontend]
+
 - **Purpose**: [What this component does]
 - **Technology**: [Specific tech stack]
 - **Key Responsibilities**:
@@ -59,6 +63,7 @@ This document outlines the architectural design and technical implementation det
 - **Interfaces**: [How it communicates with other components]
 
 #### [Component 2 - e.g., Backend API]
+
 - **Purpose**: [What this component does]
 - **Technology**: [Specific tech stack]
 - **Key Responsibilities**:
@@ -67,6 +72,7 @@ This document outlines the architectural design and technical implementation det
 - **Interfaces**: [How it communicates with other components]
 
 #### [Component 3 - e.g., Database]
+
 - **Purpose**: [What this component does]
 - **Technology**: [Specific tech stack]
 - **Schema**: [Brief description or link to schema docs]
@@ -87,6 +93,7 @@ This document outlines the architectural design and technical implementation det
 <!-- Key data structures and relationships -->
 
 #### Core Entities
+
 - **[Entity 1]**: [Description and key attributes]
 - **[Entity 2]**: [Description and key attributes]
 - **[Entity 3]**: [Description and key attributes]
@@ -255,10 +262,12 @@ For detailed decision records, see [docs-project/decisions/](../../../docs-proje
 <!-- Common problems and their solutions -->
 
 **Issue**: [Problem description]
+
 - **Symptoms**: [How to identify this issue]
 - **Solution**: [How to resolve it]
 
 **Issue**: [Problem description]
+
 - **Symptoms**: [How to identify this issue]
 - **Solution**: [How to resolve it]
 

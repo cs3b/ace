@@ -275,9 +275,45 @@ Common file groupings (examples):
 For specific examples of setting up Git hooks with specialized hook management tools, please refer to the examples in
 the [./version-control/](./version-control/) sub-directory.
 
+## 9. Release Versioning Scheme
+
+### Semantic Versioning for Releases
+
+The project uses semantic versioning with the format `v<major>.<minor>.<patch>` for releases:
+
+- **`<major>.<minor>`**: Extracted directly from the release folder name
+  - Example: Folder `v.0.3.0-feedback-after-meta.v.0.2` → Version `0.3`
+  - No dependency on task completion counts or other metrics
+- **`<patch>`**: Defaults to `0` for initial release publication
+  - Incremented only for hotfixes or patch releases
+  - Example: `v0.3.0` for initial release, `v0.3.1` for first patch
+
+### Version Determination Examples
+
+```bash
+# Release folder: v.0.3.0-feedback-after-meta.v.0.2
+# Extracted version: v0.3.0
+
+# Release folder: v.1.2.5-major-refactor
+# Extracted version: v1.2.0
+
+# Patch release from v1.2.0
+# Next version: v1.2.1
+```
+
+### Version Consistency
+
+Ensure version numbers are consistent across:
+
+- Git tags (e.g., `v0.3.0`)
+- Project files (`package.json`, `Cargo.toml`, `VERSION` files)
+- Documentation and changelog entries
+- Release folder names in `docs-project/`
+
 ## Related Documentation
 
 - [Project Management Guide](docs-dev/guides/project-management.md) (Task workflow integration)
-- [Release Process Guide](docs-dev/guides/ship-release.md) (Tagging, Changelog)
+- [Publish Release Guide](docs-dev/guides/publish-release.md) (Release versioning and archival)
+- [Changelog Guide](docs-dev/guides/changelog-guide.md) (Version linking and format)
 - [Quality Assurance Guide](docs-dev/guides/quality-assurance.md) (PR Template, Code Review)
-- Relevant Workflow Instructions: `docs-dev/workflow-instructions/lets-commit.md`
+- Relevant Workflow Instructions: `docs-dev/workflow-instructions/commit.md`, `docs-dev/workflow-instructions/publish-release.md`

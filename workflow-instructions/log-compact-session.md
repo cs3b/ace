@@ -59,7 +59,7 @@ key). Remove deeper analytical/reflection components.
 
 ## Agent Action Summary
 [Brief summary of the primary actions taken by the agent, focusing on outcomes and key files.]
-(E.g., "Updated `guides/README.md` & `guides/ship-release.md` for Task 03. Deleted
+(E.g., "Updated `guides/README.md` & `guides/publish-release.md` for Task 03. Deleted
 `guides/prepare-release/prepare-release-documentation.md`.")
 
 ## Context Loading Prompt (Copy and paste to resume session)
@@ -72,7 +72,7 @@ key). Remove deeper analytical/reflection components.
 
 **Current State:**
 - Tasks 01, 02, 03 of v0.2.0 release are complete.
-- Files modified/reviewed recently: [List key files, e.g., `guides/ship-release.md`, `tasks/03-*.md`]
+- Files modified/reviewed recently: [List key files, e.g., `guides/publish-release.md`, `tasks/03-*.md`]
 - Current release directory: `docs-project/current/v.0.2.0-StreamlineWorkflow/`
 - Last action: Completed updates to guides as per Task 03.
 

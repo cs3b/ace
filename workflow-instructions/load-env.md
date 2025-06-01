@@ -23,7 +23,7 @@ on loading context, not initiating task execution (see `work-on-task`).
     - [Testing Guidelines](docs-dev/guides/testing.md)
     - [Documentation Standards](docs-dev/guides/documentation.md)
     - [Version Control](docs-dev/guides/version-control.md)
-    - [Release Process](docs-dev/guides/ship-release.md)
+    - [Release Process](docs-dev/guides/publish-release.md)
     List available general workflow instructions: [docs-dev/workflow-instructions/](docs-dev/workflow-instructions/)
 
 2. **Load Project-Specific Context:**
@@ -58,7 +58,7 @@ on loading context, not initiating task execution (see `work-on-task`).
 - [Testing Guidelines Guide](docs-dev/guides/testing.md)
 - [Documentation Standards Guide](docs-dev/guides/documentation.md)
 - [Version Control Guide](docs-dev/guides/version-control.md)
-- [Release Process Guide](docs-dev/guides/ship-release.md)
+- [Release Process Guide](docs-dev/guides/publish-release.md)
 - [What do we build](docs-project/what-do-we-build.md)
 - [What is our architecture](docs-project/architecture.md)
 - [What is our blueprint](docs-project/blueprint.md)

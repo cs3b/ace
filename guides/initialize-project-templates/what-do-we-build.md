@@ -46,11 +46,13 @@
 ### Primary Users
 
 **[User Type 1]**: [Description of this user group, their needs, and goals]
+
 - Needs: [What they need from the project]
 - Goals: [What they want to achieve]
 - Pain Points: [Problems this project solves for them]
 
 **[User Type 2]**: [Description of this user group, their needs, and goals]
+
 - Needs: [What they need from the project]
 - Goals: [What they want to achieve]
 - Pain Points: [Problems this project solves for them]
@@ -58,6 +60,7 @@
 ### Secondary Users
 
 **[User Type 3]**: [Description of additional user groups]
+
 - Context: [When and why they interact with the project]
 
 ## Success Metrics
@@ -65,11 +68,13 @@
 <!-- Define how success will be measured for this project -->
 
 ### Primary Metrics
+
 - **[Metric 1]**: [What it measures and target values]
 - **[Metric 2]**: [What it measures and target values]
 - **[Metric 3]**: [What it measures and target values]
 
 ### Secondary Metrics
+
 - **[Metric 4]**: [What it measures and why it's important]
 - **[Metric 5]**: [What it measures and why it's important]
 
@@ -78,11 +83,13 @@
 <!-- Describe the technical approach and philosophy -->
 
 ### Core Technology Choices
+
 - **[Technology 1]**: [Why this was chosen and its benefits]
 - **[Technology 2]**: [Why this was chosen and its benefits]
 - **[Technology 3]**: [Why this was chosen and its benefits]
 
 ### Technical Principles
+
 - **[Technical Principle 1]**: [How this guides technical decisions]
 - **[Technical Principle 2]**: [How this guides technical decisions]
 
@@ -117,14 +124,17 @@
 ## Future Vision
 
 ### Short-term Goals (3-6 months)
+
 - [Goal 1]: [Description and success criteria]
 - [Goal 2]: [Description and success criteria]
 
 ### Medium-term Goals (6-12 months)
+
 - [Goal 1]: [Description and success criteria]
 - [Goal 2]: [Description and success criteria]
 
 ### Long-term Vision (1+ years)
+
 - [Vision element 1]: [Long-term aspiration]
 - [Vision element 2]: [Long-term aspiration]
 

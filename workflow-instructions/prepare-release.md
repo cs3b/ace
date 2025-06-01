@@ -88,12 +88,12 @@ user-provided release scope into actionable tasks.
 
 ## Output / Success Criteria
 
-- A new directory `docs-project/backlog/v.X.Y.Z-codename/` exists (where `v.X.Y.Z` is the specific version).
-- Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the
+* A new directory `docs-project/backlog/v.X.Y.Z-codename/` exists (where `v.X.Y.Z` is the specific version).
+* Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the
   new release directory.
-- All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
-- Git commit message is displayed in chat ready.
-- User has confirmed that tasks are sufficiently concrete or provided clarifications.
+* All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
+* Git commit message is displayed in chat ready.
+* User has confirmed that tasks are sufficiently concrete or provided clarifications.
 
 ## Reference Documentation
 

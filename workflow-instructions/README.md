@@ -13,7 +13,7 @@ user) to perform common development and project management tasks.
 - [Fix Tests](./fix-tests.md): Debug and fix failing tests.
 - [Prepare Release](./prepare-release.md): Prepare content, documentation, and perform pre-flight checks for a
   release.
-- [Ship Release](./ship-release.md): Execute the release process (versioning, tagging, building, publishing).
+- [Publish Release](./publish-release.md): Execute the release process (versioning, tagging, building, publishing).
 
 ## Project Initialization & Setup
 

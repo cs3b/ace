@@ -43,7 +43,7 @@ Our development workflow centers around:
 
 ### Release Management
 
-- **[Release Process](./ship-release.md)** - Release workflow, versioning, and checklists.
+- **[Release Process](./publish-release.md)** - Release workflow, versioning, and checklists.
 - [Release Documentation Template](./prepare-release/v.x.x.x/docs/_template.md): Standard
 - release documentation structure.
 
@@ -55,7 +55,7 @@ Project tasks and release planning are managed within the `docs-project` directo
 Key guides for this process:
 
 - [Project Management Guide](./project-management.md): Details the directory structure, task format, and core workflow.
-- [Release Process](./ship-release.md): Covers the steps for finalizing and publishing a release.
+- [Release Process](./publish-release.md): Covers the steps for finalizing and publishing a release.
 
 The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are
 +determined during the specification phase, guided by the `lets-spec-*` workflow instructions based on the
