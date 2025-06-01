@@ -40,10 +40,10 @@ Generate or update the main release overview document (e.g., `docs-project/curre
 
 ## Output / Success Criteria
 
-- [x] The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the specified release directory
+- The main release overview document (`README.md` or `v.X.Y.Z-*.md`) within the specified release directory
   is created or updated.
-- [x] The document accurately reflects the release's goals, scope, and plan.
-- [x] Key sections (Overview, Info, Goals, Plan, QA, Checklist) are present and populated appropriately.
+- The document accurately reflects the release's goals, scope, and plan.
+- Key sections (Overview, Info, Goals, Plan, QA, Checklist) are present and populated appropriately.
 
 ## Reference Documentation
 

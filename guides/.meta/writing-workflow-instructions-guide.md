@@ -50,7 +50,13 @@ While the exact sections may vary slightly depending on the instruction's purpos
 ## Output / Success Criteria
 *   Define what constitutes successful completion of the workflow instruction.
 *   Describe the expected output state, artifacts created, or changes made.
-*   Use checklists for concrete verification steps.
+*   Use simple bullet lists for concrete verification steps.
+
+Example:
+- All specified files are created in correct locations
+- Configuration changes are properly applied
+- Tests pass successfully
+- Documentation reflects all changes made
 
 ## Reference Documentation (Optional)
 *   List relevant guides or project documents that provide additional context using root-relative paths.
@@ -93,5 +99,95 @@ Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
 *   **Be Concise:** Avoid unnecessary jargon or overly long explanations.
 *   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `[Coding Standards](docs-dev/guides/coding-standards.md)`, `[Load Environment Workflow](docs-dev/workflow-instructions/load-env.md)`), **not** file-relative paths (e.g., `../guides/coding-standards.md`).
 *   **Treat AI as a "Junior Developer":** Provide clear, step-by-step guidance, but also reference established project standards and expect the AI to follow them once pointed to them. Avoid ambiguity.
+
+## List Formatting in Workflows
+
+Workflow instructions use simple bullet points and numbered lists, avoiding interactive checkboxes except in templates and examples. Understanding proper formatting is crucial for effective AI agent interaction.
+
+### ✅ Success Criteria: Use Simple Bullet Points
+
+**Post-Execution Validation:**
+```markdown
+## Success Criteria
+- All specified files have been created in the correct locations
+- Configuration changes are applied and verified
+- Tests pass and coverage requirements are met
+- Documentation has been updated to reflect changes
+```
+
+These criteria serve as a **validation list** to confirm the workflow was completed successfully. They should:
+- Be specific and verifiable
+- Focus on outcomes rather than process steps
+- Allow manual verification by humans or agents
+- Be written as simple bullet points, never as interactive checkboxes
+
+### ❌ Never Use Checkboxes in Workflow Content
+
+**Don't use checkboxes for any workflow content:**
+```markdown
+<!-- DON'T DO THIS -->
+## Process Steps
+- [ ] Run the command `bin/setup`
+- [ ] Edit the configuration file
+- [ ] Test the changes
+
+## Success Criteria
+- [ ] Configuration is updated
+- [ ] Tests pass
+```
+
+Instead, use numbered steps for processes and simple bullets for criteria:
+```markdown
+<!-- DO THIS -->
+## Process Steps
+
+1. **Initialize Setup**: Run the setup command
+   ```bash
+   bin/setup
+   ```
+
+2. **Configure System**: Edit the configuration file
+   - Update the API endpoint URL
+   - Set the appropriate timeout values
+
+3. **Validate Changes**: Test the configuration
+   ```bash
+   bin/test --config
+   ```
+
+## Success Criteria
+- Configuration is properly updated
+- All tests pass successfully
+```
+
+### ✅ Appropriate Checkbox Use: Templates and Examples Only
+
+Checkboxes are appropriate **only** when:
+- Documenting task template formats (showing what task files should contain)
+- Providing copyable templates for users
+- Giving examples of syntax in documentation
+
+```markdown
+## Example: When documenting task structure
+Tasks should include execution steps formatted like this:
+- [ ] Step 1: Implement feature
+- [ ] Step 2: Add tests
+```
+
+### Agent Interaction Guidelines
+
+**Success Criteria Lists:**
+- Are meant for **post-execution validation** only
+- Should always be written as simple bullet points
+- Serve as verification criteria to confirm completion
+- Help users and agents validate the workflow outcome
+- Never use interactive checkboxes
+
+**Process Steps:**
+- Should be numbered for sequential execution
+- May contain embedded tests or verification commands
+- Focus on actions and commands to execute
+- Use clear, imperative language
+- Never use checkboxes
 
 By following these guidelines, we can create a robust set of workflow instructions that effectively guide the AI agent, leading to more predictable and efficient development outcomes.

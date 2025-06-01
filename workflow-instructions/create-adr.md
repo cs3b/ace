@@ -35,10 +35,10 @@ capture a significant architectural decision, its context, rationale, and conseq
 
 ## Output / Success Criteria
 
-- [x] A new ADR `.md` file is created in `docs-dev/decisions/`.
-- [x] The ADR follows the standard template structure.
-- [x] The problem, decision, and rationale are clearly documented.
-- [x] Consequences and alternatives are considered and recorded.
+- A new ADR `.md` file is created in `docs-dev/decisions/`.
+- The ADR follows the standard template structure.
+- The problem, decision, and rationale are clearly documented.
+- Consequences and alternatives are considered and recorded.
 
 ## Reference Documentation
 

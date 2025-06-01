@@ -71,13 +71,13 @@ manage task statuses effectively.
 
 ## Output / Success Criteria
 
-- [ ] Current statuses (`pending`, `in-progress`, `done`, `blocked`, etc.) of tasks in the active release are
-      clearly understood.
-- [ ] Dependencies between tasks are reviewed, and any critical path or potential bottlenecks are identified.
-- [ ] Task priorities are confirmed or adjusted based on the current situation.
-- [ ] Any blockers preventing task progression are identified.
-- [ ] Action items for resolving blockers or adjusting plans are noted.
-- [ ] Terminology used aligns with the [Project Management Guide](docs-dev/guides/project-management.md).
+- Current statuses (`pending`, `in-progress`, `done`, `blocked`, etc.) of tasks in the active release are
+  clearly understood.
+- Dependencies between tasks are reviewed, and any critical path or potential bottlenecks are identified.
+- Task priorities are confirmed or adjusted based on the current situation.
+- Any blockers preventing task progression are identified.
+- Action items for resolving blockers or adjusting plans are noted.
+- Terminology used aligns with the [Project Management Guide](docs-dev/guides/project-management.md).
 
 ## Reference Documentation
 

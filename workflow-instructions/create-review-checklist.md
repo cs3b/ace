@@ -34,9 +34,9 @@ reviewed (e.g., new feature, bug fix, refactoring) and project standards.
 
 ## Output / Success Criteria
 
-- [x] A code review checklist tailored to the specific changes is generated.
-- [x] The checklist is based on the project's standard checklist (`docs-dev/guides/quality-assurance.md`).
-- [x] The checklist highlights relevant areas for review based on the changes' scope and potential impact.
+- A code review checklist tailored to the specific changes is generated.
+- The checklist is based on the project's standard checklist (`docs-dev/guides/quality-assurance.md`).
+- The checklist highlights relevant areas for review based on the changes' scope and potential impact.
 
 ## Reference Documentation
 

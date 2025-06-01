@@ -34,10 +34,10 @@ documentation tools (e.g., YARD for Ruby) and adhering to project documentation 
 
 ## Output / Success Criteria
 
-- [x] Source code contains updated, accurate documentation comments for the target interfaces.
-- [x] Documentation comments follow project standards (`docs-dev/guides/documentation.md`).
-- [x] Generated API documentation (e.g., HTML files) is up-to-date and reflects the code comments.
-- [x] Documentation covers key aspects: purpose, params, returns, examples, exceptions, notes.
+- Source code contains updated, accurate documentation comments for the target interfaces.
+- Documentation comments follow project standards (`docs-dev/guides/documentation.md`).
+- Generated API documentation (e.g., HTML files) is up-to-date and reflects the code comments.
+- Documentation covers key aspects: purpose, params, returns, examples, exceptions, notes.
 
 ## Reference Documentation
 

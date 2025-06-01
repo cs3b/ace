@@ -43,11 +43,11 @@ task, or code change based on requirements and project testing guidelines.
 
 ## Output / Success Criteria
 
-- [x] A structured list of test cases covering the specified feature/task is generated.
-- [x] Test cases cover happy path, edge cases, and error conditions.
-- [x] Test cases are categorized appropriately (Unit, Integration, etc.).
-- [x] Each test case includes a description, steps, and expected results.
-- [x] Generated tests align with principles in `docs-dev/guides/testing.md`.
+- A structured list of test cases covering the specified feature/task is generated.
+- Test cases cover happy path, edge cases, and error conditions.
+- Test cases are categorized appropriately (Unit, Integration, etc.).
+- Each test case includes a description, steps, and expected results.
+- Generated tests align with principles in `docs-dev/guides/testing.md`.
 
 ## Reference Documentation
 

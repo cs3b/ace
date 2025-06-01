@@ -79,11 +79,11 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
 
 ## Output / Success Criteria
 
-- [x] A `retrospective.md` file is created within the completed release directory.
+- A `retrospective.md` file is created within the completed release directory.
 The file uses the standard retrospective template structure
 (`docs-dev/guides/prepare-release/v.x.x.x/reflections/_template.md`).
-- [x] Key insights (Stop/Continue/Start) are captured based on the release cycle.
-- [x] Actionable improvements are identified.
+- Key insights (Stop/Continue/Start) are captured based on the release cycle.
+- Actionable improvements are identified.
 
 ## Reference Documentation
 

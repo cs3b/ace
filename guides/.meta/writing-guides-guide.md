@@ -74,6 +74,63 @@ When splitting language‑dependent examples out of a general guide, follow thes
 - **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format e.g.: `[Writing Guides Guide](docs-dev/guides/writing-guides-guide.md)`. Avoid using just the path in backticks unless discussing the path itself.
 - **Code Examples:** Use clear, minimal, and correct code examples. Specify the language in fenced code blocks (e.g., ```ruby).
 
+## Checkbox Usage Guidelines
+
+Guides are **informational and reference documents**, not actionable tasks. Proper checkbox usage is critical to prevent AI agents from treating guides as interactive checklists.
+
+### ❌ Inappropriate Use (Don't Do This)
+
+**Interactive Checklists in Guides:**
+```markdown
+## Security Review Process
+- [ ] Check input validation
+- [ ] Verify authentication
+- [ ] Test authorization
+```
+
+This treats the guide as a task to be completed, which is incorrect.
+
+### ✅ Appropriate Use (Do This Instead)
+
+**Informational Bullet Points:**
+```markdown
+## Security Review Areas
+- **Input Validation**: Check all user inputs are sanitized
+- **Authentication**: Verify login mechanisms work correctly
+- **Authorization**: Test that permissions are properly enforced
+```
+
+### ✅ Legitimate Checkbox Uses in Guides
+
+**1. Template Examples:**
+When showing what a task or checklist should look like:
+
+```markdown
+## Example Task Format
+Here's how to structure implementation steps:
+
+- [ ] Step 1: Implement feature A
+- [ ] Step 2: Add tests for feature A
+- [ ] Step 3: Update documentation
+```
+
+**2. Reference Templates:**
+When providing copyable templates:
+
+```markdown
+## Pull Request Template
+Copy this template for your PRs:
+
+## Changes
+- Implemented new feature
+
+## Testing
+- [ ] Unit tests added
+- [ ] Integration tests updated
+```
+
+**Key Principle:** If the checkboxes are meant to be copied/used elsewhere or serve as examples, they're appropriate. If they suggest the guide itself should be "completed," they're inappropriate.
+
 ## Maintaining Guides
 
 - **Review Regularly:** Periodically review guides for accuracy and relevance, especially when related processes change.

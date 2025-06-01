@@ -39,12 +39,12 @@ For detailed conventions and practical examples, first read [Version Control Gui
 
 ## Output / Success Criteria
 
-- [x] Related changes are staged (`git add`).
-- [x] AI-generated changes (if any) are reviewed.
-- [x] A single, atomic commit is created (`git commit`).
+- Related changes are staged (`git add`).
+- AI-generated changes (if any) are reviewed.
+- A single, atomic commit is created (`git commit`).
 - The commit message follows the conventional commit format outlined in the Version Control
   Guide.
-- [x] Project tracking (e.g., task `.md` status) is updated if the commit completes a task.
+- Project tracking (e.g., task `.md` status) is updated if the commit completes a task.
 
 ## Reference Guides
 

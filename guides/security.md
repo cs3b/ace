@@ -7,33 +7,33 @@ minimize vulnerabilities and protect project assets and user data.
 
 ## 1. Security Review Checklist
 
-- [ ] Input Validation
+- **Input Validation**
   - All user inputs are sanitized (e.g., against injection attacks like SQLi, XSS)
   - File paths are canonicalized and validated against allowed directories (prevent path traversal)
   - URLs are validated and checked against allowlists if applicable
 
-- [ ] Authentication & Authorization
+- **Authentication & Authorization**
   - Secrets (API keys, passwords, tokens) are securely stored (e.g., using vaults, environment variables, not
     hardcoded)
   - Access tokens have appropriate lifespans and are rotated/refreshed securely
   - Permissions and roles are correctly enforced for all actions
 
-- [ ] Data Protection
+- **Data Protection**
   - Sensitive data is encrypted at rest and in transit
   - No secrets or sensitive information are included in logs
   - Secure methods are used for data deletion when required
 
-- [ ] Network Security
+- **Network Security**
   - Use TLS/SSL (HTTPS) for all external network communication
   - Ensure proper certificate validation
   - Configure reasonable network timeouts to prevent resource exhaustion
 
-- [ ] Dependency Management
+- **Dependency Management**
   - Regularly scan dependencies for known vulnerabilities using appropriate tools for your language/ecosystem
     (e.g., GitHub Dependabot or language-specific scanners)
   - Keep dependencies updated
 
-- [ ] Secure Defaults
+- **Secure Defaults**
   - Configure services and libraries with security in mind (e.g., disable default accounts, enable security features)
 
 ### 2. Best Practices Examples (Conceptual)

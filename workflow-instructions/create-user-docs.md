@@ -46,11 +46,11 @@ or significant change.
 
 ## Output / Success Criteria
 
-- [x] User documentation for the specified feature/change is created or updated.
-- [x] Documentation is clear, accurate, and appropriate for the target audience.
-- [x] Key aspects (usage, configuration, examples) are covered.
-- [x] Documentation follows project standards (`docs-dev/guides/documentation.md`).
-- [x] Documentation is saved in the correct location.
+- User documentation for the specified feature/change is created or updated.
+- Documentation is clear, accurate, and appropriate for the target audience.
+- Key aspects (usage, configuration, examples) are covered.
+- Documentation follows project standards (`docs-dev/guides/documentation.md`).
+- Documentation is saved in the correct location.
 
 ## Reference Documentation
 

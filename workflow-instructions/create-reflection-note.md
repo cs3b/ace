@@ -74,14 +74,14 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Output / Success Criteria
 
-- [ ] A new Markdown file is created within the `reflections/` subdirectory of the target release
+- A new Markdown file is created within the `reflections/` subdirectory of the target release
   (e.g., `docs-project/current/{release_dir}/reflections/\` or `docs-project/backlog/{release_dir}/reflections/\`)
   with a name following the `YYYYMMDD-brief-description.md` convention.
-- [ ] The `reflections/` subdirectory within the target release directory is created if it did not previously exist.
-- [ ] The new file is populated with user-provided reflections.
-- [ ] Only sections (Stop Doing, Continue Doing, Start Doing) for which the user provided content are included in the file.
-- [ ] User reflections within included sections are formatted as bullet points under their respective level 1 headings.
-- [ ] The user is informed that the reflection note has been successfully saved and its intended use for future retrospectives.
+- The `reflections/` subdirectory within the target release directory is created if it did not previously exist.
+- The new file is populated with user-provided reflections.
+- Only sections (Stop Doing, Continue Doing, Start Doing) for which the user provided content are included in the file.
+- User reflections within included sections are formatted as bullet points under their respective level 1 headings.
+- The user is informed that the reflection note has been successfully saved and its intended use for future retrospectives.
 
 ## Reference Documentation
 

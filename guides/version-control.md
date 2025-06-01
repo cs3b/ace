@@ -123,14 +123,14 @@ References #123
 - Updated documentation
 
 ## Testing
-- [ ] Unit tests added
-- [ ] Integration tests updated
-- [ ] Thread safety verified
+- Unit tests added
+- Integration tests updated
+- Thread safety verified
 
 ## Documentation
-- [ ] API docs updated
-- [ ] Examples added
-- [ ] CHANGELOG updated
+- API docs updated
+- Examples added
+- CHANGELOG updated
 
 ## Breaking Changes
 - Tool initialization now requires explicit configuration
