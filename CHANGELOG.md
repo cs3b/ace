@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.11 - 2025-06-01 - Clarify Policy on Updating "Done" Tasks if Referenced Files Change
+
+- Added comprehensive policy section to `docs-dev/guides/project-management.md` under Agent Operational Boundaries
+- Defined clear distinction between prohibited modifications (content changes, historical revisions, status changes) and allowed reference updates (broken link fixes, security annotations, accessibility improvements)
+- Established process requirements for human updates including justification, additive approach, history preservation, clear attribution, and minimal scope
+- Provided concrete examples of acceptable vs unacceptable modifications to done tasks
+- Maintains balance between preserving historical accuracy and ensuring practical usability of project documentation
+
 #### v.0.3.0 - 2025-06-01 - Enhance Review Task Workflow for New Task Structure
 
 - Updated the `review-task.md` workflow instruction to incorporate the new Planning Steps and Execution Steps structure for tasks.
