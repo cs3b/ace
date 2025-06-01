@@ -1,6 +1,6 @@
 # Rust Version Control Examples
 
-This file provides Rust-specific examples and considerations related to the main [Version Control Guide](../version-control.md).
+This file provides Rust-specific examples and considerations related to the main [Version Control Guide](../version-control-system.g.md).
 
 * **.gitignore:** Ensure the standard Rust build directory (`target/`) is ignored. Tools like
   [gitignore.io](https://www.toptal.com/developers/gitignore) are helpful.

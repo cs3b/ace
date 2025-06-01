@@ -1,6 +1,6 @@
 # Ruby Error Handling Examples
 
-This file provides Ruby-specific examples related to the main [Error Handling Guide](../error-handling.md).
+This file provides Ruby-specific examples related to the main [Error Handling Guide](../error-handling.g.md).
 
 * Mechanism: begin/rescue/ensure/raise
 * Standard Library: StandardError hierarchy

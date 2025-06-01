@@ -1,6 +1,6 @@
 # Rust Documentation Examples
 
-This file provides Rust-specific examples related to the main [Documentation Standards Guide](../documentation.md).
+This file provides Rust-specific examples related to the main [Documentation Standards Guide](../documentation.g.md).
 
 * **Tools:** `cargo doc`, `rustdoc`
 * **Conventions:** Markdown within `///` or `//!` comments.

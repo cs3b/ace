@@ -31,7 +31,7 @@ To process vague concept notes into a structured format suitable for use as inpu
 3. **Analyze and Generate Clarification Questions:**
     * For each `xx-*.md` concept file, analyze its content along with project context and research materials.
     * Identify ambiguities and missing information needed to define an actionable task according to
-      [write-actionable-task.md](docs-dev/guides/write-actionable-task.md).
+      [write-actionable-task.md](docs-dev/guides/task-definition.g.md).
     * Generate specific questions focusing on:
         * **Objective:** What is the primary, measurable outcome?
         * **Scope:** What is explicitly in and out?

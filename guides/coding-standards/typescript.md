@@ -1,7 +1,7 @@
 
 # TypeScript Coding Standards
 
-> This page is a language-specific companion to [../coding-standards.md](../coding-standards.md)
+> This page is a language-specific companion to [../coding-standards.g.md](../coding-standards.g.md)
 
 ## Formatting & Style
 

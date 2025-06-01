@@ -1,6 +1,6 @@
 # Ruby Version Control Examples
 
-This file provides Ruby-specific examples and considerations related to the main [Version Control Guide](../version-control.md).
+This file provides Ruby-specific examples and considerations related to the main [Version Control Guide](../version-control-system.g.md).
 
 * **.gitignore:** Ensure standard Ruby/Rails files are ignored (e.g., `log/*`, `tmp/*`, `.bundle/`, `coverage/`,
   `.env`). Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) can generate good starting points.

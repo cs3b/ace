@@ -1,0 +1,218 @@
+# Publish Release Workflow Instruction
+
+**Goal:** Execute the final deployment and archival phase of project releases, transitioning from active development to published state. This workflow handles version finalization, documentation archival, release validation, and post-release activities.
+
+**Prerequisites:**
+
+* Run the [`load-env`](./load-env.wf.md) workflow instruction first to load project context,
+* All features, documentation, and initial release preparations are finalized.
+* All planned tasks for the release are completed (`status: done`) or explicitly deferred with documented rationale.
+* You have necessary permissions to modify project documentation structure and create final release artifacts.
+* The main conceptual guide [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md) has been reviewed for understanding the overall philosophy and process.
+
+## Process Steps
+
+### 1. Pre-Publish Validation
+
+1. **Verify Release Readiness:**
+   * Confirm all tasks in the current release are marked as `done` or have documented deferral decisions
+   * Validate that all acceptance criteria for included features are met
+   * Check that any breaking changes are properly documented with migration guides
+
+2. **Determine Final Version Number:**
+   * Extract `<major>.<minor>` from the current release folder name
+   * Use format `v<major>.<minor>.0` for initial release publication
+   * Example: Folder `v.0.3.0-feedback-after-meta.v.0.2` → Version `v0.3.0`
+   * _User Input: Confirm final version number: ____________ (e.g., `v0.3.0`)_
+
+3. **Validate Build Process:**
+   * Execute `bin/build` to ensure project integrity
+   * Verify build completes successfully (or gracefully handles no-op for documentation-only projects)
+   * Address any build failures before proceeding
+
+4. **Run Final Quality Checks:**
+   * Execute all tests: `bin/test`
+   * Run code quality checks: `bin/lint`
+   * Verify no critical issues remain unresolved
+
+### 2. Version Finalization
+
+5. **Update Version Numbers:**
+   * Update all project files containing version numbers (e.g., `package.json`, `Cargo.toml`, `VERSION` files)
+   * Ensure version consistency across all relevant files
+   * _Refer to project-specific version file locations in [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md)_
+
+6. **Generate Final Changelog:**
+   * Create or update `CHANGELOG.md` at project root
+   * Move entries from `[Unreleased]` section to new version section
+   * Add release date: `## [X.Y.Z] - YYYY-MM-DD`
+   * Include comparison links at bottom of file
+   * _Follow format specified in [`docs-dev/guides/changelog.g.md`](../guides/changelog.g.md)_
+
+7. **Validate Documentation Consistency:**
+   * Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
+   * Check that all internal references and links are accurate
+   * Confirm documentation reflects actual implemented features
+
+### 3. Release Artifact Creation
+
+8. **Commit Version Updates:**
+   * Stage all version-related changes: `git add <version_files> CHANGELOG.md`
+   * Commit with standardized message: `git commit -m "chore(release): prepare v<X.Y.Z> publication"`
+   * Example: `git commit -m "chore(release): prepare v0.3.0 publication"`
+
+9. **Create Release Tag:**
+   * Create annotated Git tag: `git tag -a v<X.Y.Z> -m "Release v<X.Y.Z> <codename>"`
+   * Example: `git tag -a v0.3.0 -m "Release v0.3.0 feedback-after-meta"`
+   * Verify tag creation: `git tag -l v<X.Y.Z>`
+
+10. **Push Release Changes:**
+    * Push commits: `git push origin <current_branch>`
+    * Push tags: `git push origin v<X.Y.Z>` or `git push origin --tags`
+
+### 4. Package Publication (If Applicable)
+
+11. **Authenticate with Package Registry:**
+    * Ensure authentication with relevant package registries (npm, PyPI, RubyGems, etc.)
+    * Verify credentials are current and have appropriate permissions
+    * _Refer to language-specific guides in [`docs-dev/guides/release-publish/`](../guides/release-publish/) if available_
+
+12. **Execute Package Publication:**
+    * Run language-specific publish command
+    * Monitor publication process for errors or warnings
+    * _Commands vary by technology stack - consult project-specific documentation_
+
+13. **Verify Package Availability:**
+    * Confirm package appears on registry website
+    * Test installation/download of published package
+    * Verify package metadata (version, description, dependencies) is correct
+
+### 5. Documentation Archival
+
+14. **Archive Release Documentation:**
+    * Create archive directory: `mkdir -p docs-project/done/`
+    * Move current release documentation: `mv docs-project/current/* docs-project/done/v<X.Y.Z>-<codename>/`
+    * Example: `mv docs-project/current/v.0.3.0-feedback-after-meta.v.0.2 docs-project/done/`
+    * Verify move completed successfully and `docs-project/current/` is empty
+
+15. **Commit Documentation Archival:**
+    * Stage archival changes: `git add docs-project/done/v<X.Y.Z>-<codename>/ docs-project/current/`
+    * Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
+    * Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
+
+16. **Push Archival Changes:**
+    * Push archival commit: `git push origin <current_branch>`
+
+### 6. Release Communication
+
+17. **Prepare Release Announcement:**
+    * Draft release announcement highlighting key changes
+    * Include installation/update instructions
+    * Reference changelog for detailed change information
+    * Prepare announcements for relevant channels (internal teams, users, community)
+
+18. **Execute Release Communication:**
+    * Publish release announcement through appropriate channels
+    * Update project documentation or website if applicable
+    * Notify stakeholders and team members
+    * Share release notes with user community
+
+### 7. Post-Release Monitoring
+
+19. **Initialize Release Monitoring:**
+    * Set up monitoring for error rates and performance metrics
+    * Establish alerting for critical issues
+    * Begin collecting user feedback on the release
+
+20. **Verify Release Success:**
+    * Confirm all release steps completed successfully
+    * Validate that published artifacts are accessible and functional
+    * Check that documentation archival preserved all necessary information
+
+21. **Update Project Status:**
+    * Mark release as `published` in project tracking systems
+    * Update roadmaps and planning documents to reflect completed release
+    * Begin planning for next release cycle if applicable
+
+### 8. Final Validation and Cleanup
+
+22. **Conduct Release Retrospective:**
+    * Document lessons learned from the release process
+    * Identify process improvements for future releases
+    * Update workflow instructions based on experience
+
+23. **Prepare for Next Development Cycle:**
+    * Create new release directory structure if next release is planned
+    * Update development environment for next version
+    * Communicate next development priorities to team
+
+## Validation Points
+
+### Critical Success Criteria
+
+Before proceeding to the next step, verify:
+
+* [ ] All quality checks pass (tests, linting, build)
+* [ ] Version numbers are consistent across all files
+* [ ] Changelog accurately reflects release changes
+* [ ] Git tags are created and pushed successfully
+* [ ] Package publication completes without errors (if applicable)
+* [ ] Documentation archival preserves all release artifacts
+* [ ] Release communication reaches intended audiences
+
+### Rollback Triggers
+
+Stop the process and consider rollback if:
+
+* Critical test failures are discovered
+* Package publication fails repeatedly
+* Security vulnerabilities are identified
+* Major functionality regressions are reported
+* Stakeholder approval is withdrawn
+
+## Error Handling
+
+### Common Issues and Resolutions
+
+1. **Build Failures:**
+   * Review build logs for specific errors
+   * Verify all dependencies are available
+   * Check for environment-specific issues
+   * Consult [`docs-dev/workflow-instructions/fix-tests.wf.md`](./fix-tests.wf.md) if test-related
+
+2. **Version Conflicts:**
+   * Check for existing tags with same version number
+   * Verify version number format matches project standards
+   * Update version files consistently
+
+3. **Publication Errors:**
+   * Verify authentication credentials
+   * Check package registry status and availability
+   * Review package configuration for errors
+
+4. **Documentation Issues:**
+   * Ensure proper file permissions for archival operations
+   * Verify Git repository status before major moves
+   * Backup critical documentation before archival
+
+## Reference Documentation
+
+* **Primary Conceptual Guide:** [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md)
+* **Changelog Standards:** [`docs-dev/guides/changelog.g.md`](../guides/changelog.g.md)
+* **Version Control Workflow:** [`docs-dev/guides/version-control-system.g.md`](../guides/version-control-system.g.md)
+* **Project Management Integration:** [`docs-dev/guides/project-management.g.md`](../guides/project-management.g.md)
+
+* **Quality Assurance:** [`docs-dev/guides/quality-assurance.g.md`](../guides/quality-assurance.g.md)
+* **Language-Specific Guides:** [`docs-dev/guides/release-publish/`](../guides/release-publish/) (if available)
+
+## Success Criteria
+
+The publish release workflow is complete when:
+
+* All version numbers are finalized and consistent
+* Package is successfully published to appropriate registries
+* Release documentation is archived in `docs-project/done/`
+* Git repository contains proper tags and commit history
+* Stakeholders are notified of release completion
+* Post-release monitoring is active
+* Project status reflects published state

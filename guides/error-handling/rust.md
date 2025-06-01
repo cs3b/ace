@@ -1,6 +1,6 @@
 # Rust Error Handling Examples
 
-This file provides Rust-specific examples related to the main [Error Handling Guide](../error-handling.md).
+This file provides Rust-specific examples and considerations related to the main [Error Handling Guide](../error-handling.g.md).
 
 * **Mechanisms:** `Result<T, E>` enum for recoverable errors, `panic!` macro for unrecoverable errors.
 * **Libraries:** `thiserror`, `anyhow` for custom error types and convenience.

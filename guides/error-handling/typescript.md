@@ -1,6 +1,6 @@
 # TypeScript Error Handling Examples
 
-This file provides TypeScript-specific examples related to the main [Error Handling Guide](../error-handling.md).
+This file provides TypeScript-specific examples related to the main [Error Handling Guide](../error-handling.g.md).
 
 * **Mechanism:** try/catch/finally/throw
 * **Custom Errors:** Extend the built-in Error class.

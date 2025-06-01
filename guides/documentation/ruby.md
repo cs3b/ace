@@ -1,6 +1,6 @@
 # Ruby Documentation Examples
 
-This file provides Ruby-specific examples related to the main [Documentation Standards Guide](../documentation.md).
+This file provides Ruby-specific examples related to the main [Documentation Standards Guide](../documentation.g.md).
 
 * **Tools:** RDoc, YARD
 * **Conventions:** [Add relevant Ruby documentation conventions here]

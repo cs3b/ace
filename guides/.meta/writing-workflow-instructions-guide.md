@@ -7,7 +7,7 @@ This guide explains how to create and structure the Markdown-based workflow inst
 ## Core Principles
 
 1.  **Clarity & Specificity**: Instructions should be unambiguous. Use clear action verbs and define expected inputs and outputs precisely. Avoid vague language.
-2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., [Coding Standards](docs-dev/guides/coding-standards.md)), project documents ([Blueprint](docs-project/blueprint.md), [Architecture](docs-project/architecture.md)), or existing code patterns using root-relative paths.
+2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., [Coding Standards](docs-dev/guides/coding-standards.g.md)), project documents ([Blueprint](docs-project/blueprint.md), [Architecture](docs-project/architecture.md)), or existing code patterns using root-relative paths.
 3.  **Structured Format**: Use Markdown sections (like `## Goal`, `## Process Steps`, `## Success Criteria`) to organize the instruction logically. This helps both humans and AI parse the information.
 4.  **Focus**: Each workflow instruction should address a single, well-defined process or goal. Break down complex workflows into smaller, composable instructions if possible.
 5.  **Examples**: Provide concrete examples of inputs, outputs, or expected results, especially for complex instructions. Few-shot learning helps the AI understand the desired format and behavior.
@@ -19,8 +19,8 @@ Workflow instructions should aim to be technology-agnostic, describing the *proc
 
 If you encounter technology-specific details (like exact commands for RSpec, specific file names such as `Cargo.toml` or `package.json`, or typical paths like `lib/your_gem/version.rb`) within a workflow instruction during review or refactoring:
 
-1.  **Prioritize Merging into Main Guides:** The preferred approach is to move these specific details into the relevant existing language-specific *guide* located in `docs-dev/guides/` (e.g., add RSpec examples to `docs-dev/guides/testing/ruby-rspec.md`, list `Cargo.toml` as the version file in `docs-dev/guides/publish-release/rust.md`). In the workflow instruction, replace the removed specifics with a generic description (e.g., "run your project's test suite", "update the language-specific version file") and add a clear reference to the main guide or language-specific sub-guide where the concrete details can be found.
-2.  **Fallback: Create Sub-Instructions:** If the technology-specific content is substantial, highly specific to the workflow's context, and doesn't fit naturally into any of the main guides, you can create language-specific *sub-instructions*. Place these in a sub-directory named after the main instruction (e.g., `docs-dev/workflow-instructions/lets-fix-tests/ruby.md`). The main workflow instruction should then link to these sub-instructions for the technology-specific steps.
+1.  **Prioritize Merging into Main Guides:** The preferred approach is to move these specific details into the relevant existing language-specific *guide* located in `docs-dev/guides/` (e.g., add RSpec examples to `docs-dev/guides/testing/ruby-rspec.md`, list `Cargo.toml` as the version file in `docs-dev/guides/release-publish/rust.md`). In the workflow instruction, replace the removed specifics with a generic description (e.g., "run your project's test suite", "update the language-specific version file") and add a clear reference to the main guide or language-specific sub-guide where the concrete details can be found.
+2.  **Fallback: Create Sub-Instructions:** If the technology-specific content is substantial, highly specific to the workflow's context, and doesn't fit naturally into any of the main guides, you can create language-specific *sub-instructions*. Place these in a sub-directory named after the main instruction (e.g., `docs-dev/workflow-instructions/fix-tests/ruby.md`). The main workflow instruction should then link to these sub-instructions for the technology-specific steps.
 
 This approach keeps the core workflow instructions clean and focused on the process, while ensuring that technology-specific details (commands, file names, paths) are available and maintainable in the appropriate guides or sub-instructions.
 
@@ -42,7 +42,7 @@ While the exact sections may vary slightly depending on the instruction's purpos
 *   Outline the sequence of actions the AI agent (guided by the user) should take.
 *   Use numbered or bulleted lists for clarity.
 *   Be specific about actions, inputs, and expected intermediate results.
-*   Reference other guides or commands where necessary (e.g., "Refer to the [Version Control Guide](docs-dev/guides/version-control.md) for commit message format").
+*   Reference other guides or commands where necessary (e.g., "Refer to the [Version Control Guide](docs-dev/guides/version-control-system.g.md) for commit message format").
 
 ## Input (If applicable)
 *   Specify the required inputs for the instruction (e.g., file paths, user confirmation, specific data).
@@ -65,39 +65,46 @@ Example:
 *   Provide a conceptual example of how the command might be invoked or used in a typical scenario.
 ```
 
-## Naming Convention
+## File Naming Convention
 
-Workflow instruction files located directly within the `docs-dev/workflow-instructions/` directory should follow a consistent naming convention to ensure clarity and predictability.
+All workflow instruction files must use the `.wf.md` suffix to distinguish them from guides (which use `.g.md`). This convention enables proper editor configuration and clear separation of content types.
 
--   **Format:** Use the pattern `<verb>-<context>.md`.
+### Naming Pattern
+-   **Format:** Use the pattern `<verb>-<context>.wf.md`.
     -   `<verb>`: Represents the primary action or purpose of the workflow (e.g., `commit`, `fix`, `prepare`, `release`, `run`, `work-on`).
     -   `<context>`: Provides specific context for the action (e.g., `tests`, `tasks`, `task`).
+-   **Style:** Use verb-first naming that describes what action the workflow performs
 -   **Prefix:** Avoid prefixes like `lets-`. Files previously using this prefix should be renamed.
 -   **Examples:**
-    -   `commit.md`
-    -   `fix-tests.md`
-    -   `prepare-tasks.md`
-    -   `release.md`
-    -   `work-on-task.md`
+    -   `commit.wf.md`
+    -   `fix-tests.wf.md`
+    -   `prepare-tasks.wf.md`
+    -   `release.wf.md`
+    -   `work-on-task.wf.md`
 
-This convention helps users quickly understand the purpose of a workflow file from its name.
+### Contrast with Guides
+Unlike guides (`.g.md` files) which use noun-based naming to describe knowledge areas:
+- **Workflows** describe processes to execute: `commit.wf.md`, `fix-tests.wf.md`
+- **Guides** document standards and knowledge: `security.g.md`, `performance.g.md`
+
+This naming distinction helps both humans and AI agents quickly identify whether a file provides executable instructions (workflow) or reference information (guide).
 
 ## Examples from This Project
 
 Review existing workflow instructions in `docs-dev/workflow-instructions/` like:
-*   `docs-dev/workflow-instructions/load-env.md`: Focuses on context gathering.
+*   `docs-dev/workflow-instructions/load-env.wf.md`: Focuses on context gathering.
 *   `docs-dev/workflow-instructions/breakdown-notes-into-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
-*   `docs-dev/workflow-instructions/lets-commit.md`: Guides a specific, common developer action referencing external standards.
+*   `docs-dev/workflow-instructions/commit.wf.md`: Guides a specific, common developer action referencing external standards.
 
 ## See Also
 
-- [Embedding Tests in AI Agent Workflows](./embedding-tests-in-workflows.md)
+- [Embedding Tests in AI Agent Workflows](docs-dev/guides/.meta/workflow-embedding-tests.g.md)
 
 ## Writing Style Tips
 
 *   **Use Action Verbs:** Start steps with clear verbs (e.g., "Create", "Update", "Verify", "Parse", "Generate").
 *   **Be Concise:** Avoid unnecessary jargon or overly long explanations.
-*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `[Coding Standards](docs-dev/guides/coding-standards.md)`, `[Load Environment Workflow](docs-dev/workflow-instructions/load-env.md)`), **not** file-relative paths (e.g., `../guides/coding-standards.md`).
+*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `[Coding Standards](docs-dev/guides/coding-standards.g.md)`, `[Load Environment Workflow](docs-dev/workflow-instructions/load-env.wf.md)`), **not** file-relative paths (e.g., `../guides/coding-standards.g.md`).
 *   **Treat AI as a "Junior Developer":** Provide clear, step-by-step guidance, but also reference established project standards and expect the AI to follow them once pointed to them. Avoid ambiguity.
 
 ## List Formatting in Workflows

@@ -40,25 +40,25 @@ Here's a breakdown of the core directories within this toolkit:
   describing the process of creating or maintaining the documentation and workflows
   themselves.
     * `README.md`: Index for all guides.
-    * `coding-standards.md`: Guidelines for writing clean, maintainable code.
-    * `documentation.md`: Standards for creating and maintaining project documentation.
-    * `project-management.md`: Overview of the project management approach
+    * `coding-standards.g.md`: Guidelines for writing clean, maintainable code.
+    * `documentation.g.md`: Standards for creating and maintaining project documentation.
+    * `project-management.g.md`: Overview of the project management approach
     facilitated by this toolkit, explaining the use of `docs-project` for tasks,
     backlog, etc.
-    * `publish-release.md`: Procedures for releasing new versions of software.
-    * `testing.md`: Strategies and best practices for software testing.
-    * `version-control.md`: Best practices for using Git and managing branches.
+    * `release-publish.g.md`: Procedures for releasing new versions of software.
+    * `testing.g.md`: Strategies and best practices for software testing.
+    * `version-control-system.g.md`: Best practices for using Git and managing branches.
     * `docs-dev/guides/.meta/writing-workflow-instructions-guide.md`: A guide on
     how to write new workflow instructions compatible with this toolkit.
     * *(Other guides as developed, e.g., API Design, Security Best Practices)*
 * **`workflow-instructions/`**: Provides step-by-step instructions for specific
 development tasks, intended for AI or human execution.
-  * `initialize-project-structure.md`: Sets up the `docs-project/` directory and
+  * `initialize-project-structure.wf.md`: Sets up the `docs-project/` directory and
   core documents in a new or existing project.
-  * `create-user-docs.md`: Guides the creation of user-facing documentation for features.
-  * `load-env.md`: Instructs on loading the development environment context.
-  * `work-on-task.md`: Defines the process for starting, working on, and completing a development task.
-  * `review-task.md`: Guides the review and refinement of a task definition.
+  * `create-user-docs.wf.md`: Guides the creation of user-facing documentation for features.
+  * `load-env.wf.md`: Instructs on loading the development environment context.
+  * `work-on-task.wf.md`: Defines the process for starting, working on, and completing a development task.
+  * `review-task.wf.md`: Guides the review and refinement of a task definition.
   * `breakdown-notes-into-tasks/`: Contains sub-workflows to process various
   inputs (FRDs, PRDs, diffs, etc.) into structured notes for task creation.
   * *(Other workflow instructions as developed, e.g., `refactor-codebase.md`,
@@ -93,7 +93,7 @@ submodule:
 
         ```text
         Read and execute the workflow instruction
-        `docs-dev/workflow-instructions/initialize-project-structure.md`.
+        `docs-dev/workflow-instructions/initialize-project-structure.wf.md`.
         ```
 
     * **Consulting Guides**: Developers (and AI assistants, if capable) should

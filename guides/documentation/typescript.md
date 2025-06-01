@@ -1,6 +1,6 @@
 # TypeScript Documentation Examples
 
-This file provides TypeScript-specific examples related to the main [Documentation Standards Guide](../documentation.md).
+This file provides TypeScript-specific examples related to the main [Documentation Standards Guide](../documentation.g.md).
 
 * **Tools:** JSDoc (with TypeScript syntax), TypeDoc
 * **Conventions:** [Add relevant TypeScript documentation conventions here]

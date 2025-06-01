@@ -1,6 +1,6 @@
 # TypeScript Version Control Examples
 
-This file provides TypeScript/Node.js specific examples and considerations related to the main [Version Control Guide](../version-control.md).
+This file provides TypeScript/Node.js specific examples and considerations related to the main [Version Control Guide](../version-control-system.g.md).
 
 * **.gitignore:** Ensure standard Node.js/TypeScript files are ignored (e.g., `node_modules/`, `dist/`, `build/`,
   `.env`, `*.tsbuildinfo`, `coverage/`). Tools like [gitignore.io](https://www.toptal.com/developers/gitignore) can

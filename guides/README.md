@@ -17,13 +17,13 @@ Our development workflow centers around:
 
 ### Meta & Process Guides
 
-- **[Project Management Guide](./project-management.md)**: Details task management, directory structure, and core workflow.
-- **[Write Actionable Task Guide](./write-actionable-task.md)**: Guide for creating clear, actionable development tasks.
-- **[Strategic Planning Guide](./strategic-planning-guide.md)**: High-level strategic planning and roadmap management.
-- **[Changelog Guide](./changelog-guide.md)**: Standards for maintaining project changelogs.
-- **[Picking Codenames Guide](./picking-codenames.md)**: Guidelines for selecting project codenames.
-- **[Embedding Tests in Workflows](./embedding-tests-in-workflows.md)**: Standard for incorporating tests in workflow instructions.
-- **[Test-Driven Development Cycle](./test-driven-development-cycle.md)**: Core TDD practices and implementation cycle.
+- **[Project Management Guide](./project-management.g.md)**: Details task management, directory structure, and core workflow.
+- **[Write Actionable Task Guide](./task-definition.g.md)**: Guide for creating clear, actionable development tasks.
+- **[Strategic Planning Guide](./strategic-planning.g.md)**: High-level strategic planning and roadmap management.
+- **[Changelog Guide](./changelog.g.md)**: Standards for maintaining project changelogs.
+- **[Picking Codenames Guide](./release-codenames.g.md)**: Guidelines for selecting project codenames.
+- **[Embedding Tests in Workflows](./.meta/workflow-embedding-tests.g.md)**: Standard for incorporating tests in workflow instructions.
+- **[Test-Driven Development Cycle](./testing-tdd-cycle.g.md)**: Core TDD practices and implementation cycle.
   - [Meta Documentation TDD](./test-driven-development-cycle/meta-documentation.md)
   - [Ruby Application TDD](./test-driven-development-cycle/ruby-application.md)
   - [Ruby Gem TDD](./test-driven-development-cycle/ruby-gem.md)
@@ -34,44 +34,44 @@ Our development workflow centers around:
 
 ### Technical & Language Guides
 
-- **[Coding Standards](./coding-standards.md)** - Code style and general best practices.
+- **[Coding Standards](./coding-standards.g.md)** - Code style and general best practices.
   - [Ruby Coding Standards](./coding-standards/ruby.md)
   - [Rust Coding Standards](./coding-standards/rust.md)
   - [TypeScript Coding Standards](./coding-standards/typescript.md)
-- **[Documentation Standards](./documentation.md)** - Documentation requirements and structure.
+- **[Documentation Standards](./documentation.g.md)** - Documentation requirements and structure.
   - [Ruby Documentation Standards](./documentation/ruby.md)
   - [Rust Documentation Standards](./documentation/rust.md)
   - [TypeScript Documentation Standards](./documentation/typescript.md)
-- **[Error Handling](./error-handling.md)** - Error handling patterns and strategies.
+- **[Error Handling](./error-handling.g.md)** - Error handling patterns and strategies.
   - [Ruby Error Handling](./error-handling/ruby.md)
   - [Rust Error Handling](./error-handling/rust.md)
   - [TypeScript Error Handling](./error-handling/typescript.md)
-- **[Performance](./performance.md)** - Performance optimization guidelines.
+- **[Performance](./performance.g.md)** - Performance optimization guidelines.
   - [Ruby Performance](./performance/ruby.md)
   - [Rust Performance](./performance/rust.md)
   - [TypeScript Performance](./performance/typescript.md)
-- **[Quality Assurance](./quality-assurance.md)** - Quality control processes and standards.
+- **[Quality Assurance](./quality-assurance.g.md)** - Quality control processes and standards.
   - [Ruby Quality Assurance](./quality-assurance/ruby.md)
   - [Rust Quality Assurance](./quality-assurance/rust.md)
   - [TypeScript Quality Assurance](./quality-assurance/typescript.md)
-- **[Security](./security.md)** - Security best practices and considerations.
+- **[Security](./security.g.md)** - Security best practices and considerations.
   - [Ruby Security](./security/ruby.md)
   - [Rust Security](./security/rust.md)
   - [TypeScript Security](./security/typescript.md)
-- **[Testing Guidelines](./testing.md)** - General testing approach and philosophy.
+- **[Testing Guidelines](./testing.g.md)** - General testing approach and philosophy.
   - [Ruby RSpec Guide](./testing/ruby-rspec.md)
   - [Ruby RSpec Config Examples](./testing/ruby-rspec-config-examples.md)
   - [Rust Testing Guide](./testing/rust.md)
   - [TypeScript (Bun) Guide](./testing/typescript-bun.md)
-- **[Troubleshooting Workflow](./troubleshooting-workflow.md)** - High-level workflow for debugging and problem-solving.
+- **[Troubleshooting Workflow](./debug-troubleshooting.g.md)** - High-level workflow for debugging and problem-solving.
   - [Ruby Troubleshooting](./troubleshooting/ruby.md)
   - [Rust Troubleshooting](./troubleshooting/rust.md)
   - [TypeScript Troubleshooting](./troubleshooting/typescript.md)
-- **[Version Control](./version-control.md)** - Git workflow and commit standards.
+- **[Version Control](./version-control-system.g.md)** - Git workflow and commit standards.
   - [Ruby Version Control](./version-control/ruby.md)
   - [Rust Version Control](./version-control/rust.md)
   - [TypeScript Version Control](./version-control/typescript.md)
-- **[Temporary File Management Guidelines](./temporary-file-management.md)** - Guidelines for AI agent temporary file usage.
+- **[Temporary File Management Guidelines](./temporary-file-management.g.md)** - Guidelines for AI agent temporary file usage.
 
 ### Draft Release Management
 
@@ -79,10 +79,10 @@ Our development workflow centers around:
 
 ### Publish Release Management
 
-- **[Publish Release Process](./publish-release.md)** - Release workflow, versioning, and publication checklists.
-  - [Ruby Publish Release](./publish-release/ruby.md)
-  - [Rust Publish Release](./publish-release/rust.md)
-  - [TypeScript Publish Release](./publish-release/typescript.md)
+- **[Publish Release Process](./release-publish.g.md)** - Release workflow, versioning, and publication checklists.
+  - [Ruby Publish Release](./release-publish/ruby.md)
+  - [Rust Publish Release](./release-publish/rust.md)
+  - [TypeScript Publish Release](./release-publish/typescript.md)
 
 ### Project Initialization
 
@@ -98,7 +98,7 @@ Project tasks and release planning are managed within the `docs-project` directo
 
 Key guides for this process:
 
-- **[Project Management Guide](./project-management.md)**: Details the directory structure, task format, and core workflow.
-- **[Publish Release Process](./publish-release.md)**: Covers the steps for finalizing and publishing a release.
+- **[Project Management Guide](./project-management.g.md)**: Details the directory structure, task format, and core workflow.
+- **[Publish Release Process](./release-publish.g.md)**: Covers the steps for finalizing and publishing a release.
 
 The specific documentation artifacts required for a release (e.g., ADRs, test cases, user examples) are determined during the specification phase, guided by the draft release templates based on the release type and scope.

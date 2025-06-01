@@ -76,9 +76,9 @@ These templates are referenced directly from the `draft-release.md` workflow ins
 4. Documenting architectural decisions
 
 For more details on how these templates integrate with the project management workflow, refer to:
-65 | - [Project Management Guide](docs-dev/guides/project-management.md)
-66 | - [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.md)
-67 | - [Publish Release Guide](docs-dev/guides/publish-release.md)
+- [Project Management Guide](docs-dev/guides/project-management.g.md)
+- [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+- [Publish Release Guide](docs-dev/guides/release-publish.g.md)
 
 ## Customization
 
