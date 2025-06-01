@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.14 - 2025-06-01 - Define and Document "Publish Release" Process and Guide
+
+- **Created comprehensive publish release process** replacing ship-release terminology:
+  - `docs-dev/guides/publish-release.md` - Detailed guide explaining release publishing philosophy, semantic versioning scheme (v<major>.<minor>.<patch> extracted from release folder names), and archival process from `docs-project/current/` to `docs-project/done/`
+  - `docs-dev/workflow-instructions/publish-release.md` - Step-by-step workflow instruction for executing the complete publish release process including version finalization, package publication, documentation archival, and stakeholder communication
+  - `docs-dev/guides/changelog-guide.md` - Comprehensive changelog writing guide following Keep a Changelog format with project-specific adaptations and integration guidelines
+- **Replaced ship-release terminology throughout codebase**:
+  - Deleted `docs-dev/workflow-instructions/ship-release.md` and `docs-dev/guides/ship-release.md` files
+  - Moved `docs-dev/guides/ship-release/` directory to `docs-dev/guides/publish-release/` with updated language-specific examples (ruby.md, rust.md, typescript.md)
+  - Updated all references from "ship-release" to "publish-release" across documentation files, workflow instructions, and guides
+- **Enhanced versioning documentation**:
+  - Updated `docs-dev/guides/version-control.md` with semantic versioning scheme documentation and examples showing version extraction from release folder names
+  - Updated `docs-dev/guides/project-management.md` with archival process description and consistent publish release terminology
+- **Integrated technology-agnostic approach** supporting diverse project types through `bin/build` execution and flexible package publication processes
+- **Established clear process separation** between preparation (handled by existing prepare-release workflow) and final deployment/archival (handled by new publish-release process)
+
 #### v.0.3.0+tasks.12 - 2025-06-01 - Remove Checkboxes from Guides and Workflow Instructions; Clarify Use of Acceptance Criteria
 
 - **Converted inappropriate interactive checklists to bullet points** in guides:
@@ -52,28 +68,28 @@ All notable changes to this project will be documented in this file.
 #### v.0.3.x+task.20 - 2025-05-30 - Improve Initialize Project Structure Workflow
 
 - **Refactored `initialize-project-structure.md` Workflow:**
-    - Added explicit idempotency statement to clarify rerun behavior.
-    - Streamlined the workflow by removing the redundant "Initialize Version Control" (formerly Step 3) and the "Tailor Development Guides" (formerly Step 4) steps.
-    - Renumbered the steps to reflect the removal of the two steps.
-    - Enhanced the "Core Documentation Generation" step to reference new templates and include improved example questions for interactive prompts.
-    - Updated the "Setup Project `bin/` Scripts" step (now Step 3) to refer to the `docs-project/architecture.md` for binstub explanations.
+  - Added explicit idempotency statement to clarify rerun behavior.
+  - Streamlined the workflow by removing the redundant "Initialize Version Control" (formerly Step 3) and the "Tailor Development Guides" (formerly Step 4) steps.
+  - Renumbered the steps to reflect the removal of the two steps.
+  - Enhanced the "Core Documentation Generation" step to reference new templates and include improved example questions for interactive prompts.
+  - Updated the "Setup Project `bin/` Scripts" step (now Step 3) to refer to the `docs-project/architecture.md` for binstub explanations.
 - **Created New Project Initialization Templates:**
-    - Added `docs-dev/guides/initialize-project-templates/PRD.md` with a basic PRD structure.
-    - Added `docs-dev/guides/initialize-project-templates/README.md` with a basic README structure.
-    - Added `docs-dev/guides/initialize-project-templates/blueprint.md` based on the current project's blueprint structure.
-    - Added `docs-dev/guides/initialize-project-templates/architecture.md` based on the current project's architecture structure, including binstub explanations.
-    - Added `docs-dev/guides/initialize-project-templates/what-do-we-build.md` based on the current project's what-do-we-build structure.
+  - Added `docs-dev/guides/initialize-project-templates/PRD.md` with a basic PRD structure.
+  - Added `docs-dev/guides/initialize-project-templates/README.md` with a basic README structure.
+  - Added `docs-dev/guides/initialize-project-templates/blueprint.md` based on the current project's blueprint structure.
+  - Added `docs-dev/guides/initialize-project-templates/architecture.md` based on the current project's architecture structure, including binstub explanations.
+  - Added `docs-dev/guides/initialize-project-templates/what-do-we-build.md` based on the current project's what-do-we-build structure.
 - **Created New Guide for Codenames:**
-    - Added `docs-dev/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
+  - Added `docs-dev/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
 
 #### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
 
 - **Task ID Generation Standardization:**
-    - Updated `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`, and `docs-dev/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
+  - Updated `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`, and `docs-dev/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
 - **Task Template and Example Consolidation:**
-    - Moved the canonical task template to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`.
-    - Relocated the full worked task example to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_example.md`.
-    - Updated `docs-dev/guides/write-actionable-task.md` to remove the embedded template and example, now linking to these new centralized locations. This streamlines task creation and ensures a single source of truth for the task structure.
+  - Moved the canonical task template to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`.
+  - Relocated the full worked task example to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_example.md`.
+  - Updated `docs-dev/guides/write-actionable-task.md` to remove the embedded template and example, now linking to these new centralized locations. This streamlines task creation and ensures a single source of truth for the task structure.
 
 ### v.0.3.0+task.19 - 2025-05-28 - Fix Markdown Lint Errors
 
