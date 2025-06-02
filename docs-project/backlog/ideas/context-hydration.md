@@ -1,8 +1,18 @@
 ## tools - bin/context
 
-  -> send prompt / workflow instruction and use (gemini flash lite to compact it) combine it in to single context document -> save as file for the task and return path
-  -> use workflow instructions and load the context in single file (with summary on top)
-  -> compact version on top and embed documents below with links to line numbers
-  -> most of the code editors read 200 lines at once (summary in 200 lines, meybe use long lines and compact files in few lines)
-  -> input: --prompt --file --task (in witch we will be using it, task is not embeded but it's use for interfering additional context)
-  -> should also include tools call response (bin/tn | bin/gl) - it should be agent with tool calling capability
+**Goal:** Create a tool (`bin/context`) to generate a single, comprehensive context document for a specific task or prompt, incorporating relevant documentation, workflow instructions, and potentially tool call responses.
+
+**Details:**
+- Leverage the existing prototype script in `docs-project/backlog/research/sample-context-hydration.rb` as a starting point.
+- The tool should scan "wiki-style" files (Markdown documents), follow internal links, and gather related information.
+- It should also search for and include relevant tool calling examples.
+- The output should be a single Markdown file.
+- The Markdown file should contain a summary at the top, followed by the embedded content of the gathered documents and tool call responses.
+- Embedded documents should include links back to their original source files, potentially with line numbers (implementation TBD).
+- An LLM (e.g., Gemini Flash Lite) should be used to compact or summarize key information, especially for the summary section.
+
+**Missing Information / Clarification Needed:**
+- How should the tool identify and include "relevant tool calling" examples? Should it search for specific patterns (e.g., `tool_code` blocks), look in designated directories, or rely on metadata?
+- How should relevance be determined when gathering tool calling examples?
+
+**Next Steps:** Refine the scope based on the clarification regarding relevant tool calling, then create a detailed task ticket outlining implementation phases (similar to `git-aliases-ticket.md`).
