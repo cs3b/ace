@@ -65,22 +65,58 @@ Modern coding agents (Google Gemini, LM Studio, GitHub Copilot Agents) can w
 
 ### 7.2  Git Workflows
 
-|  ID     | Requirement                                                                                                                     | Priority |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| R‑GIT‑1 | **`github-repository-create`** shall create a private GitHub repo via REST v3, set it as `origin`, and push the current branch. | P1       |
-| R‑GIT‑2 | The command shall honour `GITHUB_TOKEN` env for authentication.                                                                 | P1       |
-| R‑GIT‑3 | **`git-commit-with-message`** shall generate a commit message using the diff, intention, and optional instructions via the LLM. | P1       |
-| R‑GIT‑4 | Support modes: `--all` (stage all), `--staged` (default), `--files file1.rb file2.rb`.                                          | P1       |
-| R‑GIT‑5 | Provide `--dry-run` to preview the generated message without committing.                                                        | P2       |
+|  ID      | Requirement                                                                                                                                                         | Priority |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| R‑GIT‑1  | **`github-repository-create`** shall create a private GitHub repo via REST v3, set it as `origin`, and push the current branch.                                    | P1       |
+| R‑GIT‑2  | The command shall honour `GITHUB_TOKEN` env for authentication.                                                                                                     | P1       |
+| R‑GIT‑3  | **`git-commit-with-message`** shall generate a commit message using the diff, intention, and optional instructions via the LLM.                                     | P1       |
+| R‑GIT‑4  | `git-commit-with-message` shall support modes: `--all` (stage all), `--staged` (default), or specific files/globs (`--files file1.rb *.txt`).                       | P1       |
+| R‑GIT‑5  | `git-commit-with-message` shall provide a `--dry-run` option to preview the generated message without committing.                                                     | P2       |
+| R‑GIT‑6  | **`bin/gs`** (Git Status) shall be a wrapper for `git status`, defaulting to a short format with an option for verbose output.                                       | P1       |
+| R‑GIT‑7  | **`bin/gl`** (Git Log) shall be a wrapper for `git log`, replicating a format similar to `git log --oneline --decorate --color`.                                      | P1       |
+| R‑GIT‑8  | **`bin/gp`** (Git Push) shall be a wrapper for `git push`, passing arguments directly to the underlying Git command.                                                | P1       |
+| R‑GIT‑9  | `git-commit-with-message` shall use an LLM (selectable, e.g., Gemini or local via LM Studio helper scripts) to generate messages, reading API keys from ENV.         | P1       |
+| R‑GIT‑10 | `git-commit-with-message` shall allow the user to edit the LLM-generated commit message by default and provide a `--no-edit` flag to commit directly.                 | P1       |
 
 ### 7.3  Task Utilities
 
-|  ID      | Requirement                                                                                                                | Priority |
-| -------- | -------------------------------------------------------------------------------------------------------------------------- | -------- |
-| R‑TASK‑1 | **`tr`** shall list recently updated or completed tasks across current & completed releases, respecting `--last N` filter. | P1       |
-| R‑TASK‑2 | **`tn`** shall output the next actionable task with all dependencies resolved.                                             | P1       |
-| R‑TASK‑3 | **`rc`** shall return the release directory path & version string, or backlog path if none.                                | P1       |
-| R‑TASK‑4 | All utilities shall source data via `docs-dev/tools/*` scripts and return JSON when `--json` flag is passed.               | P2       |
+|  ID      | Requirement                                                                                                                                                         | Priority |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| R‑TASK‑1 | **`tr`** shall list recently updated or completed tasks across current & completed releases, respecting `--last N` filter.                                          | P1       |
+| R‑TASK‑2 | **`tn`** shall output the next actionable task with all dependencies resolved.                                                                                        | P1       |
+| R‑TASK‑3 | **`rc`** shall return the release directory path & version string, or backlog path if none.                                                                           | P1       |
+| R‑TASK‑4 | All utilities shall source data via `docs-dev/tools/*` scripts and return JSON when `--json` flag is passed.                                                          | P2       |
+| R‑TASK‑5 | `tr` shall allow users to specify input scope for searching tasks using file paths, directory paths, or glob patterns if applicable to task storage methods.         | P2       |
+| R‑TASK‑6 | `tn` shall allow users to specify input scope for searching tasks using file paths, directory paths, or glob patterns if applicable to task storage methods.         | P2       |
+
+### 7.4  Context Hydration Utilities
+
+|  ID     | Requirement                                                                                                                                                              | Priority |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| R‑CTX‑1 | **`bin/context`** shall generate a single, comprehensive context document for a specific task or prompt.                                                                 | P1       |
+| R‑CTX‑2 | The tool shall scan Markdown files, follow internal links, and gather related information including relevant tool calling examples.                                          | P1       |
+| R‑CTX‑3 | The output shall be a single Markdown file containing a summary at the top, followed by the embedded content of gathered documents and tool call responses, with links back to original sources. | P1       |
+| R‑CTX‑4 | An LLM (e.g., Gemini Flash Lite) shall be used to compact or summarize key information, especially for the summary section.                                                | P1       |
+| R‑CTX‑5 | `bin/context` shall allow users to specify input scope using file paths, directory paths, or glob patterns to refine context gathering.                                    | P2       |
+
+### 7.5  Markdown Utilities
+
+|  ID    | Requirement                                                                                                                                                              | Priority |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| R‑MD‑1 | **`bin/lint`** shall include capabilities for linting Markdown documents, specifically checking for broken links, incorrect relative paths, and other format/path issues.   | P1       |
+| R‑MD‑2 | The linter shall report errors and warnings, with an improved output format including a final summary of issues per file, overall counts, and initially detailed errors for a limited set of files. | P2       |
+| R‑MD‑3 | `bin/lint` shall provide an `--autofix` option to attempt automatic correction of certain identified Markdown issues.                                                      | P2       |
+| R‑MD‑4 | `bin/lint` shall allow users to specify input scope using file paths, directory paths, or glob patterns.                                                                   | P1       |
+
+### 7.6  Task Creation Utilities
+
+|  ID     | Requirement                                                                                                                                                              | Priority |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| R‑TCI‑1 | **`bin/tci`** (Task Capture Idea) shall accept a command-line parameter representing the user's intention or core idea for a new task.                                    | P1       |
+| R‑TCI‑2 | The tool shall load project environment context and use an LLM to process the intention, expanding it based on a predefined template.                                      | P1       |
+| R‑TCI‑3 | The LLM-generated output, formatted by the template, shall be saved as a new Markdown file in `docs-project/backlog/ideas/`.                                               | P1       |
+| R‑TCI‑4 | A guide document (`docs-dev/guides/how-to-capture-ideas.guide.md`) shall be created to detail the usage of `bin/tci`.                                                      | P2       |
+| R‑TCI‑5 | `bin/tci` shall allow specifying a scope (file/folder/glob) for project context loading if applicable to refine the context provided to the LLM.                           | P2       |
 
 ## 8  Non‑Functional Requirements
 
