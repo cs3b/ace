@@ -150,6 +150,23 @@ A concise, inspirational statement describing the long-term mission and value th
 - Goals should align with strategic objectives
 - Dates are indicative and subject to change
 
+**Release Status Tracking Format**:
+Releases should be included in the roadmap based on their location in the project folder structure:
+
+- **Future Releases** (`docs-project/backlog/`): Listed in table with target dates
+- **Active Releases** (`docs-project/current/`): Listed in table with current status indication
+- **Completed Releases** (`docs-project/done/`): Removed from table, delegated to changelog
+
+When releases move between folders during lifecycle management:
+1. **Draft → Current**: Update table to reflect active development status
+2. **Current → Done**: Remove from roadmap table entirely
+3. **Backlog reorganization**: Update target windows and dependencies as needed
+
+Release folder links should follow the pattern:
+- Backlog: `docs-project/backlog/v.X.Y.Z-codename/`
+- Current: `docs-project/current/v.X.Y.Z-codename/` 
+- Done: `docs-project/done/v.X.Y.Z-codename/`
+
 ### 5. Cross-Release Dependencies
 
 **Purpose**: Document dependencies between releases and epics
@@ -298,6 +315,200 @@ Workflow instructions should reference this guide for format validation rather t
 3. Validate each section format and content
 4. Report specific violations with guide references
 5. Require fixes before proceeding with updates
+
+## Release Removal Process
+
+When releases are completed and moved to `docs-project/done/`, they must be systematically removed from the roadmap to prevent staleness and maintain focus on future work.
+
+### Process Steps
+
+1. **Identify Completed Releases**
+   - Check `docs-project/done/` for newly archived releases
+   - Verify release completion status in project tracking
+
+2. **Remove from Planned Releases Table**
+   - Delete the entire row for the completed release from Section 4 table
+   - Maintain proper table formatting and numbering
+
+3. **Update Cross-Release Dependencies**
+   - Review Section 5 for any references to the completed release
+   - Remove or update dependency statements that reference completed work
+   - Maintain dependencies that still affect future releases
+
+4. **Delegate to Changelog**
+   - Ensure completed release information is captured in project changelog
+   - Include release achievements and key deliverables
+   - Reference changelog for historical information about completed releases
+
+5. **Update Metadata**
+   - Update `last_reviewed` date in front matter
+   - Add entry to Update History (Section 6) documenting the removal
+   - Include specific release version and removal rationale
+
+### Example Removal Entry
+
+```markdown
+| 2025-06-15 | Remove completed v.0.2.0 "Foundation" from roadmap, delegated to changelog | AI assistant |
+```
+
+### Validation Checklist
+
+- [ ] Release row removed from Planned Major Releases table
+- [ ] Cross-release dependencies updated or removed as appropriate
+- [ ] Release information captured in changelog
+- [ ] Front matter `last_reviewed` date updated
+- [ ] Update History entry added
+- [ ] No broken references to removed release remain
+
+## Integration Triggers and Workflow Dependencies
+
+The roadmap must be kept synchronized with release lifecycle changes through automated triggers during specific workflow events.
+
+### Trigger Events
+
+**1. Draft Release Creation**
+- **When**: After completing step 4 (Populate Overview Document) in draft-release workflow
+- **Action**: Add new release to roadmap "Planned Major Releases" table
+- **Trigger**: Execute manage-roadmap workflow with new release information
+- **Commit**: Separate roadmap commit with message "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
+
+**2. Release Publication**
+- **When**: During step 15 (Update Roadmap) in publish-release workflow
+- **Action**: Remove completed release from roadmap table
+- **Trigger**: Execute release removal process defined above
+- **Commit**: Separate roadmap commit with message "docs(roadmap): remove completed v.X.Y.Z-codename from planned releases"
+
+**3. Release Status Changes**
+- **When**: Releases move between backlog → current → done folders
+- **Action**: Update roadmap to reflect current status
+- **Trigger**: Manual execution of manage-roadmap workflow step 3 (Update Release Status)
+- **Commit**: Include in relevant release lifecycle commits
+
+### Cross-Workflow Dependencies
+
+**Draft-Release → Manage-Roadmap**
+- Draft-release workflow MUST call manage-roadmap workflow after step 6
+- Roadmap updates MUST be committed separately from release scaffolding
+- Roadmap commit MUST complete successfully before proceeding to step 8
+
+**Publish-Release → Manage-Roadmap**
+- Publish-release workflow MUST update roadmap before final archival
+- Roadmap cleanup MUST complete before documentation archival commit
+- Failed roadmap updates SHOULD trigger rollback consideration
+
+**Manage-Roadmap Integration Points**
+- Step 3 (Update Release Status) MUST check all project folder locations
+- Workflow MUST validate roadmap consistency with current project state
+- Updates MUST maintain roadmap format compliance per this guide
+
+### Automation Requirements
+
+**Mandatory Checks**
+- Verify release exists in expected folder location before roadmap updates
+- Validate roadmap format compliance after all updates
+- Ensure changelog integration for removed releases
+- Confirm no broken cross-references remain after changes
+
+**Error Handling**
+- If roadmap update fails during draft-release: halt process and report error
+- If roadmap cleanup fails during publish-release: consider rollback of archival
+- If format validation fails: require manual correction before proceeding
+- If cross-reference validation fails: require dependency resolution
+
+### Validation Requirements
+
+**Pre-Update Validation**
+- Confirm target release exists in expected project folder
+- Verify roadmap format compliance using this guide
+- Check for existing release entries to prevent duplicates
+
+**Post-Update Validation**
+- Validate updated roadmap format against this guide
+- Verify all cross-references are accurate and reachable
+- Confirm changelog integration for removed releases
+- Check that update history entry was added correctly
+
+## Error Handling and Recovery
+
+When roadmap updates fail during release lifecycle management, specific recovery procedures must be followed to maintain process integrity.
+
+### Error Categories
+
+**1. Format Validation Errors**
+- **Cause**: Roadmap structure doesn't comply with this guide
+- **Detection**: During step 2 (Validate Structure) or step 7 (Validate Synchronization)
+- **Response**: Halt process, report specific validation failures, require manual correction
+- **Recovery**: Fix format issues before retrying workflow
+
+**2. File System Inconsistencies**
+- **Cause**: Release folders don't match expected locations or roadmap entries
+- **Detection**: During step 3 (Update Release Status) validation
+- **Response**: Report discrepancies, require manual reconciliation
+- **Recovery**: Move releases to correct folders or update roadmap to match reality
+
+**3. Cross-Reference Failures**
+- **Cause**: Broken links to releases, epics, or dependencies
+- **Detection**: During step 7 (Validate Synchronization)
+- **Response**: Report broken references, require dependency resolution
+- **Recovery**: Update or remove broken references before proceeding
+
+**4. Commit/Push Failures**
+- **Cause**: Git conflicts, permission issues, or network problems
+- **Detection**: During step 8 (Commit Changes)
+- **Response**: Report Git error, preserve changes for manual resolution
+- **Recovery**: Resolve Git issues and manually commit roadmap changes
+
+### Workflow-Specific Error Handling
+
+**Draft-Release Workflow Failures**
+- **When**: Roadmap update fails during step 7 of draft-release
+- **Impact**: New release not added to roadmap
+- **Response**: 
+  1. Complete release scaffolding without roadmap update
+  2. Log roadmap update failure with specific error details
+  3. Require manual roadmap update before proceeding to user review
+- **Recovery**: Execute manage-roadmap workflow separately with new release information
+
+**Publish-Release Workflow Failures**
+- **When**: Roadmap cleanup fails during step 15 of publish-release
+- **Impact**: Completed release remains in roadmap (creates staleness)
+- **Response**:
+  1. Consider halting archival process if roadmap consistency is critical
+  2. Log cleanup failure with specific error details
+  3. Allow archival to proceed but flag roadmap inconsistency
+- **Recovery**: Execute roadmap cleanup manually after archival completion
+
+### Recovery Procedures
+
+**Immediate Recovery Actions**
+1. **Document Error State**: Record exact error message, workflow step, and system state
+2. **Preserve Work**: Ensure no completed work is lost due to error
+3. **Assess Impact**: Determine if process can continue or must be halted
+4. **Escalate if Needed**: Report critical errors that require human intervention
+
+**Manual Reconciliation Process**
+1. **Identify Discrepancies**: Compare roadmap state with actual project folder structure
+2. **Determine Correct State**: Decide whether roadmap or project structure should be updated
+3. **Apply Corrections**: Make necessary changes to achieve consistency
+4. **Validate Resolution**: Ensure all validation checks pass after corrections
+5. **Resume Process**: Continue with original workflow from appropriate step
+
+### Prevention Strategies
+
+**Pre-Workflow Validation**
+- Always run release status validation before major roadmap changes
+- Verify Git repository is in clean state before starting workflows
+- Check for existing roadmap format compliance before updates
+
+**Atomic Operations**
+- Commit roadmap changes separately from other workflow changes
+- Use descriptive commit messages that enable easy rollback
+- Validate roadmap after each logical change before proceeding
+
+**Monitoring and Alerts**
+- Log all roadmap modifications with timestamps and change details
+- Monitor for discrepancies between roadmap and project structure
+- Alert on validation failures or inconsistent states
 
 ## Cross-References
 

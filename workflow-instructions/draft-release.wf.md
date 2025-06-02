@@ -64,7 +64,17 @@ user-provided release scope into actionable tasks.
    * Verify that **every sentence or bullet** from the user input maps to at least one task file. Highlight any
      ambiguous or under-specified note in the chat and request clarification.
 
-7. **Prepare Commit Message (Do NOT Execute)**
+7. **Update Roadmap**
+   * Add the new release to the roadmap's "Planned Major Releases" table
+   * Include version, codename, target window, goals, and key epics
+   * Update roadmap's `last_reviewed` date and add entry to Update History
+   * Follow [Manage Roadmap Workflow](manage-roadmap.wf.md) for roadmap modifications
+   * Commit roadmap changes separately with message format:
+     ```bash
+     "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
+     ```
+
+8. **Prepare Commit Message (Do NOT Execute)**
    * Output the following command **verbatim** for the user's convenience, ensuring `v.X.Y.Z` is the specific
      version:
 
@@ -74,7 +84,7 @@ user-provided release scope into actionable tasks.
 
    * Do **not** run the command automatically.
 
-8. **Review With User**
+9. **Review With User**
    * List all newly created files and their ids.
    * Ask the user to confirm or adjust:
      * Version and codename
@@ -92,6 +102,7 @@ user-provided release scope into actionable tasks.
 * Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the
   new release directory.
 * All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
+* Roadmap updated with new release information and committed separately.
 * Git commit message is displayed in chat ready.
 * User has confirmed that tasks are sufficiently concrete or provided clarifications.
 

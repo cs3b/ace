@@ -95,23 +95,33 @@
     * Example: `mv docs-project/current/v.0.3.0-feedback-after-meta.v.0.2 docs-project/done/`
     * Verify move completed successfully and `docs-project/current/` is empty
 
-15. **Commit Documentation Archival:**
+15. **Update Roadmap (Remove Completed Release):**
+    * Remove the completed release from roadmap's "Planned Major Releases" table
+    * Update cross-release dependencies that reference the completed release
+    * Update roadmap's `last_reviewed` date and add entry to Update History
+    * Follow [Roadmap Definition Guide](../guides/roadmap-definition.g.md) release removal process
+    * Commit roadmap changes with message format:
+      ```bash
+      "docs(roadmap): remove completed v<X.Y.Z>-<codename> from planned releases"
+      ```
+
+16. **Commit Documentation Archival:**
     * Stage archival changes: `git add docs-project/done/v<X.Y.Z>-<codename>/ docs-project/current/`
     * Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
     * Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
 
-16. **Push Archival Changes:**
+17. **Push Archival Changes:**
     * Push archival commit: `git push origin <current_branch>`
 
 ### 6. Release Communication
 
-17. **Prepare Release Announcement:**
+18. **Prepare Release Announcement:**
     * Draft release announcement highlighting key changes
     * Include installation/update instructions
     * Reference changelog for detailed change information
     * Prepare announcements for relevant channels (internal teams, users, community)
 
-18. **Execute Release Communication:**
+19. **Execute Release Communication:**
     * Publish release announcement through appropriate channels
     * Update project documentation or website if applicable
     * Notify stakeholders and team members
@@ -119,29 +129,29 @@
 
 ### 7. Post-Release Monitoring
 
-19. **Initialize Release Monitoring:**
+20. **Initialize Release Monitoring:**
     * Set up monitoring for error rates and performance metrics
     * Establish alerting for critical issues
     * Begin collecting user feedback on the release
 
-20. **Verify Release Success:**
+21. **Verify Release Success:**
     * Confirm all release steps completed successfully
     * Validate that published artifacts are accessible and functional
     * Check that documentation archival preserved all necessary information
 
-21. **Update Project Status:**
+22. **Update Project Status:**
     * Mark release as `published` in project tracking systems
     * Update roadmaps and planning documents to reflect completed release
     * Begin planning for next release cycle if applicable
 
 ### 8. Final Validation and Cleanup
 
-22. **Conduct Release Retrospective:**
+23. **Conduct Release Retrospective:**
     * Document lessons learned from the release process
     * Identify process improvements for future releases
     * Update workflow instructions based on experience
 
-23. **Prepare for Next Development Cycle:**
+24. **Prepare for Next Development Cycle:**
     * Create new release directory structure if next release is planned
     * Update development environment for next version
     * Communicate next development priorities to team
@@ -156,9 +166,10 @@ Before proceeding to the next step, verify:
 * [ ] Version numbers are consistent across all files
 * [ ] Changelog accurately reflects release changes
 * [ ] Git tags are created and pushed successfully
-* [ ] Package publication completes without errors (if applicable)
-* [ ] Documentation archival preserves all release artifacts
-* [ ] Release communication reaches intended audiences
+* Package publication completes without errors (if applicable)
+* Documentation archival preserves all release artifacts
+* Roadmap updated to remove completed release and maintain accuracy
+* Release communication reaches intended audiences
 
 ### Rollback Triggers
 
