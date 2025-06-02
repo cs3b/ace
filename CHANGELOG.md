@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+#### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
+
+- **Enhanced manage-roadmap workflow with release lifecycle integration** to automatically maintain roadmap accuracy:
+  - Added step 3 (Update Release Status) to check release folder locations (backlog|current|done) and update roadmap accordingly
+  - Added step 7 (Validate Synchronization) to ensure roadmap matches project folder structure and validate cross-references
+  - Enhanced with comprehensive error handling for format validation, file system inconsistencies, and commit failures
+  - Added cross-workflow dependency documentation specifying integration with draft-release and publish-release workflows
+- **Updated draft-release workflow** to include roadmap management:
+  - Added step 7 to update roadmap with new release information after release scaffolding completion
+  - Integrated separate roadmap commit with standardized message format
+  - Added roadmap update validation to success criteria
+- **Updated publish-release workflow** to include roadmap cleanup:
+  - Added step 15 to remove completed releases from roadmap during documentation archival phase
+  - Implemented roadmap cleanup with cross-reference dependency updates
+  - Enhanced critical success criteria to include roadmap accuracy validation
+- **Enhanced roadmap definition guide** with comprehensive release lifecycle specifications:
+  - Added release status tracking format specifying how releases should be represented based on folder location
+  - Created systematic release removal process with validation checklist
+  - Documented integration triggers specifying when roadmap updates occur during release workflows
+  - Added comprehensive error handling and recovery procedures for failed roadmap updates
+  - Established cross-workflow dependencies and validation requirements for release lifecycle management
+
+#### v.0.3.0+tasks.22 - 2025-06-02 - Create Roadmap Definition Guide
+
+- **Created comprehensive roadmap definition guide** at `docs-dev/guides/roadmap-definition.g.md`:
+  - Established deterministic format requirements for all roadmap sections (Front Matter, Project Vision, Strategic Objectives, Key Themes & Epics, Planned Major Releases, Cross-Release Dependencies, Update History)
+  - Defined precise table format specifications with column definitions and validation criteria
+  - Created content guidelines and best practices for writing style, strategic alignment, and maintenance
+  - Added validation criteria for structure, content, and quality compliance
+  - Provided concrete examples demonstrating correct and incorrect roadmap formatting
+  - Documented integration guidelines for workflow instructions to reference format requirements
+- **Separated format specification from workflow process** following separation of concerns principle:
+  - Removed embedded format rules from manage-roadmap workflow instruction
+  - Established pattern for workflows to reference dedicated format guide rather than embedding specifications
+  - Created foundation for consistent roadmap format validation across all related workflows
+
 #### v.0.3.0+tasks.16 - 2025-06-02 - Implement Agreed Naming Conventions for Guides and Workflow Instructions
 
 - **Implemented file extension conventions** to establish clear distinction between guides and workflow instructions:
