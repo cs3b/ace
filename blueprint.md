@@ -63,17 +63,17 @@ This will show all project files while filtering out temporary files, session lo
 
 AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks. Modifying these files without careful consideration can break core project workflows or documentation standards.
 
-- `../../docs-dev/guides/**/*`
-- `../../docs-dev/workflow-instructions/**/*`
-- `../../docs-dev/tools/_binstubs/**/*`
-- `../../docs-dev/guides/initialize-project-templates/**/*`
-- `./decisions/**/*` (Modify only when adding or updating ADRs)
-- `./done/**/*` (Completed tasks should not be modified)
-- `../../lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
-- `../../spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
-- `../../.gitignore` (Modify carefully when adding/removing ignored patterns)
-- `../../Gemfile.lock` (Manage dependencies via `bundle add`/`remove` or explicit instruction)
-- `../../bin/*` (Modify only when updating binstub templates or adding new project-specific scripts)
+- `docs-dev/guides/**/*`
+- `docs-dev/workflow-instructions/**/*`
+- `docs-dev/tools/_binstubs/**/*`
+- `docs-dev/guides/initialize-project-templates/**/*`
+- `docs-project/decisions/**/*` (Modify only when adding or updating ADRs)
+- `docs-project/done/**/*` (Completed tasks should not be modified)
+- `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
+- `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
+- `.gitignore` (Modify carefully when adding/removing ignored patterns)
+- `Gemfile.lock` (Manage dependencies via `bundle add`/`remove` or explicit instruction)
+- `bin/*` (Modify only when updating binstub templates or adding new project-specific scripts)
 - `*.lock` # Dependency lock files (e.g., Gemfile.lock)
 - `dist/**/*` # Built artifacts
 - `build/**/*` # Build output
@@ -83,15 +83,15 @@ AI agents should treat the following paths as read-only unless explicitly instru
 
 AI agents should generally ignore the contents of the following paths during tasks such as searching for tasks, summarizing project state, or performing code analysis, unless the task explicitly requires interacting with these directories (e.g., cleaning build artifacts). These paths often contain transient data, dependencies, or build artifacts.
 
-- `./done/**/*` # Completed tasks (already read-only, but explicitly ignored for general tasks)
-- `../../vendor/**/*` (Bundler dependencies)
-- `../../tmp/**/*`
-- `../../log/**/*`
-- `../../.git/**/*`
-- `../../.bundle/**/*`
-- `../../coverage/**/*` (Test coverage reports)
-- `../../node_modules/**/*` (If applicable for frontend/tooling)
-- `../../.idea/**/*`, `../../.vscode/**/*` (Editor specific configurations)
+- `docs-project/done/**/*` # Completed tasks (already read-only, but explicitly ignored for general tasks)
+- `vendor/**/*` (Bundler dependencies)
+- `tmp/**/*`
+- `log/**/*`
+- `.git/**/*`
+- `.bundle/**/*`
+- `coverage/**/*` (Test coverage reports)
+- `node_modules/**/*` (If applicable for frontend/tooling)
+- `.idea/**/*`, `.vscode/**/*` (Editor specific configurations)
 - `**/.*.swp`, `**/.*.swo` (Swap files)
 - `/.DS_Store` (macOS system files)
 - `**/Thumbs.db` (Windows system files)
