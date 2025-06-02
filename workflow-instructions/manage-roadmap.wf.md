@@ -14,8 +14,8 @@ strategic guide.
     * Confirm the file exists at `docs-project/roadmap.md`.
     * Load its content.
 2. **Validate Structure**
-    * Verify required sections/tables (Vision, Objectives, Themes, Releases, Dependencies, Update History).
-    * If missing, stop and raise an issue.
+    * Validate roadmap format against [Roadmap Definition Guide](../guides/roadmap-definition.g.md).
+    * If validation fails, refer to definition guide for correction requirements.
 3. **Draft Changes**
     * Source proposed changes from the **input document or prompt** (very often a PRD) to ensure alignment with
       new strategic information.
@@ -46,6 +46,7 @@ strategic guide.
 
 ## Reference Documentation
 
+* [Roadmap Definition Guide](../guides/roadmap-definition.g.md)
 * [Strategic Planning Guide](../guides/strategic-planning.g.md)
 * [`breakdown-notes-into-tasks.wf.md` Workflow](breakdown-notes-into-tasks.wf.md)
 * [Commit Workflow](commit.wf.md)
