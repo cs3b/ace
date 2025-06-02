@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-06-02
+last_reviewed: 2025-06-27
 status: draft
 ---
 
@@ -36,7 +36,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | v0.0.0  | "Bootstrap"               | Q2 2025       | Initial project setup: `docs-dev`, project structure from PRD, roadmap creation.          | (Conceptual: Project Scaffolding, Initial Documentation Structure)                                   |
-| v0.1.0  | "Foundation"              | Q2 2025       | Core dev infra: Git setup, `bin` scripts, guides, Ruby gem structure, build, tests.       | (Conceptual: Gem Skeleton, Build System, Test Harness, Core CI scripts)                                |
+| v0.1.0  | "Foundation"              | Q2 2025       | Core dev infra: Ruby gem structure, build system, testing framework, Git workflow, CI/CD. | v.0.1.0+task.1, v.0.1.0+task.2, v.0.1.0+task.3, v.0.1.0+task.4                                      |
 | v0.2.0  | "Synapse"                 | Q3 2025       | LLM Integration theme features.                                                           | R-LLM-1, R-LLM-2, R-LLM-3, R-LLM-4                                                                   |
 | v0.3.0  | "Forge"                   | Q3 2025       | Git Workflow Automation theme features.                                                   | R-GIT-1, R-GIT-2, R-GIT-3, R-GIT-4, R-GIT-5, R-GIT-6, R-GIT-7, R-GIT-8, R-GIT-9, R-GIT-10            |
 | v0.4.0  | "Conductor"               | Q3 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
@@ -60,6 +60,7 @@ _Note: Release planning should align with project folder structure in `docs-proj
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-06-02 | Added v0.1.0 Foundation release with concrete task breakdown to backlog.        | AI Assistant   |
 | 2025-06-02 | Restructured Planned Major Releases based on feedback (granular initial, theme-based). | AI Assistant   |
 | 2025-06-02 | Populated Cross-Release Dependencies section.                                   | AI Assistant   |
 | 2025-06-02 | Populated Key Themes, Epics, and Planned Major Releases from PRD.               | AI Assistant   |
