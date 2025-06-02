@@ -33,10 +33,17 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 ## 4. Planned Major Releases
 
-| Version | Codename   | Target Window | Goals                                                                                 | Key Epics (Requirement IDs)                                                               |
-|---------|------------|---------------|---------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| v0.9.0  | "Catalyst" | Q3 2025       | Beta release: Core LLM (Gemini & LM Studio), Git (Repo, Commit, Wrappers), Task utils. | R-LLM-1, R-LLM-2, R-LLM-3, R-GIT-1, R-GIT-2, R-GIT-3, R-GIT-4, R-GIT-6, R-GIT-7, R-GIT-8, R-GIT-9, R-GIT-10, R-TASK-1, R-TASK-2, R-TASK-3 |
-| v1.0.0  | "Keystone" | Q3 2025       | Stable v1: All P1 features complete, hardened, documented, and published.             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-MD-1, R-MD-4, R-TCI-1, R-TCI-2, R-TCI-3 (plus v0.9.0 features hardened) |
+| Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
+|---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| v0.0.0  | "Bootstrap"               | Q2 2025       | Initial project setup: `docs-dev`, project structure from PRD, roadmap creation.          | (Conceptual: Project Scaffolding, Initial Documentation Structure)                                   |
+| v0.1.0  | "Foundation"              | Q2 2025       | Core dev infra: Git setup, `bin` scripts, guides, Ruby gem structure, build, tests.       | (Conceptual: Gem Skeleton, Build System, Test Harness, Core CI scripts)                                |
+| v0.2.0  | "Synapse"                 | Q3 2025       | LLM Integration theme features.                                                           | R-LLM-1, R-LLM-2, R-LLM-3, R-LLM-4                                                                   |
+| v0.3.0  | "Forge"                   | Q3 2025       | Git Workflow Automation theme features.                                                   | R-GIT-1, R-GIT-2, R-GIT-3, R-GIT-4, R-GIT-5, R-GIT-6, R-GIT-7, R-GIT-8, R-GIT-9, R-GIT-10            |
+| v0.4.0  | "Conductor"               | Q3 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
+| v0.5.0  | "Pathfinder"              | Q4 2025       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
+| v0.6.0  | "Scribe"                  | Q4 2025       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
+| v0.7.0  | "Spark"                   | Q4 2025       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
+| v1.0.0  | "Keystone"                | Q1 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
 
 _Note: Release planning should align with project folder structure in `docs-project/backlog/`, `docs-project/current/`, and `docs-project/done/` as per the Roadmap Definition Guide._
 
@@ -51,8 +58,9 @@ _Note: Release planning should align with project folder structure in `docs-proj
 
 ## 6. Update History
 
-| Date       | Summary                                                                 | Author         |
-|------------|-------------------------------------------------------------------------|----------------|
-| 2025-06-02 | Populated Cross-Release Dependencies section.                           | AI Assistant   |
-| 2025-06-02 | Populated Key Themes, Epics, and Planned Major Releases from PRD.       | AI Assistant   |
-| 2025-06-02 | Initial roadmap draft created from PRD.                                 | AI Assistant   |
+| Date       | Summary                                                                         | Author         |
+|------------|---------------------------------------------------------------------------------|----------------|
+| 2025-06-02 | Restructured Planned Major Releases based on feedback (granular initial, theme-based). | AI Assistant   |
+| 2025-06-02 | Populated Cross-Release Dependencies section.                                   | AI Assistant   |
+| 2025-06-02 | Populated Key Themes, Epics, and Planned Major Releases from PRD.               | AI Assistant   |
+| 2025-06-02 | Initial roadmap draft created from PRD.                                         | AI Assistant   |
