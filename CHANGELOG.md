@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [0.3.0] - 2025-06-04
+
+### Added
+- Enhanced roadmap management with automatic lifecycle integration
+- Comprehensive roadmap definition guide with format specifications
+- File extension conventions (`.wf.md` for workflows, `.g.md` for guides)
+- Meta-directories for self-referential documentation
+- Standardized bin/ aliases for development commands (test, lint, build, run)
+- Guidelines for temporary file usage by AI agents
+- Tool for getting current release path and version
+- Task templates with distinct "Plan" and "Execution" sections
+
+### Changed
+- Updated all workflow instructions to use `.wf.md` extension
+- Applied noun-based naming with `.g.md` extension to guides
+- Merged tools and utils directories into unified structure
+- Renamed "Prepare Release" to "Draft Release" for clarity
+- Enhanced task workflow structure for better plan/execution separation
+- Improved project initialization and structure workflows
+
+### Fixed
+- Resolved markdown linting errors across documentation
+- Clarified policies for updating completed tasks
+- Ensured task ID uniqueness and release versioning consistency
+- Removed inappropriate checkboxes from guides and workflows
+
+### Security
+- Established immutability rules for specified paths
+
 #### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
 
 - **Enhanced manage-roadmap workflow with release lifecycle integration** to automatically maintain roadmap accuracy:
@@ -442,3 +471,6 @@ in the 2025-05-07 and 2025-05-08 git logs)
 - Established initial project infrastructure.
 - Set up the project structure and documentation framework.
 - Documented the initial release process.
+
+[Unreleased]: https://github.com/cs3b/coding-agent-workflow-toolkit-meta/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/cs3b/coding-agent-workflow-toolkit-meta/compare/v0.2.22...v0.3.0
