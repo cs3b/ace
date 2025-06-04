@@ -33,7 +33,7 @@ directly within the task's definition file (`NN-task-name.md`).
 
 3. **Load Context:**
     * Identify relevant project context needed for execution:
-        *   **General Guides:** (e.g., `coding-standards.md`, `testing.md`, `architecture.md`,
+        * **General Guides:** (e.g., `coding-standards.md`, `testing.md`, `architecture.md`,
             [Embedding Tests in AI Agent Workflows](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md)). These might be
           standard context or explicitly mentioned in the task file.
         * **Specific Code Files:** Identify key files/modules likely to be modified based on the embedded plan
@@ -50,7 +50,7 @@ directly within the task's definition file (`NN-task-name.md`).
             * After performing the action, check for any `> TEST:` or `> VERIFY:` blocks associated with the current
               checklist item (e.g., these blocks might be immediately following the checklist item, or indented
               under it).
-            *   If found, process these blocks as defined in the
+            * If found, process these blocks as defined in the
                 [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md).
             * **Handle Outcomes:**
                 * **Pass:** If all associated embedded tests pass (or user verification is positive), proceed to the
@@ -80,14 +80,14 @@ directly within the task's definition file (`NN-task-name.md`).
 
 ## Reference Documentation
 
-*   [Writing Actionable Task Guide](docs-dev/guides/task-definition.g.md) (Defines the required embedded plan structure)
-*   [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md) (Details how to write
+* [Writing Actionable Task Guide](docs-dev/guides/task-definition.g.md) (Defines the required embedded plan structure)
+* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md) (Details how to write
   and interpret embedded tests)
-*   [Implementing the Task Cycle Guide](docs-dev/guides/testing-tdd-cycle.g.md) (Core TDD loop for code development)
-*   [Commit Workflow](docs-dev/workflow-instructions/commit.wf.md) (or renamed equivalent - Git workflow)
-*   [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.wf.md)
-*   [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
-*   [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.g.md)
+* [Implementing the Task Cycle Guide](docs-dev/guides/testing-tdd-cycle.g.md) (Core TDD loop for code development)
+* [Commit Workflow](docs-dev/workflow-instructions/commit.wf.md) (or renamed equivalent - Git workflow)
+* [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.wf.md)
+* [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
+* [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.g.md)
 * Project-specific guides (Coding Standards, Architecture, etc.) as identified in Step 3.
 
 ## Input

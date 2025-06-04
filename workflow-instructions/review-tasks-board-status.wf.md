@@ -79,7 +79,7 @@ manage task statuses effectively.
 - Action items for resolving blockers or adjusting plans are noted.
 - Terminology used aligns with the [Project Management Guide](docs-dev/guides/project-management.g.md).
 
- ## Reference Documentation
+## Reference Documentation
 
 - [Project Management Guide](docs-dev/guides/project-management.g.md) (Defines task statuses, priorities, and overall
   project structure)

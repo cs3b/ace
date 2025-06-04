@@ -23,8 +23,8 @@ user-provided release scope into actionable tasks.
 
 2. **Gather Release Metadata**
    * Ask the user for:
-     26 |      * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
-     27 |      * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md) for inspiration).
+     * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
+     * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md) for inspiration).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
 3. **Create Release Directory and Overview File**
@@ -47,7 +47,8 @@ user-provided release scope into actionable tasks.
 47 | 5. **Break Down Scope Into Tasks**
 48 |    * Use the [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
      if the raw notes are lengthy or unstructured.
-   * For each distinct item in the (possibly refined) user input:
+
+* For each distinct item in the (possibly refined) user input:
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
      2. Create a new file in the appropriate subdirectory of `docs-project/backlog/v.X.Y.Z-codename/`
         (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from
@@ -70,6 +71,7 @@ user-provided release scope into actionable tasks.
    * Update roadmap's `last_reviewed` date and add entry to Update History
    * Follow [Manage Roadmap Workflow](manage-roadmap.wf.md) for roadmap modifications
    * Commit roadmap changes separately with message format:
+
      ```bash
      "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
@@ -108,12 +110,12 @@ user-provided release scope into actionable tasks.
 
 ## Reference Documentation
 
-100 | * [Draft Release Templates](docs-dev/guides/draft-release/README.md)
-101 | * [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
-102 | * [Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
-103 | * [Project Management Guide](docs-dev/guides/project-management.g.md)
-104 | * [Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md)
-105 | * [Version Control Guide](docs-dev/guides/version-control-system.g.md)
+100 | *[Draft Release Templates](docs-dev/guides/draft-release/README.md)
+101 |* [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+102 | *[Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
+103 |* [Project Management Guide](docs-dev/guides/project-management.g.md)
+104 | *[Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md)
+105 |* [Version Control Guide](docs-dev/guides/version-control-system.g.md)
 
 ## Usage Example
 >

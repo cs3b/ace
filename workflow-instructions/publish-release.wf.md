@@ -101,6 +101,7 @@
     * Update roadmap's `last_reviewed` date and add entry to Update History
     * Follow [Roadmap Definition Guide](../guides/roadmap-definition.g.md) release removal process
     * Commit roadmap changes with message format:
+
       ```bash
       "docs(roadmap): remove completed v<X.Y.Z>-<codename> from planned releases"
       ```

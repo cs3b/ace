@@ -61,24 +61,28 @@ strategic guide.
 ## Error Handling
 
 **Format Validation Failures:**
-- If roadmap format validation fails in step 2, halt process and report specific violations
-- Require format corrections before proceeding with any updates
-- Reference [Roadmap Definition Guide](../guides/roadmap-definition.g.md) for correction requirements
+
+* If roadmap format validation fails in step 2, halt process and report specific violations
+* Require format corrections before proceeding with any updates
+* Reference [Roadmap Definition Guide](../guides/roadmap-definition.g.md) for correction requirements
 
 **Release Status Inconsistencies:**
-- If release folder locations don't match roadmap entries in step 3, report discrepancies
-- Require manual reconciliation of project structure or roadmap content
-- Document any changes needed to achieve consistency
+
+* If release folder locations don't match roadmap entries in step 3, report discrepancies
+* Require manual reconciliation of project structure or roadmap content
+* Document any changes needed to achieve consistency
 
 **Cross-Reference Validation Errors:**
-- If broken references are found in step 7, halt process and report specific issues
-- Require dependency resolution or reference updates before committing
-- Validate all references are reachable after corrections
+
+* If broken references are found in step 7, halt process and report specific issues
+* Require dependency resolution or reference updates before committing
+* Validate all references are reachable after corrections
 
 **Commit/Push Failures:**
-- If Git operations fail in step 8, preserve roadmap changes for manual resolution
-- Report specific Git error details and suggested recovery actions
-- Allow manual commit completion outside workflow if needed
+
+* If Git operations fail in step 8, preserve roadmap changes for manual resolution
+* Report specific Git error details and suggested recovery actions
+* Allow manual commit completion outside workflow if needed
 
 ## Output / Success Criteria
 
@@ -97,9 +101,10 @@ This workflow integrates with release lifecycle management workflows:
 * **Calls Commit Workflow**: For all roadmap changes following standard commit practices
 
 **Integration Requirements:**
-- Roadmap updates MUST be committed separately from release scaffolding/archival
-- Failed roadmap updates in release workflows SHOULD trigger process halt or rollback consideration
-- Release status validation MUST check actual project folder structure (`backlog/`, `current/`, `done/`)
+
+* Roadmap updates MUST be committed separately from release scaffolding/archival
+* Failed roadmap updates in release workflows SHOULD trigger process halt or rollback consideration
+* Release status validation MUST check actual project folder structure (`backlog/`, `current/`, `done/`)
 
 ## Reference Documentation
 
