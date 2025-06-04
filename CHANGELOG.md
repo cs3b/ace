@@ -6,34 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.3.0] - 2025-06-04
 
-### Added
-- Enhanced roadmap management with automatic lifecycle integration
-- Comprehensive roadmap definition guide with format specifications
-- File extension conventions (`.wf.md` for workflows, `.g.md` for guides)
-- Meta-directories for self-referential documentation
-- Standardized bin/ aliases for development commands (test, lint, build, run)
-- Guidelines for temporary file usage by AI agents
-- Tool for getting current release path and version
-- Task templates with distinct "Plan" and "Execution" sections
-
-### Changed
-- Updated all workflow instructions to use `.wf.md` extension
-- Applied noun-based naming with `.g.md` extension to guides
-- Merged tools and utils directories into unified structure
-- Renamed "Prepare Release" to "Draft Release" for clarity
-- Enhanced task workflow structure for better plan/execution separation
-- Improved project initialization and structure workflows
-
-### Fixed
-- Resolved markdown linting errors across documentation
-- Clarified policies for updating completed tasks
-- Ensured task ID uniqueness and release versioning consistency
-- Removed inappropriate checkboxes from guides and workflows
-
-### Security
-- Established immutability rules for specified paths
-
-#### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
+### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
 
 - **Enhanced manage-roadmap workflow with release lifecycle integration** to automatically maintain roadmap accuracy:
   - Added step 3 (Update Release Status) to check release folder locations (backlog|current|done) and update roadmap accordingly
@@ -55,7 +28,7 @@ All notable changes to this project will be documented in this file.
   - Added comprehensive error handling and recovery procedures for failed roadmap updates
   - Established cross-workflow dependencies and validation requirements for release lifecycle management
 
-#### v.0.3.0+tasks.22 - 2025-06-02 - Create Roadmap Definition Guide
+### v.0.3.0+tasks.22 - 2025-06-02 - Create Roadmap Definition Guide
 
 - **Created comprehensive roadmap definition guide** at `docs-dev/guides/roadmap-definition.g.md`:
   - Established deterministic format requirements for all roadmap sections (Front Matter, Project Vision, Strategic Objectives, Key Themes & Epics, Planned Major Releases, Cross-Release Dependencies, Update History)
@@ -69,7 +42,7 @@ All notable changes to this project will be documented in this file.
   - Established pattern for workflows to reference dedicated format guide rather than embedding specifications
   - Created foundation for consistent roadmap format validation across all related workflows
 
-#### v.0.3.0+tasks.16 - 2025-06-02 - Implement Agreed Naming Conventions for Guides and Workflow Instructions
+### v.0.3.0+tasks.16 - 2025-06-02 - Implement Agreed Naming Conventions for Guides and Workflow Instructions
 
 - **Implemented file extension conventions** to establish clear distinction between guides and workflow instructions:
   - Applied `.wf.md` suffix to all 21 workflow instruction files (breakdown-notes-into-tasks, commit, create-adr, create-api-docs, create-reflection-note, create-release-overview, create-retrospective-document, create-review-checklist, create-test-cases, create-user-docs, draft-release, fix-tests, initialize-project-structure, load-env, log-compact-session, manage-roadmap, publish-release, review-task, review-tasks-board-status, update-blueprint, work-on-task)
@@ -84,7 +57,7 @@ All notable changes to this project will be documented in this file.
   - Verified link integrity with zero critical broken links remaining
 - **Created Zed editor rule mapping documentation** for manual updates to development environment integration
 
-#### v.0.3.0+tasks.15 - 2025-06-01 - Rename "Prepare Release" to "Draft Release" and Ensure Independence from "Publish Release"
+### v.0.3.0+tasks.15 - 2025-06-01 - Rename "Prepare Release" to "Draft Release" and Ensure Independence from "Publish Release"
 
 - **Renamed prepare-release to draft-release throughout codebase** for clearer separation from publish-release process:
   - Renamed `docs-dev/workflow-instructions/prepare-release.md` to `docs-dev/workflow-instructions/draft-release.md`
@@ -100,7 +73,7 @@ All notable changes to this project will be documented in this file.
   - Added all missing guides to guides README.md including language-specific sub-guides and project initialization templates
 - **Clarified process separation**: Draft Release focuses on creating and planning new releases in backlog, while Publish Release handles finalizing and deploying completed releases
 
-#### v.0.3.0+tasks.14 - 2025-06-01 - Define and Document "Publish Release" Process and Guide
+### v.0.3.0+tasks.14 - 2025-06-01 - Define and Document "Publish Release" Process and Guide
 
 - **Created comprehensive publish release process** replacing ship-release terminology:
   - `docs-dev/guides/publish-release.md` - Detailed guide explaining release publishing philosophy, semantic versioning scheme (v<major>.<minor>.<patch> extracted from release folder names), and archival process from `docs-project/current/` to `docs-project/done/`
@@ -116,7 +89,7 @@ All notable changes to this project will be documented in this file.
 - **Integrated technology-agnostic approach** supporting diverse project types through `bin/build` execution and flexible package publication processes
 - **Established clear process separation** between preparation (handled by existing prepare-release workflow) and final deployment/archival (handled by new publish-release process)
 
-#### v.0.3.0+tasks.12 - 2025-06-01 - Remove Checkboxes from Guides and Workflow Instructions; Clarify Use of Acceptance Criteria
+### v.0.3.0+tasks.12 - 2025-06-01 - Remove Checkboxes from Guides and Workflow Instructions; Clarify Use of Acceptance Criteria
 
 - **Converted inappropriate interactive checklists to bullet points** in guides:
   - `docs-dev/guides/version-control.md` - Changed PR template example from checkboxes to bullet points
@@ -128,7 +101,7 @@ All notable changes to this project will be documented in this file.
 - **Converted Process Steps in ship-release.md** from checkboxes to numbered steps (1-24) for better sequential execution guidance
 - **Established clear distinction** between reference documentation (guides) and actionable content (tasks), preventing AI agents from treating guides as interactive checklists while preserving legitimate checkbox usage in templates and examples
 
-#### v.0.3.0+tasks.11 - 2025-06-01 - Clarify Policy on Updating "Done" Tasks if Referenced Files Change
+### v.0.3.0+tasks.11 - 2025-06-01 - Clarify Policy on Updating "Done" Tasks if Referenced Files Change
 
 - Added comprehensive policy section to `docs-dev/guides/project-management.md` under Agent Operational Boundaries
 - Defined clear distinction between prohibited modifications (content changes, historical revisions, status changes) and allowed reference updates (broken link fixes, security annotations, accessibility improvements)
@@ -136,32 +109,32 @@ All notable changes to this project will be documented in this file.
 - Provided concrete examples of acceptable vs unacceptable modifications to done tasks
 - Maintains balance between preserving historical accuracy and ensuring practical usability of project documentation
 
-#### v.0.3.0 - 2025-06-01 - Enhance Review Task Workflow for New Task Structure
+### v.0.3.0 - 2025-06-01 - Enhance Review Task Workflow for New Task Structure
 
 - Updated the `review-task.md` workflow instruction to incorporate the new Planning Steps and Execution Steps structure for tasks.
 - Added steps to the review process to evaluate task structure, recommend using Planning Steps for complex tasks, and suggest adding embedded tests.
 - Ensured the workflow guides reviewers to maintain consistency with the updated task template and standards.
 
-#### v.0.3.0+tasks.10 - 2025-06-01 - Refine Task Template to Include Distinct "Plan" and "Execution" Sections
+### v.0.3.0+tasks.10 - 2025-06-01 - Refine Task Template to Include Distinct "Plan" and "Execution" Sections
 
 - Updated the task template (`docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`) to include separate "Planning Steps" (`* [ ]`) and "Execution Steps" (`- [ ]`) subsections within the "Implementation Plan".
 - Updated the `write-actionable-task.md` guide to document the new structure, explaining the rationale, visual distinction, when to use planning steps, and how it relates to workflow phases (review vs. work).
 - Added examples to the guide demonstrating tasks with only execution steps and tasks with both planning and execution steps, including embedded tests in both sections.
 
-#### v.0.3.x+task.8 - 2025-06-01 - Refine Initialize Project Test Task and Create Review Roadmap Task
+### v.0.3.x+task.8 - 2025-06-01 - Refine Initialize Project Test Task and Create Review Roadmap Task
 
 - Updated `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/008-test-initialize-project.md` to align its scope with the "Initialize Project Structure" workflow, specifically excluding the creation of `roadmap.md` and initial release scaffolding.
 - Created new task `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/v.0.3.0+task.21.md` to review the `manage-roadmap.md` workflow instruction, following the guide for writing actionable tasks.
 
-#### v.0.3.x - 2025-05-30 - Standardize Binstub Location and Rename gat to tal
+### v.0.3.x - 2025-05-30 - Standardize Binstub Location and Rename gat to tal
 
 - Renamed the `bin/gat` wrapper script to `bin/tal`.
 - Updated documentation and task references for the `bin/gat` -> `bin/tal` rename.
 - Added binstub scripts for `tnid`, `rc`, and `tal` to `docs-dev/tools/_binstubs/`.
 
-#### v.0.3.x - 2025-05-30 - Incorporate Codename Picking Guide into Prepare Release Workflow
+### v.0.3.x - 2025-05-30 - Incorporate Codename Picking Guide into Prepare Release Workflow
 
-#### v.0.3.x+task.20 - 2025-05-30 - Improve Initialize Project Structure Workflow
+### v.0.3.x+task.20 - 2025-05-30 - Improve Initialize Project Structure Workflow
 
 - **Refactored `initialize-project-structure.md` Workflow:**
   - Added explicit idempotency statement to clarify rerun behavior.
@@ -178,7 +151,7 @@ All notable changes to this project will be documented in this file.
 - **Created New Guide for Codenames:**
   - Added `docs-dev/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
 
-#### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
+### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
 
 - **Task ID Generation Standardization:**
   - Updated `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`, and `docs-dev/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
