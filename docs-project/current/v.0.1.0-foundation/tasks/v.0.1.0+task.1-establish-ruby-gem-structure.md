@@ -8,12 +8,12 @@ dependencies: []
 
 # Establish Ruby Gem Structure
 
-## 0. Directory Audit ✅
+## 0. Directory Audit (Preliminary)
 
 _Command run:_
 
 ```bash
-tree -L 3 . | head -20
+tree -L 3 . | head -50
 ```
 
 _Result excerpt:_
@@ -31,29 +31,38 @@ _Result excerpt:_
     └── roadmap.md
 ```
 
+_Note: This audit was conducted during task planning and reflects the project state before gem structure implementation._
+
 ## Objective
 
-Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establish a proper foundation for development. This includes the gemspec, proper directory layout, version management, and core module structure following Ruby gem conventions.
+Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establish a proper foundation for development. This includes the gemspec, proper directory layout following ATOM architecture principles, version management, and core module structure following Ruby gem conventions and best practices from research.
 
 ## Scope of Work
 
 - Create gemspec file with proper metadata and dependencies
-- Establish standard Ruby gem directory structure
-- Set up version management system
-- Create core module and entry points
-- Configure basic Gemfile for development dependencies
+- Establish ATOM-based Ruby gem directory structure (atoms, molecules, organisms, ecosystems)
+- Set up version management system starting with 0.1.0
+- Create core module and entry points using dry-rb architecture
+- Configure Gemfile with specified development and production dependencies
+- Update architecture.md with ATOM research findings
 
 ### Deliverables
 
-#### Create
+#### Create (via bundle gem --exe)
 
-- coding_agent_tools.gemspec
-- lib/coding_agent_tools.rb (main entry point)
-- lib/coding_agent_tools/version.rb
-- lib/coding_agent_tools/cli.rb (CLI framework)
-- Gemfile
-- Rakefile
-- exe/cat (executable)
+- coding_agent_tools.gemspec (generated, then customized)
+- lib/coding_agent_tools.rb (generated, then enhanced)
+- lib/coding_agent_tools/version.rb (generated, then updated to 0.1.0)
+- Gemfile (generated, then updated with specified dependencies)
+- exe/coding_agent_tools (generated, then customized)
+
+#### Create (custom ATOM structure)
+
+- lib/coding_agent_tools/cli.rb (CLI framework using dry-rb)
+- lib/coding_agent_tools/atoms/ (smallest units - utilities, transformations)
+- lib/coding_agent_tools/molecules/ (simple compositions of atoms)
+- lib/coding_agent_tools/organisms/ (business logic handlers)
+- lib/coding_agent_tools/ecosystems/ (complete subsystems)
 
 #### Modify
 
@@ -63,13 +72,18 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 
 - (none)
 
+#### Update
+
+- docs-project/architecture.md (incorporate ATOM research findings)
+
 ## Phases
 
-1. Research Ruby gem conventions and best practices
-2. Create gemspec and directory structure
-3. Implement core module and version management
-4. Set up CLI framework and executable
-5. Configure build dependencies and Rakefile
+1. Review researched Ruby gem conventions and ATOM architecture principles
+2. Generate initial gem structure with bundle gem --exe and customize
+3. Implement core module and version management (0.1.0)
+4. Set up CLI framework using dry-rb and executable
+5. Configure development and production dependencies
+6. Update architecture documentation with ATOM findings
 
 ## Implementation Plan
 
@@ -77,52 +91,86 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 
 ### Planning Steps
 
-* [ ] Research Ruby gem best practices and standard structure
-  > TEST: Research Complete
+* [ ] Review completed research documents and incorporate findings
+  > TEST: Research Integration Complete
   > Type: Pre-condition Check
-  > Assert: Gem structure documented and design decisions made
-  > Command: test -f docs-project/backlog/v.0.1.0-foundation/researches/gem-structure.md
-* [ ] Analyze existing project structure and identify integration points
-* [ ] Plan CLI command structure and naming conventions
-* [ ] Design module hierarchy and namespace organization
+  > Assert: All research documents reviewed and incorporated into implementation plan
+  > Command: test -f docs-project/current/v.0.1.0-foundation/researches/ruby-cmdline-tools-best-practice.md && test -f docs-project/current/v.0.1.0-foundation/researches/ruby-bundle-inline.md && test -f docs-project/current/v.0.1.0-foundation/researches/architecture-atom-research.md
+* [ ] Analyze existing project structure and identify integration points with current bin/ scripts
+* [ ] Plan CLI command structure using dry-rb architecture and long descriptive naming conventions
+* [ ] Design ATOM-based module hierarchy (atoms/molecules/organisms/ecosystems)
 
 ### Execution Steps
 
-- [ ] Create lib/ directory structure with main module files
-- [ ] Write coding_agent_tools.gemspec with proper metadata and dependencies
+- [ ] Generate initial Ruby gem structure using Bundler scaffold
+  > TEST: Gem Scaffold Created
+  > Type: Action Validation
+  > Assert: Basic gem structure exists with executable
+  > Command: bundle gem coding_agent_tools --exe && test -f coding_agent_tools.gemspec && test -f exe/coding_agent_tools
+- [ ] Update coding_agent_tools.gemspec with proper metadata and specified dependencies
   > TEST: Gemspec Validation
   > Type: Action Validation
   > Assert: Gemspec is valid and can be built
   > Command: gem build coding_agent_tools.gemspec
-- [ ] Implement lib/coding_agent_tools/version.rb with semantic versioning
-- [ ] Create main entry point lib/coding_agent_tools.rb with module structure
-- [ ] Set up CLI framework in lib/coding_agent_tools/cli.rb using Thor or similar
-- [ ] Create executable script exe/cat that loads the CLI
+- [ ] Update lib/coding_agent_tools/version.rb to set 0.1.0 semantic versioning
+- [ ] Enhance main entry point lib/coding_agent_tools.rb with improved module structure
+- [ ] Replace generated CLI with dry-rb framework in lib/coding_agent_tools/cli.rb
+- [ ] Create ATOM directory structure within lib/coding_agent_tools/:
+  - atoms/ (utilities, basic transformations)
+  - molecules/ (simple compositions)
+  - organisms/ (business logic)
+  - ecosystems/ (complete subsystems)
+- [ ] Update executable script exe/coding_agent_tools to use new CLI framework
   > TEST: Executable Functionality
   > Type: Action Validation
   > Assert: CLI executable runs and shows help
-  > Command: ruby exe/cat --help
-- [ ] Write Gemfile with development dependencies (rspec, rubocop, rake)
-- [ ] Create basic Rakefile with standard gem tasks
+  > Command: ruby exe/coding_agent_tools --help
+- [ ] Update Gemfile with specified dependencies:
+  - Development: standardrb, rspec, pry, bundler-audit, gem-release
+  - Production: dotenv
+- [ ] Update docs-project/architecture.md with ATOM research findings
+  > TEST: Architecture Documentation Updated
+  > Type: Action Validation
+  > Assert: Architecture document includes ATOM principles
+  > Command: grep -q "ATOM.*hierarchy" docs-project/architecture.md
 - [ ] Update README.md with installation and basic usage instructions
 
 ## Acceptance Criteria
 
 - [ ] AC 1: Gem builds successfully using `gem build coding_agent_tools.gemspec`
 - [ ] AC 2: Gem can be installed locally and loads without errors
-- [ ] AC 3: CLI executable `cat` runs and displays help information
-- [ ] AC 4: Version can be accessed via `CodingAgentTools::VERSION`
-- [ ] AC 5: All automated checks in the Implementation Plan pass
-- [ ] AC 6: Bundle install completes successfully with all development dependencies
+- [ ] AC 3: CLI executable `coding-agent-tools` runs and displays help information
+- [ ] AC 4: Version can be accessed via `CodingAgentTools::VERSION` and equals "0.1.0"
+- [ ] AC 5: ATOM directory structure exists (atoms, molecules, organisms, ecosystems)
+- [ ] AC 6: All automated checks in the Implementation Plan pass
+- [ ] AC 7: Bundle install completes successfully with all specified dependencies
+- [ ] AC 8: Architecture documentation includes ATOM research findings
 
 ## Out of Scope
 
 - ❌ Actual CLI command implementations (covered in future tasks)
-- ❌ Test framework setup (separate task)
+- ❌ Test framework setup beyond basic structure (separate task)
 - ❌ CI/CD pipeline configuration (separate task)
 - ❌ Documentation generation system (separate task)
 - ❌ Publishing to RubyGems.org (future release)
+- ❌ Implementation of specific ATOM components (will be added in feature tasks)
+- ❌ Rake tasks (not needed per requirements)
 
 ## References
+
+### Research Documents
+- [Ruby CLI Tools Best Practice](../researches/ruby-cmdline-tools-best-practice.md)
+- [Ruby Bundle Inline](../researches/ruby-bundle-inline.md)
+- [ATOM Architecture Research](../researches/architecture-atom-research.md)
+
+### Project Documents
+- [Project Architecture](../../../architecture.md)
+- [What We Build](../../../what-do-we-build.md)
+- [Project Blueprint](../../../blueprint.md)
+
+### External References
+- [Bundler Gem Guide](https://bundler.io/guides/creating_gem.html)
+- [Dry-rb Libraries](https://dry-rb.org/)
+- [Semantic Versioning](https://semver.org/)
 
 ```
