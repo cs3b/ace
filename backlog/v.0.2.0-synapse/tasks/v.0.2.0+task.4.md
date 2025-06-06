@@ -24,7 +24,7 @@ _Result excerpt:_
 
 ## Objective
 
-Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-studio-query` commands to allow users to override default models. This provides flexibility for users to select specific models based on their needs or availability.
+Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-studio-query` commands to allow users to override default models. Default models: Gemini uses "gemini-2.0-flash-lite" and LM Studio uses "mistral-small-24b-instruct-2501@8bit". This provides flexibility for users to select specific models based on their needs or availability.
 
 ## Scope of Work
 
@@ -64,11 +64,11 @@ Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-
 
 *Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-- [ ] Research available Gemini models and their identifiers
+- [ ] Research available Gemini models and their identifiers (reference gemini-query.fish)
   > TEST: Model Research
   > Type: Pre-condition Check
   > Assert: Understand valid model names for Gemini and LM Studio
-  > Command: Manual review of API documentation
+  > Command: Manual review of API documentation and Fish implementations
 - [ ] Analyze current CLI argument parsing patterns in existing commands
 - [ ] Design model validation strategy and error messages
 - [ ] Plan default model configuration approach
@@ -111,7 +111,7 @@ Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-
 - [ ] AC 1: Both commands accept --model flag with proper argument parsing
 - [ ] AC 2: Model parameter is passed through to respective client classes
 - [ ] AC 3: Invalid model names produce clear error messages
-- [ ] AC 4: Default models work when --model flag is not specified
+- [ ] AC 4: Default models work when --model flag is not specified (gemini-2.0-flash-lite for Gemini, mistral-small-24b-instruct-2501@8bit for LM Studio)
 - [ ] AC 5: Help text documents available models and usage examples
 - [ ] AC 6: All unit and integration tests pass
 
@@ -125,5 +125,13 @@ Implement `--model` flag support (R-LLM-4) for both `llm-gemini-query` and `lms-
 - ❌ Model switching during runtime or conversations
 
 ## References
+
+- Fish implementations: 
+  - docs-project/backlog/v.0.2.0-synapse/docs/gemini-query.fish
+  - docs-project/backlog/v.0.2.0-synapse/docs/lms-query.fish
+- Default models:
+  - Gemini: gemini-2.0-flash-lite
+  - LM Studio: mistral-small-24b-instruct-2501@8bit
+
 
 ```
