@@ -27,6 +27,15 @@ Brief description of what this PR accomplishes and why it's needed.
 - [ ] Edge cases considered and tested
 - [ ] Performance impact assessed (if applicable)
 
+## CI/CD Pipeline
+
+- [ ] All CI checks pass (Ruby 3.2, 3.3, 3.4)
+- [ ] Automated tests pass in CI environment
+- [ ] Linting checks pass (`bin/lint`)
+- [ ] Gem builds successfully
+- [ ] No workflow syntax errors
+- [ ] Branch protection rules satisfied
+
 ## Code Quality
 
 - [ ] Code follows StandardRB style guide (`bin/lint`)
@@ -76,7 +85,8 @@ Brief description of what this PR accomplishes and why it's needed.
 - [ ] Branch is up to date with target branch
 - [ ] Commits are logical and well-structured
 - [ ] No merge conflicts
-- [ ] CI/CD pipeline passes
+- [ ] All CI/CD checks are green
+- [ ] Required status checks satisfied
 
 ## Related Issues
 

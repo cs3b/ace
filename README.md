@@ -1,6 +1,6 @@
 # Coding Agent Tools (CAT) Ruby Gem
 
-[![Ruby](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/main.yml/badge.svg)](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/main.yml)
+[![CI](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/coding_agent_tools.svg)](https://badge.fury.io/rb/coding_agent_tools)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
