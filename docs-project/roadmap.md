@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-06-06
+last_reviewed: 2025-01-15
 status: draft
 ---
 
@@ -58,6 +58,7 @@ _Note: Release planning should align with project folder structure in `docs-proj
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-01-15 | Added v.0.2.0-synapse release to backlog with concrete task breakdown.         | AI Assistant   |
 | 2025-06-06 | Removed completed v0.1.0 Foundation from planned releases.                     | AI Assistant   |
 | 2025-06-02 | Added v0.1.0 Foundation release with concrete task breakdown to backlog.        | AI Assistant   |
 | 2025-06-02 | Restructured Planned Major Releases based on feedback (granular initial, theme-based). | AI Assistant   |
