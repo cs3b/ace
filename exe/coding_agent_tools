@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+
+# Set up load paths for development if necessary (e.g., when not installed as a gem)
+# This ensures that `lib` is on the load path.
+# If the gem is installed, this line is not strictly necessary but doesn't hurt.
+# If running from the project's exe directory, it's crucial.
+$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+
+require "coding_agent_tools/cli" # Loads dry/cli and our command registry
+
+begin
+  Dry::CLI.new(CodingAgentTools::Cli::Commands).call
+rescue Dry::CLI::Error => e
+  warn "Error: #{e.message}"
+  # Consider more specific exit codes for different errors if needed
+  exit 1
+rescue StandardError => e
+  # Catch other unexpected errors
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n")
+  exit 1
+end

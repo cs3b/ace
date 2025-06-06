@@ -4,13 +4,30 @@ A Ruby gem providing CLI tools designed for AI coding agents and developers to s
 
 ## 🚀 Quick Start
 
-```bash
-# Install the gem
-gem install coding_agent_tools
+### Installation
 
-# Or add to your Gemfile
-gem 'coding_agent_tools'
+**1. Install as a published gem (once available):**
+
+```bash
+gem install coding_agent_tools
 ```
+
+**2. Or, for local development/use from source:**
+
+Add this line to your application's Gemfile if you are using it as a dependency from a local path (e.g., as a submodule or a local copy):
+```ruby
+gem 'coding_agent_tools', path: '.'
+```
+Then execute:
+```bash
+bundle install
+```
+Or, if you are working directly within this cloned repository:
+```bash
+bundle install
+```
+
+After installation (either globally or via Bundler in a project), the `coding_agent_tools` command will be available.
 
 ## ✨ Key Features
 
@@ -20,64 +37,53 @@ gem 'coding_agent_tools'
 - **Context Tools**: Generate comprehensive project context documents
 - **Offline Support**: Work with local language models via LM Studio
 
-## 🛠 Core Commands
+## 🛠 Core Commands (Planned Structure)
 
-### LLM Communication
-```bash
-# Query Google Gemini
-bin/llm-gemini-query --prompt "How to optimize Ruby performance?"
-
-# Query local LM Studio
-bin/lms-studio-query --prompt "Explain SOLID principles"
-```
-
-### Git Workflows
-```bash
-# Create GitHub repository and set as origin
-bin/github-repository-create my-project
-
-# Generate AI-powered commit messages
-bin/git-commit-with-message --intention "refactor authentication"
-
-# Git shortcuts
-bin/gs          # git status (short format)
-bin/gl          # git log (oneline format)
-bin/gp          # git push
-```
-
-### Task Management
-```bash
-# Find next actionable task
-bin/tn
-
-# List recent tasks
-bin/tr
-
-# Get current release context
-bin/rc
-```
-
-### Development Tools
+The primary executable for the gem is `coding_agent_tools`. Here's a look at the planned command structure (specific commands and options are illustrative and will be implemented in future tasks):
 
 ```bash
-# Run tests
-bin/test
+# General
+coding_agent_tools --version
+coding_agent_tools --help
+coding_agent_tools help <command>
 
-# Run linting
-bin/lint
+# LLM Communication
+coding_agent_tools llm query --provider gemini --prompt "How to optimize Ruby performance?"
+coding_agent_tools llm query --provider lm_studio --prompt "Explain SOLID principles"
 
-# Build gem
-bin/build
+# Source Control Management (SCM)
+coding_agent_tools scm repository create --provider github my-new-repo
+coding_agent_tools scm commit_with_message --intention "Refactor user authentication"
+coding_agent_tools scm log --oneline
+
+# Task Management
+coding_agent_tools task next
+coding_agent_tools task list --recent
+coding_agent_tools task new_id
+
+# Project Utilities
+coding_agent_tools project release_context
+# For development tasks related to the gem itself:
+# coding_agent_tools project test (or bundle exec rspec)
+# coding_agent_tools project lint (or bundle exec standardrb)
+# coding_agent_tools project build_gem (or gem build coding_agent_tools.gemspec)
 ```
+
+*Note: The existing `bin/*` scripts will be gradually replaced or wrapped by these new gem commands.*
 
 ## 🏗 Architecture
 
-Built using the **ATOM pattern** (Action, Transformation, Operation, Model):
+The gem's library code in `lib/coding_agent_tools/` is structured using an **ATOM-based hierarchy** (Atoms, Molecules, Organisms, Ecosystems), promoting modularity and reusability:
 
-- **Actions** (`lib/coding_agent_tools/actions/`): CLI handlers
-- **Transformations** (`lib/coding_agent_tools/transformations/`): Business logic
-- **Operations** (`lib/coding_agent_tools/operations/`): External adapters
-- **Models** (`lib/coding_agent_tools/models/`): Data structures
+- **`lib/coding_agent_tools/atoms/`**: Smallest, indivisible utility functions or classes.
+- **`lib/coding_agent_tools/molecules/`**: Simple compositions of Atoms forming reusable operations.
+- **`lib/coding_agent_tools/organisms/`**: More complex units performing specific business logic or features.
+- **`lib/coding_agent_tools/ecosystems/`**: The largest units, representing complete subsystems (the CLI app itself is an ecosystem).
+- **`lib/coding_agent_tools/models/`**: Data structures (POROs) used across layers.
+- **`lib/coding_agent_tools/cli/`**: Contains `dry-cli` command classes.
+- **`lib/coding_agent_tools/cli.rb`**: Main `dry-cli` registry.
+
+See the [Architecture Document](docs-project/architecture.md) for more details.
 
 ## 🔧 Configuration
 
@@ -113,7 +119,44 @@ Ensure LM Studio is running on `localhost:1234` for offline LLM queries.
 
 ## 🚧 Development Status
 
-Currently in active development. See [roadmap](docs-project/roadmap.md) for planned releases:
+Currently in active development (v0.1.0 focusing on establishing the gem structure). See [roadmap](docs-project/roadmap.md) for planned releases.
+
+## 💻 Development
+
+After cloning the repository:
+
+1.  **Set up dependencies:**
+    ```bash
+    bundle install
+    ```
+
+2.  **Run tests:**
+    ```bash
+    bundle exec rspec
+    ```
+
+3.  **Run linters/formatters:**
+    ```bash
+    bundle exec standardrb
+    ```
+
+4.  **Build the gem locally:**
+    ```bash
+    gem build coding_agent_tools.gemspec
+    ```
+    This will create a `.gem` file in the project root (e.g., `coding_agent_tools-0.1.0.gem`).
+
+5.  **Install the local build:**
+    ```bash
+    gem install ./coding_agent_tools-0.1.0.gem
+    ```
+
+6.  **Use the console for interactive development:**
+    ```bash
+    bin/console
+    ```
+
+## 📚 Documentation
 
 ## 📚 Documentation
 
@@ -127,4 +170,4 @@ This project follows documentation-driven development with structured task manag
 
 ## 📄 License
 
-[MIT License](LICENSE.txt)
+[MIT License](LICENSE)

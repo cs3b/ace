@@ -31,7 +31,7 @@ This document outlines the architectural design and technical implementation det
 
 ### High-Level Components
 
-The gem's architecture is based on the ATOM (Action, Transformation, Operation, Model) pattern, promoting modularity and testability.
+The gem's architecture is designed for modularity and testability. The code within `lib/coding_agent_tools/` specifically follows an ATOM-based hierarchy (Atoms, Molecules, Organisms, Ecosystems) inspired by Atomic Design principles for composing functionality.
 
 ```mermaid
 flowchart TD
@@ -75,6 +75,17 @@ flowchart TD
 - **Technology**: Plain Old Ruby Objects (POROs) or simple data structures.
 - **Key Responsibilities**: Defining the structure of data related to Git objects, task items, API responses, etc.
 - **Interfaces**: Used by Service Objects and Adapters.
+
+### ATOM-Based Code Structure in `lib/coding_agent_tools/`
+
+The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns:
+
+-   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., a utility function for string normalization, a basic file reader).
+-   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation (e.g., a configuration loader using file access and parsing atoms, a basic Git client using command execution atoms).
+-   **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., an LLM querier, a commit message suggester). These often correspond to Service Objects.
+-   **Ecosystems (`lib/coding_agent_tools/ecosystems/`)**: Cohesive groupings of Organisms and other components that deliver a larger, bounded context or subsystem. The overall CLI application, orchestrated by `dry-cli`, can be considered the primary ecosystem.
+-   **Models (`lib/coding_agent_tools/models/`)**: Plain Old Ruby Objects (POROs) or simple data structures used across various layers to represent entities and data (e.g., `Task`, `LLMResponse`).
+-   **CLI Commands (`lib/coding_agent_tools/cli/` and `lib/coding_agent_tools/cli.rb`)**: These are the entry points for the command-line interface, built using `dry-cli`. Commands typically delegate their core logic to Organisms.
 
 ## Data Flow
 
@@ -129,26 +140,40 @@ These scripts are intended to be idempotent where possible and provide a consist
 │   ├── architecture.md    # This document
 │   ├── blueprint.md       # Project structure overview and AI guidelines
 │   └── what-do-we-build.md # Project vision and goals
-├── lib/                   # Ruby gem source code (following ATOM architecture)
+├── exe/                   # Gem executables (e.g., coding_agent_tools)
+├── lib/                   # Ruby gem source code
+│   ├── coding_agent_tools.rb # Main gem file, loads components
 │   └── coding_agent_tools/
-│       ├── actions/       # CLI handlers / entry points
-│       ├── transformations/ # Service Objects / business logic
-│       ├── operations/    # Adapters (LLM, Git, File, etc.)
-│       └── models/        # Data structures
+│       ├── atoms/         # Smallest, indivisible units (utilities, transformations)
+│       ├── cli/           # Dry-CLI command definitions and subcommands
+│       ├── ecosystems/    # Complete subsystems or major features
+│       ├── molecules/     # Simple compositions of atoms
+│       ├── models/        # Data structures (POROs)
+│       ├── organisms/     # Business logic handlers, orchestrating molecules/atoms
+│       ├── cli.rb         # Main Dry-CLI registry
+│       ├── error.rb       # Custom gem-specific error classes
+│       └── version.rb     # Gem version definition
 ├── spec/                  # RSpec test files (unit, integration, CLI)
+├── .github/               # GitHub specific files (e.g. workflows)
+│   └── workflows/
+│       └── main.yml       # CI workflow
 ├── .gitignore             # Specifies intentionally untracked files
-├── coding_agent_tools.gemspec # Gem specification file
+├── .rspec                 # RSpec configuration
+├── .standard.yml          # StandardRB configuration
+├── CHANGELOG.md           # Record of changes
 ├── Gemfile                # Bundler dependency file
 ├── LICENSE.txt            # Project license
 ├── PRD.md                 # Product Requirements Document (primary source of truth)
-└── README.md              # Project overview and quick start guide
+├── Rakefile               # Rake tasks
+├── README.md              # Project overview and quick start guide
+└── coding_agent_tools.gemspec # Gem specification file
 ```
 
 The primary Ruby source code resides in the `lib/coding_agent_tools/` directory, organized according to the ATOM pattern. Tests are located in the `spec/` directory.
 
 ## Development Patterns
 
--   **ATOM Architecture**: The core implementation follows the Action, Transformation, Operation, Model pattern to ensure modularity, testability, and maintainability.
+-   **ATOM-Based Hierarchy**: The core library implementation (`lib/coding_agent_tools/`) follows an Atoms, Molecules, Organisms, Ecosystems hierarchy to ensure modularity, reusability, testability, and maintainability.
 -   **Test-Driven Development (TDD)**: A strong emphasis is placed on writing tests (`spec/`) before or alongside implementation code, aiming for high test coverage.
 -   **Dependency Injection**: Components are designed to accept dependencies (like adapters) via initialization, facilitating easier testing and flexibility.
 -   **CLI-First Design**: The architecture prioritizes a robust and predictable command-line interface as the primary interaction method.
