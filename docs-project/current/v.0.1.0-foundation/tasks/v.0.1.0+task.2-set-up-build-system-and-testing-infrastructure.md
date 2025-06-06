@@ -30,35 +30,34 @@ bin/
 
 ## Objective
 
-Establish a comprehensive build system and testing infrastructure for the Coding Agent Tools gem. This includes setting up RSpec for testing, RuboCop for linting, automated build processes, and development scripts that ensure code quality and consistency throughout the development lifecycle.
+Establish a comprehensive build system and testing infrastructure for the Coding Agent Tools gem. This includes enhancing RSpec for testing, StandardRB for linting, automated gem build processes, and development scripts that ensure code quality and consistency throughout the development lifecycle.
 
 ## Scope of Work
 
-- Configure RSpec testing framework with proper structure and helpers
-- Set up RuboCop linting with project-specific configuration
-- Create build scripts in bin/ directory for common development tasks
-- Establish test coverage reporting and quality gates
-- Configure automated code formatting and style enforcement
-- Set up development dependencies and gem configuration
+- Enhance existing RSpec testing framework with additional helpers and configuration
+- Configure StandardRB linting with project-specific rules
+- Enhance build scripts in bin/ directory for gem development workflow
+- Establish test coverage reporting with SimpleCov and quality gates
+- Configure automated code formatting and style enforcement with StandardRB
+- Update development dependencies and gem configuration
 
 ### Deliverables
 
 #### Create
 
-- spec/spec_helper.rb
-- spec/coding_agent_tools_spec.rb
-- .rspec
-- .rubocop.yml
-- bin/setup (development environment setup)
-- bin/console (interactive console)
+- (none - basic structure already exists)
 
 #### Modify
 
+- spec/spec_helper.rb (add SimpleCov and additional configuration)
+- spec/coding_agent_tools_spec.rb (enhance with more comprehensive tests)
+- .rspec (enhance with additional options)
+- .standard.yml (enhance with project-specific rules)
 - Rakefile (add test and lint tasks)
-- Gemfile (add development and test dependencies)
-- bin/build (enhance with comprehensive build process)
-- bin/test (configure to run RSpec)
-- bin/lint (configure to run RuboCop)
+- Gemfile (add SimpleCov and other development dependencies)
+- bin/build (configure for gem building workflow)
+- bin/test (configure to run RSpec with coverage)
+- bin/lint (configure to run StandardRB)
 
 #### Delete
 
@@ -67,10 +66,10 @@ Establish a comprehensive build system and testing infrastructure for the Coding
 ## Phases
 
 1. Research testing and build best practices for Ruby gems
-2. Configure RSpec testing framework and structure
-3. Set up RuboCop linting with appropriate rules
-4. Create and enhance development scripts in bin/
-5. Establish automated build and quality checks
+2. Enhance existing RSpec testing framework and structure
+3. Configure StandardRB linting with appropriate rules
+4. Enhance development scripts in bin/ directory
+5. Establish automated gem build and quality checks
 6. Validate entire build pipeline end-to-end
 
 ## Implementation Plan
@@ -79,55 +78,57 @@ Establish a comprehensive build system and testing infrastructure for the Coding
 
 ### Planning Steps
 
-* [ ] Research RSpec best practices for gem testing and structure
+* [ ] Research RSpec best practices for gem testing and SimpleCov integration
   > TEST: RSpec Research Complete
   > Type: Pre-condition Check
   > Assert: Testing strategy documented with examples
-  > Command: test -f docs-project/backlog/v.0.1.0-foundation/researches/rspec-strategy.md
-* [ ] Analyze existing bin/ scripts to understand current patterns
-* [ ] Plan RuboCop configuration aligned with project coding standards
-* [ ] Design test structure and helper organization for gem testing
+  > Command: test -f docs-project/current/v.0.1.0-foundation/researches/rspec-strategy.md
+* [ ] Analyze existing bin/ scripts and RSpec structure to understand current patterns
+* [ ] Plan StandardRB configuration aligned with project coding standards
+* [ ] Design enhanced test structure and helper organization for comprehensive gem testing
 
 ### Execution Steps
 
-- [ ] Create spec/ directory structure with spec_helper.rb and basic configuration
-- [ ] Write initial RSpec test for main CodingAgentTools module
-  > TEST: RSpec Configuration
+- [ ] Enhance spec/spec_helper.rb with SimpleCov configuration and additional helpers
+  > TEST: SimpleCov Integration
   > Type: Action Validation
-  > Assert: RSpec runs successfully with basic test
+  > Assert: SimpleCov generates coverage report when tests run
+  > Command: bundle exec rspec && test -f coverage/index.html
+- [ ] Enhance spec/coding_agent_tools_spec.rb with more comprehensive tests
+  > TEST: Enhanced RSpec Configuration
+  > Type: Action Validation
+  > Assert: RSpec runs successfully with enhanced tests
   > Command: bundle exec rspec spec/coding_agent_tools_spec.rb
-- [ ] Configure .rspec file with appropriate default options
-- [ ] Set up .rubocop.yml with project-specific linting rules
-- [ ] Update Gemfile with development dependencies (rspec, rubocop, etc.)
-- [ ] Enhance bin/test script to run RSpec with proper configuration
-  > TEST: Test Script Functionality
+- [ ] Enhance .rspec file with additional options for better output
+- [ ] Enhance .standard.yml with project-specific StandardRB rules
+- [ ] Update Gemfile with SimpleCov and other development dependencies
+- [ ] Enhance bin/test script to run RSpec with coverage reporting
+  > TEST: Test Script with Coverage
   > Type: Action Validation
-  > Assert: bin/test runs all specs successfully
-  > Command: bin/test
-- [ ] Enhance bin/lint script to run RuboCop with project configuration
+  > Assert: bin/test runs all specs and generates coverage
+  > Command: bin/test && test -f coverage/index.html
+- [ ] Enhance bin/lint script to run StandardRB with project configuration
   > TEST: Lint Script Functionality
   > Type: Action Validation
   > Assert: bin/lint runs without errors on clean code
   > Command: bin/lint
-- [ ] Create bin/setup script for development environment initialization
-- [ ] Create bin/console script for interactive development console
-- [ ] Update bin/build script to include testing and linting steps
-  > TEST: Complete Build Process
+- [ ] Enhance bin/build script to focus on gem building workflow
+  > TEST: Gem Build Process
   > Type: Action Validation
-  > Assert: bin/build completes all steps successfully
-  > Command: bin/build
+  > Assert: bin/build successfully builds the gem
+  > Command: bin/build && test -f coding_agent_tools-*.gem
 - [ ] Add Rake tasks for common development operations
 
 ## Acceptance Criteria
 
-- [ ] AC 1: RSpec test suite runs successfully with `bin/test`
-- [ ] AC 2: RuboCop linting passes with `bin/lint` on all Ruby files
-- [ ] AC 3: Complete build process (`bin/build`) includes testing and linting
-- [ ] AC 4: Development environment can be set up with `bin/setup`
-- [ ] AC 5: Interactive console works with `bin/console`
+- [ ] AC 1: RSpec test suite runs successfully with `bin/test` and generates coverage
+- [ ] AC 2: StandardRB linting passes with `bin/lint` on all Ruby files
+- [ ] AC 3: Gem build process (`bin/build`) successfully creates gem file
+- [ ] AC 4: Development environment can be set up with `bin/setup` (already exists)
+- [ ] AC 5: Interactive console works with `bin/console` (already exists)
 - [ ] AC 6: All automated checks in the Implementation Plan pass
-- [ ] AC 7: Bundle install completes successfully with all dependencies
-- [ ] AC 8: Test coverage reporting is configured and functional
+- [ ] AC 7: Bundle install completes successfully with all dependencies including SimpleCov
+- [ ] AC 8: SimpleCov test coverage reporting is configured and generates reports
 
 ## Out of Scope
 
