@@ -74,7 +74,7 @@ The template's Implementation Plan section is divided into two subsections to su
 This distinction supports workflow separation where review/planning phases focus on Planning Steps, while implementation phases focus on Execution Steps. Both sections can include embedded tests as guardrails.
 
 > **Tip: Generating Task IDs with `bin/tnid`**
-> Always use the `bin/tnid` command (run from the project root, e.g., `coding-agent-workflow-toolkit-meta`)
+> Always use the `bin/tnid` command (run from the project root)
 > to generate the task ID for the `id` field in the front-matter.
 > This script ensures the ID is unique, correctly formatted, and uses the next sequential
 > number for the current release, as per the conventions in

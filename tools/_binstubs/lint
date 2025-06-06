@@ -31,7 +31,7 @@ echo "INFO: This script can also call tools like linters for documentation (e.g.
 # ruff check . "$@"
 
 # Example: Call the Markdown link linter if it exists
-# TOOLKIT_MD_LINT="coding-agent-workflow-toolkit-meta/docs-dev/tools/lint-md-links.rb"
+# TOOLKIT_MD_LINT="docs-dev/tools/lint-md-links.rb"
 # if [ -f "$TOOLKIT_MD_LINT" ]; then
 #   echo "Running Markdown link linter..."
 #   ruby "$TOOLKIT_MD_LINT"

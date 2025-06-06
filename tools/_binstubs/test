@@ -19,7 +19,7 @@
 # - Java (Maven): mvn test
 # - Java (Gradle): ./gradlew test
 #
-# Refer to `coding-agent-workflow-toolkit-meta/docs-dev/guides/testing/` for
+# Refer to `docs-dev/guides/testing/` for
 # technology-specific testing guidance.
 
 set -e

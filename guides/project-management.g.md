@@ -127,7 +127,7 @@ Where:
 
 > specific release, starting from 1 (e.g., `+task.1`, `+task.12`).
 
-**Important:** While this section describes the *format* of the Task ID, the actual generation of a new, unique, and correctly sequenced task ID **must** be done using the `bin/tnid` script. This script ensures the correct sequential number is used for the current release. Always run `bin/tnid` from the project root (e.g., `coding-agent-workflow-toolkit-meta`) to obtain the ID for a new task.
+**Important:** While this section describes the *format* of the Task ID, the actual generation of a new, unique, and correctly sequenced task ID **must** be done using the `bin/tnid` script. This script ensures the correct sequential number is used for the current release. Always run `bin/tnid` from the project root to obtain the ID for a new task.
 
 **Rationale:**
 

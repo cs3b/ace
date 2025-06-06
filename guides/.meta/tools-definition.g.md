@@ -22,7 +22,7 @@ The primary goal of development tools is to:
 7.  **Cross-Platform Compatibility (where feasible):** Strive to make tools runnable on common development operating systems (Linux, macOS). If a tool has specific OS dependencies (e.g., `tree` command), document them.
 8.  **Error Handling:** Tools should provide clear error messages and exit with non-zero status codes on failure.
 9.  **Minimal Dependencies:** Prefer tools written in standard scripting languages (e.g., Bash, Ruby, Python) that are commonly available or have minimal external dependencies. If dependencies are required, document them.
-10. **Project-Relative Paths**: Tools should assume they are run from the project root (an assumption typically ensured by `bin/` wrappers). Paths within tools (e.g., to access `docs-project/` files) should be constructed relative to this root (e.g., `docs-project/current/vX.Y.Z/tasks/001.md`) and not include the top-level project directory name (e.g., avoid `coding-agent-workflow-toolkit-meta/docs-project/...`).
+10. **Project-Relative Paths**: Tools should assume they are run from the project root (an assumption typically ensured by `bin/` wrappers). Paths within tools (e.g., to access `docs-project/` files) should be constructed relative to this root (e.g., `docs-project/current/vX.Y.Z/tasks/001.md`) and not include the top-level project directory name.
 
 ## Naming Conventions
 
@@ -101,7 +101,7 @@ exec(File.expand_path('../docs-dev/tools/get-next-task', __dir__), *ARGV)
 3.  **Implement Logic:** Write the tool, adhering to the core principles and naming conventions.
 4.  **Add Usage Info:** Include a help option (`-h`, `--help`) or clear comments explaining how to use the tool.
 5.  **Test Thoroughly:** Ensure the tool works as expected in various scenarios, including edge cases and error conditions. Document example invocations or create test cases if the tool's logic is complex. Verify that the tool produces correct output and handles failures gracefully (e.g., proper exit codes, informative error messages).
-6.  **Place in `docs-dev/tools/`:** Add the new tool to the `coding-agent-workflow-toolkit-meta/docs-dev/tools/` directory.
+6.  **Place in `docs-dev/tools/`:** Add the new tool to the `docs-dev/tools/` directory.
 7.  **(Optional) Create `bin/` Wrapper:** If the tool is frequently used, consider adding a wrapper in the root `bin/` directory.
 8.  **Update Documentation:**
     *   If the tool is significant or complex, add a section to this guide describing it.
