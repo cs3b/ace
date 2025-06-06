@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# gl: Thin wrapper for recent-git-log across main, docs-dev, docs-project
+
+args = []
+ARGV.each_with_index do |arg, idx|
+  if arg == '--last' || arg == '-last'
+    args << arg
+    args << ARGV[idx+1] if ARGV[idx+1]
+  end
+end
+
+exec(File.expand_path('../docs-dev/tools/get-recent-git-log', __dir__), *args)

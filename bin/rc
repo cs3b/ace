@@ -7,7 +7,7 @@
 # __dir__ gives the directory of the current script (docs-dev/tools/_binstubs/).
 # '../get-current-release-path' navigates from docs-dev/tools/_binstubs/ up to docs-dev/tools/ and then selects the target script.
 
-target_script = File.expand_path('../get-current-release-path', __dir__)
+target_script = File.expand_path('../docs-dev/tools/get-current-release-path', __dir__)
 
 # Use exec to replace the current process with the target script.
 # *ARGV passes all command-line arguments to the target script.
