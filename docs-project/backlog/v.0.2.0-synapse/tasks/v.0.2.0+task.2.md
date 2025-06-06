@@ -24,7 +24,7 @@ _Result excerpt:_
 
 ## Objective
 
-Implement API key discovery system (R-LLM-2) that supports finding Gemini API keys via environment variable `GEMINI_API_KEY` and configuration file `~/.gemini/config`. This enables secure and flexible authentication for the Gemini LLM integration.
+Implement API key discovery system (R-LLM-2) that supports finding Gemini API keys via configuration file `~/.gemini/config` and environment variable `GEMINI_API_KEY`. Configuration file takes precedence over environment variable. This enables secure and flexible authentication for the Gemini LLM integration.
 
 ## Scope of Work
 
@@ -70,7 +70,7 @@ Implement API key discovery system (R-LLM-2) that supports finding Gemini API ke
   > Assert: Understand secure key handling patterns
   > Command: Manual review of security documentation
 - [ ] Design config file format and structure for ~/.gemini/config
-- [ ] Plan priority order for key discovery (ENV vs file vs defaults)
+- Plan priority order for key discovery (config file > ENV variable > error)
 - [ ] Design error handling for missing or invalid configurations
 
 ### Execution Steps
@@ -85,8 +85,8 @@ Implement API key discovery system (R-LLM-2) that supports finding Gemini API ke
 - [ ] Implement environment variable lookup for GEMINI_API_KEY
   > TEST: Verify Environment Variable Lookup
   > Type: Action Validation
-  > Assert: Resolver finds key from environment variable
-  > Command: GEMINI_API_KEY=test_key ruby -e "require './lib/coding_agent_tools/config/api_key_resolver'; puts CodingAgentTools::Config::ApiKeyResolver.new.resolve"
+  > Assert: Resolver finds key from environment variable when no config file exists
+  > Command: rm -f ~/.gemini/config && GEMINI_API_KEY=test_key ruby -e "require './lib/coding_agent_tools/config/api_key_resolver'; puts CodingAgentTools::Config::ApiKeyResolver.new.resolve"
 - [ ] Create GeminiConfig class for ~/.gemini/config file parsing
 - [ ] Implement YAML/JSON config file reader with error handling
   > TEST: Verify Config File Reading
@@ -106,7 +106,7 @@ Implement API key discovery system (R-LLM-2) that supports finding Gemini API ke
 
 - [ ] AC 1: System successfully discovers API key from GEMINI_API_KEY environment variable
 - [ ] AC 2: System successfully reads API key from ~/.gemini/config file
-- [ ] AC 3: Priority order is enforced (ENV variable takes precedence over config file)
+- [ ] AC 3: Priority order is enforced (config file takes precedence over ENV variable)
 - [ ] AC 4: Clear error messages when API key is not found or invalid
 - [ ] AC 5: GeminiClient integrates seamlessly with key discovery system
 - [ ] AC 6: All unit tests pass with >95% code coverage
@@ -120,5 +120,8 @@ Implement API key discovery system (R-LLM-2) that supports finding Gemini API ke
 - ❌ Integration with system keychain or credential managers
 
 ## References
+
+- Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/gemini-query.fish (shows .env file loading pattern)
+- Priority: ~/.gemini/config > GEMINI_API_KEY environment variable
 
 ```

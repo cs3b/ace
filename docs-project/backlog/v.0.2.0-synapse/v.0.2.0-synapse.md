@@ -42,6 +42,12 @@ From roadmap:
 - R-LLM-3: Implement lms-studio-query command → [v.0.2.0+task.3]
 - R-LLM-4: Add model override flag support → [v.0.2.0+task.4]
 
+**Reference Materials:**
+- Existing Fish implementation: docs/gemini-query.fish (shows working Gemini API integration)
+- Existing Fish implementation: docs/lms-query.fish (shows working LM Studio integration)
+- User preferences: lighter HTTP client approach, config file > ENV variable precedence
+- Default models: gemini-2.0-flash-lite (Gemini), mistral-small-24b-instruct-2501@8bit (LM Studio)
+
 ## Implementation Plan
 
 ### Core Components

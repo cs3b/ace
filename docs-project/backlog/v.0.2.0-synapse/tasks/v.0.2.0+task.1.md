@@ -47,7 +47,7 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
 #### Modify
 
 - lib/coding_agent_tools.rb (require new modules)
-- coding_agent_tools.gemspec (add google-cloud-ai dependency)
+- coding_agent_tools.gemspec (add faraday dependency for HTTP client)
 
 ## Phases
 
@@ -77,12 +77,12 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Add google-cloud-ai gem dependency to gemspec
-  > TEST: Verify Dependency Added
+- Add faraday or net/http dependencies for lighter HTTP client approach
+  > TEST: Verify HTTP Client Dependencies
   > Type: Action Validation
-  > Assert: google-cloud-ai gem is listed in gemspec dependencies
-  > Command: grep "google-cloud-ai" coding_agent_tools.gemspec
-- [ ] Create GeminiClient class with API integration
+  > Assert: HTTP client dependencies are available
+  > Command: ruby -e "require 'faraday'; puts 'Faraday available'" || ruby -e "require 'net/http'; puts 'Net::HTTP available'"
+- Create GeminiClient class with lightweight HTTP integration (based on gemini-query.fish)
   > TEST: Verify GeminiClient Class
   > Type: Action Validation
   > Assert: GeminiClient class exists with generate_text method
@@ -120,5 +120,9 @@ Implement the `llm-gemini-query` command (R-LLM-1) that accepts a prompt string 
 - ❌ Custom system prompts or conversation history
 
 ## References
+
+- Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/gemini-query.fish
+- Gemini API documentation: https://ai.google.dev/api/rest
+- Default model: gemini-2.0-flash-lite
 
 ```

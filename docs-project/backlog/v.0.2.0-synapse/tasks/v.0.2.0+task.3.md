@@ -24,7 +24,7 @@ _Result excerpt:_
 
 ## Objective
 
-Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studio on `localhost:1234` using the server's REST protocol for offline inference. This provides offline LLM capabilities as an alternative to cloud-based services.
+Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studio on `localhost:1234` using the server's REST protocol for offline inference. Default model should be "mistral-small-24b-instruct-2501@8bit" but configurable. This provides offline LLM capabilities as an alternative to cloud-based services.
 
 ## Scope of Work
 
@@ -64,7 +64,7 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 *Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-- [ ] Research LM Studio REST API documentation and endpoints
+- [ ] Research LM Studio REST API documentation and endpoints (reference lms-query.fish)
   > TEST: API Documentation Review
   > Type: Pre-condition Check
   > Assert: Understand LM Studio REST protocol and response formats
@@ -77,7 +77,7 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Create LMStudioClient class with HTTP REST integration
+- [ ] Create LMStudioClient class with HTTP REST integration (based on lms-query.fish)
   > TEST: Verify LMStudioClient Class
   > Type: Action Validation
   > Assert: LMStudioClient class exists with generate_text method
@@ -121,5 +121,9 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 - ❌ Multiple model instances or switching
 
 ## References
+
+- Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/lms-query.fish
+- LM Studio API endpoint: http://localhost:1234/v1/chat/completions
+- Default model: mistral-small-24b-instruct-2501@8bit
 
 ```
