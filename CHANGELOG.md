@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-## [0.3.0] - 2025-06-04
+## [v.0.3.0] - 2025-06-04
 
 ### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
 
@@ -445,5 +445,5 @@ in the 2025-05-07 and 2025-05-08 git logs)
 - Set up the project structure and documentation framework.
 - Documented the initial release process.
 
-[Unreleased]: https://github.com/cs3b/coding-agent-workflow-toolkit-meta/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/cs3b/coding-agent-workflow-toolkit-meta/compare/v.0.3.0...HEAD
 [0.3.0]: https://github.com/cs3b/coding-agent-workflow-toolkit-meta/compare/v0.2.22...v0.3.0
