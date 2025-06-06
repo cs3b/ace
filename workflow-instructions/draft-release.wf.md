@@ -69,7 +69,7 @@ user-provided release scope into actionable tasks.
    * Add the new release to the roadmap's "Planned Major Releases" table
    * Include version, codename, target window, goals, and key epics
    * Update roadmap's `last_reviewed` date and add entry to Update History
-   * Follow [Manage Roadmap Workflow](manage-roadmap.wf.md) for roadmap modifications
+   * Follow [Update Roadmap Workflow](update-roadmap.wf.md) for roadmap modifications
    * Commit roadmap changes separately with message format:
 
      ```bash

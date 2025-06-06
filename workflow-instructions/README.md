@@ -50,7 +50,7 @@ user) to perform common development and project management tasks.
 
 ## Project Management & Reflection
 
-- [Manage Roadmap](./manage-roadmap.wf.md): Manage project roadmap and task priorities.
+- [Update Roadmap](./update-roadmap.wf.md): Update project roadmap and task priorities.
 - [Review Tasks Board Status](./review-tasks-board-status.wf.md): Review current task statuses, dependencies, and
   priorities on the board.
 - [Log Compact Session](./log-compact-session.wf.md): Log a compact summary of the current session for context

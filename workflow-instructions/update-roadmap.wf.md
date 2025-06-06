@@ -1,4 +1,4 @@
-# Workflow Instruction: Manage Roadmap
+# Workflow Instruction: Update Roadmap
 
 **Goal:** Propose, review, and apply updates to `docs-project/roadmap.md` ensuring the roadmap remains an accurate
 strategic guide.

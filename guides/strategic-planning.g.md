@@ -28,7 +28,7 @@ See `/docs-project/roadmap.md`. Key sections:
 
 ## 3. Roadmap Management Lifecycle
 
-1. **Create / Propose Change**: Use `manage-roadmap.md` workflow.
+1. **Create / Propose Change**: Use `update-roadmap.wf.md` workflow.
 2. **Review**: Stakeholder/lead approves via PR or discussion.
 3. **Update**: Commit changes, increment `last_reviewed` and add entry to *Update History*.
 4. **Quarterly Checkpoint**: At start/end of each release cycle, validate roadmap relevance.

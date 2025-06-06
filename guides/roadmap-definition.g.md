@@ -412,7 +412,7 @@ The roadmap must be kept synchronized with release lifecycle changes through aut
 
 - **When**: After completing step 4 (Populate Overview Document) in draft-release workflow
 - **Action**: Add new release to roadmap "Planned Major Releases" table
-- **Trigger**: Execute manage-roadmap workflow with new release information
+- **Trigger**: Execute update-roadmap workflow with new release information
 - **Commit**: Separate roadmap commit with message "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
 
 **2. Release Publication**
@@ -426,24 +426,24 @@ The roadmap must be kept synchronized with release lifecycle changes through aut
 
 - **When**: Releases move between backlog → current → done folders
 - **Action**: Update roadmap to reflect current status
-- **Trigger**: Manual execution of manage-roadmap workflow step 3 (Update Release Status)
+- **Trigger**: Manual execution of update-roadmap workflow step 3 (Update Release Status)
 - **Commit**: Include in relevant release lifecycle commits
 
 ### Cross-Workflow Dependencies
 
-**Draft-Release → Manage-Roadmap**
+**Draft-Release → Update-Roadmap**
 
-- Draft-release workflow MUST call manage-roadmap workflow after step 6
+- Draft-release workflow MUST call update-roadmap workflow after step 6
 - Roadmap updates MUST be committed separately from release scaffolding
 - Roadmap commit MUST complete successfully before proceeding to step 8
 
-**Publish-Release → Manage-Roadmap**
+**Publish-Release → Update-Roadmap**
 
 - Publish-release workflow MUST update roadmap before final archival
 - Roadmap cleanup MUST complete before documentation archival commit
 - Failed roadmap updates SHOULD trigger rollback consideration
 
-**Manage-Roadmap Integration Points**
+**Update-Roadmap Integration Points**
 
 - Step 3 (Update Release Status) MUST check all project folder locations
 - Workflow MUST validate roadmap consistency with current project state
@@ -524,7 +524,7 @@ When roadmap updates fail during release lifecycle management, specific recovery
   1. Complete release scaffolding without roadmap update
   2. Log roadmap update failure with specific error details
   3. Require manual roadmap update before proceeding to user review
-- **Recovery**: Execute manage-roadmap workflow separately with new release information
+- **Recovery**: Execute update-roadmap workflow separately with new release information
 
 **Publish-Release Workflow Failures**
 
@@ -576,7 +576,7 @@ When roadmap updates fail during release lifecycle management, specific recovery
 ## Cross-References
 
 - [Strategic Planning Guide](strategic-planning.g.md) - Conceptual framework and lifecycle
-- [Manage Roadmap Workflow](../workflow-instructions/manage-roadmap.wf.md) - Process for making updates (references this guide)
+- [Update Roadmap Workflow](../workflow-instructions/update-roadmap.wf.md) - Process for making updates (references this guide)
 - [Current Roadmap](../../docs-project/roadmap.md) - Live roadmap document
 
 ## Last Updated
