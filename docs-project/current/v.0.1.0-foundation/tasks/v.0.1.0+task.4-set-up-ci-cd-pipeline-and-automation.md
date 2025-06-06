@@ -30,24 +30,21 @@ Establish a robust CI/CD pipeline using GitHub Actions to automate testing, lint
 
 ## Scope of Work
 
-- Create GitHub Actions workflows for CI/CD pipeline
-- Set up automated testing across multiple Ruby versions
-- Configure automated linting and code quality checks
-- Establish build validation and gem packaging verification
-- Set up automated dependency vulnerability scanning
+- Rename and enhance existing GitHub Actions workflow for comprehensive CI pipeline
+- Set up automated testing across multiple Ruby versions using existing bin/test
+- Configure automated linting using existing bin/lint script
+- Set up automated dependency vulnerability scanning (future phase)
 - Configure branch protection with required status checks
 
 ### Deliverables
 
 #### Create
 
-- .github/workflows/ci.yml (main CI pipeline)
-- .github/workflows/codeql.yml (security scanning)
-- .github/dependabot.yml (dependency updates)
-- .github/workflows/gem-build.yml (gem packaging validation)
+- .github/dependabot.yml (dependency updates) - future phase
 
 #### Modify
 
+- .github/workflows/main.yml → rename to ci.yml and enhance with multi-Ruby testing
 - README.md (add CI badges and status indicators)
 - .github/pull_request_template.md (add CI checklist items)
 
@@ -58,11 +55,9 @@ Establish a robust CI/CD pipeline using GitHub Actions to automate testing, lint
 ## Phases
 
 1. Research GitHub Actions best practices for Ruby gems
-2. Create core CI workflow with testing and linting
-3. Set up security scanning and dependency management
-4. Configure gem build validation pipeline
-5. Establish branch protection and status checks
-6. Validate complete CI/CD pipeline end-to-end
+2. Enhance existing CI workflow with multi-Ruby testing and linting integration
+3. Establish branch protection and status checks
+4. Validate complete CI pipeline end-to-end
 
 ## Implementation Plan
 
@@ -75,29 +70,24 @@ Establish a robust CI/CD pipeline using GitHub Actions to automate testing, lint
   > Type: Pre-condition Check
   > Assert: CI/CD strategy documented with workflow examples
   > Command: test -f docs-project/backlog/v.0.1.0-foundation/researches/github-actions.md
-* [ ] Analyze existing build and test infrastructure for integration points
-* [ ] Plan multi-Ruby version testing strategy and matrix
-* [ ] Design security scanning and dependency management approach
+* [ ] Analyze existing .github/workflows/main.yml and bin/ scripts for integration points
+* [ ] Plan multi-Ruby version testing strategy and matrix (3.2, 3.3, 3.4)
+* [ ] Review current build system integration with bin/test and bin/lint
 
 ### Execution Steps
 
-- [ ] Create .github/workflows/ci.yml with comprehensive testing pipeline
-- [ ] Configure multi-Ruby version testing matrix (3.0, 3.1, 3.2, 3.3)
+- [ ] Rename .github/workflows/main.yml to ci.yml and enhance with comprehensive testing pipeline
+- [ ] Configure multi-Ruby version testing matrix (3.2, 3.3, 3.4)
   > TEST: CI Workflow Syntax
   > Type: Action Validation
   > Assert: GitHub Actions workflow syntax is valid
   > Command: actionlint .github/workflows/ci.yml
-- [ ] Set up automated linting and code quality checks in CI
-- [ ] Create .github/workflows/codeql.yml for security scanning
-- [ ] Configure .github/dependabot.yml for automated dependency updates
-- [ ] Create .github/workflows/gem-build.yml for gem packaging validation
-  > TEST: Gem Build Workflow
-  > Type: Action Validation
-  > Assert: Gem build workflow successfully packages gem
-  > Command: grep -q "gem build" .github/workflows/gem-build.yml
+- [ ] Integrate bin/test script for automated testing in CI workflow
+- [ ] Integrate bin/lint script for automated linting in CI workflow
+- [ ] Update branch references from master to main in CI workflow
 - [ ] Add CI status badges to README.md
 - [ ] Update PR template with CI-related checklist items
-- [ ] Configure required status checks for branch protection
+- [ ] Configure required status checks for main branch protection
 - [ ] Test complete CI pipeline with sample PR
   > TEST: End-to-End CI Pipeline
   > Type: Action Validation
@@ -106,19 +96,22 @@ Establish a robust CI/CD pipeline using GitHub Actions to automate testing, lint
 
 ## Acceptance Criteria
 
-- [ ] AC 1: CI pipeline runs successfully on all supported Ruby versions
-- [ ] AC 2: Automated testing, linting, and security scanning complete without errors
-- [ ] AC 3: Gem build validation confirms successful packaging
-- [ ] AC 4: Dependabot configured for automated dependency updates
+- [ ] AC 1: CI pipeline runs successfully on Ruby versions 3.2, 3.3, and 3.4
+- [ ] AC 2: Automated testing and linting using bin/test and bin/lint complete without errors
+- [ ] AC 3: CI workflow properly renamed from main.yml to ci.yml
+- [ ] AC 4: Branch references updated from master to main
 - [ ] AC 5: CI status badges display correctly in README.md
 - [ ] AC 6: All automated checks in the Implementation Plan pass
-- [ ] AC 7: Branch protection rules enforced with required status checks
+- [ ] AC 7: Branch protection rules enforced with required status checks for main branch
 - [ ] AC 8: Complete pipeline validated with end-to-end test
 
 ## Out of Scope
 
 - ❌ Deployment to production environments (future release)
-- ❌ Publishing to RubyGems.org automation (future release)
+- ❌ Publishing to RubyGems.org automation (gems built locally only)
+- ❌ Automated gem packaging and release workflows
+- ❌ Security scanning with CodeQL (future phase after core CI)
+- ❌ Dependabot configuration (future phase after core CI)
 - ❌ Performance benchmarking in CI (separate task)
 - ❌ Integration testing with external services (future tasks)
 - ❌ Advanced deployment strategies (blue-green, canary, etc.)
