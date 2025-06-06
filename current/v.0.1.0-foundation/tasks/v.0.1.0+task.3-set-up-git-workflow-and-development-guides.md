@@ -43,13 +43,11 @@ Establish a standardized Git workflow and comprehensive development guides to en
 
 #### Create
 
-x - .gitmessage (commit message template)
+- .gitmessage (commit message template following version-control-system.g.md)
 - .github/pull_request_template.md
 - .github/CONTRIBUTING.md
 - docs/SETUP.md (development setup guide)
 - docs/DEVELOPMENT.md (development workflow guide)
-x - .git/hooks/commit-msg (commit message validation)
-x - .git/hooks/pre-commit (pre-commit checks)
 
 #### Modify
 
@@ -62,8 +60,8 @@ x - .git/hooks/pre-commit (pre-commit checks)
 
 ## Phases
 
-1. Research Git workflow best practices and hook implementation
-2. Configure Git hooks and commit message standards
+1. Research Git workflow best practices and commit message standards
+2. Configure commit message templates and GitHub workflow
 3. Create GitHub templates and workflow documentation
 4. Write comprehensive development guides
 5. Validate complete development workflow end-to-end
@@ -74,55 +72,56 @@ x - .git/hooks/pre-commit (pre-commit checks)
 
 ### Planning Steps
 
-* [ ] Research Git hook best practices and commit message conventions
-  > TEST: Git Workflow Research Complete
+* [ ] Review existing StandardRB/RSpec/SimpleCov setup from completed tasks 1 and 2
+  > TEST: Build System Review Complete
   > Type: Pre-condition Check
-  > Assert: Git workflow strategy documented with examples
-  > Command: test -f docs-project/backlog/v.0.1.0-foundation/researches/git-workflow.md
-* [ ] Analyze existing docs-dev/guides structure for consistency
-* [ ] Plan commit message format aligned with conventional commits
-* [ ] Design development workflow that supports both human and AI contributors
+  > Assert: Current build system capabilities documented
+  > Command: test -f bin/test && test -f bin/lint && test -f bin/build
+* [ ] Analyze existing GitHub Actions CI configuration for badge references
+* [ ] Plan commit message format aligned with docs-dev/guides/version-control-system.g.md
+* [ ] Design development workflow integrating existing bin/ scripts (setup, test, lint, build, console)
+* [ ] Plan docs/ directory structure for user-facing developer documentation
 
 ### Execution Steps
 
-- [ ] Create .gitmessage template with commit message format and examples
-- [ ] Write commit-msg Git hook to validate commit message format
-  > TEST: Commit Message Validation
-  > Type: Action Validation
-  > Assert: Hook rejects invalid commit messages and accepts valid ones
-  > Command: echo "invalid msg" | .git/hooks/commit-msg /dev/stdin; echo $?
-- [ ] Create pre-commit Git hook for automated quality checks
+- [ ] Create docs/ directory for user-facing developer documentation
+- [ ] Create .gitmessage template following version-control-system.g.md format and examples
 - [ ] Set up .github/pull_request_template.md with comprehensive checklist
-- [ ] Write .github/CONTRIBUTING.md with clear contribution guidelines
+- [ ] Write .github/CONTRIBUTING.md with clear contribution guidelines referencing StandardRB
 - [ ] Create docs/SETUP.md with step-by-step development environment setup
   > TEST: Setup Guide Completeness
   > Type: Action Validation
-  > Assert: Setup guide enables fresh environment setup
-  > Command: test -f docs/SETUP.md && grep -q "bundle install" docs/SETUP.md
-- [ ] Write docs/DEVELOPMENT.md covering workflow, testing, and release process
-- [ ] Update README.md with development section and CI badges
-- [ ] Review and enhance .gitignore for Ruby gem development
+  > Assert: Setup guide enables fresh environment setup and references bin/ scripts
+  > Command: test -f docs/SETUP.md && grep -q "bin/setup" docs/SETUP.md
+- [ ] Write docs/DEVELOPMENT.md covering workflow with bin/test, bin/lint, bin/build usage
+  > TEST: Development Guide Integration
+  > Type: Action Validation
+  > Assert: Development guide references existing build system tools
+  > Command: test -f docs/DEVELOPMENT.md && grep -q "bin/test" docs/DEVELOPMENT.md
+- [ ] Update README.md with development section referencing docs/ and CI badges
+- [ ] Review and enhance .gitignore for Ruby gem development (if needed)
 - [ ] Validate complete development workflow from clone to contribution
   > TEST: End-to-End Workflow
   > Type: Action Validation
-  > Assert: Complete development setup works from scratch
-  > Command: bin/setup && bin/test && bin/lint
+  > Assert: Complete development setup works from scratch using documented process
+  > Command: bin/setup && bin/test && bin/lint && bin/build
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Git hooks are installed and validate commit messages and code quality
+- [ ] AC 1: .gitmessage template follows version-control-system.g.md format for consistent commit messages
 - [ ] AC 2: New developers can set up development environment using docs/SETUP.md
 - [ ] AC 3: PR template provides comprehensive checklist for contributions
-- [ ] AC 4: CONTRIBUTING.md clearly explains workflow and standards
-- [ ] AC 5: Development workflow documented in docs/DEVELOPMENT.md is complete
+- [ ] AC 4: CONTRIBUTING.md clearly explains workflow, standards, and StandardRB usage
+- [ ] AC 5: Development workflow documented in docs/DEVELOPMENT.md integrates existing bin/ scripts
 - [ ] AC 6: All automated checks in the Implementation Plan pass
-- [ ] AC 7: README.md provides clear overview with development information
-- [ ] AC 8: Complete workflow tested from fresh environment setup to contribution
+- [ ] AC 7: README.md provides clear overview with development information and CI badges
+- [ ] AC 8: Complete workflow tested from fresh environment setup to contribution using documented process
 
 ## Out of Scope
 
-- ❌ CI/CD pipeline configuration (separate task)
-- ❌ GitHub Actions workflow setup (separate task)
+- ❌ Git hooks implementation (commit-msg, pre-commit validation)
+- ❌ CI/CD pipeline configuration (already completed in previous tasks)
+- ❌ GitHub Actions workflow setup (already completed in previous tasks)
 - ❌ Branch protection rules configuration (requires admin access)
 - ❌ Release automation and publishing workflows (future release)
 - ❌ Integration with external services (future tasks)
