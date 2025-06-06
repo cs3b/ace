@@ -61,12 +61,32 @@ AI-assisted development workflow in a new or existing project.
           `docs-dev/tools/`. They should function if the underlying tools are present and correctly
           referenced within the wrappers.
 
-4. **Review and Update Project Source Documentation**:
+4. **Setup v.0.0.0 Bootstrap Release Tracking**:
+    - **Copy v.0.0.0 Template**: Copy the complete v.0.0.0 template structure from `docs-dev/guides/initialize-project-templates/v.0.0.0/` to `docs-project/current/v.0.0.0-bootstrap/`.
+    - **Customize Template Tasks**: Replace template placeholders in copied task files:
+        - Replace `TEMPLATE-task.X` IDs with actual task IDs using `bin/tnid v.0.0.0` for each task.
+        - Replace `[PLACEHOLDER]` values in the release overview file with actual project information.
+        - Update task dependencies to use the actual generated task IDs.
+        - Remove template notes sections from all copied files.
+    - **Mark Completed Tasks**: Update the status of tasks that were already completed during initialization:
+        - Mark the docs-project structure setup task as `done` if directories were created.
+        - Mark the core documentation task as `in-progress` or `done` based on completion level.
+        - Leave PRD completion and roadmap creation tasks as `pending` for user completion.
+    - **Update Release Status**: Set the v.0.0.0 release overview status to `in-progress` and add the current date as the start date.
+
+5. **Review and Update Project Source Documentation**:
     - Review the information extracted or gathered through interactive prompts in Step 2.
     - Identify the primary source document (`PRD.md` or `README.md`) determined in Step 2.
     - Update the primary source document with the gathered project information (name, purpose, technology stack, key features, etc.).
     - For any information that was not fully gathered or requires further detail, add clear notes or placeholders within the document indicating where more information is needed.
     - Ensure the updated document aligns with the structure of the relevant template (`docs-dev/guides/initialize-project-templates/PRD.md` or `docs-dev/guides/initialize-project-templates/README.md`) if templates were used to initially populate the file.
+
+6. **Provide Next Steps Guidance**:
+    - **Display v.0.0.0 Tasks**: List the created v.0.0.0 tasks and their current status, explaining what remains to be completed.
+    - **PRD Completion Guidance**: Provide clear instructions for completing the PRD using the generated task, including the user verification step.
+    - **Roadmap Creation Guidance**: Explain the roadmap creation process and how it integrates with the v.0.0.0 release completion.
+    - **Release Management Overview**: Briefly explain how to use `bin/tn` and `bin/tr` commands to track progress and manage the v.0.0.0 release.
+    - **Transition to v.0.1.0**: Explain that once v.0.0.0 is complete and archived, the project will be ready for v.0.1.0 foundation planning using the draft-release workflow.
 
 ## Prerequisites
 
@@ -146,10 +166,18 @@ The generated file follows the template structure from `docs-dev/guides/initiali
    - User is aware that some `bin/` scripts (`test`, `lint`, `build`, `run`) are placeholders
      needing project-specific implementation.
 
-4. **Project Context**:
+4. **v.0.0.0 Bootstrap Release Tracking**:
+   - `docs-project/current/v.0.0.0-bootstrap/` directory exists with customized template structure.
+   - v.0.0.0 release overview file contains project-specific information and current status.
+   - Template tasks converted to actual tasks with proper IDs and dependencies.
+   - Completed initialization steps marked as `done` in corresponding tasks.
+   - Remaining tasks (PRD completion, roadmap creation) marked as `pending` for user completion.
+
+5. **Project Context**:
    - Development philosophy established using templates.
    - Technical boundaries defined in generated documentation.
    - Extension points identified and documented.
+   - Clear next steps provided for completing v.0.0.0 release and transitioning to v.0.1.0 planning.
 
 ## Workflow Instruction Context
 
@@ -172,6 +200,8 @@ Initialize an AI-driven development environment by creating necessary documentat
 - [What We Build Template](docs-dev/guides/initialize-project-templates/what-do-we-build.md) (Template for project vision)
 - [Architecture Template](docs-dev/guides/initialize-project-templates/architecture.md) (Template for technical architecture)
 - [Blueprint Template](docs-dev/guides/initialize-project-templates/blueprint.md) (Template for project structure overview)
+- [v.0.0.0 Bootstrap Template](docs-dev/guides/initialize-project-templates/v.0.0.0/) (Template for v.0.0.0 release tracking)
+- [Draft Release Workflow](docs-dev/workflow-instructions/draft-release.wf.md) (For future release planning)
 
 ## Setup Requirements
 
