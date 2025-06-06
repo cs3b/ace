@@ -1,5 +1,9 @@
 # Coding Agent Tools (CAT) Ruby Gem
 
+[![Ruby](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/main.yml/badge.svg)](https://github.com/ORGANIZATION/coding-agent-tools/actions/workflows/main.yml)
+[![Gem Version](https://badge.fury.io/rb/coding_agent_tools.svg)](https://badge.fury.io/rb/coding_agent_tools)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A Ruby gem providing CLI tools designed for AI coding agents and developers to streamline development workflows through predictable, standardized commands.
 
 ## 🚀 Quick Start
@@ -123,50 +127,86 @@ Currently in active development (v0.1.0 focusing on establishing the gem structu
 
 ## 💻 Development
 
+### Quick Start
+
 After cloning the repository:
 
-1.  **Set up dependencies:**
-    ```bash
-    bundle install
-    ```
+```bash
+# Initial setup
+bin/setup
 
-2.  **Run tests:**
-    ```bash
-    bundle exec rspec
-    ```
+# Run tests
+bin/test
 
-3.  **Run linters/formatters:**
-    ```bash
-    bundle exec standardrb
-    ```
+# Check code style
+bin/lint
 
-4.  **Build the gem locally:**
-    ```bash
-    gem build coding_agent_tools.gemspec
-    ```
-    This will create a `.gem` file in the project root (e.g., `coding_agent_tools-0.1.0.gem`).
+# Build gem
+bin/build
 
-5.  **Install the local build:**
-    ```bash
-    gem install ./coding_agent_tools-0.1.0.gem
-    ```
+# Interactive console
+bin/console
+```
 
-6.  **Use the console for interactive development:**
-    ```bash
-    bin/console
-    ```
+### Development Workflow
+
+1. **Set up environment**: `bin/setup`
+2. **Create feature branch**: `git checkout -b feature/name`
+3. **Write tests first**: Follow TDD approach
+4. **Implement feature**: Make tests pass
+5. **Verify quality**: `bin/test && bin/lint`
+6. **Commit changes**: Use conventional commit format
+7. **Push and PR**: Follow contribution guidelines
+
+### Documentation
+
+- **[Setup Guide](docs/SETUP.md)**: Complete development environment setup
+- **[Development Guide](docs/DEVELOPMENT.md)**: Daily workflow and best practices
+- **[Contributing](.github/CONTRIBUTING.md)**: Contribution guidelines and standards
+
+### Build System
+
+The project includes automated scripts for common development tasks:
+
+- `bin/setup`: Initial project setup and dependencies
+- `bin/test`: Run complete test suite with RSpec
+- `bin/lint`: Code style checking with StandardRB
+- `bin/build`: Build gem package for distribution
+- `bin/console`: Interactive Ruby console with gem loaded
 
 ## 📚 Documentation
 
-## 📚 Documentation
+### User Documentation
+- **[Setup Guide](docs/SETUP.md)** - Development environment setup
+- **[Development Guide](docs/DEVELOPMENT.md)** - Workflow and best practices
+- **[Contributing](.github/CONTRIBUTING.md)** - How to contribute
 
+### Project Documentation
 - [Architecture](docs-project/architecture.md) - System design and patterns
 - [Project Vision](docs-project/what-do-we-build.md) - Goals and use cases
-- [Development Guides](docs-dev/guides/) - Standards and best practices
+- [Development Guides](docs-dev/guides/) - Internal standards and processes
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTING.md) for details on:
+
+- Setting up your development environment
+- Code style and quality standards
+- Testing requirements and practices
+- Pull request process and guidelines
+- Commit message conventions
+
 This project follows documentation-driven development with structured task management in `docs-project/`. See the [project blueprint](docs-project/blueprint.md) for navigation guidance.
+
+### Quick Contribution Workflow
+
+1. Fork the repository and clone your fork
+2. Set up development environment: `bin/setup`
+3. Create a feature branch: `git checkout -b feature/name`
+4. Make your changes following our standards
+5. Test your changes: `bin/test && bin/lint`
+6. Commit with conventional format and push
+7. Open a pull request using our template
 
 ## 📄 License
 

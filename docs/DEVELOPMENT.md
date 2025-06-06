@@ -1,0 +1,620 @@
+# Development Workflow Guide
+
+This guide covers the day-to-day development workflow for Coding Agent Tools, including how to use the existing build system tools and follow best practices.
+
+## Overview
+
+The Coding Agent Tools project follows a structured development workflow that emphasizes:
+- **Test-Driven Development (TDD)**: Write tests first, then implement features
+- **Continuous Integration**: Automated testing and linting on every commit
+- **Conventional Commits**: Standardized commit message format
+- **Code Quality**: StandardRB linting and comprehensive test coverage
+
+## Daily Development Workflow
+
+### 1. Start Working on a Feature
+
+```bash
+# Get the latest changes
+git checkout main
+git pull origin main
+
+# Create a new feature branch
+git checkout -b feature/your-feature-name
+# or for bug fixes
+git checkout -b fix/issue-description
+```
+
+### 2. Development Cycle
+
+Follow this cycle for each feature or change:
+
+#### A. Write Tests First (TDD)
+
+```bash
+# Create or update test files
+# Location: spec/coding_agent_tools/...
+
+# Run tests to see them fail (Red)
+bin/test
+```
+
+#### B. Implement the Feature
+
+```bash
+# Write minimal code to make tests pass
+# Location: lib/coding_agent_tools/...
+
+# Run tests to see them pass (Green)
+bin/test
+```
+
+#### C. Refactor and Clean Up
+
+```bash
+# Improve code quality without changing functionality
+# Run linter to ensure code style
+bin/lint
+
+# Run tests to ensure nothing broke
+bin/test
+```
+
+#### D. Verify Build
+
+```bash
+# Build the gem to ensure no packaging issues
+bin/build
+```
+
+### 3. Commit Your Changes
+
+```bash
+# Review your changes
+git status
+git diff
+
+# Stage related changes
+git add path/to/changed/files
+
+# Commit with conventional format
+git commit
+# This opens your editor with the .gitmessage template
+```
+
+### 4. Push and Create Pull Request
+
+```bash
+# Push your branch
+git push origin feature/your-feature-name
+
+# Create a pull request on GitHub
+# Use the provided PR template
+```
+
+## Build System Commands
+
+The project includes several `bin/` scripts for common development tasks:
+
+### Core Development Commands
+
+#### `bin/setup`
+**Purpose**: Initial project setup and dependency installation
+```bash
+bin/setup
+```
+- Installs Ruby gem dependencies
+- Sets up development environment
+- Configures local settings
+- Verifies installation
+
+#### `bin/test`
+**Purpose**: Run the complete test suite
+```bash
+# Run all tests
+bin/test
+
+# Run with coverage report
+COVERAGE=true bin/test
+
+# Run specific test file
+bundle exec rspec spec/path/to/specific_test.rb
+```
+- Executes RSpec test suite
+- Shows test results and failures
+- Generates coverage reports when requested
+- Validates all functionality
+
+#### `bin/lint`
+**Purpose**: Check and fix code style using StandardRB
+```bash
+# Check for style violations
+bin/lint
+
+# Auto-fix violations (when possible)
+bundle exec standardrb --fix
+```
+- Enforces Ruby style guide (StandardRB)
+- Reports style violations
+- Can automatically fix many issues
+- Ensures consistent code formatting
+
+#### `bin/build`
+**Purpose**: Build the gem package
+```bash
+bin/build
+```
+- Compiles the gem package
+- Validates gemspec configuration
+- Creates `.gem` file for distribution
+- Verifies packaging integrity
+
+#### `bin/console`
+**Purpose**: Interactive development console
+```bash
+bin/console
+```
+- Starts IRB with gem loaded
+- Allows interactive testing of classes
+- Useful for debugging and exploration
+- Access to all gem functionality
+
+### Project Management Commands
+
+#### `bin/tn` (Task Next)
+**Purpose**: Get the next task to work on
+```bash
+bin/tn
+```
+- Shows the next pending task
+- Displays task dependencies
+- Helps prioritize development work
+
+#### `bin/tal` (Task All List)
+**Purpose**: List all available tasks
+```bash
+bin/tal
+```
+- Shows complete task backlog
+- Displays task status and priorities
+- Helps with project planning
+
+### Git Workflow Commands
+
+#### `bin/gc` (Git Commit)
+**Purpose**: Enhanced git commit with AI-generated messages
+```bash
+bin/gc -i "intention of the changes"
+```
+- Generates descriptive commit messages
+- Follows conventional commit format
+- Integrates with project workflow
+
+#### `bin/gl` (Git Log)
+**Purpose**: Enhanced git log display
+```bash
+bin/gl
+```
+- Shows formatted commit history
+- Provides better visualization
+- Helps track project progress
+
+## Testing Strategy
+
+### Test Organization
+
+```
+spec/
+├── coding_agent_tools/
+│   ├── atoms/          # Unit tests for atomic components
+│   ├── molecules/      # Integration tests for molecules
+│   ├── organisms/      # Feature tests for organisms
+│   └── ecosystems/     # End-to-end tests for ecosystems
+├── fixtures/           # Test data and mock files
+└── support/           # Test helpers and configurations
+```
+
+### Test Types
+
+#### Unit Tests (Atoms)
+- Test individual methods and classes
+- Fast execution
+- Isolated from dependencies
+- High coverage target (95%+)
+
+```ruby
+RSpec.describe CodingAgentTools::Atoms::FileUtils do
+  describe "#read_safely" do
+    it "returns file content when file exists" do
+      # Test implementation
+    end
+  end
+end
+```
+
+#### Integration Tests (Molecules)
+- Test component interactions
+- Moderate execution time
+- Limited external dependencies
+- Focus on interface contracts
+
+```ruby
+RSpec.describe CodingAgentTools::Molecules::GitOperations do
+  describe "#commit_with_message" do
+    it "creates commit with proper format" do
+      # Test implementation
+    end
+  end
+end
+```
+
+#### Feature Tests (Organisms)
+- Test complete features
+- Slower execution
+- May include external calls
+- Validate user-facing functionality
+
+```ruby
+RSpec.describe CodingAgentTools::Organisms::TaskManager do
+  describe "#next_task" do
+    it "returns highest priority pending task" do
+      # Test implementation
+    end
+  end
+end
+```
+
+#### End-to-End Tests (Ecosystems)
+- Test complete workflows
+- Slowest execution
+- Full system integration
+- Validate entire user journeys
+
+```ruby
+RSpec.describe "CLI Integration" do
+  it "completes full task workflow" do
+    # Test implementation
+  end
+end
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+bin/test
+
+# Run tests with coverage
+COVERAGE=true bin/test
+
+# Run specific test categories
+bundle exec rspec spec/coding_agent_tools/atoms/
+bundle exec rspec spec/coding_agent_tools/molecules/
+
+# Run tests matching pattern
+bundle exec rspec --grep "TaskManager"
+
+# Run failed tests only
+bundle exec rspec --only-failures
+```
+
+## Code Quality Standards
+
+### StandardRB Configuration
+
+The project uses StandardRB for code formatting and style enforcement:
+
+```yaml
+# .standard.yml (if needed for customization)
+ruby_version: 3.2
+```
+
+### Code Review Checklist
+
+Before submitting code:
+
+- [ ] All tests pass (`bin/test`)
+- [ ] Code follows StandardRB style (`bin/lint`)
+- [ ] New functionality has tests
+- [ ] Documentation is updated
+- [ ] Commit messages follow conventional format
+- [ ] No hardcoded values or secrets
+- [ ] Error handling is appropriate
+- [ ] Performance impact considered
+
+### Coverage Requirements
+
+- **Minimum coverage**: 80%
+- **Target coverage**: 90%+
+- **Critical paths**: 100% coverage required
+
+View coverage reports:
+```bash
+COVERAGE=true bin/test
+open coverage/index.html
+```
+
+## Architecture Patterns
+
+### ATOM Hierarchy
+
+Follow the established ATOM pattern:
+
+```ruby
+# Atoms: Simple, pure functions
+module CodingAgentTools::Atoms::StringUtils
+  def self.snake_case(string)
+    # Implementation
+  end
+end
+
+# Molecules: Compositions of atoms
+class CodingAgentTools::Molecules::FileProcessor
+  include CodingAgentTools::Atoms::StringUtils
+  
+  def process_file(path)
+    # Uses atoms to build functionality
+  end
+end
+
+# Organisms: Business logic components
+class CodingAgentTools::Organisms::ProjectManager
+  def initialize(file_processor: Molecules::FileProcessor.new)
+    @file_processor = file_processor
+  end
+end
+
+# Ecosystems: Complete subsystems
+class CodingAgentTools::Ecosystems::CLI
+  def initialize
+    @project_manager = Organisms::ProjectManager.new
+  end
+end
+```
+
+### Dependency Injection
+
+Use dependency injection for testability:
+
+```ruby
+class SomeClass
+  def initialize(dependency: DefaultDependency.new)
+    @dependency = dependency
+  end
+end
+
+# In tests
+let(:mock_dependency) { double("dependency") }
+let(:instance) { described_class.new(dependency: mock_dependency) }
+```
+
+## Debugging Workflow
+
+### Using the Console
+
+```bash
+bin/console
+
+# In the console:
+> require 'pry'; binding.pry  # Set breakpoint
+> CodingAgentTools::SomeClass.new.debug_method
+```
+
+### Adding Debug Output
+
+```ruby
+# Use structured logging
+require 'logger'
+
+logger = Logger.new(STDOUT)
+logger.debug "Processing file: #{filename}"
+logger.info "Operation completed successfully"
+logger.error "Failed to process: #{error.message}"
+```
+
+### Running Single Tests
+
+```bash
+# Run specific test
+bundle exec rspec spec/path/to/test_spec.rb:line_number
+
+# Run with debugging
+bundle exec rspec spec/path/to/test_spec.rb --pry
+```
+
+## Performance Considerations
+
+### Benchmarking
+
+```ruby
+require 'benchmark'
+
+Benchmark.bm do |x|
+  x.report("method_a") { 1000.times { method_a } }
+  x.report("method_b") { 1000.times { method_b } }
+end
+```
+
+### Profiling
+
+```ruby
+require 'ruby-prof'
+
+RubyProf.start
+# Your code here
+result = RubyProf.stop
+
+printer = RubyProf::FlatPrinter.new(result)
+printer.print(STDOUT)
+```
+
+## Common Development Tasks
+
+### Adding a New Feature
+
+1. **Plan the feature**:
+   - Define requirements and scope
+   - Identify affected components
+   - Plan test strategy
+
+2. **Write tests first**:
+   ```bash
+   # Create test file
+   touch spec/coding_agent_tools/path/to/new_feature_spec.rb
+   
+   # Write failing tests
+   bin/test  # Should show failures
+   ```
+
+3. **Implement the feature**:
+   ```bash
+   # Create implementation file
+   touch lib/coding_agent_tools/path/to/new_feature.rb
+   
+   # Implement minimal code
+   bin/test  # Should pass
+   ```
+
+4. **Refactor and optimize**:
+   ```bash
+   bin/lint  # Check style
+   bin/test  # Verify functionality
+   ```
+
+### Fixing a Bug
+
+1. **Reproduce the bug**:
+   ```bash
+   # Write a failing test that demonstrates the bug
+   bin/test  # Should fail
+   ```
+
+2. **Fix the issue**:
+   ```bash
+   # Make minimal changes to fix the bug
+   bin/test  # Should pass
+   ```
+
+3. **Verify the fix**:
+   ```bash
+   bin/test  # All tests should pass
+   bin/lint  # Code should be clean
+   ```
+
+### Updating Dependencies
+
+```bash
+# Update Gemfile.lock
+bundle update
+
+# Run tests to ensure compatibility
+bin/test
+
+# Check for security vulnerabilities
+bundle audit
+```
+
+## Release Workflow
+
+### Preparing for Release
+
+1. **Update version**:
+   ```ruby
+   # lib/coding_agent_tools/version.rb
+   VERSION = "0.2.0"
+   ```
+
+2. **Update changelog**:
+   ```markdown
+   # CHANGELOG.md
+   ## [0.2.0] - 2024-01-15
+   ### Added
+   - New feature description
+   ### Fixed
+   - Bug fix description
+   ```
+
+3. **Final verification**:
+   ```bash
+   bin/test
+   bin/lint
+   bin/build
+   ```
+
+### Version Tagging
+
+```bash
+# Tag the release
+git tag -a v0.2.0 -m "Release version 0.2.0"
+git push origin v0.2.0
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Tests Failing Unexpectedly
+```bash
+# Clear test cache
+rm -rf spec/examples.txt
+
+# Reinstall dependencies
+bundle clean --force
+bundle install
+
+# Run tests again
+bin/test
+```
+
+#### Linter Errors
+```bash
+# Auto-fix common issues
+bundle exec standardrb --fix
+
+# Check remaining issues
+bin/lint
+```
+
+#### Build Failures
+```bash
+# Check gemspec validity
+gem build coding_agent_tools.gemspec
+
+# Verify dependencies
+bundle check
+```
+
+## Best Practices Summary
+
+1. **Always run tests before committing**: `bin/test`
+2. **Keep commits small and focused**: One logical change per commit
+3. **Write descriptive commit messages**: Follow conventional commits
+4. **Update tests with code changes**: Maintain test coverage
+5. **Use the build scripts**: Leverage `bin/` commands for consistency
+6. **Review your own code first**: Check diff before pushing
+7. **Ask for help when stuck**: Use GitHub issues or discussions
+
+## Quick Reference
+
+```bash
+# Daily workflow commands
+bin/setup     # Initial setup
+bin/test      # Run tests
+bin/lint      # Check style
+bin/build     # Build gem
+bin/console   # Interactive shell
+
+# Git workflow
+git checkout -b feature/name
+# ... make changes ...
+bin/test && bin/lint
+git commit
+git push origin feature/name
+
+# Project management
+bin/tn        # Next task
+bin/tal       # All tasks
+bin/gc -i "intention"  # AI commit
+```
+
+Happy coding! 🚀
