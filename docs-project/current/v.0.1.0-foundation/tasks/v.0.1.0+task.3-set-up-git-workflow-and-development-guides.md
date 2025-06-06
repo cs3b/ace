@@ -43,13 +43,13 @@ Establish a standardized Git workflow and comprehensive development guides to en
 
 #### Create
 
-- .gitmessage (commit message template)
+x - .gitmessage (commit message template)
 - .github/pull_request_template.md
 - .github/CONTRIBUTING.md
 - docs/SETUP.md (development setup guide)
 - docs/DEVELOPMENT.md (development workflow guide)
-- .git/hooks/commit-msg (commit message validation)
-- .git/hooks/pre-commit (pre-commit checks)
+x - .git/hooks/commit-msg (commit message validation)
+x - .git/hooks/pre-commit (pre-commit checks)
 
 #### Modify
 

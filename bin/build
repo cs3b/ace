@@ -1,34 +1,35 @@
 #!/bin/sh
-# Placeholder for project build script (bin/build)
-# This script should be adapted during project initialization or by developers
-# to execute the project's specific build command, if applicable.
-#
-# Many interpreted language projects (e.g., Python, Ruby) may not have a separate "build" step
-# unless they are producing distributable packages or assets.
-#
-# Examples:
-# - Node.js/TypeScript: npm run build (which might run tsc)
-# - Bun: bun run build
-# - Rust: cargo build
-# - Go: go build ./...
-# - Java (Maven): mvn package
-# - Java (Gradle): ./gradlew build
-# - C/C++/Makefile: make
-#
-# If your project doesn't have a build step, this script can do nothing or be removed.
+# Build script for Coding Agent Tools gem
+# Builds the gem file for distribution
 
 set -e
 cd "$(dirname "$0")"/.. # Ensure execution from project root
 
-echo "INFO: Running 'bin/build' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/build' script."
-echo "INFO: Please update it to run your project's specific build command, if applicable."
-echo "INFO: For example: 'npm run build', 'cargo build', 'mvn package', etc."
-echo "INFO: If your project doesn't have a dedicated build step, this script can do nothing or be removed."
+echo "INFO: Building Coding Agent Tools gem from project root: $(pwd)"
 
-# Add your project's build command here. For example:
-# npm run build -- "$@"
-# cargo build --release -- "$@"
+# Clean up any existing gem files
+echo "INFO: Cleaning up old gem files..."
+rm -f *.gem
 
-echo "(Placeholder: No build command executed)"
-exit 0
+# Run tests and linting before building
+echo "INFO: Running tests before build..."
+bin/test
+
+echo "INFO: Running linter before build..."
+bin/lint
+
+# Build the gem
+echo "INFO: Building gem..."
+bundle exec gem build coding_agent_tools.gemspec
+
+# Verify the gem was created
+GEM_FILE=$(ls coding_agent_tools-*.gem 2>/dev/null | head -1)
+if [ -n "$GEM_FILE" ]; then
+  echo "SUCCESS: Gem built successfully: $GEM_FILE"
+  echo "INFO: You can install it with: gem install $GEM_FILE"
+else
+  echo "ERROR: Gem build failed - no gem file found"
+  exit 1
+fi
+
+echo "INFO: Build completed successfully"

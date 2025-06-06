@@ -1,3 +1,13 @@
 # For available configuration options, see:
 #   https://github.com/standardrb/standard
 ruby_version: 3.1
+
+# Project-specific configuration for Coding Agent Tools gem
+ignore:
+  - "vendor/**/*"
+  - "tmp/**/*"
+  - "coverage/**/*"
+  - "pkg/**/*"
+  - "*.gemspec"
+  - "docs-dev/**/*"
+  - "docs-project/**/*"

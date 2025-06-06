@@ -12,4 +12,6 @@ group :development, :test do
   gem "pry"
   gem "bundler-audit"
   gem "gem-release"
+  gem "simplecov", "~> 0.22", require: false
+  gem "simplecov-html", "~> 0.12", require: false
 end

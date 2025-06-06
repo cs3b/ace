@@ -1,5 +1,28 @@
 # frozen_string_literal: true
 
+# SimpleCov must be loaded before application code
+require "simplecov"
+require "simplecov-html"
+
+SimpleCov.start do
+  add_filter "/spec/"
+  add_filter "/vendor/"
+  add_filter "/.bundle/"
+
+  add_group "Library", "lib"
+
+  # Set coverage thresholds but don't fail build for now
+  # Will be increased as test coverage improves
+  minimum_coverage 0
+  minimum_coverage_by_file 0
+
+  formatter SimpleCov::Formatter::MultiFormatter.new([
+    SimpleCov::Formatter::HTMLFormatter
+  ])
+
+  track_files "lib/**/*.rb"
+end
+
 require "coding_agent_tools"
 
 RSpec.configure do |config|

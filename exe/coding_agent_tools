@@ -14,7 +14,7 @@ rescue Dry::CLI::Error => e
   warn "Error: #{e.message}"
   # Consider more specific exit codes for different errors if needed
   exit 1
-rescue StandardError => e
+rescue => e
   # Catch other unexpected errors
   warn "An unexpected error occurred: #{e.message}"
   warn e.backtrace.join("\n")

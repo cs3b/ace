@@ -1,44 +1,23 @@
 #!/bin/sh
-# Placeholder for project linting script (bin/lint)
-# This script should be adapted during project initialization or by developers
-# to execute the project's specific linting command(s).
-#
-# This script might call multiple linters (e.g., code linters, documentation linters).
-#
-# Examples:
-# - Node.js: npm run lint (which might run ESLint, Prettier, etc.)
-# - Bun: bun run lint
-# - Ruby/RuboCop: bundle exec rubocop
-# - Python/Ruff: ruff check .
-# - Python/Flake8: flake8
-# - Rust: cargo clippy && cargo fmt -- --check
-# - Go: golangci-lint run
-# - Markdown links: ruby tools/lint-md-links.rb (example)
-# - Makefile: make lint
+# Lint script for Coding Agent Tools gem
+# Runs StandardRB linter with project configuration
 
 set -e
 cd "$(dirname "$0")"/.. # Ensure execution from project root
 
-echo "INFO: Running 'bin/lint' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/lint' script."
-echo "INFO: Please update it to run your project's specific linting command(s)."
-echo "INFO: For example: 'npm run lint', 'bundle exec rubocop', 'ruff check .', etc."
-echo "INFO: This script can also call tools like linters for documentation (e.g., Markdown)."
+echo "INFO: Running StandardRB linter from project root: $(pwd)"
+echo "INFO: Configuration loaded from .standard.yml"
 
-# Add your project's lint command(s) here. For example:
-# npm run lint -- "$@"
-# bundle exec rubocop "$@"
-# ruff check . "$@"
+# Run StandardRB with project configuration
+bundle exec standardrb "$@"
 
-# Example: Call the Markdown link linter if it exists
-# TOOLKIT_MD_LINT="coding-agent-workflow-toolkit-meta/docs-dev/tools/lint-md-links.rb"
-# if [ -f "$TOOLKIT_MD_LINT" ]; then
-#   echo "Running Markdown link linter..."
-#   ruby "$TOOLKIT_MD_LINT"
-# else
-#   echo "INFO: Toolkit Markdown linter not found at $TOOLKIT_MD_LINT"
-# fi
+# Check for any linting issues
+if [ $? -eq 0 ]; then
+  echo "SUCCESS: No linting issues found"
+else
+  echo "ERROR: Linting issues detected"
+  echo "Run 'bundle exec standardrb --fix' to auto-fix issues where possible"
+  exit 1
+fi
 
-
-echo "(Placeholder: No lint command executed)"
-exit 0
+echo "INFO: Linting completed successfully"

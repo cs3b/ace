@@ -1,38 +1,21 @@
 #!/bin/sh
-# Placeholder for project testing command.
-# This script should be located in the project's `bin/` directory.
-#
-# The `initialize-project-structure.md` workflow, or a developer,
-# should update this script to execute the project's actual test command.
-#
-# Examples:
-# - Node.js: npm test
-# - Node.js (Yarn): yarn test
-# - Node.js (pnpm): pnpm test
-# - Bun: bun test
-# - Ruby (RSpec): bundle exec rspec
-# - Ruby (Minitest): bundle exec rake test
-# - Python (pytest): pytest
-# - Python (unittest): python -m unittest discover
-# - Rust: cargo test
-# - Go: go test ./...
-# - Java (Maven): mvn test
-# - Java (Gradle): ./gradlew test
-#
-# Refer to `coding-agent-workflow-toolkit-meta/docs-dev/guides/testing/` for
-# technology-specific testing guidance.
+# Test script for Coding Agent Tools gem
+# Runs RSpec test suite with coverage reporting
 
 set -e
 cd "$(dirname "$0")"/.. # Ensure execution from project root
 
-echo "INFO: Running 'bin/test' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/test' script."
-echo "INFO: Please update it to run your project's specific test suite."
-echo "INFO: For example: 'npm test', 'bundle exec rspec', 'cargo test', etc."
+echo "INFO: Running RSpec test suite with coverage from project root: $(pwd)"
+echo "INFO: Coverage reports will be generated in coverage/ directory"
 
-# Add your project's actual test command here:
-# Example: npm test -- "$@"
-# Example: bundle exec rspec "$@"
+# Run RSpec with coverage reporting
+bundle exec rspec "$@"
 
-echo "INFO: No test command configured in bin/test."
-exit 0 # Succeed by default for placeholder, or change to 'exit 1' to indicate not configured.
+# Check if coverage report was generated
+if [ -f "coverage/index.html" ]; then
+  echo "SUCCESS: Coverage report generated at coverage/index.html"
+else
+  echo "WARNING: Coverage report not found"
+fi
+
+echo "INFO: Test run completed"
