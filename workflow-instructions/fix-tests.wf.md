@@ -31,7 +31,7 @@ This workflow is NOT intended for:
 ## Process Steps
 
 1. **Initial Analysis:**
-    - Run the test suite (e.g., `bundle exec rspec` from project root).
+    - Run the test suite (e.g., `bin/test --only-failures` from project root).
     - Identify failing tests from the output.
     - Gather error messages and stack traces.
 
@@ -42,7 +42,8 @@ This workflow is NOT intended for:
 
 3. **Fix and Verify:**
     - Isolate one failure at a time. Run only the failing test or file (e.g.,
-      `bundle exec rspec spec/path/to/failing_spec.rb:line_number` from project root).
+      `bin/test --next-failure` or
+      `bin/test spec/path/to/failing_spec.rb:line_number` from project root).
     - Analyze the code related to the failure.
     - Implement a fix.
     - Re-run the specific test to confirm it passes.
@@ -54,7 +55,8 @@ This workflow is NOT intended for:
 1. **Environment Setup:**
     - Ensure correct language version (e.g., `ruby -v`).
     - Verify dependencies are installed and up-to-date (`bundle install` from project root).
-    - Check for required environment variables or configuration files (e.g., `.env`).
+    - If `bin/test` is not working, try running `bin/setup` from project root.
+    - Ask Review required environment variables or configuration files for correct settings, especially regarding authentication issues.
     - Clear temporary files or caches if applicable (`rm -rf tmp/*`, `rake tmp:clear` from project root).
 
 2. **Test Isolation:**
@@ -75,7 +77,7 @@ This workflow is NOT intended for:
 
 ## Output / Success Criteria
 
-1. **All Tests Pass:** The full test suite runs without failures (e.g., `bundle exec rspec`).
+1. **All Tests Pass:** The full test suite runs without failures (e.g., `bin/test`).
 2. **Targeted Fix:** The fix addresses the root cause of the test failure.
 3. **No Regressions:** The fix does not introduce new failures.
 4. **Quality Metrics:** Failing tests are addressed promptly; fixes are documented.
