@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
+tree -L 3 lib
 ```
 
 _Result excerpt:_
