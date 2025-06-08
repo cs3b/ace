@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0+tasks.1] - 2025-06-08
+
+### Added
+- **LLM Integration Framework**: Complete implementation of Google Gemini AI integration
+  - `llm-gemini-query` command-line tool for querying Google Gemini API (gemini-2.0-flash-lite model)
+  - Support for prompt input from string arguments or file paths
+  - Explicit output formatting with `--format` flag (text or json)
+  - Debug mode with `--debug` flag for verbose error output
+  - Environment variable support for API key configuration (.env file)
+- **ATOM Architecture Components**:
+  - **Atoms**: HTTPClient, JSONFormatter, EnvReader for core functionality
+  - **Molecules**: APICredentials, HTTPRequestBuilder, APIResponseParser for composed behavior
+  - **Organisms**: GeminiClient, PromptProcessor for high-level AI operations
+- **HTTP Client Integration**: Faraday HTTP client for reliable API communication
+- **Comprehensive Testing Suite**:
+  - Unit tests for all ATOM components with >95% code coverage
+  - Integration tests with live API using VCR for CI-friendly testing
+  - CI-aware VCR configuration for automated testing environments
+- **Developer Experience**:
+  - `.env.example` template for API key configuration
+  - Detailed documentation for testing with VCR
+  - Examples and refactoring guides for API credentials
+
+### Changed
+- Enhanced CLI framework to support LLM command namespace
+- Updated gemspec to include Faraday dependency
+- Improved error handling with graceful API failure management
+
 ## [0.1.0] - 2025-06-06
 
 ### Added
@@ -30,5 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Established initial project structure including placeholder scripts in `bin/` and core documentation in `docs-project/`
 - Added the `docs-dev` submodule and initial `.gitignore` file
 
-[Unreleased]: https://github.com/your-org/coding-agent-tools/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/your-org/coding-agent-tools/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/your-org/coding-agent-tools/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/your-org/coding-agent-tools/releases/tag/v0.1.0
