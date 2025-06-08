@@ -45,6 +45,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 
 #### Modify
 
+- `spec/integration/llm_gemini_query_integration_spec.rb` - Improve error messages to show command output on failure
 - ✅ `.github/workflows/ci.yml` - Added explicit `bin/setup` step before running tests
 - Potentially `Gemfile` or `coding_agent_tools.gemspec` if dependency constraints need adjustment (if needed after testing)
 
@@ -76,6 +77,14 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 
 ### Execution Steps
 
+- [ ] **Improve integration test error reporting** - Modify integration tests to display actual command output when process status fails
+  - [ ] Create helper method to check process status with meaningful error messages
+  - [ ] Replace `expect(status).to be_success` with custom matcher that shows stdout/stderr on failure
+  - [ ] Update all integration tests to use the improved error reporting
+  > TEST: Error Reporting Improved
+  > Type: Action Validation
+  > Assert: Integration tests show stderr/stdout output on failure instead of just boolean status
+  > Command: grep -A10 -B5 "expect.*process.*success" spec/integration/llm_gemini_query_integration_spec.rb
 - [x] Add explicit bundler setup step to `.github/workflows/ci.yml` before running tests
   > TEST: CI Configuration Updated
   > Type: Action Validation
@@ -97,6 +106,8 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 
 ## Acceptance Criteria
 
+- [ ] Integration tests show meaningful error messages (stderr/stdout) when commands fail instead of just boolean status
+  - [ ] Failed tests display actual command output like: "Command failed with status 1. STDERR: <actual error>"
 - [ ] No `LoadError: cannot load such file -- dry/cli` errors in Ruby 3.4
 - [ ] All 22 integration tests pass in Ruby 3.4 (currently failing)
 - [ ] CLI commands execute successfully: `exe/llm-gemini-query --help` works
@@ -120,6 +131,7 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 - Current CI workflow: `.github/workflows/ci.yml` (updated with `bin/setup` step)
 - Key insight: Tests work locally but fail in CI, indicating bundler setup issue in GitHub Actions environment
 - Status: CI configuration updated, now testing to see if issue is resolved
+- Error reporting improvement: Current tests show `expected '#<Process::Status: pid 1895 exit 1>.success?' to be truthy, got false` instead of actual command errors
 ```
 
 Now I'll prepare the commit command as requested:
