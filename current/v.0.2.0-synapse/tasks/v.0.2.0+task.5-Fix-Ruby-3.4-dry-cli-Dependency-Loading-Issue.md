@@ -45,9 +45,8 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 
 #### Modify
 
-- `.github/workflows/ci.yml` - Add explicit bundler setup step before running tests
-- Potentially `Gemfile` or `coding_agent_tools.gemspec` if dependency constraints need adjustment
-- CI configuration to ensure proper gem loading in Ruby 3.4 environment
+- ✅ `.github/workflows/ci.yml` - Added explicit `bin/setup` step before running tests
+- Potentially `Gemfile` or `coding_agent_tools.gemspec` if dependency constraints need adjustment (if needed after testing)
 
 #### Verify
 
@@ -71,33 +70,29 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
   > Type: Pre-condition Check
   > Assert: Differences between local and CI bundler setup are identified
   > Command: bin/test --check-analysis-exists ci-bundler-analysis.md
-* [ ] Research GitHub Actions ruby/setup-ruby bundler configuration best practices
-* [ ] Identify missing bundler setup steps in CI workflow
-* [ ] Review if explicit `require 'bundler/setup'` is needed before gem loading
+* [x] Research GitHub Actions ruby/setup-ruby bundler configuration best practices
+* [x] Identify missing bundler setup steps in CI workflow - added `bin/setup` step
+* [ ] Review if additional bundler configuration is needed after testing CI
 
 ### Execution Steps
 
-- [ ] Add explicit bundler setup step to `.github/workflows/ci.yml` before running tests
+- [x] Add explicit bundler setup step to `.github/workflows/ci.yml` before running tests
   > TEST: CI Configuration Updated
   > Type: Action Validation
   > Assert: CI workflow includes proper bundler setup for Ruby 3.4
-  > Command: grep -A5 -B5 "bundle" .github/workflows/ci.yml
+  > Command: grep -A5 -B5 "Setup the dependencies" .github/workflows/ci.yml
 - [ ] Test the updated CI configuration by triggering a Ruby 3.4 build
-- [ ] Add `bundle exec` prefix to test commands if not already present
-  > TEST: Bundle Exec Usage
-  > Type: Action Validation
-  > Assert: Test commands use bundle exec for proper gem loading
-  > Command: grep "bin/test" .github/workflows/ci.yml
+- [ ] Monitor CI results to see if `bin/setup` resolves the dry-cli loading issue
 - [ ] Verify CLI command execution works in CI environment
   > TEST: CLI Startup Check in CI
   > Type: Action Validation
   > Assert: CLI command starts without LoadError in CI
-  > Command: bundle exec exe/llm-gemini-query --help
+  > Command: exe/llm-gemini-query --help
 - [ ] Run full integration test suite to verify all 22 tests pass in CI
   > TEST: Integration Tests Pass in CI
   > Type: Action Validation
   > Assert: All llm-gemini-query integration tests pass in Ruby 3.4 CI environment
-  > Command: bundle exec rspec spec/integration/llm_gemini_query_integration_spec.rb
+  > Command: bin/test # which runs rspec with proper setup
 - [ ] Verify no regression in Ruby 3.2 and 3.3 CI builds
 
 ## Acceptance Criteria
@@ -122,8 +117,9 @@ Fix the Ruby 3.4 CI environment issue where the `dry-cli` gem cannot be loaded, 
 - Failed tests: 22 integration tests in `spec/integration/llm_gemini_query_integration_spec.rb`
 - Error pattern: `<internal:/usr/lib/ruby/vendor_ruby/rubygems/core_ext/kernel_require.rb>:86:in 'require': cannot load such file -- dry/cli (LoadError)`
 - Affected file: `lib/coding_agent_tools/cli.rb:3`
-- Current CI workflow: `.github/workflows/ci.yml`
+- Current CI workflow: `.github/workflows/ci.yml` (updated with `bin/setup` step)
 - Key insight: Tests work locally but fail in CI, indicating bundler setup issue in GitHub Actions environment
+- Status: CI configuration updated, now testing to see if issue is resolved
 ```
 
 Now I'll prepare the commit command as requested:
