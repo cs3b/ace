@@ -42,7 +42,7 @@ puts
 puts "3. GeminiClient now specifies its own API key environment variable:"
 begin
   # GeminiClient internally creates APICredentials with "GEMINI_API_KEY"
-  client = CodingAgentTools::Organisms::GeminiClient.new
+  CodingAgentTools::Organisms::GeminiClient.new
   puts "✓ GeminiClient initialized successfully"
 rescue => e
   puts "✗ Error: #{e.message}"
@@ -53,7 +53,7 @@ puts
 puts "4. Using custom environment variable with GeminiClient:"
 begin
   # You can override the default GEMINI_API_KEY with a custom one
-  custom_client = CodingAgentTools::Organisms::GeminiClient.new(
+  CodingAgentTools::Organisms::GeminiClient.new(
     api_key_env: "MY_CUSTOM_GEMINI_KEY"
   )
   puts "✓ GeminiClient initialized with custom env variable"
@@ -75,7 +75,7 @@ demo_credentials = CodingAgentTools::Molecules::APICredentials.new(
 )
 
 puts "   Configured key: #{demo_credentials.api_key}"
-puts "   With prefix: #{demo_credentials.api_key_with_prefix('Bearer ')}"
+puts "   With prefix: #{demo_credentials.api_key_with_prefix("Bearer ")}"
 
 # Clean up
 CodingAgentTools::Molecules::APICredentials.reset!

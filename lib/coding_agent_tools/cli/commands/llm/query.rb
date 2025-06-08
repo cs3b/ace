@@ -16,31 +16,31 @@ module CodingAgentTools
           argument :prompt, required: true, desc: "The prompt text or file path (use --file flag for files)"
 
           option :file, type: :boolean, default: false, aliases: ["f"],
-                        desc: "Treat the prompt argument as a file path"
+            desc: "Treat the prompt argument as a file path"
 
           option :format, type: :string, default: "text", values: %w[text json],
-                          desc: "Output format (text or json)"
+            desc: "Output format (text or json)"
 
           option :debug, type: :boolean, default: false, aliases: ["d"],
-                         desc: "Enable debug output for verbose error information"
+            desc: "Enable debug output for verbose error information"
 
           option :model, type: :string, default: "gemini-2.0-flash-lite",
-                         desc: "Model to use (default: gemini-2.0-flash-lite)"
+            desc: "Model to use (default: gemini-2.0-flash-lite)"
 
           option :temperature, type: :float,
-                               desc: "Temperature for generation (0.0-2.0)"
+            desc: "Temperature for generation (0.0-2.0)"
 
           option :max_tokens, type: :integer,
-                              desc: "Maximum output tokens"
+            desc: "Maximum output tokens"
 
           option :system, type: :string,
-                          desc: "System instruction/prompt"
+            desc: "System instruction/prompt"
 
           example [
             '"What is Ruby programming language?"',
             '"Explain quantum computing" --format json',
-            'prompt.txt --file',
-            'prompt.txt --file --format json --debug',
+            "prompt.txt --file",
+            "prompt.txt --file --format json --debug",
             '"Hello" --model gemini-pro --temperature 0.5'
           ]
 
@@ -58,9 +58,8 @@ module CodingAgentTools
             response = query_gemini(prompt_text, options)
 
             # Format and output the response
-            result = output_response(response, options)
-            result
-          rescue StandardError => e
+            output_response(response, options)
+          rescue => e
             handle_error(e, options[:debug])
           end
 
@@ -71,7 +70,7 @@ module CodingAgentTools
             processor.process(prompt, from_file: options[:file])
           rescue CodingAgentTools::Error => e
             raise e
-          rescue StandardError => e
+          rescue => e
             raise CodingAgentTools::Error, "Failed to process prompt: #{e.message}"
           end
 
@@ -81,7 +80,7 @@ module CodingAgentTools
             generation_options = build_generation_options(options)
 
             client.generate_text(prompt_text, **generation_options)
-          rescue StandardError => e
+          rescue => e
             new_error = CodingAgentTools::Error.new("Failed to query Gemini: #{e.message}")
             new_error.set_backtrace(e.backtrace)
             raise new_error
@@ -154,11 +153,7 @@ module CodingAgentTools
           end
 
           def error_output(message, debug_enabled)
-            if debug_enabled
-              $stderr.puts message
-            else
-              $stderr.puts message
-            end
+            warn message
           end
         end
       end

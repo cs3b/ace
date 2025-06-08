@@ -299,7 +299,7 @@ RSpec.describe CodingAgentTools::Atoms::EnvReader do
     end
 
     it "temporarily sets environment variables" do
-      result = described_class.with_env({ "TEMP_VAR" => "temp_value" }) do
+      result = described_class.with_env({"TEMP_VAR" => "temp_value"}) do
         ENV["TEMP_VAR"]
       end
       expect(result).to eq("temp_value")
@@ -307,14 +307,14 @@ RSpec.describe CodingAgentTools::Atoms::EnvReader do
     end
 
     it "temporarily overrides existing variables" do
-      described_class.with_env({ "EXISTING_VAR" => "temporary_value" }) do
+      described_class.with_env({"EXISTING_VAR" => "temporary_value"}) do
         expect(ENV["EXISTING_VAR"]).to eq("temporary_value")
       end
       expect(ENV["EXISTING_VAR"]).to eq("original_value")
     end
 
     it "handles nil values by deleting variables" do
-      described_class.with_env({ "TO_BE_DELETED" => nil }) do
+      described_class.with_env({"TO_BE_DELETED" => nil}) do
         expect(ENV["TO_BE_DELETED"]).to be_nil
       end
       expect(ENV["TO_BE_DELETED"]).to eq("will_be_removed")
@@ -322,7 +322,7 @@ RSpec.describe CodingAgentTools::Atoms::EnvReader do
 
     it "restores original state even if block raises" do
       expect {
-        described_class.with_env({ "EXISTING_VAR" => "temp_value" }) do
+        described_class.with_env({"EXISTING_VAR" => "temp_value"}) do
           expect(ENV["EXISTING_VAR"]).to eq("temp_value")
           raise "Test error"
         end
@@ -349,14 +349,14 @@ RSpec.describe CodingAgentTools::Atoms::EnvReader do
     end
 
     it "converts non-string values to strings" do
-      described_class.with_env({ "NUMERIC" => 123, "BOOLEAN" => true }) do
+      described_class.with_env({"NUMERIC" => 123, "BOOLEAN" => true}) do
         expect(ENV["NUMERIC"]).to eq("123")
         expect(ENV["BOOLEAN"]).to eq("true")
       end
     end
 
     it "returns the block's return value" do
-      result = described_class.with_env({ "TEMP" => "value" }) do
+      result = described_class.with_env({"TEMP" => "value"}) do
         "block result"
       end
       expect(result).to eq("block result")
@@ -366,10 +366,10 @@ RSpec.describe CodingAgentTools::Atoms::EnvReader do
       it "properly handles nested with_env calls" do
         ENV["NESTED_VAR"] = "original"
 
-        described_class.with_env({ "NESTED_VAR" => "outer" }) do
+        described_class.with_env({"NESTED_VAR" => "outer"}) do
           expect(ENV["NESTED_VAR"]).to eq("outer")
 
-          described_class.with_env({ "NESTED_VAR" => "inner" }) do
+          described_class.with_env({"NESTED_VAR" => "inner"}) do
             expect(ENV["NESTED_VAR"]).to eq("inner")
           end
 

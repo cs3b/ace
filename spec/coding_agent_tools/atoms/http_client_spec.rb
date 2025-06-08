@@ -24,8 +24,8 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
   describe "#get" do
     before do
       stub_request(:get, "#{test_url}/endpoint")
-        .with(headers: { "Accept" => "*/*" })
-        .to_return(status: 200, body: "Success", headers: { "Content-Type" => "text/plain" })
+        .with(headers: {"Accept" => "*/*"})
+        .to_return(status: 200, body: "Success", headers: {"Content-Type" => "text/plain"})
     end
 
     it "performs a GET request successfully" do
@@ -36,10 +36,10 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
 
     it "includes custom headers in the request" do
       stub_request(:get, "#{test_url}/endpoint")
-        .with(headers: { "Accept" => "*/*", "Authorization" => "Bearer token123" })
+        .with(headers: {"Accept" => "*/*", "Authorization" => "Bearer token123"})
         .to_return(status: 200, body: "Authorized")
 
-      response = client.get("#{test_url}/endpoint", { "Authorization" => "Bearer token123" })
+      response = client.get("#{test_url}/endpoint", {"Authorization" => "Bearer token123"})
       expect(response.status).to eq(200)
       expect(response.body).to eq("Authorized")
     end
@@ -87,13 +87,13 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
     end
 
     context "with hash body" do
-      let(:request_body) { { name: "Test", value: 123 } }
+      let(:request_body) { {name: "Test", value: 123} }
 
       before do
         stub_request(:post, "#{test_url}/endpoint")
           .with(
             body: '{"name":"Test","value":123}',
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
           .to_return(status: 201, body: '{"id":1,"name":"Test","value":123}')
       end
@@ -109,14 +109,14 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
       stub_request(:post, "#{test_url}/endpoint")
         .with(
           body: "data",
-          headers: { "Authorization" => "Bearer token123", "X-Custom" => "value" }
+          headers: {"Authorization" => "Bearer token123", "X-Custom" => "value"}
         )
         .to_return(status: 200, body: "Success")
 
       response = client.post(
         "#{test_url}/endpoint",
         "data",
-        { "Authorization" => "Bearer token123", "X-Custom" => "value" }
+        {"Authorization" => "Bearer token123", "X-Custom" => "value"}
       )
       expect(response.status).to eq(200)
     end
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
       stub_request(:post, "#{test_url}/endpoint")
         .to_return(status: 400, body: '{"error":"Invalid request"}')
 
-      response = client.post("#{test_url}/endpoint", { invalid: true })
+      response = client.post("#{test_url}/endpoint", {invalid: true})
       expect(response.status).to eq(400)
       expect(response.body).to include("Invalid request")
     end
@@ -162,7 +162,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
         stub_request(:post, "#{test_url}/users")
           .with(
             body: expected_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
           .to_return(status: 201, body: '{"id":123}')
 
@@ -185,7 +185,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
         stub_request(:post, "#{test_url}/endpoint")
           .with(
             body: "{}",
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
           .to_return(status: 204, body: "")
 

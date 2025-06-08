@@ -79,9 +79,9 @@ module EnvHelper
     # Enable debug output if requested
     if debug_mode?
       puts "Debug mode enabled"
-      puts "CI mode: #{ENV['CI'] ? 'true' : 'false'}"
-      puts "VCR Record mode: #{ENV['VCR_RECORD'] || 'default'}"
-      puts "API Key available: #{ENV['GEMINI_API_KEY'] ? 'yes' : 'no'}"
+      puts "CI mode: #{ENV["CI"] ? "true" : "false"}"
+      puts "VCR Record mode: #{ENV["VCR_RECORD"] || "default"}"
+      puts "API Key available: #{ENV["GEMINI_API_KEY"] ? "yes" : "no"}"
     end
   end
 

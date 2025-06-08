@@ -31,11 +31,11 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
     context "with GET request" do
       before do
         stub_request(:get, "#{test_url}/users")
-          .with(headers: { "Accept" => "application/json", "Content-Type" => "application/json" })
+          .with(headers: {"Accept" => "application/json", "Content-Type" => "application/json"})
           .to_return(
             status: 200,
             body: '{"users": [{"id": 1, "name": "John"}]}',
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -44,7 +44,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
 
         expect(result[:status]).to eq(200)
         expect(result[:success]).to be true
-        expect(result[:body]).to eq({ users: [{ id: 1, name: "John" }] })
+        expect(result[:body]).to eq({users: [{id: 1, name: "John"}]})
         expect(result[:raw_body]).to eq('{"users": [{"id": 1, "name": "John"}]}')
       end
 
@@ -55,34 +55,34 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
             "Content-Type" => "application/json",
             "Authorization" => "Bearer token123"
           })
-          .to_return(status: 200, body: '{}')
+          .to_return(status: 200, body: "{}")
 
-        result = builder.json_request(:get, "#{test_url}/users", headers: { "Authorization" => "Bearer token123" })
+        result = builder.json_request(:get, "#{test_url}/users", headers: {"Authorization" => "Bearer token123"})
         expect(result[:status]).to eq(200)
       end
 
       it "handles query parameters" do
         stub_request(:get, "#{test_url}/users?page=2&limit=10")
-          .to_return(status: 200, body: '{"page": 2}', headers: { "Content-Type" => "application/json" })
+          .to_return(status: 200, body: '{"page": 2}', headers: {"Content-Type" => "application/json"})
 
-        result = builder.json_request(:get, "#{test_url}/users", query: { page: 2, limit: 10 })
-        expect(result[:body]).to eq({ page: 2 })
+        result = builder.json_request(:get, "#{test_url}/users", query: {page: 2, limit: 10})
+        expect(result[:body]).to eq({page: 2})
       end
     end
 
     context "with POST request" do
-      let(:request_body) { { name: "John", email: "john@example.com" } }
+      let(:request_body) { {name: "John", email: "john@example.com"} }
 
       before do
         stub_request(:post, "#{test_url}/users")
           .with(
             body: '{"name":"John","email":"john@example.com"}',
-            headers: { "Accept" => "application/json", "Content-Type" => "application/json" }
+            headers: {"Accept" => "application/json", "Content-Type" => "application/json"}
           )
           .to_return(
             status: 201,
             body: '{"id": 1, "name": "John", "email": "john@example.com"}',
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -91,7 +91,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
 
         expect(result[:status]).to eq(201)
         expect(result[:success]).to be true
-        expect(result[:body]).to eq({ id: 1, name: "John", email: "john@example.com" })
+        expect(result[:body]).to eq({id: 1, name: "John", email: "john@example.com"})
       end
     end
 
@@ -101,7 +101,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
           .to_return(
             status: 200,
             body: "Plain text response",
-            headers: { "Content-Type" => "text/plain" }
+            headers: {"Content-Type" => "text/plain"}
           )
       end
 
@@ -115,7 +115,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
     context "with json option set to false" do
       before do
         stub_request(:get, "#{test_url}/data")
-          .with(headers: { "Accept" => "*/*" })
+          .with(headers: {"Accept" => "*/*"})
           .to_return(status: 200, body: "Some data")
       end
 
@@ -128,12 +128,12 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
     context "with error responses" do
       it "handles 404 response" do
         stub_request(:get, "#{test_url}/not-found")
-          .to_return(status: 404, body: '{"error": "Not found"}', headers: { "Content-Type" => "application/json" })
+          .to_return(status: 404, body: '{"error": "Not found"}', headers: {"Content-Type" => "application/json"})
 
         result = builder.json_request(:get, "#{test_url}/not-found")
         expect(result[:status]).to eq(404)
         expect(result[:success]).to be false
-        expect(result[:body]).to eq({ error: "Not found" })
+        expect(result[:body]).to eq({error: "Not found"})
       end
 
       it "handles 500 server error" do
@@ -157,21 +157,21 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
   end
 
   describe "#post_json" do
-    let(:body) { { message: "Hello" } }
+    let(:body) { {message: "Hello"} }
 
     before do
       stub_request(:post, "#{test_url}/messages")
         .with(
           body: '{"message":"Hello"}',
-          headers: { "Accept" => "application/json", "Content-Type" => "application/json" }
+          headers: {"Accept" => "application/json", "Content-Type" => "application/json"}
         )
-        .to_return(status: 201, body: '{"id": 123, "message": "Hello"}', headers: { "Content-Type" => "application/json" })
+        .to_return(status: 201, body: '{"id": 123, "message": "Hello"}', headers: {"Content-Type" => "application/json"})
     end
 
     it "makes a POST request with JSON body" do
       result = builder.post_json("#{test_url}/messages", body)
       expect(result[:status]).to eq(201)
-      expect(result[:body]).to eq({ id: 123, message: "Hello" })
+      expect(result[:body]).to eq({id: 123, message: "Hello"})
     end
 
     it "includes custom headers" do
@@ -183,9 +183,9 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
             "X-API-Key" => "secret"
           }
         )
-        .to_return(status: 201, body: '{}')
+        .to_return(status: 201, body: "{}")
 
-      result = builder.post_json("#{test_url}/messages", body, headers: { "X-API-Key" => "secret" })
+      result = builder.post_json("#{test_url}/messages", body, headers: {"X-API-Key" => "secret"})
       expect(result[:status]).to eq(201)
     end
   end
@@ -193,22 +193,22 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
   describe "#get_json" do
     before do
       stub_request(:get, "#{test_url}/data")
-        .with(headers: { "Accept" => "application/json", "Content-Type" => "application/json" })
-        .to_return(status: 200, body: '{"data": "value"}', headers: { "Content-Type" => "application/json" })
+        .with(headers: {"Accept" => "application/json", "Content-Type" => "application/json"})
+        .to_return(status: 200, body: '{"data": "value"}', headers: {"Content-Type" => "application/json"})
     end
 
     it "makes a GET request" do
       result = builder.get_json("#{test_url}/data")
       expect(result[:status]).to eq(200)
-      expect(result[:body]).to eq({ data: "value" })
+      expect(result[:body]).to eq({data: "value"})
     end
 
     it "includes query parameters" do
       stub_request(:get, "#{test_url}/data?filter=active&sort=name")
-        .to_return(status: 200, body: '{"filtered": true}', headers: { "Content-Type" => "application/json" })
+        .to_return(status: 200, body: '{"filtered": true}', headers: {"Content-Type" => "application/json"})
 
-      result = builder.get_json("#{test_url}/data", query: { filter: "active", sort: "name" })
-      expect(result[:body]).to eq({ filtered: true })
+      result = builder.get_json("#{test_url}/data", query: {filter: "active", sort: "name"})
+      expect(result[:body]).to eq({filtered: true})
     end
 
     it "includes custom headers" do
@@ -218,9 +218,9 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
           "Content-Type" => "application/json",
           "Authorization" => "Bearer token"
         })
-        .to_return(status: 200, body: '{}')
+        .to_return(status: 200, body: "{}")
 
-      result = builder.get_json("#{test_url}/data", headers: { "Authorization" => "Bearer token" })
+      result = builder.get_json("#{test_url}/data", headers: {"Authorization" => "Bearer token"})
       expect(result[:status]).to eq(200)
     end
   end
@@ -229,10 +229,10 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
     context "with GET method" do
       it "returns raw Faraday response" do
         stub_request(:get, "#{test_url}/raw")
-          .with(headers: { "Custom" => "Header" })
+          .with(headers: {"Custom" => "Header"})
           .to_return(status: 200, body: "Raw response")
 
-        response = builder.raw_request(:get, "#{test_url}/raw", headers: { "Custom" => "Header" })
+        response = builder.raw_request(:get, "#{test_url}/raw", headers: {"Custom" => "Header"})
 
         expect(response).to be_a(Faraday::Response)
         expect(response.status).to eq(200)
@@ -274,12 +274,12 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       end
 
       it "adds query parameters to URL without existing query" do
-        url = builder.send(:build_url_with_query, "https://example.com/path", { foo: "bar", baz: 123 })
+        url = builder.send(:build_url_with_query, "https://example.com/path", {foo: "bar", baz: 123})
         expect(url).to eq("https://example.com/path?foo=bar&baz=123")
       end
 
       it "merges with existing query parameters" do
-        url = builder.send(:build_url_with_query, "https://example.com/path?existing=value", { new: "param" })
+        url = builder.send(:build_url_with_query, "https://example.com/path?existing=value", {new: "param"})
         uri = URI.parse(url)
         params = URI.decode_www_form(uri.query).to_h
 
@@ -287,12 +287,12 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       end
 
       it "handles symbol keys" do
-        url = builder.send(:build_url_with_query, "https://example.com", { symbol_key: "value" })
+        url = builder.send(:build_url_with_query, "https://example.com", {symbol_key: "value"})
         expect(url).to eq("https://example.com?symbol_key=value")
       end
 
       it "handles special characters in query values" do
-        url = builder.send(:build_url_with_query, "https://example.com", { query: "hello world", special: "a+b=c" })
+        url = builder.send(:build_url_with_query, "https://example.com", {query: "hello world", special: "a+b=c"})
         expect(url).to include("query=hello+world")
         expect(url).to include("special=a%2Bb%3Dc")
       end
@@ -313,7 +313,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       end
 
       it "merges custom headers" do
-        custom = { "Authorization" => "Bearer token", "X-Custom" => "value" }
+        custom = {"Authorization" => "Bearer token", "X-Custom" => "value"}
         headers = builder.send(:build_headers, custom, json: true)
 
         expect(headers).to include(
@@ -325,7 +325,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       end
 
       it "allows custom headers to override defaults" do
-        custom = { "Content-Type" => "text/plain" }
+        custom = {"Content-Type" => "text/plain"}
         headers = builder.send(:build_headers, custom, json: true)
 
         expect(headers["Content-Type"]).to eq("text/plain")
@@ -337,18 +337,16 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         double("response",
           status: 200,
           success?: true,
-          headers: { "content-type" => "application/json; charset=utf-8" },
-          body: '{"key": "value"}'
-        )
+          headers: {"content-type" => "application/json; charset=utf-8"},
+          body: '{"key": "value"}')
       end
 
       let(:text_response) do
         double("response",
           status: 200,
           success?: true,
-          headers: { "content-type" => "text/plain" },
-          body: "Plain text"
-        )
+          headers: {"content-type" => "text/plain"},
+          body: "Plain text")
       end
 
       it "parses JSON response when content-type is JSON" do
@@ -356,7 +354,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
 
         expect(result[:status]).to eq(200)
         expect(result[:success]).to be true
-        expect(result[:body]).to eq({ key: "value" })
+        expect(result[:body]).to eq({key: "value"})
         expect(result[:raw_body]).to eq('{"key": "value"}')
       end
 
@@ -378,9 +376,8 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         invalid_json_response = double("response",
           status: 200,
           success?: true,
-          headers: { "content-type" => "application/json" },
-          body: "not valid json"
-        )
+          headers: {"content-type" => "application/json"},
+          body: "not valid json")
 
         result = builder.send(:parse_response, invalid_json_response, json: true)
         expect(result[:body]).to be_nil
@@ -410,8 +407,8 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       complex_response = {
         data: {
           users: [
-            { id: 1, name: "John", tags: ["admin", "user"] },
-            { id: 2, name: "Jane", tags: ["user"] }
+            {id: 1, name: "John", tags: ["admin", "user"]},
+            {id: 2, name: "Jane", tags: ["user"]}
           ],
           metadata: {
             total: 2,
@@ -424,7 +421,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         .to_return(
           status: 200,
           body: complex_response.to_json,
-          headers: { "Content-Type" => "application/json" }
+          headers: {"Content-Type" => "application/json"}
         )
 
       result = builder.get_json("#{test_url}/complex")

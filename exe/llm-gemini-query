@@ -1,5 +1,18 @@
 #!/usr/bin/env ruby
 
+# Only require bundler/setup if it hasn't been loaded already
+# (e.g., via RUBYOPT) and we're in a bundled environment
+unless defined?(Bundler)
+  if ENV["BUNDLE_GEMFILE"] || File.exist?(File.expand_path("../../Gemfile", __FILE__))
+    begin
+      require "bundler/setup"
+    rescue LoadError
+      # If bundler isn't available, continue without it
+      # This can happen in subprocess calls where Ruby version differs
+    end
+  end
+end
+
 # Set up load paths for development if necessary (e.g., when not installed as a gem)
 # This ensures that `lib` is on the load path.
 # If the gem is installed, this line is not strictly necessary but doesn't hurt.
@@ -12,7 +25,7 @@ require "coding_agent_tools/cli"
 # with the 'llm query' command prepended to the arguments
 begin
   # Prepend 'llm query' to the arguments and call the main CLI
-  modified_args = ['llm', 'query'] + ARGV
+  modified_args = ["llm", "query"] + ARGV
 
   # Replace ARGV with our modified arguments
   ARGV.clear
@@ -24,7 +37,7 @@ begin
   # Capture both stdout and stderr to modify error/help messages
   original_stdout = $stdout
   original_stderr = $stderr
-  require 'stringio'
+  require "stringio"
   captured_stdout = StringIO.new
   captured_stderr = StringIO.new
 
@@ -44,8 +57,8 @@ begin
   $stderr = original_stderr
 
   # Modify messages to show only 'llm-gemini-query' instead of full path
-  if stdout_content.include?('llm query') || stderr_content.include?('llm query')
-    stdout_content = stdout_content.gsub(/llm-gemini-query llm query/, 'llm-gemini-query')
+  if stdout_content.include?("llm query") || stderr_content.include?("llm query")
+    stdout_content = stdout_content.gsub("llm-gemini-query llm query", "llm-gemini-query")
     stderr_content = stderr_content.gsub(/"[^"]*llm[^"]*query"/, '"llm-gemini-query"')
     stderr_content = stderr_content.gsub(/Usage: "[^"]*llm[^"]*query[^"]*PROMPT"/, 'Usage: "llm-gemini-query PROMPT"')
   end
@@ -53,7 +66,6 @@ begin
   # Print the output
   $stdout.print stdout_content unless stdout_content.empty?
   $stderr.print stderr_content unless stderr_content.empty?
-
 rescue SystemExit => e
   # Get the captured output
   stdout_content = captured_stdout.string
@@ -64,8 +76,8 @@ rescue SystemExit => e
   $stderr = original_stderr
 
   # Modify messages to show only 'llm-gemini-query' instead of full path
-  if stdout_content.include?('llm query') || stderr_content.include?('llm query')
-    stdout_content = stdout_content.gsub(/llm-gemini-query llm query/, 'llm-gemini-query')
+  if stdout_content.include?("llm query") || stderr_content.include?("llm query")
+    stdout_content = stdout_content.gsub("llm-gemini-query llm query", "llm-gemini-query")
     stderr_content = stderr_content.gsub(/"[^"]*llm[^"]*query"/, '"llm-gemini-query"')
     stderr_content = stderr_content.gsub(/Usage: "[^"]*llm[^"]*query[^"]*PROMPT"/, 'Usage: "llm-gemini-query PROMPT"')
   end

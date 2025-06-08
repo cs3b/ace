@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
           text: "Ruby is a dynamic programming language.",
           finish_reason: "STOP",
           safety_ratings: [],
-          usage_metadata: { totalTokens: 42 }
+          usage_metadata: {totalTokens: 42}
         }
       end
 
@@ -69,7 +69,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
 
       it "reads prompt from file when --file flag is set" do
         allow(prompt_processor).to receive(:process).with(temp_file.path, from_file: true).and_return(file_content)
-        allow(gemini_client).to receive(:generate_text).and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+        allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         expect {
           command.call(prompt: temp_file.path, file: true)
@@ -81,7 +81,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "uses specified model" do
         allow(prompt_processor).to receive(:process).and_return("Test")
         allow(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(model: "gemini-pro").and_return(gemini_client)
-        allow(gemini_client).to receive(:generate_text).and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+        allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         command.call(prompt: "Test", model: "gemini-pro")
 
@@ -92,25 +92,25 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     context "with generation options" do
       it "passes temperature option" do
         allow(prompt_processor).to receive(:process).and_return("Test")
-        allow(gemini_client).to receive(:generate_text).with("Test", generation_config: { temperature: 0.5 }).and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+        allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {temperature: 0.5}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         command.call(prompt: "Test", temperature: 0.5)
 
-        expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: { temperature: 0.5 })
+        expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {temperature: 0.5})
       end
 
       it "passes max_tokens option" do
         allow(prompt_processor).to receive(:process).and_return("Test")
-        allow(gemini_client).to receive(:generate_text).with("Test", generation_config: { maxOutputTokens: 1000 }).and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+        allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         command.call(prompt: "Test", max_tokens: 1000)
 
-        expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: { maxOutputTokens: 1000 })
+        expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000})
       end
 
       it "passes system instruction" do
         allow(prompt_processor).to receive(:process).and_return("Test")
-        allow(gemini_client).to receive(:generate_text).with("Test", system_instruction: "You are a helpful assistant").and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+        allow(gemini_client).to receive(:generate_text).with("Test", system_instruction: "You are a helpful assistant").and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         command.call(prompt: "Test", system: "You are a helpful assistant")
 
@@ -122,8 +122,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         allow(gemini_client).to receive(:generate_text).with(
           "Test",
           system_instruction: "Be concise",
-          generation_config: { temperature: 0.3, maxOutputTokens: 500 }
-        ).and_return({ text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} })
+          generation_config: {temperature: 0.3, maxOutputTokens: 500}
+        ).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
         command.call(prompt: "Test", temperature: 0.3, max_tokens: 500, system: "Be concise")
       end
@@ -215,7 +215,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
           text: "Generated text response",
           finish_reason: "STOP",
           safety_ratings: [
-            { category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE" }
+            {category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE"}
           ],
           usage_metadata: {
             promptTokenCount: 10,
@@ -269,7 +269,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "processes prompt and queries Gemini in correct order" do
         prompt = "Original prompt"
         processed_prompt = "Processed prompt"
-        response = { text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {} }
+        response = {text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}}
 
         expect(prompt_processor).to receive(:process).with(prompt, from_file: nil).ordered.and_return(processed_prompt)
         expect(gemini_client).to receive(:generate_text).with(processed_prompt).ordered.and_return(response)
@@ -287,8 +287,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       expected_examples_array = [
         '"What is Ruby programming language?"',
         '"Explain quantum computing" --format json',
-        'prompt.txt --file',
-        'prompt.txt --file --format json --debug',
+        "prompt.txt --file",
+        "prompt.txt --file --format json --debug",
         '"Hello" --model gemini-pro --temperature 0.5'
       ]
 

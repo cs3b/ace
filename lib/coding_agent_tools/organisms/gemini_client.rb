@@ -87,7 +87,7 @@ module CodingAgentTools
         payload = {
           contents: [
             {
-              parts: [{ text: text }]
+              parts: [{text: text}]
             }
           ]
         }
@@ -110,7 +110,7 @@ module CodingAgentTools
       # @return [Hash] Model information
       def model_info
         url = "#{@base_url}/models/#{@model}"
-        response_data = @request_builder.get_json(url, query: { key: @api_key })
+        response_data = @request_builder.get_json(url, query: {key: @api_key})
         parsed = @response_parser.parse_response(response_data)
 
         if parsed[:success]
@@ -138,7 +138,7 @@ module CodingAgentTools
           contents: [
             {
               role: "user",
-              parts: [{ text: prompt }]
+              parts: [{text: prompt}]
             }
           ],
           generationConfig: @generation_config.merge(
@@ -149,7 +149,7 @@ module CodingAgentTools
         # Add system instruction if provided
         if options[:system_instruction]
           payload[:systemInstruction] = {
-            parts: [{ text: options[:system_instruction] }]
+            parts: [{text: options[:system_instruction]}]
           }
         end
 
@@ -172,7 +172,7 @@ module CodingAgentTools
           safety_ratings: candidate[:safetyRatings],
           usage_metadata: data[:usageMetadata]
         }
-      rescue StandardError => e
+      rescue => e
         raise Error, "Failed to extract text from response: #{e.message}"
       end
 
@@ -184,12 +184,12 @@ module CodingAgentTools
         details = error[:details] || {}
 
         message = if details[:message]
-                    "Gemini API Error: #{details[:message]}"
-                  elsif error[:raw_message]
-                    "Gemini API Error: #{error[:raw_message]}"
-                  else
-                    "Gemini API Error (#{error[:status]}): #{error[:message]}"
-                  end
+          "Gemini API Error: #{details[:message]}"
+        elsif error[:raw_message]
+          "Gemini API Error: #{error[:raw_message]}"
+        else
+          "Gemini API Error (#{error[:status]}): #{error[:message]}"
+        end
 
         raise Error, message
       end

@@ -72,8 +72,6 @@ module CodingAgentTools
           when Array
             index = key.to_i
             current[index] if key =~ /^\d+$/ && index < current.length
-          else
-            nil
           end
         end
       end
@@ -100,10 +98,10 @@ module CodingAgentTools
         case current_data
         when Hash
           current_data.each_with_object({}) do |(key, value), result|
-            if sensitive_keys.any? { |sensitive| key.to_s == sensitive.to_s }
-              result[key] = redact_value
+            result[key] = if sensitive_keys.any? { |sensitive| key.to_s == sensitive.to_s }
+              redact_value
             else
-              result[key] = sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
+              sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
             end
           end
         when Array

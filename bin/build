@@ -11,13 +11,6 @@ echo "INFO: Building Coding Agent Tools gem from project root: $(pwd)"
 echo "INFO: Cleaning up old gem files..."
 rm -f *.gem
 
-# Run tests and linting before building
-echo "INFO: Running tests before build..."
-bin/test
-
-echo "INFO: Running linter before build..."
-bin/lint
-
 # Build the gem
 echo "INFO: Building gem..."
 bundle exec gem build coding_agent_tools.gemspec

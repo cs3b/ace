@@ -12,8 +12,8 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
         {
           success: true,
           status: 200,
-          body: { "data" => "value", "count" => 42 },
-          headers: { "content-type" => "application/json" }
+          body: {"data" => "value", "count" => 42},
+          headers: {"content-type" => "application/json"}
         }
       end
 
@@ -22,9 +22,9 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
 
         expect(result[:success]).to be true
         expect(result[:status]).to eq(200)
-        expect(result[:data]).to eq({ "data" => "value", "count" => 42 })
+        expect(result[:data]).to eq({"data" => "value", "count" => 42})
         expect(result[:error]).to be_nil
-        expect(result[:headers]).to eq({ "content-type" => "application/json" })
+        expect(result[:headers]).to eq({"content-type" => "application/json"})
       end
     end
 
@@ -33,8 +33,8 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
         {
           success: false,
           status: 404,
-          body: { "error" => "Resource not found" },
-          headers: { "content-type" => "application/json" }
+          body: {"error" => "Resource not found"},
+          headers: {"content-type" => "application/json"}
         }
       end
 
@@ -47,7 +47,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
         expect(result[:error]).to include(
           status: 404,
           message: "Not Found",
-          details: { error: "Resource not found" }
+          details: {error: "Resource not found"}
         )
       end
     end
@@ -56,29 +56,29 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
   describe "#extract_data" do
     context "with successful response" do
       it "extracts hash body" do
-        response_data = { success: true, body: { "key" => "value" } }
-        expect(parser.extract_data(response_data)).to eq({ "key" => "value" })
+        response_data = {success: true, body: {"key" => "value"}}
+        expect(parser.extract_data(response_data)).to eq({"key" => "value"})
       end
 
       it "extracts array body" do
-        response_data = { success: true, body: [1, 2, 3] }
+        response_data = {success: true, body: [1, 2, 3]}
         expect(parser.extract_data(response_data)).to eq([1, 2, 3])
       end
 
       it "parses JSON string body" do
-        response_data = { success: true, body: '{"parsed": true}' }
-        expect(parser.extract_data(response_data)).to eq({ parsed: true })
+        response_data = {success: true, body: '{"parsed": true}'}
+        expect(parser.extract_data(response_data)).to eq({parsed: true})
       end
 
       it "returns raw string if not parseable JSON" do
-        response_data = { success: true, body: "plain text" }
+        response_data = {success: true, body: "plain text"}
         expect(parser.extract_data(response_data)).to eq("plain text")
       end
     end
 
     context "with failed response" do
       it "returns nil for failed responses" do
-        response_data = { success: false, body: { "data" => "value" } }
+        response_data = {success: false, body: {"data" => "value"}}
         expect(parser.extract_data(response_data)).to be_nil
       end
     end
@@ -87,14 +87,14 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
   describe "#extract_error" do
     context "with successful response" do
       it "returns nil" do
-        response_data = { success: true, status: 200, body: "data" }
+        response_data = {success: true, status: 200, body: "data"}
         expect(parser.extract_error(response_data)).to be_nil
       end
     end
 
     context "with error response" do
       it "extracts error from known status code" do
-        response_data = { success: false, status: 401, body: "" }
+        response_data = {success: false, status: 401, body: ""}
         error = parser.extract_error(response_data)
 
         expect(error[:status]).to eq(401)
@@ -102,7 +102,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
       end
 
       it "handles unknown status codes" do
-        response_data = { success: false, status: 418, body: "" }
+        response_data = {success: false, status: 418, body: ""}
         error = parser.extract_error(response_data)
 
         expect(error[:status]).to eq(418)
@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
         response_data = {
           success: false,
           status: 400,
-          body: { "error" => "Invalid input", "code" => "INVALID_INPUT" }
+          body: {"error" => "Invalid input", "code" => "INVALID_INPUT"}
         }
         error = parser.extract_error(response_data)
 
@@ -209,21 +209,21 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
     end
 
     it "returns nil for failed responses" do
-      failed_response = { success: false, body: { "data" => "value" } }
+      failed_response = {success: false, body: {"data" => "value"}}
       expect(parser.extract_path(failed_response, "data")).to be_nil
     end
   end
 
   describe "#rate_limited?" do
     it "returns true for 429 status" do
-      response_data = { status: 429 }
+      response_data = {status: 429}
       expect(parser.rate_limited?(response_data)).to be true
     end
 
     it "returns false for other statuses" do
-      expect(parser.rate_limited?({ status: 200 })).to be false
-      expect(parser.rate_limited?({ status: 404 })).to be false
-      expect(parser.rate_limited?({ status: 500 })).to be false
+      expect(parser.rate_limited?({status: 200})).to be false
+      expect(parser.rate_limited?({status: 404})).to be false
+      expect(parser.rate_limited?({status: 500})).to be false
     end
   end
 
@@ -276,7 +276,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
 
     context "without rate limit headers" do
       it "returns empty hash" do
-        response_data = { headers: { "content-type" => "application/json" } }
+        response_data = {headers: {"content-type" => "application/json"}}
         expect(parser.extract_rate_limit_info(response_data)).to eq({})
       end
 
@@ -320,7 +320,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
     end
 
     it "returns false for failed responses" do
-      failed_response = { success: false, body: { "user" => { "id" => 123 } } }
+      failed_response = {success: false, body: {"user" => {"id" => 123}}}
       expect(parser.validate_response(failed_response, ["user.id"])).to be false
     end
 
@@ -378,13 +378,13 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
 
       result = parser.transform_response(response_data, mapping)
 
-      expect(result).to eq({ name: "John" })
+      expect(result).to eq({name: "John"})
       expect(result).not_to have_key(:missing)
     end
 
     it "returns empty hash for failed responses" do
-      failed_response = { success: false, body: { "data" => { "value" => 123 } } }
-      mapping = { value: "data.value" }
+      failed_response = {success: false, body: {"data" => {"value" => 123}}}
+      mapping = {value: "data.value"}
 
       result = parser.transform_response(failed_response, mapping)
 
@@ -412,12 +412,12 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
 
   describe "edge cases" do
     it "handles nil body gracefully" do
-      response_data = { success: true, body: nil }
+      response_data = {success: true, body: nil}
       expect(parser.extract_data(response_data)).to be_nil
     end
 
     it "handles empty string body" do
-      response_data = { success: false, status: 500, body: "" }
+      response_data = {success: false, status: 500, body: ""}
       error = parser.extract_error(response_data)
 
       expect(error[:details]).to be_nil
@@ -425,7 +425,7 @@ RSpec.describe CodingAgentTools::Molecules::APIResponseParser do
     end
 
     it "handles malformed JSON in error body" do
-      response_data = { success: false, status: 500, body: '{"invalid": json}' }
+      response_data = {success: false, status: 500, body: '{"invalid": json}'}
       error = parser.extract_error(response_data)
 
       expect(error[:raw_message]).to eq('{"invalid": json}')

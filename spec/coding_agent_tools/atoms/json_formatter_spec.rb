@@ -6,7 +6,7 @@ require "coding_agent_tools/atoms/json_formatter"
 RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
   describe ".pretty_print" do
     context "with hash input" do
-      let(:hash) { { name: "John", age: 30, city: "New York" } }
+      let(:hash) { {name: "John", age: 30, city: "New York"} }
 
       it "formats hash with default indentation" do
         result = described_class.pretty_print(hash)
@@ -27,7 +27,7 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
     end
 
     context "with array input" do
-      let(:array) { [1, 2, { key: "value" }] }
+      let(:array) { [1, 2, {key: "value"}] }
 
       it "formats array correctly" do
         result = described_class.pretty_print(array)
@@ -87,21 +87,21 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
         result = described_class.pretty_print(nested)
         expect(result).to include('"theme": "dark"')
         expect(result).to include('"email": true')
-        expect(result.scan(/  /).count).to be > 10 # Multiple levels of indentation
+        expect(result.scan("  ").count).to be > 10 # Multiple levels of indentation
       end
     end
   end
 
   describe ".pretty_format" do
     it "is an alias for pretty_print" do
-      data = { test: "value" }
+      data = {test: "value"}
       expect(described_class.pretty_format(data)).to eq(described_class.pretty_print(data))
     end
   end
 
   describe ".compact" do
     context "with hash input" do
-      let(:hash) { { name: "John", age: 30, nested: { key: "value" } } }
+      let(:hash) { {name: "John", age: 30, nested: {key: "value"}} }
 
       it "generates compact JSON without extra whitespace" do
         result = described_class.compact(hash)
@@ -110,7 +110,7 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
     end
 
     context "with array input" do
-      let(:array) { [1, 2, 3, { key: "value" }] }
+      let(:array) { [1, 2, 3, {key: "value"}] }
 
       it "generates compact JSON array" do
         result = described_class.compact(array)
@@ -145,17 +145,17 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
     context "with valid JSON" do
       it "parses valid JSON string" do
         result = described_class.safe_parse('{"key":"value"}')
-        expect(result).to eq({ "key" => "value" })
+        expect(result).to eq({"key" => "value"})
       end
 
       it "parses JSON array" do
-        result = described_class.safe_parse('[1,2,3]')
+        result = described_class.safe_parse("[1,2,3]")
         expect(result).to eq([1, 2, 3])
       end
 
       it "parses with symbolized names when requested" do
         result = described_class.safe_parse('{"key":"value"}', symbolize_names: true)
-        expect(result).to eq({ key: "value" })
+        expect(result).to eq({key: "value"})
       end
     end
 
@@ -178,9 +178,9 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
     context "with edge cases" do
       it "parses JSON primitives" do
         expect(described_class.safe_parse('"string"')).to eq("string")
-        expect(described_class.safe_parse('123')).to eq(123)
-        expect(described_class.safe_parse('true')).to eq(true)
-        expect(described_class.safe_parse('null')).to be_nil
+        expect(described_class.safe_parse("123")).to eq(123)
+        expect(described_class.safe_parse("true")).to eq(true)
+        expect(described_class.safe_parse("null")).to be_nil
       end
     end
   end
@@ -192,14 +192,14 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
       end
 
       it "returns true for valid JSON array" do
-        expect(described_class.valid_json?('[1,2,3]')).to be true
+        expect(described_class.valid_json?("[1,2,3]")).to be true
       end
 
       it "returns true for JSON primitives" do
-        expect(described_class.valid_json?('123')).to be true
+        expect(described_class.valid_json?("123")).to be true
         expect(described_class.valid_json?('"string"')).to be true
-        expect(described_class.valid_json?('true')).to be true
-        expect(described_class.valid_json?('null')).to be true
+        expect(described_class.valid_json?("true")).to be true
+        expect(described_class.valid_json?("null")).to be true
       end
     end
 
@@ -341,8 +341,8 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
     context "with sensitive data in arrays" do
       let(:array_data) do
         [
-          { "api_key" => "key1", "data" => "value1" },
-          { "token" => "key2", "data" => "value2" },
+          {"api_key" => "key1", "data" => "value1"},
+          {"token" => "key2", "data" => "value2"},
           "plain string"
         ]
       end

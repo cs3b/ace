@@ -12,7 +12,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
       api_key: api_key,
       model: "gemini-pro",
       base_url: "https://custom.api.com",
-      generation_config: { temperature: 0.5, maxOutputTokens: 4096 },
+      generation_config: {temperature: 0.5, maxOutputTokens: 4096},
       timeout: 60
     )
   end
@@ -93,11 +93,11 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           candidates: [
             {
               content: {
-                parts: [{ text: "The capital of France is Paris." }]
+                parts: [{text: "The capital of France is Paris."}]
               },
               finishReason: "STOP",
               safetyRatings: [
-                { category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE" }
+                {category: "HARM_CATEGORY_HATE_SPEECH", probability: "NEGLIGIBLE"}
               ]
             }
           ],
@@ -116,7 +116,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
               contents: [
                 {
                   role: "user",
-                  parts: [{ text: prompt }]
+                  parts: [{text: prompt}]
                 }
               ],
               generationConfig: {
@@ -124,12 +124,12 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
                 maxOutputTokens: 8192
               }
             }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
           .to_return(
             status: 200,
             body: successful_response.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -158,7 +158,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
               contents: [
                 {
                   role: "user",
-                  parts: [{ text: custom_prompt }]
+                  parts: [{text: custom_prompt}]
                 }
               ],
               generationConfig: {
@@ -166,7 +166,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
                 maxOutputTokens: 100
               },
               systemInstruction: {
-                parts: [{ text: system_instruction }]
+                parts: [{text: system_instruction}]
               }
             }.to_json
           )
@@ -174,13 +174,13 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
             status: 200,
             body: {
               candidates: [{
-                content: { parts: [{ text: "Cherry blossoms fall\nSoft petals on the spring breeze\nNature's gentle dance" }] },
+                content: {parts: [{text: "Cherry blossoms fall\nSoft petals on the spring breeze\nNature's gentle dance"}]},
                 finishReason: "STOP",
                 safetyRatings: []
               }],
               usageMetadata: {}
             }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -188,7 +188,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         result = client.generate_text(
           custom_prompt,
           system_instruction: system_instruction,
-          generation_config: { temperature: 0.9, maxOutputTokens: 100 }
+          generation_config: {temperature: 0.9, maxOutputTokens: 100}
         )
 
         expect(result[:text]).to include("Cherry blossoms")
@@ -200,8 +200,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:post, api_url)
           .to_return(
             status: 400,
-            body: { error: { message: "Invalid request format" } }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            body: {error: {message: "Invalid request format"}}.to_json,
+            headers: {"Content-Type" => "application/json"}
           )
 
         expect {
@@ -213,8 +213,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:post, api_url)
           .to_return(
             status: 401,
-            body: { error: { message: "Invalid API key" } }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            body: {error: {message: "Invalid API key"}}.to_json,
+            headers: {"Content-Type" => "application/json"}
           )
 
         expect {
@@ -226,8 +226,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:post, api_url)
           .to_return(
             status: 429,
-            body: { error: { message: "Rate limit exceeded" } }.to_json,
-            headers: { "Content-Type" => "application/json", "Retry-After" => "60" }
+            body: {error: {message: "Rate limit exceeded"}}.to_json,
+            headers: {"Content-Type" => "application/json", "Retry-After" => "60"}
           )
 
         expect {
@@ -240,7 +240,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           .to_return(
             status: 500,
             body: "Internal Server Error",
-            headers: { "Content-Type" => "text/plain" }
+            headers: {"Content-Type" => "text/plain"}
           )
 
         expect {
@@ -252,8 +252,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:post, api_url)
           .to_return(
             status: 200,
-            body: { unexpected: "format" }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            body: {unexpected: "format"}.to_json,
+            headers: {"Content-Type" => "application/json"}
           )
 
         expect {
@@ -268,11 +268,11 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           candidates: [
             {
               content: {
-                parts: [{ text: "" }]
+                parts: [{text: ""}]
               },
               finishReason: "SAFETY",
               safetyRatings: [
-                { category: "HARM_CATEGORY_HATE_SPEECH", probability: "HIGH" }
+                {category: "HARM_CATEGORY_HATE_SPEECH", probability: "HIGH"}
               ]
             }
           ]
@@ -284,7 +284,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           .to_return(
             status: 200,
             body: blocked_response.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -317,7 +317,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
             body: {
               contents: [
                 {
-                  parts: [{ text: text }]
+                  parts: [{text: text}]
                 }
               ]
             }.to_json
@@ -328,7 +328,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
               totalTokens: 12,
               cachedContentTokens: 0
             }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -348,8 +348,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:post, api_url)
           .to_return(
             status: 400,
-            body: { error: { message: "Invalid input" } }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            body: {error: {message: "Invalid input"}}.to_json,
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -381,7 +381,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           .to_return(
             status: 200,
             body: model_info_response.to_json,
-            headers: { "Content-Type" => "application/json" }
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -401,8 +401,8 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
         stub_request(:get, api_url)
           .to_return(
             status: 404,
-            body: { error: { message: "Model not found" } }.to_json,
-            headers: { "Content-Type" => "application/json" }
+            body: {error: {message: "Model not found"}}.to_json,
+            headers: {"Content-Type" => "application/json"}
           )
       end
 
@@ -446,7 +446,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
               ]
             }
           }.to_json,
-          headers: { "Content-Type" => "application/json" }
+          headers: {"Content-Type" => "application/json"}
         )
 
       expect {
@@ -460,7 +460,7 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
       custom_model_client = described_class.new(
         api_key: api_key,
         model: "gemini-pro",
-        generation_config: { temperature: 0.2, maxOutputTokens: 1024 }
+        generation_config: {temperature: 0.2, maxOutputTokens: 1024}
       )
 
       api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=#{api_key}"
@@ -478,13 +478,13 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
           status: 200,
           body: {
             candidates: [{
-              content: { parts: [{ text: "Response from Gemini Pro" }] },
+              content: {parts: [{text: "Response from Gemini Pro"}]},
               finishReason: "STOP",
               safetyRatings: []
             }],
             usageMetadata: {}
           }.to_json,
-          headers: { "Content-Type" => "application/json" }
+          headers: {"Content-Type" => "application/json"}
         )
 
       result = custom_model_client.generate_text("Test prompt")

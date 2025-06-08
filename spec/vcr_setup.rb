@@ -3,8 +3,14 @@
 # VCR setup for subprocess loading
 # This file is loaded via RUBYOPT to enable VCR in subprocess calls
 
-require 'vcr'
-require 'webmock'
+# Ensure bundler is loaded if we're in a bundled environment
+# This is crucial for CI where the subprocess needs access to test gems
+if ENV["BUNDLE_GEMFILE"] && !defined?(Bundler)
+  require "bundler/setup"
+end
+
+require "vcr"
+require "webmock"
 
 VCR.configure do |config|
   config.cassette_library_dir = File.expand_path("cassettes", __dir__)
@@ -15,22 +21,22 @@ VCR.configure do |config|
   }
 
   # Configure to handle Gemini API
-  config.filter_sensitive_data('<GEMINI_API_KEY>') { ENV['GEMINI_API_KEY'] }
+  config.filter_sensitive_data("<GEMINI_API_KEY>") { ENV["GEMINI_API_KEY"] }
 
   # Allow localhost connections for tests
   config.ignore_localhost = false
 
   # Configure for test environment
-  if ENV['VCR_RECORD'] == 'true'
+  if ENV["VCR_RECORD"] == "true"
     config.default_cassette_options[:record] = :all
-  elsif ENV['CI']
+  elsif ENV["CI"]
     config.default_cassette_options[:record] = :none
   end
 end
 
 # Auto-insert cassette based on test context if available
-if ENV['VCR_CASSETTE_NAME']
-  VCR.insert_cassette(ENV['VCR_CASSETTE_NAME'])
+if ENV["VCR_CASSETTE_NAME"]
+  VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
 
   at_exit do
     VCR.eject_cassette if VCR.current_cassette

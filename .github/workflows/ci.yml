@@ -8,6 +8,8 @@ on:
 
 jobs:
   test:
+    env:
+      RACK_ENV: test
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby-version }}
     strategy:
@@ -24,6 +26,12 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Setup the dependencies
+        run: bin/setup
 
       - name: Run tests
         run: bin/test
@@ -42,6 +50,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Build Gem
+    env:
+      RACK_ENV: test
 
     steps:
       - name: Checkout code
@@ -52,6 +62,9 @@ jobs:
         with:
           ruby-version: "3.4"
           bundler-cache: true
+
+      - name: Setup the dependencies
+        run: bin/setup
 
       - name: Build gem
         run: bin/build

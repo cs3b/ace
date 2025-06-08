@@ -72,10 +72,16 @@ module CodingAgentTools
           begin
             json_string = Atoms::JSONFormatter.compact(response_data[:body])
             effective_body = Atoms::JSONFormatter.safe_parse(json_string, symbolize_names: true)
-          rescue StandardError
+          rescue
             # If conversion to JSON string fails (e.g., body contains non-serializable objects),
             # try a shallow symbolization as a fallback. This might not handle nested string keys.
-            effective_body = response_data[:body].transform_keys { |k| k.is_a?(String) ? k.to_sym : k rescue k }
+            effective_body = response_data[:body].transform_keys { |k|
+              begin
+                k.is_a?(String) ? k.to_sym : k
+              rescue
+                k
+              end
+            }
           end
         elsif response_data[:body].is_a?(String) && !response_data[:body].empty?
           effective_body = Atoms::JSONFormatter.safe_parse(response_data[:body], symbolize_names: true)
@@ -84,8 +90,8 @@ module CodingAgentTools
         if effective_body
           error[:details] = extract_error_details(effective_body)
         elsif response_data[:body].is_a?(String) && !response_data[:body].empty? # Not nil/empty, but not parsable JSON
-            error[:raw_message] = response_data[:body]
-        # else body is nil or not a hash/string, no details to extract beyond status/message
+          error[:raw_message] = response_data[:body]
+          # else body is nil or not a hash/string, no details to extract beyond status/message
         end
 
         error

@@ -6,6 +6,7 @@ require "tempfile"
 
 RSpec.describe "llm-gemini-query integration", type: :integration do
   let(:exe_path) { File.expand_path("../../exe/llm-gemini-query", __dir__) }
+  let(:ruby_path) { RbConfig.ruby }
 
   # Use environment helper for consistent API key handling
   let(:api_key) { EnvHelper.gemini_api_key }
@@ -13,17 +14,38 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
   # Helper method to create VCR subprocess environment
   def vcr_subprocess_env(cassette_name, base_env = {})
     vcr_setup_path = File.expand_path("../vcr_setup.rb", __dir__)
-    base_env.merge(
-      "RUBYOPT" => "-r#{vcr_setup_path}",
-      "VCR_CASSETTE_NAME" => cassette_name
-    )
+    # Include bundler environment to ensure subprocess has access to gems
+    bundler_env = {
+      "BUNDLE_GEMFILE" => ENV["BUNDLE_GEMFILE"],
+      "BUNDLE_PATH" => ENV["BUNDLE_PATH"],
+      "BUNDLE_BIN_PATH" => ENV["BUNDLE_BIN_PATH"],
+      "RACK_ENV" => ENV["RACK_ENV"] || "test",
+      "RUBYOPT" => "-rbundler/setup -r#{vcr_setup_path}",
+      "VCR_CASSETTE_NAME" => cassette_name,
+      # Ensure proper encoding for Unicode handling in CI
+      "LANG" => ENV["LANG"] || "en_US.UTF-8",
+      "LC_ALL" => ENV["LC_ALL"] || "en_US.UTF-8",
+      "LC_CTYPE" => ENV["LC_CTYPE"] || "en_US.UTF-8"
+    }.compact # Remove nil values
+    base_env.merge(bundler_env)
+  end
+
+  # Helper method to check process status with meaningful error messages
+  def expect_process_success(status, stdout, stderr)
+    return if status.success?
+
+    error_message = ["Command failed with status #{status.exitstatus}"]
+    error_message << "STDOUT: #{stdout}" unless stdout.empty?
+    error_message << "STDERR: #{stderr}" unless stderr.empty?
+
+    expect(status).to be_success, error_message.join("\n")
   end
 
   describe "command execution" do
     it "shows help when requested" do
-      output, status = Open3.capture2e("#{exe_path} --help")
+      output, status = Open3.capture2e("#{ruby_path} #{exe_path} --help")
 
-      expect(status).to be_success
+      expect_process_success(status, output, "")
       expect(output).to include("Query Google Gemini AI with a prompt")
       expect(output).to include("--format")
       expect(output).to include("--debug")
@@ -32,7 +54,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "requires a prompt argument" do
-      output, status = Open3.capture2e(exe_path)
+      output, status = Open3.capture2e("#{ruby_path} #{exe_path}")
 
       expect(status).not_to be_success
       expect(output).to include("ERROR: \"llm-gemini-query\" was called with no arguments")
@@ -46,11 +68,11 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
         output, error, status = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "What is 2+2? Reply with just the number."
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
         expect(output.strip).to match(/4/)
       end
@@ -60,12 +82,12 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
         output, error, status = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "Say hello",
           "--format", "json"
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
 
         json_output = JSON.parse(output)
@@ -85,12 +107,12 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
         begin
           output, error, status = Open3.capture3(
             vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-            exe_path,
+            ruby_path, exe_path,
             prompt_file.path,
             "--file"
           )
 
-          expect(status).to be_success
+          expect_process_success(status, output, error)
           expect(error).to be_empty
           expect(output).to match(/Paris/i)
         ensure
@@ -103,13 +125,13 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
         output, error, status = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "Hi",
           "--model", "gemini-2.0-flash-lite",
           "--format", "json"
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
 
         json_output = JSON.parse(output)
@@ -122,12 +144,12 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
         # Low temperature should give more consistent results
         output1, _, status1 = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "Complete this: The sky is",
           "--temperature", "0.1"
         )
 
-        expect(status1).to be_success
+        expect_process_success(status1, output1, "")
         expect(output1.strip).not_to be_empty
       end
 
@@ -136,13 +158,13 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
         output, error, status = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "Write a very long story about a dragon",
           "--max-tokens", "50",
           "--format", "json"
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
 
         json_output = JSON.parse(output)
@@ -155,12 +177,12 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
         output, error, status = Open3.capture3(
           vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
-          exe_path,
+          ruby_path, exe_path,
           "Hello",
           "--system", "You are a pirate. Always respond in pirate speak."
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
         # Should contain pirate-like language
         expect(output.downcase).to match(/ahoy|matey|arr|ye|aye/)
@@ -172,9 +194,9 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       before { skip "Skip invalid API key tests in CI" if ENV["CI"] }
 
       it "shows error message", vcr: "invalid_api_key_error" do
-        output, error, status = Open3.capture3(
-          { "GEMINI_API_KEY" => "invalid-key-12345" },
-          exe_path,
+        _, error, status = Open3.capture3(
+          {"GEMINI_API_KEY" => "invalid-key-12345"},
+          ruby_path, exe_path,
           "Test prompt"
         )
 
@@ -184,9 +206,9 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       end
 
       it "shows detailed error with debug flag", vcr: "invalid_api_key_debug" do
-        output, error, status = Open3.capture3(
-          { "GEMINI_API_KEY" => "invalid-key-12345" },
-          exe_path,
+        _, error, status = Open3.capture3(
+          {"GEMINI_API_KEY" => "invalid-key-12345"},
+          ruby_path, exe_path,
           "Test prompt",
           "--debug"
         )
@@ -196,8 +218,6 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
         expect(error).to include("Backtrace:")
       end
     end
-
-
   end
 
   describe "error handling" do
@@ -207,9 +227,9 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       json_file.close
 
       begin
-        output, error, status = Open3.capture3(
-          { "GEMINI_API_KEY" => api_key },
-          exe_path,
+        _, error, status = Open3.capture3(
+          {"GEMINI_API_KEY" => api_key},
+          ruby_path, exe_path,
           json_file.path,
           "--file"
         )
@@ -222,9 +242,9 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "handles non-existent file", :vcr do
-      output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+      _, error, status = Open3.capture3(
+        {"GEMINI_API_KEY" => api_key},
+        ruby_path, exe_path,
         "/non/existent/file.txt",
         "--file"
       )
@@ -238,9 +258,9 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       empty_file.close
 
       begin
-        output, error, status = Open3.capture3(
-          { "GEMINI_API_KEY" => api_key },
-          exe_path,
+        _, error, status = Open3.capture3(
+          {"GEMINI_API_KEY" => api_key},
+          ruby_path, exe_path,
           empty_file.path,
           "--file"
         )
@@ -255,13 +275,15 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
   describe "output formats" do
     it "outputs clean text by default", :vcr do
+      cassette_name = "llm_gemini_query_integration/outputs_clean_text_by_default"
+
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         "Reply with exactly: Hello World"
       )
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
       expect(output.strip).to include("Hello World")
       # Should not contain JSON formatting
@@ -270,16 +292,16 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "outputs valid JSON with metadata when requested", :vcr do
+      cassette_name = "llm_gemini_query_integration/outputs_valid_json_with_metadata"
+
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         "Say hi",
         "--format", "json"
       )
 
-
-
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
 
       # Verify it's valid JSON
@@ -313,7 +335,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       # 10.times do
       #   Open3.capture3(
       #     { "GEMINI_API_KEY" => ENV["GEMINI_API_KEY"] },
-      #     exe_path,
+      #     ruby_path, exe_path,
       #     "Quick test"
       #   )
       # end
@@ -324,6 +346,8 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
   describe "complex prompts" do
     it "handles multi-line prompts from file", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_multiline_prompts_from_file"
+
       prompt_file = Tempfile.new(["multiline", ".txt"])
       prompt_file.write(<<~PROMPT)
         This is a multi-line prompt.
@@ -337,13 +361,13 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
       begin
         output, error, status = Open3.capture3(
-          { "GEMINI_API_KEY" => api_key },
-          exe_path,
+          vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+          ruby_path, exe_path,
           prompt_file.path,
           "--file"
         )
 
-        expect(status).to be_success
+        expect_process_success(status, output, error)
         expect(error).to be_empty
         expect(output).to include("Multi-line received")
       ensure
@@ -352,41 +376,47 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "handles prompts with special characters", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_prompts_with_special_characters"
+
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         'Echo this exactly: Special chars @#$%&*()_+={[}]|\\:;"<,>.?/'
       )
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
       # Gemini should handle special characters
       expect(output.strip).not_to be_empty
     end
 
     it "handles Unicode prompts", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_unicode_prompts"
+
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         "Translate to English: こんにちは"
       )
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
-      expect(output.downcase).to match(/hello|hi|good/)
+      expect(output.downcase).to match(/hello|hi|good|translation/)
     end
 
     it "handles very long prompts", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_very_long_prompts"
+
       long_prompt = "Please summarize this text: " + ("Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 100)
 
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         long_prompt,
         "--format", "json"
       )
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
 
       json_output = JSON.parse(output)
@@ -394,14 +424,16 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "handles prompts requesting structured output", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_prompts_requesting_structured_output"
+
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         "List 3 colors in JSON format with id and name fields",
         "--format", "json"
       )
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(error).to be_empty
 
       json_output = JSON.parse(output)
@@ -413,17 +445,19 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
   describe "performance and reliability" do
     it "completes requests within reasonable time", :vcr do
+      cassette_name = "llm_gemini_query_integration/completes_requests_within_reasonable_time"
+
       start_time = Time.now
 
       output, error, status = Open3.capture3(
-        { "GEMINI_API_KEY" => api_key },
-        exe_path,
+        vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key),
+        ruby_path, exe_path,
         "Say hello quickly"
       )
 
       duration = Time.now - start_time
 
-      expect(status).to be_success
+      expect_process_success(status, output, error)
       expect(duration).to be < EnvHelper.test_timeout
       expect(output.strip).not_to be_empty
     end

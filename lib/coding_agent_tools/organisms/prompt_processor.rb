@@ -24,10 +24,10 @@ module CodingAgentTools
       # @raise [Error] If file cannot be read or is too large
       def process(input, from_file: false)
         text_content = if from_file
-                         read_prompt_from_file(input) # This already strips the content
-                       else
-                         input # Raw input string, validate_prompt_string will strip it
-                       end
+          read_prompt_from_file(input) # This already strips the content
+        else
+          input # Raw input string, validate_prompt_string will strip it
+        end
         # validate_prompt_string will check if (already stripped if from file) text_content is empty,
         # and raise if so. It also returns the stripped version.
         validate_prompt_string(text_content)
@@ -92,7 +92,7 @@ module CodingAgentTools
         unfilled = (unfilled_single + unfilled_double).uniq
 
         unless unfilled.empty?
-          raise Error, "Unfilled template variables: #{unfilled.join(', ')}"
+          raise Error, "Unfilled template variables: #{unfilled.join(", ")}"
         end
 
         result
@@ -149,10 +149,10 @@ module CodingAgentTools
             # If overlap is too large (i.e., next_pos isn't advancing past current position)
             # or if chunk_end itself didn't advance (unlikely but a safeguard),
             # then move position to chunk_end to ensure progress.
-            if next_pos > position
-              position = next_pos
+            position = if next_pos > position
+              next_pos
             else # overlap >= chunk_size or chunk_end didn't advance
-              position = chunk_end
+              chunk_end
             end
           end
         end
@@ -183,7 +183,7 @@ module CodingAgentTools
         content = read_file(file_path)
 
         # Auto-detect and validate JSON files
-        if file_path.downcase.end_with?('.json')
+        if file_path.downcase.end_with?(".json")
           data = Atoms::JSONFormatter.safe_parse(content)
           unless data
             raise Error, "Invalid JSON in file: #{file_path}"
@@ -202,7 +202,7 @@ module CodingAgentTools
         raise Error, "Permission denied reading file: #{file_path}"
       rescue Errno::ENOENT
         raise Error, "File not found: #{file_path}"
-      rescue StandardError => e
+      rescue => e
         raise Error, "Error reading file #{file_path}: #{e.message}"
       end
 

@@ -100,14 +100,14 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
 
       it "raises error for permission denied" do
         temp_file.close
-        FileUtils.chmod(0000, temp_file.path)
+        FileUtils.chmod(0o000, temp_file.path)
 
         expect {
           processor.process(temp_file.path, from_file: true)
         }.to raise_error(CodingAgentTools::Error, /Permission denied reading file/)
 
         # Restore permissions for cleanup
-        FileUtils.chmod(0644, temp_file.path)
+        FileUtils.chmod(0o644, temp_file.path)
       end
     end
   end
@@ -166,10 +166,10 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
         conversation = processor.build_conversation(prompts)
 
         expect(conversation).to eq([
-          { role: "user", content: "Hello" },
-          { role: "assistant", content: "Hi there!" },
-          { role: "user", content: "How are you?" },
-          { role: "assistant", content: "I'm doing well" }
+          {role: "user", content: "Hello"},
+          {role: "assistant", content: "Hi there!"},
+          {role: "user", content: "How are you?"},
+          {role: "assistant", content: "I'm doing well"}
         ])
       end
     end
@@ -180,10 +180,10 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
         conversation = processor.build_conversation(prompts, roles)
 
         expect(conversation).to eq([
-          { role: "user", content: "Hello" },
-          { role: "user", content: "Hi there!" },
-          { role: "assistant", content: "How are you?" },
-          { role: "assistant", content: "I'm doing well" }
+          {role: "user", content: "Hello"},
+          {role: "user", content: "Hi there!"},
+          {role: "assistant", content: "How are you?"},
+          {role: "assistant", content: "I'm doing well"}
         ])
       end
     end
@@ -193,7 +193,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
         conversation = processor.build_conversation(["Single prompt"])
 
         expect(conversation).to eq([
-          { role: "user", content: "Single prompt" }
+          {role: "user", content: "Single prompt"}
         ])
       end
     end
@@ -237,7 +237,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
         json_file.close
 
         result = processor.extract_from_json(json_file.path, "data")
-        expect(result).to eq({ "prompt" => "Nested prompt" })
+        expect(result).to eq({"prompt" => "Nested prompt"})
       end
     end
 
@@ -266,7 +266,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
     context "with valid template and variables" do
       it "substitutes single braces variables" do
         template = "Hello {name}, welcome to {place}!"
-        variables = { name: "Alice", place: "Wonderland" }
+        variables = {name: "Alice", place: "Wonderland"}
 
         result = processor.format_template(template, variables)
         expect(result).to eq("Hello Alice, welcome to Wonderland!")
@@ -274,7 +274,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
 
       it "substitutes double braces variables" do
         template = "Hello {{name}}, welcome to {{place}}!"
-        variables = { name: "Bob", place: "Paradise" }
+        variables = {name: "Bob", place: "Paradise"}
 
         result = processor.format_template(template, variables)
         expect(result).to eq("Hello Bob, welcome to Paradise!")
@@ -282,7 +282,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
 
       it "handles mixed brace styles" do
         template = "Hello {name}, welcome to {{place}}!"
-        variables = { name: "Charlie", place: "Earth" }
+        variables = {name: "Charlie", place: "Earth"}
 
         result = processor.format_template(template, variables)
         expect(result).to eq("Hello Charlie, welcome to Earth!")
@@ -290,7 +290,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
 
       it "converts non-string values to strings" do
         template = "Count: {count}, Active: {active}"
-        variables = { count: 42, active: true }
+        variables = {count: 42, active: true}
 
         result = processor.format_template(template, variables)
         expect(result).to eq("Count: 42, Active: true")
@@ -300,7 +300,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
     context "with missing variables" do
       it "raises error for unfilled variables" do
         template = "Hello {name}, your age is {age}"
-        variables = { name: "John" }
+        variables = {name: "John"}
 
         expect {
           processor.format_template(template, variables)
@@ -409,7 +409,7 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
 
         # Check that there's some overlap between consecutive chunks
         chunks.each_cons(2) do |chunk1, chunk2|
-          expect(chunk2).to include(chunk1[-10..-1]) if chunk1.length >= 10
+          expect(chunk2).to include(chunk1[-10..]) if chunk1.length >= 10
         end
       end
     end
@@ -425,7 +425,6 @@ RSpec.describe CodingAgentTools::Organisms::PromptProcessor do
         end
       end
     end
-
 
     context "with custom parameters" do
       it "respects custom chunk size" do

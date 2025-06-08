@@ -1,0 +1,159 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"Please summarize this
+        text: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum
+        dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor
+        sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur
+        adipiscing elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit."}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Sun, 08 Jun 2025 10:28:53 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=785
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "This text is a repetitive use of the phrase \"Lorem ipsum dolor sit amet, consectetur adipiscing elit,\" which is a placeholder text commonly used in design and publishing.  It contains no actual information or meaning.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.36957246203755223
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 1205,
+            "candidatesTokenCount": 43,
+            "totalTokenCount": 1248,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 1205
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 43
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "5WVFaJ6UFtfknvgPwf-bgAg"
+        }
+  recorded_at: Sun, 08 Jun 2025 10:28:53 GMT
+recorded_with: VCR 6.3.1

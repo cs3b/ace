@@ -7,7 +7,6 @@ module CodingAgentTools
     # APICredentials manages API key retrieval and configuration
     # This is a molecule - it composes the EnvReader atom
     class APICredentials
-
       # Singleton configuration store
       @config = {}
 

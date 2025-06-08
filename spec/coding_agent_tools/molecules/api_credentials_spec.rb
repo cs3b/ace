@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       end
 
       it "loads environment variables from specified .env file" do
-        credentials = described_class.new(env_key_name: "GEMINI_API_KEY", env_file_path: env_file_path)
+        described_class.new(env_key_name: "GEMINI_API_KEY", env_file_path: env_file_path)
         expect(ENV["GEMINI_API_KEY"]).to eq("env-file-key")
         expect(ENV["OTHER_KEY"]).to eq("other-value")
       end
