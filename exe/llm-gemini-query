@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+
+# Set up load paths for development if necessary (e.g., when not installed as a gem)
+# This ensures that `lib` is on the load path.
+# If the gem is installed, this line is not strictly necessary but doesn't hurt.
+# If running from the project's exe directory, it's crucial.
+$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+
+require "coding_agent_tools/cli"
+
+# This executable is a convenience wrapper that calls the main CLI
+# with the 'llm query' command prepended to the arguments
+begin
+  # Prepend 'llm query' to the arguments and call the main CLI
+  modified_args = ['llm', 'query'] + ARGV
+
+  # Replace ARGV with our modified arguments
+  ARGV.clear
+  ARGV.concat(modified_args)
+
+  # Ensure LLM commands are registered before calling CLI
+  CodingAgentTools::Cli::Commands.register_llm_commands
+
+  # Capture both stdout and stderr to modify error/help messages
+  original_stdout = $stdout
+  original_stderr = $stderr
+  require 'stringio'
+  captured_stdout = StringIO.new
+  captured_stderr = StringIO.new
+
+  $stdout = captured_stdout
+  $stderr = captured_stderr
+
+  # Call the main CLI
+  Dry::CLI.new(CodingAgentTools::Cli::Commands).call
+
+  # If we get here, the command succeeded without raising SystemExit
+  # Get the captured output and display it
+  stdout_content = captured_stdout.string
+  stderr_content = captured_stderr.string
+
+  # Restore stdout and stderr
+  $stdout = original_stdout
+  $stderr = original_stderr
+
+  # Modify messages to show only 'llm-gemini-query' instead of full path
+  if stdout_content.include?('llm query') || stderr_content.include?('llm query')
+    stdout_content = stdout_content.gsub(/llm-gemini-query llm query/, 'llm-gemini-query')
+    stderr_content = stderr_content.gsub(/"[^"]*llm[^"]*query"/, '"llm-gemini-query"')
+    stderr_content = stderr_content.gsub(/Usage: "[^"]*llm[^"]*query[^"]*PROMPT"/, 'Usage: "llm-gemini-query PROMPT"')
+  end
+
+  # Print the output
+  $stdout.print stdout_content unless stdout_content.empty?
+  $stderr.print stderr_content unless stderr_content.empty?
+
+rescue SystemExit => e
+  # Get the captured output
+  stdout_content = captured_stdout.string
+  stderr_content = captured_stderr.string
+
+  # Restore stdout and stderr
+  $stdout = original_stdout
+  $stderr = original_stderr
+
+  # Modify messages to show only 'llm-gemini-query' instead of full path
+  if stdout_content.include?('llm query') || stderr_content.include?('llm query')
+    stdout_content = stdout_content.gsub(/llm-gemini-query llm query/, 'llm-gemini-query')
+    stderr_content = stderr_content.gsub(/"[^"]*llm[^"]*query"/, '"llm-gemini-query"')
+    stderr_content = stderr_content.gsub(/Usage: "[^"]*llm[^"]*query[^"]*PROMPT"/, 'Usage: "llm-gemini-query PROMPT"')
+  end
+
+  # Print the modified output
+  $stdout.print stdout_content unless stdout_content.empty?
+  $stderr.print stderr_content unless stderr_content.empty?
+
+  # Re-raise the SystemExit to preserve the exit code
+  raise e
+rescue Dry::CLI::Error => e
+  $stdout = original_stdout if original_stdout
+  $stderr = original_stderr if original_stderr
+  warn "ERROR: #{e.message}"
+  exit 1
+rescue CodingAgentTools::Error => e
+  $stdout = original_stdout if original_stdout
+  $stderr = original_stderr if original_stderr
+  warn "ERROR: #{e.message}"
+  exit 1
+rescue => e
+  $stdout = original_stdout if original_stdout
+  $stderr = original_stderr if original_stderr
+  # Catch other unexpected errors
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+ensure
+  # Always restore stdout and stderr in case of any unexpected issues
+  $stdout = original_stdout if original_stdout
+  $stderr = original_stderr if original_stderr
+end
