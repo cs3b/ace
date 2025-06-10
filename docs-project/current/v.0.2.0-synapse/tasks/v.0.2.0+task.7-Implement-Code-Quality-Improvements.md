@@ -2,7 +2,7 @@
 id: v.0.2.0+task.7
 status: pending
 priority: medium
-estimate: 12h
+estimate: 11h # Adjusted estimate due to scope reduction
 dependencies: ["v.0.2.0+task.6"]
 ---
 
@@ -23,6 +23,7 @@ lib/
 ├── coding_agent_tools/
 │   ├── atoms/
 │   ├── cli/
+│   ├── middlewares/ # Potentially new
 │   ├── molecules/
 │   ├── organisms/
 │   ├── ecosystems/
@@ -30,6 +31,7 @@ lib/
 │   ├── cli.rb
 │   ├── cli_registry.rb
 │   ├── error.rb
+│   ├── notifications.rb # Potentially new
 │   └── version.rb
 ├── coding_agent_tools.rb
 exe/
@@ -39,6 +41,7 @@ spec/
 ├── atoms/
 ├── cli/
 ├── integration/
+├── middlewares/ # Potentially new
 ├── molecules/
 ├── organisms/
 ├── support/
@@ -50,18 +53,16 @@ spec/
 
 ## Objective
 
-Implement various code quality enhancements and best practices outlined in the `o3.code.review.md` (Code-Quality Cheat-Sheet). The goal is to improve the overall maintainability, robustness, developer experience, and adherence to established patterns within the `coding-agent-tools` gem.
+Implement various code quality enhancements and best practices outlined in the `o3.code.review.md` (Code-Quality Cheat-Sheet). The goal is to improve the overall maintainability, robustness, developer experience, and adherence to established patterns within the `coding-agent-tools` gem. This includes refining error handling, standardizing library practices, and introducing observability for external HTTP calls using `dry-monitor`.
 
 ## Scope of Work
 
-This task focuses on refactoring existing library code and test infrastructure as per the cheat-sheet.
+This task focuses on refactoring existing library code and test infrastructure as per the cheat-sheet, with modifications to use `dry-monitor` for observability and skipping Atom/Molecule consolidation. API key loading will be handled by a dedicated `env-reader` atom and is out of scope for this task.
 
 -   **CLI Executable (`exe/llm-gemini-query` and others if applicable):**
     -   Replace duplicated `rescue => e; warn e.backtrace` blocks with a single `ErrorReporter.call(e, debug:)` (needs creation of `ErrorReporter`).
 -   **Atoms & Molecules:**
-    -   Audit each Atom: if it only passes data through, merge it with its Molecule until genuine behavior appears.
     -   Leverage Faraday utilities more: let Faraday build query strings & merge headers—delete in-house URI/header code if any.
-    -   Ensure credentials are read via `ENV.fetch` (potentially with defaults) and `.env` loading is primarily in bootstrap/initialization, not deep within library code.
 -   **Misc. Library Code:**
     -   Switch to Zeitwerk autoloading; remove ad-hoc `autoload` blocks.
     -   Use `URI.join` or `Addressable::URI` for URL assembly consistently.
@@ -70,33 +71,35 @@ This task focuses on refactoring existing library code and test infrastructure a
     -   Improve fixture hygiene: Hide helpers in `spec/support` (temp files, cassette helpers) so test bodies read like prose.
     -   Consider custom matchers for more readable expectations if beneficial.
 -   **Observability:**
-    -   Emit `ActiveSupport::Notifications` around external calls (e.g., Gemini API calls) so consuming applications can hook Prometheus/StatsD without monkey-patching.
+    -   Implement observability for external HTTP calls (e.g., Gemini API calls) using `dry-monitor` as Faraday middleware, allowing consuming applications to subscribe to events.
 
 ## Deliverables
 
 #### Create
 
 -   `lib/coding_agent_tools/error_reporter.rb` - A new module/class for centralized error reporting in executables.
+-   `lib/coding_agent_tools/notifications.rb` - Module to manage the `Dry::Monitor::Notifications` instance.
+-   `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb` - New Faraday middleware for `dry-monitor` instrumentation.
 -   Potentially new RSpec custom matchers in `spec/support/matchers/`.
 -   Potentially new helper modules in `spec/support/`.
 
 #### Modify
 
 -   `exe/llm-gemini-query` (and any other executables): Refactor error handling.
--   Various Atom and Molecule classes: Consolidate pass-through Atoms, switch to Faraday utils.
--   `lib/coding_agent_tools.rb` (or relevant setup files): Implement Zeitwerk, remove old autoloads.
+-   Various Atom and Molecule classes (specifically HTTP-related ones): Switch to Faraday utils for query/header building.
+-   `lib/coding_agent_tools.rb` (or relevant setup files): Implement Zeitwerk, remove old autoloads, potentially initialize `Notifications` module.
 -   Files performing URL assembly: Switch to `URI.join` or `Addressable::URI`.
 -   Files with custom exception wrapping: Refine logic.
 -   `spec/spec_helper.rb` and relevant spec files: Reorganize helpers, potentially add custom matchers.
--   `lib/coding_agent_tools/organisms/gemini_client.rb` (and other external call sites): Add `ActiveSupport::Notifications`.
--   `Gemfile`: Add `activesupport` if not already present (for Notifications), `addressable` if chosen for URIs.
--   `coding_agent_tools.gemspec`: Add `activesupport` and `addressable` as dependencies if added.
+-   `lib/coding_agent_tools/organisms/gemini_client.rb` (and other Faraday clients): Integrate `FaradayDryMonitorLogger` middleware.
+-   `Gemfile`: Add `zeitwerk`, `dry-monitor`, `dry-configurable` (for `dry-monitor` setup), and `addressable` if chosen for URIs.
+-   `coding_agent_tools.gemspec`: Add `zeitwerk`, `dry-monitor`, `dry-configurable`, and `addressable` as dependencies if added.
 
 ## Phases
 
-1.  **Setup & Tooling:** Implement `ErrorReporter`, switch to Zeitwerk. Add `activesupport` and `addressable` dependencies.
-2.  **Core Library Refactoring:** Address Atoms/Molecules consolidation, Faraday usage, credential handling, URL assembly, and exception wrapping.
-3.  **Observability:** Implement `ActiveSupport::Notifications`.
+1.  **Setup & Tooling:** Implement `ErrorReporter`, switch to Zeitwerk. Add `zeitwerk`, `dry-monitor`, `dry-configurable` and `addressable` dependencies.
+2.  **Core Library Refactoring:** Address Faraday usage, URL assembly, and exception wrapping.
+3.  **Observability:** Implement `dry-monitor` Logging for External Calls via Faraday middleware.
 4.  **Test Refinements:** Improve fixture hygiene and consider custom matchers.
 5.  **Review & Testing:** Ensure all changes are covered by tests and maintain functionality.
 
@@ -104,27 +107,26 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 ### Planning Steps
 
-*   [ ] Review `o3.code.review.md` thoroughly to list all actionable code changes.
+*   [ ] Review `o3.code.review.md` thoroughly to list all actionable code changes (excluding Atom/Molecule merge and ENV.fetch for API keys).
     > TEST: Checklist Creation
     > Type: Pre-condition Check
     > Assert: A detailed checklist of changes from `o3.code.review.md` is created.
     > Command: N/A (Manual review)
 *   [ ] Design `ErrorReporter` module/class for CLI executables.
-*   [ ] Identify all Atoms that are candidates for merging into Molecules.
 *   [ ] List all current `autoload` statements to be replaced by Zeitwerk.
-*   [ ] Identify key external call sites for `ActiveSupport::Notifications`.
-*   [ ] Research `ActiveSupport::Notifications` basic usage and payload conventions.
+*   [ ] Research `dry-monitor` basic usage, event registration/instrumentation, and integration as Faraday middleware. Define payload for HTTP request/response events.
+*   [ ] Identify Faraday client instances where the `dry-monitor` middleware should be added.
 *   [ ] Research `Addressable::URI` vs `URI.join` for common use cases in the project.
 
 ### Execution Steps
 
 #### Phase 1: Setup & Tooling
 
--   [ ] Add `activesupport` to `Gemfile` and `coding_agent_tools.gemspec`.
-    > TEST: Dependency Added
+-   [ ] Add `zeitwerk`, `dry-monitor`, `dry-configurable` to `Gemfile` and `coding_agent_tools.gemspec`.
+    > TEST: Dependencies Added
     > Type: Action Validation
-    > Assert: `activesupport` is listed in `Gemfile` and `.gemspec`.
-    > Command: `grep "activesupport" Gemfile && grep "activesupport" coding_agent_tools.gemspec`
+    > Assert: `zeitwerk`, `dry-monitor`, `dry-configurable` are listed in `Gemfile` and `.gemspec`.
+    > Command: `grep "zeitwerk" Gemfile && grep "zeitwerk" coding_agent_tools.gemspec && grep "dry-monitor" Gemfile && grep "dry-monitor" coding_agent_tools.gemspec && grep "dry-configurable" Gemfile && grep "dry-configurable" coding_agent_tools.gemspec`
 -   [ ] (Optional) Add `addressable` to `Gemfile` and `coding_agent_tools.gemspec` if chosen over `URI.join`.
 -   [ ] Implement `ErrorReporter` module/class in `lib/coding_agent_tools/error_reporter.rb`.
     -   [ ] It should accept an exception and a debug flag.
@@ -147,21 +149,11 @@ This task focuses on refactoring existing library code and test infrastructure a
     > Type: Action Validation
     > Assert: `exe/llm-gemini-query` uses `ErrorReporter`.
     > Command: `grep ErrorReporter exe/llm-gemini-query`
--   [ ] Audit Atom classes. Merge pass-through Atoms into their respective Molecules.
-    > TEST: Atom Audit
-    > Type: Action Validation
-    > Assert: Review each Atom; if an Atom `A` is used by only one Molecule `M` and primarily passes data or makes simple calls on `M`'s behalf, it's a candidate for merging.
-    > Command: Manual review of `lib/coding_agent_tools/atoms/` and their usages.
 -   [ ] Refactor HTTP-related Atoms/Molecules to prefer Faraday's built-in utilities for query string building and header merging over custom implementations.
     > TEST: Faraday Utilities Usage
     > Type: Action Validation
     > Assert: Custom URI/query building for Faraday requests is removed.
-    > Command: `grep -E "URI\.encode_www_form|Faraday.*params" lib/coding_agent_tools/molecules/http_request_builder.rb` (check for appropriate usage)
--   [ ] Ensure API credentials are read via `ENV.fetch` (e.g., `ENV.fetch("API_KEY", "default_if_applicable")`) for clarity on required keys.
-    > TEST: ENV.fetch Usage
-    > Type: Action Validation
-    > Assert: `ENV.fetch` is used for critical environment variables like API keys.
-    > Command: `grep "ENV.fetch" lib/coding_agent_tools/molecules/api_credentials.rb`
+    > Command: `grep -E "URI\.encode_www_form|Faraday.*params" lib/coding_agent_tools/molecules/http_request_builder.rb` (check for appropriate usage, expecting removal of manual encoding if Faraday handles it)
 -   [ ] Standardize URL construction using `URI.join` or `Addressable::URI`.
     > TEST: URL Assembly Standardization
     > Type: Action Validation
@@ -173,15 +165,26 @@ This task focuses on refactoring existing library code and test infrastructure a
     > Assert: `rescue => e` blocks are reviewed for appropriate re-wrapping or re-raising.
     > Command: Manual review of `rescue` blocks.
 
-#### Phase 3: Observability
+#### Phase 3: Observability: Implement `dry-monitor` Logging for External Calls
 
--   [ ] Instrument `GeminiClient`'s API call method (`generate_text`) with `ActiveSupport::Notifications.instrument`.
-    -   [ ] Event name e.g., `"gemini_api.request.coding_agent_tools"`.
-    -   [ ] Payload includes: `model`, `prompt_length`, `duration`, `success_status`, `error_class` (if error).
-    > TEST: AS::Notifications for GeminiClient
+-   [ ] Create `lib/coding_agent_tools/notifications.rb` to initialize and provide access to a `Dry::Monitor::Notifications` instance (e.g., via `CodingAgentTools::Notifications.notifications`).
+    > TEST: Notifications Module
     > Type: Action Validation
-    > Assert: `ActiveSupport::Notifications.instrument` is used in `GeminiClient`.
-    > Command: `grep "ActiveSupport::Notifications" lib/coding_agent_tools/organisms/gemini_client.rb`
+    > Assert: `CodingAgentTools::Notifications.notifications` returns a `Dry::Monitor::Notifications` instance.
+    > Command: `ruby -e "require './lib/coding_agent_tools'; require './lib/coding_agent_tools/notifications'; puts CodingAgentTools::Notifications.notifications.inspect"`
+-   [ ] Implement `FaradayDryMonitorLogger` middleware in `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb`.
+    -   [ ] It should accept a `Dry::Monitor::Notifications` instance and an optional event namespace (e.g., `gemini_api`).
+    -   [ ] It should instrument an event like `"<namespace>.request.coding_agent_tools"` before the call. Payload should include: `method`, `url`, `headers`.
+    -   [ ] It should instrument an event like `"<namespace>.response.coding_agent_tools"` after the call. Payload should include: `method`, `url`, `status`, `duration_ms`, `response_headers`, `error_class` (if an error occurred).
+    > TEST: FaradayDryMonitorLogger Created
+    > Type: File Existence
+    > Assert: `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb` exists.
+    > Command: `test -f lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb`
+-   [ ] Integrate the `FaradayDryMonitorLogger` middleware into relevant Faraday client instances (e.g., in `GeminiClient`), passing the notifications instance and appropriate namespace.
+    > TEST: Dry::Monitor Middleware Integration in GeminiClient
+    > Type: Action Validation
+    > Assert: Faraday client in `GeminiClient` uses `FaradayDryMonitorLogger`.
+    > Command: `grep FaradayDryMonitorLogger lib/coding_agent_tools/organisms/gemini_client.rb`
 
 #### Phase 4: Test Refinements
 
@@ -209,17 +212,15 @@ This task focuses on refactoring existing library code and test infrastructure a
 ## Acceptance Criteria
 
 -   [ ] AC 1: CLI executables use a centralized `ErrorReporter`.
--   [ ] AC 2: Atoms that solely pass data are merged into their Molecules.
--   [ ] AC 3: Faraday utilities are preferred for query/header building, reducing custom code.
--   [ ] AC 4: Critical environment variables like API keys are accessed using `ENV.fetch`.
--   [ ] AC 5: Zeitwerk is used for autoloading, and manual `autoload` calls are removed.
--   [ ] AC 6: URL assembly is standardized using `URI.join` or `Addressable::URI`.
--   [ ] AC 7: Exceptions are re-wrapped only to add meaningful context.
--   [ ] AC 8: External API calls in `GeminiClient` emit `ActiveSupport::Notifications`.
--   [ ] AC 9: Test helper organization in `spec/support/` is improved.
--   [ ] AC 10: (Optional, if beneficial) 1-2 new custom RSpec matchers are introduced and used.
--   [ ] AC 11: Code passes linting with `standardrb`.
--   [ ] AC 12: All tests pass.
+-   [ ] AC 2: Faraday utilities are preferred for query/header building, reducing custom code.
+-   [ ] AC 3: Zeitwerk is used for autoloading, and manual `autoload` calls are removed.
+-   [ ] AC 4: URL assembly is standardized using `URI.join` or `Addressable::URI`.
+-   [ ] AC 5: Exceptions are re-wrapped only to add meaningful context.
+-   [ ] AC 6: External HTTP calls made via Faraday are instrumented with `dry-monitor` using a custom middleware, publishing request and response events.
+-   [ ] AC 7: Test helper organization in `spec/support/` is improved.
+-   [ ] AC 8: (Optional, if beneficial) 1-2 new custom RSpec matchers are introduced and used.
+-   [ ] AC 9: Code passes linting with `standardrb`.
+-   [ ] AC 10: All tests pass.
 
 ## Out of Scope
 
@@ -227,11 +228,14 @@ This task focuses on refactoring existing library code and test infrastructure a
 -   Adding RuboCop/Standard & SimpleCov thresholds to CI (this is CI configuration, not library code).
 -   Writing new integration specs beyond those needed to verify refactors, unless existing coverage is insufficient for a modified area.
 -   Large-scale architectural changes beyond Atom/Molecule consolidation.
+-   Auditing and merging Atom classes into Molecules (deferred from original scope).
+-   Specifics of API key loading (e.g., via `ENV.fetch`), as this will be handled by a dedicated `env-reader` atom.
 
 ## References
 
 -   [Code-Quality Cheat-Sheet](docs-project/current/v.0.2.0-synapse/researches/o3.code.review.md)
 -   [Zeitwerk Documentation](https://github.com/fxn/zeitwerk)
--   [ActiveSupport::Notifications Guide](https://guides.rubyonrails.org/active_support_instrumentation.html)
+-   [dry-monitor Documentation](https://dry-rb.org/gems/dry-monitor/)
+-   [dry-configurable Documentation](https://dry-rb.org/gems/dry-configurable/)
 -   [Faraday Documentation](https://lostisland.github.io/faraday/)
 -   [Addressable::URI Documentation](https://github.com/sporkmonger/addressable)
