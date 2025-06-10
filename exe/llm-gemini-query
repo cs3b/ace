@@ -20,6 +20,7 @@ end
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 
 require "coding_agent_tools/cli"
+require "coding_agent_tools/error_reporter"
 
 # This executable is a convenience wrapper that calls the main CLI
 # with the 'llm query' command prepended to the arguments
@@ -92,19 +93,18 @@ rescue SystemExit => e
 rescue Dry::CLI::Error => e
   $stdout = original_stdout if original_stdout
   $stderr = original_stderr if original_stderr
-  warn "ERROR: #{e.message}"
+  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
   exit 1
 rescue CodingAgentTools::Error => e
   $stdout = original_stdout if original_stdout
   $stderr = original_stderr if original_stderr
-  warn "ERROR: #{e.message}"
+  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
   exit 1
 rescue => e
   $stdout = original_stdout if original_stdout
   $stderr = original_stderr if original_stderr
   # Catch other unexpected errors
-  warn "An unexpected error occurred: #{e.message}"
-  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
   exit 1
 ensure
   # Always restore stdout and stderr in case of any unexpected issues

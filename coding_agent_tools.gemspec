@@ -38,6 +38,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dotenv", "~> 2.0"
   spec.add_dependency "dry-cli"
   spec.add_dependency "faraday", "~> 2.0"
+  spec.add_dependency "zeitwerk", "~> 2.6"
+  spec.add_dependency "dry-monitor", "~> 1.0"
+  spec.add_dependency "dry-configurable", "~> 1.0" # dry-monitor typically depends on this
+  spec.add_dependency "addressable", "~> 2.8"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/http_client"
-require_relative "../atoms/json_formatter"
+# require_relative "../atoms/json_formatter" # No longer directly used here
 
 module CodingAgentTools
   module Molecules
@@ -24,10 +24,10 @@ module CodingAgentTools
       # @option options [Boolean] :json (true) Whether to send/receive JSON
       # @return [Hash] Response data including status, headers, and body
       def json_request(method, url, **options)
-        headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method, body: options[:body])
-        url_with_query = build_url_with_query(url, options[:query])
-
-        response = execute_request(method, url_with_query, options[:body], headers)
+        headers = build_headers(options[:headers], json: options.fetch(:json, true))
+        # Query parameters are now passed directly to execute_request,
+        # which will pass them to HTTPClient, which in turn lets Faraday handle them.
+        response = execute_request(method, url, query: options[:query], body: options[:body], headers: headers)
 
         parse_response(response, json: options.fetch(:json, true))
       end
@@ -53,15 +53,16 @@ module CodingAgentTools
       # Execute a raw HTTP request
       # @param method [Symbol] HTTP method
       # @param url [String] Request URL
+      # @param query [Hash, nil] Query parameters (for GET requests)
       # @param body [String, Hash, nil] Request body
       # @param headers [Hash] Request headers
       # @return [Faraday::Response] Raw response object
-      def raw_request(method, url, body: nil, headers: {})
+      def raw_request(method, url, query: nil, body: nil, headers: {})
         case method
         when :get
-          @client.get(url, headers)
+          @client.get(url, params: query || {}, headers: headers)
         when :post
-          @client.post(url, body, headers)
+          @client.post(url, body, headers: headers)
         else
           raise ArgumentError, "Unsupported HTTP method: #{method}"
         end
@@ -72,102 +73,57 @@ module CodingAgentTools
       # Build headers for the request
       # @param custom_headers [Hash, nil] Custom headers to merge
       # @param json [Boolean] Whether this is a JSON request
-      # @param method [Symbol] HTTP method
-      # @param body [String, Hash, nil] Request body
       # @return [Hash] Complete headers
-      def build_headers(custom_headers, json: true, method: nil, body: nil)
+      def build_headers(custom_headers, json: true)
         headers = {}
 
         if json
           headers["Accept"] = "application/json"
-          # Only add Content-Type when body is present or method is POST
-          if body || method == :post
-            headers["Content-Type"] = "application/json"
-          end
+          # Content-Type: application/json for request body is now handled by
+          # Faraday's :json request middleware in HTTPClient if the body is a Hash.
         end
 
         headers.merge!(custom_headers) if custom_headers
         headers
       end
 
-      # Build URL with query parameters
-      # @param url [String] Base URL
-      # @param query [Hash, nil] Query parameters
-      # @return [String] URL with query string
-      def build_url_with_query(url, query)
-        return url if query.nil? || query.empty?
-
-        uri = URI.parse(url)
-
-        # 1. Process the input 'query' hash (additional parameters to be added/merged).
-        #    This correctly handles array values in the input 'query' hash, converting
-        #    { key: [val1, val2] } to [["key", "val1"], ["key", "val2"]].
-        new_params_list = []
-        query.each do |key, value| # 'query' is the hash of additional parameters passed to the method
-          if value.is_a?(Array)
-            value.each { |v| new_params_list << [key.to_s, v.to_s] }
-          else
-            new_params_list << [key.to_s, value.to_s]
-          end
-        end
-
-        # 2. Get existing parameters from the URL's query string as an array of [key, value] pairs.
-        #    This preserves all original parameters, including multi-value ones (e.g., "ids=1&ids=2").
-        existing_params_list = uri.query ? URI.decode_www_form(uri.query) : []
-
-        # 3. Combine the new parameters and existing parameters.
-        #    Parameters from the input 'query' hash are placed first, effectively taking precedence
-        #    or being prepended if keys are duplicated.
-        all_params_list = new_params_list + existing_params_list
-
-        # 4. Set the URI query component.
-        #    If the 'query' hash was empty (and the initial guard was bypassed or removed),
-        #    and the original URL also had no query, all_params_list would be empty.
-        #    In such cases, uri.query should be nil to avoid a trailing '?' in the URL.
-        uri.query = if all_params_list.empty?
-          nil
-        else
-          URI.encode_www_form(all_params_list)
-        end
-
-        uri.to_s
-      end
-
       # Execute the HTTP request
       # @param method [Symbol] HTTP method
       # @param url [String] Request URL
-      # @param body [String, Hash, nil] Request body
+      # @param query [Hash, nil] Query parameters for GET requests
+      # @param body [String, Hash, nil] Request body for POST, PUT, PATCH
       # @param headers [Hash] Request headers
       # @return [Faraday::Response] Response object
-      def execute_request(method, url, body, headers)
+      def execute_request(method, url, query: nil, body: nil, headers: {})
         case method
         when :get
-          @client.get(url, headers)
+          @client.get(url, params: query || {}, headers: headers)
         when :post
-          @client.post(url, body, headers)
+          # For POST, query params are typically part of the URL or body, not separate.
+          # If they were needed in URL for POST, URL construction should happen before this call.
+          @client.post(url, body, headers: headers)
         else
           raise ArgumentError, "Unsupported HTTP method: #{method}"
         end
       end
 
       # Parse the response
-      # @param response [Faraday::Response] Raw response
-      # @param json [Boolean] Whether to parse as JSON
+      # @param response [Faraday::Response] Raw response from HTTPClient
+      # @param json [Boolean] Hint for consumers; not used for parsing within this method anymore
       # @return [Hash] Parsed response data
-      def parse_response(response, json: true)
+      def parse_response(response, json: true) # rubocop:disable Lint/UnusedMethodArgument
         result = {
           status: response.status,
           headers: response.headers.to_h,
-          success: response.success?
+          success: response.success?,
+          # response.body is now either a Hash/Array (if parsed by Faraday's :json middleware)
+          # or a String (if not JSON, not parseable, or middleware not used/applicable).
+          # APIResponseParser will handle further processing if it's a string.
+          body: response.body
         }
-
-        if json && response.headers["content-type"]&.include?("application/json")
-          result[:body] = Atoms::JSONFormatter.safe_parse(response.body, symbolize_names: true)
-          result[:raw_body] = response.body
-        else
-          result[:body] = response.body
-        end
-
+        # The raw_body concept is simplified: if response.body is a string, that *is* the raw body.
+        # If it's parsed, the raw string form is implicitly handled by the fact that
+        # APIResponseParser will work with the parsed form or try to parse if it's a string.
         result
       end
     end

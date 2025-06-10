@@ -198,12 +198,18 @@ module CodingAgentTools
       # @return [String] File contents
       def read_file(file_path)
         File.read(file_path, encoding: "UTF-8").strip
-      rescue Errno::EACCES
-        raise Error, "Permission denied reading file: #{file_path}"
-      rescue Errno::ENOENT
-        raise Error, "File not found: #{file_path}"
+      rescue Errno::EACCES => e
+        new_error = Error.new("Permission denied reading file: #{file_path}")
+        new_error.set_backtrace(e.backtrace)
+        raise new_error
+      rescue Errno::ENOENT => e
+        new_error = Error.new("File not found: #{file_path}")
+        new_error.set_backtrace(e.backtrace)
+        raise new_error
       rescue => e
-        raise Error, "Error reading file #{file_path}: #{e.message}"
+        new_error = Error.new("Error reading file #{file_path}: #{e.message}")
+        new_error.set_backtrace(e.backtrace)
+        raise new_error
       end
 
       # Validate prompt string

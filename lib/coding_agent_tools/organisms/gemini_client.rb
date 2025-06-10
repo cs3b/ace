@@ -3,6 +3,7 @@
 require_relative "../molecules/api_credentials"
 require_relative "../molecules/http_request_builder"
 require_relative "../molecules/api_response_parser"
+require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
@@ -45,7 +46,10 @@ module CodingAgentTools
         @api_key = api_key || @credentials.api_key
 
         @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 30)
+          timeout: options.fetch(:timeout, 30),
+          # The event_namespace is passed to HTTPClient, which uses it to configure
+          # the FaradayDryMonitorLogger middleware for observability.
+          event_namespace: :gemini_api # For dry-monitor event namespacing
         )
         @response_parser = Molecules::APIResponseParser.new
       end
@@ -109,7 +113,12 @@ module CodingAgentTools
       # Get information about the model
       # @return [Hash] Model information
       def model_info
-        url = "#{@base_url}/models/#{@model}"
+        # Use Addressable::URI.join to construct the path
+        # Ensure base_url is handled correctly whether it has a trailing slash or not.
+        # Addressable::URI.join("http://example.com", "foo", "bar") => "http://example.com/foo/bar"
+        # Addressable::URI.join("http://example.com/", "foo", "bar") => "http://example.com/foo/bar"
+        url_obj = Addressable::URI.join(@base_url, "models/", @model)
+        url = url_obj.to_s
         response_data = @request_builder.get_json(url, query: {key: @api_key})
         parsed = @response_parser.parse_response(response_data)
 
@@ -126,7 +135,13 @@ module CodingAgentTools
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
-        "#{@base_url}/models/#{@model}:#{endpoint}?key=#{@api_key}"
+        # Construct path using Addressable::URI.join
+        path_segment = "models/#{@model}:#{endpoint}"
+        url_obj = Addressable::URI.join(@base_url, path_segment)
+
+        # Set query parameters
+        url_obj.query_values = {key: @api_key}
+        url_obj.to_s
       end
 
       # Build generation payload

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.7
-status: pending
+status: in-progress
 priority: medium
 estimate: 11h # Adjusted estimate due to scope reduction
 dependencies: ["v.0.2.0+task.6"]
@@ -107,16 +107,16 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 ### Planning Steps
 
-*   [ ] Review `o3.code.review.md` thoroughly to list all actionable code changes (excluding Atom/Molecule merge and ENV.fetch for API keys).
+*   [x] Review `o3.code.review.md` thoroughly to list all actionable code changes (excluding Atom/Molecule merge and ENV.fetch for API keys).
     > TEST: Checklist Creation
     > Type: Pre-condition Check
     > Assert: A detailed checklist of changes from `o3.code.review.md` is created.
     > Command: N/A (Manual review)
-*   [ ] Design `ErrorReporter` module/class for CLI executables.
-*   [ ] List all current `autoload` statements to be replaced by Zeitwerk.
-*   [ ] Research `dry-monitor` basic usage, event registration/instrumentation, and integration as Faraday middleware. Define payload for HTTP request/response events.
-*   [ ] Identify Faraday client instances where the `dry-monitor` middleware should be added.
-*   [ ] Research `Addressable::URI` vs `URI.join` for common use cases in the project.
+*   [x] Design `ErrorReporter` module/class for CLI executables.
+*   [x] List all current `autoload` statements to be replaced by Zeitwerk.
+*   [x] Research `dry-monitor` basic usage, event registration/instrumentation, and integration as Faraday middleware. Define payload for HTTP request/response events.
+*   [x] Identify Faraday client instances where the `dry-monitor` middleware should be added.
+*   [x] Research `Addressable::URI` vs `URI.join` for common use cases in the project.
 
 ### Execution Steps
 
@@ -127,16 +127,16 @@ This task focuses on refactoring existing library code and test infrastructure a
     > Type: Action Validation
     > Assert: `zeitwerk`, `dry-monitor`, `dry-configurable` are listed in `Gemfile` and `.gemspec`.
     > Command: `grep "zeitwerk" Gemfile && grep "zeitwerk" coding_agent_tools.gemspec && grep "dry-monitor" Gemfile && grep "dry-monitor" coding_agent_tools.gemspec && grep "dry-configurable" Gemfile && grep "dry-configurable" coding_agent_tools.gemspec`
--   [ ] (Optional) Add `addressable` to `Gemfile` and `coding_agent_tools.gemspec` if chosen over `URI.join`.
--   [ ] Implement `ErrorReporter` module/class in `lib/coding_agent_tools/error_reporter.rb`.
-    -   [ ] It should accept an exception and a debug flag.
-    -   [ ] It should log the error message and backtrace (if debug enabled).
+-   [x] (Optional) Add `addressable` to `Gemfile` and `coding_agent_tools.gemspec` if chosen over `URI.join`.
+-   [x] Implement `ErrorReporter` module/class in `lib/coding_agent_tools/error_reporter.rb`.
+    -   [x] It should accept an exception and a debug flag.
+    -   [x] It should log the error message and backtrace (if debug enabled).
     > TEST: ErrorReporter Basic Functionality
     > Type: Action Validation
     > Assert: `ErrorReporter.call(StandardError.new("test"), debug: true)` outputs message and backtrace.
     > Command: `ruby -e "require './lib/coding_agent_tools/error_reporter'; CodingAgentTools::ErrorReporter.call(StandardError.new('test err'), debug: true)"`
--   [ ] Configure Zeitwerk for autoloading in `lib/coding_agent_tools.rb`.
-    -   [ ] Remove all existing `autoload` statements from the codebase.
+-   [x] Configure Zeitwerk for autoloading in `lib/coding_agent_tools.rb`.
+    -   [x] Remove all existing `autoload` statements from the codebase.
     > TEST: Zeitwerk Loading
     > Type: Action Validation
     > Assert: Core classes (e.g., `CodingAgentTools::Atoms::JSONFormatter`) can be loaded without explicit require after `require 'coding_agent_tools'`.
@@ -144,22 +144,22 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 #### Phase 2: Core Library Refactoring
 
--   [ ] Refactor `exe/llm-gemini-query` to use the new `ErrorReporter`.
+-   [x] Refactor `exe/llm-gemini-query` to use the new `ErrorReporter`.
     > TEST: CLI Error Handling Refactored
     > Type: Action Validation
     > Assert: `exe/llm-gemini-query` uses `ErrorReporter`.
     > Command: `grep ErrorReporter exe/llm-gemini-query`
--   [ ] Refactor HTTP-related Atoms/Molecules to prefer Faraday's built-in utilities for query string building and header merging over custom implementations.
+-   [x] Refactor HTTP-related Atoms/Molecules to prefer Faraday's built-in utilities for query string building and header merging over custom implementations.
     > TEST: Faraday Utilities Usage
     > Type: Action Validation
     > Assert: Custom URI/query building for Faraday requests is removed.
     > Command: `grep -E "URI\.encode_www_form|Faraday.*params" lib/coding_agent_tools/molecules/http_request_builder.rb` (check for appropriate usage, expecting removal of manual encoding if Faraday handles it)
--   [ ] Standardize URL construction using `URI.join` or `Addressable::URI`.
+-   [x] Standardize URL construction using `URI.join` or `Addressable::URI`.
     > TEST: URL Assembly Standardization
     > Type: Action Validation
     > Assert: URL joining uses a standard library method.
     > Command: `grep -E "URI\.join|Addressable::URI\.join" lib/coding_agent_tools/**/*.rb`
--   [ ] Review and refactor exception re-wrapping. Only re-wrap to add context; otherwise, re-raise original.
+-   [x] Review and refactor exception re-wrapping. Only re-wrap to add context; otherwise, re-raise original.
     > TEST: Exception Handling Review
     > Type: Action Validation
     > Assert: `rescue => e` blocks are reviewed for appropriate re-wrapping or re-raising.
@@ -167,20 +167,20 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 #### Phase 3: Observability: Implement `dry-monitor` Logging for External Calls
 
--   [ ] Create `lib/coding_agent_tools/notifications.rb` to initialize and provide access to a `Dry::Monitor::Notifications` instance (e.g., via `CodingAgentTools::Notifications.notifications`).
+-   [x] Create `lib/coding_agent_tools/notifications.rb` to initialize and provide access to a `Dry::Monitor::Notifications` instance (e.g., via `CodingAgentTools::Notifications.notifications`).
     > TEST: Notifications Module
     > Type: Action Validation
     > Assert: `CodingAgentTools::Notifications.notifications` returns a `Dry::Monitor::Notifications` instance.
     > Command: `ruby -e "require './lib/coding_agent_tools'; require './lib/coding_agent_tools/notifications'; puts CodingAgentTools::Notifications.notifications.inspect"`
--   [ ] Implement `FaradayDryMonitorLogger` middleware in `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb`.
-    -   [ ] It should accept a `Dry::Monitor::Notifications` instance and an optional event namespace (e.g., `gemini_api`).
-    -   [ ] It should instrument an event like `"<namespace>.request.coding_agent_tools"` before the call. Payload should include: `method`, `url`, `headers`.
-    -   [ ] It should instrument an event like `"<namespace>.response.coding_agent_tools"` after the call. Payload should include: `method`, `url`, `status`, `duration_ms`, `response_headers`, `error_class` (if an error occurred).
+-   [x] Implement `FaradayDryMonitorLogger` middleware in `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb`.
+    -   [x] It should accept a `Dry::Monitor::Notifications` instance and an optional event namespace (e.g., `gemini_api`).
+    -   [x] It should instrument an event like `"<namespace>.request.coding_agent_tools"` before the call. Payload should include: `method`, `url`, `headers`.
+    -   [x] It should instrument an event like `"<namespace>.response.coding_agent_tools"` after the call. Payload should include: `method`, `url`, `status`, `duration_ms`, `response_headers`, `error_class` (if an error occurred).
     > TEST: FaradayDryMonitorLogger Created
     > Type: File Existence
     > Assert: `lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb` exists.
     > Command: `test -f lib/coding_agent_tools/middlewares/faraday_dry_monitor_logger.rb`
--   [ ] Integrate the `FaradayDryMonitorLogger` middleware into relevant Faraday client instances (e.g., in `GeminiClient`), passing the notifications instance and appropriate namespace.
+-   [x] Integrate the `FaradayDryMonitorLogger` middleware into relevant Faraday client instances (e.g., in `GeminiClient`), passing the notifications instance and appropriate namespace.
     > TEST: Dry::Monitor Middleware Integration in GeminiClient
     > Type: Action Validation
     > Assert: Faraday client in `GeminiClient` uses `FaradayDryMonitorLogger`.

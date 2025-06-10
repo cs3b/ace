@@ -69,9 +69,11 @@ module CodingAgentTools
             processor = Organisms::PromptProcessor.new
             processor.process(prompt, from_file: options[:file])
           rescue CodingAgentTools::Error => e
-            raise e
-          rescue => e
-            raise CodingAgentTools::Error, "Failed to process prompt: #{e.message}"
+            raise e # Re-raise specific CodingAgentTools errors directly
+          rescue => e # Catch other StandardErrors
+            new_error = CodingAgentTools::Error.new("Failed to process prompt: #{e.message}")
+            new_error.set_backtrace(e.backtrace)
+            raise new_error
           end
 
           def query_gemini(prompt_text, options)
