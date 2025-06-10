@@ -83,6 +83,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         allow(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(model: "gemini-pro").and_return(gemini_client)
         allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", model: "gemini-pro")
 
         expect(CodingAgentTools::Organisms::GeminiClient).to have_received(:new).with(model: "gemini-pro")
@@ -94,6 +95,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {temperature: 0.5}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", temperature: 0.5)
 
         expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {temperature: 0.5})
@@ -103,6 +105,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", max_tokens: 1000)
 
         expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000})
@@ -112,6 +115,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", system_instruction: "You are a helpful assistant").and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", system: "You are a helpful assistant")
 
         expect(gemini_client).to have_received(:generate_text).with("Test", system_instruction: "You are a helpful assistant")
@@ -125,6 +129,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
           generation_config: {temperature: 0.3, maxOutputTokens: 500}
         ).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", temperature: 0.3, max_tokens: 500, system: "Be concise")
       end
     end
@@ -274,6 +279,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         expect(prompt_processor).to receive(:process).with(prompt, from_file: nil).ordered.and_return(processed_prompt)
         expect(gemini_client).to receive(:generate_text).with(processed_prompt).ordered.and_return(response)
 
+        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: prompt)
       end
     end

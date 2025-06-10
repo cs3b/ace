@@ -160,38 +160,98 @@ module CodingAgentTools
       # @param parsed_response [Hash] Parsed API response
       # @return [Hash] Extracted text and metadata
       def extract_generated_text(parsed_response)
+        # 1. Verify parsed_response[:data] is a Hash
         data = parsed_response[:data]
+        unless data.is_a?(Hash)
+          raise Error, "Failed to extract generated text: Response data is not a Hash, cannot find candidates."
+        end
 
-        # Navigate the response structure
-        candidate = data.dig(:candidates, 0)
-        text = candidate.dig(:content, :parts, 0, :text)
+        # 2. Verify data[:candidates] is a non-empty Array
+        candidates_field = data[:candidates]
+        unless candidates_field.is_a?(Array)
+          raise Error, "Failed to extract generated text: 'candidates' field is not an array."
+        end
+        if candidates_field.empty?
+          raise Error, "Failed to extract generated text: 'candidates' array is empty."
+        end
+
+        # 3. Verify the first candidate data[:candidates][0] is a Hash
+        candidate = candidates_field[0]
+        unless candidate.is_a?(Hash)
+          # This specific message is expected by a test when candidate is not a hash (e.g. a string)
+          raise Error, "Failed to extract generated text: No valid first candidate found in response."
+        end
+
+        # 4. Verify candidate[:content] is a Hash
+        content_field = candidate[:content]
+        unless content_field.is_a?(Hash)
+          raise Error, "Failed to extract generated text: candidate 'content' field is missing or not a Hash."
+        end
+
+        # 5. Verify candidate[:content][:parts] is a non-empty Array
+        parts_field = content_field[:parts]
+        unless parts_field.is_a?(Array)
+          raise Error, "Failed to extract generated text: candidate 'content.parts' field is missing or not an Array."
+        end
+        if parts_field.empty?
+          raise Error, "Failed to extract generated text: candidate 'content.parts' array is empty."
+        end
+
+        # 6. Verify the first part candidate[:content][:parts][0] is a Hash
+        first_part = parts_field[0]
+        unless first_part.is_a?(Hash)
+          raise Error, "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash."
+        end
+
+        # 7. Verify the text field within the first part
+        unless first_part.key?(:text)
+          raise Error, "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil."
+        end
+
+        text_content = first_part[:text]
+        if text_content.nil?
+          # This case distinguishes between a missing :text key (covered above)
+          # and a :text key that is present but its value is nil.
+          raise Error, "Failed to extract generated text: text missing from the first part of the candidate's content."
+        end
 
         {
-          text: text,
-          finish_reason: candidate[:finishReason],
-          safety_ratings: candidate[:safetyRatings],
-          usage_metadata: data[:usageMetadata]
+          text: text_content,
+          finish_reason: candidate[:finishReason], # .dig not strictly needed now due to Hash checks
+          safety_ratings: candidate[:safetyRatings], # .dig not strictly needed
+          usage_metadata: data[:usageMetadata] # .dig not strictly needed
         }
-      rescue => e
-        raise Error, "Failed to extract text from response: #{e.message}"
       end
 
       # Handle API errors
       # @param parsed_response [Hash] Parsed error response
       # @raise [Error] With formatted error message
       def handle_error(parsed_response)
-        error = parsed_response[:error]
-        details = error[:details] || {}
+        # Ensure error object and HTTP status are safely accessed, providing defaults
+        error_obj = parsed_response[:error] || {}
+        http_status = error_obj[:status] || "Unknown HTTP Status"
 
-        message = if details[:message]
-          "Gemini API Error: #{details[:message]}"
-        elsif error[:raw_message]
-          "Gemini API Error: #{error[:raw_message]}"
+        # Extract primary message components from the error object
+        # details_message is typically from a nested Gemini JSON error structure like error.details.message
+        # error_message is from the top-level Gemini JSON error structure like error.message
+        # raw_message is the raw response body if it wasn't JSON or couldn't be parsed
+        details_message = error_obj.is_a?(Hash) ? error_obj.dig(:details, :message) : nil
+        error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
+        raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
+
+        # Determine the most specific error content available
+        specific_content = if details_message
+          details_message
+        elsif raw_message # Key for non-JSON responses
+          raw_message
+        elsif error_message
+          error_message
         else
-          "Gemini API Error (#{error[:status]}): #{error[:message]}"
+          "An unspecified error occurred." # Default if no message parts found
         end
 
-        raise Error, message
+        final_message = "Gemini API Error (#{http_status}): #{specific_content}"
+        raise Error, final_message # Assumes Error is CodingAgentTools::Error
       end
     end
   end

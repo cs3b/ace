@@ -64,7 +64,8 @@ module CodingAgentTools
         return false if @env_key_name.nil?
 
         # Check singleton configuration first
-        return true if self.class.config[@env_key_name]
+        config_value = self.class.config[@env_key_name]
+        return true if config_value && !config_value.to_s.strip.empty?
 
         # Then check environment
         Atoms::EnvReader.present?(@env_key_name)

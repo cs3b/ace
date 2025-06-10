@@ -31,7 +31,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
     context "with GET request" do
       before do
         stub_request(:get, "#{test_url}/users")
-          .with(headers: {"Accept" => "application/json", "Content-Type" => "application/json"})
+          .with(headers: {"Accept" => "application/json"})
           .to_return(
             status: 200,
             body: '{"users": [{"id": 1, "name": "John"}]}',
@@ -52,7 +52,6 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         stub_request(:get, "#{test_url}/users")
           .with(headers: {
             "Accept" => "application/json",
-            "Content-Type" => "application/json",
             "Authorization" => "Bearer token123"
           })
           .to_return(status: 200, body: "{}")
@@ -193,7 +192,7 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
   describe "#get_json" do
     before do
       stub_request(:get, "#{test_url}/data")
-        .with(headers: {"Accept" => "application/json", "Content-Type" => "application/json"})
+        .with(headers: {"Accept" => "application/json"})
         .to_return(status: 200, body: '{"data": "value"}', headers: {"Content-Type" => "application/json"})
     end
 
@@ -215,7 +214,6 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
       stub_request(:get, "#{test_url}/data")
         .with(headers: {
           "Accept" => "application/json",
-          "Content-Type" => "application/json",
           "Authorization" => "Bearer token"
         })
         .to_return(status: 200, body: "{}")
@@ -296,14 +294,109 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         expect(url).to include("query=hello+world")
         expect(url).to include("special=a%2Bb%3Dc")
       end
+
+      it "handles array values in input query parameters" do
+        url = builder.send(:build_url_with_query, "https://example.com/path", {ids: [1, "two", "three 3"]})
+        expect(url).to eq("https://example.com/path?ids=1&ids=two&ids=three+3")
+      end
+
+      it "prepends array values from input query to existing single-value parameters" do
+        url = builder.send(:build_url_with_query, "https://example.com/path?existing=value", {tags: ["new", "old"]})
+        uri = URI.parse(url)
+        params = URI.decode_www_form(uri.query) # Returns array of [key, value]
+        # Expected order: new params first, then existing.
+        expect(params).to eq([["tags", "new"], ["tags", "old"], ["existing", "value"]])
+        expect(url).to eq("https://example.com/path?tags=new&tags=old&existing=value")
+      end
+
+      it "preserves existing multi-value parameters when adding new single-value parameters" do
+        url = builder.send(:build_url_with_query, "https://example.com/path?ids=1&ids=2", {new_param: "value"})
+        uri = URI.parse(url)
+        params = URI.decode_www_form(uri.query)
+        # Expected order: new params first, then existing.
+        expect(params).to eq([["new_param", "value"], ["ids", "1"], ["ids", "2"]])
+        expect(url).to eq("https://example.com/path?new_param=value&ids=1&ids=2")
+      end
+
+      it "merges new array parameters with existing multi-value parameters and other parameters" do
+        url = builder.send(
+          :build_url_with_query,
+          "https://example.com/path?ids=1&ids=2&other=value&filter=old",
+          {ids: [3, 4], page: 2, filter: "new"}
+        )
+        uri = URI.parse(url)
+        URI.decode_www_form(uri.query)
+        # Expected order: new params {ids, page, filter}, then existing {ids, other, filter}
+        # URI.encode_www_form sorts by key if input is a hash, but here we construct the list.
+        # Our implementation prepends new_params_list to existing_params_list.
+        # new_params_list from {ids: [3, 4], page: 2, filter: "new"} could be [["ids", "3"], ["ids", "4"], ["page", "2"], ["filter", "new"]] (order depends on hash iteration)
+        # existing_params_list from "?ids=1&ids=2&other=value&filter=old" is [["ids", "1"], ["ids", "2"], ["other", "value"], ["filter", "old"]]
+        # So, the combined string depends on Ruby's hash iteration order for the new_params part.
+        # Let's check for inclusion and relative order where important.
+
+        # Check that all new parameters are present and appear before old ones if keys are the same or different.
+        # Example order based on typical hash iteration for {ids:..., page:..., filter:...}
+        # ?ids=3&ids=4&page=2&filter=new&ids=1&ids=2&other=value&filter=old
+        # Let's make the expectation more robust to hash ordering for the *new* params part.
+        decoded_params = CGI.parse(uri.query)
+
+        expect(decoded_params["ids"]).to eq(["3", "4", "1", "2"])
+        expect(decoded_params["page"]).to eq(["2"])
+        expect(decoded_params["filter"]).to eq(["new", "old"])
+        expect(decoded_params["other"]).to eq(["value"])
+
+        # Check specific ordering for duplicated keys (new values first)
+        expect(url).to match(/ids=3&ids=4.*ids=1&ids=2/)
+        expect(url).to match(/filter=new.*filter=old/)
+        expect(url).to include("page=2")
+        expect(url).to include("other=value")
+      end
+
+      it "returns original URL if query is nil" do
+        url = "https://example.com/path?existing=true"
+        expect(builder.send(:build_url_with_query, url, nil)).to eq(url)
+      end
+
+      it "returns original URL if query is empty hash" do
+        url = "https://example.com/path?existing=true"
+        expect(builder.send(:build_url_with_query, url, {})).to eq(url)
+      end
+
+      it "appends query to URL without existing query if query is provided" do
+        url_no_query = "https://example.com/path"
+        query = {key: "value", arr: [1, 2]} # Order might vary for key/arr
+        result_url = builder.send(:build_url_with_query, url_no_query, query)
+
+        uri = URI.parse(result_url)
+        params = URI.decode_www_form(uri.query).to_h
+        expect(params).to include("key" => "value") # Check individual key presence
+        # For array, we need to check the full list or use CGI.parse
+        parsed_cgi_params = CGI.parse(uri.query)
+        expect(parsed_cgi_params["arr"]).to eq(["1", "2"])
+      end
     end
 
     describe "#build_headers" do
-      it "returns JSON headers by default" do
-        headers = builder.send(:build_headers, nil, json: true)
-        expect(headers).to eq({
+      it "returns JSON headers by default for POST/PUT or with body" do
+        # Test case for POST (where Content-Type should be added by default)
+        headers_post = builder.send(:build_headers, nil, json: true, method: :post)
+        expect(headers_post).to eq({
           "Accept" => "application/json",
           "Content-Type" => "application/json"
+        })
+
+        # Test case with a body (where Content-Type should be added by default)
+        headers_with_body = builder.send(:build_headers, nil, json: true, body: "data")
+        expect(headers_with_body).to eq({
+          "Accept" => "application/json",
+          "Content-Type" => "application/json"
+        })
+
+        # Test case for GET without body (Content-Type should NOT be added by default)
+        headers_get = builder.send(:build_headers, nil, json: true, method: :get)
+        expect(headers_get).to eq({
+          "Accept" => "application/json"
+          # No Content-Type
         })
       end
 
@@ -314,7 +407,8 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
 
       it "merges custom headers" do
         custom = {"Authorization" => "Bearer token", "X-Custom" => "value"}
-        headers = builder.send(:build_headers, custom, json: true)
+        # Test with method: :post to ensure Content-Type is part of default headers
+        headers = builder.send(:build_headers, custom, json: true, method: :post)
 
         expect(headers).to include(
           "Accept" => "application/json",
@@ -322,6 +416,15 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
           "Authorization" => "Bearer token",
           "X-Custom" => "value"
         )
+
+        # Test with method: :get (no body) to ensure Content-Type is NOT part of default headers
+        headers_get = builder.send(:build_headers, custom, json: true, method: :get)
+        expect(headers_get).to include(
+          "Accept" => "application/json",
+          "Authorization" => "Bearer token",
+          "X-Custom" => "value"
+        )
+        expect(headers_get).not_to include("Content-Type")
       end
 
       it "allows custom headers to override defaults" do

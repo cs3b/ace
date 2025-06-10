@@ -258,7 +258,193 @@ RSpec.describe CodingAgentTools::Organisms::GeminiClient do
 
         expect {
           client.generate_text(prompt)
-        }.to raise_error(CodingAgentTools::Error, /Failed to extract text from response/)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: 'candidates' field is not an array.")
+      end
+
+      it "handles response where data is not a Hash" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {data: "not a hash"}.to_json, # APIResponseParser will put this into parsed[:data]
+            headers: {"Content-Type" => "application/json"}
+          )
+        # Note: APIResponseParser currently makes parsed[:data] = body if not Hash,
+        # so this might not be directly testable via GeminiClient if APIResponseParser handles it first.
+        # Assuming APIResponseParser passes it through for this test's purpose or that
+        # `parsed_response[:data]` becomes "not a hash".
+        # Let's adjust the stub to simulate what extract_generated_text would receive.
+        # If APIResponseParser makes :data => Atoms::JSONFormatter.safe_parse(body), and body is { "data": "string" },
+        # then parsed[:data] would be { data: "string" }.
+        # The specific check is data.dig(:candidates, 0).
+        # Let's simulate a parsed_response where :data is just a string.
+        # This requires bypassing the normal @response_parser.parse_response flow slightly for the test.
+        # A more direct way is to test `extract_generated_text` in isolation.
+        # However, for an integration test here, we ensure the client properly fails.
+        # The current implementation of APIResponseParser.parse_response sets:
+        # parsed_response[:data] = response_body if !response_body.is_a?(Hash)
+        # So, if Gemini returns a JSON string like '\"string_body\"', this would be the case.
+        # Or if it returns just a string "string_body" which isn't valid JSON for the parser.
+        # Let's assume the API returns valid JSON, but the structure is { "data": "a string instead of a hash" }
+        # The error "Response data is not a Hash, cannot find candidates." is very specific.
+        # It happens if `parsed_response[:data]` itself is not a hash.
+        # Our current `APIResponseParser` will ensure `parsed_response[:data]` is a hash if the original body was valid JSON.
+        # If the body was `"{ \"some_key\": \"some_value\" }"`, then `parsed_response[:data]` would be that hash.
+        # The error "Response data is not a Hash" is for when `parsed_response[:data]` isn't a hash.
+        # This can happen if APIResponseParser returns `{ success: true, data: "raw_non_json_body_string" }`
+        # if the response wasn't JSON. But Gemini client always expects JSON.
+        # Let's assume the body IS JSON, but its structure makes `data` not a hash that contains `candidates`.
+        # The most direct interpretation of "Response data is not a Hash" is that `parsed_response[:data]` itself.
+        # Let's test a scenario where `data` is nil, which can happen if `parsed_response` is malformed.
+        allow(client.instance_variable_get(:@response_parser)).to receive(:parse_response).and_return(
+          {success: true, data: nil} # Simulate parsed_response[:data] being nil
+        )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: Response data is not a Hash, cannot find candidates.")
+      end
+
+      it "handles response where 'candidates' field is missing" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {data_without_candidates: "some_value"}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: 'candidates' field is not an array.")
+      end
+
+      it "handles response where 'candidates' field is not an array" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: "not_an_array"}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: 'candidates' field is not an array.")
+      end
+
+      it "handles response where 'candidates' array is empty" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: []}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: 'candidates' array is empty.")
+      end
+
+      it "handles response where first candidate is not a Hash" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: ["not_a_hash"]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: No valid first candidate found in response.")
+      end
+
+      it "handles response where candidate 'content' field is missing" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{}]}.to_json, # Candidate exists, but no :content
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: candidate 'content' field is missing or not a Hash.")
+      end
+
+      it "handles response where candidate 'content' field is not a Hash" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: "not_a_hash"}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: candidate 'content' field is missing or not a Hash.")
+      end
+
+      it "handles response where candidate 'content.parts' field is missing" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {}}]}.to_json, # content exists, but no :parts
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: candidate 'content.parts' field is missing or not an Array.")
+      end
+
+      it "handles response where candidate 'content.parts' field is not an Array" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {parts: "not_an_array"}}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: candidate 'content.parts' field is missing or not an Array.")
+      end
+
+      it "handles response where candidate 'content.parts' array is empty" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {parts: []}}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: candidate 'content.parts' array is empty.")
+      end
+
+      it "handles response where first part in 'content.parts' is not a Hash" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {parts: ["not_a_hash"]}}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash.")
+      end
+
+      it "handles response where 'text' key is missing in the first part" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {parts: [{no_text_field: "value"}]}}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil.")
+      end
+
+      it "handles response where 'text' value is nil in the first part" do
+        stub_request(:post, api_url)
+          .to_return(
+            status: 200,
+            body: {candidates: [{content: {parts: [{text: nil}]}}]}.to_json,
+            headers: {"Content-Type" => "application/json"}
+          )
+        expect {
+          client.generate_text(prompt)
+        }.to raise_error(CodingAgentTools::Error, "Failed to extract generated text: text missing from the first part of the candidate's content.")
       end
     end
 

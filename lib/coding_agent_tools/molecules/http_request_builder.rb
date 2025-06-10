@@ -24,7 +24,7 @@ module CodingAgentTools
       # @option options [Boolean] :json (true) Whether to send/receive JSON
       # @return [Hash] Response data including status, headers, and body
       def json_request(method, url, **options)
-        headers = build_headers(options[:headers], json: options.fetch(:json, true))
+        headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method, body: options[:body])
         url_with_query = build_url_with_query(url, options[:query])
 
         response = execute_request(method, url_with_query, options[:body], headers)
@@ -72,13 +72,18 @@ module CodingAgentTools
       # Build headers for the request
       # @param custom_headers [Hash, nil] Custom headers to merge
       # @param json [Boolean] Whether this is a JSON request
+      # @param method [Symbol] HTTP method
+      # @param body [String, Hash, nil] Request body
       # @return [Hash] Complete headers
-      def build_headers(custom_headers, json: true)
+      def build_headers(custom_headers, json: true, method: nil, body: nil)
         headers = {}
 
         if json
           headers["Accept"] = "application/json"
-          headers["Content-Type"] = "application/json"
+          # Only add Content-Type when body is present or method is POST
+          if body || method == :post
+            headers["Content-Type"] = "application/json"
+          end
         end
 
         headers.merge!(custom_headers) if custom_headers
@@ -93,12 +98,38 @@ module CodingAgentTools
         return url if query.nil? || query.empty?
 
         uri = URI.parse(url)
-        existing_query = uri.query ? URI.decode_www_form(uri.query).to_h : {}
 
-        # Merge with new query params
-        all_params = existing_query.merge(query.transform_keys(&:to_s))
+        # 1. Process the input 'query' hash (additional parameters to be added/merged).
+        #    This correctly handles array values in the input 'query' hash, converting
+        #    { key: [val1, val2] } to [["key", "val1"], ["key", "val2"]].
+        new_params_list = []
+        query.each do |key, value| # 'query' is the hash of additional parameters passed to the method
+          if value.is_a?(Array)
+            value.each { |v| new_params_list << [key.to_s, v.to_s] }
+          else
+            new_params_list << [key.to_s, value.to_s]
+          end
+        end
 
-        uri.query = URI.encode_www_form(all_params)
+        # 2. Get existing parameters from the URL's query string as an array of [key, value] pairs.
+        #    This preserves all original parameters, including multi-value ones (e.g., "ids=1&ids=2").
+        existing_params_list = uri.query ? URI.decode_www_form(uri.query) : []
+
+        # 3. Combine the new parameters and existing parameters.
+        #    Parameters from the input 'query' hash are placed first, effectively taking precedence
+        #    or being prepended if keys are duplicated.
+        all_params_list = new_params_list + existing_params_list
+
+        # 4. Set the URI query component.
+        #    If the 'query' hash was empty (and the initial guard was bypassed or removed),
+        #    and the original URL also had no query, all_params_list would be empty.
+        #    In such cases, uri.query should be nil to avoid a trailing '?' in the URL.
+        uri.query = if all_params_list.empty?
+          nil
+        else
+          URI.encode_www_form(all_params_list)
+        end
+
         uri.to_s
       end
 

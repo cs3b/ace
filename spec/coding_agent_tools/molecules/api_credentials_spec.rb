@@ -196,6 +196,31 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       end
     end
 
+    context "when API key is blank (spaces only) in configuration" do
+      let!(:original_gemini_api_key) { ENV["GEMINI_API_KEY"] } # Store original value
+      # Use a specific instance that won't load any .env file to isolate this test.
+      let(:isolated_credentials) { described_class.new(env_key_name: "GEMINI_API_KEY", env_file_path: "/dev/null") }
+
+      before do
+        described_class.configure do |config|
+          config["GEMINI_API_KEY"] = "   " # Blank string
+        end
+        ENV.delete("GEMINI_API_KEY") # Temporarily clear for this test
+      end
+
+      after do
+        if original_gemini_api_key.nil?
+          ENV.delete("GEMINI_API_KEY")
+        else
+          ENV["GEMINI_API_KEY"] = original_gemini_api_key
+        end
+      end
+
+      it "returns false" do
+        expect(isolated_credentials.api_key_present?).to be false
+      end
+    end
+
     context "when API key is in environment" do
       before do
         ENV["GEMINI_API_KEY"] = "env-key"

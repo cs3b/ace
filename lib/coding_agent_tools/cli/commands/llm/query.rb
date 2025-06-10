@@ -47,7 +47,7 @@ module CodingAgentTools
           def call(prompt:, **options)
             # Validate prompt argument (now handled by dry-cli, but keep empty check)
             if prompt.nil? || prompt.strip.empty?
-              error_output("Error: Prompt is required", options[:debug])
+              error_output("Error: Prompt is required")
               exit 1
             end
 
@@ -142,17 +142,17 @@ module CodingAgentTools
 
           def handle_error(error, debug_enabled)
             if debug_enabled
-              error_output("Error: #{error.class.name}: #{error.message}", true)
-              error_output("\nBacktrace:", true)
-              error.backtrace.each { |line| error_output("  #{line}", true) }
+              error_output("Error: #{error.class.name}: #{error.message}")
+              error_output("\nBacktrace:")
+              error.backtrace.each { |line| error_output("  #{line}") }
             else
-              error_output("Error: #{error.message}", false)
-              error_output("Use --debug flag for more information", false)
+              error_output("Error: #{error.message}")
+              error_output("Use --debug flag for more information")
             end
             exit 1
           end
 
-          def error_output(message, debug_enabled)
+          def error_output(message)
             warn message
           end
         end

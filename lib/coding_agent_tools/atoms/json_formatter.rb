@@ -89,9 +89,48 @@ module CodingAgentTools
             # a valid JSON document (e.g., "hello" vs "\"hello\""), JSON.parse will raise an error.
             current_data = JSON.parse(data)
           rescue JSON::ParserError
-            # If parsing fails, it means the string is not a JSON structure or JSON primitive.
-            # In this case, we treat it as a literal string and it will be returned as is by the 'else' clause.
-            # current_data remains the original 'data' string.
+            # If parsing fails, it might be invalid JSON containing sensitive data
+            # Use regex to sanitize common sensitive key patterns as a fallback
+            # If parsing fails, it might be an invalid JSON string containing sensitive data.
+            # Use targeted regexes for common sensitive key patterns as a fallback.
+            current_data = data.dup # Operate on a copy of the original string input
+            sensitive_keys.each do |key_sym_or_str|
+              key_str = key_sym_or_str.to_s
+              escaped_key = Regexp.escape(key_str)
+
+              # Regex for quoted values (e.g., key:"value", 'key':'value', key="value")
+              # Captures: 1=key_part_and_separator, 2=opening_quote, 3=value_content. \2 ensures matching closing quote.
+              # Replaces only the value content, preserving original quoting and key form.
+              # The 'x' flag allows for comments and insignificant whitespace. The 'i' flag makes key matching case-insensitive.
+              quoted_value_regex = %r{
+                (                                      # Start of Capture Group $1 (key part and separator)
+                  (?:["']?)#{escaped_key}(?:["']?)     # Optional quotes around the key, then the key, then optional quotes
+                  \s*[:=]\s*                           # Separator (colon or equals) surrounded by optional whitespace
+                )                                      # End of Capture Group $1
+                (["'])                                 # Capture Group $2: The opening quote of the value
+                (.*?)                                  # Capture Group $3: The actual value content (non-greedy)
+                \2                                     # Backreference to Group $2, ensuring matching closing quote
+              }xi
+              current_data.gsub!(quoted_value_regex) { "#{$1}#{$2}#{redact_value}#{$2}" }
+
+              # Regex for unquoted values (e.g., key:value, key=value)
+              # Value is a sequence of characters not including spaces, quotes, commas, or common structure/query delimiters.
+              # Captures: 1=key_part_and_separator, 2=unquoted_value_content.
+              # Replaces value content with redact_value (unquoted), preserving key form.
+              unquoted_value_regex = %r{
+                (                                      # Start of Capture Group $1 (key part and separator)
+                  (?:["']?)#{escaped_key}(?:["']?)     # Optional quotes around the key, then the key, then optional quotes
+                  \s*[:=]\s*                           # Separator (colon or equals) surrounded by optional whitespace
+                )                                      # End of Capture Group $1
+                (                                      # Start of Capture Group $2 (the unquoted value itself)
+                  [^\s,"'\[\]{}&;]+                    # Match one or more characters that are not whitespace or common delimiters
+                )                                      # End of Capture Group $2
+              }xi
+              current_data.gsub!(unquoted_value_regex) { "#{$1}#{redact_value}" }
+            end
+            # current_data is now the regex-sanitized string.
+            # It will fall through to the 'case' statement. If it's still a string (which it is),
+            # it will be returned by the 'else' branch of the case statement.
           end
         end
 
@@ -107,7 +146,7 @@ module CodingAgentTools
         when Array
           current_data.map { |item| sanitize(item, sensitive_keys: sensitive_keys, redact_value: redact_value) }
         else
-          current_data # This will return primitives or original strings that were not valid JSON.
+          current_data # This will return primitives or sanitized strings.
         end
       end
     end

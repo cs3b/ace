@@ -416,5 +416,118 @@ RSpec.describe CodingAgentTools::Atoms::JSONFormatter do
         expect(described_class.sanitize(nil)).to be_nil
       end
     end
+
+    context "with invalid JSON string input (regex fallback)" do
+      let(:redact_value) { "[REDACTED]" }
+      let(:default_sensitive_keys) { %w[api_key token password secret] }
+
+      it "sanitizes key with double-quoted value using equals" do
+        input = 'some data api_key="mysecretvalue" and other data'
+        expected = "some data api_key=\"#{redact_value}\" and other data"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes key with single-quoted value using equals" do
+        input = "token='shhh_its_a_secret' some_other_info"
+        expected = "token='#{redact_value}' some_other_info"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes key with unquoted value using equals" do
+        input = "password=supersecret pass" # "pass" should not be redacted
+        expected = "password=#{redact_value} pass"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes key with double-quoted value using colon" do
+        input = '{"api_key": "another_secret_key", "unrelated": "data"' # Not valid JSON
+        expected = "{\"api_key\": \"#{redact_value}\", \"unrelated\": \"data\""
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes key with single-quoted value using colon" do
+        input = "{'token': 'yet_another_secret', 'other': 'stuff'}" # Not valid JSON
+        expected = "{'token': '#{redact_value}', 'other': 'stuff'}"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes key with unquoted value using colon" do
+        input = "{secret: very_secret_data, public: info}" # Not valid JSON
+        expected = "{secret: #{redact_value}, public: info}"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "handles multiple sensitive keys in one string" do
+        input = 'api_key="123" user_token=\'abc\' password=def other_secret: "shhh"'
+        expected = "api_key=\"#{redact_value}\" user_token='#{redact_value}' password=#{redact_value} other_secret: \"#{redact_value}\""
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys + [:user_token, :other_secret], redact_value: redact_value)).to eq(expected)
+      end
+
+      it "is case-insensitive for keys" do
+        input = 'API_KEY="test1" Token=\'test2\' PasSwOrD=test3'
+        expected = "API_KEY=\"#{redact_value}\" Token='#{redact_value}' PasSwOrD=#{redact_value}"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "does not change string if no sensitive keys are found" do
+        input = 'user_id=123 name="test" some_data: value'
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(input)
+      end
+
+      it "sanitizes quoted values with spaces" do
+        input = 'api_key = "my secret value with spaces"'
+        expected = "api_key = \"#{redact_value}\""
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+      end
+
+      it "sanitizes unquoted values with special characters (if they don't break regex)" do
+        # Regex for unquoted values `[^\\s,\"\'\\[\\]{}&;]+` will stop at certain chars
+        input = "password=pass!word$" # ! and $ are not in the excluded set
+        expected = "password=#{redact_value}"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected)
+
+        input_stops_at_ampersand = "password=pass&word" # & is in excluded set
+        expected_stops_at_ampersand = "password=#{redact_value}&word"
+        expect(described_class.sanitize(input_stops_at_ampersand, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected_stops_at_ampersand)
+      end
+
+      it "handles keys with internal quotes in the regex search (e.g. 'api_key')" do
+        input = "'api_key' = \"quoted_secret\""
+        expected = "'api_key' = \"#{redact_value}\""
+        expect(described_class.sanitize(input, sensitive_keys: ["api_key"], redact_value: redact_value)).to eq(expected)
+
+        input2 = "\"token\" : 'another_one'"
+        expected2 = "\"token\" : '#{redact_value}'"
+        expect(described_class.sanitize(input2, sensitive_keys: ["token"], redact_value: redact_value)).to eq(expected2)
+      end
+
+      it "preserves original quoting style of key and value (for quoted values)" do
+        input_dq_key_dq_val = '"api_key":"dq_secret"'
+        expected_dq_key_dq_val = "\"api_key\":\"#{redact_value}\""
+        expect(described_class.sanitize(input_dq_key_dq_val, sensitive_keys: ["api_key"], redact_value: redact_value)).to eq(expected_dq_key_dq_val)
+
+        input_sq_key_sq_val = "'token':'sq_secret'"
+        expected_sq_key_sq_val = "'token':'#{redact_value}'"
+        expect(described_class.sanitize(input_sq_key_sq_val, sensitive_keys: ["token"], redact_value: redact_value)).to eq(expected_sq_key_sq_val)
+
+        input_uq_key_dq_val = "password:\"uq_dq_secret\"" # unquoted key, double-quoted value
+        expected_uq_key_dq_val = "password:\"#{redact_value}\""
+        expect(described_class.sanitize(input_uq_key_dq_val, sensitive_keys: ["password"], redact_value: redact_value)).to eq(expected_uq_key_dq_val)
+      end
+
+      it "does not add quotes to redacted unquoted values" do
+        input = "secret=unquoted_data"
+        expected = "secret=#{redact_value}" # Redacted value should also be unquoted
+        expect(described_class.sanitize(input, sensitive_keys: ["secret"], redact_value: redact_value)).to eq(expected)
+      end
+
+      it "handles a string that looks like a beginning of JSON but is invalid" do
+        input = '{"api_key": "valid_secret_here", "other_data": "value", malformed_part_password=not_json_secret'
+        # Expected: JSON part is parsed and sanitized, regex handles the rest
+        # Actual: The entire string fails JSON.parse, so regex applies to the whole thing.
+        expected_regex_full = "{\"api_key\": \"#{redact_value}\", \"other_data\": \"value\", malformed_part_password=#{redact_value}"
+        expect(described_class.sanitize(input, sensitive_keys: default_sensitive_keys, redact_value: redact_value)).to eq(expected_regex_full)
+      end
+    end
   end
 end

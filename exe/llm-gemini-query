@@ -38,6 +38,7 @@ begin
   original_stdout = $stdout
   original_stderr = $stderr
   require "stringio"
+  # Note: Capturing output with StringIO might strip/affect ANSI color codes from the underlying CLI command.
   captured_stdout = StringIO.new
   captured_stderr = StringIO.new
 

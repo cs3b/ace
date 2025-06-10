@@ -114,7 +114,7 @@ VCR is already configured in the project:
    echo "GEMINI_API_KEY=your_actual_api_key_here" >> spec/.env
    ```
 
-**Note**: API keys are only needed for recording new cassettes. Normal test runs and CI use pre-recorded cassettes without requiring any API keys.
+**Note**: The helper picks up both `spec/.env` and repo-root `.env` files. API keys are only needed for recording new cassettes. Normal test runs and CI use pre-recorded cassettes without requiring any API keys.
 
 ## Writing Tests
 
