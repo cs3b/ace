@@ -27,3 +27,6 @@ spec/cassettes/**/*_with_real_api_key_*
 
 # Debug files
 debug_error.rb
+
+# Git diff files
+*.diff
