@@ -132,12 +132,15 @@ module CodingAgentTools
       private
 
       # Build API URL with model and endpoint
+      # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
-        # Construct path using Addressable::URI.join
+        # Construct path by appending to base URL path
         path_segment = "models/#{@model}:#{endpoint}"
-        url_obj = Addressable::URI.join(@base_url, path_segment)
+        url_obj = Addressable::URI.parse(@base_url)
+        url_obj.path += "/" unless url_obj.path.end_with?("/")
+        url_obj.path += path_segment
 
         # Set query parameters
         url_obj.query_values = {key: @api_key}

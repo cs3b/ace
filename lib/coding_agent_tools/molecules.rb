@@ -2,6 +2,5 @@
 
 module CodingAgentTools
   module Molecules
-
   end
 end

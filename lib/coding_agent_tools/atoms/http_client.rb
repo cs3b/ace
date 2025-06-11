@@ -68,13 +68,13 @@ module CodingAgentTools
           # However, Faraday's :json response middleware parses the body and populates response.body.
           # Our logger accesses response.status and response.headers, which are fine.
           faraday.use :faraday_dry_monitor_logger,
-                      notifications_instance: CodingAgentTools::Notifications.notifications,
-                      event_namespace: @event_namespace
+            notifications_instance: CodingAgentTools::Notifications.notifications,
+            event_namespace: @event_namespace
 
           # Middleware to automatically parse JSON response bodies.
           # It will parse bodies with 'Content-Type' matching /\bjson$/.
           # Using symbolize_names: true for consistency with previous manual parsing.
-          faraday.response :json, parser_options: { symbolize_names: true }
+          faraday.response :json, parser_options: {symbolize_names: true}
 
           # Standard Faraday adapter
           faraday.adapter Faraday.default_adapter

@@ -2,6 +2,5 @@
 
 module CodingAgentTools
   module Atoms
-
   end
 end

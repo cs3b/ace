@@ -19,6 +19,7 @@ end
 # If running from the project's exe directory, it's crucial.
 $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 
+require "coding_agent_tools"
 require "coding_agent_tools/cli"
 require "coding_agent_tools/error_reporter"
 

@@ -112,7 +112,7 @@ module CodingAgentTools
       # @param json [Boolean] Hint for consumers; not used for parsing within this method anymore
       # @return [Hash] Parsed response data
       def parse_response(response, json: true) # rubocop:disable Lint/UnusedMethodArgument
-        result = {
+        {
           status: response.status,
           headers: response.headers.to_h,
           success: response.success?,
@@ -124,7 +124,6 @@ module CodingAgentTools
         # The raw_body concept is simplified: if response.body is a string, that *is* the raw body.
         # If it's parsed, the raw string form is implicitly handled by the fact that
         # APIResponseParser will work with the parsed form or try to parse if it's a string.
-        result
       end
     end
   end

@@ -12,8 +12,6 @@ loader.inflector.inflect(
 loader.setup
 
 module CodingAgentTools
-
-
   # Your code goes here...
   # For example, a global configuration method could be defined here:
   #
