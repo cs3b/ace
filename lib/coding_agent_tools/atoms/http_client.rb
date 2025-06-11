@@ -2,6 +2,7 @@
 
 require "faraday"
 # require "json" # No longer needed for direct use here, Faraday's :json middleware handles it.
+require_relative "../middlewares/faraday_dry_monitor_logger" # Ensure middleware is loaded and registered
 
 module CodingAgentTools
   module Atoms
@@ -20,26 +21,31 @@ module CodingAgentTools
 
       # Perform a GET request
       # @param url [String] The URL to request
-      # @param params [Hash] Query parameters
-      # @param headers [Hash] Request headers
+      # @param options [Hash] Options hash, can include :params and :headers.
+      # @option options [Hash] :params ({}) Query parameters.
+      # @option options [Hash] :headers ({}) Request headers.
       # @return [Faraday::Response] The response object
-      def get(url, params: {}, headers: {})
-        # Faraday's GET request can take the path (nil if url is full), params, and headers.
-        # If 'url' in connection is the base, 'url' here would be the path.
-        # If 'url' in connection is full, path for .get should be nil or empty.
-        # Assuming 'url' passed to this method is the full URL or specific path segment for the request.
-        connection(url).get(nil, params, headers)
+      def get(url, **options)
+        params = options.fetch(:params, {})
+        headers = options.fetch(:headers, {})
+        connection(url).get do |req|
+          req.params = params unless params.empty?
+          req.headers.merge!(headers) unless headers.empty?
+        end
       end
 
       # Perform a POST request
       # @param url [String] The URL to request
       # @param body [String, Hash, nil] Request body. If Hash, will be JSON-encoded by middleware.
-      # @param headers [Hash] Request headers
+      # @param options [Hash] Options hash, can include :headers.
+      # @option options [Hash] :headers ({}) Request headers.
       # @return [Faraday::Response] The response object
-      def post(url, body, headers: {})
-        # Faraday's POST request can take path (nil if url is full), body, and headers.
-        # The :json request middleware will handle Hash bodies.
-        connection(url).post(nil, body, headers)
+      def post(url, body, **options)
+        headers = options.fetch(:headers, {})
+        connection(url).post do |req|
+          req.body = body # Let Faraday's JSON middleware handle nil or hash bodies appropriately
+          req.headers.merge!(headers) unless headers.empty?
+        end
       end
 
       private

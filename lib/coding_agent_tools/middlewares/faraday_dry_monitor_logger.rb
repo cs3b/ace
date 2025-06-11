@@ -53,6 +53,10 @@ module CodingAgentTools
         end
         @notifications = notifications_instance
         @namespace = event_namespace
+
+        # Explicitly register the events this middleware will publish
+        @notifications.register_event("#{@namespace}.request.coding_agent_tools")
+        @notifications.register_event("#{@namespace}.response.coding_agent_tools")
       end
 
       # Processes the request and instruments it.
