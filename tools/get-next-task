@@ -9,7 +9,7 @@ require 'set'
 def parse_task_sequential_number(task_id_str)
   # Ensure task_id_str is a string before attempting to match
   return Float::INFINITY unless task_id_str && task_id_str.is_a?(String)
-  
+
   match = task_id_str.match(/\+task\.(\d+)$/)
   if match
     match[1].to_i
@@ -27,7 +27,7 @@ tasks = {}
 task_files.each do |f|
   content = File.read(f)
   if content =~ /^---\s*\n(.*?)\n---/m
-    fm = YAML.safe_load($1)
+    fm = YAML.safe_load($1, permitted_classes: [Date])
     id = fm['id']
     status = fm['status']
     deps = fm['dependencies'] || []
@@ -60,11 +60,11 @@ candidates.sort_by! do |t|
                     when 'pending'     then 1
                     # Any other status that is not 'done' and not explicitly listed above
                     # will be grouped together after 'pending'.
-                    else 2 
+                    else 2
                     end
-  
+
   task_sequential_num = parse_task_sequential_number(t[:id])
-  
+
   [status_priority, task_sequential_num, t[:id].to_s]
 end
 
