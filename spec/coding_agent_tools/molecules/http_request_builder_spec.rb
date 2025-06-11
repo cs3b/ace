@@ -262,10 +262,6 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
   end
 
   describe "private methods" do
-
-
-    end
-
     describe "#build_headers" do
       it "returns JSON headers by default for POST/PUT or with body" do
         # Test case for POST (where Content-Type should be added by default)
