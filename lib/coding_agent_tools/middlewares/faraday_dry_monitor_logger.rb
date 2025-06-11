@@ -48,7 +48,7 @@ module CodingAgentTools
       #   Defaults to `:http_client`.
       def initialize(app, notifications_instance:, event_namespace: :http_client)
         super(app)
-        unless notifications_instance&.respond_to?(:publish)
+        if notifications_instance.nil? || !notifications_instance.respond_to?(:publish)
           raise ArgumentError, "notifications_instance must be a Dry::Monitor::Notifications compatible object"
         end
         @notifications = notifications_instance
@@ -109,8 +109,8 @@ module CodingAgentTools
           url: url,
           status: response&.status,
           duration_ms: duration_ms,
-          response_headers: response&.headers&.to_h || {},
-          error_class: error_object&.class&.name
+          response_headers: response&.headers ? response.headers.to_h : {},
+          error_class: error_object ? error_object.class.name : nil
         }
         @notifications.publish(event_name, payload)
       end

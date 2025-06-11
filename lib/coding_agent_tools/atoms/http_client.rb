@@ -17,6 +17,9 @@ module CodingAgentTools
         @timeout = options.fetch(:timeout, 30)
         @open_timeout = options.fetch(:open_timeout, 10)
         @event_namespace = options.fetch(:event_namespace, :http_client)
+
+        # Register events early to support subscription before making requests
+        register_events
       end
 
       # Perform a GET request
@@ -49,6 +52,13 @@ module CodingAgentTools
       end
 
       private
+
+      # Register events with the notifications system to allow early subscription
+      def register_events
+        notifications = CodingAgentTools::Notifications.notifications
+        notifications.register_event("#{@event_namespace}.request.coding_agent_tools")
+        notifications.register_event("#{@event_namespace}.response.coding_agent_tools")
+      end
 
       # Create a Faraday connection for the given URL
       # @param url [String] The base URL

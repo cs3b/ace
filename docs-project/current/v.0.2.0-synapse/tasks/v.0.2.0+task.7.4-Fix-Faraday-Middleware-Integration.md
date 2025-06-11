@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.7.4
-status: to-do
+status: done
 priority: medium
 estimate: 3h
 dependencies: ["v.0.2.0+task.7.3"]
@@ -253,14 +253,14 @@ end
 
 ## Acceptance Criteria
 
-- [ ] AC1: Custom FaradayDryMonitorLogger middleware loads without errors
-- [ ] AC2: Middleware is properly integrated into Faraday stack
-- [ ] AC3: JSON parsing still works correctly with custom middleware
-- [ ] AC4: HTTP requests complete successfully with middleware enabled
-- [ ] AC5: Events are properly emitted to dry-monitor notifications
-- [ ] AC6: System gracefully handles missing dry-monitor dependencies
-- [ ] AC7: Middleware ordering doesn't interfere with request/response processing
-- [ ] AC8: All HTTP client tests pass with middleware enabled
+- [x] AC1: Custom FaradayDryMonitorLogger middleware loads without errors
+- [x] AC2: Middleware is properly integrated into Faraday stack
+- [x] AC3: JSON parsing still works correctly with custom middleware
+- [x] AC4: HTTP requests complete successfully with middleware enabled
+- [x] AC5: Events are properly emitted to dry-monitor notifications
+- [x] AC6: System gracefully handles missing dry-monitor dependencies
+- [x] AC7: Middleware ordering doesn't interfere with request/response processing
+- [x] AC8: All HTTP client tests pass with middleware enabled
 
 ## Risk Assessment
 
