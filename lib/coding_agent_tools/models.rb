@@ -2,6 +2,5 @@
 
 module CodingAgentTools
   module Models
-    # Autoload all model classes
   end
 end

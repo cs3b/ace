@@ -2,6 +2,5 @@
 
 module CodingAgentTools
   module Ecosystems
-    # Autoload all ecosystem classes
   end
 end
