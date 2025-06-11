@@ -24,7 +24,7 @@ module CodingAgentTools
       # @option options [Boolean] :json (true) Whether to send/receive JSON
       # @return [Hash] Response data including status, headers, and body
       def json_request(method, url, **options)
-        headers = build_headers(options[:headers], json: options.fetch(:json, true))
+        headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method, body: options[:body])
         # Query parameters are now passed directly to execute_request,
         # which will pass them to HTTPClient, which in turn lets Faraday handle them.
         response = execute_request(method, url, query: options[:query], body: options[:body], headers: headers)
@@ -73,18 +73,34 @@ module CodingAgentTools
       # Build headers for the request
       # @param custom_headers [Hash, nil] Custom headers to merge
       # @param json [Boolean] Whether this is a JSON request
+      # @param method [Symbol, nil] HTTP method to determine if Content-Type is needed
+      # @param body [Object, nil] Request body to determine if Content-Type is needed
       # @return [Hash] Complete headers
-      def build_headers(custom_headers, json: true)
+      def build_headers(custom_headers, json: true, method: nil, body: nil)
         headers = {}
 
         if json
           headers["Accept"] = "application/json"
-          # Content-Type: application/json for request body is now handled by
-          # Faraday's :json request middleware in HTTPClient if the body is a Hash.
+          # Add Content-Type for methods that typically have request bodies
+          # or when a body is explicitly provided
+          if should_add_content_type?(method, body)
+            headers["Content-Type"] = "application/json"
+          end
         end
 
         headers.merge!(custom_headers) if custom_headers
         headers
+      end
+
+      # Determine if Content-Type header should be added
+      # @param method [Symbol, nil] HTTP method
+      # @param body [Object, nil] Request body
+      # @return [Boolean] Whether to add Content-Type header
+      def should_add_content_type?(method, body)
+        # Add Content-Type if there's a body or if method typically has a body
+        return true if body
+        return true if method && [:post, :put, :patch].include?(method)
+        false
       end
 
       # Execute the HTTP request
