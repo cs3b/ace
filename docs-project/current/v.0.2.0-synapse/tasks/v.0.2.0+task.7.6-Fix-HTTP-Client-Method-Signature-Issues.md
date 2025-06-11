@@ -1,9 +1,9 @@
 ---
-id: v.0.2.0+task.9
+id: v.0.2.0+task.7.6
 status: done
 priority: high
 estimate: 2h
-dependencies: [v.0.2.0+task.8]
+dependencies: [v.0.2.0+task.7.5]
 ---
 
 # Fix HTTP Client Method Signature Issues

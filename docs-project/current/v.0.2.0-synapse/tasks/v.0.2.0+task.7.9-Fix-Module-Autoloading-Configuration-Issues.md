@@ -1,9 +1,9 @@
 ---
-id: v.0.2.0+task.12
+id: v.0.2.0+task.7.9
 status: done
 priority: low
 estimate: 2h
-dependencies: [v.0.2.0+task.8]
+dependencies: [v.0.2.0+task.7.5]
 ---
 
 # Fix Module Autoloading Configuration Issues

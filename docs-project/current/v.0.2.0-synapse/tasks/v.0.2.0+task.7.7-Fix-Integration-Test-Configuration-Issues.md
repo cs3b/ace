@@ -1,9 +1,9 @@
 ---
-id: v.0.2.0+task.10
+id: v.0.2.0+task.7.7
 status: done
 priority: medium
 estimate: 3h
-dependencies: [v.0.2.0+task.8, v.0.2.0+task.9]
+dependencies: [v.0.2.0+task.7.5, v.0.2.0+task.7.6]
 ---
 
 # Fix Integration Test Configuration Issues
