@@ -56,8 +56,17 @@ module CodingAgentTools
       # Register events with the notifications system to allow early subscription
       def register_events
         notifications = CodingAgentTools::Notifications.notifications
-        notifications.register_event("#{@event_namespace}.request.coding_agent_tools")
-        notifications.register_event("#{@event_namespace}.response.coding_agent_tools")
+
+        # Guard against duplicate event registration across multiple instances
+        # While dry-monitor's register_event appears to be idempotent in current version,
+        # we implement this guard as a defensive measure per code review feedback
+        begin
+          notifications.register_event("#{@event_namespace}.request.coding_agent_tools")
+          notifications.register_event("#{@event_namespace}.response.coding_agent_tools")
+        rescue
+          # Silently ignore registration errors for already registered events
+          # This handles cases where dry-monitor behavior might change between versions
+        end
       end
 
       # Create a Faraday connection for the given URL
@@ -77,7 +86,7 @@ module CodingAgentTools
           # and before response manipulation middleware if we want to log the raw-ish response before parsing.
           # However, Faraday's :json response middleware parses the body and populates response.body.
           # Our logger accesses response.status and response.headers, which are fine.
-          faraday.use :faraday_dry_monitor_logger,
+          faraday.use CodingAgentTools::Middlewares::FaradayDryMonitorLogger,
             notifications_instance: CodingAgentTools::Notifications.notifications,
             event_namespace: @event_namespace
 

@@ -91,20 +91,10 @@ rescue SystemExit => e
 
   # Re-raise the SystemExit to preserve the exit code
   raise e
-rescue Dry::CLI::Error => e
-  $stdout = original_stdout if original_stdout
-  $stderr = original_stderr if original_stderr
-  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
-  exit 1
-rescue CodingAgentTools::Error => e
-  $stdout = original_stdout if original_stdout
-  $stderr = original_stderr if original_stderr
-  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
-  exit 1
 rescue => e
   $stdout = original_stdout if original_stdout
   $stderr = original_stderr if original_stderr
-  # Catch other unexpected errors
+  # Handle all errors through the centralized error reporter
   CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
   exit 1
 ensure

@@ -94,6 +94,14 @@ module CodingAgentTools
             # If parsing fails, it might be an invalid JSON string containing sensitive data.
             # Use targeted regexes for common sensitive key patterns as a fallback.
             current_data = data.dup # Operate on a copy of the original string input
+
+            # Performance optimization: skip regex processing for large strings without sensitive keys
+            # This avoids expensive regex operations on large blobs that don't contain sensitive data
+            # Use case-insensitive check to match the regex behavior
+            unless sensitive_keys.any? { |key| current_data.downcase.include?(key.to_s.downcase) }
+              return current_data
+            end
+
             sensitive_keys.each do |key_sym_or_str|
               key_str = key_sym_or_str.to_s
               escaped_key = Regexp.escape(key_str)

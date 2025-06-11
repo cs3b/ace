@@ -116,8 +116,10 @@ module CodingAgentTools
         # Construct path by appending to base URL path to preserve v1beta
         path_segment = "models/#{@model}"
         url_obj = Addressable::URI.parse(@base_url)
-        url_obj.path += "/" unless url_obj.path.end_with?("/")
-        url_obj.path += path_segment
+
+        # Use File.join-style logic to avoid double slashes
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        url_obj.path = "#{base_path}/#{path_segment}"
 
         # Set query parameters
         url_obj.query_values = {key: @api_key}
@@ -143,8 +145,10 @@ module CodingAgentTools
         # Construct path by appending to base URL path
         path_segment = "models/#{@model}:#{endpoint}"
         url_obj = Addressable::URI.parse(@base_url)
-        url_obj.path += "/" unless url_obj.path.end_with?("/")
-        url_obj.path += path_segment
+
+        # Use File.join-style logic to avoid double slashes
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        url_obj.path = "#{base_path}/#{path_segment}"
 
         # Set query parameters
         url_obj.query_values = {key: @api_key}

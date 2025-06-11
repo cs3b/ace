@@ -2,6 +2,7 @@
 
 require "open3"
 require "timeout"
+require "shellwords"
 
 # Shared helpers for process execution in integration tests
 module ProcessHelpers
@@ -92,7 +93,7 @@ module ProcessHelpers
       "BUNDLE_PATH" => ENV["BUNDLE_PATH"],
       "BUNDLE_BIN_PATH" => ENV["BUNDLE_BIN_PATH"],
       "RACK_ENV" => ENV["RACK_ENV"] || "test",
-      "RUBYOPT" => "-rbundler/setup -r#{vcr_setup_path}",
+      "RUBYOPT" => "-rbundler/setup -r#{Shellwords.escape(vcr_setup_path)}",
       "VCR_CASSETTE_NAME" => cassette_name,
       # Ensure proper encoding for Unicode handling in CI
       "LANG" => ENV["LANG"] || "en_US.UTF-8",

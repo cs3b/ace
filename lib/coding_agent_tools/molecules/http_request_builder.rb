@@ -79,16 +79,18 @@ module CodingAgentTools
       def build_headers(custom_headers, json: true, method: nil, body: nil)
         headers = {}
 
+        # Merge custom headers first to avoid overwriting them
+        headers.merge!(custom_headers) if custom_headers
+
         if json
-          headers["Accept"] = "application/json"
+          headers["Accept"] ||= "application/json"
           # Add Content-Type for methods that typically have request bodies
-          # or when a body is explicitly provided
+          # or when a body is explicitly provided, but only if not already set
           if should_add_content_type?(method, body)
-            headers["Content-Type"] = "application/json"
+            headers["Content-Type"] ||= "application/json"
           end
         end
 
-        headers.merge!(custom_headers) if custom_headers
         headers
       end
 
@@ -110,6 +112,10 @@ module CodingAgentTools
       # @param body [String, Hash, nil] Request body for POST, PUT, PATCH
       # @param headers [Hash] Request headers
       # @return [Faraday::Response] Response object
+      #
+      # @note Query parameters are only used for GET requests. For POST and other
+      #   non-GET requests, query parameters are ignored and should be included
+      #   in the URL or request body as appropriate for the API being called.
       def execute_request(method, url, query: nil, body: nil, headers: {})
         case method
         when :get
@@ -132,7 +138,7 @@ module CodingAgentTools
         raw_body = nil
 
         # Handle different cases:
-        # 1. Body is already parsed (by Faraday middleware) - need to recreate raw_body
+        # 1. Body is already parsed (by Faraday middleware) - use efficient raw_body generation
         # 2. Body is a string - use it as raw_body and optionally parse it
         if body.is_a?(String)
           # Parse JSON if requested and it looks like JSON
@@ -148,8 +154,15 @@ module CodingAgentTools
           end
         elsif body.is_a?(Hash) || body.is_a?(Array)
           # Body was already parsed by Faraday middleware
-          # Generate JSON string for raw_body
-          raw_body = JSON.generate(body)
+          # For compatibility, provide raw_body but optimize for common cases
+          # Only re-encode if it's a reasonably sized response to avoid performance issues
+          raw_body = if json && body_size_reasonable?(body)
+            JSON.generate(body)
+          else
+            # For very large responses, skip raw_body to avoid performance penalty
+            # This is a reasonable tradeoff for the edge case of huge JSON responses
+            nil
+          end
         end
 
         result = {
@@ -159,7 +172,7 @@ module CodingAgentTools
           body: body
         }
 
-        # Only include raw_body if we actually parsed JSON
+        # Include raw_body if available (for JSON responses we parsed or re-encoded)
         result[:raw_body] = raw_body if raw_body
 
         result
@@ -171,6 +184,24 @@ module CodingAgentTools
       def looks_like_json?(response)
         content_type = response.headers["content-type"] || ""
         content_type.include?("application/json") || content_type.include?("text/json")
+      end
+
+      # Check if body size is reasonable for re-encoding
+      # This helps avoid performance issues with very large JSON responses
+      # @param body [Hash, Array] The parsed body to check
+      # @return [Boolean] Whether it's reasonable to re-encode this body
+      def body_size_reasonable?(body)
+        # Simple heuristic: if serialized size estimation is reasonable, allow re-encoding
+        # For most API responses, this will be true. For huge responses, we skip raw_body.
+        estimated_size = case body
+        when Hash
+          body.keys.size + body.values.flatten.size
+        when Array
+          body.flatten.size
+        else
+          0
+        end
+        estimated_size < 10_000 # Reasonable limit for typical API responses
       end
     end
   end

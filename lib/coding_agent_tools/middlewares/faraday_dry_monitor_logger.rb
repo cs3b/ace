@@ -110,7 +110,8 @@ module CodingAgentTools
           status: response&.status,
           duration_ms: duration_ms,
           response_headers: response&.headers&.to_h || {},
-          error_class: error_object&.class&.name
+          error_class: error_object&.class&.name,
+          error_message: error_object&.message
         }
         @notifications.publish(event_name, payload)
       end
