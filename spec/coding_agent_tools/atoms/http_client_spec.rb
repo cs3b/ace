@@ -39,7 +39,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
         .with(headers: {"Accept" => "*/*", "Authorization" => "Bearer token123"})
         .to_return(status: 200, body: "Authorized")
 
-      response = client.get("#{test_url}/endpoint", {"Authorization" => "Bearer token123"})
+      response = client.get("#{test_url}/endpoint", headers: {"Authorization" => "Bearer token123"})
       expect(response.status).to eq(200)
       expect(response.body).to eq("Authorized")
     end
@@ -116,7 +116,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
       response = client.post(
         "#{test_url}/endpoint",
         "data",
-        {"Authorization" => "Bearer token123", "X-Custom" => "value"}
+        headers: {"Authorization" => "Bearer token123", "X-Custom" => "value"}
       )
       expect(response.status).to eq(200)
     end
