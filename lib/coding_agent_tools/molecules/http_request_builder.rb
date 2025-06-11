@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/http_client"
-# require_relative "../atoms/json_formatter" # No longer directly used here
+require "json"
 
 module CodingAgentTools
   module Molecules
@@ -125,21 +125,52 @@ module CodingAgentTools
 
       # Parse the response
       # @param response [Faraday::Response] Raw response from HTTPClient
-      # @param json [Boolean] Hint for consumers; not used for parsing within this method anymore
+      # @param json [Boolean] Whether to parse JSON responses
       # @return [Hash] Parsed response data
-      def parse_response(response, json: true) # rubocop:disable Lint/UnusedMethodArgument
-        {
+      def parse_response(response, json: true)
+        body = response.body
+        raw_body = nil
+
+        # Handle different cases:
+        # 1. Body is already parsed (by Faraday middleware) - need to recreate raw_body
+        # 2. Body is a string - use it as raw_body and optionally parse it
+        if body.is_a?(String)
+          # Parse JSON if requested and it looks like JSON
+          if json && looks_like_json?(response)
+            begin
+              raw_body = body
+              parsed_body = JSON.parse(body, symbolize_names: true)
+              body = parsed_body
+            rescue JSON::ParserError
+              # Keep body as string if parsing fails
+              # Don't set raw_body since we didn't actually parse
+            end
+          end
+        elsif body.is_a?(Hash) || body.is_a?(Array)
+          # Body was already parsed by Faraday middleware
+          # Generate JSON string for raw_body
+          raw_body = JSON.generate(body)
+        end
+
+        result = {
           status: response.status,
           headers: response.headers.to_h,
           success: response.success?,
-          # response.body is now either a Hash/Array (if parsed by Faraday's :json middleware)
-          # or a String (if not JSON, not parseable, or middleware not used/applicable).
-          # APIResponseParser will handle further processing if it's a string.
-          body: response.body
+          body: body
         }
-        # The raw_body concept is simplified: if response.body is a string, that *is* the raw body.
-        # If it's parsed, the raw string form is implicitly handled by the fact that
-        # APIResponseParser will work with the parsed form or try to parse if it's a string.
+
+        # Only include raw_body if we actually parsed JSON
+        result[:raw_body] = raw_body if raw_body
+
+        result
+      end
+
+      # Check if response looks like JSON based on content-type
+      # @param response [Faraday::Response] The response to check
+      # @return [Boolean] Whether the response appears to be JSON
+      def looks_like_json?(response)
+        content_type = response.headers["content-type"] || ""
+        content_type.include?("application/json") || content_type.include?("text/json")
       end
     end
   end

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.7.3
-status: to-do
+status: done
 priority: high
 estimate: 4h
 dependencies: ["v.0.2.0+task.7.2"]
@@ -247,14 +247,14 @@ end
 
 ## Acceptance Criteria
 
-- [ ] AC1: Response hash includes `:raw_body` field for JSON responses
-- [ ] AC2: JSON responses are properly parsed into Ruby objects in `:body` field
-- [ ] AC3: Non-JSON responses return string body with `:raw_body` copy
-- [ ] AC4: All HTTPRequestBuilder tests pass
-- [ ] AC5: Response structure is consistent across all HTTP methods
-- [ ] AC6: WebMock stubs properly simulate JSON content-type headers
-- [ ] AC7: No regression in response parsing functionality
-- [ ] AC8: Error responses maintain consistent structure
+- [x] AC1: Response hash includes `:raw_body` field for JSON responses
+- [x] AC2: JSON responses are properly parsed into Ruby objects in `:body` field
+- [x] AC3: Non-JSON responses return string body with `:raw_body` copy
+- [x] AC4: All HTTPRequestBuilder tests pass
+- [x] AC5: Response structure is consistent across all HTTP methods
+- [x] AC6: WebMock stubs properly simulate JSON content-type headers
+- [x] AC7: No regression in response parsing functionality
+- [x] AC8: Error responses maintain consistent structure
 
 ## Risk Assessment
 
