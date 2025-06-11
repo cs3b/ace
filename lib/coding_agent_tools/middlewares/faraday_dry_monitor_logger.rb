@@ -109,8 +109,8 @@ module CodingAgentTools
           url: url,
           status: response&.status,
           duration_ms: duration_ms,
-          response_headers: response&.headers ? response.headers.to_h : {},
-          error_class: error_object ? error_object.class.name : nil
+          response_headers: response&.headers&.to_h || {},
+          error_class: error_object&.class&.name
         }
         @notifications.publish(event_name, payload)
       end

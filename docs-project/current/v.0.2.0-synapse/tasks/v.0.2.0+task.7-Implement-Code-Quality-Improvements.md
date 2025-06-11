@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.7
-status: in-progress
+status: done
 priority: medium
 estimate: 11h # Adjusted estimate due to scope reduction
 dependencies: ["v.0.2.0+task.6"]
@@ -122,7 +122,7 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 #### Phase 1: Setup & Tooling
 
--   [ ] Add `zeitwerk`, `dry-monitor`, `dry-configurable` to `Gemfile` and `coding_agent_tools.gemspec`.
+-   [x] Add `zeitwerk`, `dry-monitor`, `dry-configurable` to `Gemfile` and `coding_agent_tools.gemspec`.
     > TEST: Dependencies Added
     > Type: Action Validation
     > Assert: `zeitwerk`, `dry-monitor`, `dry-configurable` are listed in `Gemfile` and `.gemspec`.
@@ -188,13 +188,13 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 #### Phase 4: Test Refinements
 
--   [ ] Review `spec/support/` and existing specs for helpers that can be centralized or improved for readability.
-    -   [ ] E.g., move VCR setup helpers fully into `spec/support/vcr_helpers.rb` if not already.
+-   [x] Review `spec/support/` and existing specs for helpers that can be centralized or improved for readability.
+    -   [x] E.g., move VCR setup helpers fully into `spec/support/vcr_helpers.rb` if not already.
     > TEST: Test Helper Review
     > Type: Action Validation
     > Assert: `spec/support/` is organized and helpers are well-defined.
     > Command: `tree spec/support/`
--   [ ] Identify 1-2 areas where custom RSpec matchers could significantly improve test readability and implement them.
+-   [x] Identify 1-2 areas where custom RSpec matchers could significantly improve test readability and implement them.
     > TEST: Custom Matcher Implementation
     > Type: Action Validation
     > Assert: At least one new custom matcher is created and used.
@@ -202,8 +202,8 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 #### Phase 5: Review & Testing
 
--   [ ] Run `standardrb --fix` and ensure all linting passes.
--   [ ] Run `bin/test` and ensure all tests pass, including integration tests.
+-   [x] Run `standardrb --fix` and ensure all linting passes.
+-   [x] Run `bin/test` and ensure all tests pass, including integration tests.
     > TEST: Full Test Suite
     > Type: Action Validation
     > Assert: All tests pass (`bundle exec rspec`).
@@ -211,16 +211,16 @@ This task focuses on refactoring existing library code and test infrastructure a
 
 ## Acceptance Criteria
 
--   [ ] AC 1: CLI executables use a centralized `ErrorReporter`.
--   [ ] AC 2: Faraday utilities are preferred for query/header building, reducing custom code.
--   [ ] AC 3: Zeitwerk is used for autoloading, and manual `autoload` calls are removed.
--   [ ] AC 4: URL assembly is standardized using `URI.join` or `Addressable::URI`.
--   [ ] AC 5: Exceptions are re-wrapped only to add meaningful context.
--   [ ] AC 6: External HTTP calls made via Faraday are instrumented with `dry-monitor` using a custom middleware, publishing request and response events.
--   [ ] AC 7: Test helper organization in `spec/support/` is improved.
--   [ ] AC 8: (Optional, if beneficial) 1-2 new custom RSpec matchers are introduced and used.
--   [ ] AC 9: Code passes linting with `standardrb`.
--   [ ] AC 10: All tests pass.
+-   [x] AC 1: CLI executables use a centralized `ErrorReporter`.
+-   [x] AC 2: Faraday utilities are preferred for query/header building, reducing custom code.
+-   [x] AC 3: Zeitwerk is used for autoloading, and manual `autoload` calls are removed.
+-   [x] AC 4: URL assembly is standardized using `URI.join` or `Addressable::URI`.
+-   [x] AC 5: Exceptions are re-wrapped only to add meaningful context.
+-   [x] AC 6: External HTTP calls made via Faraday are instrumented with `dry-monitor` using a custom middleware, publishing request and response events.
+-   [x] AC 7: Test helper organization in `spec/support/` is improved.
+-   [x] AC 8: (Optional, if beneficial) 1-2 new custom RSpec matchers are introduced and used.
+-   [x] AC 9: Code passes linting with `standardrb`.
+-   [x] AC 10: All tests pass.
 
 ## Out of Scope
 

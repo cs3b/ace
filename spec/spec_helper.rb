@@ -31,6 +31,13 @@ require_relative "support/env_helper"
 # Load VCR configuration
 require_relative "support/vcr"
 
+# Load custom matchers
+require_relative "support/matchers/json_matchers"
+require_relative "support/matchers/http_matchers"
+
+# Load shared helpers
+require_relative "support/process_helpers"
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
