@@ -6,6 +6,7 @@ loader = Zeitwerk::Loader.for_gem
 loader.inflector.inflect(
   "json_formatter" => "JSONFormatter",
   "http_client" => "HTTPClient",
+  "http_request_builder" => "HTTPRequestBuilder",
   "api_credentials" => "APICredentials",
   "api_response_parser" => "APIResponseParser"
 )
