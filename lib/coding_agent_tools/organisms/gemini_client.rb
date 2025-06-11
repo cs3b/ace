@@ -113,13 +113,17 @@ module CodingAgentTools
       # Get information about the model
       # @return [Hash] Model information
       def model_info
-        # Use Addressable::URI.join to construct the path
-        # Ensure base_url is handled correctly whether it has a trailing slash or not.
-        # Addressable::URI.join("http://example.com", "foo", "bar") => "http://example.com/foo/bar"
-        # Addressable::URI.join("http://example.com/", "foo", "bar") => "http://example.com/foo/bar"
-        url_obj = Addressable::URI.join(@base_url, "models/", @model)
+        # Construct path by appending to base URL path to preserve v1beta
+        path_segment = "models/#{@model}"
+        url_obj = Addressable::URI.parse(@base_url)
+        url_obj.path += "/" unless url_obj.path.end_with?("/")
+        url_obj.path += path_segment
+
+        # Set query parameters
+        url_obj.query_values = {key: @api_key}
         url = url_obj.to_s
-        response_data = @request_builder.get_json(url, query: {key: @api_key})
+
+        response_data = @request_builder.get_json(url)
         parsed = @response_parser.parse_response(response_data)
 
         if parsed[:success]
