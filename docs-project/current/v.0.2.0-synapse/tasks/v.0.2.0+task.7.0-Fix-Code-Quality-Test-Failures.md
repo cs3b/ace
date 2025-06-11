@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.7.0
-status: to-do
+status: done
 priority: critical
 estimate: 12h
 dependencies: ["v.0.2.0+task.7"]
@@ -18,7 +18,7 @@ After implementing code quality improvements in task v.0.2.0+task.7-Implement-Co
 Running `bin/test` produces 5 main failure categories:
 
 1. **Zeitwerk Autoloading Issues** - Classes not loading due to naming convention mismatches
-2. **Method Signature Mismatches** - `ArgumentError: unknown keyword` errors  
+2. **Method Signature Mismatches** - `ArgumentError: unknown keyword` errors
 3. **Response Structure Changes** - Missing `:raw_body` fields and JSON parsing problems
 4. **Faraday Middleware Integration** - Custom middleware causing conflicts
 5. **General Integration Issues** - Various secondary effects from the refactoring
@@ -27,7 +27,7 @@ Running `bin/test` produces 5 main failure categories:
 
 ```
 Zeitwerk::NameError:
-  expected file .../http_request_builder.rb to define constant 
+  expected file .../http_request_builder.rb to define constant
   CodingAgentTools::Molecules::HttpRequestBuilder, but didn't
 
 ArgumentError: unknown keyword: :method
@@ -46,7 +46,7 @@ Systematically fix all test failures introduced by the code quality improvements
 
 The failures stem from four main categories:
 
-### 1. **Zeitwerk Integration Issues** 
+### 1. **Zeitwerk Integration Issues**
 - **Problem**: Class names don't follow Zeitwerk naming conventions
 - **Impact**: Classes fail to autoload, breaking entire system
 - **Priority**: Critical - blocks all other testing
@@ -56,14 +56,14 @@ The failures stem from four main categories:
 - **Impact**: `ArgumentError` exceptions in tests and potentially production
 - **Priority**: High - breaks existing functionality
 
-### 3. **Response Format Changes** 
+### 3. **Response Format Changes**
 - **Problem**: HTTP response structure modified, breaking test expectations
 - **Impact**: Tests expect specific response format that no longer exists
 - **Priority**: High - affects core functionality contracts
 
 ### 4. **Middleware Integration Problems**
 - **Problem**: Custom dry-monitor middleware may conflict with standard middleware
-- **Impact**: HTTP requests may fail or behave unexpectedly  
+- **Impact**: HTTP requests may fail or behave unexpectedly
 - **Priority**: Medium - may affect observability features
 
 ## Implementation Strategy
@@ -75,17 +75,17 @@ This task is broken down into sequential subtasks that must be completed in orde
 ```
 v.0.2.0+task.7.1 (Zeitwerk Issues)
     ↓
-v.0.2.0+task.7.2 (Method Signatures) 
+v.0.2.0+task.7.2 (Method Signatures)
     ↓
 v.0.2.0+task.7.3 (Response Structure)
-    ↓  
+    ↓
 v.0.2.0+task.7.4 (Middleware Integration)
 ```
 
 ### Sequential Fix Approach
 
 1. **First**: Fix Zeitwerk issues - nothing else can be tested until classes load
-2. **Second**: Fix method signatures - core functionality must work  
+2. **Second**: Fix method signatures - core functionality must work
 3. **Third**: Fix response structures - restore expected API contracts
 4. **Fourth**: Fix middleware integration - ensure observability features work
 
@@ -98,7 +98,7 @@ v.0.2.0+task.7.4 (Middleware Integration)
 - **Files**: `lib/coding_agent_tools.rb`
 - **Test**: Verify classes can be loaded
 
-### [v.0.2.0+task.7.2] Fix Method Signature Issues 
+### [v.0.2.0+task.7.2] Fix Method Signature Issues
 - **Status**: Blocked by 7.1
 - **Problem**: `build_headers` method doesn't accept `:method` parameter
 - **Solution**: Update method signature or fix test calls
@@ -106,7 +106,7 @@ v.0.2.0+task.7.4 (Middleware Integration)
 - **Test**: No `ArgumentError: unknown keyword` errors
 
 ### [v.0.2.0+task.7.3] Fix Response Structure Changes
-- **Status**: Blocked by 7.2  
+- **Status**: Blocked by 7.2
 - **Problem**: Missing `:raw_body`, JSON parsing not working
 - **Solution**: Restore expected response format with both parsed and raw data
 - **Files**: `http_request_builder.rb`, `http_client.rb`
@@ -126,7 +126,7 @@ v.0.2.0+task.7.4 (Middleware Integration)
 - [ ] No regression in functionality from before task v.0.2.0+task.7
 - [ ] Retain benefits of code quality improvements where possible
 
-### Secondary Goals  
+### Secondary Goals
 - [ ] Maintain backward compatibility for external consumers
 - [ ] Preserve observability features from dry-monitor integration
 - [ ] Keep improved error handling and Faraday utilities usage
@@ -151,7 +151,7 @@ bin/test
 # Test core functionality still works
 exe/llm-gemini-query "test prompt" --debug
 
-# Test new observability features  
+# Test new observability features
 # (verify dry-monitor events are emitted)
 ```
 
@@ -172,7 +172,7 @@ exe/llm-gemini-query "test prompt" --debug
 **Total Estimate**: 12 hours across 4 subtasks
 
 - **v.0.2.0+task.7.1**: 2h (Critical path)
-- **v.0.2.0+task.7.2**: 3h  
+- **v.0.2.0+task.7.2**: 3h
 - **v.0.2.0+task.7.3**: 4h (Most complex)
 - **v.0.2.0+task.7.4**: 3h
 
@@ -183,7 +183,7 @@ exe/llm-gemini-query "test prompt" --debug
 - [ ] AC1: `bin/test` passes completely (0 failures, 0 errors)
 - [ ] AC2: All classes can be autoloaded via Zeitwerk
 - [ ] AC3: No `ArgumentError: unknown keyword` errors
-- [ ] AC4: HTTP responses include expected `:body` and `:raw_body` fields  
+- [ ] AC4: HTTP responses include expected `:body` and `:raw_body` fields
 - [ ] AC5: JSON parsing works correctly
 - [ ] AC6: Custom middleware integrates without conflicts
 - [ ] AC7: `exe/llm-gemini-query` executable works correctly
