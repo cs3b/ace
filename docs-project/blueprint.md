@@ -46,7 +46,8 @@ This will show all project files while filtering out temporary files, session lo
 ## Key Project-Specific Files
 
 - [Product Requirements Document (PRD)](../../PRD.md) - Primary source of truth for project goals and requirements
-- [Main README](../../README.md) - Project overview and quick start
+- [Main README](../../README.md) - Project overview, installation, runtime configuration, and user-facing documentation
+- [Development Guide](../../docs/DEVELOPMENT.md) - Development environment setup, testing, build tools, and contributor workflow
 - [Workflow Instructions](../../docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
 - [Project Guides](../../docs-dev/guides/README.md) - Development standards and best practices
 - `coding_agent_tools.gemspec` - Ruby gem definition and dependencies
@@ -54,10 +55,16 @@ This will show all project files while filtering out temporary files, session lo
 
 ## Technology Stack
 
-- **Primary Language**: Ruby (>= 3.2)
+- **Primary Language**: Ruby (>= 3.4.2)
 - **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model)
-- **Key Libraries/Tools**: Bundler, RSpec, Aruba, RuboCop
+- **Runtime Dependencies**: Faraday (HTTP client), dry-cli (CLI framework)
+- **Development Tools**: RSpec, StandardRB, VCR, Zeitwerk
 - **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API
+
+### Documentation Separation
+
+- **README.md**: Contains runtime information, installation instructions, basic usage, and configuration for end users
+- **docs/DEVELOPMENT.md**: Contains development environment setup, testing frameworks, build tools, and contributor guidelines
 
 ## Read-Only Paths
 
@@ -130,21 +137,27 @@ Refer to the [Architecture document](./architecture.md#command-line-tools-bin) f
 
 ## Dependencies
 
-### Runtime Dependencies (Key Examples)
+### Runtime Dependencies
 
-- Ruby (>= 3.2)
-- Bundler
-- Gems for Google Gemini API interaction
-- Gems/tools for LM Studio interaction
-- Standard system Git CLI
-- Gems for GitHub REST API interaction (e.g., octokit)
+- **Ruby** (>= 3.4.2)
+- **Bundler** - Dependency management
+- **Faraday** - HTTP client for API integrations (Google Gemini)
+- **dry-cli** - Command-line interface framework
+- Standard system **Git CLI**
+- Optional: **LM Studio** for offline LLM support
 
-### Development Dependencies (Key Examples)
+### Development Dependencies
 
-- RSpec
-- Aruba
-- RuboCop
+- **RSpec** - Testing framework
+- **StandardRB** - Code style and formatting
+- **VCR** - HTTP interaction recording for testing
+- **Zeitwerk** - Code loading and autoloading
+- **SimpleCov** - Code coverage analysis
+- **WebMock** - HTTP request stubbing
+- **Pry** - Interactive debugging
 - `docs-dev/tools/*` scripts (used by some `bin/` wrappers)
+
+See `coding_agent_tools.gemspec` and `Gemfile` for complete dependency specifications.
 
 ## Submodules
 

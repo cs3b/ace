@@ -16,7 +16,7 @@ This document outlines the architectural design and technical implementation det
 ### Development Tools
 
 - **Build System**: Standard Ruby Gem build (`gemspec`)
-- **Testing Framework**: RSpec (for unit and integration tests), Aruba (for CLI tests)
+- **Testing Framework**: RSpec (for unit and integration tests)
 - **Linting/Formatting**: RuboCop (likely used for style enforcement)
 - **Type System**: Native Ruby (Sorbet not explicitly mentioned in PRD v1)
 
@@ -218,7 +218,6 @@ The ATOM architecture provides several extension points:
 ### Development Dependencies
 
 -   RSpec
--   Aruba
 -   RuboCop / StandardRB
 -   Potentially VCR for recording API interactions in tests.
 -   `docs-dev/tools/*` scripts: Dependencies for certain `bin/` utilities that wrap scripts from the `docs-dev` submodule.

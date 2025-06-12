@@ -36,6 +36,7 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 ## ✨ Key Features
 
 - **LLM Integration**: Query Google Gemini and local LM Studio models
+  - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
 - **Context Tools**: Generate comprehensive project context documents
@@ -75,6 +76,15 @@ coding_agent_tools project release_context
 
 *Note: The existing `bin/*` scripts will be gradually replaced or wrapped by these new gem commands.*
 
+## 🔧 Available Standalone Commands
+
+### New Standalone Commands
+
+- **`exe/llm-gemini-query`**: Directly query the Google Gemini API
+  - Usage: `exe/llm-gemini-query "Your prompt" [--file] [--format json|text] [--model MODEL_NAME] [--temperature TEMP] [--max-tokens TOKENS] [--system "SYSTEM_PROMPT"] [--debug]`
+  - Example: `exe/llm-gemini-query "What is Ruby?"`
+  - Requires: `GEMINI_API_KEY` environment variable
+
 ## 🏗 Architecture
 
 The gem's library code in `lib/coding_agent_tools/` is structured using an **ATOM-based hierarchy** (Atoms, Molecules, Organisms, Ecosystems), promoting modularity and reusability:
@@ -87,11 +97,30 @@ The gem's library code in `lib/coding_agent_tools/` is structured using an **ATO
 - **`lib/coding_agent_tools/cli/`**: Contains `dry-cli` command classes.
 - **`lib/coding_agent_tools/cli.rb`**: Main `dry-cli` registry.
 
+### Core Dependencies
+
+- **Faraday**: HTTP client for API integrations (Google Gemini)
+- **dry-cli**: Command-line interface framework
+
 See the [Architecture Document](docs-project/architecture.md) for more details.
 
 ## 🔧 Configuration
 
 ### API Keys
+
+Create a `.env` file in your project root (copy from `.env.example`):
+
+```bash
+# Google Gemini API Key
+# Get this from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_actual_gemini_api_key_here
+
+# GitHub (for repository creation)
+GITHUB_TOKEN=your-token
+```
+
+Or set environment variables directly:
+
 ```bash
 # Google Gemini
 export GEMINI_API_KEY="your-api-key"
@@ -105,7 +134,7 @@ Ensure LM Studio is running on `localhost:1234` for offline LLM queries.
 
 ## 📋 Requirements
 
-- Ruby ≥ 3.2
+- Ruby ≥ 3.4.2
 - Git CLI
 - Optional: LM Studio for offline LLM support
 
@@ -127,52 +156,28 @@ Currently in active development (v0.1.0 focusing on establishing the gem structu
 
 ## 💻 Development
 
-### Quick Start
+For complete development information including environment setup, testing, build tools, and contribution workflow, see **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 
-After cloning the repository:
+### Quick Start for Contributors
 
 ```bash
-# Initial setup
+# Clone and setup
+git clone <repository-url>
+cd coding-agent-tools
 bin/setup
 
-# Run tests
-bin/test
+# Run tests and linting
+bin/test && bin/lint
 
-# Check code style
-bin/lint
-
-# Build gem
-bin/build
-
-# Interactive console
-bin/console
+# Start developing
+git checkout -b feature/your-feature
 ```
 
-### Development Workflow
+### Key Development Resources
 
-1. **Set up environment**: `bin/setup`
-2. **Create feature branch**: `git checkout -b feature/name`
-3. **Write tests first**: Follow TDD approach
-4. **Implement feature**: Make tests pass
-5. **Verify quality**: `bin/test && bin/lint`
-6. **Commit changes**: Use conventional commit format
-7. **Push and PR**: Follow contribution guidelines
-
-### Documentation
-
-- **[Setup Guide](docs/SETUP.md)**: Complete development environment setup
-- **[Development Guide](docs/DEVELOPMENT.md)**: Daily workflow and best practices
-- **[Contributing](.github/CONTRIBUTING.md)**: Contribution guidelines and standards
-
-### Build System
-
-The project includes automated scripts for common development tasks:
-
-- `bin/setup`: Initial project setup and dependencies
-- `bin/test`: Run complete test suite with RSpec
-- `bin/lint`: Code style checking with StandardRB
-- `bin/build`: Build gem package for distribution
-- `bin/console`: Interactive Ruby console with gem loaded
+- **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and tools
+- **[Setup Guide](docs/SETUP.md)** - Environment setup instructions  
+- **[Contributing](.github/CONTRIBUTING.md)** - Contribution guidelines and standards
 
 ## 📚 Documentation
 

@@ -10,6 +10,59 @@ The Coding Agent Tools project follows a structured development workflow that em
 - **Conventional Commits**: Standardized commit message format
 - **Code Quality**: StandardRB linting and comprehensive test coverage
 
+## Development Dependencies
+
+### Core Development Tools
+
+- **RSpec**: Testing framework for unit, integration, and feature tests
+- **StandardRB**: Ruby code style and formatting enforcer
+- **SimpleCov**: Code coverage analysis and reporting
+
+### Testing & Quality Assurance
+
+- **VCR**: HTTP interaction recording for testing external API integrations
+- **WebMock**: HTTP request stubbing and mocking for isolated tests
+- **FactoryBot**: Test data generation and fixture management
+- **Pry**: Interactive debugging and REPL for development
+
+### Development Support
+
+- **Zeitwerk**: Code loading and autoloading for development environment
+- **Bundler**: Dependency management and gem packaging
+- **Rake**: Task automation and build system integration
+- **YARD**: Documentation generation from code comments
+
+For complete dependency information, see `coding_agent_tools.gemspec` and `Gemfile`.
+
+## API Key Setup for Development
+
+### Environment Configuration
+
+For running tests that interact with real APIs or recording new VCR cassettes:
+
+1. **Copy the example environment files**:
+   ```bash
+   cp .env.example .env
+   cp spec/.env.example spec/.env
+   ```
+
+2. **Edit the `.env` files and add your actual API keys** (particularly `GEMINI_API_KEY`):
+   ```bash
+   # In .env file
+   GEMINI_API_KEY="your_actual_gemini_api_key_here"
+   
+   # In spec/.env file (for testing)
+   GEMINI_API_KEY="your_actual_gemini_api_key_here"
+   VCR_RECORD=false  # Set to true when recording new cassettes
+   ```
+
+3. **When recording new VCR cassettes**, set `VCR_RECORD=true` in `spec/.env`
+
+### Getting API Keys
+
+- **Google Gemini API Key**: Get this from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **GitHub Token** (if needed): Generate from [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+
 ## Daily Development Workflow
 
 ### 1. Start Working on a Feature
