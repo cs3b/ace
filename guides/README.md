@@ -34,6 +34,7 @@ Our development workflow centers around:
 
 ### Technical & Language Guides
 
+- **[Code Review: Diff-Based Documentation Updates](./code-review-diff-for-docs-update.g.md)** - Systematic approach for reviewing code diffs and updating related documentation.
 - **[Coding Standards](./coding-standards.g.md)** - Code style and general best practices.
   - [Ruby Coding Standards](./coding-standards/ruby.md)
   - [Rust Coding Standards](./coding-standards/rust.md)

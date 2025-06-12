@@ -115,4 +115,36 @@ exec(File.expand_path('../docs-dev/tools/get-next-task', __dir__), *ARGV)
 - **Address Issues:** Fix bugs or issues reported in tools promptly.
 - **Version Control:** All tools must be version-controlled within the `docs-dev` repository.
 
+## Current Development Tools
+
+### Documentation Review Tools
+
+#### `generate-doc-review-prompt`
+**Purpose:** Creates comprehensive AI agent prompts for reviewing code diffs and updating related documentation.
+
+**Usage:**
+```bash
+# Basic usage - generate prompt from diff file
+docs-dev/tools/generate-doc-review-prompt -d changes.diff
+
+# Specify custom output location
+docs-dev/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
+
+# Include full documentation content for detailed analysis
+docs-dev/tools/generate-doc-review-prompt -d changes.diff --include-content
+```
+
+**Options:**
+- `-d, --diff FILE`: Path to the diff file (required)
+- `-o, --output FILE`: Output file for the prompt (optional, auto-generates if not specified)
+- `-r, --root DIR`: Project root directory (default: current directory)
+- `-c, --include-content`: Include full content of documentation files (default: just list files)
+- `-h, --help`: Show help message
+
+**Wrapper:** Available as `bin/cr-docs` for convenient access.
+
+**Dependencies:** Standard Ruby libraries only (optparse, pathname, fileutils).
+
+**Related Documentation:** See [Code Review: Diff-Based Documentation Updates](docs-dev/guides/code-review-diff-for-docs-update.g.md) for comprehensive workflow guidance.
+
 By following these guidelines, we can build a robust and useful set of development tools that enhance our workflow.
