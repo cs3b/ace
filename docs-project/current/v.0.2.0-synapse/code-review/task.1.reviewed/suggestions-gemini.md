@@ -171,7 +171,7 @@ The primary documentation impact is the need to introduce these new features, ex
     *   Update "What We Build" to list the new ATOM components and CLI tool.
 *   [X] **NEW FILE**: `examples/llm_gemini_query_usage.rb` (or update existing examples).
     *   Provide programmatic examples if `GeminiClient` or other organisms are intended for library use. The diff adds `examples/generic_api_credentials.rb` which is good. Consider one for `GeminiClient`.
-*   [ ] **CLI Command Help Text**: Ensure `dry-cli` generates accurate and helpful text for `llm query` and its options, and that `exe/llm-gemini-query --help` (with its output rewriting) is clear.
+*   [x] **CLI Command Help Text**: Ensure `dry-cli` generates accurate and helpful text for `llm query` and its options, and that `exe/llm-gemini-query --help` (with its output rewriting) is clear.
 
 ## 🔵 LOW PRIORITY UPDATES (Nice to have)
 

@@ -124,6 +124,7 @@ bin/build
 - **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks.
 - **Commit Changes**: Use `bin/git-commit-with-message` to stage changes and generate a commit message.
 - **Query LLM**: Use `bin/llm-gemini-query` or `bin/lms-studio-query` to interact with language models.
+- **Generate Documentation Review**: Use `bin/cr-docs` to create comprehensive documentation update prompts from code diffs.
 
 Refer to the [Architecture document](./architecture.md#command-line-tools-bin) for a more detailed list and description of `bin/` commands.
 

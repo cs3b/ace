@@ -31,3 +31,7 @@ debug_error.rb
 
 # Git diff files
 *.diff
+
+# docs-project specific files
+docs-project/**/code-review/**/*.diff
+docs-project/**/code-review/**/prompt*.md
