@@ -74,10 +74,7 @@ Replace the current manual subprocess execution approach in CLI integration test
 ### Planning Steps
 
 * [ ] Analyze current integration test patterns and identify Aruba equivalent approaches
-  > TEST: Aruba Patterns Analysis
-  > Type: Pre-condition Check
-  > Assert: Current test patterns are mapped to Aruba equivalents
-  > Command: bin/test --check-analysis-complete aruba-migration-plan.md
+
 * [ ] Plan VCR integration strategy with Aruba's command execution model
 * [ ] Review Aruba documentation for CLI testing best practices and subprocess environment handling
 
@@ -104,7 +101,7 @@ Replace the current manual subprocess execution approach in CLI integration test
   > TEST: Full Integration Test Suite
   > Type: Action Validation
   > Assert: All integration tests pass and maintain same coverage
-  > Command: bin/test --integration
+  > Command: bin/test spec/integration/llm_gemini_query_integration_spec.rb
 
 ## Acceptance Criteria
 
