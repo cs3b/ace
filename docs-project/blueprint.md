@@ -27,7 +27,9 @@ This project follows a documentation-first approach with these primary directori
 
 - **bin/** - Executable scripts (binstubs/wrappers) for project automation (e.g., `bin/test`, `bin/tn`)
 
-- **lib/** - Ruby gem source code, organized by the ATOM architecture pattern
+- **exe/** - Primary gem executables (e.g., `exe/llm-gemini-query`)
+
+- **lib/** - Ruby gem source code, organized by the ATOM architecture pattern with subdirectories for `atoms/`, `molecules/`, `organisms/`, `cli/`, `models/`, and cross-cutting concerns like `middlewares/`.
 
 - **spec/** - RSpec test files (unit, integration, CLI)
 
@@ -56,9 +58,9 @@ This will show all project files while filtering out temporary files, session lo
 ## Technology Stack
 
 - **Primary Language**: Ruby (>= 3.4.2)
-- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model)
-- **Runtime Dependencies**: Faraday (HTTP client), dry-cli (CLI framework)
-- **Development Tools**: RSpec, StandardRB, VCR, Zeitwerk
+- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model), Zeitwerk for efficient code loading, and dry-monitor for observability
+- **Runtime Dependencies**: Faraday (HTTP client), dry-cli (CLI framework), dry-configurable (configuration management), addressable (URI parsing and manipulation)
+- **Development Tools**: RSpec, StandardRB, VCR, WebMock, Zeitwerk
 - **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API
 
 ### Documentation Separation
@@ -130,7 +132,7 @@ bin/build
 - **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on.
 - **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks.
 - **Commit Changes**: Use `bin/git-commit-with-message` to stage changes and generate a commit message.
-- **Query LLM**: Use `bin/llm-gemini-query` or `bin/lms-studio-query` to interact with language models.
+- **Query LLM**: Use `exe/llm-gemini-query` or `bin/lms-studio-query` to interact with language models.
 - **Generate Documentation Review**: Use `bin/cr-docs` to create comprehensive documentation update prompts from code diffs.
 
 Refer to the [Architecture document](./architecture.md#command-line-tools-bin) for a more detailed list and description of `bin/` commands.
@@ -139,23 +141,21 @@ Refer to the [Architecture document](./architecture.md#command-line-tools-bin) f
 
 ### Runtime Dependencies
 
-- **Ruby** (>= 3.4.2)
+- **Ruby** (>= 3.2)
 - **Bundler** - Dependency management
-- **Faraday** - HTTP client for API integrations (Google Gemini)
-- **dry-cli** - Command-line interface framework
-- Standard system **Git CLI**
-- Optional: **LM Studio** for offline LLM support
+- **faraday** - Flexible HTTP client library.
+- **zeitwerk** - Efficient and thread-safe code loader.
+- **dry-monitor** - Event-based monitoring and instrumentation toolkit.
+- **dry-configurable** - Provides configuration capabilities for Ruby objects.
+- **addressable** - URI manipulation library.
 
 ### Development Dependencies
 
-- **RSpec** - Testing framework
-- **StandardRB** - Code style and formatting
-- **VCR** - HTTP interaction recording for testing
-- **Zeitwerk** - Code loading and autoloading
-- **SimpleCov** - Code coverage analysis
-- **WebMock** - HTTP request stubbing
-- **Pry** - Interactive debugging
-- `docs-dev/tools/*` scripts (used by some `bin/` wrappers)
+- **RSpec** - Testing framework.
+- **RuboCop / StandardRB** - Code style linter and formatter.
+- **VCR** - Records and replays HTTP interactions for tests.
+- **WebMock** - Stubs and sets expectations on HTTP requests.
+- `docs-dev/tools/*` scripts (used by some `bin/` wrappers).
 
 See `coding_agent_tools.gemspec` and `Gemfile` for complete dependency specifications.
 

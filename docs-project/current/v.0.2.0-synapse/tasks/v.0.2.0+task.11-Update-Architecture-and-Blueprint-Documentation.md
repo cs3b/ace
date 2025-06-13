@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.11
-status: pending
+status: done
 priority: high
 estimate: 5h
 dependencies: [v.0.2.0+task.1]
@@ -73,7 +73,7 @@ Update the core architecture and blueprint documentation to reflect the signific
 
 ### Execution Steps
 
-- [ ] Update `docs-project/architecture.md` "ATOM-Based Code Structure" section:
+- [x] Update `docs-project/architecture.md` "ATOM-Based Code Structure" section:
   - Add new Atoms: EnvReader, HTTPClient, JSONFormatter
   - Add new Molecules: APICredentials, HTTPRequestBuilder, APIResponseParser
   - Add new Organisms: GeminiClient, PromptProcessor
@@ -82,33 +82,33 @@ Update the core architecture and blueprint documentation to reflect the signific
   > Type: Action Validation
   > Assert: All new ATOM components are properly documented
   > Manual Verification: Review the "ATOM-Based Code Structure" section in `docs-project/architecture.md` to ensure all new ATOM components (EnvReader, HTTPClient, JSONFormatter, APICredentials, HTTPRequestBuilder, APIResponseParser, GeminiClient, PromptProcessor) and cross-cutting concerns are properly documented.
-- [ ] Update architecture.md "File Organization" section with new files and directories
-- [ ] Add new "Development Patterns" subsections for "Testing with VCR" and "Observability with dry-monitor"
-- [ ] Update architecture.md "Dependencies" sections with new runtime (faraday, zeitwerk, dry-monitor, dry-configurable, addressable) and development (vcr, webmock) dependencies
-- [ ] Update `docs-project/blueprint.md` "Project Organization" section for new lib/ subdirectories and exe/ directory
-- [ ] Update blueprint.md "Technology Stack" section with new gems and patterns
-- [ ] Update blueprint.md "Entry Points" and "Common Workflows" to include exe/llm-gemini-query
-- [ ] Update blueprint.md "Dependencies" sections with new runtime and development dependencies
+- [x] Update architecture.md "File Organization" section with new files and directories
+- [x] Add new "Development Patterns" subsections for "Testing with VCR" and "Observability with dry-monitor"
+- [x] Update architecture.md "Dependencies" sections with new runtime (faraday, zeitwerk, dry-monitor, dry-configurable, addressable) and development (vcr, webmock) dependencies
+- [x] Update `docs-project/blueprint.md` "Project Organization" section for new lib/ subdirectories and exe/ directory
+- [x] Update blueprint.md "Technology Stack" section with new gems and patterns
+- [x] Update blueprint.md "Entry Points" and "Common Workflows" to include exe/llm-gemini-query
+- [x] Update blueprint.md "Dependencies" sections with new runtime and development dependencies
   > TEST: Blueprint Updates Complete
   > Type: Action Validation
   > Assert: Blueprint documentation reflects all new project organization changes
   > Manual Verification: Review `docs-project/blueprint.md` to confirm it reflects all new project organization changes, including updated "Project Organization," "Technology Stack," "Entry Points," "Common Workflows" (for `exe/llm-gemini-query`), and "Dependencies" sections.
-- [ ] Add cross-references between architecture.md and blueprint.md for consistency
-- [ ] Ensure all new architectural patterns are explained with their purpose and benefits
+- [x] Add cross-references between architecture.md and blueprint.md for consistency
+- [x] Ensure all new architectural patterns are explained with their purpose and benefits
 
 ## Acceptance Criteria
 
-- [ ] architecture.md "ATOM-Based Code Structure" includes all new Atoms, Molecules, and Organisms
-- [ ] architecture.md "File Organization" reflects new directory structure and key files
-- [ ] architecture.md includes new "Development Patterns" section covering VCR and dry-monitor
-- [ ] architecture.md "Dependencies" sections are updated with all new runtime and development dependencies
-- [ ] blueprint.md "Project Organization" reflects new lib/ subdirectories and exe/ directory
-- [ ] blueprint.md "Technology Stack" includes new gems and architectural patterns
-- [ ] blueprint.md "Entry Points" and "Common Workflows" include exe/llm-gemini-query
-- [ ] blueprint.md "Dependencies" sections match architecture.md dependency updates
-- [ ] Both documents maintain consistent terminology and cross-reference each other appropriately
-- [ ] All new architectural patterns are explained with context and rationale
-- [ ] Documents follow existing project documentation style and formatting
+- [x] architecture.md "ATOM-Based Code Structure" includes all new Atoms, Molecules, and Organisms
+- [x] architecture.md "File Organization" reflects new directory structure and key files
+- [x] architecture.md includes new "Development Patterns" section covering VCR and dry-monitor
+- [x] architecture.md "Dependencies" sections are updated with all new runtime and development dependencies
+- [x] blueprint.md "Project Organization" reflects new lib/ subdirectories and exe/ directory
+- [x] blueprint.md "Technology Stack" includes new gems and architectural patterns
+- [x] blueprint.md "Entry Points" and "Common Workflows" include exe/llm-gemini-query
+- [x] blueprint.md "Dependencies" sections match architecture.md dependency updates
+- [x] Both documents maintain consistent terminology and cross-reference each other appropriately
+- [x] All new architectural patterns are explained with context and rationale
+- [x] Documents follow existing project documentation style and formatting
 
 ## Out of Scope
 
