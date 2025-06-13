@@ -6,7 +6,7 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 
 ## ✨ Key Features
 
-- **LLM Communication**: CLI commands (`llm-gemini-query`, `lms-studio-query`) for interacting with Google Gemini and local LM Studio models.
+- **LLM Communication**: Implemented CLI commands (`llm-gemini-query`, `lms-studio-query`) for interacting with Google Gemini and local LM Studio models.
 - **Git Workflow Automation**: Tools for creating GitHub repositories (`github-repository-create`) and generating intelligent Git commit messages based on diffs and intentions (`git-commit-with-message`).
 - **Task Management Utilities**: Commands (`tn`, `tr`, `rc`) to help developers and agents identify the next actionable task, review recent tasks, and manage release directories, often integrating with documentation-based task backlogs.
 - **Standardized Interface**: Provides a consistent CLI and API surface for automation, reducing reliance on ad-hoc scripts.
@@ -78,7 +78,11 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 
 ### What We Build
 - A Ruby gem (`coding_agent_tools`) installable via standard Ruby package managers (RubyGems, Bundler).
-- A suite of CLI executables (`bin/`) for common Dev Ops and task management workflows.
+- A suite of CLI executables (`bin/`) for common Dev Ops and task management workflows, including `exe/llm-gemini-query`.
+- Core ATOM components, including:
+  - **Atoms**: `EnvReader`, `HTTPClient`, `JSONFormatter`
+  - **Molecules**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`
+  - **Organisms**: `GeminiClient`, `PromptProcessor`
 - An internal API used by the CLI, which can potentially be exposed for programmatic use.
 - Integrations with Google Gemini API and local LM Studio API.
 - Integrations with Git CLI and GitHub REST API (v3).
@@ -109,7 +113,6 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 ## Future Vision
 
 ### Short-term Goals (Complete by ~Aug 2025 - v1.0.0)
-- Achieve GA for core LLM communication commands.
 - Finalize and release GitHub repository creation and commit generator tools.
 - Implement and stabilize task utility commands (`tn`, `tr`, `rc`).
 - Reach ≥ 95% test coverage.
