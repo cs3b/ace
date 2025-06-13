@@ -193,14 +193,15 @@ bundle exec standardrb --fix
 - Ensures consistent code formatting
 
 #### `bin/build`
-**Purpose**: Build the gem package
+**Purpose**: Build the gem package and verify its local installation
 ```bash
 bin/build
 ```
 - Compiles the gem package
 - Validates gemspec configuration
 - Creates `.gem` file for distribution
-- Verifies packaging integrity
+- Verifies packaging integrity by attempting to install the gem locally in a temporary environment
+- Provides enhanced build confidence by ensuring the gem can be correctly installed and used
 
 #### `bin/console`
 **Purpose**: Interactive development console
@@ -331,6 +332,25 @@ RSpec.describe "CLI Integration" do
 end
 ```
 
+#### Integration Tests with VCR
+- Specifically for tests that interact with external APIs (e.g., Google Gemini, GitHub).
+- Uses VCR to record and replay HTTP interactions, ensuring tests are fast, deterministic, and don't rely on live external services.
+- When recording new cassettes, ensure `VCR_RECORD=true` is set in `spec/.env` and your API keys are configured.
+- For detailed setup and usage, refer to the [VCR Testing Guide](docs/testing-with-vcr.md).
+
+```ruby
+# Example of a VCR-enabled test
+RSpec.describe CodingAgentTools::Molecules::LLMApiClient do
+  it "makes an API call and records/replays the response" do
+    VCR.use_cassette("llm_response_example") do
+      # Test implementation that triggers an external API call
+      response = described_class.new.generate_text("test prompt")
+      expect(response).to include("expected text")
+    end
+  end
+end
+```
+
 ### Running Tests
 
 ```bash
@@ -391,8 +411,6 @@ open coverage/index.html
 
 ### ATOM Hierarchy
 
-Follow the established ATOM pattern:
-
 ```ruby
 # Atoms: Simple, pure functions
 module CodingAgentTools::Atoms::StringUtils
@@ -404,7 +422,7 @@ end
 # Molecules: Compositions of atoms
 class CodingAgentTools::Molecules::FileProcessor
   include CodingAgentTools::Atoms::StringUtils
-  
+
   def process_file(path)
     # Uses atoms to build functionality
   end
@@ -440,6 +458,22 @@ end
 let(:mock_dependency) { double("dependency") }
 let(:instance) { described_class.new(dependency: mock_dependency) }
 ```
+
+### Zeitwerk Autoloading
+
+The project utilizes Zeitwerk for efficient and performant code autoloading. This means classes and modules are automatically loaded when first referenced, without requiring explicit `require` statements for most of the application's own code.
+
+- **Benefits**: Faster startup times, less boilerplate `require` statements, and a clearer representation of the codebase structure.
+- **Convention**: Code is organized into directories matching the module/class hierarchy. For example, `lib/coding_agent_tools/atoms/string_utils.rb` defines `CodingAgentTools::Atoms::StringUtils`.
+- **Development**: When adding new files or directories, ensure they follow Zeitwerk's naming conventions to be automatically picked up. Run `bin/console` to confirm autoloading works as expected for new components.
+
+### Dry-Monitor Observability
+
+`dry-monitor` is used to implement an event-based observability pattern. This allows for clear separation of concerns by dispatching events when significant actions occur within the application, which other components can subscribe to.
+
+- **Benefits**: Decoupled components, easier debugging and logging, and the ability to extend functionality without modifying core logic.
+- **Usage**: Components publish events (e.g., `monitor.publish(:task_completed, task_id: 123)`), and listeners subscribe to these events to perform actions like logging, metrics collection, or triggering subsequent processes.
+- **Example**: Critical operations might publish events that `dry-monitor` listeners can pick up to log detailed information, or update internal state for monitoring dashboards.
 
 ## Debugging Workflow
 

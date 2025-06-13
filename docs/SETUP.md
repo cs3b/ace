@@ -7,7 +7,7 @@ This guide will help you set up a complete development environment for Coding Ag
 Before you begin, ensure you have the following installed on your system:
 
 ### Required
-- **Ruby 3.2+** (recommended: 3.4.2)
+- **Ruby 3.4.2**
 - **Git** (version 2.0+)
 - **Bundler** gem
 
@@ -62,11 +62,11 @@ bundler --version
 
 ```bash
 # Clone your fork (replace with your username)
-git clone https://github.com/YOUR_USERNAME/coding-agent-tools.git
+git clone https://github.com/cs3b/coding-agent-tools.git
 cd coding-agent-tools
 
 # Or clone the main repository
-git clone https://github.com/ORGANIZATION/coding-agent-tools.git
+git clone https://github.com/cs3b/coding-agent-tools.git
 cd coding-agent-tools
 ```
 
@@ -159,19 +159,36 @@ git config --list | grep commit.template
 
 ### 2. API Keys (Optional)
 
-For full functionality, configure API keys:
+For full functionality, especially for features interacting with external APIs, configure your API keys using the provided example environment files.
 
-```bash
-# Google Gemini API (for LLM features)
-export GEMINI_API_KEY="your-gemini-api-key"
+1.  **Copy the example environment files**:
+    ```bash
+    cp .env.example .env
+    cp spec/.env.example spec/.env
+    ```
 
-# GitHub Token (for repository operations)
-export GITHUB_TOKEN="your-github-token"
+2.  **Edit the `.env` and `spec/.env` files**:
+    - Open `.env` and `spec/.env` in your editor.
+    - Add your actual `GEMINI_API_KEY` to both files.
+    - The `spec/.env` file is specifically for testing and VCR recording. When you need to record new VCR cassettes for API integration tests, you will set `VCR_RECORD=true` in this file.
 
-# Add to your shell profile for persistence
-echo 'export GEMINI_API_KEY="your-gemini-api-key"' >> ~/.bashrc
-echo 'export GITHUB_TOKEN="your-github-token"' >> ~/.bashrc
-```
+    Example `.env` (development settings):
+    ```
+    # .env
+    GEMINI_API_KEY="your_actual_gemini_api_key_here"
+    GITHUB_TOKEN="your_actual_github_token_here"
+    ```
+
+    Example `spec/.env` (testing settings for VCR):
+    ```
+    # spec/.env
+    GEMINI_API_KEY="your_actual_gemini_api_key_here"
+    VCR_RECORD=false # Set to true when recording new cassettes
+    ```
+
+3.  **Obtaining API Keys**:
+    - **Google Gemini API Key**: Get this from [Google AI Studio](https://makersuite.google.com/app/apikey).
+    - **GitHub Token** (if needed): Generate from [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
 
 ### 3. LM Studio (Optional)
 
