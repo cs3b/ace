@@ -22,9 +22,9 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
       "RUBYOPT" => "-rbundler/setup -r#{vcr_setup_path}",
       "VCR_CASSETTE_NAME" => cassette_name,
       # Ensure proper encoding for Unicode handling in CI
-      "LANG" => ENV["LANG"] || "en_US.UTF-8",
-      "LC_ALL" => ENV["LC_ALL"] || "en_US.UTF-8",
-      "LC_CTYPE" => ENV["LC_CTYPE"] || "en_US.UTF-8"
+      "LANG" => ENV["LANG"].to_s.empty? ? "en_US.UTF-8" : ENV["LANG"],
+      "LC_ALL" => ENV["LC_ALL"].to_s.empty? ? "en_US.UTF-8" : ENV["LC_ALL"],
+      "LC_CTYPE" => ENV["LC_CTYPE"].to_s.empty? ? "en_US.UTF-8" : ENV["LC_CTYPE"]
     }.compact # Remove nil values
 
     env_vars = base_env.merge(bundler_env)

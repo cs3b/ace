@@ -5,15 +5,6 @@ require "coding_agent_tools/atoms/env_reader"
 require "tempfile"
 
 RSpec.describe CodingAgentTools::Atoms::EnvReader do
-  # Store original ENV state
-  let(:original_env) { ENV.to_h }
-
-  # Clean up ENV after each test
-  after do
-    ENV.clear
-    original_env.each { |k, v| ENV[k] = v }
-  end
-
   describe ".load_env_file" do
     let(:temp_env_file) { Tempfile.new([".env", ""]) }
 

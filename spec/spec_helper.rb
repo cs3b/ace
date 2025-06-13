@@ -37,6 +37,8 @@ require_relative "support/matchers/http_matchers"
 
 # Load shared helpers
 require_relative "support/process_helpers"
+# Helper for safe ENV manipulation in specs
+require_relative "support/env_helpers"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -47,5 +49,12 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+  # Prevent environment variable leakage between examples
+  config.around do |example|
+    original_env = ENV.to_hash
+    example.run
+  ensure
+    ENV.replace(original_env)
   end
 end

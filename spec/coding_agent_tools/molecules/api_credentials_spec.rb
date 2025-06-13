@@ -6,13 +6,8 @@ require "tempfile"
 require "fileutils"
 
 RSpec.describe CodingAgentTools::Molecules::APICredentials do
-  # Store original ENV state
-  let(:original_env) { ENV.to_h }
-
-  # Clean up ENV and reset configuration after each test
+  # Reset configuration after each test
   after do
-    ENV.clear
-    original_env.each { |k, v| ENV[k] = v }
     described_class.reset!
   end
 
@@ -85,9 +80,11 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       end
 
       it "loads environment variables from specified .env file" do
-        described_class.new(env_key_name: "GEMINI_API_KEY", env_file_path: env_file_path)
-        expect(ENV["GEMINI_API_KEY"]).to eq("env-file-key")
-        expect(ENV["OTHER_KEY"]).to eq("other-value")
+        with_modified_env("GEMINI_API_KEY" => nil, "OTHER_KEY" => nil) do
+          described_class.new(env_key_name: "GEMINI_API_KEY", env_file_path: env_file_path)
+          expect(ENV["GEMINI_API_KEY"]).to eq("env-file-key")
+          expect(ENV["OTHER_KEY"]).to eq("other-value")
+        end
       end
     end
   end
