@@ -16,7 +16,7 @@ This document outlines the architectural design and technical implementation det
 ### Development Tools
 
 - **Build System**: Standard Ruby Gem build (`gemspec`)
-- **Testing Framework**: RSpec (for unit and integration tests)
+- **Testing Framework**: RSpec (for unit and integration tests), Aruba (for CLI integration tests)
 - **Linting/Formatting**: RuboCop (likely used for style enforcement)
 - **Type System**: Native Ruby (Sorbet not explicitly mentioned in PRD v1)
 

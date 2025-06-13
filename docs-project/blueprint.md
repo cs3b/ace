@@ -60,7 +60,7 @@ This will show all project files while filtering out temporary files, session lo
 - **Primary Language**: Ruby (>= 3.4.2)
 - **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model), Zeitwerk for efficient code loading, and dry-monitor for observability
 - **Runtime Dependencies**: Faraday (HTTP client), dry-cli (CLI framework), dry-configurable (configuration management), addressable (URI parsing and manipulation)
-- **Development Tools**: RSpec, StandardRB, VCR, WebMock, Zeitwerk
+- **Development Tools**: RSpec, StandardRB, VCR, WebMock, Aruba, Zeitwerk
 - **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API
 
 ### Documentation Separation

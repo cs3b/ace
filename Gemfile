@@ -16,4 +16,5 @@ group :development, :test do
   gem "simplecov-html", "~> 0.12", require: false
   gem "webmock", "~> 3.0"
   gem "vcr", "~> 6.0"
+  gem "aruba", "~> 2.0"
 end

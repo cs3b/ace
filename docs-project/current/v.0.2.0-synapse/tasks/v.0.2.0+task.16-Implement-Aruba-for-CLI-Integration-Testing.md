@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.16
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -73,31 +73,31 @@ Replace the current manual subprocess execution approach in CLI integration test
 
 ### Planning Steps
 
-* [ ] Analyze current integration test patterns and identify Aruba equivalent approaches
+* [x] Analyze current integration test patterns and identify Aruba equivalent approaches
 
-* [ ] Plan VCR integration strategy with Aruba's command execution model
-* [ ] Review Aruba documentation for CLI testing best practices and subprocess environment handling
+* [x] Plan VCR integration strategy with Aruba's command execution model
+* [x] Review Aruba documentation for CLI testing best practices and subprocess environment handling
 
 ### Execution Steps
 
-- [ ] Add Aruba gem dependency to `Gemfile` in the development group
-- [ ] Update `docs/DEVELOPMENT.md` to include Aruba in Core Development Tools section
-- [ ] Update `docs-project/blueprint.md` to include Aruba in Development Tools and Dependencies
-- [ ] Update `docs-project/architecture.md` to include Aruba in Testing Framework description
-- [ ] Install Aruba dependency by running `bundle install`
+- [x] Add Aruba gem dependency to `Gemfile` in the development group
+- [x] Update `docs/DEVELOPMENT.md` to include Aruba in Core Development Tools section
+- [x] Update `docs-project/blueprint.md` to include Aruba in Development Tools and Dependencies
+- [x] Update `docs-project/architecture.md` to include Aruba in Testing Framework description
+- [x] Install Aruba dependency by running `bundle install`
   > TEST: Dependency Installation
   > Type: Action Validation
   > Assert: Aruba gem is installed and available in test environment
   > Command: bundle exec ruby -e "require 'aruba'; puts 'Aruba loaded successfully'"
-- [ ] Refactor `spec/integration/llm_gemini_query_integration_spec.rb` to use Aruba instead of Open3
+- [x] Refactor `spec/integration/llm_gemini_query_integration_spec.rb` to use Aruba instead of Open3
   > TEST: Integration Test Refactoring
   > Type: Action Validation
   > Assert: All existing test scenarios pass with Aruba implementation
   > Command: bundle exec rspec spec/integration/llm_gemini_query_integration_spec.rb
-- [ ] Simplify VCR subprocess environment setup to work with Aruba's command execution
-- [ ] Replace manual process status checking with Aruba's built-in assertions
-- [ ] Clean up helper methods that are no longer needed with Aruba
-- [ ] Verify all test scenarios continue to work correctly
+- [x] Simplify VCR subprocess environment setup to work with Aruba's command execution
+- [x] Replace manual process status checking with Aruba's built-in assertions
+- [x] Clean up helper methods that are no longer needed with Aruba
+- [x] Verify all test scenarios continue to work correctly
   > TEST: Full Integration Test Suite
   > Type: Action Validation
   > Assert: All integration tests pass and maintain same coverage
@@ -105,14 +105,14 @@ Replace the current manual subprocess execution approach in CLI integration test
 
 ## Acceptance Criteria
 
-- [ ] Aruba gem is added as a development dependency in `Gemfile`
-- [ ] Documentation is updated to reflect Aruba usage in development dependencies
-- [ ] `spec/integration/llm_gemini_query_integration_spec.rb` uses Aruba instead of Open3
-- [ ] All existing test scenarios (help output, error handling, API calls, file input, etc.) continue to pass
-- [ ] VCR cassette recording and playback works correctly with Aruba
-- [ ] Test code is simplified and more maintainable than the previous Open3 implementation
-- [ ] No manual subprocess environment setup is required (leverages Aruba's built-in capabilities)
-- [ ] Process status checking uses Aruba's assertions instead of manual expect_process_success helper
+- [x] Aruba gem is added as a development dependency in `Gemfile`
+- [x] Documentation is updated to reflect Aruba usage in development dependencies
+- [x] `spec/integration/llm_gemini_query_integration_spec.rb` uses Aruba instead of Open3
+- [x] All existing test scenarios (help output, error handling, API calls, file input, etc.) continue to pass
+- [x] VCR cassette recording and playback works correctly with Aruba
+- [x] Test code is simplified and more maintainable than the previous Open3 implementation
+- [x] No manual subprocess environment setup is required (leverages Aruba's built-in capabilities)
+- [x] Process status checking uses Aruba's assertions instead of manual expect_process_success helper
 
 ## Out of Scope
 

@@ -22,6 +22,7 @@ The Coding Agent Tools project follows a structured development workflow that em
 
 - **VCR**: HTTP interaction recording for testing external API integrations
 - **WebMock**: HTTP request stubbing and mocking for isolated tests
+- **Aruba**: CLI testing framework for command-line integration tests
 - **FactoryBot**: Test data generation and fixture management
 - **Pry**: Interactive debugging and REPL for development
 
