@@ -61,7 +61,7 @@ Create four new Architecture Decision Records (ADRs) to document the significant
   > TEST: ADR Format Analysis Complete
   > Type: Pre-condition Check
   > Assert: ADR format and structure requirements are documented
-  > Command: bin/test --check-adr-format-analyzed
+  > Manual Verification: Manually review `docs-project/decisions/ADR-001-CI-Aware-VCR-Configuration.md` to understand the established ADR format, structure, and style conventions.
 * [ ] Analyze task.1 implementation to gather detailed context for each architectural decision
 * [ ] Research alternatives and trade-offs for each decision to ensure comprehensive coverage
 * [ ] Plan ADR content to include all required sections with appropriate detail level
@@ -76,7 +76,7 @@ Create four new Architecture Decision Records (ADRs) to document the significant
   > TEST: ADR-002 Content Validation
   > Type: Action Validation
   > Assert: Zeitwerk ADR covers all required sections with accurate technical details
-  > Command: bin/test --validate-adr-content docs-project/decisions/ADR-002-Zeitwerk-for-Autoloading.md
+  > Manual Verification: Review `docs-project/decisions/ADR-002-Zeitwerk-for-Autoloading.md` to ensure it covers all required sections (Context, Decision, Consequences, Alternatives) with accurate technical details regarding Zeitwerk adoption.
 - [ ] Create `docs-project/decisions/ADR-003-Observability-with-dry-monitor.md`:
   - Context: Need to instrument key operations for debugging and monitoring
   - Decision: Use dry-monitor via central Notifications instance with FaradayDryMonitorLogger
@@ -95,7 +95,7 @@ Create four new Architecture Decision Records (ADRs) to document the significant
   > TEST: All ADRs Created and Validated
   > Type: Action Validation
   > Assert: All four new ADRs exist and contain complete, accurate information
-  > Command: bin/test --validate-all-new-adrs docs-project/decisions/
+  > Manual Verification: Verify that `docs-project/decisions/ADR-003-Observability-with-dry-monitor.md`, `docs-project/decisions/ADR-004-Centralized-CLI-Error-Reporting.md`, and `docs-project/decisions/ADR-005-HTTP-Client-Strategy-with-Faraday.md` exist and contain complete and accurate information following the established ADR format.
 - [ ] Ensure all ADRs follow consistent numbering, formatting, and cross-referencing
 - [ ] Add appropriate metadata and status information to each ADR
 - [ ] Review all ADRs for technical accuracy and completeness

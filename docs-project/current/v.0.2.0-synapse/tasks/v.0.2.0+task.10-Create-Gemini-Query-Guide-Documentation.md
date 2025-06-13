@@ -63,7 +63,7 @@ Create comprehensive documentation for the new `exe/llm-gemini-query` command in
   > TEST: Command Analysis Complete
   > Type: Pre-condition Check
   > Assert: All CLI options and their behavior are documented
-  > Command: bin/test --check-gemini-command-analysis-complete
+  > Manual Verification: Manually execute `exe/llm-gemini-query --help` and analyze its output to ensure all CLI options and their behaviors are understood and noted for documentation.
 * [ ] Review existing project documentation style and formatting standards
 * [ ] Plan guide structure to cover all user scenarios from basic to advanced usage
 * [ ] Identify practical use cases and example scenarios to include
@@ -82,12 +82,12 @@ Create comprehensive documentation for the new `exe/llm-gemini-query` command in
   > TEST: Guide Content Validation
   > Type: Action Validation
   > Assert: Guide covers all required sections with accurate information
-  > Command: bin/test --validate-gemini-guide-content docs/llm-integration/gemini-query-guide.md
+  > Manual Verification: Review `docs/llm-integration/gemini-query-guide.md` to confirm it covers all required sections (Introduction, Setup, Basic Usage, Output Format, Advanced Options, Combined Options, Troubleshooting) with accurate information.
 - [ ] Validate all command examples in the guide work correctly
   > TEST: Example Commands Validation
   > Type: Action Validation
   > Assert: All command examples in the guide execute successfully
-  > Command: bin/test --validate-guide-examples docs/llm-integration/gemini-query-guide.md
+  > Manual Verification: Manually execute each command example provided in `docs/llm-integration/gemini-query-guide.md` to ensure they run successfully and produce expected output.
 - [ ] Ensure proper markdown formatting and internal link structure
 - [ ] Add cross-references to related documentation (README.md, SETUP.md)
 

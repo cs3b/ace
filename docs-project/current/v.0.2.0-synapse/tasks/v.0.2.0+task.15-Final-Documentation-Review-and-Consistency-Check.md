@@ -77,7 +77,7 @@ Perform a comprehensive final review of all project documentation to ensure cons
   > TEST: Documentation Inventory Complete
   > Type: Pre-condition Check
   > Assert: All documentation files are catalogued with review criteria
-  > Command: bin/test --check-documentation-inventory-complete
+  > Manual Verification: Create a checklist or inventory of all project documentation files, noting review criteria for each (e.g., consistency, accuracy, completeness).
 * [ ] Plan systematic review approach to ensure no files are missed
 * [ ] Establish consistency criteria for terminology, formatting, and cross-references
 * [ ] Review all previously completed documentation tasks to understand changes made
@@ -91,7 +91,7 @@ Perform a comprehensive final review of all project documentation to ensure cons
   > TEST: Link Validation Complete
   > Type: Action Validation
   > Assert: All internal links are functional and point to correct locations
-  > Command: bin/test --validate-all-documentation-links
+  > Manual Verification: Systematically click through and verify all internal markdown links within and between documents, and check references to code files and directories.
 - [ ] Review terminology consistency across all documents:
   - Consistent naming of components (Atoms, Molecules, Organisms)
   - Consistent command names and usage examples
@@ -109,7 +109,7 @@ Perform a comprehensive final review of all project documentation to ensure cons
   > TEST: Feature Documentation Consistency
   > Type: Action Validation
   > Assert: All new features are consistently documented across all relevant files
-  > Command: bin/test --validate-feature-documentation-consistency
+  > Manual Verification: Cross-reference all new features (e.g., `exe/llm-gemini-query` command, `GEMINI_API_KEY` configuration, new ATOM components, Zeitwerk, dry-monitor) to ensure they are mentioned consistently and accurately in all relevant documentation files.
 - [ ] Review formatting and style consistency:
   - Markdown formatting standards adherence
   - Code block formatting and language tags
@@ -123,7 +123,7 @@ Perform a comprehensive final review of all project documentation to ensure cons
   > TEST: Final Documentation Quality Check
   > Type: Action Validation
   > Assert: All documentation meets quality standards for clarity and professionalism
-  > Command: bin/test --final-documentation-quality-check
+  > Manual Verification: Perform a final comprehensive read-through of all updated documentation to check for grammar, spelling, clarity, readability, logical flow, organization, and professional tone.
 - [ ] Make minor corrections and improvements identified during review
 - [ ] Ensure all cross-references are bidirectional where appropriate
 

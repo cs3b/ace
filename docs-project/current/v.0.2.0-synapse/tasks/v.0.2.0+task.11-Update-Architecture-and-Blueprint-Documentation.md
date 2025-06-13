@@ -66,7 +66,7 @@ Update the core architecture and blueprint documentation to reflect the signific
   > TEST: Documentation Structure Analysis
   > Type: Pre-condition Check
   > Assert: Current documentation structure and sections are mapped
-  > Command: bin/test --check-arch-docs-structure-analyzed
+  > Manual Verification: Manually review `docs-project/architecture.md` and `docs-project/blueprint.md` to understand their existing structure and sections.
 * [ ] Analyze task.1 implementation to identify all new components and patterns
 * [ ] Review suggestions-gemini.md specifications for exact architectural updates needed
 * [ ] Plan content organization to maintain document coherence and readability
@@ -81,7 +81,7 @@ Update the core architecture and blueprint documentation to reflect the signific
   > TEST: ATOM Structure Updates
   > Type: Action Validation
   > Assert: All new ATOM components are properly documented
-  > Command: bin/test --validate-atom-structure-updates docs-project/architecture.md
+  > Manual Verification: Review the "ATOM-Based Code Structure" section in `docs-project/architecture.md` to ensure all new ATOM components (EnvReader, HTTPClient, JSONFormatter, APICredentials, HTTPRequestBuilder, APIResponseParser, GeminiClient, PromptProcessor) and cross-cutting concerns are properly documented.
 - [ ] Update architecture.md "File Organization" section with new files and directories
 - [ ] Add new "Development Patterns" subsections for "Testing with VCR" and "Observability with dry-monitor"
 - [ ] Update architecture.md "Dependencies" sections with new runtime (faraday, zeitwerk, dry-monitor, dry-configurable, addressable) and development (vcr, webmock) dependencies
@@ -92,7 +92,7 @@ Update the core architecture and blueprint documentation to reflect the signific
   > TEST: Blueprint Updates Complete
   > Type: Action Validation
   > Assert: Blueprint documentation reflects all new project organization changes
-  > Command: bin/test --validate-blueprint-updates docs-project/blueprint.md
+  > Manual Verification: Review `docs-project/blueprint.md` to confirm it reflects all new project organization changes, including updated "Project Organization," "Technology Stack," "Entry Points," "Common Workflows" (for `exe/llm-gemini-query`), and "Dependencies" sections.
 - [ ] Add cross-references between architecture.md and blueprint.md for consistency
 - [ ] Ensure all new architectural patterns are explained with their purpose and benefits
 

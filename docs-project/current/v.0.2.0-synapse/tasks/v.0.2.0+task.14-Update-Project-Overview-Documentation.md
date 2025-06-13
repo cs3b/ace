@@ -56,7 +56,7 @@ Update the project overview documentation to reflect that the Google Gemini LLM 
   > TEST: Project Overview Analysis Complete
   > Type: Pre-condition Check
   > Assert: Current project overview content and update needs are identified
-  > Command: bin/test --check-project-overview-analyzed
+  > Manual Verification: Manually review `docs-project/what-do-we-build.md` to understand its existing content and structure, identifying areas that need updates.
 * [ ] Compare current overview with task.1 implementation to identify all changes needed
 * [ ] Review suggestions-gemini.md specifications for exact updates required
 * [ ] Plan content updates to maintain document coherence and accuracy
@@ -72,7 +72,7 @@ Update the project overview documentation to reflect that the Google Gemini LLM 
   > TEST: Feature Status Updates Complete
   > Type: Action Validation
   > Assert: All implemented features are correctly marked as complete
-  > Command: bin/test --validate-feature-status-updates docs-project/what-do-we-build.md
+  > Manual Verification: Review `docs-project/what-do-we-build.md` to confirm that the "Key Features" section accurately reflects Gemini LLM integration as implemented, and the "What We Build" section lists all new ATOM components and the `exe/llm-gemini-query` CLI tool.
 - [ ] Ensure project capabilities accurately reflect the current implementation state
 - [ ] Update any references to planned features that are now implemented
 - [ ] Maintain consistency with terminology used in updated architecture documentation

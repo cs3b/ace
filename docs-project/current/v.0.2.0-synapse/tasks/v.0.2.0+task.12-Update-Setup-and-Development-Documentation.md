@@ -58,7 +58,7 @@ Update the setup and development documentation to reflect the new requirements a
   > TEST: Development Docs Structure Analysis
   > Type: Pre-condition Check
   > Assert: Current documentation structure and sections are identified
-  > Command: bin/test --check-dev-docs-structure-analyzed
+  > Manual Verification: Manually review `docs/SETUP.md` and `docs/DEVELOPMENT.md` to understand their existing structure and sections.
 * [ ] Review .tool-versions and new dependencies to understand updated requirements
 * [ ] Analyze VCR setup and testing patterns from task.1 implementation
 * [ ] Plan content updates to maintain document flow and usability
@@ -73,7 +73,7 @@ Update the setup and development documentation to reflect the new requirements a
   > TEST: SETUP.md Updates Complete
   > Type: Action Validation
   > Assert: SETUP.md reflects all new requirements and configuration
-  > Command: bin/test --validate-setup-updates docs/SETUP.md
+  > Manual Verification: Review `docs/SETUP.md` to confirm it reflects all new requirements, including Ruby version, API key setup instructions, and `.env.example`/`spec/.env` usage.
 - [ ] Update `docs/DEVELOPMENT.md` "Testing Strategy" section:
   - Add new subsection for "Integration Tests with VCR"
   - Document VCR usage for API-dependent tests
@@ -89,9 +89,9 @@ Update the setup and development documentation to reflect the new requirements a
   > TEST: DEVELOPMENT.md Updates Complete
   > Type: Action Validation
   > Assert: DEVELOPMENT.md includes all new patterns and testing strategies
-  > Command: bin/test --validate-development-updates docs/DEVELOPMENT.md
+  > Manual Verification: Review `docs/DEVELOPMENT.md` to confirm it includes the new "Integration Tests with VCR" section, updated "Build System Commands," and the new "Architectural Patterns" section (Zeitwerk, dry-monitor, ATOM organization).
 - [ ] Add cross-references between SETUP.md and DEVELOPMENT.md for consistency
-- [ ] Ensure all new dependencies are mentioned with their development purpose
+- [ ] Ensure all new development dependencies are mentioned with their development purpose
 
 ## Acceptance Criteria
 
