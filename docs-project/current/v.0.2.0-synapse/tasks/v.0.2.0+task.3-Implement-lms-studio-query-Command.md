@@ -3,7 +3,7 @@ id: v.0.2.0+task.3 # REQUIRED - Unique ID. Always use bin/tnid to get the next s
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: medium
 estimate: 6h
-dependencies: []
+dependencies: [v.0.2.0+task.2]
 ---
 
 # Implement lms-studio-query Command
@@ -24,11 +24,11 @@ _Result excerpt:_
 
 ## Objective
 
-Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studio on `localhost:1234` using the server's REST protocol for offline inference. Default model should be "mistral-small-24b-instruct-2501@8bit" but configurable. This provides offline LLM capabilities as an alternative to cloud-based services.
+Implement the `llm-lmstudio-query` command (R-LLM-3) that interfaces with LM Studio on `localhost:1234` using the server's REST protocol for offline inference. Default model should be "mistralai/devstral-small-2505" but configurable. This provides offline LLM capabilities as an alternative to cloud-based services.
 
 ## Scope of Work
 
-- Create CLI command `lms-studio-query` with Ruby implementation
+- Create CLI command `llm-lmstudio-query` with Ruby implementation
 - Integrate with LM Studio REST API on localhost:1234
 - Support prompt input from string argument or file path
 - Handle response formatting and error scenarios
@@ -38,16 +38,20 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 #### Create
 
-- lib/coding_agent_tools/commands/lms_studio_query.rb
-- lib/coding_agent_tools/llm/lm_studio_client.rb
-- bin/lms-studio-query (executable CLI script)
-- spec/commands/lms_studio_query_spec.rb
-- spec/llm/lm_studio_client_spec.rb
+- lib/coding_agent_tools/cli/commands/lms/query.rb
+- lib/coding_agent_tools/organisms/lm_studio_client.rb
+- exe/llm-lmstudio-query (executable CLI script)
+- spec/coding_agent_tools/cli/commands/lms/query_spec.rb
+- spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
+- spec/integration/llm_lmstudio_query_integration_spec.rb (Aruba + VCR integration tests)
 
 #### Modify
 
-- lib/coding_agent_tools.rb (require new modules)
 - coding_agent_tools.gemspec (add http client dependencies if needed)
+
+#### Note on Zeitwerk
+
+- lib/coding_agent_tools.rb modifications may not be needed due to Zeitwerk autoloading (ADR-002), as long as proper file naming conventions are followed
 
 ## Phases
 
@@ -77,34 +81,40 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Create LMStudioClient class with HTTP REST integration (based on lms-query.fish)
+- [ ] Create LMStudioClient organism with HTTP REST integration (reusing HTTPRequestBuilder and APIResponseParser molecules)
   > TEST: Verify LMStudioClient Class
   > Type: Action Validation
   > Assert: LMStudioClient class exists with generate_text method
-  > Command: ruby -e "require './lib/coding_agent_tools/llm/lm_studio_client'; puts CodingAgentTools::LLM::LMStudioClient.new.respond_to?(:generate_text)"
+  > Command: ruby -e "require './lib/coding_agent_tools/organisms/lm_studio_client'; puts CodingAgentTools::Organisms::LMStudioClient.new.respond_to?(:generate_text)"
 - [ ] Implement server health check and connection validation
   > TEST: Verify Server Health Check
   > Type: Action Validation
   > Assert: Client can detect if LM Studio server is running
-  > Command: ruby -e "require './lib/coding_agent_tools/llm/lm_studio_client'; puts CodingAgentTools::LLM::LMStudioClient.new.server_available?"
+  > Command: ruby -e "require './lib/coding_agent_tools/organisms/lm_studio_client'; puts CodingAgentTools::Organisms::LMStudioClient.new.server_available?"
 - [ ] Implement CLI command class with argument parsing
-- [ ] Create executable bin script that calls the command class
+- [ ] Create executable script in exe/ that calls the CLI command class
   > TEST: Verify CLI Executable
   > Type: Action Validation
-  > Assert: lms-studio-query command is executable and shows help
-  > Command: bin/lms-studio-query --help
+  > Assert: llm-lmstudio-query command is executable and shows help
+  > Command: exe/llm-lmstudio-query --help
 - [ ] Add comprehensive unit tests including mock server scenarios
   > TEST: Verify Test Coverage
   > Type: Action Validation
   > Assert: All new classes have corresponding test files with mocks
   > Command: find spec -name "*lm_studio*" -o -name "*lms*"
-- [ ] Implement integration test with actual LM Studio instance
+- [ ] Integrate APICredentials molecule for authentication (reuse from Task 2)
+- [ ] Create integration tests using Aruba + VCR pattern (following llm_gemini_query_integration_spec.rb)
+  > TEST: Verify Integration Test Setup
+  > Type: Action Validation
+  > Assert: Integration test file exists and follows Aruba/VCR pattern
+  > Command: find spec/integration -name "*llm_lmstudio*"
+- [ ] Configure VCR cassettes for LM Studio API interactions
 
 ## Acceptance Criteria
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-- [ ] AC 1: `lms-studio-query` command accepts prompts as string arguments and file paths
+- [ ] AC 1: `llm-lmstudio-query` command accepts prompts as string arguments and file paths
 - [ ] AC 2: Command successfully interfaces with LM Studio REST API on localhost:1234
 - [ ] AC 3: Response output matches expected format from LM Studio
 - [ ] AC 4: Clear error messages when LM Studio server is not available
@@ -124,6 +134,11 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 - Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/lms-query.fish
 - LM Studio API endpoint: http://localhost:1234/v1/chat/completions
-- Default model: mistral-small-24b-instruct-2501@8bit
+- Default model: mistralai/devstral-small-2505
+- Architecture: Follow ATOM pattern - LMStudioClient organism composes APICredentials, HTTPRequestBuilder, and APIResponseParser molecules
+- Reuse existing molecules: APICredentials (from Task 2), HTTPRequestBuilder, APIResponseParser
+- CLI pattern: Follow same structure as lib/coding_agent_tools/cli/commands/llm/query.rb
+- Integration testing: Use Aruba + VCR pattern similar to llm_gemini_query_integration_spec.rb
+- Zeitwerk: Follow ADR-002 file naming conventions to avoid manual require statements
 
 ```
