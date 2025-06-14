@@ -1,0 +1,220 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://localhost:1234/v1/models
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Powered-By:
+      - Express
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Headers:
+      - "*"
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '2487'
+      Etag:
+      - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
+      Date:
+      - Sat, 14 Jun 2025 19:54:13 GMT
+      Connection:
+      - keep-alive
+      Keep-Alive:
+      - timeout=5
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+          "data": [
+            {
+              "id": "mistralai/devstral-small-2505",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "deepseek/deepseek-r1-0528-qwen3-8b",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "text-embedding-nomic-embed-text-v1.5",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "phi-4-reasoning-plus-mlx",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "phi-4-reasoning-mlx",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "phi-4-mini-reasoning-mlx",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "qwen3-30b-a3b-mlx",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "mistral-small-3.1-24b-instruct-2503",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "deepseek-r1-distill-qwen-32b",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "sfr-embedding-mistral",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "text-embedding-granite-embedding-278m-multilingual",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "gemma-3-27b-it@q4_k_m",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "gemma-3-27b-it@q8_0",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "gemma-3-4b-it",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "watt-tool-8b",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "gemma-3-12b-it",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "gemma-3-1b-it",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "phi-4-mini-instruct",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "phi-4",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "forgotten-safeword-24b",
+              "object": "model",
+              "owned_by": "organization_owner"
+            },
+            {
+              "id": "pantheon-rp-pure-x-cydonia-ub-v1.3-36b-i1",
+              "object": "model",
+              "owned_by": "organization_owner"
+            }
+          ],
+          "object": "list"
+        }
+  recorded_at: Sat, 14 Jun 2025 19:54:13 GMT
+- request:
+    method: post
+    uri: http://localhost:1234/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"mistralai/devstral-small-2505","messages":[{"role":"user","content":"Test
+        default model"}],"temperature":0.7,"max_tokens":-1,"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Powered-By:
+      - Express
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Headers:
+      - "*"
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '589'
+      Etag:
+      - W/"24d-BrMf4VWfTnAsfl9HiOIv6578XrY"
+      Date:
+      - Sat, 14 Jun 2025 19:54:15 GMT
+      Connection:
+      - keep-alive
+      Keep-Alive:
+      - timeout=5
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+          "id": "chatcmpl-qb9udd29ekpv37run8rbe",
+          "object": "chat.completion",
+          "created": 1749930853,
+          "model": "mistralai/devstral-small-2505",
+          "choices": [
+            {
+              "index": 0,
+              "logprobs": null,
+              "finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "Hello! I'm Devstral, a helpful assistant trained by Mistral AI. How can I assist you today?"
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 1228,
+            "completion_tokens": 23,
+            "total_tokens": 1251
+          },
+          "stats": {},
+          "system_fingerprint": "mistralai/devstral-small-2505"
+        }
+  recorded_at: Sat, 14 Jun 2025 19:54:15 GMT
+recorded_with: VCR 6.3.1

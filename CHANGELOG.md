@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+#### v.0.2.0+task.3 - 2025-06-14 - Implement LM Studio Query Command
+
+### Added
+- **LM Studio Integration**: Complete implementation of `llm-lmstudio-query` command for offline LLM inference
+  - `LMStudioClient` organism with HTTP REST integration to localhost:1234
+  - CLI command with argument parsing for prompts and file input
+  - Server health check and connection validation
+  - Comprehensive error handling for server unavailable scenarios
+  - Default model support (mistralai/devstral-small-2505) with configurability
+- **Testing Infrastructure**:
+  - Unit tests with mock server scenarios for LMStudioClient
+  - Integration tests using Aruba + VCR pattern
+  - VCR cassettes for LM Studio API interactions
+  - Test coverage for various prompt types and edge cases
+- **CLI Infrastructure**:
+  - LMS command registration in CLI system
+  - Executable script `exe/llm-lmstudio-query`
+  - Proper Zeitwerk inflection for LMStudioClient
+
+### Changed
+- **Module Loading**: Updated Zeitwerk inflector configuration to include `lm_studio_client`
+- **CLI Registration**: Extended CLI system to register LMS commands alongside existing LLM commands
+- **VCR Configuration**: Enhanced VCR setup to handle localhost connections for LM Studio testing
+
 ## [v.0.2.0+tasks.5 - task.16] - CLI Integration Testing, Documentation Updates, and Code Quality Fixes
 
 ### Added

@@ -35,9 +35,22 @@ module CodingAgentTools
         @llm_commands_registered = true
       end
 
+      def self.register_lms_commands
+        return if @lms_commands_registered
+
+        require_relative "cli/commands/lms/query"
+
+        register "lms", aliases: [] do |prefix|
+          prefix.register "query", Commands::LMS::Query
+        end
+
+        @lms_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
+        register_lms_commands
         super
       end
     end

@@ -23,7 +23,10 @@ VCR.configure do |config|
   # Configure to handle Gemini API
   config.filter_sensitive_data("<GEMINI_API_KEY>") { ENV["GEMINI_API_KEY"] }
 
-  # Allow localhost connections for tests
+  # Configure to handle LM Studio API (localhost)
+  config.filter_sensitive_data("<LM_STUDIO_API_KEY>") { ENV["LM_STUDIO_API_KEY"] }
+
+  # Allow localhost connections for tests (needed for LM Studio)
   config.ignore_localhost = false
 
   # Configure for test environment
