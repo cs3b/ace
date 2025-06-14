@@ -27,9 +27,11 @@ module CodingAgentTools
         return if @llm_commands_registered
 
         require_relative "cli/commands/llm/query"
+        require_relative "cli/commands/llm/models"
 
         register "llm", aliases: [] do |prefix|
           prefix.register "query", Commands::LLM::Query
+          prefix.register "models", Commands::LLM::Models
         end
 
         @llm_commands_registered = true
@@ -39,9 +41,11 @@ module CodingAgentTools
         return if @lms_commands_registered
 
         require_relative "cli/commands/lms/query"
+        require_relative "cli/commands/lms/models"
 
         register "lms", aliases: [] do |prefix|
           prefix.register "query", Commands::LMS::Query
+          prefix.register "models", Commands::LMS::Models
         end
 
         @lms_commands_registered = true

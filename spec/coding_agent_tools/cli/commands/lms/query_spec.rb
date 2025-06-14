@@ -18,7 +18,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
     allow(mock_lm_studio_client).to receive(:generate_text).and_return({
       text: "Default response",
       finish_reason: "stop",
-      usage_metadata: { prompt_tokens: 5, completion_tokens: 10 }
+      usage_metadata: {prompt_tokens: 5, completion_tokens: 10}
     })
   end
 
@@ -28,7 +28,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
       {
         text: "Ruby is a programming language",
         finish_reason: "stop",
-        usage_metadata: { prompt_tokens: 10, completion_tokens: 20 }
+        usage_metadata: {prompt_tokens: 10, completion_tokens: 20}
       }
     end
 
@@ -127,7 +127,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
           text: "Ruby is a programming language",
           metadata: {
             finish_reason: "stop",
-            usage: { prompt_tokens: 10, completion_tokens: 20 }
+            usage: {prompt_tokens: 10, completion_tokens: 20}
           }
         }
 
@@ -229,7 +229,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
         expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
           .with(model: "custom-model")
 
-        command.send(:build_lm_studio_client, { model: "custom-model" })
+        command.send(:build_lm_studio_client, {model: "custom-model"})
       end
     end
 
@@ -240,7 +240,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
       end
 
       it "includes system instruction" do
-        options = command.send(:build_generation_options, { system: "Be helpful" })
+        options = command.send(:build_generation_options, {system: "Be helpful"})
         expect(options[:system_instruction]).to eq("Be helpful")
       end
 
@@ -264,14 +264,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     describe "#output_text_response" do
       it "outputs text to stdout" do
-        response = { text: "Hello world" }
+        response = {text: "Hello world"}
 
         expect { command.send(:output_text_response, response) }
           .to output("Hello world\n").to_stdout
       end
 
       it "returns the response" do
-        response = { text: "Hello world" }
+        response = {text: "Hello world"}
         result = nil
         expect { result = command.send(:output_text_response, response) }
           .to output("Hello world\n").to_stdout
@@ -284,18 +284,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
         response = {
           text: "Hello world",
           finish_reason: "stop",
-          usage_metadata: { tokens: 10 }
+          usage_metadata: {tokens: 10}
         }
 
         allow(CodingAgentTools::Atoms::JSONFormatter).to receive(:pretty_format)
           .and_return('{"formatted": "json"}')
 
         expect { command.send(:output_json_response, response) }
-          .to output(%{{"formatted": "json"}\n}).to_stdout
+          .to output(%({"formatted": "json"}\n)).to_stdout
       end
 
       it "returns the response" do
-        response = { text: "Hello world" }
+        response = {text: "Hello world"}
         allow(CodingAgentTools::Atoms::JSONFormatter).to receive(:pretty_format)
           .and_return("{}")
 

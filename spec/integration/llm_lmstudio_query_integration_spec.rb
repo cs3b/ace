@@ -107,7 +107,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
         cassette_name = "llm_lmstudio_query_integration/uses_custom_model"
         setup_vcr_env(cassette_name)
 
-        # Use a model that should be available in LM Studio
+        # Use default model for testing model override
         run_command("#{ruby_path} #{exe_path} 'Hi' --model mistralai/devstral-small-2505 --format json")
 
         expect(last_command_started).to have_exit_status(0)

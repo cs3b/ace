@@ -97,7 +97,7 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
         cassette_name = "llm_gemini_query_integration/uses_custom_model"
         setup_vcr_env(cassette_name, "GEMINI_API_KEY" => api_key)
 
-        run_command("#{ruby_path} #{exe_path} 'Hi' --model gemini-2.0-flash-lite --format json")
+        run_command("#{ruby_path} #{exe_path} 'Hi' --model gemini-1.5-flash --format json")
 
         expect(last_command_started).to have_exit_status(0)
         expect(last_command_started.stderr).to be_empty

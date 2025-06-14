@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
     end
 
     it "merges custom generation config" do
-      custom_client = described_class.new(generation_config: { temperature: 0.9 })
+      custom_client = described_class.new(generation_config: {temperature: 0.9})
       config = custom_client.instance_variable_get(:@generation_config)
       expect(config[:temperature]).to eq(0.9)
       expect(config[:max_tokens]).to eq(-1) # Default value preserved
@@ -42,7 +42,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       it "returns true" do
         allow(mock_request_builder).to receive(:get_json)
           .with("http://localhost:1234/v1/models")
-          .and_return({ success: true, status: 200 })
+          .and_return({success: true, status: 200})
 
         expect(client.server_available?).to be true
       end
@@ -58,7 +58,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
 
       it "returns false on non-200 status" do
         allow(mock_request_builder).to receive(:get_json)
-          .and_return({ success: false, status: 500 })
+          .and_return({success: false, status: 500})
 
         expect(client.server_available?).to be false
       end
@@ -97,7 +97,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
         expected_payload = {
           model: "mistralai/devstral-small-2505",
           messages: [
-            { role: "user", content: prompt }
+            {role: "user", content: prompt}
           ],
           temperature: 0.7,
           max_tokens: -1,
@@ -106,7 +106,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
 
         allow(mock_request_builder).to receive(:post_json)
           .with("http://localhost:1234/v1/chat/completions", expected_payload)
-          .and_return({ success: true, status: 200, body: successful_response[:data] })
+          .and_return({success: true, status: 200, body: successful_response[:data]})
 
         allow(mock_response_parser).to receive(:parse_response)
           .and_return(successful_response)
@@ -123,8 +123,8 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
         expected_payload = {
           model: "mistralai/devstral-small-2505",
           messages: [
-            { role: "system", content: system_instruction },
-            { role: "user", content: prompt }
+            {role: "system", content: system_instruction},
+            {role: "user", content: prompt}
           ],
           temperature: 0.7,
           max_tokens: -1,
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
 
         allow(mock_request_builder).to receive(:post_json)
           .with("http://localhost:1234/v1/chat/completions", expected_payload)
-          .and_return({ success: true, status: 200, body: successful_response[:data] })
+          .and_return({success: true, status: 200, body: successful_response[:data]})
 
         allow(mock_response_parser).to receive(:parse_response)
           .and_return(successful_response)
@@ -145,7 +145,7 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
         expected_payload = {
           model: "mistralai/devstral-small-2505",
           messages: [
-            { role: "user", content: prompt }
+            {role: "user", content: prompt}
           ],
           temperature: 0.9,
           max_tokens: 1000,
@@ -154,12 +154,12 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
 
         allow(mock_request_builder).to receive(:post_json)
           .with("http://localhost:1234/v1/chat/completions", expected_payload)
-          .and_return({ success: true, status: 200, body: successful_response[:data] })
+          .and_return({success: true, status: 200, body: successful_response[:data]})
 
         allow(mock_response_parser).to receive(:parse_response)
           .and_return(successful_response)
 
-        client.generate_text(prompt, generation_config: { temperature: 0.9, max_tokens: 1000 })
+        client.generate_text(prompt, generation_config: {temperature: 0.9, max_tokens: 1000})
       end
     end
 
@@ -185,12 +185,12 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
           error: {
             status: 400,
             message: "Bad Request",
-            details: { message: "Invalid model specified" }
+            details: {message: "Invalid model specified"}
           }
         }
 
         allow(mock_request_builder).to receive(:post_json)
-          .and_return({ success: false, status: 400, body: { error: "Invalid model" } })
+          .and_return({success: false, status: 400, body: {error: "Invalid model"}})
 
         allow(mock_response_parser).to receive(:parse_response)
           .and_return(error_response)
@@ -206,9 +206,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when data is not a hash" do
-        invalid_response = { success: true, data: "not a hash" }
+        invalid_response = {success: true, data: "not a hash"}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -216,9 +216,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when choices is not an array" do
-        invalid_response = { success: true, data: { choices: "not an array" } }
+        invalid_response = {success: true, data: {choices: "not an array"}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -226,9 +226,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when choices array is empty" do
-        invalid_response = { success: true, data: { choices: [] } }
+        invalid_response = {success: true, data: {choices: []}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -236,9 +236,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when first choice is not a hash" do
-        invalid_response = { success: true, data: { choices: ["not a hash"] } }
+        invalid_response = {success: true, data: {choices: ["not a hash"]}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -246,9 +246,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when message is not a hash" do
-        invalid_response = { success: true, data: { choices: [{ message: "not a hash" }] } }
+        invalid_response = {success: true, data: {choices: [{message: "not a hash"}]}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -256,9 +256,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when content key is missing" do
-        invalid_response = { success: true, data: { choices: [{ message: {} }] } }
+        invalid_response = {success: true, data: {choices: [{message: {}}]}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -266,9 +266,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "raises error when content is nil" do
-        invalid_response = { success: true, data: { choices: [{ message: { content: nil } }] } }
+        invalid_response = {success: true, data: {choices: [{message: {content: nil}}]}}
 
-        allow(mock_request_builder).to receive(:post_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:post_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(invalid_response)
 
         expect { client.generate_text(prompt) }
@@ -288,15 +288,15 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
           success: true,
           data: {
             data: [
-              { id: "model1", object: "model", owned_by: "local" },
-              { id: "model2", object: "model", owned_by: "local" }
+              {id: "model1", object: "model", owned_by: "local"},
+              {id: "model2", object: "model", owned_by: "local"}
             ]
           }
         }
 
         allow(mock_request_builder).to receive(:get_json)
           .with("http://localhost:1234/v1/models")
-          .and_return({ success: true, status: 200, body: models_response[:data] })
+          .and_return({success: true, status: 200, body: models_response[:data]})
 
         allow(mock_response_parser).to receive(:parse_response)
           .and_return(models_response)
@@ -307,9 +307,9 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
       end
 
       it "returns empty array when no models data" do
-        models_response = { success: true, data: {} }
+        models_response = {success: true, data: {}}
 
-        allow(mock_request_builder).to receive(:get_json).and_return({ success: true })
+        allow(mock_request_builder).to receive(:get_json).and_return({success: true})
         allow(mock_response_parser).to receive(:parse_response).and_return(models_response)
 
         result = client.list_models
@@ -333,8 +333,8 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
   describe "#model_info" do
     it "returns model info from list when model exists" do
       models = [
-        { id: "mistralai/devstral-small-2505", object: "model", owned_by: "local" },
-        { id: "other-model", object: "model", owned_by: "local" }
+        {id: "mistralai/devstral-small-2505", object: "model", owned_by: "local"},
+        {id: "other-model", object: "model", owned_by: "local"}
       ]
 
       allow(client).to receive(:list_models).and_return(models)
@@ -369,23 +369,23 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
         payload = client.send(:build_generation_payload, "Hello", {})
 
         expect(payload[:model]).to eq("mistralai/devstral-small-2505")
-        expect(payload[:messages]).to eq([{ role: "user", content: "Hello" }])
+        expect(payload[:messages]).to eq([{role: "user", content: "Hello"}])
         expect(payload[:temperature]).to eq(0.7)
         expect(payload[:max_tokens]).to eq(-1)
         expect(payload[:stream]).to be false
       end
 
       it "includes system instruction" do
-        payload = client.send(:build_generation_payload, "Hello", { system_instruction: "Be helpful" })
+        payload = client.send(:build_generation_payload, "Hello", {system_instruction: "Be helpful"})
 
         expect(payload[:messages]).to eq([
-          { role: "system", content: "Be helpful" },
-          { role: "user", content: "Hello" }
+          {role: "system", content: "Be helpful"},
+          {role: "user", content: "Hello"}
         ])
       end
 
       it "applies custom generation config" do
-        payload = client.send(:build_generation_payload, "Hello", { generation_config: { temperature: 0.9 } })
+        payload = client.send(:build_generation_payload, "Hello", {generation_config: {temperature: 0.9}})
 
         expect(payload[:temperature]).to eq(0.9)
       end

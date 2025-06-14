@@ -49,7 +49,6 @@ module CodingAgentTools
             if prompt.nil? || prompt.to_s.strip.empty?
               error_output("Error: Prompt is required")
               exit 1
-              return # Ensure we don't continue after exit call in tests
             end
 
             # Process the prompt
@@ -162,7 +161,7 @@ module CodingAgentTools
           end
 
           def error_output(message)
-            $stderr.puts message
+            warn message
           end
         end
       end

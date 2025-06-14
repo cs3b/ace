@@ -110,6 +110,31 @@ module CodingAgentTools
         end
       end
 
+      # List all available models
+      # @return [Array] List of available models
+      def list_models
+        # Construct path by appending to base URL path to preserve v1beta
+        path_segment = "models"
+        url_obj = Addressable::URI.parse(@base_url)
+
+        # Use File.join-style logic to avoid double slashes
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        url_obj.path = "#{base_path}/#{path_segment}"
+
+        # Set query parameters
+        url_obj.query_values = {key: @api_key}
+        url = url_obj.to_s
+
+        response_data = @request_builder.get_json(url)
+        parsed = @response_parser.parse_response(response_data)
+
+        if parsed[:success]
+          parsed[:data][:models] || []
+        else
+          handle_error(parsed)
+        end
+      end
+
       # Get information about the model
       # @return [Hash] Model information
       def model_info

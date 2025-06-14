@@ -61,7 +61,7 @@ module CodingAgentTools
         url = build_api_url("models")
         response_data = @request_builder.get_json(url)
         response_data[:success] && response_data[:status] == 200
-      rescue => e
+      rescue
         false
       end
 
@@ -112,7 +112,7 @@ module CodingAgentTools
       def model_info
         models = list_models
         models.find { |model| model[:id] == @model } ||
-          { id: @model, object: "model", owned_by: "local" }
+          {id: @model, object: "model", owned_by: "local"}
       end
 
       private
