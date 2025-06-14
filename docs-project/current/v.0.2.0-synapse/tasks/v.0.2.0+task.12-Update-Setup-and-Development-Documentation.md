@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.12
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: [v.0.2.0+task.1]
@@ -54,18 +54,18 @@ Update the setup and development documentation to reflect the new requirements a
 
 ### Planning Steps
 
-* [ ] Review current SETUP.md and DEVELOPMENT.md to understand existing structure
+* [x] Review current SETUP.md and DEVELOPMENT.md to understand existing structure
   > TEST: Development Docs Structure Analysis
   > Type: Pre-condition Check
   > Assert: Current documentation structure and sections are identified
   > Manual Verification: Manually review `docs/SETUP.md` and `docs/DEVELOPMENT.md` to understand their existing structure and sections.
-* [ ] Review .tool-versions and new dependencies to understand updated requirements
-* [ ] Analyze VCR setup and testing patterns from task.1 implementation
-* [ ] Plan content updates to maintain document flow and usability
+* [x] Review .tool-versions and new dependencies to understand updated requirements
+* [x] Analyze VCR setup and testing patterns from task.1 implementation
+* [x] Plan content updates to maintain document flow and usability
 
 ### Execution Steps
 
-- [ ] Update `docs/SETUP.md` "Prerequisites" section:
+- [x] Update `docs/SETUP.md` "Prerequisites" section:
   - Update Ruby version requirement to 3.4.2 (from .tool-versions)
   - Add "Configuration" section for API keys setup
   - Document GEMINI_API_KEY and .env.example usage for development
@@ -74,15 +74,15 @@ Update the setup and development documentation to reflect the new requirements a
   > Type: Action Validation
   > Assert: SETUP.md reflects all new requirements and configuration
   > Manual Verification: Review `docs/SETUP.md` to confirm it reflects all new requirements, including Ruby version, API key setup instructions, and `.env.example`/`spec/.env` usage.
-- [ ] Update `docs/DEVELOPMENT.md` "Testing Strategy" section:
+- [x] Update `docs/DEVELOPMENT.md` "Testing Strategy" section:
   - Add new subsection for "Integration Tests with VCR"
   - Document VCR usage for API-dependent tests
   - Link to docs/testing-with-vcr.md for detailed VCR information
   - Explain API key setup in spec/ for recording new cassettes
-- [ ] Update DEVELOPMENT.md "Build System Commands" section:
+- [x] Update DEVELOPMENT.md "Build System Commands" section:
   - Document new gem installation verification step in bin/build
   - Explain enhanced build confidence through local gem installation testing
-- [ ] Add new section in DEVELOPMENT.md for "Architectural Patterns":
+- [x] Add new section in DEVELOPMENT.md for "Architectural Patterns":
   - Mention Zeitwerk autoloading adoption
   - Document dry-monitor observability pattern
   - Explain ATOM-based component organization
@@ -90,21 +90,21 @@ Update the setup and development documentation to reflect the new requirements a
   > Type: Action Validation
   > Assert: DEVELOPMENT.md includes all new patterns and testing strategies
   > Manual Verification: Review `docs/DEVELOPMENT.md` to confirm it includes the new "Integration Tests with VCR" section, updated "Build System Commands," and the new "Architectural Patterns" section (Zeitwerk, dry-monitor, ATOM organization).
-- [ ] Add cross-references between SETUP.md and DEVELOPMENT.md for consistency
-- [ ] Ensure all new development dependencies are mentioned with their development purpose
+- [x] Add cross-references between SETUP.md and DEVELOPMENT.md for consistency
+- [x] Ensure all new development dependencies are mentioned with their development purpose
 
 ## Acceptance Criteria
 
-- [ ] SETUP.md "Prerequisites" section specifies Ruby >= 3.4.2
-- [ ] SETUP.md includes "Configuration" section with GEMINI_API_KEY setup instructions
-- [ ] SETUP.md documents .env.example usage and spec/.env setup for VCR
-- [ ] DEVELOPMENT.md "Testing Strategy" includes VCR integration testing section
-- [ ] DEVELOPMENT.md links to docs/testing-with-vcr.md for detailed VCR information
-- [ ] DEVELOPMENT.md "Build System Commands" documents new gem verification step
-- [ ] DEVELOPMENT.md includes new "Architectural Patterns" section covering Zeitwerk, dry-monitor, and ATOM organization
-- [ ] Both documents maintain consistency in terminology and cross-reference appropriately
-- [ ] All new development dependencies are explained with their purpose
-- [ ] Documents follow existing project documentation style and formatting
+- [x] SETUP.md "Prerequisites" section specifies Ruby >= 3.4.2
+- [x] SETUP.md includes "Configuration" section with GEMINI_API_KEY setup instructions
+- [x] SETUP.md documents .env.example usage and spec/.env setup for VCR
+- [x] DEVELOPMENT.md "Testing Strategy" includes VCR integration testing section
+- [x] DEVELOPMENT.md links to docs/testing-with-vcr.md for detailed VCR information
+- [x] DEVELOPMENT.md "Build System Commands" documents new gem verification step
+- [x] DEVELOPMENT.md includes new "Architectural Patterns" section covering Zeitwerk, dry-monitor, and ATOM organization
+- [x] Both documents maintain consistency in terminology and cross-reference appropriately
+- [x] All new development dependencies are explained with their purpose
+- [x] Documents follow existing project documentation style and formatting
 
 ## Out of Scope
 
