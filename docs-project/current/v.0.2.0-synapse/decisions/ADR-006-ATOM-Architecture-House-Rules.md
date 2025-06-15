@@ -140,7 +140,8 @@ When creating a new component, follow this decision process:
 ## References
 
 - [LlmModelInfo Refactoring Example](../../code-review/task-4/code-review-combined.md) - Primary example of Model vs Molecule classification
-- [Architecture Documentation](../../../../architecture.md) - ATOM structure definition and component examples
+- [Architecture Documentation](../../../architecture.md) - ATOM structure definition and component examples
+- [ATOM Component Classification House Rules](../../../../docs-dev/guides/atom-house-rules.md) - Practical implementation guide for these rules
 - [Code Review Guidelines](../../../guides/code-review/README.md) - Review process for architectural decisions
 - [ATOM Architecture Principles](https://atomicdesign.bradfrost.com/) - Original inspiration for component hierarchy
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Separation of concerns principles

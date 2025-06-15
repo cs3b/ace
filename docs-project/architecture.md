@@ -78,7 +78,7 @@ flowchart TD
 
 ### ATOM-Based Code Structure in `lib/coding_agent_tools/`
 
-The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns:
+The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns. For detailed classification rules and practical guidelines, see the [ATOM Component Classification House Rules](../docs-dev/guides/atom-house-rules.md):
 
 -   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, utility functions for string normalization, basic file readers).
 -   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).

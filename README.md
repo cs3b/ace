@@ -37,7 +37,7 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 
 - **LLM Integration**: Query Google Gemini and local LM Studio models
   - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
-- **Model Discovery**: List and filter available models from different providers
+- **Model Discovery**: List and filter available models from different providers (see [Model Management Guide](docs/model-management.md))
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
