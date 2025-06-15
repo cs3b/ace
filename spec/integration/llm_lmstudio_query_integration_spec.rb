@@ -28,6 +28,18 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
     env_vars.each { |key, value| set_environment_variable(key, value) }
   end
 
+  # VCR-wrapped helper to check LM Studio availability
+  def lm_studio_available?
+    VCR.use_cassette("lm_studio_availability_check", record: :once) do
+      require "net/http"
+      uri = URI("http://localhost:1234/v1/models")
+      response = Net::HTTP.get_response(uri)
+      response.code == "200"
+    end
+  rescue
+    false
+  end
+
   describe "command execution" do
     it "shows help when requested" do
       run_command("#{ruby_path} #{exe_path} --help")
@@ -52,15 +64,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
     context "with LM Studio server available" do
       # Skip these tests if LM Studio server is not running
       before do
-        # Quick check if LM Studio is available
-        require "net/http"
-        begin
-          uri = URI("http://localhost:1234/v1/models")
-          response = Net::HTTP.get_response(uri)
-          skip "LM Studio server not available at localhost:1234" if response.code != "200"
-        rescue => e
-          skip "LM Studio server not available: #{e.message}"
-        end
+        skip "LM Studio server not available at localhost:1234" unless lm_studio_available?
       end
 
       it "queries LM Studio with a simple prompt", :vcr do
@@ -216,15 +220,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
   describe "output formats" do
     context "with LM Studio available" do
       before do
-        # Skip if LM Studio is not available
-        require "net/http"
-        begin
-          uri = URI("http://localhost:1234/v1/models")
-          response = Net::HTTP.get_response(uri)
-          skip "LM Studio server not available" if response.code != "200"
-        rescue => e
-          skip "LM Studio server not available: #{e.message}"
-        end
+        skip "LM Studio server not available" unless lm_studio_available?
       end
 
       it "outputs clean text by default", :vcr do
@@ -273,15 +269,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
   describe "complex prompts" do
     context "with LM Studio available" do
       before do
-        # Skip if LM Studio is not available
-        require "net/http"
-        begin
-          uri = URI("http://localhost:1234/v1/models")
-          response = Net::HTTP.get_response(uri)
-          skip "LM Studio server not available" if response.code != "200"
-        rescue => e
-          skip "LM Studio server not available: #{e.message}"
-        end
+        skip "LM Studio server not available" unless lm_studio_available?
       end
 
       it "handles multi-line prompts from file", :vcr do
@@ -347,15 +335,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
   describe "performance and reliability" do
     context "with LM Studio available" do
       before do
-        # Skip if LM Studio is not available
-        require "net/http"
-        begin
-          uri = URI("http://localhost:1234/v1/models")
-          response = Net::HTTP.get_response(uri)
-          skip "LM Studio server not available" if response.code != "200"
-        rescue => e
-          skip "LM Studio server not available: #{e.message}"
-        end
+        skip "LM Studio server not available" unless lm_studio_available?
       end
 
       it "completes requests within reasonable time", :vcr do
@@ -378,15 +358,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
   describe "model management" do
     context "with LM Studio available" do
       before do
-        # Skip if LM Studio is not available
-        require "net/http"
-        begin
-          uri = URI("http://localhost:1234/v1/models")
-          response = Net::HTTP.get_response(uri)
-          skip "LM Studio server not available" if response.code != "200"
-        rescue => e
-          skip "LM Studio server not available: #{e.message}"
-        end
+        skip "LM Studio server not available" unless lm_studio_available?
       end
 
       it "works with default model", :vcr do

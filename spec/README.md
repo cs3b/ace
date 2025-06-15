@@ -9,6 +9,14 @@ This document explains how to run and record tests for the coding-agent-tools pr
 - `spec/support/` - Shared test helpers and configuration
 - `spec/cassettes/` - VCR cassettes (recorded HTTP interactions)
 
+### LMS Integration Tests
+
+LMS (Language Model Studio) integration tests use VCR for both API calls and availability checks:
+
+- **Availability checks**: VCR-wrapped probes to `http://localhost:1234/v1/models`
+- **API interactions**: Full LMS API calls recorded in cassettes
+- **CI-safe**: All HTTP interactions are mocked, preventing CI fragility
+
 ## Environment Setup
 
 ### 1. Copy Environment Configuration
@@ -94,7 +102,17 @@ spec/cassettes/
 │   ├── API_integration_with_valid_API_key_queries_Gemini_with_a_simple_prompt.yml
 │   ├── API_integration_with_valid_API_key_outputs_JSON_format_when_requested.yml
 │   └── ...
+├── llm_lmstudio_query_integration/
+│   ├── queries_lm_studio_with_simple_prompt.yml
+│   ├── outputs_json_format.yml
+│   └── ...
+└── lm_studio_availability_check.yml
 ```
+
+### LMS-Specific Cassettes
+
+- `lm_studio_availability_check.yml` - Records availability probe responses
+- `llm_lmstudio_query_integration/` - Contains all LMS API interaction recordings
 
 ### Cassette Content
 

@@ -1,6 +1,73 @@
 ---
 http_interactions:
 - request:
+    method: post
+    uri: http://localhost:1234/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"mistralai/devstral-small-2505","messages":[{"role":"user","content":"What
+        is 2+2? Reply with just the number."}],"temperature":0.7,"max_tokens":-1,"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      X-Powered-By:
+      - Express
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Allow-Headers:
+      - "*"
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '499'
+      Etag:
+      - W/"1f3-ETuAdX3IGsyE3IUMxi6IN52rJVI"
+      Date:
+      - Sat, 14 Jun 2025 19:54:38 GMT
+      Connection:
+      - keep-alive
+      Keep-Alive:
+      - timeout=5
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+          "id": "chatcmpl-j1mdqstbj3g5p7yraecs6x",
+          "object": "chat.completion",
+          "created": 1749930878,
+          "model": "mistralai/devstral-small-2505",
+          "choices": [
+            {
+              "index": 0,
+              "logprobs": null,
+              "finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "4"
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 1238,
+            "completion_tokens": 1,
+            "total_tokens": 1239
+          },
+          "stats": {},
+          "system_fingerprint": "mistralai/devstral-small-2505"
+        }
+  recorded_at: Sat, 14 Jun 2025 19:54:38 GMT
+- request:
     method: get
     uri: http://localhost:1234/v1/models
     body:
@@ -29,9 +96,9 @@ http_interactions:
       Content-Length:
       - '2487'
       Etag:
-      - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
+      - W/"9b7-MkWsECqHt47ssqrKjiotYT1pIeQ"
       Date:
-      - Sat, 14 Jun 2025 19:54:38 GMT
+      - Sun, 15 Jun 2025 19:55:29 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -42,12 +109,12 @@ http_interactions:
         {
           "data": [
             {
-              "id": "mistralai/devstral-small-2505",
+              "id": "deepseek/deepseek-r1-0528-qwen3-8b",
               "object": "model",
               "owned_by": "organization_owner"
             },
             {
-              "id": "deepseek/deepseek-r1-0528-qwen3-8b",
+              "id": "mistralai/devstral-small-2505",
               "object": "model",
               "owned_by": "organization_owner"
             },
@@ -149,72 +216,5 @@ http_interactions:
           ],
           "object": "list"
         }
-  recorded_at: Sat, 14 Jun 2025 19:54:38 GMT
-- request:
-    method: post
-    uri: http://localhost:1234/v1/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"model":"mistralai/devstral-small-2505","messages":[{"role":"user","content":"What
-        is 2+2? Reply with just the number."}],"temperature":0.7,"max_tokens":-1,"stream":false}'
-    headers:
-      User-Agent:
-      - Faraday v2.13.1
-      Accept:
-      - application/json
-      Content-Type:
-      - application/json
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      X-Powered-By:
-      - Express
-      Access-Control-Allow-Origin:
-      - "*"
-      Access-Control-Allow-Headers:
-      - "*"
-      Content-Type:
-      - application/json; charset=utf-8
-      Content-Length:
-      - '499'
-      Etag:
-      - W/"1f3-ETuAdX3IGsyE3IUMxi6IN52rJVI"
-      Date:
-      - Sat, 14 Jun 2025 19:54:38 GMT
-      Connection:
-      - keep-alive
-      Keep-Alive:
-      - timeout=5
-    body:
-      encoding: UTF-8
-      string: |-
-        {
-          "id": "chatcmpl-j1mdqstbj3g5p7yraecs6x",
-          "object": "chat.completion",
-          "created": 1749930878,
-          "model": "mistralai/devstral-small-2505",
-          "choices": [
-            {
-              "index": 0,
-              "logprobs": null,
-              "finish_reason": "stop",
-              "message": {
-                "role": "assistant",
-                "content": "4"
-              }
-            }
-          ],
-          "usage": {
-            "prompt_tokens": 1238,
-            "completion_tokens": 1,
-            "total_tokens": 1239
-          },
-          "stats": {},
-          "system_fingerprint": "mistralai/devstral-small-2505"
-        }
-  recorded_at: Sat, 14 Jun 2025 19:54:38 GMT
+  recorded_at: Sun, 15 Jun 2025 19:55:29 GMT
 recorded_with: VCR 6.3.1
