@@ -7,6 +7,8 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 ## ✨ Key Features
 
 - **LLM Communication**: Implemented CLI commands (`llm-gemini-query`, `lms-studio-query`) for interacting with Google Gemini and local LM Studio models.
+- **Model Discovery and Management**: List and filter available models from different providers, with the ability to select specific models for queries using the --model flag.
+- **LM Studio Integration**: Direct integration with local LM Studio models for offline LLM queries without requiring API keys.
 - **Git Workflow Automation**: Tools for creating GitHub repositories (`github-repository-create`) and generating intelligent Git commit messages based on diffs and intentions (`git-commit-with-message`).
 - **Task Management Utilities**: Commands (`tn`, `tr`, `rc`) to help developers and agents identify the next actionable task, review recent tasks, and manage release directories, often integrating with documentation-based task backlogs.
 - **Standardized Interface**: Provides a consistent CLI and API surface for automation, reducing reliance on ad-hoc scripts.
