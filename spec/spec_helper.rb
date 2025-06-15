@@ -39,6 +39,8 @@ require_relative "support/matchers/http_matchers"
 require_relative "support/process_helpers"
 # Helper for safe ENV manipulation in specs
 require_relative "support/env_helpers"
+# ANSI color testing infrastructure
+require_relative "support/ansi_color_testing_helper"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
