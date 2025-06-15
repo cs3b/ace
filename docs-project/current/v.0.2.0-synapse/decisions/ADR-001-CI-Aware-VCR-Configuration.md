@@ -50,6 +50,78 @@ This configuration automatically:
 
 The solution uses standard `bin/test` command (wrapper around `bundle exec rspec`) with environment variables for control, eliminating the need for custom tooling.
 
+Additionally, we established a pattern for testing localhost services (such as LM Studio) by wrapping availability checks in VCR cassettes. This prevents CI fragility that occurs when direct network calls are made in test setup blocks, ensuring consistent test behavior across development and CI environments.
+
+## Handling Localhost Services
+
+### The CI Fragility Problem
+
+When testing integration with localhost services (such as LM Studio running on `http://localhost:1234`), a common anti-pattern is to make direct `Net::HTTP` calls in test `before` blocks to check service availability:
+
+```ruby
+# ANTI-PATTERN: Direct network calls in test setup
+RSpec.describe MyServiceClient do
+  before do
+    # This will fail in CI where localhost services aren't available
+    response = Net::HTTP.get_response(URI("http://localhost:1234/health"))
+    skip "Service not available" unless response.code == "200"
+  rescue StandardError
+    skip "Service not available"
+  end
+end
+```
+
+This approach causes CI fragility because:
+1. **Localhost services are unavailable in CI** - The service doesn't exist in the CI environment
+2. **Network calls bypass VCR** - Direct calls in setup blocks aren't recorded or replayed
+3. **Inconsistent test behavior** - Tests behave differently in local vs CI environments
+4. **Flaky test runs** - Network timeouts and connection errors cause random failures
+
+### The VCR-Wrapped Probe Solution
+
+The solution is to wrap availability checks in VCR cassettes, creating a deterministic pattern that works in both local and CI environments:
+
+```ruby
+# RECOMMENDED PATTERN: VCR-wrapped availability check
+def lm_studio_available?
+  VCR.use_cassette("lm_studio_availability_check") do
+    begin
+      response = Net::HTTP.get_response(URI("http://localhost:1234/v1/models"))
+      response.code == "200"
+    rescue StandardError
+      false
+    end
+  end
+end
+
+# Usage in tests
+RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
+  before do
+    skip "LM Studio not available" unless lm_studio_available?
+  end
+
+  it "queries the local LM Studio service" do
+    # Test implementation with VCR cassettes
+  end
+end
+```
+
+### Why This Pattern Works
+
+1. **VCR Handles Network Calls Gracefully**: The availability check is recorded during development and replayed in CI
+2. **Deterministic Behavior**: Tests run consistently across all environments
+3. **Proper Separation**: Service availability checks are separate from actual test logic
+4. **Maintainable**: Easy to understand and modify the availability logic
+5. **CI-Safe**: No actual network calls are made in CI environments
+
+### Implementation Guidelines
+
+- **Create dedicated helper methods** for each localhost service (e.g., `lm_studio_available?`, `redis_available?`)
+- **Use descriptive cassette names** that clearly indicate the purpose (`service_name_availability_check`)
+- **Handle exceptions gracefully** by returning `false` for any network errors
+- **Record cassettes during development** with the actual service running
+- **Commit cassettes to version control** to ensure CI has the recorded responses
+
 ## Consequences
 
 ### Positive
@@ -62,6 +134,8 @@ The solution uses standard `bin/test` command (wrapper around `bundle exec rspec
 - **Fast CI Builds**: No external API calls means faster, more reliable test runs
 - **Cost Control**: Prevents accidental API usage in CI environments
 - **Maintainable**: Any Ruby developer can understand and modify the configuration
+- **Localhost Service Reliability**: VCR-wrapped availability checks prevent CI failures when localhost services (like LM Studio) are unavailable, ensuring consistent test behavior
+- **Deterministic Testing**: Network interactions with localhost services are recorded and replayed, eliminating flaky test runs caused by service unavailability
 
 ### Negative
 

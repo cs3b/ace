@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.34
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -54,45 +54,55 @@ Update ADR-001-CI-Aware-VCR-Configuration.md to include a new section documentin
 
 ### Planning Steps
 
-* [ ] Review current ADR-001 content and structure
+* [x] Review current ADR-001 content and structure
   > TEST: ADR Structure Analysis
   > Type: Pre-condition Check
   > Assert: Current ADR sections and structure are understood
-  > Command: grep "^##" docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md
-* [ ] Analyze the LM Studio testing implementation to extract best practices
-* [ ] Design clear explanation of the CI fragility problem and solution
+  > Command: grep "^##" docs-project/current/v.0.2.0-synapse/decisions/ADR-001-CI-Aware-VCR-Configuration.md
+  > Result: ✅ PASS - ADR structure analyzed: Status, Context, Decision, Consequences (Positive/Negative/Neutral), Alternatives Considered, Related Decisions, References
+* [x] Analyze the LM Studio testing implementation to extract best practices
+  > Result: ✅ PASS - Found VCR-wrapped `lm_studio_available?` helper pattern in docs/DEVELOPMENT.md that prevents CI fragility by avoiding direct Net::HTTP calls in test before blocks
+* [x] Design clear explanation of the CI fragility problem and solution
+  > Result: ✅ PASS - Problem: Direct Net::HTTP calls in test before blocks fail in CI when localhost services unavailable. Solution: VCR-wrapped availability helpers that record/replay network interactions deterministically.
 
 ### Execution Steps
 
-- [ ] Add new section "Handling Localhost Services" after existing VCR configuration
+- [x] Add new section "Handling Localhost Services" after existing VCR configuration
   > TEST: Localhost Section Added
   > Type: Action Validation
   > Assert: New section for localhost services exists
-  > Command: grep -A2 "Localhost Services" docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md
-- [ ] Document the problem: direct Net::HTTP calls in before blocks cause CI failures
-- [ ] Document the solution: VCR-wrapped availability check helpers
-- [ ] Add code example of the `lm_studio_available?` helper pattern
+  > Command: grep -A2 "Localhost Services" docs-project/current/v.0.2.0-synapse/decisions/ADR-001-CI-Aware-VCR-Configuration.md
+  > Result: ✅ PASS - Section "## Handling Localhost Services" added with subsections for CI fragility problem and VCR-wrapped probe solution
+- [x] Document the problem: direct Net::HTTP calls in before blocks cause CI failures
+  > Result: ✅ PASS - Problem documented in "The CI Fragility Problem" subsection with clear explanation and anti-pattern example
+- [x] Document the solution: VCR-wrapped availability check helpers
+  > Result: ✅ PASS - Solution documented in "The VCR-Wrapped Probe Solution" subsection with recommended pattern and implementation guidelines
+- [x] Add code example of the `lm_studio_available?` helper pattern
   > TEST: Helper Example Present
   > Type: Action Validation
   > Assert: lm_studio_available? example is included
-  > Command: grep -B2 -A5 "lm_studio_available?" docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md
-- [ ] Explain why this pattern works: VCR handles the network call gracefully
-- [ ] Update the Decision section to mention localhost service handling
-- [ ] Add to Consequences section about improved CI reliability
+  > Command: grep -B2 -A5 "lm_studio_available?" docs-project/current/v.0.2.0-synapse/decisions/ADR-001-CI-Aware-VCR-Configuration.md
+  > Result: ✅ PASS - Helper example included with VCR-wrapped availability check pattern and usage in test before blocks
+- [x] Explain why this pattern works: VCR handles the network call gracefully
+  > Result: ✅ PASS - Explanation included in "Why This Pattern Works" subsection with 5 key benefits: VCR handles network calls gracefully, deterministic behavior, proper separation, maintainable, and CI-safe
+- [x] Update the Decision section to mention localhost service handling
+  > Result: ✅ PASS - Added paragraph to Decision section explaining localhost service testing pattern
+- [x] Add to Consequences section about improved CI reliability
   > TEST: Consequences Updated
   > Type: Action Validation
   > Assert: Consequences mention CI reliability for localhost services
-  > Command: grep -A5 "Consequences" docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md | grep -i "localhost\|reliability"
+  > Command: grep -A15 "Consequences" docs-project/current/v.0.2.0-synapse/decisions/ADR-001-CI-Aware-VCR-Configuration.md | grep -i "localhost\|reliability"
+  > Result: ✅ PASS - Added "Localhost Service Reliability" and "Deterministic Testing" benefits to Positive consequences
 
 ## Acceptance Criteria
 
-- [ ] ADR-001 includes a dedicated section for localhost service testing
-- [ ] The CI fragility problem is clearly explained
-- [ ] The VCR-wrapped probe pattern is documented with code examples
-- [ ] The `lm_studio_available?` helper is shown as the recommended approach
-- [ ] The rationale explains why this prevents CI failures
-- [ ] The update maintains consistency with existing ADR content
-- [ ] Cross-references to this pattern can be made from other documentation
+- [x] ADR-001 includes a dedicated section for localhost service testing
+- [x] The CI fragility problem is clearly explained
+- [x] The VCR-wrapped probe pattern is documented with code examples
+- [x] The `lm_studio_available?` helper is shown as the recommended approach
+- [x] The rationale explains why this prevents CI failures
+- [x] The update maintains consistency with existing ADR content
+- [x] Cross-references to this pattern can be made from other documentation
 
 ## Out of Scope
 
