@@ -37,6 +37,8 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 
 - **LLM Integration**: Query Google Gemini and local LM Studio models
   - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
+- **Model Discovery**: List and filter available models from different providers
+- **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
 - **Context Tools**: Generate comprehensive project context documents
@@ -85,6 +87,21 @@ coding_agent_tools project release_context
   - Example: `exe/llm-gemini-query "What is Ruby?"`
   - Requires: `GEMINI_API_KEY` environment variable
 
+- **`exe/llm-lmstudio-query`**: Query a local LM Studio model
+  - Usage: `exe/llm-lmstudio-query "Your prompt" [--model MODEL_ID]`
+  - Example: `exe/llm-lmstudio-query "Explain SOLID principles"`
+  - Requires: LM Studio running on localhost:1234
+
+- **`exe/llm-gemini-models`**: List available Google Gemini models
+  - Usage: `exe/llm-gemini-models [--filter FILTER] [--format json]`
+  - Example: `exe/llm-gemini-models --filter "gemini-pro"`
+  - Requires: `GEMINI_API_KEY` environment variable
+
+- **`exe/llm-lmstudio-models`**: List available LM Studio models
+  - Usage: `exe/llm-lmstudio-models [--filter FILTER] [--format json]`
+  - Example: `exe/llm-lmstudio-models --filter "llama"`
+  - Requires: LM Studio running on localhost:1234
+
 ## 🏗 Architecture
 
 The gem's library code in `lib/coding_agent_tools/` is structured using an **ATOM-based hierarchy** (Atoms, Molecules, Organisms, Ecosystems), promoting modularity and reusability:
@@ -130,7 +147,7 @@ export GITHUB_TOKEN="your-token"
 ```
 
 ### LM Studio
-Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API credentials required for localhost usage.
+Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API credentials required for default localhost usage.
 
 ## 📋 Requirements
 

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.24
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -65,24 +65,24 @@ Update the main README.md to announce the new LM Studio integration and model ma
 
 ### Planning Steps
 
-* [ ] Review current README.md structure and identify exact insertion points
+* [x] Review current README.md structure and identify exact insertion points
   > TEST: README Structure Analysis
   > Type: Pre-condition Check
   > Assert: Key sections (Key Features, Available Standalone Commands, Configuration) are identified
   > Command: grep -n "^##" README.md
-* [ ] Draft the new content entries following existing documentation style
+* [x] Draft the new content entries following existing documentation style
 
 ### Execution Steps
 
-- [ ] Add "Model Discovery" and "LM Studio Integration" to Key Features section
-- [ ] Add documentation for `exe/llm-lmstudio-query` command with usage example
+- [x] Add "Model Discovery" and "LM Studio Integration" to Key Features section
+- [x] Add documentation for `exe/llm-lmstudio-query` command with usage example
   > TEST: Command Documentation Complete
   > Type: Action Validation
   > Assert: llm-lmstudio-query is documented with correct usage pattern
   > Command: grep -A2 "llm-lmstudio-query" README.md
-- [ ] Add documentation for `exe/llm-gemini-models` command with usage example
-- [ ] Add documentation for `exe/llm-lmstudio-models` command with usage example
-- [ ] Update LM Studio configuration section to clarify no API credentials required
+- [x] Add documentation for `exe/llm-gemini-models` command with usage example
+- [x] Add documentation for `exe/llm-lmstudio-models` command with usage example
+- [x] Update LM Studio configuration section to clarify no API credentials required
   > TEST: Configuration Clarity
   > Type: Action Validation
   > Assert: LM Studio section explicitly mentions "No API credentials required"
@@ -90,11 +90,11 @@ Update the main README.md to announce the new LM Studio integration and model ma
 
 ## Acceptance Criteria
 
-- [ ] Key Features section includes "Model Discovery" and "LM Studio Integration" bullet points
-- [ ] All three new commands (llm-lmstudio-query, llm-gemini-models, llm-lmstudio-models) are documented with usage examples
-- [ ] Each command documentation includes the --model and --filter flags where applicable
-- [ ] LM Studio configuration section explicitly states "No API credentials required for default localhost usage"
-- [ ] Documentation style is consistent with existing README content
+- [x] Key Features section includes "Model Discovery" and "LM Studio Integration" bullet points
+- [x] All three new commands (llm-lmstudio-query, llm-gemini-models, llm-lmstudio-models) are documented with usage examples
+- [x] Each command documentation includes the --model and --filter flags where applicable
+- [x] LM Studio configuration section explicitly states "No API credentials required for default localhost usage"
+- [x] Documentation style is consistent with existing README content
 
 ## Out of Scope
 
