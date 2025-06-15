@@ -1,104 +1,11 @@
 #!/usr/bin/env ruby
 
-# Only require bundler/setup if it hasn't been loaded already
-# (e.g., via RUBYOPT) and we're in a bundled environment
-unless defined?(Bundler)
-  if ENV["BUNDLE_GEMFILE"] || File.exist?(File.expand_path("../../Gemfile", __FILE__))
-    begin
-      require "bundler/setup"
-    rescue LoadError
-      # If bundler isn't available, continue without it
-      # This can happen in subprocess calls where Ruby version differs
-    end
-  end
-end
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-# Set up load paths for development if necessary (e.g., when not installed as a gem)
-# This ensures that `lib` is on the load path.
-# If the gem is installed, this line is not strictly necessary but doesn't hurt.
-# If running from the project's exe directory, it's crucial.
-$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+require "coding_agent_tools/molecules/executable_wrapper"
 
-require "coding_agent_tools"
-require "coding_agent_tools/cli"
-require "coding_agent_tools/error_reporter"
-
-# This executable is a convenience wrapper that calls the main CLI
-# with the 'lms models' command prepended to the arguments
-begin
-  # Prepend 'lms models' to the arguments and call the main CLI
-  modified_args = ["lms", "models"] + ARGV
-
-  # Replace ARGV with our modified arguments
-  ARGV.clear
-  ARGV.concat(modified_args)
-
-  # Ensure LMS commands are registered before calling CLI
-  CodingAgentTools::Cli::Commands.register_lms_commands
-
-  # Capture both stdout and stderr to modify error/help messages
-  original_stdout = $stdout
-  original_stderr = $stderr
-  require "stringio"
-  # Note: Capturing output with StringIO might strip/affect ANSI color codes from the underlying CLI command.
-  captured_stdout = StringIO.new
-  captured_stderr = StringIO.new
-
-  $stdout = captured_stdout
-  $stderr = captured_stderr
-
-  # Call the main CLI
-  Dry::CLI.new(CodingAgentTools::Cli::Commands).call
-
-  # If we get here, the command succeeded without raising SystemExit
-  # Get the captured output and display it
-  stdout_content = captured_stdout.string
-  stderr_content = captured_stderr.string
-
-  # Restore stdout and stderr
-  $stdout = original_stdout
-  $stderr = original_stderr
-
-  # Modify messages to show only 'llm-lmstudio-models' instead of full path
-  if stdout_content.include?("lms models") || stderr_content.include?("lms models")
-    stdout_content = stdout_content.gsub("llm-lmstudio-models lms models", "llm-lmstudio-models")
-    stderr_content = stderr_content.gsub(/"[^"]*lms[^"]*models"/, '"llm-lmstudio-models"')
-    stderr_content = stderr_content.gsub(/Usage: "[^"]*lms[^"]*models[^"]*"/, 'Usage: "llm-lmstudio-models"')
-  end
-
-  # Print the output
-  $stdout.print stdout_content unless stdout_content.empty?
-  $stderr.print stderr_content unless stderr_content.empty?
-rescue SystemExit => e
-  # Get the captured output
-  stdout_content = captured_stdout.string
-  stderr_content = captured_stderr.string
-
-  # Restore stdout and stderr
-  $stdout = original_stdout
-  $stderr = original_stderr
-
-  # Modify messages to show only 'llm-lmstudio-models' instead of full path
-  if stdout_content.include?("lms models") || stderr_content.include?("lms models")
-    stdout_content = stdout_content.gsub("llm-lmstudio-models lms models", "llm-lmstudio-models")
-    stderr_content = stderr_content.gsub(/"[^"]*lms[^"]*models"/, '"llm-lmstudio-models"')
-    stderr_content = stderr_content.gsub(/Usage: "[^"]*lms[^"]*models[^"]*"/, 'Usage: "llm-lmstudio-models"')
-  end
-
-  # Print the modified output
-  $stdout.print stdout_content unless stdout_content.empty?
-  $stderr.print stderr_content unless stderr_content.empty?
-
-  # Re-raise the SystemExit to preserve the exit code
-  raise e
-rescue => e
-  $stdout = original_stdout if original_stdout
-  $stderr = original_stderr if original_stderr
-  # Handle all errors through the centralized error reporter
-  CodingAgentTools::ErrorReporter.call(e, debug: ENV["DEBUG"] == "true")
-  exit 1
-ensure
-  # Always restore stdout and stderr in case of any unexpected issues
-  $stdout = original_stdout if original_stdout
-  $stderr = original_stderr if original_stderr
-end
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["lms", "models"],
+  registration_method: :register_lms_commands,
+  executable_name: "llm-lmstudio-models"
+).call
