@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.30
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -59,43 +59,43 @@ Update blueprint.md to include the new model management commands and developer t
 
 ### Planning Steps
 
-* [ ] Review current blueprint.md structure and identify update locations
+* [x] Review current blueprint.md structure and identify update locations
   > TEST: Blueprint Structure Analysis
   > Type: Pre-condition Check
   > Assert: Common workflows and developer tools sections are identified
   > Command: grep -n "^##" docs-project/blueprint.md | grep -E "Workflow|Tool|Command"
-* [ ] Map new features to appropriate blueprint sections
-* [ ] Ensure consistency with other updated documentation
+* [x] Map new features to appropriate blueprint sections
+* [x] Ensure consistency with other updated documentation
 
 ### Execution Steps
 
-- [ ] Add llm-gemini-models to common workflows or commands section
+- [x] Add llm-gemini-models to common workflows or commands section
   > TEST: Gemini Models Command Added
   > Type: Action Validation
   > Assert: llm-gemini-models is documented in the blueprint
   > Command: grep "llm-gemini-models" docs-project/blueprint.md
-- [ ] Add llm-lmstudio-models to common workflows or commands section
-- [ ] Add llm-lmstudio-query to available commands section
+- [x] Add llm-lmstudio-models to common workflows or commands section
+- [x] Add llm-lmstudio-query to available commands section
   > TEST: LM Studio Query Command Added
   > Type: Action Validation
   > Assert: llm-lmstudio-query appears in the blueprint
   > Command: grep "llm-lmstudio-query" docs-project/blueprint.md
-- [ ] Add bin/cr to developer tools section with brief description
+- [x] Add bin/cr to developer tools section with brief description
   > TEST: Code Review Tool Documented
   > Type: Action Validation
   > Assert: bin/cr tool is listed in developer tools
   > Command: grep "bin/cr" docs-project/blueprint.md
-- [ ] Update any workflow examples that could benefit from model selection features
-- [ ] Ensure all additions maintain consistent formatting and style
+- [x] Update any workflow examples that could benefit from model selection features
+- [x] Ensure all additions maintain consistent formatting and style
 
 ## Acceptance Criteria
 
-- [ ] All three new commands (llm-gemini-models, llm-lmstudio-models, llm-lmstudio-query) are documented
-- [ ] bin/cr developer tool is listed with its purpose
-- [ ] Model discovery workflow is represented in appropriate section
-- [ ] LM Studio integration is clearly indicated as a key capability
-- [ ] Documentation style remains consistent with existing blueprint content
-- [ ] No v.0.2.0 features are missing from the blueprint
+- [x] All three new commands (llm-gemini-models, llm-lmstudio-models, llm-lmstudio-query) are documented
+- [x] bin/cr developer tool is listed with its purpose
+- [x] Model discovery workflow is represented in appropriate section
+- [x] LM Studio integration is clearly indicated as a key capability
+- [x] Documentation style remains consistent with existing blueprint content
+- [x] No v.0.2.0 features are missing from the blueprint
 
 ## Out of Scope
 
