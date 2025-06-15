@@ -38,15 +38,17 @@ lib/coding_agent_tools/
 
 ## Objective
 
-Collection of code quality improvements to enhance maintainability, consistency, and reduce technical debt across CLI components and related functionality. These improvements include extracting common CLI functionality, improving URL construction, centralizing constants, and organizing fallback configurations.
+Collection of remaining code quality improvements to enhance maintainability, consistency, and reduce technical debt across CLI components. Focus on extracting shared patterns from CLI command classes, refactoring repetitive URL construction in GeminiClient, centralizing constants, and organizing fallback configurations.
+
+**Note**: ExecutableWrapper molecule has already been implemented (commit 2c27340), eliminating 400+ lines of duplicated code across exe/* scripts. This task focuses on the remaining CLI command-level improvements.
 
 ## Scope of Work
 
-- Extract shared patterns from CLI commands into reusable components
-- Improve URL construction in GeminiClient using proper URI handling
+- Extract shared patterns from CLI command classes into reusable components
+- Refactor repetitive URL construction pattern in GeminiClient (3 instances of duplicate logic)
 - Extract hardcoded string values to well-named constants
 - Centralize fallback model lists for better maintainability
-- Improve overall code consistency and reduce duplication
+- Improve overall code consistency and reduce duplication in CLI commands
 
 ### Deliverables
 
@@ -59,7 +61,7 @@ Collection of code quality improvements to enhance maintainability, consistency,
 
 #### Modify
 
-- lib/coding_agent_tools/organisms/gemini_client.rb
+- lib/coding_agent_tools/organisms/gemini_client.rb (refactor URL construction duplication)
 - lib/coding_agent_tools/cli/commands/llm/models.rb
 - lib/coding_agent_tools/cli/commands/lms/models.rb
 - Various files with hardcoded strings and model lists
@@ -75,17 +77,21 @@ Collection of code quality improvements to enhance maintainability, consistency,
 
 ### Planning Steps
 
-* [ ] Analyze CLI commands to identify shared patterns and duplicated code
+* [ ] Analyze CLI command classes to identify shared patterns and duplicated code
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
-  > Assert: Common CLI patterns are documented and shared functionality identified
+  > Assert: Common CLI patterns are documented and shared functionality identified (methods like filter_models, output_models, handle_error are duplicated)
   > Command: diff -u lib/coding_agent_tools/cli/commands/llm/models.rb lib/coding_agent_tools/cli/commands/lms/models.rb
 * [ ] Identify all hardcoded strings that should be constants
   > TEST: Hardcoded Strings Catalogued
   > Type: Pre-condition Check
   > Assert: All hardcoded strings are documented with suggested constant names
   > Command: grep -r "\"[A-Z_]*\"" lib/coding_agent_tools/ --include="*.rb" | head -20
-* [ ] Research current URL construction patterns in GeminiClient
+* [ ] Research repetitive URL construction patterns in GeminiClient (3 instances of duplicate base_path logic)
+  > TEST: URL Construction Patterns Identified
+  > Type: Pre-condition Check  
+  > Assert: Repetitive URL construction logic is documented (list_models, model_info, build_api_url methods)
+  > Command: grep -n "base_path.*=.*url_obj\.path" lib/coding_agent_tools/organisms/gemini_client.rb
 * [ ] Document all fallback model lists across command classes
 
 ### Execution Steps
@@ -103,12 +109,11 @@ Collection of code quality improvements to enhance maintainability, consistency,
   > Assert: CLI constants are properly defined and accessible
   > Command: ruby -r "./lib/coding_agent_tools/constants/cli_constants" -e "puts CodingAgentTools::Constants::CliConstants::ROLE_USER"
 - [ ] Replace hardcoded strings with constant references throughout codebase
-- [ ] Improve URL construction in GeminiClient using Addressable::URI
-  > TEST: URL Construction Improved
+- [ ] Extract repetitive URL construction logic in GeminiClient into a private helper method
+  > TEST: URL Construction Refactored
   > Type: Action Validation
-  > Assert: GeminiClient uses proper URI handling methods
-  > Command: grep -n "Addressable::URI" lib/coding_agent_tools/organisms/gemini_client.rb
-- [ ] Add addressable gem dependency if not already present
+  > Assert: GeminiClient has single URL construction method instead of 3 duplicated patterns
+  > Command: grep -c "base_path.*=.*url_obj\.path" lib/coding_agent_tools/organisms/gemini_client.rb | test "$(cat)" -eq 1
 - [ ] Create centralized fallback model configuration
 - [ ] Update command classes to use centralized fallback models
   > TEST: Fallback Models Centralized
@@ -120,15 +125,16 @@ Collection of code quality improvements to enhance maintainability, consistency,
 
 ## Acceptance Criteria
 
-- [ ] CLI commands use shared behavior module for common functionality
-- [ ] Code duplication is reduced between similar CLI commands
-- [ ] All hardcoded strings are replaced with appropriately named constants
-- [ ] GeminiClient uses proper URI handling instead of manual string concatenation
-- [ ] Fallback model lists are centralized and easily configurable
-- [ ] All existing functionality is preserved
+- [ ] CLI command classes use shared behavior module for common functionality (filter_models, output_models, handle_error methods)
+- [ ] Code duplication is reduced between llm/models.rb and lms/models.rb commands
+- [ ] All hardcoded strings in CLI commands are replaced with appropriately named constants
+- [ ] GeminiClient URL construction logic is extracted into a single private helper method (eliminating 3 instances of duplicate base_path logic)
+- [ ] Fallback model lists are centralized in YAML configuration and easily configurable
+- [ ] All existing functionality is preserved (no behavior changes to CLI commands)
 - [ ] Test suite passes completely with no regressions
-- [ ] Code follows established patterns and conventions
-- [ ] Documentation is updated to reflect new shared components
+- [ ] Code follows established ATOM architecture patterns and conventions
+- [ ] Documentation is updated to reflect new shared CLI components
+- [ ] ExecutableWrapper functionality remains intact (already implemented and working)
 
 ## Out of Scope
 
@@ -136,6 +142,8 @@ Collection of code quality improvements to enhance maintainability, consistency,
 - ❌ Changing CLI command interfaces or behavior
 - ❌ Major architectural changes to CLI framework
 - ❌ Refactoring non-CLI code beyond specific improvements mentioned
+- ❌ Reworking ExecutableWrapper (already completed in commit 2c27340)
+- ❌ Major changes to Addressable::URI usage (already properly implemented)
 
 ## References
 
