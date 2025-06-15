@@ -6,7 +6,7 @@ estimate: 2h
 dependencies: []
 ---
 
-# Verify ANSI Color StringIO Behavior
+# Create ANSI Color Testing Infrastructure
 
 ## 0. Directory Audit ✅
 
@@ -37,15 +37,15 @@ spec/
 
 ## Objective
 
-Confirm if `StringIO` strips ANSI colors from CLI output and address any limitations found. This investigation will ensure proper CLI color formatting and consistent user experience across different output capture scenarios.
+Create testing infrastructure for ANSI color handling in CLI output to prepare for future color features. This infrastructure will ensure proper CLI color formatting and consistent user experience across different output capture scenarios when color functionality is added.
 
 ## Scope of Work
 
-- Create test cases to verify ANSI color handling with `StringIO`
-- Document current behavior regarding ANSI color preservation
-- Evaluate impact on user experience if colors are stripped
-- Consider alternative approaches if color stripping is problematic
-- Update CLI tests to account for color handling behavior
+- Create test infrastructure for ANSI color handling with `StringIO`
+- Document ANSI color behavior patterns for future CLI color features
+- Build reusable testing helper for color capture scenarios  
+- Establish behavior matrix testing approach for different capture methods
+- Prepare foundation for future color functionality in CLI commands
 
 ### Deliverables
 
@@ -71,56 +71,51 @@ Confirm if `StringIO` strips ANSI colors from CLI output and address any limitat
 
 ### Planning Steps
 
-* [ ] Research StringIO behavior with ANSI escape sequences
+* [ ] Research StringIO behavior with ANSI escape sequences and color gem behavior patterns
   > TEST: Research Complete
   > Type: Pre-condition Check
   > Assert: ANSI color behavior with StringIO is understood
   > Command: ruby -e "require 'stringio'; s = StringIO.new; s.puts '\033[31mred\033[0m'; puts s.string.inspect"
-* [ ] Identify all CLI components that use colored output
-* [ ] Plan comprehensive test strategy for color handling verification
+* [ ] Design behavior matrix for different capture scenarios (StringIO default, forced color, real TTY)
+* [ ] Plan ergonomic helper API for repeated use across CLI test suites
 
 ### Execution Steps
 
-- [ ] Create test helper for ANSI color testing
+- [ ] Create ANSI color testing helper with ergonomic API
   > TEST: Helper Created
   > Type: Action Validation
   > Assert: ANSI color testing helper is properly defined and usable
   > Command: ruby -r "./spec/support/ansi_color_testing_helper" -e "puts AnsiColorTestingHelper"
-- [ ] Implement tests to verify StringIO ANSI color preservation
-- [ ] Test with various color libraries (colorize, tty-color, etc. if used)
-- [ ] Test with different terminal environments and capture methods
-  > TEST: Color Behavior Documented
+- [ ] Implement behavior matrix tests covering StringIO default, forced color, and TTY scenarios
+- [ ] Add canonical ANSI_REGEX pattern to helper to avoid duplication
+- [ ] Implement proper side-effect management for stdout/stderr stubbing
+  > TEST: Color Behavior Matrix Complete
   > Type: Action Validation
-  > Assert: All color preservation tests complete with documented results
+  > Assert: All behavior matrix tests pass and demonstrate expected patterns
   > Command: bin/test spec/cli/ansi_color_behavior_spec.rb --format documentation
-- [ ] Investigate $stdout.tty? detection for terminal vs capture scenarios
-- [ ] Document findings in technical notes with examples
-- [ ] Evaluate if color stripping impacts user experience significantly
-- [ ] Implement workarounds or solutions if color preservation is critical
-  > TEST: Solutions Implemented
-  > Type: Action Validation
-  > Assert: Any implemented color handling solutions work correctly
-  > Command: bin/test --check-color-handling-solutions
-- [ ] Update existing CLI tests to account for color behavior
-- [ ] Update documentation with color handling limitations and recommendations
+- [ ] Test $stdout.tty? detection and ENV['FORCE_COLOR'] behavior
+- [ ] Document ANSI color infrastructure in technical notes with behavior matrix
+- [ ] Create example usage patterns for future CLI color implementation
+- [ ] Integrate helper with existing CLI test infrastructure
 
 ## Acceptance Criteria
 
-- [ ] ANSI color behavior with StringIO is thoroughly tested and documented
-- [ ] Impact on CLI user experience is evaluated and documented
-- [ ] Test cases cover various color libraries and terminal scenarios
-- [ ] Workarounds or solutions implemented if color stripping is problematic
-- [ ] Existing CLI tests updated to handle color behavior appropriately
-- [ ] Technical documentation includes clear examples and recommendations
-- [ ] Color handling is consistent across all CLI commands
-- [ ] Performance impact of any solutions is acceptable
+- [ ] ANSI color testing infrastructure is implemented and documented
+- [ ] Behavior matrix testing covers StringIO default, forced color, and TTY scenarios  
+- [ ] Test helper provides ergonomic API for capturing CLI output with/without colors
+- [ ] Technical documentation includes behavior matrix and usage examples
+- [ ] Helper properly manages stdout/stderr side-effects to prevent test leakage
+- [ ] Infrastructure is ready for future CLI color feature implementation
+- [ ] Testing patterns align with existing CLI test infrastructure
 
 ## Out of Scope
 
-- ❌ Implementing new color features or libraries
-- ❌ Refactoring entire CLI color system
-- ❌ Adding color configuration options
+- ❌ Implementing actual CLI color features (this task creates infrastructure only)
+- ❌ Adding color libraries as dependencies
+- ❌ Refactoring existing CLI output for colors
 - ❌ Testing non-ANSI color systems
+- ❌ Performance optimization (negligible impact expected)
+- ❌ Windows/POSIX platform-specific color handling
 
 ## References
 
