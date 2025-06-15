@@ -113,18 +113,7 @@ module CodingAgentTools
       # List all available models
       # @return [Array] List of available models
       def list_models
-        # Construct path by appending to base URL path to preserve v1beta
-        path_segment = "models"
-        url_obj = Addressable::URI.parse(@base_url)
-
-        # Use File.join-style logic to avoid double slashes
-        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
-        url_obj.path = "#{base_path}/#{path_segment}"
-
-        # Set query parameters
-        url_obj.query_values = {key: @api_key}
-        url = url_obj.to_s
-
+        url = build_url_with_path("models")
         response_data = @request_builder.get_json(url)
         parsed = @response_parser.parse_response(response_data)
 
@@ -138,18 +127,7 @@ module CodingAgentTools
       # Get information about the model
       # @return [Hash] Model information
       def model_info
-        # Construct path by appending to base URL path to preserve v1beta
-        path_segment = "models/#{@model}"
-        url_obj = Addressable::URI.parse(@base_url)
-
-        # Use File.join-style logic to avoid double slashes
-        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
-        url_obj.path = "#{base_path}/#{path_segment}"
-
-        # Set query parameters
-        url_obj.query_values = {key: @api_key}
-        url = url_obj.to_s
-
+        url = build_url_with_path("models/#{@model}")
         response_data = @request_builder.get_json(url)
         parsed = @response_parser.parse_response(response_data)
 
@@ -167,8 +145,14 @@ module CodingAgentTools
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
-        # Construct path by appending to base URL path
         path_segment = "models/#{@model}:#{endpoint}"
+        build_url_with_path(path_segment)
+      end
+
+      # Build URL with path segment, handling proper path joining and query parameters
+      # @param path_segment [String] Path segment to append
+      # @return [String] Complete URL
+      def build_url_with_path(path_segment)
         url_obj = Addressable::URI.parse(@base_url)
 
         # Use File.join-style logic to avoid double slashes

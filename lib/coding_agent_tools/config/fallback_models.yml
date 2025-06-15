@@ -1,0 +1,42 @@
+# Fallback model configurations for CLI commands
+# These models are used when API calls fail or when no connection is available
+
+gemini:
+  default_model: "gemini-2.0-flash-lite"
+  models:
+    - id: "gemini-2.0-flash-lite"
+      name: "Gemini 2.0 Flash Lite"
+      description: "Fast and efficient model, good for most tasks"
+      default: true
+    - id: "gemini-1.5-flash"
+      name: "Gemini 1.5 Flash"
+      description: "Fast multimodal model optimized for speed"
+      default: false
+    - id: "gemini-1.5-pro"
+      name: "Gemini 1.5 Pro"
+      description: "Mid-size multimodal model for complex reasoning tasks"
+      default: false
+
+lm_studio:
+  default_model: "mistralai/devstral-small-2505"
+  models:
+    - id: "mistralai/devstral-small-2505"
+      name: "Devstral Small"
+      description: "Specialized coding model, optimized for development tasks"
+      default: true
+    - id: "deepseek/deepseek-r1-0528-qwen3-8b"
+      name: "DeepSeek R1 Qwen3 8B"
+      description: "Advanced reasoning model with strong performance"
+      default: false
+
+# Usage instructions for each provider
+usage_instructions:
+  gemini:
+    command: "llm-gemini-query \"your prompt\" --model MODEL_ID"
+    header: "Available Gemini Models:"
+  lm_studio:
+    command: "llm-lmstudio-query \"your prompt\" --model MODEL_ID"
+    header: "Available LM Studio Models:"
+    note: "Note: Models must be loaded in LM Studio before use."
+    server_info: "Server: Ensure LM Studio is running at http://localhost:1234"
+    server_url: "http://localhost:1234"

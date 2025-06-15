@@ -3,6 +3,10 @@
 require "dry/cli"
 require_relative "../../../organisms/lm_studio_client"
 require_relative "../../../models/llm_model_info"
+require_relative "../../shared_behavior"
+require_relative "../../../constants/cli_constants"
+require_relative "../../../constants/model_constants"
+require "yaml"
 
 module CodingAgentTools
   module Cli
@@ -10,15 +14,17 @@ module CodingAgentTools
       module LMS
         # Models command for listing available LM Studio models
         class Models < Dry::CLI::Command
+          include CodingAgentTools::Cli::SharedBehavior
           desc "List available LM Studio AI models"
 
           option :filter, type: :string, aliases: ["f"],
             desc: "Filter models by name (fuzzy search)"
 
-          option :format, type: :string, default: "text", values: %w[text json],
+          option :format, type: :string, default: CodingAgentTools::Constants::CliConstants::FORMAT_TEXT,
+            values: CodingAgentTools::Constants::CliConstants::VALID_FORMATS,
             desc: "Output format (text or json)"
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
+          option :debug, type: :boolean, default: false, aliases: CodingAgentTools::Constants::CliConstants::DEBUG_OPTION_ALIASES,
             desc: "Enable debug output for verbose error information"
 
           example [
@@ -71,56 +77,37 @@ module CodingAgentTools
 
           # Fallback models if API call fails
           def fallback_models
+            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config = YAML.load_file(config_path)
+
             default_model_id = Organisms::LMStudioClient::DEFAULT_MODEL
-            [
+            lms_config = config["lm_studio"]
+
+            lms_config["models"].map do |model_data|
               CodingAgentTools::Models::LlmModelInfo.new(
-                id: "mistralai/devstral-small-2505",
-                name: "Devstral Small",
-                description: "Specialized coding model, optimized for development tasks",
-                default: default_model_id == "mistralai/devstral-small-2505"
-              ),
-              CodingAgentTools::Models::LlmModelInfo.new(
-                id: "deepseek/deepseek-r1-0528-qwen3-8b",
-                name: "DeepSeek R1 Qwen3 8B",
-                description: "Advanced reasoning model with strong performance",
-                default: default_model_id == "deepseek/deepseek-r1-0528-qwen3-8b"
+                id: model_data["id"],
+                name: model_data["name"],
+                description: model_data["description"],
+                default: model_data["id"] == default_model_id
               )
-            ]
-          end
-
-          # Filter models based on search term
-          def filter_models(models, filter_term)
-            return models unless filter_term
-
-            filter_term = filter_term.downcase
-            models.select do |model|
-              model.id.downcase.include?(filter_term) ||
-                model.name.downcase.include?(filter_term) ||
-                model.description.downcase.include?(filter_term)
-            end
-          end
-
-          # Output models in the specified format
-          def output_models(models, options)
-            case options[:format]
-            when "json"
-              output_json_models(models)
-            else
-              output_text_models(models)
             end
           end
 
           # Output models as formatted text
           def output_text_models(models)
             if models.empty?
-              puts "No models found matching the filter criteria."
+              puts CodingAgentTools::Constants::CliConstants::NO_MODELS_FOUND_MESSAGE
               return
             end
 
-            puts "Available LM Studio Models:"
-            puts "=" * 50
+            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config = YAML.load_file(config_path)
+            usage_config = config["usage_instructions"]["lm_studio"]
+
+            puts usage_config["header"]
+            puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
             puts
-            puts "Note: Models must be loaded in LM Studio before use."
+            puts usage_config["note"]
             puts
 
             models.each do |model|
@@ -129,39 +116,26 @@ module CodingAgentTools
             end
 
             puts
-            puts "Usage: llm-lmstudio-query \"your prompt\" --model MODEL_ID"
+            puts "Usage: #{usage_config["command"]}"
             puts
-            puts "Server: Ensure LM Studio is running at http://localhost:1234"
+            puts usage_config["server_info"]
           end
 
           # Output models as JSON
           def output_json_models(models)
+            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config = YAML.load_file(config_path)
+            usage_config = config["usage_instructions"]["lm_studio"]
+
             default_model = models.find(&:default?)
             output = {
               models: models.map(&:to_json_hash),
               count: models.length,
               default_model: default_model&.id || Organisms::LMStudioClient::DEFAULT_MODEL,
-              server_url: "http://localhost:1234"
+              server_url: usage_config["server_url"]
             }
 
             puts JSON.pretty_generate(output)
-          end
-
-          # Handle errors
-          def handle_error(error, debug_enabled)
-            if debug_enabled
-              error_output("Error: #{error.class.name}: #{error.message}")
-              error_output("\nBacktrace:")
-              error.backtrace.each { |line| error_output("  #{line}") }
-            else
-              error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
-            end
-            exit 1
-          end
-
-          def error_output(message)
-            warn message
           end
         end
       end
