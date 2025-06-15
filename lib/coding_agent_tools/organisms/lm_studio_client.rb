@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/api_credentials"
 require_relative "../molecules/http_request_builder"
 require_relative "../molecules/api_response_parser"
 require "json"
@@ -38,15 +37,8 @@ module CodingAgentTools
 
         # Initialize components
         # Note: LM Studio typically doesn't require authentication for localhost
-        begin
-          @credentials = Molecules::APICredentials.new(
-            env_key_name: options.fetch(:api_key_env, "LM_STUDIO_API_KEY")
-          )
-          @api_key = @credentials.api_key if @credentials.api_key_present?
-        rescue KeyError
-          # LM Studio typically doesn't require authentication for localhost
-          @api_key = nil
-        end
+        # Allow optional API key via options or environment variable
+        @api_key = options[:api_key] || ENV[options.fetch(:api_key_env, "LM_STUDIO_API_KEY")]
 
         @request_builder = Molecules::HTTPRequestBuilder.new(
           timeout: options.fetch(:timeout, 180),

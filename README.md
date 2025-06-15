@@ -130,7 +130,7 @@ export GITHUB_TOKEN="your-token"
 ```
 
 ### LM Studio
-Ensure LM Studio is running on `localhost:1234` for offline LLM queries.
+Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API credentials required for localhost usage.
 
 ## 📋 Requirements
 

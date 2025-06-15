@@ -119,6 +119,40 @@ credentials = APICredentials.new(env_key_name: "GEMINI_API_KEY")
 
 If you were using `GeminiClient`, no changes are needed as it handles the configuration internally.
 
+## LM Studio Credentials Handling
+
+LM Studio has been updated to make credentials completely optional since localhost connections typically don't require authentication:
+
+### Before (Required APICredentials)
+```ruby
+class LMStudioClient
+  def initialize(model: DEFAULT_MODEL, **options)
+    @credentials = Molecules::APICredentials.new(
+      env_key_name: options.fetch(:api_key_env, "LM_STUDIO_API_KEY")
+    )
+    @api_key = @credentials.api_key if @credentials.api_key_present?
+  rescue KeyError
+    @api_key = nil
+  end
+end
+```
+
+### After (Optional APICredentials)
+```ruby
+class LMStudioClient
+  def initialize(model: DEFAULT_MODEL, **options)
+    # Allow optional API key via options or environment variable
+    @api_key = options[:api_key] || ENV[options.fetch(:api_key_env, "LM_STUDIO_API_KEY")]
+  end
+end
+```
+
+### Benefits for LM Studio
+1. **Simplified Setup**: No APICredentials dependency for localhost usage
+2. **Backward Compatibility**: Still accepts API keys if provided
+3. **Reduced Complexity**: Eliminates unnecessary exception handling for local development
+4. **Better Developer Experience**: Works out-of-the-box without credential setup
+
 ## Design Principles
 
 This refactoring follows the SOLID principles:
@@ -130,4 +164,4 @@ This refactoring follows the SOLID principles:
 The refactoring also maintains the atomic/molecular/organism hierarchy where:
 - **Atoms** (EnvReader): Basic environment variable reading
 - **Molecules** (APICredentials): Generic credential management
-- **Organisms** (GeminiClient): Service-specific implementation with its own configuration
+- **Organisms** (GeminiClient, LMStudioClient): Service-specific implementation with their own configuration
