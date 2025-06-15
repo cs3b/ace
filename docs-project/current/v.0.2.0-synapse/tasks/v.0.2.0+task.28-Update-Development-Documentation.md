@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.28
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -55,30 +55,30 @@ Update DEVELOPMENT.md to document the new `bin/cr` code review tool and establis
 
 ### Planning Steps
 
-* [ ] Locate appropriate sections in DEVELOPMENT.md for updates
+* [x] Locate appropriate sections in DEVELOPMENT.md for updates
   > TEST: Section Identification
   > Type: Pre-condition Check
   > Assert: Developer tools and testing strategy sections are identified
   > Command: grep -n "^##" docs/DEVELOPMENT.md | grep -E "Tool|Test|Build"
-* [ ] Review bin/cr script to understand its functionality
-* [ ] Analyze the VCR localhost testing pattern from the code review
+* [x] Review bin/cr script to understand its functionality
+* [x] Analyze the VCR localhost testing pattern from the code review
 
 ### Execution Steps
 
-- [ ] Add new subsection for bin/cr in developer tools or build system commands
+- [x] Add new subsection for bin/cr in developer tools or build system commands
   > TEST: bin/cr Documentation Added
   > Type: Action Validation
   > Assert: bin/cr tool is documented with purpose and usage
   > Command: grep -A5 "bin/cr" docs/DEVELOPMENT.md
-- [ ] Document bin/cr purpose: generates comprehensive code review prompts from git diff
-- [ ] Add usage example for bin/cr
-- [ ] Update Testing Strategy section with VCR-wrapped localhost probe pattern
+- [x] Document bin/cr purpose: generates comprehensive code review prompts from git diff
+- [x] Add usage example for bin/cr
+- [x] Update Testing Strategy section with VCR-wrapped localhost probe pattern
   > TEST: Localhost Testing Pattern Documented
   > Type: Action Validation
   > Assert: VCR-wrapped probe pattern is explained for localhost services
   > Command: grep -A3 "localhost.*VCR" docs/DEVELOPMENT.md
-- [ ] Add example of lm_studio_available? helper pattern
-- [ ] Add cross-reference to ADR-001 for detailed localhost testing guidance
+- [x] Add example of lm_studio_available? helper pattern
+- [x] Add cross-reference to ADR-001 for detailed localhost testing guidance
   > TEST: ADR Reference Added
   > Type: Action Validation
   > Assert: ADR-001 is referenced in the testing section
@@ -86,13 +86,13 @@ Update DEVELOPMENT.md to document the new `bin/cr` code review tool and establis
 
 ## Acceptance Criteria
 
-- [ ] bin/cr tool is fully documented with purpose, usage, and examples
-- [ ] The tool documentation mentions it wraps docs-dev/tools/generate-code-review-prompt
-- [ ] VCR-wrapped localhost probe pattern is documented as a best practice
-- [ ] The pattern explains why direct Net::HTTP calls in test before blocks cause CI fragility
-- [ ] Example code for the lm_studio_available? helper pattern is included
-- [ ] Cross-reference to ADR-001 is added for detailed localhost testing guidance
-- [ ] All additions follow existing documentation style and formatting
+- [x] bin/cr tool is fully documented with purpose, usage, and examples
+- [x] The tool documentation mentions it wraps docs-dev/tools/generate-code-review-prompt
+- [x] VCR-wrapped localhost probe pattern is documented as a best practice
+- [x] The pattern explains why direct Net::HTTP calls in test before blocks cause CI fragility
+- [x] Example code for the lm_studio_available? helper pattern is included
+- [x] Cross-reference to ADR-001 is added for detailed localhost testing guidance
+- [x] All additions follow existing documentation style and formatting
 
 ## Out of Scope
 

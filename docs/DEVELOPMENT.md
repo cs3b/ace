@@ -254,6 +254,16 @@ bin/gl
 - Provides better visualization
 - Helps track project progress
 
+#### `bin/cr` (Code Review Prompt Generator)
+**Purpose**: Generates comprehensive code review prompts from git diff
+```bash
+# Generate a prompt for the current changes
+bin/cr
+```
+- Wraps the `docs-dev/tools/generate-code-review-prompt` tool
+- Useful for preparing context for AI-assisted or peer code reviews
+- Analyzes current git diff to create structured review prompts
+
 ## Testing Strategy
 
 ### Test Organization
@@ -351,6 +361,37 @@ RSpec.describe CodingAgentTools::Molecules::LLMApiClient do
   end
 end
 ```
+
+#### VCR-Wrapped Localhost Testing Pattern
+- **Best Practice for Localhost Services**: When testing integration with localhost services (e.g., LM Studio), use a dedicated VCR-wrapped availability check instead of direct Net::HTTP calls in test `before` blocks.
+- **Why**: Direct Net::HTTP calls in test setup cause CI fragility since localhost services aren't available in CI environments.
+- **Pattern**: Create a helper method that performs the availability check within a VCR cassette, allowing tests to run deterministically in both local and CI environments.
+
+```ruby
+# Example of VCR-wrapped localhost probe pattern
+def lm_studio_available?
+  VCR.use_cassette("lm_studio_availability_check") do
+    begin
+      response = Net::HTTP.get_response(URI("http://localhost:1234/v1/models"))
+      response.code == "200"
+    rescue StandardError
+      false
+    end
+  end
+end
+
+# Usage in tests
+RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
+  before do
+    skip "LM Studio not available" unless lm_studio_available?
+  end
+
+  it "queries the local LM Studio service" do
+    # Test implementation
+  end
+end
+```
+- For detailed localhost testing guidance, refer to [ADR-001-CI-Aware-VCR-Configuration](docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md).
 
 ### Running Tests
 
