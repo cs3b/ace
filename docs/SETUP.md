@@ -196,8 +196,9 @@ For offline LLM functionality:
 
 1. Download and install LM Studio from https://lmstudio.ai/
 2. Start LM Studio and load a compatible model
-3. Ensure it's running on `localhost:1234` (default)
-4. No API credentials required for localhost usage
+3. Ensure LM Studio is running on `localhost:1234` for offline LLM queries. **No API credentials required for default localhost usage.**
+
+> **Note**: Unlike cloud-based LLM services, LM Studio running locally does not require any API keys or authentication when using the default localhost configuration.
 
 ## Development Scripts
 
