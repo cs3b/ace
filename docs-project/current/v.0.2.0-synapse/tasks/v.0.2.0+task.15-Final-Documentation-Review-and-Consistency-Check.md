@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.15
-status: pending
+status: blocked
 priority: low
 estimate: 4h
 dependencies: [v.0.2.0+task.9, v.0.2.0+task.10, v.0.2.0+task.11, v.0.2.0+task.12, v.0.2.0+task.13, v.0.2.0+task.14]
