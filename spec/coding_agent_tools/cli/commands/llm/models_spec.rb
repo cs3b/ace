@@ -154,9 +154,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
     describe "#filter_models" do
       let(:models) do
         [
-          CodingAgentTools::Molecules::Model.new(id: "model-1", name: "Model One", description: "First model"),
-          CodingAgentTools::Molecules::Model.new(id: "model-2", name: "Model Two", description: "Second model"),
-          CodingAgentTools::Molecules::Model.new(id: "flash-model", name: "Flash Model", description: "Fast model")
+          CodingAgentTools::Models::LlmModelInfo.new(id: "model-1", name: "Model One", description: "First model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "model-2", name: "Model Two", description: "Second model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "flash-model", name: "Flash Model", description: "Fast model")
         ]
       end
 

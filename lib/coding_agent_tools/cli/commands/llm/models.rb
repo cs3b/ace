@@ -2,7 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../organisms/gemini_client"
-require_relative "../../../molecules/model"
+require_relative "../../../models/llm_model_info"
 
 module CodingAgentTools
   module Cli
@@ -52,7 +52,7 @@ module CodingAgentTools
             default_model_id = Organisms::GeminiClient::DEFAULT_MODEL
             generate_models.map do |model|
               model_id = model[:name].sub("models/", "")
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_model_name(model[:name]),
                 description: model[:description] || "Gemini model",
@@ -87,19 +87,19 @@ module CodingAgentTools
           def fallback_models
             default_model_id = Organisms::GeminiClient::DEFAULT_MODEL
             [
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: "gemini-2.0-flash-lite",
                 name: "Gemini 2.0 Flash Lite",
                 description: "Fast and efficient model, good for most tasks",
                 default: default_model_id == "gemini-2.0-flash-lite"
               ),
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: "gemini-1.5-flash",
                 name: "Gemini 1.5 Flash",
                 description: "Fast multimodal model optimized for speed",
                 default: default_model_id == "gemini-1.5-flash"
               ),
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: "gemini-1.5-pro",
                 name: "Gemini 1.5 Pro",
                 description: "Mid-size multimodal model for complex reasoning tasks",

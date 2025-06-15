@@ -2,7 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../organisms/lm_studio_client"
-require_relative "../../../molecules/model"
+require_relative "../../../models/llm_model_info"
 
 module CodingAgentTools
   module Cli
@@ -47,7 +47,7 @@ module CodingAgentTools
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_model_name(model_id),
                 description: "LM Studio model",
@@ -73,13 +73,13 @@ module CodingAgentTools
           def fallback_models
             default_model_id = Organisms::LMStudioClient::DEFAULT_MODEL
             [
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: "mistralai/devstral-small-2505",
                 name: "Devstral Small",
                 description: "Specialized coding model, optimized for development tasks",
                 default: default_model_id == "mistralai/devstral-small-2505"
               ),
-              Molecules::Model.new(
+              CodingAgentTools::Models::LlmModelInfo.new(
                 id: "deepseek/deepseek-r1-0528-qwen3-8b",
                 name: "DeepSeek R1 Qwen3 8B",
                 description: "Advanced reasoning model with strong performance",

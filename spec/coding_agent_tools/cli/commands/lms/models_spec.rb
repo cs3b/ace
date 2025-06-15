@@ -151,9 +151,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Models do
     describe "#filter_models" do
       let(:models) do
         [
-          CodingAgentTools::Molecules::Model.new(id: "mistralai/model-1", name: "Mistral One", description: "First model"),
-          CodingAgentTools::Molecules::Model.new(id: "deepseek/model-2", name: "DeepSeek Two", description: "Second model"),
-          CodingAgentTools::Molecules::Model.new(id: "qwen/coder-model", name: "Qwen Coder", description: "Coding model")
+          CodingAgentTools::Models::LlmModelInfo.new(id: "mistralai/model-1", name: "Mistral One", description: "First model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "deepseek/model-2", name: "DeepSeek Two", description: "Second model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "qwen/coder-model", name: "Qwen Coder", description: "Coding model")
         ]
       end
 
