@@ -47,9 +47,8 @@ coding-agent-tools/
 │   ├── done/                 # Completed releases
 │   └── roadmap.md            # Strategic planning
 ├── exe/                      # Gem executables (user commands)
-│   ├── llm-gemini-models     # List Gemini models
+│   ├── llm-models            # List models from various providers
 │   ├── llm-gemini-query      # Query Gemini API
-│   ├── llm-lmstudio-models   # List LM Studio models
 │   └── llm-lmstudio-query    # Query LM Studio
 ├── lib/                      # Ruby gem source code
 │   └── coding_agent_tools/   # Main gem module
@@ -190,9 +189,8 @@ User-facing commands provided by the gem:
 ```bash
 # LLM Integration
 exe/llm-gemini-query      # Query Google Gemini models
-exe/llm-gemini-models     # List available Gemini models
+exe/llm-models            # List available models from various providers
 exe/llm-lmstudio-query    # Query local LM Studio models
-exe/llm-lmstudio-models   # List available LM Studio models
 
 # Future commands (planned)
 # exe/github-repository-create
@@ -204,7 +202,7 @@ exe/llm-lmstudio-models   # List available LM Studio models
 - **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on
 - **Run Tests**: Use `bin/test` to ensure code quality before committing
 - **Query LLMs**: Use `exe/llm-gemini-query "your prompt"` or `exe/llm-lmstudio-query "your prompt"`
-- **List Models**: Use `exe/llm-gemini-models` or `exe/llm-lmstudio-models` to see available models
+- **List Models**: Use `exe/llm-models <provider>` to see available models from different providers
 - **Code Review**: Use `bin/cr` to generate a code review prompt from git diff
 - **Commit Changes**: Use `bin/gc -i "your intention"` for standardized commits
 

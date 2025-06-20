@@ -1,7 +1,7 @@
 ---
 id: v.0.2.0+task.37
 title: Refactor Models Listing Commands with Caching
-status: pending
+status: done
 priority: high
 assignee: unassigned
 labels:
@@ -64,57 +64,57 @@ exe
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Research optimal cache structure and format (YAML vs JSON)
-* [ ] Design unified CLI interface for multiple providers
-* [ ] Plan cost information retrieval strategy (API vs LLM-assisted search)
-* [ ] Determine cache invalidation strategy and refresh mechanism
+* [x] Research optimal cache structure and format (YAML vs JSON)
+* [x] Design unified CLI interface for multiple providers
+* [x] Plan cost information retrieval strategy (API vs LLM-assisted search)
+* [x] Determine cache invalidation strategy and refresh mechanism
 
 ### Execution Steps
-- [ ] Consolidate `llm-gemini-models` and `llm-lmstudio-models` by refactoring `lib/coding_agent_tools/cli/commands/llm/models.rb` to become the unified command.
+- [x] Consolidate `llm-gemini-models` and `llm-lmstudio-models` by refactoring `lib/coding_agent_tools/cli/commands/llm/models.rb` to become the unified command.
   ```bash
   llm-models <provider>  # default: google
   llm-models google
   llm-models lmstudio
   ```
-- [ ] Delete `lib/coding_agent_tools/cli/commands/lms/models.rb`
-- [ ] Merge relevant, unique test cases from `spec/coding_agent_tools/cli/commands/lms/models_spec.rb` into `spec/coding_agent_tools/cli/commands/llm/models_spec.rb`
-- [ ] Delete `spec/coding_agent_tools/cli/commands/lms/models_spec.rb`
-- [ ] Implement base caching infrastructure
-  - [ ] Create `.coding-agent-tools-cache/` directory structure
-  - [ ] Implement cache file format (YAML) per provider
-  - [ ] Add cache read/write logic
-- [ ] Migrate existing Gemini models listing functionality
+- [x] Delete `lib/coding_agent_tools/cli/commands/lms/models.rb`
+- [x] Merge relevant, unique test cases from `spec/coding_agent_tools/cli/commands/lms/models_spec.rb` into `spec/coding_agent_tools/cli/commands/llm/models_spec.rb`
+- [x] Delete `spec/coding_agent_tools/cli/commands/lms/models_spec.rb`
+- [x] Implement base caching infrastructure
+  - [x] Create `.coding-agent-tools-cache/` directory structure
+  - [x] Implement cache file format (YAML) per provider
+  - [x] Add cache read/write logic
+- [x] Migrate existing Gemini models listing functionality
   > TEST: Gemini Models Listing
   >   Type: Action Validation
   >   Assert: llm-models google returns same output as llm-gemini-models
   >   Command: bin/test --compare-outputs "llm-models google" "llm-gemini-models"
-- [ ] Migrate existing LMStudio models listing functionality
+- [x] Migrate existing LMStudio models listing functionality
   > TEST: LMStudio Models Listing
   >   Type: Action Validation
   >   Assert: llm-models lmstudio returns same output as llm-lmstudio-models
   >   Command: bin/test --compare-outputs "llm-models lmstudio" "llm-lmstudio-models"
-- [ ] Implement cache-first retrieval logic
-  - [ ] Read from cache by default
-  - [ ] Add `--refresh` or `--fetch-from-api` flag for updates
-  - [ ] Only update changed models on refresh
+- [x] Implement cache-first retrieval logic
+  - [x] Read from cache by default
+  - [x] Add `--refresh` or `--fetch-from-api` flag for updates
+  - [x] Only update changed models on refresh
 
-- [ ] Remove deprecated binaries
-  - [ ] Delete `exe/llm-gemini-models`
-  - [ ] Delete `exe/llm-lmstudio-models`
-- [ ] Update all references in codebase
-- [ ] Update documentation and examples
+- [x] Remove deprecated binaries
+  - [x] Delete `exe/llm-gemini-models`
+  - [x] Delete `exe/llm-lmstudio-models`
+- [x] Update all references in codebase
+- [x] Update documentation and examples
 
 ## Acceptance Criteria
 
-- [ ] Single `llm-models` command handles all providers
-- [ ] Default provider is Google/Gemini when no argument provided
-- [ ] Cache is used by default for faster response times
-- [ ] `--refresh` flag fetches latest data from APIs
+- [x] Single `llm-models` command handles all providers
+- [x] Default provider is Google/Gemini when no argument provided
+- [x] Cache is used by default for faster response times
+- [x] `--refresh` flag fetches latest data from APIs
 
-- [ ] Cache files are stored in `.coding-agent-tools-cache/` with provider-specific YAML files
-- [ ] Old `llm-gemini-models` and `llm-lmstudio-models` commands are removed
-- [ ] All tests pass after migration
-- [ ] Documentation is updated with new command usage
+- [x] Cache files are stored in `.coding-agent-tools-cache/` with provider-specific YAML files
+- [x] Old `llm-gemini-models` and `llm-lmstudio-models` commands are removed
+- [x] All tests pass after migration
+- [x] Documentation is updated with new command usage
 
 ## Out of Scope
 
@@ -133,3 +133,8 @@ exe
 This task will likely require modifications to: `exe/llm-models`, `lib/coding_agent_tools/cli.rb`, `lib/coding_agent_tools/cli/commands/llm/models.rb`, `README.md`, `CHANGELOG.md`, `docs/blueprint.md`, `docs/llm-integration/model-management.md`. It will also involve the deletion of `exe/llm-gemini-models`, `exe/llm-lmstudio-models`, `lib/coding_agent_tools/cli/commands/lms/models.rb`, and `spec/coding_agent_tools/cli/commands/lms/models_spec.rb`. Test updates will be required in `spec/coding_agent_tools/cli/commands/llm/models_spec.rb`.
 
 - Consider using existing Ruby cache libraries vs custom implementation
+
+## Post-Implementation Notes
+
+- Fixed test output pollution where error messages were leaking to console during test runs
+- Updated invalid provider test to properly capture stderr output using RSpec mocks

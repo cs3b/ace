@@ -14,7 +14,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
   end
 
   describe "#call" do
-    context "with default options" do
+    context "with google provider (default)" do
       it "lists all available models" do
         command.call
 
@@ -39,14 +39,52 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       end
     end
 
+    context "with lmstudio provider" do
+      it "lists all available models" do
+        command.call(provider: "lmstudio")
+
+        output_content = output.string
+        expect(output_content).to include("Available LM Studio Models:")
+        expect(output_content).to include("Default model")
+        expect(output_content).to include("Usage: llm-lmstudio-query")
+        # Should contain at least one model
+        expect(output_content).to match(/ID: [\w\/-]+/)
+        expect(output_content).to match(/Name: /)
+        expect(output_content).to match(/Description: /)
+      end
+
+      it "shows server information" do
+        command.call(provider: "lmstudio")
+
+        output_content = output.string
+        expect(output_content).to include("Note: Models must be loaded in LM Studio before use")
+        expect(output_content).to include("http://localhost:1234")
+      end
+    end
+
+    context "with invalid provider" do
+      it "shows error message" do
+        allow(command).to receive(:warn).and_return(nil)
+        expect { command.call(provider: "invalid") }.to raise_error(SystemExit)
+        expect(command).to have_received(:warn).with("Error: Invalid provider 'invalid'. Valid providers are: google, lmstudio")
+      end
+    end
+
     context "with filter option" do
-      it "filters models correctly" do
+      it "filters google models correctly" do
         # Test with a term that should match at least one model
         command.call(filter: "gemini")
 
         output_content = output.string
         # Should have models since "gemini" should match
         expect(output_content).to match(/ID: gemini-[\w\.-]+/)
+      end
+
+      it "filters lmstudio models correctly" do
+        command.call(provider: "lmstudio", filter: "mistral")
+
+        output_content = output.string
+        expect(output_content).to match(/ID: mistralai\/[\w\/-]+/)
       end
 
       it "shows no results message when no matches" do
@@ -104,6 +142,22 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           expect(model["id"].downcase).to include("gemini-1.5")
         end
       end
+
+      it "outputs lmstudio models in JSON format" do
+        command.call(provider: "lmstudio", format: "json")
+
+        output_content = output.string
+        json_output = JSON.parse(output_content)
+
+        expect(json_output).to have_key("models")
+        expect(json_output).to have_key("count")
+        expect(json_output).to have_key("default_model")
+        expect(json_output).to have_key("server_url")
+        expect(json_output["provider"]).to eq("lmstudio")
+        expect(json_output["server_url"]).to eq("http://localhost:1234")
+        expect(json_output["models"]).to be_an(Array)
+        expect(json_output["models"].length).to be > 0
+      end
     end
 
     context "error handling" do
@@ -128,8 +182,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
   describe "private methods" do
     describe "#get_available_models" do
-      it "returns an array of model hashes" do
-        models = command.send(:get_available_models)
+      it "returns an array of model hashes for google" do
+        models = command.send(:get_available_models, "google")
 
         expect(models).to be_an(Array)
         expect(models.length).to be > 0
@@ -142,8 +196,30 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         end
       end
 
-      it "includes the default model" do
-        models = command.send(:get_available_models)
+      it "returns an array of model hashes for lmstudio" do
+        models = command.send(:get_available_models, "lmstudio")
+
+        expect(models).to be_an(Array)
+        expect(models.length).to be > 0
+
+        models.each do |model|
+          expect(model).to respond_to(:id)
+          expect(model).to respond_to(:name)
+          expect(model).to respond_to(:description)
+          expect(model).to respond_to(:default?)
+        end
+      end
+
+      it "includes the default model for google" do
+        models = command.send(:get_available_models, "google")
+        default_model = models.find(&:default?)
+
+        expect(default_model).not_to be_nil
+        expect(default_model.id).not_to be_empty
+      end
+
+      it "includes the default model for lmstudio" do
+        models = command.send(:get_available_models, "lmstudio")
         default_model = models.find(&:default?)
 
         expect(default_model).not_to be_nil
@@ -157,6 +233,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           CodingAgentTools::Models::LlmModelInfo.new(id: "model-1", name: "Model One", description: "First model"),
           CodingAgentTools::Models::LlmModelInfo.new(id: "model-2", name: "Model Two", description: "Second model"),
           CodingAgentTools::Models::LlmModelInfo.new(id: "flash-model", name: "Flash Model", description: "Fast model")
+        ]
+      end
+
+      let(:lmstudio_models) do
+        [
+          CodingAgentTools::Models::LlmModelInfo.new(id: "mistralai/model-1", name: "Mistral One", description: "First model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "deepseek/model-2", name: "DeepSeek Two", description: "Second model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "qwen/coder-model", name: "Qwen Coder", description: "Coding model")
         ]
       end
 
@@ -192,6 +276,24 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       it "returns empty array when no matches" do
         result = command.send(:filter_models, models, "nonexistent")
         expect(result).to be_empty
+      end
+
+      it "filters lmstudio models by provider" do
+        result = command.send(:filter_models, lmstudio_models, "mistralai")
+        expect(result.length).to eq(1)
+        expect(result.first.id).to eq("mistralai/model-1")
+      end
+
+      it "filters lmstudio models by name" do
+        result = command.send(:filter_models, lmstudio_models, "DeepSeek")
+        expect(result.length).to eq(1)
+        expect(result.first.name).to eq("DeepSeek Two")
+      end
+
+      it "filters lmstudio models by description" do
+        result = command.send(:filter_models, lmstudio_models, "Coding")
+        expect(result.length).to eq(1)
+        expect(result.first.description).to eq("Coding model")
       end
     end
   end

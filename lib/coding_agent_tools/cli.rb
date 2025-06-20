@@ -41,11 +41,9 @@ module CodingAgentTools
         return if @lms_commands_registered
 
         require_relative "cli/commands/lms/query"
-        require_relative "cli/commands/lms/models"
 
         register "lms", aliases: [] do |prefix|
           prefix.register "query", Commands::LMS::Query
-          prefix.register "models", Commands::LMS::Models
         end
 
         @lms_commands_registered = true

@@ -7,20 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+#### v.0.2.0+task.37 - 2025-06-20 - Unified Model Listing Command
+
+### Added
+
+- **Unified Model Listing Command**: New consolidated CLI command for discovering available models
+  - `llm-models` command with provider support (google, lmstudio)
+  - Caching mechanism for faster response times with `--refresh` flag
+  - Fuzzy search filtering (text/JSON output) maintained for both providers
+  - Replaced separate `llm-gemini-models` and `llm-lmstudio-models` commands
+
 #### v.0.2.0+task.4 - 2025-06-14 - Add Model Override Flag Support
 
 ### Added
 - **Model Override Flags**: Complete implementation of `--model` flag support for both Gemini and LM Studio query commands
   - Model parameter validation and error handling through APIs
   - Help text documentation with usage examples
-- **Model Listing Commands**: New CLI commands for discovering available models
-  - `llm-gemini-models` command with fuzzy search filtering (text/JSON output)
-  - `llm-lmstudio-models` command with fuzzy search filtering (text/JSON output)
-  - Updated CLI registration to include models commands
 - **Updated Model Lists**: Accurate model names aligned with v1beta API
   - Gemini models: gemini-2.0-flash-lite (default), gemini-2.0-flash, gemini-2.5-flash-preview-05-20, gemini-2.5-pro-preview-06-05, gemini-1.5-flash, gemini-1.5-flash-8b, gemini-1.5-pro
   - LM Studio models: mistralai/devstral-small-2505 (default), deepseek/deepseek-r1-0528-qwen3-8b, and others
-- **Enhanced Testing**: 
+- **Enhanced Testing**:
   - Unit tests for model listing commands with comprehensive filter testing
   - Integration test updates with valid model override scenarios
   - Fixed test model names to use v1beta compatible models

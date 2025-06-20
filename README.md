@@ -38,8 +38,8 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 - **LLM Integration**: Query Google Gemini and local LM Studio models
   - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
 - **Model Discovery**: List and filter available models from different providers
-  - **Google Gemini Models**: Discover available models via `exe/llm-gemini-models`
-  - **LM Studio Models**: List local models via `exe/llm-lmstudio-models`
+  - **Unified Model Discovery**: Discover available models via `exe/llm-models <provider>`
+  - **Caching Support**: Model information is cached for faster response times
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
@@ -94,15 +94,14 @@ coding_agent_tools project release_context
   - Example: `exe/llm-lmstudio-query "Explain SOLID principles"`
   - Requires: LM Studio running on localhost:1234
 
-- **`exe/llm-gemini-models`**: List available Google Gemini models
-  - Usage: `exe/llm-gemini-models [--filter FILTER] [--format json]`
-  - Example: `exe/llm-gemini-models --filter "gemini-pro"`
-  - Requires: `GEMINI_API_KEY` environment variable
-
-- **`exe/llm-lmstudio-models`**: List available LM Studio models
-  - Usage: `exe/llm-lmstudio-models [--filter FILTER] [--format json]`
-  - Example: `exe/llm-lmstudio-models --filter "llama"`
-  - Requires: LM Studio running on localhost:1234
+- **`exe/llm-models`**: List available AI models from various providers
+  - Usage: `exe/llm-models [PROVIDER] [--filter FILTER] [--format json] [--refresh]`
+  - Examples: 
+    - `exe/llm-models google --filter "gemini-pro"`
+    - `exe/llm-models lmstudio --filter "mistral"`
+    - `exe/llm-models google --refresh` (refresh cache)
+  - Providers: `google` (default), `lmstudio`
+  - Requires: `GEMINI_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
 
 ## 🏗 Architecture
 

@@ -6,8 +6,7 @@ This comprehensive guide covers the model discovery and management features in C
 
 1. [Introduction](#introduction)
 2. [Available Commands](#available-commands)
-   - [llm-gemini-models](#llm-gemini-models)
-   - [llm-lmstudio-models](#llm-lmstudio-models)
+   - [llm-models](#llm-models)
 3. [Basic Usage](#basic-usage)
    - [Listing Google Gemini Models](#listing-google-gemini-models)
    - [Listing LM Studio Models](#listing-lm-studio-models)
@@ -33,10 +32,9 @@ This comprehensive guide covers the model discovery and management features in C
 
 The model management system in Coding Agent Tools provides a unified interface for discovering and selecting Large Language Models (LLMs) from both cloud-based and local services. This system consists of two primary commands:
 
-- **`llm-gemini-models`**: Discovers available Google Gemini models via the Gemini API
-- **`llm-lmstudio-models`**: Discovers available models from your local LM Studio installation
+- **`llm-models`**: Unified command for discovering available models from multiple providers (Google Gemini, LM Studio)
 
-These commands help you identify which models are available, understand their capabilities, and select the appropriate model for your specific use case before making queries.
+This command helps you identify which models are available from different providers, understand their capabilities, and select the appropriate model for your specific use case before making queries. It includes caching for faster response times.
 
 ## Available Commands
 
@@ -56,14 +54,8 @@ llm-gemini-models [OPTIONS]
 - Shows which model is currently set as default
 - Fallback to cached models when API is unavailable
 
-### llm-lmstudio-models
-
-Discovers and lists available models from your local LM Studio installation.
-
-**Usage:**
-```bash
-llm-lmstudio-models [OPTIONS]
-```
+**Arguments:**
+- `PROVIDER`: Provider to list models for (`google`, `lmstudio`). Default: `google`
 
 **Key Features:**
 - Connects to local LM Studio instance (default: localhost:1234)
@@ -79,7 +71,7 @@ llm-lmstudio-models [OPTIONS]
 To see all available Gemini models:
 
 ```bash
-llm-gemini-models
+llm-models google
 ```
 
 **Example Output:**
@@ -108,7 +100,7 @@ Usage: llm-gemini-query "your prompt" --model MODEL_ID
 To see all available LM Studio models:
 
 ```bash
-llm-lmstudio-models
+llm-models lmstudio
 ```
 
 **Example Output:**
@@ -139,27 +131,27 @@ Both commands support filtering models by name using the `--filter` (or `-f`) op
 ### Filtering Gemini Models
 
 ```bash
-# Find all Flash models
-llm-gemini-models --filter flash
+# Find all Flash models from Google
+llm-models google --filter flash
 
-# Find Pro models
-llm-gemini-models --filter pro
+# Find Pro models from Google
+llm-models google --filter pro
 
-# Find specific version
-llm-gemini-models --filter "2.0"
+# Find specific version from Google
+llm-models google --filter "2.0"
 ```
 
 ### Filtering LM Studio Models
 
 ```bash
-# Find Mistral models
-llm-lmstudio-models --filter mistral
+# Find Mistral models from LM Studio
+llm-models lmstudio --filter mistral
 
-# Find DeepSeek models
-llm-lmstudio-models --filter deepseek
+# Find DeepSeek models from LM Studio
+llm-models lmstudio --filter deepseek
 
-# Find models with specific capabilities
-llm-lmstudio-models --filter "reasoning"
+# Find models with specific capabilities from LM Studio
+llm-models lmstudio --filter "reasoning"
 ```
 
 ## Output Formats
@@ -181,7 +173,7 @@ Use the `--format json` option to get structured JSON output suitable for progra
 #### Gemini JSON Output
 
 ```bash
-llm-gemini-models --format json
+llm-models google --format json
 ```
 
 **Example JSON Structure:**
@@ -209,7 +201,7 @@ llm-gemini-models --format json
 #### LM Studio JSON Output
 
 ```bash
-llm-lmstudio-models --format json
+llm-models lmstudio --format json
 ```
 
 **Example JSON Structure:**
@@ -273,7 +265,7 @@ The JSON output format enables powerful scripting and automation scenarios:
 
 ```bash
 # Get default Gemini model ID
-DEFAULT_MODEL=$(llm-gemini-models --format json | jq -r '.default_model')
+DEFAULT_MODEL=$(llm-models google --format json | jq -r '.default_model')
 echo "Default model: $DEFAULT_MODEL"
 ```
 
@@ -281,14 +273,14 @@ echo "Default model: $DEFAULT_MODEL"
 
 ```bash
 # Find all Flash models and extract IDs
-llm-gemini-models --filter flash --format json | jq -r '.models[].id'
+llm-models google --filter flash --format json | jq -r '.models[].id'
 ```
 
 #### Check Model Availability
 
 ```bash
 # Check if specific model is available
-llm-gemini-models --format json | jq -r '.models[] | select(.id=="gemini-1.5-pro") | .id'
+llm-models google --format json | jq -r '.models[] | select(.id=="gemini-1.5-pro") | .id'
 ```
 
 ### Model Information Parsing
@@ -300,7 +292,7 @@ Use the structured JSON output to build model selection logic:
 # Model selection script
 
 # Get all available models
-MODELS=$(llm-gemini-models --format json)
+MODELS=$(llm-models google --format json)
 
 # Select fastest model (Flash variants)
 FAST_MODEL=$(echo "$MODELS" | jq -r '.models[] | select(.id | contains("flash")) | .id' | head -1)
@@ -332,7 +324,7 @@ Error: Failed to connect to Gemini API
 echo $GEMINI_API_KEY
 
 # Test connection with debug output
-llm-gemini-models --debug
+llm-models google --debug
 ```
 
 #### LM Studio Connection Problems
@@ -354,7 +346,7 @@ Error: Cannot connect to LM Studio at localhost:1234
 curl http://localhost:1234/v1/models
 
 # Test with debug output
-llm-lmstudio-models --debug
+llm-models lmstudio --debug
 ```
 
 ### Empty Results
@@ -370,7 +362,7 @@ If the command returns no models:
 **Debugging Steps:**
 ```bash
 # Test with fallback models
-llm-gemini-models --debug
+llm-models google --debug
 
 # Check API key permissions
 llm-gemini-query "test" --debug
@@ -391,7 +383,7 @@ curl http://localhost:1234/v1/models
 
 # Load a model in LM Studio interface
 # Then retry the command
-llm-lmstudio-models
+llm-models lmstudio
 ```
 
 ### Authentication Problems
