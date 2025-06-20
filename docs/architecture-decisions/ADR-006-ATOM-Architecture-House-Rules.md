@@ -64,7 +64,7 @@ We establish the following classification rules for components in the ATOM archi
 
 **Examples**:
 - `Organisms::GeminiClient` - Orchestrates API communication with Google Gemini
-- `Organisms::LMStudioClient` - Manages local LLM interactions and configuration  
+- `Organisms::LMStudioClient` - Manages local LLM interactions and configuration
 - `Organisms::PromptProcessor` - Coordinates prompt preparation, processing, and parsing
 
 ### Classification Decision Tree
@@ -80,7 +80,7 @@ When creating a new component, follow this decision process:
    - Composes Atoms to create reusable functionality
    - Stateless or minimal state
 
-3. **Does it orchestrate complex business logic?** → Organisms  
+3. **Does it orchestrate complex business logic?** → Organisms
    - Coordinates multiple components for business goals
    - May manage state and complex workflows
    - Represents significant business capabilities
@@ -139,9 +139,9 @@ When creating a new component, follow this decision process:
 
 ## References
 
-- [LlmModelInfo Refactoring Example](../../code-review/task-4/code-review-combined.md) - Primary example of Model vs Molecule classification
-- [Architecture Documentation](../../../architecture.md) - ATOM structure definition and component examples
-- [ATOM Component Classification House Rules](../../../../docs-dev/guides/atom-house-rules.md) - Practical implementation guide for these rules
-- [Code Review Guidelines](../../../guides/code-review/README.md) - Review process for architectural decisions
+- [LlmModelInfo Refactoring Example](docs-project/current/v.0.2.0-synapse/code-review/task-4/code-review-combined.md) - Primary example of Model vs Molecule classification
+- [Architecture Documentation](docs/architecture.md) - ATOM structure definition and component examples
+- [ATOM Component Classification House Rules](docs-dev/guides/atom-house-rules.md) - Practical implementation guide for these rules
+- [Code Review Guidelines](docs-dev/guides/code-review/README.md) - Review process for architectural decisions
 - [ATOM Architecture Principles](https://atomicdesign.bradfrost.com/) - Original inspiration for component hierarchy
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Separation of concerns principles

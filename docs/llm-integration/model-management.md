@@ -425,10 +425,10 @@ LM Studio typically doesn't require authentication for local use, but if you enc
 
 For complete setup and usage information, refer to these related guides:
 
-- **[Project Overview](../README.md)**: Main project documentation and quick start guide
-- **[Setup Guide](SETUP.md)**: Initial configuration and API key setup
-- **[Gemini Query Guide](llm-integration/gemini-query-guide.md)**: Detailed information about using Gemini models
-- **[Development Guide](DEVELOPMENT.md)**: Development environment setup and testing
+- **[Project Overview](README.md)**: Main project documentation and quick start guide
+- **[Setup Guide](docs/SETUP.md)**: Initial configuration and API key setup
+- **[Gemini Query Guide](docs/llm-integration/gemini-query-guide.md)**: Detailed information about using Gemini models
+- **[Development Guide](docs/DEVELOPMENT.md)**: Development environment setup and testing
 
 ### Related Commands
 

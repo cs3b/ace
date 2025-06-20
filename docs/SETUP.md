@@ -200,43 +200,11 @@ For offline LLM functionality:
 
 > **Note**: Unlike cloud-based LLM services, LM Studio running locally does not require any API keys or authentication when using the default localhost configuration.
 
-## Development Scripts
+## Development Tools
 
-The project includes several convenience scripts in the `bin/` directory:
+The project includes various `bin/` scripts to automate development tasks, testing, and common workflows. For a comprehensive list and description of all available `bin/` and `exe/` commands, refer to the [Project Blueprint](docs/blueprint.md#entry-points).
 
-### Core Development Scripts
-
-```bash
-# Setup and dependency management
-bin/setup          # Initial project setup
-
-# Testing and quality assurance
-bin/test           # Run all tests
-bin/lint           # Run StandardRB linter
-bin/build          # Build the gem
-
-# Development tools
-bin/console        # Interactive Ruby console
-bin/run            # Run gem commands during development
-```
-
-### Project-Specific Scripts
-
-```bash
-# Task management
-bin/tn             # Get next task to work on
-bin/tal            # List all tasks
-bin/tnid           # Get task by ID
-
-# Git workflow
-bin/gc             # Git commit with message
-bin/gl             # Git log
-bin/gp             # Git push
-
-# Other utilities
-bin/tree           # Show project structure
-bin/rc             # Release context generation
-bin/tr             # Task runner
+You can also run `bin/help` (once implemented) or `bin/<command> --help` for specific command usage.
 ```
 
 ## IDE/Editor Setup

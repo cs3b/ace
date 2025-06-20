@@ -150,7 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created the initial project roadmap and defined initial release structure
 - Consolidated ideas into Product Requirements Document with context hydration, git aliases, markdown tasks, task capture, and UX features
 - Added architectural research and documentation fixes including ATOM architecture research
-- Established initial project structure including placeholder scripts in `bin/` and core documentation in `docs-project/`
+- Established initial project structure including placeholder scripts in `bin/` and core documentation in `docs/`
 - Added the `docs-dev` submodule and initial `.gitignore` file
 
 [0.2.0]: https://github.com/your-org/coding-agent-tools/compare/v0.1.0...v0.2.0

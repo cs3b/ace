@@ -41,11 +41,10 @@ coding-agent-tools/
 │   ├── guides/               # Best practices and standards
 │   ├── tools/                # Utility scripts for workflows
 │   └── workflow-instructions/ # AI agent workflow definitions
-├── docs-project/             # Project management
+├── docs-project/             # Project management (tasks, roadmap)
 │   ├── backlog/              # Future release tasks
 │   ├── current/              # Active release work
 │   ├── done/                 # Completed releases
-│   ├── decisions/            # Architecture Decision Records
 │   └── roadmap.md            # Strategic planning
 ├── exe/                      # Gem executables (user commands)
 │   ├── llm-gemini-models     # List Gemini models
@@ -90,11 +89,10 @@ This will show all project files while filtering out temporary files, session lo
 
 ## Key Project-Specific Files
 
-- [Product Requirements Document (PRD)](../PRD.md) - Primary source of truth for project goals and requirements
-- [Main README](../README.md) - Project overview, installation, runtime configuration, and user-facing documentation
-- [Development Guide](../docs/DEVELOPMENT.md) - Development environment setup, testing, build tools, and contributor workflow
-- [Workflow Instructions](../docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
-- [Project Guides](../docs-dev/guides/README.md) - Development standards and best practices
+- [Main README](README.md) - Project overview, installation, runtime configuration, and user-facing documentation
+- [Development Guide](docs/DEVELOPMENT.md) - Development environment setup, testing, build tools, and contributor workflow
+- [Workflow Instructions](docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](docs-dev/guides/README.md) - Development standards and best practices
 - `coding_agent_tools.gemspec` - Ruby gem definition and dependencies
 - `Gemfile` - Bundler dependency management
 

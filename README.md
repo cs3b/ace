@@ -125,28 +125,7 @@ See the [Architecture Document](docs/architecture.md) for more details.
 
 ## 🔧 Configuration
 
-### API Keys
-
-Create a `.env` file in your project root (copy from `.env.example`):
-
-```bash
-# Google Gemini API Key
-# Get this from: https://makersuite.google.com/app/apikey
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-
-# GitHub (for repository creation)
-GITHUB_TOKEN=your-token
-```
-
-Or set environment variables directly:
-
-```bash
-# Google Gemini
-export GEMINI_API_KEY="your-api-key"
-
-# GitHub (for repository creation)
-export GITHUB_TOKEN="your-token"
-```
+For detailed instructions on configuring API keys (e.g., `GEMINI_API_KEY`) and setting up LM Studio, please refer to the [Setup Guide](docs/SETUP.md#api-keys-optional).
 
 ### LM Studio
 Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API credentials required for default localhost usage.
@@ -171,7 +150,7 @@ Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API 
 
 ## 🚧 Development Status
 
-Currently in active development (v0.1.0 focusing on establishing the gem structure). See [roadmap](docs-project/roadmap.md) for planned releases.
+Currently in active development (v0.1.0 focusing on establishing the gem structure). See [roadmap](docs/roadmap.md) for planned releases.
 
 ## 💻 Development
 
@@ -190,7 +169,7 @@ For complete development information including environment setup, testing, build
 ### Project Documentation
 - [Project Vision](docs/what-do-we-build.md) - Goals and use cases
 - [Architecture](docs/architecture.md) - System design and patterns
-- [Development Guides](docs-dev/guides/) - Internal standards and processes
+- [Documentation Structure Guide](docs-dev/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
 
 ## 🤝 Contributing
 

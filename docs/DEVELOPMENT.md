@@ -68,7 +68,7 @@ For running tests that interact with real APIs or recording new VCR cassettes:
    ```bash
    # In .env file
    GEMINI_API_KEY="your_actual_gemini_api_key_here"
-   
+
    # In spec/.env file (for testing)
    GEMINI_API_KEY="your_actual_gemini_api_key_here"
    VCR_RECORD=false  # Set to true when recording new cassettes
@@ -184,6 +184,9 @@ bin/setup
 ```bash
 # Run all tests
 bin/test
+
+# Run with progress format
+bin/test --format progress
 
 # Run with coverage report
 COVERAGE=true bin/test
@@ -408,13 +411,16 @@ RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
   end
 end
 ```
-- For detailed localhost testing guidance, refer to [ADR-001-CI-Aware-VCR-Configuration](docs/architecture/ADR-001-CI-Aware-VCR-Configuration.md).
+- For detailed localhost testing guidance, refer to [ADR-001-CI-Aware-VCR-Configuration](docs/architecture-decisions/ADR-001-CI-Aware-VCR-Configuration.md).
 
 ### Running Tests
 
 ```bash
 # Run all tests
 bin/test
+
+# Run with progress format
+bin/test --format progress
 
 # Run tests with coverage
 COVERAGE=true bin/test
@@ -607,7 +613,7 @@ printer.print(STDOUT)
    ```bash
    # Create test file
    touch spec/coding_agent_tools/path/to/new_feature_spec.rb
-   
+
    # Write failing tests
    bin/test  # Should show failures
    ```
@@ -616,7 +622,7 @@ printer.print(STDOUT)
    ```bash
    # Create implementation file
    touch lib/coding_agent_tools/path/to/new_feature.rb
-   
+
    # Implement minimal code
    bin/test  # Should pass
    ```

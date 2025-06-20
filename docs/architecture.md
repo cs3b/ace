@@ -47,7 +47,7 @@ flowchart TD
     Organisms --> Molecules
     Molecules --> Atoms
     Organisms --> Models
-    
+
     Atoms -->|HTTP| GeminiAPI((Google Gemini))
     Atoms -->|HTTP| LMStudio((LM Studio))<br/>(localhost:1234)
     Atoms -->|System Calls| FileSystem[(File System)]
@@ -92,11 +92,11 @@ flowchart TD
 
 ### ATOM-Based Code Structure in `lib/coding_agent_tools/`
 
-The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns. For detailed classification rules and practical guidelines, see the [ATOM Component Classification House Rules](../../docs-dev/guides/atom-house-rules.md):
+The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns. For detailed classification rules and practical guidelines, see the [ATOM Component Classification House Rules](docs-dev/guides/atom-house-rules.md):
 
 -   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, utility functions for string normalization, basic file readers).
 -   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).
--   **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., `GeminiClient` for interacting with the Gemini API, `LMStudioClient` for local LLM interactions, `PromptProcessor` for preparing and parsing LLM prompts, LLM queriers, commit message suggesters). These often correspond to Service Objects.
+-   **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., `GeminiClient` for interacting with the Gemini API, `LMStudioClient` for local LLM interactions, `PromptProcessor` for preparing and parsing LLM prompts, LLM queriers, commit message suggesters). These handle the core business logic and workflows.
 -   **Ecosystems (`lib/coding_agent_tools/ecosystems/`)**: Cohesive groupings of Organisms and other components that deliver a larger, bounded context or subsystem. The overall CLI application, orchestrated by `dry-cli`, can be considered the primary ecosystem.
 -   **Models (`lib/coding_agent_tools/models/`)**: Plain Old Ruby Objects (POROs), typically implemented as Structs, that act as pure, immutable data carriers. They have no external dependencies or I/O operations and focus solely on data representation (e.g., `LlmModelInfo` for language model metadata, `Task` for task representation, `LLMResponse` for API response data).
 -   **CLI Commands (`lib/coding_agent_tools/cli/` and `lib/coding_agent_tools/cli.rb`)**: These are the entry points for the command-line interface, built using `dry-cli`. Commands typically delegate their core logic to Organisms.
@@ -104,18 +104,18 @@ The internal structure of the gem's library code (`lib/coding_agent_tools/`) adh
 
 ## Data Flow
 
-Data typically flows from the CLI (user input) to a Service Object, which uses Adapters to interact with external systems (LLM, Git, file system). The Adapters return data, potentially mapped to internal Models, back to the Service Object for processing. The final result is returned through the Adapter layer back to the Service Object, and finally outputted via the CLI. For task utilities, data might be read from local files (`docs-project/`) via an Adapter/Service Object and formatted for CLI output.
+Data typically flows from the CLI (user input) to an Organism, which orchestrates Molecules and Atoms to interact with external systems (LLM, Git, file system). The Atoms handle basic operations and return data, potentially structured using Models, back to the Molecules for composition. The Molecules return processed data to the Organism for business logic processing. The final result flows back through the layers and is outputted via the CLI. For task utilities, data might be read from local files (`docs-project/`) via Atoms and processed through the ATOM layers for CLI output.
 
-### Request Processing Flow (Example: git-commit-with-message)
+### Request Processing Flow (Example: llm-gemini-query)
 
-1.  **Input**: User/agent invokes `bin/git-commit-with-message` with arguments (`--intention`, `--files`, etc.).
-2.  **Processing (CLI)**: The CLI executable parses arguments, calls the relevant Service Object.
-3.  **Processing (Service Object)**: Service Object gathers necessary context (diff from Git via Adapter), prepares prompt for LLM.
-4.  **External Interaction (Adapter)**: Service Object calls the LLM Adapter (e.g., `GeminiAdapter`) with the prompt.
-5.  **External Service**: LLM API processes the prompt and returns a message.
-6.  **Processing (Adapter)**: Adapter receives the LLM response, potentially validates/formats it, returns to Service Object.
-7.  **Processing (Service Object)**: Service Object takes the generated message, stages files (via Git Adapter), and performs the Git commit (via Git Adapter).
-8.  **Output**: CLI confirms the commit or reports errors.
+1.  **Input**: User/agent invokes `exe/llm-gemini-query` with a prompt and optional model selection.
+2.  **Processing (CLI)**: The CLI command class parses arguments, validates input, and calls the relevant Organism.
+3.  **Processing (Organism)**: GeminiClient Organism orchestrates the request by using Molecules to build HTTP requests and manage credentials.
+4.  **External Interaction (Molecules/Atoms)**: HTTPRequestBuilder Molecule creates the request structure, HTTPClient Atom executes the API call to Google Gemini.
+5.  **External Service**: Gemini API processes the prompt and returns a response.
+6.  **Processing (Molecules/Atoms)**: APIResponseParser Molecule processes the JSON response, JSONFormatter Atom structures the data.
+7.  **Processing (Organism)**: GeminiClient receives the formatted response, applies any business rules, and prepares output.
+8.  **Output**: CLI displays the formatted response or reports errors with appropriate error handling.
 
 
 
@@ -140,7 +140,7 @@ Other key directories:
 - `bin/` - Development tools and binstubs
 - `spec/` - RSpec test suite
 - `docs/` - Product documentation (architecture, vision, blueprint)
-- `docs-project/` - Project management (tasks, decisions, roadmap)
+- `docs-project/` - Project management (tasks, roadmap)
 
 For a complete directory structure and file listings, see the [Project Blueprint](./blueprint.md#project-organization).
 
@@ -148,7 +148,7 @@ For a complete directory structure and file listings, see the [Project Blueprint
 
 -   **ATOM-Based Hierarchy**: The core library implementation (`lib/coding_agent_tools/`) follows an Atoms, Molecules, Organisms, Ecosystems hierarchy to ensure modularity, reusability, testability, and maintainability. This pattern promotes a clear separation of concerns, making components easier to understand, test, and adapt.
 -   **Test-Driven Development (TDD)**: A strong emphasis is placed on writing tests (`spec/`) before or alongside implementation code, aiming for high test coverage. This approach ensures code correctness and facilitates refactoring.
--   **Dependency Injection**: Components are designed to accept dependencies (like adapters) via initialization rather than creating them internally. This facilitates easier testing by allowing mock objects to be injected, and promotes flexibility by decoupling components from their concrete implementations.
+-   **Dependency Injection**: Components are designed to accept dependencies (like Atoms and Molecules) via initialization rather than creating them internally. This facilitates easier testing by allowing mock objects to be injected, and promotes flexibility by decoupling components from their concrete implementations.
 -   **CLI-First Design**: The architecture prioritizes a robust and predictable command-line interface as the primary interaction method. However, the CLI is designed as a thin layer over the Organisms, which can be reused in other contexts (e.g., web services, other Ruby applications). This allows the gem to be easily integrated into automated workflows and used directly by developers or other agents.
 -   **Testing with VCR**: HTTP interactions with external APIs are recorded and replayed using VCR. This ensures tests are fast, reliable, and deterministic, as they do not rely on live external services, making the test suite robust against network issues or API changes.
 -   **Observability with dry-monitor**: Key events and operations within the gem are instrumented using `dry-monitor`. This allows for centralized logging, error reporting, and performance monitoring by decoupling the event emitters from their consumers, thus avoiding tightly coupled concerns and promoting a flexible monitoring setup.
@@ -226,4 +226,3 @@ For detailed decision records, see [docs/architecture-decisions/](./architecture
 -   **Issue**: LLM query fails.
     -   **Symptoms**: Commands like `bin/llm-gemini-query` report API errors or connection issues.
     -   **Solution**: Check environment variables (`GEMINI_API_KEY`), network connectivity, and the status of the LM Studio server if using the local model.
-
