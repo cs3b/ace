@@ -43,7 +43,7 @@ git checkout -b fix/issue-description
 # Run all tests
 bin/test
 
-# Run linter
+# Run linter (includes StandardRB and secrets scanning)
 bin/lint
 
 # Build gem to verify no issues
@@ -102,7 +102,7 @@ This project uses **StandardRB** for Ruby code formatting and linting.
 ### Running StandardRB
 
 ```bash
-# Check for style violations
+# Check for style violations (includes secrets scanning)
 bin/lint
 
 # Auto-fix violations (when possible)
@@ -134,6 +134,78 @@ lib/coding_agent_tools/
 ├── models/         # Data structures (POROs)
 └── cli/           # Command-line interface
 ```
+
+## 🔒 Security and Secrets Scanning
+
+This project includes automated secrets detection to prevent accidental commits of API keys, passwords, and other sensitive information.
+
+### How It Works
+
+- **GitHub Push Protection**: Automatically enabled for all pushes to prevent secrets from reaching the repository
+- **Local Scanning**: `bin/lint` includes `bin/lint-security` for faster feedback during development
+- **Graceful Fallback**: If Gitleaks isn't installed, scanning is skipped with an informative message
+- **Gitignore Respect**: Files in `.gitignore` are automatically excluded from scanning
+- **File Size Limits**: Large files (>1MB) are skipped by default to avoid scanning logs and data dumps
+
+### Installing Gitleaks (Optional)
+
+While not required, installing Gitleaks provides immediate feedback during development:
+
+```bash
+# macOS
+brew install gitleaks
+
+# Other platforms
+# See: https://github.com/gitleaks/gitleaks#installation
+```
+
+### Scanning Options
+
+Use the `bin/lint-security` script directly for advanced options:
+
+```bash
+# Basic scan (current files, <1MB, respects .gitignore)
+bin/lint-security
+
+# Scan including large files
+bin/lint-security --full
+
+# Scan entire git history
+bin/lint-security --git-past
+
+# Full historical scan including large files
+bin/lint-security --full --git-past
+
+# Verbose output
+bin/lint-security --verbose
+```
+
+### What Gets Scanned
+
+- All source code, documentation, and configuration files not in `.gitignore`
+- **File Size Limit**: 1MB by default (use `--full` to override)
+- **Excluded**: VCR cassettes, test fixtures, build artifacts, and documentation examples
+- **Filtered**: Known safe patterns like placeholder values and test keys
+
+### If Secrets Are Detected
+
+1. **Remove the secret** from your code
+2. **Use environment variables** instead:
+   ```ruby
+   api_key = ENV['GEMINI_API_KEY']
+   ```
+3. **Add to .env file** (not committed to git):
+   ```bash
+   GEMINI_API_KEY=your_actual_key_here
+   ```
+4. **Run `bin/lint`** again to verify
+
+### False Positives
+
+If you encounter false positives:
+- Check if it's a test fixture that should use placeholder values
+- Verify the pattern isn't actually sensitive
+- For legitimate cases, contact maintainers for configuration updates
 
 ## 🧪 Testing Guidelines
 

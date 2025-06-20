@@ -1,0 +1,109 @@
+# Gitleaks configuration for Coding Agent Tools Ruby gem
+# This file configures secret detection rules and exclusions
+
+[extend]
+# Use the default Gitleaks rules as a base
+useDefault = true
+
+# Configure file size limits (can be overridden with --full flag)
+[detect]
+maxTargetMegaBytes = 1
+
+# Global allowlist for common false positives
+[allowlist]
+description = "Global allowlist for common Ruby project false positives"
+
+# Use regex patterns for path exclusions
+# Note: Files in .gitignore are automatically excluded by Gitleaks
+paths = [
+    # Environment files (may contain development keys)
+    '''\.env$''',
+    '''\.env\..*''',
+
+    # VCR cassettes contain filtered API responses
+    '''spec/cassettes/.*''',
+
+    # Test fixtures may contain example secrets
+    '''spec/fixtures/.*''',
+
+    # Build and dependency directories (in addition to .gitignore)
+    '''vendor/.*''',
+    '''node_modules/.*''',
+    '''tmp/.*''',
+    '''coverage/.*''',
+    '''pkg/.*''',
+    '''\.bundle/.*''',
+
+    # Generated files that might contain tokens
+    '''.*\.log$''',
+    '''.*\.pid$''',
+    '''.*\.seed$''',
+    '''.*\.cache$''',
+    '''.*\.tmp$''',
+
+    # IDE and editor files
+    '''\.vscode/.*''',
+    '''\.idea/.*''',
+    '''.*\.swp$''',
+    '''.*\.swo$''',
+    '''.*~$''',
+
+    # OS files
+    '''\.DS_Store$''',
+    '''Thumbs\.db$''',
+
+    # Documentation build artifacts
+    '''docs/_site/.*''',
+    '''docs/\.jekyll-cache/.*''',
+
+    # Project-specific exclusions
+    '''docs-dev/.*''',
+    '''docs-project/.*''',
+
+    # Large database/data files that might contain tokens
+    '''.*\.sql\.gz$''',
+    '''.*\.dump$''',
+    '''.*\.backup$''',
+]
+
+regexes = [
+    # Filtered secrets in VCR cassettes
+    "<GEMINI_API_KEY>",
+    "<AUTHORIZATION>",
+    "test-api-key-for-vcr-playback",
+    "your_actual_gemini_api_key_here",
+
+    # Documentation examples and placeholders
+    "your_api_key_here",
+    "example-key-.*",
+    "placeholder-.*",
+    "sk-.*example.*",
+    "ghp_.*example.*",
+    "your_actual_.*_here",
+
+    # Test fixtures and example secrets
+    "test-secret-123",
+    "example-api-key",
+    "fake-token-.*",
+    "invalid-key-.*",
+    "test-key-.*",
+    "changeme",
+    "replace-me",
+    "todo-.*",
+    "fixme-.*",
+
+    # Common Ruby/Rails patterns that may trigger false positives
+    "ActiveRecord::Migration\\[\\d+\\.\\d+\\]",
+    "Rails\\.application\\.secrets",
+    "Rails\\.application\\.credentials",
+
+    # Common test patterns
+    "SecureRandom\\.(hex|uuid|base64)",
+    "Digest::(MD5|SHA1|SHA256)\\.hexdigest",
+
+    # Git commit SHAs (40 character hex strings) - these are public
+    "[0-9a-f]{40}",
+
+    # UUIDs - often used as test data
+    "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+]

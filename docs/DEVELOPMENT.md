@@ -208,18 +208,41 @@ bundle exec rspec spec/path/to/specific_test.rb
 - Validates all functionality
 
 #### `bin/lint`
-**Purpose**: Check and fix code style using StandardRB
+**Purpose**: Check and fix code style using StandardRB and scan for secrets
 ```bash
-# Check for style violations
+# Check for style violations and secrets
 bin/lint
 
 # Auto-fix violations (when possible)
 bundle exec standardrb --fix
 ```
 - Enforces Ruby style guide (StandardRB)
-- Reports style violations
-- Can automatically fix many issues
-- Ensures consistent code formatting
+- Calls `bin/lint-security` for secrets scanning
+- Reports style violations and security issues
+- Can automatically fix many style issues
+- Ensures consistent code formatting and security
+- Graceful fallback when Gitleaks is not available
+
+#### `bin/lint-security`
+**Purpose**: Standalone security scanning with Gitleaks
+```bash
+# Basic scan (current files, <1MB, respects .gitignore)
+bin/lint-security
+
+# Scan including large files (>1MB)
+bin/lint-security --full
+
+# Scan entire git history for secrets
+bin/lint-security --git-past
+
+# Full historical scan with verbose output
+bin/lint-security --full --git-past --verbose
+```
+- Detects secrets using Gitleaks (when installed)
+- Respects `.gitignore` patterns automatically
+- File size limits (1MB by default) to avoid scanning logs/dumps
+- Can scan git history for historical secrets
+- Graceful fallback with informative message when Gitleaks missing
 
 #### `bin/build`
 **Purpose**: Build the gem package and verify its local installation
