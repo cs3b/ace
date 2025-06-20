@@ -44,7 +44,7 @@ conventions should be documented in `docs-project/testing-guide.md` (if it exist
         └── test_helper.ext # Or 'spec_helper.ext' - Test configuration
     ```
 
-    *(Refer to `docs-project/blueprint.md` for the project's actual structure)*
+    *(Refer to `docs/blueprint.md` for the project's actual structure)*
 
 3. **Test Pyramid:** Aim for a healthy test pyramid: many fast unit tests at the base, fewer integration
    tests, and even fewer slow E2E tests at the top.

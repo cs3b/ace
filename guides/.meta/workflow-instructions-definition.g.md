@@ -7,7 +7,7 @@ This guide explains how to create and structure the Markdown-based workflow inst
 ## Core Principles
 
 1.  **Clarity & Specificity**: Instructions should be unambiguous. Use clear action verbs and define expected inputs and outputs precisely. Avoid vague language.
-2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., [Coding Standards](docs-dev/guides/coding-standards.g.md)), project documents ([Blueprint](docs-project/blueprint.md), [Architecture](docs-project/architecture.md)), or existing code patterns using root-relative paths.
+2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g.: project documents ([Blueprint](docs/blueprint.md), [Architecture](docs/architecture.md)), or existing code patterns using root-relative paths.
 3.  **Structured Format**: Use Markdown sections (like `## Goal`, `## Process Steps`, `## Success Criteria`) to organize the instruction logically. This helps both humans and AI parse the information.
 4.  **Focus**: Each workflow instruction should address a single, well-defined process or goal. Break down complex workflows into smaller, composable instructions if possible.
 5.  **Examples**: Provide concrete examples of inputs, outputs, or expected results, especially for complex instructions. Few-shot learning helps the AI understand the desired format and behavior.

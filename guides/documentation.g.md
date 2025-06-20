@@ -117,7 +117,7 @@ your-package-manager install your-package-name
 
 1. **Architecture Documentation**:
 
-    Refer to the project's `docs-project/blueprint.md` for the specific structure.
+    Refer to the project's `docs/blueprint.md` for the specific structure.
 
 ```markdown
 # Architecture Overview
@@ -169,8 +169,8 @@ your-package-manager install your-package-name
 
 Clear documentation is crucial for effective AI collaboration.
 
-- **Structured Project Docs:** Maintain core documents like `docs-project/what-do-we-build.md`,
-    `docs-project/architecture.md`, and `docs-project/blueprint.md`. Keep them up-to-date as they provide
+- **Structured Project Docs:** Maintain core documents like `docs/what-do-we-build.md`,
+    `docs/architecture.md`, and `docs/blueprint.md`. Keep them up-to-date as they provide
     essential high-level context for the AI.
 - **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.g.md`)
     with clear descriptions, implementation notes, and acceptance criteria.

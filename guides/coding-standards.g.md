@@ -8,7 +8,7 @@ and consistent code within this project. Adhering to these standards facilitates
 
 This document outlines general coding standards applicable across the project. Project-specific
 conventions or language-specific rules beyond these general principles may be documented
-in the relevant `docs-project/` directory or linked from the `docs-project/blueprint.md`.
+in the relevant `docs-project/` directory or linked from the `docs/blueprint.md`.
 
 ## General Principles
 
@@ -66,7 +66,7 @@ Please refer to the relevant guide for your language:
 
 - Follow a logical directory structure (e.g., separating library code, tests, configuration, documentation).
 - Use clear and consistent file naming conventions.
-Refer to the project\'s `docs-project/blueprint.md` for the specific structure.
+Refer to the project's `docs/blueprint.md` for the specific structure.
 
 ## AI-Assisted Development Collaboration
 
@@ -77,7 +77,7 @@ to a junior developer needing clear guidance.
   identifying relevant context *before* asking the AI to generate or modify code. This aligns with the
   "Slow Vibe Coding" principle mentioned in Project Management.
 - **Provide Context:** Give the AI sufficient context, including relevant code snippets, project structure
-  (`docs-project/blueprint.md`), architecture (`docs-project/architecture.md`), existing patterns, and the
+  (`docs/blueprint.md`), architecture (`docs/architecture.md`), existing patterns, and the
   specific task definition (`.md` file within `docs-project`).
 - **Use Specific, Concise Instructions:** Avoid vague requests. Break down complex tasks into smaller,
   well-defined steps. Use clear action verbs and specify the desired outcome. Consider using "prompt hygiene"

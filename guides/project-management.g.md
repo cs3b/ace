@@ -254,8 +254,8 @@ Tasks and release structures are typically generated through one of three primar
     - Break down the task into smaller, logical steps.
     - Identify potential challenges or areas needing clarification.
     - Outline the intended design, interfaces, and test structures.
-    - Gather necessary context (relevant existing code, patterns, `docs-project/blueprint.md`,
-      `docs-project/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
+    - Gather necessary context (relevant existing code, patterns, `docs/blueprint.md`,
+      `docs/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
 1. **Test-Driven Development (AI-Assisted)**:
     - **Write Tests (Test Phase in `work-on-task`)**: Guide the AI to generate failing tests based on the planned
       structure and acceptance criteria using the testing phase described in the
@@ -280,7 +280,7 @@ Tasks and release structures are typically generated through one of three primar
 ## Agent Operational Boundaries
 
 To ensure project integrity and prevent unintentional modifications to critical or archived areas, the AI
-agent\'s operations are guided by path-based restrictions defined in the project\'s `docs-project/blueprint.md`
+agent's operations are guided by path-based restrictions defined in the project's `docs/blueprint.md`
 file. These restrictions specify:
 
 - **Read-Only Paths**: Files and directories that the agent should not attempt to modify. This is useful for
@@ -291,8 +291,8 @@ file. These restrictions specify:
   temporary files, and other non-essential items.
 
 By adhering to these rules, the agent can operate more safely and efficiently within the project. For the
-specific configurations of these paths for this project, please refer to the \"Read-Only Paths\" and
-\"Ignored Paths\" sections in `docs-project/blueprint.md`.
+specific configurations of these paths for this project, please refer to the "Read-Only Paths" and
+"Ignored Paths" sections in `docs/blueprint.md`.
 
 ### Policy on Done Tasks with Changing Referenced Files
 
