@@ -1,3 +1,4 @@
+# Project Initialization Feedback
 2. What was a struggle (required few attempts, or needed fixing):
 
 *   **`bin/tnid` Script Logic:** This was the most significant struggle.
@@ -13,3 +14,11 @@
 
 *   **Executing `bin/gc` Successfully:** Due to the syntax error, I couldn't get the `bin/gc` script to run through its intended logic, even to the point of just displaying the commit message and prompting for confirmation. The script was failing before it could fully execute.
 *   **Full Workflow Rule Adherence (Implicit):** While the user rule mentioned "prepare command `bin/gc -i "$write short intention for changes that have been made"` in the chat but do not run it," the `draft-release.wf.md` (Step 8) *also* specified a very similar instruction: "Output the following command **verbatim** ... `chore(backlog): scaffold release v.X.Y.Z-codename – initial structure and tasks`". I was attempting to test my `bin/gc` with this specific string as input, which led to the discovery of the quoting issue in the script. The script itself should have been able to handle such input.
+
+
+# feedback after reelease RELEASE
+
+bin/rn
+fish: Unknown command: bin/rn
+
+next - release number
