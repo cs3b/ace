@@ -50,6 +50,14 @@ This quick start guide gets you up and running with the development environment.
 - **Rake**: Task automation and build system integration
 - **YARD**: Documentation generation from code comments
 
+### Optional Security Tools
+
+- **Gitleaks** _(optional)_: Secrets detection for local development
+  - Install: [https://github.com/gitleaks/gitleaks#installation](https://github.com/gitleaks/gitleaks#installation)
+  - Usage: Automatically integrated with `bin/lint` when available
+  - Fallback: `bin/lint` provides informative message if not installed
+  - Purpose: Complements GitHub's native push protection with local scanning
+
 For complete dependency information, see `coding_agent_tools.gemspec` and `Gemfile`.
 
 ## API Key Setup for Development
