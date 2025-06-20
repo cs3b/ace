@@ -6,8 +6,10 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Core Project Documents
 
-- [What We Build](docs-project/what-do-we-build.md) - Project vision and goals
-- [Architecture](docs-project/architecture.md) - System design and implementation principles
+- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+- [Architecture](docs/architecture.md) - System design and implementation principles
+- [Blueprint](docs/blueprint.md) - Project structure and organization
+
 
 ## Project Organization
 
@@ -56,7 +58,7 @@ This will show all project files while filtering out temporary files, session lo
 
 - [Workflow Instructions](docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
 - [Project Guides](docs-dev/guides/README.md) - Development standards and best practices
-- [Configuration](config/README.md) - Configuration documentation (if applicable)
+- [Configuration](README.md) - Configuration documentation (if applicable)
 
 ## Technology Stack
 

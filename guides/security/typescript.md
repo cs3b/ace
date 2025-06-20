@@ -1,6 +1,6 @@
 # TypeScript Security Examples
 
-This file provides TypeScript-specific examples related to the main [Security Guide](../security.md).
+This file provides TypeScript-specific examples related to the main [Security Guide](docs-dev/guides/security.g.md).
 
 * **Dependency Scanning:** `npm audit`, `yarn audit`, Snyk, GitHub Dependabot
 * **Static Analysis (SAST):** ESLint security plugins (e.g., `eslint-plugin-security`), SonarQube/SonarCloud

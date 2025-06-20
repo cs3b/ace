@@ -1,6 +1,6 @@
 ---
 id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using bin/tnid
-status: pending # See [Project Management Guide](project-management.md) for all possible values
+status: pending
 priority: high
 estimate: 2h
 dependencies: [TEMPLATE-task.3]

@@ -6,7 +6,7 @@ This guide provides practical rules and decision-making tools for correctly clas
 
 The ATOM architecture organizes code into distinct layers based on complexity and responsibility:
 - **Models**: Pure data carriers
-- **Molecules**: Behavior-oriented helpers  
+- **Molecules**: Behavior-oriented helpers
 - **Organisms**: Complex business logic units
 - **Atoms**: Basic utilities (foundation layer)
 - **Ecosystems**: Cohesive groupings of organisms
@@ -43,7 +43,7 @@ Use Models/                    Does it perform I/O operations?
 
 **Characteristics**:
 - Typically implemented as `Struct` classes
-- No I/O operations (no file access, no network calls, no database queries)  
+- No I/O operations (no file access, no network calls, no database queries)
 - No external gem dependencies beyond Ruby standard library
 - Focus solely on data representation and basic data manipulation
 - Immutable when possible
@@ -55,7 +55,7 @@ LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true
   def default?
     default
   end
-  
+
   def to_h
     {id: id, name: name, description: description, default: default}
   end
@@ -98,19 +98,19 @@ class HTTPRequestBuilder
   def initialize(timeout: 30)
     @timeout = timeout
   end
-  
+
   def build_get_request(url, headers = {})
     # Focused logic for building HTTP requests
   end
 end
 
-# ✅ Good: Reusable wrapper functionality  
+# ✅ Good: Reusable wrapper functionality
 class ExecutableWrapper
   def initialize(command_path:, registration_method:)
     @command_path = command_path
     @registration_method = registration_method
   end
-  
+
   def call
     setup_bundler
     execute_cli
@@ -134,10 +134,10 @@ end
 # ❌ Bad: Pure data (should be Model)
 class UserSettings
   attr_accessor :theme, :language, :notifications
-  
+
   def initialize(theme:, language:, notifications:)
     @theme = theme
-    @language = language  
+    @language = language
     @notifications = notifications
   end
 end
@@ -163,18 +163,18 @@ class GeminiClient
     @response_parser = Molecules::APIResponseParser.new
     @credentials = Molecules::APICredentials.new(api_key)
   end
-  
+
   def generate_text(prompt, **options)
     # Orchestrates request building, API calling, and response parsing
   end
-  
+
   def list_models
     # Complete business operation
   end
 end
 
 # ✅ Good: Complex business logic coordination
-class PromptProcessor  
+class PromptProcessor
   def process_prompt(template, context)
     # Coordinates template parsing, variable substitution, validation
   end
@@ -193,7 +193,7 @@ end
 # ❌ Bad: Pure data structure (should be Model)
 class ConfigurationSettings
   attr_reader :api_endpoint, :timeout, :retry_count
-  
+
   def initialize(api_endpoint:, timeout:, retry_count:)
     @api_endpoint = api_endpoint
     @timeout = timeout
@@ -213,7 +213,7 @@ When creating a new class, ask yourself:
 - [ ] Could this be implemented as a Struct?
 - [ ] Does it focus on "what" the data represents?
 
-### For Molecules:  
+### For Molecules:
 - [ ] Does this class perform a specific, focused operation?
 - [ ] Does it compose simpler components (atoms)?
 - [ ] Is it reusable across different contexts?
@@ -233,9 +233,9 @@ When creating a new class, ask yourself:
 
 **Problem**: Placing pure data structures in `molecules/` or `organisms/`
 
-**Example**: 
+**Example**:
 ```ruby
-# ❌ Wrong location: molecules/model.rb  
+# ❌ Wrong location: molecules/model.rb
 class Model < Struct.new(:id, :name)
   def to_s
     "#{id}: #{name}"
@@ -244,7 +244,7 @@ end
 ```
 
 **Solution**: Move to `models/` and rename appropriately
-```ruby  
+```ruby
 # ✅ Correct location: models/llm_model_info.rb
 LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true)
 ```
@@ -261,7 +261,7 @@ LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true
 class OrderHandler
   def process_complete_order(order)
     validate_order(order)
-    reserve_inventory(order) 
+    reserve_inventory(order)
     process_payment(order)
     ship_order(order)
     send_notifications(order)
@@ -271,11 +271,11 @@ end
 
 **Solution**: Move to organisms for complex business coordination
 ```ruby
-# ✅ Correct: Business orchestration in organism  
+# ✅ Correct: Business orchestration in organism
 class OrderProcessor
   def initialize
     @validator = Molecules::OrderValidator.new
-    @inventory = Molecules::InventoryManager.new  
+    @inventory = Molecules::InventoryManager.new
     @payment = Molecules::PaymentProcessor.new
   end
 end
@@ -316,7 +316,7 @@ To maintain these standards as the project grows, consider implementing:
 - **CI Pipeline Checks**: Automated validation during pull requests
 - **File Naming Conventions**: Enforce naming patterns that reflect component type
 
-### Code Review Guidelines  
+### Code Review Guidelines
 - **Classification Review**: Every new class should be reviewed for proper placement
 - **Architecture Review**: Periodic reviews of component boundaries
 - **Refactoring Guidelines**: Clear process for moving misplaced components
@@ -328,10 +328,10 @@ To maintain these standards as the project grows, consider implementing:
 
 ## Cross-References
 
-- [Architecture Documentation](../../docs/architecture.md) - Overall system architecture
-- [ADR-006: ATOM Architecture House Rules](../../docs-project/current/v.0.2.0-synapse/decisions/ADR-006-ATOM-Architecture-House-Rules.md) - Official architecture decisions
-- [Coding Standards](./coding-standards.md) - General coding practices
-- [Testing Guidelines](./testing.md) - Testing patterns for each component type
+- [Architecture Documentation](docs/architecture.md) - Overall system architecture
+- [ADR-006: ATOM Architecture House Rules](docs-project/current/v.0.2.0-synapse/decisions/ADR-006-ATOM-Architecture-House-Rules.md) - Official architecture decisions
+- [Coding Standards](docs-dev/guides/coding-standards.g.md) - General coding practices
+- [Testing Guidelines](docs-dev/guides/testing.g.md) - Testing patterns for each component type
 
 ## Conclusion
 

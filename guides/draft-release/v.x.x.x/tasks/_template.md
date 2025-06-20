@@ -1,6 +1,6 @@
 ---
-id: <run bin/tnid to generate ID> # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see docs-dev/guides/project-management.md#task-id-convention.
-status: pending # See [Project Management Guide](project-management.md) for all possible values
+id: <run bin/tnid to generate ID>
+status: pending
 priority: <high/medium/low>
 estimate: <n>h
 dependencies: [<ticket-ids>]

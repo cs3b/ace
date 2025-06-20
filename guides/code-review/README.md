@@ -163,7 +163,7 @@ You can modify the review template (`_code-review-from-diff.md`) to:
    ```bash
    # Implement new feature
    vim lib/my_gem/new_feature.rb
-   
+
    # Add tests
    vim spec/my_gem/new_feature_spec.rb
    ```
@@ -229,7 +229,6 @@ To improve the code review system:
 
 ## See Also
 
-- [Documentation Review System](../README.md)
-- [ATOM Architecture Guide](../../../architecture.md)
+- [Project Architecture](docs/architecture.md)
 - [Ruby Style Guide](https://rubystyle.guide)
 - [RSpec Best Practices](https://www.betterspecs.org)

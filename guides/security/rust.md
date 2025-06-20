@@ -1,6 +1,6 @@
 # Rust Security Examples
 
-This file provides Rust-specific examples related to the main [Security Guide](../security.md).
+This file provides Rust-specific examples related to the main [Security Guide](docs-dev/guides//security.g.md).
 
 * **Dependency Scanning:** `cargo audit`, GitHub Dependabot
 * **Static Analysis (SAST):** `cargo clippy` (catches some security issues), potentially external SAST tools.

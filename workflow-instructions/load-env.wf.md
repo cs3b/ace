@@ -27,9 +27,9 @@ on loading context, not initiating task execution (see `work-on-task`).
     List available general workflow instructions: [docs-dev/workflow-instructions/](docs-dev/workflow-instructions/)
 
 2. **Load Project-Specific Context:**
-    - Review project objectives: [docs-project/what-do-we-build.md](docs-project/what-do-we-build.md)
-    - Examine high-level architecture: [docs-project/architecture.md](docs-project/architecture.md)
-    - Check project structure and key files: [docs-project/blueprint.md](docs-project/blueprint.md).
+    - Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
+    - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
+    - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
 
 3. **Determine Current Work State:**
     - Identify active release directory: [docs-project/current/](docs-project/current/)
@@ -59,7 +59,7 @@ on loading context, not initiating task execution (see `work-on-task`).
 - [Documentation Standards Guide](docs-dev/guides/documentation.g.md)
 - [Version Control Guide](docs-dev/guides/version-control-system.g.md)
 - [Release Process Guide](docs-dev/guides/release-publish.g.md)
-- [What do we build](docs-project/what-do-we-build.md)
-- [What is our architecture](docs-project/architecture.md)
-- [What is our blueprint](docs-project/blueprint.md)
+- [What do we build](docs/what-do-we-build.md)
+- [What is our architecture](docs/architecture.md)
+- [What is our blueprint](docs/blueprint.md)
 - [`Work on Task` Workflow Instruction](docs-dev/workflow-instructions/work-on-task.wf.md)

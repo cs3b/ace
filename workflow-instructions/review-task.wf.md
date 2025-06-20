@@ -28,9 +28,9 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 
 2. **Review Task Against Context:**
     - Compare the task's Objective and Description against the project's overall goals as defined in
-      [What We Build](docs-project/what-do-we-build.md).
+      [What We Build](docs/what-do-we-build.md).
     - Evaluate the proposed Implementation Details, Scope, and Deliverables in light of the project
-      [Architecture](docs-project/architecture.md) and [Blueprint](docs-project/blueprint.md). Identify any
+      [Architecture](docs/architecture.md) and [Blueprint](docs/blueprint.md). Identify any
       potential architectural conflicts or structural challenges.
     - **Review Recent Git and Task History:**
         - Use the `bin/gl` tool (powered by `docs-dev/tools/get-recent-git-log`) to view recent commits across the
@@ -67,7 +67,7 @@ with project goals, architecture, and recent changes. Identify areas requiring u
           cover analysis, research, and design activities.
         - Ensure Execution Steps (`- [ ]`) focus on concrete implementation actions.
         - Suggest embedded tests where verification or validation would be beneficial.
-    - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs-project/architecture.md)
+    - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs/architecture.md)
       principles).
     - Identify specific code files or guides that will be relevant during implementation, noting if recent changes
       in those files need particular attention.
@@ -119,7 +119,7 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 - [Write Actionable Task Guide](../guides/task-definition.g.md) (Format for task files)
 - [Project Management Guide](../guides/project-management.g.md) (Task status, dependencies, overall workflow)
 - [Load Environment Workflow Instruction](./load-env.wf.md) (Provides necessary context including recent changes)
-- [What We Build](docs-project/what-do-we-build.md)
-- [Architecture](docs-project/architecture.md)
-- [Blueprint](docs-project/blueprint.md)
-- [Version Control Guide](../guides/version-control-system.g.md) (For understanding Git history review)
+- [What We Build](docs/what-do-we-build.md)
+- [Architecture](docs/architecture.md)
+- [Blueprint](docs/blueprint.md)
+- [Version Control Guide](docs-dev/guides/version-control-system.g.md) (For understanding Git history review)
