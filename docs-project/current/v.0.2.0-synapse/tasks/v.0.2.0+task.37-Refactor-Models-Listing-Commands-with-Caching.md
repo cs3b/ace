@@ -40,7 +40,7 @@ exe
 
 - Consolidate `llm-gemini-models` and `llm-lmstudio-models` into a single `llm-models` command
 - Implement caching mechanism for model information
-- Add cost information retrieval and display for each model
+
 - Create cache management functionality (read from cache by default, refresh on demand)
 
 ## Deliverables / Manifest
@@ -57,7 +57,7 @@ exe
 1. **Design Phase**: Design cache structure and unified command interface
 2. **Implementation Phase**: Create unified binary with provider selection
 3. **Caching Phase**: Implement cache storage and retrieval logic
-4. **Cost Integration Phase**: Add model cost information
+
 5. **Migration Phase**: Remove old binaries and update references
 6. **Documentation Phase**: Update user guides and examples
 
@@ -70,12 +70,15 @@ exe
 * [ ] Determine cache invalidation strategy and refresh mechanism
 
 ### Execution Steps
-- [ ] Create new `llm-models` command structure with provider parameter
+- [ ] Consolidate `llm-gemini-models` and `llm-lmstudio-models` by refactoring `lib/coding_agent_tools/cli/commands/llm/models.rb` to become the unified command.
   ```bash
   llm-models <provider>  # default: google
   llm-models google
   llm-models lmstudio
   ```
+- [ ] Delete `lib/coding_agent_tools/cli/commands/lms/models.rb`
+- [ ] Merge relevant, unique test cases from `spec/coding_agent_tools/cli/commands/lms/models_spec.rb` into `spec/coding_agent_tools/cli/commands/llm/models_spec.rb`
+- [ ] Delete `spec/coding_agent_tools/cli/commands/lms/models_spec.rb`
 - [ ] Implement base caching infrastructure
   - [ ] Create `.coding-agent-tools-cache/` directory structure
   - [ ] Implement cache file format (YAML) per provider
@@ -94,10 +97,7 @@ exe
   - [ ] Read from cache by default
   - [ ] Add `--refresh` or `--fetch-from-api` flag for updates
   - [ ] Only update changed models on refresh
-- [ ] Add cost information integration
-  - [ ] Fetch cost data from API when available
-  - [ ] Implement LLM-assisted cost lookup for missing data
-  - [ ] Store cost information in cache (input/output/cached tokens)
+
 - [ ] Remove deprecated binaries
   - [ ] Delete `exe/llm-gemini-models`
   - [ ] Delete `exe/llm-lmstudio-models`
@@ -110,7 +110,7 @@ exe
 - [ ] Default provider is Google/Gemini when no argument provided
 - [ ] Cache is used by default for faster response times
 - [ ] `--refresh` flag fetches latest data from APIs
-- [ ] Cost information is displayed for each model (when available)
+
 - [ ] Cache files are stored in `.coding-agent-tools-cache/` with provider-specific YAML files
 - [ ] Old `llm-gemini-models` and `llm-lmstudio-models` commands are removed
 - [ ] All tests pass after migration
@@ -119,6 +119,7 @@ exe
 ## Out of Scope
 
 - Adding new providers (OpenAI, Anthropic, Mixtral) - this is covered in a separate task
+- The implementation of *detailed* cost calculation, storage, and reporting is explicitly out of scope for this task and will be addressed in `v.0.2.0+task.40`. This task should *not* introduce new data structures or logic for recording cost per token, beyond what is necessary for model listing.
 - Implementing actual cost tracking during usage - this is covered in a separate task
 - Complex cache invalidation strategies (time-based, etc.)
 
@@ -127,4 +128,8 @@ exe
 - Current implementation: `exe/llm-gemini-models`, `exe/llm-lmstudio-models`
 - Cache format should be extensible for future providers
 - Risk: Breaking changes for users relying on old commands - mitigate with clear migration guide
+## Anticipated Changes
+
+This task will likely require modifications to: `exe/llm-models`, `lib/coding_agent_tools/cli.rb`, `lib/coding_agent_tools/cli/commands/llm/models.rb`, `README.md`, `CHANGELOG.md`, `docs/blueprint.md`, `docs/llm-integration/model-management.md`. It will also involve the deletion of `exe/llm-gemini-models`, `exe/llm-lmstudio-models`, `lib/coding_agent_tools/cli/commands/lms/models.rb`, and `spec/coding_agent_tools/cli/commands/lms/models_spec.rb`. Test updates will be required in `spec/coding_agent_tools/cli/commands/llm/models_spec.rb`.
+
 - Consider using existing Ruby cache libraries vs custom implementation

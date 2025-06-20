@@ -75,6 +75,7 @@ lib/coding_agent_tools
   - [ ] OpenAI pricing tiers
   - [ ] Anthropic token costs
   - [ ] Mixtral/Together pricing
+* [ ] Review `LlmModelInfo` and determine how to extend it to encapsulate pricing data per model without breaking its pure data structure nature. Consider adding new attributes (e.g., `pricing_details`) and helper methods (e.g., `cost_per_token_input`) to `LlmModelInfo`.
 * [ ] Design cost tracking data structures
   ```ruby
   # Example structure:
