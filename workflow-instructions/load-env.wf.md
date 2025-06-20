@@ -8,7 +8,7 @@ on loading context, not initiating task execution (see `work-on-task`).
 
 - Executed within the project's root directory.
 - `docs-dev/` and `docs-project/` directories exist and are populated according to project standards.
-- `docs-project/blueprint.md` exists and is reasonably up-to-date.
+- `docs/blueprint.md` exists and is reasonably up-to-date.
 
 ## Input
 
