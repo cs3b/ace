@@ -147,14 +147,6 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 - **CI/CD Pipelines**: Intended to be invoked as part of automated workflows.
 - **AI Coding Agents**: Primary users and integrators of the tools.
 
-## Submodules
-
-### docs-dev
-- Path: `docs-dev`
-- Repository: [Repository URL - assumed external]
-- Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
-- **Important**: Commits for this submodule must be made from within the submodule directory.
-
 ---
 
 *This document should be updated as the project evolves and new insights are gained about user needs and project direction.*

@@ -37,7 +37,7 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 
 - **LLM Integration**: Query Google Gemini and local LM Studio models
   - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
-- **Model Discovery**: List and filter available models from different providers (see [Model Management Guide](docs/model-management.md))
+- **Model Discovery**: List and filter available models from different providers (see [Model Management Guide](docs/dev-guides/model-management.md))
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
@@ -119,7 +119,7 @@ The gem's library code in `lib/coding_agent_tools/` is structured using an **ATO
 - **Faraday**: HTTP client for API integrations (Google Gemini)
 - **dry-cli**: Command-line interface framework
 
-See the [Architecture Document](docs-project/architecture.md) for more details.
+See the [Architecture Document](docs/architecture.md) for more details.
 
 ## 🔧 Configuration
 
@@ -193,7 +193,7 @@ git checkout -b feature/your-feature
 ### Key Development Resources
 
 - **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and tools
-- **[Setup Guide](docs/SETUP.md)** - Environment setup instructions  
+- **[Setup Guide](docs/SETUP.md)** - Environment setup instructions
 - **[Contributing](.github/CONTRIBUTING.md)** - Contribution guidelines and standards
 
 ## 📚 Documentation
@@ -204,8 +204,8 @@ git checkout -b feature/your-feature
 - **[Contributing](.github/CONTRIBUTING.md)** - How to contribute
 
 ### Project Documentation
-- [Architecture](docs-project/architecture.md) - System design and patterns
-- [Project Vision](docs-project/what-do-we-build.md) - Goals and use cases
+- [Project Vision](docs/what-do-we-build.md) - Goals and use cases
+- [Architecture](docs/architecture.md) - System design and patterns
 - [Development Guides](docs-dev/guides/) - Internal standards and processes
 
 ## 🤝 Contributing
@@ -218,7 +218,7 @@ We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTI
 - Pull request process and guidelines
 - Commit message conventions
 
-This project follows documentation-driven development with structured task management in `docs-project/`. See the [project blueprint](docs-project/blueprint.md) for navigation guidance.
+This project follows documentation-driven development with structured task management in `docs-project/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
 
 ### Quick Contribution Workflow
 

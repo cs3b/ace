@@ -47,26 +47,22 @@ This will show all project files while filtering out temporary files, session lo
 
 ## Key Project-Specific Files
 
-- [Product Requirements Document (PRD)](../../PRD.md) - Primary source of truth for project goals and requirements
-- [Main README](../../README.md) - Project overview, installation, runtime configuration, and user-facing documentation
-- [Development Guide](../../docs/DEVELOPMENT.md) - Development environment setup, testing, build tools, and contributor workflow
-- [Workflow Instructions](../../docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
-- [Project Guides](../../docs-dev/guides/README.md) - Development standards and best practices
+- [Product Requirements Document (PRD)](../PRD.md) - Primary source of truth for project goals and requirements
+- [Main README](../README.md) - Project overview, installation, runtime configuration, and user-facing documentation
+- [Development Guide](../docs/DEVELOPMENT.md) - Development environment setup, testing, build tools, and contributor workflow
+- [Workflow Instructions](../docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](../docs-dev/guides/README.md) - Development standards and best practices
 - `coding_agent_tools.gemspec` - Ruby gem definition and dependencies
 - `Gemfile` - Bundler dependency management
 
 ## Technology Stack
 
-- **Primary Language**: Ruby (>= 3.4.2)
-- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model), Zeitwerk for efficient code loading, and dry-monitor for observability
-- **Runtime Dependencies**: Faraday (HTTP client), dry-cli (CLI framework), dry-configurable (configuration management), addressable (URI parsing and manipulation)
-- **Development Tools**: RSpec, StandardRB, VCR, WebMock, Aruba, Zeitwerk
-- **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API
+- **Primary Language**: Ruby (>= 3.2)
+- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model)
+- **Key Dependencies**: Faraday, dry-cli, RSpec, VCR
+- **External Integrations**: Google Gemini API, LM Studio, Git/GitHub
 
-### Documentation Separation
-
-- **README.md**: Contains runtime information, installation instructions, basic usage, and configuration for end users
-- **docs/DEVELOPMENT.md**: Contains development environment setup, testing frameworks, build tools, and contributor guidelines
+For detailed technology stack information, dependency versions, and architectural patterns, see the [Architecture document](./architecture.md#technology-stack).
 
 ## Read-Only Paths
 
@@ -142,25 +138,13 @@ Refer to the [Architecture document](./architecture.md#command-line-tools-bin) f
 
 ## Dependencies
 
-### Runtime Dependencies
+- **Ruby** >= 3.2 with Bundler
+- **Key Gems**: Faraday (HTTP), dry-cli (CLI framework), RSpec (testing)
+- **External Tools**: Git CLI, optional LM Studio for local LLM support
 
-- **Ruby** (>= 3.2)
-- **Bundler** - Dependency management
-- **faraday** - Flexible HTTP client library.
-- **zeitwerk** - Efficient and thread-safe code loader.
-- **dry-monitor** - Event-based monitoring and instrumentation toolkit.
-- **dry-configurable** - Provides configuration capabilities for Ruby objects.
-- **addressable** - URI manipulation library.
-
-### Development Dependencies
-
-- **RSpec** - Testing framework.
-- **RuboCop / StandardRB** - Code style linter and formatter.
-- **VCR** - Records and replays HTTP interactions for tests.
-- **WebMock** - Stubs and sets expectations on HTTP requests.
-- `docs-dev/tools/*` scripts (used by some `bin/` wrappers).
-
-See `coding_agent_tools.gemspec` and `Gemfile` for complete dependency specifications.
+For complete dependency specifications with versions and development dependencies, see:
+- [Architecture Dependencies section](./architecture.md#dependencies)
+- `coding_agent_tools.gemspec` and `Gemfile`
 
 ## Submodules
 
@@ -169,7 +153,7 @@ See `coding_agent_tools.gemspec` and `Gemfile` for complete dependency specifica
 - Path: `docs-dev`
 - Repository: [Repository URL - assumed external]
 - Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
-- **Important**: Commits for this submodule must be made from within the submodule directory (`../../docs-dev`).
+- **Important**: Commits for this submodule must be made from within the submodule directory (`../docs-dev`).
 
 ---
 

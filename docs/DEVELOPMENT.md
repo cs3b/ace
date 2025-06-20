@@ -347,7 +347,7 @@ end
 - Specifically for tests that interact with external APIs (e.g., Google Gemini, GitHub).
 - Uses VCR to record and replay HTTP interactions, ensuring tests are fast, deterministic, and don't rely on live external services.
 - When recording new cassettes, ensure `VCR_RECORD=true` is set in `spec/.env` and your API keys are configured.
-- For detailed setup and usage, refer to the [VCR Testing Guide](docs/testing-with-vcr.md).
+- For detailed setup and usage, refer to the [VCR Testing Guide](docs/dev-guides/testing-with-vcr.md).
 
 ```ruby
 # Example of a VCR-enabled test
