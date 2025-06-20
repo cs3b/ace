@@ -95,7 +95,7 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 ### What We Don't Build (v1)
 - SDKs or libraries in languages other than Ruby.
 - A full-featured graphical user interface (GUI) for Git or task management.
-- Direct integrations with proprietary LLM endpoints other than those specified (e.g., direct OpenAI calls within the gem, although wrappers could be built by users).
+- Direct integrations with proprietary LLM endpoints beyond our planned providers. Note: We plan to add support for major providers like OpenAI, Anthropic, and Mistral in future releases.
 - Real-time collaborative editing features.
 - A complete replacement for robust ticketing systems (Jira, Asana, etc.), but rather a tool to interact with backlog information potentially stored elsewhere or locally in docs.
 

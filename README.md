@@ -37,7 +37,9 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 
 - **LLM Integration**: Query Google Gemini and local LM Studio models
   - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
-- **Model Discovery**: List and filter available models from different providers (see [Model Management Guide](docs/dev-guides/model-management.md))
+- **Model Discovery**: List and filter available models from different providers
+  - **Google Gemini Models**: Discover available models via `exe/llm-gemini-models`
+  - **LM Studio Models**: List local models via `exe/llm-lmstudio-models`
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
@@ -173,26 +175,8 @@ Currently in active development (v0.1.0 focusing on establishing the gem structu
 
 ## 💻 Development
 
-For complete development information including environment setup, testing, build tools, and contribution workflow, see **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
-
-### Quick Start for Contributors
-
-```bash
-# Clone and setup
-git clone <repository-url>
-cd coding-agent-tools
-bin/setup
-
-# Run tests and linting
-bin/test && bin/lint
-
-# Start developing
-git checkout -b feature/your-feature
-```
-
-### Key Development Resources
-
-- **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and tools
+For complete development information including environment setup, testing, build tools, and contribution workflow, see:
+- **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and contributor quick start
 - **[Setup Guide](docs/SETUP.md)** - Environment setup instructions
 - **[Contributing](.github/CONTRIBUTING.md)** - Contribution guidelines and standards
 

@@ -25,7 +25,7 @@ This document outlines the architectural design and technical implementation det
 - **Containerization**: Optional (e.g., Docker for running LM Studio)
 - **Cloud Platform**: N/A (Gem runs locally or in CI environments)
 - **CI/CD**: GitHub Actions (used for automated testing and building)
-- **Monitoring**: Basic opt-in analytics via Snowplow collector (v1)
+
 
 ## System Architecture
 
@@ -35,46 +35,60 @@ The gem's architecture is designed for modularity and testability. The code with
 
 ```mermaid
 flowchart TD
-    subgraph Ruby Gem (CAT)
+    subgraph Ruby Gem (CAT)
         direction TB
-        CLI[Executables / bin/*]
-        ServiceObjects[🔧 Service Objects]
-        Adapters[🌐 Adapters]
-        Models[(Data Models)]
+        CLI[CLI Commands<br/>exe/* & cli/]
+        Organisms[🧬 Organisms<br/>Business Logic]
+        Molecules[🔬 Molecules<br/>Composed Operations]
+        Atoms[⚛️ Atoms<br/>Basic Utilities]
+        Models[(Models<br/>Data Structures)]
     end
-    CLI --> ServiceObjects --> Adapters
-    Adapters -->|Gemini REST| GeminiAPI((Google Gemini))
-    Adapters -->|LM Studio| LMStudio((Local Model))\n(localhost:1234)
-    Adapters -->|Git CLI / GitHub API| GitHub((Git/GitHub))
-    ServiceObjects --> Models
-    Models -->|Reads from/Writes to| LocalFS[(Local File System)\n(e.g., docs-project tasks)]
+    CLI --> Organisms
+    Organisms --> Molecules
+    Molecules --> Atoms
+    Organisms --> Models
+    
+    Atoms -->|HTTP| GeminiAPI((Google Gemini))
+    Atoms -->|HTTP| LMStudio((LM Studio))<br/>(localhost:1234)
+    Atoms -->|System Calls| FileSystem[(File System)]
+    Atoms -->|ENV| Environment[Environment Variables]
 ```
 
 ### Component Descriptions
 
-#### CLI (Action Layer)
+#### CLI (Command Layer)
 - **Purpose**: Provides the command-line interface for user and agent interaction.
-- **Technology**: Ruby, potentially using libraries like Thor or Dry-CLI.
-- **Key Responsibilities**: Parsing command-line arguments, initial input validation, invoking the appropriate Service Objects.
-- **Interfaces**: Communicates with Service Objects.
+- **Technology**: dry-cli framework with command classes in `cli/commands/`.
+- **Key Responsibilities**: Parsing command-line arguments, initial input validation, invoking the appropriate Organisms.
+- **Location**: `exe/*` scripts and `lib/coding_agent_tools/cli/`.
 
-#### Service Objects (Transformation Layer)
+#### Organisms (Business Logic Layer)
 - **Purpose**: Contains the core business logic and orchestrates operations.
-- **Technology**: Pure Ruby classes.
-- **Key Responsibilities**: Implementing specific workflows (e.g., generating a commit message, finding the next task), transforming data between models and adapters.
-- **Interfaces**: Interacts with Adapters and Models. Designed to be testable in isolation.
+- **Technology**: Pure Ruby classes that coordinate Molecules and handle complex workflows.
+- **Key Components**: `GeminiClient`, `LMStudioClient`, `PromptProcessor`.
+- **Key Responsibilities**: Implementing specific workflows (e.g., querying LLMs, processing prompts), coordinating multiple Molecules, managing business rules.
+- **Location**: `lib/coding_agent_tools/organisms/`.
 
-#### Adapters (Operation Layer)
-- **Purpose**: Provides interfaces to external systems or tools (LLMs, Git, file system).
-- **Technology**: Ruby classes wrapping external libraries or system calls.
-- **Key Responsibilities**: Handling communication protocols (HTTP, system commands), error handling for external interactions, translating external responses into internal data models.
-- **Interfaces**: Communicates with external APIs/tools and is used by Service Objects.
+#### Molecules (Composition Layer)
+- **Purpose**: Simple compositions of Atoms that form reusable operations.
+- **Technology**: Ruby classes that combine multiple Atoms for specific tasks.
+- **Key Components**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`, `ExecutableWrapper`.
+- **Key Responsibilities**: Building HTTP requests, parsing API responses, managing credentials, wrapping system executables.
+- **Location**: `lib/coding_agent_tools/molecules/`.
 
-#### Models (Model Layer)
+#### Atoms (Utility Layer)
+- **Purpose**: Smallest, indivisible units of functionality with no dependencies on other gem components.
+- **Technology**: Simple Ruby classes or modules providing basic utilities.
+- **Key Components**: `EnvReader`, `HTTPClient`, `JSONFormatter`.
+- **Key Responsibilities**: Reading environment variables, making HTTP requests, formatting JSON data.
+- **Location**: `lib/coding_agent_tools/atoms/`.
+
+#### Models (Data Layer)
 - **Purpose**: Represents the data structures used within the gem.
 - **Technology**: Plain Old Ruby Objects (POROs) or simple data structures.
-- **Key Responsibilities**: Defining the structure of data related to Git objects, task items, API responses, etc.
-- **Interfaces**: Used by Service Objects and Adapters.
+- **Key Components**: `LlmModelInfo` and other data carriers.
+- **Key Responsibilities**: Defining the structure of data for LLM models, API responses, configuration.
+- **Location**: `lib/coding_agent_tools/models/`.
 
 ### ATOM-Based Code Structure in `lib/coding_agent_tools/`
 
@@ -103,83 +117,39 @@ Data typically flows from the CLI (user input) to a Service Object, which uses A
 7.  **Processing (Service Object)**: Service Object takes the generated message, stages files (via Git Adapter), and performs the Git commit (via Git Adapter).
 8.  **Output**: CLI confirms the commit or reports errors.
 
-## Command-line Tools (bin/)
 
-The `bin/` directory contains executable scripts that serve as the primary interface for the gem. These are often thin wrappers (binstubs) that invoke the main gem logic.
-
-### Key Commands (as per PRD):
-
--   `bin/llm-gemini-query`: Query Google Gemini.
--   `bin/lms-studio-query`: Query local LM Studio.
--   `bin/github-repository-create`: Create a GitHub repository.
--   `bin/git-commit-with-message`: Generate and perform a Git commit.
--   `bin/tr`: List recent tasks.
--   `bin/tn`: Find the next actionable task.
--   `bin/rc`: Get current release path and version.
--   `bin/test`: Run the test suite.
--   `bin/lint`: Run code quality checks.
--   `bin/build`: Build the gem.
--   `bin/run`: (Context dependent, potentially runs gem commands or a sample usage).
--   `bin/tree`: Display project directory structure (likely wraps `docs-dev/tools/tree.sh`).
-
-These scripts are intended to be idempotent where possible and provide a consistent, predictable interface for automation.
 
 ## File Organization
 
+The gem follows the ATOM architecture pattern with this essential structure:
+
 ```
-.
-├── bin/                   # Executable command-line scripts (binstubs/wrappers)
-├── docs-dev/              # Submodule: Development resources, guides, templates, tools
-│   ├── guides/            # Best practices, patterns, templates
-│   ├── tools/             # Utility scripts (e.g., for task management, tree display)
-│   └── workflow-instructions/ # AI workflow definitions
-├── docs-project/          # Project-specific documentation and management files
-│   ├── backlog/           # Task files for future releases
-│   ├── current/           # Task files for the current release
-│   ├── done/              # Completed task files
-│   ├── decisions/         # Architecture Decision Records (.keep file ensures directory exists)
-│   ├── architecture.md    # This document
-│   ├── blueprint.md       # Project structure overview and AI guidelines
-│   └── what-do-we-build.md # Project vision and goals
-├── exe/                   # Gem executables (e.g., coding_agent_tools)
-├── lib/                   # Ruby gem source code
-│   ├── coding_agent_tools.rb # Main gem file, loads components
-│   └── coding_agent_tools/
-│       ├── atoms/         # Smallest, indivisible units (utilities, transformations)
-│       ├── cli/           # Dry-CLI command definitions and subcommands
-│       ├── ecosystems/    # Complete subsystems or major features
-│       ├── middlewares/   # Common middleware for request/response processing
-│       ├── molecules/     # Simple compositions of atoms
-│       ├── models/        # Data structures (POROs)
-│       ├── notifications.rb # Global notification and event handling
-│       ├── organisms/     # Business logic handlers, orchestrating molecules/atoms
-│       ├── cli.rb         # Main Dry-CLI registry
-│       ├── error.rb       # Custom gem-specific error classes
-│       └── version.rb     # Gem version definition
-├── spec/                  # RSpec test files (unit, integration, CLI)
-├── .github/               # GitHub specific files (e.g. workflows)
-│   └── workflows/
-│       └── main.yml       # CI workflow
-├── .gitignore             # Specifies intentionally untracked files
-├── .rspec                 # RSpec configuration
-├── .standard.yml          # StandardRB configuration
-├── CHANGELOG.md           # Record of changes
-├── Gemfile                # Bundler dependency file
-├── LICENSE.txt            # Project license
-├── PRD.md                 # Product Requirements Document (primary source of truth)
-├── Rakefile               # Rake tasks
-├── README.md              # Project overview and quick start guide
-└── coding_agent_tools.gemspec # Gem specification file
+lib/coding_agent_tools/
+├── atoms/         # Basic utilities (HTTP, JSON, ENV reading)
+├── molecules/     # Composed operations (credentials, request building)
+├── organisms/     # Business logic (GeminiClient, LMStudioClient)
+├── ecosystems/    # Future: Complete workflows orchestrating organisms
+├── models/        # Data structures (LlmModelInfo, etc.)
+├── cli/           # dry-cli command definitions
+├── middlewares/   # Cross-cutting concerns (logging, monitoring)
+└── *.rb           # Core files (version, error, notifications)
 ```
 
-The primary Ruby source code resides in the `lib/coding_agent_tools/` directory, organized according to the ATOM pattern. Tests are located in the `spec/` directory. For a comprehensive overview of the overall project directory structure, refer to the [Project Blueprint's Project Organization section](./blueprint.md#project-organization).
+Other key directories:
+- `exe/` - Gem executables (user-facing commands)
+- `bin/` - Development tools and binstubs
+- `spec/` - RSpec test suite
+- `docs/` - Product documentation (architecture, vision, blueprint)
+- `docs-project/` - Project management (tasks, decisions, roadmap)
+
+For a complete directory structure and file listings, see the [Project Blueprint](./blueprint.md#project-organization).
 
 ## Development Patterns
 
 -   **ATOM-Based Hierarchy**: The core library implementation (`lib/coding_agent_tools/`) follows an Atoms, Molecules, Organisms, Ecosystems hierarchy to ensure modularity, reusability, testability, and maintainability. This pattern promotes a clear separation of concerns, making components easier to understand, test, and adapt.
 -   **Test-Driven Development (TDD)**: A strong emphasis is placed on writing tests (`spec/`) before or alongside implementation code, aiming for high test coverage. This approach ensures code correctness and facilitates refactoring.
 -   **Dependency Injection**: Components are designed to accept dependencies (like adapters) via initialization rather than creating them internally. This facilitates easier testing by allowing mock objects to be injected, and promotes flexibility by decoupling components from their concrete implementations.
--   **CLI-First Design**: The architecture prioritizes a robust and predictable command-line interface as the primary interaction method. This allows the gem to be easily integrated into automated workflows and used directly by developers or other agents.
+-   **CLI-First Design**: The architecture prioritizes a robust and predictable command-line interface as the primary interaction method. However, the CLI is designed as a thin layer over the Organisms, which can be reused in other contexts (e.g., web services, other Ruby applications). This allows the gem to be easily integrated into automated workflows and used directly by developers or other agents.
 -   **Testing with VCR**: HTTP interactions with external APIs are recorded and replayed using VCR. This ensures tests are fast, reliable, and deterministic, as they do not rely on live external services, making the test suite robust against network issues or API changes.
 -   **Observability with dry-monitor**: Key events and operations within the gem are instrumented using `dry-monitor`. This allows for centralized logging, error reporting, and performance monitoring by decoupling the event emitters from their consumers, thus avoiding tightly coupled concerns and promoting a flexible monitoring setup.
 
@@ -207,10 +177,11 @@ The gem is deployed as a standard RubyGem.
 
 The ATOM architecture provides several extension points:
 
--   **New Commands**: Add new executables in `bin/` and corresponding Action/Service Object logic in `lib/`.
--   **New Adapters**: Implement new Adapters in `lib/coding_agent_tools/operations/` to integrate with different external APIs, LLM providers, or tools. These can then be used by existing or new Service Objects.
+-   **New Commands**: Add new executables in `exe/` and corresponding CLI command classes in `lib/coding_agent_tools/cli/commands/`.
+-   **New Organisms**: Implement new Organisms in `lib/coding_agent_tools/organisms/` to integrate with different external APIs, LLM providers, or tools (e.g., OpenAI, Anthropic, Mistral). These encapsulate business logic and can be reused across different contexts.
+-   **New Ecosystems**: Create Ecosystems in `lib/coding_agent_tools/ecosystems/` to orchestrate multiple Organisms for complex workflows (e.g., git commit workflow, code review automation).
 -   **New Models**: Define new data structures in `lib/coding_agent_tools/models/` as needed for new features or data representations.
--   **Custom Scripts**: Users can create their own scripts in the project's `bin/` directory that utilize the gem's internal API or CLI commands.
+-   **Custom Development Scripts**: Developers can create their own scripts in the project's `bin/` directory for development automation.
 
 ## Dependencies
 
@@ -236,13 +207,13 @@ The ATOM architecture provides several extension points:
 -   **SimpleCov** - Code coverage analysis
 -   **Pry** - Interactive debugging
 
-For a comprehensive and up-to-date list of dependencies, refer to the `coding_agent_tools.gemspec` and `Gemfile`, and consult the [Project Blueprint's Dependencies section](./blueprint.md#dependencies) for a complementary overview.
+For a comprehensive and up-to-date list of dependencies, refer to the `coding_agent_tools.gemspec` and `Gemfile`.
 
 ## Decision Records
 
 Significant architectural decisions are documented as Architecture Decision Records (ADRs).
 
-For detailed decision records, see [docs-project/decisions/](../../../coding-agent-tools/docs-project/decisions/).
+For detailed decision records, see [docs/architecture-decisions/](./architecture-decisions/).
 
 ## Troubleshooting
 
@@ -256,10 +227,3 @@ For detailed decision records, see [docs-project/decisions/](../../../coding-age
     -   **Symptoms**: Commands like `bin/llm-gemini-query` report API errors or connection issues.
     -   **Solution**: Check environment variables (`GEMINI_API_KEY`), network connectivity, and the status of the LM Studio server if using the local model.
 
-## Future Considerations
-
--   **Multi-language bindings**: Explore providing SDKs or libraries in languages other than Ruby (post v1).
--   **Streaming LLM responses**: Investigate if agents require streaming output from LLMs rather than waiting for a full reply.
--   **Encrypted local storage**: Consider if caching or storing sensitive data locally requires encryption.
--   **Rubocop plugin**: Assess the value of a Rubocop plugin to enforce ATOM directory boundaries and other architectural conventions.
--   **Advanced Task Management Integration**: Explore deeper integrations with external task management systems.

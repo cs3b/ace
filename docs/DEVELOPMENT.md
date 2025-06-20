@@ -10,6 +10,23 @@ The Coding Agent Tools project follows a structured development workflow that em
 - **Conventional Commits**: Standardized commit message format
 - **Code Quality**: StandardRB linting and comprehensive test coverage
 
+## Quick Start for Contributors
+
+```bash
+# Clone and setup
+git clone <repository-url>
+cd coding-agent-tools
+bin/setup
+
+# Run tests and linting
+bin/test && bin/lint
+
+# Start developing
+git checkout -b feature/your-feature
+```
+
+This quick start guide gets you up and running with the development environment. For detailed setup instructions, see the [Setup Guide](SETUP.md).
+
 ## Development Dependencies
 
 ### Core Development Tools

@@ -11,29 +11,72 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Project Organization
 
-This project follows a documentation-first approach with these primary directories:
-
-- **docs-dev/** - Development resources and workflows (Git submodule)
-  - **guides/** - Best practices and standards for development
-  - **tools/** - Utility scripts to support development workflows (e.g., for task management, tree display)
-  - **workflow-instructions/** - Structured commands for AI agents
-  - **zed/** - Editor integration (if applicable)
-
-- **docs-project/** - Project-specific documentation, task management, and decisions
-  - **backlog/** - Pending tasks for future releases
-  - **current/** - Active release cycle work
-  - **done/** - Completed releases and tasks
-  - **decisions/** - Architecture Decision Records (ADRs)
-
-- **bin/** - Executable scripts (binstubs/wrappers) for project automation (e.g., `bin/test`, `bin/tn`)
-
-- **exe/** - Primary gem executables (e.g., `exe/llm-gemini-query`)
-
-- **lib/** - Ruby gem source code, organized by the ATOM architecture pattern with subdirectories for `atoms/`, `molecules/`, `organisms/`, `cli/`, `models/`, and cross-cutting concerns like `middlewares/`.
-
-- **spec/** - RSpec test files (unit, integration, CLI)
-
-<!-- Add your project-specific directories here -->
+```
+coding-agent-tools/
+├── bin/                      # Development tools and binstubs
+│   ├── build                 # Build and verify gem installation
+│   ├── console               # Ruby console with gem loaded
+│   ├── cr                    # Code review prompt generator
+│   ├── cr-docs               # Documentation review generator
+│   ├── gc                    # Git commit with standardized format
+│   ├── gl                    # Get recent git log
+│   ├── lint                  # Run StandardRB code quality checks
+│   ├── rc                    # Get current release context
+│   ├── setup                 # Initial development setup
+│   ├── tal                   # List all tasks
+│   ├── test                  # Run RSpec test suite
+│   ├── tn                    # Find next unblocked task
+│   ├── tnid                  # Generate next task ID
+│   ├── tr                    # List recent tasks
+│   └── tree                  # Display filtered project structure
+├── docs/                     # Product documentation
+│   ├── architecture.md       # Technical design and patterns
+│   ├── blueprint.md          # This file - project navigation
+│   ├── what-do-we-build.md   # Product vision and goals
+│   ├── DEVELOPMENT.md        # Development workflow guide
+│   ├── SETUP.md              # Environment setup instructions
+│   ├── dev-guides/           # Technical deep-dive guides
+│   └── llm-integration/      # LLM feature documentation
+├── docs-dev/                 # Development resources (Git submodule)
+│   ├── guides/               # Best practices and standards
+│   ├── tools/                # Utility scripts for workflows
+│   └── workflow-instructions/ # AI agent workflow definitions
+├── docs-project/             # Project management
+│   ├── backlog/              # Future release tasks
+│   ├── current/              # Active release work
+│   ├── done/                 # Completed releases
+│   ├── decisions/            # Architecture Decision Records
+│   └── roadmap.md            # Strategic planning
+├── exe/                      # Gem executables (user commands)
+│   ├── llm-gemini-models     # List Gemini models
+│   ├── llm-gemini-query      # Query Gemini API
+│   ├── llm-lmstudio-models   # List LM Studio models
+│   └── llm-lmstudio-query    # Query LM Studio
+├── lib/                      # Ruby gem source code
+│   └── coding_agent_tools/   # Main gem module
+│       ├── atoms/            # Basic utilities
+│       ├── molecules/        # Composed operations
+│       ├── organisms/        # Business logic
+│       ├── ecosystems/       # Complete workflows
+│       ├── models/           # Data structures
+│       ├── cli/              # CLI command classes
+│       ├── middlewares/      # Cross-cutting concerns
+│       └── *.rb              # Core files
+├── spec/                     # Test suite
+│   ├── unit/                 # Unit tests by component
+│   ├── integration/          # Integration tests
+│   ├── cli/                  # CLI tests
+│   ├── support/              # Test helpers
+│   └── cassettes/            # VCR recordings
+├── .github/                  # GitHub configuration
+│   ├── workflows/            # CI/CD pipelines
+│   └── CONTRIBUTING.md       # Contribution guidelines
+├── CHANGELOG.md              # Version history
+├── README.md                 # Project overview
+├── Gemfile                   # Ruby dependencies
+├── coding_agent_tools.gemspec # Gem specification
+└── LICENSE                   # MIT license
+```
 
 ## View Complete Directory Structure
 
@@ -68,21 +111,14 @@ For detailed technology stack information, dependency versions, and architectura
 
 AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks. Modifying these files without careful consideration can break core project workflows or documentation standards.
 
-- `docs-dev/guides/**/*`
-- `docs-dev/workflow-instructions/**/*`
-- `docs-dev/tools/_binstubs/**/*`
-- `docs-dev/guides/initialize-project-templates/**/*`
-- `docs-project/decisions/**/*` (Modify only when adding or updating ADRs)
+- `docs-dev/**/*` (Entire submodule is read-only)
+- `docs/architecture-decisions/**/*` (Modify only when adding ADRs)
 - `docs-project/done/**/*` (Completed tasks should not be modified)
 - `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
 - `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
 - `.gitignore` (Modify carefully when adding/removing ignored patterns)
 - `Gemfile.lock` (Manage dependencies via `bundle add`/`remove` or explicit instruction)
 - `bin/*` (Modify only when updating binstub templates or adding new project-specific scripts)
-- `*.lock` # Dependency lock files (e.g., Gemfile.lock)
-- `dist/**/*` # Built artifacts
-- `build/**/*` # Build output
-- `pkg/**/*` # Gem packages
 
 ## Ignored Paths
 
@@ -106,45 +142,75 @@ AI agents should generally ignore the contents of the following paths during tas
 - `*.lock`
 - `*.tmp`
 - `*~` # Backup files
+- `dist/**/*` # Built artifacts
+- `build/**/*` # Build output
+- `pkg/**/*` # Gem packages
 
 ## Entry Points
 
-### Development
+### Command Structure: bin/ vs exe/
+
+The project has two distinct directories for executable commands:
+
+- **`bin/`**: Development tools used when working on the project itself
+- **`exe/`**: The actual gem executables that users will run after installing the gem
+
+Note: Currently in transition - some user-facing commands are still in `bin/` but will eventually be moved to `exe/` or replaced with binstubs pointing to `exe/` commands.
+
+### Development Tools (bin/)
+
+Tools for project development and maintenance:
 
 ```bash
-# Run the test suite
-bin/test
+# Testing and code quality
+bin/test              # Run the test suite
+bin/lint              # Run StandardRB code quality checks
+bin/build             # Build the gem and verify installation
 
-# Run code quality checks
-bin/lint
+# Task management (wraps docs-dev tools)
+bin/tn                # Find next unblocked task
+bin/tr                # List recent tasks
+bin/tal               # List all tasks
+bin/tnid              # Generate next task ID
+bin/rc                # Get current release context
 
-# Build the gem
-bin/build
+# Git workflow
+bin/gl                # Get recent git log
+bin/gc                # Git commit with standardized format
+bin/cr                # Generate code review prompt
+bin/cr-docs           # Generate documentation review prompt
+
+# Utilities
+bin/tree              # Display filtered project structure
+bin/console           # Ruby console with gem loaded
 ```
-*(Note: `bin/run` might be used for specific entry points if defined)*
+
+### Gem Executables (exe/)
+
+User-facing commands provided by the gem:
+
+```bash
+# LLM Integration
+exe/llm-gemini-query      # Query Google Gemini models
+exe/llm-gemini-models     # List available Gemini models
+exe/llm-lmstudio-query    # Query local LM Studio models
+exe/llm-lmstudio-models   # List available LM Studio models
+
+# Future commands (planned)
+# exe/github-repository-create
+# exe/git-commit-with-message
+```
 
 ### Common Workflows
 
-- **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on.
-- **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks.
-- **Commit Changes**: Use `bin/git-commit-with-message` to stage changes and generate a commit message.
-- **Query LLM**: Use `exe/llm-gemini-query` or `bin/lms-studio-query` to interact with language models.
-- **List Available Models**: Use `llm-gemini-models` to see available Google Gemini models, or `llm-lmstudio-models` to see LM Studio models.
-- **Query Local Models**: Use `llm-lmstudio-query` to interact with local LM Studio models.
-- **Code Review**: Use `bin/cr` to generate code review prompts for development workflow.
-- **Generate Documentation Review**: Use `bin/cr-docs` to create comprehensive documentation update prompts from code diffs.
+- **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on
+- **Run Tests**: Use `bin/test` to ensure code quality before committing
+- **Query LLMs**: Use `exe/llm-gemini-query "your prompt"` or `exe/llm-lmstudio-query "your prompt"`
+- **List Models**: Use `exe/llm-gemini-models` or `exe/llm-lmstudio-models` to see available models
+- **Code Review**: Use `bin/cr` to generate a code review prompt from git diff
+- **Commit Changes**: Use `bin/gc -i "your intention"` for standardized commits
 
-Refer to the [Architecture document](./architecture.md#command-line-tools-bin) for a more detailed list and description of `bin/` commands.
 
-## Dependencies
-
-- **Ruby** >= 3.2 with Bundler
-- **Key Gems**: Faraday (HTTP), dry-cli (CLI framework), RSpec (testing)
-- **External Tools**: Git CLI, optional LM Studio for local LLM support
-
-For complete dependency specifications with versions and development dependencies, see:
-- [Architecture Dependencies section](./architecture.md#dependencies)
-- `coding_agent_tools.gemspec` and `Gemfile`
 
 ## Submodules
 
@@ -157,4 +223,4 @@ For complete dependency specifications with versions and development dependencie
 
 ---
 
-*This blueprint serves as a quick reference and guide for automated agents. It should be updated if the project structure, key technologies, or operational guidelines change significantly.*
+*This blueprint serves as a quick reference and guide for automated agents.*
