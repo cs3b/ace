@@ -82,108 +82,219 @@ function processItems(items) {
 }
 ```
 
-### 2. Project Documentation
+### 2. Project Documentation Structure
 
-1. **README.md Structure**:
+This section clarifies the purpose and scope of each major documentation file. Following these guidelines helps maintain consistency and prevents content duplication.
 
-    ```markdown
-    # Your Project Name
+#### Core Documentation Files
 
-    Briefly describe your project.
+##### README.md (Project Root)
+**Purpose**: Entry point for new users and quick reference
 
-    ## Quick Start
+**Contains**:
+- Project badges and status
+- Brief project description (1-2 paragraphs)
+- Quick start installation instructions
+- Key features list (high-level)
+- Basic usage examples
+- Links to detailed documentation
+- Contributing quick start
+- License information
 
-```text
-// Your Quick Start code here
-// Example: Initialize and run a basic task
-```
+**Does NOT contain**:
+- Detailed technical architecture
+- Comprehensive feature documentation
+- Development environment setup details
+- Internal implementation details
 
-## Installation
+**Example Structure**:
 
-```bash
-your-package-manager install your-package-name
-```
+Refer to the [README.md template](docs-dev/guides/initialize-project-templates/README.md)
 
-## Documentation
+##### docs/what-do-we-build.md
+**Purpose**: Product vision and business context
 
-```text
-- [API Reference](docs/api.md) <!-- Assuming \\\'docs\\\\\' is a root dir for user docs -->
-- [Tutorials](docs/tutorials/) <!-- Assuming \\\\\'docs\\\\\' is a root dir for user docs -->
-- [Examples](examples/) <!-- Assuming \\\'examples\\\' is a root dir -->
-```
+**Contains**:
+- Product vision statement
+- Key features and capabilities (business perspective)
+- User personas and their needs
+- Use cases and scenarios
+- Success metrics
+- Value proposition
+- Future vision (product roadmap perspective)
+- Market positioning
 
-```text
-```
+**Does NOT contain**:
+- Technical implementation details
+- Code structure or patterns
+- Development workflows
+- Directory structures
+- Dependencies lists
 
-1. **Architecture Documentation**:
+##### docs/architecture.md
+**Purpose**: Technical design and implementation details
 
-    Refer to the project's `docs/blueprint.md` for the specific structure.
+**Contains**:
+- System architecture overview
+- Technology stack with justifications
+- ATOM architecture pattern details (or your pattern)
+- Component descriptions and interactions
+- Data flow diagrams
+- File organization (technical perspective)
+- Development patterns and principles
+- Security and performance considerations
+- Technical dependencies with versions
+- Decision records references
 
-```markdown
-# Architecture Overview
+**Does NOT contain**:
+- Business goals or user personas
+- Installation instructions
+- Navigation guides for developers
+- Task management information
 
-## Components
-- Agent: Core execution engine
-- Tools: System capabilities
-- Registry: Tool management
+##### docs/blueprint.md
+**Purpose**: Project navigation guide (especially for AI agents)
 
-## Data Flow
-1.  Agent receives task
-2.  Tools are loaded
-3.  LLM processes task
-4.  Results returned
+**Contains**:
+- Brief description of what a blueprint is
+- Links to core documents (what-we-build, architecture)
+- Project organization (directory structure)
+- Key file locations and purposes
+- Technology stack summary (with link to architecture for details)
+- Entry points and common workflows
+- Read-only and ignored paths for AI agents
+- Quick reference commands
 
-## Extension Points
-- Custom tools
-- Prompt templates
-- Result processors
-```
+**Does NOT contain**:
+- Detailed technical explanations
+- Business vision or goals
+- Implementation patterns
+- Comprehensive dependency analysis
 
-1. **Tutorial Structure**:
+##### docs/SETUP.md
+**Purpose**: Development environment setup
 
-```markdown
-# Building Your First Agent
+**Contains**:
+- System requirements
+- Installation prerequisites
+- Step-by-step setup instructions
+- Environment configuration
+- Dependency installation
+- Verification steps
+- Common setup issues and solutions
 
-1.  Create agent
-2.  Configure tools
-3.  Execute tasks
-4.  Handle results
-```
+**Does NOT contain**:
+- Development workflows
+- Architecture details
+- Testing strategies
+- Contributing guidelines
 
-## Example Implementation
+##### docs/DEVELOPMENT.md
+**Purpose**: Development workflow and practices
 
-```javascript
-// Complete working example relevant to the tutorial step
-```
+**Contains**:
+- Daily development workflow
+- Testing strategies and examples
+- Build system commands
+- Code quality standards
+- Debugging techniques
+- Performance optimization tips
+- Release workflow
+- Links to specialized guides (e.g., VCR testing)
 
-## Common Patterns
+**Does NOT contain**:
+- Initial setup instructions
+- Product vision
+- Architecture decisions
+- Basic usage examples
 
-- Error handling
-- Tool composition
-- State management
+##### docs-project/roadmap.md
+**Purpose**: Strategic planning and release management
 
-```text
-```
+**Contains**:
+- Project vision summary
+- Strategic objectives with metrics
+- Release timeline and milestones
+- Major features by release
+- Cross-release dependencies
+- Update history
+
+**Does NOT contain**:
+- Technical implementation details
+- Current task lists
+- Development setup instructions
+- Architecture patterns
+
+#### Specialized Documentation
+
+##### docs/llm-integration/
+**Purpose**: Feature-specific user guides
+
+**Example**: `gemini-query-guide.md`
+- Comprehensive usage instructions
+- Configuration options
+- Examples and use cases
+- Troubleshooting
+- Integration patterns
+
+##### docs/architecture-decisions/
+**Purpose**: Architecture Decision Records (ADRs)
+
+**Contains**:
+- Technical decisions with context
+- Alternatives considered
+- Consequences and trade-offs
+- Decision rationale
+
+#### Content Placement Quick Reference
+
+| Content Type | Primary Location | Secondary References OK |
+|-------------|------------------|------------------------|
+| Product vision | what-do-we-build.md | README (brief), roadmap |
+| User personas | what-do-we-build.md | - |
+| Installation | README, SETUP.md | - |
+| Usage examples | README (basic), docs/examples/ | - |
+| Directory structure | blueprint.md | architecture.md (technical) |
+| ATOM pattern details | architecture.md | blueprint.md (navigation) |
+| Dependencies | architecture.md (detailed) | blueprint.md (summary) |
+| Development workflow | DEVELOPMENT.md | - |
+| API documentation | Feature guides | architecture.md (design) |
+
+#### Guidelines for New Documentation
+
+1. **Check existing documents first** - Don't create new files if the content belongs in an existing document
+2. **Link, don't duplicate** - Reference other documents rather than copying content
+3. **Keep scope focused** - Each document should have a clear, single purpose
+4. **Update the blueprint** - When adding new key documents, update blueprint.md
+5. **Consider the audience** - Technical details for developers, business context for stakeholders
+6. **Maintain consistency** - Follow the established patterns in each document type
+
+#### Cross-Reference Patterns
+
+##### When to Link
+- From README to detailed guides
+- From blueprint to all major documents
+- From overview documents to detailed implementations
+- From guides to related ADRs
+
+##### How to Link
+- Use relative paths from the document location
+- Include section anchors for specific topics
+- Verify links work after moving documents
+- Update links when reorganizing
 
 ### 3. Documenting for AI Collaboration
 
 Clear documentation is crucial for effective AI collaboration.
 
-- **Structured Project Docs:** Maintain core documents like `docs/what-do-we-build.md`,
-    `docs/architecture.md`, and `docs/blueprint.md`. Keep them up-to-date as they provide
-    essential high-level context for the AI.
 - **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.g.md`)
     with clear descriptions, implementation notes, and acceptance criteria.
-- **ADRs:** Document significant architectural decisions in `docs-dev/decisions/` to provide rationale and
-    context for the AI.
 - **Workflow Instructions:** Write clear, specific workflow instructions (`docs-dev/workflow-instructions/*.wf.md`)
     outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code:
     focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
-- **Code Comments:** Use comments to explain the "why" behind complex logic, not just the "what". This helps
-    the AI understand intent.
 - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected
     knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link
-    to a relevant ADR or guide section using root-relative paths like `docs-dev/decisions/ADR-001.md` or
+    to a relevant ADR or guide section using root-relative paths like `docs/architecture-decisions/ADR-001.md` or
     `docs-dev/guides/coding-standards.g.md`.
 
 ## Code Comments

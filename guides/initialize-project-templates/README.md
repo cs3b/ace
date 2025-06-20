@@ -5,6 +5,7 @@
 ## Overview
 
 <!-- Brief description of what this project does and why it exists -->
+<!-- See docs-dev/guides/documentation.g.md for documentation structure guidelines -->
 
 ## Features
 
@@ -158,9 +159,11 @@ bin/test
 
 ## Documentation
 
-- [Project Blueprint](docs-project/blueprint.md) - Project structure overview
-- [Architecture](docs-project/architecture.md) - Technical architecture
-- [What We Build](docs-project/what-do-we-build.md) - Project vision and goals
+- [Project Blueprint](docs/blueprint.md) - Project structure overview
+- [Architecture](docs/architecture.md) - Technical architecture
+- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+
+For guidance on documentation structure and best practices, see the [Documentation Guide](docs-dev/guides/documentation.g.md).
 
 ## License
 
