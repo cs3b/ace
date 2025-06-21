@@ -4,6 +4,7 @@ require "spec_helper"
 require "aruba/rspec"
 
 RSpec.describe "llm-lmstudio-query integration", type: :aruba do
+  include ProcessHelpers
   let(:exe_path) { File.expand_path("../../exe/llm-lmstudio-query", __dir__) }
   let(:ruby_path) { RbConfig.ruby }
 
@@ -47,7 +48,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
       expect(last_command_started).to have_exit_status(0)
       expect(last_command_started).to have_output(/Query LM Studio AI with a prompt/)
       expect(last_command_started).to have_output(/--format/)
-      expect(last_command_started).to have_output(/--debug/)
+      expect(last_command_started).to have_output(/--\[no-\]debug/)
       expect(last_command_started).to have_output(/--model/)
       expect(last_command_started).to have_output(/Examples:/)
     end
@@ -91,7 +92,17 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
         expect(json_output).to have_key("text")
         expect(json_output).to have_key("metadata")
         expect(json_output["metadata"]).to have_key("finish_reason")
-        expect(json_output["metadata"]).to have_key("usage")
+        expect(json_output["metadata"]).to have_key("input_tokens")
+        expect(json_output["metadata"]).to have_key("output_tokens")
+        expect(json_output["metadata"]).to have_key("took")
+        expect(json_output["metadata"]).to have_key("provider")
+        expect(json_output["metadata"]).to have_key("model")
+        expect(json_output["metadata"]).to have_key("timestamp")
+
+        # Check normalized token counts
+        expect(json_output["metadata"]["input_tokens"]).to be_a(Integer)
+        expect(json_output["metadata"]["output_tokens"]).to be_a(Integer)
+        expect(json_output["metadata"]["provider"]).to eq("lmstudio")
       end
 
       it "reads prompt from file", :vcr do
@@ -100,7 +111,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
 
         write_file("prompt.txt", "What is the capital of France? Reply with just the city name.")
 
-        run_command("#{ruby_path} #{exe_path} prompt.txt --file")
+        run_command("#{ruby_path} #{exe_path} prompt.txt")
 
         expect(last_command_started).to have_exit_status(0)
         expect(last_command_started.stderr).to be_empty
@@ -191,29 +202,46 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
   end
 
   describe "error handling" do
-    it "handles malformed JSON prompt file gracefully", :vcr do
-      write_file("malformed.json", '{"invalid": json}')
+    it "treats malformed JSON as inline content and queries AI", :vcr do
+      temp_dir = Dir.mktmpdir("lmstudio_test")
+      malformed_file = File.join(temp_dir, "malformed.json")
+      File.write(malformed_file, '{"invalid": json}')
 
-      run_command("#{ruby_path} #{exe_path} malformed.json --file")
+      env = vcr_subprocess_env("llm-lmstudio-query integration/error handling/treats malformed JSON as inline content and queries AI")
+      stdout, stderr, status = execute_gem_executable("llm-lmstudio-query", [malformed_file], env: env)
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to include("Error:")
+      expect(status).to be_success, "Command failed: #{stderr}"
+      expect(stderr).to be_empty
+      # Should respond with AI text about the content
+      expect(stdout).not_to be_empty
+    ensure
+      FileUtils.remove_entry(temp_dir) if temp_dir && Dir.exist?(temp_dir)
     end
 
-    it "handles non-existent file" do
-      run_command("#{ruby_path} #{exe_path} /non/existent/file.txt --file")
+    it "treats non-existent file path as inline content", :vcr do
+      env = vcr_subprocess_env("llm-lmstudio-query integration/error handling/treats non-existent file path as inline content")
+      stdout, stderr, status = execute_gem_executable("llm-lmstudio-query", ["/non/existent/file.txt"], env: env)
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to match(/not found|does not exist/i)
+      expect(status).to be_success, "Command failed: #{stderr}"
+      expect(stderr).to be_empty
+      # Should respond with AI text about the file path
+      expect(stdout).not_to be_empty
     end
 
-    it "handles empty file" do
-      write_file("empty.txt", "")
+    it "handles empty file by treating it as empty prompt", :vcr do
+      temp_dir = Dir.mktmpdir("lmstudio_test")
+      empty_file = File.join(temp_dir, "empty.txt")
+      File.write(empty_file, "")
 
-      run_command("#{ruby_path} #{exe_path} empty.txt --file")
+      env = vcr_subprocess_env("llm-lmstudio-query integration/error handling/handles empty file by treating it as empty prompt")
+      stdout, stderr, status = execute_gem_executable("llm-lmstudio-query", [empty_file], env: env)
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to match(/empty|blank/i)
+      expect(status).to be_success, "Command failed: #{stderr}"
+      expect(stderr).to be_empty
+      # Should respond with AI's helpful default message
+      expect(stdout).not_to be_empty
+    ensure
+      FileUtils.remove_entry(temp_dir) if temp_dir && Dir.exist?(temp_dir)
     end
   end
 
@@ -257,11 +285,17 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
         # Check metadata structure
         metadata = json_output["metadata"]
         expect(metadata).to have_key("finish_reason")
-        expect(metadata).to have_key("usage")
+        expect(metadata).to have_key("input_tokens")
+        expect(metadata).to have_key("output_tokens")
+        expect(metadata).to have_key("took")
+        expect(metadata).to have_key("provider")
+        expect(metadata).to have_key("model")
+        expect(metadata).to have_key("timestamp")
 
-        # Usage should have token counts (if available)
-        usage = metadata["usage"]
-        expect(usage).to be_a(Hash) if usage
+        # Check normalized token counts
+        expect(metadata["input_tokens"]).to be_a(Integer)
+        expect(metadata["output_tokens"]).to be_a(Integer)
+        expect(metadata["provider"]).to eq("lmstudio")
       end
     end
   end
@@ -285,7 +319,7 @@ RSpec.describe "llm-lmstudio-query integration", type: :aruba do
           Reply with: "Multi-line received"
         PROMPT
 
-        run_command("#{ruby_path} #{exe_path} multiline.txt --file")
+        run_command("#{ruby_path} #{exe_path} multiline.txt")
 
         expect(last_command_started).to have_exit_status(0)
         expect(last_command_started.stderr).to be_empty

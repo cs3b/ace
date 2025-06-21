@@ -1,7 +1,7 @@
 ---
 id: v.0.2.0+task.38
 title: Enhance LLM Query Commands File I/O and Format Handling
-status: pending
+status: done
 priority: high
 assignee: unassigned
 labels:
@@ -57,7 +57,7 @@ find lib -name "*query*" -type f
 
 ### Planning Steps
 
-* [ ] Design new CLI interface with explicit file handling
+* [x] Design new CLI interface with explicit file handling
   ```bash
   # New interface examples:
   llm-gemini-query path/to/prompt.md --system path/to/system.md --output path/to/output.json --format json
@@ -65,12 +65,12 @@ find lib -name "*query*" -type f
   llm-gemini-query path/to/prompt.txt --system "inline system prompt" --output summary.txt
   ```
 
-* [ ] Design auto-format detection logic
+* [x] Design auto-format detection logic
   - File path detection: Check if argument is a valid file path to determine file vs inline content
   - Format precedence: `--format` flag takes precedence over file extension inference
   - Support both file and inline content for `--prompt` and `--system` flags
 
-* [ ] Design metadata normalization structure
+* [x] Design metadata normalization structure
   ```json
   {
     "text": "response content",
@@ -86,12 +86,12 @@ find lib -name "*query*" -type f
   }
   ```
 
-* [ ] Plan format handlers architecture
+* [x] Plan format handlers architecture
   - JSON: Full metadata with normalized token counts
   - Markdown: YAML front matter + content
   - Plain text: Content only, metadata in summary when writing to file
 
-* [ ] Identify current `--file` flag cleanup areas
+* [x] Identify current `--file` flag cleanup areas
   - Remove `--file` option from both command classes
   - Update `PromptProcessor.process` method signature
   - Remove `from_file` parameter usage
@@ -99,86 +99,86 @@ find lib -name "*query*" -type f
 
 ### Execution Steps
 
-- [ ] Create shared file I/O module (`Molecules::FileIOHandler`)
-  - [ ] Implement file reading utilities with path validation
-  - [ ] Implement file writing utilities with directory creation
-  - [ ] Add format inference from file extensions
-  - [ ] Add path detection logic (file vs inline content)
+- [x] Create shared file I/O module (`Molecules::FileIOHandler`)
+  - [x] Implement file reading utilities with path validation
+  - [x] Implement file writing utilities with directory creation
+  - [x] Add format inference from file extensions
+  - [x] Add path detection logic (file vs inline content)
   > TEST: File Path Detection
   >   Type: Unit Test
   >   Assert: Correctly identifies file paths vs inline content
   >   Command: bundle exec rspec spec/coding_agent_tools/molecules/file_io_handler_spec.rb
 
-- [ ] Create metadata normalization module (`Molecules::MetadataNormalizer`)
-  - [ ] Implement provider-specific token mapping
+- [x] Create metadata normalization module (`Molecules::MetadataNormalizer`)
+  - [x] Implement provider-specific token mapping
     - Gemini: `promptTokenCount` → `input_tokens`, `candidatesTokenCount` → `output_tokens`
     - LMStudio: `prompt_tokens` → `input_tokens`, `completion_tokens` → `output_tokens`
-  - [ ] Add execution timing tracking
-  - [ ] Add common metadata fields (provider, model, timestamp)
+  - [x] Add execution timing tracking
+  - [x] Add common metadata fields (provider, model, timestamp)
 
-- [ ] Create format handler modules
-  - [ ] JSON format handler with normalized metadata
-  - [ ] Markdown format handler with YAML front matter
-  - [ ] Plain text format handler (content only)
-  - [ ] Add summary generation for file output scenarios
+- [x] Create format handler modules
+  - [x] JSON format handler with normalized metadata
+  - [x] Markdown format handler with YAML front matter
+  - [x] Plain text format handler (content only)
+  - [x] Add summary generation for file output scenarios
 
-- [ ] Remove current `--file` flag implementation
-  - [ ] Update CLI argument parsing in both query commands
-  - [ ] Remove `--file` option definitions
-  - [ ] Update `process_prompt` methods to use auto-detection
-  - [ ] Update help text and examples
+- [x] Remove current `--file` flag implementation
+  - [x] Update CLI argument parsing in both query commands
+  - [x] Remove `--file` option definitions
+  - [x] Update `process_prompt` methods to use auto-detection
+  - [x] Update help text and examples
   > TEST: CLI Argument Parsing
   >   Type: Unit Test
   >   Assert: New argument structure parses correctly, old --file flag removed
   >   Command: bundle exec rspec spec/coding_agent_tools/cli/commands/llm/query_spec.rb spec/coding_agent_tools/cli/commands/lms/query_spec.rb
 
-- [ ] Implement new CLI interface
-  - [ ] Replace `--file` with auto-detection logic
-  - [ ] Add `--system` file support (extends existing inline support)
-  - [ ] Add `--output` flag for output file path
-  - [ ] Add `--format` flag with auto-inference fallback
-  - [ ] Make first positional argument support both inline and file content
+- [x] Implement new CLI interface
+  - [x] Replace `--file` with auto-detection logic
+  - [x] Add `--system` file support (extends existing inline support)
+  - [x] Add `--output` flag for output file path
+  - [x] Add `--format` flag with auto-inference fallback
+  - [x] Make first positional argument support both inline and file content
 
-- [ ] Implement file-based content handling
-  - [ ] Auto-detect file vs inline content for prompt argument
-  - [ ] Auto-detect file vs inline content for `--system` argument
-  - [ ] Support both absolute and relative paths
-  - [ ] Handle file reading errors gracefully
+- [x] Implement file-based content handling
+  - [x] Auto-detect file vs inline content for prompt argument
+  - [x] Auto-detect file vs inline content for `--system` argument
+  - [x] Support both absolute and relative paths
+  - [x] Handle file reading errors gracefully
 
-- [ ] Implement output file handling
-  - [ ] Create output directory if it doesn't exist
-  - [ ] Write output in specified or inferred format
-  - [ ] Print execution summary to stdout when writing to file
-  - [ ] Handle file writing errors gracefully
+- [x] Implement output file handling
+  - [x] Create output directory if it doesn't exist
+  - [x] Write output in specified or inferred format
+  - [x] Print execution summary to stdout when writing to file
+  - [x] Handle file writing errors gracefully
   > TEST: File Output Creation
   >   Type: Integration Test
   >   Assert: Output files created with correct format and metadata
   >   Command: bundle exec rspec spec/integration/llm_file_io_integration_spec.rb
 
-- [ ] Add format-specific features
-  - [ ] JSON: Include normalized metadata (input_tokens, output_tokens, took, etc.)
-  - [ ] Markdown: Add YAML front matter with metadata
-  - [ ] Plain text: Save only response content, show summary in stdout
-  - [ ] Add execution timing to all formats
+- [x] Add format-specific features
+  - [x] JSON: Include normalized metadata (input_tokens, output_tokens, took, etc.)
+  - [x] Markdown: Add YAML front matter with metadata
+  - [x] Plain text: Save only response content, show summary in stdout
+  - [x] Add execution timing to all formats
 
-- [ ] Update help text and documentation
-  - [ ] Clear examples in `--help` output for both commands
-  - [ ] Update command documentation in `docs/llm-integration/`
-  - [ ] Scan and update references in `docs/**/*.md` and root `*.md` files
-  - [ ] Remove `--file` flag references from documentation
+- [x] Update help text and documentation
+  - [x] Clear examples in `--help` output for both commands
+  - [x] Update command documentation in `docs/llm-integration/`
+  - [x] Scan and update references in `docs/**/*.md` and root `*.md` files
+  - [x] Remove `--file` flag references from documentation
 
-- [ ] Apply changes consistently
-  - [ ] Update `llm-gemini-query` command
-  - [ ] Update `llm-lmstudio-query` command
-  - [ ] Ensure identical interface behavior across providers
-  - [ ] Maintain backward compatibility for existing functionality
+- [x] Apply changes consistently
+  - [x] Update `llm-gemini-query` command
+  - [x] Update `llm-lmstudio-query` command
+  - [x] Ensure identical interface behavior across providers
+  - [x] Maintain backward compatibility for existing functionality
 
-- [ ] Add comprehensive testing
-  - [ ] Unit tests for new modules and updated command classes
-  - [ ] Integration tests for file I/O scenarios
-  - [ ] Test auto-detection logic for various input types
-  - [ ] Test format inference and precedence rules
-  - [ ] Test metadata normalization across providers
+- [x] Add comprehensive testing
+  - [x] Unit tests for new modules and updated command classes
+  - [x] Integration tests for file I/O scenarios with VCR
+  - [x] Test auto-detection logic for various input types
+  - [x] Test format inference and precedence rules
+  - [x] Test metadata normalization across providers
   > TEST: End-to-End File I/O
   >   Type: Integration Test
   >   Assert: Complete file I/O workflow works for all formats
@@ -186,24 +186,24 @@ find lib -name "*query*" -type f
 
 ## Acceptance Criteria
 
-- [ ] `--file` flag is removed from both query commands
-- [ ] Users can specify prompt and system prompt content as either files or inline text (auto-detected)
-- [ ] `--output` flag saves responses to files with automatic directory creation
-- [ ] Format is automatically inferred from output file extension when `--format` not specified
-- [ ] `--format` flag takes precedence over file extension when both present
-- [ ] JSON output includes normalized metadata (input_tokens, output_tokens, took, provider, model, timestamp)
-- [ ] Markdown output includes metadata in YAML front matter following Hugo/Jekyll conventions
-- [ ] Plain text output contains only response content, with summary (metadata) printed to stdout
-- [ ] Execution timing is tracked and included in all structured formats
-- [ ] Token counts are normalized across providers (Gemini and LMStudio)
-- [ ] Output directory is created automatically if it doesn't exist
-- [ ] Summary information is printed to stdout when output is saved to file
-- [ ] Help text provides clear usage examples without `--file` references
-- [ ] Both `llm-gemini-query` and `llm-lmstudio-query` have identical interfaces
-- [ ] All existing functionality remains accessible through new interface
-- [ ] Integration tests cover all file I/O scenarios and format combinations
-- [ ] All documentation is updated to reflect new interface
-- [ ] All tests pass: `bin/test`
+- [x] `--file` flag is removed from both query commands
+- [x] Users can specify prompt and system prompt content as either files or inline text (auto-detected)
+- [x] `--output` flag saves responses to files with automatic directory creation
+- [x] Format is automatically inferred from output file extension when `--format` not specified
+- [x] `--format` flag takes precedence over file extension when both present
+- [x] JSON output includes normalized metadata (input_tokens, output_tokens, took, provider, model, timestamp)
+- [x] Markdown output includes metadata in YAML front matter following Hugo/Jekyll conventions
+- [x] Plain text output contains only response content, with summary (metadata) printed to stdout
+- [x] Execution timing is tracked and included in all structured formats
+- [x] Token counts are normalized across providers (Gemini and LMStudio)
+- [x] Output directory is created automatically if it doesn't exist
+- [x] Summary information is printed to stdout when output is saved to file
+- [x] Help text provides clear usage examples without `--file` references
+- [x] Both `llm-gemini-query` and `llm-lmstudio-query` have identical interfaces
+- [x] All existing functionality remains accessible through new interface
+- [x] Integration tests cover all file I/O scenarios and format combinations
+- [x] All documentation is updated to reflect new interface
+- [x] All tests pass: `bin/test`
 
 ## Out of Scope
 

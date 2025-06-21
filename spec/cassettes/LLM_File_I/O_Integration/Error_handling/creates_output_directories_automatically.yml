@@ -1,0 +1,84 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"Test"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Sat, 21 Jun 2025 11:39:17 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=1333
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I'm ready. How can I help you test something?  Please tell me what you'd like me to test.  For example, are you testing:\n\n*   **My responses?** (e.g., Does it answer questions correctly? Does it follow instructions?)\n*   **A specific topic?** (e.g., Tell me about the history of the Eiffel Tower.  Write a poem about a cat.)\n*   **A specific function?** (e.g., Can I translate this sentence into Spanish? Can you summarize this text?)\n*   **Something else entirely?**\n\nThe more information you give me, the better I can understand what you want me to do!\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.35266568501790363
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 1,
+            "candidatesTokenCount": 150,
+            "totalTokenCount": 151,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 1
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 150
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "5JlWaN_yEJb7hMIP4fzx4A4"
+        }
+  recorded_at: Sat, 21 Jun 2025 11:39:17 GMT
+recorded_with: VCR 6.3.1

@@ -10,9 +10,21 @@ VCR.configure do |config|
   # Use WebMock as the HTTP stubbing library
   config.hook_into :webmock
 
+  # Register custom request matcher for dynamic content
+  config.register_request_matcher :body_without_dynamic_paths do |request_1, request_2|
+    if request_1.body && request_2.body
+      # Normalize dynamic file paths before comparing
+      normalized_body_1 = request_1.body.gsub(/\/tmp\/does_not_exist_\d+\.txt/, '/tmp/does_not_exist_XXXX.txt')
+      normalized_body_2 = request_2.body.gsub(/\/tmp\/does_not_exist_\d+\.txt/, '/tmp/does_not_exist_XXXX.txt')
+      normalized_body_1 == normalized_body_2
+    else
+      request_1.body == request_2.body
+    end
+  end
+
   # Configure how requests are matched
   config.default_cassette_options = {
-    match_requests_on: [:method, :uri, :headers, :body],
+    match_requests_on: [:method, :uri, :headers, :body_without_dynamic_paths],
     serialize_with: :json,
     decode_compressed_response: true
   }
@@ -78,8 +90,12 @@ VCR.configure do |config|
       interaction.response.body.gsub!(/"id":\s*"[^"]*"/, '"id": "test-id"')
     end
 
-    # Clean up request timestamps
-    interaction.request.body&.gsub!(/"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?"/, '"2024-01-01T00:00:00Z"')
+    # Clean up request timestamps and dynamic file paths
+    if interaction.request.body
+      interaction.request.body.gsub!(/"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?"/, '"2024-01-01T00:00:00Z"')
+      # Normalize random file paths like /tmp/does_not_exist_1234.txt
+      interaction.request.body.gsub!(/\/tmp\/does_not_exist_\d+\.txt/, '/tmp/does_not_exist_XXXX.txt')
+    end
   end
 
   # Configure error handling

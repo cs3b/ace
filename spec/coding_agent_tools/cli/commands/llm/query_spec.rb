@@ -35,22 +35,50 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       before do
-        allow(prompt_processor).to receive(:process).with(prompt, from_file: nil).and_return(prompt)
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(double("file_handler", read_content: prompt))
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({
+          finish_reason: "stop",
+          input_tokens: 10,
+          output_tokens: 32,
+          took: 0.5,
+          provider: "gemini",
+          model: "gemini-2.0-flash-lite",
+          timestamp: "2024-01-01T00:00:00Z"
+        })
         allow(gemini_client).to receive(:generate_text).and_return(response)
       end
 
       it "queries Gemini and outputs text response" do
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a dynamic programming language.")
+        )
+
         expect {
           command.call(prompt: prompt)
         }.to output("Ruby is a dynamic programming language.\n").to_stdout
       end
 
       it "outputs JSON response when format is json" do
+        json_response = {
+          text: "Ruby is a dynamic programming language.",
+          metadata: {
+            finish_reason: "stop",
+            input_tokens: 10,
+            output_tokens: 32,
+            took: 0.5,
+            provider: "gemini",
+            model: "gemini-2.0-flash-lite",
+            timestamp: "2024-01-01T00:00:00Z"
+          }
+        }.to_json
+
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("json").and_return(
+          double("json_handler", format: json_response)
+        )
+
         expect {
           command.call(prompt: prompt, format: "json")
-        }.to output(a_string_including("Ruby is a dynamic programming language")
-                   .and(including('"finish_reason": "STOP"'))
-                   .and(including('"totalTokens": 42'))).to_stdout
+        }.to output("#{json_response}\n").to_stdout
       end
     end
 
@@ -67,21 +95,46 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         temp_file.unlink
       end
 
-      it "reads prompt from file when --file flag is set" do
-        allow(prompt_processor).to receive(:process).with(temp_file.path, from_file: true).and_return(file_content)
+      it "reads prompt from file with auto-detection" do
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with(temp_file.path, auto_detect: true).and_return(file_content)
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({
+          finish_reason: "stop",
+          input_tokens: 5,
+          output_tokens: 10,
+          took: 0.3,
+          provider: "gemini",
+          model: "gemini-2.0-flash-lite",
+          timestamp: "2024-01-01T00:00:00Z"
+        })
+
         allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Response")
+        )
+
         expect {
-          command.call(prompt: temp_file.path, file: true)
+          command.call(prompt: temp_file.path)
         }.to output("Response\n").to_stdout
       end
     end
 
     context "with custom model" do
       it "uses specified model" do
-        allow(prompt_processor).to receive(:process).and_return("Test")
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with("Test", auto_detect: true).and_return("Test")
+
         allow(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(model: "gemini-pro").and_return(gemini_client)
         allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({})
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(
+          double("handler", format: "Response")
+        )
 
         allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", model: "gemini-pro")
@@ -91,45 +144,51 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     end
 
     context "with generation options" do
+      before do
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with("Test", auto_detect: true).and_return("Test")
+        allow(file_handler).to receive(:read_content).with("You are a helpful assistant", auto_detect: true).and_return("You are a helpful assistant")
+        allow(file_handler).to receive(:read_content).with("Be concise", auto_detect: true).and_return("Be concise")
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({})
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(
+          double("handler", format: "Response")
+        )
+        allow($stdout).to receive(:puts) # Suppress output for these tests
+      end
+
       it "passes temperature option" do
-        allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {temperature: 0.5}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
-        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", temperature: 0.5)
 
         expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {temperature: 0.5})
       end
 
       it "passes max_tokens option" do
-        allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000}).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
-        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", max_tokens: 1000)
 
         expect(gemini_client).to have_received(:generate_text).with("Test", generation_config: {maxOutputTokens: 1000})
       end
 
       it "passes system instruction" do
-        allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with("Test", system_instruction: "You are a helpful assistant").and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
-        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", system: "You are a helpful assistant")
 
         expect(gemini_client).to have_received(:generate_text).with("Test", system_instruction: "You are a helpful assistant")
       end
 
       it "combines multiple generation options" do
-        allow(prompt_processor).to receive(:process).and_return("Test")
         allow(gemini_client).to receive(:generate_text).with(
           "Test",
           system_instruction: "Be concise",
           generation_config: {temperature: 0.3, maxOutputTokens: 500}
         ).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
 
-        allow($stdout).to receive(:puts) # Suppress output for this test
         command.call(prompt: "Test", temperature: 0.3, max_tokens: 500, system: "Be concise")
       end
     end
@@ -164,7 +223,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       let(:prompt) { "Test prompt" }
 
       before do
-        allow(prompt_processor).to receive(:process).and_return(prompt)
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with(prompt, auto_detect: true).and_return(prompt)
       end
 
       context "when debug is disabled" do
@@ -179,7 +240,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         end
 
         it "shows simple error message for processing errors" do
-          allow(prompt_processor).to receive(:process).and_raise(CodingAgentTools::Error, "File not found")
+          file_handler = double("file_handler")
+          allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+          allow(file_handler).to receive(:read_content).with(prompt, auto_detect: true).and_raise(CodingAgentTools::Error, "File not found")
 
           expect {
             expect { command.call(prompt: prompt, debug: false) }.to raise_error(SystemExit) do |error|
@@ -231,28 +294,59 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       before do
-        allow(prompt_processor).to receive(:process).and_return(prompt)
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with(prompt, auto_detect: true).and_return(prompt)
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({
+          finish_reason: "stop",
+          input_tokens: 10,
+          output_tokens: 20,
+          took: 0.5,
+          provider: "gemini",
+          model: "gemini-2.0-flash-lite",
+          timestamp: "2024-01-01T00:00:00Z"
+        })
+
         allow(gemini_client).to receive(:generate_text).and_return(response)
       end
 
       it "outputs plain text by default" do
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Generated text response")
+        )
+
         expect {
           command.call(prompt: prompt)
         }.to output("Generated text response\n").to_stdout
       end
 
       it "outputs formatted JSON when requested" do
+        json_response = {
+          text: "Generated text response",
+          metadata: {
+            finish_reason: "stop",
+            input_tokens: 10,
+            output_tokens: 20,
+            took: 0.5,
+            provider: "gemini",
+            model: "gemini-2.0-flash-lite",
+            timestamp: "2024-01-01T00:00:00Z"
+          }
+        }.to_json
+
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("json").and_return(
+          double("json_handler", format: json_response)
+        )
+
         expect {
           command.call(prompt: prompt, format: "json")
-        }.to output(a_string_including("Generated text response")
-                   .and(including('"finish_reason": "STOP"'))
-                   .and(including('"promptTokenCount": 10'))
-                   .and(including("HARM_CATEGORY_HATE_SPEECH"))).to_stdout
+        }.to output("#{json_response}\n").to_stdout
       end
 
       it "rejects invalid format option" do
         # This is handled by Dry::CLI validation
-        # The format option has values: %w[text json]
+        # The format option has values: %w[text json markdown]
         # Invalid values would be rejected before reaching our code
       end
     end
@@ -262,7 +356,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         ENV.delete("GEMINI_API_KEY")
         allow(CodingAgentTools::Organisms::GeminiClient).to receive(:new).and_raise(KeyError, "API key not found")
 
-        allow(prompt_processor).to receive(:process).and_return("Test")
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with("Test", auto_detect: true).and_return("Test")
 
         expect {
           expect { command.call(prompt: "Test") }.to raise_error(SystemExit)
@@ -276,7 +372,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         processed_prompt = "Processed prompt"
         response = {text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}}
 
-        expect(prompt_processor).to receive(:process).with(prompt, from_file: nil).ordered.and_return(processed_prompt)
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        expect(file_handler).to receive(:read_content).with(prompt, auto_detect: true).ordered.and_return(processed_prompt)
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({})
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(
+          double("handler", format: "Response")
+        )
         expect(gemini_client).to receive(:generate_text).with(processed_prompt).ordered.and_return(response)
 
         allow($stdout).to receive(:puts) # Suppress output for this test
@@ -293,9 +396,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       expected_examples_array = [
         '"What is Ruby programming language?"',
         '"Explain quantum computing" --format json',
-        "prompt.txt --file",
-        "prompt.txt --file --format json --debug",
-        '"Hello" --model gemini-pro --temperature 0.5'
+        "prompt.txt --output response.json",
+        "prompt.txt --system system.md --output response.md",
+        '"Hello" --model gemini-pro --temperature 0.5 --output result.txt'
       ]
 
       expect(described_class.examples).to eq(expected_examples_array), "The content of the registered examples array does not match the expected content."
@@ -314,7 +417,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     end
 
     it "has all required options" do
-      expected_options = [:file, :format, :debug, :model, :temperature, :max_tokens, :system].sort
+      expected_options = [:output, :format, :debug, :model, :temperature, :max_tokens, :system].sort
       actual_options = described_class.options.map(&:name).sort
       expect(actual_options).to eq(expected_options), "Options mismatch. Actual: #{actual_options.inspect}, Expected: #{expected_options.inspect}"
     end

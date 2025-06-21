@@ -85,8 +85,11 @@ coding_agent_tools project release_context
 ### New Standalone Commands
 
 - **`exe/llm-gemini-query`**: Directly query the Google Gemini API
-  - Usage: `exe/llm-gemini-query "Your prompt" [--file] [--format json|text] [--model MODEL_NAME] [--temperature TEMP] [--max-tokens TOKENS] [--system "SYSTEM_PROMPT"] [--debug]`
-  - Example: `exe/llm-gemini-query "What is Ruby?"`
+  - Usage: `exe/llm-gemini-query "prompt or file path" [--output FILE] [--format json|markdown|text] [--model MODEL_NAME] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--debug]`
+  - Examples: 
+    - `exe/llm-gemini-query "What is Ruby?"`
+    - `exe/llm-gemini-query prompt.txt --output response.json`
+    - `exe/llm-gemini-query "Question" --system system.md --output result.md`
   - Requires: `GEMINI_API_KEY` environment variable
 
 - **`exe/llm-lmstudio-query`**: Query a local LM Studio model

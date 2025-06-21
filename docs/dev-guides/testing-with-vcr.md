@@ -330,6 +330,51 @@ grep -r "<GEMINI_API_KEY>" spec/cassettes/     # Should show filtered keys
 4. **Use descriptive test names** - they become cassette filenames
 5. **Keep tests focused** - one API interaction per test when possible
 
+### Integration Test Performance
+
+1. **Use ProcessHelpers for subprocess tests** - Properly integrates with VCR for subprocess API calls
+2. **Avoid `system()` calls in integration tests** - They don't inherit VCR configuration
+3. **Capture stdout/stderr properly** - Use `execute_gem_executable()` to prevent pollution
+4. **Make tests deterministic** - Avoid random values that break VCR matching
+5. **Check test performance** - VCR tests should be fast (~0.3s), slow tests indicate real API calls
+
+### Subprocess VCR Integration
+
+When writing integration tests that spawn subprocesses (like testing CLI commands):
+
+```ruby
+# ❌ Don't use system() calls - they bypass VCR
+system("bundle exec exe/your-command", "arg1", "arg2")
+
+# ✅ Use ProcessHelpers for proper VCR integration
+include ProcessHelpers
+
+it "runs command with VCR", :vcr do
+  env = vcr_subprocess_env("test_name")
+  stdout, stderr, status = execute_gem_executable("your-command", ["arg1", "arg2"], env: env)
+  
+  expect(status).to be_success
+  expect(stdout).to include("expected output")
+end
+```
+
+### Handling Dynamic Content in Tests
+
+When tests contain dynamic content (like timestamps, random IDs, or temporary file paths):
+
+```ruby
+# ❌ Don't use random values that change each run
+non_existent = "/tmp/does_not_exist_#{rand(10000)}.txt"
+
+# ✅ Use fixed values for deterministic cassettes
+non_existent = "/tmp/does_not_exist_test_file.txt"
+
+# For truly dynamic content, use custom VCR matchers:
+it "handles dynamic content", vcr_options: { match_requests_on: [:method, :uri, :body_without_dynamic_parts] } do
+  # Test code with dynamic content
+end
+```
+
 ### Security Guidelines
 
 1. **Never commit real API keys** to the repository
@@ -338,12 +383,50 @@ grep -r "<GEMINI_API_KEY>" spec/cassettes/     # Should show filtered keys
 4. **Always verify filtering worked** before committing cassettes
 5. **Set up git hooks** to prevent accidental key commits
 
+### Debugging Slow or Failing Tests
+
+When integration tests are unexpectedly slow or failing:
+
+1. **Check if VCR is working**:
+   ```bash
+   # Look for cassette creation
+   find spec/cassettes -name "*.yml" -mtime -1  # Recent cassettes
+   
+   # Run specific test and check timing
+   bin/test spec/integration/your_test.rb -e "specific test"
+   ```
+
+2. **Signs of bypassed VCR**:
+   - Tests taking >1 second (should be ~0.3s with cassettes)
+   - Network errors in CI
+   - API rate limit errors
+   - Different results between runs
+
+3. **Common fixes**:
+   - Ensure test uses `:vcr` tag
+   - Use ProcessHelpers for subprocess calls
+   - Check VCR cassette name generation
+   - Verify environment variables are set correctly
+
+4. **Performance benchmarking**:
+   ```bash
+   # Before optimization
+   Top 10 slowest examples (38.2 seconds, 57.5% of total time):
+     test_name: 12.48 seconds  # ❌ Making real API calls
+   
+   # After VCR optimization  
+   Top 10 slowest examples (4.67 seconds, 58.4% of total time):
+     test_name: 0.32 seconds   # ✅ Using VCR cassettes
+   ```
+
 ### CI/CD Guidelines
 
 1. **No API keys in CI** - rely on pre-recorded cassettes
 2. **Include cassettes in repository** - don't generate them in CI
 3. **Monitor for missing cassettes** in CI failures
 4. **Keep cassettes up to date** with API changes
+5. **Watch for stdout pollution** - clean test output indicates proper VCR usage
+6. **Validate test performance** - CI should have fast, consistent timing
 
 ## Environment Variables Reference
 
@@ -373,6 +456,10 @@ CI=true bin/test spec/integration/            # Simulate CI environment
 find spec/cassettes -name "*.yml" -type f     # List all cassettes
 rm -rf spec/cassettes/                        # Remove all cassettes
 rm spec/cassettes/path/to/specific.yml        # Remove specific cassette
+
+# Performance debugging
+bin/test spec/integration/ | grep "slowest"   # Check test performance
+find spec/cassettes -name "*.yml" -mtime -1   # Find recently created cassettes
 ```
 
 This CI-aware VCR configuration provides a seamless testing experience that automatically adapts to your environment while maintaining security and reliability.

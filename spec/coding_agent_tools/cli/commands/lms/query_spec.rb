@@ -6,15 +6,27 @@ require "coding_agent_tools/cli/commands/lms/query"
 RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
   let(:command) { described_class.new }
   let(:mock_lm_studio_client) { instance_double(CodingAgentTools::Organisms::LMStudioClient) }
-  let(:mock_prompt_processor) { instance_double(CodingAgentTools::Organisms::PromptProcessor) }
+  let(:mock_file_handler) { instance_double(CodingAgentTools::Molecules::FileIoHandler) }
 
   before do
     allow(CodingAgentTools::Organisms::LMStudioClient).to receive(:new).and_return(mock_lm_studio_client)
-    allow(CodingAgentTools::Organisms::PromptProcessor).to receive(:new).and_return(mock_prompt_processor)
+    allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(mock_file_handler)
     allow(command).to receive(:exit) # Prevent actual exit calls during tests
 
     # Default stubs to handle parameter variations
-    allow(mock_prompt_processor).to receive(:process).and_return("default response")
+    allow(mock_file_handler).to receive(:read_content).and_return("default response")
+    allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({
+      finish_reason: "stop",
+      input_tokens: 5,
+      output_tokens: 10,
+      took: 0.5,
+      provider: "lmstudio",
+      model: "mistralai/devstral-small-2505",
+      timestamp: "2024-01-01T00:00:00Z"
+    })
+    allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(
+      double("handler", format: "Default response")
+    )
     allow(mock_lm_studio_client).to receive(:generate_text).and_return({
       text: "Default response",
       finish_reason: "stop",
@@ -34,13 +46,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     context "with basic prompt" do
       it "processes prompt and generates response" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
 
         allow(mock_lm_studio_client).to receive(:generate_text)
           .with(prompt)
           .and_return(successful_response)
+
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a programming language")
+        )
 
         expect { command.call(prompt: prompt) }
           .to output("Ruby is a programming language\n").to_stdout
@@ -49,25 +65,30 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     context "with file input" do
       let(:file_content) { "Explain quantum computing" }
+      let(:file_path) { "prompt.txt" }
 
-      it "processes file and generates response" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: true)
+      it "processes file with auto-detection and generates response" do
+        allow(mock_file_handler).to receive(:read_content)
+          .with(file_path, auto_detect: true)
           .and_return(file_content)
 
         allow(mock_lm_studio_client).to receive(:generate_text)
           .with(file_content)
           .and_return(successful_response)
 
-        expect { command.call(prompt: prompt, file: true) }
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a programming language")
+        )
+
+        expect { command.call(prompt: file_path) }
           .to output("Ruby is a programming language\n").to_stdout
       end
     end
 
     context "with custom model" do
       it "uses specified model" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
         expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
           .with(model: "custom-model")
@@ -77,6 +98,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
           .with(prompt)
           .and_return(successful_response)
 
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a programming language")
+        )
+
         expect { command.call(prompt: prompt, model: "custom-model") }
           .to output("Ruby is a programming language\n").to_stdout
       end
@@ -85,12 +110,19 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
     context "with system instruction" do
       it "includes system instruction in generation options" do
         system_instruction = "You are a helpful assistant"
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(system_instruction, auto_detect: true)
+          .and_return(system_instruction)
         allow(mock_lm_studio_client).to receive(:generate_text)
           .with(prompt, system_instruction: system_instruction)
           .and_return(successful_response)
+
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a programming language")
+        )
 
         expect { command.call(prompt: prompt, system: system_instruction) }
           .to output("Ruby is a programming language\n").to_stdout
@@ -99,8 +131,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     context "with generation config options" do
       it "includes temperature and max_tokens in generation config" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
         allow(mock_lm_studio_client).to receive(:generate_text)
           .with(prompt, generation_config: {
@@ -109,6 +141,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
           })
           .and_return(successful_response)
 
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("text").and_return(
+          double("text_handler", format: "Ruby is a programming language")
+        )
+
         expect { command.call(prompt: prompt, temperature: 0.9, max_tokens: 1000) }
           .to output("Ruby is a programming language\n").to_stdout
       end
@@ -116,8 +152,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     context "with JSON output format" do
       it "outputs JSON format" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
         allow(mock_lm_studio_client).to receive(:generate_text)
           .with(prompt)
@@ -127,12 +163,21 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
           text: "Ruby is a programming language",
           metadata: {
             finish_reason: "stop",
-            usage: {prompt_tokens: 10, completion_tokens: 20}
+            input_tokens: 10,
+            output_tokens: 20,
+            took: 0.5,
+            provider: "lmstudio",
+            model: "mistralai/devstral-small-2505",
+            timestamp: "2024-01-01T00:00:00Z"
           }
-        }
+        }.to_json
+
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).with("json").and_return(
+          double("json_handler", format: expected_json)
+        )
 
         expect { command.call(prompt: prompt, format: "json") }
-          .to output(/#{Regexp.escape(expected_json[:text])}/).to_stdout
+          .to output("#{expected_json}\n").to_stdout
       end
     end
 
@@ -155,8 +200,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
     context "when prompt processing fails" do
       it "handles CodingAgentTools::Error" do
         error = CodingAgentTools::Error.new("File not found")
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_raise(error)
 
         expect(command).to receive(:error_output).with("Error: File not found")
@@ -168,8 +213,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
       it "wraps other errors" do
         error = StandardError.new("Unexpected error")
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_raise(error)
 
         expect(command).to receive(:error_output).with("Error: Failed to process prompt: Unexpected error")
@@ -182,8 +227,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     context "when LM Studio query fails" do
       it "wraps errors" do
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_return(prompt)
         error = StandardError.new("Server unavailable")
         allow(mock_lm_studio_client).to receive(:generate_text)
@@ -202,8 +247,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
       it "shows detailed error information" do
         error = StandardError.new("Test error")
         error.set_backtrace(["line1", "line2"])
-        allow(mock_prompt_processor).to receive(:process)
-          .with(prompt, from_file: false)
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
           .and_raise(error)
 
         expect(command).to receive(:error_output).with("Error: CodingAgentTools::Error: Failed to process prompt: Test error")
@@ -235,12 +280,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
 
     describe "#build_generation_options" do
       it "builds empty options by default" do
-        options = command.send(:build_generation_options, {})
+        options = command.send(:build_generation_options, {}, nil)
         expect(options).to eq({})
       end
 
       it "includes system instruction" do
-        options = command.send(:build_generation_options, {system: "Be helpful"})
+        options = command.send(:build_generation_options, {}, "Be helpful")
         expect(options[:system_instruction]).to eq("Be helpful")
       end
 
@@ -248,7 +293,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
         options = command.send(:build_generation_options, {
           temperature: 0.9,
           max_tokens: 1000
-        })
+        }, nil)
 
         expect(options[:generation_config]).to eq({
           temperature: 0.9,
@@ -257,59 +302,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
       end
 
       it "excludes empty generation config" do
-        options = command.send(:build_generation_options, {})
+        options = command.send(:build_generation_options, {}, nil)
         expect(options).not_to have_key(:generation_config)
-      end
-    end
-
-    describe "#output_text_response" do
-      it "outputs text to stdout" do
-        response = {text: "Hello world"}
-
-        expect { command.send(:output_text_response, response) }
-          .to output("Hello world\n").to_stdout
-      end
-
-      it "returns the response" do
-        response = {text: "Hello world"}
-        result = nil
-        expect { result = command.send(:output_text_response, response) }
-          .to output("Hello world\n").to_stdout
-        expect(result).to eq(response)
-      end
-    end
-
-    describe "#output_json_response" do
-      it "outputs formatted JSON" do
-        response = {
-          text: "Hello world",
-          finish_reason: "stop",
-          usage_metadata: {tokens: 10}
-        }
-
-        allow(CodingAgentTools::Atoms::JSONFormatter).to receive(:pretty_format)
-          .and_return('{"formatted": "json"}')
-
-        expect { command.send(:output_json_response, response) }
-          .to output(%({"formatted": "json"}\n)).to_stdout
-      end
-
-      it "returns the response" do
-        response = {text: "Hello world"}
-        allow(CodingAgentTools::Atoms::JSONFormatter).to receive(:pretty_format)
-          .and_return("{}")
-
-        result = nil
-        expect { result = command.send(:output_json_response, response) }
-          .to output("{}\n").to_stdout
-        expect(result).to eq(response)
-      end
-    end
-
-    describe "#error_output" do
-      it "outputs to stderr" do
-        expect { command.send(:error_output, "Error message") }
-          .to output("Error message\n").to_stderr
       end
     end
   end

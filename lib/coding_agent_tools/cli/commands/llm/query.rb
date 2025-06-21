@@ -1,9 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require_relative "../../../organisms/gemini_client"
-require_relative "../../../organisms/prompt_processor"
-require_relative "../../../atoms/json_formatter"
 
 module CodingAgentTools
   module Cli
@@ -13,13 +10,13 @@ module CodingAgentTools
         class Query < Dry::CLI::Command
           desc "Query Google Gemini AI with a prompt"
 
-          argument :prompt, required: true, desc: "The prompt text or file path (use --file flag for files)"
+          argument :prompt, required: true, desc: "The prompt text or file path (auto-detected)"
 
-          option :file, type: :boolean, default: false, aliases: ["f"],
-            desc: "Treat the prompt argument as a file path"
+          option :output, type: :string, aliases: ["o"],
+            desc: "Output file path (format inferred from extension)"
 
-          option :format, type: :string, default: "text", values: %w[text json],
-            desc: "Output format (text or json)"
+          option :format, type: :string, values: %w[text json markdown],
+            desc: "Output format (overrides file extension inference)"
 
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
@@ -34,14 +31,14 @@ module CodingAgentTools
             desc: "Maximum output tokens"
 
           option :system, type: :string,
-            desc: "System instruction/prompt"
+            desc: "System instruction/prompt (text or file path, auto-detected)"
 
           example [
             '"What is Ruby programming language?"',
             '"Explain quantum computing" --format json',
-            "prompt.txt --file",
-            "prompt.txt --file --format json --debug",
-            '"Hello" --model gemini-pro --temperature 0.5'
+            "prompt.txt --output response.json",
+            "prompt.txt --system system.md --output response.md",
+            '"Hello" --model gemini-pro --temperature 0.5 --output result.txt'
           ]
 
           def call(prompt:, **options)
@@ -51,35 +48,52 @@ module CodingAgentTools
               exit 1
             end
 
-            # Process the prompt
-            prompt_text = process_prompt(prompt, options)
+            # Initialize file I/O handler
+            @file_handler = Molecules::FileIoHandler.new
+
+            # Process the prompt and system instruction
+            prompt_text = process_content(prompt, "prompt")
+            system_text = process_system_instruction(options[:system]) if options[:system]
+
+            # Track execution time
+            start_time = Time.now
 
             # Initialize and query Gemini
-            response = query_gemini(prompt_text, options)
+            response = query_gemini(prompt_text, system_text, options)
+
+            # Calculate execution time
+            execution_time = Time.now - start_time
+
+            # Add normalized metadata
+            normalized_response = add_normalized_metadata(response, execution_time, options)
 
             # Format and output the response
-            output_response(response, options)
+            output_response(normalized_response, options)
           rescue => e
             handle_error(e, options[:debug])
           end
 
           private
 
-          def process_prompt(prompt, options)
-            processor = Organisms::PromptProcessor.new
-            processor.process(prompt, from_file: options[:file])
+          def process_content(content, content_type)
+            @file_handler.read_content(content, auto_detect: true)
           rescue CodingAgentTools::Error => e
             raise e # Re-raise specific CodingAgentTools errors directly
           rescue => e # Catch other StandardErrors
-            new_error = CodingAgentTools::Error.new("Failed to process prompt: #{e.message}")
+            new_error = CodingAgentTools::Error.new("Failed to process #{content_type}: #{e.message}")
             new_error.set_backtrace(e.backtrace)
             raise new_error
           end
 
-          def query_gemini(prompt_text, options)
+          def process_system_instruction(system_content)
+            return nil if system_content.nil? || system_content.strip.empty?
+            process_content(system_content, "system instruction")
+          end
+
+          def query_gemini(prompt_text, system_text, options)
             client = build_gemini_client(options)
 
-            generation_options = build_generation_options(options)
+            generation_options = build_generation_options(options, system_text)
 
             client.generate_text(prompt_text, **generation_options)
           rescue => e
@@ -95,11 +109,11 @@ module CodingAgentTools
             Organisms::GeminiClient.new(**client_options)
           end
 
-          def build_generation_options(options)
+          def build_generation_options(options, system_text)
             generation_options = {}
 
             # Add system instruction if provided
-            generation_options[:system_instruction] = options[:system] if options[:system]
+            generation_options[:system_instruction] = system_text if system_text
 
             # Build generation config if temperature or max_tokens provided
             generation_config = {}
@@ -111,35 +125,55 @@ module CodingAgentTools
             generation_options
           end
 
+          def add_normalized_metadata(response, execution_time, options)
+            metadata = Molecules::MetadataNormalizer.normalize(
+              response,
+              provider: "gemini",
+              model: options[:model] || "gemini-2.0-flash-lite",
+              execution_time: execution_time
+            )
+
+            {
+              text: response[:text],
+              metadata: metadata
+            }
+          end
+
           def output_response(response, options)
-            case options[:format]
-            when "json"
-              output_json_response(response)
+            if options[:output]
+              output_to_file(response, options)
             else
-              output_text_response(response)
+              output_to_stdout(response, options)
             end
             response
           end
 
-          def output_text_response(response)
-            puts response[:text]
-            response
+          def output_to_file(response, options)
+            format = determine_output_format(options)
+            handler = Molecules::FormatHandlers.get_handler(format)
+
+            formatted_content = handler.format(response)
+            @file_handler.write_content(formatted_content, options[:output], format: format)
+
+            # Print summary to stdout
+            summary = handler.generate_summary(response, options[:output])
+            puts summary
           end
 
-          def output_json_response(response)
-            # Structure the JSON output
-            output = {
-              text: response[:text],
-              metadata: {
-                finish_reason: response[:finish_reason],
-                safety_ratings: response[:safety_ratings],
-                usage: response[:usage_metadata]
-              }
-            }
+          def output_to_stdout(response, options)
+            format = options[:format] || "text"
+            handler = Molecules::FormatHandlers.get_handler(format)
 
-            formatted = Atoms::JSONFormatter.pretty_format(output)
-            puts formatted
-            response
+            formatted_content = handler.format(response)
+            puts formatted_content
+          end
+
+          def determine_output_format(options)
+            # Format flag takes precedence over file extension
+            return options[:format] if options[:format]
+
+            # Infer from file extension
+            @file_handler.infer_format_from_path(options[:output])
           end
 
           def handle_error(error, debug_enabled)

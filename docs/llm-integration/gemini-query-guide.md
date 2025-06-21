@@ -66,7 +66,7 @@ This will send the question to the default Gemini model and print the text respo
 
 ### File Prompts
 
-For longer prompts or to keep your prompts organized, you can use a file. Create a text file (e.g., `prompt.txt`) containing your prompt, then use the `--file` (or `-f`) flag:
+For longer prompts or to keep your prompts organized, you can use a file. Create a text file (e.g., `prompt.txt`) containing your prompt, then simply provide the file path as the prompt argument (auto-detected):
 
 **Example `prompt.txt`:**
 ```/dev/null/prompt.txt#L1-3
@@ -76,7 +76,7 @@ Provide a brief summary suitable for a high school student.
 
 **Command:**
 ```/dev/null/example.sh#L1
-llm-gemini-query prompt.txt --file
+llm-gemini-query prompt.txt
 ```
 
 ## Output Format Options
@@ -168,7 +168,7 @@ llm-gemini-query "List three benefits of exercise." --system "You are a helpful 
 Enables debug output, providing more verbose information, especially useful for troubleshooting issues or understanding the internal workings of the command.
 
 ```/dev/null/example.sh#L1
-llm-gemini-query long_prompt.txt --file --format json --debug
+llm-gemini-query long_prompt.txt --format json --debug
 ```
 
 ## Combined Options Examples
@@ -177,7 +177,7 @@ You can combine multiple options to achieve specific behaviors.
 
 **Example 1: Specific model, temperature, and JSON output from a file.**
 ```/dev/null/example.sh#L1
-llm-gemini-query research_summary.txt --file --model gemini-pro --temperature 0.7 --format json
+llm-gemini-query research_summary.txt --model gemini-pro --temperature 0.7 --format json
 ```
 
 **Example 2: Concise creative poem with system instruction and limited length.**
@@ -199,7 +199,7 @@ If you receive an error related to authentication or a missing API key, ensure t
 
 ### Prompt File Not Found
 
-If you use the `--file` flag and the command reports that the file was not found:
+If you provide a file path and the command reports that the file was not found, it will treat the path as inline text. To ensure a file is read:
 
 *   **Verify path:** Ensure the file path you provided is correct and that the file exists at that location relative to where you are running the command.
 *   **Current Directory:** Confirm you are running the command from the correct directory or provide an absolute path to the prompt file.

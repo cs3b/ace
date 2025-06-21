@@ -38,7 +38,7 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
       expect(last_command_started).to have_exit_status(0)
       expect(last_command_started).to have_output(/Query Google Gemini AI with a prompt/)
       expect(last_command_started).to have_output(/--format/)
-      expect(last_command_started).to have_output(/--debug/)
+      expect(last_command_started).to have_output(/--\[no-\]debug/)
       expect(last_command_started).to have_output(/--model/)
       expect(last_command_started).to have_output(/Examples:/)
     end
@@ -77,7 +77,17 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
         expect(json_output).to have_key("text")
         expect(json_output).to have_key("metadata")
         expect(json_output["metadata"]).to have_key("finish_reason")
-        expect(json_output["metadata"]).to have_key("usage")
+        expect(json_output["metadata"]).to have_key("input_tokens")
+        expect(json_output["metadata"]).to have_key("output_tokens")
+        expect(json_output["metadata"]).to have_key("took")
+        expect(json_output["metadata"]).to have_key("provider")
+        expect(json_output["metadata"]).to have_key("model")
+        expect(json_output["metadata"]).to have_key("timestamp")
+
+        # Check normalized token counts
+        expect(json_output["metadata"]["input_tokens"]).to be_a(Integer)
+        expect(json_output["metadata"]["output_tokens"]).to be_a(Integer)
+        expect(json_output["metadata"]["provider"]).to eq("gemini")
       end
 
       it "reads prompt from file", :vcr do
@@ -86,7 +96,7 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
 
         write_file("prompt.txt", "What is the capital of France? Reply with just the city name.")
 
-        run_command("#{ruby_path} #{exe_path} prompt.txt --file")
+        run_command("#{ruby_path} #{exe_path} prompt.txt")
 
         expect(last_command_started).to have_exit_status(0)
         expect(last_command_started.stderr).to be_empty
@@ -171,33 +181,42 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
   end
 
   describe "error handling" do
-    it "handles malformed JSON prompt file gracefully", :vcr do
-      set_environment_variable("GEMINI_API_KEY", api_key)
+    it "treats malformed JSON as inline content and queries AI", :vcr do
+      cassette_name = "llm_gemini_query_integration/treats_malformed_json_as_inline"
+      setup_vcr_env(cassette_name, "GEMINI_API_KEY" => api_key)
       write_file("malformed.json", '{"invalid": json}')
 
-      run_command("#{ruby_path} #{exe_path} malformed.json --file")
+      run_command("#{ruby_path} #{exe_path} malformed.json")
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to include("Error:")
+      expect(last_command_started).to have_exit_status(0)
+      expect(last_command_started.stderr).to be_empty
+      # Should respond with AI text about the content
+      expect(last_command_started.stdout).not_to be_empty
     end
 
-    it "handles non-existent file", :vcr do
-      set_environment_variable("GEMINI_API_KEY", api_key)
+    it "treats non-existent file path as inline content", :vcr do
+      cassette_name = "llm_gemini_query_integration/treats_nonexistent_file_as_inline"
+      setup_vcr_env(cassette_name, "GEMINI_API_KEY" => api_key)
 
-      run_command("#{ruby_path} #{exe_path} /non/existent/file.txt --file")
+      run_command("#{ruby_path} #{exe_path} '/non/existent/file.txt'")
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to match(/not found|does not exist/i)
+      expect(last_command_started).to have_exit_status(0)
+      expect(last_command_started.stderr).to be_empty
+      # Should respond with AI text about the file path
+      expect(last_command_started.stdout).not_to be_empty
     end
 
-    it "handles empty file", :vcr do
-      set_environment_variable("GEMINI_API_KEY", api_key)
+    it "handles empty file by treating it as empty prompt", :vcr do
+      cassette_name = "llm_gemini_query_integration/handles_empty_file"
+      setup_vcr_env(cassette_name, "GEMINI_API_KEY" => api_key)
       write_file("empty.txt", "")
 
-      run_command("#{ruby_path} #{exe_path} empty.txt --file")
+      run_command("#{ruby_path} #{exe_path} empty.txt")
 
-      expect(last_command_started).not_to have_exit_status(0)
-      expect(last_command_started.stderr).to match(/empty|blank/i)
+      expect(last_command_started).to have_exit_status(0)
+      expect(last_command_started.stderr).to be_empty
+      # Should respond with AI's helpful default message
+      expect(last_command_started.stdout).not_to be_empty
     end
   end
 
@@ -236,13 +255,17 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
       # Check metadata structure
       metadata = json_output["metadata"]
       expect(metadata).to have_key("finish_reason")
-      expect(metadata).to have_key("safety_ratings")
-      expect(metadata).to have_key("usage")
+      expect(metadata).to have_key("input_tokens")
+      expect(metadata).to have_key("output_tokens")
+      expect(metadata).to have_key("took")
+      expect(metadata).to have_key("provider")
+      expect(metadata).to have_key("model")
+      expect(metadata).to have_key("timestamp")
 
-      # Usage should have token counts
-      usage = metadata["usage"]
-      expect(usage).to be_a(Hash)
-      expect(usage.keys).to include("promptTokenCount") if usage.any?
+      # Check normalized token counts
+      expect(metadata["input_tokens"]).to be_a(Integer)
+      expect(metadata["output_tokens"]).to be_a(Integer)
+      expect(metadata["provider"]).to eq("gemini")
     end
   end
 
@@ -279,7 +302,7 @@ RSpec.describe "llm-gemini-query integration", type: :aruba do
         Reply with: "Multi-line received"
       PROMPT
 
-      run_command("#{ruby_path} #{exe_path} multiline.txt --file")
+      run_command("#{ruby_path} #{exe_path} multiline.txt")
 
       expect(last_command_started).to have_exit_status(0)
       expect(last_command_started.stderr).to be_empty

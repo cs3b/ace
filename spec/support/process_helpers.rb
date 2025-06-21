@@ -123,7 +123,7 @@ module ProcessHelpers
   # @param timeout [Integer] Timeout in seconds
   # @return [Array<String, String, Process::Status>] stdout, stderr, status
   def execute_gem_executable(exe_name, args = [], env: {}, timeout: DEFAULT_TIMEOUT)
-    exe_path = File.expand_path("../../../exe/#{exe_name}", __dir__)
+    exe_path = File.expand_path("../../exe/#{exe_name}", __dir__)
     execute_ruby_script(exe_path, args, env: env, timeout: timeout)
   end
 
