@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.39
-title: Add LLM Provider Support for OpenAI, Anthropic, and Mixtral
+title: Add LLM Provider Support for OpenAI, Anthropic, Mixtral, and Together AI
 status: pending
 priority: high
 assignee: unassigned
@@ -21,44 +21,42 @@ updated_at: 2024-01-01
 
 ## Objective / Problem Statement
 
-Currently, the coding-agent-tools only supports Google Gemini and LMStudio as LLM providers. Many users need access to other popular LLM providers like OpenAI (GPT models), Anthropic (Claude models), and Mixtral. Adding support for these providers will significantly expand the toolkit's capabilities and allow users to choose the best model for their specific use cases.
+Currently, the coding-agent-tools only supports Google Gemini and LMStudio as LLM providers. Many users need access to other popular LLM providers like OpenAI (GPT models), Anthropic (Claude models), Mixtral, and Together AI. Adding support for these providers will significantly expand the toolkit's capabilities and allow users to choose the best model for their specific use cases.
 
 ## Directory Audit
 
 ```bash
-tree -L 2 lib/coding_agent_tools/providers
-lib/coding_agent_tools/providers
-├── gemini.rb
-└── lmstudio.rb
+tree -L 2 lib/coding_agent_tools/organisms
+lib/coding_agent_tools/organisms
+├── gemini_client.rb
+└── lm_studio_client.rb
 
-tree -L 1 exe | grep -E "(gemini|lmstudio)"
-├── llm-gemini-models
+tree -L 1 exe | grep -E "(query|models)"
 ├── llm-gemini-query
-├── llm-lmstudio-models
-└── llm-lmstudio-query
+├── llm-lmstudio-query
+└── llm-models
 ```
 
 ## Scope of Work
 
 - Create provider modules for OpenAI, Anthropic, and Mixtral
 - Implement API clients for each provider following existing patterns
-- Create query and models commands for each provider
-- Ensure compatibility with planned unified commands (from task.37)
+- Create query commands for each new provider
+- Integrate new providers into the existing unified `llm-models` command
 - Add proper API key discovery and configuration
 - Implement comprehensive error handling and testing
 
 ## Deliverables / Manifest
 
-- [ ] Create `lib/coding_agent_tools/providers/openai.rb` module
-- [ ] Create `lib/coding_agent_tools/providers/anthropic.rb` module
-- [ ] Create `lib/coding_agent_tools/providers/mixtral.rb` module
-- [ ] Create API client classes for each provider
+- [ ] Create `lib/coding_agent_tools/organisms/openai_client.rb`
+- [ ] Create `lib/coding_agent_tools/organisms/anthropic_client.rb`
+- [ ] Create `lib/coding_agent_tools/organisms/mixtral_client.rb`
+- [ ] Create API client classes for each provider in `organisms/`
 - [ ] Create `exe/llm-openai-query` command
-- [ ] Create `exe/llm-openai-models` command
 - [ ] Create `exe/llm-anthropic-query` command
-- [ ] Create `exe/llm-anthropic-models` command
 - [ ] Create `exe/llm-mixtral-query` command
-- [ ] Create `exe/llm-mixtral-models` command
+- [ ] Create `lib/coding_agent_tools/organisms/together_ai_client.rb` module
+- [ ] Create `exe/llm-together-ai-query` command
 - [ ] Add provider configuration to API credentials system
 - [ ] Create integration tests for each provider
 - [ ] Update documentation with provider-specific guides
@@ -66,9 +64,9 @@ tree -L 1 exe | grep -E "(gemini|lmstudio)"
 ## Phases
 
 1. **Architecture Phase**: Design provider interfaces following ATOM pattern
-2. **OpenAI Implementation**: Implement OpenAI provider and commands
-3. **Anthropic Implementation**: Implement Anthropic provider and commands
-4. **Mixtral Implementation**: Implement Mixtral provider and commands
+2. **OpenAI Implementation**: Implement OpenAI client and query command, integrate into `llm-models`
+3. **Anthropic Implementation**: Implement Anthropic client and query command, integrate into `llm-models`
+4. **Mixtral Implementation**: Implement Mixtral client and query command, integrate into `llm-models`
 5. **Integration Phase**: Ensure compatibility with unified commands
 6. **Testing Phase**: Comprehensive testing of all providers
 7. **Documentation Phase**: Create guides and update existing docs
@@ -76,68 +74,110 @@ tree -L 1 exe | grep -E "(gemini|lmstudio)"
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Study existing Gemini and LMStudio provider implementations
-  > TEST: Provider Pattern Analysis
+* [ ] Study existing `Organisms::GeminiClient` and `Organisms::LMStudioClient` implementations
+  > TEST: Provider Client Pattern Analysis
   >   Type: Pre-condition Check
-  >   Assert: Document common patterns and interfaces
+  >   Assert: Document common patterns and interfaces in `lib/coding_agent_tools/organisms/`
   >   Command: bin/test --analyze-provider-patterns
 * [ ] Research API specifications for each provider
   - [ ] OpenAI API v1 documentation
   - [ ] Anthropic Claude API documentation
-  - [ ] Mixtral/Together AI API documentation
+  - [ ] Mistral AI API documentation
+  - [ ] Together AI API documentation
 * [ ] Design consistent interface across all providers
 * [ ] Plan API key discovery strategy for each provider
   - [ ] OpenAI: `OPENAI_API_KEY`
   - [ ] Anthropic: `ANTHROPIC_API_KEY`
-  - [ ] Mixtral: `MIXTRAL_API_KEY` or `TOGETHER_API_KEY`
+  - [ ] Mixtral: `MISTRAL_API_KEY`
+  - [ ] Together AI: `TOGETHER_API_KEY`
 
 ### Execution Steps
-- [ ] Implement OpenAI provider
-  - [ ] Create `lib/coding_agent_tools/providers/openai.rb`
+- [ ] Implement OpenAI provider client
+  - [ ] Create `lib/coding_agent_tools/organisms/openai_client.rb`
   - [ ] Implement OpenAI API client with proper error handling
   - [ ] Support GPT-4, GPT-4 Turbo, GPT-3.5 models
   - [ ] Handle streaming and non-streaming responses
-  > TEST: OpenAI Provider Integration
+  > TEST: OpenAI Provider Client Integration
   >   Type: Integration Test
-  >   Assert: Can list models and make queries
-  >   Command: bin/test --provider openai
-- [ ] Create OpenAI commands
+  >   Assert: API client can list models and make queries
+  >   Command: bin/test --provider openai --client-only
+- [ ] Create OpenAI query command
   - [ ] Implement `exe/llm-openai-query`
-  - [ ] Implement `exe/llm-openai-models`
-  - [ ] Ensure consistent CLI interface with existing commands
-- [ ] Implement Anthropic provider
-  - [ ] Create `lib/coding_agent_tools/providers/anthropic.rb`
-  - [ ] Implement Anthropic API client
+  - [ ] Ensure consistent CLI interface with existing query commands
+- [ ] Integrate OpenAI into unified `llm-models` command
+  - [ ] Update `lib/coding_agent_tools/cli/commands/llm/models.rb` to support OpenAI
+  - [ ] Add OpenAI models to caching and listing logic
+  > TEST: Unified Models - OpenAI Integration
+  >   Type: Integration Test
+  >   Assert: `llm-models openai` lists OpenAI models
+  >   Command: bin/test --llm-models openai
+- [ ] Implement Anthropic provider client
+  - [ ] Create `lib/coding_agent_tools/organisms/anthropic_client.rb`
+  - [ ] Implement Anthropic API client with proper error handling
   - [ ] Support Claude 3 Opus, Sonnet, and Haiku models
   - [ ] Handle Anthropic's message format requirements
-  > TEST: Anthropic Provider Integration
+  > TEST: Anthropic Provider Client Integration
   >   Type: Integration Test
-  >   Assert: Can list models and make queries
-  >   Command: bin/test --provider anthropic
-- [ ] Create Anthropic commands
+  >   Assert: API client can list models and make queries
+  >   Command: bin/test --provider anthropic --client-only
+- [ ] Create Anthropic query command
   - [ ] Implement `exe/llm-anthropic-query`
-  - [ ] Implement `exe/llm-anthropic-models`
+  - [ ] Ensure consistent CLI interface with existing query commands
   - [ ] Handle Anthropic's specific requirements (e.g., human/assistant alternation)
-- [ ] Implement Mixtral provider
-  - [ ] Create `lib/coding_agent_tools/providers/mixtral.rb`
-  - [ ] Implement Together AI or Mistral API client
+- [ ] Integrate Anthropic into unified `llm-models` command
+  - [ ] Update `lib/coding_agent_tools/cli/commands/llm/models.rb` to support Anthropic
+  - [ ] Add Anthropic models to caching and listing logic
+  > TEST: Unified Models - Anthropic Integration
+  >   Type: Integration Test
+  >   Assert: `llm-models anthropic` lists Anthropic models
+  >   Command: bin/test --llm-models anthropic
+- [ ] Implement Mixtral provider client
+  - [ ] Create `lib/coding_agent_tools/organisms/mixtral_client.rb`
+  - [ ] Implement Together AI or Mistral API client with proper error handling
   - [ ] Support Mixtral-8x7B and other Mistral models
   - [ ] Handle provider-specific response formats
-  > TEST: Mixtral Provider Integration
+  > TEST: Mixtral Provider Client Integration
   >   Type: Integration Test
-  >   Assert: Can list models and make queries
-  >   Command: bin/test --provider mixtral
-- [ ] Create Mixtral commands
+  >   Assert: API client can list models and make queries
+  >   Command: bin/test --provider mixtral --client-only
+- [ ] Create Mixtral query command
   - [ ] Implement `exe/llm-mixtral-query`
-  - [ ] Implement `exe/llm-mixtral-models`
+  - [ ] Ensure consistent CLI interface with existing query commands
+- [ ] Integrate Mixtral into unified `llm-models` command
+  - [ ] Update `lib/coding_agent_tools/cli/commands/llm/models.rb` to support Mixtral
+  - [ ] Add Mixtral models to caching and listing logic
+  > TEST: Unified Models - Mixtral Integration
+  >   Type: Integration Test
+  >   Assert: `llm-models mixtral` lists Mixtral models
+  >   Command: bin/test --llm-models mixtral
+- [ ] Implement Together AI provider client
+  - [ ] Create `lib/coding_agent_tools/organisms/together_ai_client.rb`
+  - [ ] Implement Together AI API client with proper error handling
+  - [ ] Support relevant Together AI models (e.g., Llama, Mixtral through Together)
+  - [ ] Handle Together AI response formats
+  > TEST: Together AI Provider Client Integration
+  >   Type: Integration Test
+  >   Assert: API client can list models and make queries programmatically via Together AI
+  >   Command: bin/test --provider together_ai --client-only
+- [ ] Create Together AI query command
+  - [ ] Implement `exe/llm-together-ai-query`
+  - [ ] Ensure consistent CLI interface with existing query commands
+- [ ] Integrate Together AI into unified `llm-models` command
+  - [ ] Update `lib/coding_agent_tools/cli/commands/llm/models.rb` to support Together AI
+  - [ ] Add Together AI models to caching and listing logic
+  > TEST: Unified Models - Together AI Integration
+  >   Type: Integration Test
+  >   Assert: `llm-models together_ai` lists Together AI models
+  >   Command: bin/test --llm-models together_ai
 - [ ] Update API credentials system
   - [ ] Add OpenAI key discovery
   - [ ] Add Anthropic key discovery
-  - [ ] Add Mixtral/Together key discovery
+  - [ ] Add Mistral key discovery
+  - [ ] Add Together AI key discovery
   - [ ] Update configuration documentation
-- [ ] Ensure unified command compatibility
-  - [ ] Update provider registry for `llm-models` command
-  - [ ] Ensure consistent interfaces for future integration
+- [ ] Ensure unified `llm-models` command compatibility
+  - [ ] Update `lib/coding_agent_tools/cli/commands/llm/models.rb` to incorporate new providers
+  - [ ] Ensure `llm-models` can list models for OpenAI, Anthropic, and Mixtral
 - [ ] Add comprehensive error handling
   - [ ] Rate limiting responses
   - [ ] Invalid API key errors
@@ -151,14 +191,15 @@ tree -L 1 exe | grep -E "(gemini|lmstudio)"
 ## Acceptance Criteria
 
 - [ ] All three providers (OpenAI, Anthropic, Mixtral) are fully implemented
-- [ ] Each provider has working `query` and `models` commands
+- [ ] Each new provider has a working `query` command (`llm-openai-query`, etc.)
+- [ ] The unified `llm-models` command can list models for all new providers (OpenAI, Anthropic, Mixtral)
 - [ ] API key discovery works for all providers using environment variables
 - [ ] Error messages are clear and actionable for common issues
 - [ ] All providers follow the same architectural patterns as existing ones
 - [ ] Integration tests pass for all providers
 - [ ] Commands support all features available in Gemini/LMStudio commands
 - [ ] Documentation clearly explains setup and usage for each provider
-- [ ] Provider modules are compatible with planned unified commands
+
 - [ ] Response formats are consistent across all providers
 
 ## Out of Scope
@@ -174,9 +215,10 @@ tree -L 1 exe | grep -E "(gemini|lmstudio)"
 
 - [OpenAI API Reference](https://platform.openai.com/docs/api-reference)
 - [Anthropic API Reference](https://docs.anthropic.com/claude/reference)
+- [Mistral AI API Reference](https://docs.mistral.ai/api/)
 - [Together AI API Reference](https://docs.together.ai/reference)
 - Risk: API changes from providers - mitigate with version pinning
 - Risk: Rate limiting differences - implement provider-specific retry logic
 - Risk: Cost implications - ensure users understand pricing differences
-- Follow existing patterns in `lib/coding_agent_tools/providers/`
-- Use existing HTTP client patterns from Gemini implementation
+- Follow existing patterns in `lib/coding_agent_tools/organisms/` (e.g., `gemini_client.rb`, `lm_studio_client.rb`)
+- Use existing HTTP client patterns from Gemini client implementation
