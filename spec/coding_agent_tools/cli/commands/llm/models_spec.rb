@@ -449,8 +449,6 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         expect(default_model).not_to be_nil
         expect(default_model.id).not_to be_empty
       end
-
-
     end
 
     describe "#filter_models" do

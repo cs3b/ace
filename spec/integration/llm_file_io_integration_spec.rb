@@ -67,7 +67,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
         # Parse YAML front matter
         lines = content.split("\n")
-        yaml_end = lines[1..-1].index("---")
+        yaml_end = lines[1..].index("---")
         expect(yaml_end).not_to be_nil, "Expected YAML front matter closing '---' not found"
 
         yaml_content = lines[1...yaml_end + 1].join("\n")
@@ -236,7 +236,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
         # Parse YAML front matter
         lines = content.split("\n")
-        yaml_end = lines[1..-1].index("---")
+        yaml_end = lines[1..].index("---")
         expect(yaml_end).not_to be_nil, "Expected YAML front matter closing '---' not found"
 
         yaml_content = lines[1...yaml_end + 1].join("\n")
