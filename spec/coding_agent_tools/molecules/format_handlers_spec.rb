@@ -220,7 +220,7 @@ RSpec.describe CodingAgentTools::Molecules::FormatHandlers do
 
         # Find YAML front matter boundaries
         start_index = lines.index("---")
-        end_index = lines[start_index + 1..-1].index("---")
+        end_index = lines[start_index + 1..].index("---")
         end_index = start_index + 1 + end_index if end_index
 
         expect(start_index).not_to be_nil
