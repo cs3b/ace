@@ -14,7 +14,7 @@ module CodingAgentTools
       API_BASE_URL = "https://api.together.xyz/v1"
 
       # Default model to use
-      DEFAULT_MODEL = "deepseek-ai/DeepSeek-V3"
+      DEFAULT_MODEL = "mistralai/Mistral-7B-Instruct-v0.3"
 
       # Default environment variable name for Together AI API key
       DEFAULT_API_KEY_ENV = "TOGETHER_API_KEY"

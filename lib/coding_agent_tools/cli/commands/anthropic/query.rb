@@ -31,6 +31,9 @@ module CodingAgentTools
           option :max_tokens, type: :integer,
             desc: "Maximum output tokens"
 
+          option :timeout, type: :integer,
+            desc: "Request timeout in seconds"
+
           option :system, type: :string,
             desc: "System instruction/prompt (text or file path, auto-detected)"
 
@@ -39,7 +42,8 @@ module CodingAgentTools
             '"Explain quantum computing" --format json',
             "prompt.txt --output response.json",
             "prompt.txt --system system.md --output response.md",
-            '"Hello" --model claude-3-5-haiku-20241022 --temperature 0.5 --output result.txt'
+            '"Hello" --model claude-3-5-haiku-20241022 --temperature 0.5 --output result.txt',
+            '"Hello" --timeout 60'
           ]
 
           def call(prompt:, **options)
@@ -106,6 +110,7 @@ module CodingAgentTools
           def build_anthropic_client(options)
             client_options = {}
             client_options[:model] = options[:model] if options[:model]
+            client_options[:timeout] = options[:timeout] if options[:timeout]
 
             Organisms::AnthropicClient.new(**client_options)
           end

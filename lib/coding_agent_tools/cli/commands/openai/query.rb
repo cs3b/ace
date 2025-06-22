@@ -34,12 +34,15 @@ module CodingAgentTools
           option :system, type: :string,
             desc: "System instruction/prompt (text or file path, auto-detected)"
 
+          option :timeout, type: :integer, desc: "Request timeout in seconds"
+
           example [
             '"What is Ruby programming language?"',
             '"Explain quantum computing" --format json',
             "prompt.txt --output response.json",
             "prompt.txt --system system.md --output response.md",
-            '"Hello" --model gpt-4o-mini --temperature 0.5 --output result.txt'
+            '"Hello" --model gpt-4o-mini --temperature 0.5 --output result.txt',
+            '"Hello" --timeout 60'
           ]
 
           def call(prompt:, **options)
@@ -106,6 +109,7 @@ module CodingAgentTools
           def build_openai_client(options)
             client_options = {}
             client_options[:model] = options[:model] if options[:model]
+            client_options[:timeout] = options[:timeout] if options[:timeout]
 
             Organisms::OpenAIClient.new(**client_options)
           end

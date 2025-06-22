@@ -33,12 +33,15 @@ module CodingAgentTools
           option :system, type: :string,
             desc: "System instruction/prompt (text or file path, auto-detected)"
 
+          option :timeout, type: :integer, desc: "Request timeout in seconds"
+
           example [
             '"What is Ruby programming language?"',
             '"Explain quantum computing" --format json',
             "prompt.txt --output response.json",
             "prompt.txt --system system.md --output response.md",
-            '"Hello" --model mistralai/devstral-small-2505 --temperature 0.5 --output result.txt'
+            '"Hello" --model mistralai/devstral-small-2505 --temperature 0.5 --output result.txt',
+            '"Hello" --timeout 180'
           ]
 
           def call(prompt:, **options)
@@ -110,6 +113,7 @@ module CodingAgentTools
           def build_lm_studio_client(options)
             client_options = {}
             client_options[:model] = options[:model] if options[:model]
+            client_options[:timeout] = options[:timeout] if options[:timeout]
 
             Organisms::LMStudioClient.new(**client_options)
           end

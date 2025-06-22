@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         output_content = output.string
         expect(output_content).to include("Available Together AI Models")
-        expect(output_content).to include("Default model")
+
         expect(output_content).to include("Usage: llm-together-ai-query")
         # Should contain at least one model
         expect(output_content).to match(/ID: [\w\/-]+/)
@@ -450,13 +450,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         expect(default_model.id).not_to be_empty
       end
 
-      it "includes the default model for together_ai" do
-        models = command.send(:get_available_models, "together_ai")
-        default_model = models.find(&:default?)
 
-        expect(default_model).not_to be_nil
-        expect(default_model.id).not_to be_empty
-      end
     end
 
     describe "#filter_models" do

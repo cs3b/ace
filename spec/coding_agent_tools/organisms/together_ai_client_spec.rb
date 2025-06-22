@@ -20,7 +20,7 @@ RSpec.describe CodingAgentTools::Organisms::TogetherAIClient do
   describe "#initialize" do
     context "with default configuration" do
       it "uses default model" do
-        expect(client.instance_variable_get(:@model)).to eq("deepseek-ai/DeepSeek-V3")
+        expect(client.instance_variable_get(:@model)).to eq("mistralai/Mistral-7B-Instruct-v0.3")
       end
 
       it "uses default base URL" do
@@ -132,6 +132,13 @@ RSpec.describe CodingAgentTools::Organisms::TogetherAIClient do
     end
 
     context "with custom generation options" do
+      let(:client) do
+        described_class.new(
+          api_key: api_key,
+          model: "deepseek-ai/DeepSeek-V3"
+        )
+      end
+
       let(:options) do
         {
           system_instruction: "You are a math tutor",
@@ -393,10 +400,10 @@ RSpec.describe CodingAgentTools::Organisms::TogetherAIClient do
       it "returns model information from list_models" do
         result = client.model_info
 
-        # Since DeepSeek-V3 doesn't have "chat" or "instruct" in its name,
-        # it won't be in the filtered list, so model_info will return default info
-        expect(result[:id]).to eq("deepseek-ai/DeepSeek-V3")
-        expect(result[:name]).to eq("deepseek-ai/DeepSeek-V3")
+        # Since the client's default model "mistralai/Mistral-7B-Instruct-v0.3" is not in the mock response,
+        # model_info will return default info with the client's configured model
+        expect(result[:id]).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(result[:name]).to eq("mistralai/Mistral-7B-Instruct-v0.3")
         expect(result[:owned_by]).to eq("together")
         expect(result[:created]).to be_a(Integer)
       end
