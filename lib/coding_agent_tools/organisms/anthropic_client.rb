@@ -1,0 +1,270 @@
+# frozen_string_literal: true
+
+require_relative "../molecules/api_credentials"
+require_relative "../molecules/http_request_builder"
+require_relative "../molecules/api_response_parser"
+require "addressable/uri"
+
+module CodingAgentTools
+  module Organisms
+    # AnthropicClient provides high-level interface to Anthropic API
+    # This is an organism - it orchestrates molecules to achieve business goals
+    class AnthropicClient
+      # Anthropic API base URL
+      API_BASE_URL = "https://api.anthropic.com/v1"
+
+      # Default model to use
+      DEFAULT_MODEL = "claude-3-5-haiku-20241022"
+
+      # Default environment variable name for Anthropic API key
+      DEFAULT_API_KEY_ENV = "ANTHROPIC_API_KEY"
+
+      # API version
+      API_VERSION = "2023-06-01"
+
+      # Default generation config
+      DEFAULT_GENERATION_CONFIG = {
+        temperature: 0.7,
+        max_tokens: 4096
+      }.freeze
+
+      # Initialize Anthropic client
+      # @param api_key [String, nil] API key (uses env/config if nil)
+      # @param model [String] Model to use
+      # @param options [Hash] Additional options
+      # @option options [String] :base_url API base URL
+      # @option options [Hash] :generation_config Default generation config
+      # @option options [Integer] :timeout Request timeout
+      def initialize(api_key: nil, model: DEFAULT_MODEL, **options)
+        @model = model
+        @base_url = options.fetch(:base_url, API_BASE_URL)
+        @generation_config = DEFAULT_GENERATION_CONFIG.merge(
+          options.fetch(:generation_config, {})
+        )
+
+        # Initialize components
+        @credentials = Molecules::APICredentials.new(
+          env_key_name: options.fetch(:api_key_env, DEFAULT_API_KEY_ENV)
+        )
+        @api_key = api_key || @credentials.api_key
+
+        @request_builder = Molecules::HTTPRequestBuilder.new(
+          timeout: options.fetch(:timeout, 30),
+          # The event_namespace is passed to HTTPClient, which uses it to configure
+          # the FaradayDryMonitorLogger middleware for observability.
+          event_namespace: :anthropic_api # For dry-monitor event namespacing
+        )
+        @response_parser = Molecules::APIResponseParser.new
+      end
+
+      # Generate text content from a prompt
+      # @param prompt [String] The prompt text
+      # @param options [Hash] Generation options
+      # @option options [String] :system_instruction System instruction/message
+      # @option options [Hash] :generation_config Override generation config
+      # @return [Hash] Response with generated text
+      def generate_text(prompt, **options)
+        payload = build_generation_payload(prompt, options)
+        url = build_api_url("messages")
+
+        response_data = @request_builder.post_json(url, payload, headers: auth_headers)
+        parsed = @response_parser.parse_response(response_data)
+
+        if parsed[:success]
+          extract_generated_text(parsed)
+        else
+          handle_error(parsed)
+        end
+      end
+
+      # Generate text with streaming response
+      # @param prompt [String] The prompt text
+      # @param options [Hash] Generation options
+      # @yield [chunk] Yields each response chunk
+      # @yieldparam chunk [String] Text chunk
+      # @return [String] Complete generated text
+      def generate_text_stream(prompt, **options)
+        raise NotImplementedError, "Streaming responses not yet implemented"
+      end
+
+      # Count tokens in a text (Anthropic doesn't have a direct API for this)
+      # @param text [String] Text to count tokens for
+      # @return [Hash] Token count information
+      def count_tokens(text)
+        raise NotImplementedError, "Token counting not directly supported by Anthropic API"
+      end
+
+      # List all available models
+      # @return [Array] List of available models
+      def list_models
+        # Anthropic doesn't provide a models endpoint, so we return a static list
+        [
+          {
+            id: "claude-3-5-sonnet-20241022",
+            name: "Claude 3.5 Sonnet",
+            description: "Most intelligent Claude model",
+            created: 1729555200
+          },
+          {
+            id: "claude-3-5-haiku-20241022",
+            name: "Claude 3.5 Haiku",
+            description: "Fast and cost-effective",
+            created: 1729555200
+          },
+          {
+            id: "claude-3-opus-20240229",
+            name: "Claude 3 Opus",
+            description: "Powerful model for complex tasks",
+            created: 1709251200
+          },
+          {
+            id: "claude-3-sonnet-20240229",
+            name: "Claude 3 Sonnet",
+            description: "Balanced performance and speed",
+            created: 1709251200
+          },
+          {
+            id: "claude-3-haiku-20240307",
+            name: "Claude 3 Haiku",
+            description: "Fast, compact, and cost-effective",
+            created: 1709769600
+          }
+        ]
+      end
+
+      # Get information about the model
+      # @return [Hash] Model information
+      def model_info
+        models = list_models
+        models.find { |model| model[:id] == @model } || {
+          id: @model,
+          name: @model.split("-").map(&:capitalize).join(" "),
+          description: "Anthropic Claude model"
+        }
+      end
+
+      private
+
+      # Build API URL for the given endpoint
+      # @param endpoint [String] API endpoint
+      # @return [String] Complete URL
+      def build_api_url(endpoint)
+        url_obj = Addressable::URI.parse(@base_url)
+
+        # Use File.join-style logic to avoid double slashes
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        url_obj.path = "#{base_path}/#{endpoint}"
+
+        url_obj.to_s
+      end
+
+      # Build authentication headers
+      # @return [Hash] Authentication headers
+      def auth_headers
+        {
+          "x-api-key" => @api_key,
+          "anthropic-version" => API_VERSION,
+          "Content-Type" => "application/json"
+        }
+      end
+
+      # Build generation payload
+      # @param prompt [String] The prompt
+      # @param options [Hash] Options
+      # @return [Hash] Request payload
+      def build_generation_payload(prompt, options)
+        generation_config = @generation_config.merge(
+          options.fetch(:generation_config, {})
+        )
+
+
+
+        payload = {
+          model: @model,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: generation_config[:temperature],
+          max_tokens: generation_config[:max_tokens]
+        }
+
+        # Add system message if provided
+        if options[:system_instruction]
+          payload[:system] = options[:system_instruction]
+        end
+
+
+        payload
+      end
+
+      # Extract generated text from response
+      # @param parsed_response [Hash] Parsed API response
+      # @return [Hash] Extracted text and metadata
+      def extract_generated_text(parsed_response)
+        # 1. Verify parsed_response[:data] is a Hash
+        data = parsed_response[:data]
+        unless data.is_a?(Hash)
+          raise Error, "Failed to extract generated text: Response data is not a Hash."
+        end
+
+        # 2. Verify data[:content] is a non-empty Array
+        content_field = data[:content]
+        unless content_field.is_a?(Array)
+          raise Error, "Failed to extract generated text: 'content' field is not an array."
+        end
+        if content_field.empty?
+          raise Error, "Failed to extract generated text: 'content' array is empty."
+        end
+
+        # 3. Extract text from all content blocks
+        text_parts = []
+        content_field.each do |block|
+          if block.is_a?(Hash) && block[:type] == "text" && block[:text]
+            text_parts << block[:text]
+          end
+        end
+
+        if text_parts.empty?
+          raise Error, "Failed to extract generated text: No text blocks found in content."
+        end
+
+        {
+          text: text_parts.join("\n"),
+          finish_reason: data[:stop_reason],
+          usage_metadata: data[:usage]
+        }
+      end
+
+      # Handle API errors
+      # @param parsed_response [Hash] Parsed error response
+      # @raise [Error] With formatted error message
+      def handle_error(parsed_response)
+        # Ensure error object and HTTP status are safely accessed, providing defaults
+        error_obj = parsed_response[:error] || {}
+        http_status = error_obj[:status] || "Unknown HTTP Status"
+
+        # Extract primary message components from the error object
+        # Anthropic's error structure is different from OpenAI
+        error_data = error_obj.is_a?(Hash) ? error_obj[:error] : {}
+        error_type = error_data[:type] if error_data.is_a?(Hash)
+        error_message = error_data[:message] if error_data.is_a?(Hash)
+        raw_message = error_obj[:raw_message] if error_obj.is_a?(Hash)
+
+        # Determine the most specific error content available
+        specific_content = if error_message
+          error_type ? "#{error_type}: #{error_message}" : error_message
+        elsif raw_message
+          raw_message
+        else
+          "An unspecified error occurred."
+        end
+
+        final_message = "Anthropic API Error (#{http_status}): #{specific_content}"
+        raise Error, final_message
+      end
+    end
+  end
+end

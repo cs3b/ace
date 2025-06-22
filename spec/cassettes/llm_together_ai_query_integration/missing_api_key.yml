@@ -1,0 +1,82 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.together.xyz/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo","messages":[{"role":"user","content":"Hello"}],"temperature":0.7,"max_tokens":4096}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Authorization:
+      - Bearer tgp_v1_ozfzhaN8NmEskfY1ggKBz2Ul_KM97CSCX2tliuqs4hI
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 429
+      message: Too Many Requests
+    headers:
+      Date:
+      - Sat, 21 Jun 2025 23:17:43 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '615'
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9537388d0dfa60d5-MAD
+      Cf-Cache-Status:
+      - DYNAMIC
+      Retry-After:
+      - '7'
+      Access-Control-Allow-Origin:
+      - "*"
+      Etag:
+      - W/"267-xyNhnZxFnxChVQcsvVw8ssafeWY"
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains
+      X-Amzn-Trace-Id:
+      - 9aed05d7-e2d4-4abd-94a4-def41208441e-noamzn
+      X-Api-Received:
+      - '2025-06-21T23:17:42.983Z'
+      X-Ratelimit:
+      - 'true'
+      X-Ratelimit-Limit:
+      - '0.1'
+      X-Ratelimit-Limit-Tokens:
+      - '1000'
+      X-Ratelimit-Remaining:
+      - '0'
+      X-Ratelimit-Remaining-Tokens:
+      - '1000'
+      X-Ratelimit-Reset:
+      - '7'
+      X-Request-Id:
+      - nz4vNVc-3NKUce-9537388d0dfa60d5
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+          "id": "nz4vNVc-3NKUce-9537388d0dfa60d5",
+          "error": {
+            "message": "You have reached the rate limit specific to this model meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo. The maximum rate limit for this model is 6.0 queries and 60000 tokens per minute. This limit differs from the general rate limits published at Together AI rate limits documentation (https://docs.together.ai/docs/rate-limits). For inquiries about increasing your model-specific rate limit, please contact our sales team (https://www.together.ai/forms/contact-sales)",
+            "type": "model_rate_limit",
+            "param": null,
+            "code": null
+          }
+        }
+  recorded_at: Sat, 21 Jun 2025 23:17:43 GMT
+recorded_with: VCR 6.3.1

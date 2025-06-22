@@ -29,14 +29,118 @@ lm_studio:
       description: "Advanced reasoning model with strong performance"
       default: false
 
+openai:
+  default_model: "gpt-4o"
+  models:
+    - id: "gpt-4o"
+      name: "GPT-4 Omni"
+      description: "Most capable OpenAI model with vision and advanced reasoning"
+      default: true
+    - id: "gpt-4o-mini"
+      name: "GPT-4 Omni Mini"
+      description: "Smaller, faster, and cheaper GPT-4 variant"
+      default: false
+    - id: "gpt-4-turbo"
+      name: "GPT-4 Turbo"
+      description: "Previous generation GPT-4 with 128k context"
+      default: false
+    - id: "gpt-3.5-turbo"
+      name: "GPT-3.5 Turbo"
+      description: "Fast and cost-effective for simpler tasks"
+      default: false
+
+anthropic:
+  default_model: "claude-3-5-sonnet-20241022"
+  models:
+    - id: "claude-3-5-sonnet-20241022"
+      name: "Claude 3.5 Sonnet"
+      description: "Most intelligent Claude model"
+      default: true
+    - id: "claude-3-5-haiku-20241022"
+      name: "Claude 3.5 Haiku"
+      description: "Fast and cost-effective"
+      default: false
+    - id: "claude-3-opus-20240229"
+      name: "Claude 3 Opus"
+      description: "Powerful model for complex tasks"
+      default: false
+    - id: "claude-3-sonnet-20240229"
+      name: "Claude 3 Sonnet"
+      description: "Balanced performance and speed"
+      default: false
+    - id: "claude-3-haiku-20240307"
+      name: "Claude 3 Haiku"
+      description: "Fast, compact, and cost-effective"
+      default: false
+
+mistral:
+  default_model: "mistral-large-latest"
+  models:
+    - id: "mistral-large-latest"
+      name: "Mistral Large"
+      description: "Most capable Mistral model with advanced reasoning"
+      default: true
+    - id: "mistral-medium-latest"
+      name: "Mistral Medium"
+      description: "Balanced performance and efficiency"
+      default: false
+    - id: "mistral-small-latest"
+      name: "Mistral Small"
+      description: "Fast and efficient for simpler tasks"
+      default: false
+    - id: "mistral-8x7b-instruct"
+      name: "Mistral 8x7B"
+      description: "Open-source mixture of experts model"
+      default: false
+    - id: "mistral-8x22b-instruct"
+      name: "Mistral 8x22B"
+      description: "Large open-source mixture of experts model"
+      default: false
+
+together_ai:
+  default_model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+  models:
+    - id: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+      name: "Llama 3.1 70B Instruct Turbo"
+      description: "Fast Llama 3.1 70B with optimized inference"
+      default: true
+    - id: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+      name: "Llama 3.1 8B Instruct Turbo"
+      description: "Smaller, faster Llama 3.1 model"
+      default: false
+    - id: "mistralai/Mistral-8x7B-Instruct-v0.1"
+      name: "Mistral 8x7B Instruct"
+      description: "Mixture of experts model with strong performance"
+      default: false
+    - id: "mistralai/Mistral-8x22B-Instruct-v0.1"
+      name: "Mistral 8x22B Instruct"
+      description: "Large mixture of experts model"
+      default: false
+    - id: "deepseek-ai/deepseek-coder-33b-instruct"
+      name: "DeepSeek Coder 33B"
+      description: "Specialized model for code generation"
+      default: false
+
 # Usage instructions for each provider
 usage_instructions:
   gemini:
-    command: "llm-gemini-query \"your prompt\" --model MODEL_ID"
+    command: 'llm-gemini-query "your prompt" --model MODEL_ID'
     header: "Available Gemini Models:"
   lm_studio:
-    command: "llm-lmstudio-query \"your prompt\" --model MODEL_ID"
+    command: 'llm-lmstudio-query "your prompt" --model MODEL_ID'
     header: "Available LM Studio Models:"
     note: "Note: Models must be loaded in LM Studio before use."
     server_info: "Server: Ensure LM Studio is running at http://localhost:1234"
     server_url: "http://localhost:1234"
+  openai:
+    command: 'llm-openai-query "your prompt" --model MODEL_ID'
+    header: "Available OpenAI Models:"
+  anthropic:
+    command: 'llm-anthropic-query "your prompt" --model MODEL_ID'
+    header: "Available Anthropic Models:"
+  mistral:
+    command: 'llm-mistral-query "your prompt" --model MODEL_ID'
+    header: "Available Mistral AI Models:"
+  together_ai:
+    command: 'llm-together-ai-query "your prompt" --model MODEL_ID'
+    header: "Available Together AI Models:"

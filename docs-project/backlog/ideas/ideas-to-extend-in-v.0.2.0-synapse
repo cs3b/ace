@@ -39,7 +39,7 @@ c) -> add info about cost of each model (in / out / cached) -> cache
 
 - openai
 - anthropic
-- mixtral
+- mistral
 
 
 4. -> add cost tracking (when using json and markdown) file format

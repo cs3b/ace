@@ -9,7 +9,9 @@ loader.inflector.inflect(
   "http_request_builder" => "HTTPRequestBuilder",
   "api_credentials" => "APICredentials",
   "api_response_parser" => "APIResponseParser",
-  "lm_studio_client" => "LMStudioClient"
+  "lm_studio_client" => "LMStudioClient",
+  "openai_client" => "OpenAIClient",
+  "together_ai_client" => "TogetherAIClient"
 )
 loader.setup
 

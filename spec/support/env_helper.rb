@@ -62,6 +62,98 @@ module EnvHelper
     end
   end
 
+  # Get API key with fallback logic
+  def self.anthropic_api_key
+    # In CI, always use test key
+    return "test-api-key-for-vcr-playback" if ENV["CI"]
+
+    # For explicit recording, require real API key
+    if ENV["VCR_RECORD"] == "true"
+      key = ENV["ANTHROPIC_API_KEY"]
+      if key.nil? || key.empty? || key == "your_actual_anthropic_api_key_here"
+        raise "Real ANTHROPIC_API_KEY required for recording. Set it in spec/.env or environment."
+      end
+      return key
+    end
+
+    # For normal development, use real key if available, otherwise test key
+    key = ENV["ANTHROPIC_API_KEY"]
+    if key && !key.empty? && key != "your_actual_anthropic_api_key_here"
+      key
+    else
+      "test-api-key-for-vcr-playback"
+    end
+  end
+
+  # Get API key with fallback logic
+  def self.mistral_api_key
+    # In CI, always use test key
+    return "test-api-key-for-vcr-playback" if ENV["CI"]
+
+    # For explicit recording, require real API key
+    if ENV["VCR_RECORD"] == "true"
+      key = ENV["MISTRAL_API_KEY"]
+      if key.nil? || key.empty? || key == "your_actual_mistral_api_key_here"
+        raise "Real MISTRAL_API_KEY required for recording. Set it in spec/.env or environment."
+      end
+      return key
+    end
+
+    # For normal development, use real key if available, otherwise test key
+    key = ENV["MISTRAL_API_KEY"]
+    if key && !key.empty? && key != "your_actual_mistral_api_key_here"
+      key
+    else
+      "test-api-key-for-vcr-playback"
+    end
+  end
+
+  # Get API key with fallback logic
+  def self.openai_api_key
+    # In CI, always use test key
+    return "test-api-key-for-vcr-playback" if ENV["CI"]
+
+    # For explicit recording, require real API key
+    if ENV["VCR_RECORD"] == "true"
+      key = ENV["OPENAI_API_KEY"]
+      if key.nil? || key.empty? || key == "your_actual_openai_api_key_here"
+        raise "Real OPENAI_API_KEY required for recording. Set it in spec/.env or environment."
+      end
+      return key
+    end
+
+    # For normal development, use real key if available, otherwise test key
+    key = ENV["OPENAI_API_KEY"]
+    if key && !key.empty? && key != "your_actual_openai_api_key_here"
+      key
+    else
+      "test-api-key-for-vcr-playback"
+    end
+  end
+
+  # Get API key with fallback logic
+  def self.together_api_key
+    # In CI, always use test key
+    return "test-api-key-for-vcr-playback" if ENV["CI"]
+
+    # For explicit recording, require real API key
+    if ENV["VCR_RECORD"] == "true"
+      key = ENV["TOGETHER_API_KEY"]
+      if key.nil? || key.empty? || key == "your_actual_together_api_key_here"
+        raise "Real TOGETHER_API_KEY required for recording. Set it in spec/.env or environment."
+      end
+      return key
+    end
+
+    # For normal development, use real key if available, otherwise test key
+    key = ENV["TOGETHER_API_KEY"]
+    if key && !key.empty? && key != "your_actual_together_api_key_here"
+      key
+    else
+      "test-api-key-for-vcr-playback"
+    end
+  end
+
   # Check if debug mode is enabled
   def self.debug_mode?
     ENV["TEST_DEBUG"] == "true" || ENV["TEST_DEBUG"] == "1"
@@ -81,14 +173,18 @@ module EnvHelper
       puts "Debug mode enabled"
       puts "CI mode: #{ENV["CI"] ? "true" : "false"}"
       puts "VCR Record mode: #{ENV["VCR_RECORD"] || "default"}"
-      puts "API Key available: #{ENV["GEMINI_API_KEY"] ? "yes" : "no"}"
+      puts "GEMINI API Key available: #{ENV["GEMINI_API_KEY"] ? "yes" : "no"}"
+      puts "ANTHROPIC API Key available: #{ENV["ANTHROPIC_API_KEY"] ? "yes" : "no"}"
+      puts "MISTRAL API Key available: #{ENV["MISTRAL_API_KEY"] ? "yes" : "no"}"
+      puts "OPENAI API Key available: #{ENV["OPENAI_API_KEY"] ? "yes" : "no"}"
+      puts "TOGETHER API Key available: #{ENV["TOGETHER_API_KEY"] ? "yes" : "no"}"
     end
   end
 
   # Clean up environment after tests
   def self.cleanup_test_env
     # Reset test-specific environment variables
-    test_vars = %w[GEMINI_API_KEY VCR_RECORD TEST_DEBUG TEST_TIMEOUT]
+    test_vars = %w[GEMINI_API_KEY ANTHROPIC_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TOGETHER_API_KEY VCR_RECORD TEST_DEBUG TEST_TIMEOUT]
 
     test_vars.each do |var|
       # Only unset if it wasn't originally set
@@ -103,7 +199,7 @@ module EnvHelper
 
   # Preserve original environment variables
   def self.preserve_original_env
-    test_vars = %w[GEMINI_API_KEY VCR_RECORD TEST_DEBUG TEST_TIMEOUT]
+    test_vars = %w[GEMINI_API_KEY ANTHROPIC_API_KEY MISTRAL_API_KEY OPENAI_API_KEY TOGETHER_API_KEY VCR_RECORD TEST_DEBUG TEST_TIMEOUT]
 
     test_vars.each do |var|
       ENV["ORIGINAL_#{var}"] = ENV[var] if ENV[var]

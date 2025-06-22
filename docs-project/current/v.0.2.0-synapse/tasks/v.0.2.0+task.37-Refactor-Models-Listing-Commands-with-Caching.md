@@ -118,7 +118,7 @@ exe
 
 ## Out of Scope
 
-- Adding new providers (OpenAI, Anthropic, Mixtral) - this is covered in a separate task
+- Adding new providers (OpenAI, Anthropic, Mistral) - this is covered in a separate task
 - The implementation of *detailed* cost calculation, storage, and reporting is explicitly out of scope for this task and will be addressed in `v.0.2.0+task.40`. This task should *not* introduce new data structures or logic for recording cost per token, beyond what is necessary for model listing.
 - Implementing actual cost tracking during usage - this is covered in a separate task
 - Complex cache invalidation strategies (time-based, etc.)

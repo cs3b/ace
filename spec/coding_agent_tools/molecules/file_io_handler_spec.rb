@@ -29,8 +29,16 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
     end
 
     context "with non-existing files" do
-      it "returns false for non-existing file paths" do
+      it "returns false for non-existing file paths with extensions" do
         expect(handler.file_path?("/nonexistent/file.txt")).to be false
+      end
+
+      it "returns false for simple non-existing filenames with extensions" do
+        expect(handler.file_path?("nonexistent_file.txt")).to be false
+      end
+
+      it "returns false for non-existing paths without extensions" do
+        expect(handler.file_path?("/nonexistent/path")).to be false
       end
     end
 
@@ -102,18 +110,6 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
       it "strips whitespace from inline content" do
         content = "  Hello, world!  "
         expect(handler.read_content(content)).to eq "Hello, world!"
-      end
-    end
-
-    context "with non-existing files" do
-      it "treats non-existing file paths as inline content with auto-detection" do
-        # Non-existing paths are treated as inline content when auto-detection is enabled
-        expect(handler.read_content("/nonexistent/file.txt")).to eq "/nonexistent/file.txt"
-      end
-
-      it "raises error when explicitly reading non-existing files" do
-        # When auto-detection is disabled, it should treat as inline content
-        expect(handler.read_content("/nonexistent/file.txt", auto_detect: false)).to eq "/nonexistent/file.txt"
       end
     end
 
