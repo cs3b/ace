@@ -3,6 +3,10 @@
 require "dry/cli"
 require "yaml"
 require "fileutils"
+require_relative "../../../organisms/openai_client"
+require_relative "../../../organisms/anthropic_client"
+require_relative "../../../organisms/mistral_client"
+require_relative "../../../organisms/together_ai_client"
 
 module CodingAgentTools
   module Cli
@@ -38,7 +42,7 @@ module CodingAgentTools
 
           def call(provider: "google", **options)
             unless valid_provider?(provider)
-              warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio"
+              warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai"
               exit 1
             end
 
@@ -101,7 +105,7 @@ module CodingAgentTools
 
           # Check if provider is valid
           def valid_provider?(provider)
-            %w[google lmstudio].include?(provider)
+            %w[google lmstudio openai anthropic mistral together_ai].include?(provider)
           end
 
           # Get list of available models for the specified provider
@@ -122,6 +126,14 @@ module CodingAgentTools
               fetch_gemini_models
             when "lmstudio"
               fetch_lmstudio_models
+            when "openai"
+              fetch_openai_models
+            when "anthropic"
+              fetch_anthropic_models
+            when "mistral"
+              fetch_mistral_models
+            when "together_ai"
+              fetch_together_ai_models
             end
           rescue
             # Fallback to hardcoded list if API fails
@@ -169,6 +181,83 @@ module CodingAgentTools
             end.sort_by(&:id)
           end
 
+          # Fetch OpenAI models from API
+          def fetch_openai_models
+            client = Organisms::OpenAIClient.new
+            models_response = client.list_models
+
+            # Filter to only include chat/completion models
+            chat_models = models_response.select do |model|
+              model[:id].include?("gpt") || model[:id].include?("o1")
+            end
+
+            default_model_id = Organisms::OpenAIClient::DEFAULT_MODEL
+            # Convert API response to our model structure
+            chat_models.map do |model|
+              model_id = model[:id]
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: model_id,
+                name: format_openai_model_name(model_id),
+                description: "OpenAI model",
+                default: model_id == default_model_id
+              )
+            end.sort_by(&:id)
+          end
+
+          # Fetch Anthropic models from API
+          def fetch_anthropic_models
+            client = Organisms::AnthropicClient.new
+            models_response = client.list_models
+
+            default_model_id = Organisms::AnthropicClient::DEFAULT_MODEL
+            # Convert API response to our model structure
+            models_response.map do |model|
+              model_id = model[:id]
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: model_id,
+                name: format_anthropic_model_name(model_id),
+                description: model[:description] || "Anthropic Claude model",
+                default: model_id == default_model_id
+              )
+            end.sort_by(&:id)
+          end
+
+          # Fetch Mistral models from API
+          def fetch_mistral_models
+            client = Organisms::MistralClient.new
+            models_response = client.list_models
+
+            default_model_id = Organisms::MistralClient::DEFAULT_MODEL
+            # Convert API response to our model structure
+            models_response.map do |model|
+              model_id = model[:id]
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: model_id,
+                name: format_mistral_model_name(model_id),
+                description: model[:description] || "Mistral AI model",
+                default: model_id == default_model_id
+              )
+            end.sort_by(&:id)
+          end
+
+          # Fetch Together AI models from API
+          def fetch_together_ai_models
+            client = Organisms::TogetherAIClient.new
+            models_response = client.list_models
+
+            default_model_id = Organisms::TogetherAIClient::DEFAULT_MODEL
+            # Convert API response to our model structure
+            models_response.map do |model|
+              model_id = model[:id] || model[:name]
+              CodingAgentTools::Models::LlmModelInfo.new(
+                id: model_id,
+                name: format_together_ai_model_name(model_id),
+                description: model[:description] || "Together AI model",
+                default: model_id == default_model_id
+              )
+            end.sort_by(&:id)
+          end
+
           # Format Gemini model name for display
           def format_model_name(model_name)
             name = model_name.sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
@@ -189,6 +278,88 @@ module CodingAgentTools
             # Convert to title case
             words = name_part.split(/[-_]/).map(&:capitalize)
             words.join(" ")
+          end
+
+          # Format OpenAI model name for display
+          def format_openai_model_name(model_id)
+            # Handle common OpenAI model naming patterns
+            case model_id
+            when /^gpt-4o/
+              "GPT-4 Omni"
+            when /^gpt-4-turbo/
+              "GPT-4 Turbo"
+            when /^gpt-4/
+              "GPT-4"
+            when /^gpt-3.5-turbo/
+              "GPT-3.5 Turbo"
+            when /^o1-preview/
+              "O1 Preview"
+            when /^o1-mini/
+              "O1 Mini"
+            else
+              model_id.split("-").map(&:capitalize).join(" ")
+            end
+          end
+
+          # Format Anthropic model name for display
+          def format_anthropic_model_name(model_id)
+            # Handle Anthropic model naming patterns
+            case model_id
+            when /^claude-3-5-sonnet/
+              "Claude 3.5 Sonnet"
+            when /^claude-3-5-haiku/
+              "Claude 3.5 Haiku"
+            when /^claude-3-opus/
+              "Claude 3 Opus"
+            when /^claude-3-sonnet/
+              "Claude 3 Sonnet"
+            when /^claude-3-haiku/
+              "Claude 3 Haiku"
+            else
+              model_id.split("-").map(&:capitalize).join(" ")
+            end
+          end
+
+          # Format Mistral model name for display
+          def format_mistral_model_name(model_id)
+            # Handle Mistral AI model naming patterns
+            case model_id
+            when /^mistral-large/
+              "Mistral Large"
+            when /^mistral-medium/
+              "Mistral Medium"
+            when /^mistral-small/
+              "Mistral Small"
+            when /^mistral-tiny/
+              "Mistral Tiny"
+            when /^mistral-8x7b/
+              "Mistral 8x7B"
+            when /^mistral-8x22b/
+              "Mistral 8x22B"
+            else
+              model_id.split("-").map(&:capitalize).join(" ")
+            end
+          end
+
+          # Format Together AI model name for display
+          def format_together_ai_model_name(model_id)
+            # Handle Together AI model naming patterns
+            case model_id
+            when /meta-llama.*3.*70[Bb]/
+              "Llama 3.1 70B"
+            when /meta-llama.*3.*8[Bb]/
+              "Llama 3.1 8B"
+            when /mistralai.*[Mm]istral.*8x7[Bb]/
+              "Mistral 8x7B"
+            when /mistralai.*[Mm]istral.*8x22[Bb]/
+              "Mistral 8x22B"
+            when /deepseek/i
+              "DeepSeek Coder"
+            when /qwen/i
+              model_id.split("/").last.split("-").map(&:capitalize).join(" ")
+            else
+              model_id.split("/").last.split("-").map(&:capitalize).join(" ")
+            end
           end
 
           # Fallback models if API call fails
@@ -214,6 +385,54 @@ module CodingAgentTools
               lms_config = config["lm_studio"]
 
               lms_config["models"].map do |model_data|
+                CodingAgentTools::Models::LlmModelInfo.new(
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id
+                )
+              end
+            when "openai"
+              default_model_id = Organisms::OpenAIClient::DEFAULT_MODEL
+              openai_config = config["openai"]
+
+              openai_config["models"].map do |model_data|
+                CodingAgentTools::Models::LlmModelInfo.new(
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id
+                )
+              end
+            when "anthropic"
+              default_model_id = Organisms::AnthropicClient::DEFAULT_MODEL
+              anthropic_config = config["anthropic"]
+
+              anthropic_config["models"].map do |model_data|
+                CodingAgentTools::Models::LlmModelInfo.new(
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id
+                )
+              end
+            when "mistral"
+              default_model_id = Organisms::MistralClient::DEFAULT_MODEL
+              mistral_config = config["mistral"]
+
+              mistral_config["models"].map do |model_data|
+                CodingAgentTools::Models::LlmModelInfo.new(
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id
+                )
+              end
+            when "together_ai"
+              default_model_id = Organisms::TogetherAIClient::DEFAULT_MODEL
+              together_ai_config = config["together_ai"]
+
+              together_ai_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
                   id: model_data["id"],
                   name: model_data["name"],
@@ -310,6 +529,50 @@ module CodingAgentTools
               puts "Usage: #{usage_config["command"]}"
               puts
               puts usage_config["server_info"]
+            when "openai"
+              puts "Available OpenAI Models"
+              puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
+
+              models.each do |model|
+                puts
+                puts model
+              end
+
+              puts
+              puts "Usage: llm-openai-query \"Your prompt here\" --model MODEL_ID"
+            when "anthropic"
+              puts "Available Anthropic Models"
+              puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
+
+              models.each do |model|
+                puts
+                puts model
+              end
+
+              puts
+              puts "Usage: llm-anthropic-query \"Your prompt here\" --model MODEL_ID"
+            when "mistral"
+              puts "Available Mistral AI Models"
+              puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
+
+              models.each do |model|
+                puts
+                puts model
+              end
+
+              puts
+              puts "Usage: llm-mistral-query \"Your prompt here\" --model MODEL_ID"
+            when "together_ai"
+              puts "Available Together AI Models"
+              puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
+
+              models.each do |model|
+                puts
+                puts model
+              end
+
+              puts
+              puts "Usage: llm-together-ai-query \"Your prompt here\" --model MODEL_ID"
             end
           end
 
@@ -333,6 +596,14 @@ module CodingAgentTools
               usage_config = config["usage_instructions"]["lm_studio"]
               output[:default_model] = default_model&.id || Organisms::LMStudioClient::DEFAULT_MODEL
               output[:server_url] = usage_config["server_url"]
+            when "openai"
+              output[:default_model] = default_model&.id || Organisms::OpenAIClient::DEFAULT_MODEL
+            when "anthropic"
+              output[:default_model] = default_model&.id || Organisms::AnthropicClient::DEFAULT_MODEL
+            when "mistral"
+              output[:default_model] = default_model&.id || Organisms::MistralClient::DEFAULT_MODEL
+            when "together_ai"
+              output[:default_model] = default_model&.id || Organisms::TogetherAIClient::DEFAULT_MODEL
             end
 
             puts JSON.pretty_generate(output)

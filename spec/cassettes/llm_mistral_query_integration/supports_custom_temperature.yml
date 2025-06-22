@@ -1,0 +1,78 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.mistral.ai/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"mistral-large-latest","messages":[{"role":"user","content":"What
+        is 1+1? Answer with just the number."}],"temperature":"0.0","max_tokens":4096}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Authorization:
+      - Bearer 8jV9dyXjiTtEc36F8G5NnIoHLzd1tWok
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sun, 22 Jun 2025 00:17:02 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      X-Envoy-Upstream-Service-Time:
+      - '218'
+      X-Ratelimit-Limit-Tokens-Minute:
+      - '500000'
+      X-Ratelimit-Remaining-Tokens-Minute:
+      - '499799'
+      X-Ratelimit-Limit-Tokens-Month:
+      - '1000000000'
+      X-Ratelimit-Remaining-Tokens-Month:
+      - '999996986'
+      X-Ratelimit-Tokens-Query-Cost:
+      - '19'
+      X-Ratelimit-Limit-Req-Minute:
+      - '60'
+      X-Ratelimit-Remaining-Req-Minute:
+      - '55'
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Kong-Upstream-Latency:
+      - '219'
+      X-Kong-Proxy-Latency:
+      - '6'
+      X-Kong-Request-Id:
+      - 23a5f64724ccd00d2d5f1e629d06c342
+      Cf-Cache-Status:
+      - DYNAMIC
+      Set-Cookie:
+      - __cf_bm=0uxA0G2QTTu_nRzHcseeTPE2FI5Hlr_vIEkmg0PCM_k-1750551422-1.0.1.1-eqIjPC0gdc9Dwv1hy6NwECjhFjnEAv50T5vphSo0YPzjgxWWI8v4IiqpN0I0LtbiqEA5LP5KA.ztEdZ8ynQQ5fdYRFVIClqi3_P6rA7i6VA;
+        path=/; expires=Sun, 22-Jun-25 00:47:02 GMT; domain=.mistral.ai; HttpOnly;
+        Secure; SameSite=None
+      - _cfuvid=Q3mLKhOEXFv82tTuVB5PBVhyX1e08okIWrjnflDTRb0-1750551422543-0.0.1.1-604800000;
+        path=/; domain=.mistral.ai; HttpOnly; Secure; SameSite=None
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 95378f751c160141-MAD
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"163dc7d00cc84e69b3c048d3884faf12","object":"chat.completion","created":1750551422,"model":"mistral-large-latest","choices":[{"index":0,"message":{"role":"assistant","tool_calls":null,"content":"2"},"finish_reason":"stop"}],"usage":{"prompt_tokens":16,"total_tokens":19,"completion_tokens":3}}'
+  recorded_at: Sun, 22 Jun 2025 00:17:02 GMT
+recorded_with: VCR 6.3.1

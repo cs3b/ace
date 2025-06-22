@@ -109,11 +109,12 @@ module ProcessHelpers
   # @param args [Array] Arguments to pass to the script
   # @param env [Hash] Environment variables
   # @param timeout [Integer] Timeout in seconds
+  # @param input [String] Input to send to stdin
   # @return [Array<String, String, Process::Status>] stdout, stderr, status
-  def execute_ruby_script(script_path, args = [], env: {}, timeout: DEFAULT_TIMEOUT)
+  def execute_ruby_script(script_path, args = [], env: {}, timeout: DEFAULT_TIMEOUT, input: nil)
     ruby_path = RbConfig.ruby
     command = [ruby_path, script_path] + args
-    execute_command(command, env: env, timeout: timeout)
+    execute_command(command, env: env, timeout: timeout, input: input)
   end
 
   # Execute a gem executable with proper bundler setup
@@ -121,10 +122,11 @@ module ProcessHelpers
   # @param args [Array] Arguments to pass to the executable
   # @param env [Hash] Environment variables
   # @param timeout [Integer] Timeout in seconds
+  # @param input [String] Input to send to stdin
   # @return [Array<String, String, Process::Status>] stdout, stderr, status
-  def execute_gem_executable(exe_name, args = [], env: {}, timeout: DEFAULT_TIMEOUT)
+  def execute_gem_executable(exe_name, args = [], env: {}, timeout: DEFAULT_TIMEOUT, input: nil)
     exe_path = File.expand_path("../../exe/#{exe_name}", __dir__)
-    execute_ruby_script(exe_path, args, env: env, timeout: timeout)
+    execute_ruby_script(exe_path, args, env: env, timeout: timeout, input: input)
   end
 
   # Create a temporary file with content and return its path

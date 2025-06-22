@@ -41,6 +41,11 @@ VCR.configure do |config|
     end
   end
 
+  # Filter Anthropic API keys
+  config.filter_sensitive_data("<ANTHROPIC_API_KEY>") do |interaction|
+    interaction.request.headers["X-Api-Key"]&.first
+  end
+
   # Filter Authorization headers if present
   config.filter_sensitive_data("<AUTHORIZATION>") do |interaction|
     interaction.request.headers["Authorization"]&.first

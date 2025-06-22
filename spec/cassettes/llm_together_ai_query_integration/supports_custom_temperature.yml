@@ -1,0 +1,106 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.together.xyz/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo","messages":[{"role":"user","content":"What
+        is 1+1? Answer with just the number."}],"temperature":"0.0","max_tokens":4096}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Authorization:
+      - Bearer <TOGETHER_API_KEY>
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sun, 22 Jun 2025 00:56:03 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 9537c89b3e1d0140-MAD
+      Cf-Cache-Status:
+      - DYNAMIC
+      Retry-After:
+      - '10'
+      Access-Control-Allow-Origin:
+      - "*"
+      Etag:
+      - W/"21a-vjdAUmQOKcArf9GieqZXHAN7xiE"
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains
+      X-Amzn-Trace-Id:
+      - 9067e458-26be-4717-9160-69e46a1eba71-noamzn
+      X-Api-Call-End:
+      - '2025-06-22T00:56:03.605Z'
+      X-Api-Call-Start:
+      - '2025-06-22T00:56:03.400Z'
+      X-Api-Received:
+      - '2025-06-22T00:56:03.388Z'
+      X-Inference-Version:
+      - v2
+      X-Ratelimit:
+      - 'false'
+      X-Ratelimit-Limit:
+      - '0.1'
+      X-Ratelimit-Limit-Tokens:
+      - '1000'
+      X-Ratelimit-Remaining:
+      - '0'
+      X-Ratelimit-Remaining-Tokens:
+      - '1000'
+      X-Ratelimit-Reset:
+      - '10'
+      X-Request-Id:
+      - nz5ScUj-2j9zxn-9537c89b3e1d0140
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: ASCII-8BIT
+      string: |-
+        {
+          "id": "nz5ScUj-2j9zxn-9537c89b3e1d0140",
+          "object": "chat.completion",
+          "created": 1750553763,
+          "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+          "prompt": [],
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "seed": 138938640601500590,
+              "logprobs": null,
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "2",
+                "tool_calls": []
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 48,
+            "completion_tokens": 2,
+            "total_tokens": 50,
+            "cached_tokens": 0
+          }
+        }
+  recorded_at: Sun, 22 Jun 2025 00:56:03 GMT
+recorded_with: VCR 6.3.1

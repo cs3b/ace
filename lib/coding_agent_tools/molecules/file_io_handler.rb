@@ -33,12 +33,16 @@ module CodingAgentTools
       def file_path?(input)
         return false if input.nil? || input.strip.empty?
 
-        # Check if it's a valid file path that exists
+        # File paths must be single line strings
+        input_str = input.strip
+        return false if input_str.include?("\n") || input_str.include?("\r")
+
+        # Only consider it a file path if the file actually exists
         begin
-          path = Pathname.new(input.strip)
-          return false if path.to_s.include?("\n") || path.to_s.include?("\r")
+          path = Pathname.new(input_str)
           File.exist?(path.to_s)
-        rescue
+        rescue ArgumentError, SystemCallError
+          # Invalid path characters or other path-related errors
           false
         end
       end
