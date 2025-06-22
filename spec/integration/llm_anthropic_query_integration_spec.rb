@@ -22,7 +22,7 @@ RSpec.describe "llm-anthropic-query integration", type: :integration do
     end
 
     it "requires a prompt argument" do
-      stdout, stderr, status = execute_gem_executable(exe_name, [])
+      _, stderr, status = execute_gem_executable(exe_name, [])
 
       expect(status.exitstatus).to eq(1)
       expect(stderr).to match(/ERROR: "llm-anthropic-query" was called with no arguments/)
@@ -102,8 +102,6 @@ RSpec.describe "llm-anthropic-query integration", type: :integration do
         stdout, stderr, status = execute_gem_executable(exe_name,
           ["What is 1+1? Answer with just the number.", "--temperature", "0.0"], env: env)
 
-
-
         expect(status).to be_success
         expect(stdout).to match(/2/)
         expect(stderr).to be_empty
@@ -115,7 +113,7 @@ RSpec.describe "llm-anthropic-query integration", type: :integration do
 
         output_file = create_temp_file("", extension: ".txt")
 
-        stdout, stderr, status = execute_gem_executable(exe_name,
+        _, stderr, status = execute_gem_executable(exe_name,
           ["Say hello world", "--output", output_file], env: env)
 
         expect(status).to be_success
@@ -142,7 +140,7 @@ RSpec.describe "llm-anthropic-query integration", type: :integration do
       it "shows authentication error" do
         env = vcr_subprocess_env("llm_anthropic_query_integration/invalid_api_key", "ANTHROPIC_API_KEY" => "invalid-key")
 
-        stdout, stderr, status = execute_gem_executable(exe_name, ["Hello"], env: env)
+        _, stderr, status = execute_gem_executable(exe_name, ["Hello"], env: env)
 
         expect(status.exitstatus).to eq(1)
         expect(stderr).to match(/Error.*API.*[Aa]uth|[Ii]nvalid.*key|[Uu]nauthorized|API Error.*unspecified error/i)
