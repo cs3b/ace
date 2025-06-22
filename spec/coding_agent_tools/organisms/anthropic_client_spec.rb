@@ -312,17 +312,170 @@ RSpec.describe CodingAgentTools::Organisms::AnthropicClient do
   end
 
   describe "#list_models" do
-    it "returns a static list of available models" do
-      result = client.list_models
+    let(:api_models_url) { "https://api.anthropic.com/v1/models" }
 
-      expect(result).to be_an(Array)
-      expect(result.length).to be > 0
+    context "with successful API response" do
+      let(:mock_api_response) do
+        {
+          data: [
+            {
+              id: "claude-3-5-sonnet-20241022",
+              display_name: "Claude 3.5 Sonnet",
+              created_at: "2024-10-22T00:00:00Z",
+              type: "model"
+            },
+            {
+              id: "claude-3-5-haiku-20241022",
+              display_name: "Claude 3.5 Haiku",
+              created_at: "2024-10-22T00:00:00Z",
+              type: "model"
+            }
+          ],
+          has_more: false,
+          first_id: "claude-3-5-sonnet-20241022",
+          last_id: "claude-3-5-haiku-20241022"
+        }
+      end
 
-      # Check that it includes the default model
-      claude_haiku = result.find { |m| m[:id] == "claude-3-5-haiku-20241022" }
-      expect(claude_haiku).not_to be_nil
-      expect(claude_haiku[:name]).to eq("Claude 3.5 Haiku")
-      expect(claude_haiku[:description]).to eq("Fast and cost-effective")
+      before do
+        allow(client.instance_variable_get(:@request_builder))
+          .to receive(:get_json)
+          .with("#{api_models_url}?limit=100", headers: anything)
+          .and_return({status: 200, body: mock_api_response.to_json})
+
+        allow(client.instance_variable_get(:@response_parser))
+          .to receive(:parse_response)
+          .with({status: 200, body: mock_api_response.to_json})
+          .and_return({success: true, data: mock_api_response})
+      end
+
+      it "returns list of models from API" do
+        result = client.list_models
+
+        expect(result).to be_an(Array)
+        expect(result.length).to eq(2)
+
+        claude_sonnet = result.find { |m| m[:id] == "claude-3-5-sonnet-20241022" }
+        expect(claude_sonnet).not_to be_nil
+        expect(claude_sonnet[:name]).to eq("Claude 3.5 Sonnet")
+        expect(claude_sonnet[:description]).to eq("Balanced intelligence and speed")
+        expect(claude_sonnet[:created]).to be_a(Integer)
+
+        claude_haiku = result.find { |m| m[:id] == "claude-3-5-haiku-20241022" }
+        expect(claude_haiku).not_to be_nil
+        expect(claude_haiku[:name]).to eq("Claude 3.5 Haiku")
+        expect(claude_haiku[:description]).to eq("Fast and cost-effective")
+      end
+    end
+
+    context "with paginated API response" do
+      let(:first_page_response) do
+        {
+          data: [
+            {
+              id: "claude-3-5-sonnet-20241022",
+              display_name: "Claude 3.5 Sonnet",
+              created_at: "2024-10-22T00:00:00Z",
+              type: "model"
+            }
+          ],
+          has_more: true,
+          first_id: "claude-3-5-sonnet-20241022",
+          last_id: "claude-3-5-sonnet-20241022"
+        }
+      end
+
+      let(:second_page_response) do
+        {
+          data: [
+            {
+              id: "claude-3-5-haiku-20241022",
+              display_name: "Claude 3.5 Haiku",
+              created_at: "2024-10-22T00:00:00Z",
+              type: "model"
+            }
+          ],
+          has_more: false,
+          first_id: "claude-3-5-haiku-20241022",
+          last_id: "claude-3-5-haiku-20241022"
+        }
+      end
+
+      before do
+        allow(client.instance_variable_get(:@request_builder))
+          .to receive(:get_json)
+          .with("#{api_models_url}?limit=100", headers: anything)
+          .and_return({status: 200, body: first_page_response.to_json})
+
+        allow(client.instance_variable_get(:@request_builder))
+          .to receive(:get_json)
+          .with("#{api_models_url}?after_id=claude-3-5-sonnet-20241022&limit=100", headers: anything)
+          .and_return({status: 200, body: second_page_response.to_json})
+
+        allow(client.instance_variable_get(:@response_parser))
+          .to receive(:parse_response)
+          .with({status: 200, body: first_page_response.to_json})
+          .and_return({success: true, data: first_page_response})
+
+        allow(client.instance_variable_get(:@response_parser))
+          .to receive(:parse_response)
+          .with({status: 200, body: second_page_response.to_json})
+          .and_return({success: true, data: second_page_response})
+      end
+
+      it "handles pagination and returns all models" do
+        result = client.list_models
+
+        expect(result).to be_an(Array)
+        expect(result.length).to eq(2)
+        expect(result.map { |m| m[:id] }).to contain_exactly(
+          "claude-3-5-sonnet-20241022",
+          "claude-3-5-haiku-20241022"
+        )
+      end
+    end
+
+    context "when API call fails" do
+      before do
+        allow(client.instance_variable_get(:@request_builder))
+          .to receive(:get_json)
+          .and_return({status: 401, body: {error: {message: "Unauthorized"}}.to_json})
+
+        allow(client.instance_variable_get(:@response_parser))
+          .to receive(:parse_response)
+          .and_return({success: false, error: {status: 401, error: {message: "Unauthorized"}}})
+      end
+
+      it "falls back to static list" do
+        result = client.list_models
+
+        expect(result).to be_an(Array)
+        expect(result.length).to be > 0
+
+        # Should contain fallback models
+        claude_haiku = result.find { |m| m[:id] == "claude-3-5-haiku-20241022" }
+        expect(claude_haiku).not_to be_nil
+        expect(claude_haiku[:name]).to eq("Claude 3.5 Haiku")
+      end
+    end
+
+    context "when API call raises exception" do
+      before do
+        allow(client.instance_variable_get(:@request_builder))
+          .to receive(:get_json)
+          .and_raise(StandardError.new("Network error"))
+      end
+
+      it "falls back to static list" do
+        result = client.list_models
+
+        expect(result).to be_an(Array)
+        expect(result.length).to be > 0
+
+        # Should contain fallback models
+        claude_haiku = result.find { |m| m[:id] == "claude-3-5-haiku-20241022" }
+        expect(claude_haiku).not_to be_nil
+      end
     end
   end
 

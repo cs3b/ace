@@ -22,7 +22,7 @@ RSpec.describe "llm-mistral-query integration", type: :integration do
     end
 
     it "requires a prompt argument" do
-      stdout, stderr, status = execute_gem_executable(exe_name, [])
+      _, stderr, status = execute_gem_executable(exe_name, [])
 
       expect(status.exitstatus).to eq(1)
       expect(stderr).to match(/ERROR: "llm-mistral-query" was called with no arguments/)
@@ -113,7 +113,7 @@ RSpec.describe "llm-mistral-query integration", type: :integration do
 
         output_file = create_temp_file("", extension: ".txt")
 
-        stdout, stderr, status = execute_gem_executable(exe_name,
+        _, stderr, status = execute_gem_executable(exe_name,
           ["Say hello world", "--output", output_file], env: env)
 
         expect(status).to be_success
@@ -140,12 +140,11 @@ RSpec.describe "llm-mistral-query integration", type: :integration do
       it "shows authentication error" do
         env = vcr_subprocess_env("llm_mistral_query_integration/invalid_api_key", "MISTRAL_API_KEY" => "invalid-key")
 
-        stdout, stderr, status = execute_gem_executable(exe_name, ["Hello"], env: env)
+        _, stderr, status = execute_gem_executable(exe_name, ["Hello"], env: env)
 
         expect(status.exitstatus).to eq(1)
         expect(stderr).to match(/Error.*API.*[Aa]uth|[Ii]nvalid.*key|[Uu]nauthorized/i)
       end
     end
-
   end
 end

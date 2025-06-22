@@ -97,39 +97,52 @@ module CodingAgentTools
       # List all available models
       # @return [Array] List of available models
       def list_models
-        # Anthropic doesn't provide a models endpoint, so we return a static list
-        [
-          {
-            id: "claude-3-5-sonnet-20241022",
-            name: "Claude 3.5 Sonnet",
-            description: "Most intelligent Claude model",
-            created: 1729555200
-          },
-          {
-            id: "claude-3-5-haiku-20241022",
-            name: "Claude 3.5 Haiku",
-            description: "Fast and cost-effective",
-            created: 1729555200
-          },
-          {
-            id: "claude-3-opus-20240229",
-            name: "Claude 3 Opus",
-            description: "Powerful model for complex tasks",
-            created: 1709251200
-          },
-          {
-            id: "claude-3-sonnet-20240229",
-            name: "Claude 3 Sonnet",
-            description: "Balanced performance and speed",
-            created: 1709251200
-          },
-          {
-            id: "claude-3-haiku-20240307",
-            name: "Claude 3 Haiku",
-            description: "Fast, compact, and cost-effective",
-            created: 1709769600
-          }
-        ]
+        all_models = []
+        after_id = nil
+
+        loop do
+          url = build_api_url("models")
+          query_params = {}
+          query_params[:after_id] = after_id if after_id
+          query_params[:limit] = 100 # Maximum allowed per page
+
+          # Add query parameters to URL if present
+          unless query_params.empty?
+            uri = Addressable::URI.parse(url)
+            uri.query_values = query_params
+            url = uri.to_s
+          end
+
+          response_data = @request_builder.get_json(url, headers: auth_headers)
+          parsed = @response_parser.parse_response(response_data)
+
+          if parsed[:success]
+            data = parsed[:data]
+            models_data = data[:data] || []
+
+            # Transform API response to match expected format
+            models_data.each do |model|
+              all_models << {
+                id: model[:id],
+                name: model[:display_name],
+                description: generate_model_description(model[:id]),
+                created: parse_created_at(model[:created_at])
+              }
+            end
+
+            # Check if there are more pages
+            break unless data[:has_more]
+            after_id = data[:last_id]
+          else
+            # If API call fails, fall back to static list
+            return fallback_models_list
+          end
+        end
+
+        all_models
+      rescue
+        # If any error occurs, fall back to static list
+        fallback_models_list
       end
 
       # Get information about the model
@@ -177,8 +190,6 @@ module CodingAgentTools
           options.fetch(:generation_config, {})
         )
 
-
-
         payload = {
           model: @model,
           messages: [
@@ -195,7 +206,6 @@ module CodingAgentTools
         if options[:system_instruction]
           payload[:system] = options[:system_instruction]
         end
-
 
         payload
       end
@@ -264,6 +274,80 @@ module CodingAgentTools
 
         final_message = "Anthropic API Error (#{http_status}): #{specific_content}"
         raise Error, final_message
+      end
+
+      # Generate a description for a model based on its ID
+      # @param model_id [String] The model ID
+      # @return [String] Model description
+      def generate_model_description(model_id)
+        case model_id
+        when /claude-opus-4/
+          "Our most capable model"
+        when /claude-sonnet-4/
+          "High-performance model"
+        when /claude-3-7-sonnet/
+          "High-performance model with early extended thinking"
+        when /claude-3-5-sonnet/
+          "Balanced intelligence and speed"
+        when /claude-3-5-haiku/
+          "Fast and cost-effective"
+        when /claude-3-opus/
+          "Powerful model for complex tasks"
+        when /claude-3-sonnet/
+          "Balanced performance and speed"
+        when /claude-3-haiku/
+          "Fast, compact, and cost-effective"
+        else
+          "Anthropic Claude model"
+        end
+      end
+
+      # Parse created_at timestamp from API response
+      # @param created_at [String] RFC 3339 timestamp
+      # @return [Integer] Unix timestamp
+      def parse_created_at(created_at)
+        return Time.now.to_i if created_at.nil? || created_at.empty?
+
+        Time.parse(created_at).to_i
+      rescue
+        Time.now.to_i
+      end
+
+      # Fallback static models list when API is unavailable
+      # @return [Array] Static list of models
+      def fallback_models_list
+        [
+          {
+            id: "claude-3-5-sonnet-20241022",
+            name: "Claude 3.5 Sonnet",
+            description: "Most intelligent Claude model",
+            created: 1729555200
+          },
+          {
+            id: "claude-3-5-haiku-20241022",
+            name: "Claude 3.5 Haiku",
+            description: "Fast and cost-effective",
+            created: 1729555200
+          },
+          {
+            id: "claude-3-opus-20240229",
+            name: "Claude 3 Opus",
+            description: "Powerful model for complex tasks",
+            created: 1709251200
+          },
+          {
+            id: "claude-3-sonnet-20240229",
+            name: "Claude 3 Sonnet",
+            description: "Balanced performance and speed",
+            created: 1709251200
+          },
+          {
+            id: "claude-3-haiku-20240307",
+            name: "Claude 3 Haiku",
+            description: "Fast, compact, and cost-effective",
+            created: 1709769600
+          }
+        ]
       end
     end
   end

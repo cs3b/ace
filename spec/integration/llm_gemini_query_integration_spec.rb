@@ -22,7 +22,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
     end
 
     it "requires a prompt argument" do
-      stdout, stderr, status = execute_gem_executable(exe_name, [])
+      _, stderr, status = execute_gem_executable(exe_name, [])
 
       expect(status.exitstatus).to eq(1)
       expect(stderr).to match(/ERROR: "llm-gemini-query" was called with no arguments/)
@@ -102,7 +102,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
         env = vcr_subprocess_env(cassette_name, "GEMINI_API_KEY" => api_key)
 
         # Low temperature should give more consistent results
-        stdout, stderr, status = execute_gem_executable(exe_name,
+        stdout, _, status = execute_gem_executable(exe_name,
           ["Complete this: The sky is", "--temperature", "0.1"], env: env)
 
         expect(status).to be_success
@@ -145,7 +145,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       it "shows error message", vcr: "invalid_api_key_error" do
         env = vcr_subprocess_env("invalid_api_key_error", "GEMINI_API_KEY" => "invalid-key-12345")
 
-        stdout, stderr, status = execute_gem_executable(exe_name, ["Test prompt"], env: env)
+        _, stderr, status = execute_gem_executable(exe_name, ["Test prompt"], env: env)
 
         expect(status).not_to be_success
         expect(stderr).to include("Error:")
@@ -155,7 +155,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
       it "shows detailed error with debug flag", vcr: "invalid_api_key_debug" do
         env = vcr_subprocess_env("invalid_api_key_debug", "GEMINI_API_KEY" => "invalid-key-12345")
 
-        stdout, stderr, status = execute_gem_executable(exe_name, ["Test prompt", "--debug"], env: env)
+        _, stderr, status = execute_gem_executable(exe_name, ["Test prompt", "--debug"], env: env)
 
         expect(status).not_to be_success
         expect(stderr).to include("Error:")
@@ -302,7 +302,7 @@ RSpec.describe "llm-gemini-query integration", type: :integration do
 
       start_time = Time.now
 
-      stdout, stderr, status = execute_gem_executable(exe_name, ["Say hello quickly"], env: env)
+      stdout, _, status = execute_gem_executable(exe_name, ["Say hello quickly"], env: env)
 
       duration = Time.now - start_time
 
