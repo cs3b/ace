@@ -181,6 +181,76 @@ RSpec.describe CodingAgentTools::Cli::Commands::LMS::Query do
       end
     end
 
+    context "with timeout parameter" do
+      it "passes timeout to LMStudioClient" do
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
+          .and_return(prompt)
+
+        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
+          .with(hash_including(timeout: 60))
+          .and_return(mock_lm_studio_client)
+
+        allow(mock_lm_studio_client).to receive(:generate_text)
+          .with(prompt)
+          .and_return(successful_response)
+
+        expect { command.call(prompt: prompt, timeout: 60) }
+          .to output("Default response\n").to_stdout
+      end
+
+      it "uses default timeout when not specified" do
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
+          .and_return(prompt)
+
+        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
+          .with(no_args)
+          .and_return(mock_lm_studio_client)
+
+        allow(mock_lm_studio_client).to receive(:generate_text)
+          .with(prompt)
+          .and_return(successful_response)
+
+        expect { command.call(prompt: prompt) }
+          .to output("Default response\n").to_stdout
+      end
+
+      it "handles custom timeout value" do
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
+          .and_return(prompt)
+
+        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
+          .with(hash_including(timeout: 180))
+          .and_return(mock_lm_studio_client)
+
+        allow(mock_lm_studio_client).to receive(:generate_text)
+          .with(prompt)
+          .and_return(successful_response)
+
+        expect { command.call(prompt: prompt, timeout: 180) }
+          .to output("Default response\n").to_stdout
+      end
+
+      it "passes timeout with other options" do
+        allow(mock_file_handler).to receive(:read_content)
+          .with(prompt, auto_detect: true)
+          .and_return(prompt)
+
+        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new)
+          .with(hash_including(model: "custom-model", timeout: 90))
+          .and_return(mock_lm_studio_client)
+
+        allow(mock_lm_studio_client).to receive(:generate_text)
+          .with(prompt)
+          .and_return(successful_response)
+
+        expect { command.call(prompt: prompt, model: "custom-model", timeout: 90) }
+          .to output("Default response\n").to_stdout
+      end
+    end
+
     context "with empty prompt" do
       it "exits with error" do
         expect(command).to receive(:error_output).with("Error: Prompt is required")

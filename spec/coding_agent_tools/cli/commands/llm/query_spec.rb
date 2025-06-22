@@ -193,6 +193,53 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
     end
 
+    context "with timeout parameter" do
+      before do
+        file_handler = double("file_handler")
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(file_handler).to receive(:read_content).with("Test", auto_detect: true).and_return("Test")
+
+        allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return({})
+        allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(
+          double("handler", format: "Response")
+        )
+        allow($stdout).to receive(:puts) # Suppress output for these tests
+        allow(gemini_client).to receive(:generate_text).and_return({text: "Response", finish_reason: "STOP", safety_ratings: [], usage_metadata: {}})
+      end
+
+      it "passes timeout to GeminiClient" do
+        expect(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(
+          hash_including(timeout: 60)
+        ).and_return(gemini_client)
+
+        command.call(prompt: "Test", timeout: 60)
+      end
+
+      it "uses default timeout when not specified" do
+        expect(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(
+          no_args
+        ).and_return(gemini_client)
+
+        command.call(prompt: "Test")
+      end
+
+      it "handles custom timeout value" do
+        expect(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(
+          hash_including(timeout: 120)
+        ).and_return(gemini_client)
+
+        command.call(prompt: "Test", timeout: 120)
+      end
+
+      it "passes timeout with other options" do
+        expect(CodingAgentTools::Organisms::GeminiClient).to receive(:new).with(
+          hash_including(model: "gemini-pro", timeout: 90)
+        ).and_return(gemini_client)
+
+        command.call(prompt: "Test", model: "gemini-pro", timeout: 90)
+      end
+    end
+
     context "with empty or nil prompt" do
       it "exits with error for nil prompt" do
         expect {
@@ -391,14 +438,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
   describe "examples" do
     it "has valid examples in command definition" do
       expect(described_class.examples).not_to be_empty, "No examples registered for command."
-      expect(described_class.examples.count).to eq(5), "Expected exactly five examples."
+      expect(described_class.examples.count).to eq(6), "Expected exactly six examples."
 
       expected_examples_array = [
         '"What is Ruby programming language?"',
         '"Explain quantum computing" --format json',
         "prompt.txt --output response.json",
         "prompt.txt --system system.md --output response.md",
-        '"Hello" --model gemini-pro --temperature 0.5 --output result.txt'
+        '"Hello" --model gemini-pro --temperature 0.5 --output result.txt',
+        '"Hello" --timeout 60'
       ]
 
       expect(described_class.examples).to eq(expected_examples_array), "The content of the registered examples array does not match the expected content."
@@ -417,7 +465,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     end
 
     it "has all required options" do
-      expected_options = [:output, :format, :debug, :model, :temperature, :max_tokens, :system].sort
+      expected_options = [:output, :format, :debug, :model, :temperature, :max_tokens, :system, :timeout].sort
       actual_options = described_class.options.map(&:name).sort
       expect(actual_options).to eq(expected_options), "Options mismatch. Actual: #{actual_options.inspect}, Expected: #{expected_options.inspect}"
     end
