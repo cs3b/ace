@@ -5,8 +5,11 @@ directly within the task's definition file (`NN-task-name.md`).
 
 **Prerequisites:**
 
-* Run the [`load-env`](docs-dev/workflow-instructions/load-env.wf.md) workflow instruction first to load project context,
-  general guides, project specifics, and identify the current release/tasks.
+* **Load Project-Specific Context:**
+ - Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
+ - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
+ - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
+
 * Task definition files (`docs-project/current/{release_dir}/tasks/NN-task-name.md`) contain a dedicated section
   (e.g., `## Implementation Plan`) with a detailed, step-by-step checklist using Markdown
   (`- [ ] Action description...`). *(Note: The exact structure is defined in `write-actionable-task.md`)*.

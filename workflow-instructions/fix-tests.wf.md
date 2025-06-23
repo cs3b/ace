@@ -7,6 +7,14 @@ rather than general application bugs.
 
 ## Prerequisites
 
+* **Load Project-Specific Context:**
+  - Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
+  - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
+  - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
+
+* **Load Test-Specific Docs:**
+  - if working with tests that call real api (integration / vcr ) then read also [docs/dev-guides/testing-with-vcr.md](docs/dev-guides/testing-with-vcr.md)
+
 - Test suite has been run and failures have been identified.
 - Access to test output (error messages, stack traces).
 - Development environment is set up correctly (dependencies installed, services running if needed).
