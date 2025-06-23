@@ -41,7 +41,7 @@ module CodingAgentTools
         @api_key = options[:api_key] || ENV[options.fetch(:api_key_env, "LM_STUDIO_API_KEY")]
 
         @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 180),
+          timeout: options.fetch(:timeout, 180).to_i,
           event_namespace: :lm_studio_api
         )
         @response_parser = Molecules::APIResponseParser.new

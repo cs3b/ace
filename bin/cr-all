@@ -123,6 +123,8 @@ providers.each do |pair|
     "--system", system_prompt_path
   ]
 
+  puts cmd
+
   puts "⏳  Running review with #{provider}:#{model} → #{output_file}"
   success = system(*cmd)
   if success
