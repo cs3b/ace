@@ -1,7 +1,7 @@
 ---
 id: v.0.2.0+task.40
 title: Implement Cost Tracking for LLM Usage
-status: pending
+status: blocked
 priority: medium
 assignee: unassigned
 labels:
@@ -114,12 +114,12 @@ lib/coding_agent_tools
   - [ ] Add cost summary after each query
   ```
   Response generated successfully.
-  
+
   Token Usage:
     Input: 1,234 tokens
     Output: 567 tokens
     Cached: 123 tokens
-  
+
   Cost Summary:
     Input: $0.001234
     Output: $0.001134
