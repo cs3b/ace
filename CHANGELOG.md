@@ -120,7 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ATOM Architecture Components**:
   - **Atoms**: HTTPClient, JSONFormatter, EnvReader for core functionality
   - **Molecules**: APICredentials, HTTPRequestBuilder, APIResponseParser for composed behavior
-  - **Organisms**: GeminiClient, PromptProcessor for high-level AI operations
+  - **Organisms**: GoogleClient, PromptProcessor for high-level AI operations
 - **HTTP Client Integration**: Faraday HTTP client for reliable API communication
 - **Comprehensive Testing Suite**:
   - Unit tests for all ATOM components with >95% code coverage

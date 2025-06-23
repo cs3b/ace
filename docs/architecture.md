@@ -65,7 +65,7 @@ flowchart TD
 #### Organisms (Business Logic Layer)
 - **Purpose**: Contains the core business logic and orchestrates operations.
 - **Technology**: Pure Ruby classes that coordinate Molecules and handle complex workflows.
-- **Key Components**: `GeminiClient`, `LMStudioClient`, `PromptProcessor`.
+- **Key Components**: `GoogleClient`, `LMStudioClient`, `PromptProcessor`.
 - **Key Responsibilities**: Implementing specific workflows (e.g., querying LLMs, processing prompts), coordinating multiple Molecules, managing business rules.
 - **Location**: `lib/coding_agent_tools/organisms/`.
 

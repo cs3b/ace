@@ -26,11 +26,9 @@ module CodingAgentTools
       def self.register_llm_commands
         return if @llm_commands_registered
 
-        require_relative "cli/commands/llm/query"
         require_relative "cli/commands/llm/models"
 
         register "llm", aliases: [] do |prefix|
-          prefix.register "query", Commands::LLM::Query
           prefix.register "models", Commands::LLM::Models
         end
 
@@ -97,6 +95,19 @@ module CodingAgentTools
         @together_ai_commands_registered = true
       end
 
+
+      def self.register_google_commands
+        return if @google_commands_registered
+
+        require_relative "cli/commands/google/query"
+
+        register "google", aliases: [] do |prefix|
+          prefix.register "query", Commands::Google::Query
+        end
+
+        @google_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -105,6 +116,7 @@ module CodingAgentTools
         register_anthropic_commands
         register_mistral_commands
         register_together_ai_commands
+        register_google_commands
         super
       end
     end

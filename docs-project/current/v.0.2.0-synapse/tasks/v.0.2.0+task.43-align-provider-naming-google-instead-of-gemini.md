@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.43
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -76,44 +76,44 @@ Standardize provider naming throughout the codebase by using `google` instead of
 
 ### Planning Steps
 
-* [ ] Audit all files containing `gemini` references to understand scope
+* [x] Audit all files containing `gemini` references to understand scope
   > TEST: Naming Audit Complete
   > Type: Pre-condition Check
   > Assert: All gemini references are catalogued and migration plan is documented
   > Command: grep -r "gemini" . --include="*.rb" --include="*.md" --include="*.yml" | wc -l
-* [ ] Design backward-compatibility strategy for existing users
-* [ ] Plan migration sequence to avoid breaking changes
+* [x] Design backward-compatibility strategy for existing users
+* [x] Plan migration sequence to avoid breaking changes
 
 ### Execution Steps
 
-- [ ] Create new `GoogleClient` class by copying and renaming `GeminiClient`
+- [x] Create new `GoogleClient` class by copying and renaming `GeminiClient`
   > TEST: Google Client Creation
   > Type: Action Validation
   > Assert: New GoogleClient class exists and compiles without errors
   > Command: ruby -c lib/coding_agent_tools/organisms/google_client.rb
-- [ ] Create new `llm-google-query` executable
-- [ ] Update class references in new GoogleClient to use consistent naming
-- [ ] Create new command class `Google::Query` in appropriate namespace
-- [ ] Update model fixtures to use `google` provider naming
-- [ ] Update test specifications for new Google classes
+- [x] Create new `llm-google-query` executable
+- [x] Update class references in new GoogleClient to use consistent naming
+- [x] Create new command class `Google::Query` in appropriate namespace
+- [x] Update model fixtures to use `google` provider naming
+- [x] Update test specifications for new Google classes
   > TEST: Test Suite Passes
   > Type: Action Validation
   > Assert: All new tests pass and existing functionality is preserved
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/google_client_spec.rb
-- [ ] Update CLI registration to include new Google command
-- [ ] Add backward-compatibility alias for `gemini` commands
-- [ ] Update gemspec to include new executable
-- [ ] Update documentation to reference new naming convention
-- [ ] Update CI configuration to test new executable
+- [x] Update CLI registration to include new Google command
+- [x] Add backward-compatibility alias for `gemini` commands
+- [x] Update gemspec to include new executable
+- [x] Update documentation to reference new naming convention
+- [x] Update CI configuration to test new executable
 
 ## Acceptance Criteria
 
-- [ ] AC 1: New `llm-google-query` executable works identically to `llm-gemini-query`
-- [ ] AC 2: All tests pass with new Google-named classes
-- [ ] AC 3: Backward compatibility maintained - existing `llm-gemini-query` still works
-- [ ] AC 4: Documentation updated to reflect new naming convention
-- [ ] AC 5: CI passes with new executable included
-- [ ] AC 6: Model metadata uses `google` as provider identifier
+- [x] AC 1: New `llm-google-query` executable works identically to `llm-gemini-query`
+- [x] AC 2: All tests pass with new Google-named classes
+- [x] AC 3: Backward compatibility maintained - existing `llm-gemini-query` still works
+- [x] AC 4: Documentation updated to reflect new naming convention
+- [x] AC 5: CI passes with new executable included
+- [x] AC 6: Model metadata uses `google` as provider identifier
 
 ## Out of Scope
 

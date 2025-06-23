@@ -1,0 +1,84 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyA4Vna1MH5oMbxvz0DL8US2zesgXOdrXas
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"nonexistent_file.txt"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Mon, 23 Jun 2025 22:47:51 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=2675
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "I understand you're asking about a file named \"nonexistent_file.txt\". \n\nSince the file name suggests it doesn't exist, I can tell you:\n\n*   **The file doesn't physically exist:** There's no file with that name in the current context. This could be on your computer, a server, or any other storage location.\n*   **You'll get an error if you try to access it:** If you try to open, read, or write to \"nonexistent\\_file.txt\" without first creating it, you'll likely encounter an error. The specific error message depends on the programming language or operating system you're using, but it'll generally indicate that the file cannot be found.\n*   **You might need to create it:** If you want to work with this file, you'll need to create it first. You can typically do this using a text editor, a programming language's file handling functions, or a command-line utility (like `touch` on Linux/macOS or `echo \u003e nonexistent_file.txt` on some systems).\n*   **It's a placeholder:** The name \"nonexistent\\_file.txt\" is often used as a placeholder to represent a file that might be created later.\n\nIf you have a specific question about this file, like how to create it or how to handle an error related to it, please provide more context. For example:\n\n*   \"I'm trying to open 'nonexistent\\_file.txt' in Python, but I get an error. How do I fix this?\"\n*   \"How do I create an empty file named 'nonexistent\\_file.txt' on my computer?\"\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.32146570094734678
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 6,
+            "candidatesTokenCount": 361,
+            "totalTokenCount": 367,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 6
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 361
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "lNlZaJbDJYjO698Pi4SmkQc"
+        }
+  recorded_at: Mon, 23 Jun 2025 22:47:51 GMT
+recorded_with: VCR 6.3.1

@@ -63,7 +63,7 @@ We establish the following classification rules for components in the ATOM archi
 - Represent cohesive business capabilities
 
 **Examples**:
-- `Organisms::GeminiClient` - Orchestrates API communication with Google Gemini
+- `Organisms::GoogleClient` - Orchestrates API communication with Google Gemini
 - `Organisms::LMStudioClient` - Manages local LLM interactions and configuration
 - `Organisms::PromptProcessor` - Coordinates prompt preparation, processing, and parsing
 

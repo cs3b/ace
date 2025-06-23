@@ -19,9 +19,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         command.call
 
         output_content = output.string
-        expect(output_content).to include("Available Gemini Models")
+        expect(output_content).to include("Available Google Models")
         expect(output_content).to include("Default model")
-        expect(output_content).to include("Usage: llm-gemini-query")
+        expect(output_content).to include("Usage: llm-google-query")
         # Should contain at least one model
         expect(output_content).to match(/ID: gemini-[\w\.-]+/)
         expect(output_content).to match(/Name: Gemini/)

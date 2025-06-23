@@ -1,0 +1,165 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GEMINI_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":""}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Mon, 23 Jun 2025 22:42:54 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=1396
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I'm ready. What can I do for you today? I can help with a variety of tasks, including:\n\n*   **Answering questions:** I can provide information on a wide range of topics. Just ask!\n*   **Writing different kinds of creative text formats:** I can write poems, code, scripts, musical pieces, email, letters, etc.\n*   **Summarizing text:** I can condense long articles or documents into shorter versions.\n*   **Translating languages:** I can translate text between many different languages.\n*   **Generating ideas:** I can help you brainstorm ideas for projects, stories, or anything else.\n*   **Providing definitions:** I can look up the meaning of words and phrases.\n*   **And more!**\n\nJust tell me what you need, and I'll do my best to assist you.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.15168009747515668
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 1,
+            "candidatesTokenCount": 182,
+            "totalTokenCount": 183,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 1
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 182
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "bdhZaNyeJNmYhMIP46GkkAk"
+        }
+  recorded_at: Mon, 23 Jun 2025 22:42:54 GMT
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyA4Vna1MH5oMbxvz0DL8US2zesgXOdrXas
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":""}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Mon, 23 Jun 2025 22:47:00 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=671
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I'm ready. How can I help you today? I can answer questions, provide information, write different kinds of creative content, and much more. Just let me know what you'd like!\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.22437644004821777
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 1,
+            "candidatesTokenCount": 44,
+            "totalTokenCount": 45,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 1
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 44
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "ZNlZaNjwAf_bgLUPvdfCsQU"
+        }
+  recorded_at: Mon, 23 Jun 2025 22:47:00 GMT
+recorded_with: VCR 6.3.1
