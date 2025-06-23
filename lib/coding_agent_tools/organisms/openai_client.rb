@@ -46,7 +46,7 @@ module CodingAgentTools
         @api_key = api_key || @credentials.api_key
 
         @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 30),
+          timeout: options.fetch(:timeout, 30).to_i,
           # The event_namespace is passed to HTTPClient, which uses it to configure
           # the FaradayDryMonitorLogger middleware for observability.
           event_namespace: :openai_api # For dry-monitor event namespacing
