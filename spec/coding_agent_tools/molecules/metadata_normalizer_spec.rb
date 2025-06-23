@@ -8,7 +8,7 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
     let(:execution_time) { 2.45 }
     let(:model) { "test-model" }
 
-    context "with Gemini provider" do
+    context "with Google provider" do
       let(:gemini_response) do
         {
           text: "Test response",
@@ -24,10 +24,32 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
         }
       end
 
-      it "normalizes Gemini metadata correctly" do
+
+
+      it "handles missing usage metadata" do
+        response = {text: "Test", finish_reason: "STOP"}
+        result = described_class.normalize(
+          response,
+          provider: "google",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result).to include(
+          finish_reason: "stop",
+          input_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          took: 2.45,
+          provider: "google",
+          model: model
+        )
+      end
+
+      it "normalizes Google metadata correctly" do
         result = described_class.normalize(
           gemini_response,
-          provider: "gemini",
+          provider: "google",
           model: model,
           execution_time: execution_time
         )
@@ -38,28 +60,11 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
           output_tokens: 456,
           total_tokens: 579,
           took: 2.45,
-          provider: "gemini",
+          provider: "google",
           model: model,
           safety_ratings: gemini_response[:safety_ratings]
         )
         expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
-      end
-
-      it "handles missing usage metadata" do
-        response = {text: "Test", finish_reason: "STOP"}
-
-        result = described_class.normalize(
-          response,
-          provider: "gemini",
-          model: model,
-          execution_time: execution_time
-        )
-
-        expect(result).to include(
-          input_tokens: 0,
-          output_tokens: 0,
-          total_tokens: 0
-        )
       end
 
       it "handles string keys in usage metadata" do
@@ -74,7 +79,7 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
 
         result = described_class.normalize(
           response,
-          provider: "gemini",
+          provider: "google",
           model: model,
           execution_time: execution_time
         )

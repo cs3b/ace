@@ -3,10 +3,6 @@
 require "dry/cli"
 require "yaml"
 require "fileutils"
-require_relative "../../../organisms/openai_client"
-require_relative "../../../organisms/anthropic_client"
-require_relative "../../../organisms/mistral_client"
-require_relative "../../../organisms/together_ai_client"
 
 module CodingAgentTools
   module Cli
@@ -62,9 +58,9 @@ module CodingAgentTools
 
             filter_term = filter_term.downcase
             models.select do |model|
-              model.id.downcase.include?(filter_term) ||
-                model.name.downcase.include?(filter_term) ||
-                model.description.downcase.include?(filter_term)
+              (model.id&.downcase&.include?(filter_term)) ||
+                (model.name&.downcase&.include?(filter_term)) ||
+                (model.description&.downcase&.include?(filter_term))
             end
           end
 
@@ -123,7 +119,7 @@ module CodingAgentTools
           def fetch_models_from_api(provider)
             case provider
             when "google"
-              fetch_gemini_models
+              fetch_google_models
             when "lmstudio"
               fetch_lmstudio_models
             when "openai"
@@ -140,9 +136,9 @@ module CodingAgentTools
             fallback_models(provider)
           end
 
-          # Fetch Gemini models from API
-          def fetch_gemini_models
-            client = Organisms::GeminiClient.new
+          # Fetch Google models from API
+          def fetch_google_models
+            client = Organisms::GoogleClient.new
             models_response = client.list_models
 
             # Filter to only include generateContent-capable models
@@ -151,13 +147,13 @@ module CodingAgentTools
             end
 
             # Convert API response to our model structure
-            default_model_id = Organisms::GeminiClient::DEFAULT_MODEL
+            default_model_id = Organisms::GoogleClient::DEFAULT_MODEL
             generate_models.map do |model|
               model_id = model[:name].sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_model_name(model[:name]),
-                description: model[:description] || "Gemini model",
+                description: model[:description] || "Google model",
                 default: model_id == default_model_id
               )
             end.sort_by(&:id)
@@ -258,7 +254,7 @@ module CodingAgentTools
             end.sort_by(&:id)
           end
 
-          # Format Gemini model name for display
+          # Format Google model name for display
           def format_model_name(model_name)
             name = model_name.sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
 
@@ -369,10 +365,10 @@ module CodingAgentTools
 
             case provider
             when "google"
-              default_model_id = Organisms::GeminiClient::DEFAULT_MODEL
-              gemini_config = config["gemini"]
+              default_model_id = Organisms::GoogleClient::DEFAULT_MODEL
+              google_config = config["google"]
 
-              gemini_config["models"].map do |model_data|
+              google_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
                   id: model_data["id"],
                   name: model_data["name"],
@@ -501,7 +497,7 @@ module CodingAgentTools
 
             case provider
             when "google"
-              usage_config = config["usage_instructions"]["gemini"]
+              usage_config = config["usage_instructions"]["google"]
               puts usage_config["header"]
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
@@ -591,7 +587,7 @@ module CodingAgentTools
 
             case provider
             when "google"
-              output[:default_model] = default_model&.id || Organisms::GeminiClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || Organisms::GoogleClient::DEFAULT_MODEL
             when "lmstudio"
               usage_config = config["usage_instructions"]["lm_studio"]
               output[:default_model] = default_model&.id || Organisms::LMStudioClient::DEFAULT_MODEL

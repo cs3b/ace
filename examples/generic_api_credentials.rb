@@ -5,7 +5,7 @@ require "bundler/setup"
 require "coding_agent_tools"
 
 # Example: Using APICredentials as a generic credential manager
-# Now APICredentials doesn't know about any specific service (like Gemini)
+# Now APICredentials doesn't know about any specific service (like Google)
 
 puts "=== Generic API Credentials Example ==="
 puts
@@ -13,9 +13,9 @@ puts
 # Example 1: Using APICredentials for different services
 puts "1. Creating credentials for different services:"
 
-# For Gemini API
-gemini_credentials = CodingAgentTools::Molecules::APICredentials.new(
-  env_key_name: "GEMINI_API_KEY"
+# For Google API
+google_credentials = CodingAgentTools::Molecules::APICredentials.new(
+  env_key_name: "GOOGLE_API_KEY"
 )
 
 # For OpenAI API
@@ -33,30 +33,30 @@ puts
 
 # Example 2: Checking if keys are present
 puts "2. Checking API key availability:"
-puts "   Gemini API key present: #{gemini_credentials.api_key_present?}"
+puts "   Google API key present: #{google_credentials.api_key_present?}"
 puts "   OpenAI API key present: #{openai_credentials.api_key_present?}"
 puts "   Custom API key present: #{custom_credentials.api_key_present?}"
 puts
 
-# Example 3: Using with GeminiClient (now specifies its own key name)
-puts "3. GeminiClient now specifies its own API key environment variable:"
+# Example 3: Using with GoogleClient (now specifies its own key name)
+puts "3. GoogleClient now specifies its own API key environment variable:"
 begin
-  # GeminiClient internally creates APICredentials with "GEMINI_API_KEY"
-  CodingAgentTools::Organisms::GeminiClient.new
-  puts "✓ GeminiClient initialized successfully"
+  # GoogleClient internally creates APICredentials with "GOOGLE_API_KEY"
+  CodingAgentTools::Organisms::GoogleClient.new
+  puts "✓ GoogleClient initialized successfully"
 rescue => e
   puts "✗ Error: #{e.message}"
 end
 puts
 
-# Example 4: Custom API key environment variable for GeminiClient
-puts "4. Using custom environment variable with GeminiClient:"
+# Example 4: Custom API key environment variable for GoogleClient
+puts "4. Using custom environment variable with GoogleClient:"
 begin
-  # You can override the default GEMINI_API_KEY with a custom one
-  CodingAgentTools::Organisms::GeminiClient.new(
-    api_key_env: "MY_CUSTOM_GEMINI_KEY"
+  # You can override the default GOOGLE_API_KEY with a custom one
+  CodingAgentTools::Organisms::GoogleClient.new(
+    api_key_env: "MY_CUSTOM_GOOGLE_KEY"
   )
-  puts "✓ GeminiClient initialized with custom env variable"
+  puts "✓ GoogleClient initialized with custom env variable"
 rescue => e
   puts "✗ Error: #{e.message}"
 end
@@ -93,7 +93,7 @@ puts
 
 puts "=== Summary ==="
 puts "APICredentials is now a generic credential manager that:"
-puts "- Doesn't assume any specific service (no more GEMINI_API_KEY default)"
+puts "- Doesn't assume any specific service (no more GOOGLE_API_KEY default)"
 puts "- Requires env_key_name to be specified for API key operations"
-puts "- Can be used by any service-specific client (like GeminiClient)"
+puts "- Can be used by any service-specific client (like GoogleClient)"
 puts "- Service clients (organisms) now own their configuration details"

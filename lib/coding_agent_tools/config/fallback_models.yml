@@ -1,7 +1,7 @@
 # Fallback model configurations for CLI commands
 # These models are used when API calls fail or when no connection is available
 
-gemini:
+google:
   default_model: "gemini-2.0-flash-lite"
   models:
     - id: "gemini-2.0-flash-lite"
@@ -123,9 +123,10 @@ together_ai:
 
 # Usage instructions for each provider
 usage_instructions:
-  gemini:
-    command: 'llm-gemini-query "your prompt" --model MODEL_ID'
-    header: "Available Gemini Models:"
+  google:
+    command: 'llm-google-query "your prompt" --model MODEL_ID'
+    header: "Available Google Models:"
+
   lm_studio:
     command: 'llm-lmstudio-query "your prompt" --model MODEL_ID'
     header: "Available LM Studio Models:"

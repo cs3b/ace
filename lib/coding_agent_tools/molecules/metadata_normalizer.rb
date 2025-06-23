@@ -7,14 +7,14 @@ module CodingAgentTools
     class MetadataNormalizer
       # Normalize metadata from different LLM providers into consistent format
       # @param response [Hash] Raw response from LLM provider
-      # @param provider [String] Provider name (gemini, lmstudio)
+      # @param provider [String] Provider name (google, lmstudio)
       # @param model [String] Model name used
       # @param execution_time [Float] Time taken for request in seconds
       # @return [Hash] Normalized metadata structure
       def self.normalize(response, provider:, model:, execution_time:)
         case provider.to_s.downcase
-        when "gemini"
-          normalize_gemini_metadata(response, model, execution_time)
+        when "google"
+          normalize_google_metadata(response, model, execution_time)
         when "lmstudio"
           normalize_lmstudio_metadata(response, model, execution_time)
         else
@@ -28,12 +28,12 @@ module CodingAgentTools
         Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
       end
 
-      # Normalize Gemini response metadata
-      # @param response [Hash] Gemini response
+      # Normalize Google response metadata
+      # @param response [Hash] Google response
       # @param model [String] Model name
       # @param execution_time [Float] Execution time in seconds
       # @return [Hash] Normalized metadata
-      def self.normalize_gemini_metadata(response, model, execution_time)
+      def self.normalize_google_metadata(response, model, execution_time)
         usage = response[:usage_metadata] || {}
 
         {
@@ -42,7 +42,7 @@ module CodingAgentTools
           output_tokens: usage[:candidatesTokenCount] || usage["candidatesTokenCount"] || 0,
           total_tokens: calculate_total_tokens(usage, :gemini),
           took: execution_time.round(3),
-          provider: "gemini",
+          provider: "google",
           model: model,
           timestamp: current_timestamp,
           safety_ratings: response[:safety_ratings]
@@ -129,7 +129,7 @@ module CodingAgentTools
       end
 
       # Mark private class methods
-      private_class_method :normalize_gemini_metadata, :normalize_lmstudio_metadata,
+      private_class_method :normalize_google_metadata, :normalize_lmstudio_metadata,
         :normalize_unknown_metadata, :extract_finish_reason,
         :calculate_total_tokens
     end

@@ -1,0 +1,51 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=literal:[REDACTED:gcp-api-key]
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"What does ''Hëllö Wörld''
+        mean?"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Mon, 23 Jun 2025 22:48:10 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=1760
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        ewogICJjYW5kaWRhdGVzIjogWwogICAgewogICAgICAiY29udGVudCI6IHsKICAgICAgICAicGFydHMiOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgICJ0ZXh0IjogIlwiSMOrbGzDtiBXw7ZybGRcIiBpcyBhIHBsYXlmdWwsIHNsaWdodGx5IGFsdGVyZWQgdmVyc2lvbiBvZiB0aGUgcGhyYXNlIFwiSGVsbG8gV29ybGQuXCIgSXQncyBhIGNvbW1vbiBwcm9ncmFtbWluZyB0cmFkaXRpb24gdG8gc3RhcnQgd2l0aCBhIHNpbXBsZSBwcm9ncmFtIHRoYXQganVzdCBwcmludHMgXCJIZWxsbywgV29ybGQhXCIgdG8gdGhlIHNjcmVlbi5cblxuSGVyZSdzIHRoZSBicmVha2Rvd246XG5cbiogICAqKlwiSMOrbGzDtlwiKio6IFRoZSBcImVcIiBpbiBcIkhlbGxvXCIgaXMgcmVwbGFjZWQgd2l0aCBcIsOrXCIsIHdoaWNoIGlzIGFuIFwiZVwiIHdpdGggYW4gdW1sYXV0LiBUaGlzIGlzIGEgZGlhY3JpdGljIG1hcmsgdGhhdCdzIG9mdGVuIHVzZWQgaW4gbGFuZ3VhZ2VzIGxpa2UgR2VybWFuIG9yIEZyZW5jaC4gSXQgZG9lc24ndCBjaGFuZ2UgdGhlIHByb251bmNpYXRpb24gbXVjaCwgYnV0IGl0IGFkZHMgYSB2aXN1YWwgZGlzdGluY3Rpb24uXG4qICAgKipcIlfDtnJsZFwiKio6IFRoZSBcIm9cIiBpbiBcIldvcmxkXCIgaXMgcmVwbGFjZWQgd2l0aCBcIsO2XCIsIHdoaWNoIGlzIGFuIFwib1wiIHdpdGggYW4gdW1sYXV0LiBBZ2FpbiwgdGhpcyBhZGRzIGEgdmlzdWFsIGRpc3RpbmN0aW9uLlxuXG4qKkluIGVzc2VuY2UsIGl0J3MgYSB3aGltc2ljYWwgdmFyaWF0aW9uIG9mIFwiSGVsbG8gV29ybGRcIiB0aGF0J3MgbWVhbnQgdG8gYmUgZXllLWNhdGNoaW5nIGFuZCBhIGJpdCBxdWlya3kuKiogSXQncyBvZnRlbiB1c2VkIGluIGNvbnRleHRzIHdoZXJlIHRoZSBwZXJzb24gd2FudHMgdG8gYmUgYSBsaXR0bGUgbW9yZSBjcmVhdGl2ZSBvciBkcmF3IGF0dGVudGlvbiB0byB0aGUgbWVzc2FnZS5cbiIKICAgICAgICAgIH0KICAgICAgICBdLAogICAgICAgICJyb2xlIjogIm1vZGVsIgogICAgICB9LAogICAgICAiZmluaXNoUmVhc29uIjogIlNUT1AiLAogICAgICAiYXZnTG9ncHJvYnMiOiAtMC40NzQ5MDkwNzY3NzYyMDUxNAogICAgfQogIF0sCiAgInVzYWdlTWV0YWRhdGEiOiB7CiAgICAicHJvbXB0VG9rZW5Db3VudCI6IDEyLAogICAgImNhbmRpZGF0ZXNUb2tlbkNvdW50IjogMjIzLAogICAgInRvdGFsVG9rZW5Db3VudCI6IDIzNSwKICAgICJwcm9tcHRUb2tlbnNEZXRhaWxzIjogWwogICAgICB7CiAgICAgICAgIm1vZGFsaXR5IjogIlRFWFQiLAogICAgICAgICJ0b2tlbkNvdW50IjogMTIKICAgICAgfQogICAgXSwKICAgICJjYW5kaWRhdGVzVG9rZW5zRGV0YWlscyI6IFsKICAgICAgewogICAgICAgICJtb2RhbGl0eSI6ICJURVhUIiwKICAgICAgICAidG9rZW5Db3VudCI6IDIyMwogICAgICB9CiAgICBdCiAgfSwKICAibW9kZWxWZXJzaW9uIjogImdlbWluaS0yLjAtZmxhc2gtbGl0ZSIsCiAgInJlc3BvbnNlSWQiOiAicWRsWmFKNzFENldybnZnUDQtWDc2QVkiCn0K
+  recorded_at: Mon, 23 Jun 2025 22:48:10 GMT
+recorded_with: VCR 6.3.1

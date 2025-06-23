@@ -26,15 +26,15 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
   end
 
   # Use VCR for predictable API responses
-  let(:api_key) { EnvHelper.gemini_api_key }
+  let(:api_key) { EnvHelper.google_api_key }
 
-  describe "Gemini query command" do
+  describe "Google query command" do
     context "with file input and output" do
       it "reads prompt from file and writes JSON output", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with file input and output/reads prompt from file and writes JSON output", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes JSON output", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -44,7 +44,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
         expect(parsed["text"]).to be_a(String)
         expect(parsed["metadata"]).to include(
-          "provider" => "gemini",
+          "provider" => "google",
           "model" => "gemini-2.0-flash-lite"
         )
         expect(parsed["metadata"]["input_tokens"]).to be_a(Integer)
@@ -54,8 +54,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       xit "reads prompt from file and writes Markdown output", :vcr do
         md_output = "#{output_file}.md"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with file input and output/reads prompt from file and writes Markdown output", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--output", md_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes Markdown output", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--output", md_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(md_output)).to be true
@@ -81,8 +81,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and writes text output", :vcr do
         txt_output = "#{output_file}.txt"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with file input and output/reads prompt from file and writes text output", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--output", txt_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes text output", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--output", txt_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(txt_output)).to be true
@@ -95,8 +95,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "uses format flag to override file extension", :vcr do
         txt_output = "#{output_file}.txt"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with file input and output/uses format flag to override file extension", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--output", txt_output, "--format", "json"], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/uses format flag to override file extension", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--output", txt_output, "--format", "json"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(txt_output)).to be true
@@ -105,14 +105,14 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
         parsed = JSON.parse(content)
 
         expect(parsed["text"]).to be_a(String)
-        expect(parsed["metadata"]["provider"]).to eq("gemini")
+        expect(parsed["metadata"]["provider"]).to eq("google")
       end
 
       it "reads both prompt and system from files", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with file input and output/reads both prompt and system from files", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--system", system_file, "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads both prompt and system from files", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--system", system_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -121,7 +121,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
         parsed = JSON.parse(content)
 
         expect(parsed["text"]).to be_a(String)
-        expect(parsed["metadata"]["provider"]).to eq("gemini")
+        expect(parsed["metadata"]["provider"]).to eq("google")
       end
     end
 
@@ -129,8 +129,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "processes inline prompt and writes to file", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with inline content/processes inline prompt and writes to file", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", ["What is 2+2?", "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with inline content/processes inline prompt and writes to file", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", ["What is 2+2?", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -139,14 +139,14 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
         parsed = JSON.parse(content)
 
         expect(parsed["text"]).to be_a(String)
-        expect(parsed["metadata"]["provider"]).to eq("gemini")
+        expect(parsed["metadata"]["provider"]).to eq("google")
       end
 
       it "processes inline prompt with inline system instruction", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with inline content/processes inline prompt with inline system instruction", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", ["What is 2+2?", "--system", "Be concise", "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with inline content/processes inline prompt with inline system instruction", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", ["What is 2+2?", "--system", "Be concise", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -157,8 +157,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and uses inline system instruction", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with mixed file and inline content/reads prompt from file and uses inline system instruction", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", [prompt_file, "--system", "Be very detailed", "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with mixed file and inline content/reads prompt from file and uses inline system instruction", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", [prompt_file, "--system", "Be very detailed", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -167,8 +167,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "uses inline prompt and reads system from file", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with mixed file and inline content/uses inline prompt and reads system from file", {"GEMINI_API_KEY" => api_key})
-        _, stderr, status = execute_gem_executable("llm-gemini-query", ["Quick question", "--system", system_file, "--output", json_output], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with mixed file and inline content/uses inline prompt and reads system from file", {"GEMINI_API_KEY" => api_key})
+        _, stderr, status = execute_gem_executable("llm-google-query", ["Quick question", "--system", system_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(File.exist?(json_output)).to be true
@@ -177,18 +177,18 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
     context "with stdout output" do
       it "outputs JSON format to stdout", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with stdout output/outputs JSON format to stdout", {"GEMINI_API_KEY" => api_key})
-        stdout, stderr, status = execute_gem_executable("llm-gemini-query", ["Test prompt", "--format", "json"], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with stdout output/outputs JSON format to stdout", {"GEMINI_API_KEY" => api_key})
+        stdout, stderr, status = execute_gem_executable("llm-google-query", ["Test prompt", "--format", "json"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         parsed = JSON.parse(stdout)
         expect(parsed["text"]).to be_a(String)
-        expect(parsed["metadata"]["provider"]).to eq("gemini")
+        expect(parsed["metadata"]["provider"]).to eq("google")
       end
 
       it "outputs text format to stdout by default", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/Gemini query command/with stdout output/outputs text format to stdout by default", {"GEMINI_API_KEY" => api_key})
-        stdout, stderr, status = execute_gem_executable("llm-gemini-query", ["Test prompt"], env: env)
+        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with stdout output/outputs text format to stdout by default", {"GEMINI_API_KEY" => api_key})
+        stdout, stderr, status = execute_gem_executable("llm-google-query", ["Test prompt"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
         expect(stdout.strip).to be_a(String)
@@ -277,7 +277,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
       # Non-existent files should be treated as inline content
       env = vcr_subprocess_env("LLM File I/O Integration/Error handling/handles non-existent input files gracefully", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", [non_existent, "--output", json_output], env: env)
+      _, stderr, status = execute_gem_executable("llm-google-query", [non_existent, "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       expect(File.exist?(json_output)).to be true
@@ -287,7 +287,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       nested_output = File.join(temp_dir, "nested", "deep", "output.json")
 
       env = vcr_subprocess_env("LLM File I/O Integration/Error handling/creates output directories automatically", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--output", nested_output], env: env)
+      _, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--output", nested_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       expect(File.exist?(nested_output)).to be true
@@ -295,7 +295,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
     it "handles invalid format gracefully" do
       env = {"GEMINI_API_KEY" => api_key}
-      stdout, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--format", "invalid"], env: env)
+      stdout, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--format", "invalid"], env: env)
 
       expect(status).not_to be_success, "Command should have failed"
       combined_output = "#{stdout}#{stderr}"
@@ -308,7 +308,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       json_output = "#{output_file}.json"
 
       env = vcr_subprocess_env("LLM File I/O Integration/Format inference/infers JSON format from .json extension", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--output", json_output], env: env)
+      _, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       content = File.read(json_output)
@@ -319,7 +319,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       md_output = "#{output_file}.md"
 
       env = vcr_subprocess_env("LLM File I/O Integration/Format inference/infers Markdown format from .md extension", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--output", md_output], env: env)
+      _, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--output", md_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       content = File.read(md_output)
@@ -330,7 +330,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       unknown_output = "#{output_file}.xyz"
 
       env = vcr_subprocess_env("LLM File I/O Integration/Format inference/defaults to text format for unknown extensions", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--output", unknown_output], env: env)
+      _, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--output", unknown_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       content = File.read(unknown_output)
@@ -340,11 +340,11 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
   end
 
   describe "Metadata normalization" do
-    it "normalizes Gemini metadata correctly", :vcr do
+    it "normalizes Google metadata correctly", :vcr do
       json_output = "#{output_file}.json"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Metadata normalization/normalizes Gemini metadata correctly", {"GEMINI_API_KEY" => api_key})
-      _, stderr, status = execute_gem_executable("llm-gemini-query", ["Test", "--output", json_output], env: env)
+      env = vcr_subprocess_env("LLM File I/O Integration/Metadata normalization/normalizes Google metadata correctly", {"GEMINI_API_KEY" => api_key})
+      _, stderr, status = execute_gem_executable("llm-google-query", ["Test", "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
       content = File.read(json_output)
@@ -352,7 +352,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       metadata = parsed["metadata"]
 
       expect(metadata).to include(
-        "provider" => "gemini",
+        "provider" => "google",
         "model" => "gemini-2.0-flash-lite"
       )
       expect(metadata["finish_reason"]).to be_a(String)

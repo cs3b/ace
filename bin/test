@@ -9,7 +9,7 @@ echo "INFO: Running RSpec test suite with coverage from project root: $(pwd)"
 echo "INFO: Coverage reports will be generated in coverage/ directory"
 
 # Run RSpec with coverage reporting
-bundle exec rspec --format progress "$@"
+bundle exec rspec "$@"
 
 # Check if coverage report was generated
 if [ -f "coverage/index.html" ]; then
