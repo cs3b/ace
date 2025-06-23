@@ -1,6 +1,6 @@
 # Google Query Guide
 
-This guide provides comprehensive documentation for the `exe/llm-google-query` command, which allows users to interact with Google Gemini Large Language Models (LLMs) directly from the command line. It covers setup, usage patterns, advanced options, troubleshooting, and practical examples to help you effectively leverage Google LLM integration features. For a general overview of the project, refer to the [main README](../../README.md).
+This guide provides comprehensive documentation for the `exe/llm-google-query` command, which allows users to interact with Google Large Language Models (LLMs) directly from the command line. It covers setup, usage patterns, advanced options, troubleshooting, and practical examples to help you effectively leverage Google LLM integration features. For a general overview of the project, refer to the [main README](../../README.md).
 
 ## Table of Contents
 1.  [Introduction](#introduction)
@@ -19,8 +19,7 @@ This guide provides comprehensive documentation for the `exe/llm-google-query` c
     *   [`--system`](#--system)
     *   [`--debug`](#--debug)
 6.  [Combined Options Examples](#combined-options-examples)
-7.  [Backward Compatibility](#backward-compatibility)
-8.  [Troubleshooting](#troubleshooting)
+7.  [Troubleshooting](#troubleshooting)
     *   [API Key Not Configured](#api-key-not-configured)
     *   [Prompt File Not Found](#prompt-file-not-found)
     *   [Common Errors](#common-errors)
@@ -29,9 +28,9 @@ This guide provides comprehensive documentation for the `exe/llm-google-query` c
 
 ## Introduction
 
-The `exe/llm-google-query` command provides a convenient way to send prompts to Google Gemini models and receive responses directly in your terminal. It's designed for quick queries, scripting, and integrating LLM capabilities into command-line workflows.
+The `exe/llm-google-query` command provides a convenient way to send prompts to Google models and receive responses directly in your terminal. It's designed for quick queries, scripting, and integrating LLM capabilities into command-line workflows.
 
-This command uses the new standardized `google` provider naming convention, which aligns with industry standards and supports future extensibility.
+This command uses the standardized `google` provider naming convention, which aligns with industry standards and supports future extensibility.
 
 ## Setup
 
@@ -53,21 +52,19 @@ Before using `llm-google-query`, you need to obtain a Google API key and configu
         ```
     *   Ensure your shell environment is set up to load variables from `.env` files (e.g., by using `direnv` or similar tools, or by sourcing the file manually: `source .env`). Refer to the project's `.env.example` for more details on environment variable management. For general project setup instructions, including environment variable management, refer to the [Project Setup Guide](../SETUP.md).
 
-**Note:** The command will also accept `GEMINI_API_KEY` for backward compatibility, but `GOOGLE_API_KEY` is the preferred environment variable name.
-
 ## Basic Usage
 
 The fundamental usage of `llm-google-query` involves providing a prompt, either as a direct string or from a file.
 
 ### String Prompts
 
-To query Google Gemini with a direct string prompt, simply pass the text as an argument:
+To query Google with a direct string prompt, simply pass the text as an argument:
 
 ```bash
 llm-google-query "What is Ruby programming language?"
 ```
 
-This will send the question to the default Gemini model and print the text response to your terminal.
+This will send the question to the default Google model and print the text response to your terminal.
 
 ### File Prompts
 
@@ -86,7 +83,7 @@ llm-google-query prompt.txt
 
 ## Output Format Options
 
-You can specify the format of the output from the Google Gemini model using the `--format` option.
+You can specify the format of the output from the Google model using the `--format` option.
 
 ### Text Output (Default)
 
@@ -131,7 +128,7 @@ _Expected Output (example, truncated):_
 
 ### `--model`
 
-Specifies the Gemini model to use for the query. The default model is `gemini-2.0-flash-lite`. You can specify other available models, such as `gemini-pro`.
+Specifies the Google model to use for the query. The default model is `gemini-2.0-flash-lite`. You can specify other available models, such as `gemini-pro`.
 
 ```bash
 llm-google-query "Hello" --model gemini-2.0-flash-lite
@@ -190,20 +187,6 @@ llm-google-query "Write a haiku about a rainy day." --system "Be playful and con
 llm-google-query "Explain machine learning" --output response.md --format markdown
 ```
 
-## Backward Compatibility
-
-The `llm-google-query` command is the new standard for querying Google Gemini models. However, for backward compatibility, the original `llm-gemini-query` command is still available and functions identically.
-
-```bash
-# New standard command (recommended)
-llm-google-query "What is machine learning?"
-
-# Legacy command (still supported)
-llm-gemini-query "What is machine learning?"
-```
-
-Both commands use the same underlying implementation and support the same options and features.
-
 ## Troubleshooting
 
 This section addresses common issues you might encounter when using `llm-google-query`.
@@ -215,7 +198,6 @@ If you receive an error related to authentication or a missing API key, ensure t
 *   **Check `.env` file:** Verify that `GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"` (with your actual key) is present in your `.env` file.
 *   **Load environment variables:** Make sure your shell loads the `.env` file. If not using a tool like `direnv`, you might need to manually source it: `source .env`.
 *   **Validate the key:** Double-check that the API key itself is correct and has the necessary permissions in Google AI Studio.
-*   **Legacy compatibility:** If you have an existing `GEMINI_API_KEY` set, the command will use it, but consider migrating to `GOOGLE_API_KEY` for consistency.
 
 ### Prompt File Not Found
 
@@ -226,7 +208,7 @@ If you provide a file path and the command reports that the file was not found, 
 
 ### Common Errors
 
-*   **Network Issues:** If you experience connection timeouts or failures, check your internet connection and ensure that Google's Gemini API endpoints are accessible from your network.
+*   **Network Issues:** If you experience connection timeouts or failures, check your internet connection and ensure that Google's API endpoints are accessible from your network.
 *   **Model Rate Limits:** If you make too many requests in a short period, you might hit API rate limits. The command should ideally handle retries, but if issues persist, pause and try again later. Refer to Google Gemini API documentation for current rate limits.
 *   **Invalid Arguments:** If you encounter errors about invalid options or values, review the `--help` output of `llm-google-query` to ensure you are using the correct flags and value formats (e.g., temperature range).
 *   **Provider Naming:** If you see references to "Gemini" in error messages, this is expected as the underlying API is still the Google Gemini API. The `google` naming convention is used for consistency in the CLI interface.
