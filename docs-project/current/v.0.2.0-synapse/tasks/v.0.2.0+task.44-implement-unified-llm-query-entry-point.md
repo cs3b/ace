@@ -19,23 +19,29 @@ find . -name "*llm*query*" -type f | head -10
 _Result excerpt:_
 
 ```
-./exe/llm-gemini-query
-./exe/lms-studio-query
-./lib/coding_agent_tools/cli/commands/llm/gemini_query.rb
-./lib/coding_agent_tools/cli/commands/lms/studio_query.rb
+./exe/llm-google-query
+./exe/llm-anthropic-query
+./exe/llm-openai-query
+./exe/llm-mistral-query
+./exe/llm-together-ai-query
+./exe/llm-lmstudio-query
+./lib/coding_agent_tools/cli/commands/google/query.rb
+./lib/coding_agent_tools/cli/commands/anthropic/query.rb
+./lib/coding_agent_tools/cli/commands/openai/query.rb
+./lib/coding_agent_tools/cli/commands/mistral/query.rb
 ```
 
 ## Objective
 
-Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that consolidates all LLM provider interactions under a single command. This addresses Priority 1 requirement #2 from the code review findings and provides a more ergonomic interface while maintaining backward compatibility through wrapper scripts.
+Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that consolidates all LLM provider interactions under a single command. This addresses Priority 1 requirement #2 from the code review findings and provides a more ergonomic interface while maintaining backward compatibility through wrapper scripts. The system now supports 6 providers: google, anthropic, openai, mistral, together_ai, and lmstudio.
 
 ## Scope of Work
 
 - Create new unified `llm-query` executable with provider:model syntax
 - Remove `--model` flag in favor of positional argument parsing
-- Implement popular shorthand aliases (gflash, gpro, o3, o4-mini, etc.)
-- Create thin wrapper scripts for backward compatibility
-- Update command routing to handle provider:model parsing
+- Implement dynamic shorthand aliases pointing to latest models (gflash, gpro, csonet, copus, o4mini, o3, etc.)
+- Create thin wrapper scripts for backward compatibility across all 6 providers
+- Update command routing to handle provider:model parsing for all providers
 - Add comprehensive error handling for invalid provider:model combinations
 
 ### Deliverables
@@ -45,10 +51,12 @@ Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that con
 - `exe/llm-query` (new unified executable)
 - `lib/coding_agent_tools/cli/commands/llm/unified_query.rb`
 - `lib/coding_agent_tools/molecules/provider_model_parser.rb`
-- `exe/gflash` (alias for google:gemini-1.5-flash)
-- `exe/gpro` (alias for google:gemini-1.5-pro)
-- `exe/o3` (alias for openai:gpt-3.5-turbo)
-- `exe/o4-mini` (alias for openai:gpt-4o-mini)
+- `exe/gflash` (alias for google:gemini-2.5-flash)
+- `exe/gpro` (alias for google:gemini-2.5-pro)
+- `exe/csonet` (alias for anthropic:claude-4-0-sonnet-latest)
+- `exe/copus` (alias for anthropic:claude-4-0-opus-latest)
+- `exe/o4mini` (alias for openai:gpt-4o-mini)
+- `exe/o3` (alias for openai:o3)
 - `spec/coding_agent_tools/cli/commands/llm/unified_query_spec.rb`
 - `spec/coding_agent_tools/molecules/provider_model_parser_spec.rb`
 
@@ -56,8 +64,12 @@ Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that con
 
 - `lib/coding_agent_tools/cli/commands.rb` (register unified command)
 - `coding_agent_tools.gemspec` (add new executables)
-- `exe/llm-gemini-query` (convert to wrapper script)
-- `exe/lms-studio-query` (convert to wrapper script)
+- `exe/llm-google-query` (convert to wrapper script)
+- `exe/llm-anthropic-query` (convert to wrapper script)
+- `exe/llm-openai-query` (convert to wrapper script)
+- `exe/llm-mistral-query` (convert to wrapper script)
+- `exe/llm-together-ai-query` (convert to wrapper script)
+- `exe/llm-lmstudio-query` (convert to wrapper script)
 - Documentation and help text
 
 #### Delete
@@ -66,67 +78,70 @@ Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that con
 
 ## Phases
 
-1. Design provider:model parsing system
+1. Design provider:model parsing system for all 6 providers
 2. Implement unified command infrastructure
-3. Create shorthand alias executables
-4. Convert existing executables to wrapper scripts
+3. Create dynamic shorthand alias executables pointing to latest models
+4. Convert existing executables to wrapper scripts for all providers
 5. Update documentation and help systems
-6. Add comprehensive testing
+6. Add comprehensive testing for multi-provider support
 
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Design provider:model syntax specification and validation rules
+* [ ] Design provider:model syntax specification and validation rules for all 6 providers
   > TEST: Syntax Design Complete
   > Type: Pre-condition Check
-  > Assert: Provider:model syntax is documented with examples and edge cases
+  > Assert: Provider:model syntax is documented with examples and edge cases for all providers
   > Command: test -f docs/provider-model-syntax.md
-* [ ] Research popular model naming conventions across providers
-* [ ] Plan alias naming strategy for maximum ergonomics
-* [ ] Design error handling for invalid provider:model combinations
+* [ ] Research model naming conventions across all 6 providers (google, anthropic, openai, mistral, together_ai, lmstudio)
+* [ ] Plan dynamic alias strategy that points to latest models (gflash→gemini-2.5-flash, csonet→claude-4-0-sonnet-latest, etc.)
+* [ ] Design error handling for invalid provider:model combinations across all providers
 
 ### Execution Steps
 
-- [ ] Create `ProviderModelParser` molecule for parsing provider:model syntax
+- [ ] Create `ProviderModelParser` molecule for parsing provider:model syntax across all 6 providers
   > TEST: Parser Creation
   > Type: Action Validation
-  > Assert: Parser correctly handles valid and invalid syntax
+  > Assert: Parser correctly handles valid and invalid syntax for all providers
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/provider_model_parser_spec.rb
-- [ ] Implement `UnifiedQuery` command class with provider routing
-- [ ] Add provider:model validation and error handling
+- [ ] Implement `UnifiedQuery` command class with multi-provider routing
+- [ ] Add provider:model validation and error handling for all 6 providers
 - [ ] Create unified `llm-query` executable
-- [ ] Implement shorthand alias executables (gflash, gpro, etc.)
+- [ ] Implement dynamic shorthand alias executables (gflash, gpro, csonet, copus, o4mini, o3, etc.)
   > TEST: Alias Functionality
   > Type: Action Validation
-  > Assert: All alias executables properly delegate to unified command
-  > Command: exe/gflash --help | grep -q "google:gemini-1.5-flash"
-- [ ] Convert existing executables to thin wrapper scripts
-- [ ] Update CLI command registration
-- [ ] Add comprehensive test coverage for all new components
+  > Assert: All alias executables properly delegate to unified command with latest models
+  > Command: exe/gflash --help | grep -q "google:gemini-2.5-flash"
+- [ ] Convert all existing provider executables to thin wrapper scripts
+- [ ] Update CLI command registration for multi-provider support
+- [ ] Add comprehensive test coverage for all new components and providers
   > TEST: Test Coverage
   > Type: Action Validation
   > Assert: All new code has test coverage above 95%
   > Command: bundle exec rspec --format json | jq '.summary.coverage_percent'
-- [ ] Update help text and documentation
+- [ ] Update help text and documentation for all providers
 - [ ] Update gemspec with new executables
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `llm-query google:gemini-1.5-flash "test prompt"` works correctly
-- [ ] AC 2: `llm-query lmstudio:model-name "test prompt"` works correctly
-- [ ] AC 3: Invalid provider:model combinations show helpful error messages
-- [ ] AC 4: All shorthand aliases work and show correct provider:model in help
-- [ ] AC 5: Backward compatibility maintained - existing executables still work
-- [ ] AC 6: Help system shows available providers and example usage
-- [ ] AC 7: All tests pass with >95% coverage on new components
+- [ ] AC 1: `llm-query google:gemini-2.5-flash "test prompt"` works correctly
+- [ ] AC 2: `llm-query anthropic:claude-4-0-sonnet-latest "test prompt"` works correctly
+- [ ] AC 3: `llm-query openai:gpt-4o "test prompt"` works correctly
+- [ ] AC 4: `llm-query lmstudio:model-name "test prompt"` works correctly
+- [ ] AC 5: Invalid provider:model combinations show helpful error messages for all providers
+- [ ] AC 6: All shorthand aliases work and dynamically point to latest models
+- [ ] AC 7: Backward compatibility maintained - all existing provider executables still work
+- [ ] AC 8: Help system shows all 6 available providers and example usage
+- [ ] AC 9: All tests pass with >95% coverage on new components
 
 ## Out of Scope
 
 - ❌ Removing existing individual provider executables
-- ❌ Implementing new LLM providers (use existing ones)
+- ❌ Implementing additional LLM providers beyond the existing 6
 - ❌ Complex model discovery or recommendation features
 - ❌ Interactive provider selection UI
+- ❌ Real-time model availability checking for "latest" aliases
 
 ## References
 

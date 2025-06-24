@@ -19,23 +19,27 @@ find . -path "*/organisms/*client*" -name "*.rb" | head -10
 _Result excerpt:_
 
 ```
-./lib/coding_agent_tools/organisms/gemini_client.rb
+./lib/coding_agent_tools/organisms/anthropic_client.rb
+./lib/coding_agent_tools/organisms/google_client.rb
 ./lib/coding_agent_tools/organisms/lm_studio_client.rb
-./spec/coding_agent_tools/organisms/gemini_client_spec.rb
-./spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
+./lib/coding_agent_tools/organisms/mistral_client.rb
+./lib/coding_agent_tools/organisms/openai_client.rb
+./lib/coding_agent_tools/organisms/together_ai_client.rb
+./spec/coding_agent_tools/organisms/anthropic_client_spec.rb
+./spec/coding_agent_tools/organisms/google_client_spec.rb
 ```
 
 ## Objective
 
-Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate code duplication across LLM provider clients. This addresses Priority 2 requirement #3 from the code review findings and establishes a foundation for easier addition of new providers while ensuring consistent behavior across all clients.
+Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate code duplication across LLM provider clients. This addresses Priority 2 requirement #3 from the code review findings and establishes a foundation for easier addition of new providers while ensuring consistent behavior across all 6 clients (google, anthropic, openai, mistral, together_ai, lmstudio).
 
 ## Scope of Work
 
 - Create abstract base client classes with shared functionality
-- Extract common patterns from existing Gemini and LM Studio clients
+- Extract common patterns from existing 6 provider clients (google, anthropic, openai, mistral, together_ai, lmstudio)
 - Implement template method pattern for provider-specific operations
-- Refactor existing clients to inherit from base classes
-- Establish consistent error handling and response processing
+- Refactor all existing clients to inherit from base classes
+- Establish consistent error handling and response processing across all providers
 - Add comprehensive testing for inheritance hierarchy
 
 ### Deliverables
@@ -50,37 +54,45 @@ Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate cod
 
 #### Modify
 
-- `lib/coding_agent_tools/organisms/gemini_client.rb` (refactor to inherit)
+- `lib/coding_agent_tools/organisms/google_client.rb` (refactor to inherit)
+- `lib/coding_agent_tools/organisms/anthropic_client.rb` (refactor to inherit)
+- `lib/coding_agent_tools/organisms/openai_client.rb` (refactor to inherit)
+- `lib/coding_agent_tools/organisms/mistral_client.rb` (refactor to inherit)
+- `lib/coding_agent_tools/organisms/together_ai_client.rb` (refactor to inherit)
 - `lib/coding_agent_tools/organisms/lm_studio_client.rb` (refactor to inherit)
-- `spec/coding_agent_tools/organisms/gemini_client_spec.rb` (use shared examples)
+- `spec/coding_agent_tools/organisms/google_client_spec.rb` (use shared examples)
+- `spec/coding_agent_tools/organisms/anthropic_client_spec.rb` (use shared examples)
+- `spec/coding_agent_tools/organisms/openai_client_spec.rb` (use shared examples)
+- `spec/coding_agent_tools/organisms/mistral_client_spec.rb` (use shared examples)
+- `spec/coding_agent_tools/organisms/together_ai_client_spec.rb` (use shared examples)
 - `spec/coding_agent_tools/organisms/lm_studio_client_spec.rb` (use shared examples)
 - `lib/coding_agent_tools.rb` (update requires)
 
 #### Delete
 
-- Duplicated code blocks from existing clients
+- Duplicated code blocks from existing 6 provider clients
 
 ## Phases
 
-1. Analyze existing clients to identify common patterns
+1. Analyze existing 6 provider clients to identify common patterns
 2. Design base class hierarchy and interfaces
 3. Implement abstract base classes
-4. Refactor existing clients to use inheritance
+4. Refactor all existing clients to use inheritance
 5. Create shared test examples
-6. Validate all functionality still works
+6. Validate all functionality still works across all providers
 
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Analyze existing client implementations to identify common patterns
+* [ ] Analyze existing 6 provider client implementations to identify common patterns
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
-  > Assert: Common patterns documented and extraction plan created
+  > Assert: Common patterns documented and extraction plan created for all 6 providers
   > Command: test -f docs/client-refactoring-analysis.md
-* [ ] Design inheritance hierarchy with clear separation of concerns
+* [ ] Design inheritance hierarchy with clear separation of concerns across all providers
 * [ ] Plan template method pattern for provider-specific operations
-* [ ] Design consistent error handling strategy across all clients
+* [ ] Design consistent error handling strategy across all 6 providers
 
 ### Execution Steps
 
@@ -93,40 +105,64 @@ Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate cod
 - [ ] Extract common HTTP request/response handling logic
 - [ ] Implement template methods for provider-specific operations
 - [ ] Add consistent error handling and logging across base classes
-- [ ] Refactor `GeminiClient` to inherit from `BaseChatCompletionClient`
-  > TEST: Gemini Client Refactoring
+- [ ] Refactor `GoogleClient` to inherit from `BaseChatCompletionClient`
+  > TEST: Google Client Refactoring
   > Type: Action Validation
-  > Assert: Refactored GeminiClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/gemini_client_spec.rb
+  > Assert: Refactored GoogleClient maintains all existing functionality
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/google_client_spec.rb
+- [ ] Refactor `AnthropicClient` to inherit from `BaseChatCompletionClient`
+  > TEST: Anthropic Client Refactoring
+  > Type: Action Validation
+  > Assert: Refactored AnthropicClient maintains all existing functionality
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/anthropic_client_spec.rb
+- [ ] Refactor `OpenaiClient` to inherit from `BaseChatCompletionClient`
+  > TEST: OpenAI Client Refactoring
+  > Type: Action Validation
+  > Assert: Refactored OpenaiClient maintains all existing functionality
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/openai_client_spec.rb
+- [ ] Refactor `MistralClient` to inherit from `BaseChatCompletionClient`
+  > TEST: Mistral Client Refactoring
+  > Type: Action Validation
+  > Assert: Refactored MistralClient maintains all existing functionality
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/mistral_client_spec.rb
+- [ ] Refactor `TogetherAiClient` to inherit from `BaseChatCompletionClient`
+  > TEST: Together AI Client Refactoring
+  > Type: Action Validation
+  > Assert: Refactored TogetherAiClient maintains all existing functionality
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/together_ai_client_spec.rb
 - [ ] Refactor `LMStudioClient` to inherit from `BaseChatCompletionClient`
   > TEST: LM Studio Client Refactoring
   > Type: Action Validation
   > Assert: Refactored LMStudioClient maintains all existing functionality
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
 - [ ] Create shared RSpec examples for common client behavior
-- [ ] Update client specs to use shared examples
+- [ ] Update all 6 client specs to use shared examples
 - [ ] Add comprehensive tests for base class functionality
   > TEST: Base Class Test Coverage
   > Type: Action Validation
   > Assert: Base classes have >95% test coverage
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/base_*_spec.rb --format json | jq '.summary.coverage_percent'
 - [ ] Update library requires and autoloading
-- [ ] Validate no regression in existing functionality
+- [ ] Validate no regression in existing functionality across all providers
 
 ## Acceptance Criteria
 
 - [ ] AC 1: `BaseClient` provides common initialization and utility methods
 - [ ] AC 2: `BaseChatCompletionClient` handles chat completion workflow
-- [ ] AC 3: Existing `GeminiClient` functionality unchanged after refactoring
-- [ ] AC 4: Existing `LMStudioClient` functionality unchanged after refactoring
-- [ ] AC 5: Code duplication reduced by at least 50% in client classes
-- [ ] AC 6: All existing tests pass without modification of assertions
-- [ ] AC 7: New base classes have comprehensive test coverage
-- [ ] AC 8: Shared test examples cover common client behaviors
+- [ ] AC 3: Existing `GoogleClient` functionality unchanged after refactoring
+- [ ] AC 4: Existing `AnthropicClient` functionality unchanged after refactoring
+- [ ] AC 5: Existing `OpenaiClient` functionality unchanged after refactoring
+- [ ] AC 6: Existing `MistralClient` functionality unchanged after refactoring
+- [ ] AC 7: Existing `TogetherAiClient` functionality unchanged after refactoring
+- [ ] AC 8: Existing `LMStudioClient` functionality unchanged after refactoring
+- [ ] AC 9: Code duplication reduced by at least 50% across all 6 client classes
+- [ ] AC 10: All existing tests pass without modification of assertions
+- [ ] AC 11: New base classes have comprehensive test coverage
+- [ ] AC 12: Shared test examples cover common client behaviors
 
 ## Out of Scope
 
-- ❌ Adding new LLM providers (use existing clients only)
+- ❌ Adding new LLM providers beyond the existing 6
 - ❌ Changing public APIs of existing clients
 - ❌ Implementing advanced features like retry logic (separate task)
 - ❌ Performance optimizations beyond basic refactoring
