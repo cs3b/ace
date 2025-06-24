@@ -2,13 +2,13 @@
 id: v.0.2.0+task.45
 status: pending
 priority: high
-estimate: 10h
+estimate: 12h
 dependencies: [v.0.2.0+task.43]
 ---
 
 # Implement Base Client Hierarchy to Reduce Duplication
 
-## 0. Directory Audit ✅
+## Directory Audit ✅
 
 _Command run:_
 
@@ -72,78 +72,145 @@ Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate cod
 
 - Duplicated code blocks from existing 6 provider clients
 
-## Phases
-
-1. Analyze existing 6 provider clients to identify common patterns
-2. Design base class hierarchy and interfaces
-3. Implement abstract base classes
-4. Refactor all existing clients to use inheritance
-5. Create shared test examples
-6. Validate all functionality still works across all providers
-
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Analyze existing 6 provider client implementations to identify common patterns
+* [ ] **Analyze Duplication Patterns Across All 6 Clients**
+  - Document initialization patterns (~80% duplication identified)
+  - Document core interface methods (~90% duplication identified)  
+  - Document helper method patterns (~70% duplication identified)
+  - Create extraction plan for common code
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
-  > Assert: Common patterns documented and extraction plan created for all 6 providers
-  > Command: test -f docs/client-refactoring-analysis.md
-* [ ] Design inheritance hierarchy with clear separation of concerns across all providers
-* [ ] Plan template method pattern for provider-specific operations
-* [ ] Design consistent error handling strategy across all 6 providers
+  > Assert: Duplication analysis documented with specific patterns
+  > Command: test -f docs/client-duplication-analysis.md
+
+* [ ] **Design Base Class Hierarchy and Interfaces**
+  - Design `BaseClient` for common utilities and initialization
+  - Design `BaseChatCompletionClient` for chat completion workflow
+  - Plan template method pattern for provider-specific operations
+  - Define abstract methods and hook points for customization
+
+* [ ] **Plan Migration Strategy**
+  - Define refactoring order (one client at a time approach)
+  - Plan rollback strategy in case of critical issues
+  - Design backward compatibility preservation approach
+  - Create validation checklist for each client migration
+
+* [ ] **Design Error Handling and Response Processing**
+  - Standardize error message formatting across providers
+  - Extract common response parsing patterns
+  - Plan provider-specific error handling hooks
 
 ### Execution Steps
 
-- [ ] Create `BaseClient` with common initialization and utility methods
-  > TEST: Base Client Creation
+- [ ] **Create BaseClient Foundation**
+  - Implement common initialization patterns
+  - Add shared utility methods
+  - Create template method hooks for provider customization
+  > TEST: Base Client Compilation
   > Type: Action Validation
-  > Assert: BaseClient compiles and provides expected interface
+  > Assert: BaseClient compiles without errors and provides expected interface
   > Command: ruby -c lib/coding_agent_tools/organisms/base_client.rb
-- [ ] Create `BaseChatCompletionClient` inheriting from `BaseClient`
-- [ ] Extract common HTTP request/response handling logic
-- [ ] Implement template methods for provider-specific operations
-- [ ] Add consistent error handling and logging across base classes
-- [ ] Refactor `GoogleClient` to inherit from `BaseChatCompletionClient`
-  > TEST: Google Client Refactoring
+
+- [ ] **Create BaseChatCompletionClient**
+  - Inherit from BaseClient
+  - Implement common chat completion workflow
+  - Add abstract methods for provider-specific operations
+  - Extract common response processing logic
+  > TEST: Base Chat Completion Client Compilation
   > Type: Action Validation
-  > Assert: Refactored GoogleClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/google_client_spec.rb
-- [ ] Refactor `AnthropicClient` to inherit from `BaseChatCompletionClient`
-  > TEST: Anthropic Client Refactoring
-  > Type: Action Validation
-  > Assert: Refactored AnthropicClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/anthropic_client_spec.rb
-- [ ] Refactor `OpenaiClient` to inherit from `BaseChatCompletionClient`
-  > TEST: OpenAI Client Refactoring
-  > Type: Action Validation
-  > Assert: Refactored OpenaiClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/openai_client_spec.rb
-- [ ] Refactor `MistralClient` to inherit from `BaseChatCompletionClient`
-  > TEST: Mistral Client Refactoring
-  > Type: Action Validation
-  > Assert: Refactored MistralClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/mistral_client_spec.rb
-- [ ] Refactor `TogetherAiClient` to inherit from `BaseChatCompletionClient`
-  > TEST: Together AI Client Refactoring
-  > Type: Action Validation
-  > Assert: Refactored TogetherAiClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/together_ai_client_spec.rb
-- [ ] Refactor `LMStudioClient` to inherit from `BaseChatCompletionClient`
-  > TEST: LM Studio Client Refactoring
-  > Type: Action Validation
-  > Assert: Refactored LMStudioClient maintains all existing functionality
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
-- [ ] Create shared RSpec examples for common client behavior
-- [ ] Update all 6 client specs to use shared examples
-- [ ] Add comprehensive tests for base class functionality
+  > Assert: BaseChatCompletionClient compiles and defines expected interface
+  > Command: ruby -c lib/coding_agent_tools/organisms/base_chat_completion_client.rb
+
+- [ ] **Create Base Class Test Suite**
+  - Add comprehensive tests for BaseClient functionality
+  - Add tests for BaseChatCompletionClient functionality
+  - Create shared examples for common client behaviors
   > TEST: Base Class Test Coverage
   > Type: Action Validation
-  > Assert: Base classes have >95% test coverage
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/base_*_spec.rb --format json | jq '.summary.coverage_percent'
-- [ ] Update library requires and autoloading
-- [ ] Validate no regression in existing functionality across all providers
+  > Assert: Base classes have comprehensive test coverage
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/base_*_spec.rb
+
+- [ ] **Refactor GoogleClient (Phase 1)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Implement provider-specific methods
+  - Ensure all existing functionality preserved
+  > TEST: Google Client Functionality Preserved
+  > Type: Action Validation  
+  > Assert: All existing GoogleClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/google_client_spec.rb
+
+- [ ] **Refactor AnthropicClient (Phase 2)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Handle Anthropic-specific response format differences
+  - Ensure all existing functionality preserved
+  > TEST: Anthropic Client Functionality Preserved
+  > Type: Action Validation
+  > Assert: All existing AnthropicClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/anthropic_client_spec.rb
+
+- [ ] **Refactor OpenAIClient (Phase 3)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Handle OpenAI-specific authentication and response formats
+  - Ensure all existing functionality preserved
+  > TEST: OpenAI Client Functionality Preserved
+  > Type: Action Validation
+  > Assert: All existing OpenAIClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/openai_client_spec.rb
+
+- [ ] **Refactor MistralClient (Phase 4)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Handle Mistral-specific API patterns
+  - Ensure all existing functionality preserved
+  > TEST: Mistral Client Functionality Preserved
+  > Type: Action Validation
+  > Assert: All existing MistralClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/mistral_client_spec.rb
+
+- [ ] **Refactor TogetherAIClient (Phase 5)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Handle Together AI-specific model filtering and response formats
+  - Ensure all existing functionality preserved
+  > TEST: Together AI Client Functionality Preserved
+  > Type: Action Validation
+  > Assert: All existing TogetherAIClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/together_ai_client_spec.rb
+
+- [ ] **Refactor LMStudioClient (Phase 6)**
+  - Update to inherit from BaseChatCompletionClient
+  - Extract duplicated code to base classes
+  - Handle LM Studio-specific server availability checks
+  - Ensure all existing functionality preserved
+  > TEST: LM Studio Client Functionality Preserved
+  > Type: Action Validation
+  > Assert: All existing LMStudioClient functionality works after refactoring
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
+
+- [ ] **Update Library Configuration**
+  - Update `lib/coding_agent_tools.rb` requires for new base classes
+  - Ensure Zeitwerk autoloading works correctly with inheritance
+  - Update any direct class references if needed
+  > TEST: Autoloading Verification
+  > Type: Action Validation
+  > Assert: All classes load correctly with inheritance hierarchy
+  > Command: ruby -e "require './lib/coding_agent_tools'; puts 'All classes loaded successfully'"
+
+- [ ] **Final Integration Validation**
+  - Run complete test suite across all refactored clients
+  - Verify code duplication reduction (target: >50% reduction)
+  - Validate CLI commands still work with refactored clients
+  - Check integration test compatibility
+  > TEST: Complete System Integration
+  > Type: Final Validation
+  > Assert: All functionality preserved across entire system
+  > Command: bundle exec rspec spec/ && bin/test
 
 ## Acceptance Criteria
 
@@ -160,12 +227,37 @@ Introduce `BaseChatCompletionClient` and `BaseClient` hierarchy to eliminate cod
 - [ ] AC 11: New base classes have comprehensive test coverage
 - [ ] AC 12: Shared test examples cover common client behaviors
 
+## Architecture Notes
+
+**Base Class Hierarchy Design:**
+```
+BaseClient (common utilities, initialization)
+└── BaseChatCompletionClient (chat completion workflow)
+    ├── GoogleClient (Google Gemini API specifics)
+    ├── AnthropicClient (Anthropic Claude API specifics)
+    ├── OpenAIClient (OpenAI GPT API specifics)
+    ├── MistralClient (Mistral AI API specifics)
+    ├── TogetherAIClient (Together AI API specifics)
+    └── LMStudioClient (LM Studio local server specifics)
+```
+
+**Template Method Pattern:**
+- Abstract methods for provider-specific URL building
+- Hook methods for custom authentication headers  
+- Override points for response parsing differences
+- Consistent error handling with provider-specific formatting
+
+**Backward Compatibility:**
+- All public APIs will be preserved during refactoring
+- Minor breaking changes acceptable if they improve architecture (pre-1.0.0)
+- CLI commands and integration points remain unchanged
+
 ## Out of Scope
 
 - ❌ Adding new LLM providers beyond the existing 6
-- ❌ Changing public APIs of existing clients
 - ❌ Implementing advanced features like retry logic (separate task)
 - ❌ Performance optimizations beyond basic refactoring
+- ❌ Changing CLI command interfaces
 
 ## References
 
