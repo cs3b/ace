@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../models/default_model_config"
+
 module CodingAgentTools
   module Molecules
     # ProviderModelParser handles parsing and validation of provider:model syntax
@@ -38,15 +40,12 @@ module CodingAgentTools
         "o3" => "openai:o3"
       }.freeze
 
-      # Default models for each provider (when only provider is specified)
-      DEFAULT_MODELS = {
-        "google" => "gemini-2.0-flash-lite",
-        "anthropic" => "claude-3-5-haiku-20241022",
-        "openai" => "gpt-4o-mini",
-        "mistral" => "open-mistral-nemo",
-        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
-        "lmstudio" => "mistralai/devstral-small-2505"
-      }.freeze
+      # Get the default model configuration instance
+      #
+      # @return [CodingAgentTools::Models::DefaultModelConfig] The configuration instance
+      def default_config
+        @default_config ||= CodingAgentTools::Models::DefaultModelConfig.default
+      end
 
       # Result object for parsed provider:model combinations
       ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
@@ -90,7 +89,7 @@ module CodingAgentTools
           end
 
           # Use default model for provider
-          model = DEFAULT_MODELS[provider]
+          model = default_config.default_model_for(provider)
 
           # Create successful result
           ParseResult.new(provider, model, true, nil, original_input)
@@ -135,7 +134,7 @@ module CodingAgentTools
       #
       # @return [Hash<String, String>] Mapping of providers to default models
       def default_models
-        DEFAULT_MODELS.dup
+        default_config.all_models
       end
 
       # Gets the default model for a specific provider
@@ -143,8 +142,12 @@ module CodingAgentTools
       # @param provider [String] The provider name
       # @return [String, nil] The default model or nil if provider not found
       def default_model_for(provider)
-        return nil if provider.nil?
-        DEFAULT_MODELS[provider.strip.downcase]
+        return nil if provider.nil? || provider.strip.empty?
+        begin
+          default_config.default_model_for(provider.strip.downcase)
+        rescue CodingAgentTools::Models::DefaultModelConfig::UnsupportedProviderError
+          nil
+        end
       end
 
       # Validates if a provider is supported

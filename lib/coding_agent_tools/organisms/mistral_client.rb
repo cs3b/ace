@@ -3,6 +3,7 @@
 require_relative "../molecules/api_credentials"
 require_relative "../molecules/http_request_builder"
 require_relative "../molecules/api_response_parser"
+require_relative "../models/default_model_config"
 require "addressable/uri"
 
 module CodingAgentTools
@@ -12,9 +13,6 @@ module CodingAgentTools
     class MistralClient
       # Mistral AI API base URL
       API_BASE_URL = "https://api.mistral.ai/v1"
-
-      # Default model to use
-      DEFAULT_MODEL = "open-mistral-nemo"
 
       # Default environment variable name for Mistral API key
       DEFAULT_API_KEY_ENV = "MISTRAL_API_KEY"
@@ -32,8 +30,8 @@ module CodingAgentTools
       # @option options [String] :base_url API base URL
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
-      def initialize(api_key: nil, model: DEFAULT_MODEL, **options)
-        @model = model
+      def initialize(api_key: nil, model: nil, **options)
+        @model = model || default_model
         @base_url = options.fetch(:base_url, API_BASE_URL)
         @generation_config = DEFAULT_GENERATION_CONFIG.merge(
           options.fetch(:generation_config, {})
@@ -118,6 +116,13 @@ module CodingAgentTools
       end
 
       private
+
+      # Get the default model for this provider
+      #
+      # @return [String] The default model name
+      def default_model
+        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("mistral")
+      end
 
       # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint

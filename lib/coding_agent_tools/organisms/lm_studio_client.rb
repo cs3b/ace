@@ -2,6 +2,7 @@
 
 require_relative "../molecules/http_request_builder"
 require_relative "../molecules/api_response_parser"
+require_relative "../models/default_model_config"
 require "json"
 
 module CodingAgentTools
@@ -11,9 +12,6 @@ module CodingAgentTools
     class LMStudioClient
       # LM Studio API base URL (local server)
       API_BASE_URL = "http://localhost:1234"
-
-      # Default model to use
-      DEFAULT_MODEL = "mistralai/devstral-small-2505"
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
@@ -28,8 +26,8 @@ module CodingAgentTools
       # @option options [String] :base_url API base URL
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
-      def initialize(model: DEFAULT_MODEL, **options)
-        @model = model
+      def initialize(model: nil, **options)
+        @model = model || default_model
         @base_url = options.fetch(:base_url, API_BASE_URL)
         @generation_config = DEFAULT_GENERATION_CONFIG.merge(
           options.fetch(:generation_config, {})
@@ -108,6 +106,13 @@ module CodingAgentTools
       end
 
       private
+
+      # Get the default model for this provider
+      #
+      # @return [String] The default model name
+      def default_model
+        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("lmstudio")
+      end
 
       # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint

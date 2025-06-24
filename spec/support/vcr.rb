@@ -22,18 +22,44 @@ VCR.configure do |config|
     end
   end
 
+  # Register custom request matcher to ignore the 'key' query parameter in URIs.
+  # This allows matching requests even if the API key is different.
+  config.register_request_matcher :uri_without_key_param do |request_1, request_2|
+    normalize_uri = lambda do |uri|
+      uri_obj = URI(uri)
+      if uri_obj.query
+        query = URI.decode_www_form(uri_obj.query)
+        filtered_query = query.reject { |k, _v| k == "key" }
+        # Set query to nil if it's empty to avoid a trailing '?'
+        uri_obj.query = URI.encode_www_form(filtered_query) if filtered_query.any?
+        uri_obj.query = nil unless filtered_query.any?
+      end
+      uri_obj.to_s
+    end
+
+    normalize_uri.call(request_1.uri) == normalize_uri.call(request_2.uri)
+  end
+
+
   # Configure how requests are matched
   config.default_cassette_options = {
-    match_requests_on: [:method, :uri, :headers, :body_without_dynamic_paths],
+    match_requests_on: [:method, :uri_without_key_param, :headers, :body_without_dynamic_paths],
     serialize_with: :json,
     decode_compressed_response: true
   }
 
   # Sensitive data filtering - remove API keys from recorded cassettes
-  
+
   # Google/Gemini API keys in headers
   config.filter_sensitive_data("<GOOGLE_API_KEY>") do |interaction|
     interaction.request.headers["X-Goog-Api-Key"]&.first
+  end
+
+  # Google API keys in URLs
+  config.filter_sensitive_data("<GOOGLE_API_KEY>") do |interaction|
+    if interaction.request.uri.match?(/key=AIza[0-9A-Za-z_-]{35}/)
+      interaction.request.uri.match(/key=(AIza[0-9A-Za-z_-]{35})/)[1]
+    end
   end
 
 
@@ -106,11 +132,6 @@ VCR.configure do |config|
 
   # Configure before_record hook to clean up responses
   config.before_record do |interaction|
-    # First, filter API keys in URIs (must come before other filtering)
-    if interaction.request.uri.match(/key=AIza[0-9A-Za-z_-]{35}/)
-      interaction.request.uri = interaction.request.uri.gsub(/key=AIza[0-9A-Za-z_-]{35}/, "key=<GOOGLE_API_KEY>")
-    end
-
     # Remove any timestamps or dynamic data that might cause issues
     if interaction.response.body
       # Clean up any dynamic timestamps in the response

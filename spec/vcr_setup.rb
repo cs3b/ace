@@ -1,50 +1,32 @@
 # frozen_string_literal: true
 
-# VCR setup for subprocess loading
-# This file is loaded via RUBYOPT to enable VCR in subprocess calls
+# VCR setup for subprocesses (e.g., when specs spawn CLI helpers or Ruby scripts).
+#
+# The previous implementation duplicated a pared-down VCR configuration that
+# inevitably drifted away from the canonical one used by the RSpec runner
+# (`spec/support/vcr.rb`).  Instead of maintaining two separate configs we simply
+# load the primary file, guaranteeing identical behaviour (custom matchers,
+# sensitive-data filters, recording modes, etc.) in both the parent and child
+# processes.
 
-# Ensure bundler is loaded if we're in a bundled environment
-# This is crucial for CI where the subprocess needs access to test gems
+# Ensure Bundler is available inside the subprocess (mirrors old behaviour)
 if ENV["BUNDLE_GEMFILE"] && !defined?(Bundler)
   require "bundler/setup"
 end
 
-require "vcr"
+# Load the shared VCR configuration (brings in `vcr`, `webmock/rspec`, matchers,
+# filters, RSpec hooks, and recording-mode logic).
+require File.expand_path("support/vcr.rb", __dir__)
+
+# `spec/support/vcr.rb` enables WebMock inside an RSpec `before(:suite)` hook,
+# which does **not** run in a plain Ruby subprocess. We therefore enable it
+# explicitly here to ensure HTTP interception is active.
 require "webmock"
-
-VCR.configure do |config|
-  config.cassette_library_dir = File.expand_path("cassettes", __dir__)
-  config.hook_into :webmock
-  config.default_cassette_options = {
-    record: :once,
-    match_requests_on: [:method, :uri, :body]
-  }
-
-  # Configure to handle Gemini API
-  config.filter_sensitive_data("<GEMINI_API_KEY>") { ENV["GEMINI_API_KEY"] }
-
-  # Configure to handle LM Studio API (localhost)
-  config.filter_sensitive_data("<LM_STUDIO_API_KEY>") { ENV["LM_STUDIO_API_KEY"] }
-
-  # Allow localhost connections for tests (needed for LM Studio)
-  config.ignore_localhost = false
-
-  # Configure for test environment
-  if ENV["VCR_RECORD"] == "true"
-    config.default_cassette_options[:record] = :all
-  elsif ENV["CI"]
-    config.default_cassette_options[:record] = :none
-  end
-end
-
-# Auto-insert cassette based on test context if available
-if ENV["VCR_CASSETTE_NAME"]
-  VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
-
-  at_exit do
-    VCR.eject_cassette if VCR.current_cassette
-  end
-end
-
-# Enable WebMock
 WebMock.enable!
+
+# If the parent process provided a cassette name, insert it automatically so the
+# subprocess records/replays under the same cassette.
+if ENV["VCR_CASSETTE_NAME"] && !VCR.current_cassette
+  VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
+  at_exit { VCR.eject_cassette if VCR.current_cassette }
+end
