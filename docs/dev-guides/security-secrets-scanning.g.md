@@ -64,11 +64,12 @@ The project uses `.gitleaks.toml` for configuration:
 
 Key exclusions:
 - **Gitignore Files**: All patterns in `.gitignore` are automatically excluded
-- `spec/cassettes/` - VCR cassettes with filtered API responses
 - `spec/fixtures/` - Test fixtures with example data
 - `.env` files - Local development environment variables
 - Large files (>1MB) - Logs, dumps, and data files unless `--full` is used
 - Documentation examples with placeholder values
+
+**Note**: VCR cassettes (`spec/cassettes/`) are now scanned to ensure proper API key filtering. The allowlist includes filtered placeholders like `<GOOGLE_API_KEY>`, `<OPENAI_API_KEY>`, etc.
 
 ## GitHub Push Protection
 
@@ -200,11 +201,12 @@ INFO: Respecting file size limits (1MB) - use --full to override
 **Issue**: Need to scan git history
 **Solution**: Use `bin/lint-security --git-past` to scan entire repository history
 
-**Issue**: VCR cassettes triggering alerts
+**Issue**: VCR cassettes triggering alerts with real API keys
 ```bash
-Finding: <GEMINI_API_KEY>
+Finding: sk-proj-abc123... (OpenAI API key)
+Finding: AIzaSy... (Google API key)
 ```
-**Solution**: Verify cassettes are in `spec/cassettes/` (should be excluded)
+**Solution**: This indicates VCR filtering failed. Check VCR configuration in `spec/support/vcr.rb` and manually clean cassettes if needed
 
 **Issue**: Test fixtures triggering alerts
 **Solution**: Use placeholder values like `test-key-123` instead of realistic secrets

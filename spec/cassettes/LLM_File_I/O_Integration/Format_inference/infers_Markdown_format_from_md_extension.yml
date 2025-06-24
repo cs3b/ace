@@ -81,4 +81,85 @@ http_interactions:
           "responseId": "-JhWaJ6lKfOVsbQPxaKksAc"
         }
   recorded_at: Sat, 21 Jun 2025 11:35:20 GMT
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"Test"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Tue, 24 Jun 2025 13:31:24 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=1058
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I'm ready. Please tell me what you want me to test.  What are you testing?  Provide me with:\n\n*   **The thing you want me to test (e.g., a code snippet, a website, a concept, a sentence, etc.)**\n*   **What you want me to check for (e.g., correctness, functionality, grammar, etc.)**\n\nThe more information you give me, the better I can help.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.465540771484375
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 1,
+            "candidatesTokenCount": 100,
+            "totalTokenCount": 101,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 1
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 100
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "q6haaO7QKvOdnvgPrJbnoQg"
+        }
+  recorded_at: Tue, 24 Jun 2025 13:31:24 GMT
 recorded_with: VCR 6.3.1

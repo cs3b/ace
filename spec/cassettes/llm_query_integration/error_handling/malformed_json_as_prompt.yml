@@ -1,0 +1,84 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>
+    body:
+      encoding: UTF-8
+      string: '{"contents":[{"role":"user","parts":[{"text":"{\"incomplete\":"}]}],"generationConfig":{"temperature":0.7,"maxOutputTokens":8192}}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json; charset=UTF-8
+      Vary:
+      - Origin
+      - Referer
+      - X-Origin
+      Date:
+      - Tue, 24 Jun 2025 13:31:31 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      X-Xss-Protection:
+      - '0'
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Content-Type-Options:
+      - nosniff
+      Server-Timing:
+      - gfet4t7; dur=1691
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        {
+          "candidates": [
+            {
+              "content": {
+                "parts": [
+                  {
+                    "text": "Okay, I understand. You've provided the JSON object `{\"incomplete\":`.  This indicates that you want me to help you complete something. \n\nTo help you, please tell me:\n\n*   **What are you trying to create?** (e.g., a JSON object, a sentence, a story, a code snippet, a list)\n*   **What is the context?** (e.g., What is the purpose of this JSON object? What information are you trying to convey?)\n*   **What do you want to happen next?** (e.g., What should be the content of the JSON object?)\n\nThe more information you give me, the better I can assist you.\n\nFor example, you could say:\n\n\"I'm creating a JSON object to represent a user. The `incomplete` part is a placeholder. I want to add information about the user's name and email address. What should the rest of the JSON object look like?\"\n\nOnce I have this information, I can help you fill in the missing parts.\n"
+                  }
+                ],
+                "role": "model"
+              },
+              "finishReason": "STOP",
+              "avgLogprobs": -0.38108096803937641
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 3,
+            "candidatesTokenCount": 224,
+            "totalTokenCount": 227,
+            "promptTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 3
+              }
+            ],
+            "candidatesTokensDetails": [
+              {
+                "modality": "TEXT",
+                "tokenCount": 224
+              }
+            ]
+          },
+          "modelVersion": "gemini-2.0-flash-lite",
+          "responseId": "sqhaaIOzCei5nvgPmd2MgQY"
+        }
+  recorded_at: Tue, 24 Jun 2025 13:31:31 GMT
+recorded_with: VCR 6.3.1

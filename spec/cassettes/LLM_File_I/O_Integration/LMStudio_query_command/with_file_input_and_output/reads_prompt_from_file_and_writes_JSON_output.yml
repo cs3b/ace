@@ -31,7 +31,7 @@ http_interactions:
       Etag:
       - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
       Date:
-      - Sat, 21 Jun 2025 11:34:03 GMT
+      - Tue, 24 Jun 2025 13:31:28 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -149,7 +149,7 @@ http_interactions:
           ],
           "object": "list"
         }
-  recorded_at: Sat, 21 Jun 2025 11:34:03 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:28 GMT
 - request:
     method: post
     uri: http://localhost:1234/v1/chat/completions
@@ -180,11 +180,11 @@ http_interactions:
       Content-Type:
       - application/json; charset=utf-8
       Content-Length:
-      - '530'
+      - '529'
       Etag:
-      - W/"212-OfaPZqknJONx2ga5fmdVNpGBRx8"
+      - W/"211-Ir+nNINL++QJklJrVjNHRLdYL4U"
       Date:
-      - Sat, 21 Jun 2025 11:34:04 GMT
+      - Tue, 24 Jun 2025 13:31:29 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -193,9 +193,9 @@ http_interactions:
       encoding: UTF-8
       string: |-
         {
-          "id": "chatcmpl-b0sas1gm55r0ckhf22h6xs8",
+          "id": "chatcmpl-509576gkl12jdgsf13kfyp",
           "object": "chat.completion",
-          "created": 1750505643,
+          "created": 1750771888,
           "model": "mistralai/devstral-small-2505",
           "choices": [
             {
@@ -216,5 +216,5 @@ http_interactions:
           "stats": {},
           "system_fingerprint": "mistralai/devstral-small-2505"
         }
-  recorded_at: Sat, 21 Jun 2025 11:34:04 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:29 GMT
 recorded_with: VCR 6.3.1

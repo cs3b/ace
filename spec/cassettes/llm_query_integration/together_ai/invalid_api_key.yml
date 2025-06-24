@@ -1,0 +1,68 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.together.xyz/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"mistralai/Mistral-7B-Instruct-v0.3","messages":[{"role":"user","content":"Hello"}],"temperature":0.7,"max_tokens":4096}'
+    headers:
+      User-Agent:
+      - Faraday v2.13.1
+      Authorization:
+      - Bearer invalid-key
+      Content-Type:
+      - application/json
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Tue, 24 Jun 2025 13:32:58 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '266'
+      Connection:
+      - keep-alive
+      Cf-Ray:
+      - 954c981a2a3f60d0-MAD
+      Cf-Cache-Status:
+      - DYNAMIC
+      Access-Control-Allow-Origin:
+      - "*"
+      Etag:
+      - W/"10a-qgoaTxD8tQNRNGl9zxyXOJhV0nE"
+      Strict-Transport-Security:
+      - max-age=15552000; includeSubDomains
+      X-Amzn-Trace-Id:
+      - 8df46843-3fba-4ab3-8b96-07b6b0004110-noamzn
+      X-Api-Received:
+      - '2025-06-24T13:32:58.264Z'
+      X-Request-Id:
+      - nzQj2AB-3NKUce-954c981a2a3f60d0
+      Vary:
+      - Accept-Encoding
+      Server:
+      - cloudflare
+      Alt-Svc:
+      - h3=":443"; ma=86400
+    body:
+      encoding: UTF-8
+      string: |-
+        {
+          "id": "nzQj2AB-3NKUce-954c981a2a3f60d0",
+          "error": {
+            "message": "Invalid API key provided. You can find your API key at https://api.together.xyz/settings/api-keys.",
+            "type": "invalid_request_error",
+            "param": null,
+            "code": "invalid_api_key"
+          }
+        }
+  recorded_at: Tue, 24 Jun 2025 13:32:58 GMT
+recorded_with: VCR 6.3.1

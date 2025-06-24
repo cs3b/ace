@@ -31,7 +31,7 @@ http_interactions:
       Etag:
       - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
       Date:
-      - Sat, 21 Jun 2025 11:35:04 GMT
+      - Tue, 24 Jun 2025 13:31:27 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -149,7 +149,7 @@ http_interactions:
           ],
           "object": "list"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:04 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:27 GMT
 - request:
     method: post
     uri: http://localhost:1234/v1/chat/completions
@@ -180,11 +180,11 @@ http_interactions:
       Content-Type:
       - application/json; charset=utf-8
       Content-Length:
-      - '908'
+      - '531'
       Etag:
-      - W/"38c-dpD2CMxeijxQTZGwOKfkhf9HE4I"
+      - W/"213-U4DJOnLznW3yljgjC0iJLDLRBAg"
       Date:
-      - Sat, 21 Jun 2025 11:35:09 GMT
+      - Tue, 24 Jun 2025 13:31:28 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -193,9 +193,9 @@ http_interactions:
       encoding: UTF-8
       string: |-
         {
-          "id": "chatcmpl-s0xahe2st8u75quh6a4s",
+          "id": "chatcmpl-kk7awqe45o548h2c4wzgo",
           "object": "chat.completion",
-          "created": 1750505704,
+          "created": 1750771887,
           "model": "mistralai/devstral-small-2505",
           "choices": [
             {
@@ -204,17 +204,17 @@ http_interactions:
               "finish_reason": "stop",
               "message": {
                 "role": "assistant",
-                "content": "Let's test a few things to ensure you understand your role and guidelines properly. First, can you tell me what your primary role is as defined in the instructions?\n\nAlso, if I ask you to search for a specific file in a complex directory structure, what command would you use to efficiently locate it?\n\nLastly, if I ask you for advice on how to structure a commit message, what would be your recommendation?"
+                "content": "Hello! How can I assist you today?"
               }
             }
           ],
           "usage": {
             "prompt_tokens": 1227,
-            "completion_tokens": 84,
-            "total_tokens": 1311
+            "completion_tokens": 9,
+            "total_tokens": 1236
           },
           "stats": {},
           "system_fingerprint": "mistralai/devstral-small-2505"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:09 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:28 GMT
 recorded_with: VCR 6.3.1

@@ -170,7 +170,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
         result = parser.parse("googlegemini")
 
         expect(result).to be_invalid
-        expect(result.error).to eq("Invalid format. Expected 'provider:model' or alias")
+        expect(result.error).to eq("Unknown provider: googlegemini. Supported providers: google, anthropic, openai, mistral, together_ai, lmstudio")
         expect(result.original_input).to eq("googlegemini")
       end
 
@@ -208,8 +208,131 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
         result = parser.parse("unknown_alias")
 
         expect(result).to be_invalid
-        expect(result.error).to eq("Invalid format. Expected 'provider:model' or alias")
+        expect(result.error).to eq("Unknown provider: unknown_alias. Supported providers: google, anthropic, openai, mistral, together_ai, lmstudio")
       end
+    end
+
+    context "with provider-only syntax (using default models)" do
+      it "parses google provider-only correctly" do
+        result = parser.parse("google")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("google")
+        expect(result.model).to eq("gemini-2.0-flash-lite")
+        expect(result.original_input).to eq("google")
+      end
+
+      it "parses anthropic provider-only correctly" do
+        result = parser.parse("anthropic")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("anthropic")
+        expect(result.model).to eq("claude-3-5-haiku-20241022")
+        expect(result.original_input).to eq("anthropic")
+      end
+
+      it "parses openai provider-only correctly" do
+        result = parser.parse("openai")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("openai")
+        expect(result.model).to eq("gpt-4o-mini")
+        expect(result.original_input).to eq("openai")
+      end
+
+      it "parses mistral provider-only correctly" do
+        result = parser.parse("mistral")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("mistral")
+        expect(result.model).to eq("open-mistral-nemo")
+        expect(result.original_input).to eq("mistral")
+      end
+
+      it "parses together_ai provider-only correctly" do
+        result = parser.parse("together_ai")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("together_ai")
+        expect(result.model).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(result.original_input).to eq("together_ai")
+      end
+
+      it "parses lmstudio provider-only correctly" do
+        result = parser.parse("lmstudio")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("lmstudio")
+        expect(result.model).to eq("mistralai/devstral-small-2505")
+        expect(result.original_input).to eq("lmstudio")
+      end
+
+      it "handles case insensitive provider-only" do
+        result = parser.parse("GOOGLE")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("google")
+        expect(result.model).to eq("gemini-2.0-flash-lite")
+      end
+
+      it "handles whitespace around provider-only" do
+        result = parser.parse("  anthropic  ")
+
+        expect(result).to be_valid
+        expect(result.provider).to eq("anthropic")
+        expect(result.model).to eq("claude-3-5-haiku-20241022")
+      end
+    end
+  end
+
+  describe "#default_models" do
+    it "returns all default models" do
+      defaults = parser.default_models
+
+      expect(defaults).to include(
+        "google" => "gemini-2.0-flash-lite",
+        "anthropic" => "claude-3-5-haiku-20241022",
+        "openai" => "gpt-4o-mini",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "lmstudio" => "mistralai/devstral-small-2505"
+      )
+    end
+
+    it "returns a copy of the hash" do
+      defaults1 = parser.default_models
+      defaults2 = parser.default_models
+
+      expect(defaults1).to eq(defaults2)
+      expect(defaults1).not_to be(defaults2) # Different object instances
+    end
+  end
+
+  describe "#default_model_for" do
+    it "returns default model for valid providers" do
+      expect(parser.default_model_for("google")).to eq("gemini-2.0-flash-lite")
+      expect(parser.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
+      expect(parser.default_model_for("openai")).to eq("gpt-4o-mini")
+      expect(parser.default_model_for("mistral")).to eq("open-mistral-nemo")
+      expect(parser.default_model_for("together_ai")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+      expect(parser.default_model_for("lmstudio")).to eq("mistralai/devstral-small-2505")
+    end
+
+    it "handles case insensitive provider names" do
+      expect(parser.default_model_for("GOOGLE")).to eq("gemini-2.0-flash-lite")
+      expect(parser.default_model_for("Anthropic")).to eq("claude-3-5-haiku-20241022")
+    end
+
+    it "handles whitespace" do
+      expect(parser.default_model_for("  google  ")).to eq("gemini-2.0-flash-lite")
+    end
+
+    it "returns nil for unknown providers" do
+      expect(parser.default_model_for("unknown")).to be_nil
+    end
+
+    it "returns nil for nil input" do
+      expect(parser.default_model_for(nil)).to be_nil
     end
   end
 

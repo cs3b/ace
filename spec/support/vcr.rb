@@ -30,23 +30,43 @@ VCR.configure do |config|
   }
 
   # Sensitive data filtering - remove API keys from recorded cassettes
-  config.filter_sensitive_data("<GEMINI_API_KEY>") do |interaction|
+  
+  # Google/Gemini API keys in headers
+  config.filter_sensitive_data("<GOOGLE_API_KEY>") do |interaction|
     interaction.request.headers["X-Goog-Api-Key"]&.first
   end
 
-  # Also filter API keys from query parameters
-  config.filter_sensitive_data("<GEMINI_API_KEY>") do |interaction|
-    if interaction.request.uri.include?("key=")
-      URI.parse(interaction.request.uri).query&.split("&")&.find { |param| param.start_with?("key=") }&.split("=")&.last
-    end
-  end
 
-  # Filter Anthropic API keys
+  # Anthropic API keys in headers (X-API-Key)
   config.filter_sensitive_data("<ANTHROPIC_API_KEY>") do |interaction|
     interaction.request.headers["X-Api-Key"]&.first
   end
 
-  # Filter Authorization headers if present
+  # OpenAI API keys in Authorization headers (Bearer sk-...)
+  config.filter_sensitive_data("<OPENAI_API_KEY>") do |interaction|
+    auth_header = interaction.request.headers["Authorization"]&.first
+    if auth_header&.start_with?("Bearer sk-")
+      auth_header.sub("Bearer ", "")
+    end
+  end
+
+  # Mistral API keys in Authorization headers (Bearer ...)
+  config.filter_sensitive_data("<MISTRAL_API_KEY>") do |interaction|
+    auth_header = interaction.request.headers["Authorization"]&.first
+    if auth_header&.start_with?("Bearer ") && interaction.request.uri.include?("api.mistral.ai")
+      auth_header.sub("Bearer ", "")
+    end
+  end
+
+  # Together AI API keys in Authorization headers (Bearer ...)
+  config.filter_sensitive_data("<TOGETHER_API_KEY>") do |interaction|
+    auth_header = interaction.request.headers["Authorization"]&.first
+    if auth_header&.start_with?("Bearer ") && interaction.request.uri.include?("api.together.xyz")
+      auth_header.sub("Bearer ", "")
+    end
+  end
+
+  # Generic Authorization headers (for any remaining patterns)
   config.filter_sensitive_data("<AUTHORIZATION>") do |interaction|
     interaction.request.headers["Authorization"]&.first
   end
@@ -86,6 +106,11 @@ VCR.configure do |config|
 
   # Configure before_record hook to clean up responses
   config.before_record do |interaction|
+    # First, filter API keys in URIs (must come before other filtering)
+    if interaction.request.uri.match(/key=AIza[0-9A-Za-z_-]{35}/)
+      interaction.request.uri = interaction.request.uri.gsub(/key=AIza[0-9A-Za-z_-]{35}/, "key=<GOOGLE_API_KEY>")
+    end
+
     # Remove any timestamps or dynamic data that might cause issues
     if interaction.response.body
       # Clean up any dynamic timestamps in the response
@@ -186,21 +211,21 @@ module VCRHelpers
 
   # Get the current API key (real or test)
   def current_api_key
-    EnvHelper.gemini_api_key
+    EnvHelper.google_api_key
   end
 
   # Skip test if recording but no real API key available
   def skip_if_no_api_key_for_recording
     if !ENV["CI"] && ENV["VCR_RECORD"] == "true" && !real_api_key_available?
-      skip "Recording requires real GEMINI_API_KEY. Set it in spec/.env"
+      skip "Recording requires real GOOGLE_API_KEY. Set it in spec/.env"
     end
   end
 
   private
 
   def real_api_key_available?
-    key = ENV["GEMINI_API_KEY"]
-    !key.nil? && !key.empty? && key != "your_actual_gemini_api_key_here" && key != "test-api-key-for-vcr-playback"
+    key = ENV["GOOGLE_API_KEY"]
+    !key.nil? && !key.empty? && key != "your_actual_google_api_key_here" && key != "test-api-key-for-vcr-playback"
   end
 end
 
