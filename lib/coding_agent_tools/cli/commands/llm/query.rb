@@ -132,22 +132,9 @@ module CodingAgentTools
             client_options = {model: model}
             client_options[:timeout] = options[:timeout] if options[:timeout]
 
-            case provider
-            when "google"
-              Organisms::GoogleClient.new(**client_options)
-            when "anthropic"
-              Organisms::AnthropicClient.new(**client_options)
-            when "openai"
-              Organisms::OpenAIClient.new(**client_options)
-            when "mistral"
-              Organisms::MistralClient.new(**client_options)
-            when "together_ai"
-              Organisms::TogetherAIClient.new(**client_options)
-            when "lmstudio"
-              Organisms::LMStudioClient.new(**client_options)
-            else
-              raise "Unsupported provider: #{provider}"
-            end
+            Molecules::ClientFactory.build(provider, client_options)
+          rescue Molecules::ClientFactory::UnknownProviderError => e
+            raise ArgumentError, e.message
           end
 
           def build_generation_options(provider, options, system_text)

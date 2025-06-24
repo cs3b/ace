@@ -174,7 +174,7 @@ module CodingAgentTools
           end
         when Hash
           obj.transform_keys { |k| ensure_proper_encoding(k) }
-             .transform_values { |v| ensure_proper_encoding(v) }
+            .transform_values { |v| ensure_proper_encoding(v) }
         when Array
           obj.map { |item| ensure_proper_encoding(item) }
         else

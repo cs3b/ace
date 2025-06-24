@@ -49,7 +49,7 @@ VCR.configure do |config|
       "X-Goog-Api-Key",   # Google
       "Authorization"     # OpenAI, Mistral, Together AI
     ]
-    
+
     normalize_headers = lambda do |headers|
       # Convert headers to hash with lowercase keys for consistent comparison
       normalized = {}
@@ -63,7 +63,6 @@ VCR.configure do |config|
 
     normalize_headers.call(request_1.headers) == normalize_headers.call(request_2.headers)
   end
-
 
   # Configure how requests are matched
   config.default_cassette_options = {
@@ -85,7 +84,6 @@ VCR.configure do |config|
       interaction.request.uri.match(/key=(AIza[0-9A-Za-z_-]{35})/)[1]
     end
   end
-
 
   # Anthropic API keys in headers (X-API-Key)
   config.filter_sensitive_data("<ANTHROPIC_API_KEY>") do |interaction|

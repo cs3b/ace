@@ -12,9 +12,10 @@ module CodingAgentTools
         if self.class == BaseChatCompletionClient
           raise NotImplementedError, "BaseChatCompletionClient is abstract and cannot be instantiated directly"
         end
-        
+
         super
       end
+
       # Generate text content from a prompt
       # @param prompt [String] The prompt text
       # @param options [Hash] Generation options
@@ -68,7 +69,7 @@ module CodingAgentTools
           else
             provider_name.capitalize
           end
-          
+
           raise NotImplementedError, "Token counting not directly supported by #{provider_display_name} API"
         end
       end
@@ -181,7 +182,7 @@ module CodingAgentTools
       # @return [Hash] Complete request options
       def build_request_options(options)
         request_opts = {}
-        
+
         if needs_auth_headers?
           request_opts[:headers] = auth_headers
         end

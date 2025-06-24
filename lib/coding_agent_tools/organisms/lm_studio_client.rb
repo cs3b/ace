@@ -18,6 +18,12 @@ module CodingAgentTools
         stream: false
       }.freeze
 
+      # Explicit provider name declaration
+      # @return [String] The provider name for this client
+      def self.provider_name
+        "lmstudio"
+      end
+
       # Initialize LM Studio client
       # @param model [String] Model to use
       # @param options [Hash] Additional options
@@ -29,7 +35,7 @@ module CodingAgentTools
         options[:event_namespace] ||= :lm_studio_api
         options[:timeout] ||= 180  # LM Studio needs longer timeout
         options[:api_key_env] ||= "LM_STUDIO_API_KEY"
-        
+
         super(api_key: options[:api_key], model: model, **options)
       end
 
@@ -48,19 +54,18 @@ module CodingAgentTools
         unless server_available?
           raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
         end
-        
-        super(prompt, **options)
+
+        super
       end
 
-      # Override to add server availability check  
+      # Override to add server availability check
       def list_models
         unless server_available?
           raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
         end
-        
+
         super
       end
-
 
       protected
 

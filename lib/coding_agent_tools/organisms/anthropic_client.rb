@@ -23,6 +23,12 @@ module CodingAgentTools
         max_tokens: 4096
       }.freeze
 
+      # Explicit provider name declaration
+      # @return [String] The provider name for this client
+      def self.provider_name
+        "anthropic"
+      end
+
       # Initialize Anthropic client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use
@@ -34,10 +40,9 @@ module CodingAgentTools
         # Set Anthropic-specific defaults
         options[:event_namespace] ||= :anthropic_api
         options[:api_key_env] ||= DEFAULT_API_KEY_ENV
-        
-        super(api_key: api_key, model: model, **options)
-      end
 
+        super
+      end
 
       # Override list_models to handle Anthropic's pagination and fallback
       def list_models
