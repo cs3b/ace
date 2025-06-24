@@ -2,6 +2,8 @@
 
 Automated code review workflow using multiple LLM providers for comprehensive analysis.
 
+**When providing a commit hash as argument**: The commit is used as the starting point (exclusive) - the review will include all commits from AFTER that commit up to HEAD.
+
 ## Prerequisites
 
 - Ensure all changes are committed or stashed
@@ -71,10 +73,13 @@ git diff HEAD > input.diff
 git diff HEAD~3..HEAD > input.diff
 git diff main..feature-branch > input.diff
 
-# Option D: From commit hash
+# Option D: From commit hash (single commit)
 git show <commit-hash> > input.diff
 
-# Option E: Using stash (if you need to stash changes)
+# Option E: From commit hash to HEAD (exclusive of starting commit)
+git diff <commit-hash>..HEAD > input.diff
+
+# Option F: Using stash (if you need to stash changes)
 git stash push -m "Code review stash $(date +%Y%m%d-%H%M%S)"
 git stash show -p > input.diff
 ```
