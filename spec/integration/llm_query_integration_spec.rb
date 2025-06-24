@@ -488,6 +488,34 @@ RSpec.describe "llm-query integration", type: :integration do
     end
   end
 
+  describe "provider syntax variations" do
+    let(:google_api_key) { EnvHelper.google_api_key }
+
+    it "supports provider-only syntax using default models", :vcr do
+      cassette_name = "llm_query_integration/syntax/provider_only_default_model"
+      env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+
+      stdout, stderr, status = execute_gem_executable(exe_name,
+        ["google", "What is 2+2? Reply with just the number."], env: env)
+
+      expect(status).to be_success
+      expect(stdout).to match(/4/)
+      expect(stderr).to be_empty
+    end
+
+    it "supports full provider:model syntax", :vcr do
+      cassette_name = "llm_query_integration/syntax/provider_model_explicit"
+      env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+
+      stdout, stderr, status = execute_gem_executable(exe_name,
+        ["google:gemini-2.0-flash-lite", "What is 2+2? Reply with just the number."], env: env)
+
+      expect(status).to be_success
+      expect(stdout).to match(/4/)
+      expect(stderr).to be_empty
+    end
+  end
+
   describe "common functionality across providers" do
     let(:google_api_key) { EnvHelper.google_api_key }
 
@@ -663,6 +691,38 @@ RSpec.describe "llm-query integration", type: :integration do
       else
         # If API call fails due to rate limiting or temporary issues, check that the alias was recognized
         expect(stderr).to match(/Failed to query anthropic|API.*Error|unspecified error/i)
+        expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
+      end
+    end
+
+    it "supports additional aliases like gpro", :vcr do
+      cassette_name = "llm_query_integration/aliases/supports_gpro"
+      env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+
+      stdout, stderr, status = execute_gem_executable(exe_name,
+        ["gpro", "What is 2+2? Reply with just the number."], env: env)
+
+      expect(status).to be_success
+      expect(stdout).to match(/4/)
+      expect(stderr).to be_empty
+    end
+
+    it "supports additional aliases like o4mini", :vcr do
+      api_key = EnvHelper.openai_api_key
+      skip "OPENAI_API_KEY not available for testing" if api_key.nil? || api_key.empty?
+
+      cassette_name = "llm_query_integration/aliases/supports_o4mini"
+      env = vcr_subprocess_env(cassette_name, "OPENAI_API_KEY" => api_key)
+
+      stdout, stderr, status = execute_gem_executable(exe_name,
+        ["o4mini", "What is 2+2? Reply with just the number."], env: env)
+
+      if status.success?
+        expect(stdout).to match(/4/)
+        expect(stderr).to be_empty
+      else
+        # If API call fails due to rate limiting or temporary issues, check that the alias was recognized
+        expect(stderr).to match(/Failed to query openai|API.*Error/i)
         expect(stderr).not_to match(/Unknown provider|Invalid provider/i)
       end
     end
