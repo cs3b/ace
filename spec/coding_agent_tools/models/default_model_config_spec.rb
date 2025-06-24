@@ -10,10 +10,10 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
     it "includes all required providers" do
       expect(described_class::DEFAULT_MODELS).to include(
         "google" => "gemini-2.0-flash-lite",
-        "anthropic" => "claude-3-5-sonnet-20241022",
+        "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
-        "mistral" => "mistral-large-latest",
-        "together_ai" => "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
         "lmstudio" => "mistralai/devstral-small-2505"
       )
     end
@@ -51,7 +51,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
       it "uses DEFAULT_MODELS" do
         config = described_class.new
         expect(config.default_model_for("google")).to eq("gemini-2.0-flash-lite")
-        expect(config.default_model_for("anthropic")).to eq("claude-3-5-sonnet-20241022")
+        expect(config.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
       end
     end
 
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
         config = described_class.new(custom_config)
 
         expect(config.default_model_for("google")).to eq("custom-model")
-        expect(config.default_model_for("anthropic")).to eq("claude-3-5-sonnet-20241022")
+        expect(config.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
       end
 
       it "allows overriding all providers" do
@@ -134,29 +134,29 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
     context "with valid providers" do
       it "returns correct models for all providers" do
         expect(config.default_model_for("google")).to eq("gemini-2.0-flash-lite")
-        expect(config.default_model_for("anthropic")).to eq("claude-3-5-sonnet-20241022")
+        expect(config.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
         expect(config.default_model_for("openai")).to eq("gpt-4o-mini")
-        expect(config.default_model_for("mistral")).to eq("mistral-large-latest")
-        expect(config.default_model_for("together_ai")).to eq("meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo")
+        expect(config.default_model_for("mistral")).to eq("open-mistral-nemo")
+        expect(config.default_model_for("together_ai")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
         expect(config.default_model_for("lmstudio")).to eq("mistralai/devstral-small-2505")
       end
 
       it "handles case insensitive provider names" do
         expect(config.default_model_for("GOOGLE")).to eq("gemini-2.0-flash-lite")
         expect(config.default_model_for("Google")).to eq("gemini-2.0-flash-lite")
-        expect(config.default_model_for("ANTHROPIC")).to eq("claude-3-5-sonnet-20241022")
+        expect(config.default_model_for("ANTHROPIC")).to eq("claude-3-5-haiku-20241022")
       end
 
       it "handles whitespace in provider names" do
         expect(config.default_model_for(" google ")).to eq("gemini-2.0-flash-lite")
-        expect(config.default_model_for("\tanthropic\n")).to eq("claude-3-5-sonnet-20241022")
+        expect(config.default_model_for("\tanthropic\n")).to eq("claude-3-5-haiku-20241022")
       end
 
       it "handles provider aliases" do
         expect(config.default_model_for("lms")).to eq("mistralai/devstral-small-2505")
         expect(config.default_model_for("lm_studio")).to eq("mistralai/devstral-small-2505")
         expect(config.default_model_for("open_ai")).to eq("gpt-4o-mini")
-        expect(config.default_model_for("together")).to eq("meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo")
+        expect(config.default_model_for("together")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
       end
     end
 
@@ -256,10 +256,10 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
       models = config.all_models
       expect(models).to include(
         "google" => "gemini-2.0-flash-lite",
-        "anthropic" => "claude-3-5-sonnet-20241022",
+        "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
-        "mistral" => "mistral-large-latest",
-        "together_ai" => "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
         "lmstudio" => "mistralai/devstral-small-2505"
       )
     end
@@ -279,7 +279,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
       models = config_with_custom.all_models
 
       expect(models["google"]).to eq("custom-model")
-      expect(models["anthropic"]).to eq("claude-3-5-sonnet-20241022")
+      expect(models["anthropic"]).to eq("claude-3-5-haiku-20241022")
     end
   end
 
@@ -385,7 +385,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
     it "has all default models configured" do
       default_config = described_class.default
       expect(default_config.default_model_for("google")).to eq("gemini-2.0-flash-lite")
-      expect(default_config.default_model_for("anthropic")).to eq("claude-3-5-sonnet-20241022")
+      expect(default_config.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
     end
   end
 
@@ -397,7 +397,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
       expect(config.default_model_for("lms")).to eq("mistralai/devstral-small-2505")
       expect(config.default_model_for("lm_studio")).to eq("mistralai/devstral-small-2505")
       expect(config.default_model_for("open_ai")).to eq("gpt-4o-mini")
-      expect(config.default_model_for("together")).to eq("meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo")
+      expect(config.default_model_for("together")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
     end
   end
 

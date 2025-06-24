@@ -9,7 +9,7 @@ module CodingAgentTools
     # @example Basic usage
     #   config = DefaultModelConfig.new
     #   config.default_model_for("google") # => "gemini-2.0-flash-lite"
-    #   config.default_model_for("anthropic") # => "claude-3-5-sonnet-20241022"
+    #   config.default_model_for("anthropic") # => "claude-3-5-haiku-20241022"
     #
     # @example With custom configuration
     #   custom_config = { "google" => "gemini-pro" }
@@ -19,10 +19,10 @@ module CodingAgentTools
       # Default model mappings for all supported providers
       DEFAULT_MODELS = {
         "google" => "gemini-2.0-flash-lite",
-        "anthropic" => "claude-3-5-sonnet-20241022",
+        "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
-        "mistral" => "mistral-large-latest",
-        "together_ai" => "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
         "lmstudio" => "mistralai/devstral-small-2505"
       }.freeze
 

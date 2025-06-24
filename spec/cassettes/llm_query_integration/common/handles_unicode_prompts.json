@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"What does 'Hëllö Wörld' mean?\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 15:33:37 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=2147"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"\\\"Hëllö Wörld\\\" is a playful misspelling of the classic programming phrase \\\"Hello World.\\\"\\n\\nHere's a breakdown:\\n\\n*   **Hello World:** This is a simple program that prints the text \\\"Hello, World!\\\" (or a similar greeting) to the screen. It's a traditional way for beginners to learn a new programming language.\\n*   **Hëllö Wörld:** This is the same concept, but with intentional misspellings to add a bit of humor or make it stand out. The umlauts (the two dots above the \\\"e\\\" and \\\"o\\\") are often used to suggest a certain style or aesthetic.\\n\\nSo, \\\"Hëllö Wörld\\\" is essentially a fun, stylized version of the \\\"Hello World\\\" greeting. It's likely used in contexts like:\\n\\n*   **Programming examples:** To demonstrate basic code functionality in a playful way.\\n*   **Design or art:** As a visual element, perhaps in a logo, graphic, or website heading.\\n*   **Humor:** To inject a bit of fun into a message or design.\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.5359176832207283\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 12,\n    \"candidatesTokenCount\": 233,\n    \"totalTokenCount\": 245,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 12\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 233\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"T8VaaNGZNpTehMIPyoOx2As\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:33:37 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

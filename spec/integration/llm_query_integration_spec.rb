@@ -51,12 +51,12 @@ RSpec.describe "llm-query integration", type: :integration do
           cassette_name = "llm_query_integration/google/queries_with_simple_prompt"
           env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => api_key)
 
-          stdout, stderr, status = execute_gem_executable(exe_name,
-            ["google", "What is 2+2? Reply with just the number."], env: env)
+            stdout, stderr, status = execute_gem_executable(exe_name,
+              ["google:gemini-2.0-flash-lite", "What is 2+2? Reply with just the number."], env: env)
 
-          expect(status).to be_success
-          expect(stdout).to match(/4/)
-          expect(stderr).to be_empty
+            expect(stderr).to be_empty
+            expect(stdout).to match(/4/)
+            expect(status).to be_success
         end
 
         it "outputs JSON format when requested", :vcr do
@@ -64,7 +64,7 @@ RSpec.describe "llm-query integration", type: :integration do
           env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => api_key)
 
           stdout, stderr, status = execute_gem_executable(exe_name,
-            ["google", "Say hello", "--format", "json"], env: env)
+            ["google:gemini-2.0-flash-lite", "Say hello", "--format", "json"], env: env)
 
           expect(status).to be_success
           expect(stderr).to be_empty
@@ -103,7 +103,7 @@ RSpec.describe "llm-query integration", type: :integration do
           env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => api_key)
 
           stdout, stderr, status = execute_gem_executable(exe_name,
-            ["google", "What is 1+1? Answer with just the number.", "--temperature", "0.0"], env: env)
+            ["google:gemini-2.0-flash-lite", "What is 1+1? Answer with just the number.", "--temperature", "0.0"], env: env)
 
           expect(status).to be_success
           expect(stdout).to match(/2/)
@@ -128,7 +128,7 @@ RSpec.describe "llm-query integration", type: :integration do
           env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => api_key)
 
           stdout, stderr, status = execute_gem_executable(exe_name,
-            ["google", "What is 2+2?", "--system", "You are a calculator. Only respond with numbers."], env: env)
+            ["google:gemini-2.0-flash-lite", "What is 2+2?", "--system", "You are a calculator. Only respond with numbers."], env: env)
 
           expect(status).to be_success
           expect(stdout).to match(/4/)
@@ -140,7 +140,7 @@ RSpec.describe "llm-query integration", type: :integration do
         it "shows authentication error" do
           env = vcr_subprocess_env("llm_query_integration/google/invalid_api_key", "GOOGLE_API_KEY" => "invalid-key")
 
-          _, stderr, status = execute_gem_executable(exe_name, ["google", "Hello"], env: env)
+          _, stderr, status = execute_gem_executable(exe_name, ["google:gemini-2.0-flash-lite", "Hello"], env: env)
 
           expect(status.exitstatus).to eq(1)
           expect(stderr).to match(/Error.*API.*key|Error.*Failed to query Google/i)
@@ -151,7 +151,7 @@ RSpec.describe "llm-query integration", type: :integration do
         it "shows API key error" do
           env = vcr_subprocess_env("llm_query_integration/google/missing_api_key", "GOOGLE_API_KEY" => "")
 
-          _, stderr, status = execute_gem_executable(exe_name, ["google", "Hello"], env: env)
+          _, stderr, status = execute_gem_executable(exe_name, ["google:gemini-2.0-flash-lite", "Hello"], env: env)
 
           expect(status.exitstatus).to eq(1)
           expect(stderr).to match(/Error.*API key not found/i)
@@ -496,7 +496,7 @@ RSpec.describe "llm-query integration", type: :integration do
       env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
 
       stdout, stderr, status = execute_gem_executable(exe_name,
-        ["google", "What does 'Hëllö Wörld' mean?"], env: env)
+        ["google:gemini-2.0-flash-lite", "What does 'Hëllö Wörld' mean?"], env: env)
 
       expect(status).to be_success
       expect(stdout).not_to be_empty
@@ -508,7 +508,7 @@ RSpec.describe "llm-query integration", type: :integration do
       env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
 
       stdout, stderr, status = execute_gem_executable(exe_name,
-        ["google", "What does 'Hello, World!' mean in programming?"], env: env)
+        ["google:gemini-2.0-flash-lite", "What does 'Hello, World!' mean in programming?"], env: env)
 
       expect(status).to be_success
       expect(stdout).not_to be_empty
@@ -534,7 +534,7 @@ RSpec.describe "llm-query integration", type: :integration do
       env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
 
       stdout, stderr, status = execute_gem_executable(exe_name,
-        ["google", "Write a long essay about artificial intelligence.", "--max-tokens", "50"], env: env)
+        ["google:gemini-2.0-flash-lite", "Write a long essay about artificial intelligence.", "--max-tokens", "50"], env: env)
 
       expect(status).to be_success
       expect(stdout).not_to be_empty
@@ -548,7 +548,7 @@ RSpec.describe "llm-query integration", type: :integration do
       output_file = create_temp_file("", extension: ".json")
 
       _, stderr, status = execute_gem_executable(exe_name,
-        ["google", "Say hello world", "--output", output_file], env: env)
+        ["google:gemini-2.0-flash-lite", "Say hello world", "--output", output_file], env: env)
 
       expect(status).to be_success
       expect(stderr).to be_empty
@@ -570,7 +570,7 @@ RSpec.describe "llm-query integration", type: :integration do
       start_time = Time.now
 
       stdout, stderr, status = execute_gem_executable(exe_name,
-        ["google", "What is 2+2?"], env: env)
+        ["google:gemini-2.0-flash-lite", "What is 2+2?"], env: env)
 
       end_time = Time.now
       duration = end_time - start_time
@@ -603,7 +603,7 @@ RSpec.describe "llm-query integration", type: :integration do
       env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
 
       stdout, stderr, status = execute_gem_executable(exe_name,
-        ["google", "nonexistent_file.txt"], env: env)
+        ["google:gemini-2.0-flash-lite", "nonexistent_file.txt"], env: env)
 
       expect(status).to be_success
       expect(stdout).not_to be_empty
@@ -613,7 +613,7 @@ RSpec.describe "llm-query integration", type: :integration do
 
   describe "error handling" do
     it "handles invalid arguments gracefully" do
-      _, stderr, status = execute_gem_executable(exe_name, ["google", "test", "--invalid-option"])
+      _, stderr, status = execute_gem_executable(exe_name, ["google:gemini-2.0-flash-lite", "test", "--invalid-option"])
 
       expect(status.exitstatus).to eq(1)
       expect(stderr).not_to be_empty

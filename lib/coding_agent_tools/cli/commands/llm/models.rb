@@ -3,6 +3,7 @@
 require "dry/cli"
 require "yaml"
 require "fileutils"
+require_relative "../../../models/default_model_config"
 
 module CodingAgentTools
   module Cli
@@ -99,6 +100,11 @@ module CodingAgentTools
 
           private
 
+          # Get the default model configuration
+          def default_config
+            @default_config ||= CodingAgentTools::Models::DefaultModelConfig.default
+          end
+
           # Check if provider is valid
           def valid_provider?(provider)
             %w[google lmstudio openai anthropic mistral together_ai].include?(provider)
@@ -147,7 +153,7 @@ module CodingAgentTools
             end
 
             # Convert API response to our model structure
-            default_model_id = Organisms::GoogleClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("google")
             generate_models.map do |model|
               model_id = model[:name].sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
               CodingAgentTools::Models::LlmModelInfo.new(
@@ -164,7 +170,7 @@ module CodingAgentTools
             client = Organisms::LMStudioClient.new
             models_response = client.list_models
 
-            default_model_id = Organisms::LMStudioClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("lmstudio")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
@@ -187,7 +193,7 @@ module CodingAgentTools
               model[:id].include?("gpt") || model[:id].include?("o1")
             end
 
-            default_model_id = Organisms::OpenAIClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("openai")
             # Convert API response to our model structure
             chat_models.map do |model|
               model_id = model[:id]
@@ -205,7 +211,7 @@ module CodingAgentTools
             client = Organisms::AnthropicClient.new
             models_response = client.list_models
 
-            default_model_id = Organisms::AnthropicClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("anthropic")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
@@ -223,7 +229,7 @@ module CodingAgentTools
             client = Organisms::MistralClient.new
             models_response = client.list_models
 
-            default_model_id = Organisms::MistralClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("mistral")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
@@ -241,7 +247,7 @@ module CodingAgentTools
             client = Organisms::TogetherAIClient.new
             models_response = client.list_models
 
-            default_model_id = Organisms::TogetherAIClient::DEFAULT_MODEL
+            default_model_id = default_config.default_model_for("together_ai")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id] || model[:name]
@@ -365,7 +371,7 @@ module CodingAgentTools
 
             case provider
             when "google"
-              default_model_id = Organisms::GoogleClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("google")
               google_config = config["google"]
 
               google_config["models"].map do |model_data|
@@ -377,7 +383,7 @@ module CodingAgentTools
                 )
               end
             when "lmstudio"
-              default_model_id = Organisms::LMStudioClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("lmstudio")
               lms_config = config["lm_studio"]
 
               lms_config["models"].map do |model_data|
@@ -389,7 +395,7 @@ module CodingAgentTools
                 )
               end
             when "openai"
-              default_model_id = Organisms::OpenAIClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("openai")
               openai_config = config["openai"]
 
               openai_config["models"].map do |model_data|
@@ -401,7 +407,7 @@ module CodingAgentTools
                 )
               end
             when "anthropic"
-              default_model_id = Organisms::AnthropicClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("anthropic")
               anthropic_config = config["anthropic"]
 
               anthropic_config["models"].map do |model_data|
@@ -413,7 +419,7 @@ module CodingAgentTools
                 )
               end
             when "mistral"
-              default_model_id = Organisms::MistralClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("mistral")
               mistral_config = config["mistral"]
 
               mistral_config["models"].map do |model_data|
@@ -425,7 +431,7 @@ module CodingAgentTools
                 )
               end
             when "together_ai"
-              default_model_id = Organisms::TogetherAIClient::DEFAULT_MODEL
+              default_model_id = default_config.default_model_for("together_ai")
               together_ai_config = config["together_ai"]
 
               together_ai_config["models"].map do |model_data|
@@ -587,19 +593,19 @@ module CodingAgentTools
 
             case provider
             when "google"
-              output[:default_model] = default_model&.id || Organisms::GoogleClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("google")
             when "lmstudio"
               usage_config = config["usage_instructions"]["lm_studio"]
-              output[:default_model] = default_model&.id || Organisms::LMStudioClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("lmstudio")
               output[:server_url] = usage_config["server_url"]
             when "openai"
-              output[:default_model] = default_model&.id || Organisms::OpenAIClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("openai")
             when "anthropic"
-              output[:default_model] = default_model&.id || Organisms::AnthropicClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("anthropic")
             when "mistral"
-              output[:default_model] = default_model&.id || Organisms::MistralClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("mistral")
             when "together_ai"
-              output[:default_model] = default_model&.id || Organisms::TogetherAIClient::DEFAULT_MODEL
+              output[:default_model] = default_model&.id || default_config.default_model_for("together_ai")
             end
 
             puts JSON.pretty_generate(output)

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.47
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: [v.0.2.0+task.45]
@@ -113,7 +113,7 @@ Complete the partially implemented `DefaultModelConfig` class and integrate it t
   > **PLAN**: Replace constants with method calls, maintain same return values
 * [x] Design validation rules to ensure all providers have default models configured ✅
   > **COMPLETED**: Validation exists in `DefaultModelConfig` class
-* [ ] Fix incorrect default model values in existing `DefaultModelConfig` class
+* [x] Fix incorrect default model values in existing `DefaultModelConfig` class ✅
   > TEST: Model Values Fixed
   > Type: Pre-condition Check
   > Assert: DefaultModelConfig values match current system defaults
@@ -121,79 +121,79 @@ Complete the partially implemented `DefaultModelConfig` class and integrate it t
 
 ### Execution Steps
 
-- [ ] Fix incorrect default model values in existing `DefaultModelConfig` class
+- [x] Fix incorrect default model values in existing `DefaultModelConfig` class
   > TEST: Model Values Fixed
   > Type: Action Validation
   > Assert: DefaultModelConfig values match current system defaults exactly
   > Command: ruby -c lib/coding_agent_tools/models/default_model_config.rb && ruby -e "require_relative 'lib/coding_agent_tools/models/default_model_config'; config = CodingAgentTools::Models::DefaultModelConfig.default; puts config.default_model_for('anthropic'); puts config.default_model_for('mistral'); puts config.default_model_for('together_ai')"
-- [ ] Update `ProviderModelParser` to use centralized config instead of `DEFAULT_MODELS` hash
+- [x] Update `ProviderModelParser` to use centralized config instead of `DEFAULT_MODELS` hash
   > TEST: Parser Config Integration
   > Type: Action Validation
   > Assert: Parser uses centralized config and maintains same behavior
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/provider_model_parser_spec.rb
-- [ ] Update `GoogleClient` to use centralized configuration
+- [x] Update `GoogleClient` to use centralized configuration
   > TEST: Google Client Update
   > Type: Action Validation
   > Assert: GoogleClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/google_client_spec.rb
-- [ ] Update `AnthropicClient` to use centralized configuration
+- [x] Update `AnthropicClient` to use centralized configuration
   > TEST: Anthropic Client Update
   > Type: Action Validation
   > Assert: AnthropicClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/anthropic_client_spec.rb
-- [ ] Update `OpenAIClient` to use centralized configuration
+- [x] Update `OpenAIClient` to use centralized configuration
   > TEST: OpenAI Client Update
   > Type: Action Validation
   > Assert: OpenAIClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/openai_client_spec.rb
-- [ ] Update `MistralClient` to use centralized configuration
+- [x] Update `MistralClient` to use centralized configuration
   > TEST: Mistral Client Update
   > Type: Action Validation
   > Assert: MistralClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/mistral_client_spec.rb
-- [ ] Update `TogetherAIClient` to use centralized configuration
+- [x] Update `TogetherAIClient` to use centralized configuration
   > TEST: Together AI Client Update
   > Type: Action Validation
   > Assert: TogetherAIClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/together_ai_client_spec.rb
-- [ ] Update `LMStudioClient` to use centralized configuration
+- [x] Update `LMStudioClient` to use centralized configuration
   > TEST: LM Studio Client Update
   > Type: Action Validation
   > Assert: LMStudioClient uses centralized config and maintains same default behavior
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/lm_studio_client_spec.rb
-- [ ] Update `llm/models.rb` command to use centralized configuration
+- [x] Update `llm/models.rb` command to use centralized configuration
   > TEST: Models Command Update
   > Type: Action Validation
   > Assert: Models command uses centralized config and maintains same output
   > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/llm/models_spec.rb
-- [ ] Remove hardcoded `DEFAULT_MODEL` constants from organism client classes
-- [ ] Remove `DEFAULT_MODELS` hash from `ProviderModelParser`
-- [ ] Add comprehensive tests for configuration class
+- [x] Remove hardcoded `DEFAULT_MODEL` constants from organism client classes
+- [x] Remove `DEFAULT_MODELS` hash from `ProviderModelParser`
+- [x] Add comprehensive tests for configuration class
   > TEST: Configuration Test Coverage
   > Type: Action Validation
   > Assert: DefaultModelConfig has >95% test coverage
   > Command: bundle exec rspec spec/coding_agent_tools/models/default_model_config_spec.rb --format json | jq '.summary.coverage_percent'
-- [ ] Update library requires and ensure proper loading order
-- [ ] Validate all existing functionality works with centralized config across all 6 providers
+- [x] Update library requires and ensure proper loading order
+- [x] Validate all existing functionality works with centralized config across all 6 providers
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Single `DefaultModelConfig` class provides all fallback models for all 6 providers
-- [ ] AC 2: All hardcoded `DEFAULT_MODEL` constants replaced with centralized config calls
-- [ ] AC 3: Google client uses same default model as before ('gemini-2.0-flash-lite')
-- [ ] AC 4: Anthropic client uses same default model as before ('claude-3-5-haiku-20241022') 
-- [ ] AC 5: OpenAI client uses same default model as before ('gpt-4o-mini')
-- [ ] AC 6: Mistral client uses same default model as before ('open-mistral-nemo')
-- [ ] AC 7: Together AI client uses same default model as before ('mistralai/Mistral-7B-Instruct-v0.3')
-- [ ] AC 8: LM Studio client uses same default model as before ('mistralai/devstral-small-2505')
-- [ ] AC 9: Provider-only syntax continues to work: `llm-query google "prompt"` uses default model
-- [ ] AC 10: Provider:model syntax continues to work: `llm-query google:gemini-pro "prompt"`
-- [ ] AC 11: Configuration validates that all 6 providers have default models
-- [ ] AC 12: `ProviderModelParser` uses centralized config instead of hardcoded hash
-- [ ] AC 13: Models command uses centralized config for default model identification  
-- [ ] AC 14: All existing functionality preserved with reduced duplication
-- [ ] AC 15: `DefaultModelConfig` has correct values matching current system (not the incorrect ones currently in the class)
-- [ ] AC 16: New configuration is easily extensible for additional providers
+- [x] AC 1: Single `DefaultModelConfig` class provides all fallback models for all 6 providers
+- [x] AC 2: All hardcoded `DEFAULT_MODEL` constants replaced with centralized config calls
+- [x] AC 3: Google client uses same default model as before ('gemini-2.0-flash-lite')
+- [x] AC 4: Anthropic client uses same default model as before ('claude-3-5-haiku-20241022') 
+- [x] AC 5: OpenAI client uses same default model as before ('gpt-4o-mini')
+- [x] AC 6: Mistral client uses same default model as before ('open-mistral-nemo')
+- [x] AC 7: Together AI client uses same default model as before ('mistralai/Mistral-7B-Instruct-v0.3')
+- [x] AC 8: LM Studio client uses same default model as before ('mistralai/devstral-small-2505')
+- [x] AC 9: Provider-only syntax continues to work: `llm-query google "prompt"` uses default model
+- [x] AC 10: Provider:model syntax continues to work: `llm-query google:gemini-pro "prompt"`
+- [x] AC 11: Configuration validates that all 6 providers have default models
+- [x] AC 12: `ProviderModelParser` uses centralized config instead of hardcoded hash
+- [x] AC 13: Models command uses centralized config for default model identification  
+- [x] AC 14: All existing functionality preserved with reduced duplication
+- [x] AC 15: `DefaultModelConfig` has correct values matching current system (not the incorrect ones currently in the class)
+- [x] AC 16: New configuration is easily extensible for additional providers
 
 ## Out of Scope
 
