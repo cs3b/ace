@@ -35,8 +35,8 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 
 ## ✨ Key Features
 
-- **LLM Integration**: Query Google Gemini and local LM Studio models
-  - **Google Gemini LLM Integration**: Direct integration with Google's Gemini API via `exe/llm-gemini-query`
+- **LLM Integration**: Query multiple LLM providers using unified syntax
+  - **Unified LLM Query**: Direct integration with multiple providers via `exe/llm-query provider:model`
 - **Model Discovery**: List and filter available models from different providers
   - **Unified Model Discovery**: Discover available models via `exe/llm-models <provider>`
   - **Caching Support**: Model information is cached for faster response times
@@ -84,18 +84,17 @@ coding_agent_tools project release_context
 
 ### New Standalone Commands
 
-- **`exe/llm-gemini-query`**: Directly query the Google Gemini API
-  - Usage: `exe/llm-gemini-query "prompt or file path" [--output FILE] [--format json|markdown|text] [--model MODEL_NAME] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--debug]`
+- **`exe/llm-query`**: Query any supported LLM provider using unified syntax
+  - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--debug]`
   - Examples: 
-    - `exe/llm-gemini-query "What is Ruby?"`
-    - `exe/llm-gemini-query prompt.txt --output response.json`
-    - `exe/llm-gemini-query "Question" --system system.md --output result.md`
-  - Requires: `GEMINI_API_KEY` environment variable
-
-- **`exe/llm-lmstudio-query`**: Query a local LM Studio model
-  - Usage: `exe/llm-lmstudio-query "Your prompt" [--model MODEL_ID]`
-  - Example: `exe/llm-lmstudio-query "Explain SOLID principles"`
-  - Requires: LM Studio running on localhost:1234
+    - `exe/llm-query google:gemini-2.5-flash "What is Ruby?"`
+    - `exe/llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output response.json`
+    - `exe/llm-query openai:gpt-4o "Question" --system system.md --output result.md`
+    - `exe/llm-query lmstudio "Explain SOLID principles"`
+    - `exe/llm-query gflash "Quick question"` (using alias for google:gemini-2.5-flash)
+  - Supports: Google Gemini, Anthropic Claude, OpenAI GPT, Mistral, Together AI, LM Studio
+  - Provider aliases: `gflash`, `csonet`, `o4mini` and more
+  - Requires: API keys for respective providers (see Setup Guide)
 
 - **`exe/llm-models`**: List available AI models from various providers
   - Usage: `exe/llm-models [PROVIDER] [--filter FILTER] [--format json] [--refresh]`

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../models/default_model_config"
+require_relative "client_factory"
 
 module CodingAgentTools
   module Molecules
@@ -47,6 +48,44 @@ module CodingAgentTools
         @default_config ||= CodingAgentTools::Models::DefaultModelConfig.default
       end
 
+      # Ensure all client classes for supported providers are loaded
+      # This triggers Zeitwerk autoloading and client registration
+      def ensure_providers_loaded
+        return if @providers_loaded
+
+        # Map of provider names to their client class names
+        provider_client_classes = {
+          "google" => "GoogleClient",
+          "anthropic" => "AnthropicClient",
+          "openai" => "OpenAIClient",
+          "mistral" => "MistralClient",
+          "together_ai" => "TogetherAIClient",
+          "lmstudio" => "LMStudioClient"
+        }
+
+        # Load each client class to trigger auto-registration
+        provider_client_classes.each do |provider_name, class_name|
+          next unless SUPPORTED_PROVIDERS.include?(provider_name)
+
+          begin
+            # Access the class to trigger Zeitwerk autoloading
+            client_class = CodingAgentTools::Organisms.const_get(class_name)
+
+            # Force registration with ClientFactory (fallback if inherited hook didn't work)
+            if client_class.respond_to?(:provider_name)
+              provider_key = client_class.provider_name
+              if provider_key && provider_key == provider_name
+                Molecules::ClientFactory.register(provider_key, client_class)
+              end
+            end
+          rescue NameError
+            # Class doesn't exist - skip it
+          end
+        end
+
+        @providers_loaded = true
+      end
+
       # Result object for parsed provider:model combinations
       ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
         def valid?
@@ -68,6 +107,9 @@ module CodingAgentTools
       # @return [ParseResult] The parsed result with provider, model, and validation info
       def parse(input)
         return create_error_result(input, "Input cannot be nil or empty") if input.nil? || input.strip.empty?
+
+        # Ensure all provider client classes are loaded for registration
+        ensure_providers_loaded
 
         original_input = input
 

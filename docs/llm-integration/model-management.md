@@ -15,8 +15,7 @@ This comprehensive guide covers the model discovery and management features in C
    - [Text Output (Default)](#text-output-default)
    - [JSON Output](#json-output)
 6. [Integration with Query Commands](#integration-with-query-commands)
-   - [Using Models with Gemini Queries](#using-models-with-gemini-queries)
-   - [Using Models with LM Studio Queries](#using-models-with-lm-studio-queries)
+   - [Using Models with LLM Queries](#using-models-with-llm-queries)
 7. [Advanced Usage](#advanced-usage)
    - [Scripting and Automation](#scripting-and-automation)
    - [Model Information Parsing](#model-information-parsing)
@@ -92,7 +91,7 @@ ID: gemini-1.5-pro
 Name: Gemini 1.5 Pro
 Description: Mid-size multimodal model that supports up to 2 million tokens
 
-Usage: llm-gemini-query "your prompt" --model MODEL_ID
+Usage: llm-query google:MODEL_ID "your prompt"
 ```
 
 ### Listing LM Studio Models
@@ -119,7 +118,7 @@ ID: deepseek/deepseek-r1-0528-qwen3-8b
 Name: Deepseek R1 0528 Qwen3 8b
 Description: LM Studio model
 
-Usage: llm-lmstudio-query "your prompt" --model MODEL_ID
+Usage: llm-query lmstudio:MODEL_ID "your prompt"
 
 Server: Ensure LM Studio is running at http://localhost:1234
 ```
@@ -223,36 +222,28 @@ llm-models lmstudio --format json
 
 ## Integration with Query Commands
 
-The primary purpose of model management commands is to help you select appropriate models for use with query commands. Both services provide query commands that accept a `--model` parameter.
+The primary purpose of model management commands is to help you select appropriate models for use with the unified `llm-query` command using the `provider:model` syntax.
 
-### Using Models with Gemini Queries
+### Using Models with LLM Queries
 
-After discovering available models, use them with the `llm-gemini-query` command:
-
-```bash
-# Use default model
-llm-gemini-query "Explain quantum computing"
-
-# Use specific model
-llm-gemini-query "Write a poem" --model gemini-1.5-pro
-
-# Use latest Flash model for speed
-llm-gemini-query "Quick question" --model gemini-1.5-flash
-```
-
-### Using Models with LM Studio Queries
-
-Similarly, use discovered models with the `llm-lmstudio-query` command:
+After discovering available models, use them with the unified `llm-query` command:
 
 ```bash
-# Use default model
-llm-lmstudio-query "Help me debug this code"
+# Use Google models with provider:model syntax
+llm-query google:gemini-2.5-flash "Explain quantum computing"
+llm-query google:gemini-1.5-pro "Write a poem"
+llm-query google:gemini-1.5-flash "Quick question"
 
-# Use specific model for coding tasks
-llm-lmstudio-query "Optimize this function" --model mistralai/devstral-small-2505
+# Use LM Studio models with provider:model syntax
+llm-query lmstudio:mistralai/devstral-small-2505 "Optimize this function"
+llm-query lmstudio:deepseek/deepseek-r1-0528-qwen3-8b "Solve this logic puzzle"
 
-# Use reasoning model for complex problems
-llm-lmstudio-query "Solve this logic puzzle" --model deepseek/deepseek-r1-0528-qwen3-8b
+# Use provider without specific model for default
+llm-query google "Help me debug this code"
+llm-query lmstudio "Explain SOLID principles"
+
+# Use aliases for common models
+llm-query gflash "Quick question"  # alias for google:gemini-2.5-flash
 ```
 
 ## Advanced Usage
@@ -298,7 +289,7 @@ MODELS=$(llm-models google --format json)
 FAST_MODEL=$(echo "$MODELS" | jq -r '.models[] | select(.id | contains("flash")) | .id' | head -1)
 
 # Use selected model for query
-llm-gemini-query "Quick summary of the news" --model "$FAST_MODEL"
+llm-query google:"$FAST_MODEL" "Quick summary of the news"
 ```
 
 ## Troubleshooting
@@ -365,7 +356,7 @@ If the command returns no models:
 llm-models google --debug
 
 # Check API key permissions
-llm-gemini-query "test" --debug
+llm-query google:gemini-2.5-flash "test" --debug
 ```
 
 #### No LM Studio Models Found
@@ -419,13 +410,12 @@ For complete setup and usage information, refer to these related guides:
 
 - **[Project Overview](README.md)**: Main project documentation and quick start guide
 - **[Setup Guide](docs/SETUP.md)**: Initial configuration and API key setup
-- **[Gemini Query Guide](docs/llm-integration/gemini-query-guide.md)**: Detailed information about using Gemini models
+- **[Google Query Guide](docs/llm-integration/google-query-guide.md)**: Detailed information about using Google models
 - **[Development Guide](docs/DEVELOPMENT.md)**: Development environment setup and testing
 
 ### Related Commands
 
-- **`llm-gemini-query`**: Execute queries using Google Gemini models
-- **`llm-lmstudio-query`**: Execute queries using LM Studio models
+- **`llm-query`**: Execute queries using any supported LLM provider with unified syntax
 
 ---
 

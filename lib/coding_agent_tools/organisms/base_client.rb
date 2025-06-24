@@ -3,6 +3,7 @@
 require_relative "../molecules/api_credentials"
 require_relative "../molecules/http_request_builder"
 require_relative "../molecules/api_response_parser"
+require_relative "../molecules/client_factory"
 require_relative "../models/default_model_config"
 
 module CodingAgentTools
@@ -11,6 +12,35 @@ module CodingAgentTools
     # This is the foundation class that handles initialization, configuration, and common utilities
     class BaseClient
       attr_reader :model, :base_url, :generation_config
+
+      # Auto-register subclasses with the ClientFactory
+      def self.inherited(subclass)
+        super
+        # Register with ClientFactory if it's available
+        # If not, the ensure_clients_loaded fallback will handle it
+        provider_key = subclass.provider_key
+        if provider_key
+          begin
+            Molecules::ClientFactory.register(provider_key, subclass)
+          rescue NameError
+            # ClientFactory not loaded yet - that's ok, ensure_clients_loaded will handle it
+          end
+        end
+      end
+
+      # Get the provider key for factory registration
+      # Uses the provider_name method, but returns nil for abstract base classes
+      # @return [String, nil] Provider key for registration, nil to skip registration
+      def self.provider_key
+        return nil if self == BaseClient # Don't register the base class
+        return nil if name&.include?("BaseChatCompletionClient") # Don't register abstract base classes
+
+        begin
+          provider_name
+        rescue NotImplementedError
+          nil # Don't register classes that don't implement provider_name
+        end
+      end
 
       # Initialize base client with common configuration
       # @param api_key [String, nil] API key (uses env/config if nil)
@@ -26,7 +56,7 @@ module CodingAgentTools
         if self.class == BaseClient
           raise NotImplementedError, "BaseClient is abstract and cannot be instantiated directly"
         end
-        
+
         @model = model || default_model
         @base_url = options.fetch(:base_url, self.class::API_BASE_URL)
         @generation_config = self.class::DEFAULT_GENERATION_CONFIG.merge(
@@ -39,22 +69,17 @@ module CodingAgentTools
         setup_response_parser
       end
 
-      # Get the provider name for this client
+      # Get the provider name for this client instance
       # @return [String] Provider name (e.g., "google", "anthropic")
       def provider_name
-        # Extract provider name from class name
-        # GoogleClient -> google, AnthropicClient -> anthropic, etc.
-        class_name = self.class.name.split("::").last.gsub(/Client$/, "")
-        
-        # Handle special cases for compound names
-        case class_name
-        when "TogetherAI"
-          "together_ai"
-        when "LMStudio"
-          "lmstudio"
-        else
-          class_name.downcase
-        end
+        self.class.provider_name
+      end
+
+      # Get the provider name for this client class (class method)
+      # Subclasses should override this method to declare their provider name explicitly
+      # @return [String] Provider name (e.g., "google", "anthropic")
+      def self.provider_name
+        raise NotImplementedError, "#{name} must implement .provider_name"
       end
 
       protected
@@ -114,7 +139,7 @@ module CodingAgentTools
       # Get the default event namespace for monitoring
       # @return [Symbol] Event namespace
       def default_event_namespace
-        "#{provider_name}_api".to_sym
+        :"#{provider_name}_api"
       end
 
       # Make a POST request with JSON payload
@@ -198,7 +223,7 @@ module CodingAgentTools
         else
           provider_name.capitalize
         end
-        
+
         "#{provider_display_name} API Error (#{http_status}): #{content}"
       end
     end

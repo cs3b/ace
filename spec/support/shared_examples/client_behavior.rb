@@ -29,7 +29,7 @@ RSpec.shared_examples "a base client" do
     end
 
     it "merges generation config with defaults" do
-      custom_config = { temperature: 0.5 }
+      custom_config = {temperature: 0.5}
       client = described_class.new(generation_config: custom_config)
       expect(client.generation_config[:temperature]).to eq(0.5)
     end
@@ -59,7 +59,7 @@ RSpec.shared_examples "a base client" do
     end
 
     it "handles missing error details gracefully" do
-      minimal_error = { success: false, error: {} }
+      minimal_error = {success: false, error: {}}
       expect {
         subject.send(:handle_error, minimal_error)
       }.to raise_error(CodingAgentTools::Error, /API Error.*An unspecified error occurred/)
@@ -122,8 +122,12 @@ RSpec.shared_examples "a chat completion client" do
         allow(subject).to receive(:build_generation_payload).and_return({})
         allow(subject).to receive(:build_generation_url).and_return("http://test.example")
         allow(subject).to receive(:post_json_request).and_raise("Mock - don't actually call")
-        
-        subject.generate_text("test", system_instruction: "You are a helpful assistant") rescue nil
+
+        begin
+          subject.generate_text("test", system_instruction: "You are a helpful assistant")
+        rescue
+          nil
+        end
       }.not_to raise_error(ArgumentError)
     end
   end

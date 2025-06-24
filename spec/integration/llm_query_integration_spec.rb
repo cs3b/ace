@@ -51,12 +51,12 @@ RSpec.describe "llm-query integration", type: :integration do
           cassette_name = "llm_query_integration/google/queries_with_simple_prompt"
           env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => api_key)
 
-            stdout, stderr, status = execute_gem_executable(exe_name,
-              ["google:gemini-2.0-flash-lite", "What is 2+2? Reply with just the number."], env: env)
+          stdout, stderr, status = execute_gem_executable(exe_name,
+            ["google:gemini-2.0-flash-lite", "What is 2+2? Reply with just the number."], env: env)
 
-            expect(stderr).to be_empty
-            expect(stdout).to match(/4/)
-            expect(status).to be_success
+          expect(stderr).to be_empty
+          expect(stdout).to match(/4/)
+          expect(status).to be_success
         end
 
         it "outputs JSON format when requested", :vcr do

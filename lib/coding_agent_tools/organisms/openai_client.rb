@@ -20,6 +20,12 @@ module CodingAgentTools
         max_tokens: 4096
       }.freeze
 
+      # Explicit provider name declaration
+      # @return [String] The provider name for this client
+      def self.provider_name
+        "openai"
+      end
+
       # Initialize OpenAI client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use
@@ -31,11 +37,9 @@ module CodingAgentTools
         # Set OpenAI-specific defaults
         options[:event_namespace] ||= :openai_api
         options[:api_key_env] ||= DEFAULT_API_KEY_ENV
-        
-        super(api_key: api_key, model: model, **options)
+
+        super
       end
-
-
 
       private
 
