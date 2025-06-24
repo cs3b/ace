@@ -40,10 +40,34 @@ VCR.configure do |config|
     normalize_uri.call(request_1.uri) == normalize_uri.call(request_2.uri)
   end
 
+  # Register custom request matcher to ignore API key headers.
+  # This allows matching requests even if the API key headers are different (filtered vs test keys).
+  config.register_request_matcher :headers_without_api_keys do |request_1, request_2|
+    # List of API key headers to ignore when matching
+    api_key_headers = [
+      "X-Api-Key",        # Anthropic
+      "X-Goog-Api-Key",   # Google
+      "Authorization"     # OpenAI, Mistral, Together AI
+    ]
+    
+    normalize_headers = lambda do |headers|
+      # Convert headers to hash with lowercase keys for consistent comparison
+      normalized = {}
+      headers.each do |key, values|
+        # Skip API key headers
+        next if api_key_headers.any? { |api_header| key.downcase == api_header.downcase }
+        normalized[key.downcase] = values
+      end
+      normalized
+    end
+
+    normalize_headers.call(request_1.headers) == normalize_headers.call(request_2.headers)
+  end
+
 
   # Configure how requests are matched
   config.default_cassette_options = {
-    match_requests_on: [:method, :uri_without_key_param, :headers, :body_without_dynamic_paths],
+    match_requests_on: [:method, :uri_without_key_param, :headers_without_api_keys, :body_without_dynamic_paths],
     serialize_with: :json,
     decode_compressed_response: true
   }
@@ -118,8 +142,8 @@ VCR.configure do |config|
 
   config.default_cassette_options[:record] = recording_mode
 
-  # Allow connections to localhost (for test servers if needed)
-  config.ignore_localhost = true
+  # Don't ignore localhost for LM Studio testing
+  config.ignore_localhost = false
 
   # Configure what to do when no cassette is inserted
   # Allow connections when recording, disallow in CI or when explicitly disabled

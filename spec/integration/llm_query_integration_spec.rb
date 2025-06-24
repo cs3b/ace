@@ -354,8 +354,8 @@ RSpec.describe "llm-query integration", type: :integration do
           stdout, stderr, status = execute_gem_executable(exe_name,
             ["together_ai", "What is 2+2? Reply with just the number."], env: env)
 
-          expect(stdout).to match(/4/)
           expect(stderr).to be_empty
+          expect(stdout).to match(/4/)
           expect(status).to be_success
         end
 

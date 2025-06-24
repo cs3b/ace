@@ -1,0 +1,130 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "get",
+        "uri": "http://localhost:1234/v1/models",
+        "body": {
+          "encoding": "US-ASCII",
+          "string": ""
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "X-Powered-By": [
+            "Express"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Access-Control-Allow-Headers": [
+            "*"
+          ],
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ],
+          "Content-Length": [
+            "2487"
+          ],
+          "Etag": [
+            "W/\"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc\""
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 17:28:43 GMT"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "Keep-Alive": [
+            "timeout=5"
+          ]
+        },
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\n  \"data\": [\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    },\n    {\n      \"id\": \"test-id\",\n      \"object\": \"model\",\n      \"owned_by\": \"organization_owner\"\n    }\n  ],\n  \"object\": \"list\"\n}"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 17:28:43 GMT"
+    },
+    {
+      "request": {
+        "method": "post",
+        "uri": "http://localhost:1234/v1/chat/completions",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"model\":\"mistralai/devstral-small-2505\",\"messages\":[{\"role\":\"user\",\"content\":\"Test prompt\"}],\"temperature\":0.7,\"max_tokens\":-1,\"stream\":false}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "X-Powered-By": [
+            "Express"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Access-Control-Allow-Headers": [
+            "*"
+          ],
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ],
+          "Content-Length": [
+            "553"
+          ],
+          "Etag": [
+            "W/\"229-4iKvZ6S4w+u5nwRex6RMl0Brf5I\""
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 17:28:45 GMT"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "Keep-Alive": [
+            "timeout=5"
+          ]
+        },
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\n  \"id\": \"test-id\",\n  \"object\": \"chat.completion\",\n  \"created\": 1750786123,\n  \"model\": \"mistralai/devstral-small-2505\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"logprobs\": null,\n      \"finish_reason\": \"stop\",\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"Hello! How can I assist you today? Let's test this out.\"\n      }\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 1227,\n    \"completion_tokens\": 15,\n    \"total_tokens\": 1242\n  },\n  \"stats\": {},\n  \"system_fingerprint\": \"mistralai/devstral-small-2505\"\n}"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 17:28:45 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

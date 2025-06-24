@@ -1,0 +1,115 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://api.openai.com/v1/chat/completions",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"Count from 1 to 3\"}],\"temperature\":0.7,\"max_tokens\":4096}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Authorization": [
+            "<AUTHORIZATION>"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Date": [
+            "Tue, 24 Jun 2025 15:53:46 GMT"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "Access-Control-Expose-Headers": [
+            "X-Request-ID"
+          ],
+          "Openai-Organization": [
+            "user-qlz11mdprg3n7u0od0sy0j4r"
+          ],
+          "Openai-Processing-Ms": [
+            "302"
+          ],
+          "Openai-Version": [
+            "2020-10-01"
+          ],
+          "X-Envoy-Upstream-Service-Time": [
+            "307"
+          ],
+          "X-Ratelimit-Limit-Requests": [
+            "5000"
+          ],
+          "X-Ratelimit-Limit-Tokens": [
+            "2000000"
+          ],
+          "X-Ratelimit-Remaining-Requests": [
+            "4999"
+          ],
+          "X-Ratelimit-Remaining-Tokens": [
+            "1999993"
+          ],
+          "X-Ratelimit-Reset-Requests": [
+            "12ms"
+          ],
+          "X-Ratelimit-Reset-Tokens": [
+            "0s"
+          ],
+          "X-Request-Id": [
+            "req_6a18a383116b50cdfab3982fcc3410e7"
+          ],
+          "Strict-Transport-Security": [
+            "max-age=31536000; includeSubDomains; preload"
+          ],
+          "Cf-Cache-Status": [
+            "DYNAMIC"
+          ],
+          "Set-Cookie": [
+            "__cf_bm=7SxkU7vGJJmzcsldWCOOrCTNyJods7fdzDN.F7W__ag-1750780426-1.0.1.1-FXxHSeTLxNecZFmPz8lJCxsoMCiC3DiMdKh2jq6zI_fnGOHU6lABaiJHi4vWWAfoxIMifwhUvYBi_vnhLCduypRhC5mzV4FEbOokF0Mf5Yc; path=/; expires=Tue, 24-Jun-25 16:23:46 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None",
+            "_cfuvid=L8I6sv5uC95ISIAk6UxiFErWvY1bvBnsAk5C83sfK9c-1750780426628-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server": [
+            "cloudflare"
+          ],
+          "Cf-Ray": [
+            "954d665cbe5f03bd-MAD"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=86400"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"id\": \"test-id\",\n  \"object\": \"chat.completion\",\n  \"created\": 1750780426,\n  \"model\": \"gpt-4o-mini-2024-07-18\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"1, 2, 3.\",\n        \"refusal\": null,\n        \"annotations\": []\n      },\n      \"logprobs\": null,\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 14,\n    \"completion_tokens\": 8,\n    \"total_tokens\": 22,\n    \"prompt_tokens_details\": {\n      \"cached_tokens\": 0,\n      \"audio_tokens\": 0\n    },\n    \"completion_tokens_details\": {\n      \"reasoning_tokens\": 0,\n      \"audio_tokens\": 0,\n      \"accepted_prediction_tokens\": 0,\n      \"rejected_prediction_tokens\": 0\n    }\n  },\n  \"service_tier\": \"default\",\n  \"system_fingerprint\": \"fp_34a54ae93c\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:53:46 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Write a long essay about artificial intelligence.\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":\"50\"}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 15:53:06 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=878"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"## The Algorithmic Age: Navigating the Complexities of Artificial Intelligence\\n\\nArtificial intelligence (AI) has rapidly transitioned from the realm of science fiction to a tangible force shaping our world. From the mundane to the monumental, AI is woven into the\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"MAX_TOKENS\",\n      \"avgLogprobs\": -0.37643101750587932\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 8,\n    \"candidatesTokenCount\": 49,\n    \"totalTokenCount\": 57,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 8\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 49\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"4slaaKOwA46AsbQProilsQ4\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:53:06 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}
