@@ -1,105 +1,110 @@
 # frozen_string_literal: true
 
 require_relative "base_chat_completion_client"
-require "json"
+require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
-    # LMStudioClient provides high-level interface to LM Studio local server
+    # TogetheraiClient provides high-level interface to Together AI API
     # This is an organism - it orchestrates molecules to achieve business goals
-    class LMStudioClient < BaseChatCompletionClient
-      # LM Studio API base URL (local server)
-      API_BASE_URL = "http://localhost:1234"
+    class TogetheraiClient < BaseChatCompletionClient
+      # Together AI API base URL
+      API_BASE_URL = "https://api.together.xyz/v1"
+
+      # Default environment variable name for Together AI API key
+      DEFAULT_API_KEY_ENV = "TOGETHER_API_KEY"
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
         temperature: 0.7,
-        max_tokens: -1,
-        stream: false
+        max_tokens: 4096
       }.freeze
 
       # Explicit provider name declaration
       # @return [String] The provider name for this client
       def self.provider_name
-        "lmstudio"
+        "together_ai"
       end
 
-      # Initialize LM Studio client
+      # Initialize Together AI client
+      # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use
       # @param options [Hash] Additional options
       # @option options [String] :base_url API base URL
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
-      def initialize(model: nil, **options)
-        # Set LM Studio-specific defaults
-        options[:event_namespace] ||= :lm_studio_api
-        options[:timeout] ||= 180  # LM Studio needs longer timeout
-        options[:api_key_env] ||= "LM_STUDIO_API_KEY"
-
-        super(api_key: options[:api_key], model: model, **options)
-      end
-
-      # Check if LM Studio server is available
-      # @return [Boolean] True if server is running and responsive
-      def server_available?
-        url = build_api_url("models")
-        response_data = @request_builder.get_json(url)
-        response_data[:success] && response_data[:status] == 200
-      rescue
-        false
-      end
-
-      # Override to add server availability check
-      def generate_text(prompt, **options)
-        unless server_available?
-          raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
-        end
+      def initialize(api_key: nil, model: nil, **options)
+        # Set Together AI-specific defaults
+        options[:event_namespace] ||= :together_ai_api
+        options[:api_key_env] ||= DEFAULT_API_KEY_ENV
 
         super
       end
 
-      # Override to add server availability check
+      # Override list_models to handle Together AI's unique response format and filtering
       def list_models
-        unless server_available?
-          raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
-        end
+        url = build_api_url("models")
+        request_options = build_request_options({})
+        parsed = get_json_request(url, **request_options)
 
-        super
+        if parsed[:success]
+          # Together AI returns models in a different format
+          models_array = parsed[:data].is_a?(Array) ? parsed[:data] : []
+          # Filter to only include chat/instruct models
+          models_array.select do |model|
+            model_id = model[:id] || model[:name]
+            model_id && (model_id.include?("instruct") || model_id.include?("chat") ||
+                        model_id.include?("Instruct") || model_id.include?("Chat"))
+          end
+        else
+          handle_error_response(parsed)
+        end
       end
 
       protected
 
-      # LM Studio doesn't need credentials
-      def needs_credentials?
-        false
-      end
-
-      # LM Studio doesn't need auth headers
-      def needs_auth_headers?
-        false
-      end
-
-      # LM Studio doesn't support individual model info
+      # Together AI doesn't support individual model info
       def supports_individual_model_info?
         false
+      end
+
+      # Override to check both id and name fields for model matching
+      def matches_current_model?(model)
+        model[:id] == @model || model[:name] == @model
       end
 
       # Override fallback for when model not found in list
       def fallback_model_info
         {
           id: @model,
-          object: "model",
-          owned_by: "local"
+          name: @model,
+          created: Time.now.to_i,
+          owned_by: "together"
         }
       end
 
       private
 
-      # Build API URL for the given endpoint (LM Studio specific format)
+      # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
-        "#{@base_url}/v1/#{endpoint}"
+        url_obj = Addressable::URI.parse(@base_url)
+
+        # Use File.join-style logic to avoid double slashes
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        url_obj.path = "#{base_path}/#{endpoint}"
+
+        url_obj.to_s
+      end
+
+      # Build authentication headers
+      # @return [Hash] Authentication headers
+      def auth_headers
+        {
+          "Authorization" => "Bearer #{@api_key}",
+          "Content-Type" => "application/json"
+        }
       end
 
       # Build generation payload
@@ -131,8 +136,7 @@ module CodingAgentTools
           model: @model,
           messages: messages,
           temperature: generation_config[:temperature],
-          max_tokens: generation_config[:max_tokens],
-          stream: generation_config[:stream]
+          max_tokens: generation_config[:max_tokens]
         }
       end
 
@@ -184,9 +188,9 @@ module CodingAgentTools
         }
       end
 
-      # Extract error content from LM Studio-specific error structure
+      # Extract error content from Together AI-specific error structure
       def extract_error_content(error_obj)
-        details_message = error_obj.is_a?(Hash) ? error_obj.dig(:details, :message) : nil
+        details_message = error_obj.is_a?(Hash) ? error_obj.dig(:error, :message) : nil
         error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
         raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
 

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "coding_agent_tools/organisms/together_ai_client"
+require "coding_agent_tools/organisms/togetherai_client"
 require "webmock/rspec"
 
-RSpec.describe CodingAgentTools::Organisms::TogetherAIClient do
+RSpec.describe CodingAgentTools::Organisms::TogetheraiClient do
   let(:api_key) { "test-api-key-123" }
   let(:client) { described_class.new(api_key: api_key) }
   let(:custom_client) do

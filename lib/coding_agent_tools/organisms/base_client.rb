@@ -31,7 +31,7 @@ module CodingAgentTools
       # Get the provider key for factory registration.
       # Returns nil for abstract base classes to prevent them from being registered.
       # Concrete subclasses use this key to auto-register with ClientFactory via the inherited hook.
-      # 
+      #
       # @return [String, nil] Provider key for registration, nil to skip registration
       def self.provider_key
         return nil if self == BaseClient # Don't register the base class

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.60
-status: pending
+status: done
 priority: low
 estimate: 2h
 dependencies: ["v.0.2.0+task.57"]
@@ -51,37 +51,37 @@ Current client files with problematic naming:
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Create comprehensive list of all files that reference the affected classes
-* [ ] Plan the new naming conventions and class names
-* [ ] Identify all test files that need updating
-* [ ] Plan the order of operations to avoid breaking changes
+* [x] Create comprehensive list of all files that reference the affected classes
+* [x] Plan the new naming conventions and class names
+* [x] Identify all test files that need updating
+* [x] Plan the order of operations to avoid breaking changes
 
 ### Execution Steps
-- [ ] Rename files and update class names:
+- [x] Rename files and update class names:
   - `lm_studio_client.rb` → `lmstudio_client.rb` (LMStudioClient → LmstudioClient)
   - `together_ai_client.rb` → `togetherai_client.rb` (TogetherAIClient → TogetheraiClient)
   - Keep `openai_client.rb` as is, but update class to `OpenaiClient`
-- [ ] Update all require statements and file references
-- [ ] Update all test files to use new class names
-- [ ] Update provider_name methods in client classes if needed
-- [ ] Remove hardcoded mapping from ProviderModelParser:
+- [x] Update all require statements and file references
+- [x] Update all test files to use new class names
+- [x] Update provider_name methods in client classes if needed
+- [x] Remove hardcoded mapping from ProviderModelParser:
   ```ruby
   def filename_to_class_name(filename)
     # Simple algorithmic transformation - no special cases needed
     filename.split('_').map(&:capitalize).join
   end
   ```
-- [ ] Run all tests to ensure no regressions
-- [ ] Update any documentation that references the old class names
+- [x] Run all tests to ensure no regressions
+- [x] Update any documentation that references the old class names
 
 ## Acceptance Criteria
 
-- [ ] All client files follow consistent snake_case naming without acronyms
-- [ ] Class names can be derived algorithmically from filenames
-- [ ] No hardcoded mapping exists in ProviderModelParser
-- [ ] All tests pass with new naming conventions
-- [ ] All require statements and references updated
-- [ ] Provider functionality remains unchanged
+- [x] All client files follow consistent snake_case naming without acronyms
+- [x] Class names can be derived algorithmically from filenames
+- [x] No hardcoded mapping exists in ProviderModelParser
+- [x] All tests pass with new naming conventions
+- [x] All require statements and references updated
+- [x] Provider functionality remains unchanged
 
 ## Out of Scope
 

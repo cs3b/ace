@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "coding_agent_tools/organisms/lm_studio_client"
+require "coding_agent_tools/organisms/lmstudio_client"
 
-RSpec.describe CodingAgentTools::Organisms::LMStudioClient do
+RSpec.describe CodingAgentTools::Organisms::LmstudioClient do
   let(:client) { described_class.new }
   let(:mock_request_builder) { instance_double(CodingAgentTools::Molecules::HTTPRequestBuilder) }
   let(:mock_response_parser) { instance_double(CodingAgentTools::Molecules::APIResponseParser) }
