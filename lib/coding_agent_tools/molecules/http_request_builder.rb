@@ -157,7 +157,7 @@ module CodingAgentTools
           # For compatibility, provide raw_body but optimize for common cases
           # Only re-encode if it's a reasonably sized response to avoid performance issues
           raw_body = if json && body_size_reasonable?(body)
-            JSON.generate(body)
+            JSON.generate(ensure_proper_encoding(body))
           else
             # For very large responses, skip raw_body to avoid performance penalty
             # This is a reasonable tradeoff for the edge case of huge JSON responses
@@ -202,6 +202,30 @@ module CodingAgentTools
           0
         end
         estimated_size < 10_000 # Reasonable limit for typical API responses
+      end
+
+      # Ensure proper UTF-8 encoding for JSON generation
+      # This fixes Ruby 3.4.2 compatibility issues where UTF-8 strings
+      # marked as BINARY encoding cause JSON.generate warnings
+      # @param obj [Object] Object to fix encoding for
+      # @return [Object] Object with proper string encoding
+      def ensure_proper_encoding(obj)
+        case obj
+        when String
+          # Force encoding to UTF-8 if it's a valid UTF-8 string
+          if obj.encoding == Encoding::BINARY && obj.valid_encoding?
+            obj.force_encoding(Encoding::UTF_8)
+          else
+            obj
+          end
+        when Hash
+          obj.transform_keys { |k| ensure_proper_encoding(k) }
+             .transform_values { |v| ensure_proper_encoding(v) }
+        when Array
+          obj.map { |item| ensure_proper_encoding(item) }
+        else
+          obj
+        end
       end
     end
   end

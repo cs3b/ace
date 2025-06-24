@@ -1,0 +1,120 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://api.together.xyz/v1/chat/completions",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"model\":\"mistralai/Mistral-7B-Instruct-v0.3\",\"messages\":[{\"role\":\"user\",\"content\":\"What is 2+2? Reply with just the number.\"}],\"temperature\":0.7,\"max_tokens\":4096}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Authorization": [
+            "<AUTHORIZATION>"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Date": [
+            "Tue, 24 Jun 2025 17:09:19 GMT"
+          ],
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ],
+          "Connection": [
+            "keep-alive"
+          ],
+          "Cf-Ray": [
+            "954dd50978541a80-MAD"
+          ],
+          "Cf-Cache-Status": [
+            "DYNAMIC"
+          ],
+          "Retry-After": [
+            "2"
+          ],
+          "Access-Control-Allow-Origin": [
+            "*"
+          ],
+          "Etag": [
+            "W/\"213-381LhoIzIP0Mw+KSNNMMO10nmrA\""
+          ],
+          "Strict-Transport-Security": [
+            "max-age=15552000; includeSubDomains"
+          ],
+          "X-Amzn-Trace-Id": [
+            "d6724fc3-f7ad-4f22-84e5-209fff2b12d6-noamzn"
+          ],
+          "X-Api-Call-End": [
+            "2025-06-24T17:09:20.060Z"
+          ],
+          "X-Api-Call-Start": [
+            "2025-06-24T17:09:19.953Z"
+          ],
+          "X-Api-Received": [
+            "2025-06-24T17:09:19.945Z"
+          ],
+          "X-Inference-Version": [
+            "v2"
+          ],
+          "X-Ratelimit": [
+            "false"
+          ],
+          "X-Ratelimit-Limit": [
+            "1"
+          ],
+          "X-Ratelimit-Limit-Tokens": [
+            "1000"
+          ],
+          "X-Ratelimit-Remaining": [
+            "1"
+          ],
+          "X-Ratelimit-Remaining-Tokens": [
+            "1000"
+          ],
+          "X-Ratelimit-Reset": [
+            "2"
+          ],
+          "X-Request-Id": [
+            "nzRsZAG-3NKUce-954dd50978541a80"
+          ],
+          "Vary": [
+            "Accept-Encoding"
+          ],
+          "Server": [
+            "cloudflare"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=86400"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"id\": \"test-id\",\n  \"object\": \"chat.completion\",\n  \"created\": 1750784959,\n  \"model\": \"mistralai/Mistral-7B-Instruct-v0.3\",\n  \"prompt\": [],\n  \"choices\": [\n    {\n      \"finish_reason\": \"stop\",\n      \"seed\": 15293651062243015000,\n      \"logprobs\": null,\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \" 4\",\n        \"tool_calls\": []\n      }\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 18,\n    \"completion_tokens\": 3,\n    \"total_tokens\": 21,\n    \"cached_tokens\": 0\n  }\n}"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 17:09:19 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

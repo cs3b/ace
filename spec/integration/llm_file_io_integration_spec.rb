@@ -33,7 +33,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and writes JSON output", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes JSON output", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/reads_prompt_from_file_and_writes_JSON_output"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -53,7 +54,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       xit "reads prompt from file and writes Markdown output", :vcr do
         md_output = "#{output_file}.md"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes Markdown output", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/reads_prompt_from_file_and_writes_Markdown_output"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--output", md_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -80,7 +82,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and writes text output", :vcr do
         txt_output = "#{output_file}.txt"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads prompt from file and writes text output", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/reads_prompt_from_file_and_writes_text_output"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--output", txt_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -94,7 +97,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "uses format flag to override file extension", :vcr do
         txt_output = "#{output_file}.txt"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/uses format flag to override file extension", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/uses_format_flag_to_override_file_extension"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--output", txt_output, "--format", "json"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -110,7 +114,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads both prompt and system from files", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with file input and output/reads both prompt and system from files", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_file_input_and_output/reads_both_prompt_and_system_from_files"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--system", system_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -128,7 +133,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "processes inline prompt and writes to file", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with inline content/processes inline prompt and writes to file", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_inline_content/processes_inline_prompt_and_writes_to_file"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", "What is 2+2?", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -144,7 +150,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "processes inline prompt with inline system instruction", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with inline content/processes inline prompt with inline system instruction", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_inline_content/processes_inline_prompt_with_inline_system_instruction"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", "What is 2+2?", "--system", "Be concise", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -156,7 +163,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and uses inline system instruction", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with mixed file and inline content/reads prompt from file and uses inline system instruction", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_mixed_file_and_inline_content/reads_prompt_from_file_and_uses_inline_system_instruction"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", prompt_file, "--system", "Be very detailed", "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -166,7 +174,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "uses inline prompt and reads system from file", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with mixed file and inline content/uses inline prompt and reads system from file", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_mixed_file_and_inline_content/uses_inline_prompt_and_reads_system_from_file"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         _, stderr, status = execute_gem_executable("llm-query", ["google", "Quick question", "--system", system_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -176,7 +185,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
     context "with stdout output" do
       it "outputs JSON format to stdout", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with stdout output/outputs JSON format to stdout", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_stdout_output/outputs_JSON_format_to_stdout"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         stdout, stderr, status = execute_gem_executable("llm-query", ["google", "Test prompt", "--format", "json"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -186,7 +196,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       end
 
       it "outputs text format to stdout by default", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/Google query command/with stdout output/outputs text format to stdout by default", {"GOOGLE_API_KEY" => api_key})
+        cassette_name = "llm_file_io_integration/google_query_command/with_stdout_output/outputs_text_format_to_stdout_by_default"
+        env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
         stdout, stderr, status = execute_gem_executable("llm-query", ["google", "Test prompt"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -201,7 +212,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       it "reads prompt from file and writes JSON output", :vcr do
         json_output = "#{output_file}.json"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/LMStudio query command/with file input and output/reads prompt from file and writes JSON output")
+        cassette_name = "llm_file_io_integration/lmstudio/reads_prompt_file_writes_json"
+        env = vcr_subprocess_env(cassette_name)
         _, stderr, status = execute_gem_executable("llm-query", ["lmstudio", prompt_file, "--output", json_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -221,7 +233,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       xit "reads prompt from file and writes Markdown output", :vcr do
         md_output = "#{output_file}.md"
 
-        env = vcr_subprocess_env("LLM File I/O Integration/LMStudio query command/with file input and output/reads prompt from file and writes Markdown output")
+        cassette_name = "llm_file_io_integration/lmstudio/reads_prompt_file_writes_markdown"
+        env = vcr_subprocess_env(cassette_name)
         _, stderr, status = execute_gem_executable("llm-query", ["lmstudio", prompt_file, "--output", md_output], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -248,7 +261,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
     context "with stdout output" do
       it "outputs JSON format to stdout", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/LMStudio query command/with stdout output/outputs JSON format to stdout")
+        cassette_name = "llm_file_io_integration/lmstudio/outputs_json_to_stdout"
+        env = vcr_subprocess_env(cassette_name)
         stdout, stderr, status = execute_gem_executable("llm-query", ["lmstudio", "Test prompt", "--format", "json"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -258,7 +272,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       end
 
       it "outputs text format to stdout by default", :vcr do
-        env = vcr_subprocess_env("LLM File I/O Integration/LMStudio query command/with stdout output/outputs text format to stdout by default")
+        cassette_name = "llm_file_io_integration/lmstudio/outputs_text_to_stdout"
+        env = vcr_subprocess_env(cassette_name)
         stdout, stderr, status = execute_gem_executable("llm-query", ["lmstudio", "Test prompt"], env: env)
 
         expect(status).to be_success, "Command failed: #{stderr}"
@@ -274,7 +289,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
       json_output = "#{output_file}.json"
 
       # Non-existent files should be treated as inline content
-      env = vcr_subprocess_env("LLM File I/O Integration/Error handling/handles non-existent input files gracefully", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/error_handling/handles_non-existent_input_files_gracefully"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", non_existent, "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -284,7 +300,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "creates output directories automatically", :vcr do
       nested_output = File.join(temp_dir, "nested", "deep", "output.json")
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Error handling/creates output directories automatically", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/error_handling/creates_output_directories_automatically"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--output", nested_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -305,7 +322,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "infers JSON format from .json extension", :vcr do
       json_output = "#{output_file}.json"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Format inference/infers JSON format from .json extension", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/format_inference/infers_JSON_format_from_json_extension"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -316,7 +334,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "infers Markdown format from .md extension", :vcr do
       md_output = "#{output_file}.md"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Format inference/infers Markdown format from .md extension", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/format_inference/infers_Markdown_format_from_md_extension"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--output", md_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -327,7 +346,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "defaults to text format for unknown extensions", :vcr do
       unknown_output = "#{output_file}.xyz"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Format inference/defaults to text format for unknown extensions", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/format_inference/defaults_to_text_format_for_unknown_extensions"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--output", unknown_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -341,7 +361,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "normalizes Google metadata correctly", :vcr do
       json_output = "#{output_file}.json"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Metadata normalization/normalizes Google metadata correctly", {"GOOGLE_API_KEY" => api_key})
+      cassette_name = "llm_file_io_integration/metadata_normalization/normalizes_Google_metadata_correctly"
+      env = vcr_subprocess_env(cassette_name, {"GOOGLE_API_KEY" => api_key})
       _, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"
@@ -363,7 +384,8 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
     it "normalizes LMStudio metadata correctly", :vcr do
       json_output = "#{output_file}.json"
 
-      env = vcr_subprocess_env("LLM File I/O Integration/Metadata normalization/normalizes LMStudio metadata correctly")
+      cassette_name = "llm_file_io_integration/lmstudio/normalizes_metadata"
+      env = vcr_subprocess_env(cassette_name)
       _, stderr, status = execute_gem_executable("llm-query", ["lmstudio", "Test", "--output", json_output], env: env)
 
       expect(status).to be_success, "Command failed: #{stderr}"

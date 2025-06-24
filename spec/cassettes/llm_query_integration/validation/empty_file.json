@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Tue, 24 Jun 2025 15:53:10 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=1592"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready. What can I do for you today? Let me know what you need – I can help with a variety of tasks, such as:\\n\\n*   **Answering questions:** I can provide information on a wide range of topics.\\n*   **Generating text:** I can write different kinds of creative content, like poems, code, scripts, musical pieces, email, letters, etc.\\n*   **Summarizing text:** I can condense long articles or documents.\\n*   **Translating languages:** I can translate between many different languages.\\n*   **Brainstorming ideas:** I can help you come up with creative ideas for projects or problems.\\n*   **Writing different kinds of creative content:** I can write different kinds of creative content, like poems, code, scripts, musical pieces, email, letters, etc.\\n\\nJust tell me what you'd like me to do!\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.14630940085963198\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 190,\n    \"totalTokenCount\": 191,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 190\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"5claaI-pHfH_2PgPh_z--AY\"\n}\n"
+        }
+      },
+      "recorded_at": "Tue, 24 Jun 2025 15:53:10 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}

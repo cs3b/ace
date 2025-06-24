@@ -14,7 +14,7 @@ module CodingAgentTools
       # @raise [JSON::ParserError] If string input cannot be parsed as JSON
       def self.pretty_print(data, indent: "  ")
         data = JSON.parse(data) if data.is_a?(String)
-        JSON.pretty_generate(data, indent: indent)
+        JSON.pretty_generate(ensure_proper_encoding(data), indent: indent)
       end
 
       # Alias for pretty_print for convenience
@@ -31,7 +31,7 @@ module CodingAgentTools
       # @raise [JSON::ParserError] If string input cannot be parsed as JSON
       def self.compact(data)
         data = JSON.parse(data) if data.is_a?(String)
-        JSON.generate(data)
+        JSON.generate(ensure_proper_encoding(data))
       end
 
       # Parse JSON string safely
@@ -155,6 +155,30 @@ module CodingAgentTools
           current_data.map { |item| sanitize(item, sensitive_keys: sensitive_keys, redact_value: redact_value) }
         else
           current_data # This will return primitives or sanitized strings.
+        end
+      end
+
+      # Ensure proper UTF-8 encoding for JSON generation
+      # This fixes Ruby 3.4.2 compatibility issues where UTF-8 strings
+      # marked as BINARY encoding cause JSON.generate warnings
+      # @param obj [Object] Object to fix encoding for
+      # @return [Object] Object with proper string encoding
+      def self.ensure_proper_encoding(obj)
+        case obj
+        when String
+          # Force encoding to UTF-8 if it's a valid UTF-8 string
+          if obj.encoding == Encoding::BINARY && obj.valid_encoding?
+            obj.force_encoding(Encoding::UTF_8)
+          else
+            obj
+          end
+        when Hash
+          obj.transform_keys { |k| ensure_proper_encoding(k) }
+             .transform_values { |v| ensure_proper_encoding(v) }
+        when Array
+          obj.map { |item| ensure_proper_encoding(item) }
+        else
+          obj
         end
       end
     end
