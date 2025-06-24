@@ -1,16 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/api_credentials"
-require_relative "../molecules/http_request_builder"
-require_relative "../molecules/api_response_parser"
-require_relative "../models/default_model_config"
+require_relative "base_chat_completion_client"
 require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
     # AnthropicClient provides high-level interface to Anthropic API
     # This is an organism - it orchestrates molecules to achieve business goals
-    class AnthropicClient
+    class AnthropicClient < BaseChatCompletionClient
       # Anthropic API base URL
       API_BASE_URL = "https://api.anthropic.com/v1"
 
@@ -34,66 +31,15 @@ module CodingAgentTools
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
       def initialize(api_key: nil, model: nil, **options)
-        @model = model || default_model
-        @base_url = options.fetch(:base_url, API_BASE_URL)
-        @generation_config = DEFAULT_GENERATION_CONFIG.merge(
-          options.fetch(:generation_config, {})
-        )
-
-        # Initialize components
-        @credentials = Molecules::APICredentials.new(
-          env_key_name: options.fetch(:api_key_env, DEFAULT_API_KEY_ENV)
-        )
-        @api_key = api_key || @credentials.api_key
-
-        @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 30).to_i,
-          # The event_namespace is passed to HTTPClient, which uses it to configure
-          # the FaradayDryMonitorLogger middleware for observability.
-          event_namespace: :anthropic_api # For dry-monitor event namespacing
-        )
-        @response_parser = Molecules::APIResponseParser.new
+        # Set Anthropic-specific defaults
+        options[:event_namespace] ||= :anthropic_api
+        options[:api_key_env] ||= DEFAULT_API_KEY_ENV
+        
+        super(api_key: api_key, model: model, **options)
       end
 
-      # Generate text content from a prompt
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @option options [String] :system_instruction System instruction/message
-      # @option options [Hash] :generation_config Override generation config
-      # @return [Hash] Response with generated text
-      def generate_text(prompt, **options)
-        payload = build_generation_payload(prompt, options)
-        url = build_api_url("messages")
 
-        response_data = @request_builder.post_json(url, payload, headers: auth_headers)
-        parsed = @response_parser.parse_response(response_data)
-
-        if parsed[:success]
-          extract_generated_text(parsed)
-        else
-          handle_error(parsed)
-        end
-      end
-
-      # Generate text with streaming response
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @yield [chunk] Yields each response chunk
-      # @yieldparam chunk [String] Text chunk
-      # @return [String] Complete generated text
-      def generate_text_stream(prompt, **options)
-        raise NotImplementedError, "Streaming responses not yet implemented"
-      end
-
-      # Count tokens in a text (Anthropic doesn't have a direct API for this)
-      # @param text [String] Text to count tokens for
-      # @return [Hash] Token count information
-      def count_tokens(text)
-        raise NotImplementedError, "Token counting not directly supported by Anthropic API"
-      end
-
-      # List all available models
-      # @return [Array] List of available models
+      # Override list_models to handle Anthropic's pagination and fallback
       def list_models
         all_models = []
         after_id = nil
@@ -111,8 +57,8 @@ module CodingAgentTools
             url = uri.to_s
           end
 
-          response_data = @request_builder.get_json(url, headers: auth_headers)
-          parsed = @response_parser.parse_response(response_data)
+          request_options = build_request_options({})
+          parsed = get_json_request(url, **request_options)
 
           if parsed[:success]
             data = parsed[:data]
@@ -143,11 +89,21 @@ module CodingAgentTools
         fallback_models_list
       end
 
-      # Get information about the model
-      # @return [Hash] Model information
-      def model_info
-        models = list_models
-        models.find { |model| model[:id] == @model } || {
+      protected
+
+      # Anthropic doesn't support individual model info API
+      def supports_individual_model_info?
+        false
+      end
+
+      # Anthropic uses messages endpoint
+      def generation_endpoint
+        "messages"
+      end
+
+      # Override fallback for when model not found in list
+      def fallback_model_info
+        {
           id: @model,
           name: @model.split("-").map(&:capitalize).join(" "),
           description: "Anthropic Claude model"
@@ -155,13 +111,6 @@ module CodingAgentTools
       end
 
       private
-
-      # Get the default model for this provider
-      #
-      # @return [String] The default model name
-      def default_model
-        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("anthropic")
-      end
 
       # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint
@@ -253,15 +202,8 @@ module CodingAgentTools
         }
       end
 
-      # Handle API errors
-      # @param parsed_response [Hash] Parsed error response
-      # @raise [Error] With formatted error message
-      def handle_error(parsed_response)
-        # Ensure error object and HTTP status are safely accessed, providing defaults
-        error_obj = parsed_response[:error] || {}
-        http_status = error_obj[:status] || "Unknown HTTP Status"
-
-        # Extract primary message components from the error object
+      # Extract error content from Anthropic-specific error structure
+      def extract_error_content(error_obj)
         # Anthropic's error structure is different from OpenAI
         error_data = error_obj.is_a?(Hash) ? error_obj[:error] : {}
         error_type = error_data[:type] if error_data.is_a?(Hash)
@@ -269,16 +211,13 @@ module CodingAgentTools
         raw_message = error_obj[:raw_message] if error_obj.is_a?(Hash)
 
         # Determine the most specific error content available
-        specific_content = if error_message
+        if error_message
           error_type ? "#{error_type}: #{error_message}" : error_message
         elsif raw_message
           raw_message
         else
           "An unspecified error occurred."
         end
-
-        final_message = "Anthropic API Error (#{http_status}): #{specific_content}"
-        raise Error, final_message
       end
 
       # Generate a description for a model based on its ID

@@ -1,16 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/api_credentials"
-require_relative "../molecules/http_request_builder"
-require_relative "../molecules/api_response_parser"
-require_relative "../models/default_model_config"
+require_relative "base_chat_completion_client"
 require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
     # TogetherAIClient provides high-level interface to Together AI API
     # This is an organism - it orchestrates molecules to achieve business goals
-    class TogetherAIClient
+    class TogetherAIClient < BaseChatCompletionClient
       # Together AI API base URL
       API_BASE_URL = "https://api.together.xyz/v1"
 
@@ -31,70 +28,19 @@ module CodingAgentTools
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
       def initialize(api_key: nil, model: nil, **options)
-        @model = model || default_model
-        @base_url = options.fetch(:base_url, API_BASE_URL)
-        @generation_config = DEFAULT_GENERATION_CONFIG.merge(
-          options.fetch(:generation_config, {})
-        )
-
-        # Initialize components
-        @credentials = Molecules::APICredentials.new(
-          env_key_name: options.fetch(:api_key_env, DEFAULT_API_KEY_ENV)
-        )
-        @api_key = api_key || @credentials.api_key
-
-        @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 30).to_i,
-          # The event_namespace is passed to HTTPClient, which uses it to configure
-          # the FaradayDryMonitorLogger middleware for observability.
-          event_namespace: :together_ai_api # For dry-monitor event namespacing
-        )
-        @response_parser = Molecules::APIResponseParser.new
+        # Set Together AI-specific defaults
+        options[:event_namespace] ||= :together_ai_api
+        options[:api_key_env] ||= DEFAULT_API_KEY_ENV
+        
+        super(api_key: api_key, model: model, **options)
       end
 
-      # Generate text content from a prompt
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @option options [String] :system_instruction System instruction/message
-      # @option options [Hash] :generation_config Override generation config
-      # @return [Hash] Response with generated text
-      def generate_text(prompt, **options)
-        payload = build_generation_payload(prompt, options)
-        url = build_api_url("chat/completions")
 
-        response_data = @request_builder.post_json(url, payload, headers: auth_headers)
-        parsed = @response_parser.parse_response(response_data)
-
-        if parsed[:success]
-          extract_generated_text(parsed)
-        else
-          handle_error(parsed)
-        end
-      end
-
-      # Generate text with streaming response
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @yield [chunk] Yields each response chunk
-      # @yieldparam chunk [String] Text chunk
-      # @return [String] Complete generated text
-      def generate_text_stream(prompt, **options)
-        raise NotImplementedError, "Streaming responses not yet implemented"
-      end
-
-      # Count tokens in a text (Together AI doesn't have a direct API for this)
-      # @param text [String] Text to count tokens for
-      # @return [Hash] Token count information
-      def count_tokens(text)
-        raise NotImplementedError, "Token counting not directly supported by Together AI API"
-      end
-
-      # List all available models
-      # @return [Array] List of available models
+      # Override list_models to handle Together AI's unique response format and filtering
       def list_models
         url = build_api_url("models")
-        response_data = @request_builder.get_json(url, headers: auth_headers)
-        parsed = @response_parser.parse_response(response_data)
+        request_options = build_request_options({})
+        parsed = get_json_request(url, **request_options)
 
         if parsed[:success]
           # Together AI returns models in a different format
@@ -106,15 +52,25 @@ module CodingAgentTools
                         model_id.include?("Instruct") || model_id.include?("Chat"))
           end
         else
-          handle_error(parsed)
+          handle_error_response(parsed)
         end
       end
 
-      # Get information about the model
-      # @return [Hash] Model information
-      def model_info
-        models = list_models
-        models.find { |model| model[:id] == @model || model[:name] == @model } || {
+      protected
+
+      # Together AI doesn't support individual model info
+      def supports_individual_model_info?
+        false
+      end
+
+      # Override to check both id and name fields for model matching
+      def matches_current_model?(model)
+        model[:id] == @model || model[:name] == @model
+      end
+
+      # Override fallback for when model not found in list
+      def fallback_model_info
+        {
           id: @model,
           name: @model,
           created: Time.now.to_i,
@@ -123,13 +79,6 @@ module CodingAgentTools
       end
 
       private
-
-      # Get the default model for this provider
-      #
-      # @return [String] The default model name
-      def default_model
-        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("together_ai")
-      end
 
       # Build API URL for the given endpoint
       # @param endpoint [String] API endpoint
@@ -234,21 +183,14 @@ module CodingAgentTools
         }
       end
 
-      # Handle API errors
-      # @param parsed_response [Hash] Parsed error response
-      # @raise [Error] With formatted error message
-      def handle_error(parsed_response)
-        # Ensure error object and HTTP status are safely accessed, providing defaults
-        error_obj = parsed_response[:error] || {}
-        http_status = error_obj[:status] || "Unknown HTTP Status"
-
-        # Extract primary message components from the error object
+      # Extract error content from Together AI-specific error structure
+      def extract_error_content(error_obj)
         details_message = error_obj.is_a?(Hash) ? error_obj.dig(:error, :message) : nil
         error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
         raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
 
         # Determine the most specific error content available
-        specific_content = if details_message
+        if details_message
           details_message
         elsif raw_message
           raw_message
@@ -257,9 +199,6 @@ module CodingAgentTools
         else
           "An unspecified error occurred."
         end
-
-        final_message = "Together AI API Error (#{http_status}): #{specific_content}"
-        raise Error, final_message
       end
     end
   end
