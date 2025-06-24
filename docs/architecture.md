@@ -200,7 +200,7 @@ The ATOM architecture provides several extension points:
 ### Development Dependencies
 
 -   RSpec: Testing framework.
--   RuboCop / StandardRB: Code style linter and formatter.
+-   StandardRB: Code style linter and formatter.
 -   `vcr`: Records and replays HTTP interactions for tests.
 -   `webmock`: Stubs and sets expectations on HTTP requests.
 -   `docs-dev/tools/*` scripts: Dependencies for certain `bin/` utilities that wrap scripts from the `docs-dev` submodule.
@@ -214,15 +214,3 @@ For a comprehensive and up-to-date list of dependencies, refer to the `coding_ag
 Significant architectural decisions are documented as Architecture Decision Records (ADRs).
 
 For detailed decision records, see [docs/architecture-decisions/](./architecture-decisions/).
-
-## Troubleshooting
-
-(This section is a placeholder and should be populated with common issues and their solutions as they are identified.)
-
--   **Issue**: Command not found after installation.
-    -   **Symptoms**: Running `bin/tn` or other commands results in "command not found".
-    -   **Solution**: Ensure Bundler binstubs are set up and your PATH includes the project's `bin/` directory. Run `bundle install` if using Bundler.
-
--   **Issue**: LLM query fails.
-    -   **Symptoms**: Commands like `bin/llm-gemini-query` report API errors or connection issues.
-    -   **Solution**: Check environment variables (`GEMINI_API_KEY`), network connectivity, and the status of the LM Studio server if using the local model.

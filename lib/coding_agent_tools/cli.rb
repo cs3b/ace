@@ -27,9 +27,11 @@ module CodingAgentTools
         return if @llm_commands_registered
 
         require_relative "cli/commands/llm/models"
+        require_relative "cli/commands/llm/unified_query"
 
         register "llm", aliases: [] do |prefix|
           prefix.register "models", Commands::LLM::Models
+          prefix.register "unified_query", Commands::LLM::UnifiedQuery
         end
 
         @llm_commands_registered = true
