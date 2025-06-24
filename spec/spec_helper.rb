@@ -42,6 +42,9 @@ require_relative "support/env_helpers"
 # ANSI color testing infrastructure
 require_relative "support/ansi_color_testing_helper"
 
+# Load shared examples for client behaviors
+require_relative "support/shared_examples/client_behavior"
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

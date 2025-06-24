@@ -1,16 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/api_credentials"
-require_relative "../molecules/http_request_builder"
-require_relative "../molecules/api_response_parser"
-require_relative "../models/default_model_config"
+require_relative "base_chat_completion_client"
 require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
     # GoogleClient provides high-level interface to Google Gemini API
     # This is an organism - it orchestrates molecules to achieve business goals
-    class GoogleClient
+    class GoogleClient < BaseChatCompletionClient
       # Google Gemini API base URL
       API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -31,61 +28,41 @@ module CodingAgentTools
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
       def initialize(api_key: nil, model: nil, **options)
-        @model = model || default_model
-        @base_url = options.fetch(:base_url, API_BASE_URL)
-        @generation_config = DEFAULT_GENERATION_CONFIG.merge(
-          options.fetch(:generation_config, {})
-        )
-
-        # Initialize components
-        @credentials = Molecules::APICredentials.new(
-          env_key_name: options.fetch(:api_key_env, DEFAULT_API_KEY_ENV)
-        )
-        @api_key = api_key || @credentials.api_key
-
-        @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 30).to_i,
-          # The event_namespace is passed to HTTPClient, which uses it to configure
-          # the FaradayDryMonitorLogger middleware for observability.
-          event_namespace: :google_api # For dry-monitor event namespacing
-        )
-        @response_parser = Molecules::APIResponseParser.new
+        # Set Google-specific defaults
+        options[:event_namespace] ||= :google_api
+        options[:api_key_env] ||= DEFAULT_API_KEY_ENV
+        
+        super(api_key: api_key, model: model, **options)
       end
 
-      # Generate text content from a prompt
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @option options [String] :system_instruction System instruction/message
-      # @option options [Hash] :generation_config Override generation config
-      # @return [Hash] Response with generated text
-      def generate_text(prompt, **options)
-        payload = build_generation_payload(prompt, options)
-        url = build_api_url("generateContent")
 
-        response_data = @request_builder.post_json(url, payload)
-        parsed = @response_parser.parse_response(response_data)
 
-        if parsed[:success]
-          extract_generated_text(parsed)
-        else
-          handle_error(parsed)
-        end
+
+      protected
+
+      # Google supports token counting
+      def supports_token_counting?
+        true
       end
 
-      # Generate text with streaming response
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @yield [chunk] Yields each response chunk
-      # @yieldparam chunk [String] Text chunk
-      # @return [String] Complete generated text
-      def generate_text_stream(prompt, **options)
-        raise NotImplementedError, "Streaming responses not yet implemented"
+      # Google doesn't use auth headers (uses query parameters)
+      def needs_auth_headers?
+        false
       end
 
-      # Count tokens in a text
-      # @param text [String] Text to count tokens for
-      # @return [Hash] Token count information
-      def count_tokens(text)
+      # Google uses a different generation endpoint
+      def generation_endpoint
+        "generateContent"
+      end
+
+      # Google extracts models from 'models' field
+      def extract_models_list(parsed_response)
+        data = parsed_response[:data]
+        data[:models] || []
+      end
+
+      # Perform token counting (Google-specific implementation)
+      def perform_token_counting(text)
         payload = {
           contents: [
             {
@@ -95,8 +72,7 @@ module CodingAgentTools
         }
 
         url = build_api_url("countTokens")
-        response_data = @request_builder.post_json(url, payload)
-        parsed = @response_parser.parse_response(response_data)
+        parsed = post_json_request(url, payload)
 
         if parsed[:success]
           {
@@ -104,49 +80,28 @@ module CodingAgentTools
             details: parsed[:data]
           }
         else
-          handle_error(parsed)
+          handle_error_response(parsed)
         end
       end
 
-      # List all available models
-      # @return [Array] List of available models
-      def list_models
-        url = build_url_with_path("models")
-        response_data = @request_builder.get_json(url)
-        parsed = @response_parser.parse_response(response_data)
-
-        if parsed[:success]
-          parsed[:data][:models] || []
-        else
-          handle_error(parsed)
-        end
+      # Build generation URL for Google (model-specific)
+      def build_generation_url(options)
+        build_api_url(generation_endpoint)
       end
 
-      # Get information about the model
-      # @return [Hash] Model information
-      def model_info
-        url = build_url_with_path("models/#{@model}")
-        response_data = @request_builder.get_json(url)
-        parsed = @response_parser.parse_response(response_data)
+      # Build models URL for Google
+      def build_models_url
+        build_url_with_path("models")
+      end
 
-        if parsed[:success]
-          parsed[:data]
-        else
-          handle_error(parsed)
-        end
+      # Build model info URL for Google
+      def build_model_info_url
+        build_url_with_path("models/#{@model}")
       end
 
       private
 
-      # Get the default model for this provider
-      #
-      # @return [String] The default model name
-      def default_model
-        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("google")
-      end
-
-      # Build API URL with model and endpoint
-      # Build API URL for the given endpoint
+      # Build API URL with model and endpoint (Google-specific format)
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
@@ -263,35 +218,23 @@ module CodingAgentTools
         }
       end
 
-      # Handle API errors
-      # @param parsed_response [Hash] Parsed error response
-      # @raise [Error] With formatted error message
-      def handle_error(parsed_response)
-        # Ensure error object and HTTP status are safely accessed, providing defaults
-        error_obj = parsed_response[:error] || {}
-        http_status = error_obj[:status] || "Unknown HTTP Status"
-
-        # Extract primary message components from the error object
-        # details_message is typically from a nested Google JSON error structure like error.details.message
-        # error_message is from the top-level Google JSON error structure like error.message
-        # raw_message is the raw response body if it wasn't JSON or couldn't be parsed
+      # Extract error content from Google-specific error structure
+      def extract_error_content(error_obj)
+        # Google-specific error extraction logic
         details_message = error_obj.is_a?(Hash) ? error_obj.dig(:details, :message) : nil
         error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
         raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
 
         # Determine the most specific error content available
-        specific_content = if details_message
+        if details_message
           details_message
         elsif raw_message # Key for non-JSON responses
           raw_message
         elsif error_message
           error_message
         else
-          "An unspecified error occurred." # Default if no message parts found
+          "An unspecified error occurred."
         end
-
-        final_message = "Google API Error (#{http_status}): #{specific_content}"
-        raise Error, final_message # Assumes Error is CodingAgentTools::Error
       end
     end
   end

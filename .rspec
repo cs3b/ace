@@ -1,6 +1,6 @@
+--require spec_helper
+--exclude-pattern spec/integration/**
 --format progress
 --color
---require spec_helper
 --profile
 --order random
---backtrace

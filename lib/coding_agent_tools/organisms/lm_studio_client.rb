@@ -1,15 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/http_request_builder"
-require_relative "../molecules/api_response_parser"
-require_relative "../models/default_model_config"
+require_relative "base_chat_completion_client"
 require "json"
 
 module CodingAgentTools
   module Organisms
     # LMStudioClient provides high-level interface to LM Studio local server
     # This is an organism - it orchestrates molecules to achieve business goals
-    class LMStudioClient
+    class LMStudioClient < BaseChatCompletionClient
       # LM Studio API base URL (local server)
       API_BASE_URL = "http://localhost:1234"
 
@@ -27,22 +25,12 @@ module CodingAgentTools
       # @option options [Hash] :generation_config Default generation config
       # @option options [Integer] :timeout Request timeout
       def initialize(model: nil, **options)
-        @model = model || default_model
-        @base_url = options.fetch(:base_url, API_BASE_URL)
-        @generation_config = DEFAULT_GENERATION_CONFIG.merge(
-          options.fetch(:generation_config, {})
-        )
-
-        # Initialize components
-        # Note: LM Studio typically doesn't require authentication for localhost
-        # Allow optional API key via options or environment variable
-        @api_key = options[:api_key] || ENV[options.fetch(:api_key_env, "LM_STUDIO_API_KEY")]
-
-        @request_builder = Molecules::HTTPRequestBuilder.new(
-          timeout: options.fetch(:timeout, 180).to_i,
-          event_namespace: :lm_studio_api
-        )
-        @response_parser = Molecules::APIResponseParser.new
+        # Set LM Studio-specific defaults
+        options[:event_namespace] ||= :lm_studio_api
+        options[:timeout] ||= 180  # LM Studio needs longer timeout
+        options[:api_key_env] ||= "LM_STUDIO_API_KEY"
+        
+        super(api_key: options[:api_key], model: model, **options)
       end
 
       # Check if LM Studio server is available
@@ -55,66 +43,54 @@ module CodingAgentTools
         false
       end
 
-      # Generate text content from a prompt
-      # @param prompt [String] The prompt text
-      # @param options [Hash] Generation options
-      # @option options [String] :system_instruction System instruction/message
-      # @option options [Hash] :generation_config Override generation config
-      # @return [Hash] Response with generated text
+      # Override to add server availability check
       def generate_text(prompt, **options)
         unless server_available?
           raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
         end
-
-        payload = build_generation_payload(prompt, options)
-        url = build_api_url("chat/completions")
-
-        response_data = @request_builder.post_json(url, payload)
-        parsed = @response_parser.parse_response(response_data)
-
-        if parsed[:success]
-          extract_generated_text(parsed)
-        else
-          handle_error(parsed)
-        end
+        
+        super(prompt, **options)
       end
 
-      # List available models
-      # @return [Array] List of available models
+      # Override to add server availability check  
       def list_models
         unless server_available?
           raise Error, "LM Studio server is not available at #{@base_url}. Please ensure LM Studio is running."
         end
-
-        url = build_api_url("models")
-        response_data = @request_builder.get_json(url)
-        parsed = @response_parser.parse_response(response_data)
-
-        if parsed[:success]
-          parsed[:data][:data] || []
-        else
-          handle_error(parsed)
-        end
+        
+        super
       end
 
-      # Get information about the current model
-      # @return [Hash] Model information
-      def model_info
-        models = list_models
-        models.find { |model| model[:id] == @model } ||
-          {id: @model, object: "model", owned_by: "local"}
+
+      protected
+
+      # LM Studio doesn't need credentials
+      def needs_credentials?
+        false
+      end
+
+      # LM Studio doesn't need auth headers
+      def needs_auth_headers?
+        false
+      end
+
+      # LM Studio doesn't support individual model info
+      def supports_individual_model_info?
+        false
+      end
+
+      # Override fallback for when model not found in list
+      def fallback_model_info
+        {
+          id: @model,
+          object: "model",
+          owned_by: "local"
+        }
       end
 
       private
 
-      # Get the default model for this provider
-      #
-      # @return [String] The default model name
-      def default_model
-        CodingAgentTools::Models::DefaultModelConfig.default.default_model_for("lmstudio")
-      end
-
-      # Build API URL for the given endpoint
+      # Build API URL for the given endpoint (LM Studio specific format)
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
@@ -203,21 +179,14 @@ module CodingAgentTools
         }
       end
 
-      # Handle API errors
-      # @param parsed_response [Hash] Parsed error response
-      # @raise [Error] With formatted error message
-      def handle_error(parsed_response)
-        # Ensure error object and HTTP status are safely accessed, providing defaults
-        error_obj = parsed_response[:error] || {}
-        http_status = error_obj[:status] || "Unknown HTTP Status"
-
-        # Extract primary message components from the error object
+      # Extract error content from LM Studio-specific error structure
+      def extract_error_content(error_obj)
         details_message = error_obj.is_a?(Hash) ? error_obj.dig(:details, :message) : nil
         error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
         raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
 
         # Determine the most specific error content available
-        specific_content = if details_message
+        if details_message
           details_message
         elsif raw_message
           raw_message
@@ -226,9 +195,6 @@ module CodingAgentTools
         else
           "An unspecified error occurred."
         end
-
-        final_message = "LM Studio API Error (#{http_status}): #{specific_content}"
-        raise Error, final_message
       end
     end
   end
