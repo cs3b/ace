@@ -24,8 +24,6 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
         }
       end
 
-
-
       it "handles missing usage metadata" do
         response = {text: "Test", finish_reason: "STOP"}
         result = described_class.normalize(

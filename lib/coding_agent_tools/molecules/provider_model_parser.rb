@@ -38,6 +38,16 @@ module CodingAgentTools
         "o3" => "openai:o3"
       }.freeze
 
+      # Default models for each provider (when only provider is specified)
+      DEFAULT_MODELS = {
+        "google" => "gemini-2.0-flash-lite",
+        "anthropic" => "claude-3-5-haiku-20241022",
+        "openai" => "gpt-4o-mini",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "lmstudio" => "mistralai/devstral-small-2505"
+      }.freeze
+
       # Result object for parsed provider:model combinations
       ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
         def valid?
@@ -67,29 +77,44 @@ module CodingAgentTools
           input = DYNAMIC_ALIASES[input.strip]
         end
 
-        # Parse provider:model syntax
+        # Parse provider:model syntax or provider-only
         parts = input.strip.split(":", 2)
 
-        if parts.length != 2
-          return create_error_result(input, "Invalid format. Expected 'provider:model' or alias")
+        if parts.length == 1
+          # Provider-only syntax, use default model
+          provider = parts[0].strip.downcase
+
+          # Validate provider
+          unless SUPPORTED_PROVIDERS.include?(provider)
+            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{SUPPORTED_PROVIDERS.join(", ")}")
+          end
+
+          # Use default model for provider
+          model = DEFAULT_MODELS[provider]
+
+          # Create successful result
+          ParseResult.new(provider, model, true, nil, original_input)
+        elsif parts.length == 2
+          # provider:model syntax
+          provider, model = parts
+          provider = provider.strip.downcase
+          model = model.strip
+
+          # Validate provider
+          unless SUPPORTED_PROVIDERS.include?(provider)
+            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{SUPPORTED_PROVIDERS.join(", ")}")
+          end
+
+          # Validate model is not empty
+          if model.empty?
+            return create_error_result(input, "Model name cannot be empty")
+          end
+
+          # Create successful result
+          ParseResult.new(provider, model, true, nil, original_input)
+        else
+          create_error_result(input, "Invalid format. Expected 'provider:model', 'provider', or alias")
         end
-
-        provider, model = parts
-        provider = provider.strip.downcase
-        model = model.strip
-
-        # Validate provider
-        unless SUPPORTED_PROVIDERS.include?(provider)
-          return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{SUPPORTED_PROVIDERS.join(', ')}")
-        end
-
-        # Validate model is not empty
-        if model.empty?
-          return create_error_result(input, "Model name cannot be empty")
-        end
-
-        # Create successful result
-        ParseResult.new(provider, model, true, nil, original_input)
       end
 
       # Returns all supported providers
@@ -104,6 +129,22 @@ module CodingAgentTools
       # @return [Hash<String, String>] Mapping of aliases to provider:model combinations
       def dynamic_aliases
         DYNAMIC_ALIASES.dup
+      end
+
+      # Returns default models for all providers
+      #
+      # @return [Hash<String, String>] Mapping of providers to default models
+      def default_models
+        DEFAULT_MODELS.dup
+      end
+
+      # Gets the default model for a specific provider
+      #
+      # @param provider [String] The provider name
+      # @return [String, nil] The default model or nil if provider not found
+      def default_model_for(provider)
+        return nil if provider.nil?
+        DEFAULT_MODELS[provider.strip.downcase]
       end
 
       # Validates if a provider is supported

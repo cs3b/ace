@@ -31,7 +31,7 @@ http_interactions:
       Etag:
       - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
       Date:
-      - Sat, 21 Jun 2025 11:35:03 GMT
+      - Tue, 24 Jun 2025 13:31:26 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -149,7 +149,7 @@ http_interactions:
           ],
           "object": "list"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:03 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:26 GMT
 - request:
     method: post
     uri: http://localhost:1234/v1/chat/completions
@@ -180,11 +180,11 @@ http_interactions:
       Content-Type:
       - application/json; charset=utf-8
       Content-Length:
-      - '528'
+      - '531'
       Etag:
-      - W/"210-0qlLZLMsD6j2D1831AbrUq8+30c"
+      - W/"213-zGe/CAHeiag20iyxqFwYbxs9JZg"
       Date:
-      - Sat, 21 Jun 2025 11:35:04 GMT
+      - Tue, 24 Jun 2025 13:31:26 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -193,9 +193,9 @@ http_interactions:
       encoding: UTF-8
       string: |-
         {
-          "id": "chatcmpl-t6ki5emye6ih54bh0liuk",
+          "id": "chatcmpl-ddrvwz30w9nedj0ttaoru",
           "object": "chat.completion",
-          "created": 1750505703,
+          "created": 1750771886,
           "model": "mistralai/devstral-small-2505",
           "choices": [
             {
@@ -204,17 +204,17 @@ http_interactions:
               "finish_reason": "stop",
               "message": {
                 "role": "assistant",
-                "content": "What would you like me to test?"
+                "content": "Hello! How can I assist you today?"
               }
             }
           ],
           "usage": {
             "prompt_tokens": 1227,
-            "completion_tokens": 8,
-            "total_tokens": 1235
+            "completion_tokens": 9,
+            "total_tokens": 1236
           },
           "stats": {},
           "system_fingerprint": "mistralai/devstral-small-2505"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:04 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:26 GMT
 recorded_with: VCR 6.3.1

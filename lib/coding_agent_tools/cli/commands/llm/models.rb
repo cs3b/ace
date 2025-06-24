@@ -58,9 +58,9 @@ module CodingAgentTools
 
             filter_term = filter_term.downcase
             models.select do |model|
-              (model.id&.downcase&.include?(filter_term)) ||
-                (model.name&.downcase&.include?(filter_term)) ||
-                (model.description&.downcase&.include?(filter_term))
+              model.id&.downcase&.include?(filter_term) ||
+                model.name&.downcase&.include?(filter_term) ||
+                model.description&.downcase&.include?(filter_term)
             end
           end
 

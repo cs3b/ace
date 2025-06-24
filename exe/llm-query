@@ -5,7 +5,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "coding_agent_tools/molecules/executable_wrapper"
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ["llm", "unified_query"],
+  command_path: ["llm", "query"],
   registration_method: :register_llm_commands,
   executable_name: "llm-query"
 ).call

@@ -20,8 +20,6 @@ paths = [
     '''\.env$''',
     '''\.env\..*''',
 
-    # VCR cassettes contain filtered API responses
-    '''spec/cassettes/.*''',
 
     # Test fixtures may contain example secrets
     '''spec/fixtures/.*''',
@@ -67,11 +65,17 @@ paths = [
 ]
 
 regexes = [
-    # Filtered secrets in VCR cassettes
+    # Filtered secrets in VCR cassettes (these are safe placeholders)
+    "<GOOGLE_API_KEY>",
     "<GEMINI_API_KEY>",
+    "<ANTHROPIC_API_KEY>",
+    "<OPENAI_API_KEY>",
+    "<MISTRAL_API_KEY>",
+    "<TOGETHER_API_KEY>",
     "<AUTHORIZATION>",
     "test-api-key-for-vcr-playback",
     "your_actual_gemini_api_key_here",
+    "your_actual_google_api_key_here",
 
     # Documentation examples and placeholders
     "your_api_key_here",

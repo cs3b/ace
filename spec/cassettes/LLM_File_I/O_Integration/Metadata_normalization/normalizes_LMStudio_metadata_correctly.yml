@@ -31,7 +31,7 @@ http_interactions:
       Etag:
       - W/"9b7-SYUXmbTvaXDtU7SbacZRT31Scqc"
       Date:
-      - Sat, 21 Jun 2025 11:35:15 GMT
+      - Tue, 24 Jun 2025 13:31:16 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -149,7 +149,7 @@ http_interactions:
           ],
           "object": "list"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:15 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:16 GMT
 - request:
     method: post
     uri: http://localhost:1234/v1/chat/completions
@@ -179,11 +179,11 @@ http_interactions:
       Content-Type:
       - application/json; charset=utf-8
       Content-Length:
-      - '691'
+      - '529'
       Etag:
-      - W/"2b3-uGcdPr+JnrAf18WDT65xuNxSkKA"
+      - W/"211-IVK0YPx+0om2uTCihQnJE89mpDs"
       Date:
-      - Sat, 21 Jun 2025 11:35:18 GMT
+      - Tue, 24 Jun 2025 13:31:16 GMT
       Connection:
       - keep-alive
       Keep-Alive:
@@ -192,9 +192,9 @@ http_interactions:
       encoding: UTF-8
       string: |-
         {
-          "id": "chatcmpl-wwbfjlhdgvghg669oahpeb",
+          "id": "chatcmpl-nbrf2as94ohjtfupdqtx1l",
           "object": "chat.completion",
-          "created": 1750505715,
+          "created": 1750771876,
           "model": "mistralai/devstral-small-2505",
           "choices": [
             {
@@ -203,17 +203,17 @@ http_interactions:
               "finish_reason": "stop",
               "message": {
                 "role": "assistant",
-                "content": "Hello! I'm Devstral, a helpful assistant trained by Mistral AI. How can I assist you today? If it's a programming question, please provide details about the issue or code you'd like help with."
+                "content": "What would you like me to test?"
               }
             }
           ],
           "usage": {
             "prompt_tokens": 1226,
-            "completion_tokens": 44,
-            "total_tokens": 1270
+            "completion_tokens": 8,
+            "total_tokens": 1234
           },
           "stats": {},
           "system_fingerprint": "mistralai/devstral-small-2505"
         }
-  recorded_at: Sat, 21 Jun 2025 11:35:18 GMT
+  recorded_at: Tue, 24 Jun 2025 13:31:16 GMT
 recorded_with: VCR 6.3.1
