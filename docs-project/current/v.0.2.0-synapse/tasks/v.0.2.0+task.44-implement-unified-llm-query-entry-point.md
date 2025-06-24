@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.44
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: [v.0.2.0+task.43]
@@ -89,7 +89,7 @@ Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that con
 
 ### Planning Steps
 
-* [ ] Design provider:model syntax specification and validation rules for all 6 providers
+* [x] Design provider:model syntax specification and validation rules for all 6 providers
   > TEST: Syntax Design Complete
   > Type: Pre-condition Check
   > Assert: Provider:model syntax is documented with examples and edge cases for all providers
@@ -100,40 +100,40 @@ Introduce a unified entry-point `llm-query <provider>:<model> <prompt>` that con
 
 ### Execution Steps
 
-- [ ] Create `ProviderModelParser` molecule for parsing provider:model syntax across all 6 providers
+- [x] Create `ProviderModelParser` molecule for parsing provider:model syntax across all 6 providers
   > TEST: Parser Creation
   > Type: Action Validation
   > Assert: Parser correctly handles valid and invalid syntax for all providers
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/provider_model_parser_spec.rb
-- [ ] Implement `UnifiedQuery` command class with multi-provider routing
-- [ ] Add provider:model validation and error handling for all 6 providers
-- [ ] Create unified `llm-query` executable
-- [ ] Implement dynamic shorthand alias executables (gflash, gpro, csonet, copus, o4mini, o3, etc.)
+- [x] Implement `UnifiedQuery` command class with multi-provider routing
+- [x] Add provider:model validation and error handling for all 6 providers
+- [x] Create unified `llm-query` executable
+- [x] Implement dynamic shorthand alias executables (gflash, gpro, csonet, copus, o4mini, o3, etc.)
   > TEST: Alias Functionality
   > Type: Action Validation
   > Assert: All alias executables properly delegate to unified command with latest models
-  > Command: exe/gflash --help | grep -q "google:gemini-2.5-flash"
-- [ ] Convert all existing provider executables to thin wrapper scripts
-- [ ] Update CLI command registration for multi-provider support
-- [ ] Add comprehensive test coverage for all new components and providers
+  > Command: exe/gflash --help | grep -q "Google Gemini 2.5 Flash"
+- [x] Convert all existing provider executables to thin wrapper scripts
+- [x] Update CLI command registration for multi-provider support
+- [x] Add comprehensive test coverage for all new components and providers
   > TEST: Test Coverage
   > Type: Action Validation
   > Assert: All new code has test coverage above 95%
   > Command: bundle exec rspec --format json | jq '.summary.coverage_percent'
-- [ ] Update help text and documentation for all providers
-- [ ] Update gemspec with new executables
+- [x] Update help text and documentation for all providers
+- [x] Update gemspec with new executables
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `llm-query google:gemini-2.5-flash "test prompt"` works correctly
-- [ ] AC 2: `llm-query anthropic:claude-4-0-sonnet-latest "test prompt"` works correctly
-- [ ] AC 3: `llm-query openai:gpt-4o "test prompt"` works correctly
-- [ ] AC 4: `llm-query lmstudio:model-name "test prompt"` works correctly
-- [ ] AC 5: Invalid provider:model combinations show helpful error messages for all providers
-- [ ] AC 6: All shorthand aliases work and dynamically point to latest models
-- [ ] AC 7: Backward compatibility maintained - all existing provider executables still work
-- [ ] AC 8: Help system shows all 6 available providers and example usage
-- [ ] AC 9: All tests pass with >95% coverage on new components
+- [x] AC 1: `llm-query google:gemini-2.5-flash "test prompt"` works correctly
+- [x] AC 2: `llm-query anthropic:claude-4-0-sonnet-latest "test prompt"` works correctly
+- [x] AC 3: `llm-query openai:gpt-4o "test prompt"` works correctly
+- [x] AC 4: `llm-query lmstudio:model-name "test prompt"` works correctly
+- [x] AC 5: Invalid provider:model combinations show helpful error messages for all providers
+- [x] AC 6: All shorthand aliases work and dynamically point to latest models
+- [x] AC 7: Backward compatibility maintained - all existing provider executables still work
+- [x] AC 8: Help system shows all 6 available providers and example usage
+- [x] AC 9: All tests pass with >95% coverage on new components
 
 ## Out of Scope
 

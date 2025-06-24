@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+require "coding_agent_tools/molecules/alias_executable_wrapper"
+
+CodingAgentTools::Molecules::AliasExecutableWrapper.new(
+  alias_name: "copus",
+  executable_name: "copus"
+).call
