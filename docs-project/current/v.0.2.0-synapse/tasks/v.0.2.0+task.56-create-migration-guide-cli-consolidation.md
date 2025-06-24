@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.56
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: ["v.0.2.0+task.53", "v.0.2.0+task.54", "v.0.2.0+task.55"]
@@ -51,42 +51,42 @@ tree -L 2 docs | sed 's/^/    /'
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Review all old `llm-*-query` executables to catalog exact command syntaxes
-* [ ] Identify all command-line options and their equivalents in new syntax
-* [ ] Plan migration examples covering common use cases
+* [x] Review all old `llm-*-query` executables to catalog exact command syntaxes
+* [x] Identify all command-line options and their equivalents in new syntax
+* [x] Plan migration examples covering common use cases
 
 ### Execution Steps
-- [ ] Create `docs/MIGRATION.md` with the following sections:
+- [x] Create `docs/MIGRATION.md` with the following sections:
   - Breaking Changes overview
   - Old vs New Command Mapping table
   - Step-by-step migration instructions
   - Common examples with before/after
   - Alias suggestions for backward compatibility
   - Troubleshooting section
-- [ ] Include specific examples for each provider:
+- [x] Include specific examples for each provider:
   - `llm-gemini-query` → `llm-query google:model`
   - `llm-anthropic-query` → `llm-query anthropic:model`
   - `llm-openai-query` → `llm-query openai:model`
   - `llm-mistral-query` → `llm-query mistral:model`
   - `llm-together-query` → `llm-query together_ai:model`
   - `llm-lms-query` → `llm-query lmstudio:model`
-- [ ] Document alias support (gflash, csonet, etc.)
-- [ ] Add backward compatibility suggestions using shell aliases
-- [ ] Update `docs/README.md` with migration notice at the top
+- [x] Document alias support (gflash, csonet, etc.)
+- [x] Add backward compatibility suggestions using shell aliases
+- [x] Update `README.md` with migration notice at the top
   > TEST: Migration Guide Link
   >   Type: Action Validation
   >   Assert: README.md contains visible link to MIGRATION.md
-  >   Command: grep -q "MIGRATION.md" docs/README.md
-- [ ] Add section about model override syntax changes if applicable
+  >   Command: grep -q "MIGRATION.md" README.md
+- [x] Add section about model override syntax changes if applicable
 
 ## Acceptance Criteria
 
-- [ ] `docs/MIGRATION.md` exists with comprehensive migration instructions
-- [ ] All six old CLI commands have documented migration paths
-- [ ] Examples cover basic usage, options, and edge cases
-- [ ] Shell alias examples provided for backward compatibility
-- [ ] README.md prominently links to the migration guide
-- [ ] Guide is clear enough that a user can migrate without reading source code
+- [x] `docs/MIGRATION.md` exists with comprehensive migration instructions
+- [x] All six old CLI commands have documented migration paths
+- [x] Examples cover basic usage, options, and edge cases
+- [x] Shell alias examples provided for backward compatibility
+- [x] README.md prominently links to the migration guide
+- [x] Guide is clear enough that a user can migrate without reading source code
 
 ## Out of Scope
 

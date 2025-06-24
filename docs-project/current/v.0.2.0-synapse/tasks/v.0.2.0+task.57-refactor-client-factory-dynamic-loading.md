@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.57
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: ["v.0.2.0+task.54"]
@@ -58,60 +58,36 @@ tree -L 2 lib/coding_agent_tools | grep -E "(molecules|organisms)" | sed 's/^/  
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Research Zeitwerk's constant loading patterns and best practices
-* [ ] Analyze current directory structure and naming conventions for clients
-* [ ] Design approach that respects Zeitwerk's autoloading without eagerly loading all constants
-* [ ] Consider edge cases (malformed files, non-client files in organisms directory)
+* [x] Research Zeitwerk's constant loading patterns and best practices
+* [x] Analyze current directory structure and naming conventions for clients
+* [x] Design approach that respects Zeitwerk's autoloading without eagerly loading all constants
+* [x] Consider edge cases (malformed files, non-client files in organisms directory)
 
 ### Execution Steps
-- [ ] Refactor `ensure_clients_loaded` method to use dynamic discovery:
-  ```ruby
-  def ensure_clients_loaded
-    return if @clients_loaded
-    
-    # Dynamically discover client files
-    client_files = Dir.glob(File.expand_path("../organisms/*_client.rb", __dir__))
-    
-    client_files.each do |file|
-      # Extract class name from filename
-      class_name = File.basename(file, ".rb").split('_').map(&:capitalize).join
-      
-      begin
-        # Trigger Zeitwerk autoloading by referencing the constant
-        client_class = CodingAgentTools::Organisms.const_get(class_name)
-        
-        # Verify it's actually a client class (inherits from BaseClient)
-        if client_class < CodingAgentTools::Organisms::BaseClient
-          # Registration happens automatically via inherited hook
-        end
-      rescue NameError => e
-        # Log warning but don't fail - file might not match a valid class
-        warn "Warning: Could not load client class #{class_name}: #{e.message}" if ENV["DEBUG"]
-      end
-    end
-    
-    @clients_loaded = true
-  end
-  ```
-- [ ] Add defensive checks to ensure only valid client classes are processed
-- [ ] Update any comments or documentation in the file
-- [ ] Add tests for edge cases:
+- [x] Refactor `ensure_clients_loaded` method to use dynamic discovery:
+  - Implemented directory scanning approach with `Dir.glob` to find client files
+  - Added intelligent class name mapping to handle acronyms (OpenAI, LMStudio, TogetherAI)
+  - Added filtering to skip base classes and abstract classes
+  - Added proper error handling for malformed classes
+- [x] Add defensive checks to ensure only valid client classes are processed
+- [x] Update any comments or documentation in the file
+- [x] Add tests for edge cases:
   > TEST: Dynamic Discovery
   >   Type: Action Validation
   >   Assert: New client files are automatically discovered without code changes
   >   Command: bundle exec rspec spec/coding_agent_tools/molecules/client_factory_spec.rb
-- [ ] Test with a mock client file to verify dynamic loading
-- [ ] Ensure performance is not significantly impacted by directory scanning
-- [ ] Verify that non-client files in organisms directory don't cause issues
+- [x] Test with a mock client file to verify dynamic loading
+- [x] Ensure performance is not significantly impacted by directory scanning
+- [x] Verify that non-client files in organisms directory don't cause issues
 
 ## Acceptance Criteria
 
-- [ ] ClientFactory no longer contains a hardcoded list of client class names
-- [ ] All existing clients continue to load and function correctly
-- [ ] New client classes are automatically discovered without factory modifications
-- [ ] Tests verify dynamic loading behavior
-- [ ] No performance regression in client loading
-- [ ] Edge cases handled gracefully (malformed files, non-clients)
+- [x] ClientFactory no longer contains a hardcoded list of client class names
+- [x] All existing clients continue to load and function correctly
+- [x] New client classes are automatically discovered without factory modifications
+- [x] Tests verify dynamic loading behavior
+- [x] No performance regression in client loading
+- [x] Edge cases handled gracefully (malformed files, non-clients)
 
 ## Out of Scope
 

@@ -53,33 +53,40 @@ module CodingAgentTools
       def ensure_providers_loaded
         return if @providers_loaded
 
-        # Map of provider names to their client class names
-        provider_client_classes = {
-          "google" => "GoogleClient",
-          "anthropic" => "AnthropicClient",
-          "openai" => "OpenAIClient",
-          "mistral" => "MistralClient",
-          "together_ai" => "TogetherAIClient",
-          "lmstudio" => "LMStudioClient"
-        }
+        # Dynamically discover client files in the organisms directory
+        organisms_path = File.expand_path("../../organisms", __FILE__)
+        client_files = Dir.glob(File.join(organisms_path, "*_client.rb"))
 
-        # Load each client class to trigger auto-registration
-        provider_client_classes.each do |provider_name, class_name|
-          next unless SUPPORTED_PROVIDERS.include?(provider_name)
+        client_files.each do |file|
+          filename = File.basename(file, ".rb")
+          
+          # Skip base classes and abstract classes
+          next if filename.start_with?("base_")
+          
+          # Convert filename to class name with proper acronym handling
+          class_name = filename_to_class_name(filename)
 
           begin
             # Access the class to trigger Zeitwerk autoloading
             client_class = CodingAgentTools::Organisms.const_get(class_name)
 
-            # Force registration with ClientFactory (fallback if inherited hook didn't work)
-            if client_class.respond_to?(:provider_name)
+            # Verify it's actually a client class that should be registered
+            next unless client_class.respond_to?(:provider_name)
+            
+            # Get provider_name safely - skip if it raises NotImplementedError
+            begin
               provider_key = client_class.provider_name
-              if provider_key && provider_key == provider_name
-                Molecules::ClientFactory.register(provider_key, client_class)
-              end
+            rescue NotImplementedError
+              next # Skip abstract classes that don't implement provider_name
             end
-          rescue NameError
-            # Class doesn't exist - skip it
+            
+            next unless provider_key && SUPPORTED_PROVIDERS.include?(provider_key)
+
+            # Force registration with ClientFactory (fallback if inherited hook didn't work)
+            Molecules::ClientFactory.register(provider_key, client_class)
+          rescue NameError => e
+            # Class doesn't exist or can't be loaded - log warning in debug mode but don't fail
+            warn "Warning: Could not load client class #{class_name}: #{e.message}" if ENV["DEBUG"]
           end
         end
 
@@ -220,6 +227,27 @@ module CodingAgentTools
       end
 
       private
+
+      # Converts a filename to the appropriate class name with proper acronym handling
+      # TODO: This hardcoded mapping should be eliminated by standardizing filename conventions
+      # See task for renaming files to follow predictable patterns (e.g., lm_studio_client.rb -> lmstudio_client.rb)
+      # @param filename [String] The filename (without .rb extension)
+      # @return [String] The class name
+      def filename_to_class_name(filename)
+        # Handle special cases for known acronyms/patterns
+        # NOTE: This hardcoding will be removed once filenames follow consistent conventions
+        case filename
+        when "lm_studio_client"
+          "LMStudioClient"
+        when "openai_client"
+          "OpenAIClient"
+        when "together_ai_client"
+          "TogetherAIClient"
+        else
+          # Default case: capitalize each word
+          filename.split('_').map(&:capitalize).join
+        end
+      end
 
       # Creates an error result for invalid input
       #
