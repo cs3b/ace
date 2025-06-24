@@ -59,10 +59,10 @@ module CodingAgentTools
 
         client_files.each do |file|
           filename = File.basename(file, ".rb")
-          
+
           # Skip base classes and abstract classes
           next if filename.start_with?("base_")
-          
+
           # Convert filename to class name with proper acronym handling
           class_name = filename_to_class_name(filename)
 
@@ -72,14 +72,14 @@ module CodingAgentTools
 
             # Verify it's actually a client class that should be registered
             next unless client_class.respond_to?(:provider_name)
-            
+
             # Get provider_name safely - skip if it raises NotImplementedError
             begin
               provider_key = client_class.provider_name
             rescue NotImplementedError
               next # Skip abstract classes that don't implement provider_name
             end
-            
+
             next unless provider_key && SUPPORTED_PROVIDERS.include?(provider_key)
 
             # Force registration with ClientFactory (fallback if inherited hook didn't work)
@@ -228,25 +228,12 @@ module CodingAgentTools
 
       private
 
-      # Converts a filename to the appropriate class name with proper acronym handling
-      # TODO: This hardcoded mapping should be eliminated by standardizing filename conventions
-      # See task for renaming files to follow predictable patterns (e.g., lm_studio_client.rb -> lmstudio_client.rb)
+      # Converts a filename to the appropriate class name using algorithmic transformation
       # @param filename [String] The filename (without .rb extension)
       # @return [String] The class name
       def filename_to_class_name(filename)
-        # Handle special cases for known acronyms/patterns
-        # NOTE: This hardcoding will be removed once filenames follow consistent conventions
-        case filename
-        when "lm_studio_client"
-          "LMStudioClient"
-        when "openai_client"
-          "OpenAIClient"
-        when "together_ai_client"
-          "TogetherAIClient"
-        else
-          # Default case: capitalize each word
-          filename.split('_').map(&:capitalize).join
-        end
+        # Simple algorithmic transformation - no special cases needed
+        filename.split("_").map(&:capitalize).join
       end
 
       # Creates an error result for invalid input

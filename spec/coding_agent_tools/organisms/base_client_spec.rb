@@ -58,10 +58,10 @@ RSpec.describe CodingAgentTools::Organisms::BaseClient do
       [
         CodingAgentTools::Organisms::GoogleClient,
         CodingAgentTools::Organisms::AnthropicClient,
-        CodingAgentTools::Organisms::OpenAIClient,
+        CodingAgentTools::Organisms::OpenaiClient,
         CodingAgentTools::Organisms::MistralClient,
-        CodingAgentTools::Organisms::TogetherAIClient,
-        CodingAgentTools::Organisms::LMStudioClient
+        CodingAgentTools::Organisms::TogetheraiClient,
+        CodingAgentTools::Organisms::LmstudioClient
       ]
     end
 
@@ -80,10 +80,10 @@ RSpec.describe CodingAgentTools::Organisms::BaseClient do
       expected_names = {
         "GoogleClient" => "google",
         "AnthropicClient" => "anthropic",
-        "OpenAIClient" => "openai",
+        "OpenaiClient" => "openai",
         "MistralClient" => "mistral",
-        "TogetherAIClient" => "together_ai",
-        "LMStudioClient" => "lmstudio"
+        "TogetheraiClient" => "together_ai",
+        "LmstudioClient" => "lmstudio"
       }
 
       client_classes.each do |client_class|

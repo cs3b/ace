@@ -8,10 +8,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
   let(:mock_file_handler) { instance_double(CodingAgentTools::Molecules::FileIoHandler) }
   let(:mock_google_client) { instance_double(CodingAgentTools::Organisms::GoogleClient) }
   let(:mock_anthropic_client) { instance_double(CodingAgentTools::Organisms::AnthropicClient) }
-  let(:mock_openai_client) { instance_double(CodingAgentTools::Organisms::OpenAIClient) }
+  let(:mock_openai_client) { instance_double(CodingAgentTools::Organisms::OpenaiClient) }
   let(:mock_mistral_client) { instance_double(CodingAgentTools::Organisms::MistralClient) }
-  let(:mock_together_ai_client) { instance_double(CodingAgentTools::Organisms::TogetherAIClient) }
-  let(:mock_lmstudio_client) { instance_double(CodingAgentTools::Organisms::LMStudioClient) }
+  let(:mock_together_ai_client) { instance_double(CodingAgentTools::Organisms::TogetheraiClient) }
+  let(:mock_lmstudio_client) { instance_double(CodingAgentTools::Organisms::LmstudioClient) }
   let(:mock_format_handler) { instance_double("FormatHandler") }
   let(:mock_response) { {text: "Mock response", metadata: {}} }
   let(:mock_normalized_response) { {text: "Mock response", metadata: {provider: "google", model: "gemini-2.0-flash-lite"}} }
@@ -24,10 +24,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     # Mock clients
     allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_google_client)
     allow(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).and_return(mock_anthropic_client)
-    allow(CodingAgentTools::Organisms::OpenAIClient).to receive(:new).and_return(mock_openai_client)
+    allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_openai_client)
     allow(CodingAgentTools::Organisms::MistralClient).to receive(:new).and_return(mock_mistral_client)
-    allow(CodingAgentTools::Organisms::TogetherAIClient).to receive(:new).and_return(mock_together_ai_client)
-    allow(CodingAgentTools::Organisms::LMStudioClient).to receive(:new).and_return(mock_lmstudio_client)
+    allow(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).and_return(mock_together_ai_client)
+    allow(CodingAgentTools::Organisms::LmstudioClient).to receive(:new).and_return(mock_lmstudio_client)
 
     # Mock client generate_text methods
     [mock_google_client, mock_anthropic_client, mock_openai_client,
@@ -67,7 +67,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "queries openai provider correctly" do
-        expect(CodingAgentTools::Organisms::OpenAIClient).to receive(:new).with(model: "gpt-4o")
+        expect(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).with(model: "gpt-4o")
         expect(mock_openai_client).to receive(:generate_text).with("test prompt")
 
         command.call(provider_model: "openai:gpt-4o", prompt: "test prompt")
@@ -81,14 +81,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "queries together_ai provider correctly" do
-        expect(CodingAgentTools::Organisms::TogetherAIClient).to receive(:new).with(model: "meta-llama/Llama-2-7b-chat-hf")
+        expect(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).with(model: "meta-llama/Llama-2-7b-chat-hf")
         expect(mock_together_ai_client).to receive(:generate_text).with("test prompt")
 
         command.call(provider_model: "together_ai:meta-llama/Llama-2-7b-chat-hf", prompt: "test prompt")
       end
 
       it "queries lmstudio provider correctly" do
-        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new).with(model: "local-model")
+        expect(CodingAgentTools::Organisms::LmstudioClient).to receive(:new).with(model: "local-model")
         expect(mock_lmstudio_client).to receive(:generate_text).with("test prompt")
 
         command.call(provider_model: "lmstudio:local-model", prompt: "test prompt")
@@ -115,7 +115,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "uses default model for openai" do
-        expect(CodingAgentTools::Organisms::OpenAIClient).to receive(:new).with(model: "gpt-4o-mini")
+        expect(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).with(model: "gpt-4o-mini")
 
         command.call(provider_model: "openai", prompt: "test prompt")
       end
@@ -127,13 +127,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "uses default model for together_ai" do
-        expect(CodingAgentTools::Organisms::TogetherAIClient).to receive(:new).with(model: "mistralai/Mistral-7B-Instruct-v0.3")
+        expect(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).with(model: "mistralai/Mistral-7B-Instruct-v0.3")
 
         command.call(provider_model: "together_ai", prompt: "test prompt")
       end
 
       it "uses default model for lmstudio" do
-        expect(CodingAgentTools::Organisms::LMStudioClient).to receive(:new).with(model: "mistralai/devstral-small-2505")
+        expect(CodingAgentTools::Organisms::LmstudioClient).to receive(:new).with(model: "mistralai/devstral-small-2505")
 
         command.call(provider_model: "lmstudio", prompt: "test prompt")
       end
@@ -165,13 +165,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "resolves o4mini alias to openai:gpt-4o-mini" do
-        expect(CodingAgentTools::Organisms::OpenAIClient).to receive(:new).with(model: "gpt-4o-mini")
+        expect(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).with(model: "gpt-4o-mini")
 
         command.call(provider_model: "o4mini", prompt: "test prompt")
       end
 
       it "resolves o3 alias to openai:o3" do
-        expect(CodingAgentTools::Organisms::OpenAIClient).to receive(:new).with(model: "o3")
+        expect(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).with(model: "o3")
 
         command.call(provider_model: "o3", prompt: "test prompt")
       end

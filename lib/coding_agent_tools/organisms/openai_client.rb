@@ -5,9 +5,9 @@ require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
-    # OpenAIClient provides high-level interface to OpenAI API
+    # OpenaiClient provides high-level interface to OpenAI API
     # This is an organism - it orchestrates molecules to achieve business goals
-    class OpenAIClient < BaseChatCompletionClient
+    class OpenaiClient < BaseChatCompletionClient
       # OpenAI API base URL
       API_BASE_URL = "https://api.openai.com/v1"
 

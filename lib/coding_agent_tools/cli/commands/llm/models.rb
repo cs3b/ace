@@ -167,7 +167,7 @@ module CodingAgentTools
 
           # Fetch LM Studio models from API
           def fetch_lmstudio_models
-            client = Organisms::LMStudioClient.new
+            client = Organisms::LmstudioClient.new
             models_response = client.list_models
 
             default_model_id = default_config.default_model_for("lmstudio")
@@ -185,7 +185,7 @@ module CodingAgentTools
 
           # Fetch OpenAI models from API
           def fetch_openai_models
-            client = Organisms::OpenAIClient.new
+            client = Organisms::OpenaiClient.new
             models_response = client.list_models
 
             # Filter to only include chat/completion models
@@ -244,7 +244,7 @@ module CodingAgentTools
 
           # Fetch Together AI models from API
           def fetch_together_ai_models
-            client = Organisms::TogetherAIClient.new
+            client = Organisms::TogetheraiClient.new
             models_response = client.list_models
 
             default_model_id = default_config.default_model_for("together_ai")
