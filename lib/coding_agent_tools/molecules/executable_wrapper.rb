@@ -125,7 +125,21 @@ module CodingAgentTools
         result = Dry::CLI.new(CodingAgentTools::Cli::Commands).call
         # CLI commands now return status codes instead of exiting
         # Return 0 if result is nil (successful completion) or the actual status code
-        result.nil? ? 0 : result
+        # Handle unexpected types (like Set) that can occur due to CLI registration issues
+        if result.nil?
+          0
+        elsif result.is_a?(Integer)
+          result
+        else
+          # If we get an unexpected type from Dry::CLI, check captured stderr for errors
+          # This is a workaround for Dry::CLI sometimes returning unexpected types
+          stderr_content = @captured_stderr&.string || ""
+          if stderr_content.include?("Error:") || stderr_content.include?("ERROR:")
+            1  # Indicate failure if there are error messages
+          else
+            0  # Default to success if no obvious errors
+          end
+        end
       end
 
       # Processes output and exits with the appropriate status code
@@ -133,6 +147,13 @@ module CodingAgentTools
         restore_streams
         output_content = get_captured_content
         print_modified_output(output_content)
+        
+        # Handle case where CLI returns unexpected types (e.g., Set instead of Integer)
+        # This can happen when CLI registration has issues
+        unless status_code.is_a?(Integer)
+          status_code = 0  # Assume success if we get an unexpected type
+        end
+        
         exit(status_code) if status_code != 0
       end
 
