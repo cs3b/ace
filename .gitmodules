@@ -4,3 +4,6 @@
 [submodule "docs-project"]
 	path = docs-project
 	url = git@github.com:cs3b/coding-agent-workflow-toolkit-project.git
+[submodule "dev-ai-tools"]
+	path = dev-ai-tools
+	url = git@github.com:cs3b/coding-agent-tools.git
