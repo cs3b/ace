@@ -6,6 +6,12 @@ require "coding_agent_tools/molecules/provider_model_parser"
 RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
   let(:parser) { described_class.new }
 
+  before do
+    # Clear dynamic registrations before each test to avoid test pollution
+    described_class.clear_registrations!
+    CodingAgentTools::Molecules::ClientFactory.clear_registry!
+  end
+
   describe "#parse" do
     context "with valid provider:model syntax" do
       it "parses google provider correctly" do
@@ -170,7 +176,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
         result = parser.parse("googlegemini")
 
         expect(result).to be_invalid
-        expect(result.error).to eq("Unknown provider: googlegemini. Supported providers: google, anthropic, openai, mistral, together_ai, lmstudio")
+        expect(result.error).to eq("Unknown provider: googlegemini. Supported providers: anthropic, google, lmstudio, mistral, openai, together_ai")
         expect(result.original_input).to eq("googlegemini")
       end
 
@@ -208,7 +214,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
         result = parser.parse("unknown_alias")
 
         expect(result).to be_invalid
-        expect(result.error).to eq("Unknown provider: unknown_alias. Supported providers: google, anthropic, openai, mistral, together_ai, lmstudio")
+        expect(result.error).to eq("Unknown provider: unknown_alias. Supported providers: anthropic, google, lmstudio, mistral, openai, together_ai")
       end
     end
 
