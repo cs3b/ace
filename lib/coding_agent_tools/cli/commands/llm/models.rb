@@ -41,14 +41,16 @@ module CodingAgentTools
           def call(provider: "google", **options)
             unless valid_provider?(provider)
               warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai"
-              exit 1
+              return 1
             end
 
             models = get_available_models(provider, options[:refresh])
             filtered_models = filter_models(models, options[:filter])
             output_models(filtered_models, options.merge(provider: provider))
+            return 0
           rescue => e
             handle_error(e, options[:debug])
+            return 1
           end
 
           # Filter models based on search term
@@ -90,7 +92,6 @@ module CodingAgentTools
               error_output("Error: #{error.message}")
               error_output("Use --debug flag for more information")
             end
-            exit 1
           end
 
           # Output error message to stderr

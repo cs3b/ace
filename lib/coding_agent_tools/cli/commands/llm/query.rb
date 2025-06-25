@@ -65,19 +65,21 @@ module CodingAgentTools
               error_output("  llm-query google \"What is Ruby?\"")
               error_output("  llm-query gflash \"Quick question\"")
               error_output("  llm-query anthropic:claude-4-0-sonnet-latest \"Explain AI\"")
-              exit 1
+              return 1
             end
 
             # Validate prompt argument
             if prompt.nil? || prompt.strip.empty?
               error_output("Error: Prompt is required")
-              exit 1
+              return 1
             end
 
             # Execute the unified query logic
             execute_query(parse_result.provider, parse_result.model, prompt, options)
+            0
           rescue => e
             handle_error(e, options[:debug])
+            1
           end
 
           private
@@ -264,7 +266,6 @@ module CodingAgentTools
               error_output("Error: #{error.message}")
               error_output("Use --debug flag for more information")
             end
-            exit 1
           end
 
           def error_output(message)
