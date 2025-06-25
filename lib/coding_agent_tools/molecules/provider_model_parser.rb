@@ -21,25 +21,34 @@ module CodingAgentTools
     #   result.valid? # => false
     #   result.error # => "Unknown provider: invalid"
     class ProviderModelParser
-      # Supported LLM providers
-      SUPPORTED_PROVIDERS = %w[
-        google
-        anthropic
-        openai
-        mistral
-        together_ai
-        lmstudio
-      ].freeze
+      class << self
+        # Register a provider and its aliases dynamically
+        # Called by ClientFactory during client registration
+        # @param provider_name [String] The provider identifier
+        # @param aliases [Hash] Provider-specific aliases
+        def register_provider(provider_name, aliases = {})
+          registered_providers << provider_name unless registered_providers.include?(provider_name)
+          registered_aliases.merge!(aliases)
+        end
 
-      # Dynamic aliases mapping to provider:model combinations
-      DYNAMIC_ALIASES = {
-        "gflash" => "google:gemini-2.5-flash",
-        "gpro" => "google:gemini-2.5-pro",
-        "csonet" => "anthropic:claude-4-0-sonnet-latest",
-        "copus" => "anthropic:claude-4-0-opus-latest",
-        "o4mini" => "openai:gpt-4o-mini",
-        "o3" => "openai:o3"
-      }.freeze
+        # Get dynamically registered providers
+        # @return [Array<String>] List of registered provider names
+        def registered_providers
+          @registered_providers ||= []
+        end
+
+        # Get dynamically registered aliases
+        # @return [Hash<String, String>] Mapping of aliases to provider:model combinations
+        def registered_aliases
+          @registered_aliases ||= {}
+        end
+
+        # Clear dynamic registrations (mainly for testing)
+        def clear_registrations!
+          @registered_providers = []
+          @registered_aliases = {}
+        end
+      end
 
       # Get the default model configuration instance
       #
@@ -80,7 +89,7 @@ module CodingAgentTools
               next # Skip abstract classes that don't implement provider_name
             end
 
-            next unless provider_key && SUPPORTED_PROVIDERS.include?(provider_key)
+            next unless provider_key
 
             # Force registration with ClientFactory (fallback if inherited hook didn't work)
             Molecules::ClientFactory.register(provider_key, client_class)
@@ -121,8 +130,8 @@ module CodingAgentTools
         original_input = input
 
         # Handle dynamic aliases first
-        if DYNAMIC_ALIASES.key?(input.strip)
-          input = DYNAMIC_ALIASES[input.strip]
+        if dynamic_aliases.key?(input.strip)
+          input = dynamic_aliases[input.strip]
         end
 
         # Parse provider:model syntax or provider-only
@@ -133,8 +142,8 @@ module CodingAgentTools
           provider = parts[0].strip.downcase
 
           # Validate provider
-          unless SUPPORTED_PROVIDERS.include?(provider)
-            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{SUPPORTED_PROVIDERS.join(", ")}")
+          unless supported_providers.include?(provider)
+            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
           end
 
           # Use default model for provider
@@ -149,8 +158,8 @@ module CodingAgentTools
           model = model.strip
 
           # Validate provider
-          unless SUPPORTED_PROVIDERS.include?(provider)
-            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{SUPPORTED_PROVIDERS.join(", ")}")
+          unless supported_providers.include?(provider)
+            return create_error_result(input, "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
           end
 
           # Validate model is not empty
@@ -169,14 +178,18 @@ module CodingAgentTools
       #
       # @return [Array<String>] List of supported provider names
       def supported_providers
-        SUPPORTED_PROVIDERS.dup
+        # Ensure providers are loaded first
+        ensure_providers_loaded
+        self.class.registered_providers.sort
       end
 
       # Returns all available dynamic aliases
       #
       # @return [Hash<String, String>] Mapping of aliases to provider:model combinations
       def dynamic_aliases
-        DYNAMIC_ALIASES.dup
+        # Ensure providers are loaded first
+        ensure_providers_loaded
+        self.class.registered_aliases.dup
       end
 
       # Returns default models for all providers
@@ -205,7 +218,7 @@ module CodingAgentTools
       # @return [Boolean] True if the provider is supported
       def valid_provider?(provider)
         return false if provider.nil?
-        SUPPORTED_PROVIDERS.include?(provider.strip.downcase)
+        supported_providers.include?(provider.strip.downcase)
       end
 
       # Resolves an alias to its full provider:model form
@@ -214,7 +227,7 @@ module CodingAgentTools
       # @return [String, nil] The provider:model string or nil if not found
       def resolve_alias(alias_name)
         return nil if alias_name.nil?
-        DYNAMIC_ALIASES[alias_name.strip]
+        dynamic_aliases[alias_name.strip]
       end
 
       # Checks if input is a known dynamic alias
@@ -223,7 +236,7 @@ module CodingAgentTools
       # @return [Boolean] True if input is a known alias
       def alias?(input)
         return false if input.nil?
-        DYNAMIC_ALIASES.key?(input.strip)
+        dynamic_aliases.key?(input.strip)
       end
 
       private
