@@ -8,7 +8,8 @@ loader.inflector.inflect(
   "http_client" => "HTTPClient",
   "http_request_builder" => "HTTPRequestBuilder",
   "api_credentials" => "APICredentials",
-  "api_response_parser" => "APIResponseParser"
+  "api_response_parser" => "APIResponseParser",
+  "xdg_directory_resolver" => "XDGDirectoryResolver"
 )
 loader.setup
 
