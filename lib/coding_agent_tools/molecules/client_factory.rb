@@ -14,6 +14,9 @@ module CodingAgentTools
         def register(provider_name, client_class)
           @registry ||= {}
           @registry[provider_name] = client_class
+
+          # Collect provider metadata for dynamic discovery
+          collect_provider_metadata(provider_name, client_class)
         end
 
         # Build a client instance for the specified provider
@@ -49,6 +52,23 @@ module CodingAgentTools
         # Clear the registry (mainly for testing)
         def clear_registry!
           @registry = {}
+        end
+
+        private
+
+        # Collect provider metadata and notify ProviderModelParser
+        # @param provider_name [String] The provider identifier
+        # @param client_class [Class] The client class
+        def collect_provider_metadata(provider_name, client_class)
+          # Get dynamic aliases if the client class supports them
+          aliases = {}
+          if client_class.respond_to?(:dynamic_aliases)
+            aliases = client_class.dynamic_aliases || {}
+          end
+
+          # Notify ProviderModelParser about the new provider
+          require_relative "provider_model_parser"
+          ProviderModelParser.register_provider(provider_name, aliases)
         end
       end
     end
