@@ -17,6 +17,16 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
     )
   end
 
+  describe ".dynamic_aliases" do
+    it "returns expected aliases for Google provider" do
+      aliases = described_class.dynamic_aliases
+      expect(aliases).to eq({
+        "gflash" => "google:gemini-2.5-flash",
+        "gpro" => "google:gemini-2.5-pro"
+      })
+    end
+  end
+
   describe "#initialize" do
     context "with default configuration" do
       it "uses default model" do
