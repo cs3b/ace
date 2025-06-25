@@ -46,8 +46,10 @@ module CodingAgentTools
             # For now, create a placeholder implementation
             # In a real implementation, this would read from cache/logs
             generate_sample_report(options)
+            return 0
           rescue => e
             handle_error(e, options[:debug])
+            return 1
           end
 
           private
@@ -290,7 +292,6 @@ module CodingAgentTools
               warn "Error: #{error.message}"
               warn "Use --debug flag for more information"
             end
-            exit 1
           end
         end
       end

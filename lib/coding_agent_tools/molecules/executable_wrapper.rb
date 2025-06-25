@@ -104,8 +104,8 @@ module CodingAgentTools
       # Captures output, executes CLI, and processes the result
       def capture_and_execute
         setup_output_capture
-        execute_cli
-        process_successful_output
+        status_code = execute_cli
+        process_output_and_exit(status_code)
       rescue SystemExit => e
         process_system_exit(e)
       end
@@ -120,16 +120,20 @@ module CodingAgentTools
         $stderr = @captured_stderr
       end
 
-      # Executes the main CLI
+      # Executes the main CLI and returns the exit status
       def execute_cli
-        Dry::CLI.new(CodingAgentTools::Cli::Commands).call
+        result = Dry::CLI.new(CodingAgentTools::Cli::Commands).call
+        # CLI commands now return status codes instead of exiting
+        # Return 0 if result is nil (successful completion) or the actual status code
+        result.nil? ? 0 : result
       end
 
-      # Processes output when command succeeds without SystemExit
-      def process_successful_output
+      # Processes output and exits with the appropriate status code
+      def process_output_and_exit(status_code)
         restore_streams
         output_content = get_captured_content
         print_modified_output(output_content)
+        exit(status_code) if status_code != 0
       end
 
       # Processes output when SystemExit is raised

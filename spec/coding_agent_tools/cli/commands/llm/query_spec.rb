@@ -35,8 +35,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       allow(client).to receive(:generate_text).and_return(mock_response)
     end
 
-    # Mock metadata normalizer
-    allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize).and_return(mock_normalized_response[:metadata])
+    # Mock metadata normalizer and cost tracker
+    allow(CodingAgentTools::CostTracker).to receive(:new).and_return(double("CostTracker"))
+    mock_usage_metadata = double("UsageMetadata",
+      to_h: mock_normalized_response[:metadata],
+      input_tokens: 100,
+      output_tokens: 50,
+      cached?: false,
+      cached_tokens: 0,
+      has_cost_info?: false,
+      cost_summary: "Cost info unavailable")
+    allow(CodingAgentTools::Molecules::MetadataNormalizer).to receive(:normalize_with_cost).and_return(mock_usage_metadata)
 
     # Mock format handlers
     allow(CodingAgentTools::Molecules::FormatHandlers).to receive(:get_handler).and_return(mock_format_handler)
@@ -56,7 +65,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         expect(CodingAgentTools::Organisms::GoogleClient).to receive(:new).with(model: "gemini-2.5-flash")
         expect(mock_google_client).to receive(:generate_text).with("test prompt")
 
-        command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt")
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt")
+        expect(result).to eq(0)
       end
 
       it "queries anthropic provider correctly" do
@@ -105,7 +115,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "uses default model for google" do
         expect(CodingAgentTools::Organisms::GoogleClient).to receive(:new).with(model: "gemini-2.0-flash-lite")
 
-        command.call(provider_model: "google", prompt: "test prompt")
+        result = command.call(provider_model: "google", prompt: "test prompt")
+        expect(result).to eq(0)
       end
 
       it "uses default model for anthropic" do
@@ -239,7 +250,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "outputs to stdout with text format by default" do
         expect($stdout).to receive(:puts).with("formatted response")
 
-        command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt")
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt")
+        expect(result).to eq(0)
       end
 
       it "outputs to file when specified" do
@@ -258,37 +270,37 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
     end
 
     context "with invalid input" do
-      it "exits with error for unknown provider" do
-        expect { command.call(provider_model: "unknown:model", prompt: "test prompt") }
-          .to raise_error(SystemExit)
+      it "returns error status for unknown provider" do
+        result = command.call(provider_model: "unknown:model", prompt: "test prompt")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with(/Error: Unknown provider: unknown/)
       end
 
-      it "exits with error for empty prompt" do
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: "") }
-          .to raise_error(SystemExit)
+      it "returns error status for empty prompt" do
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with("Error: Prompt is required")
       end
 
-      it "exits with error for nil prompt" do
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: nil) }
-          .to raise_error(SystemExit)
+      it "returns error status for nil prompt" do
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: nil)
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with("Error: Prompt is required")
       end
 
-      it "exits with error for whitespace-only prompt" do
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: "   ") }
-          .to raise_error(SystemExit)
+      it "returns error status for whitespace-only prompt" do
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "   ")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with("Error: Prompt is required")
       end
 
       it "shows helpful error information" do
-        expect { command.call(provider_model: "unknown:model", prompt: "test prompt") }
-          .to raise_error(SystemExit)
+        result = command.call(provider_model: "unknown:model", prompt: "test prompt")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with(/Supported providers:/).at_least(:once)
         expect(command).to have_received(:error_output).with(/Available aliases:/).at_least(:once)
@@ -300,8 +312,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "handles client errors without debug" do
         allow(mock_google_client).to receive(:generate_text).and_raise(StandardError.new("API error"))
 
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt") }
-          .to raise_error(SystemExit)
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with(/Error: Failed to query google: API error/)
         expect(command).to have_received(:error_output).with("Use --debug flag for more information")
@@ -310,8 +322,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "handles client errors with debug" do
         allow(mock_google_client).to receive(:generate_text).and_raise(StandardError.new("API error"))
 
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt", debug: true) }
-          .to raise_error(SystemExit)
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "test prompt", debug: true)
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with(/Error: CodingAgentTools::Error: Failed to query google: API error/)
         expect(command).to have_received(:error_output).with("\nBacktrace:")
@@ -320,8 +332,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       it "handles file processing errors" do
         allow(mock_file_handler).to receive(:read_content).and_raise(CodingAgentTools::Error.new("File not found"))
 
-        expect { command.call(provider_model: "google:gemini-2.5-flash", prompt: "nonexistent.txt") }
-          .to raise_error(SystemExit)
+        result = command.call(provider_model: "google:gemini-2.5-flash", prompt: "nonexistent.txt")
+        expect(result).to eq(1)
 
         expect(command).to have_received(:error_output).with(/Error: File not found/)
       end
