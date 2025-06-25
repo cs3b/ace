@@ -36,6 +36,9 @@ module CodingAgentTools
 
           option :timeout, type: :integer, desc: "Request timeout in seconds"
 
+          option :force, type: :boolean, default: false, aliases: ["f"],
+            desc: "Force overwrite existing output files without confirmation"
+
           example [
             'google:gemini-2.5-flash "What is Ruby programming language?"',
             'google "What is Ruby?" # uses default model',
@@ -199,7 +202,7 @@ module CodingAgentTools
             handler = Molecules::FormatHandlers.get_handler(format)
 
             formatted_content = handler.format(response)
-            @file_handler.write_content(formatted_content, options[:output], format: format)
+            @file_handler.write_content(formatted_content, options[:output], format: format, force: options[:force])
 
             # Print summary to stdout
             summary = handler.generate_summary(response, options[:output])

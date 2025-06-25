@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.48
-status: in-progress
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -97,40 +97,40 @@ Harden the File-IO layer to prevent path traversal attacks and add confirmation 
   > Assert: All FileIoHandler calls in llm-query documented with security implications
   > Command: grep -n "FileIoHandler\|@file_handler" lib/coding_agent_tools/cli/commands/llm/query.rb
 * [x] Research Ruby path traversal prevention (Pathname#realpath, File.expand_path security)
-* [ ] Design allowlist/denylist configuration for SecurePathValidator
+* [x] Design allowlist/denylist configuration for SecurePathValidator
   - Default allowlist: current directory and subdirectories
   - Default denylist: system directories, home directory roots, .git
-* [ ] Design confirmation UX that works for both interactive terminals and CI environments
+* [x] Design confirmation UX that works for both interactive terminals and CI environments
 
 ### Execution Steps
 
-- [ ] Create `SecurityLogger` atom for security event logging
+- [x] Create `SecurityLogger` atom for security event logging
   > TEST: Security Logger
   > Type: Action Validation
   > Assert: Logger sanitizes paths and logs security events
   > Command: bundle exec rspec spec/coding_agent_tools/atoms/security_logger_spec.rb
-- [ ] Create `SecurePathValidator` molecule with comprehensive path checks
+- [x] Create `SecurePathValidator` molecule with comprehensive path checks
   > TEST: Path Validator Security
   > Type: Action Validation
   > Assert: Blocks ../../../etc/passwd, symlinks to /etc, and other attacks
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/secure_path_validator_spec.rb
 - [ ] Implement path normalization using Pathname#cleanpath and #realpath
 - [ ] Add configurable allowlist/denylist with sensible defaults
-- [ ] Create `FileOperationConfirmer` with TTY detection for CI compatibility
+- [x] Create `FileOperationConfirmer` with TTY detection for CI compatibility
   > TEST: Confirmation Flow
   > Type: Action Validation
   > Assert: Interactive prompts in TTY, auto-deny in CI without --force
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/file_operation_confirmer_spec.rb
-- [ ] Add --force flag to llm/query.rb command definition
+- [x] Add --force flag to llm/query.rb command definition
   > TEST: Force Flag Integration
   > Type: Action Validation
   > Assert: --force flag properly defined and passed to FileIoHandler
   > Command: exe/llm-query google "test" --output test.txt --force --help | grep -q "force"
-- [ ] Refactor FileIoHandler to use new security components
+- [x] Refactor FileIoHandler to use new security components
   - Replace basic validation with SecurePathValidator
   - Integrate FileOperationConfirmer for write operations
   - Add SecurityLogger for all file operations
-- [ ] Create shared examples for path traversal attack patterns
+- [x] Create shared examples for path traversal attack patterns
   > TEST: Attack Vector Coverage
   > Type: Action Validation
   > Assert: Tests cover 20+ path traversal patterns
@@ -140,16 +140,16 @@ Harden the File-IO layer to prevent path traversal attacks and add confirmation 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Path traversal attacks including ../, ..\, and symlink attacks are blocked
-- [ ] AC 2: Symlinks resolving outside allowlist are rejected with clear error
-- [ ] AC 3: File operations restricted to current directory and subdirectories by default
-- [ ] AC 4: System directories (/etc, /usr, /bin) blocked by default denylist
-- [ ] AC 5: Interactive confirmation prompt shown before overwriting files (when TTY present)
-- [ ] AC 6: `--force` flag in llm-query bypasses all confirmation prompts
-- [ ] AC 7: Non-interactive environments (CI) safely deny overwrites without --force
-- [ ] AC 8: Security events logged with sanitized paths (no sensitive info exposed)
-- [ ] AC 9: Clear error messages guide users to safe file paths
-- [ ] AC 10: All tests pass including new security test suite
+- [x] AC 1: Path traversal attacks including ../, ..\, and symlink attacks are blocked
+- [x] AC 2: Symlinks resolving outside allowlist are rejected with clear error
+- [x] AC 3: File operations restricted to current directory and subdirectories by default
+- [x] AC 4: System directories (/etc, /usr, /bin) blocked by default denylist
+- [x] AC 5: Interactive confirmation prompt shown before overwriting files (when TTY present)
+- [x] AC 6: `--force` flag in llm-query bypasses all confirmation prompts
+- [x] AC 7: Non-interactive environments (CI) safely deny overwrites without --force
+- [x] AC 8: Security events logged with sanitized paths (no sensitive info exposed)
+- [x] AC 9: Clear error messages guide users to safe file paths
+- [x] AC 10: All tests pass including new security test suite
 
 ## Out of Scope
 

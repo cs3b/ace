@@ -23,8 +23,14 @@ module CodingAgentTools
       # Initialize file I/O handler
       # @param options [Hash] Configuration options
       # @option options [Integer] :max_file_size Maximum file size to read
+      # @option options [SecurityLogger] :security_logger Logger for security events
+      # @option options [SecurePathValidator] :path_validator Path security validator
+      # @option options [FileOperationConfirmer] :operation_confirmer File operation confirmer
       def initialize(**options)
         @max_file_size = options.fetch(:max_file_size, MAX_FILE_SIZE)
+        @security_logger = options[:security_logger] || create_security_logger
+        @path_validator = options[:path_validator] || create_path_validator
+        @operation_confirmer = options[:operation_confirmer] || create_operation_confirmer
       end
 
       # Detect if input is a file path or inline content
@@ -60,24 +66,48 @@ module CodingAgentTools
         end
       end
 
-      # Write content to file with format handling
+      # Write content to file with format handling and security checks
       # @param content [String] Content to write
       # @param file_path [String] Output file path
       # @param format [String, nil] Format override (json, markdown, text)
+      # @param force [Boolean] Whether to force overwrite without confirmation
       # @return [String] Inferred or specified format
-      # @raise [Error] If file cannot be written
-      def write_content(content, file_path, format: nil)
-        inferred_format = format || infer_format_from_path(file_path)
+      # @raise [Error] If file cannot be written or security checks fail
+      def write_content(content, file_path, format: nil, force: false)
+        # Validate path security
+        validation_result = @path_validator.validate_path(file_path, operation: :write)
+        if validation_result.invalid?
+          raise Error, "Path validation failed: #{validation_result.error_message}"
+        end
+
+        validated_path = validation_result.sanitized_path
+        inferred_format = format || infer_format_from_path(validated_path)
+
+        # Check for overwrite confirmation if file exists
+        confirmation_result = @operation_confirmer.confirm_overwrite(validated_path, force: force)
+        unless confirmation_result.confirmed?
+          raise Error, "File overwrite denied: #{confirmation_result.reason}"
+        end
 
         # Ensure output directory exists
-        dir_path = File.dirname(file_path)
+        dir_path = File.dirname(validated_path)
         FileUtils.mkdir_p(dir_path) unless File.directory?(dir_path)
 
         # Write content to file
-        File.write(file_path, content, encoding: "UTF-8")
+        File.write(validated_path, content, encoding: "UTF-8")
+
+        @security_logger.log_event(:file_operation,
+          path: validated_path,
+          metadata: {
+            operation: "write",
+            format: inferred_format,
+            size: content.bytesize,
+            forced: force
+          })
 
         inferred_format
       rescue => e
+        @security_logger.log_error(e, context: {operation: "write", file_path: file_path})
         raise Error, "Failed to write file #{file_path}: #{e.message}"
       end
 
@@ -135,30 +165,50 @@ module CodingAgentTools
 
       private
 
-      # Read content from file with validation
+      # Read content from file with security validation
       # @param file_path [String] Path to file
       # @return [String] File contents
-      # @raise [Error] If file cannot be read or is too large
+      # @raise [Error] If file cannot be read, is too large, or fails security checks
       def read_file_content(file_path)
-        unless File.exist?(file_path)
+        # Validate path security
+        validation_result = @path_validator.validate_path(file_path, operation: :read)
+        if validation_result.invalid?
+          raise Error, "Path validation failed: #{validation_result.error_message}"
+        end
+
+        validated_path = validation_result.sanitized_path
+
+        unless File.exist?(validated_path)
           raise Error, "File not found: #{file_path}"
         end
 
-        unless File.readable?(file_path)
+        unless File.readable?(validated_path)
           raise Error, "Permission denied reading file: #{file_path}"
         end
 
-        file_size = File.size(file_path)
+        file_size = File.size(validated_path)
         if file_size > @max_file_size
           raise Error, "File too large: #{file_size} bytes (max: #{@max_file_size})"
         end
 
-        File.read(file_path, encoding: "UTF-8").strip
+        content = File.read(validated_path, encoding: "UTF-8").strip
+
+        @security_logger.log_event(:file_operation,
+          path: validated_path,
+          metadata: {
+            operation: "read",
+            size: file_size
+          })
+
+        content
       rescue Errno::EACCES
+        @security_logger.log_error(StandardError.new("Permission denied"), context: {operation: "read", file_path: file_path})
         raise Error, "Permission denied reading file: #{file_path}"
       rescue Errno::ENOENT
+        @security_logger.log_error(StandardError.new("File not found"), context: {operation: "read", file_path: file_path})
         raise Error, "File not found: #{file_path}"
       rescue => e
+        @security_logger.log_error(e, context: {operation: "read", file_path: file_path})
         raise Error, "Error reading file #{file_path}: #{e.message}"
       end
 
@@ -172,6 +222,27 @@ module CodingAgentTools
         end
 
         content.strip
+      end
+
+      # Create security logger instance
+      # @return [SecurityLogger] Security logger
+      def create_security_logger
+        require_relative "../atoms/security_logger"
+        Atoms::SecurityLogger.new
+      end
+
+      # Create secure path validator instance
+      # @return [SecurePathValidator] Path validator
+      def create_path_validator
+        require_relative "secure_path_validator"
+        SecurePathValidator.new
+      end
+
+      # Create file operation confirmer instance
+      # @return [FileOperationConfirmer] Operation confirmer
+      def create_operation_confirmer
+        require_relative "file_operation_confirmer"
+        FileOperationConfirmer.new
       end
     end
   end

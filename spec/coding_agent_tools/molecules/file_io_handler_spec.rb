@@ -6,8 +6,21 @@ require "tmpdir"
 require "coding_agent_tools/molecules/file_io_handler"
 
 RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
-  let(:handler) { described_class.new }
   let(:temp_dir) { Dir.mktmpdir }
+
+  # Create a test-only path validator that allows all paths for testing
+  let(:test_path_validator) do
+    # For tests, we'll create a validator that allows all paths by overriding validate_path
+    validator_class = Class.new(CodingAgentTools::Molecules::SecurePathValidator) do
+      def validate_path(path, context = {})
+        # For tests, just return a successful validation with the path as-is
+        CodingAgentTools::Molecules::SecurePathValidator::ValidationResult.new(true, path, nil, nil)
+      end
+    end
+    validator_class.new
+  end
+
+  let(:handler) { described_class.new(path_validator: test_path_validator) }
 
   after do
     FileUtils.remove_entry(temp_dir) if Dir.exist?(temp_dir)
@@ -272,7 +285,7 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
 
   describe "file size limits" do
     context "with custom max file size" do
-      let(:small_handler) { described_class.new(max_file_size: 10) }
+      let(:small_handler) { described_class.new(max_file_size: 10, path_validator: test_path_validator) }
       let(:temp_file) { Tempfile.new("large_test") }
 
       before do
