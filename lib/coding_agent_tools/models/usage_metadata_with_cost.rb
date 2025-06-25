@@ -25,6 +25,9 @@ module CodingAgentTools
         cached_tokens: nil,
         cost_calculation: nil
       )
+        # Set cost calculation before calling super to avoid frozen object modification
+        @cost_calculation = cost_calculation
+
         super(
           input_tokens: input_tokens,
           output_tokens: output_tokens,
@@ -39,9 +42,7 @@ module CodingAgentTools
           cached_tokens: cached_tokens
         )
 
-        @cost_calculation = cost_calculation
-
-        freeze
+        # No need to call freeze again as super already does it
       end
 
       attr_reader :cost_calculation

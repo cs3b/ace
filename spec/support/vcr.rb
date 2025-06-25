@@ -29,7 +29,7 @@ VCR.configure do |config|
       uri_obj = URI(uri)
       if uri_obj.query
         query = URI.decode_www_form(uri_obj.query)
-        filtered_query = query.except("key")
+        filtered_query = query.reject { |param| param[0] == "key" }
         # Set query to nil if it's empty to avoid a trailing '?'
         uri_obj.query = URI.encode_www_form(filtered_query) if filtered_query.any?
         uri_obj.query = nil unless filtered_query.any?

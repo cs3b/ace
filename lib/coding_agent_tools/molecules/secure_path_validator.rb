@@ -2,6 +2,7 @@
 
 require "pathname"
 require "fileutils"
+require "tmpdir"
 
 module CodingAgentTools
   module Molecules
@@ -17,8 +18,15 @@ module CodingAgentTools
 
       # Default configuration for security validation
       DEFAULT_CONFIG = {
-        # Allow current directory and subdirectories by default
-        allowed_base_paths: ["."],
+        # Allow current directory and common temporary directories by default
+        allowed_base_paths: [
+          ".",                           # Current directory and subdirectories
+          "/tmp",                        # Unix/Linux temporary directory
+          "/var/tmp",                    # Unix/Linux alternative temporary directory
+          "/var/folders",                # macOS system temporary directories
+          "/private/tmp",                # macOS private temporary directory
+          "/private/var/tmp"             # macOS private alternative temporary directory
+        ],
 
         # Deny system directories and common sensitive paths
         denied_patterns: [
@@ -54,6 +62,18 @@ module CodingAgentTools
       # @param security_logger [SecurityLogger, nil] Logger for security events
       def initialize(config: {}, security_logger: nil)
         @config = DEFAULT_CONFIG.merge(config)
+        
+        # Ensure allowed_base_paths is always an Array (not Set or other type)
+        @config[:allowed_base_paths] = Array(@config[:allowed_base_paths]).dup
+        
+        # Add system temporary directories to allowed paths if not already present
+        system_temp_dirs = discover_system_temp_directories
+        system_temp_dirs.each do |temp_dir|
+          unless @config[:allowed_base_paths].include?(temp_dir)
+            @config[:allowed_base_paths] << temp_dir
+          end
+        end
+        
         @security_logger = security_logger || create_default_logger
       end
 
@@ -109,6 +129,35 @@ module CodingAgentTools
       end
 
       private
+
+      # Discover system temporary directories from environment variables
+      # @return [Array<String>] List of additional temporary directories to allow
+      def discover_system_temp_directories
+        temp_dirs = []
+        
+        # Check common environment variables for temporary directories
+        %w[TMPDIR TMP TEMP].each do |env_var|
+          temp_path = ENV[env_var]
+          if temp_path && !temp_path.empty? && File.directory?(temp_path)
+            # Resolve to absolute path
+            resolved_path = File.realpath(temp_path)
+            temp_dirs << resolved_path unless temp_dirs.include?(resolved_path)
+          end
+        end
+        
+        # Ruby's default temporary directory
+        begin
+          ruby_tmp = Dir.tmpdir
+          if ruby_tmp && File.directory?(ruby_tmp)
+            resolved_path = File.realpath(ruby_tmp)
+            temp_dirs << resolved_path unless temp_dirs.include?(resolved_path)
+          end
+        rescue
+          # Ignore errors in discovering Ruby's tmpdir
+        end
+        
+        temp_dirs
+      end
 
       # Create default security logger
       # @return [SecurityLogger] Default logger instance
