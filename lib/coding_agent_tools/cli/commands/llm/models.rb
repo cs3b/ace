@@ -4,6 +4,7 @@ require "dry/cli"
 require "yaml"
 require "fileutils"
 require_relative "../../../models/default_model_config"
+require_relative "../../../molecules/cache_manager"
 
 module CodingAgentTools
   module Cli
@@ -157,11 +158,18 @@ module CodingAgentTools
             default_model_id = default_config.default_model_for("google")
             generate_models.map do |model|
               model_id = model[:name].sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
+
+              # Extract context size and max output tokens from model metadata
+              context_size = extract_google_context_size(model)
+              max_output_tokens = extract_google_max_output_tokens(model)
+
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_model_name(model[:name]),
                 description: model[:description] || "Google model",
-                default: model_id == default_model_id
+                default: model_id == default_model_id,
+                context_size: context_size,
+                max_output_tokens: max_output_tokens
               )
             end.sort_by(&:id)
           end
@@ -175,11 +183,18 @@ module CodingAgentTools
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
+
+              # Extract context size and max output tokens from LM Studio model metadata
+              context_size = extract_lmstudio_context_size(model)
+              max_output_tokens = extract_lmstudio_max_output_tokens(model)
+
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_lmstudio_model_name(model_id),
                 description: "LM Studio model",
-                default: model_id == default_model_id
+                default: model_id == default_model_id,
+                context_size: context_size,
+                max_output_tokens: max_output_tokens
               )
             end.sort_by(&:id)
           end
@@ -385,7 +400,9 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             when "lmstudio"
@@ -397,7 +414,9 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             when "openai"
@@ -409,7 +428,9 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             when "anthropic"
@@ -421,7 +442,9 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             when "mistral"
@@ -433,7 +456,9 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             when "together_ai"
@@ -446,28 +471,28 @@ module CodingAgentTools
                   id: model_data["id"],
                   name: model_data["name"],
                   description: model_data["description"],
-                  default: model_data["id"] == default_model_id
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             end
           end
 
-          # Cache management methods
-          def cache_dir
-            @cache_dir ||= File.expand_path("~/.coding-agent-tools-cache")
+          # Cache management methods using XDG-compliant CacheManager
+          def cache_manager
+            @cache_manager ||= CodingAgentTools::Molecules::CacheManager.new
           end
 
-          def cache_file_path(provider)
-            File.join(cache_dir, "#{provider}_models.yml")
+          def cache_file_name(provider)
+            "#{provider}_models.yml"
           end
 
           def cache_exists?(provider)
-            File.exist?(cache_file_path(provider))
+            cache_manager.cache_exists?(cache_file_name(provider))
           end
 
           def cache_models(provider, models)
-            FileUtils.mkdir_p(cache_dir)
-
             cache_data = {
               "cached_at" => Time.now.iso8601,
               "provider" => provider,
@@ -476,23 +501,28 @@ module CodingAgentTools
                   "id" => model.id,
                   "name" => model.name,
                   "description" => model.description,
-                  "default" => model.default?
+                  "default" => model.default?,
+                  "context_size" => model.context_size,
+                  "max_output_tokens" => model.max_output_tokens
                 }
               end
             }
 
-            File.write(cache_file_path(provider), YAML.dump(cache_data))
+            cache_manager.write_cache(cache_file_name(provider), YAML.dump(cache_data))
           end
 
           def load_models_from_cache(provider)
-            cache_data = YAML.load_file(cache_file_path(provider))
+            cache_content = cache_manager.read_cache(cache_file_name(provider))
+            cache_data = YAML.load(cache_content)
 
             cache_data["models"].map do |model_data|
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_data["id"],
                 name: model_data["name"],
                 description: model_data["description"],
-                default: model_data["default"]
+                default: model_data["default"],
+                context_size: model_data["context_size"],
+                max_output_tokens: model_data["max_output_tokens"]
               )
             end
           end
@@ -616,6 +646,98 @@ module CodingAgentTools
             end
 
             puts JSON.pretty_generate(output)
+          end
+
+          # Context size extraction methods
+
+          # Extract context size from Google model metadata
+          # @param model [Hash] Google model metadata
+          # @return [Integer, nil] Context size in tokens
+          def extract_google_context_size(model)
+            # Google models may have inputTokenLimit in their metadata
+            input_limit = model.dig(:inputTokenLimit)
+            return input_limit if input_limit&.positive?
+
+            # Fallback to known values for common models
+            model_name = model[:name] || ""
+            case model_name
+            when /gemini-2\.0-flash-exp/
+              1_048_576  # 1M tokens
+            when /gemini-2\.0-flash/
+              1_048_576  # 1M tokens
+            when /gemini-exp-1206/
+              2_097_152  # 2M tokens
+            when /gemini-exp-1121/
+              2_097_152  # 2M tokens
+            when /gemini-1\.5-pro/
+              2_097_152  # 2M tokens
+            when /gemini-1\.5-flash/
+              1_048_576  # 1M tokens
+            when /gemini-1\.0-pro/
+              32_768     # 32K tokens
+            end
+          end
+
+          # Extract max output tokens from Google model metadata
+          # @param model [Hash] Google model metadata
+          # @return [Integer, nil] Max output tokens
+          def extract_google_max_output_tokens(model)
+            # Google models may have outputTokenLimit in their metadata
+            output_limit = model.dig(:outputTokenLimit)
+            return output_limit if output_limit&.positive?
+
+            # Fallback to known values for common models
+            model_name = model[:name] || ""
+            case model_name
+            when /gemini-2\.0-flash/
+              8_192   # 8K tokens
+            when /gemini-exp/
+              8_192   # 8K tokens
+            when /gemini-1\.5-pro/
+              8_192   # 8K tokens
+            when /gemini-1\.5-flash/
+              8_192   # 8K tokens
+            when /gemini-1\.0-pro/
+              2_048   # 2K tokens
+            end
+          end
+
+          # Extract context size from LM Studio model metadata
+          # @param model [Hash] LM Studio model metadata
+          # @return [Integer, nil] Context size in tokens
+          def extract_lmstudio_context_size(model)
+            # LM Studio models may have context_length in their metadata
+            context_length = model.dig(:context_length) || model.dig(:context_size)
+            return context_length if context_length&.positive?
+
+            # Fallback based on model name patterns
+            model_id = model[:id] || ""
+            case model_id
+            when /llama.*3.*70b/i
+              131_072  # 128K tokens
+            when /llama.*3.*8b/i
+              131_072  # 128K tokens
+            when /mistral.*8x7b/i
+              32_768   # 32K tokens
+            when /qwen/i
+              32_768   # 32K tokens
+            when /deepseek/i
+              16_384   # 16K tokens
+            end
+          end
+
+          # Extract max output tokens from LM Studio model metadata
+          # @param model [Hash] LM Studio model metadata
+          # @return [Integer, nil] Max output tokens
+          def extract_lmstudio_max_output_tokens(model)
+            # LM Studio models may have max_tokens in their metadata
+            max_tokens = model.dig(:max_tokens) || model.dig(:max_output_tokens)
+            return max_tokens if max_tokens&.positive?
+
+            # For LM Studio, max output is usually limited by context size
+            # Typically set to context_size / 2 for safety
+            context_size = extract_lmstudio_context_size(model)
+            context_size ? [context_size / 2, 4096].max : nil
           end
         end
       end

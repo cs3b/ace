@@ -61,13 +61,14 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
       expect(response.body).to eq("Not Found")
     end
 
-    it "handles 500 server errors" do
+    it "retries 500 server errors and eventually fails" do
       stub_request(:get, "#{test_url}/error")
         .to_return(status: 500, body: "Internal Server Error")
+        .times(3) # Should retry 3 times by default
 
-      response = client.get("#{test_url}/error")
-      expect(response.status).to eq(500)
-      expect(response.body).to eq("Internal Server Error")
+      expect {
+        client.get("#{test_url}/error")
+      }.to raise_error(CodingAgentTools::Molecules::RetryMiddleware::RetryableError, /Retryable response: 500/)
     end
   end
 
@@ -205,6 +206,151 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
       expect {
         slow_client.get("#{test_url}/slow")
       }.to raise_error(Faraday::ConnectionFailed)
+    end
+  end
+
+  describe "retry behavior", :slow do
+    let(:retry_client) { described_class.new(retry_config: {max_attempts: 2, base_delay: 0.01}) }
+
+    context "with retryable status codes" do
+      it "retries HTTP 429 responses" do
+        stub_request(:get, "#{test_url}/rate-limited")
+          .to_return(status: 429, body: "Rate limited")
+          .then.to_return(status: 200, body: "Success")
+
+        response = retry_client.get("#{test_url}/rate-limited")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "retries HTTP 502 responses" do
+        stub_request(:get, "#{test_url}/bad-gateway")
+          .to_return(status: 502, body: "Bad Gateway")
+          .then.to_return(status: 200, body: "Success")
+
+        response = retry_client.get("#{test_url}/bad-gateway")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "retries HTTP 503 responses" do
+        stub_request(:get, "#{test_url}/service-unavailable")
+          .to_return(status: 503, body: "Service Unavailable")
+          .then.to_return(status: 200, body: "Success")
+
+        response = retry_client.get("#{test_url}/service-unavailable")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "fails after max retries with retryable status codes" do
+        stub_request(:get, "#{test_url}/persistent-error")
+          .to_return(status: 503, body: "Service Unavailable")
+          .times(2) # Should retry up to max_attempts
+
+        expect {
+          retry_client.get("#{test_url}/persistent-error")
+        }.to raise_error(CodingAgentTools::Molecules::RetryMiddleware::RetryableError)
+      end
+    end
+
+    context "with non-retryable status codes" do
+      it "does not retry HTTP 404 responses" do
+        stub_request(:get, "#{test_url}/not-found")
+          .to_return(status: 404, body: "Not Found")
+          .times(1) # Should only be called once
+
+        response = retry_client.get("#{test_url}/not-found")
+        expect(response.status).to eq(404)
+        expect(response.body).to eq("Not Found")
+      end
+
+      it "does not retry HTTP 401 responses" do
+        stub_request(:get, "#{test_url}/unauthorized")
+          .to_return(status: 401, body: "Unauthorized")
+          .times(1) # Should only be called once
+
+        response = retry_client.get("#{test_url}/unauthorized")
+        expect(response.status).to eq(401)
+        expect(response.body).to eq("Unauthorized")
+      end
+    end
+
+    context "with connection errors" do
+      it "retries connection failures" do
+        stub_request(:get, "#{test_url}/connection-error")
+          .to_raise(Faraday::ConnectionFailed)
+          .then.to_return(status: 200, body: "Success")
+
+        response = retry_client.get("#{test_url}/connection-error")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "retries timeout errors" do
+        stub_request(:get, "#{test_url}/timeout-error")
+          .to_raise(Faraday::TimeoutError)
+          .then.to_return(status: 200, body: "Success")
+
+        response = retry_client.get("#{test_url}/timeout-error")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "fails after max retries with connection errors" do
+        stub_request(:get, "#{test_url}/persistent-connection-error")
+          .to_raise(Faraday::ConnectionFailed)
+          .times(2) # Should retry up to max_attempts
+
+        expect {
+          retry_client.get("#{test_url}/persistent-connection-error")
+        }.to raise_error(Faraday::ConnectionFailed)
+      end
+    end
+
+    context "with POST requests" do
+      it "retries POST requests with retryable errors" do
+        stub_request(:post, "#{test_url}/retry-post")
+          .with(body: "test data")
+          .to_return(status: 503, body: "Service Unavailable")
+          .then.to_return(status: 201, body: "Created")
+
+        response = retry_client.post("#{test_url}/retry-post", "test data")
+        expect(response.status).to eq(201)
+        expect(response.body).to eq("Created")
+      end
+    end
+
+    context "with custom retry configuration" do
+      let(:custom_retry_client) do
+        described_class.new(
+          retry_config: {
+            max_attempts: 4,
+            base_delay: 0.01,
+            retryable_status_codes: [418, 500] # Custom status codes
+          }
+        )
+      end
+
+      it "uses custom retryable status codes" do
+        stub_request(:get, "#{test_url}/teapot")
+          .to_return(status: 418, body: "I'm a teapot")
+          .then.to_return(status: 200, body: "Success")
+
+        response = custom_retry_client.get("#{test_url}/teapot")
+        expect(response.status).to eq(200)
+        expect(response.body).to eq("Success")
+      end
+
+      it "does not retry status codes not in custom list" do
+        stub_request(:get, "#{test_url}/bad-gateway")
+          .to_return(status: 502, body: "Bad Gateway")
+          .times(1) # Should only be called once since 502 not in custom list
+
+        response = custom_retry_client.get("#{test_url}/bad-gateway")
+        expect(response.status).to eq(502)
+        expect(response.body).to eq("Bad Gateway")
+      end
     end
   end
 
