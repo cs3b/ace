@@ -577,7 +577,7 @@ RSpec.describe "llm-query integration", type: :integration do
       output_file = create_temp_file("", extension: ".json")
 
       _, stderr, status = execute_gem_executable(exe_name,
-        ["google:gemini-2.0-flash-lite", "Say hello world", "--output", output_file], env: env)
+        ["google:gemini-2.0-flash-lite", "Say hello world", "--output", output_file, "--force"], env: env)
 
       expect(status).to be_success
       expect(stderr).to be_empty
@@ -665,9 +665,12 @@ RSpec.describe "llm-query integration", type: :integration do
     let(:google_api_key) { EnvHelper.google_api_key }
 
     describe "malicious input file paths" do
-      it "treats non-existent malicious paths as inline content (safe behavior)" do
+      it "treats non-existent malicious paths as inline content (safe behavior)", :vcr do
         # Non-existent paths should be treated as inline prompts, not file paths
         # This is actually the secure behavior - no file system access attempted
+        cassette_name = "llm_query_integration/security/malicious_paths_as_inline_content"
+        env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+        
         malicious_paths = [
           "../../../etc/passwd",
           "../../root/.bashrc",
@@ -677,7 +680,7 @@ RSpec.describe "llm-query integration", type: :integration do
         malicious_paths.each do |malicious_path|
           # These should succeed as they're treated as inline prompts
           _, stderr, _ = execute_gem_executable(exe_name,
-            ["google", malicious_path], env: {"GOOGLE_API_KEY" => google_api_key}, timeout: 30000)
+            ["google", malicious_path], env: env)
 
           # Should succeed or fail due to API, not path validation
           expect(stderr).not_to match(/Path validation failed/i),
@@ -705,7 +708,10 @@ RSpec.describe "llm-query integration", type: :integration do
     end
 
     describe "malicious output file paths" do
-      it "blocks path traversal attempts in output files" do
+      it "blocks path traversal attempts in output files", :vcr do
+        cassette_name = "llm_query_integration/security/blocks_path_traversal"
+        env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+        
         malicious_output_paths = [
           "../../../tmp/malicious.txt",
           "../../etc/evil.txt",
@@ -716,7 +722,7 @@ RSpec.describe "llm-query integration", type: :integration do
         malicious_output_paths.each do |malicious_path|
           _, stderr, status = execute_gem_executable(exe_name,
             ["google", "test prompt", "--output", malicious_path],
-            env: {"GOOGLE_API_KEY" => google_api_key})
+            env: env)
 
           expect(status.exitstatus).to eq(1)
           expect(stderr).to match(/Path validation failed|outside allowed|denied pattern|path traversal/i),
@@ -724,7 +730,10 @@ RSpec.describe "llm-query integration", type: :integration do
         end
       end
 
-      it "blocks writing to system directories" do
+      it "blocks writing to system directories", :vcr do
+        cassette_name = "llm_query_integration/security/blocks_system_directories"
+        env = vcr_subprocess_env(cassette_name, "GOOGLE_API_KEY" => google_api_key)
+        
         system_output_paths = [
           "/etc/malicious.conf",
           "/usr/bin/evil",
@@ -735,7 +744,7 @@ RSpec.describe "llm-query integration", type: :integration do
         system_output_paths.each do |system_path|
           _, stderr, status = execute_gem_executable(exe_name,
             ["google", "test prompt", "--output", system_path],
-            env: {"GOOGLE_API_KEY" => google_api_key})
+            env: env)
 
           expect(status.exitstatus).to eq(1)
           expect(stderr).to match(/Path validation failed|denied pattern/i),
