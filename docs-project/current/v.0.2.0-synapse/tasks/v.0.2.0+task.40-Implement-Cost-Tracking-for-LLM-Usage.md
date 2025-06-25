@@ -101,22 +101,48 @@ lib/coding_agent_tools
     }
   }
   ```
+* [ ] **Research LiteLLM and ccusage integration approach** ✅
+  - **LiteLLM Pricing API**: `https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json`
+  - **ccusage Architecture**: TypeScript tool that uses LiteLLM's pricing data for cost calculations
+  - **Cost Calculation Strategy**: Use LiteLLM's pricing JSON as authoritative source (same as ccusage)
+  - **Fallback Strategy**: Cache pricing data locally, fallback to offline mode if API unavailable
+  - **Model Matching**: ccusage uses fuzzy matching with provider prefixes and partial matches
+  - **Precision**: BigDecimal equivalent needed (ccusage uses standard JavaScript number precision)
 * [ ] Plan integration with cache system from task.37
-* [ ] Design cost summary display format
+* [ ] Design cost summary display format leveraging ccusage patterns
 
 ### Execution Steps
-- [ ] Create core cost tracking infrastructure
+- [ ] **Create LiteLLM-based pricing infrastructure** (inspired by ccusage@15.2.0)
+  - [ ] Create `lib/coding_agent_tools/pricing_fetcher.rb` (Ruby port of ccusage PricingFetcher)
+    - Fetch from `https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json`
+    - Cache pricing data locally in `.coding-agent-tools-cache/pricing.json`
+    - Implement automatic fallback to cached data if API unavailable
+    - Support offline mode using cached pricing data
+  - [ ] Create fuzzy model name matching (ccusage-style)
+    - Direct match first, then provider prefix variations (`anthropic/claude-3-5-sonnet`)
+    - Partial matching for model name variations
+    - Handle provider-specific aliases and naming conventions
   - [ ] Implement `lib/coding_agent_tools/cost_tracker.rb`
+    - Integration with PricingFetcher for authoritative pricing data
+    - Support for all token types: input, output, cache_creation, cache_read
+    - Use BigDecimal for precision (6+ decimal places)
   - [ ] Create pricing data structures in `lib/coding_agent_tools/models/pricing.rb`
-  - [ ] Add methods to load pricing from cache
+    - Mirror LiteLLM's JSON schema structure
+    - Fields: `input_cost_per_token`, `output_cost_per_token`, `cache_creation_input_token_cost`, `cache_read_input_token_cost`
+  - [ ] Extend `LlmModelInfo` with pricing integration
+    - Add pricing lookup capability via model ID
+    - Cache pricing data per model to avoid repeated API calls
   > TEST: Cost Calculation Accuracy
   >   Type: Unit Test
   >   Assert: Cost calculations are accurate to 6 decimal places
   >   Command: bin/test --verify-cost-calculations
-- [ ] Integrate with cache system
-  - [ ] Read model pricing from `.coding-agent-tools-cache/`
-  - [ ] Handle missing pricing data gracefully
-  - [ ] Support pricing updates via cache refresh
+- [ ] **Integrate LiteLLM pricing with existing cache system**
+  - [ ] Store pricing data in `.coding-agent-tools-cache/litellm_pricing.json`
+  - [ ] Add pricing refresh to `llm-models --refresh` command
+  - [ ] Handle missing pricing data gracefully with clear warnings
+  - [ ] Support pricing updates via `PricingFetcher.refresh` method
+  - [ ] Implement pricing cache expiration (24 hours) with automatic refresh
+  - [ ] Add fallback pricing for common models when LiteLLM API unavailable
 - [ ] Update response classes
   - [ ] Add cost calculation to `base_response.rb`
   - [ ] Implement provider-specific cost logic
@@ -186,27 +212,55 @@ lib/coding_agent_tools
 
 ## Acceptance Criteria
 
-- [ ] Cost is calculated for every LLM query based on token usage
-- [ ] Cost information uses pricing data from model cache
-- [ ] Cost summary is displayed in stdout after each query
-- [ ] JSON output includes complete cost breakdown in metadata
+**Core Functionality:**
+- [ ] Cost is calculated for every LLM query based on token usage using LiteLLM pricing data
+- [ ] **LiteLLM Integration**: Pricing data fetched from official LiteLLM JSON endpoint (same source as ccusage)
+- [ ] **Fuzzy Model Matching**: Handles provider aliases and model name variations (claude-3-5-sonnet, anthropic/claude-3-5-sonnet)
+- [ ] Cost summary is displayed in stdout after each query with breakdown by token type
+- [ ] JSON output includes complete cost breakdown in metadata matching ccusage format
 - [ ] Markdown output includes cost information in YAML front matter
-- [ ] Cost tracking works for all providers (including free/local ones)
-- [ ] Usage report command provides accurate cost summaries
-- [ ] Cost display can be toggled via configuration
-- [ ] Missing pricing data is handled gracefully with warnings
-- [ ] Cost calculations are accurate to at least 6 decimal places
-- [ ] Tests verify cost calculation accuracy
-- [ ] Documentation explains cost tracking features
+
+**Advanced Features:**
+- [ ] **Cache Integration**: Pricing data cached locally with 24-hour expiration and automatic refresh
+- [ ] **Offline Mode**: Works without internet using cached pricing data (ccusage-style fallback)
+- [ ] **All Token Types**: Supports input, output, cache_creation, and cache_read token costs
+- [ ] Cost tracking works for all providers (including special handling for free/local LMStudio models)
+- [ ] Usage report command provides accurate cost summaries with LiteLLM precision
+
+**Quality and Reliability:**
+- [ ] **Precision**: Cost calculations accurate to at least 6 decimal places using BigDecimal
+- [ ] **Error Handling**: Missing pricing data handled gracefully with clear warnings and fallbacks
+- [ ] **Configuration**: Cost display can be toggled via configuration
+- [ ] **Testing**: Comprehensive tests verify cost calculation accuracy against LiteLLM data
+- [ ] **Documentation**: Explains cost tracking features and LiteLLM integration approach
+
+## LiteLLM Integration Advantages
+
+**Why use LiteLLM pricing data (same as ccusage@15.2.0):**
+
+1. **Authoritative Source**: LiteLLM maintains the most comprehensive and up-to-date pricing database for all major LLM providers
+2. **Industry Standard**: Used by ccusage, litellm-proxy, and other major tools - proven reliability
+3. **Automatic Updates**: Pricing changes are automatically reflected in the JSON endpoint
+4. **Comprehensive Coverage**: Supports all providers we use (Google, OpenAI, Anthropic, Mistral, Together AI, etc.)
+5. **Token Type Support**: Handles input, output, cache creation, and cache read tokens
+6. **Model Variations**: Includes provider-specific model names and aliases
+7. **Proven Architecture**: ccusage demonstrates successful Ruby-equivalent implementation patterns
+
+**Implementation Benefits:**
+- **Reduced Maintenance**: No need to manually track pricing changes across 6+ providers
+- **Accuracy**: Single source of truth eliminates pricing discrepancies
+- **Resilience**: Offline fallback ensures functionality during network issues
+- **Compatibility**: Can cross-reference costs with other tools using same pricing source
+- **Future-Proof**: Automatically supports new models as LiteLLM adds them
 
 ## Out of Scope
 
-- Currency conversion between different currencies
-- Historical pricing (only current prices from cache)
+- Currency conversion between different currencies (LiteLLM uses USD only)
+- Historical pricing (only current prices from LiteLLM cache)
 - Cost budgets or spending limits
-- Real-time price updates from provider APIs
+- Real-time price updates from provider APIs (LiteLLM updates irregularly)
 - Billing integration or payment processing
-- Complex pricing tiers or volume discounts
+- Complex pricing tiers or volume discounts (not supported by LiteLLM)
 
 ## References & Risks
 

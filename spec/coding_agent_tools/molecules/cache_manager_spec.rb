@@ -257,7 +257,7 @@ RSpec.describe CodingAgentTools::Molecules::CacheManager do
         # Mock File.expand_path to point to our test legacy cache during initialization
         allow(File).to receive(:expand_path).and_call_original
         allow(File).to receive(:expand_path).with("~/.coding-agent-tools-cache").and_return(legacy_cache)
-        
+
         cache_manager = described_class.new(xdg_resolver: test_resolver)
 
         expect { cache_manager.migrate_cache_data }.to output(/INFO: Migrated cache.*INFO: Legacy cache preserved/m).to_stdout
@@ -309,7 +309,7 @@ RSpec.describe CodingAgentTools::Molecules::CacheManager do
         expect {
           result = cache_manager.migrate_cache_data
         }.to output(/Error: Cache migration failed/).to_stderr
-        
+
         expect(result).to be false
       end
     end
