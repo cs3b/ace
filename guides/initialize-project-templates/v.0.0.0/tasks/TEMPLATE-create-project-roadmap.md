@@ -9,6 +9,7 @@ dependencies: [TEMPLATE-task.3]
 # TEMPLATE: Create Project Roadmap
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
+
 1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section

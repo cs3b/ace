@@ -9,6 +9,7 @@ dependencies: []
 # TEMPLATE: Setup docs-project Structure
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
+
 1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
 2. Remove this template note section
 3. Customize content for specific project needs

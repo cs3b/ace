@@ -80,6 +80,7 @@ The tasks in the tasks/ directory are also templates and should be customized fo
 ## Release Completion
 
 When all tasks are complete:
+
 - [ ] Move this release directory to docs-project/done/
 - [ ] Update project status to indicate v.0.0.0 completion
 - [ ] Begin planning for v.0.1.0 foundation release
