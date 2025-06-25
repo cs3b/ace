@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a structured Architecture Decision Record (ADR) document in the `docs-dev/decisions/` directory to
+Create a structured Architecture Decision Record (ADR) document in the `docs/architecture-decisions/` directory to
 capture a significant architectural decision, its context, rationale, and consequences.
 
 ## Prerequisites
@@ -16,7 +16,7 @@ capture a significant architectural decision, its context, rationale, and conseq
 1. **Identify Need:** Determine that a decision warrants an ADR (e.g., choosing a library, defining a core
    interface, changing a major workflow).
 2. **Gather Context:** Collect information about the problem, requirements, constraints, and alternatives considered.
-3. **Draft ADR:** Create a new file (e.g., `docs-dev/decisions/ADR-XXX-DecisionTitle.md`).
+3. **Draft ADR:** Create a new file (e.g., `docs/architecture-decisions/ADR-XXX-DecisionTitle.md`).
    Use the standard template and fill in the sections:
     - **Status:** (e.g., Proposed, Accepted)
     - **Context:** Describe the problem/issue.
@@ -35,7 +35,7 @@ capture a significant architectural decision, its context, rationale, and conseq
 
 ## Output / Success Criteria
 
-- A new ADR `.md` file is created in `docs-dev/decisions/`.
+- A new ADR `.md` file is created in `docs/architecture-decisions/`.
 - The ADR follows the standard template structure.
 - The problem, decision, and rationale are clearly documented.
 - Consequences and alternatives are considered and recorded.
