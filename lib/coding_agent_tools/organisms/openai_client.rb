@@ -26,6 +26,15 @@ module CodingAgentTools
         "openai"
       end
 
+      # Dynamic aliases for this provider
+      # @return [Hash] Mapping of aliases to provider:model combinations
+      def self.dynamic_aliases
+        {
+          "o4mini" => "openai:gpt-4o-mini",
+          "o3" => "openai:o3"
+        }
+      end
+
       # Initialize OpenAI client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use

@@ -29,6 +29,15 @@ module CodingAgentTools
         "anthropic"
       end
 
+      # Dynamic aliases for this provider
+      # @return [Hash] Mapping of aliases to provider:model combinations
+      def self.dynamic_aliases
+        {
+          "csonet" => "anthropic:claude-4-0-sonnet-latest",
+          "copus" => "anthropic:claude-4-0-opus-latest"
+        }
+      end
+
       # Initialize Anthropic client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use

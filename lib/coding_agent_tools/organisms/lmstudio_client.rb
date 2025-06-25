@@ -24,6 +24,12 @@ module CodingAgentTools
         "lmstudio"
       end
 
+      # Dynamic aliases for this provider
+      # @return [Hash] Mapping of aliases to provider:model combinations
+      def self.dynamic_aliases
+        {}
+      end
+
       # Initialize LM Studio client
       # @param model [String] Model to use
       # @param options [Hash] Additional options

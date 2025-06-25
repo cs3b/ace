@@ -26,6 +26,15 @@ module CodingAgentTools
         "google"
       end
 
+      # Dynamic aliases for this provider
+      # @return [Hash] Mapping of aliases to provider:model combinations
+      def self.dynamic_aliases
+        {
+          "gflash" => "google:gemini-2.5-flash",
+          "gpro" => "google:gemini-2.5-pro"
+        }
+      end
+
       # Initialize Google client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use

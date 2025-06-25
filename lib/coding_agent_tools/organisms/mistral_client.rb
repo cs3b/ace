@@ -26,6 +26,12 @@ module CodingAgentTools
         "mistral"
       end
 
+      # Dynamic aliases for this provider
+      # @return [Hash] Mapping of aliases to provider:model combinations
+      def self.dynamic_aliases
+        {}
+      end
+
       # Initialize Mistral client
       # @param api_key [String, nil] API key (uses env/config if nil)
       # @param model [String] Model to use
