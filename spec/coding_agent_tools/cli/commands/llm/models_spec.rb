@@ -217,6 +217,24 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         expect(first_model).to have_key("name")
         expect(first_model).to have_key("description")
         expect(first_model).to have_key("default")
+        expect(first_model).to have_key("context_size")
+        expect(first_model).to have_key("max_output_tokens")
+      end
+
+      it "includes context size information in JSON output" do
+        command.call(format: "json")
+
+        output_content = output.string
+        json_output = JSON.parse(output_content)
+
+        # At least some models should have context size information
+        models_with_context = json_output["models"].select { |m| m["context_size"] }
+        expect(models_with_context).not_to be_empty
+
+        models_with_context.each do |model|
+          expect(model["context_size"]).to be_a(Integer)
+          expect(model["context_size"]).to be > 1000  # Should be reasonable
+        end
       end
 
       it "filters work with JSON format" do

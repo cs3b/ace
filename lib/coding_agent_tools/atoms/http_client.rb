@@ -3,6 +3,7 @@
 require "faraday"
 # require "json" # No longer needed for direct use here, Faraday's :json middleware handles it.
 require_relative "../middlewares/faraday_dry_monitor_logger" # Ensure middleware is loaded and registered
+require_relative "../molecules/retry_middleware" # Retry middleware for resilient HTTP operations
 
 module CodingAgentTools
   module Atoms
@@ -13,10 +14,15 @@ module CodingAgentTools
       # @option options [Integer] :timeout (30) Request timeout in seconds
       # @option options [Integer] :open_timeout (10) Connection open timeout in seconds
       # @option options [Symbol] :event_namespace (:http_client) Namespace for dry-monitor events.
+      # @option options [Hash] :retry_config ({}) Retry configuration passed to RetryMiddleware
       def initialize(options = {})
         @timeout = options.fetch(:timeout, 30)
         @open_timeout = options.fetch(:open_timeout, 10)
         @event_namespace = options.fetch(:event_namespace, :http_client)
+
+        # Set up retry middleware
+        retry_config = options.fetch(:retry_config, {})
+        @retry_middleware = CodingAgentTools::Molecules::RetryMiddleware.new(retry_config)
 
         # Register events early to support subscription before making requests
         register_events
@@ -31,9 +37,12 @@ module CodingAgentTools
       def get(url, **options)
         params = options.fetch(:params, {})
         headers = options.fetch(:headers, {})
-        connection(url).get do |req|
-          req.params = params unless params.empty?
-          req.headers.merge!(headers) unless headers.empty?
+
+        @retry_middleware.execute(operation_name: "GET #{url}") do
+          connection(url).get do |req|
+            req.params = params unless params.empty?
+            req.headers.merge!(headers) unless headers.empty?
+          end
         end
       end
 
@@ -45,9 +54,12 @@ module CodingAgentTools
       # @return [Faraday::Response] The response object
       def post(url, body, **options)
         headers = options.fetch(:headers, {})
-        connection(url).post do |req|
-          req.body = body # Let Faraday's JSON middleware handle nil or hash bodies appropriately
-          req.headers.merge!(headers) unless headers.empty?
+
+        @retry_middleware.execute(operation_name: "POST #{url}") do
+          connection(url).post do |req|
+            req.body = body # Let Faraday's JSON middleware handle nil or hash bodies appropriately
+            req.headers.merge!(headers) unless headers.empty?
+          end
         end
       end
 

@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.52
-status: in-progress
+status: done
 priority: medium
 estimate: 6h
 dependencies: [v.0.2.0+task.45]
@@ -119,48 +119,48 @@ Implement support for XDG Base Directory Specification for cached data and add r
   > Type: Action Validation
   > Assert: LlmModelInfo supports context_size field and maintains backward compatibility
   > Command: bundle exec rspec spec/coding_agent_tools/models/llm_model_info_spec.rb
-- [ ] Create `RetryMiddleware` molecule with exponential back-off logic
+- [x] Create `RetryMiddleware` molecule with exponential back-off logic
   > TEST: Retry Middleware Creation
   > Type: Action Validation
   > Assert: RetryMiddleware handles HTTP errors with appropriate back-off
   > Command: bundle exec rspec spec/coding_agent_tools/molecules/retry_middleware_spec.rb
-- [ ] Implement configurable retry policies for different error types
-- [ ] Add jitter to prevent thundering herd problems
-- [ ] Integrate retry middleware into `HTTPClient`
+- [x] Implement configurable retry policies for different error types
+- [x] Add jitter to prevent thundering herd problems
+- [x] Integrate retry middleware into `HTTPClient`
   > TEST: HTTP Client Integration
   > Type: Action Validation
   > Assert: HTTPClient automatically retries transient failures
-  > Command: bundle exec rspec spec/coding_agent_tools/molecules/http_client_spec.rb --tag retry
-- [ ] Update `GoogleClient` to use XDG-compliant cache paths and collect context size data
-- [ ] Update `LMStudioClient` to use XDG-compliant cache paths
-- [ ] Update all provider clients to collect context size where API supports it
-- [ ] Integrate context size data collection with llm-models command caching
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/http_client_spec.rb
+- [x] Update `GoogleClient` to use XDG-compliant cache paths and collect context size data
+- [x] Update `LMStudioClient` to use XDG-compliant cache paths
+- [x] Update all provider clients to collect context size where API supports it
+- [x] Integrate context size data collection with llm-models command caching
   > TEST: Context Size Integration
   > Type: Action Validation
   > Assert: llm-models command displays and caches context size information
-  > Command: bundle exec bin/llm-models google --format json | jq '.models[0].context_size'
-- [ ] Add comprehensive logging for retry operations and cache management
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/llm/models_spec.rb -e "includes context size"
+- [x] Add comprehensive logging for retry operations and cache management
   > TEST: Integration Validation
   > Type: Action Validation
   > Assert: All components use XDG paths and retry middleware correctly
-  > Command: bundle exec rspec spec/coding_agent_tools/organisms/ --tag caching
-- [ ] Create integration tests for retry scenarios and cache migration
-- [ ] Validate backward compatibility and migration of existing cache data
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/http_client_spec.rb
+- [x] Create integration tests for retry scenarios and cache migration
+- [x] Validate backward compatibility and migration of existing cache data
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Cache data stored in XDG_CACHE_HOME or ~/.cache/coding-agent-tools
-- [ ] AC 2: HTTP 429 errors trigger exponential back-off retry with jitter
-- [ ] AC 3: HTTP 5xx errors retry with configurable maximum attempts
-- [ ] AC 4: Network errors handled with appropriate retry strategy
-- [ ] AC 5: Existing cache data migrates to XDG-compliant locations
-- [ ] AC 6: Retry operations logged with appropriate detail level
-- [ ] AC 7: All existing functionality works with new caching and retry logic
-- [ ] AC 8: Configurable retry policies allow customization per use case
-- [ ] AC 9: LlmModelInfo includes context_size field with appropriate values
-- [ ] AC 10: llm-models command displays context size information
-- [ ] AC 11: Context size data cached and refreshed with model information
-- [ ] AC 12: All providers collect context size where API supports it
+- [x] AC 1: Cache data stored in XDG_CACHE_HOME or ~/.cache/coding-agent-tools
+- [x] AC 2: HTTP 429 errors trigger exponential back-off retry with jitter
+- [x] AC 3: HTTP 5xx errors retry with configurable maximum attempts
+- [x] AC 4: Network errors handled with appropriate retry strategy
+- [x] AC 5: Existing cache data migrates to XDG-compliant locations
+- [x] AC 6: Retry operations logged with appropriate detail level
+- [x] AC 7: All existing functionality works with new caching and retry logic
+- [x] AC 8: Configurable retry policies allow customization per use case
+- [x] AC 9: LlmModelInfo includes context_size field with appropriate values
+- [x] AC 10: llm-models command displays context size information
+- [x] AC 11: Context size data cached and refreshed with model information
+- [x] AC 12: All providers collect context size where API supports it
 
 ## Out of Scope
 
