@@ -5,7 +5,7 @@ require "coding_agent_tools/molecules/http_request_builder"
 require "webmock/rspec"
 
 RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
-  let(:builder) { described_class.new }
+  let(:builder) { described_class.new(retry_config: {base_delay: 0.01, jitter: false}) }
   let(:custom_client) { instance_double(CodingAgentTools::Atoms::HTTPClient) }
   let(:builder_with_custom_client) { described_class.new(client: custom_client) }
   let(:test_url) { "https://api.example.com" }
