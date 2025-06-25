@@ -41,7 +41,7 @@ module CodingAgentTools
           def call(provider: "google", **options)
             unless valid_provider?(provider)
               warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai"
-              return 1
+              exit(1)
             end
 
             models = get_available_models(provider, options[:refresh])
@@ -50,7 +50,7 @@ module CodingAgentTools
             return 0
           rescue => e
             handle_error(e, options[:debug])
-            return 1
+            exit(1)
           end
 
           # Filter models based on search term
@@ -509,12 +509,12 @@ module CodingAgentTools
               end
             }
 
-            cache_manager.write_cache(cache_file_name(provider), YAML.dump(cache_data))
+            cache_manager.write_cache(cache_file_name(provider), cache_data)
           end
 
           def load_models_from_cache(provider)
-            cache_content = cache_manager.read_cache(cache_file_name(provider))
-            cache_data = YAML.load(cache_content)
+            cache_data = cache_manager.read_cache(cache_file_name(provider))
+            return fallback_models(provider) if cache_data.nil?
 
             cache_data["models"].map do |model_data|
               CodingAgentTools::Models::LlmModelInfo.new(

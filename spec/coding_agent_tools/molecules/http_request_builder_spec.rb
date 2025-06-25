@@ -140,10 +140,12 @@ RSpec.describe CodingAgentTools::Molecules::HTTPRequestBuilder do
         stub_request(:get, "#{test_url}/error")
           .to_return(status: 500, body: "Internal Server Error")
 
-        result = builder.json_request(:get, "#{test_url}/error")
-        expect(result[:status]).to eq(500)
-        expect(result[:success]).to be false
-        expect(result[:body]).to eq("Internal Server Error")
+        expect {
+          builder.json_request(:get, "#{test_url}/error")
+        }.to raise_error(CodingAgentTools::Molecules::RetryMiddleware::RetryableError) do |error|
+          expect(error.message).to include("Retryable response: 500")
+          expect(error.response.status).to eq(500)
+        end
       end
     end
 

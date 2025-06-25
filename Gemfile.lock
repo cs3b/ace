@@ -3,6 +3,7 @@ PATH
   specs:
     coding_agent_tools (0.1.0)
       addressable (~> 2.8)
+      csv (~> 3.0)
       dotenv (~> 2.0)
       dry-cli
       dry-configurable (~> 1.0)
@@ -34,6 +35,7 @@ GEM
     crack (1.0.0)
       bigdecimal
       rexml
+    csv (3.3.5)
     cucumber (9.2.1)
       builder (~> 3.2)
       cucumber-ci-environment (> 9, < 11)
