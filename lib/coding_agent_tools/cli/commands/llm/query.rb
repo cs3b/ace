@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require_relative "../../../cost_tracker"
 
 module CodingAgentTools
   module Cli
@@ -175,16 +176,22 @@ module CodingAgentTools
           end
 
           def add_normalized_metadata(response, execution_time, provider, model)
-            metadata = Molecules::MetadataNormalizer.normalize(
+            # Initialize cost tracker for enhanced metadata
+            cost_tracker = CostTracker.new
+
+            # Use cost-enabled normalization
+            metadata_with_cost = Molecules::MetadataNormalizer.normalize_with_cost(
               response,
               provider: provider,
               model: model,
-              execution_time: execution_time
+              execution_time: execution_time,
+              cost_tracker: cost_tracker
             )
 
             {
               text: response[:text],
-              metadata: metadata
+              metadata: metadata_with_cost.to_h,
+              usage_metadata: metadata_with_cost
             }
           end
 
@@ -215,6 +222,29 @@ module CodingAgentTools
 
             formatted_content = handler.format(response)
             puts formatted_content
+
+            # Display usage and cost summary for text format
+            if format == "text" && response[:usage_metadata]
+              puts "\n" + generate_usage_summary(response[:usage_metadata])
+            end
+          end
+
+          def generate_usage_summary(usage_metadata)
+            lines = []
+            lines << "Token Usage:"
+            lines << "  Input: #{usage_metadata.input_tokens.to_s.rjust(8)} tokens"
+            lines << "  Output: #{usage_metadata.output_tokens.to_s.rjust(7)} tokens"
+
+            if usage_metadata.cached?
+              lines << "  Cached: #{usage_metadata.cached_tokens.to_s.rjust(7)} tokens"
+            end
+
+            if usage_metadata.has_cost_info?
+              lines << ""
+              lines << usage_metadata.cost_summary
+            end
+
+            lines.join("\n")
           end
 
           def determine_output_format(options)

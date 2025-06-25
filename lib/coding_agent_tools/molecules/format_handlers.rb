@@ -40,10 +40,54 @@ module CodingAgentTools
           end
 
           if metadata[:input_tokens] && metadata[:output_tokens]
-            summary_parts << "Tokens: #{metadata[:input_tokens]} input, #{metadata[:output_tokens]} output"
+            tokens_info = "Tokens: #{metadata[:input_tokens]} input, #{metadata[:output_tokens]} output"
+            tokens_info += ", #{metadata[:cached_tokens]} cached" if metadata[:cached_tokens] && metadata[:cached_tokens] > 0
+            summary_parts << tokens_info
+          end
+
+          # Add cost information if available
+          if metadata[:cost]
+            cost_info = build_cost_summary(metadata[:cost])
+            summary_parts << cost_info if cost_info
           end
 
           summary_parts.join("\n")
+        end
+
+        # Build cost summary string from cost metadata
+        # @param cost_data [Hash] Cost breakdown data
+        # @return [String, nil] Formatted cost summary
+        def build_cost_summary(cost_data)
+          return nil unless cost_data && cost_data[:total]
+
+          cost_parts = []
+          cost_parts << "Cost: $#{format_cost(cost_data[:total])}"
+
+          if cost_data[:input] || cost_data[:output]
+            breakdown = []
+            breakdown << "input: $#{format_cost(cost_data[:input])}" if cost_data[:input]
+            breakdown << "output: $#{format_cost(cost_data[:output])}" if cost_data[:output]
+
+            if cost_data[:cache_creation] && cost_data[:cache_creation] > 0
+              breakdown << "cache creation: $#{format_cost(cost_data[:cache_creation])}"
+            end
+
+            if cost_data[:cache_read] && cost_data[:cache_read] > 0
+              breakdown << "cache read: $#{format_cost(cost_data[:cache_read])}"
+            end
+
+            cost_parts << " (#{breakdown.join(", ")})" unless breakdown.empty?
+          end
+
+          cost_parts.join
+        end
+
+        # Format cost value for display
+        # @param cost [Float, Numeric] Cost value
+        # @return [String] Formatted cost string
+        def format_cost(cost)
+          return "0.000000" if cost.nil? || cost.zero?
+          sprintf("%.6f", cost)
         end
 
         protected

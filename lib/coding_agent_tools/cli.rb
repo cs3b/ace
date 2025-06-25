@@ -28,10 +28,12 @@ module CodingAgentTools
 
         require_relative "cli/commands/llm/models"
         require_relative "cli/commands/llm/query"
+        require_relative "cli/commands/llm/usage_report"
 
         register "llm", aliases: [] do |prefix|
           prefix.register "models", Commands::LLM::Models
           prefix.register "query", Commands::LLM::Query
+          prefix.register "usage_report", Commands::LLM::UsageReport
         end
 
         @llm_commands_registered = true
