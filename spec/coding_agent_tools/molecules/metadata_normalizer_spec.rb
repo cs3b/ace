@@ -166,6 +166,158 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
       end
     end
 
+    context "with Anthropic provider" do
+      let(:anthropic_response) do
+        {
+          text: "Hello! How are you doing today?",
+          finish_reason: "end_turn",
+          usage_metadata: {
+            input_tokens: 9,
+            output_tokens: 11,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 0,
+            service_tier: "standard"
+          }
+        }
+      end
+
+      it "normalizes Anthropic metadata correctly" do
+        result = described_class.normalize(
+          anthropic_response,
+          provider: "anthropic",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result).to include(
+          finish_reason: "end_turn",
+          input_tokens: 9,
+          output_tokens: 11,
+          total_tokens: 20,
+          took: 2.45,
+          provider: "anthropic",
+          model: model
+        )
+        expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
+      end
+    end
+
+    context "with OpenAI provider" do
+      let(:openai_response) do
+        {
+          text: "Hello! How can I assist you today?",
+          finish_reason: "stop",
+          usage_metadata: {
+            prompt_tokens: 9,
+            completion_tokens: 9,
+            total_tokens: 18,
+            prompt_tokens_details: {cached_tokens: 0, audio_tokens: 0},
+            completion_tokens_details: {reasoning_tokens: 0, audio_tokens: 0}
+          }
+        }
+      end
+
+      it "normalizes OpenAI metadata correctly" do
+        result = described_class.normalize(
+          openai_response,
+          provider: "openai",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result).to include(
+          finish_reason: "stop",
+          input_tokens: 9,
+          output_tokens: 9,
+          total_tokens: 18,
+          took: 2.45,
+          provider: "openai",
+          model: model
+        )
+        expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
+      end
+    end
+
+    context "with Mistral provider" do
+      let(:mistral_response) do
+        {
+          text: "Hello! How can I assist you today?",
+          finish_reason: "stop",
+          usage_metadata: {
+            prompt_tokens: 5,
+            completion_tokens: 10,
+            total_tokens: 15
+          }
+        }
+      end
+
+      it "normalizes Mistral metadata correctly" do
+        result = described_class.normalize(
+          mistral_response,
+          provider: "mistral",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result).to include(
+          finish_reason: "stop",
+          input_tokens: 5,
+          output_tokens: 10,
+          total_tokens: 15,
+          took: 2.45,
+          provider: "mistral",
+          model: model
+        )
+        expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
+      end
+    end
+
+    context "with TogetherAI provider" do
+      let(:togetherai_response) do
+        {
+          text: " Hello! How can I help you today?",
+          finish_reason: "stop",
+          usage_metadata: {
+            prompt_tokens: 7,
+            completion_tokens: 10,
+            total_tokens: 17,
+            cached_tokens: 0
+          }
+        }
+      end
+
+      it "normalizes TogetherAI metadata correctly" do
+        result = described_class.normalize(
+          togetherai_response,
+          provider: "together_ai",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result).to include(
+          finish_reason: "stop",
+          input_tokens: 7,
+          output_tokens: 10,
+          total_tokens: 17,
+          took: 2.45,
+          provider: "together_ai",
+          model: model
+        )
+        expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
+      end
+
+      it "handles alternate togetherai provider name" do
+        result = described_class.normalize(
+          togetherai_response,
+          provider: "togetherai",
+          model: model,
+          execution_time: execution_time
+        )
+
+        expect(result[:provider]).to eq("together_ai")
+      end
+    end
+
     context "with unknown provider" do
       let(:unknown_response) do
         {
@@ -191,7 +343,7 @@ RSpec.describe CodingAgentTools::Molecules::MetadataNormalizer do
           took: 2.45,
           provider: "custom",
           model: model,
-          raw_usage: {custom_field: "value"}
+          provider_specific: {custom_field: "value"}
         )
         expect(result[:timestamp]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/)
       end

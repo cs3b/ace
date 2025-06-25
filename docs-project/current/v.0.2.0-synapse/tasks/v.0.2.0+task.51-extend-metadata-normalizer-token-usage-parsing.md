@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.51
-status: pending
+status: done
 priority: medium
 estimate: 5h
 dependencies: [v.0.2.0+task.45]
@@ -153,13 +153,13 @@ Extend the `MetadataNormalizer` to parse token usage information from all 6 LLM 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `MetadataNormalizer` extracts token usage from all provider responses
-- [ ] AC 2: Usage metadata includes input tokens, output tokens, and total counts
-- [ ] AC 4: Consistent `UsageMetadata` format across all providers
-- [ ] AC 5: Request timing and performance data included in metadata
-- [ ] AC 6: Provider-specific parsers handle edge cases and malformed responses
-- [ ] AC 7: All existing functionality maintained with enhanced metadata
-- [ ] AC 8: Extensible architecture allows easy addition of new providers
+- [x] AC 1: `MetadataNormalizer` extracts token usage from all provider responses
+- [x] AC 2: Usage metadata includes input tokens, output tokens, and total counts
+- [x] AC 4: Consistent `UsageMetadata` format across all providers
+- [x] AC 5: Request timing and performance data included in metadata
+- [x] AC 6: Provider-specific parsers handle edge cases and malformed responses
+- [x] AC 7: All existing functionality maintained with enhanced metadata
+- [x] AC 8: Extensible architecture allows easy addition of new providers
 
 ## Out of Scope
 
