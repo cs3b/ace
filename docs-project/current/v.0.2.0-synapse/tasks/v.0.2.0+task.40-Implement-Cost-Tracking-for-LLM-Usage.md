@@ -1,7 +1,7 @@
 ---
 id: v.0.2.0+task.40
 title: Implement Cost Tracking for LLM Usage
-status: blocked
+status: ready
 priority: medium
 assignee: unassigned
 labels:
@@ -9,12 +9,12 @@ labels:
   - cost-tracking
   - analytics
 dependencies:
-  - v.0.2.0+task.37
-  - v.0.2.0+task.38
+  - v.0.2.0+task.37 ✅ (completed - model caching implemented)
+  - v.0.2.0+task.38 ✅ (completed - file I/O implemented)
 estimated_hours: 16
 actual_hours: 0
 created_at: 2024-01-01
-updated_at: 2024-01-01
+updated_at: 2025-06-25
 ---
 
 # Implement Cost Tracking for LLM Usage
@@ -71,23 +71,34 @@ lib/coding_agent_tools
 
 ### Planning Steps
 * [ ] Research current pricing models for all supported providers
-  - [ ] Gemini pricing (input/output/cached tokens)
-  - [ ] OpenAI pricing tiers
-  - [ ] Anthropic token costs
-  - [ ] Mistral/Together pricing
-* [ ] Review `LlmModelInfo` and determine how to extend it to encapsulate pricing data per model without breaking its pure data structure nature. Consider adding new attributes (e.g., `pricing_details`) and helper methods (e.g., `cost_per_token_input`) to `LlmModelInfo`.
+  - [x] **Google Gemini Models**: $1.25/$5.00 per 1M tokens (2.0/2.5 Flash), $1.25/$5.00 (1.5 Pro), FREE (1.5 Flash in free tier). Context caching: $0.3125 input, $4.50/hour storage
+  - [x] **OpenAI Models**: $5.00/$20.00 (GPT-4o), $0.15/$0.60 (GPT-4o Mini), $10.00/$30.00 (GPT-4 Turbo), $0.50/$1.50 (GPT-3.5 Turbo). Batch API: 50% discount, cached inputs: 50% reduction
+  - [x] **Anthropic Claude**: $3.00/$15.00 (3.5 Sonnet), $1.00/$5.00 (3.5 Haiku), $15.00/$75.00 (3 Opus), $0.25/$1.25 (3 Haiku). Batch API: 50% discount
+  - [x] **Mistral AI**: $4.00/$12.00 (Large), $2.75/$8.10 (Medium), $1.00/$3.00 (Small), $0.70/$0.70 (8x7B), $2.00/$6.00 (8x22B)
+  - [x] **Together AI**: $0.54/$0.88 (Llama 3.1 70B), $0.10/$0.18 (Llama 3.1 8B), $0.60/$0.90 (Mistral 8x7B), $1.20/$1.80 (Mistral 8x22B)
+  - [x] **LMStudio**: FREE (all local models), no API costs, requires local hardware
+* [ ] Review `LlmModelInfo` structure - **UPDATED**: Already extended with `context_size` and `max_output_tokens` fields. Need to add pricing fields: `input_price_per_1m_tokens`, `output_price_per_1m_tokens`, `currency`, `special_pricing_notes`
 * [ ] Design cost tracking data structures
   ```ruby
-  # Example structure:
+  # Enhanced cost tracking structure with model context info:
   {
     input_tokens: 1000,
     output_tokens: 500,
     cached_tokens: 200,
-    input_cost: 0.001,
-    output_cost: 0.002,
-    cached_cost: 0.0001,
-    total_cost: 0.0031,
-    currency: "USD"
+    context_size: 128000,        # From LlmModelInfo
+    max_output_tokens: 4096,     # From LlmModelInfo
+    input_cost: 0.001234,
+    output_cost: 0.002500,
+    cached_cost: 0.000062,
+    total_cost: 0.003796,
+    currency: "USD",
+    model_pricing: {
+      input_price_per_1m_tokens: 1.25,
+      output_price_per_1m_tokens: 5.00,
+      cached_price_per_1m_tokens: 0.3125,
+      provider: "google",
+      model_id: "gemini-2.0-flash"
+    }
   }
   ```
 * [ ] Plan integration with cache system from task.37
@@ -199,10 +210,13 @@ lib/coding_agent_tools
 
 ## References & Risks
 
-- Pricing data source: Model cache from task.37
-- Token usage data: API response metadata
-- Risk: Pricing changes - mitigated by cache refresh mechanism
-- Risk: Calculation precision - use BigDecimal for accuracy
-- Risk: Missing pricing data - provide clear warnings
-- Consider future support for multiple currencies
-- Follow existing metadata patterns in response classes
+- **Pricing data source**: Model cache from task.37 ✅ (implemented in `llm/models.rb`)
+- **Token usage data**: API response metadata ✅ (implemented via `MetadataNormalizer` and `UsageMetadata`)
+- **Context/Token limits**: Already implemented in `LlmModelInfo` with `context_size` and `max_output_tokens` fields ✅
+- **Model information**: `LlmModelInfo` struct with formatting methods for human-readable display ✅
+- **Risk: Pricing changes** - mitigated by cache refresh mechanism via `llm-models --refresh`
+- **Risk: Calculation precision** - use BigDecimal for accuracy (6+ decimal places required)
+- **Risk: Missing pricing data** - provide clear warnings, handle gracefully
+- **Architecture note**: Current system uses hash-based responses (not response classes), integrate with existing `MetadataNormalizer` workflow
+- **Free models**: LMStudio and some Gemini models require special handling (no cost)
+- Consider future support for multiple currencies and batch API discounts
