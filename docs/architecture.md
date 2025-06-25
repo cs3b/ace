@@ -33,26 +33,9 @@ This document outlines the architectural design and technical implementation det
 
 The gem's architecture is designed for modularity and testability. The code within `lib/coding_agent_tools/` specifically follows an ATOM-based hierarchy (Atoms, Molecules, Organisms, Ecosystems) inspired by Atomic Design principles for composing functionality. This high-level component breakdown is also reflected in the project's directory structure, as detailed in the [Project Blueprint's Project Organization section](./blueprint.md#project-organization).
 
-```mermaid
-flowchart TD
-    subgraph Ruby Gem (CAT)
-        direction TB
-        CLI[CLI Commands<br/>exe/* & cli/]
-        Organisms[🧬 Organisms<br/>Business Logic]
-        Molecules[🔬 Molecules<br/>Composed Operations]
-        Atoms[⚛️ Atoms<br/>Basic Utilities]
-        Models[(Models<br/>Data Structures)]
-    end
-    CLI --> Organisms
-    Organisms --> Molecules
-    Molecules --> Atoms
-    Organisms --> Models
+**Security and Caching Architecture**: The gem now includes comprehensive security hardening and XDG-compliant caching systems. 
 
-    Atoms -->|HTTP| GeminiAPI((Google Gemini))
-    Atoms -->|HTTP| LMStudio((LM Studio))<br/>(localhost:1234)
-    Atoms -->|System Calls| FileSystem[(File System)]
-    Atoms -->|ENV| Environment[Environment Variables]
-```
+For visual representations of the architecture, see [Architecture Diagrams](./architecture/diagrams.md).
 
 ### Component Descriptions
 
@@ -155,15 +138,26 @@ For a complete directory structure and file listings, see the [Project Blueprint
 
 ## Security Considerations
 
--   **API Key/Token Handling**: The gem avoids hardcoding secrets. API keys and tokens (e.g., `GEMINI_API_KEY`, `GITHUB_TOKEN`) are read from environment variables or standard configuration locations (`~/.gemini/config`, macOS keychain).
--   **No Plaintext Secrets in Logs**: Logging is designed to avoid exposing sensitive information.
--   **Input Validation**: Basic input validation is performed, particularly at the CLI/Action layer, to prevent command injection or other security vulnerabilities.
+The gem implements a comprehensive, multi-layered security framework:
+
+-   **Path Traversal Prevention**: `SecurePathValidator` provides robust defense against directory escape attacks using allowlists, denylists, and path normalization.
+-   **Secure File Operations**: `FileIOHandler` integrates path validation and user confirmation for all file write operations, with `--force` flag support for automation.
+-   **Interactive Safety**: `FileOperationConfirmer` provides safe defaults for CI environments while offering user confirmation in interactive sessions.
+-   **Credential Protection**: `SecurityLogger` automatically redacts sensitive information (API keys, emails, IPs) from all log outputs.
+-   **API Key/Token Handling**: Secrets are read from environment variables or standard configuration locations, never hardcoded.
+-   **XDG Compliance**: Cache and configuration files follow XDG Base Directory specifications for secure, predictable storage locations.
+
+For detailed security architecture, see the [Architecture Diagrams](./architecture/diagrams.md).
 
 ## Performance Considerations
 
 -   **Startup Latency**: Target low startup latency (≤ 200 ms for CLI commands) for responsiveness, especially when invoked by agents.
--   **Caching**: Potential for implementing caching strategies (e.g., for LLM responses or frequently accessed data) to improve performance.
+-   **XDG-Compliant Caching**: `CacheManager` provides structured, standards-compliant caching for model lists and API responses, significantly reducing redundant operations.
+-   **HTTP Resilience**: `RetryMiddleware` implements exponential backoff for failed requests, prioritizing reliability over raw speed while preventing API overwhelm.
+-   **Cache Migration**: Automatic migration from legacy cache locations ensures no performance regression during upgrades.
 -   **Profiling**: Standard Ruby profiling tools can be used to identify performance bottlenecks.
+
+For detailed caching architecture, see the [Architecture Diagrams](./architecture/diagrams.md).
 
 ## Deployment Architecture
 
