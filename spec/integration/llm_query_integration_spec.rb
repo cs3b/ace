@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "tempfile"
 
 RSpec.describe "llm-query integration", type: :integration do
   include ProcessHelpers
@@ -657,6 +658,188 @@ RSpec.describe "llm-query integration", type: :integration do
       expect(status).to be_success
       expect(stdout).not_to be_empty
       expect(stderr).to be_empty
+    end
+  end
+
+  describe "security validation" do
+    let(:google_api_key) { EnvHelper.google_api_key }
+
+    describe "malicious input file paths" do
+      it "treats non-existent malicious paths as inline content (safe behavior)" do
+        # Non-existent paths should be treated as inline prompts, not file paths
+        # This is actually the secure behavior - no file system access attempted
+        malicious_paths = [
+          "../../../etc/passwd",
+          "../../root/.bashrc",
+          "/etc/shadow"
+        ]
+
+        malicious_paths.each do |malicious_path|
+          # These should succeed as they're treated as inline prompts
+          _, stderr, _ = execute_gem_executable(exe_name,
+            ["google", malicious_path], env: {"GOOGLE_API_KEY" => google_api_key}, timeout: 30000)
+
+          # Should succeed or fail due to API, not path validation
+          expect(stderr).not_to match(/Path validation failed/i),
+            "Non-existent path should be treated as inline content: #{malicious_path}"
+        end
+      end
+
+      it "blocks access to existing sensitive files" do
+        # Test with files that actually exist in the system
+        existing_sensitive_paths = [
+          "/etc/passwd"  # Common on Unix systems
+        ]
+
+        existing_sensitive_paths.each do |sensitive_path|
+          next unless File.exist?(sensitive_path)  # Skip if file doesn't exist on this system
+
+          _, stderr, status = execute_gem_executable(exe_name,
+            ["google", sensitive_path], env: {"GOOGLE_API_KEY" => google_api_key})
+
+          expect(status.exitstatus).to eq(1)
+          expect(stderr).to match(/Path validation failed|denied pattern/i),
+            "Expected security error for sensitive path: #{sensitive_path}"
+        end
+      end
+    end
+
+    describe "malicious output file paths" do
+      it "blocks path traversal attempts in output files" do
+        malicious_output_paths = [
+          "../../../tmp/malicious.txt",
+          "../../etc/evil.txt",
+          "/etc/overwrite.txt",
+          "/usr/bin/backdoor.sh"
+        ]
+
+        malicious_output_paths.each do |malicious_path|
+          _, stderr, status = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", malicious_path],
+            env: {"GOOGLE_API_KEY" => google_api_key})
+
+          expect(status.exitstatus).to eq(1)
+          expect(stderr).to match(/Path validation failed|outside allowed|denied pattern|path traversal/i),
+            "Expected security error for malicious output path: #{malicious_path}, but got: #{stderr}"
+        end
+      end
+
+      it "blocks writing to system directories" do
+        system_output_paths = [
+          "/etc/malicious.conf",
+          "/usr/bin/evil",
+          "/var/log/attack.log",
+          "/root/backdoor.txt"
+        ]
+
+        system_output_paths.each do |system_path|
+          _, stderr, status = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", system_path],
+            env: {"GOOGLE_API_KEY" => google_api_key})
+
+          expect(status.exitstatus).to eq(1)
+          expect(stderr).to match(/Path validation failed|denied pattern/i),
+            "Expected security error for system path: #{system_path}"
+        end
+      end
+    end
+
+    describe "--force flag functionality" do
+      it "shows force flag in help" do
+        stdout, _, status = execute_gem_executable(exe_name, ["--help"])
+
+        expect(status).to be_success
+        expect(stdout).to match(/--\[no-\]force.*-f.*force.*overwrite/i)
+      end
+
+      it "accepts --force flag without errors" do
+        # Create a file in the current directory to avoid path validation issues
+        output_file = File.join(Dir.pwd, "test_force_#{Time.now.to_i}.txt")
+        File.write(output_file, "existing content")
+
+        begin
+          # Create a non-interactive environment (CI mode simulation)
+          _, stderr, _ = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", output_file, "--force"],
+            env: {"GOOGLE_API_KEY" => google_api_key, "CI" => "true"})
+
+          # Should not fail due to overwrite confirmation with --force flag
+          expect(stderr).not_to match(/File overwrite denied|overwrite.*denied/i)
+        ensure
+          File.delete(output_file) if File.exist?(output_file)
+        end
+      end
+
+      it "accepts -f short flag without errors" do
+        # Create a file in the current directory to avoid path validation issues
+        output_file = File.join(Dir.pwd, "test_force_short_#{Time.now.to_i}.txt")
+        File.write(output_file, "existing content")
+
+        begin
+          # Create a non-interactive environment (CI mode simulation)
+          _, stderr, _ = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", output_file, "-f"],
+            env: {"GOOGLE_API_KEY" => google_api_key, "CI" => "true"})
+
+          # Should not fail due to overwrite confirmation with -f flag
+          expect(stderr).not_to match(/File overwrite denied|overwrite.*denied/i)
+        ensure
+          File.delete(output_file) if File.exist?(output_file)
+        end
+      end
+    end
+
+    describe "file overwrite protection" do
+      it "denies overwrite without --force in CI environment" do
+        # Create a file in the current directory to avoid path validation issues
+        output_file = File.join(Dir.pwd, "test_overwrite_#{Time.now.to_i}.txt")
+        File.write(output_file, "existing content")
+
+        begin
+          # Create a CI environment where confirmation cannot be provided
+          _, stderr, status = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", output_file],
+            env: {"GOOGLE_API_KEY" => google_api_key, "CI" => "true"})
+
+          expect(status.exitstatus).to eq(1)
+          expect(stderr).to match(/File overwrite denied|overwrite.*denied/i)
+        ensure
+          File.delete(output_file) if File.exist?(output_file)
+        end
+      end
+
+      it "allows overwrite to new files without --force" do
+        # Create a new file in the current directory
+        new_file = File.join(Dir.pwd, "new_output_#{Time.now.to_i}.txt")
+
+        begin
+          _, stderr, status = execute_gem_executable(exe_name,
+            ["google", "test prompt", "--output", new_file],
+            env: {"GOOGLE_API_KEY" => google_api_key, "CI" => "true"})
+
+          # Should succeed for new files (or fail due to API, not overwrite protection)
+          unless status.success?
+            expect(stderr).not_to match(/File overwrite denied|overwrite.*denied/i)
+          end
+        ensure
+          File.delete(new_file) if File.exist?(new_file)
+        end
+      end
+    end
+
+    describe "security logging" do
+      it "does not leak sensitive information in error messages for output files" do
+        # Test security logging by trying to write to a system path
+        system_path = "/etc/malicious_test.txt"
+
+        _, stderr, status = execute_gem_executable(exe_name,
+          ["google", "test prompt", "--output", system_path], env: {"GOOGLE_API_KEY" => google_api_key})
+
+        expect(status.exitstatus).to eq(1)
+        expect(stderr).to match(/Path validation failed|denied pattern/i)
+        # Ensure security logging is working (should see sanitized paths)
+        expect(stderr).to match(/\[hidden\]|\[DENIED_ACCESS\]/i)
+      end
     end
   end
 

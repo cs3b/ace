@@ -20,7 +20,16 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
     validator_class.new
   end
 
-  let(:handler) { described_class.new(path_validator: test_path_validator) }
+  # Create a test security logger that captures output instead of writing to STDERR
+  let(:test_security_logger) do
+    require "stringio"
+    log_output = StringIO.new
+    test_logger = Logger.new(log_output)
+    test_logger.level = Logger::ERROR  # Only capture errors to reduce noise
+    CodingAgentTools::Atoms::SecurityLogger.new(logger: test_logger)
+  end
+
+  let(:handler) { described_class.new(path_validator: test_path_validator, security_logger: test_security_logger) }
 
   after do
     FileUtils.remove_entry(temp_dir) if Dir.exist?(temp_dir)
@@ -285,7 +294,7 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
 
   describe "file size limits" do
     context "with custom max file size" do
-      let(:small_handler) { described_class.new(max_file_size: 10, path_validator: test_path_validator) }
+      let(:small_handler) { described_class.new(max_file_size: 10, path_validator: test_path_validator, security_logger: test_security_logger) }
       let(:temp_file) { Tempfile.new("large_test") }
 
       before do
