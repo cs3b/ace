@@ -2,5 +2,5 @@
 --exclude-pattern spec/integration/**
 --format progress
 --color
---profile
+--profile 1
 --order random
