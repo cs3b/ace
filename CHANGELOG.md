@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [v0.4.0] - 2025-06-25
+
+### Added
+
+- Enhanced initialize-project-structure workflow with v.0.0.0 template release tracking
+  - Created template v.0.0.0 release structure in docs-dev/guides/initialize-project-templates/
+  - Added template copying and customization logic for new projects
+  - Integrated roadmap creation into project initialization process
+  - Included clear user guidance for post-initialization steps
+
+### Changed
+
+- Renamed manage-roadmap workflow to update-roadmap for improved clarity
+  - Updated all references across the codebase
+  - Enhanced workflow with cleanup functionality for completed releases
+- Improved roadmap management with post-release cleanup integration
+  - Added cleanup step to remove completed releases from roadmap
+  - Updated step numbering and error handling procedures
+
 ## [v.0.3.0] - 2025-06-04
 
 ### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
@@ -444,4 +463,3 @@ in the 2025-05-07 and 2025-05-08 git logs)
 - Established initial project infrastructure.
 - Set up the project structure and documentation framework.
 - Documented the initial release process.
-
