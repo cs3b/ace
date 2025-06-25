@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+require_relative "provider_usage_parsers/google_usage_parser"
+require_relative "provider_usage_parsers/lmstudio_usage_parser"
+require_relative "provider_usage_parsers/anthropic_usage_parser"
+require_relative "provider_usage_parsers/openai_usage_parser"
+require_relative "provider_usage_parsers/mistral_usage_parser"
+require_relative "provider_usage_parsers/togetherai_usage_parser"
+
 module CodingAgentTools
   module Molecules
     # MetadataNormalizer provides consistent metadata handling across LLM providers
@@ -7,18 +14,84 @@ module CodingAgentTools
     class MetadataNormalizer
       # Normalize metadata from different LLM providers into consistent format
       # @param response [Hash] Raw response from LLM provider
-      # @param provider [String] Provider name (google, lmstudio)
+      # @param provider [String] Provider name (google, lmstudio, anthropic, openai, mistral, together_ai)
       # @param model [String] Model name used
       # @param execution_time [Float] Time taken for request in seconds
       # @return [Hash] Normalized metadata structure
       def self.normalize(response, provider:, model:, execution_time:)
-        case provider.to_s.downcase
+        normalized_provider = normalize_provider_name(provider)
+        usage_data = parse_usage_metadata(response, normalized_provider)
+
+        build_normalized_metadata(
+          response: response,
+          provider: normalized_provider,
+          model: model,
+          execution_time: execution_time,
+          usage_data: usage_data
+        )
+      end
+
+      # Parse usage metadata using provider-specific parsers
+      # @param response [Hash] Raw response from LLM provider
+      # @param provider [String] Normalized provider name
+      # @return [Hash] Parsed usage information
+      def self.parse_usage_metadata(response, provider)
+        case provider
         when "google"
-          normalize_google_metadata(response, model, execution_time)
+          ProviderUsageParsers::GoogleUsageParser.parse(response)
         when "lmstudio"
-          normalize_lmstudio_metadata(response, model, execution_time)
+          ProviderUsageParsers::LMStudioUsageParser.parse(response)
+        when "anthropic"
+          ProviderUsageParsers::AnthropicUsageParser.parse(response)
+        when "openai"
+          ProviderUsageParsers::OpenaiUsageParser.parse(response)
+        when "mistral"
+          ProviderUsageParsers::MistralUsageParser.parse(response)
+        when "together_ai", "togetherai"
+          ProviderUsageParsers::TogetheraiUsageParser.parse(response)
         else
-          normalize_unknown_metadata(response, provider, model, execution_time)
+          # Fallback for unknown providers
+          {
+            input_tokens: 0,
+            output_tokens: 0,
+            total_tokens: 0,
+            provider_specific: response[:usage_metadata] || response["usage_metadata"]
+          }
+        end
+      end
+
+      # Build the final normalized metadata structure
+      # @param response [Hash] Raw response
+      # @param provider [String] Normalized provider name
+      # @param model [String] Model name
+      # @param execution_time [Float] Execution time in seconds
+      # @param usage_data [Hash] Parsed usage information
+      # @return [Hash] Complete normalized metadata
+      def self.build_normalized_metadata(response:, provider:, model:, execution_time:, usage_data:)
+        {
+          finish_reason: extract_finish_reason(response[:finish_reason]),
+          input_tokens: usage_data[:input_tokens] || 0,
+          output_tokens: usage_data[:output_tokens] || 0,
+          total_tokens: usage_data[:total_tokens] || 0,
+          took: execution_time.round(3),
+          provider: provider,
+          model: model,
+          timestamp: current_timestamp,
+          safety_ratings: usage_data[:safety_ratings],
+          cached_tokens: usage_data[:cached_tokens],
+          provider_specific: usage_data[:provider_specific]
+        }.compact
+      end
+
+      # Normalize provider name to consistent format
+      # @param provider [String] Raw provider name
+      # @return [String] Normalized provider name
+      def self.normalize_provider_name(provider)
+        case provider.to_s.downcase
+        when "together_ai", "togetherai"
+          "together_ai"
+        else
+          provider.to_s.downcase
         end
       end
 
@@ -129,7 +202,8 @@ module CodingAgentTools
       end
 
       # Mark private class methods
-      private_class_method :normalize_google_metadata, :normalize_lmstudio_metadata,
+      private_class_method :parse_usage_metadata, :build_normalized_metadata,
+        :normalize_provider_name, :normalize_google_metadata, :normalize_lmstudio_metadata,
         :normalize_unknown_metadata, :extract_finish_reason,
         :calculate_total_tokens
     end
