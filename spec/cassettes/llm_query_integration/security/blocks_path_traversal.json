@@ -6,7 +6,7 @@
         "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
         "body": {
           "encoding": "UTF-8",
-          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Say hello world\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"test prompt\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
         },
         "headers": {
           "User-Agent": [
@@ -38,7 +38,7 @@
             "X-Origin"
           ],
           "Date": [
-            "Wed, 25 Jun 2025 14:37:17 GMT"
+            "Wed, 25 Jun 2025 14:49:09 GMT"
           ],
           "Server": [
             "scaffolding on HTTPServer2"
@@ -53,7 +53,7 @@
             "nosniff"
           ],
           "Server-Timing": [
-            "gfet4t7; dur=540"
+            "gfet4t7; dur=626"
           ],
           "Alt-Svc": [
             "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
@@ -64,10 +64,10 @@
         },
         "body": {
           "encoding": "ASCII-8BIT",
-          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Hello world!\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.020351819694042206\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 3,\n    \"candidatesTokenCount\": 4,\n    \"totalTokenCount\": 7,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 3\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 4\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"nAlcaLW2MfOVsbQPxaKksAc\"\n}\n"
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready! What would you like me to test? Please provide the prompt or task you want me to try. I will do my best to fulfill it.\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.58706762983992289\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 2,\n    \"candidatesTokenCount\": 37,\n    \"totalTokenCount\": 39,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 2\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 37\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"ZAxcaOWkJ-rthMIPlef-8A4\"\n}\n"
         }
       },
-      "recorded_at": "Wed, 25 Jun 2025 14:37:17 GMT"
+      "recorded_at": "Wed, 25 Jun 2025 14:49:09 GMT"
     }
   ],
   "recorded_with": "VCR 6.3.1"

@@ -1,0 +1,74 @@
+{
+  "http_interactions": [
+    {
+      "request": {
+        "method": "post",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"../../../etc/passwd\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
+        },
+        "headers": {
+          "User-Agent": [
+            "Faraday v2.13.1"
+          ],
+          "Accept": [
+            "application/json"
+          ],
+          "Content-Type": [
+            "application/json"
+          ],
+          "Accept-Encoding": [
+            "gzip;q=1.0,deflate;q=0.6,identity;q=0.3"
+          ]
+        }
+      },
+      "response": {
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
+          "Vary": [
+            "Origin",
+            "Referer",
+            "X-Origin"
+          ],
+          "Date": [
+            "Wed, 25 Jun 2025 14:47:45 GMT"
+          ],
+          "Server": [
+            "scaffolding on HTTPServer2"
+          ],
+          "X-Xss-Protection": [
+            "0"
+          ],
+          "X-Frame-Options": [
+            "SAMEORIGIN"
+          ],
+          "X-Content-Type-Options": [
+            "nosniff"
+          ],
+          "Server-Timing": [
+            "gfet4t7; dur=3398"
+          ],
+          "Alt-Svc": [
+            "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+          ],
+          "Transfer-Encoding": [
+            "chunked"
+          ]
+        },
+        "body": {
+          "encoding": "ASCII-8BIT",
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"The path `../../../etc/passwd` is a relative path.  It is a path that, when interpreted by a program or the operating system, starts at the current directory and then moves up three levels in the directory hierarchy before finally accessing the `/etc/passwd` file.\\n\\n*   `..` represents the parent directory.\\n*   `/etc/passwd` is a standard file on Unix-like operating systems (like Linux, macOS, etc.) that contains user account information. This file is typically protected, and only the root user or users with appropriate permissions can read or modify it.\\n*   The exact location of the current directory, from which the path starts, varies depending on the context.\\n\\n**Example:**\\n\\nLet's say the current directory is `/home/user/documents`.  Then:\\n\\n1.  `../` would be `/home/user/` (one level up)\\n2.  `../../` would be `/home/` (two levels up)\\n3.  `../../../` would be `/` (three levels up, the root directory)\\n4.  `../../../etc/passwd` would be `/etc/passwd` (accessing the passwd file from the root directory)\\n\\n**Security Implications:**\\n\\n*   **Privilege Escalation:**  If a program is vulnerable to a path traversal attack (also known as directory traversal or dot-dot-slash attack), an attacker might be able to use a path like this to access sensitive files like `/etc/passwd`, potentially obtaining usernames, user IDs, and other account information.\\n*   **Information Disclosure:** Even if the attacker can't directly modify the file, reading it can provide valuable information for further attacks (e.g., identifying user accounts, understanding system configuration).\\n\\n**In summary:**  `../../../etc/passwd` is a path that, when used correctly, can be used to locate the password file of a system.  It's important to understand its relative nature and the potential security risks it presents.  In a normal, secure system, a user without the necessary privileges should not be able to access this file.\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.50787811279296879\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 4,\n    \"candidatesTokenCount\": 440,\n    \"totalTokenCount\": 444,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 4\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 440\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"DgxcaNWaJ6uHsbQPwtGBsQk\"\n}\n"
+        }
+      },
+      "recorded_at": "Wed, 25 Jun 2025 14:47:45 GMT"
+    }
+  ],
+  "recorded_with": "VCR 6.3.1"
+}
