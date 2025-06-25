@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
         "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
         "mistral" => "open-mistral-nemo",
-        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "lmstudio" => "mistralai/devstral-small-2505"
       )
     end
@@ -137,7 +137,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
         expect(config.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
         expect(config.default_model_for("openai")).to eq("gpt-4o-mini")
         expect(config.default_model_for("mistral")).to eq("open-mistral-nemo")
-        expect(config.default_model_for("together_ai")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(config.default_model_for("together_ai")).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
         expect(config.default_model_for("lmstudio")).to eq("mistralai/devstral-small-2505")
       end
 
@@ -156,7 +156,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
         expect(config.default_model_for("lms")).to eq("mistralai/devstral-small-2505")
         expect(config.default_model_for("lm_studio")).to eq("mistralai/devstral-small-2505")
         expect(config.default_model_for("open_ai")).to eq("gpt-4o-mini")
-        expect(config.default_model_for("together")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(config.default_model_for("together")).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
       end
     end
 
@@ -259,7 +259,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
         "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
         "mistral" => "open-mistral-nemo",
-        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "lmstudio" => "mistralai/devstral-small-2505"
       )
     end
@@ -397,7 +397,7 @@ RSpec.describe CodingAgentTools::Models::DefaultModelConfig do
       expect(config.default_model_for("lms")).to eq("mistralai/devstral-small-2505")
       expect(config.default_model_for("lm_studio")).to eq("mistralai/devstral-small-2505")
       expect(config.default_model_for("open_ai")).to eq("gpt-4o-mini")
-      expect(config.default_model_for("together")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+      expect(config.default_model_for("together")).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
     end
   end
 

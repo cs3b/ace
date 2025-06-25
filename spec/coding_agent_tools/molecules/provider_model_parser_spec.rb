@@ -260,7 +260,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
 
         expect(result).to be_valid
         expect(result.provider).to eq("together_ai")
-        expect(result.model).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(result.model).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
         expect(result.original_input).to eq("together_ai")
       end
 
@@ -300,7 +300,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
         "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
         "mistral" => "open-mistral-nemo",
-        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "lmstudio" => "mistralai/devstral-small-2505"
       )
     end
@@ -320,7 +320,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
       expect(parser.default_model_for("anthropic")).to eq("claude-3-5-haiku-20241022")
       expect(parser.default_model_for("openai")).to eq("gpt-4o-mini")
       expect(parser.default_model_for("mistral")).to eq("open-mistral-nemo")
-      expect(parser.default_model_for("together_ai")).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+      expect(parser.default_model_for("together_ai")).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
       expect(parser.default_model_for("lmstudio")).to eq("mistralai/devstral-small-2505")
     end
 

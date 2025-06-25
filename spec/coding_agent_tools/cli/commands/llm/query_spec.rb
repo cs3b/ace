@@ -127,7 +127,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "uses default model for together_ai" do
-        expect(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).with(model: "mistralai/Mistral-7B-Instruct-v0.3")
+        expect(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).with(model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
 
         command.call(provider_model: "together_ai", prompt: "test prompt")
       end
