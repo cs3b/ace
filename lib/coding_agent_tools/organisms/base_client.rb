@@ -55,7 +55,7 @@ module CodingAgentTools
       # @option options [Symbol] :event_namespace Event namespace for monitoring
       def initialize(api_key: nil, model: nil, **options)
         # Prevent direct instantiation of abstract base class
-        if self.class == BaseClient
+        if instance_of?(BaseClient)
           raise NotImplementedError, "BaseClient is abstract and cannot be instantiated directly"
         end
 

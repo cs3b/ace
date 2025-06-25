@@ -9,7 +9,7 @@ module CodingAgentTools
     class BaseChatCompletionClient < BaseClient
       def initialize(api_key: nil, model: nil, **options)
         # Prevent direct instantiation of abstract base class
-        if self.class == BaseChatCompletionClient
+        if instance_of?(BaseChatCompletionClient)
           raise NotImplementedError, "BaseChatCompletionClient is abstract and cannot be instantiated directly"
         end
 
