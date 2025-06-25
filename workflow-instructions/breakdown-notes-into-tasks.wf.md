@@ -6,10 +6,28 @@ To orchestrate the processing of various raw inputs (like PRDs, git diffs, backl
 selection of an appropriate sub-workflow, and then to take the structured output from that
 sub-workflow, refine it, verify it with the user, and ultimately create formal, actionable task files.
 
+## Project Context
+
+* Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
+* Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
+* Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
+* [Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
+* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md)
+
 ## Input
 
 * The initial raw input material (e.g., a PRD file, git diff output, PR comments, unstructured backlog notes).
-* The type of this input, to help select the correct sub-workflow.
+* The type of this input, to help select the correct sub-workflow from (one of):
+```text
+docs-dev/workflow-instructions/breakdown-notes-into-tasks/
+├── from-concepts-in-backlog.md
+├── from-diff.md
+├── from-frd.md
+├── from-pr-comments-api.md
+├── from-pr-comments-mcp.md
+├── from-prd.md
+└── from-release-backlog.md
+```
 * (Implicit) Current project context, including information about the current release if applicable.
 
 ## Process Steps
@@ -92,7 +110,3 @@ sub-workflow, refine it, verify it with the user, and ultimately create formal, 
 * The user has reviewed and approved the content and structure of the finalized task(s) before saving.
 
 ## Reference Documentation
-
-* [Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
-* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md)
-* Sub-workflow documents within the `breakdown-notes-into-tasks/` directory.

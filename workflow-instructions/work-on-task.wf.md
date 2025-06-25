@@ -10,10 +10,6 @@ directly within the task's definition file (`NN-task-name.md`).
  - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
  - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
 
-* Task definition files (`docs-project/current/{release_dir}/tasks/NN-task-name.md`) contain a dedicated section
-  (e.g., `## Implementation Plan`) with a detailed, step-by-step checklist using Markdown
-  (`- [ ] Action description...`). *(Note: The exact structure is defined in `write-actionable-task.md`)*.
-
 ## Process Steps
 
 1. **Select Task File:**
@@ -36,9 +32,8 @@ directly within the task's definition file (`NN-task-name.md`).
 
 3. **Load Context:**
     * Identify relevant project context needed for execution:
-        * **General Guides:** (e.g., `coding-standards.md`, `testing.md`, `architecture.md`,
-            [Embedding Tests in AI Agent Workflows](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md)). These might be
-          standard context or explicitly mentioned in the task file.
+        * **General Guides:** (e.g., `docs-dev/guides/coding-standards.g.md`, `docs-dev/guides/testing.g.md`,
+           These might be standard context or explicitly mentioned in the task file.
         * **Specific Code Files:** Identify key files/modules likely to be modified based on the embedded plan
           (if listed in the task file or inferable).
     * **AI Action:** Ensure this context (guides, relevant code snippets) is loaded and considered during
@@ -53,8 +48,6 @@ directly within the task's definition file (`NN-task-name.md`).
             * After performing the action, check for any `> TEST:` or `> VERIFY:` blocks associated with the current
               checklist item (e.g., these blocks might be immediately following the checklist item, or indented
               under it).
-            * If found, process these blocks as defined in the
-                [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md).
             * **Handle Outcomes:**
                 * **Pass:** If all associated embedded tests pass (or user verification is positive), proceed to the
                   next step for this checklist item.
@@ -70,9 +63,6 @@ directly within the task's definition file (`NN-task-name.md`).
            unit/integration testing of the software components being built or modified.
         4. **Update Checklist:** Only after the primary action is complete AND all associated embedded
            tests/verifications pass, update its status in the task file: `- [x] Action description...`
-    * **Commit Appropriately:** Decide on commit frequency. Commit after each logical step (i.e., a checklist item
-      and its successfully passed tests) or group of related items, following
-      [`commit.wf.md`](docs-dev/workflow-instructions/commit.wf.md) (or renamed equivalent).
     * Continue until all checklist items in the plan are marked `- [x]`.
 
 5. **Final Review & Status Update:**
@@ -83,15 +73,8 @@ directly within the task's definition file (`NN-task-name.md`).
 
 ## Reference Documentation
 
-* [Writing Actionable Task Guide](docs-dev/guides/task-definition.g.md) (Defines the required embedded plan structure)
-* [Embedding Tests in AI Agent Workflows Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md) (Details how to write
-  and interpret embedded tests)
-* [Implementing the Task Cycle Guide](docs-dev/guides/testing-tdd-cycle.g.md) (Core TDD loop for code development)
-* [Commit Workflow](docs-dev/workflow-instructions/commit.wf.md) (or renamed equivalent - Git workflow)
-* [`load-env` Workflow Instruction](docs-dev/workflow-instructions/load-env.wf.md)
 * [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
 * [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.g.md)
-* Project-specific guides (Coding Standards, Architecture, etc.) as identified in Step 3.
 
 ## Input
 
