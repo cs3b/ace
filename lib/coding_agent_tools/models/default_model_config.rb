@@ -22,7 +22,7 @@ module CodingAgentTools
         "anthropic" => "claude-3-5-haiku-20241022",
         "openai" => "gpt-4o-mini",
         "mistral" => "open-mistral-nemo",
-        "together_ai" => "mistralai/Mistral-7B-Instruct-v0.3",
+        "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
         "lmstudio" => "mistralai/devstral-small-2505"
       }.freeze
 

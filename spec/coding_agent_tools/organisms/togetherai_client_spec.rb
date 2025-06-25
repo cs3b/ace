@@ -20,7 +20,7 @@ RSpec.describe CodingAgentTools::Organisms::TogetheraiClient do
   describe "#initialize" do
     context "with default configuration" do
       it "uses default model" do
-        expect(client.instance_variable_get(:@model)).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(client.instance_variable_get(:@model)).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
       end
 
       it "uses default base URL" do
@@ -400,10 +400,10 @@ RSpec.describe CodingAgentTools::Organisms::TogetheraiClient do
       it "returns model information from list_models" do
         result = client.model_info
 
-        # Since the client's default model "mistralai/Mistral-7B-Instruct-v0.3" is not in the mock response,
+        # Since the client's default model "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo" is not in the mock response,
         # model_info will return default info with the client's configured model
-        expect(result[:id]).to eq("mistralai/Mistral-7B-Instruct-v0.3")
-        expect(result[:name]).to eq("mistralai/Mistral-7B-Instruct-v0.3")
+        expect(result[:id]).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
+        expect(result[:name]).to eq("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo")
         expect(result[:owned_by]).to eq("together")
         expect(result[:created]).to be_a(Integer)
       end

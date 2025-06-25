@@ -137,8 +137,9 @@ module CodingAgentTools
             when "together_ai"
               fetch_together_ai_models
             end
-          rescue
+          rescue => e
             # Fallback to hardcoded list if API fails
+            warn "API failed for #{provider}: #{e.message}" if ENV['DEBUG_MODELS']
             fallback_models(provider)
           end
 
@@ -246,6 +247,9 @@ module CodingAgentTools
           def fetch_together_ai_models
             client = Organisms::TogetheraiClient.new
             models_response = client.list_models
+
+            # If no models returned, raise an error to trigger fallback
+            raise "No models returned from API" if models_response.empty?
 
             default_model_id = default_config.default_model_for("together_ai")
             # Convert API response to our model structure
@@ -367,6 +371,8 @@ module CodingAgentTools
           # Fallback models if API call fails
           def fallback_models(provider)
             config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            warn "Loading fallback models from: #{config_path}" if ENV['DEBUG_MODELS']
+            warn "File exists: #{File.exist?(config_path)}" if ENV['DEBUG_MODELS']
             config = YAML.load_file(config_path)
 
             case provider
@@ -433,6 +439,7 @@ module CodingAgentTools
             when "together_ai"
               default_model_id = default_config.default_model_for("together_ai")
               together_ai_config = config["together_ai"]
+              warn "together_ai_config: #{together_ai_config.inspect}" if ENV['DEBUG_MODELS']
 
               together_ai_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
