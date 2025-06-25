@@ -6,6 +6,8 @@ require_relative "provider_usage_parsers/anthropic_usage_parser"
 require_relative "provider_usage_parsers/openai_usage_parser"
 require_relative "provider_usage_parsers/mistral_usage_parser"
 require_relative "provider_usage_parsers/togetherai_usage_parser"
+require_relative "../cost_tracker"
+require_relative "../models/usage_metadata_with_cost"
 
 module CodingAgentTools
   module Molecules
@@ -29,6 +31,40 @@ module CodingAgentTools
           execution_time: execution_time,
           usage_data: usage_data
         )
+      end
+
+      # Normalize metadata with cost calculation included
+      # @param response [Hash] Raw response from LLM provider
+      # @param provider [String] Provider name
+      # @param model [String] Model name used
+      # @param execution_time [Float] Time taken for request in seconds
+      # @param cost_tracker [CostTracker, nil] Cost tracker instance (optional)
+      # @return [Models::UsageMetadataWithCost] Enhanced metadata with cost info
+      def self.normalize_with_cost(response, provider:, model:, execution_time:, cost_tracker: nil)
+        # Get basic normalized metadata
+        normalized_metadata = normalize(response, provider: provider, model: model, execution_time: execution_time)
+
+        # Create base UsageMetadata object
+        usage_metadata = Models::UsageMetadata.new(**normalized_metadata)
+
+        # Calculate cost if tracker is provided
+        cost_calculation = if cost_tracker
+          begin
+            cost_tracker.calculate_cost_with_fallback(
+              model_id: model,
+              input_tokens: usage_metadata.input_tokens,
+              output_tokens: usage_metadata.output_tokens,
+              cache_creation_tokens: 0,
+              cache_read_tokens: usage_metadata.cached_tokens || 0
+            )
+          rescue
+            # If cost calculation fails, continue without cost info
+            nil
+          end
+        end
+
+        # Return enhanced metadata with cost information
+        Models::UsageMetadataWithCost.from_usage_metadata(usage_metadata, cost_calculation)
       end
 
       # Parse usage metadata using provider-specific parsers
