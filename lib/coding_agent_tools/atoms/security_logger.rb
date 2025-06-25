@@ -133,7 +133,7 @@ module CodingAgentTools
           # Show only the last two components for context
           components = Pathname.new(expanded).each_filename.to_a
           if components.length > 2
-            return "[hidden]/#{components[-2..-1].join("/")}"
+            return "[hidden]/#{components[-2..].join("/")}"
           elsif components.length > 0
             return "[hidden]/#{components.join("/")}"
           end
