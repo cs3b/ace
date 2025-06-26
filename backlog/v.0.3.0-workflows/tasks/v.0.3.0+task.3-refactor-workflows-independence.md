@@ -2,7 +2,7 @@
 id: v.0.3.0+task.3
 status: pending
 priority: high
-estimate: 20h
+estimate: 25h
 dependencies: [v.0.3.0+task.1]
 ---
 

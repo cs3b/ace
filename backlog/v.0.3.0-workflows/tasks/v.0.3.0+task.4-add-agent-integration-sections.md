@@ -3,7 +3,7 @@ id: v.0.3.0+task.4
 status: pending
 priority: medium
 estimate: 6h
-dependencies: [v.0.3.0+task.2, v.0.3.0+task.3]
+dependencies: [v.0.3.0+task.1, v.0.3.0+task.3]
 ---
 
 # Add Agent Integration Sections to Workflows
@@ -63,7 +63,7 @@ Add standardized agent integration sections to each workflow instruction file, p
 
 ### Planning Steps
 
-* [ ] Review agent integration requirements from task v.0.3.0+task.2
+* [ ] Review agent integration requirements from task v.0.3.0+task.1
   > TEST: Requirements Integration Complete
   > Type: Pre-condition Check
   > Assert: Agent requirements are incorporated into integration plan

@@ -3,7 +3,7 @@ id: v.0.3.0+task.1
 status: pending
 priority: high
 estimate: 8h
-dependencies: []
+dependencies: [v.0.3.0+task.8]
 ---
 
 # Analyze Current Workflow Dependencies
@@ -13,16 +13,35 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 3 dev-handbook/workflow-instructions | sed 's/^/    /'
+find dev-handbook/workflow-instructions -name "*.wf.md" | sort | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-dev-handbook/workflow-instructions/
-├── breakdown-notes-into-tasks.wf.md
-├── draft-release.wf.md
-└── update-roadmap.wf.md
+    dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+    dev-handbook/workflow-instructions/commit.wf.md
+    dev-handbook/workflow-instructions/create-adr.wf.md
+    dev-handbook/workflow-instructions/create-api-docs.wf.md
+    dev-handbook/workflow-instructions/create-reflection-note.wf.md
+    dev-handbook/workflow-instructions/create-release-overview.wf.md
+    dev-handbook/workflow-instructions/create-retrospective-document.wf.md
+    dev-handbook/workflow-instructions/create-review-checklist.wf.md
+    dev-handbook/workflow-instructions/create-test-cases.wf.md
+    dev-handbook/workflow-instructions/create-user-docs.wf.md
+    dev-handbook/workflow-instructions/draft-release.wf.md
+    dev-handbook/workflow-instructions/fix-tests.wf.md
+    dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+    dev-handbook/workflow-instructions/load-env.wf.md
+    dev-handbook/workflow-instructions/log-compact-session.wf.md
+    dev-handbook/workflow-instructions/publish-release.wf.md
+    dev-handbook/workflow-instructions/review-task.wf.md
+    dev-handbook/workflow-instructions/review-tasks-board-status.wf.md
+    dev-handbook/workflow-instructions/update-blueprint.wf.md
+    dev-handbook/workflow-instructions/update-roadmap.wf.md
+    dev-handbook/workflow-instructions/work-on-task.wf.md
+
+Total files: 21
 ```
 
 ## Objective
