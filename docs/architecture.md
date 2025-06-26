@@ -47,7 +47,7 @@ flowchart TD
     Adapters -->|LM Studio| LMStudio((Local Model))\n(localhost:1234)
     Adapters -->|Git CLI / GitHub API| GitHub((Git/GitHub))
     ServiceObjects --> Models
-    Models -->|Reads from/Writes to| LocalFS[(Local File System)\n(e.g., docs-project tasks)]
+    Models -->|Reads from/Writes to| LocalFS[(Local File System)\n(e.g., dev-taskflow tasks)]
 ```
 
 ### Component Descriptions
@@ -89,7 +89,7 @@ The internal structure of the gem's library code (`lib/coding_agent_tools/`) adh
 
 ## Data Flow
 
-Data typically flows from the CLI (user input) to a Service Object, which uses Adapters to interact with external systems (LLM, Git, file system). The Adapters return data, potentially mapped to internal Models, back to the Service Object for processing. The final result is returned through the Adapter layer back to the Service Object, and finally outputted via the CLI. For task utilities, data might be read from local files (`docs-project/`) via an Adapter/Service Object and formatted for CLI output.
+Data typically flows from the CLI (user input) to a Service Object, which uses Adapters to interact with external systems (LLM, Git, file system). The Adapters return data, potentially mapped to internal Models, back to the Service Object for processing. The final result is returned through the Adapter layer back to the Service Object, and finally outputted via the CLI. For task utilities, data might be read from local files (`dev-taskflow/`) via an Adapter/Service Object and formatted for CLI output.
 
 ### Request Processing Flow (Example: git-commit-with-message)
 
@@ -119,7 +119,7 @@ The `bin/` directory contains executable scripts that serve as the primary inter
 -   `bin/lint`: Run code quality checks.
 -   `bin/build`: Build the gem.
 -   `bin/run`: (Context dependent, potentially runs gem commands or a sample usage).
--   `bin/tree`: Display project directory structure (likely wraps `docs-dev/tools/tree.sh`).
+-   `bin/tree`: Display project directory structure (likely wraps `dev-tools/exe-old/tree.sh`).
 
 These scripts are intended to be idempotent where possible and provide a consistent, predictable interface for automation.
 
@@ -128,11 +128,11 @@ These scripts are intended to be idempotent where possible and provide a consist
 ```
 .
 ├── bin/                   # Executable command-line scripts (binstubs/wrappers)
-├── docs-dev/              # Submodule: Development resources, guides, templates, tools
+├── dev-handbook/              # Submodule: Development resources, guides, templates, tools
 │   ├── guides/            # Best practices, patterns, templates
 │   ├── tools/             # Utility scripts (e.g., for task management, tree display)
 │   └── workflow-instructions/ # AI workflow definitions
-├── docs-project/          # Project-specific documentation and management files
+├── dev-taskflow/          # Project-specific documentation and management files
 │   ├── backlog/           # Task files for future releases
 │   ├── current/           # Task files for the current release
 │   ├── done/              # Completed task files
@@ -140,7 +140,7 @@ These scripts are intended to be idempotent where possible and provide a consist
 │   ├── architecture.md    # This document
 │   ├── blueprint.md       # Project structure overview and AI guidelines
 │   └── what-do-we-build.md # Project vision and goals
-├── exe/                   # Gem executables (e.g., coding_agent_tools)
+├── dev-tools/exe/                   # Gem executables (e.g., coding_agent_tools)
 ├── lib/                   # Ruby gem source code
 │   ├── coding_agent_tools.rb # Main gem file, loads components
 │   └── coding_agent_tools/
@@ -221,13 +221,13 @@ The ATOM architecture provides several extension points:
 -   Aruba
 -   RuboCop / StandardRB
 -   Potentially VCR for recording API interactions in tests.
--   `docs-dev/tools/*` scripts: Dependencies for certain `bin/` utilities that wrap scripts from the `docs-dev` submodule.
+-   `dev-tools/exe-old/*` scripts: Dependencies for certain `bin/` utilities that wrap scripts from the `dev-handbook` submodule.
 
 ## Decision Records
 
 Significant architectural decisions are documented as Architecture Decision Records (ADRs).
 
-For detailed decision records, see [docs-project/decisions/](../../../coding-agent-tools/docs-project/decisions/).
+For detailed decision records, see [dev-taskflow/decisions/](../../../coding-agent-tools/dev-taskflow/decisions/).
 
 ## Troubleshooting
 

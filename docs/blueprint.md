@@ -13,13 +13,13 @@ This document provides a concise overview of the project's structure and organiz
 
 This project follows a documentation-first approach with these primary directories:
 
-- **docs-dev/** - Development resources and workflows (Git submodule)
+- **dev-handbook/** - Development resources and workflows (Git submodule)
   - **guides/** - Best practices and standards for development
   - **tools/** - Utility scripts to support development workflows (e.g., for task management, tree display)
   - **workflow-instructions/** - Structured commands for AI agents
   - **zed/** - Editor integration (if applicable)
 
-- **docs-project/** - Project-specific documentation, task management, and decisions
+- **dev-taskflow/** - Project-specific documentation, task management, and decisions
   - **backlog/** - Pending tasks for future releases
   - **current/** - Active release cycle work
   - **done/** - Completed releases and tasks
@@ -47,8 +47,8 @@ This will show all project files while filtering out temporary files, session lo
 
 - [Product Requirements Document (PRD)](../../PRD.md) - Primary source of truth for project goals and requirements
 - [Main README](../../README.md) - Project overview and quick start
-- [Workflow Instructions](../../docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
-- [Project Guides](../../docs-dev/guides/README.md) - Development standards and best practices
+- [Workflow Instructions](../../dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](../../dev-handbook/guides/README.md) - Development standards and best practices
 - `coding_agent_tools.gemspec` - Ruby gem definition and dependencies
 - `Gemfile` - Bundler dependency management
 
@@ -63,12 +63,12 @@ This will show all project files while filtering out temporary files, session lo
 
 AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks. Modifying these files without careful consideration can break core project workflows or documentation standards.
 
-- `docs-dev/guides/**/*`
-- `docs-dev/workflow-instructions/**/*`
-- `docs-dev/tools/_binstubs/**/*`
-- `docs-dev/guides/initialize-project-templates/**/*`
-- `docs-project/decisions/**/*` (Modify only when adding or updating ADRs)
-- `docs-project/done/**/*` (Completed tasks should not be modified)
+- `dev-handbook/guides/**/*`
+- `dev-handbook/workflow-instructions/**/*`
+- `dev-tools/exe-old/_binstubs/**/*`
+- `dev-handbook/guides/initialize-project-templates/**/*`
+- `dev-taskflow/decisions/**/*` (Modify only when adding or updating ADRs)
+- `dev-taskflow/done/**/*` (Completed tasks should not be modified)
 - `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
 - `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
 - `.gitignore` (Modify carefully when adding/removing ignored patterns)
@@ -83,7 +83,7 @@ AI agents should treat the following paths as read-only unless explicitly instru
 
 AI agents should generally ignore the contents of the following paths during tasks such as searching for tasks, summarizing project state, or performing code analysis, unless the task explicitly requires interacting with these directories (e.g., cleaning build artifacts). These paths often contain transient data, dependencies, or build artifacts.
 
-- `docs-project/done/**/*` # Completed tasks (already read-only, but explicitly ignored for general tasks)
+- `dev-taskflow/done/**/*` # Completed tasks (already read-only, but explicitly ignored for general tasks)
 - `vendor/**/*` (Bundler dependencies)
 - `tmp/**/*`
 - `log/**/*`
@@ -143,16 +143,16 @@ Refer to the [Architecture document](./architecture.md#command-line-tools-bin) f
 - RSpec
 - Aruba
 - RuboCop
-- `docs-dev/tools/*` scripts (used by some `bin/` wrappers)
+- `dev-tools/exe-old/*` scripts (used by some `bin/` wrappers)
 
 ## Submodules
 
-### docs-dev
+### dev-handbook
 
-- Path: `docs-dev`
+- Path: `dev-handbook`
 - Repository: [Repository URL - assumed external]
 - Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
-- **Important**: Commits for this submodule must be made from within the submodule directory (`../../docs-dev`).
+- **Important**: Commits for this submodule must be made from within the submodule directory (`../../dev-handbook`).
 
 ---
 

@@ -15,16 +15,16 @@ Automated code review workflow using multiple LLM providers for comprehensive an
 **Default parameters for code reviews:**
 - **Include dependencies**: Always use `--include-dependencies` for comprehensive context
 - **Timeout**: 300 seconds (5 minutes) for complex reviews
-- **System prompt**: `docs-dev/guides/code-review/_code-review-system.md`
+- **System prompt**: `dev-handbook/guides/code-review/_code-review-system.md`
 - **Default provider**: `gpro` (Google Gemini 2.5 Pro)
-- **Default filtered paths**: `.claude/**`, `docs/**`, `docs-project/**`, `.*`, `spec/cassettes/**/*`
+- **Default filtered paths**: `.claude/**`, `docs/**`, `dev-taskflow/**`, `.*`, `spec/cassettes/**/*`
 
 ## Quick Start (Staged/Uncommitted Changes)
 
 ```bash
 # 1. Create timestamped review directory
-mkdir -p docs-project/current/v.0.2.0-synapse/code_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
-cd docs-project/current/v.0.2.0-synapse/code_review/uncommitted-changes-*
+mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
+cd dev-taskflow/current/v.0.2.0-synapse/code_review/uncommitted-changes-*
 
 # 2. Ensure all changes are staged
 git add -A  # Stages all changes (new, modified, and deleted files)
@@ -33,8 +33,8 @@ git add -A  # Stages all changes (new, modified, and deleted files)
 git diff --cached > input.diff
 
 # 4. Filter out unnecessary files (docs, tests, etc.)
-ruby docs-dev/tools/filter-diff.rb input.diff \
-  ".claude/**" "docs/**" "docs-project/**" ".*" "spec/cassettes/**/*" \
+ruby dev-tools/exe-old/filter-diff.rb input.diff \
+  ".claude/**" "docs/**" "dev-taskflow/**" ".*" "spec/cassettes/**/*" \
   -o input-filtered.diff
 
 # 5. Generate review prompt with dependencies
@@ -42,7 +42,7 @@ bin/cr -d input-filtered.diff -o cr-prompt.md --include-dependencies
 
 # 6. Run review with default provider (gpro)
 exe/llm-query gpro cr-prompt.md \
-  --system docs-dev/guides/code-review/_code-review-system.md \
+  --system dev-handbook/guides/code-review/_code-review-system.md \
   --timeout 300 \
   --output cr-report-gpro.md
 ```
@@ -52,12 +52,12 @@ exe/llm-query gpro cr-prompt.md \
 ### 1. Prepare Review Environment
 ```bash
 # Create review directory with timestamp (default for uncommitted changes)
-mkdir -p docs-project/current/v.0.2.0-synapse/code_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
-cd docs-project/current/v.0.2.0-synapse/code_review/uncommitted-changes-*
+mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
+cd dev-taskflow/current/v.0.2.0-synapse/code_review/uncommitted-changes-*
 
 # Or use specific task/release naming
-mkdir -p docs-project/current/v.X.X.X-release/code_review/task-N/
-cd docs-project/current/v.X.X.X-release/code_review/task-N/
+mkdir -p dev-taskflow/current/v.X.X.X-release/code_review/task-N/
+cd dev-taskflow/current/v.X.X.X-release/code_review/task-N/
 ```
 
 ### 2. Generate Diff
@@ -87,19 +87,19 @@ git stash show -p > input.diff
 ### 3. Filter Diff (Optional but Recommended)
 ```bash
 # Default: Filter out documentation, test cassettes, and hidden files
-ruby docs-dev/tools/filter-diff.rb input.diff \
-  ".claude/**" "docs/**" "docs-project/**" ".*" "spec/cassettes/**/*" \
+ruby dev-tools/exe-old/filter-diff.rb input.diff \
+  ".claude/**" "docs/**" "dev-taskflow/**" ".*" "spec/cassettes/**/*" \
   -o input-filtered.diff
 
 # With additional custom patterns
-ruby docs-dev/tools/filter-diff.rb input.diff \
-  ".claude/**" "docs/**" "docs-project/**" ".*" "spec/cassettes/**/*" \
+ruby dev-tools/exe-old/filter-diff.rb input.diff \
+  ".claude/**" "docs/**" "dev-taskflow/**" ".*" "spec/cassettes/**/*" \
   "tmp/**" "log/**" "vendor/**" \
   -o input-filtered.diff
 
 # Using a pattern file
-echo -e ".claude/**\ndocs/**\ndocs-project/**\n.*\nspec/cassettes/**/*" > .ignore-patterns
-ruby docs-dev/tools/filter-diff.rb input.diff -p .ignore-patterns -o input-filtered.diff
+echo -e ".claude/**\ndocs/**\ndev-taskflow/**\n.*\nspec/cassettes/**/*" > .ignore-patterns
+ruby dev-tools/exe-old/filter-diff.rb input.diff -p .ignore-patterns -o input-filtered.diff
 ```
 
 ### 4. Generate Review Prompt (DEFAULT: with dependencies)
@@ -118,14 +118,14 @@ bin/cr -d input-filtered.diff -o cr-prompt.md
 ```bash
 # Default: Run with gpro only
 exe/llm-query gpro cr-prompt.md \
-  --system docs-dev/guides/code-review/_code-review-system.md \
+  --system dev-handbook/guides/code-review/_code-review-system.md \
   --timeout 300 \
   --output cr-report-gpro.md
 
 # Multiple providers (for critical changes)
 for provider in gpro csonet; do
   exe/llm-query $provider cr-prompt.md \
-    --system docs-dev/guides/code-review/_code-review-system.md \
+    --system dev-handbook/guides/code-review/_code-review-system.md \
     --timeout 300 \
     --output "cr-report-${provider}.md"
 done
@@ -134,7 +134,7 @@ done
 providers=(gpro csonet o4 mistral)
 for provider in "${providers[@]}"; do
   exe/llm-query $provider cr-prompt.md \
-    --system docs-dev/guides/code-review/_code-review-system.md \
+    --system dev-handbook/guides/code-review/_code-review-system.md \
     --timeout 300 \
     --output "cr-report-${provider}.md"
 done
@@ -145,25 +145,25 @@ done
 ### Basic Review
 ```bash
 # Quick review of current working directory changes
-mkdir -p docs-project/current/v.0.2.0-synapse/code_review/task-42/
-cd docs-project/current/v.0.2.0-synapse/code_review/task-42/
+mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
+cd dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
 git diff > input.diff
 bin/cr -d input.diff -o cr-prompt.md
-exe/llm-query gpro cr-prompt.md --system docs-dev/guides/code-review/_code-review-system.md --timeout 300 -o cr-report-gpro.md
+exe/llm-query gpro cr-prompt.md --system dev-handbook/guides/code-review/_code-review-system.md --timeout 300 -o cr-report-gpro.md
 ```
 
 ### Comprehensive Review
 ```bash
 # Full context review with multiple providers
-mkdir -p docs-project/current/v.0.2.0-synapse/code_review/task-42/
-cd docs-project/current/v.0.2.0-synapse/code_review/task-42/
+mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
+cd dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
 git diff HEAD~5..HEAD > input.diff
 bin/cr -d input.diff -o cr-prompt.md --include-dependencies
 
 # Run multiple providers
 for provider in gpro csonet o4; do
   exe/llm-query $provider cr-prompt.md \
-    --system docs-dev/guides/code-review/_code-review-system.md \
+    --system dev-handbook/guides/code-review/_code-review-system.md \
     --timeout 300 \
     --output "cr-report-${provider}.md"
 done
@@ -175,7 +175,7 @@ done
 gh pr checkout 123
 git diff main..HEAD > input.diff
 bin/cr -d input.diff -o cr-prompt.md
-exe/llm-query csonet cr-prompt.md --system docs-dev/guides/code-review/_code-review-system.md --timeout 300 -o cr-report-csonet.md
+exe/llm-query csonet cr-prompt.md --system dev-handbook/guides/code-review/_code-review-system.md --timeout 300 -o cr-report-csonet.md
 ```
 
 ## Provider Selection Guide
@@ -188,7 +188,7 @@ exe/llm-query csonet cr-prompt.md --system docs-dev/guides/code-review/_code-rev
 ## Output Files Structure
 
 ```
-docs-project/current/v.X.X.X-release/code_review/task-N/
+dev-taskflow/current/v.X.X.X-release/code_review/task-N/
 ├── input.diff              # Git diff (DO NOT load into session - too large)
 ├── cr-prompt.md            # Generated review prompt (DO NOT load into session - too large)  
 ├── cr-report-gpro.md       # Google Gemini review

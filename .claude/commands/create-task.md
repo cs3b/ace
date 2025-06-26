@@ -1,4 +1,4 @@
-1. READ the [@breakdown-notes-into-tasks.md](@file:docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+1. READ the [@breakdown-notes-into-tasks.md](@file:dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
 
 2. READ all the docs listed in Project Context (linked in document from step 1.)
 

@@ -2,12 +2,12 @@
 # bin/tal: Thin wrapper for get-all-tasks utility
 
 # This script assumes it is located in <project_root>/bin/
-# The target script is in <project_root>/docs-dev/tools/
+# The target script is in <project_root>/dev-tools/exe-old/
 # File.expand_path calculates the absolute path.
 # __dir__ gives the directory of the current script (bin/).
-# '../docs-dev/tools/get-all-tasks' navigates from bin/ up to project_root and then down.
+# '../dev-tools/exe-old/get-all-tasks' navigates from bin/ up to project_root and then down.
 
-target_script = File.expand_path('../docs-dev/tools/get-all-tasks', __dir__)
+target_script = File.expand_path('../dev-tools/exe-old/get-all-tasks', __dir__)
 
 # Use exec to replace the current process with the target script.
 # *ARGV passes all command-line arguments to the target script.

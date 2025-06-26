@@ -1,6 +1,6 @@
 1. use user specified task(s) or use terminal tool `bin/tn` to get next tasks
 
-2. READ the [@review-task.md](@file:docs-dev/workflow-instructions/review-task.wf.md) and all the linked documents
+2. READ the [@review-task.md](@file:dev-handbook/workflow-instructions/review-task.wf.md) and all the linked documents
 
 3. use the instructions from step 2. and start review of each task identified in step 1.
 

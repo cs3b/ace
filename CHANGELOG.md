@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Enhanced initialize-project-structure workflow with v.0.0.0 template release tracking
-  - Created template v.0.0.0 release structure in docs-dev/guides/initialize-project-templates/
+  - Created template v.0.0.0 release structure in dev-handbook/guides/initialize-project-templates/
   - Added template copying and customization logic for new projects
   - Integrated roadmap creation into project initialization process
   - Included clear user guidance for post-initialization steps
@@ -49,7 +49,7 @@ All notable changes to this project will be documented in this file.
 
 ### v.0.3.0+tasks.22 - 2025-06-02 - Create Roadmap Definition Guide
 
-- **Created comprehensive roadmap definition guide** at `docs-dev/guides/roadmap-definition.g.md`:
+- **Created comprehensive roadmap definition guide** at `dev-handbook/guides/roadmap-definition.g.md`:
   - Established deterministic format requirements for all roadmap sections (Front Matter, Project Vision, Strategic Objectives, Key Themes & Epics, Planned Major Releases, Cross-Release Dependencies, Update History)
   - Defined precise table format specifications with column definitions and validation criteria
   - Created content guidelines and best practices for writing style, strategic alignment, and maintenance
@@ -68,8 +68,8 @@ All notable changes to this project will be documented in this file.
   - Applied `.g.md` suffix to all guide files with noun-based naming (changelog, coding-standards, documentation, error-handling, performance, project-management, quality-assurance, security, strategic-planning, temporary-file-management, testing, release-codenames, release-publish, testing-tdd-cycle, debug-troubleshooting, version-control-system, task-definition)
   - Moved and renamed workflow-specific guides: embedding-tests-in-workflows → .meta/workflow-embedding-tests.g.md, tools-guide → .meta/tools.g.md
 - **Updated meta-documentation** to reflect new naming conventions:
-  - Enhanced `docs-dev/guides/.meta/writing-guides-guide.md` with `.g.md` convention documentation and noun-based naming examples
-  - Enhanced `docs-dev/guides/.meta/writing-workflow-instructions-guide.md` with `.wf.md` convention documentation and verb-first naming pattern
+  - Enhanced `dev-handbook/guides/.meta/writing-guides-guide.md` with `.g.md` convention documentation and noun-based naming examples
+  - Enhanced `dev-handbook/guides/.meta/writing-workflow-instructions-guide.md` with `.wf.md` convention documentation and verb-first naming pattern
 - **Fixed internal documentation links** throughout the codebase:
   - Updated all cross-references in workflow instructions and guides to use new `.wf.md` and `.g.md` filenames
   - Corrected relative paths in test-driven-development-cycle documentation
@@ -79,8 +79,8 @@ All notable changes to this project will be documented in this file.
 ### v.0.3.0+tasks.15 - 2025-06-01 - Rename "Prepare Release" to "Draft Release" and Ensure Independence from "Publish Release"
 
 - **Renamed prepare-release to draft-release throughout codebase** for clearer separation from publish-release process:
-  - Renamed `docs-dev/workflow-instructions/prepare-release.md` to `docs-dev/workflow-instructions/draft-release.md`
-  - Renamed `docs-dev/guides/prepare-release/` directory to `docs-dev/guides/draft-release/`
+  - Renamed `dev-handbook/workflow-instructions/prepare-release.md` to `dev-handbook/workflow-instructions/draft-release.md`
+  - Renamed `dev-handbook/guides/prepare-release/` directory to `dev-handbook/guides/draft-release/`
   - Updated 147+ references across workflow instructions, guides, session files, and current tasks
 - **Established complete independence between draft-release and publish-release processes**:
   - Removed inappropriate references to draft-release from publish-release documentation
@@ -95,34 +95,34 @@ All notable changes to this project will be documented in this file.
 ### v.0.3.0+tasks.14 - 2025-06-01 - Define and Document "Publish Release" Process and Guide
 
 - **Created comprehensive publish release process** replacing ship-release terminology:
-  - `docs-dev/guides/publish-release.md` - Detailed guide explaining release publishing philosophy, semantic versioning scheme (v<major>.<minor>.<patch> extracted from release folder names), and archival process from `docs-project/current/` to `docs-project/done/`
-  - `docs-dev/workflow-instructions/publish-release.md` - Step-by-step workflow instruction for executing the complete publish release process including version finalization, package publication, documentation archival, and stakeholder communication
-  - `docs-dev/guides/changelog-guide.md` - Comprehensive changelog writing guide following Keep a Changelog format with project-specific adaptations and integration guidelines
+  - `dev-handbook/guides/publish-release.md` - Detailed guide explaining release publishing philosophy, semantic versioning scheme (v<major>.<minor>.<patch> extracted from release folder names), and archival process from `dev-taskflow/current/` to `dev-taskflow/done/`
+  - `dev-handbook/workflow-instructions/publish-release.md` - Step-by-step workflow instruction for executing the complete publish release process including version finalization, package publication, documentation archival, and stakeholder communication
+  - `dev-handbook/guides/changelog-guide.md` - Comprehensive changelog writing guide following Keep a Changelog format with project-specific adaptations and integration guidelines
 - **Replaced ship-release terminology throughout codebase**:
-  - Deleted `docs-dev/workflow-instructions/ship-release.md` and `docs-dev/guides/ship-release.md` files
-  - Moved `docs-dev/guides/ship-release/` directory to `docs-dev/guides/publish-release/` with updated language-specific examples (ruby.md, rust.md, typescript.md)
+  - Deleted `dev-handbook/workflow-instructions/ship-release.md` and `dev-handbook/guides/ship-release.md` files
+  - Moved `dev-handbook/guides/ship-release/` directory to `dev-handbook/guides/publish-release/` with updated language-specific examples (ruby.md, rust.md, typescript.md)
   - Updated all references from "ship-release" to "publish-release" across documentation files, workflow instructions, and guides
 - **Enhanced versioning documentation**:
-  - Updated `docs-dev/guides/version-control.md` with semantic versioning scheme documentation and examples showing version extraction from release folder names
-  - Updated `docs-dev/guides/project-management.md` with archival process description and consistent publish release terminology
+  - Updated `dev-handbook/guides/version-control.md` with semantic versioning scheme documentation and examples showing version extraction from release folder names
+  - Updated `dev-handbook/guides/project-management.md` with archival process description and consistent publish release terminology
 - **Integrated technology-agnostic approach** supporting diverse project types through `bin/build` execution and flexible package publication processes
 - **Established clear process separation** between preparation (handled by existing prepare-release workflow) and final deployment/archival (handled by new publish-release process)
 
 ### v.0.3.0+tasks.12 - 2025-06-01 - Remove Checkboxes from Guides and Workflow Instructions; Clarify Use of Acceptance Criteria
 
 - **Converted inappropriate interactive checklists to bullet points** in guides:
-  - `docs-dev/guides/version-control.md` - Changed PR template example from checkboxes to bullet points
-  - `docs-dev/guides/security.md` - Converted security review checklist from interactive checkboxes to informational bullet points with bold headers
+  - `dev-handbook/guides/version-control.md` - Changed PR template example from checkboxes to bullet points
+  - `dev-handbook/guides/security.md` - Converted security review checklist from interactive checkboxes to informational bullet points with bold headers
 - **Enhanced meta documentation** with comprehensive checkbox usage guidelines:
-  - `docs-dev/guides/.meta/writing-guides-guide.md` - Added detailed section on appropriate vs inappropriate checkbox usage, with examples of when checkboxes are legitimate (templates, examples) vs inappropriate (interactive checklists)
-  - `docs-dev/guides/.meta/writing-workflow-instructions-guide.md` - Added "List Formatting in Workflows" section clarifying that Success Criteria should use simple bullet points, Process Steps should use numbered lists, and checkboxes are only appropriate in templates/examples
+  - `dev-handbook/guides/.meta/writing-guides-guide.md` - Added detailed section on appropriate vs inappropriate checkbox usage, with examples of when checkboxes are legitimate (templates, examples) vs inappropriate (interactive checklists)
+  - `dev-handbook/guides/.meta/writing-workflow-instructions-guide.md` - Added "List Formatting in Workflows" section clarifying that Success Criteria should use simple bullet points, Process Steps should use numbered lists, and checkboxes are only appropriate in templates/examples
 - **Standardized all workflow instruction Success Criteria** to use simple bullet points instead of checkboxes across 11 workflow files: `create-user-docs.md`, `create-test-cases.md`, `create-retrospective-document.md`, `create-release-overview.md`, `create-api-docs.md`, `create-adr.md`, `commit.md`, `create-review-checklist.md`, `review-tasks-board-status.md`, `create-reflection-note.md`, `prepare-release.md`
 - **Converted Process Steps in ship-release.md** from checkboxes to numbered steps (1-24) for better sequential execution guidance
 - **Established clear distinction** between reference documentation (guides) and actionable content (tasks), preventing AI agents from treating guides as interactive checklists while preserving legitimate checkbox usage in templates and examples
 
 ### v.0.3.0+tasks.11 - 2025-06-01 - Clarify Policy on Updating "Done" Tasks if Referenced Files Change
 
-- Added comprehensive policy section to `docs-dev/guides/project-management.md` under Agent Operational Boundaries
+- Added comprehensive policy section to `dev-handbook/guides/project-management.md` under Agent Operational Boundaries
 - Defined clear distinction between prohibited modifications (content changes, historical revisions, status changes) and allowed reference updates (broken link fixes, security annotations, accessibility improvements)
 - Established process requirements for human updates including justification, additive approach, history preservation, clear attribution, and minimal scope
 - Provided concrete examples of acceptable vs unacceptable modifications to done tasks
@@ -136,20 +136,20 @@ All notable changes to this project will be documented in this file.
 
 ### v.0.3.0+tasks.10 - 2025-06-01 - Refine Task Template to Include Distinct "Plan" and "Execution" Sections
 
-- Updated the task template (`docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`) to include separate "Planning Steps" (`* [ ]`) and "Execution Steps" (`- [ ]`) subsections within the "Implementation Plan".
+- Updated the task template (`dev-handbook/guides/prepare-release/v.x.x.x/tasks/_template.md`) to include separate "Planning Steps" (`* [ ]`) and "Execution Steps" (`- [ ]`) subsections within the "Implementation Plan".
 - Updated the `write-actionable-task.md` guide to document the new structure, explaining the rationale, visual distinction, when to use planning steps, and how it relates to workflow phases (review vs. work).
 - Added examples to the guide demonstrating tasks with only execution steps and tasks with both planning and execution steps, including embedded tests in both sections.
 
 ### v.0.3.x+task.8 - 2025-06-01 - Refine Initialize Project Test Task and Create Review Roadmap Task
 
-- Updated `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/008-test-initialize-project.md` to align its scope with the "Initialize Project Structure" workflow, specifically excluding the creation of `roadmap.md` and initial release scaffolding.
-- Created new task `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/v.0.3.0+task.21.md` to review the `manage-roadmap.md` workflow instruction, following the guide for writing actionable tasks.
+- Updated `dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/008-test-initialize-project.md` to align its scope with the "Initialize Project Structure" workflow, specifically excluding the creation of `roadmap.md` and initial release scaffolding.
+- Created new task `dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/v.0.3.0+task.21.md` to review the `manage-roadmap.md` workflow instruction, following the guide for writing actionable tasks.
 
 ### v.0.3.x - 2025-05-30 - Standardize Binstub Location and Rename gat to tal
 
 - Renamed the `bin/gat` wrapper script to `bin/tal`.
 - Updated documentation and task references for the `bin/gat` -> `bin/tal` rename.
-- Added binstub scripts for `tnid`, `rc`, and `tal` to `docs-dev/tools/_binstubs/`.
+- Added binstub scripts for `tnid`, `rc`, and `tal` to `dev-tools/exe-old/_binstubs/`.
 
 ### v.0.3.x - 2025-05-30 - Incorporate Codename Picking Guide into Prepare Release Workflow
 
@@ -160,29 +160,29 @@ All notable changes to this project will be documented in this file.
   - Streamlined the workflow by removing the redundant "Initialize Version Control" (formerly Step 3) and the "Tailor Development Guides" (formerly Step 4) steps.
   - Renumbered the steps to reflect the removal of the two steps.
   - Enhanced the "Core Documentation Generation" step to reference new templates and include improved example questions for interactive prompts.
-  - Updated the "Setup Project `bin/` Scripts" step (now Step 3) to refer to the `docs-project/architecture.md` for binstub explanations.
+  - Updated the "Setup Project `bin/` Scripts" step (now Step 3) to refer to the `dev-taskflow/architecture.md` for binstub explanations.
 - **Created New Project Initialization Templates:**
-  - Added `docs-dev/guides/initialize-project-templates/PRD.md` with a basic PRD structure.
-  - Added `docs-dev/guides/initialize-project-templates/README.md` with a basic README structure.
-  - Added `docs-dev/guides/initialize-project-templates/blueprint.md` based on the current project's blueprint structure.
-  - Added `docs-dev/guides/initialize-project-templates/architecture.md` based on the current project's architecture structure, including binstub explanations.
-  - Added `docs-dev/guides/initialize-project-templates/what-do-we-build.md` based on the current project's what-do-we-build structure.
+  - Added `dev-handbook/guides/initialize-project-templates/PRD.md` with a basic PRD structure.
+  - Added `dev-handbook/guides/initialize-project-templates/README.md` with a basic README structure.
+  - Added `dev-handbook/guides/initialize-project-templates/blueprint.md` based on the current project's blueprint structure.
+  - Added `dev-handbook/guides/initialize-project-templates/architecture.md` based on the current project's architecture structure, including binstub explanations.
+  - Added `dev-handbook/guides/initialize-project-templates/what-do-we-build.md` based on the current project's what-do-we-build structure.
 - **Created New Guide for Codenames:**
-  - Added `docs-dev/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
+  - Added `dev-handbook/guides/picking-codenames.md` with guidance on choosing themes, length, and uniqueness for project codenames.
 
 ### v.0.3.x - 2025-05-30 - Standardize Task ID Generation and Consolidate Task Templates
 
 - **Task ID Generation Standardization:**
-  - Updated `docs-dev/guides/write-actionable-task.md`, `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`, and `docs-dev/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
+  - Updated `dev-handbook/guides/write-actionable-task.md`, `dev-handbook/workflow-instructions/breakdown-notes-into-tasks.md`, and `dev-handbook/guides/project-management.md` to mandate the use of the `bin/tnid` script for generating task IDs. This ensures unique, correctly formatted, and sequentially numbered task IDs.
 - **Task Template and Example Consolidation:**
-  - Moved the canonical task template to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_template.md`.
-  - Relocated the full worked task example to `docs-dev/guides/prepare-release/v.x.x.x/tasks/_example.md`.
-  - Updated `docs-dev/guides/write-actionable-task.md` to remove the embedded template and example, now linking to these new centralized locations. This streamlines task creation and ensures a single source of truth for the task structure.
+  - Moved the canonical task template to `dev-handbook/guides/prepare-release/v.x.x.x/tasks/_template.md`.
+  - Relocated the full worked task example to `dev-handbook/guides/prepare-release/v.x.x.x/tasks/_example.md`.
+  - Updated `dev-handbook/guides/write-actionable-task.md` to remove the embedded template and example, now linking to these new centralized locations. This streamlines task creation and ensures a single source of truth for the task structure.
 
 ### v.0.3.0+task.19 - 2025-05-28 - Fix Markdown Lint Errors
 
 - **Documentation Quality Improvements:**
-  - Fixed final markdown lint errors in `docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/018-add-tool-for-getting-release-path.md`
+  - Fixed final markdown lint errors in `dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2/tasks/018-add-tool-for-getting-release-path.md`
   - Resolved MD013 line length violations by appropriately breaking long lines to comply with 120-character limit
   - Completed processing of all 81 markdown files in the project
 
@@ -199,22 +199,22 @@ All notable changes to this project will be documented in this file.
 ### v.0.3.0+task.18 - 2025-05-27 - Add Tool for Getting Current Release Path and Version
 
 - **Created New Development Tools:**
-- Added `docs-dev/tools/get-current-release-path.sh` - Main tool script that determines the appropriate
+- Added `dev-tools/exe-old/get-current-release-path.sh` - Main tool script that determines the appropriate
   directory for storing newly created tasks and returns version information.
 - Added `bin/rc` - Thin wrapper script for easy access to the get-current-release-path utility.
-- Added `docs-dev/tools/test-get-current-release-path.sh` - Comprehensive test suite with 13 test
+- Added `dev-tools/exe-old/test-get-current-release-path.sh` - Comprehensive test suite with 13 test
   assertions covering 5 test scenarios.
 
 - **Tool Functionality:**
-- Returns path to current release directory (e.g., `docs-project/current/v.X.Y.Z-codename`)
+- Returns path to current release directory (e.g., `dev-taskflow/current/v.X.Y.Z-codename`)
   and version string (e.g., `v.X.Y.Z`) when a current release exists.
-- Returns backlog tasks path (`docs-dev/backlog/tasks`) and empty version when no current
+- Returns backlog tasks path (`dev-handbook/backlog/tasks`) and empty version when no current
   release is detected.
 - Handles edge cases like multiple release directories gracefully.
 - Includes help option and proper error handling for invalid arguments.
 
 - **Workflow Integration:**
-- Updated `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md` to utilize the new
+- Updated `dev-handbook/workflow-instructions/breakdown-notes-into-tasks.md` to utilize the new
   `bin/rc` tool in Step 6 for determining task storage location.
 - Added instructions for creating necessary directories before saving task files.
 - Integrated version information access for potential use in task metadata or naming.
@@ -223,23 +223,23 @@ All notable changes to this project will be documented in this file.
 - All automated tests pass, covering current release detection, backlog fallback, multiple
   directories, help functionality, and error handling.
 - Tool correctly identifies and works with the actual project structure
-  (`docs-project/current/v.0.3.0-feedback-after-meta.v.0.2`).
+  (`dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2`).
 
 ### v.0.3.x-fix - 2025-05-27 - Update Breakdown Notes to Tasks Workflow
 
 - Updated the `breakdown-notes-into-tasks.md` workflow instructions.
-- Added clarification on where formal task files should be stored (current release `tasks/` directory or `docs-dev/backlog/tasks/`).
+- Added clarification on where formal task files should be stored (current release `tasks/` directory or `dev-handbook/backlog/tasks/`).
 - Introduced a new Step 6 to formalize the task structure according to the `write-actionable-task.md` guide after user verification.
 - Reviewed and updated the workflow's goal, inputs, process steps, output, and success criteria for consistency.
 
 ### v.0.3.0+task.7 - 2025-05-27 - Add .meta/ Subdirectories for Self-Referential Workflows and Guides
 
-- Created the `.meta/` subdirectories within `docs-dev/guides/` and `docs-dev/workflow-instructions/`.
+- Created the `.meta/` subdirectories within `dev-handbook/guides/` and `dev-handbook/workflow-instructions/`.
 - Moved the `writing-guides-guide.md`, `writing-workflow-instructions.md` (and renamed it to
   `writing-workflow-instructions-guide.md`), and `tools-guide.md` files into
-  `docs-dev/guides/.meta/`.
+  `dev-handbook/guides/.meta/`.
 - Updated all internal links within the project that pointed to these moved guide files.
-- Added documentation explaining the purpose and usage of the `.meta/` directories in `docs-dev/README.md`.
+- Added documentation explaining the purpose and usage of the `.meta/` directories in `dev-handbook/README.md`.
 - Verified internal links using the lint tool.
 
 ### v.0.3.0+task.5 - 2025-05-27 - Ensure Uniqueness and Consistency of Task IDs and Release Versioning (and Tooling Fixes)
@@ -248,46 +248,46 @@ All notable changes to this project will be documented in this file.
   - Implemented new task ID convention: `v.X.Y.Z+task.<sequential_number>`.
   - Standardized release directory naming to `v.X.Y.Z-codename`.
 - **Tooling Enhancements & Fixes**:
-  - Added `bin/tnid` (`docs-dev/tools/get-next-task-id`) to generate the next unique task ID.
-  - Added `bin/gat` (`docs-dev/tools/get-all-tasks`) to list all tasks in a release, sorted by
+  - Added `bin/tnid` (`dev-tools/exe-old/get-next-task-id`) to generate the next unique task ID.
+  - Added `bin/gat` (`dev-tools/exe-old/get-all-tasks`) to list all tasks in a release, sorted by
     dependencies and highlighting the next actionable one.
-  - Added `docs-dev/tools/lint-task-metadata` script (integrated into `bin/lint`) to validate task
+  - Added `dev-tools/exe-old/lint-task-metadata` script (integrated into `bin/lint`) to validate task
     metadata against new conventions.
-  - Modified `bin/tn` (`docs-dev/tools/get-next-task`) to correctly sort task IDs numerically and
+  - Modified `bin/tn` (`dev-tools/exe-old/get-next-task`) to correctly sort task IDs numerically and
     prioritize `in-progress` tasks.
-  - Updated `docs-dev/guides/tools-guide.md` with refined principles for path conventions, testing,
+  - Updated `dev-handbook/guides/tools-guide.md` with refined principles for path conventions, testing,
     and binstub simplicity.
-  - Corrected path usage, regexes for version parsing, and fixed bugs in the newly
+  - Corrected path usage, regdev-tools/exes for version parsing, and fixed bugs in the newly
     created/modified tools (`get-next-task-id`, `get-all-tasks`, `lint-task-metadata`) and their
     binstubs (`bin/tnid`, `bin/gat`).
   - Fixed minor errors in `bin/lint` script.
 - **Documentation Updates**:
-  - Updated `docs-dev/guides/project-management.md` with new task ID convention, release folder
+  - Updated `dev-handbook/guides/project-management.md` with new task ID convention, release folder
     naming, and tool information.
-  - Updated `docs-dev/guides/write-actionable-task.md` with new task ID format in
+  - Updated `dev-handbook/guides/write-actionable-task.md` with new task ID format in
     templates/examples.
-  - Updated `docs-dev/workflow-instructions/prepare-release.md` to reflect new ID generation and
+  - Updated `dev-handbook/workflow-instructions/prepare-release.md` to reflect new ID generation and
     versioning.
     versioning.
 
 ### **Minor Fix:**
 
-- Bring back the directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`, deleted
+- Bring back the directory `dev-handbook/workflow-instructions/breakdown-notes-into-tasks`, deleted
     in 33af0d94cb0598baa4b5d36b8ffd273d3b8ebcc8
 
 ### v.0.3.x-4 - 2025-05-27 - Implement Immutability Rules for Specified Paths via Agent Blueprint
 
 - **Agent Operational Boundaries:**
-  - Added "Read-Only Paths" and "Ignored Paths" sections to `docs-project/blueprint.md` to define
+  - Added "Read-Only Paths" and "Ignored Paths" sections to `dev-taskflow/blueprint.md` to define
     file access rules for the agent.
-    - Populated "Ignored Paths" with default common patterns (e.g., `docs-project/done/**/*`,
+    - Populated "Ignored Paths" with default common patterns (e.g., `dev-taskflow/done/**/*`,
       `**/node_modules/**`).
-    - Added project-specific "Read-Only Paths" (e.g., `docs-project/releases/**/*`,
-      `docs-project/decisions/**/*`).
-  - Updated `docs-dev/workflow-instructions/initialize-project-structure.md` to include these new
+    - Added project-specific "Read-Only Paths" (e.g., `dev-taskflow/releases/**/*`,
+      `dev-taskflow/decisions/**/*`).
+  - Updated `dev-handbook/workflow-instructions/initialize-project-structure.md` to include these new
     sections and their default content when generating a new `blueprint.md`.
-  - Added a new "Agent Operational Boundaries" section to `docs-dev/guides/project-management.md`
-    to explain the purpose of these blueprint configurations and refer to `docs-project/blueprint.md`
+  - Added a new "Agent Operational Boundaries" section to `dev-handbook/guides/project-management.md`
+    to explain the purpose of these blueprint configurations and refer to `dev-taskflow/blueprint.md`
     for details.
 
 ### v.0.3.x-3 - 2025-05-27 - Establish Guidelines for Temporary File Usage by AI Agent
@@ -296,44 +296,44 @@ All notable changes to this project will be documented in this file.
   - Defined criteria for appropriate use of temporary files by the agent.
   - Specified recommended locations, naming conventions, and cleanup responsibilities for temporary
     files.
-  - Documented these guidelines in `docs-dev/guides/temporary-file-management.md` and updated relevant
+  - Documented these guidelines in `dev-handbook/guides/temporary-file-management.md` and updated relevant
     links.
 
 - **Development Cycle Documentation Refinement:**
-  - Renamed `docs-dev/guides/task-cycle.md` to `docs-dev/guides/test-driven-development-cycle.md`.
-  - Renamed directory `docs-dev/guides/task-cycle/` to `docs-dev/guides/test-driven-development-cycle/`.
+  - Renamed `dev-handbook/guides/task-cycle.md` to `dev-handbook/guides/test-driven-development-cycle.md`.
+  - Renamed directory `dev-handbook/guides/task-cycle/` to `dev-handbook/guides/test-driven-development-cycle/`.
   - Updated all internal references to these renamed paths.
-  - Deleted redundant `docs-dev/guides/testing/test-cycle.md`.
+  - Deleted redundant `dev-handbook/guides/testing/test-cycle.md`.
 
 ### v.0.3.x-2 - 2025-05-27 - Design a Standard for Incorporating Tests into AI Agent Workflows
 
 - **Workflow Testing Standard:**
   - Defined a standard for embedding tests (`> TEST:`, `> VERIFY:`) in workflow instruction files.
-  - Created `docs-dev/guides/embedding-tests-in-workflows.md` detailing the standard.
-  - Updated `docs-dev/guides/writing-workflow-instructions.md` to reference the new testing guide.
-  - Added a proposed `bin/test` script to `docs-project/architecture.md`.
-  - Integrated the testing standard into `docs-dev/guides/write-actionable-task.md`,
-    `docs-dev/workflow-instructions/work-on-task.md`, and
-    `docs-dev/workflow-instructions/breakdown-notes-into-tasks.md`.
+  - Created `dev-handbook/guides/embedding-tests-in-workflows.md` detailing the standard.
+  - Updated `dev-handbook/guides/writing-workflow-instructions.md` to reference the new testing guide.
+  - Added a proposed `bin/test` script to `dev-taskflow/architecture.md`.
+  - Integrated the testing standard into `dev-handbook/guides/write-actionable-task.md`,
+    `dev-handbook/workflow-instructions/work-on-task.md`, and
+    `dev-handbook/workflow-instructions/breakdown-notes-into-tasks.md`.
 
 ### v.0.3.x-13 - 2025-05-26 - Create `bin/` Aliases for Common Development Commands
 
 - **Standardized `bin/` Commands:**
   - Introduced top-level `bin/test`, `bin/lint`, `bin/build`, and `bin/run` alias scripts.
   - These scripts wrap underlying project-specific commands for consistent developer experience.
-  - Created placeholder binstub templates in `docs-dev/tools/_binstubs/` for new projects.
+  - Created placeholder binstub templates in `dev-tools/exe-old/_binstubs/` for new projects.
   - Documented the new `bin/` aliases.
 
 ### v.0.3.x-6 - 2025-05-26 - Merge tools and utils Directories
 
 - **Tooling Structure Refinement:**
-  - Merged `docs-dev/utils` directory into `docs-dev/tools`.
-  - Renamed scripts in `docs-dev/tools` to follow a verb-prefix naming convention (e.g.,
+  - Merged `dev-handbook/utils` directory into `dev-tools/exe-old`.
+  - Renamed scripts in `dev-tools/exe-old` to follow a verb-prefix naming convention (e.g.,
     `recent-tasks` to `get-recent-tasks`).
   - Updated all internal and external references to the old script paths and names.
 
 - **Minor Cleanup:**
-  - Deleted duplicate directory `docs-dev/workflow-instructions/breakdown-notes-into-tasks`.
+  - Deleted duplicate directory `dev-handbook/workflow-instructions/breakdown-notes-into-tasks`.
 
 ---
 
@@ -372,9 +372,9 @@ All notable changes to this project will be documented in this file.
 ## 2025-05-07
 
 - **Changed:**
-  - Updated `docs-project` to `v0.2.3-17` which refactored documentation generation workflows.
+  - Updated `dev-taskflow` to `v0.2.3-17` which refactored documentation generation workflows.
     This includes:
-    - Flattening the `docs-dev/workflow-instructions/docs/` subdirectory.
+    - Flattening the `dev-handbook/workflow-instructions/docs/` subdirectory.
     - Renaming documentation generation workflows to `create-<context>.md`
       (e.g., `create-adr.md`, `create-api-docs.md`).
     - Updating H1 titles and internal links.
@@ -416,16 +416,16 @@ in the 2025-05-07 and 2025-05-08 git logs)
   - Reviewed and restructured documentation generation workflows (Task
     `17-review-documentation-generation-workflows` - details in 2025-05-07 log).
 - **Project Planning & Execution Enhancements:**
-  - Defined and implemented a project roadmap (`docs-project/roadmap.md`) and strategic planning
-    process (`docs-dev/guides/strategic-planning-guide.md`,
-    `docs-dev/workflow-instructions/manage-roadmap.md`). (Task
+  - Defined and implemented a project roadmap (`dev-taskflow/roadmap.md`) and strategic planning
+    process (`dev-handbook/guides/strategic-planning-guide.md`,
+    `dev-handbook/workflow-instructions/manage-roadmap.md`). (Task
     `20-define-roadmap-and-strategic-planning`)
   - Mandated and defined a structured "Implementation Plan" section within task files
-    (`docs-dev/guides/write-actionable-task.md`). (Task `21-define-embedded-plan-structure`)
+    (`dev-handbook/guides/write-actionable-task.md`). (Task `21-define-embedded-plan-structure`)
   - Created a new `ship-release` workflow. (Task `22-create-ship-release-workflow`)
 - **Documentation Quality & Structure Improvements:**
-  - Created guides for troubleshooting (`docs-dev/guides/troubleshooting-workflow.md`). (Task `04-high-level-dev-debug-workflow`)
-  - Created guide for task implementation cycle (`docs-dev/guides/test-driven-development-cycle.md`). (Task `05-support-writing-workflow-guide`)
+  - Created guides for troubleshooting (`dev-handbook/guides/troubleshooting-workflow.md`). (Task `04-high-level-dev-debug-workflow`)
+  - Created guide for task implementation cycle (`dev-handbook/guides/test-driven-development-cycle.md`). (Task `05-support-writing-workflow-guide`)
   - Split testing guides by technology. (Task `06-split-testing-guides-by-tech`)
   - Reviewed and improved `prepare-release` templates. (Task `19-review-prepare-release-templates`)
 
@@ -444,7 +444,7 @@ in the 2025-05-07 and 2025-05-08 git logs)
 ### Release v.0.2.0 (Dev Docs Review - Streamline Workflow)
 
 - **Unified Task Management:** Solidified a single task management system using structured Markdown files
-  in `docs-project/{backlog,current,done}`. Removed the experimental `project/task-manager`.
+  in `dev-taskflow/{backlog,current,done}`. Removed the experimental `project/task-manager`.
 - **Simplified Release Documentation:** Provided clearer guidelines for documentation required for
   different release types (Patch, Feature, Major).
 - **Workflow Consistency:** Ensured consistent terminology and aligned Kanban board references. Commands

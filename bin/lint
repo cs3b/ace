@@ -12,7 +12,7 @@ LINT_SUCCESS=true
 # Run markdownlint for all Markdown files, ignoring node_modules
 # Pass any arguments received by this script to markdownlint
 echo "INFO: Running markdownlint..."
-if npx markdownlint-cli '**/*.md' --config .markdownlint.json --ignore node_modules --ignore docs-project/done --ignore docs-project/sessions --ignore tmp --fix "$@"; then
+if npx markdownlint-cli '**/*.md' --config .markdownlint.json --ignore node_modules --ignore dev-taskflow/done --ignore dev-taskflow/sessions --ignore tmp --fix "$@"; then
   echo "INFO: markdownlint passed."
 else
   echo "ERROR: markdownlint found issues."
@@ -20,11 +20,11 @@ else
 fi
 
 # Run the custom Markdown link linter script
-LINK_CHECKER_SCRIPT="docs-dev/tools/lint-md-links.rb"
+LINK_CHECKER_SCRIPT="dev-tools/exe-old/lint-md-links.rb"
 echo "INFO: Running link checker script: $LINK_CHECKER_SCRIPT..."
 if [ -f "$LINK_CHECKER_SCRIPT" ]; then
   # Assuming the script takes no arguments or handles them internally
-  if ruby "$LINK_CHECKER_SCRIPT" docs-dev/**/*; then
+  if ruby "$LINK_CHECKER_SCRIPT" dev-handbook/**/*; then
     echo "INFO: Link checker ($LINK_CHECKER_SCRIPT) passed."
   else
     echo "ERROR: Link checker ($LINK_CHECKER_SCRIPT) found issues."
@@ -37,7 +37,7 @@ else
 fi
 
 # Run the custom task metadata linter script
-TASK_METADATA_LINTER_SCRIPT="docs-dev/tools/lint-task-metadata"
+TASK_METADATA_LINTER_SCRIPT="dev-tools/exe-old/lint-task-metadata"
 echo "INFO: Running task metadata linter script: $TASK_METADATA_LINTER_SCRIPT..."
 if [ -f "$TASK_METADATA_LINTER_SCRIPT" ]; then
   if ruby "$TASK_METADATA_LINTER_SCRIPT"; then

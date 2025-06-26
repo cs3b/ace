@@ -1,4 +1,4 @@
-1. READ the [@work-on-task.md](@file:docs-dev/workflow-instructions/work-on-task.wf.md) and all the linked documents
+1. READ the [@work-on-task.md](@file:dev-handbook/workflow-instructions/work-on-task.wf.md) and all the linked documents
 
 2. read recommended docs from document read in step 2.
 

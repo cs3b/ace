@@ -15,8 +15,8 @@ while test $i -le (count $argv)
     set i (math $i + 1)
 end
 
-echo "Commit changes in submodule: docs-dev..."
-pushd docs-dev
+echo "Commit changes in submodule: dev-handbook..."
+pushd dev-handbook
 if test -n "$intention"
     gcama -i "$intention"
 else
@@ -24,8 +24,8 @@ else
 end
 popd
 
-echo "Commit changes in submodule: docs-project..."
-pushd docs-project
+echo "Commit changes in submodule: dev-taskflow..."
+pushd dev-taskflow
 if test -n "$intention"
     gcama -i "$intention"
 else

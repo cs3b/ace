@@ -6,7 +6,7 @@ This project builds a Ruby gem that provides AI-powered development tools throug
 ## Your Analysis Process:
 
 1. **Scan Reflection Notes**
-   - Read all files in `docs-project/current/*/reflections/*.md`
+   - Read all files in `dev-taskflow/current/*/reflections/*.md`
    - Focus on development friction points, failed assumptions, and recurring issues
    - Note specific examples from task implementations (v.0.2.0+task.*)
 
@@ -40,7 +40,7 @@ This project builds a Ruby gem that provides AI-powered development tools throug
 
 ## Output Structure:
 
-Create a comprehensive report at: `docs-project/current/v.0.2.0-synapse/reflections/reports/YYYYMMDD-HHMMSS-reflection-analysis.md`
+Create a comprehensive report at: `dev-taskflow/current/v.0.2.0-synapse/reflections/reports/YYYYMMDD-HHMMSS-reflection-analysis.md`
 
 ```markdown
 # Coding Agent Tools: Reflection Analysis Report
@@ -83,12 +83,12 @@ Date: YYYY-MM-DD HH:MM:SS
 
 After creating the report:
 6. **Archive Processed Reflections**
-   - Create `docs-project/current/v.0.2.0-synapse/reflections/compacted/` if needed
+   - Create `dev-taskflow/current/v.0.2.0-synapse/reflections/compacted/` if needed
    - Move all analyzed reflection files there with a batch timestamp
    - Leave the new report in the main reflections folder
 
 ## Key Focus Areas for CAT Project:
 - Validate all solutions against the gem's CLI-first philosophy
-- Ensure proposals don't break existing `exe/` commands
+- Ensure proposals don't break existing `dev-tools/exe/` commands
 - Consider how solutions integrate with LLM providers (OpenAI, Anthropic, etc.)
 - Prioritize developer ergonomics for AI-assisted coding workflows

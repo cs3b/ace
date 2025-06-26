@@ -1,4 +1,4 @@
-1. read [@fix-tests.wf.md](@file:coding-agent-tools/docs-dev/workflow-instructions/fix-tests.wf.md)
+1. read [@fix-tests.wf.md](@file:coding-agent-tools/dev-handbook/workflow-instructions/fix-tests.wf.md)
 
 2. read recommended docs from document read in step 1.
 

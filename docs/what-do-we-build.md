@@ -82,9 +82,9 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 - An internal API used by the CLI, which can potentially be exposed for programmatic use.
 - Integrations with Google Gemini API and local LM Studio API.
 - Integrations with Git CLI and GitHub REST API (v3).
-- Tools to interact with documentation-based task backlogs (e.g., in `docs-project`).
+- Tools to interact with documentation-based task backlogs (e.g., in `dev-taskflow`).
 - Comprehensive unit and integration tests.
-- Documentation (`docs-project/`) detailing usage and architecture.
+- Documentation (`dev-taskflow/`) detailing usage and architecture.
 
 ### What We Don't Build (v1)
 - SDKs or libraries in languages other than Ruby.
@@ -134,18 +134,18 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 - **LM Studio**: Required for local, offline LLM interactions.
 - **Git CLI**: Fundamental command-line tool interacted with by the gem.
 - **GitHub REST API (v3)**: Used for repository creation.
-- **`docs-dev/tools/*` scripts**: Utility scripts assumed to be present in the `docs-dev` submodule for certain operations (like task utilities).
+- **`dev-tools/exe-old/*` scripts**: Utility scripts assumed to be present in the `dev-handbook` submodule for certain operations (like task utilities).
 
 ### Ecosystem Integration
 - **Git/GitHub**: Deep integration for repository management and commit workflows.
-- **Task Backlogs (Docs-based)**: Designed to work with tasks defined in documentation files (`docs-project/`).
+- **Task Backlogs (Docs-based)**: Designed to work with tasks defined in documentation files (`dev-taskflow/`).
 - **CI/CD Pipelines**: Intended to be invoked as part of automated workflows.
 - **AI Coding Agents**: Primary users and integrators of the tools.
 
 ## Submodules
 
-### docs-dev
-- Path: `docs-dev`
+### dev-handbook
+- Path: `dev-handbook`
 - Repository: [Repository URL - assumed external]
 - Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
 - **Important**: Commits for this submodule must be made from within the submodule directory.

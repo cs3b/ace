@@ -3,10 +3,10 @@
 echo "Pushing main repository..."
 git push
 
-echo "Pushing submodule: docs-dev..."
-git -C docs-dev push
+echo "Pushing submodule: dev-handbook..."
+git -C dev-handbook push
 
-echo "Pushing submodule: docs-project..."
-git -C docs-project push
+echo "Pushing submodule: dev-taskflow..."
+git -C dev-taskflow push
 
 echo "All repositories pushed successfully."

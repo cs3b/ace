@@ -2,32 +2,32 @@
 
 This repository (`coding-agent-workflow-toolkit-meta`) provides the overarching
 documentation and guidance for setting up and using a comprehensive, AI-assisted
-development workflow. It explains how to integrate the `docs-dev` toolkit
+development workflow. It explains how to integrate the `dev-handbook` toolkit
 (which contains standardized development guides and workflow instructions) with
-a `docs-project` structure (for your project-specific documentation and task
+a `dev-taskflow` structure (for your project-specific documentation and task
 management).
 
 The goal is to create a consistent, efficient, and AI-friendly development environment.
 
 ## Core Components
 
-1. **`docs-dev` Toolkit**:
+1. **`dev-handbook` Toolkit**:
     A specialized toolkit, ideally consumed from its own repository:
     `https://github.com/cs3b/coding-agent-workflow-toolkit`. It provides
     standardized development guides, workflow instructions, templates, and utilities.
-    * You integrate `docs-dev` into your project, typically as a Git submodule, into a local `docs-dev/` directory.
-    The `docs-dev/` folder within *this* meta-repository contains an *example* of
+    * You integrate `dev-handbook` into your project, typically as a Git submodule, into a local `dev-handbook/` directory.
+    The `dev-handbook/` folder within *this* meta-repository contains an *example* of
     such a toolkit\'s README and structure, primarily for illustrative purposes
     here. For actual use and the latest version, always refer to the dedicated
-    `docs-dev` toolkit repository.
+    `dev-handbook` toolkit repository.
 
-2. **`docs-project` Structure**:
+2. **`dev-taskflow` Structure**:
     A standardized directory structure for all your project-specific documentation
     (e.g., `what-do-we-build.md`, `architecture.md`, `blueprint.md`), task management
     (`backlog/`, `current/`, `done/`), and decision logs.
-    * This structure is typically initialized and managed by workflows found in the `docs-dev` toolkit.
-    The `docs-project/` folder within *this* meta-repository contains an *example*
-    README detailing the `docs-project` specification and an example of its structure.
+    * This structure is typically initialized and managed by workflows found in the `dev-handbook` toolkit.
+    The `dev-taskflow/` folder within *this* meta-repository contains an *example*
+    README detailing the `dev-taskflow` specification and an example of its structure.
 
 ## Getting Started / Setup
 
@@ -37,59 +37,59 @@ To establish this workflow in your project:
 
 * Git installed on your system.
 
-**Step 1: Integrate the `docs-dev` Toolkit**
+**Step 1: Integrate the `dev-handbook` Toolkit**
 
-The `docs-dev` toolkit contains all the standard guides, workflow instructions,
+The `dev-handbook` toolkit contains all the standard guides, workflow instructions,
 and templates. It is highly recommended to add it to your project as a Git
 submodule from its dedicated repository.
 
-* **Canonical `docs-dev` repository**: `https://github.com/cs3b/coding-agent-workflow-toolkit`
+* **Canonical `dev-handbook` repository**: `https://github.com/cs3b/coding-agent-workflow-toolkit`
 
 In your project's root directory, run:
 
 ```text
-git submodule add https://github.com/cs3b/coding-agent-workflow-toolkit.git docs-dev
+git submodule add https://github.com/cs3b/coding-agent-workflow-toolkit.git dev-handbook
 git submodule update --init --recursive
 ```
 
-This will clone the `docs-dev` toolkit into a `docs-dev/` directory in your project, ready for use.
+This will clone the `dev-handbook` toolkit into a `dev-handbook/` directory in your project, ready for use.
 
-**Advanced: Forking `docs-dev` for Customization**
+**Advanced: Forking `dev-handbook` for Customization**
 
-If you need to customize the `docs-dev` toolkit (e.g., tailor guides/workflows,
+If you need to customize the `dev-handbook` toolkit (e.g., tailor guides/workflows,
 create technology-specific branches for your projects):
 
-Fork the canonical `docs-dev` repository (i.e.,
+Fork the canonical `dev-handbook` repository (i.e.,
 `https://github.com/cs3b/coding-agent-workflow-toolkit`) on GitHub.
 2. **Add Your Fork as Submodule**: In your project\'s root, add your personal
 fork as the submodule:
 
 ```sh
-git submodule add <URL_OF_YOUR_FORKED_DOCS_DEV_REPO> docs-dev
+git submodule add <URL_OF_YOUR_FORKED_DOCS_DEV_REPO> dev-handbook
 git submodule update --init --recursive
 ```
 
 (Replace `<URL_OF_YOUR_FORKED_DOCS_DEV_REPO>` with the URL of your fork).
-3. **Customize**: Navigate into your local `docs-dev` submodule (`cd docs-dev`),
+3. **Customize**: Navigate into your local `dev-handbook` submodule (`cd dev-handbook`),
 create a new branch (e.g., `git checkout -b my-project-specific-branch`), and
 make your modifications.
-4. **Stay Updated**: To incorporate updates from the original `docs-dev` toolkit,
+4. **Stay Updated**: To incorporate updates from the original `dev-handbook` toolkit,
 periodically fetch and merge changes from the upstream repository into your
 fork's main branch, and then merge those updates into your custom branches.
 
-**Step 2: Initialize Your `docs-project` Structure**
+**Step 2: Initialize Your `dev-taskflow` Structure**
 
-Once the `docs-dev` toolkit is integrated (i.e., you have a `docs-dev/` directory
+Once the `dev-handbook` toolkit is integrated (i.e., you have a `dev-handbook/` directory
 in your project containing the toolkit), use its
 `initialize-project-structure.md` workflow to set up your project-specific
-`docs-project/` directory.
+`dev-taskflow/` directory.
 
 This is typically done by instructing an AI coding assistant. See the "Using
 Workflow Instructions with a Chat Interface" section below for how to do this.
 
-## Understanding `docs-project/`
+## Understanding `dev-taskflow/`
 
-The `docs-project/` directory, once initialized in your project, becomes the
+The `dev-taskflow/` directory, once initialized in your project, becomes the
 central hub for its living documentation and operational context. It includes:
 
 Core documents defining the project: `what-do-we-build.md`, `architecture.md`,
@@ -98,17 +98,17 @@ Core documents defining the project: `what-do-we-build.md`, `architecture.md`,
 * Task management system: `backlog/`, `current/`, `done/` directories.
 * Decision log: `decisions/` directory.
 
-For a detailed explanation of the `docs-project` specification and structure,
+For a detailed explanation of the `dev-taskflow` specification and structure,
 refer to the example `README.md` located at
-`coding-agent-workflow-toolkit-meta/docs-project/README.md`.
+`coding-agent-workflow-toolkit-meta/dev-taskflow/README.md`.
 
 ## Using Workflow Instructions with a Chat Interface
 
-Most interactions with the `docs-dev` workflows are designed to be performed via
+Most interactions with the `dev-handbook` workflows are designed to be performed via
 an AI-powered chat interface or coding assistant that can read files and execute
 commands. To run a workflow:
 
-1. Ensure the `docs-dev` toolkit is present in your project at the `docs-dev/` path (see Step 1 in "Getting Started / Setup").
+1. Ensure the `dev-handbook` toolkit is present in your project at the `dev-handbook/` path (see Step 1 in "Getting Started / Setup").
 Instruct your AI assistant to read and execute the desired workflow instruction
 file, providing any necessary inputs like file paths.
 
@@ -120,7 +120,7 @@ using a Product Requirements Document (PRD) as initial input:
 
 ```text
 Read and execute the workflow instruction
-`docs-dev/workflow-instructions/initialize-project-structure.md`.
+`dev-handbook/workflow-instructions/initialize-project-structure.md`.
 (The AI will likely ask for the location of a PRD or prompt for project details if one isn't found.)
 ```
 
@@ -131,16 +131,16 @@ This often involves a preparatory step to structure the input, followed by task 
 
 ```text
 1. Prepare an analysis from your Feature Requirements Document (FRD):
-   Read and execute the workflow instruction `docs-dev/workflow-instructions/breakdown-notes-into-tasks/from-frd.md`.
+   Read and execute the workflow instruction `dev-handbook/workflow-instructions/breakdown-notes-into-tasks/from-frd.md`.
    (The AI will likely ask for the FRD content or path).
 
 2. Create tasks from the structured analysis:
    Instruct the AI to use the output from the previous step to define and create
-   individual task files in `docs-project/backlog/{release_version}/tasks/`,
-   following the guidelines in `docs-dev/guides/write-actionable-task.md`.
+   individual task files in `dev-taskflow/backlog/{release_version}/tasks/`,
+   following the guidelines in `dev-handbook/guides/write-actionable-task.md`.
 ```
 
-(Note: The `docs-dev/workflow-instructions/breakdown-notes-into-tasks/`
+(Note: The `dev-handbook/workflow-instructions/breakdown-notes-into-tasks/`
 directory contains various sub-workflows like `from-frd.md`, `from-prd.md`,
 `from-diff.md`, etc., to handle different input sources for task creation.)
 
@@ -151,12 +151,12 @@ changes, and to propose refinements:
 
 ```text
 You might use a helper script (e.g., `bin/tn` if available in your
-`docs-dev/tools/` or project `bin/`) via the terminal tool, or manually select
-a task from `docs-project/current/{release_version}/tasks/`.
+`dev-tools/exe-old/` or project `bin/`) via the terminal tool, or manually select
+a task from `dev-taskflow/current/{release_version}/tasks/`.
 
 2. Instruct the agent with the task's file path:
    Read and execute the workflow instruction
-   `docs-dev/workflow-instructions/review-task.md` using the task file
+   `dev-handbook/workflow-instructions/review-task.md` using the task file
    <path_to_identified_task.md>.
 ```
 
@@ -172,7 +172,7 @@ To implement a defined and reviewed task (e.g., the next one suggested by
 
 2. Instruct the agent with the task's file path:
    Read and execute the workflow instruction
-   `docs-dev/workflow-instructions/work-on-task.md` using the task file
+   `dev-handbook/workflow-instructions/work-on-task.md` using the task file
    <path_to_identified_task.md>.
 ```
 
@@ -189,7 +189,7 @@ coding tools and for examples of specific workflows, please refer to the
 
 | Question | Answer |
 |----------|--------|
-| **What’s the difference between `docs-dev` and `docs-project`?** | `docs-dev` is reusable, language-agnostic guidance; `docs-project` holds your project-specific artefacts. (in this case the meta project, where we use it to improve itself) |
+| **What’s the difference between `dev-handbook` and `dev-taskflow`?** | `dev-handbook` is reusable, language-agnostic guidance; `dev-taskflow` holds your project-specific artefacts. (in this case the meta project, where we use it to improve itself) |
 
 ---
 
@@ -198,13 +198,13 @@ coding tools and for examples of specific workflows, please refer to the
 This `coding-agent-workflow-toolkit-meta` repository serves to:
 
 Explain the overall philosophy, architecture, and integration strategy of the
-`docs-dev` toolkit and the `docs-project` specification.
+`dev-handbook` toolkit and the `dev-taskflow` specification.
 Provide illustrative examples of README files and directory structures for both
-`docs-dev` and `docs-project`. These are for guidance; the canonical `docs-dev`
+`dev-handbook` and `dev-taskflow`. These are for guidance; the canonical `dev-handbook`
 toolkit should be sourced from its own repository.
 Offer a centralized place for high-level discussions, issues, and examples
 related to the entire AI-assisted development workflow ecosystem.
 
-For the actual `docs-dev` toolkit, its most current version, and its own issue
+For the actual `dev-handbook` toolkit, its most current version, and its own issue
 tracking, please refer to its dedicated repository:
 `https://github.com/cs3b/coding-agent-workflow-toolkit`.
