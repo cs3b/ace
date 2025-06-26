@@ -1,0 +1,102 @@
+---
+id: v.0.3.0+task.1
+status: pending
+priority: high
+estimate: 8h
+dependencies: []
+---
+
+# Analyze Current Workflow Dependencies
+
+## 0. Directory Audit ✅
+
+_Command run:_
+
+```bash
+tree -L 3 dev-handbook/workflow-instructions | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+dev-handbook/workflow-instructions/
+├── breakdown-notes-into-tasks.wf.md
+├── draft-release.wf.md
+└── update-roadmap.wf.md
+```
+
+## Objective
+
+Analyze all 21 existing workflow instruction files to identify cross-dependencies, external references, and missing context that prevents workflows from being self-contained and independently executable by coding agents.
+
+## Scope of Work
+
+- Audit all 21 workflow instruction files for external dependencies and cross-references
+- Document missing high-level execution plans in workflows
+- Identify workflows lacking project context loading sections
+- Analyze patterns for standardizing workflow structure across all files
+- Create comprehensive dependency mapping and refactoring plan
+
+### Deliverables
+
+#### Create
+
+- dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-dependency-analysis.md
+
+#### Modify
+
+- None (analysis phase)
+
+#### Delete
+
+- None
+
+## Phases
+
+1. Audit existing workflow files
+2. Map dependencies and references
+3. Identify missing context areas
+4. Document findings and recommendations
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Survey all workflow instruction files in dev-handbook/workflow-instructions/
+  > TEST: Complete Workflow Inventory
+  > Type: Pre-condition Check
+  > Assert: All workflow files are identified and catalogued
+  > Command: bin/test --check-file-exists dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-inventory.md
+* [ ] Research coding agent integration requirements for Claude Code, Windsurf, and Zed
+* [ ] Analyze patterns in current workflow cross-references
+
+### Execution Steps
+
+- [ ] Read and analyze each workflow instruction file for external dependencies
+- [ ] Document all cross-references to other workflows, guides, and templates
+  > TEST: Cross-Reference Documentation Complete
+  > Type: Action Validation
+  > Assert: All workflow cross-references are documented
+  > Command: bin/test --check-analysis-completeness workflow-dependency-analysis.md
+- [ ] Identify context gaps that prevent independent execution
+- [ ] Create dependency mapping visualization
+- [ ] Write comprehensive analysis report with recommendations
+
+## Acceptance Criteria
+
+- [ ] All workflow files analyzed for dependencies
+- [ ] Cross-reference mapping complete and documented
+- [ ] Context gaps identified with specific recommendations
+- [ ] Analysis report provides clear refactoring roadmap
+
+## Out of Scope
+
+- ❌ Actually refactoring workflows (separate task)
+- ❌ Creating new workflow templates
+- ❌ Agent-specific integration implementation
+
+## References
+
+- dev-handbook/workflow-instructions/ (all workflow files)
+- dev-handbook/guides/draft-release/ (template references)
+- CLAUDE.md (project context)

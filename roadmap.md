@@ -29,6 +29,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| v.0.3.0 | "Workflows"               | Q1 2026       | Improve workflow independence and integration capabilities for coding agents like Claude Code, Windsurf, Zed | Workflow Independence, Agent Integration, Documentation Enhancement |
 | v1.0.0  | "Keystone"                | Q1 2026       | Stable v1: Core LLM integration features hardened, documented, published to RubyGems.   | All P1 Req IDs (R-LLM\*) integrated & stable.                                              |
 
 _Note: Release planning should align with project folder structure in `dev-taskflow/backlog/`, `dev-taskflow/current/`, and `dev-taskflow/done/` as per the Roadmap Definition Guide._
@@ -42,6 +43,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-06-26 | Added release v.0.3.0-workflows to planned releases focusing on workflow independence and agent integration. | AI Assistant   |
 | 2025-06-26 | Removed all tool-related themes and releases (moved to separate dev-tools repository). Roadmap now focuses solely on LLM integration. | AI Assistant   |
 | 2025-01-15 | Added v.0.2.0-synapse release to backlog with concrete task breakdown.         | AI Assistant   |
 | 2025-06-06 | Removed completed v0.1.0 Foundation from planned releases.                     | AI Assistant   |
