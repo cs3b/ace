@@ -46,6 +46,11 @@ After installation (either globally or via Bundler in a project), the `coding_ag
   - **Automatic Cost Calculation**: Real-time cost tracking using LiteLLM pricing data
   - **Usage Reports**: Detailed breakdowns by provider, model, and time period via `exe/llm-usage-report`
   - **Multiple Export Formats**: JSON, CSV, and formatted table outputs
+- **Enhanced Security**: Multi-layered security framework with comprehensive protections
+  - **Path Validation**: Robust defense against directory traversal attacks and unauthorized access
+  - **Interactive Confirmations**: Safe defaults with user prompts for file overwrites
+  - **Credential Protection**: Automatic redaction of sensitive information from logs
+  - **XDG Compliance**: Secure, standards-compliant file and cache management
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
@@ -110,8 +115,21 @@ coding_agent_tools project release_context
     - `exe/llm-models google --filter "gemini-pro"`
     - `exe/llm-models lmstudio --filter "mistral"`
     - `exe/llm-models google --refresh` (refresh cache)
+  - **New Output Fields**: Now includes `Context Size` and `Max Output` token limits for better model selection
+  - **Sample Output**:
+    ```
+    Available LM Studio Models:
+    ==================================================
+    
+    ID: mistralai/devstral-small-2505
+    Name: Devstral Small
+    Description: Specialized coding model, optimized for development tasks
+    Context Size: 32.8K tokens
+    Max Output: 16.4K tokens
+    Status: Default model
+    ```
   - Providers: `google` (default), `lmstudio`
-  - Requires: `GEMINI_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
+  - Requires: `GOOGLE_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
 
 - **`exe/llm-usage-report`**: Generate comprehensive cost and usage reports
   - Usage: `exe/llm-usage-report [--format json|csv|table] [--date-range today|week|month|YYYY-MM-DD:YYYY-MM-DD] [--provider PROVIDER] [--model MODEL] [--output FILE] [--debug]`
@@ -157,6 +175,56 @@ exe/llm-query google "What is Ruby?" --output answer.txt -f
 ```
 
 This behavior ensures safe file operations while maintaining compatibility with automated workflows.
+
+## 💰 Cost Tracking & Usage Analytics
+
+All LLM queries automatically include cost tracking and usage analytics. Here's what you'll see:
+
+**Basic Query with Cost Summary:**
+```bash
+$ exe/llm-query google:gemini-2.5-flash "What is Ruby programming?"
+
+Ruby is a dynamic, object-oriented programming language...
+
+Token Usage:
+    Input:      234 tokens
+   Output:      156 tokens
+
+Cost Breakdown:
+  Input cost:  $0.000292 (234 tokens × $0.00000125/token)
+  Output cost: $0.000195 (156 tokens × $0.00000125/token)
+  Total cost:  $0.000487
+```
+
+**Usage Report Generation:**
+```bash
+$ exe/llm-usage-report --date-range today
+
+LLM Usage Report
+================================================================================
+
+Summary:
+  Total Queries: 5
+  Total Cost: $0.023847
+  Total Tokens: 12,450
+  Average Cost per Query: $0.004769
+
+By Provider:
+  Google: 3 queries, $0.012891
+  Anthropic: 2 queries, $0.010956
+
+Detailed Usage:
+Timestamp           Provider     Model                   Input   Output   Cached       Cost     Time
+--------------------------------------------------------------------------------
+2024-01-15T10:30:45 google       gemini-2.5-flash          234      156        0 $0.000487    1.2s
+2024-01-15T11:15:22 anthropic    claude-3-5-sonnet         892      445       50 $0.005234    2.8s
+```
+
+This helps you:
+- **Monitor Costs**: Track spending across providers and models
+- **Optimize Usage**: Compare model costs and performance
+- **Budget Planning**: Generate reports for cost analysis
+- **Token Efficiency**: Understand prompt and response sizes
 
 ## 🏗 Architecture
 

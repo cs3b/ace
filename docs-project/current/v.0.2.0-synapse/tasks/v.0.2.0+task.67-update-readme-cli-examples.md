@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.67
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -59,31 +59,31 @@ Refresh all CLI command examples in README.md to match current implementation ou
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Run `llm-query` commands to capture current output format with cost/usage data
-* [ ] Run `llm-models` commands to capture current output with new fields 
-* [ ] Run `llm usage_report` commands to understand output format and options
-* [ ] Review current "Key Features" list to identify needed updates
+* [x] Run `llm-query` commands to capture current output format with cost/usage data
+* [x] Run `llm-models` commands to capture current output with new fields 
+* [x] Run `llm usage_report` commands to understand output format and options
+* [x] Review current "Key Features" list to identify needed updates
 
 ### Execution Steps
-- [ ] Update `llm-query` command examples to show new cost and usage summary output
-- [ ] Update `llm-models` command examples to show `context_size` and `max_output_tokens` fields
-- [ ] Add new `llm usage_report` command to "Core Commands" section with examples
-- [ ] Add "Cost Tracking" to "Key Features" list with appropriate description
-- [ ] Add "Enhanced Security" to "Key Features" list with appropriate description
-- [ ] Update any other CLI examples that may be affected by recent changes
-- [ ] Validate all examples produce the documented output
-- [ ] Ensure command descriptions and help text references are accurate
+- [x] Update `llm-query` command examples to show new cost and usage summary output
+- [x] Update `llm-models` command examples to show `context_size` and `max_output_tokens` fields
+- [x] Add new `llm usage_report` command to "Core Commands" section with examples
+- [x] Add "Cost Tracking" to "Key Features" list with appropriate description
+- [x] Add "Enhanced Security" to "Key Features" list with appropriate description
+- [x] Update any other CLI examples that may be affected by recent changes
+- [x] Validate all examples produce the documented output
+- [x] Ensure command descriptions and help text references are accurate
 
 ## Acceptance Criteria
 
-- [ ] All `llm-query` examples show current output format including cost/usage data
-- [ ] All `llm-models` examples show current output format including new fields
-- [ ] `llm usage_report` command is documented with practical examples
-- [ ] "Key Features" list includes "Cost Tracking" and "Enhanced Security"
-- [ ] "Core Commands" section includes `llm usage_report`
-- [ ] All documented examples produce the expected output when executed
-- [ ] Command descriptions are accurate and up-to-date
-- [ ] No outdated examples remain in the documentation
+- [x] All `llm-query` examples show current output format including cost/usage data
+- [x] All `llm-models` examples show current output format including new fields
+- [x] `llm usage_report` command is documented with practical examples
+- [x] "Key Features" list includes "Cost Tracking" and "Enhanced Security"
+- [x] "Core Commands" section includes `llm usage_report`
+- [x] All documented examples produce the expected output when executed
+- [x] Command descriptions are accurate and up-to-date
+- [x] No outdated examples remain in the documentation
 
 ## Out of Scope
 
