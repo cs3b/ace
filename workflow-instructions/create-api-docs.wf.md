@@ -2,44 +2,296 @@
 
 ## Goal
 
-Generate or update API documentation for public interfaces (classes, modules, methods) using standard
-documentation tools (e.g., YARD for Ruby) and adhering to project documentation standards.
+Generate or update API documentation for public interfaces (classes, modules, methods) using standard documentation tools and following consistent documentation patterns.
 
 ## Prerequisites
 
-- Code with public interfaces that need documentation.
-- Project configured with a documentation generation tool (e.g., YARD setup).
+- Code with public interfaces that need documentation
+- Documentation generation tool configured (e.g., YARD for Ruby, JSDoc for JavaScript)
+- Understanding of the code's functionality and intended usage
 
 ## Process Steps
 
-1. **Identify Target Code:** Determine which classes, modules, or methods require documentation updates
-   (e.g., newly added, recently modified).
-2. **Analyze Code:** Review the code to understand its purpose, parameters, return values, potential
-   exceptions, usage patterns, and any performance or thread-safety considerations.
-3. **Write Doc Comments:** Add or update documentation comments directly in the source code using the
-   standard tool syntax (e.g., YARD tags like `@param`, `@return`, `@raise`, `@example`, `@note`, `@see`).
-    - Follow guidelines in `dev-handbook/guides/documentation.md` for content and style.
-    - Include clear descriptions, parameter details, return value explanations, usage examples, and notes
-      on constraints or important behaviors.
-4. **Generate Documentation:** Run the documentation generation tool (e.g., `bundle exec yard doc` from
-   project root) to produce the static documentation files.
-5. **Review Generated Docs:** Check the output for completeness, accuracy, formatting errors, and broken
-   links. Ensure examples are correct and helpful.
-6. **Commit Changes:** Commit the updated source code comments and any generated documentation files (if tracked in git).
+1. **Identify Target Code:**
+   * Determine which code needs documentation:
+     - New classes, modules, or methods
+     - Modified public APIs
+     - Undocumented public interfaces
+     - Code with outdated documentation
+   * Priority order:
+     - Public APIs used by external consumers
+     - Core domain models and services
+     - Utility classes and helpers
+     - Internal implementation details (lower priority)
 
-## Input
+2. **Analyze Code Structure:**
+   * Review the code to understand:
+     - Purpose and responsibility
+     - Input parameters and their types
+     - Return values and types
+     - Possible exceptions or errors
+     - Side effects or state changes
+     - Usage patterns and examples
+     - Performance characteristics
+     - Thread safety considerations
 
-- Target code files or modules needing documentation.
-- Understanding of the code's functionality.
+3. **Write Documentation Comments:**
+   
+   **Ruby/YARD Example:**
+   ```ruby
+   # Processes payment transactions using the configured gateway
+   #
+   # This service handles payment processing including validation,
+   # gateway communication, and error handling. It supports multiple
+   # payment methods and implements retry logic for transient failures.
+   #
+   # @example Process a credit card payment
+   #   payment_service = PaymentService.new
+   #   result = payment_service.process(
+   #     amount: 99.99,
+   #     currency: 'USD',
+   #     payment_method: credit_card
+   #   )
+   #
+   # @example Handle payment errors
+   #   begin
+   #     result = payment_service.process(payment_data)
+   #   rescue PaymentService::InvalidAmount => e
+   #     Rails.logger.error("Invalid amount: #{e.message}")
+   #   end
+   #
+   # @param amount [BigDecimal] The payment amount (must be positive)
+   # @param currency [String] ISO 4217 currency code (e.g., 'USD', 'EUR')
+   # @param payment_method [PaymentMethod] The payment method to use
+   # @param options [Hash] Additional options
+   # @option options [Boolean] :capture (true) Whether to capture immediately
+   # @option options [String] :idempotency_key Unique key for idempotent requests
+   #
+   # @return [PaymentResult] The result object containing transaction details
+   #
+   # @raise [InvalidAmount] if amount is negative or zero
+   # @raise [UnsupportedCurrency] if currency is not supported
+   # @raise [GatewayError] if gateway communication fails
+   #
+   # @note This method is thread-safe
+   # @note Transactions are automatically logged for audit purposes
+   #
+   # @see PaymentResult
+   # @see PaymentMethod
+   # @see https://docs.example.com/payments
+   #
+   # @since 2.1.0
+   def process(amount:, currency:, payment_method:, **options)
+     # Implementation
+   end
+   ```
+   
+   **JavaScript/JSDoc Example:**
+   ```javascript
+   /**
+    * Processes payment transactions using the configured gateway
+    * 
+    * @description This service handles payment processing including validation,
+    * gateway communication, and error handling. Supports multiple payment methods.
+    *
+    * @param {number} amount - The payment amount in cents
+    * @param {string} currency - ISO 4217 currency code
+    * @param {PaymentMethod} paymentMethod - Payment method object
+    * @param {Object} [options={}] - Additional options
+    * @param {boolean} [options.capture=true] - Whether to capture immediately
+    * @param {string} [options.idempotencyKey] - Unique key for idempotent requests
+    * 
+    * @returns {Promise<PaymentResult>} Promise resolving to payment result
+    * 
+    * @throws {InvalidAmountError} Amount must be positive
+    * @throws {UnsupportedCurrencyError} Currency not supported
+    * @throws {GatewayError} Gateway communication failure
+    * 
+    * @example
+    * // Process a payment
+    * const result = await paymentService.process({
+    *   amount: 9999,
+    *   currency: 'USD',
+    *   paymentMethod: creditCard
+    * });
+    * 
+    * @example
+    * // With error handling
+    * try {
+    *   const result = await paymentService.process(paymentData);
+    * } catch (error) {
+    *   if (error instanceof InvalidAmountError) {
+    *     console.error('Invalid amount:', error.message);
+    *   }
+    * }
+    * 
+    * @since 2.1.0
+    */
+   async process({ amount, currency, paymentMethod, options = {} }) {
+     // Implementation
+   }
+   ```
+
+4. **Documentation Standards:**
+   
+   **Required Elements:**
+   - **Description**: Clear, concise explanation of what the code does
+   - **Parameters**: All parameters with types and descriptions
+   - **Return Value**: Type and description of what's returned
+   - **Exceptions**: All possible exceptions/errors that can be thrown
+   - **Examples**: At least one realistic usage example
+   
+   **Optional Elements:**
+   - **Notes**: Important behaviors, constraints, or warnings
+   - **See Also**: Links to related classes, methods, or docs
+   - **Since**: Version when added (for public APIs)
+   - **Deprecated**: Deprecation notices with migration path
+   - **Todo**: Known limitations or future improvements
+
+5. **Common Documentation Patterns:**
+   
+   **Class/Module Documentation:**
+   ```ruby
+   # Handles user authentication and session management
+   #
+   # This module provides methods for authenticating users,
+   # managing sessions, and handling authentication tokens.
+   # It supports multiple authentication strategies including
+   # password-based and OAuth.
+   #
+   # @example Basic authentication
+   #   include Authentication
+   #   
+   #   if authenticate_user(email, password)
+   #     # User authenticated successfully
+   #   end
+   #
+   # @see AuthenticationStrategy
+   # @see SessionManager
+   module Authentication
+   ```
+   
+   **Configuration/Options Documentation:**
+   ```ruby
+   # @param options [Hash] Configuration options
+   # @option options [Integer] :timeout (30) Request timeout in seconds
+   # @option options [Integer] :retries (3) Number of retry attempts
+   # @option options [Boolean] :ssl_verify (true) Whether to verify SSL
+   # @option options [Logger] :logger (Rails.logger) Logger instance
+   ```
+   
+   **Callback/Block Documentation:**
+   ```ruby
+   # @yield [item] Gives each item to the block
+   # @yieldparam item [Item] The current item being processed
+   # @yieldreturn [Boolean] Whether to include the item
+   ```
+
+6. **Generate and Review Documentation:**
+   ```bash
+   # Ruby/YARD
+   bundle exec yard doc
+   bundle exec yard server  # View at http://localhost:8808
+   
+   # JavaScript/JSDoc
+   npx jsdoc -c jsdoc.json
+   
+   # Python/Sphinx
+   sphinx-build -b html source build
+   ```
+   
+   **Review Checklist:**
+   - [ ] All public methods are documented
+   - [ ] Parameter types are accurate
+   - [ ] Examples are correct and runnable
+   - [ ] Links are not broken
+   - [ ] Formatting renders correctly
+   - [ ] No spelling/grammar errors
+
+7. **Common Issues and Fixes:**
+   
+   **Missing Types:**
+   ```ruby
+   # Bad - missing type information
+   # @param user The user to process
+   
+   # Good - includes type
+   # @param user [User] The user to process
+   ```
+   
+   **Vague Descriptions:**
+   ```ruby
+   # Bad - too vague
+   # Processes the data
+   
+   # Good - specific and helpful
+   # Validates and transforms user input data into a normalized format
+   # suitable for database storage
+   ```
+   
+   **No Examples:**
+   ```ruby
+   # Bad - no usage example
+   # @return [Hash] The result
+   
+   # Good - shows how to use
+   # @return [Hash] The result containing :status and :data
+   # @example
+   #   result = process_data(input)
+   #   puts result[:status]  # => :success
+   #   puts result[:data]    # => { processed: true }
+   ```
+
+8. **Commit Documentation Updates:**
+   ```bash
+   git add -A
+   git commit -m "docs(api): update documentation for PaymentService
+   
+   - Add comprehensive YARD documentation
+   - Include usage examples
+   - Document all exceptions
+   - Add parameter type information"
+   ```
 
 ## Output / Success Criteria
 
-- Source code contains updated, accurate documentation comments for the target interfaces.
-- Documentation comments follow project standards (`dev-handbook/guides/documentation.md`).
-- Generated API documentation (e.g., HTML files) is up-to-date and reflects the code comments.
-- Documentation covers key aspects: purpose, params, returns, examples, exceptions, notes.
+- All public APIs have complete documentation comments
+- Documentation includes all required elements (description, params, returns, examples)
+- Generated documentation is accurate and renders correctly
+- No broken links or formatting errors
+- Examples are realistic and helpful
+- Documentation follows consistent style and format
 
-## Reference Documentation
+## Best Practices
 
-- [Documentation Standards Guide](dev-handbook/guides/documentation.g.md) (Provides specific examples and tag usage)
-- [Coding Standards Guide](dev-handbook/guides/coding-standards.g.md)
+**DO:**
+- Write documentation as you code
+- Include real-world examples
+- Document edge cases and gotchas
+- Keep descriptions concise but complete
+- Update docs when code changes
+- Use consistent terminology
+
+**DON'T:**
+- Leave TODOs in public API docs
+- Include implementation details
+- Copy-paste without reviewing
+- Use ambiguous language
+- Document obvious things
+- Forget to document exceptions
+
+## Documentation Tools by Language
+
+- **Ruby**: YARD (`yard doc`)
+- **JavaScript**: JSDoc (`jsdoc`)
+- **TypeScript**: TypeDoc (`typedoc`)
+- **Python**: Sphinx (`sphinx-build`)
+- **Java**: Javadoc (`javadoc`)
+- **C#**: XML Documentation (`///`)
+
+## Usage Example
+> "I've added new public methods to the PaymentService class. Help me create proper API documentation for these methods."
+
+---
+
+This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.

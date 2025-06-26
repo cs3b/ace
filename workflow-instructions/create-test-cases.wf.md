@@ -2,54 +2,394 @@
 
 ## Goal
 
-Generate a structured list of test cases (unit, integration, performance, etc.) for a specific feature,
-task, or code change based on requirements and project testing guidelines.
+Generate a structured list of test cases (unit, integration, performance, etc.) for a specific feature, task, or code change based on requirements and comprehensive testing principles.
 
 ## Prerequisites
 
-- A clear understanding of the feature/task requirements (e.g., from a task `.md` file, FRD, or PR
-  description).
-- Access to project testing guidelines (`dev-docs/guides/testing.md`).
+- Clear understanding of the feature/task requirements
+- Knowledge of the code changes or implementation approach
+- Understanding of different test types and their purposes
+- Access to existing test patterns in the codebase
 
 ## Process Steps
 
-1. **Analyze Requirements:** Review the feature/task description, implementation notes, and acceptance criteria
-   (likely found in a task `.md` file within `dev-taskflow`).
-2. **Identify Scenarios:** Brainstorm potential usage scenarios:
-    - **Happy Path:** Standard, expected usage.
-    - **Edge Cases:** Boundary conditions, unusual inputs, empty/null values.
-    - **Error Conditions:** Invalid inputs, failures of dependencies, exception handling.
-    - **Integration Points:** Interactions with other modules or external systems.
-    - **Performance/Security (if applicable):** Scenarios related to load, concurrency, or potential
-      vulnerabilities.
-3. **Categorize Tests:** Group the identified scenarios into test types (Unit, Integration, E2E,
-   Performance, Security) based on `dev-handbook/guides/testing.md`.
-4. **Draft Test Cases:** For each scenario, describe the test case including:
-    - **Test ID/Name:** A unique identifier.
-    - **Description:** What the test aims to verify.
-    - **Prerequisites/Setup:** Any required initial state or data.
-    - **Steps:** Actions to perform.
-    - **Expected Result:** The anticipated outcome or verification point.
-5. **Structure Output:** Format the test cases clearly, potentially using a table or list structure.
-   Use the template `dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md` as a reference
-   for structure.
-6. **Save (Optional):** Save the generated test cases to the appropriate location, often within the
-   release directory (e.g., `dev-taskflow/current/{release_dir}/test-cases/feature-x-tests.md`).
+1. **Analyze Requirements:**
+   * Review the feature/task details:
+     - Business requirements and user stories
+     - Technical specifications
+     - Acceptance criteria
+     - Implementation approach
+     - Dependencies and integrations
+   
+   * Identify testable components:
+     - Input validation rules
+     - Business logic flows
+     - Output expectations
+     - Error scenarios
+     - Performance requirements
 
-## Input
+2. **Identify Test Scenarios:**
+   
+   **Scenario Categories:**
+   
+   **Happy Path (Core Functionality):**
+   - Standard expected usage
+   - Primary user workflows
+   - Common configurations
+   - Successful outcomes
+   
+   **Edge Cases:**
+   - Boundary values (min/max)
+   - Empty or null inputs
+   - Special characters
+   - Large data sets
+   - Concurrent operations
+   
+   **Error Conditions:**
+   - Invalid inputs
+   - Missing required data
+   - Service failures
+   - Network timeouts
+   - Permission denials
+   
+   **Integration Points:**
+   - External API calls
+   - Database operations
+   - File system access
+   - Message queues
+   - Third-party services
 
-- Feature/task requirements (description, acceptance criteria).
-- Optional: Specific code changes being tested.
+3. **Categorize by Test Type:**
+   
+   **Unit Tests** (Isolated component testing):
+   - Individual functions/methods
+   - Class behavior
+   - Pure logic validation
+   - Mock external dependencies
+   
+   **Integration Tests** (Component interaction):
+   - API endpoint testing
+   - Database integration
+   - Service communication
+   - Configuration loading
+   
+   **End-to-End Tests** (Full workflow):
+   - Complete user journeys
+   - Multi-step processes
+   - Cross-system flows
+   - UI interaction (if applicable)
+   
+   **Performance Tests** (Speed and scale):
+   - Response time benchmarks
+   - Throughput limits
+   - Resource usage
+   - Concurrent user load
+   
+   **Security Tests** (Vulnerability checks):
+   - Authentication bypass
+   - Authorization violations
+   - Input injection
+   - Data exposure
+
+4. **Create Test Case Structure:**
+   
+   **Test Case Template:**
+   ```markdown
+   ## Test Case: [TC-001] [Descriptive Name]
+   
+   **Category**: [Unit | Integration | E2E | Performance | Security]
+   **Priority**: [High | Medium | Low]
+   **Component**: [Component/Module being tested]
+   
+   ### Description
+   Brief explanation of what this test validates.
+   
+   ### Prerequisites
+   - Required test data
+   - System state
+   - Configuration settings
+   - External dependencies
+   
+   ### Test Steps
+   1. [Action 1]
+      - Input: [Specific data/parameters]
+      - Action: [What to do]
+   2. [Action 2]
+      - Input: [Specific data/parameters]
+      - Action: [What to do]
+   3. [Verification]
+      - Check: [What to verify]
+   
+   ### Expected Results
+   - [Expected outcome 1]
+   - [Expected outcome 2]
+   - [System state after test]
+   
+   ### Actual Results
+   (To be filled during test execution)
+   - [ ] Pass
+   - [ ] Fail
+   - Notes: 
+   
+   ### Test Data
+   ```json
+   {
+     "input": "example",
+     "config": {
+       "setting": "value"
+     }
+   }
+   ```
+   ```
+
+5. **Generate Comprehensive Test Cases:**
+   
+   **Example: User Authentication Feature**
+   
+   ```markdown
+   # Test Cases: User Authentication
+   
+   ## Unit Tests
+   
+   ### TC-001: Valid Password Validation
+   **Category**: Unit
+   **Priority**: High
+   **Component**: PasswordValidator
+   
+   **Description**: Verify password meets all security requirements
+   
+   **Test Steps**:
+   1. Call validatePassword("SecureP@ss123")
+   2. Check return value
+   
+   **Expected**: Returns true for valid password
+   
+   ---
+   
+   ### TC-002: Weak Password Rejection
+   **Category**: Unit
+   **Priority**: High
+   **Component**: PasswordValidator
+   
+   **Description**: Verify weak passwords are rejected
+   
+   **Test Cases**:
+   - "123456" → false (too simple)
+   - "password" → false (common word)
+   - "short" → false (too short)
+   - "" → false (empty)
+   - null → false (null input)
+   
+   ---
+   
+   ## Integration Tests
+   
+   ### TC-010: Successful Login Flow
+   **Category**: Integration
+   **Priority**: High
+   **Component**: AuthenticationService
+   
+   **Description**: Verify complete login process with valid credentials
+   
+   **Prerequisites**:
+   - Test user exists in database
+   - Authentication service running
+   
+   **Test Steps**:
+   1. POST /api/login with valid credentials
+   2. Verify response status 200
+   3. Check returned JWT token
+   4. Validate token contains correct user claims
+   
+   **Expected**:
+   - Status: 200 OK
+   - Valid JWT token
+   - User session created
+   
+   ---
+   
+   ### TC-011: Failed Login - Invalid Credentials
+   **Category**: Integration
+   **Priority**: High
+   **Component**: AuthenticationService
+   
+   **Test Matrix**:
+   | Username | Password | Expected Status | Error Message |
+   |----------|----------|----------------|---------------|
+   | valid@email | wrong_pass | 401 | Invalid credentials |
+   | wrong@email | valid_pass | 401 | Invalid credentials |
+   | "" | valid_pass | 400 | Email required |
+   | valid@email | "" | 400 | Password required |
+   
+   ---
+   
+   ## Performance Tests
+   
+   ### TC-020: Login Response Time
+   **Category**: Performance
+   **Priority**: Medium
+   **Component**: AuthenticationService
+   
+   **Description**: Verify login completes within acceptable time
+   
+   **Test Steps**:
+   1. Measure single login request time
+   2. Repeat 100 times
+   3. Calculate average, min, max, p95
+   
+   **Expected**:
+   - Average response time < 200ms
+   - 95th percentile < 500ms
+   - No requests > 1000ms
+   ```
+
+6. **Include Test Implementation Hints:**
+   
+   ```markdown
+   ## Implementation Notes
+   
+   ### Unit Test Example (Jest/JavaScript):
+   ```javascript
+   describe('PasswordValidator', () => {
+     test('TC-001: Valid password validation', () => {
+       const result = validatePassword('SecureP@ss123');
+       expect(result).toBe(true);
+     });
+     
+     test.each([
+       ['123456', false, 'too simple'],
+       ['password', false, 'common word'],
+       ['short', false, 'too short'],
+       ['', false, 'empty'],
+       [null, false, 'null input']
+     ])('TC-002: Rejects %s (%s)', (password, expected, reason) => {
+       expect(validatePassword(password)).toBe(expected);
+     });
+   });
+   ```
+   
+   ### Integration Test Example (RSpec/Ruby):
+   ```ruby
+   RSpec.describe 'Authentication API' do
+     describe 'POST /api/login' do
+       context 'TC-010: with valid credentials' do
+         let(:user) { create(:user, password: 'ValidPass123!') }
+         
+         it 'returns success with JWT token' do
+           post '/api/login', params: {
+             email: user.email,
+             password: 'ValidPass123!'
+           }
+           
+           expect(response).to have_http_status(200)
+           expect(json_response['token']).to be_present
+           expect(decoded_token['user_id']).to eq(user.id)
+         end
+       end
+     end
+   end
+   ```
+   ```
+
+7. **Review and Refine:**
+   
+   **Test Case Review Checklist:**
+   - [ ] All requirements have corresponding tests
+   - [ ] Happy path scenarios covered
+   - [ ] Edge cases identified and tested
+   - [ ] Error conditions properly tested
+   - [ ] Test data is realistic
+   - [ ] Tests are independent
+   - [ ] Clear pass/fail criteria
+   - [ ] Appropriate test types chosen
+
+8. **Save Test Cases:**
+   
+   **File Organization:**
+   ```
+   dev-taskflow/current/v.X.Y.Z/test-cases/
+   ├── feature-authentication-tests.md
+   ├── api-endpoint-tests.md
+   └── performance-benchmarks.md
+   ```
+   
+   **Naming Convention:**
+   - `feature-[name]-tests.md` - Feature-specific tests
+   - `api-[endpoint]-tests.md` - API testing
+   - `security-[component]-tests.md` - Security tests
+   - `performance-[area]-tests.md` - Performance tests
+
+## Test Case Prioritization
+
+**High Priority:**
+- Core business logic
+- Security-critical features
+- User-facing functionality
+- Data integrity operations
+
+**Medium Priority:**
+- Secondary features
+- Admin functions
+- Reporting features
+- Performance optimizations
+
+**Low Priority:**
+- Nice-to-have features
+- Cosmetic issues
+- Rare edge cases
+- Internal tools
 
 ## Output / Success Criteria
 
-- A structured list of test cases covering the specified feature/task is generated.
-- Test cases cover happy path, edge cases, and error conditions.
-- Test cases are categorized appropriately (Unit, Integration, etc.).
-- Each test case includes a description, steps, and expected results.
-- Generated tests align with principles in `dev-handbook/guides/testing.md`.
+- Comprehensive test case list covering all requirements
+- Tests organized by type and priority
+- Each test has clear steps and expected results
+- Test data and prerequisites documented
+- Edge cases and error scenarios included
+- Tests are atomic and independent
+- Clear traceability to requirements
 
-## Reference Documentation
+## Common Testing Patterns
 
-- [Testing Guidelines Guide](dev-handbook/guides/testing.g.md)
-- [Test Cases Template](dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md)
+### Boundary Testing
+```markdown
+### TC-030: Age Validation Boundaries
+**Test Cases**:
+- Age = -1 → Error (negative)
+- Age = 0 → Valid (minimum)
+- Age = 17 → Invalid (below minimum)
+- Age = 18 → Valid (minimum adult)
+- Age = 120 → Valid (maximum reasonable)
+- Age = 121 → Warning (unusually high)
+- Age = null → Error (required field)
+```
+
+### State Transition Testing
+```markdown
+### TC-040: Order State Transitions
+**Valid Transitions**:
+- Draft → Submitted → Approved → Fulfilled
+- Draft → Cancelled
+- Submitted → Rejected
+
+**Invalid Transitions**:
+- Fulfilled → Draft (cannot reverse)
+- Cancelled → Approved (terminated state)
+```
+
+### Data Validation Matrix
+```markdown
+### TC-050: Input Validation
+| Field | Valid Values | Invalid Values | Expected Error |
+|-------|--------------|----------------|----------------|
+| Email | user@domain.com | plaintext | Invalid format |
+| Phone | +1-555-1234 | 12345 | Invalid format |
+| Date | 2024-01-01 | 01-01-2024 | Invalid format |
+```
+
+## Usage Example
+> "I've implemented a new user registration feature with email verification. Create comprehensive test cases covering all aspects of the registration flow."
+
+---
+
+This workflow ensures thorough test coverage through systematic identification and documentation of test scenarios across all testing levels.
