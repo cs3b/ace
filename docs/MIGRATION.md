@@ -1,4 +1,135 @@
-# Migration Guide: Unified LLM Query Command
+# Migration Guide
+
+This guide helps you migrate between different versions of the Coding Agent Tools gem.
+
+## Table of Contents
+
+- [Cache Directory Location Change (v0.2.0)](#cache-directory-location-change-v020)
+- [Unified LLM Query Command (v0.2.0)](#unified-llm-query-command-v020)
+
+---
+
+## Cache Directory Location Change (v0.2.0)
+
+### Overview
+
+Starting with v0.2.0, the cache directory location has moved to comply with XDG Base Directory specifications:
+
+- **Old location**: `~/.coding-agent-tools-cache` 
+- **New location**: `~/.cache/coding-agent-tools` (or `$XDG_CACHE_HOME/coding-agent-tools`)
+
+This change provides better integration with system standards and user expectations for cache storage locations.
+
+### Automatic Migration
+
+The gem automatically migrates your existing cache data:
+
+1. **Migration Trigger**: Occurs on first run of any cache-using command after upgrading
+2. **Migration Process**: 
+   - Copies all files from `~/.coding-agent-tools-cache` to `~/.cache/coding-agent-tools/models/`
+   - Creates a `.migration_complete` marker file to prevent re-migration
+   - Preserves original files for safety (they are not deleted)
+3. **Migration Confirmation**: You'll see informational messages during migration
+
+### Environment Variables
+
+The new cache location respects XDG environment variables:
+
+- **`XDG_CACHE_HOME`**: If set, cache goes to `$XDG_CACHE_HOME/coding-agent-tools`
+- **`HOME`**: If `XDG_CACHE_HOME` unset, cache goes to `$HOME/.cache/coding-agent-tools`
+- **Fallback**: If neither available, uses `.cache/coding-agent-tools` in current directory
+
+### Manual Migration
+
+If automatic migration fails or you prefer manual control:
+
+1. **Create new cache directory**:
+   ```bash
+   mkdir -p ~/.cache/coding-agent-tools/models
+   ```
+
+2. **Copy cache files**:
+   ```bash
+   cp ~/.coding-agent-tools-cache/* ~/.cache/coding-agent-tools/models/
+   ```
+
+3. **Create migration marker**:
+   ```bash
+   echo "migrated_at: $(date -Iseconds)" > ~/.cache/coding-agent-tools/.migration_complete
+   ```
+
+### Troubleshooting Migration Issues
+
+**Issue: Permission denied during migration**
+```
+Error: Cache migration failed: Permission denied
+```
+**Solution**: Ensure you have write permissions to the target directory:
+```bash
+# Check permissions
+ls -la ~/.cache/
+# Create directory with correct permissions if needed
+mkdir -p ~/.cache/coding-agent-tools
+chmod 700 ~/.cache/coding-agent-tools
+```
+
+**Issue: Migration occurs repeatedly**
+```
+INFO: Migrated cache from ~/.coding-agent-tools-cache to ~/.cache/coding-agent-tools
+```
+**Solution**: Check for missing migration marker:
+```bash
+# Verify marker exists
+ls -la ~/.cache/coding-agent-tools/.migration_complete
+# Create marker manually if missing
+touch ~/.cache/coding-agent-tools/.migration_complete
+```
+
+**Issue: Custom XDG_CACHE_HOME not recognized**
+```
+Cache still using ~/.cache instead of custom location
+```
+**Solution**: Verify environment variable is exported:
+```bash
+# Check current value
+echo $XDG_CACHE_HOME
+# Set and export if needed
+export XDG_CACHE_HOME="/custom/cache/path"
+```
+
+### Verifying Cache Location
+
+Check your current cache setup:
+
+```bash
+# Check for XDG-compliant cache directory
+ls -la ~/.cache/coding-agent-tools/
+
+# Check for legacy cache (will still exist after migration)
+ls -la ~/.coding-agent-tools-cache/
+
+# Verify cache subdirectories
+ls -la ~/.cache/coding-agent-tools/models/
+ls -la ~/.cache/coding-agent-tools/http/
+ls -la ~/.cache/coding-agent-tools/temp/
+```
+
+You can also trigger cache usage to see the migration in action:
+```bash
+# Run a command that uses cache (this will trigger migration if needed)
+exe/llm-models google
+```
+
+### Benefits of XDG Compliance
+
+- **Standards Compliance**: Follows established Linux/Unix conventions
+- **Better Organization**: Cache data grouped with other application caches
+- **User Control**: Respects user's preferred cache directory settings
+- **System Integration**: Works better with cache cleaning tools and scripts
+
+---
+
+## Unified LLM Query Command (v0.2.0)
 
 This guide helps you migrate from the old provider-specific commands to the new unified `llm-query` command syntax introduced in v0.2.0.
 
