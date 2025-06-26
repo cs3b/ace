@@ -73,11 +73,15 @@ git diff HEAD > input.diff
 git diff HEAD~3..HEAD > input.diff
 git diff main..feature-branch > input.diff
 
-# Option D: From commit hash (single commit)
-git show <commit-hash> > input.diff
+# Option D: From tag/reference to HEAD (RECOMMENDED for releases)
+git diff v.0.2.1+task.61..HEAD > input.diff
+git diff v.0.2.1..HEAD > input.diff
 
 # Option E: From commit hash to HEAD (exclusive of starting commit)
 git diff <commit-hash>..HEAD > input.diff
+
+# Option F: From commit hash (single commit only - NOT recommended for reviews)
+git show <commit-hash> > input.diff
 
 # Option F: Using stash (if you need to stash changes)
 git stash push -m "Code review stash $(date +%Y%m%d-%H%M%S)"
