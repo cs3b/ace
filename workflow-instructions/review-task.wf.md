@@ -2,124 +2,255 @@
 
 ## Goal
 
-Review and refine a task definition, potentially proposing an implementation approach or solution, ensuring it aligns
-with project goals, architecture, and recent changes. Identify areas requiring user feedback or further clarification.
+Review and refine a task definition, potentially proposing an implementation approach or solution, ensuring it aligns with project goals, architecture, and recent changes. Identify areas requiring user feedback or further clarification.
 
 ## Prerequisites
 
-- The project environment has been loaded using the `load-env` workflow instruction to provide necessary context
-  (guides, architecture, blueprint), including a review of recent code changes.
-- The task to be reviewed exists as a Markdown file, ideally following the structure defined in the
-  [Write Actionable Task Guide](../guides/task-definition.g.md).
-- The task file is located within the `dev-taskflow/{backlog|current}/{release_dir}/tasks/` directory.
+- Task file exists in markdown format
+- Understanding of project context and architecture
+- Access to recent git history and project status
 
-## Input
+## Project Context Loading
 
-- The full path to the task `.md` file to be reviewed.
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
 
 ## Process Steps
 
 1. **Load Task Content:**
-    - Read the content of the provided task `.md` file.
-    - Parse the frontmatter (id, status, priority, dependencies) and sections (Objective, Description, Scope,
-      Deliverables, Implementation Plan, Acceptance Criteria, Out of Scope, References).
-    - Examine the Implementation Plan structure, noting whether it uses the new Planning Steps and Execution Steps
-      subsections or the legacy single-section format.
+   * Read the task file from the provided path
+   * Parse the structure:
+     ```yaml
+     ---
+     id: v.X.Y.Z+task.N
+     status: [pending | in-progress | done | blocked]
+     priority: [high | medium | low]
+     estimate: Nh
+     dependencies: []
+     ---
+     ```
+   * Extract key sections:
+     - Objective and description
+     - Scope of work and deliverables
+     - Implementation plan structure
+     - Acceptance criteria
+     - Out of scope items
 
 2. **Review Task Against Context:**
-    - Compare the task's Objective and Description against the project's overall goals as defined in
-      [What We Build](docs/what-do-we-build.md).
-    - Evaluate the proposed Implementation Details, Scope, and Deliverables in light of the project
-      [Architecture](docs/architecture.md) and [Blueprint](docs/blueprint.md). Identify any
-      potential architectural conflicts or structural challenges.
-    - **Review Recent Git and Task History:**
-        - Use the `bin/gl` tool (powered by `dev-handbook/tools/get-recent-git-log`) to view recent commits across the
-          main repo and submodules, sorted by date. This helps identify changes that may impact the task.
-        - Use the `bin/tr` tool (powered by `dev-handbook/tools/get-recent-tasks`) to quickly summarize recently updated
-          or completed tasks. This helps track project progress and find related or recently finished work.
-        - Both tools support the `--last` argument to filter by time window (e.g., `--last 2.days`).
-        - Consider recent code and task changes when reviewing assumptions, requirements, and implementation plans.
-          Look for changes in related code areas or foundational parts of the project.
-    - Review the task's dependencies against the current project status (as understood from `review-kanban-board`
-      or `load-env`) to confirm they are met or identify blockers.
+   
+   **Project Alignment Check:**
+   - Does the objective align with project goals?
+   - Is the approach consistent with architecture?
+   - Are deliverables appropriate for the project?
+   
+   **Recent Changes Review:**
+   ```bash
+   # Review recent commits
+   git log --oneline -20
+   
+   # Check recently modified files in task area
+   git diff --name-only HEAD~10
+   
+   # Look for related completed tasks
+   ls -t dev-taskflow/current/*/tasks/*.md | grep -E "(done|completed)" | head -10
+   ```
+   
+   **Dependency Validation:**
+   - Are listed dependencies actually complete?
+   - Are there hidden dependencies not listed?
+   - Will recent changes impact this task?
 
-3. **Identify Needs for Update:**
-    - Based on the review, determine if the task file needs updates due to:
-        - Ambiguity in description or requirements.
-        - Inconsistencies with project standards ([Coding Standards](../guides/coding-standards.g.md),
-          [Documentation Standards](../guides/documentation.g.md), etc.).
-        - Impact from recent code changes or architectural decisions ([ADRs](dev-taskflow/decisions/)).
-        - Missing or unclear Implementation Plan steps.
-        - Implementation Plan not following the current Planning Steps/Execution Steps structure.
-        - Inadequate or unverifiable Acceptance Criteria.
-        - Missing embedded tests in Planning or Execution steps where appropriate.
-    - Note down specific areas requiring refinement.
+3. **Analyze Implementation Plan:**
+   
+   **Structure Assessment:**
+   - Check for proper Planning Steps (`* [ ]`) and Execution Steps (`- [ ]`)
+   - Verify embedded tests are included where needed
+   - Ensure logical flow from research to implementation
+   
+   **Quality Criteria:**
+   - [ ] Planning steps cover necessary research/design
+   - [ ] Execution steps are concrete and actionable
+   - [ ] Test blocks validate critical operations
+   - [ ] Steps are properly sequenced
+   - [ ] Effort estimates seem reasonable
+   
+   **Common Issues to Check:**
+   - Missing directory audits for context
+   - Vague or ambiguous action items
+   - Lack of verification steps
+   - Unrealistic scope or timeline
+   - Missing error handling considerations
 
-4. **Think and Propose Solution/Refinement:**
-    - Use the `thinking` tool to analyze the task requirements, existing plan, and project context, incorporating
-      the understanding of recent changes.
-    - Brainstorm potential implementation approaches or refinements to the existing plan, ensuring compatibility
-      with recent work.
-    - If the task is complex or underspecified, propose a high-level solution structure or a more detailed
-      implementation plan checklist.
-    - **Evaluate Implementation Plan Structure:**
-        - For complex tasks requiring research or design decisions, recommend adding Planning Steps (`* [ ]`) to
-          cover analysis, research, and design activities.
-        - Ensure Execution Steps (`- [ ]`) focus on concrete implementation actions.
-        - Suggest embedded tests where verification or validation would be beneficial.
-    - Consider alternative approaches and their trade-offs (align with [Architecture Guide](docs/architecture.md)
-      principles).
-    - Identify specific code files or guides that will be relevant during implementation, noting if recent changes
-      in those files need particular attention.
+4. **Identify Improvement Areas:**
+   
+   **Task Definition Issues:**
+   - Ambiguous requirements
+   - Incomplete acceptance criteria
+   - Missing technical details
+   - Unclear scope boundaries
+   
+   **Implementation Plan Issues:**
+   - Missing research/analysis steps
+   - No test verification blocks
+   - Skipping important validations
+   - Ignoring edge cases
+   
+   **Context Issues:**
+   - Outdated assumptions
+   - Conflicts with recent changes
+   - Missing architectural considerations
+   - Ignoring coding standards
 
-5. **Formulate User Feedback / Clarification Points:**
-    - Clearly articulate any questions, ambiguities, or decisions that require user input before proceeding with implementation.
-    - This might include:
-        - Confirming a proposed solution approach, especially if influenced by recent changes.
-        - Clarifying ambiguous requirements.
-        - Seeking guidance on design choices.
-        - Confirming if recent changes impact the task as identified in Step 3, and discussing how to proceed.
+5. **Propose Refinements:**
+   
+   **Enhanced Implementation Plan Template:**
+   ```markdown
+   ## Implementation Plan
+   
+   ### Planning Steps
+   * [ ] Research existing implementation patterns
+     > TEST: Pattern Analysis
+     > Type: Pre-condition Check
+     > Assert: Similar patterns identified and documented
+     > Command: grep -r "pattern" lib/
+   
+   * [ ] Design solution approach
+     - Consider alternatives
+     - Document decision rationale
+     - Create high-level design
+   
+   * [ ] Identify impacted components
+     > TEST: Impact Analysis
+     > Type: Pre-condition Check
+     > Assert: All dependencies mapped
+     > Command: bin/deps --check component
+   
+   ### Execution Steps
+   - [ ] Implement core functionality
+     > TEST: Core Implementation
+     > Type: Action Validation
+     > Assert: Basic functionality works
+     > Command: bin/test spec/feature_spec.rb
+   
+   - [ ] Add error handling
+     - Handle edge cases
+     - Add appropriate logging
+     - Create helpful error messages
+   
+   - [ ] Write comprehensive tests
+     > TEST: Test Coverage
+     > Type: Action Validation
+     > Assert: Coverage > 90%
+     > Command: bin/test --coverage
+   
+   - [ ] Update documentation
+     - API documentation
+     - User guides
+     - Code comments
+   ```
 
-6. **Present Findings and Next Steps:**
-    - Summarize the task review findings, highlighting any impacts from recent Git history and areas for improvement or clarification.
-    - Present the proposed solution approach or refined implementation plan (if generated).
-    - **Specifically address Implementation Plan structure:**
-        - If the task uses legacy single-section format, recommend updating to Planning/Execution structure if appropriate.
-        - Highlight where Planning Steps would be beneficial for complex tasks requiring analysis or design.
-        - Suggest locations for embedded tests to improve task verification.
-    - Explicitly list the points requiring user feedback.
-    - Suggest the next logical step, which might be:
-        - User provides feedback/clarification.
-        - Updating the task file based on identified needs (if simple or authorized).
-        - Proceeding to `work-on-task` if the task is clear and ready.
+6. **Formulate Feedback Points:**
+   
+   **Question Templates:**
+   - "The objective mentions [X], but the scope includes [Y]. Should we...?"
+   - "Recent changes to [component] may impact this. How should we adjust?"
+   - "The acceptance criteria don't specify [important aspect]. What's expected?"
+   - "Two approaches are viable: [A] vs [B]. Which aligns better with our goals?"
+   
+   **Decision Points:**
+   - Technical approach confirmation
+   - Scope clarification
+   - Priority validation
+   - Resource allocation
+   - Risk assessment
+
+7. **Present Review Summary:**
+   
+   **Review Report Structure:**
+   ```markdown
+   ## Task Review Summary
+   
+   ### Task: [ID] - [Title]
+   **Status**: Ready for implementation | Needs clarification | Requires updates
+   
+   ### Key Findings
+   1. [Finding 1 - e.g., aligns with architecture]
+   2. [Finding 2 - e.g., missing test criteria]
+   3. [Finding 3 - e.g., conflicts with recent changes]
+   
+   ### Proposed Improvements
+   - [Specific improvement 1]
+   - [Specific improvement 2]
+   
+   ### Questions for Clarification
+   1. [Question requiring user input]
+   2. [Design decision needed]
+   
+   ### Recommended Next Steps
+   - [ ] Address clarification points
+   - [ ] Update task definition
+   - [ ] Proceed with implementation
+   ```
+
+## Review Checklist
+
+**Task Completeness:**
+- [ ] Clear, measurable objective
+- [ ] Well-defined scope and deliverables
+- [ ] Comprehensive implementation plan
+- [ ] Verifiable acceptance criteria
+- [ ] Explicit out-of-scope items
+
+**Technical Validity:**
+- [ ] Aligns with architecture
+- [ ] Follows coding standards
+- [ ] Considers recent changes
+- [ ] Addresses dependencies
+- [ ] Includes error handling
+
+**Process Compliance:**
+- [ ] Uses correct task format
+- [ ] Has proper metadata
+- [ ] Includes embedded tests
+- [ ] Follows naming conventions
+- [ ] Documents decisions
 
 ## Output / Success Criteria
 
-**Output:**
+- Comprehensive review identifying all issues
+- Clear improvement recommendations
+- Specific questions for clarification
+- Actionable next steps defined
+- Risk areas highlighted
+- Implementation approach validated
 
-- A summary of the task review, highlighting inconsistencies or areas for improvement, particularly in light of
-  recent code changes.
-- A proposed solution approach or refined implementation plan for the task (if applicable), potentially adjusted
-  based on recent work and following the current Planning Steps/Execution Steps structure.
-- A clear list of questions or points requiring user feedback.
-- A suggestion for the next step in the workflow.
+## Common Patterns
 
-**Success Criteria:**
+### High-Risk Task Pattern
+Tasks touching core functionality need extra scrutiny:
+- More thorough testing requirements
+- Rollback plan considerations
+- Performance impact analysis
+- Security review requirements
 
-- The task definition has been thoroughly reviewed against project context and recent changes in Git history.
-- Potential issues or ambiguities in the task definition, especially those arising from or impacted by recent work,
-  are identified.
-- A viable approach to implementing the task is considered and potentially proposed, taking recent changes into account
-  and following current task structure standards.
-- All points requiring user decision or clarification are explicitly stated.
-- The path forward for the task is clearly defined (e.g., requires feedback, ready for implementation).
+### Refactoring Task Pattern
+Refactoring tasks should include:
+- Current state documentation
+- Refactoring strategy
+- Incremental milestones
+- Regression test plans
 
-## Reference Documentation
+### New Feature Pattern
+New features require:
+- User story validation
+- API design review
+- Integration considerations
+- Documentation requirements
 
-- [Write Actionable Task Guide](../guides/task-definition.g.md) (Format for task files)
-- [Project Management Guide](../guides/project-management.g.md) (Task status, dependencies, overall workflow)
-- [Load Environment Workflow Instruction](./load-env.wf.md) (Provides necessary context including recent changes)
-- [What We Build](docs/what-do-we-build.md)
-- [Architecture](docs/architecture.md)
-- [Blueprint](docs/blueprint.md)
-- [Version Control Guide](dev-handbook/guides/version-control-system.g.md) (For understanding Git history review)
+## Usage Example
+> "Review task dev-taskflow/current/v.0.3.0/tasks/v.0.3.0+task.5-implement-oauth.md and identify any issues or improvements needed before implementation."
+
+---
+
+This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.

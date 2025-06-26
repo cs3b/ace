@@ -2,89 +2,244 @@
 
 ## Goal
 
-To capture individual or team observations, learnings, and ideas for improvement using the standard
-reflection template. These notes are intended for later synthesis, primarily as input for the
-`create-retrospective-document.md` workflow.
+Capture individual or team observations, learnings, and ideas for improvement during development work. These notes document insights that can help improve future work processes and outcomes.
 
 ## Prerequisites
 
-- The reflection template is available at `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`.
-- Understanding of the proposed naming convention
-  and location for reflection notes:
-  - **Location:** Within a specific release directory, e.g.,
-    (e.g., `dev-taskflow/current/{release_dir}/reflections/\\` or
-    `dev-taskflow/backlog/{release_dir}/reflections/\\`)
-  - **Filename:** `YYYYMMDD-brief-description.md` (e.g., `20231027-thoughts-on-task-123.md`).
-  - The `reflections/` subdirectory should be created within the target release directory if it doesn't exist.
+- Understanding of what reflections to capture (learnings, challenges, improvements)
+- Access to create files in the project structure
+- Current working session or specific context to reflect upon
 
 ## Process Steps
 
-1. **Initiation:**
-    - The user requests to create a reflection note.
-    - The user provides a brief topic, task ID, or description for the note (e.g., "reflections on
-      component X refactor", "learnings from bug Y").
-    - The user specifies the target release (e.g., "current release", or the name/path of a specific
-      release in `dev-taskflow/backlog/`). If not specified, the agent should assume the "current" release.
+1. **Determine Reflection Context:**
+   * If user provides specific context:
+     - Use the provided topic, task, or time period
+     - Focus reflection on that specific area
+   * If no context provided:
+     - Self-review the current working session
+     - Analyze recent changes and activities
+     - Extract learnings from current work
 
-2. **Prepare File:**
-    - The agent determines the path to the target release directory.
-        - For "current release": This usually involves identifying the symbolic link or directory at
-          `dev-taskflow/current/`. The agent might need to list contents or use a helper
-          script/tool if available to resolve this to a concrete path
-          (e.g., `dev-taskflow/current/vX.Y.Z-release-name`).
-        - For a backlog release: The user should provide the path or name (e.g., `dev-taskflow/backlog/vA.B.C-future-release`).
-    - The agent constructs the full path for the reflection note:
-      `TARGET_RELEASE_PATH/reflections/YYYYMMDD-user-provided-description.md`.
-        - Example for current release:
-          `dev-taskflow/current/{resolved_release_dir}/reflections/`
-          `YYYYMMDD-user-provided-description.md`.
-    - The agent ensures the `TARGET_RELEASE_PATH/reflections/` directory exists. If not, it should be
-      created. (Note: `edit_file` tool with `create_or_overwrite = True` typically handles parent directory
-      creation for the file itself).
+2. **Identify Target Location:**
+   * Determine where to save the reflection:
+     ```bash
+     # Check for current release
+     ls -d dev-taskflow/current/*/
+     
+     # If current release exists
+     dev-taskflow/current/{release}/reflections/
+     
+     # If no current release
+     dev-taskflow/reflections/
+     ```
+   * Create reflections directory if needed
+   * Generate filename: `YYYYMMDD-brief-description.md`
+     - Example: `20240126-authentication-refactor-learnings.md`
+     - Example: `20240126-session-review.md`
 
-3. **Populate from Template:**
-    - The agent reads the content of the standard reflection template:
-      `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`.
-    - The agent creates the new reflection note file (using the full path determined in Step 2) and
-      populates it with the template's content (which includes level 1 headings for sections).
+3. **Create Reflection Structure:**
+   
+   **Embedded Reflection Template:**
+   ```markdown
+   # Reflection: [Topic/Date]
+   
+   **Date**: YYYY-MM-DD
+   **Context**: [Brief description of what this reflection covers]
+   **Author**: [Name or identifier]
+   
+   ## What Went Well
+   
+   - [Positive outcome or successful approach]
+   - [Effective pattern discovered]
+   - [Good decision that paid off]
+   
+   ## What Could Be Improved
+   
+   - [Challenge encountered]
+   - [Inefficiency identified]
+   - [Area needing attention]
+   
+   ## Key Learnings
+   
+   - [Important insight gained]
+   - [New understanding developed]
+   - [Valuable lesson learned]
+   
+   ## Action Items
+   
+   ### Stop Doing
+   - [Practice or approach to discontinue]
+   - [Ineffective pattern to avoid]
+   
+   ### Continue Doing
+   - [Successful practice to maintain]
+   - [Effective approach to keep using]
+   
+   ### Start Doing
+   - [New practice to adopt]
+   - [Improvement to implement]
+   
+   ## Technical Details
+   
+   (Optional: Specific technical insights, code patterns, or implementation notes)
+   
+   ```
+   
+   ## Additional Context
+   
+   (Optional: Links to relevant PRs, tasks, or documentation)
+   ```
 
-4. **User Fills Reflection:**
-    - The agent informs the user that the reflection note file has been created with the template
-      and is ready to be filled (providing the path to the new file).
-    - The agent prompts the user to provide their thoughts for the "Stop Doing", "Continue Doing", and
-      "Start Doing" sections, indicating that they will be added as bullet points.
-    - The user provides the content for these sections.
-    - The agent assists the user by editing the newly created reflection note file to insert
-      the user's content as bullet points under the appropriate level 1 headings. Empty
-      sections (those for which the user provided no content) are skipped.
+4. **Gather Reflection Content:**
+   
+   **For Self-Review Session:**
+   - Review recent git commits
+   - Analyze completed tasks
+   - Identify challenges faced
+   - Note successful solutions
+   - Extract patterns and learnings
+   
+   **Reflection Prompts:**
+   - What was the main goal of this work?
+   - What obstacles were encountered?
+   - How were problems solved?
+   - What would you do differently?
+   - What patterns emerged?
+   - What knowledge was gained?
 
-5. **Save & Confirm:**
-    - The agent ensures the reflection note file is saved with the user's input.
-    - The agent confirms to the user that the note has been saved (providing the full path again).
-    - The agent reminds the user that this note can be used as input for the
-      [`create-retrospective-document.wf.md`](./create-retrospective-document.wf.md) workflow.
+5. **Populate Reflection:**
+   
+   **Example Content Generation:**
+   ```markdown
+   # Reflection: Authentication System Refactor
+   
+   **Date**: 2024-01-26
+   **Context**: Refactoring the authentication system to support OAuth
+   **Author**: Development Team
+   
+   ## What Went Well
+   
+   - Clear separation of authentication strategies made the code more maintainable
+   - Test-driven approach caught several edge cases early
+   - Pair programming sessions improved code quality
+   
+   ## What Could Be Improved
+   
+   - Initial time estimates were too optimistic
+   - Documentation was updated after implementation rather than alongside
+   - Integration tests took longer than expected to stabilize
+   
+   ## Key Learnings
+   
+   - OAuth implementation complexity varies significantly between providers
+   - Mocking external authentication services requires careful consideration
+   - Early spike solutions save time in the long run
+   
+   ## Action Items
+   
+   ### Stop Doing
+   - Estimating OAuth integration as "simple"
+   - Leaving documentation until the end
+   
+   ### Continue Doing
+   - TDD approach for security-critical features
+   - Regular pair programming sessions
+   - Creating spike solutions for unknowns
+   
+   ### Start Doing
+   - Document authentication flows before implementation
+   - Create integration test fixtures early
+   - Schedule regular security reviews
+   ```
 
-## Input
+6. **Review and Save:**
+   * Ensure all sections have meaningful content
+   * Remove empty sections if not applicable
+   * Save file with descriptive filename
+   * Commit with appropriate message:
+     ```bash
+     git add dev-taskflow/current/*/reflections/*.md
+     git commit -m "docs(reflection): add learnings from [topic]"
+     ```
 
-- User request to create a reflection note.
-- Target release for the reflection note (e.g., "current", or path/name of a backlog release).
-- A brief topic, task ID, or description for the reflection note (used for filename generation).
-- Content for the "Stop Doing", "Continue Doing", and "Start Doing" sections (provided by the
-  user during Step 4).
+## Self-Review Process
+
+When no specific context is provided, follow this process:
+
+1. **Analyze Recent Work:**
+   ```bash
+   # Review recent commits
+   git log --oneline -10
+   
+   # Check modified files
+   git diff --name-only HEAD~5
+   
+   # Review completed tasks
+   ls -t dev-taskflow/current/*/tasks/*.md | head -5
+   ```
+
+2. **Extract Insights:**
+   - Identify patterns in the work
+   - Note any repeated challenges
+   - Recognize successful approaches
+   - Consider process improvements
+
+3. **Generate Reflection:**
+   - Summarize the session's accomplishments
+   - Document any blockers encountered
+   - Capture new learnings
+   - Propose process improvements
+
+## Common Reflection Patterns
+
+### Technical Reflection
+Focus on code quality, architecture decisions, and technical learnings.
+
+### Process Reflection
+Focus on workflow efficiency, team collaboration, and methodology.
+
+### Problem-Solving Reflection
+Focus on how specific challenges were overcome and lessons learned.
+
+### Learning Reflection
+Focus on new skills, tools, or concepts mastered during the work.
 
 ## Output / Success Criteria
 
-- A new Markdown file is created within the `reflections/` subdirectory of the target release
-  (e.g., `dev-taskflow/current/{release_dir}/reflections/\` or `dev-taskflow/backlog/{release_dir}/reflections/\`)
-  with a name following the `YYYYMMDD-brief-description.md` convention.
-- The `reflections/` subdirectory within the target release directory is created if it did not previously exist.
-- The new file is populated with user-provided reflections.
-- Only sections (Stop Doing, Continue Doing, Start Doing) for which the user provided content are included in the file.
-- User reflections within included sections are formatted as bullet points under their respective level 1 headings.
-- The user is informed that the reflection note has been successfully saved and its intended use for future retrospectives.
+- Reflection note created with meaningful content
+- Insights captured for future reference
+- Action items clearly defined
+- File saved in appropriate location
+- Learning documented for team benefit
 
-## Reference Documentation
+## Best Practices
 
-88 | - [Reflection Template (`_template.md`)](dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md)
-89 | - [`create-retrospective-document.wf.md` Workflow Instruction](./create-retrospective-document.wf.md)
-90 | - [Writing Workflow Instructions Guide](dev-handbook/guides/.meta/workflow-instructions-definition.g.md)
+**DO:**
+- Be honest about challenges and failures
+- Focus on actionable improvements
+- Include specific examples
+- Keep entries concise but complete
+- Date and contextualize reflections
+
+**DON'T:**
+- Make it a blame session
+- Be vague or generic
+- Skip the action items
+- Forget to save/commit
+- Write novels - keep it focused
+
+## Usage Examples
+
+**With context:**
+> "Create a reflection note about the authentication system refactor we just completed"
+
+**Without context:**
+> "Create a reflection note" (triggers self-review of current session)
+
+**Specific learning:**
+> "Create a reflection note about the OAuth integration challenges we faced"
+
+---
+
+This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.

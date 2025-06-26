@@ -1,123 +1,235 @@
-# Log Compact Session Workflow Instruction (log-compact-session)
+# Log Compact Session Workflow Instruction
 
 ## Goal
 
-To capture a compact summary of the current session (what was done, next steps, key file links) primarily for
-context saving/reloading, especially when dealing with token limits or needing to transfer session state.
-Streamline content to focus on brevity and essential context for reloading (the "Context Loading Prompt" remains
-key). Remove deeper analytical/reflection components.
+Capture a compact summary of the current session (what was done, next steps, key file links) primarily for context saving/reloading, especially when dealing with token limits or needing to transfer session state.
 
 ## Prerequisites
 
-- An active development session with recent interactions between user and AI agent.
-- A defined current release directory (`dev-taskflow/current/{release_dir}/`).
-- The `sessions/` subdirectory exists or can be created within the current release directory.
-
-## Input
-
-- User request to log the current session in a compact format.
-- Access to the recent chat/interaction history for the AI agent to summarize compactly.
+- Active development session with recent work
+- Clear understanding of what was accomplished
+- Knowledge of next steps or current blockers
 
 ## Process Steps
 
-1. **Trigger Workflow Instruction:** The user invokes `log-compact-session` typically after a significant
-   interaction, at the end of a work segment, or when needing to save context due to token limits.
-2. **Agent Summarization:** The AI agent analyzes the recent interaction history within the current chat/session.
-3. **Identify Key Elements:** The agent identifies:
-    - The primary user request(s) in the segment.
-    - The main actions taken by the agent in response.
-    - The key files, directories, tasks, or concepts involved.
-    - The current objective or next step.
-4. **Generate Log Content:** The agent constructs the log content, including:
-    - A unique identifier (Timestamp recommended).
-    - A concise summary of the user request(s).
-    - A concise summary of the agent's actions/responses (e.g., "Generated patch for Task 03", "Created ADR-002",
-      "Answered question about X").
-    - A brief summary of the user request(s), focusing on the core goal.
-    - A brief summary of the agent's key actions/responses directly related to achieving the goal (e.g., files
-      touched, main outcomes).
-    - A "Context Loading Prompt" designed to efficiently restore the current working state in a new session.
-5. **Determine Log Location:**
-    - Identify the current release directory (e.g., `dev-taskflow/current/v.0.2.0-StreamlineWorkflow/`).
-    - Target the `sessions/` subdirectory within that release directory.
-6. **Save Log File:**
-    - Create a filename using the timestamp (e.g., `YYYYMMDD-HHMMSS-compact-log.md`).
-    - Save the generated compact log content to this file.
-    - *Initial Implementation:* The agent might present the formatted log content for the user to manually save
-      to the correct location. Future implementations could involve direct file saving capabilities.
-7. **Confirm Save:** Inform the user that the compact session log has been generated and specify the path where
-   it was (or should be) saved.
+1. **Analyze Current Session:**
+   * Review recent work in the session:
+     - Main objectives addressed
+     - Key files modified or created
+     - Decisions made
+     - Problems encountered
+     - Current state of work
+   
+   * Identify critical context:
+     - Active task or feature
+     - Important file paths
+     - Unfinished work
+     - Next immediate steps
 
-## Log File Format (`*.md`)
+2. **Generate Session Summary:**
+   
+   **Use Embedded Template:**
+   ```markdown
+   # Compact Session Log: YYYY-MM-DD HH:MM:SS
+   
+   ## Request Summary
+   [Concise summary of the user's main goal during this session]
+   Example: "User requested implementation of OAuth authentication feature"
+   
+   ## Work Completed
+   - [Key accomplishment 1]
+   - [Key accomplishment 2]
+   - [Files created/modified with paths]
+   
+   ## Current State
+   - Active task: [task ID and brief description]
+   - Work status: [in-progress/blocked/ready for review]
+   - Key files in focus:
+     - `path/to/file1.ext` - [what was done]
+     - `path/to/file2.ext` - [current state]
+   
+   ## Context Loading Prompt
+   
+   ---
+   ### Resume Session: [Brief Description]
+   
+   **Goal:** [Next immediate objective]
+   
+   **Session Context:**
+   - Working on: [current feature/task]
+   - Progress: [percentage or milestones completed]
+   - Release: [current release if applicable]
+   
+   **Key Files to Load:**
+   ```
+   dev-taskflow/current/v.X.Y.Z/tasks/current-task.md
+   src/main/feature/implementation.rb
+   spec/feature/implementation_spec.rb
+   docs/feature-guide.md
+   ```
+   
+   **Recent Changes:**
+   - [File]: [Brief description of changes]
+   - [File]: [Current state/what's pending]
+   
+   **Next Steps:**
+   1. [Immediate next action]
+   2. [Following action]
+   3. [Subsequent tasks]
+   
+   **Blockers/Decisions Needed:**
+   - [Any blockers or pending decisions]
+   
+   **Commands to Run:**
+   ```bash
+   # Useful commands to resume work
+   bin/test spec/feature_spec.rb
+   bin/lint
+   git status
+   ```
+   ---
+   ```
 
+3. **Determine Save Location:**
+   ```bash
+   # Check for current release
+   RELEASE_DIR=$(ls -d dev-taskflow/current/*/ 2>/dev/null | head -1)
+   
+   if [ -n "$RELEASE_DIR" ]; then
+     SESSION_DIR="${RELEASE_DIR}sessions/"
+   else
+     SESSION_DIR="dev-taskflow/sessions/"
+   fi
+   
+   # Create directory if needed
+   mkdir -p "$SESSION_DIR"
+   
+   # Generate filename with timestamp
+   FILENAME="$(date +%Y%m%d-%H%M%S)-compact-log.md"
+   FILEPATH="${SESSION_DIR}${FILENAME}"
+   ```
+
+4. **Include Restoration Instructions:**
+   
+   **Essential Elements:**
+   - Exact file paths to reopen
+   - Current git branch/status
+   - Environment state if relevant
+   - Test commands to verify state
+   - Clear next action
+   
+   **Example Context Loading:**
+   ```markdown
+   ### Quick Restore Commands
+   ```bash
+   # 1. Load the task
+   cat dev-taskflow/current/v.0.3.0/tasks/v.0.3.0+task.5.md
+   
+   # 2. Open key files
+   $EDITOR src/auth/oauth_handler.rb spec/auth/oauth_handler_spec.rb
+   
+   # 3. Check current state
+   git status
+   bin/test --only-failures
+   
+   # 4. Resume where left off
+   # - Complete the error handling in oauth_handler.rb:45
+   # - Add remaining test cases for error scenarios
+   # - Update API documentation
+   ```
+   ```
+
+5. **Save and Confirm:**
+   * Save the log to determined location
+   * Provide confirmation with path:
+     ```
+     Session log saved to: dev-taskflow/current/v.0.3.0/sessions/20240126-143022-compact-log.md
+     
+     To resume this session later, load the context prompt from the saved file.
+     ```
+
+## Usage Patterns
+
+### End of Work Session
 ```markdown
-# Compact Session Log: YYYY-MM-DD HH:MM:SS
-
 ## Request Summary
-[Concise summary of the user's main goal or request during this session segment.]
-(E.g., \"User asked to implement Task 03: Update Guides.\")
+Implemented user authentication feature with JWT tokens
 
-## Agent Action Summary
-[Brief summary of the primary actions taken by the agent, focusing on outcomes and key files.]
-(E.g., "Updated `guides/README.md` & `guides/publish-release.md` for Task 03. Deleted
-`guides/draft-release/draft-release-documentation.md`.")
+## Work Completed
+- Created AuthenticationController with login/logout endpoints
+- Added JWT token generation and validation
+- Wrote comprehensive test suite (15 tests, all passing)
+- Updated API documentation
 
-## Context Loading Prompt (Copy and paste to resume session)
-
----
-# Context Loading Prompt: Resume [Brief Description of State]
-
-**Goal:** [State the next immediate objective]
-(E.g., Continue work on v0.2.0, starting Task 04.)
-
-**Current State:**
-- Tasks 01, 02, 03 of v0.2.0 release are complete.
-- Files modified/reviewed recently: [List key files, e.g., `guides/publish-release.md`, `tasks/03-*.md`]
-- Current release directory: `dev-taskflow/current/v.0.2.0-StreamlineWorkflow/`
-- Last action: Completed updates to guides as per Task 03.
-
-**Files/Directories to Load/Review:**
-- `dev-taskflow/current/v.0.2.0/` (Load this entire directory context)
-  - `tasks/04-define-session-logging.md` (Next task)
-  - `docs/unified-workflow-guide.md` (Recently modified)
-  - Other relevant files based on recent interaction...
-
-**Next Objective:** [Explicitly state the next step]
-(E.g., Begin implementation of Task 04: Define Session Logging Command.)
----
-
+## Current State
+- Active task: v.0.3.0+task.12 (90% complete)
+- Work status: Ready for code review
+- Key files in focus:
+  - `app/controllers/authentication_controller.rb` - Complete
+  - `spec/controllers/authentication_controller_spec.rb` - Complete
+  - `docs/api/authentication.md` - Needs final review
 ```
 
-## Integration into Workflow
+### Context Switch
+```markdown
+## Request Summary
+Debugging production issue with payment processing
 
-The `log-session` workflow instruction should be used periodically, especially:
+## Work Completed
+- Identified race condition in payment state machine
+- Added logging to trace issue
+- Created failing test case
 
-- Before switching context to a different task.
-- After complex interactions or generating significant artifacts (code, documentation), especially if needing to pause.
-- At the end of a development session, or when token limits are a concern.
-- When needing to transfer session state to another instance or agent.
+## Current State
+- Active task: HOTFIX-payment-race-condition
+- Work status: In-progress (root cause identified)
+- Key files in focus:
+  - `app/services/payment_processor.rb:145` - Race condition here
+  - `spec/services/payment_processor_spec.rb:298` - Failing test
+```
 
-This workflow is designed for quick state capture. For deeper analysis and synthesis of session activities into
-actionable improvements or project retrospectives, refer to the
-[`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) workflow,
-which may use these compact session logs as one of its inputs.
+### Token Limit Reached
+```markdown
+## Request Summary
+Refactoring legacy notification system (session truncated due to token limit)
 
-## Reference Documentation
+## Work Completed
+- Analyzed 15 files in legacy notification system
+- Created refactoring plan with 8 phases
+- Completed Phase 1: Extract notification types
+- Started Phase 2: Create adapter interfaces
 
-- [Project Management Guide](dev-handbook/guides/project-management.g.md)
-- [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) (For
-  synthesizing session data into broader reflections)
+## Context Loading Prompt
+[Detailed state for resuming exactly where left off]
+```
+
+## Best Practices
+
+**DO:**
+- Keep summaries concise but complete
+- Include exact file paths and line numbers
+- Note any uncommitted changes
+- Specify exact commands to resume
+- Mention critical decisions or blockers
+
+**DON'T:**
+- Include lengthy code snippets
+- Duplicate information available in files
+- Forget to mention the current git state
+- Omit important context or decisions
+- Make summaries too verbose
 
 ## Output / Success Criteria
 
-- The process for logging a compact session summary is clearly defined.
-- The standard format for the compact session log file, emphasizing brevity and context for reloading (including
-  the "Context Loading Prompt"), is documented.
-- The storage location within the current release's `sessions/` directory is specified.
-- The purpose is focused on context saving/reloading, distinct from deeper analytical reflections handled by
-  other workflows (e.g., `create-retrospective-document.md`).
+- Compact session log created with all essential information
+- Clear instructions for resuming work
+- File saved in appropriate location
+- Context sufficient to continue without confusion
+- Next steps explicitly defined
 
-## Additional Prerequisites
+## Usage Example
+> "Create a session log - we've been working on the OAuth implementation and I need to switch contexts"
 
-- An active development session with recent interactions.
-- A defined current release directory (`dev-taskflow/current/{release_dir}/`).
+---
+
+This workflow enables efficient context preservation and restoration, critical for managing complex development work across sessions or token limits.
