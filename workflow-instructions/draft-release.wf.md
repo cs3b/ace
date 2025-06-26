@@ -11,8 +11,10 @@ user-provided release scope into actionable tasks.
 
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project’s version file.
-14 | * Familiarity with the task writing standards and template structure (see
-15 |   [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)).
+* Familiarity with the task writing standards and template structure (see
+  [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)).
+* Access to the `dev-taskflow/` and `dev-handbook/` directories.
+* The `bin/tnid` command is available and functional for generating task IDs.
 
 ## Process Steps
 
@@ -44,21 +46,20 @@ user-provided release scope into actionable tasks.
      * Release title, goals, and **Collected Notes** section containing the raw user input.
      * Initial high-level implementation plan (checkbox list) to be refined later.
 
-47 | 5. **Break Down Scope Into Tasks**
-48 |    * Use the [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+5. **Break Down Scope Into Tasks**
+   * Use the [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
      if the raw notes are lengthy or unstructured.
-
-* For each distinct item in the (possibly refined) user input:
-     1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
-     2. Create a new file in the appropriate subdirectory of `dev-taskflow/backlog/v.X.Y.Z-codename/`
+   * For each distinct item in the (possibly refined) user input:
+     a. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
+     b. Create a new file in the appropriate subdirectory of `dev-taskflow/backlog/v.X.Y.Z-codename/`
         (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from
         `dev-handbook/guides/draft-release/v.x.x.x/[template-family]/_template.md`.
-     3. Replace placeholder fields:
+     c. Replace placeholder fields:
         * `id`: Use `bin/tnid v.X.Y.Z` (where `v.X.Y.Z` is the specific version of the current release being
           prepared) to generate the next task ID in the format `v.X.Y.Z+task.<sequential_number>`.
         * `status`: `pending`
         * Title and content derived from the user note.
-     4. In the original user note (file or pasted text), append a comment with the created task id for
+     d. In the original user note (file or pasted text), append a comment with the created task id for
         traceability.
 
 6. **Ensure Completeness**
@@ -76,7 +77,12 @@ user-provided release scope into actionable tasks.
      "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
-8. **Prepare Commit Message (Do NOT Execute)**
+8. **Validate Directory Structure**
+   * Verify all required directories were created successfully.
+   * Confirm the overview file exists and contains the correct version/codename.
+   * Check that task files have proper IDs and are properly formatted.
+
+9. **Prepare Commit Message (Do NOT Execute)**
    * Output the following command **verbatim** for the user's convenience, ensuring `v.X.Y.Z` is the specific
      version:
 
@@ -86,7 +92,7 @@ user-provided release scope into actionable tasks.
 
    * Do **not** run the command automatically.
 
-9. **Review With User**
+10. **Review With User**
    * List all newly created files and their ids.
    * Ask the user to confirm or adjust:
      * Version and codename
@@ -110,12 +116,12 @@ user-provided release scope into actionable tasks.
 
 ## Reference Documentation
 
-100 | *[Draft Release Templates](dev-handbook/guides/draft-release/README.md)
-101 |* [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
-102 | *[Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)
-103 |* [Project Management Guide](dev-handbook/guides/project-management.g.md)
-104 | *[Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md)
-105 |* [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+* [Draft Release Templates](dev-handbook/guides/draft-release/README.md)
+* [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+* [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)
+* [Project Management Guide](dev-handbook/guides/project-management.g.md)
+* [Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md)
+* [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
 
 ## Usage Example
 >
