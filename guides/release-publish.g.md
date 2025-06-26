@@ -368,8 +368,6 @@ Track key metrics to improve the release process:
 
 ## Related Documentation
 
-- [Changelog Guide](./changelog.g.md) (Changelog writing standards)
 - [Version Control Guide](./version-control-system.g.md) (Git workflow and tagging)
 - [Project Management Guide](./project-management.g.md) (Task and release coordination)
-- [Publish Release Workflow](../workflow-instructions/publish-release.wf.md) (Step-by-step execution)
 - [Quality Assurance Guide](./quality-assurance.g.md) (Release validation standards)

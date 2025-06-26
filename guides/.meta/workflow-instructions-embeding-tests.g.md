@@ -8,14 +8,16 @@ automated tasks.
 
 Embedding tests directly into workflow instructions allows an AI agent to:
 
-- Verify pre-conditions before starting complex operations.
-- Validate the outcome of individual actions or tool uses.
-- Confirm that a series of steps achieved the desired overall result.
-- Request user verification for subjective or critical outputs.
-- Ensure adherence to safety guardrails and compliance requirements.
+- Verify pre-conditions before starting complex operations
+- Validate the outcome of individual actions or tool uses
+- Confirm that a series of steps achieved the desired overall result
+- Request user verification for subjective or critical outputs
+- Ensure adherence to safety guardrails and compliance requirements
+- Support self-contained workflow execution without external test files
 
 This immediate feedback loop helps catch errors early, reduces the need for extensive manual checking,
-and improves automated processes.
+and improves automated processes. In the context of self-contained workflows, embedded tests are
+essential for validation without external dependencies.
 
 ## Test Categories
 
@@ -108,6 +110,25 @@ The AI agent should:
       workflow, then await user guidance.
 5. **Log:** Record all test executions and their outcomes.
 
+## Integration with Self-Contained Workflows
+
+Embedded tests are crucial for maintaining workflow independence:
+
+1. **No External Test Scripts**: Tests should be defined inline rather than referencing external test files
+2. **Self-Validating Steps**: Each major step can include its own validation
+3. **Context-Aware Testing**: Tests can reference files loaded in the Project Context Loading section
+4. **Technology-Agnostic Commands**: Use placeholder commands that can be adapted to different stacks
+
+### Example: Self-Contained Test in Planning Step
+```markdown
+### Planning Steps
+* [ ] Review dependency analysis findings
+  > TEST: Analysis Review Complete
+  > Type: Pre-condition Check
+  > Assert: Dependency analysis results are incorporated into refactoring plan
+  > Command: grep -l "dependency" workflow-independence-plan.md
+```
+
 ## Examples
 
 ### Simple, Fast Feedback Tests
@@ -197,7 +218,33 @@ This script would provide a consistent interface for checks like:
 - Environment variable is set (`--check-env-var-set <VAR_NAME>`)
 - Arbitrary command execution and exit code checking (`--exec "your command here" --expect-exit-code <N>`)
 
-Using `bin/test` promotes consistency and simplifies the `Command:` field in workflow files.
+**Note**: In self-contained workflows, test commands should be generic placeholders when `bin/test`
+isn't available, with comments showing language-specific alternatives:
+
+```markdown
+> TEST: Version File Updated
+> Type: Action Validation
+> Assert: Version number updated in project files
+> Command: grep "version.*X.Y.Z" package.json || grep "version.*X.Y.Z" Cargo.toml || grep "VERSION.*X.Y.Z" setup.py
+```
+
+## Best Practices for Embedded Tests
+
+### In Self-Contained Workflows
+
+1. **Embed Test Logic**: Include test commands directly rather than referencing external test suites
+2. **Use Generic Patterns**: Write tests that can work across different technology stacks
+3. **Provide Alternatives**: Show multiple command options for different environments
+4. **Keep Tests Simple**: Focus on existence checks and pattern matching
+5. **Document Expected Output**: Be clear about what constitutes success
+
+### Example: Technology-Agnostic Test
+```markdown
+> TEST: Project Tests Pass
+> Type: Post-condition Check
+> Assert: All project tests pass successfully
+> Command: bin/test || npm test || bundle exec rspec || pytest || cargo test
+```
 
 By adopting this standard, AI agent workflows can become significantly more reliable and easier to debug, leading
-to more efficient and trustworthy automation.
+to more efficient and trustworthy automation, while maintaining complete independence from external resources.

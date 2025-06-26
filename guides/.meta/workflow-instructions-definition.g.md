@@ -7,62 +7,153 @@ This guide explains how to create and structure the Markdown-based workflow inst
 ## Core Principles
 
 1.  **Clarity & Specificity**: Instructions should be unambiguous. Use clear action verbs and define expected inputs and outputs precisely. Avoid vague language.
-2.  **Context is Key**: Assume the AI might not have the full immediate context. Reference relevant guides (e.g., [Coding Standards](dev-handbook/guides/coding-standards.g.md)), project documents ([What We Build](docs/what-do-we-build.md), [Architecture](docs/architecture.md), [Blueprint](docs/blueprint.md)), or existing code patterns using root-relative paths.
-3.  **Structured Format**: Use Markdown sections (like `## Goal`, `## Process Steps`, `## Success Criteria`) to organize the instruction logically. This helps both humans and AI parse the information.
-4.  **Focus**: Each workflow instruction should address a single, well-defined process or goal. Break down complex workflows into smaller, composable instructions if possible.
-5.  **Examples**: Provide concrete examples of inputs, outputs, or expected results, especially for complex instructions. Few-shot learning helps the AI understand the desired format and behavior.
-6.  **Planning Before Prompting**: Just like coding, plan the workflow instruction before writing it. Define the goal, the steps involved, the necessary inputs, and how to measure success.
+2.  **Self-Containment**: Each workflow should be independently executable without requiring external references. Embed all necessary templates, examples, and context directly within the workflow.
+3.  **Context Loading**: Include a `## Project Context Loading` section that lists specific files an AI agent should load before executing the workflow. This replaces the need for cross-workflow dependencies.
+4.  **Structured Format**: Use consistent Markdown sections:
+    - `## Goal` - Clear objective statement
+    - `## Prerequisites` - Required conditions
+    - `## Project Context Loading` - Files to load
+    - `## High-Level Execution Plan` - Planning and execution phases with checkboxes
+    - `## Process Steps` - Detailed implementation steps
+    - `## Success Criteria` - Validation points
+5.  **Embedded Content**: Instead of referencing external templates or guides, embed the essential content directly. This includes:
+    - Template structures
+    - Example commands
+    - Common patterns
+    - Format specifications
+6.  **Focus**: Each workflow instruction should address a single, well-defined process or goal. Complex workflows should still be self-contained rather than split into sub-workflows.
+7.  **Examples**: Provide concrete examples of inputs, outputs, or expected results inline. Embed template content rather than referencing external files.
+8.  **Planning Before Execution**: Include a high-level execution plan with planning and execution phases, using checkboxes for task tracking during workflow execution.
 
 ## Handling Technology-Specific Content
 
-Workflow instructions should aim to be technology-agnostic, describing the *process* rather than embedding specific commands, file names, or paths for every language or tool.
+Workflow instructions should be self-contained while remaining practical across different technology stacks. This is achieved through embedded examples and patterns rather than external references.
 
-If you encounter technology-specific details (like exact commands for RSpec, specific file names such as `Cargo.toml` or `package.json`, or typical paths like `lib/your_gem/version.rb`) within a workflow instruction during review or refactoring:
+### Embedding Technology Examples
 
-1.  **Prioritize Merging into Main Guides:** The preferred approach is to move these specific details into the relevant existing language-specific *guide* located in `dev-handbook/guides/` (e.g., add RSpec examples to `dev-handbook/guides/testing/ruby-rspec.md`, list `Cargo.toml` as the version file in `dev-handbook/guides/release-publish/rust.md`). In the workflow instruction, replace the removed specifics with a generic description (e.g., "run your project's test suite", "update the language-specific version file") and add a clear reference to the main guide or language-specific sub-guide where the concrete details can be found.
-2.  **Fallback: Create Sub-Instructions:** If the technology-specific content is substantial, highly specific to the workflow's context, and doesn't fit naturally into any of the main guides, you can create language-specific *sub-instructions*. Place these in a sub-directory named after the main instruction (e.g., `dev-handbook/workflow-instructions/fix-tests/ruby.md`). The main workflow instruction should then link to these sub-instructions for the technology-specific steps.
+When dealing with technology-specific content:
 
-This approach keeps the core workflow instructions clean and focused on the process, while ensuring that technology-specific details (commands, file names, paths) are available and maintainable in the appropriate guides or sub-instructions.
+1. **Embed Common Examples**: Include examples for multiple common technologies directly in the workflow:
+   ```markdown
+   ### Common Test Commands
+   - Ruby: `bundle exec rspec`
+   - Node.js: `npm test`
+   - Python: `pytest`
+   - Rust: `cargo test`
+   ```
+
+2. **Use Inline Pattern Sections**: Create sections that show patterns for different stacks:
+   ```markdown
+   ### Version File Locations
+   - Node.js: `package.json`
+   - Ruby: `*.gemspec` or `lib/*/version.rb`
+   - Python: `setup.py` or `pyproject.toml`
+   - Rust: `Cargo.toml`
+   ```
+
+3. **Provide Template Adaptations**: When embedding templates, show variations:
+   ```markdown
+   ### Build Commands
+   ```bash
+   # TODO: Replace with project-specific build command
+   # Examples:
+   # - Ruby: bundle install
+   # - Node.js: npm install && npm run build
+   # - Python: pip install -r requirements.txt
+   # - Rust: cargo build --release
+   ```
+   ```
+
+This approach ensures workflows remain self-contained and immediately usable without external lookups, while providing practical guidance for different technology stacks.
 
 ## Standard Workflow Instruction Structure
 
-While the exact sections may vary slightly depending on the instruction's purpose, aim for a structure similar to this:
+All workflow instructions should follow this standardized structure for consistency and self-containment:
 
 ```markdown
-# [Workflow Instruction Name] Workflow Instruction (e.g., lets-commit)
+# [Workflow Name] Workflow Instruction
 
 ## Goal
-*   Clearly state the primary objective of this workflow instruction. What problem does it solve or what process does it facilitate?
 
-## Prerequisites (Optional)
-*   List any conditions that must be met or other workflow instructions that should be run *before* this one.
-*   Mention required tools, environment setup, or specific project state.
+Clearly state the primary objective of this workflow. What problem does it solve or what process does it facilitate?
+
+## Prerequisites
+
+- List any conditions that must be met before starting
+- Required tools, permissions, or project state
+- Do NOT reference other workflows that must be run first
+
+## Project Context Loading
+
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture: `docs/architecture.md`  
+* Load current release: `dev-taskflow/current/*/`
+* [Other specific files relevant to this workflow]
+
+## High-Level Execution Plan
+
+### Planning Phase
+* [ ] [Planning step 1]
+* [ ] [Planning step 2]
+* [ ] [Planning step 3]
+
+### Execution Phase
+- [ ] [Execution step 1]
+- [ ] [Execution step 2]
+- [ ] [Execution step 3]
 
 ## Process Steps
-*   Outline the sequence of actions the AI agent (guided by the user) should take.
-*   Use numbered or bulleted lists for clarity.
-*   Be specific about actions, inputs, and expected intermediate results.
-*   Reference other guides or commands where necessary (e.g., "Refer to the [Version Control Guide](dev-handbook/guides/version-control-system.g.md) for commit message format").
 
-## Input (If applicable)
-*   Specify the required inputs for the instruction (e.g., file paths, user confirmation, specific data).
+1. **Step Name**: Detailed description
+   * Sub-steps with specific actions
+   * Embed any necessary templates or examples here
+   * Include commands inline rather than referencing external docs
+   
+2. **Step Name**: Next major step
+   ```bash
+   # Example commands embedded directly
+   bin/test
+   bin/lint
+   ```
 
-## Output / Success Criteria
-*   Define what constitutes successful completion of the workflow instruction.
-*   Describe the expected output state, artifacts created, or changes made.
-*   Use simple bullet lists for concrete verification steps.
+## Embedded Templates
 
-Example:
-- All specified files are created in correct locations
-- Configuration changes are properly applied
-- Tests pass successfully
-- Documentation reflects all changes made
+### Template Name
+```markdown
+[Complete template content embedded here]
+[No external references]
+```
 
-## Reference Documentation (Optional)
-*   List relevant guides or project documents that provide additional context using root-relative paths.
+### Another Template
+```yaml
+[Full template structure]
+[All fields documented]
+```
 
-## Usage Example (Optional)
-*   Provide a conceptual example of how the command might be invoked or used in a typical scenario.
+## Success Criteria
+
+- Clear, verifiable outcomes listed as simple bullets
+- No checkboxes in success criteria
+- Focus on what should exist or be true after completion
+- Each criterion should be objectively verifiable
+
+## Common Patterns
+
+### Pattern 1
+[Description and example embedded]
+
+### Pattern 2
+[Description and example embedded]
+
+## Best Practices
+
+**DO:**
+- [Specific practices for this workflow]
+- [Common successful approaches]
+
+**DON'T:**
+- [Common pitfalls to avoid]
+- [Anti-patterns specific to this workflow]
 ```
 
 ## File Naming Convention
@@ -91,20 +182,53 @@ This naming distinction helps both humans and AI agents quickly identify whether
 
 ## Examples from This Project
 
-Review existing workflow instructions in `dev-handbook/workflow-instructions/` like:
-*   `dev-handbook/workflow-instructions/load-env.wf.md`: Focuses on context gathering.
-*   `dev-handbook/workflow-instructions/breakdown-notes-into-tasks/from-pr-comments-api.md`: Complex process with specific inputs (fetched comments) and outputs (structured tasks).
-*   `dev-handbook/workflow-instructions/commit.wf.md`: Guides a specific, common developer action referencing external standards.
+Review these refactored workflow instructions that demonstrate self-containment principles:
+
+### Context Loading Example
+`dev-handbook/workflow-instructions/load-project-context.wf.md` (formerly load-env.wf.md):
+- Includes explicit file loading instructions
+- No external workflow dependencies
+- Clear context gathering steps
+
+### Embedded Templates Example
+`dev-handbook/workflow-instructions/initialize-project-structure.wf.md`:
+- Contains complete PRD, README, and architecture templates
+- Embeds all binstub scripts
+- Includes full v.0.0.0 release structure
+
+### Simplified Process Example
+`dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md`:
+- Unified approach for all input types
+- Embedded task template
+- No sub-workflow dependencies
+
+### Command Reference Example
+`dev-handbook/workflow-instructions/publish-release.wf.md`:
+- Embeds package registry commands for all major platforms
+- Includes changelog format specification
+- Contains complete release process without external references
+
+## Key Refactoring Principles
+
+When refactoring workflows for independence:
+
+1. **Embed, Don't Reference**: Copy essential content from guides into workflows
+2. **Explicit Context Loading**: List specific files to load at the start
+3. **Include All Templates**: Embed complete templates rather than referencing them
+4. **Provide Multiple Examples**: Show patterns for different technology stacks
+5. **Self-Contained Commands**: Include full command examples inline
+6. **Remove Cross-Dependencies**: No workflow should require another workflow to run first
 
 ## See Also
 
-- [Embedding Tests in AI Agent Workflows](dev-handbook/guides/.meta/workflow-embedding-tests.g.md)
+- [Embedding Tests in AI Agent Workflows](dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md)
 
 ## Writing Style Tips
 
 *   **Use Action Verbs:** Start steps with clear verbs (e.g., "Create", "Update", "Verify", "Parse", "Generate").
 *   **Be Concise:** Avoid unnecessary jargon or overly long explanations.
-*   **Reference Explicitly:** Use root-relative paths to files or other instructions where possible (e.g., `[Coding Standards](dev-handbook/guides/coding-standards.g.md)`, `[Load Environment Workflow](dev-handbook/workflow-instructions/load-env.wf.md)`), **not** file-relative paths (e.g., `../guides/coding-standards.g.md`).
+*   **Embed Content:** Instead of referencing external guides or templates, embed the essential content directly in the workflow. This ensures self-containment.
+*   **List Context Files:** In the Project Context Loading section, use root-relative paths to list files the AI should load before starting (e.g., `docs/architecture.md`, `dev-taskflow/current/*/`).
 *   **Treat AI as a "Junior Developer":** Provide clear, step-by-step guidance, but also reference established project standards and expect the AI to follow them once pointed to them. Avoid ambiguity.
 
 ## List Formatting in Workflows
@@ -189,6 +313,40 @@ Tasks should include execution steps formatted like this:
 - Serve as verification criteria to confirm completion
 - Help users and agents validate the workflow outcome
 - Never use interactive checkboxes
+
+## Workflow Independence Principles
+
+### Self-Containment Requirements
+
+Every workflow must be independently executable:
+
+1. **No Cross-Workflow Dependencies**: Never require another workflow to be run first. Instead, list prerequisites as conditions that should exist.
+
+2. **Embedded Essential Content**: Include all necessary information within the workflow:
+   - Template structures
+   - Command examples
+   - Format specifications
+   - Common patterns
+
+3. **Explicit Context Loading**: Replace implicit dependencies with explicit file loading:
+   ```markdown
+   ## Project Context Loading
+   * Load project structure: `docs/blueprint.md`
+   * Load current tasks: `dev-taskflow/current/*/tasks/*.md`
+   * Check existing PRD: `PRD.md` or `README.md`
+   ```
+
+4. **Complete Process Coverage**: Ensure the workflow contains everything needed from start to finish without external lookups.
+
+### Migration from Dependent to Independent
+
+When refactoring existing workflows:
+
+1. **Identify External References**: Find all links to guides, templates, or other workflows
+2. **Extract Essential Content**: Copy the necessary information into the workflow
+3. **Convert Prerequisites**: Change "Run X workflow first" to "Ensure Y exists"
+4. **Embed Templates**: Include complete template content rather than linking
+5. **Add Context Loading**: List specific files to load at the beginning
 
 **Process Steps:**
 - Should be numbered for sequential execution
