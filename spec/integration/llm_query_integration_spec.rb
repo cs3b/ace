@@ -799,6 +799,17 @@ RSpec.describe "llm-query integration", type: :integration do
           File.delete(output_file) if File.exist?(output_file)
         end
       end
+
+      it "blocks writing to a denied path even when --force is used" do
+        denied_path = "/etc/test_denied.txt"
+
+        _, stderr, status = execute_gem_executable(exe_name,
+          ["google", "test prompt", "--output", denied_path, "--force"],
+          env: {"GOOGLE_API_KEY" => google_api_key})
+
+        expect(status.exitstatus).to eq(1)
+        expect(stderr).to match(/Path validation failed|denied pattern/i)
+      end
     end
 
     describe "file overwrite protection" do
