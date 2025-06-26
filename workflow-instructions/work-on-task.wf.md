@@ -1,88 +1,234 @@
 # Work on Task Workflow Instruction
 
-**Goal:** Initiate and guide the step-by-step implementation of a specific task, using the detailed plan embedded
-directly within the task's definition file (`NN-task-name.md`).
+**Goal:** Initiate and guide the step-by-step implementation of a specific task, using the detailed plan embedded directly within the task's definition file.
 
-**Prerequisites:**
+## Prerequisites
 
-* **Load Project-Specific Context:**
- - Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
- - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
- - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
+* Task file selected with embedded implementation plan
+* Understanding of the task format and structure
+* Access to project files and tools
+
+## Project Context Loading
+
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
 
 ## Process Steps
 
 1. **Select Task File:**
-    * Identify the current release directory path (from `load-env`).
-    * List available tasks: `ls -1 dev-taskflow/current/{release_dir}/tasks/*.md`
-    * Review task details as needed (`cat ...`). Check `status`, `priority`, and `dependencies`.
-    * **User Action:** Choose the specific task `.md` file to work on (typically `status: pending` with met
-      `dependencies`). Provide the full path to this file.
+   * Identify the current release directory:
+     ```bash
+     # Find current release directory
+     ls -1 dev-taskflow/current/
+     ```
+   * List available tasks:
+     ```bash
+     ls -1 dev-taskflow/current/*/tasks/*.md
+     ```
+   * Review task metadata to select appropriate task:
+     - Check `status: pending` (not yet started)
+     - Verify `dependencies: []` are met
+     - Consider `priority: high/medium/low`
+   * Provide the full path to the selected task file
 
 2. **Load Task & Validate Plan:**
-    * Load the content of the selected task `.md` file.
-    * **Verify Embedded Plan:**
-        * Confirm the presence of the required implementation plan section (e.g., `## Implementation Plan`).
-        * Check that this section contains a list of actionable steps formatted as Markdown checklist items
-          (`- [ ] ...`).
-        * If the plan is missing or incorrectly formatted, STOP and report the issue. The task file needs correction
-          according to `write-actionable-task.md`.
-    * **Review High-Level Goal:** Briefly review the task's main Objective/Description to ensure alignment before
-      execution.
+   * Load the content of the selected task `.md` file
+   * **Verify Task Structure:**
+     ```markdown
+     ---
+     id: v.X.Y.Z+task.N
+     status: [pending | in-progress | done | blocked]
+     priority: [high | medium | low]
+     estimate: Nh
+     dependencies: []
+     ---
+     
+     # Task Title
+     
+     ## Implementation Plan
+     ### Planning Steps
+     * [ ] Research/analysis steps (asterisk markers)
+     ### Execution Steps  
+     - [ ] Implementation actions (hyphen markers)
+     ```
+   * If structure is invalid, STOP and report the issue
+   * Review the task's Objective to ensure understanding
 
-3. **Load Context:**
-    * Identify relevant project context needed for execution:
-        * **General Guides:** (e.g., `dev-handbook/guides/coding-standards.g.md`, `dev-handbook/guides/testing.g.md`,
-           These might be standard context or explicitly mentioned in the task file.
-        * **Specific Code Files:** Identify key files/modules likely to be modified based on the embedded plan
-          (if listed in the task file or inferable).
-    * **AI Action:** Ensure this context (guides, relevant code snippets) is loaded and considered during
-      execution.
+3. **Update Task Status:**
+   * Change task status from `pending` to `in-progress`:
+     ```yaml
+     status: in-progress
+     ```
+   * Save the updated task file
 
 4. **Execute Task Plan Step-by-Step:**
-    * Focus on the checklist items (`- [ ] ...`) and any associated embedded test blocks (`> TEST: ...`,
-      `> VERIFY: ...`) within the task file's `## Implementation Plan` section.
-    * **Iterate through Checklist:** For each `- [ ]` item:
-        1. **Perform Action:** Execute the primary action described by the checklist item.
-        2. **Execute Embedded Tests/Verifications:**
-            * After performing the action, check for any `> TEST:` or `> VERIFY:` blocks associated with the current
-              checklist item (e.g., these blocks might be immediately following the checklist item, or indented
-              under it).
-            * **Handle Outcomes:**
-                * **Pass:** If all associated embedded tests pass (or user verification is positive), proceed to the
-                  next step for this checklist item.
-                * **Fail:** If any automated test fails, or user verification is negative/abortive, STOP processing
-                  the current checklist item. Report the failure (including test name, assertion, command output if
-                  any, and the failing checklist item) to the user and await further instructions. Do NOT mark the
-                  checklist item as complete.
-        3. **Follow Task Cycle Principles (for code changes):** If the primary action of the checklist item involved
-           writing or modifying code that creates new functionality or behaviors (and this was not already covered by
-           an embedded test that, for example, ran a full test suite for the component), consider following the
-           [Implementing the Task Cycle Guide](dev-handbook/guides/testing-tdd-cycle.g.md) principles
-           (Test -> Code -> Refactor -> Verify) for that specific code. This applies more to traditional
-           unit/integration testing of the software components being built or modified.
-        4. **Update Checklist:** Only after the primary action is complete AND all associated embedded
-           tests/verifications pass, update its status in the task file: `- [x] Action description...`
-    * Continue until all checklist items in the plan are marked `- [x]`.
+   * Process each checklist item in order:
+   
+   **For Planning Steps (`* [ ]`):**
+   - Execute research, analysis, or design work
+   - Document findings inline or in separate files
+   - Check for embedded tests:
+     ```markdown
+     * [ ] Research step
+       > TEST: Pre-condition Check
+       > Type: Pre-condition Check
+       > Assert: What needs to be verified
+       > Command: bin/test --check-something
+     ```
+   
+   **For Execution Steps (`- [ ]`):**
+   - Implement the concrete action
+   - Follow coding standards (see embedded guidelines below)
+   - Check for embedded tests:
+     ```markdown
+     - [ ] Implementation step
+       > TEST: Action Validation
+       > Type: Action Validation
+       > Assert: Expected outcome
+       > Command: bin/test --verify-result
+     ```
+   
+   **Test Execution:**
+   - Run any embedded test commands
+   - If tests fail: STOP, report failure, await instructions
+   - Only mark item complete (`[x]`) after tests pass
 
-5. **Final Review & Status Update:**
-    * Review the completed work against the task's `## Acceptance Criteria`.
-    * Run final checks or tests as defined.
-    * Once satisfied, update the task file's `status:` field (e.g., to `done`).
-    * Perform a final commit.
+5. **Follow Coding Standards:**
+   When implementing code changes, follow these principles:
+   
+   **General Principles:**
+   - **Clarity**: Use meaningful names, keep functions focused
+   - **Consistency**: Follow established project patterns
+   - **Simplicity**: Avoid unnecessary complexity
+   - **DRY**: Abstract common logic into reusable components
+   - **Modularity**: Clear responsibilities, loose coupling
+   - **Testability**: Design for easy testing
+   
+   **Code Quality:**
+   - Use consistent indentation (2 spaces for Ruby)
+   - Limit line length (100-120 characters)
+   - Run linters/formatters before committing
+   - Write tests for new functionality
+   - Document public APIs and complex logic
+   
+   **Error Handling:**
+   - Use specific, informative error classes
+   - Provide context with errors
+   - Handle errors appropriately for the context
 
-## Reference Documentation
+6. **Handle Test Failures:**
+   If tests fail during implementation:
+   
+   **Immediate Actions:**
+   1. Stop processing the current step
+   2. Capture the error output
+   3. Report to user with:
+      - Test name and type
+      - Expected vs actual results
+      - Full error message
+      - Relevant code context
+   
+   **Diagnostic Steps:**
+   - Check test assumptions
+   - Verify environment setup
+   - Review recent changes
+   - Consider edge cases
+   
+   **Resolution Options:**
+   - Fix the implementation
+   - Update the test if requirements changed
+   - Mark task as blocked if external help needed
 
-* [Fix Tests Workflow](dev-handbook/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
-* [Temporary File Management Guidelines](dev-handbook/guides/temporary-file-management.g.md)
+7. **Final Review & Completion:**
+   * Review all completed checklist items
+   * Verify against Acceptance Criteria:
+     ```markdown
+     ## Acceptance Criteria
+     - [ ] All deliverables created/modified
+     - [ ] Key functionalities working
+     - [ ] All automated checks pass
+     ```
+   * Run final validation:
+     ```bash
+     # Run project tests
+     bin/test
+     
+     # Run linting
+     bin/lint
+     
+     # Build if applicable
+     bin/build
+     ```
+   * Update task status to `done`
+   * Commit all changes with descriptive message
+
+## Temporary File Management
+
+When working with temporary files:
+- Create in system temp directory or project-specific location
+- Use descriptive names with timestamps
+- Clean up after task completion
+- Never commit temporary files
+
+## Error Recovery
+
+**If workflow is interrupted:**
+1. Save all work in progress
+2. Document the current step and any issues
+3. Update task file with notes
+4. Commit partial progress if valuable
+
+**If blocked by dependencies:**
+1. Update task status to `blocked`
+2. Document the blocking issue
+3. Note required resolution
+4. Move to another task if possible
 
 ## Input
 
-* Full path to the selected task `.md` file containing an embedded implementation plan.
+* Full path to the selected task file containing embedded implementation plan
+* Task must have valid structure and implementation plan
 
 ## Output / Success Criteria
 
-* All checklist items (`- [ ]`) in the task file's implementation plan are completed and marked (`- [x]`).
-* The work passes the task's Acceptance Criteria.
-* The task file's status is updated (e.g., to `done`).
-* All changes are committed according to project standards.
+* All checklist items marked complete (`[x]`)
+* All embedded tests pass
+* Acceptance criteria met
+* Task status updated to `done`
+* Changes committed with appropriate message
+* Code follows project standards
+* Documentation updated as needed
+
+## Common Patterns
+
+### Task Selection Priority
+1. High priority pending tasks
+2. Tasks with met dependencies
+3. Tasks matching current skills/context
+4. Smaller tasks for quick wins
+
+### Commit Message Format
+```
+type(scope): description
+
+- Detail 1
+- Detail 2
+
+Refs: #task-id
+```
+
+Types: feat, fix, docs, style, refactor, test, chore
+
+### Test-Driven Development
+1. Write/run test first (if applicable)
+2. Implement minimal code to pass
+3. Refactor for quality
+4. Verify all tests still pass
+
+## Usage Example
+> "Work on task dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.3-refactor-workflows.md"
+
+---
+
+This workflow guides the systematic implementation of tasks, ensuring quality, traceability, and project consistency throughout the development process.

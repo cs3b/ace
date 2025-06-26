@@ -6,49 +6,236 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
 ## Prerequisites
 
-- Code changes have been implemented and tested.
-- Files related to a single logical change are ready to be staged.
-- Familiarity with the project's version control guidelines.
-
-Follow these steps to create well-structured commits.
-For detailed conventions and practical examples, first read [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+- Code changes have been implemented and tested
+- Files related to a single logical change are ready to be staged
+- Understanding of conventional commit format
 
 ## Process Steps
 
 1. **Review and Prepare Changes:**
-    - Review modified files (`git status`, `git diff`).
-    - Ensure new code has corresponding tests.
-    - Verify tests pass (using your project's standard test command, e.g., `your_test_runner_command`. See
-      `dev-handbook/guides/testing/<your_lang>.md` or `dev-handbook/guides/task-cycle/<your_lang>.md` for details).
-    - Check test coverage if applicable (using your project's standard coverage command,
-      e.g., `your_coverage_command`. See testing guides for details).
-    - Group related changes logically (e.g., feature implementation + tests + docs).
+   ```bash
+   # View current status
+   git status
+   
+   # Review unstaged changes
+   git diff
+   
+   # Review specific file changes
+   git diff path/to/file
+   ```
+   
+   **Validation checklist:**
+   - [ ] Changes relate to a single logical unit
+   - [ ] New code has corresponding tests
+   - [ ] All tests pass (`bin/test`)
+   - [ ] Code has been linted (`bin/lint`)
+   - [ ] No debugging code or temporary files included
 
-2. **Create Commit:**
-    - Stage *only* the related changes for this commit (`git add <files...>`).
-    - Review staged changes (`git diff --staged`).
-    - **Review AI Changes:** If changes were generated or assisted by AI, review them rigorously against
-      requirements and coding standards before proceeding. Check for correctness, edge cases, and adherence
-      to patterns.
-    - Write a clear conventional commit message (follow format in guide). Use `git commit`.
-    - Verify commit scope and content.
+2. **Stage Related Changes:**
+   ```bash
+   # Stage specific files
+   git add path/to/file1 path/to/file2
+   
+   # Stage all changes in a directory
+   git add path/to/directory/
+   
+   # Interactive staging for partial file changes
+   git add -p
+   ```
+   
+   **Review staged changes:**
+   ```bash
+   git diff --staged
+   ```
 
-3. **Follow Up:**
-    - Push changes when ready (`git push`).
-    - Update relevant project tracking (e.g., mark task as done in its `.md` file if applicable).
+3. **Write Conventional Commit Message:**
+   
+   **Format:**
+   ```
+   type(scope): subject
+   
+   [optional body]
+   
+   [optional footer(s)]
+   ```
+   
+   **Types:**
+   - `feat`: New feature
+   - `fix`: Bug fix
+   - `docs`: Documentation only
+   - `style`: Formatting, missing semicolons, etc.
+   - `refactor`: Code change that neither fixes nor adds feature
+   - `test`: Adding missing tests
+   - `chore`: Maintenance tasks, dependency updates
+   
+   **Examples:**
+   ```bash
+   # Simple commit
+   git commit -m "feat(auth): add password reset functionality"
+   
+   # Commit with body
+   git commit -m "fix(api): handle null values in user response
+   
+   - Add null checks for optional fields
+   - Update tests to cover edge cases
+   - Fix TypeScript types
+   
+   Fixes #123"
+   ```
+   
+   **Guidelines:**
+   - Subject line: 50 characters or less
+   - Use imperative mood ("add" not "added")
+   - Don't end subject with period
+   - Separate subject from body with blank line
+   - Body lines: 72 characters or less
+   - Reference issues/tasks when applicable
+
+4. **AI-Generated Code Review:**
+   If changes were AI-assisted:
+   - **Verify correctness**: Does it solve the intended problem?
+   - **Check edge cases**: Are all scenarios handled?
+   - **Review patterns**: Does it follow project conventions?
+   - **Security check**: No credentials or vulnerabilities?
+   - **Performance**: No obvious inefficiencies?
+
+5. **Create the Commit:**
+   ```bash
+   # Commit with editor for detailed message
+   git commit
+   
+   # Commit with inline message
+   git commit -m "type(scope): description"
+   
+   # Amend last commit if needed
+   git commit --amend
+   ```
+
+6. **Post-Commit Actions:**
+   - Update task status if commit completes a task:
+     ```yaml
+     status: done
+     ```
+   - Push when ready:
+     ```bash
+     git push origin branch-name
+     ```
+   - Update any related documentation
+
+## Commit Message Templates
+
+### Feature Implementation
+```
+feat(module): implement new functionality
+
+- Add main feature logic
+- Include comprehensive tests
+- Update documentation
+
+Implements #task-id
+```
+
+### Bug Fix
+```
+fix(component): resolve issue with data handling
+
+Root cause: Incorrect null check in process method
+Solution: Add proper validation before processing
+
+- Fix null pointer exception
+- Add test cases for edge scenarios
+- Update error messages
+
+Fixes #bug-id
+```
+
+### Refactoring
+```
+refactor(service): simplify request handling logic
+
+- Extract common patterns to helper methods
+- Reduce code duplication
+- Improve readability
+
+No functional changes
+```
+
+## Common Patterns
+
+### Atomic Commits
+Each commit should:
+- Represent one logical change
+- Be revertable without breaking functionality
+- Include all related changes (code, tests, docs)
+- Pass all tests independently
+
+### Interactive Staging
+For complex changes:
+```bash
+# Stage hunks interactively
+git add -p
+
+# Options:
+# y - stage this hunk
+# n - skip this hunk
+# s - split into smaller hunks
+# e - manually edit hunk
+```
+
+### Commit Series
+When implementing a feature across multiple commits:
+1. Infrastructure/setup commits first
+2. Core implementation commits
+3. Test commits
+4. Documentation commits
+5. Polish/cleanup commits
+
+## Error Handling
+
+**Accidentally committed to wrong branch:**
+```bash
+# Create new branch with current commits
+git branch new-branch
+
+# Reset current branch
+git reset --hard origin/main
+
+# Switch to new branch
+git checkout new-branch
+```
+
+**Need to modify last commit:**
+```bash
+# Add more changes
+git add files
+
+# Amend without changing message
+git commit --amend --no-edit
+
+# Or change the message too
+git commit --amend
+```
+
+**Committed sensitive data:**
+```bash
+# Remove from history (requires force push)
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch path/to/sensitive-file" \
+  --prune-empty --tag-name-filter cat -- --all
+```
 
 ## Output / Success Criteria
 
-- Related changes are staged (`git add`).
-- AI-generated changes (if any) are reviewed.
-- A single, atomic commit is created (`git commit`).
-- The commit message follows the conventional commit format outlined in the Version Control
-  Guide.
-- Project tracking (e.g., task `.md` status) is updated if the commit completes a task.
+- Changes are grouped logically into atomic commits
+- Each commit message follows conventional format
+- All commits pass tests independently
+- No temporary or debug code committed
+- Task status updated if applicable
+- Changes pushed to appropriate branch
 
-## Reference Guides
+## Usage Example
+> "I've finished implementing the user authentication feature. Help me commit these changes properly."
 
-- [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
-- [Documentation Guide](dev-handbook/guides/documentation.g.md)
-- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Task status updates)
-- [Testing Guides](dev-handbook/guides/testing)
+---
+
+This workflow ensures consistent, well-documented commits that maintain project history clarity and facilitate collaboration.

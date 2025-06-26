@@ -2,105 +2,294 @@
 
 ## Goal
 
-Systematically diagnose and fix failing automated tests (unit, integration, etc.) - focusing specifically on test failures
-rather than general application bugs.
+Systematically diagnose and fix failing automated tests (unit, integration, etc.) - focusing specifically on test failures rather than general application bugs.
 
 ## Prerequisites
 
-* **Load Project-Specific Context:**
-  - Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
-  - Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
-  - Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
+- Test suite has been run and failures have been identified
+- Access to test output (error messages, stack traces)
+- Development environment is set up correctly
+- Understanding of the project's testing approach
 
-* **Load Test-Specific Docs:**
-  - if working with tests that call real api (integration / vcr ) then read also [docs/dev-guides/testing-with-vcr.md](docs/dev-guides/testing-with-vcr.md)
+## Project Context Loading
 
-- Test suite has been run and failures have been identified.
-- Access to test output (error messages, stack traces).
-- Development environment is set up correctly (dependencies installed, services running if needed).
-
-A systematic approach to diagnose and fix failing tests - distinct from general bug fixing. This workflow focuses
-specifically on test failures, which often require specialized knowledge of testing frameworks and patterns. For
-detailed testing practices and framework info, see [Testing Guide](dev-handbook/guides/testing.g.md).
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
 
 ## When to Use This Workflow
 
-- When automated tests are failing in your test suite
-- When you need to systematically address test-specific issues
-- When failures are related to test setup, isolation, or execution
-- When test infrastructure needs repair
+**Use this workflow for:**
+- Automated tests failing in your test suite
+- Test-specific issues (setup, isolation, execution)
+- Test infrastructure problems
+- Flaky or intermittent test failures
 
-This workflow is NOT intended for:
-
-- Fixing general application bugs that aren't causing test failures
-- Feature development or implementation of new requirements
+**NOT for:**
+- General application bugs not causing test failures
+- Feature development or new requirements
 - Performance optimization unrelated to tests
 
 ## Process Steps
 
 1. **Initial Analysis:**
-    - Run the test suite (e.g., `bin/test --only-failures` from project root).
-    - Identify failing tests from the output.
-    - Gather error messages and stack traces.
+   ```bash
+   # Run full test suite
+   bin/test
+   
+   # Run only failing tests
+   bin/test --only-failures
+   
+   # Run with detailed output
+   bin/test --verbose
+   ```
+   
+   **Capture:**
+   - Failing test names and locations
+   - Error messages and stack traces
+   - Test execution time (for timeout issues)
+   - Pattern of failures (consistent vs intermittent)
 
 2. **Prioritize Failures:**
-    - Focus on unit tests first (usually faster to run and debug).
-    - Address integration tests next.
-    - Handle end-to-end tests last.
+   
+   **Priority order:**
+   1. **Unit tests** - Usually fastest to fix and run
+   2. **Integration tests** - May involve multiple components
+   3. **End-to-end tests** - Most complex, slowest to debug
+   
+   **Within each level, prioritize:**
+   - Tests blocking other work
+   - Tests with clear error messages
+   - Recently modified tests
+   - Core functionality tests
 
-3. **Fix and Verify:**
-    - Isolate one failure at a time. Run only the failing test or file (e.g.,
-      `bin/test --next-failure` or
-      `bin/test spec/path/to/failing_spec.rb:line_number` from project root).
-    - Analyze the code related to the failure.
-    - Implement a fix.
-    - Re-run the specific test to confirm it passes.
-    - Run the broader suite (e.g., the whole file or component) to check for unintended side effects.
-    - Document the root cause and fix if non-trivial (e.g., in commit message or code comments).
+3. **Isolate and Diagnose:**
+   
+   **Run specific test:**
+   ```bash
+   # Ruby/RSpec example
+   bin/test spec/path/to/failing_spec.rb:42
+   
+   # Run specific test by name pattern
+   bin/test --name "test_user_authentication"
+   
+   # Run next failure
+   bin/test --next-failure
+   ```
+   
+   **Common failure patterns:**
+   - **Assertion failures**: Expected vs actual mismatch
+   - **Setup errors**: Missing test data or configuration
+   - **Timeout errors**: Slow operations or deadlocks
+   - **Dependency errors**: Missing mocks or stubs
+   - **State pollution**: Tests affecting each other
 
-## Test-Specific Issues
+4. **Diagnose Root Cause:**
+   
+   **Environment Issues:**
+   ```bash
+   # Check language version
+   ruby -v
+   python --version
+   node -v
+   
+   # Verify dependencies
+   bundle install
+   npm install
+   pip install -r requirements.txt
+   
+   # Reset test database
+   bin/rails db:test:prepare
+   
+   # Clear caches
+   rm -rf tmp/*
+   rm -rf .pytest_cache
+   ```
+   
+   **Test Isolation Problems:**
+   - Check setup/teardown methods
+   - Verify database transactions/rollbacks
+   - Look for shared state between tests
+   - Review test execution order dependencies
+   
+   **Common Fixes:**
+   ```ruby
+   # Example: Ensure clean state
+   before(:each) do
+     DatabaseCleaner.clean
+     Rails.cache.clear
+   end
+   
+   # Example: Fix timing issues
+   it "processes asynchronously" do
+     perform_async_operation
+     wait_for { async_result }.to be_present
+   end
+   
+   # Example: Proper mocking
+   allow(ExternalService).to receive(:call).and_return(mock_response)
+   ```
 
-1. **Environment Setup:**
-    - Ensure correct language version (e.g., `ruby -v`).
-    - Verify dependencies are installed and up-to-date (`bundle install` from project root).
-    - If `bin/test` is not working, try running `bin/setup` from project root.
-    - Ask Review required environment variables or configuration files for correct settings, especially regarding authentication issues.
-    - Clear temporary files or caches if applicable (`rm -rf tmp/*`, `rake tmp:clear` from project root).
+5. **Implement Fix:**
+   
+   **Fix categories:**
+   - **Test code fix**: Update assertions, fix test logic
+   - **Application code fix**: Fix actual bug revealed by test
+   - **Test data fix**: Correct fixtures or factories
+   - **Infrastructure fix**: Update test helpers or configuration
+   
+   **Verification steps:**
+   1. Run the specific failing test
+   2. Run all tests in the same file
+   3. Run all tests in the same module/component
+   4. Run full test suite
 
-2. **Test Isolation:**
-    - Review test helper files (e.g., `spec/spec_helper.rb`).
-    - Check `before`/`after` hooks for proper setup and cleanup.
-    - Ensure mocks/stubs are correctly configured and reset between tests.
-    - Look for state leakage between tests.
+6. **Document and Commit:**
+   
+   **Document in commit message:**
+   ```
+   fix(tests): resolve flaky user authentication test
+   
+   - Add proper database cleanup in teardown
+   - Fix race condition in async callback
+   - Increase timeout for CI environment
+   
+   The test was failing intermittently due to database
+   state pollution from previous tests.
+   ```
+   
+   **Add code comments if needed:**
+   ```ruby
+   # IMPORTANT: This sleep is required because the external
+   # service has a rate limit. See issue #123
+   sleep 0.1
+   ```
 
-3. **External Dependencies:**
-    - Verify external services (databases, APIs) are running if needed for integration tests.
-    - Ensure network connectivity.
-    - Check API keys or credentials.
+## Common Test Issues and Solutions
 
-## Reference Documentation
+### 1. Database State Issues
+**Symptoms**: Tests pass individually but fail when run together
+**Solutions**:
+- Use database transactions
+- Implement proper cleanup in teardown
+- Check for hardcoded IDs
+- Use factories instead of fixtures
 
-- [Testing Guide](dev-handbook/guides/testing.g.md)
-- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+### 2. Time-Dependent Tests
+**Symptoms**: Tests fail at certain times or dates
+**Solutions**:
+- Mock time with tools like Timecop
+- Use relative dates instead of absolute
+- Set consistent timezone in tests
+
+### 3. External API Tests
+**Symptoms**: Tests fail due to network or API changes
+**Solutions**:
+- Use VCR or similar for recording/replaying
+- Mock external services
+- Use test doubles for APIs
+- Implement proper error handling
+
+### 4. Async/Concurrent Tests
+**Symptoms**: Intermittent failures, race conditions
+**Solutions**:
+- Add proper wait conditions
+- Use test helpers for async operations
+- Increase timeouts appropriately
+- Ensure proper synchronization
+
+### 5. Test Performance
+**Symptoms**: Tests timeout or run very slowly
+**Solutions**:
+- Profile slow tests
+- Use test data builders efficiently
+- Minimize database operations
+- Parallelize test execution
+
+## Testing Principles
+
+**Write Good Tests:**
+- **Isolated**: No dependencies between tests
+- **Repeatable**: Same result every time
+- **Self-validating**: Clear pass/fail
+- **Timely**: Run quickly
+- **Focused**: Test one thing
+
+**Test Organization:**
+- Group related tests logically
+- Use descriptive test names
+- Follow AAA pattern (Arrange, Act, Assert)
+- Keep tests DRY but readable
+
+**Debugging Techniques:**
+- Add debug output temporarily
+- Use debugger breakpoints
+- Examine test logs
+- Run tests in different orders
+- Binary search for problematic tests
 
 ## Output / Success Criteria
 
-1. **All Tests Pass:** The full test suite runs without failures (e.g., `bin/test`).
-2. **Targeted Fix:** The fix addresses the root cause of the test failure.
-3. **No Regressions:** The fix does not introduce new failures.
-4. **Quality Metrics:** Failing tests are addressed promptly; fixes are documented.
-5. **Learning:** The underlying cause of test failures is understood and documented to prevent similar issues.
+- All tests in the suite pass consistently
+- Root cause of failures understood and documented
+- No new test failures introduced
+- Test execution time remains reasonable
+- Fixes follow testing best practices
+- Knowledge captured for future reference
 
-## Relationship to Bug Fixing
+## Reference Patterns
 
-While this workflow shares some similarities with general bug fixing, it is specifically focused on test-related issues
-which often require:
+### RSpec (Ruby)
+```ruby
+RSpec.describe UserService do
+  let(:user) { create(:user) }
+  
+  before do
+    # Setup
+  end
+  
+  after do
+    # Cleanup
+  end
+  
+  it "performs expected behavior" do
+    result = UserService.call(user)
+    expect(result).to be_success
+  end
+end
+```
 
-- Specialized knowledge of testing frameworks and patterns
-- Understanding of test isolation and data dependencies
-- Familiarity with mocking, stubbing, and test doubles
-- Awareness of test infrastructure and execution environment
+### Jest (JavaScript)
+```javascript
+describe('UserService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  test('performs expected behavior', async () => {
+    const result = await UserService.call(mockUser);
+    expect(result.success).toBe(true);
+  });
+});
+```
 
-If the issue you're addressing is primarily an application bug that happens to be revealed by tests
-(rather than an issue with the tests themselves), consider following a more general bug-fixing
-approach after understanding the test failure.
+### pytest (Python)
+```python
+import pytest
+
+class TestUserService:
+    @pytest.fixture
+    def user(self):
+        return User(name="Test User")
+    
+    def test_performs_expected_behavior(self, user):
+        result = UserService.call(user)
+        assert result.success == True
+```
+
+## Usage Example
+> "The test suite is failing with 5 errors in the user authentication module. Help me fix these test failures."
+
+---
+
+This workflow provides a systematic approach to fixing test failures, emphasizing proper diagnosis, isolation, and sustainable solutions that maintain test suite health.
