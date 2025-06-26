@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.46
-status: obsolete
+status: done
 priority: none
 estimate: 0h
 dependencies: [v.0.2.0+task.45]
