@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-01-15
+last_reviewed: 2025-06-26
 status: draft
 ---
 
@@ -35,7 +35,6 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| v0.2.0  | "Synapse"                 | Q3 2025       | LLM Integration theme features.                                                           | R-LLM-1, R-LLM-2, R-LLM-3, R-LLM-4                                                                   |
 | v0.3.0  | "Forge"                   | Q3 2025       | Git Workflow Automation theme features.                                                   | R-GIT-1, R-GIT-2, R-GIT-3, R-GIT-4, R-GIT-5, R-GIT-6, R-GIT-7, R-GIT-8, R-GIT-9, R-GIT-10            |
 | v0.4.0  | "Conductor"               | Q3 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
 | v0.5.0  | "Pathfinder"              | Q4 2025       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
@@ -58,6 +57,7 @@ _Note: Release planning should align with project folder structure in `docs-proj
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-06-26 | Removed completed v0.2.0-synapse from planned releases.                        | AI Assistant   |
 | 2025-01-15 | Added v.0.2.0-synapse release to backlog with concrete task breakdown.         | AI Assistant   |
 | 2025-06-06 | Removed completed v0.1.0 Foundation from planned releases.                     | AI Assistant   |
 | 2025-06-02 | Added v0.1.0 Foundation release with concrete task breakdown to backlog.        | AI Assistant   |
