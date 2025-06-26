@@ -320,6 +320,116 @@ grep -r "AIza" spec/cassettes/                 # Should be empty (Google API key
 grep -r "<GEMINI_API_KEY>" spec/cassettes/     # Should show filtered keys
 ```
 
+## Cassette Size Optimization
+
+### Automatic Response Filtering
+
+VCR is configured to automatically optimize large responses that aren't essential for test functionality. This is particularly important for tests that trigger auxiliary data fetching.
+
+#### Model Pricing Data Optimization
+
+The VCR configuration includes a `before_record` hook that automatically replaces large model pricing responses with minimal fixtures:
+
+```ruby
+# In spec/support/vcr.rb
+config.before_record do |interaction|
+  # Optimize model pricing data for syntax tests that don't need full pricing information
+  if interaction.request.uri.include?("model_prices_and_context_window.json")
+    # Replace massive pricing response (~555KB) with minimal fixture
+    minimal_pricing_data = {
+      "gemini-2.0-flash-lite" => {
+        "max_tokens" => 8192,
+        "max_input_tokens" => 1000000,
+        "max_output_tokens" => 8192,
+        "input_cost_per_token" => 0.000001,
+        "output_cost_per_token" => 0.000002,
+        "litellm_provider" => "gemini",
+        "mode" => "chat"
+        # ... essential fields only
+      }
+    }
+    
+    interaction.response.body = JSON.generate(minimal_pricing_data)
+    # Update content-length header to match
+    if interaction.response.headers["Content-Length"]
+      interaction.response.headers["Content-Length"] = [interaction.response.body.bytesize.to_s]
+    end
+  end
+end
+```
+
+#### Benefits of Response Filtering
+
+- **Dramatic size reduction**: Cassettes reduced from 595KB to 2.6KB (99.6% improvement)
+- **Faster test execution**: 73% speed improvement (1.17s → 0.31s)
+- **Maintained functionality**: Tests continue to validate intended behavior
+- **Automatic optimization**: No manual intervention required for future cassettes
+
+#### When to Use Response Filtering
+
+Consider implementing response filtering for:
+
+1. **Large auxiliary data responses** (>100KB) that aren't core to test validation
+2. **Frequently downloaded reference data** (model lists, pricing, metadata)
+3. **Tests focused on syntax/parsing** rather than data accuracy
+4. **Performance-critical test suites** where speed matters
+
+#### Implementing Custom Filtering
+
+To add filtering for other large responses:
+
+```ruby
+# Add to the before_record hook in spec/support/vcr.rb
+config.before_record do |interaction|
+  # Existing optimizations...
+  
+  # Example: Filter large model list responses
+  if interaction.request.uri.include?("models/list") && 
+     interaction.response.body.bytesize > 50_000
+    # Replace with minimal model list
+    minimal_models = {
+      "models" => [
+        {"id" => "test-model", "name" => "Test Model"},
+        # ... essential models only
+      ]
+    }
+    interaction.response.body = JSON.generate(minimal_models)
+  end
+end
+```
+
+### Monitoring Cassette Sizes
+
+Use the built-in linter to regularly monitor cassette sizes:
+
+```bash
+# Check for cassettes larger than 50KB (default threshold)
+bin/lint-cassettes
+
+# Use custom threshold (e.g., 25KB)
+bin/lint-cassettes --threshold 25
+
+# Example output for large cassettes:
+# ⚠️  Found 2 large cassette(s):
+# 1. spec/cassettes/large_test.json
+#    Size: 120.5KB (141.0% over threshold)
+#    Recommendation: Consider VCR response filtering optimization
+```
+
+Manual monitoring commands:
+
+```bash
+# Find large cassettes (>50KB)
+find spec/cassettes -name "*.json" -size +50k -ls
+
+# Check total cassette directory size
+du -sh spec/cassettes/
+
+# Analyze specific cassette content
+ls -lh spec/cassettes/path/to/large_cassette.json
+head -100 spec/cassettes/path/to/large_cassette.json
+```
+
 ## Best Practices
 
 ### Development Workflow
@@ -329,6 +439,7 @@ grep -r "<GEMINI_API_KEY>" spec/cassettes/     # Should show filtered keys
 3. **Review cassettes before committing** to ensure no sensitive data leaked
 4. **Use descriptive test names** - they become cassette filenames
 5. **Keep tests focused** - one API interaction per test when possible
+6. **Monitor cassette sizes** - watch for unexpectedly large files that may need optimization
 
 ### Integration Test Performance
 
@@ -419,6 +530,17 @@ When integration tests are unexpectedly slow or failing:
      test_name: 0.32 seconds   # ✅ Using VCR cassettes
    ```
 
+5. **Cassette size indicators**:
+   ```bash
+   # Large cassettes may indicate missing optimization opportunities
+   find spec/cassettes -name "*.json" -size +100k  # Should be rare
+   
+   # Specific cassette size analysis
+   ls -lh spec/cassettes/problematic_test.json
+   # 595K = likely needs optimization
+   # 2.6K = well optimized
+   ```
+
 ### CI/CD Guidelines
 
 1. **No API keys in CI** - rely on pre-recorded cassettes
@@ -460,6 +582,13 @@ rm spec/cassettes/path/to/specific.yml        # Remove specific cassette
 # Performance debugging
 bin/test spec/integration/ | grep "slowest"   # Check test performance
 find spec/cassettes -name "*.yml" -mtime -1   # Find recently created cassettes
+
+# Cassette size optimization
+bin/lint-cassettes                                  # Check cassette sizes (recommended)
+bin/lint-cassettes -t 25                            # Check with custom threshold
+find spec/cassettes -name "*.json" -size +100k -ls  # Find large cassettes manually
+du -sh spec/cassettes/                               # Total cassette size
+du -h spec/cassettes/ | sort -rh | head -10         # Top 10 largest cassettes
 ```
 
 This CI-aware VCR configuration provides a seamless testing experience that automatically adapts to your environment while maintaining security and reliability.
