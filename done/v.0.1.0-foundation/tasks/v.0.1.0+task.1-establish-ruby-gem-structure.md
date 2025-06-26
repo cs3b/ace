@@ -22,11 +22,11 @@ _Result excerpt:_
 .
 ├── README.md
 ├── bin/
-├── docs-dev/
+├── dev-handbook/
 │   ├── guides/
 │   ├── tools/
 │   └── workflow-instructions/
-└── docs-project/
+└── dev-taskflow/
     ├── backlog/
     └── roadmap.md
 ```
@@ -48,13 +48,13 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 
 ### Deliverables
 
-#### Create (via bundle gem --exe)
+#### Create (via bundle gem --dev-tools/exe)
 
 - coding_agent_tools.gemspec (generated, then customized)
 - lib/coding_agent_tools.rb (generated, then enhanced)
 - lib/coding_agent_tools/version.rb (generated, then updated to 0.1.0)
 - Gemfile (generated, then updated with specified dependencies)
-- exe/coding_agent_tools (generated, then customized)
+- dev-tools/exe/coding_agent_tools (generated, then customized)
 
 #### Create (custom ATOM structure)
 
@@ -74,12 +74,12 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
 
 #### Update
 
-- docs-project/architecture.md (incorporate ATOM research findings)
+- dev-taskflow/architecture.md (incorporate ATOM research findings)
 
 ## Phases
 
 1. Review researched Ruby gem conventions and ATOM architecture principles
-2. Generate initial gem structure with bundle gem --exe and customize
+2. Generate initial gem structure with bundle gem --dev-tools/exe and customize
 3. Implement core module and version management (0.1.0)
 4. Set up CLI framework using dry-rb and executable
 5. Configure development and production dependencies
@@ -95,7 +95,7 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
   > TEST: Research Integration Complete
   > Type: Pre-condition Check
   > Assert: All research documents reviewed and incorporated into implementation plan
-  > Command: test -f docs-project/current/v.0.1.0-foundation/researches/ruby-cmdline-tools-best-practice.md && test -f docs-project/current/v.0.1.0-foundation/researches/ruby-bundle-inline.md && test -f docs-project/current/v.0.1.0-foundation/researches/architecture-atom-research.md
+  > Command: test -f dev-taskflow/current/v.0.1.0-foundation/researches/ruby-cmdline-tools-best-practice.md && test -f dev-taskflow/current/v.0.1.0-foundation/researches/ruby-bundle-inline.md && test -f dev-taskflow/current/v.0.1.0-foundation/researches/architecture-atom-research.md
 * [x] Analyze existing project structure and identify integration points with current bin/ scripts
 * [x] Plan CLI command structure using dry-rb architecture and long descriptive naming conventions
 * [x] Design ATOM-based module hierarchy (atoms/molecules/organisms/ecosystems)
@@ -106,7 +106,7 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
   > TEST: Gem Scaffold Created
   > Type: Action Validation
   > Assert: Basic gem structure exists with executable
-  > Command: bundle gem coding_agent_tools --exe && test -f coding_agent_tools.gemspec && test -f exe/coding_agent_tools
+  > Command: bundle gem coding_agent_tools --dev-tools/exe && test -f coding_agent_tools.gemspec && test -f dev-tools/exe/coding_agent_tools
 - [x] Update coding_agent_tools.gemspec with proper metadata and specified dependencies
   > TEST: Gemspec Validation
   > Type: Action Validation
@@ -120,19 +120,19 @@ Create the fundamental Ruby gem structure for Coding Agent Tools (CAT) to establ
   - molecules/ (simple compositions)
   - organisms/ (business logic)
   - ecosystems/ (complete subsystems)
-- [x] Update executable script exe/coding_agent_tools to use new CLI framework
+- [x] Update executable script dev-tools/exe/coding_agent_tools to use new CLI framework
   > TEST: Executable Functionality
   > Type: Action Validation
   > Assert: CLI executable runs and shows help
-  > Command: ruby exe/coding_agent_tools --help
+  > Command: ruby dev-tools/exe/coding_agent_tools --help
 - [x] Update Gemfile with specified dependencies:
   - Development: standardrb, rspec, pry, bundler-audit, gem-release
   - Production: dotenv
-- [x] Update docs-project/architecture.md with ATOM research findings
+- [x] Update dev-taskflow/architecture.md with ATOM research findings
   > TEST: Architecture Documentation Updated
   > Type: Action Validation
   > Assert: Architecture document includes ATOM principles
-  > Command: grep -q "ATOM.*hierarchy" docs-project/architecture.md
+  > Command: grep -q "ATOM.*hierarchy" dev-taskflow/architecture.md
 - [x] Update README.md with installation and basic usage instructions
 
 ## Acceptance Criteria

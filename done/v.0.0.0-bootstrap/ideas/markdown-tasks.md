@@ -3,7 +3,7 @@
 **Goal:** Enhance the project's capabilities for linting Markdown documents, specifically focusing on link validation and improving the output of the linting tool.
 
 **Details:**
-- Build upon existing sample tools like `docs-dev/tools/lint-md-links.rb` and `docs-dev/tools/lint-task-metadata`.
+- Build upon existing sample tools like `dev-tools/exe-old/lint-md-links.rb` and `dev-tools/exe-old/lint-task-metadata`.
 - Implement checks for specific Markdown link formats and path issues (e.g., broken file links, incorrect relative paths).
 - The linter should report errors and warnings by default.
 - Add an `--autofix` option to attempt to automatically correct certain types of link or formatting issues.

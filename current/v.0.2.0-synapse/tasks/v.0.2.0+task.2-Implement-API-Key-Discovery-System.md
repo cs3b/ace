@@ -1,5 +1,5 @@
 ---
-id: v.0.2.0+task.2 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see docs-dev/guides/project-management.md#task-id-convention.
+id: v.0.2.0+task.2 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see dev-handbook/guides/project-management.md#task-id-convention.
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: high
 estimate: 4h
@@ -13,7 +13,7 @@ dependencies: [v.0.2.0+task.1]
 _Command run:_
 
 ```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -121,7 +121,7 @@ Implement API key discovery system (R-LLM-2) that supports finding Gemini API ke
 
 ## References
 
-- Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/gemini-query.fish (shows .env file loading pattern)
+- Fish implementation: dev-taskflow/backlog/v.0.2.0-synapse/docs/gemini-query.fish (shows .env file loading pattern)
 - Priority: ~/.gemini/config > GEMINI_API_KEY environment variable
 
 ```

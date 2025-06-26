@@ -85,7 +85,7 @@ Modern coding agents (Google Gemini, LM Studio, GitHub Copilot Agents) can w
 | R‑TASK‑1 | **`tr`** shall list recently updated or completed tasks across current & completed releases, respecting `--last N` filter.                                          | P1       |
 | R‑TASK‑2 | **`tn`** shall output the next actionable task with all dependencies resolved.                                                                                        | P1       |
 | R‑TASK‑3 | **`rc`** shall return the release directory path & version string, or backlog path if none.                                                                           | P1       |
-| R‑TASK‑4 | All utilities shall source data via `docs-dev/tools/*` scripts and return JSON when `--json` flag is passed.                                                          | P2       |
+| R‑TASK‑4 | All utilities shall source data via `dev-tools/exe-old/*` scripts and return JSON when `--json` flag is passed.                                                          | P2       |
 | R‑TASK‑5 | `tr` shall allow users to specify input scope for searching tasks using file paths, directory paths, or glob patterns if applicable to task storage methods.         | P2       |
 | R‑TASK‑6 | `tn` shall allow users to specify input scope for searching tasks using file paths, directory paths, or glob patterns if applicable to task storage methods.         | P2       |
 
@@ -114,8 +114,8 @@ Modern coding agents (Google Gemini, LM Studio, GitHub Copilot Agents) can w
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | R‑TCI‑1 | **`bin/tci`** (Task Capture Idea) shall accept a command-line parameter representing the user's intention or core idea for a new task.                                    | P1       |
 | R‑TCI‑2 | The tool shall load project environment context and use an LLM to process the intention, expanding it based on a predefined template.                                      | P1       |
-| R‑TCI‑3 | The LLM-generated output, formatted by the template, shall be saved as a new Markdown file in `docs-project/backlog/ideas/`.                                               | P1       |
-| R‑TCI‑4 | A guide document (`docs-dev/guides/how-to-capture-ideas.guide.md`) shall be created to detail the usage of `bin/tci`.                                                      | P2       |
+| R‑TCI‑3 | The LLM-generated output, formatted by the template, shall be saved as a new Markdown file in `dev-taskflow/backlog/ideas/`.                                               | P1       |
+| R‑TCI‑4 | A guide document (`dev-handbook/guides/how-to-capture-ideas.guide.md`) shall be created to detail the usage of `bin/tci`.                                                      | P2       |
 | R‑TCI‑5 | `bin/tci` shall allow specifying a scope (file/folder/glob) for project context loading if applicable to refine the context provided to the LLM.                           | P2       |
 
 ## 8  Non‑Functional Requirements
@@ -180,7 +180,7 @@ CI pipeline (GitHub Actions) runs on pushes & PRs; required checks: `rspec`, `r
 * Local LM Studio installation on dev machines.
 * GitHub App with repo‑create scope.
 * Ruby 3.2 runtime in CI & dev containers.
-* `docs-dev/tools/*` scripts present in codebase.
+* `dev-tools/exe-old/*` scripts present in codebase.
 
 ## 14  Risks & Mitigations
 

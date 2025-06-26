@@ -14,7 +14,7 @@ _Command run (illustrative, run before starting work):_
 
 ```bash
 ls -1 bin/
-ls -1 coding-agent-workflow-toolkit-meta/docs-dev/tools/_binstubs/ # Check for relevant binstubs
+ls -1 coding-agent-workflow-toolkit-meta/dev-tools/exe-old/_binstubs/ # Check for relevant binstubs
 # tree -L 2 fish/ # To understand structure of source Fish scripts
 ```
 
@@ -27,7 +27,7 @@ lint
 run
 test
 
-coding-agent-workflow-toolkit-meta/docs-dev/tools/_binstubs/
+coding-agent-workflow-toolkit-meta/dev-tools/exe-old/_binstubs/
 build
 lint
 run
@@ -68,8 +68,8 @@ capability to generate commit messages using LLMs.
     - Construct a prompt for an LLM, incorporating the diff and any provided intention.
     - **LLM Interaction:**
       - Provide a mechanism to call LLMs for commit message generation. This will likely involve creating two helper
-        scripts in `docs-dev/tools/` (e.g., `docs-dev/tools/llm_query_gemini.sh` and
-        `docs-dev/tools/llm_query_lms.sh`) that encapsulate the `curl` calls and API key
+        scripts in `dev-tools/exe-old/` (e.g., `dev-tools/exe-old/llm_query_gemini.sh` and
+        `dev-tools/exe-old/llm_query_lms.sh`) that encapsulate the `curl` calls and API key
         handling logic from `gemini-query.fish` and `lms-query.fish`.
       - `bin/gc` will call one of these scripts based on a flag (e.g., `--local` for LM Studio, default to Gemini
         or configurable).
@@ -89,11 +89,11 @@ capability to generate commit messages using LLMs.
 - `bin/gl` (executable shell script)
 - `bin/gp` (executable shell script)
 - `bin/gc` (executable shell script)
-- `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_gemini.sh` (executable helper script for Gemini API
+- `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_gemini.sh` (executable helper script for Gemini API
   calls)
-- `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_lms.sh` (executable helper script for LM Studio API
+- `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_lms.sh` (executable helper script for LM Studio API
   calls)
-- `coding-agent-workflow-toolkit-meta/docs-dev/prompts/gc_llm_commits.guide.md` (copy or adapt from
+- `coding-agent-workflow-toolkit-meta/dev-handbook/prompts/gc_llm_commits.guide.md` (copy or adapt from
   `fish/functions-cs3b/prompts/gc-llm-commits.guide.md` if it exists, or create based on `gc-llm.fish`'s
   embedded guide)
 
@@ -112,9 +112,9 @@ capability to generate commit messages using LLMs.
     - Confirm API key management strategy (environment variables).
     - Ensure the commit message generation prompt and guide (`gc_llm_commits.guide.md`) are properly handled.
 2. **Implementation (Helper LLM Scripts):**
-    - Create `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_gemini.sh`.
-    - Create `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_lms.sh`.
-    - Create/copy `coding-agent-workflow-toolkit-meta/docs-dev/prompts/gc_llm_commits.guide.md`.
+    - Create `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_gemini.sh`.
+    - Create `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_lms.sh`.
+    - Create/copy `coding-agent-workflow-toolkit-meta/dev-handbook/prompts/gc_llm_commits.guide.md`.
     - Test these scripts independently with sample API calls.
 3. **Implementation (Simple Git Wrappers):**
     - Create and test `bin/gs`.
@@ -167,17 +167,17 @@ capability to generate commit messages using LLMs.
   - [ ] Plan how `bin/gc` will pass the commit guide content as the system prompt to these helper
     scripts.
 - [ ] **Phase 2: Implementation (Helper LLM Scripts & Guide)**
-  - [ ] Create `coding-agent-workflow-toolkit-meta/docs-dev/prompts/gc_llm_commits.guide.md` by copying content
+  - [ ] Create `coding-agent-workflow-toolkit-meta/dev-handbook/prompts/gc_llm_commits.guide.md` by copying content
     from `fish/functions-cs3b/prompts/gc-llm-commits.guide.md` (if it exists and is accessible) or by
     reconstructing its essence from `gc-llm.fish`.
-  - [ ] Implement `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_gemini.sh`:
+  - [ ] Implement `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_gemini.sh`:
     - [ ] Add shebang `#!/bin/sh`.
     - [ ] Implement argument parsing (e.g., using `getopts` or simple positional).
     - [ ] Check for `GEMINI_API_KEY`.
     - [ ] Construct and execute `curl` command for Gemini API.
     - [ ] Parse response using `jq` (ensure `jq` is a documented prerequisite or handle its absence gracefully).
     - [ ] `chmod +x`.
-  - [ ] Implement `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_lms.sh`:
+  - [ ] Implement `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_lms.sh`:
     - [ ] Add shebang `#!/bin/sh`.
     - [ ] Implement argument parsing.
     - [ ] Construct and execute `curl` command for LM Studio.
@@ -207,13 +207,13 @@ capability to generate commit messages using LLMs.
   - [ ] `COMMIT_INTENTION=""`, `NO_EDIT_FLAG=false`, `USE_LOCAL_LLM=false`. Parse flags.
   - [ ] `DIFF_OUTPUT=$(git diff --staged)`. Check if empty.
   - [ ] Read `COMMIT_GUIDE_CONTENT` from
-    `coding-agent-workflow-toolkit-meta/docs-dev/prompts/gc_llm_commits.guide.md`.
+    `coding-agent-workflow-toolkit-meta/dev-handbook/prompts/gc_llm_commits.guide.md`.
   - [ ] Construct `SYSTEM_PROMPT` (from guide) and `USER_PROMPT` (from diff and intention).
   - [ ] Conditional call to LLM helper:
     - If `USE_LOCAL_LLM` is true,
-      `RAW_COMMIT_MSG=$(./coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_lms.sh -s \"$SYSTEM_PROMPT\" \"$USER_PROMPT\")`.
+      `RAW_COMMIT_MSG=$(./coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_lms.sh -s \"$SYSTEM_PROMPT\" \"$USER_PROMPT\")`.
     - Else,
-      `RAW_COMMIT_MSG=$(./coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_gemini.sh -s \"$SYSTEM_PROMPT\" \"$USER_PROMPT\")`.
+      `RAW_COMMIT_MSG=$(./coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_gemini.sh -s \"$SYSTEM_PROMPT\" \"$USER_PROMPT\")`.
     - Handle errors from helper scripts.
   - [ ] Clean `RAW_COMMIT_MSG` (e.g., using `sed` to remove markdown backticks,
     `echo \"$MSG\" | tr -s \' \\t\\n\' \' \' | sed \'s/^ *//;s/ *$//'` or similar POSIX ways to trim).
@@ -240,10 +240,10 @@ capability to generate commit messages using LLMs.
 
 - [ ] `bin/gs`, `bin/gl`, `bin/gp`, `bin/gc` scripts exist in the project's `bin/` directory and are
   executable.
-- [ ] `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_gemini.sh` and
-  `coding-agent-workflow-toolkit-meta/docs-dev/tools/llm_query_lms.sh` exist, are executable, and can
+- [ ] `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_gemini.sh` and
+  `coding-agent-workflow-toolkit-meta/dev-tools/exe-old/llm_query_lms.sh` exist, are executable, and can
   successfully query their respective LLMs.
-- [ ] `coding-agent-workflow-toolkit-meta/docs-dev/prompts/gc_llm_commits.guide.md` exists and
+- [ ] `coding-agent-workflow-toolkit-meta/dev-handbook/prompts/gc_llm_commits.guide.md` exists and
   contains the commit
   message generation guide.
 - [ ] `bin/gs` correctly displays Git status (short and verbose options work).
@@ -277,7 +277,7 @@ capability to generate commit messages using LLMs.
 - `fish/functions-cs3b/gemini-query.fish`
 - `fish/functions-cs3b/lms-query.fish`
 - `fish/aliases-cs3b/git.fish`
-- `coding-agent-workflow-toolkit-meta/docs-dev/guides/write-actionable-task.md`
+- `coding-agent-workflow-toolkit-meta/dev-handbook/guides/write-actionable-task.md`
 - POSIX shell scripting guides.
 - `git` command documentation (`git add`, `git diff`, `git commit`, `git log`, `git status`, `git push`).
 - `curl` documentation.

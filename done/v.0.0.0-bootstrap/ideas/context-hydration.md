@@ -3,7 +3,7 @@
 **Goal:** Create a tool (`bin/context`) to generate a single, comprehensive context document for a specific task or prompt, incorporating relevant documentation, workflow instructions, and potentially tool call responses.
 
 **Details:**
-- Leverage the existing prototype script in `docs-project/backlog/research/sample-context-hydration.rb` as a starting point.
+- Leverage the existing prototype script in `dev-taskflow/backlog/research/sample-context-hydration.rb` as a starting point.
 - The tool should scan "wiki-style" files (Markdown documents), follow internal links, and gather related information.
 - It should also search for and include relevant tool calling examples.
 - The output should be a single Markdown file.

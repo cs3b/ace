@@ -1,5 +1,5 @@
 ---
-id: v.0.2.0+task.3 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see docs-dev/guides/project-management.md#task-id-convention.
+id: v.0.2.0+task.3 # REQUIRED - Unique ID. Always use bin/tnid to get the next sequential number for the current release. For format details, see dev-handbook/guides/project-management.md#task-id-convention.
 status: pending # See [Project Management Guide](project-management.md) for all possible values
 priority: medium
 estimate: 6h
@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
@@ -122,7 +122,7 @@ Implement the `lms-studio-query` command (R-LLM-3) that interfaces with LM Studi
 
 ## References
 
-- Fish implementation: docs-project/backlog/v.0.2.0-synapse/docs/lms-query.fish
+- Fish implementation: dev-taskflow/backlog/v.0.2.0-synapse/docs/lms-query.fish
 - LM Studio API endpoint: http://localhost:1234/v1/chat/completions
 - Default model: mistral-small-24b-instruct-2501@8bit
 

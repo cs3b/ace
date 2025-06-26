@@ -13,14 +13,14 @@ dependencies: [v.0.1.0+task.1, v.0.1.0+task.2]
 _Command run:_
 
 ```bash
-ls -la .git/hooks/ && tree docs-dev/guides -L 2
+ls -la .git/hooks/ && tree dev-handbook/guides -L 2
 ```
 
 _Result excerpt:_
 
 ```
 .git/hooks/
-docs-dev/guides/
+dev-handbook/guides/
 ├── draft-release/
 ├── task-definition.g.md
 └── project-management.g.md
@@ -78,7 +78,7 @@ Establish a standardized Git workflow and comprehensive development guides to en
   > Assert: Current build system capabilities documented
   > Command: test -f bin/test && test -f bin/lint && test -f bin/build
 * [x] Analyze existing GitHub Actions CI configuration for badge references
-* [x] Plan commit message format aligned with docs-dev/guides/version-control-system.g.md
+* [x] Plan commit message format aligned with dev-handbook/guides/version-control-system.g.md
 * [x] Design development workflow integrating existing bin/ scripts (setup, test, lint, build, console)
 * [x] Plan docs/ directory structure for user-facing developer documentation
 

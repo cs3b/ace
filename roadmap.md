@@ -43,13 +43,13 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 | v0.7.0  | "Spark"                   | Q4 2025       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
 | v1.0.0  | "Keystone"                | Q1 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
 
-_Note: Release planning should align with project folder structure in `docs-project/backlog/`, `docs-project/current/`, and `docs-project/done/` as per the Roadmap Definition Guide._
+_Note: Release planning should align with project folder structure in `dev-taskflow/backlog/`, `dev-taskflow/current/`, and `dev-taskflow/done/` as per the Roadmap Definition Guide._
 
 ## 5. Cross-Release Dependencies
 
 - **LLM-Powered Git Features (v0.3.0):** The `git-commit-with-message` feature (R-GIT-3, R-GIT-9) under the "Git Workflow Automation" theme relies on the core "LLM Integration" (R-LLM-1, R-LLM-3) being delivered in v0.2.0 "Synapse" before the v0.3.0 "Forge" release.
 - **Advanced LLM Features (v1.0.0):** Several P1 features in v1.0.0 "Keystone", such as LLM-based context summarization (R-CTX-4) and LLM-assisted task expansion (R-TCI-2), depend on the foundational "LLM Integration" capabilities delivered in v0.2.0 "Synapse".
-- **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of `docs-dev/tools/*` scripts, which serve as their primary data source.
+- **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of `dev-tools/exe-old/*` scripts, which serve as their primary data source.
 - **External Service Dependencies:**
     - "LLM Integration" (R-LLM-1, R-LLM-3) requires access to Google Gemini API and a local LM Studio installation.
     - "Git Workflow Automation" (R-GIT-1) for repository creation requires a configured GitHub App/token.

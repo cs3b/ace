@@ -8,8 +8,8 @@
 - A new workflow instruction should be created specifically for the task idea capture process, guiding the tool on loading necessary context and interacting with the LLM.
 - The tool will use an LLM (e.g., Google Flash Lite) to process the provided intention.
 - The LLM should expand on the idea and format it according to a predefined simple template for idea files. The expansion should stay within the structural limits of the template.
-- The output from the LLM, formatted by the template, should be saved as a new Markdown file in the `docs-project/backlog/ideas/` directory.
-- A guide document (`docs-dev/guides/how-to-capture-ideas.guide.md`) should be created to explain the process and how to use the `bin/tci` tool.
+- The output from the LLM, formatted by the template, should be saved as a new Markdown file in the `dev-taskflow/backlog/ideas/` directory.
+- A guide document (`dev-handbook/guides/how-to-capture-ideas.guide.md`) should be created to explain the process and how to use the `bin/tci` tool.
 
 **Missing Information / Clarification Needed:**
 - What is the desired structure and content of the simple template for idea files?
