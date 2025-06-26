@@ -1,0 +1,105 @@
+#!/usr/bin/env ruby
+
+require 'set'
+
+# Check workflow independence
+class WorkflowIndependenceChecker
+  def initialize
+    @workflows_dir = 'dev-handbook/workflow-instructions'
+    @cross_refs = Hash.new { |h, k| h[k] = Set.new }
+    @external_refs = Hash.new { |h, k| h[k] = Set.new }
+  end
+
+  def check_all
+    workflows = Dir.glob("#{@workflows_dir}/**/*.wf.md")
+    
+    workflows.each do |workflow|
+      check_workflow(workflow)
+    end
+    
+    output_report(workflows.length)
+  end
+
+  private
+
+  def check_workflow(file)
+    content = File.read(file)
+    workflow_name = File.basename(file)
+    
+    # Check for references to other workflows
+    content.scan(/\[([^\]]+)\]\(([^)]*\.wf\.md[^)]*)\)/).each do |text, link|
+      target = File.basename(link.split('#').first)
+      next if target == workflow_name
+      
+      @cross_refs[workflow_name] << "#{target} (link: '#{text}')"
+    end
+    
+    # Check for workflow execution dependencies
+    if content.match?(/Run the .* workflow/i) || 
+       content.match?(/execute .* workflow first/i) ||
+       content.match?(/requires .* workflow/i)
+      @cross_refs[workflow_name] << "Has workflow execution dependencies"
+    end
+    
+    # Check for external guide references (not in context loading)
+    lines = content.split("\n")
+    in_context_section = false
+    
+    lines.each do |line|
+      in_context_section = true if line.include?("## Project Context Loading")
+      in_context_section = false if line.start_with?("## ") && !line.include?("Project Context Loading")
+      
+      next if in_context_section
+      
+      # Check for guide references outside context loading
+      line.scan(/\[([^\]]+)\]\(([^)]*\.g\.md[^)]*)\)/).each do |text, link|
+        @external_refs[workflow_name] << "Guide: #{File.basename(link)} (text: '#{text}')"
+      end
+    end
+  end
+
+  def output_report(total_count)
+    puts "# Workflow Independence Report"
+    puts "Generated: #{Time.now}"
+    puts
+    
+    independent_count = total_count - @cross_refs.length - @external_refs.length
+    
+    puts "## Summary"
+    puts "- Total workflows: #{total_count}"
+    puts "- Fully independent: #{independent_count}"
+    puts "- With cross-workflow references: #{@cross_refs.length}"
+    puts "- With external guide references: #{@external_refs.length}"
+    puts
+    
+    if @cross_refs.empty? && @external_refs.empty?
+      puts "✅ **All workflows are fully independent!**"
+      return
+    end
+    
+    if @cross_refs.any?
+      puts "## Cross-Workflow Dependencies"
+      @cross_refs.each do |workflow, refs|
+        puts "\n### #{workflow}"
+        refs.each { |ref| puts "- #{ref}" }
+      end
+    end
+    
+    if @external_refs.any?
+      puts "\n## External Guide References (Outside Context Loading)"
+      @external_refs.each do |workflow, refs|
+        puts "\n### #{workflow}"
+        refs.each { |ref| puts "- #{ref}" }
+      end
+    end
+    
+    puts "\n## Recommendations"
+    puts "1. Replace cross-workflow references with embedded content"
+    puts "2. Move guide references to Project Context Loading section"
+    puts "3. Embed essential guide content directly in workflows"
+    puts "4. Remove workflow execution dependencies"
+  end
+end
+
+# Run the checker
+WorkflowIndependenceChecker.new.check_all

@@ -1,0 +1,155 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'pathname'
+
+# Check workflow compliance with updated standards
+class WorkflowComplianceChecker
+  REQUIRED_SECTIONS = [
+    '## Goal',
+    '## Prerequisites',
+    '## Project Context Loading',
+    '## Process Steps'
+  ].freeze
+
+  RECOMMENDED_SECTIONS = [
+    '## High-Level Execution Plan',
+    '## Success Criteria',
+    '## Embedded Templates',
+    '## Best Practices'
+  ].freeze
+
+  DEPRECATED_PATTERNS = [
+    /\[.*?\]\(\.\.\/guides\//,  # Relative guide references
+    /\[.*?\]\(dev-handbook\/guides\//,  # External guide references (except in context loading)
+    /Run the \[.*?\] workflow/i,  # Cross-workflow dependencies
+    /load-env\.wf\.md/,  # Old workflow name
+    /lets-\w+\.wf\.md/  # Old naming pattern
+  ].freeze
+
+  def initialize
+    @workflows_dir = 'dev-handbook/workflow-instructions'
+    @results = {}
+  end
+
+  def check_all_workflows
+    Dir.glob("#{@workflows_dir}/**/*.wf.md").each do |file|
+      check_workflow(file)
+    end
+    
+    print_results
+  end
+
+  private
+
+  def check_workflow(file)
+    content = File.read(file)
+    relative_path = file
+    
+    @results[relative_path] = {
+      required_sections: check_required_sections(content),
+      recommended_sections: check_recommended_sections(content),
+      deprecated_patterns: check_deprecated_patterns(content),
+      has_embedded_content: has_embedded_content?(content),
+      has_cross_dependencies: has_cross_dependencies?(content)
+    }
+  end
+
+  def check_required_sections(content)
+    missing = REQUIRED_SECTIONS.reject { |section| content.include?(section) }
+    { missing: missing, compliant: missing.empty? }
+  end
+
+  def check_recommended_sections(content)
+    missing = RECOMMENDED_SECTIONS.reject { |section| content.include?(section) }
+    { missing: missing, has_some: missing.length < RECOMMENDED_SECTIONS.length }
+  end
+
+  def check_deprecated_patterns(content)
+    found = DEPRECATED_PATTERNS.select { |pattern| content.match?(pattern) }
+    { found: found, compliant: found.empty? }
+  end
+
+  def has_embedded_content?(content)
+    content.include?('```') && 
+    (content.include?('## Embedded Templates') || 
+     content.include?('### Template') ||
+     content.include?('**Template:**') ||
+     content.include?('**Use Embedded'))
+  end
+
+  def has_cross_dependencies?(content)
+    content.match?(/Run the .* workflow first/i) ||
+    content.match?(/prerequisite.*workflow/i) ||
+    content.match?(/depends on.*workflow/i)
+  end
+
+  def print_results
+    puts "# Workflow Compliance Report"
+    puts "Generated: #{Time.now}"
+    puts
+    
+    compliant = []
+    non_compliant = []
+    
+    @results.each do |file, checks|
+      if fully_compliant?(checks)
+        compliant << file
+      else
+        non_compliant << [file, checks]
+      end
+    end
+    
+    puts "## Summary"
+    puts "- Total workflows: #{@results.count}"
+    puts "- Fully compliant: #{compliant.count}"
+    puts "- Need updates: #{non_compliant.count}"
+    puts
+    
+    if compliant.any?
+      puts "## Compliant Workflows"
+      compliant.each { |f| puts "- ✅ #{f}" }
+      puts
+    end
+    
+    if non_compliant.any?
+      puts "## Workflows Needing Updates"
+      non_compliant.each do |file, checks|
+        puts "\n### #{file}"
+        
+        unless checks[:required_sections][:compliant]
+          puts "❌ Missing required sections:"
+          checks[:required_sections][:missing].each { |s| puts "  - #{s}" }
+        end
+        
+        if !checks[:recommended_sections][:has_some]
+          puts "⚠️  Missing all recommended sections"
+        elsif checks[:recommended_sections][:missing].any?
+          puts "⚠️  Missing recommended sections:"
+          checks[:recommended_sections][:missing].each { |s| puts "  - #{s}" }
+        end
+        
+        unless checks[:deprecated_patterns][:compliant]
+          puts "❌ Contains deprecated patterns"
+        end
+        
+        unless checks[:has_embedded_content]
+          puts "⚠️  No embedded content detected"
+        end
+        
+        if checks[:has_cross_dependencies]
+          puts "❌ Has cross-workflow dependencies"
+        end
+      end
+    end
+  end
+
+  def fully_compliant?(checks)
+    checks[:required_sections][:compliant] &&
+    checks[:deprecated_patterns][:compliant] &&
+    !checks[:has_cross_dependencies]
+  end
+end
+
+# Run the checker
+WorkflowComplianceChecker.new.check_all_workflows

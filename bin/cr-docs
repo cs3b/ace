@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# frozen_string_literal: true
+
+# Code Review Documentation Generator
+# Wrapper script for generating comprehensive documentation review prompts from diffs
+
+set -euo pipefail
+
+# Get the directory of this script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Path to the actual tool
+TOOL_PATH="$PROJECT_ROOT/dev-tools/exe-old/generate-doc-review-prompt"
+
+# Check if the tool exists
+if [[ ! -f "$TOOL_PATH" ]]; then
+    echo "Error: Documentation review prompt generator not found at $TOOL_PATH"
+    echo "Make sure the dev-tools submodule is properly initialized."
+    exit 1
+fi
+
+# Check if the tool is executable
+if [[ ! -x "$TOOL_PATH" ]]; then
+    echo "Making documentation review prompt generator executable..."
+    chmod +x "$TOOL_PATH"
+fi
+
+# Pass all arguments to the actual tool
+exec "$TOOL_PATH" "$@"
