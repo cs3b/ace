@@ -42,6 +42,10 @@ After installation (either globally or via Bundler in a project), the `coding_ag
 - **Model Discovery**: List and filter available models from different providers
   - **Unified Model Discovery**: Discover available models via `exe/llm-models <provider>`
   - **Caching Support**: Model information is cached for faster response times
+- **Cost Tracking**: Comprehensive cost analysis and usage reporting
+  - **Automatic Cost Calculation**: Real-time cost tracking using LiteLLM pricing data
+  - **Usage Reports**: Detailed breakdowns by provider, model, and time period via `exe/llm-usage-report`
+  - **Multiple Export Formats**: JSON, CSV, and formatted table outputs
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
@@ -108,6 +112,17 @@ coding_agent_tools project release_context
     - `exe/llm-models google --refresh` (refresh cache)
   - Providers: `google` (default), `lmstudio`
   - Requires: `GEMINI_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
+
+- **`exe/llm-usage-report`**: Generate comprehensive cost and usage reports
+  - Usage: `exe/llm-usage-report [--format json|csv|table] [--date-range today|week|month|YYYY-MM-DD:YYYY-MM-DD] [--provider PROVIDER] [--model MODEL] [--output FILE] [--debug]`
+  - Examples:
+    - `exe/llm-usage-report` (basic table format)
+    - `exe/llm-usage-report --format json --output monthly-report.json`
+    - `exe/llm-usage-report --date-range week --provider google`
+    - `exe/llm-usage-report --model claude-3-5-sonnet --format csv`
+    - `exe/llm-usage-report --date-range 2024-01-01:2024-01-31`
+  - Features: Automatic cost calculation using LiteLLM pricing data, provider/model filtering, multiple export formats
+  - See: [Cost Tracking Guide](./docs/llm-integration/cost-tracking.md) for detailed usage
 
 ## 🛡️ File Operations & Security
 
