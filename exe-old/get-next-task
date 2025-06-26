@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# get-next-task: Find the next actionable task in the current release (not done, all deps met)
+require 'yaml'
+require 'set'
+
+# Helper function to parse task ID for sorting by its sequential number.
+# E.g., "v.0.1.0+task.5" -> 5
+# Returns Float::INFINITY for non-conforming IDs to sort them last.
+def parse_task_sequential_number(task_id_str)
+  # Ensure task_id_str is a string before attempting to match
+  return Float::INFINITY unless task_id_str && task_id_str.is_a?(String)
+
+  match = task_id_str.match(/\+task\.(\d+)$/)
+  if match
+    match[1].to_i
+  else
+    Float::INFINITY # Sort IDs not matching the pattern (e.g., old format) last
+  end
+end
+
+# Find all task files in current release
+task_files = Dir.glob('docs-project/current/*/tasks/*.md')
+
+tasks = {}
+# Parse all tasks for id, status, dependencies, title, path
+
+task_files.each do |f|
+  content = File.read(f)
+  if content =~ /^---\s*\n(.*?)\n---/m
+    fm = YAML.safe_load($1, permitted_classes: [Date])
+    id = fm['id']
+    status = fm['status']
+    deps = fm['dependencies'] || []
+    # handle string or array
+    deps = deps.is_a?(String) ? deps.scan(/\w[\w\.-]*/) : deps
+    title = content.sub(/^---.*?---/m, '').match(/^#\s+(.+)/)&.captures&.first || '(No Title)'
+    tasks[id] = {id: id, status: status, deps: deps, title: title, path: f}
+  end
+end
+
+done_ids = tasks.select { |_, t| t[:status] == 'done' }.keys.to_set
+
+# Select candidates: not done, all deps met (or missing dep is not present in this release)
+candidates = tasks.values.select do |t|
+  next if t[:status] == 'done'
+  unmet = t[:deps].any? { |dep| tasks[dep] && tasks[dep][:status] != 'done' }
+  !unmet
+end
+
+# Sort candidates to determine the next task:
+# 1. Primary sort key: Status. 'in-progress' tasks come first, then 'pending'.
+#    Other statuses (if any, besides 'done') will come after 'pending'.
+# 2. Secondary sort key: Task sequential number (numeric, from vX.Y.Z+task.N).
+#    Lower numbers come first. Handles non-standard IDs by sorting them last.
+# 3. Tertiary sort key: Full task ID string. This is a tie-breaker for stability,
+#    though task IDs + numbers should ideally be unique within a status group.
+candidates.sort_by! do |t|
+  status_priority = case t[:status]&.downcase # Use downcase for case-insensitivity and safe navigation for nil status
+                    when 'in-progress' then 0
+                    when 'pending'     then 1
+                    # Any other status that is not 'done' and not explicitly listed above
+                    # will be grouped together after 'pending'.
+                    else 2
+                    end
+
+  task_sequential_num = parse_task_sequential_number(t[:id])
+
+  [status_priority, task_sequential_num, t[:id].to_s]
+end
+
+if candidates.empty?
+  puts "No actionable tasks found!"
+else
+  t = candidates.first
+  puts "Next task to work on:"
+  puts "  ID:    #{t[:id]}"
+  puts "  Title: #{t[:title]}"
+  puts "  Path:  #{t[:path]}"
+  puts "  Status: #{t[:status]}"
+  puts "  Dependencies: #{t[:deps].join(', ')}"
+end
