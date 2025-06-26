@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.69
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -75,25 +75,25 @@ Update the component descriptions in `docs/architecture.md` to include all new A
 * [ ] Plan integration with existing architectural documentation
 
 ### Execution Steps
-- [ ] Add `SecurityLogger` and `XDGDirectoryResolver` to Atoms section with architectural descriptions
-- [ ] Add `CacheManager`, `SecurePathValidator`, `FileOperationConfirmer`, `RetryMiddleware` to Molecules section
-- [ ] Add `ProviderUsageParsers` molecule collection to architecture documentation
-- [ ] Add `UsageMetadata`, `UsageMetadataWithCost`, `Pricing` to Models section
-- [ ] Update "Performance Considerations" section to include `CacheManager` and `RetryMiddleware`
-- [ ] Update component interaction descriptions to reflect new architecture
-- [ ] Ensure consistent architectural terminology and style
-- [ ] Review overall architecture narrative for coherence with new components
+- [x] Add `SecurityLogger` and `XDGDirectoryResolver` to Atoms section with architectural descriptions
+- [x] Add `CacheManager`, `SecurePathValidator`, `FileOperationConfirmer`, `RetryMiddleware` to Molecules section
+- [x] Add `ProviderUsageParsers` molecule collection to architecture documentation
+- [x] Add `UsageMetadata`, `UsageMetadataWithCost`, `Pricing` to Models section
+- [x] Update "Performance Considerations" section to include `CacheManager` and `RetryMiddleware`
+- [x] Update component interaction descriptions to reflect new architecture
+- [x] Ensure consistent architectural terminology and style
+- [x] Review overall architecture narrative for coherence with new components
 
 ## Acceptance Criteria
 
-- [ ] All new Atoms are documented in the Atoms section with clear architectural descriptions
-- [ ] All new Molecules are documented in the Molecules section with clear architectural descriptions  
-- [ ] All new Models are documented in the Models section with clear architectural descriptions
-- [ ] "Performance Considerations" section includes new caching and retry components
-- [ ] Component interactions and dependencies are accurately described
-- [ ] New components integrate coherently with existing architectural narrative
-- [ ] Documentation follows consistent style and terminology
-- [ ] Architecture overview provides complete picture of current system structure
+- [x] All new Atoms are documented in the Atoms section with clear architectural descriptions
+- [x] All new Molecules are documented in the Molecules section with clear architectural descriptions  
+- [x] All new Models are documented in the Models section with clear architectural descriptions
+- [x] "Performance Considerations" section includes new caching and retry components
+- [x] Component interactions and dependencies are accurately described
+- [x] New components integrate coherently with existing architectural narrative
+- [x] Documentation follows consistent style and terminology
+- [x] Architecture overview provides complete picture of current system structure
 
 ## Out of Scope
 
