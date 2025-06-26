@@ -190,7 +190,92 @@ For full functionality, especially for features interacting with external APIs, 
     - **Google Gemini API Key**: Get this from [Google AI Studio](https://makersuite.google.com/app/apikey).
     - **GitHub Token** (if needed): Generate from [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
 
-### 3. LM Studio (Optional)
+### 3. Cache Directory Configuration
+
+The Coding Agent Tools gem uses XDG Base Directory Specification compliant cache storage for model lists, pricing data, and usage reports.
+
+#### Default Cache Location
+
+By default, cache files are stored in:
+- **Linux/macOS**: `~/.cache/coding-agent-tools/`
+- **Windows**: `%LOCALAPPDATA%\coding-agent-tools\cache\` (or `~/.cache/coding-agent-tools/`)
+
+#### Environment Variable Configuration
+
+You can customize the cache location using standard XDG environment variables:
+
+**`XDG_CACHE_HOME`** (Primary):
+```bash
+# Set custom cache directory
+export XDG_CACHE_HOME="/custom/cache/location"
+# Cache will be stored at: /custom/cache/location/coding-agent-tools/
+```
+
+**`HOME`** (Fallback):
+```bash
+# If XDG_CACHE_HOME is not set, uses $HOME/.cache/
+export HOME="/custom/home"
+# Cache will be stored at: /custom/home/.cache/coding-agent-tools/
+```
+
+#### Cache Structure
+
+The cache directory is organized by type:
+```
+~/.cache/coding-agent-tools/
+├── models/           # Model information and lists
+├── http/             # HTTP response caches
+├── temp/             # Temporary files
+└── pricing/          # LiteLLM pricing data
+```
+
+#### Configuration Examples
+
+**Development Environment**:
+```bash
+# Keep cache in project directory for development
+export XDG_CACHE_HOME="$(pwd)/.cache"
+exe/llm-models google  # Creates .cache/coding-agent-tools/models/
+```
+
+**CI/CD Environment**:
+```bash
+# Use temporary cache directory
+export XDG_CACHE_HOME="/tmp/ci-cache"
+# Cache will be at: /tmp/ci-cache/coding-agent-tools/
+```
+
+**Docker Container**:
+```bash
+# Mount cache volume and set environment
+docker run -v /host/cache:/cache -e XDG_CACHE_HOME=/cache your-app
+```
+
+#### Cache Migration
+
+If you have an existing cache in the legacy location (`~/.coding-agent-tools-cache`), it will be automatically migrated to the new XDG-compliant location on first use. See the [Migration Guide](./MIGRATION.md#cache-directory-location-change-v020) for details.
+
+#### Cache Management
+
+**View Cache Status**:
+```bash
+# Check cache contents
+ls -la ~/.cache/coding-agent-tools/
+
+# Check cache sizes
+du -sh ~/.cache/coding-agent-tools/
+```
+
+**Clear Cache** (if needed):
+```bash
+# Remove all cached data
+rm -rf ~/.cache/coding-agent-tools/
+
+# Or remove specific cache types
+rm -rf ~/.cache/coding-agent-tools/models/
+```
+
+### 4. LM Studio (Optional)
 
 For offline LLM functionality:
 

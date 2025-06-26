@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.68
-status: pending
+status: done
 priority: high
 estimate: 1h
 dependencies: []
@@ -51,30 +51,30 @@ Update SETUP.md to explain the new XDG-compliant cache directory configuration, 
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Review `XDGDirectoryResolver` implementation to understand cache path resolution
-* [ ] Test environment variable behavior (`XDG_CACHE_HOME`, `HOME`)
-* [ ] Identify default cache location and fallback behaviors
-* [ ] Plan integration with existing SETUP.md structure
+* [x] Review `XDGDirectoryResolver` implementation to understand cache path resolution
+* [x] Test environment variable behavior (`XDG_CACHE_HOME`, `HOME`)
+* [x] Identify default cache location and fallback behaviors
+* [x] Plan integration with existing SETUP.md structure
 
 ### Execution Steps
-- [ ] Add new section to SETUP.md explaining XDG-compliant cache directory
-- [ ] Document default cache location: `~/.cache/coding-agent-tools`
-- [ ] Explain `XDG_CACHE_HOME` environment variable configuration
-- [ ] Document `HOME` environment variable fallback behavior
-- [ ] Provide examples of cache directory configuration for different environments
-- [ ] Add note about automatic migration from legacy cache location
-- [ ] Reference migration guide for users with existing caches
-- [ ] Integrate cache configuration with existing setup workflow
+- [x] Add new section to SETUP.md explaining XDG-compliant cache directory
+- [x] Document default cache location: `~/.cache/coding-agent-tools`
+- [x] Explain `XDG_CACHE_HOME` environment variable configuration
+- [x] Document `HOME` environment variable fallback behavior
+- [x] Provide examples of cache directory configuration for different environments
+- [x] Add note about automatic migration from legacy cache location
+- [x] Reference migration guide for users with existing caches
+- [x] Integrate cache configuration with existing setup workflow
 
 ## Acceptance Criteria
 
-- [ ] SETUP.md contains comprehensive XDG cache directory documentation
-- [ ] Default cache location (`~/.cache/coding-agent-tools`) is clearly documented
-- [ ] Environment variables that affect cache location are explained
-- [ ] Configuration examples are provided for common scenarios
-- [ ] Migration from legacy cache is referenced appropriately
-- [ ] New section integrates well with existing SETUP.md structure
-- [ ] All documented environment variable behaviors work as described
+- [x] SETUP.md contains comprehensive XDG cache directory documentation
+- [x] Default cache location (`~/.cache/coding-agent-tools`) is clearly documented
+- [x] Environment variables that affect cache location are explained
+- [x] Configuration examples are provided for common scenarios
+- [x] Migration from legacy cache is referenced appropriately
+- [x] New section integrates well with existing SETUP.md structure
+- [x] All documented environment variable behaviors work as described
 
 ## Out of Scope
 
