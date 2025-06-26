@@ -217,6 +217,44 @@ llm-query openai:gpt-4o "Generate data" --output data.json --format json
 
 # Multiple files
 llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output analysis.md
+
+# Force overwrite existing files (bypass confirmation prompts)
+llm-query google:gemini-2.5-flash "Update content" --output existing.md --force
+
+# Short form of force flag
+llm-query openai:gpt-4o "New content" --output report.txt -f
+```
+
+#### File Overwrite Protection
+
+When using `--output`, the tool includes built-in protection against accidental file overwrites:
+
+**Interactive Environments** (terminals):
+- If the output file exists, you'll be prompted for confirmation:
+  ```
+  File 'report.txt' already exists. Overwrite? [y/N]: 
+  ```
+- Type `y` or `yes` to confirm, or `n`/`no` (or press Enter) to cancel
+
+**Non-Interactive Environments** (CI/automation):
+- Overwrite attempts are automatically denied for safety
+- Use `--force` (or `-f`) to bypass confirmation:
+  ```bash
+  llm-query google:gemini-2.5-flash "CI content" --output build/report.md --force
+  ```
+
+**Examples:**
+```bash
+# Interactive mode - will prompt if file exists
+llm-query anthropic:claude-4-0-sonnet-latest "Analysis" --output results.md
+
+# Automation-friendly - bypasses prompts
+llm-query openai:gpt-4o "Automated report" --output daily-report.txt --force
+
+# Script usage with force flag
+for model in gemini-2.5-flash claude-4-0-sonnet-latest gpt-4o; do
+    llm-query "$model" "Compare features" --output "comparison-$model.md" --force
+done
 ```
 
 ### System Instructions
@@ -254,6 +292,9 @@ llm-query google:gemini-2.5-flash "Test prompt" --debug
 
 # Debug with file output
 llm-query openai:gpt-4o prompt.txt --output result.md --debug
+
+# Debug with forced overwrite
+llm-query anthropic:claude-4-0-sonnet-latest "Debug test" --output debug.log --force --debug
 ```
 
 ## Provider-Specific Information
@@ -488,11 +529,14 @@ llm-query anthropic:claude-4-0-sonnet-latest "complex analysis" --timeout 120
 # Force specific format
 llm-query google:gemini-2.5-flash "data" --format json
 
-# Check file permissions
-llm-query openai:gpt-4o "content" --output /tmp/test.md
+# Check file permissions (with force to skip confirmation)
+llm-query openai:gpt-4o "content" --output /tmp/test.md --force
 
 # Debug output processing
 llm-query anthropic:claude-4-0-sonnet-latest "test" --output result.txt --debug
+
+# Bypass overwrite prompts for testing
+llm-query google:gemini-2.5-flash "test content" --output test-output.txt --force
 ```
 
 ### Provider Fallbacks
@@ -501,11 +545,11 @@ llm-query anthropic:claude-4-0-sonnet-latest "test" --output result.txt --debug
 #!/bin/bash
 # Script with provider fallbacks
 
-if llm-query google:gemini-2.5-flash "$1" --output response.md 2>/dev/null; then
+if llm-query google:gemini-2.5-flash "$1" --output response.md --force 2>/dev/null; then
     echo "Google query successful"
-elif llm-query anthropic:claude-4-0-sonnet-latest "$1" --output response.md 2>/dev/null; then
+elif llm-query anthropic:claude-4-0-sonnet-latest "$1" --output response.md --force 2>/dev/null; then
     echo "Fallback to Anthropic successful"
-elif llm-query openai:gpt-4o "$1" --output response.md 2>/dev/null; then
+elif llm-query openai:gpt-4o "$1" --output response.md --force 2>/dev/null; then
     echo "Fallback to OpenAI successful"
 else
     echo "All providers failed"

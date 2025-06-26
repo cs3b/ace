@@ -87,16 +87,18 @@ coding_agent_tools project release_context
 ### New Standalone Commands
 
 - **`exe/llm-query`**: Query any supported LLM provider using unified syntax
-  - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--debug]`
+  - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--force] [--debug]`
   - Examples: 
     - `exe/llm-query google:gemini-2.5-flash "What is Ruby?"`
     - `exe/llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output response.json`
     - `exe/llm-query openai:gpt-4o "Question" --system system.md --output result.md`
     - `exe/llm-query lmstudio "Explain SOLID principles"`
     - `exe/llm-query gflash "Quick question"` (using alias for google:gemini-2.5-flash)
+    - `exe/llm-query google "Overwrite example" --output existing.txt --force` (bypass confirmation)
   - Supports: Google Gemini, Anthropic Claude, OpenAI GPT, Mistral, Together AI, LM Studio
   - Provider aliases: `gflash`, `csonet`, `o4mini` and more
   - Requires: API keys for respective providers (see Setup Guide)
+  - **File Operations**: When using `--output`, if the target file exists, you'll be prompted for confirmation unless `--force` (or `-f`) is specified. In non-interactive environments (CI/automation), use `--force` to bypass prompts.
 
 - **`exe/llm-models`**: List available AI models from various providers
   - Usage: `exe/llm-models [PROVIDER] [--filter FILTER] [--format json] [--refresh]`
@@ -106,6 +108,40 @@ coding_agent_tools project release_context
     - `exe/llm-models google --refresh` (refresh cache)
   - Providers: `google` (default), `lmstudio`
   - Requires: `GEMINI_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
+
+## 🛡️ File Operations & Security
+
+### Interactive Overwrite Confirmation
+
+When using the `--output` flag with `exe/llm-query`, the tool includes built-in security features for file operations:
+
+**Interactive Mode** (terminals):
+- If the output file already exists, you'll receive a confirmation prompt:
+  ```
+  File 'response.txt' already exists. Overwrite? [y/N]: 
+  ```
+- Type `y` or `yes` to confirm overwrite, or `n`/`no` (or just press Enter) to cancel
+
+**Non-Interactive Mode** (CI/automation):
+- In CI environments or non-TTY contexts, overwrite attempts are automatically denied for safety
+- Use the `--force` (or `-f`) flag to bypass confirmation prompts:
+  ```bash
+  exe/llm-query google "Question" --output response.txt --force
+  ```
+
+**Examples**:
+```bash
+# Interactive confirmation (will prompt if file exists)
+exe/llm-query google "What is Ruby?" --output answer.txt
+
+# Force overwrite without prompts (useful for scripts)
+exe/llm-query google "What is Ruby?" --output answer.txt --force
+
+# Alias for force flag
+exe/llm-query google "What is Ruby?" --output answer.txt -f
+```
+
+This behavior ensures safe file operations while maintaining compatibility with automated workflows.
 
 ## 🏗 Architecture
 

@@ -17,13 +17,13 @@ RSpec.describe CodingAgentTools::Molecules::SecurePathValidator do
     it "uses default configuration when none provided" do
       validator = described_class.new
       allowed_paths = validator.config[:allowed_base_paths]
-      
+
       # Check that all expected default paths are included
       expected_defaults = [".", "/tmp", "/var/tmp", "/var/folders", "/private/tmp", "/private/var/tmp"]
       expected_defaults.each do |path|
         expect(allowed_paths).to include(path), "Expected #{path} to be in allowed_base_paths"
       end
-      
+
       # Check that system temp directories are automatically added
       expect(allowed_paths.length).to be >= expected_defaults.length
       expect(validator.config[:denied_patterns]).to be_an(Array)
@@ -35,13 +35,13 @@ RSpec.describe CodingAgentTools::Molecules::SecurePathValidator do
       validator = described_class.new(config: custom_config)
 
       expect(validator.config[:max_path_depth]).to eq(10)
-      
+
       allowed_paths = validator.config[:allowed_base_paths]
       # Custom paths should be included
       expect(allowed_paths).to include("/tmp")
       # System temp directories should be automatically added
       expect(allowed_paths.length).to be >= 1
-      
+
       expect(validator.config[:denied_patterns]).to be_an(Array) # Still includes defaults
     end
   end

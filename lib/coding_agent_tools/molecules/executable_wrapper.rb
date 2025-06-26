@@ -147,13 +147,13 @@ module CodingAgentTools
         restore_streams
         output_content = get_captured_content
         print_modified_output(output_content)
-        
+
         # Handle case where CLI returns unexpected types (e.g., Set instead of Integer)
         # This can happen when CLI registration has issues
         unless status_code.is_a?(Integer)
           status_code = 0  # Assume success if we get an unexpected type
         end
-        
+
         exit(status_code) if status_code != 0
       end
 
