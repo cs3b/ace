@@ -47,7 +47,7 @@ module CodingAgentTools
             models = get_available_models(provider, options[:refresh])
             filtered_models = filter_models(models, options[:filter])
             output_models(filtered_models, options.merge(provider: provider))
-            return 0
+            0
           rescue => e
             handle_error(e, options[:debug])
             exit(1)

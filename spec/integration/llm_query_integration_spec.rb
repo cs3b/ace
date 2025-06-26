@@ -673,7 +673,7 @@ RSpec.describe "llm-query integration", type: :integration do
 
         # Test one representative malicious path (all non-existent paths behave the same)
         malicious_path = "../../../etc/passwd"
-        
+
         # This should succeed as it's treated as inline prompt
         _, stderr, _ = execute_gem_executable(exe_name,
           ["google", malicious_path], env: env)

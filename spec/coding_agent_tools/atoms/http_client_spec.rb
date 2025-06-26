@@ -8,16 +8,16 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
   let(:client) { described_class.new }
   let(:custom_client) { described_class.new(timeout: 60, open_timeout: 20) }
   let(:test_url) { "https://api.example.com" }
-  
+
   # Helper method to create a fast client for testing retry/timeout behavior
   def fast_client(retry_config = {})
     default_fast_config = {
-      max_attempts: 2, 
+      max_attempts: 2,
       base_delay: 0.001
     }
     described_class.new(retry_config: default_fast_config.merge(retry_config))
   end
-  
+
   # Helper to mock sleep for fast test execution
   def mock_sleep_delays
     allow_any_instance_of(CodingAgentTools::Molecules::RetryMiddleware).to receive(:sleep)
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
 
     it "handles connection errors" do
       mock_sleep_delays
-      
+
       stub_request(:get, "#{test_url}/endpoint").to_raise(Faraday::ConnectionFailed)
 
       expect {
@@ -79,7 +79,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
 
     it "retries 500 server errors and eventually fails" do
       mock_sleep_delays
-      
+
       stub_request(:get, "#{test_url}/error")
         .to_return(status: 500, body: "Internal Server Error")
         .times(3) # Should retry 3 times by default
@@ -142,7 +142,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
 
     it "handles connection errors" do
       mock_sleep_delays
-      
+
       stub_request(:post, "#{test_url}/endpoint").to_raise(Faraday::ConnectionFailed)
 
       expect {
@@ -232,7 +232,7 @@ RSpec.describe CodingAgentTools::Atoms::HTTPClient do
 
   describe "retry behavior", :slow do
     let(:retry_client) { fast_client }
-    
+
     before do
       mock_sleep_delays
     end

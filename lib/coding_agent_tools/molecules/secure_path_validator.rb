@@ -62,10 +62,10 @@ module CodingAgentTools
       # @param security_logger [SecurityLogger, nil] Logger for security events
       def initialize(config: {}, security_logger: nil)
         @config = DEFAULT_CONFIG.merge(config)
-        
+
         # Ensure allowed_base_paths is always an Array (not Set or other type)
         @config[:allowed_base_paths] = Array(@config[:allowed_base_paths]).dup
-        
+
         # Add system temporary directories to allowed paths if not already present
         system_temp_dirs = discover_system_temp_directories
         system_temp_dirs.each do |temp_dir|
@@ -73,7 +73,7 @@ module CodingAgentTools
             @config[:allowed_base_paths] << temp_dir
           end
         end
-        
+
         @security_logger = security_logger || create_default_logger
       end
 
@@ -134,7 +134,7 @@ module CodingAgentTools
       # @return [Array<String>] List of additional temporary directories to allow
       def discover_system_temp_directories
         temp_dirs = []
-        
+
         # Check common environment variables for temporary directories
         %w[TMPDIR TMP TEMP].each do |env_var|
           temp_path = ENV[env_var]
@@ -144,7 +144,7 @@ module CodingAgentTools
             temp_dirs << resolved_path unless temp_dirs.include?(resolved_path)
           end
         end
-        
+
         # Ruby's default temporary directory
         begin
           ruby_tmp = Dir.tmpdir
@@ -155,7 +155,7 @@ module CodingAgentTools
         rescue
           # Ignore errors in discovering Ruby's tmpdir
         end
-        
+
         temp_dirs
       end
 

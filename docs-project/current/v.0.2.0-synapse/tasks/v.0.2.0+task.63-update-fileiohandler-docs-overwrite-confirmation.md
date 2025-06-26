@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.63
-status: pending
+status: done
 priority: critical
 estimate: 2h
 dependencies: []
@@ -48,24 +48,24 @@ Update user-facing documentation to explain the new interactive overwrite confir
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Review current `llm-query` command documentation in README.md
-* [ ] Identify all locations where file output behavior is documented
-* [ ] Review the actual implementation to understand the exact behavior of `--force` flag and confirmation prompts
+* [x] Review current `llm-query` command documentation in README.md
+* [x] Identify all locations where file output behavior is documented
+* [x] Review the actual implementation to understand the exact behavior of `--force` flag and confirmation prompts
 
 ### Execution Steps
-- [ ] Update README.md `llm-query` command section to include `--force` flag documentation
-- [ ] Add explanation of interactive overwrite confirmation behavior
-- [ ] Include practical examples showing both interactive and scripted usage
-- [ ] Update any other relevant documentation mentioning file output behavior
-- [ ] Validate that all examples work as documented
+- [x] Update README.md `llm-query` command section to include `--force` flag documentation
+- [x] Add explanation of interactive overwrite confirmation behavior
+- [x] Include practical examples showing both interactive and scripted usage
+- [x] Update any other relevant documentation mentioning file output behavior
+- [x] Validate that all examples work as documented
 
 ## Acceptance Criteria
 
-- [ ] README.md includes documentation of the `--force` flag for `llm-query` command
-- [ ] Interactive overwrite confirmation behavior is clearly explained
-- [ ] Examples demonstrate both interactive and non-interactive usage scenarios
-- [ ] Users understand why prompts appear and how to bypass them in scripts
-- [ ] All CLI examples in documentation are accurate and up-to-date
+- [x] README.md includes documentation of the `--force` flag for `llm-query` command
+- [x] Interactive overwrite confirmation behavior is clearly explained
+- [x] Examples demonstrate both interactive and non-interactive usage scenarios
+- [x] Users understand why prompts appear and how to bypass them in scripts
+- [x] All CLI examples in documentation are accurate and up-to-date
 
 ## Out of Scope
 
