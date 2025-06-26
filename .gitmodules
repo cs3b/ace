@@ -1,0 +1,9 @@
+[submodule "dev-handbook"]
+	path = dev-handbook
+	url = git@github.com:cs3b/coding-agent-handbook.git
+[submodule "dev-taskflow"]
+	path = dev-taskflow
+	url = git@github.com:cs3b/coding-agent-handbook-taskflow.git
+[submodule "dev-tools"]
+	path = dev-tools
+	url = git@github.com:cs3b/coding-agent-tools.git
