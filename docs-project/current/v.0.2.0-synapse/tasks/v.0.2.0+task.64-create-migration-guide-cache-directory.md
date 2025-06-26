@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.64
-status: pending
+status: done
 priority: critical
 estimate: 1.5h
 dependencies: []
@@ -51,29 +51,29 @@ Create comprehensive migration documentation for the cache directory location ch
 ## Implementation Plan
 
 ### Planning Steps
-* [ ] Review the XDGDirectoryResolver and CacheManager implementation to understand migration behavior
-* [ ] Identify all scenarios where migration might occur or fail
-* [ ] Determine what environment variables affect the new cache location
+* [x] Review the XDGDirectoryResolver and CacheManager implementation to understand migration behavior
+* [x] Identify all scenarios where migration might occur or fail
+* [x] Determine what environment variables affect the new cache location
 
 ### Execution Steps
-- [ ] Add "Cache Directory Location Change" section to docs/MIGRATION.md
-- [ ] Document the path change from `~/.coding-agent-tools-cache` to `~/.cache/coding-agent-tools`
-- [ ] Explain automatic migration triggers (first run of cache-using commands)
-- [ ] Document environment variables that affect cache location (`XDG_CACHE_HOME`, `HOME`)
-- [ ] Provide manual migration instructions for edge cases
-- [ ] Add troubleshooting section for migration failures
-- [ ] Update README.md to reference the migration guide
-- [ ] Validate that all documented procedures work correctly
+- [x] Add "Cache Directory Location Change" section to docs/MIGRATION.md
+- [x] Document the path change from `~/.coding-agent-tools-cache` to `~/.cache/coding-agent-tools`
+- [x] Explain automatic migration triggers (first run of cache-using commands)
+- [x] Document environment variables that affect cache location (`XDG_CACHE_HOME`, `HOME`)
+- [x] Provide manual migration instructions for edge cases
+- [x] Add troubleshooting section for migration failures
+- [x] Update README.md to reference the migration guide
+- [x] Validate that all documented procedures work correctly
 
 ## Acceptance Criteria
 
-- [ ] MIGRATION.md contains comprehensive cache directory migration documentation
-- [ ] Users understand the path change and automatic migration behavior
-- [ ] Manual migration procedures are documented for edge cases
-- [ ] Environment variable influences on cache location are explained
-- [ ] Troubleshooting steps are provided for migration failures
-- [ ] README.md references the migration guide appropriately
-- [ ] All documented procedures have been tested and work correctly
+- [x] MIGRATION.md contains comprehensive cache directory migration documentation
+- [x] Users understand the path change and automatic migration behavior
+- [x] Manual migration procedures are documented for edge cases
+- [x] Environment variable influences on cache location are explained
+- [x] Troubleshooting steps are provided for migration failures
+- [x] README.md references the migration guide appropriately
+- [x] All documented procedures have been tested and work correctly
 
 ## Out of Scope
 

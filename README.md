@@ -6,7 +6,7 @@
 
 A Ruby gem providing CLI tools designed for AI coding agents and developers to streamline development workflows through predictable, standardized commands.
 
-> **⚠️ Breaking Changes in v0.2.0**: The LLM query commands have been unified. If you're upgrading from v0.1.x, see the **[Migration Guide](docs/MIGRATION.md)** for instructions on updating your scripts and commands.
+> **⚠️ Breaking Changes in v0.2.0**: The LLM query commands have been unified and cache directory location has changed to XDG-compliant paths. If you're upgrading from v0.1.x, see the **[Migration Guide](docs/MIGRATION.md)** for instructions on updating your scripts and cache migration information.
 
 ## 🚀 Quick Start
 
