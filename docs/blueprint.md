@@ -21,6 +21,7 @@ coding-agent-tools/
 │   ├── gc                    # Git commit with standardized format
 │   ├── gl                    # Get recent git log
 │   ├── lint                  # Run StandardRB code quality checks
+│   ├── lint-cassettes        # Check VCR cassette sizes (warnings only)
 │   ├── rc                    # Get current release context
 │   ├── setup                 # Initial development setup
 │   ├── tal                   # List all tasks
@@ -162,6 +163,7 @@ Tools for project development and maintenance:
 # Testing and code quality
 bin/test              # Run the test suite
 bin/lint              # Run StandardRB code quality checks
+bin/lint-cassettes    # Check VCR cassette sizes (warnings only)
 bin/build             # Build the gem and verify installation
 
 # Task management (wraps docs-dev tools)

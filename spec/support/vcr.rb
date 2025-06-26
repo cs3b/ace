@@ -169,6 +169,45 @@ VCR.configure do |config|
       # Normalize random file paths like /tmp/does_not_exist_1234.txt
       interaction.request.body.gsub!(/\/tmp\/does_not_exist_\d+\.txt/, "/tmp/does_not_exist_XXXX.txt")
     end
+
+    # Optimize model pricing data for syntax tests that don't need full pricing information
+    if interaction.request.uri.include?("model_prices_and_context_window.json")
+      # Create a minimal pricing fixture containing only essential Google model data
+      minimal_pricing_data = {
+        "gemini-2.0-flash-lite" => {
+          "max_tokens" => 8192,
+          "max_input_tokens" => 1000000,
+          "max_output_tokens" => 8192,
+          "input_cost_per_token" => 0.000001,
+          "output_cost_per_token" => 0.000002,
+          "litellm_provider" => "gemini",
+          "mode" => "chat",
+          "supports_function_calling" => true,
+          "supports_vision" => true,
+          "supports_system_messages" => true
+        },
+        "gemini-1.5-flash" => {
+          "max_tokens" => 8192,
+          "max_input_tokens" => 1000000,
+          "max_output_tokens" => 8192,
+          "input_cost_per_token" => 0.000001,
+          "output_cost_per_token" => 0.000002,
+          "litellm_provider" => "gemini",
+          "mode" => "chat",
+          "supports_function_calling" => true,
+          "supports_vision" => true,
+          "supports_system_messages" => true
+        }
+      }
+
+      # Replace the massive pricing response with minimal data for test optimization
+      interaction.response.body = JSON.generate(minimal_pricing_data)
+
+      # Update content length header to match new body size
+      if interaction.response.headers["Content-Length"]
+        interaction.response.headers["Content-Length"] = [interaction.response.body.bytesize.to_s]
+      end
+    end
   end
 
   # Configure error handling
