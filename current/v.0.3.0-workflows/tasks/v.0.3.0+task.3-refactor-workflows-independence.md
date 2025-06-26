@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.3
-status: pending
+status: in-progress
 priority: high
 estimate: 25h
 dependencies: [v.0.3.0+task.1]
@@ -84,23 +84,23 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
 
 ### Planning Steps
 
-* [ ] Review dependency analysis findings from task v.0.3.0+task.1
+* [x] Review dependency analysis findings from task v.0.3.0+task.1
   > TEST: Analysis Review Complete
   > Type: Pre-condition Check
   > Assert: Dependency analysis results are incorporated into refactoring plan
   > Command: bin/test --check-dependency-review workflow-independence-plan.md
-* [ ] Plan specific refactoring approach for each workflow
-* [ ] Design context embedding strategy
+* [x] Plan specific refactoring approach for each workflow
+* [x] Design context embedding strategy
 
 ### Execution Steps
 
-- [ ] Refactor draft-release.wf.md to be self-contained
+- [x] Refactor draft-release.wf.md to be self-contained
   > TEST: Draft Release Independence
   > Type: Action Validation
   > Assert: Draft release workflow can execute without external workflow references
   > Command: bin/test --check-workflow-independence draft-release.wf.md
-- [ ] Refactor breakdown-notes-into-tasks.wf.md for independence
-- [ ] Refactor update-roadmap.wf.md to embed necessary context
+- [x] Refactor breakdown-notes-into-tasks.wf.md for independence
+- [x] Refactor update-roadmap.wf.md to embed necessary context
 - [ ] Embed template content and reference materials within workflows
 - [ ] Remove or replace cross-workflow dependencies
 - [ ] Validate each workflow can execute independently
