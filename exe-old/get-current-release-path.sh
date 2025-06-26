@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Function to print usage instructions
 print_usage() {
-    echo "Usage: docs-dev/tools/get-current-release-path.sh [OPTIONS]"
+    echo "Usage: dev-handbook/tools/get-current-release-path.sh [OPTIONS]"
     echo ""
     echo "Determines the appropriate directory for storing newly created tasks."
     echo "Returns two lines: directory path and version string (empty if no current release)."
@@ -16,7 +16,7 @@ print_usage() {
     echo "  -h, --help    Display this help message"
     echo ""
     echo "Output format:"
-    echo "  Line 1: Directory path (e.g., 'docs-project/current/v.0.3.0-codename' or 'docs-dev/backlog/tasks')"
+    echo "  Line 1: Directory path (e.g., 'dev-taskflow/current/v.0.3.0-codename' or 'dev-handbook/backlog/tasks')"
     echo "  Line 2: Version string (e.g., 'v.0.3.0' or empty string)"
 }
 
@@ -37,16 +37,16 @@ case "${1:-}" in
 esac
 
 # Main logic to find current release directory
-current_release_pattern="docs-project/current/v.*.*.*-*"
+current_release_pattern="dev-taskflow/current/v.*.*.*-*"
 
 # Find directories matching the current release pattern
-release_dirs=(docs-project/current/v.*.*.*)
+release_dirs=(dev-taskflow/current/v.*.*.*)
 if [[ ${#release_dirs[@]} -eq 1 && -d "${release_dirs[0]}" ]]; then
     # Found exactly one current release directory
     release_dir="${release_dirs[0]}"
     
     # Extract version from directory name
-    # Pattern: docs-project/current/v.X.Y.Z-codename -> v.X.Y.Z
+    # Pattern: dev-taskflow/current/v.X.Y.Z-codename -> v.X.Y.Z
     dir_name=$(basename "$release_dir")
     if [[ $dir_name =~ ^(v\.[0-9]+\.[0-9]+\.[0-9]+)- ]]; then
         version="${BASH_REMATCH[1]}"
@@ -87,11 +87,11 @@ elif [[ ${#release_dirs[@]} -gt 1 ]]; then
         echo "$version"
     else
         # Fallback to backlog
-        echo "docs-dev/backlog/tasks"
+        echo "dev-handbook/backlog/tasks"
         echo ""
     fi
 else
     # No current release directory found, use backlog
-    echo "docs-dev/backlog/tasks"
+    echo "dev-handbook/backlog/tasks"
     echo ""
 fi

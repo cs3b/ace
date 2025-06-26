@@ -11,12 +11,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Path to the actual tool
-TOOL_PATH="$PROJECT_ROOT/docs-dev/tools/generate-doc-review-prompt"
+TOOL_PATH="$PROJECT_ROOT/dev-handbook/tools/generate-doc-review-prompt"
 
 # Check if the tool exists
 if [[ ! -f "$TOOL_PATH" ]]; then
     echo "Error: Documentation review prompt generator not found at $TOOL_PATH"
-    echo "Make sure the docs-dev submodule is properly initialized."
+    echo "Make sure the dev-handbook submodule is properly initialized."
     exit 1
 fi
 

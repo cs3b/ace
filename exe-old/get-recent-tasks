@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# get-recent-tasks: Summarize recently updated tasks (done/in-progress) from docs-project
+# get-recent-tasks: Summarize recently updated tasks (done/in-progress) from dev-taskflow
 require 'optparse'
 require 'yaml'
 require 'time'
@@ -28,8 +28,8 @@ since_time = Time.now - since_seconds
 
 # Find all relevant .md files
 task_dirs = [
-  'docs-project/current',
-  'docs-project/done'
+  'dev-taskflow/current',
+  'dev-taskflow/done'
 ]
 files = []
 task_dirs.each do |dir|
@@ -71,7 +71,7 @@ entries.sort_by! { |e| -e[:mtime].to_i }
 puts "%-18s  %-8s  %-19s  %s" % ["Task ID", "Status", "Updated", "Title"]
 puts "="*70
 entries.each do |e|
-  rel_path = e[:path].sub(/^.*docs-project\//, 'docs-project/')
+  rel_path = e[:path].sub(/^.*dev-taskflow\//, 'dev-taskflow/')
   puts "%-18s  %-8s  %-19s  %s" % [e[:id], e[:status], e[:mtime].strftime('%Y-%m-%d %H:%M'), e[:title]]
   puts "    #{rel_path}"
 end

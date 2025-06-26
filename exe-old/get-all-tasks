@@ -6,7 +6,7 @@ require 'set'
 
 # --- Configuration ---
 # These paths are relative to the project root where the script is expected to be run from.
-BASE_PATH = Pathname.new("docs-project")
+BASE_PATH = Pathname.new("dev-taskflow")
 CURRENT_RELEASES_DIR = BASE_PATH / "current"
 BACKLOG_RELEASES_DIR = BASE_PATH / "backlog"
 TASKS_SUBDIR_NAME = "tasks"
@@ -92,7 +92,7 @@ elsif input_arg.match?(VERSION_REGEX) # Argument is a version string like "v0.1.
     abort "Error: Could not find a release directory starting with version '#{input_arg}' in #{CURRENT_RELEASES_DIR} or #{BACKLOG_RELEASES_DIR}."
   end
 else
-  abort "Usage: #{$PROGRAM_NAME} [version (v.X.Y.Z) | path/to/release/folder (e.g., docs-project/current/v.X.Y.Z-codename)]\\n       (No arguments defaults to the unique release in #{CURRENT_RELEASES_DIR})"
+  abort "Usage: #{$PROGRAM_NAME} [version (v.X.Y.Z) | path/to/release/folder (e.g., dev-taskflow/current/v.X.Y.Z-codename)]\\n       (No arguments defaults to the unique release in #{CURRENT_RELEASES_DIR})"
 end
 
 tasks_dir = release_dir_path / TASKS_SUBDIR_NAME

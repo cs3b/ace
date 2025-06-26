@@ -57,9 +57,9 @@ test_current_release_exists() {
     print_test_header "Test 1: Current release directory exists"
     
     # Setup: Create mock directory structure with current release
-    mkdir -p docs-project/current
-    mkdir -p docs-dev/backlog/tasks
-    mkdir -p "docs-project/current/v.1.2.3-test-release"
+    mkdir -p dev-taskflow/current
+    mkdir -p dev-handbook/backlog/tasks
+    mkdir -p "dev-taskflow/current/v.1.2.3-test-release"
     
     # Run the tool
     output=$("$TOOL_PATH" 2>&1)
@@ -78,10 +78,10 @@ test_current_release_exists() {
         return 1
     fi
     
-    if [[ "$path_line" == "docs-project/current/v.1.2.3-test-release" ]]; then
+    if [[ "$path_line" == "dev-taskflow/current/v.1.2.3-test-release" ]]; then
         print_pass "Correct path returned: $path_line"
     else
-        print_fail "Expected 'docs-project/current/v.1.2.3-test-release', got '$path_line'"
+        print_fail "Expected 'dev-taskflow/current/v.1.2.3-test-release', got '$path_line'"
         return 1
     fi
     
@@ -98,9 +98,9 @@ test_no_current_release() {
     print_test_header "Test 2: No current release directory exists"
     
     # Setup: Create mock directory structure without current release
-    rm -rf docs-project docs-dev
-    mkdir -p docs-project/current
-    mkdir -p docs-dev/backlog/tasks
+    rm -rf dev-taskflow dev-handbook
+    mkdir -p dev-taskflow/current
+    mkdir -p dev-handbook/backlog/tasks
     # No release directory created this time
     
     # Run the tool
@@ -120,10 +120,10 @@ test_no_current_release() {
         return 1
     fi
     
-    if [[ "$path_line" == "docs-dev/backlog/tasks" ]]; then
+    if [[ "$path_line" == "dev-handbook/backlog/tasks" ]]; then
         print_pass "Correct backlog path returned: $path_line"
     else
-        print_fail "Expected 'docs-dev/backlog/tasks', got '$path_line'"
+        print_fail "Expected 'dev-handbook/backlog/tasks', got '$path_line'"
         return 1
     fi
     
@@ -140,11 +140,11 @@ test_multiple_release_directories() {
     print_test_header "Test 3: Multiple release directories exist"
     
     # Setup: Create multiple release directories
-    rm -rf docs-project docs-dev
-    mkdir -p docs-project/current
-    mkdir -p docs-dev/backlog/tasks
-    mkdir -p "docs-project/current/v.1.0.0-first"
-    mkdir -p "docs-project/current/v.2.0.0-second"
+    rm -rf dev-taskflow dev-handbook
+    mkdir -p dev-taskflow/current
+    mkdir -p dev-handbook/backlog/tasks
+    mkdir -p "dev-taskflow/current/v.1.0.0-first"
+    mkdir -p "dev-taskflow/current/v.2.0.0-second"
     
     # Run the tool
     output=$("$TOOL_PATH" 2>&1)
@@ -164,7 +164,7 @@ test_multiple_release_directories() {
     fi
     
     # Should pick one of the directories (implementation picks first lexicographically)
-    if [[ "$path_line" =~ ^docs-project/current/v\.[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+    if [[ "$path_line" =~ ^dev-taskflow/current/v\.[0-9]+\.[0-9]+\.[0-9]+- ]]; then
         print_pass "Valid release path returned: $path_line"
     else
         print_fail "Expected release path pattern, got '$path_line'"

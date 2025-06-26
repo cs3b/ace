@@ -9,5 +9,5 @@ ignore:
   - "coverage/**/*"
   - "pkg/**/*"
   - "*.gemspec"
-  - "docs-dev/**/*"
-  - "docs-project/**/*"
+  - "dev-handbook/**/*"
+  - "dev-taskflow/**/*"

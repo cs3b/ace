@@ -19,7 +19,7 @@
 # - Java (Maven): mvn test
 # - Java (Gradle): ./gradlew test
 #
-# Refer to `docs-dev/guides/testing/` for
+# Refer to `dev-handbook/guides/testing/` for
 # technology-specific testing guidance.
 
 set -e
