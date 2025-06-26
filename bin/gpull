@@ -1,0 +1,15 @@
+#!/usr/bin/env fish
+
+echo "Pulling main repository..."
+git pull
+
+echo "Pulling submodule: dev-handbook..."
+git -C dev-handbook pull
+
+echo "Pulling submodule: dev-taskflow..."
+git -C dev-taskflow pull
+
+echo "Pulling submodule: dev-tools..."
+git -C dev-tools pull
+
+echo "All repositories pulled successfully."

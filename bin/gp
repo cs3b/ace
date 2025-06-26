@@ -9,4 +9,7 @@ git -C dev-handbook push
 echo "Pushing submodule: dev-taskflow..."
 git -C dev-taskflow push
 
+echo "Pushing submodule: dev-tools..."
+git -C dev-tools push
+
 echo "All repositories pushed successfully."
