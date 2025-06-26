@@ -55,30 +55,30 @@ For visual representations of the architecture, see [Architecture Diagrams](./ar
 #### Molecules (Composition Layer)
 - **Purpose**: Simple compositions of Atoms that form reusable operations.
 - **Technology**: Ruby classes that combine multiple Atoms for specific tasks.
-- **Key Components**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`, `ExecutableWrapper`, `SecurePathValidator`, `FileOperationConfirmer`, `FileIOHandler`.
-- **Key Responsibilities**: Building HTTP requests, parsing API responses, managing credentials, wrapping system executables, validating file paths for security, confirming file operations safely, handling file I/O with security integration.
+- **Key Components**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`, `ExecutableWrapper`, `SecurePathValidator`, `FileOperationConfirmer`, `FileIOHandler`, `CacheManager`, `RetryMiddleware`, `MetadataNormalizer`, `ProviderUsageParsers`.
+- **Key Responsibilities**: Building HTTP requests, parsing API responses, managing credentials, wrapping system executables, validating file paths for security, confirming file operations safely, handling file I/O with security integration, XDG-compliant cache management with migration support, HTTP resilience with exponential backoff, normalizing provider response metadata, parsing usage data from different LLM providers.
 - **Location**: `lib/coding_agent_tools/molecules/`.
 
 #### Atoms (Utility Layer)
 - **Purpose**: Smallest, indivisible units of functionality with no dependencies on other gem components.
 - **Technology**: Simple Ruby classes or modules providing basic utilities.
-- **Key Components**: `EnvReader`, `HTTPClient`, `JSONFormatter`, `SecurityLogger`.
-- **Key Responsibilities**: Reading environment variables, making HTTP requests, formatting JSON data, security-focused logging with sanitization.
+- **Key Components**: `EnvReader`, `HTTPClient`, `JSONFormatter`, `SecurityLogger`, `XDGDirectoryResolver`.
+- **Key Responsibilities**: Reading environment variables, making HTTP requests, formatting JSON data, security-focused logging with sanitization, XDG-compliant directory resolution for cross-platform caching.
 - **Location**: `lib/coding_agent_tools/atoms/`.
 
 #### Models (Data Layer)
 - **Purpose**: Represents the data structures used within the gem.
 - **Technology**: Plain Old Ruby Objects (POROs) or simple data structures.
-- **Key Components**: `LlmModelInfo` and other data carriers.
-- **Key Responsibilities**: Defining the structure of data for LLM models, API responses, configuration.
+- **Key Components**: `LlmModelInfo`, `UsageMetadata`, `UsageMetadataWithCost`, `Pricing`, `DefaultModelConfig`.
+- **Key Responsibilities**: Defining the structure of data for LLM models, API responses, configuration, usage tracking with token counts, cost-enhanced usage metadata, pricing information from LiteLLM, default model configurations per provider.
 - **Location**: `lib/coding_agent_tools/models/`.
 
 ### ATOM-Based Code Structure in `lib/coding_agent_tools/`
 
 The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns. For detailed classification rules and practical guidelines, see the [ATOM Component Classification House Rules](docs-dev/guides/atom-house-rules.md):
 
--   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, `SecurityLogger` for security-focused logging with automatic sanitization, utility functions for string normalization, basic file readers).
--   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, `SecurePathValidator` for path security validation, `FileOperationConfirmer` for safe file operation confirmations, `FileIOHandler` for secure file I/O operations, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).
+-   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, `SecurityLogger` for security-focused logging with automatic sanitization, `XDGDirectoryResolver` for cross-platform directory resolution following XDG Base Directory specifications, utility functions for string normalization, basic file readers).
+-   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, `SecurePathValidator` for path security validation, `FileOperationConfirmer` for safe file operation confirmations, `FileIOHandler` for secure file I/O operations, `CacheManager` for XDG-compliant cache management with automatic migration, `RetryMiddleware` for HTTP resilience with exponential backoff, `MetadataNormalizer` for standardizing provider response metadata, `ProviderUsageParsers` collection for parsing usage data from different LLM providers, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).
 -   **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., `GeminiClient` for interacting with the Gemini API, `LMStudioClient` for local LLM interactions, `PromptProcessor` for preparing and parsing LLM prompts, LLM queriers, commit message suggesters). These handle the core business logic and workflows.
 -   **Ecosystems (`lib/coding_agent_tools/ecosystems/`)**: Cohesive groupings of Organisms and other components that deliver a larger, bounded context or subsystem. The overall CLI application, orchestrated by `dry-cli`, can be considered the primary ecosystem.
 -   **Models (`lib/coding_agent_tools/models/`)**: Plain Old Ruby Objects (POROs), typically implemented as Structs, that act as pure, immutable data carriers. They have no external dependencies or I/O operations and focus solely on data representation (e.g., `LlmModelInfo` for language model metadata, `Task` for task representation, `LLMResponse` for API response data).
@@ -93,12 +93,17 @@ Data typically flows from the CLI (user input) to an Organism, which orchestrate
 
 1.  **Input**: User/agent invokes `exe/llm-gemini-query` with a prompt and optional model selection.
 2.  **Processing (CLI)**: The CLI command class parses arguments, validates input, and calls the relevant Organism.
-3.  **Processing (Organism)**: GeminiClient Organism orchestrates the request by using Molecules to build HTTP requests and manage credentials.
-4.  **External Interaction (Molecules/Atoms)**: HTTPRequestBuilder Molecule creates the request structure, HTTPClient Atom executes the API call to Google Gemini.
-5.  **External Service**: Gemini API processes the prompt and returns a response.
-6.  **Processing (Molecules/Atoms)**: APIResponseParser Molecule processes the JSON response, JSONFormatter Atom structures the data.
-7.  **Processing (Organism)**: GeminiClient receives the formatted response, applies any business rules, and prepares output.
-8.  **Output**: CLI displays the formatted response or reports errors with appropriate error handling.
+3.  **Security Validation**: SecurePathValidator Molecule validates any file paths, SecurityLogger Atom logs security events.
+4.  **Cache Check**: CacheManager Molecule checks for cached model information using XDGDirectoryResolver Atom for path resolution.
+5.  **Processing (Organism)**: GeminiClient Organism orchestrates the request by using Molecules to build HTTP requests and manage credentials.
+6.  **HTTP Resilience**: RetryMiddleware Molecule wraps the HTTP request with exponential backoff and error handling.
+7.  **External Interaction (Molecules/Atoms)**: HTTPRequestBuilder Molecule creates the request structure, HTTPClient Atom executes the API call to Google Gemini.
+8.  **External Service**: Gemini API processes the prompt and returns a response.
+9.  **Response Processing**: APIResponseParser Molecule processes the JSON response, MetadataNormalizer Molecule standardizes response metadata, ProviderUsageParsers extract usage information.
+10. **Cost Calculation**: UsageMetadataWithCost Model combines usage data with Pricing Model to calculate costs.
+11. **Caching**: CacheManager Molecule caches response data and updates usage tracking information.
+12. **Processing (Organism)**: GeminiClient receives the formatted response with cost information, applies business rules, and prepares output.
+13. **Output**: CLI displays the formatted response with cost summary, usage statistics, and appropriate error handling with security-sanitized logs.
 
 
 
@@ -319,9 +324,12 @@ For visual representations of the security architecture, see [Architecture Diagr
 ## Performance Considerations
 
 -   **Startup Latency**: Target low startup latency (≤ 200 ms for CLI commands) for responsiveness, especially when invoked by agents.
--   **XDG-Compliant Caching**: `CacheManager` provides structured, standards-compliant caching for model lists and API responses, significantly reducing redundant operations.
--   **HTTP Resilience**: `RetryMiddleware` implements exponential backoff for failed requests, prioritizing reliability over raw speed while preventing API overwhelm.
--   **Cache Migration**: Automatic migration from legacy cache locations ensures no performance regression during upgrades.
+-   **XDG-Compliant Caching**: `CacheManager` provides structured, standards-compliant caching for model lists and API responses, significantly reducing redundant operations and API calls.
+-   **HTTP Resilience**: `RetryMiddleware` implements exponential backoff for failed requests, prioritizing reliability over raw speed while preventing API overwhelm and improving success rates.
+-   **Cache Performance**: `CacheManager` uses atomic file operations and intelligent cache invalidation to minimize I/O overhead while ensuring data consistency across concurrent operations.
+-   **Retry Optimization**: `RetryMiddleware` includes jitter and configurable delay intervals to prevent thundering herd problems and optimize retry timing based on failure patterns.
+-   **Cache Migration**: Automatic migration from legacy cache locations ensures no performance regression during upgrades, with migration occurring asynchronously to avoid blocking operations.
+-   **Memory Efficiency**: Components designed to minimize memory footprint, with streaming operations and lazy loading for large data sets.
 -   **Profiling**: Standard Ruby profiling tools can be used to identify performance bottlenecks.
 
 For detailed caching architecture, see the [Architecture Diagrams](./architecture/diagrams.md).
