@@ -127,7 +127,8 @@ class DocReviewPromptGenerator
       adrs: collect_adrs(project_root),
       project_docs: collect_project_docs(project_root),
       root_docs: collect_root_docs(project_root),
-      tech_docs: collect_tech_docs(project_root)
+      tech_docs: collect_tech_docs(project_root),
+      key_docs: collect_key_docs(project_root)
     }
   end
 
@@ -164,6 +165,34 @@ class DocReviewPromptGenerator
     files.map { |f| format_file_info(f, project_root) }
   end
 
+  def collect_key_docs(project_root)
+    # Key documentation files that should always be included as context
+    key_files = [
+      'README.md',
+      'docs/architecture.md',
+      'docs/blueprint.md',
+      'docs/DEVELOPMENT.md',
+      'docs/what-do-we-build.md'
+    ]
+
+    key_files.map do |file_path|
+      full_path = project_root / file_path
+      if full_path.exist?
+        format_key_doc_with_content(full_path, project_root)
+      else
+        "#{file_path}: Not found"
+      end
+    end.compact
+  end
+
+  def format_key_doc_with_content(file_path, project_root)
+    relative_path = Pathname.new(file_path).relative_path_from(project_root)
+    content = File.read(file_path).strip
+    "#{relative_path}:\n#{content}\n---"
+  rescue => e
+    "#{relative_path}: Error reading - #{e.message}"
+  end
+
   def format_file_info(file_path, project_root)
     relative_path = Pathname.new(file_path).relative_path_from(project_root)
 
@@ -186,6 +215,7 @@ class DocReviewPromptGenerator
       .gsub('[LIST YOUR PROJECT DOCUMENTATION FILES HERE]', format_list(doc_state[:project_docs]))
       .gsub('[LIST YOUR ROOT MARKDOWN FILES HERE]', format_list(doc_state[:root_docs]))
       .gsub('[LIST YOUR TECHNICAL DOCUMENTATION FILES HERE]', format_list(doc_state[:tech_docs]))
+      .gsub('[INSERT KEY DOCUMENTATION CONTENT HERE]', format_key_docs(doc_state[:key_docs]))
   end
 
   def read_prompt_template
@@ -221,6 +251,12 @@ class DocReviewPromptGenerator
     else
       items.map { |item| "- #{item}" }.join("\n")
     end
+  end
+
+  def format_key_docs(key_docs)
+    return "No key documentation found" if key_docs.empty?
+    
+    key_docs.join("\n\n")
   end
 
   def write_prompt_file(content)

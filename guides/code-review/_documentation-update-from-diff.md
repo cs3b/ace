@@ -20,25 +20,9 @@ This project follows:
 
 ### 2. Current Documentation State
 
-#### Architecture Decision Records (ADRs)
-Location: `docs-project/decisions/`
-Current files:
-[LIST YOUR CURRENT ADR FILES HERE]
-
-#### Project Documentation  
-Location: `docs-project/*.md` (excluding roadmap)
-Current files:
-[LIST YOUR PROJECT DOCUMENTATION FILES HERE]
-
-#### Root Documentation
-Location: `*.md` files in project root
-Current files:
-[LIST YOUR ROOT MARKDOWN FILES HERE]
-
-#### Technical Documentation
-Location: `docs/**/*.md`
-Current files:
-[LIST YOUR TECHNICAL DOCUMENTATION FILES HERE]
+#### Key Documentation Context
+Essential documentation files included for review context:
+[INSERT KEY DOCUMENTATION CONTENT HERE]
 
 ## Your Comprehensive Analysis Task
 
@@ -218,7 +202,7 @@ Structure your comprehensive response as:
 ### New Features
 [Detailed list with implications]
 
-### Modified Features  
+### Modified Features
 [Detailed list with implications]
 
 ### Architecture Changes
