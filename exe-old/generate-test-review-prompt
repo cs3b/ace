@@ -7,16 +7,16 @@
 #
 # Usage Examples:
 #   Generate prompt from a diff file:
-#     docs-dev/tools/generate-test-review-prompt -d changes.diff
+#     dev-handbook/tools/generate-test-review-prompt -d changes.diff
 #
 #   Specify custom output location:
-#     docs-dev/tools/generate-test-review-prompt -d changes.diff -o review-prompt.md
+#     dev-handbook/tools/generate-test-review-prompt -d changes.diff -o review-prompt.md
 #
 #   Include documentation context:
-#     docs-dev/tools/generate-test-review-prompt -d changes.diff --include-docs
+#     dev-handbook/tools/generate-test-review-prompt -d changes.diff --include-docs
 #
 #   Include implementation files for coverage verification:
-#     docs-dev/tools/generate-test-review-prompt -d changes.diff --include-implementation
+#     dev-handbook/tools/generate-test-review-prompt -d changes.diff --include-implementation
 
 require 'optparse'
 require 'pathname'

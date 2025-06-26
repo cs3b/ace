@@ -7,13 +7,13 @@
 #
 # Usage Examples:
 #   Generate prompt from a diff file:
-#     docs-dev/tools/generate-doc-review-prompt -d changes.diff
+#     dev-handbook/tools/generate-doc-review-prompt -d changes.diff
 #
 #   Specify custom output location:
-#     docs-dev/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
+#     dev-handbook/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
 #
 #   Include full documentation content for detailed analysis:
-#     docs-dev/tools/generate-doc-review-prompt -d changes.diff --include-content
+#     dev-handbook/tools/generate-doc-review-prompt -d changes.diff --include-content
 
 require 'optparse'
 require 'pathname'
@@ -133,7 +133,7 @@ class DocReviewPromptGenerator
   end
 
   def collect_adrs(project_root)
-    adr_dir = project_root / 'docs-project' / 'decisions'
+    adr_dir = project_root / 'dev-taskflow' / 'decisions'
     return ["No ADRs directory found"] unless adr_dir.exist?
 
     files = Dir.glob(adr_dir / '*.md').sort
@@ -145,8 +145,8 @@ class DocReviewPromptGenerator
   end
 
   def collect_project_docs(project_root)
-    docs_dir = project_root / 'docs-project'
-    return ["No docs-project directory found"] unless docs_dir.exist?
+    docs_dir = project_root / 'dev-taskflow'
+    return ["No dev-taskflow directory found"] unless docs_dir.exist?
 
     files = Dir.glob(docs_dir / '*.md').reject { |f| File.basename(f) == 'roadmap.md' }.sort
     files.map { |f| format_file_info(f, project_root) }
@@ -222,8 +222,8 @@ class DocReviewPromptGenerator
     # Try multiple possible locations for the template
     possible_paths = [
       File.join(__dir__, '..', 'guides', 'code-review', '_documentation-update-from-diff.md'),
-      File.join(@options[:project_root], 'docs-dev', 'guides', 'code-review', '_documentation-update-from-diff.md'),
-      File.join(Dir.pwd, 'docs-dev', 'guides', 'code-review', '_documentation-update-from-diff.md')
+      File.join(@options[:project_root], 'dev-handbook', 'guides', 'code-review', '_documentation-update-from-diff.md'),
+      File.join(Dir.pwd, 'dev-handbook', 'guides', 'code-review', '_documentation-update-from-diff.md')
     ]
 
     template_path = possible_paths.find { |path| File.exist?(path) }
@@ -232,7 +232,7 @@ class DocReviewPromptGenerator
       puts "Error: Prompt template not found. Searched in:"
       possible_paths.each { |path| puts "  - #{path}" }
       puts ""
-      puts "Make sure you're running from the project root or that the docs-dev"
+      puts "Make sure you're running from the project root or that the dev-handbook"
       puts "directory structure is properly set up."
       exit 1
     end

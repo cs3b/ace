@@ -19,7 +19,7 @@ def parse_task_sequential_number(task_id_str)
 end
 
 # Find all task files in current release
-task_files = Dir.glob('docs-project/current/*/tasks/*.md')
+task_files = Dir.glob('dev-taskflow/current/*/tasks/*.md')
 
 tasks = {}
 # Parse all tasks for id, status, dependencies, title, path

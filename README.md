@@ -291,7 +291,7 @@ For complete development information including environment setup, testing, build
 ### Project Documentation
 - [Project Vision](docs/what-do-we-build.md) - Goals and use cases
 - [Architecture](docs/architecture.md) - System design and patterns
-- [Documentation Structure Guide](docs-dev/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
+- [Documentation Structure Guide](dev-handbook/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
 
 ## 🤝 Contributing
 
@@ -303,7 +303,7 @@ We welcome contributions! Please see our [Contributing Guide](.github/CONTRIBUTI
 - Pull request process and guidelines
 - Commit message conventions
 
-This project follows documentation-driven development with structured task management in `docs-project/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
+This project follows documentation-driven development with structured task management in `dev-taskflow/`. See the [project blueprint](docs/blueprint.md) for navigation guidance.
 
 ### Quick Contribution Workflow
 

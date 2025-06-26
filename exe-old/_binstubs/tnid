@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 # tnid: Thin wrapper for get-next-task-id utility
 
-# This script assumes it is located in <project_root>/docs-dev/tools/_binstubs/
-# The target script is in <project_root>/docs-dev/tools/
+# This script assumes it is located in <project_root>/dev-handbook/tools/_binstubs/
+# The target script is in <project_root>/dev-handbook/tools/
 
-# __dir__ gives the directory of the current script (docs-dev/tools/_binstubs/).
-# \'../get-next-task-id\' navigates from docs-dev/tools/_binstubs/ up to docs-dev/tools/ and then selects the target script.
+# __dir__ gives the directory of the current script (dev-handbook/tools/_binstubs/).
+# \'../get-next-task-id\' navigates from dev-handbook/tools/_binstubs/ up to dev-handbook/tools/ and then selects the target script.
 
 target_script = File.expand_path('../get-next-task-id', __dir__)
 

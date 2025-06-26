@@ -12,9 +12,9 @@ set -e
 # Default settings
 DEFAULT_DEPTH=3
 DEFAULT_EXCLUDES=(
-  "docs-project/backlog"
-  "docs-project/done" 
-  "docs-project/sessions"
+  "dev-taskflow/backlog"
+  "dev-taskflow/done" 
+  "dev-taskflow/sessions"
   "tmp"
   "node_modules"
   ".git"
@@ -22,7 +22,7 @@ DEFAULT_EXCLUDES=(
 
 # Function to print usage instructions
 print_usage() {
-  echo "Usage: docs-dev/tools/show-directory-tree [OPTIONS]"
+  echo "Usage: dev-handbook/tools/show-directory-tree [OPTIONS]"
   echo ""
   echo "Options:"
   echo "  -L, --depth DEPTH       Specify the maximum display depth of the directory tree (default: $DEFAULT_DEPTH)"
