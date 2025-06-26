@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.3
-status: done
+status: in-progress
 priority: high
 estimate: 25h
 dependencies: [v.0.3.0+task.1]
@@ -103,14 +103,17 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
 - [x] Refactor update-roadmap.wf.md to embed necessary context
 - [x] Embed template content and reference materials within workflows
 - [x] Remove or replace cross-workflow dependencies
+- [ ] Refactor initialize-project-structure.wf.md for independence
+- [ ] Refactor publish-release.wf.md for independence
+- [ ] Refactor update-blueprint.wf.md for independence
 - [ ] Validate each workflow can execute independently
 
 ## Acceptance Criteria
 
-- [x] All workflows can execute without external workflow dependencies
-- [x] Necessary context and templates embedded within each workflow
-- [x] Workflows maintain full functionality after refactoring
-- [x] No broken references or missing context
+- [ ] All workflows can execute without external workflow dependencies
+- [ ] Necessary context and templates embedded within each workflow
+- [ ] Workflows maintain full functionality after refactoring
+- [ ] No broken references or missing context
 
 ## Out of Scope
 
