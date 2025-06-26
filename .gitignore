@@ -33,5 +33,6 @@ debug_error.rb
 *.diff
 
 # docs-project specific files
-docs-project/**/code-review/**/*.diff
-docs-project/**/code-review/**/prompt*.md
+docs-project/**/*_review/**/*.diff
+docs-project/**/*_review/**/*prompt*.md
+docs-project/**/*_review/**/*prompt*.md
