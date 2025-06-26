@@ -134,7 +134,7 @@ bin/cr-docs -d changes.diff --include-content
 ### AI Agent Prompt Template
 
 The comprehensive AI agent prompt template is available at:
-[docs-dev/guides/code-review/_documentation-update-from-diff.md](docs-dev/guides/code-review/_documentation-update-from-diff.md)
+[dev-handbook/guides/code-review/_documentation-update-from-diff.md](dev-handbook/guides/code-review/_documentation-update-from-diff.md)
 
 This template provides structured instructions for AI agents to:
 - Perform systematic diff analysis
@@ -208,9 +208,9 @@ Before considering documentation updates complete:
 
 ## Related Documentation
 
-- [Documentation Guide](docs-dev/guides/documentation.g.md) - General documentation standards
-- [Version Control System Guide](docs-dev/guides/version-control-system.g.md) - Working with diffs and changes
-- [Quality Assurance Guide](docs-dev/guides/quality-assurance.g.md) - Review processes and standards
+- [Documentation Guide](dev-handbook/guides/documentation.g.md) - General documentation standards
+- [Version Control System Guide](dev-handbook/guides/version-control-system.g.md) - Working with diffs and changes
+- [Quality Assurance Guide](dev-handbook/guides/quality-assurance.g.md) - Review processes and standards
 
 ---
 

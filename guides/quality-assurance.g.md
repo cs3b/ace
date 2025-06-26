@@ -207,7 +207,7 @@ please refer to the examples in the [./quality-assurance/](./quality-assurance/)
 
 ## Related Documentation
 
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
-- [Testing Guidelines](docs-dev/guides/testing.g.md)
-- [Version Control](docs-dev/guides/version-control-system.g.md) (PR Templates)
-- [Security](docs-dev/guides/security.g.md)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+- [Testing Guidelines](dev-handbook/guides/testing.g.md)
+- [Version Control](dev-handbook/guides/version-control-system.g.md) (PR Templates)
+- [Security](dev-handbook/guides/security.g.md)

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide establishes the deterministic format requirements, validation criteria, and content guidelines for the project roadmap document (`docs-project/roadmap.md`). It serves as the authoritative specification that workflow instructions and other roadmap-related processes should reference to ensure consistent roadmap structure and quality.
+This guide establishes the deterministic format requirements, validation criteria, and content guidelines for the project roadmap document (`dev-taskflow/roadmap.md`). It serves as the authoritative specification that workflow instructions and other roadmap-related processes should reference to ensure consistent roadmap structure and quality.
 
 ## Overview
 
@@ -170,9 +170,9 @@ A concise, inspirational statement describing the long-term mission and value th
 **Release Status Tracking Format**:
 Releases should be included in the roadmap based on their location in the project folder structure:
 
-- **Future Releases** (`docs-project/backlog/`): Listed in table with target dates
-- **Active Releases** (`docs-project/current/`): Listed in table with current status indication
-- **Completed Releases** (`docs-project/done/`): Removed from table, delegated to changelog
+- **Future Releases** (`dev-taskflow/backlog/`): Listed in table with target dates
+- **Active Releases** (`dev-taskflow/current/`): Listed in table with current status indication
+- **Completed Releases** (`dev-taskflow/done/`): Removed from table, delegated to changelog
 
 When releases move between folders during lifecycle management:
 
@@ -182,9 +182,9 @@ When releases move between folders during lifecycle management:
 
 Release folder links should follow the pattern:
 
-- Backlog: `docs-project/backlog/v.X.Y.Z-codename/`
-- Current: `docs-project/current/v.X.Y.Z-codename/`
-- Done: `docs-project/done/v.X.Y.Z-codename/`
+- Backlog: `dev-taskflow/backlog/v.X.Y.Z-codename/`
+- Current: `dev-taskflow/current/v.X.Y.Z-codename/`
+- Done: `dev-taskflow/done/v.X.Y.Z-codename/`
 
 ### 5. Cross-Release Dependencies
 
@@ -360,12 +360,12 @@ Workflow instructions should reference this guide for format validation rather t
 
 ## Release Removal Process
 
-When releases are completed and moved to `docs-project/done/`, they must be systematically removed from the roadmap to prevent staleness and maintain focus on future work.
+When releases are completed and moved to `dev-taskflow/done/`, they must be systematically removed from the roadmap to prevent staleness and maintain focus on future work.
 
 ### Process Steps
 
 1. **Identify Completed Releases**
-   - Check `docs-project/done/` for newly archived releases
+   - Check `dev-taskflow/done/` for newly archived releases
    - Verify release completion status in project tracking
 
 2. **Remove from Planned Releases Table**
@@ -577,7 +577,7 @@ When roadmap updates fail during release lifecycle management, specific recovery
 
 - [Strategic Planning Guide](strategic-planning.g.md) - Conceptual framework and lifecycle
 - [Update Roadmap Workflow](../workflow-instructions/update-roadmap.wf.md) - Process for making updates (references this guide)
-- [Current Roadmap](../../docs-project/roadmap.md) - Live roadmap document
+- [Current Roadmap](../../dev-taskflow/roadmap.md) - Live roadmap document
 
 ## Last Updated
 

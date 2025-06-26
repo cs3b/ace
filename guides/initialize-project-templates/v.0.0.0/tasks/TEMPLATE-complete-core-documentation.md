@@ -29,9 +29,9 @@ Enhance and complete the core documentation files generated during project struc
 
 #### Modify
 
-- docs-project/what-do-we-build.md (enhance with detailed project vision)
-- docs-project/architecture.md (add technology stack and architectural patterns)
-- docs-project/blueprint.md (customize development guidelines and project structure)
+- dev-taskflow/what-do-we-build.md (enhance with detailed project vision)
+- dev-taskflow/architecture.md (add technology stack and architectural patterns)
+- dev-taskflow/blueprint.md (customize development guidelines and project structure)
 - README.md (update with current project information if needed)
 
 #### Delete
@@ -53,7 +53,7 @@ Enhance and complete the core documentation files generated during project struc
   > TEST: Documentation Baseline Review
   > Type: Pre-condition Check
   > Assert: Core documentation files exist and contain basic structure
-  > Command: test -s docs-project/what-do-we-build.md && test -s docs-project/architecture.md && test -s docs-project/blueprint.md
+  > Command: test -s dev-taskflow/what-do-we-build.md && test -s dev-taskflow/architecture.md && test -s dev-taskflow/blueprint.md
 - [ ] Identify missing information gaps in project vision and technical details
 - [ ] Gather specific technology stack and architectural decision information
 
@@ -63,27 +63,27 @@ Enhance and complete the core documentation files generated during project struc
   > TEST: Project Vision Complete
   > Type: Action Validation
   > Assert: what-do-we-build.md contains comprehensive project description
-  > Command: grep -q "Key Features\|Target Users\|Core Functionality" docs-project/what-do-we-build.md
+  > Command: grep -q "Key Features\|Target Users\|Core Functionality" dev-taskflow/what-do-we-build.md
 - [ ] Complete architecture.md with technology stack, system components, and integration patterns
   > TEST: Architecture Documentation Complete
   > Type: Action Validation
   > Assert: architecture.md includes technology stack and system architecture
-  > Command: grep -q "Technology Stack\|System Architecture\|Data Flow" docs-project/architecture.md
+  > Command: grep -q "Technology Stack\|System Architecture\|Data Flow" dev-taskflow/architecture.md
 - [ ] Customize blueprint.md with project-specific development guidelines and structure
   > TEST: Blueprint Customization Complete
   > Type: Action Validation
   > Assert: blueprint.md contains project-specific guidelines
-  > Command: grep -q "Development Guidelines\|Project Structure\|AI Agent Guidelines" docs-project/blueprint.md
+  > Command: grep -q "Development Guidelines\|Project Structure\|AI Agent Guidelines" dev-taskflow/blueprint.md
 - [ ] Update README.md to reflect current project status and documentation structure
   > TEST: README Alignment
   > Type: Action Validation
   > Assert: README.md aligns with core documentation
-  > Command: grep -q "docs-project\|Documentation" README.md
+  > Command: grep -q "dev-taskflow\|Documentation" README.md
 - [ ] Cross-validate consistency between all documentation files
   > TEST: Documentation Consistency
   > Type: Post-condition Check
   > Assert: All core documentation files are consistent and reference each other appropriately
-  > Command: bin/test --check-doc-consistency docs-project/
+  > Command: bin/test --check-doc-consistency dev-taskflow/
 
 ## Acceptance Criteria
 
@@ -103,8 +103,8 @@ Enhance and complete the core documentation files generated during project struc
 
 ## References
 
-- docs-dev/guides/initialize-project-templates/ (documentation templates)
-- docs-project/what-do-we-build.md (target file)
-- docs-project/architecture.md (target file)
-- docs-project/blueprint.md (target file)
-- docs-dev/guides/project-management.g.md
+- dev-handbook/guides/initialize-project-templates/ (documentation templates)
+- dev-taskflow/what-do-we-build.md (target file)
+- dev-taskflow/architecture.md (target file)
+- dev-taskflow/blueprint.md (target file)
+- dev-handbook/guides/project-management.g.md

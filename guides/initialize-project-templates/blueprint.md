@@ -17,13 +17,13 @@ This document provides a concise overview of the project's structure and organiz
 
 This project follows a documentation-first approach with these primary directories:
 
-- **docs-dev/** - Development resources and workflows
+- **dev-handbook/** - Development resources and workflows
   - **guides/** - Best practices and standards for development
   - **tools/** - Utility scripts to support development workflows
   - **workflow-instructions/** - Structured commands for AI agents
   - **zed/** - Editor integration (if applicable)
 
-- **docs-project/** - Project-specific documentation
+- **dev-taskflow/** - Project-specific documentation
   - **current/** - Active release cycle work
   - **backlog/** - Pending tasks for future releases
   - **done/** - Completed releases and tasks
@@ -56,8 +56,8 @@ This will show all project files while filtering out temporary files, session lo
 
 <!-- List important files that developers should know about -->
 
-- [Workflow Instructions](docs-dev/workflow-instructions/README.md) - Entry point for understanding available AI workflows
-- [Project Guides](docs-dev/guides/README.md) - Development standards and best practices
+- [Workflow Instructions](dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](dev-handbook/guides/README.md) - Development standards and best practices
 - [Configuration](README.md) - Configuration documentation (if applicable)
 
 ## Technology Stack
@@ -75,8 +75,8 @@ This will show all project files while filtering out temporary files, session lo
 This section lists files and directories that the agent should treat as read-only. Attempts to modify these paths should be flagged or prevented.
 
 <!-- Add project-specific read-only paths -->
-- `docs-project/decisions/**/*`
-- `docs-project/done/**/*`
+- `dev-taskflow/decisions/**/*`
+- `dev-taskflow/done/**/*`
 - `*.lock` # Dependency lock files
 - `dist/**/*` # Built artifacts
 - `build/**/*` # Build output
@@ -85,7 +85,7 @@ This section lists files and directories that the agent should treat as read-onl
 
 This section lists files, directories, or glob patterns that the agent should ignore entirely during its operations (e.g., when searching, reading, or editing files).
 
-- `docs-project/done/**/*` # Default: Protects completed tasks and releases
+- `dev-taskflow/done/**/*` # Default: Protects completed tasks and releases
 - `**/node_modules/**`
 - `**/.git/**`
 - `**/__pycache__/**`
@@ -122,7 +122,7 @@ bin/build
 
 - **New Feature**: Use `bin/tn` to find next task, follow task workflow
 - **Bug Fix**: Create task in backlog, prioritize, implement
-- **Documentation**: Update relevant files in `docs-project/`
+- **Documentation**: Update relevant files in `dev-taskflow/`
 
 ## Dependencies
 

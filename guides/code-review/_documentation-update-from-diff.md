@@ -79,11 +79,11 @@ For each significant change identified, determine:
 
 Systematically assess each documentation category:
 
-#### Architecture Decision Records (`docs-project/decisions/`)
+#### Architecture Decision Records (`dev-taskflow/decisions/`)
 - [ ] **New ADR Required**: [Topic] - [Reason for documentation]
 - [ ] **Update Existing ADR**: [File] - [Specific changes needed]
 
-#### Project Documentation (`docs-project/*.md`)
+#### Project Documentation (`dev-taskflow/*.md`)
 - [ ] **architecture.md**: [Specific sections needing updates]
 - [ ] **blueprint.md**: [Specific sections needing updates]
 - [ ] **what-do-we-build.md**: [Specific sections needing updates]

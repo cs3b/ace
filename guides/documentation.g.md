@@ -109,7 +109,7 @@ This section clarifies the purpose and scope of each major documentation file. F
 
 **Example Structure**:
 
-Refer to the [README.md template](docs-dev/guides/initialize-project-templates/README.md)
+Refer to the [README.md template](dev-handbook/guides/initialize-project-templates/README.md)
 
 ##### docs/what-do-we-build.md
 **Purpose**: Product vision and business context
@@ -208,7 +208,7 @@ Refer to the [README.md template](docs-dev/guides/initialize-project-templates/R
 - Architecture decisions
 - Basic usage examples
 
-##### docs-project/roadmap.md
+##### dev-taskflow/roadmap.md
 **Purpose**: Strategic planning and release management
 
 **Contains**:
@@ -287,15 +287,15 @@ Refer to the [README.md template](docs-dev/guides/initialize-project-templates/R
 
 Clear documentation is crucial for effective AI collaboration.
 
-- **Task Definitions:** Use the structured `.md` format for tasks (see `docs-dev/guides/project-management.g.md`)
+- **Task Definitions:** Use the structured `.md` format for tasks (see `dev-handbook/guides/project-management.g.md`)
     with clear descriptions, implementation notes, and acceptance criteria.
-- **Workflow Instructions:** Write clear, specific workflow instructions (`docs-dev/workflow-instructions/*.wf.md`)
+- **Workflow Instructions:** Write clear, specific workflow instructions (`dev-handbook/workflow-instructions/*.wf.md`)
     outlining processes for the AI to follow for common tasks. Follow guidelines similar to writing good code:
     focused, clear inputs/outputs, examples. (See Task 04 for creating a dedicated guide on this).
 - **Cross-Referencing:** Link related documents (guides, tasks, ADRs, code files) to create a connected
     knowledge base that the AI can potentially navigate or be guided through. For example, a task file might link
     to a relevant ADR or guide section using root-relative paths like `docs/architecture-decisions/ADR-001.md` or
-    `docs-dev/guides/coding-standards.g.md`.
+    `dev-handbook/guides/coding-standards.g.md`.
 
 ## Code Comments
 
@@ -322,6 +322,6 @@ For specific examples of documentation generation tools, comment styles, or conv
 languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to the examples in the
 [./documentation/](./documentation/) sub-directory.
 
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (Task format, ADRs)
-- [ADR Template](docs-dev/guides/draft-release/v.x.x.x/decisions/_template.md)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Task format, ADRs)
+- [ADR Template](dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md)

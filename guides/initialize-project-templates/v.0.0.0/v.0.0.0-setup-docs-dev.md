@@ -18,7 +18,7 @@ This is the foundational release that establishes the project's documentation st
 
 - [ ] Establish docs-dev framework structure
   - Success Metrics: All core documentation directories created
-  - Acceptance Criteria: docs-project structure exists with backlog/current/done folders
+  - Acceptance Criteria: dev-taskflow structure exists with backlog/current/done folders
   - Implementation Strategy: Use initialize-project-structure workflow
   - Dependencies & Status: None
   - Risks & Mitigations: None identified
@@ -42,7 +42,7 @@ This is the foundational release that establishes the project's documentation st
 ### Core Components
 
 1. **Documentation Structure Setup**:
-   - [ ] Initialize docs-dev and docs-project directories
+   - [ ] Initialize docs-dev and dev-taskflow directories
    - [ ] Create core documentation files (what-do-we-build.md, architecture.md, blueprint.md)
    - [ ] Set up bin scripts from binstubs
 
@@ -81,6 +81,6 @@ The tasks in the tasks/ directory are also templates and should be customized fo
 
 When all tasks are complete:
 
-- [ ] Move this release directory to docs-project/done/
+- [ ] Move this release directory to dev-taskflow/done/
 - [ ] Update project status to indicate v.0.0.0 completion
 - [ ] Begin planning for v.0.1.0 foundation release

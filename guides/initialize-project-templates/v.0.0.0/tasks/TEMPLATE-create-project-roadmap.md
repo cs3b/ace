@@ -25,7 +25,7 @@ Create a comprehensive project roadmap that outlines planned releases, major mil
 
 #### Create
 
-- docs-project/roadmap.md (complete project roadmap)
+- dev-taskflow/roadmap.md (complete project roadmap)
 
 #### Modify
 
@@ -62,32 +62,32 @@ Create a comprehensive project roadmap that outlines planned releases, major mil
   > TEST: Roadmap File Creation
   > Type: Action Validation
   > Assert: roadmap.md exists with proper template structure
-  > Command: test -f docs-project/roadmap.md && grep -q "# Project Roadmap\|## Release Overview" docs-project/roadmap.md
+  > Command: test -f dev-taskflow/roadmap.md && grep -q "# Project Roadmap\|## Release Overview" dev-taskflow/roadmap.md
 - [ ] Define v.0.1.0 foundation release with core infrastructure setup
   > TEST: v.0.1.0 Release Defined
   > Type: Action Validation
   > Assert: roadmap contains detailed v.0.1.0 release specification
-  > Command: grep -q "## v\.0\.1\.0.*Foundation\|Infrastructure Setup" docs-project/roadmap.md
+  > Command: grep -q "## v\.0\.1\.0.*Foundation\|Infrastructure Setup" dev-taskflow/roadmap.md
 - [ ] Plan v.0.2.0 and v.0.3.0 releases with major feature milestones
   > TEST: Future Releases Planned
   > Type: Action Validation
   > Assert: roadmap includes v.0.2.0 and v.0.3.0 planning
-  > Command: grep -q "## v\.0\.2\.0\|## v\.0\.3\.0" docs-project/roadmap.md
+  > Command: grep -q "## v\.0\.2\.0\|## v\.0\.3\.0" dev-taskflow/roadmap.md
 - [ ] Document release dependencies, prerequisites, and success criteria
   > TEST: Release Dependencies Documented
   > Type: Action Validation
   > Assert: roadmap includes dependencies and success criteria for each release
-  > Command: grep -q "Dependencies\|Prerequisites\|Success Criteria" docs-project/roadmap.md
+  > Command: grep -q "Dependencies\|Prerequisites\|Success Criteria" dev-taskflow/roadmap.md
 - [ ] Include timeline estimates and target delivery windows
   > TEST: Timeline Information Complete
   > Type: Action Validation
   > Assert: roadmap contains realistic timeline estimates
-  > Command: grep -q "Target Date\|Timeline\|Estimated Duration" docs-project/roadmap.md
+  > Command: grep -q "Target Date\|Timeline\|Estimated Duration" dev-taskflow/roadmap.md
 - [ ] Add release management processes and guidelines
   > TEST: Process Documentation Complete
   > Type: Action Validation
   > Assert: roadmap includes release management processes
-  > Command: grep -q "Release Process\|Management\|Guidelines" docs-project/roadmap.md
+  > Command: grep -q "Release Process\|Management\|Guidelines" dev-taskflow/roadmap.md
 - [ ] Review roadmap with stakeholders for feasibility and alignment
   > VERIFY: Stakeholder Roadmap Review
   > Type: User Feedback
@@ -97,7 +97,7 @@ Create a comprehensive project roadmap that outlines planned releases, major mil
   > TEST: Roadmap Finalization
   > Type: Post-condition Check
   > Assert: roadmap is complete with approval and version tracking
-  > Command: grep -q "Version\|Last Updated\|Status.*Approved" docs-project/roadmap.md
+  > Command: grep -q "Version\|Last Updated\|Status.*Approved" dev-taskflow/roadmap.md
 
 ## Acceptance Criteria
 
@@ -120,9 +120,9 @@ Create a comprehensive project roadmap that outlines planned releases, major mil
 
 ## References
 
-- docs-project/roadmap.md (target file)
+- dev-taskflow/roadmap.md (target file)
 - PRD.md (requirements source)
-- docs-dev/guides/roadmap-templates/ (if available)
-- docs-dev/workflow-instructions/draft-release.wf.md
-- docs-dev/guides/project-management.g.md
-- docs-dev/guides/release-codenames.g.md
+- dev-handbook/guides/roadmap-templates/ (if available)
+- dev-handbook/workflow-instructions/draft-release.wf.md
+- dev-handbook/guides/project-management.g.md
+- dev-handbook/guides/release-codenames.g.md

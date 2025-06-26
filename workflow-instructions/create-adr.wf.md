@@ -42,5 +42,5 @@ capture a significant architectural decision, its context, rationale, and conseq
 
 ## Reference Documentation
 
-- [ADR Template](docs-dev/guides/draft-release/v.x.x.x/decisions/_template.md)
-- [Documentation Standards Guide](docs-dev/guides/documentation.g.md)
+- [ADR Template](dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md)
+- [Documentation Standards Guide](dev-handbook/guides/documentation.g.md)

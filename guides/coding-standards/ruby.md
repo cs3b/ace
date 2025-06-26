@@ -23,7 +23,7 @@ addition to the generic standards in `../coding-standards.md`.
 
 ## Testing Conventions
 
-- Use RSpec with the directory layout defined in `docs-dev/guides/testing/ruby-rspec.md`.
+- Use RSpec with the directory layout defined in `dev-handbook/guides/testing/ruby-rspec.md`.
 - Tag specs (`:unit`, `:integration`, `:e2e`) per the testing guide.
 
 ## File Organization

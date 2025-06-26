@@ -10,7 +10,7 @@ key). Remove deeper analytical/reflection components.
 ## Prerequisites
 
 - An active development session with recent interactions between user and AI agent.
-- A defined current release directory (`docs-project/current/{release_dir}/`).
+- A defined current release directory (`dev-taskflow/current/{release_dir}/`).
 - The `sessions/` subdirectory exists or can be created within the current release directory.
 
 ## Input
@@ -38,7 +38,7 @@ key). Remove deeper analytical/reflection components.
       touched, main outcomes).
     - A "Context Loading Prompt" designed to efficiently restore the current working state in a new session.
 5. **Determine Log Location:**
-    - Identify the current release directory (e.g., `docs-project/current/v.0.2.0-StreamlineWorkflow/`).
+    - Identify the current release directory (e.g., `dev-taskflow/current/v.0.2.0-StreamlineWorkflow/`).
     - Target the `sessions/` subdirectory within that release directory.
 6. **Save Log File:**
     - Create a filename using the timestamp (e.g., `YYYYMMDD-HHMMSS-compact-log.md`).
@@ -73,11 +73,11 @@ key). Remove deeper analytical/reflection components.
 **Current State:**
 - Tasks 01, 02, 03 of v0.2.0 release are complete.
 - Files modified/reviewed recently: [List key files, e.g., `guides/publish-release.md`, `tasks/03-*.md`]
-- Current release directory: `docs-project/current/v.0.2.0-StreamlineWorkflow/`
+- Current release directory: `dev-taskflow/current/v.0.2.0-StreamlineWorkflow/`
 - Last action: Completed updates to guides as per Task 03.
 
 **Files/Directories to Load/Review:**
-- `docs-project/current/v.0.2.0/` (Load this entire directory context)
+- `dev-taskflow/current/v.0.2.0/` (Load this entire directory context)
   - `tasks/04-define-session-logging.md` (Next task)
   - `docs/unified-workflow-guide.md` (Recently modified)
   - Other relevant files based on recent interaction...
@@ -99,13 +99,13 @@ The `log-session` workflow instruction should be used periodically, especially:
 
 This workflow is designed for quick state capture. For deeper analysis and synthesis of session activities into
 actionable improvements or project retrospectives, refer to the
-[`create-retrospective-document.wf.md`](docs-dev/workflow-instructions/create-retrospective-document.wf.md) workflow,
+[`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) workflow,
 which may use these compact session logs as one of its inputs.
 
 ## Reference Documentation
 
-- [Project Management Guide](docs-dev/guides/project-management.g.md)
-- [`create-retrospective-document.wf.md`](docs-dev/workflow-instructions/create-retrospective-document.wf.md) (For
+- [Project Management Guide](dev-handbook/guides/project-management.g.md)
+- [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) (For
   synthesizing session data into broader reflections)
 
 ## Output / Success Criteria
@@ -120,4 +120,4 @@ which may use these compact session logs as one of its inputs.
 ## Additional Prerequisites
 
 - An active development session with recent interactions.
-- A defined current release directory (`docs-project/current/{release_dir}/`).
+- A defined current release directory (`dev-taskflow/current/{release_dir}/`).

@@ -253,7 +253,7 @@ src/
 - **[Decision 1]**: [Brief summary and rationale]
 - **[Decision 2]**: [Brief summary and rationale]
 
-For detailed decision records, see [docs-project/decisions/](../../../docs-project/decisions/).
+For detailed decision records, see [dev-taskflow/decisions/](../../../dev-taskflow/decisions/).
 
 ## Troubleshooting
 

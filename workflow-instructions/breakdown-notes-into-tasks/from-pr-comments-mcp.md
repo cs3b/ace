@@ -15,7 +15,7 @@ PR feedback and process it into a structured format suitable for use as input fo
 
 * Access to an MCP server with GitHub integration and necessary functions enabled.
 * A valid GitHub Pull Request URL.
-* A target release directory path identified (e.g., `docs-project/current/vX.Y.Z-feedback-to-pr-NNN/`).
+* A target release directory path identified (e.g., `dev-taskflow/current/vX.Y.Z-feedback-to-pr-NNN/`).
 
 ## Input
 
@@ -27,7 +27,7 @@ PR feedback and process it into a structured format suitable for use as input fo
 1. **Determine Release Path:**
     * Use the provided target release directory path.
     If not provided, determine the appropriate path (e.g., based on current project version and PR
-    number, typically `docs-project/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`). Confirm
+    number, typically `dev-taskflow/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`). Confirm
     with the user and create if necessary.
     * Ensure the target directory structure exists or create it: `{release_path}/docs/comments/` and `{release_path}/docs/reviews/`.
 

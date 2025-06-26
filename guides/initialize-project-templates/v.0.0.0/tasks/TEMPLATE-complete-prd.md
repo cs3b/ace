@@ -30,7 +30,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
 #### Modify
 
 - PRD.md (complete all sections with detailed requirements)
-- docs-project/what-do-we-build.md (ensure alignment with PRD)
+- dev-taskflow/what-do-we-build.md (ensure alignment with PRD)
 
 #### Delete
 
@@ -97,7 +97,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
   > TEST: Documentation Alignment
   > Type: Post-condition Check
   > Assert: PRD aligns with what-do-we-build.md and architecture.md
-  > Command: bin/test --check-prd-alignment PRD.md docs-project/what-do-we-build.md docs-project/architecture.md
+  > Command: bin/test --check-prd-alignment PRD.md dev-taskflow/what-do-we-build.md dev-taskflow/architecture.md
 - [ ] Finalize PRD with version control and approval tracking
   > TEST: PRD Finalization
   > Type: Post-condition Check
@@ -127,7 +127,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
 ## References
 
 - PRD.md (target file)
-- docs-dev/guides/initialize-project-templates/PRD.md (template reference)
-- docs-project/what-do-we-build.md (alignment reference)
-- docs-project/architecture.md (technical alignment reference)
-- docs-dev/guides/project-management.g.md
+- dev-handbook/guides/initialize-project-templates/PRD.md (template reference)
+- dev-taskflow/what-do-we-build.md (alignment reference)
+- dev-taskflow/architecture.md (technical alignment reference)
+- dev-handbook/guides/project-management.g.md

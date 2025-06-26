@@ -14,7 +14,7 @@ directly within the task's definition file (`NN-task-name.md`).
 
 1. **Select Task File:**
     * Identify the current release directory path (from `load-env`).
-    * List available tasks: `ls -1 docs-project/current/{release_dir}/tasks/*.md`
+    * List available tasks: `ls -1 dev-taskflow/current/{release_dir}/tasks/*.md`
     * Review task details as needed (`cat ...`). Check `status`, `priority`, and `dependencies`.
     * **User Action:** Choose the specific task `.md` file to work on (typically `status: pending` with met
       `dependencies`). Provide the full path to this file.
@@ -32,7 +32,7 @@ directly within the task's definition file (`NN-task-name.md`).
 
 3. **Load Context:**
     * Identify relevant project context needed for execution:
-        * **General Guides:** (e.g., `docs-dev/guides/coding-standards.g.md`, `docs-dev/guides/testing.g.md`,
+        * **General Guides:** (e.g., `dev-handbook/guides/coding-standards.g.md`, `dev-handbook/guides/testing.g.md`,
            These might be standard context or explicitly mentioned in the task file.
         * **Specific Code Files:** Identify key files/modules likely to be modified based on the embedded plan
           (if listed in the task file or inferable).
@@ -58,7 +58,7 @@ directly within the task's definition file (`NN-task-name.md`).
         3. **Follow Task Cycle Principles (for code changes):** If the primary action of the checklist item involved
            writing or modifying code that creates new functionality or behaviors (and this was not already covered by
            an embedded test that, for example, ran a full test suite for the component), consider following the
-           [Implementing the Task Cycle Guide](docs-dev/guides/testing-tdd-cycle.g.md) principles
+           [Implementing the Task Cycle Guide](dev-handbook/guides/testing-tdd-cycle.g.md) principles
            (Test -> Code -> Refactor -> Verify) for that specific code. This applies more to traditional
            unit/integration testing of the software components being built or modified.
         4. **Update Checklist:** Only after the primary action is complete AND all associated embedded
@@ -73,8 +73,8 @@ directly within the task's definition file (`NN-task-name.md`).
 
 ## Reference Documentation
 
-* [Fix Tests Workflow](docs-dev/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
-* [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.g.md)
+* [Fix Tests Workflow](dev-handbook/workflow-instructions/fix-tests.wf.md) (For diagnosing and fixing failing tests)
+* [Temporary File Management Guidelines](dev-handbook/guides/temporary-file-management.g.md)
 
 ## Input
 

@@ -14,7 +14,7 @@ task, or code change based on requirements and project testing guidelines.
 ## Process Steps
 
 1. **Analyze Requirements:** Review the feature/task description, implementation notes, and acceptance criteria
-   (likely found in a task `.md` file within `docs-project`).
+   (likely found in a task `.md` file within `dev-taskflow`).
 2. **Identify Scenarios:** Brainstorm potential usage scenarios:
     - **Happy Path:** Standard, expected usage.
     - **Edge Cases:** Boundary conditions, unusual inputs, empty/null values.
@@ -23,7 +23,7 @@ task, or code change based on requirements and project testing guidelines.
     - **Performance/Security (if applicable):** Scenarios related to load, concurrency, or potential
       vulnerabilities.
 3. **Categorize Tests:** Group the identified scenarios into test types (Unit, Integration, E2E,
-   Performance, Security) based on `docs-dev/guides/testing.md`.
+   Performance, Security) based on `dev-handbook/guides/testing.md`.
 4. **Draft Test Cases:** For each scenario, describe the test case including:
     - **Test ID/Name:** A unique identifier.
     - **Description:** What the test aims to verify.
@@ -31,10 +31,10 @@ task, or code change based on requirements and project testing guidelines.
     - **Steps:** Actions to perform.
     - **Expected Result:** The anticipated outcome or verification point.
 5. **Structure Output:** Format the test cases clearly, potentially using a table or list structure.
-   Use the template `docs-dev/guides/draft-release/v.x.x.x/test-cases/_template.md` as a reference
+   Use the template `dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md` as a reference
    for structure.
 6. **Save (Optional):** Save the generated test cases to the appropriate location, often within the
-   release directory (e.g., `docs-project/current/{release_dir}/test-cases/feature-x-tests.md`).
+   release directory (e.g., `dev-taskflow/current/{release_dir}/test-cases/feature-x-tests.md`).
 
 ## Input
 
@@ -47,9 +47,9 @@ task, or code change based on requirements and project testing guidelines.
 - Test cases cover happy path, edge cases, and error conditions.
 - Test cases are categorized appropriately (Unit, Integration, etc.).
 - Each test case includes a description, steps, and expected results.
-- Generated tests align with principles in `docs-dev/guides/testing.md`.
+- Generated tests align with principles in `dev-handbook/guides/testing.md`.
 
 ## Reference Documentation
 
-- [Testing Guidelines Guide](docs-dev/guides/testing.g.md)
-- [Test Cases Template](docs-dev/guides/draft-release/v.x.x.x/test-cases/_template.md)
+- [Testing Guidelines Guide](dev-handbook/guides/testing.g.md)
+- [Test Cases Template](dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md)

@@ -23,12 +23,12 @@ This Ruby gem follows:
 *This section is populated when using the --include-dependencies flag*
 
 #### Project Documentation
-Location: `docs-project/*.md` (excluding roadmap)
+Location: `dev-taskflow/*.md` (excluding roadmap)
 Current files:
 [LIST YOUR PROJECT DOCUMENTATION FILES HERE]
 
 #### Architecture Decision Records (ADRs)
-Location: `docs-project/decisions/` and `docs-project/current/*/decisions/*.md`
+Location: `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/*.md`
 Current files:
 [LIST YOUR CURRENT ADR FILES HERE]
 

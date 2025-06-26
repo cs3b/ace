@@ -194,5 +194,5 @@ in different languages (e.g., Ruby\'s `begin/rescue`, Python\'s `try/except`, Ja
 
 ## Related Documentation
 
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
-- [Quality Assurance](docs-dev/guides/quality-assurance.g.md) (Logging, Monitoring)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+- [Quality Assurance](dev-handbook/guides/quality-assurance.g.md) (Logging, Monitoring)

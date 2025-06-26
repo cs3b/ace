@@ -17,7 +17,7 @@ Vision → Strategic Objectives → Roadmap (Themes/Epics → Releases) → Task
 
 ## 2. Roadmap Document Anatomy
 
-See `/docs-project/roadmap.md`. Key sections:
+See `/dev-taskflow/roadmap.md`. Key sections:
 
 1. Project Vision
 2. Strategic Objectives (table)

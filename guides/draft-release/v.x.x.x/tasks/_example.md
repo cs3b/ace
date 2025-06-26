@@ -13,7 +13,7 @@ dependencies: []
 _Command run 2025‑04‑24:_
 
 ```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt (irrelevant folders omitted):_
@@ -49,7 +49,7 @@ Split language‑specific snippets out of _every_ general guide so developers ca
 2. **Extract** Ruby, Rust, and TypeScript blocks into per‑language sub‑guides.  
    - _Testing_ uses `ruby-rspec.md` & `typescript-bun.md`.  
 3. **Clean** general guides so only polyglot advice remains.  
-4. **Index** – add links for all new files to `docs-dev/guides/README.md` (or create `index.md`).  
+4. **Index** – add links for all new files to `dev-handbook/guides/README.md` (or create `index.md`).  
 5. **Review** – run `md-link-check`; ensure docs build passes.
 
 ### Deliverables
@@ -88,27 +88,27 @@ Split language‑specific snippets out of _every_ general guide so developers ca
 - [ ] **Create Sub-directories:** Create the language-specific sub-directories (`coding-standards/`, `documentation/`, etc.) if they don't exist.
   > TEST: Coding Standards Sub-directory Created
   > Type: Post-condition Check
-  > Assert: The `docs-dev/guides/coding-standards` directory exists.
-  > Command: bin/test --check-file-exists docs-dev/guides/coding-standards --type d
+  > Assert: The `dev-handbook/guides/coding-standards` directory exists.
+  > Command: bin/test --check-file-exists dev-handbook/guides/coding-standards --type d
 - [ ] **Extract & Create (Ruby):** Move Ruby blocks from general guides to `guides/<category>/ruby.md` (or
   `ruby-rspec.md` for testing).
   > TEST: Ruby Coding Standard File Created
   > Type: Post-condition Check
-  > Assert: The `docs-dev/guides/coding-standards/ruby.md` file exists and is not empty.
-  > Command: bin/test --check-file-exists-not-empty docs-dev/guides/coding-standards/ruby.md
+  > Assert: The `dev-handbook/guides/coding-standards/ruby.md` file exists and is not empty.
+  > Command: bin/test --check-file-exists-not-empty dev-handbook/guides/coding-standards/ruby.md
 - [ ] **Extract & Create (Rust):** Move Rust blocks from general guides to `guides/<category>/rust.md`.
 - [ ] **Extract & Create (TypeScript):** Move TypeScript blocks from general guides to
   `guides/<category}/typescript.md` (or `typescript-bun.md` for testing).
 - [ ] **Refactor General Guides:** Review each of the 9 general guides, removing the extracted language-specific
   blocks and ensuring only language-agnostic content remains. Remove `testing/frameworks.md`.
 - [ ] **Tag Obsolete:** Tag any remaining unmapped examples with `<!--TODO:Delete-->`.
-- [ ] **Index:** Update `docs-dev/guides/README.md` (or create `index.md`) to include links to all newly created
+- [ ] **Index:** Update `dev-handbook/guides/README.md` (or create `index.md`) to include links to all newly created
   language-specific guides.
 - [ ] **Review & Check:** Run `md-link-check`.
   > TEST: Markdown Links Check
   > Type: Guardrail
-  > Assert: All markdown links are valid in the `docs-dev/guides` directory.
-  > Command: md-link-check docs-dev/guides
+  > Assert: All markdown links are valid in the `dev-handbook/guides` directory.
+  > Command: md-link-check dev-handbook/guides
 >
 > # Or a more specific path / project-wide lint command
 

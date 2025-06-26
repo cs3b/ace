@@ -3,8 +3,8 @@
 ## Goal
 
 Guide the AI agent and developer through **drafting a new release** in the project backlog.
-This includes creating the initial release directory structure under `docs-project/backlog/`,
-copying the standard templates from `docs-dev/guides/draft-release/`, and breaking the
+This includes creating the initial release directory structure under `dev-taskflow/backlog/`,
+copying the standard templates from `dev-handbook/guides/draft-release/`, and breaking the
 user-provided release scope into actionable tasks.
 
 ## Prerequisites
@@ -12,30 +12,30 @@ user-provided release scope into actionable tasks.
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project’s version file.
 14 | * Familiarity with the task writing standards and template structure (see
-15 |   [Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)).
+15 |   [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)).
 
 ## Process Steps
 
 1. **Load Context**
    * Read this instruction file and all referenced guides:
-     * [Draft Release Templates](docs-dev/guides/draft-release/README.md)
-     * Language-specific sub-guides in `docs-dev/guides/draft-release/` as needed.
+     * [Draft Release Templates](dev-handbook/guides/draft-release/README.md)
+     * Language-specific sub-guides in `dev-handbook/guides/draft-release/` as needed.
 
 2. **Gather Release Metadata**
    * Ask the user for:
      * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
-     * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md) for inspiration).
+     * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md) for inspiration).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
 3. **Create Release Directory and Overview File**
    * Create the target release directory using the specific semantic version:
-     `docs-project/backlog/v.X.Y.Z-codename/` (e.g., `docs-project/backlog/v.0.3.0-new-feature/`).
+     `dev-taskflow/backlog/v.X.Y.Z-codename/` (e.g., `dev-taskflow/backlog/v.0.3.0-new-feature/`).
    * Create standard sub-directories within the new release directory (e.g., `tasks/`, `docs/`, `decisions/`,
      `codemods/`, `reflections/`, `researches/`, `test-cases/`, `user-experience/`) mirroring the structure found
-     in `docs-dev/guides/draft-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these
+     in `dev-handbook/guides/draft-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these
      subdirectories at this stage.
-   * Copy the main release overview template file from `docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`
-     to `docs-project/backlog/v.X.Y.Z-codename/v.x.x.x-codename.md`.
+   * Copy the main release overview template file from `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`
+     to `dev-taskflow/backlog/v.X.Y.Z-codename/v.x.x.x-codename.md`.
    * Rename the newly copied overview file in the target directory to `v.X.Y.Z-codename.md` (matching the
      directory’s version and codename).
 
@@ -45,14 +45,14 @@ user-provided release scope into actionable tasks.
      * Initial high-level implementation plan (checkbox list) to be refined later.
 
 47 | 5. **Break Down Scope Into Tasks**
-48 |    * Use the [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+48 |    * Use the [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
      if the raw notes are lengthy or unstructured.
 
 * For each distinct item in the (possibly refined) user input:
      1. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
-     2. Create a new file in the appropriate subdirectory of `docs-project/backlog/v.X.Y.Z-codename/`
+     2. Create a new file in the appropriate subdirectory of `dev-taskflow/backlog/v.X.Y.Z-codename/`
         (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from
-        `docs-dev/guides/draft-release/v.x.x.x/[template-family]/_template.md`.
+        `dev-handbook/guides/draft-release/v.x.x.x/[template-family]/_template.md`.
      3. Replace placeholder fields:
         * `id`: Use `bin/tnid v.X.Y.Z` (where `v.X.Y.Z` is the specific version of the current release being
           prepared) to generate the next task ID in the format `v.X.Y.Z+task.<sequential_number>`.
@@ -100,7 +100,7 @@ user-provided release scope into actionable tasks.
 
 ## Output / Success Criteria
 
-* A new directory `docs-project/backlog/v.X.Y.Z-codename/` exists (where `v.X.Y.Z` is the specific version).
+* A new directory `dev-taskflow/backlog/v.X.Y.Z-codename/` exists (where `v.X.Y.Z` is the specific version).
 * Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the
   new release directory.
 * All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
@@ -110,18 +110,18 @@ user-provided release scope into actionable tasks.
 
 ## Reference Documentation
 
-100 | *[Draft Release Templates](docs-dev/guides/draft-release/README.md)
-101 |* [Breakdown Notes into Tasks Workflow](docs-dev/workflow-instructions/breakdown-notes-into-tasks.wf.md)
-102 | *[Write Actionable Task Guide](docs-dev/guides/task-definition.g.md)
-103 |* [Project Management Guide](docs-dev/guides/project-management.g.md)
-104 | *[Picking Project Codenames Guide](docs-dev/guides/release-codenames.g.md)
-105 |* [Version Control Guide](docs-dev/guides/version-control-system.g.md)
+100 | *[Draft Release Templates](dev-handbook/guides/draft-release/README.md)
+101 |* [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+102 | *[Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)
+103 |* [Project Management Guide](dev-handbook/guides/project-management.g.md)
+104 | *[Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md)
+105 |* [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
 
 ## Usage Example
 >
-> “Prepare a new release with the notes in `docs-project/backlog/ideas.md`.
+> “Prepare a new release with the notes in `dev-taskflow/backlog/ideas.md`.
 > Expected version: `v.0.3.0`, codename: `atlas`.”
 
 ---
 
-This workflow focuses on **drafting** a release in the backlog. For information on finalizing and publishing a completed release, see the [Publish Release Guide](docs-dev/guides/release-publish.g.md).
+This workflow focuses on **drafting** a release in the backlog. For information on finalizing and publishing a completed release, see the [Publish Release Guide](dev-handbook/guides/release-publish.g.md).

@@ -1,26 +1,26 @@
 # Workflow Instruction: Update Roadmap
 
-**Goal:** Propose, review, and apply updates to `docs-project/roadmap.md` ensuring the roadmap remains an accurate
+**Goal:** Propose, review, and apply updates to `dev-taskflow/roadmap.md` ensuring the roadmap remains an accurate
 strategic guide.
 
 ## Prerequisites
 
 * Current project context loaded via `load-env`.
-* Write access to `docs-project/roadmap.md`.
+* Write access to `dev-taskflow/roadmap.md`.
 
 ## Process Steps
 
 1. **Select Roadmap**
-    * Confirm the file exists at `docs-project/roadmap.md`.
+    * Confirm the file exists at `dev-taskflow/roadmap.md`.
     * Load its content.
 2. **Validate Structure**
     * Validate roadmap format against [Roadmap Definition Guide](../guides/roadmap-definition.g.md).
     * If validation fails, refer to definition guide for correction requirements.
 3. **Update Release Status**
     * Check current release folder locations:
-        * `docs-project/backlog/` - Future releases (should appear in roadmap)
-        * `docs-project/current/` - Active releases (should be linked in roadmap)
-        * `docs-project/done/` - Completed releases (should be removed from roadmap)
+        * `dev-taskflow/backlog/` - Future releases (should appear in roadmap)
+        * `dev-taskflow/current/` - Active releases (should be linked in roadmap)
+        * `dev-taskflow/done/` - Completed releases (should be removed from roadmap)
     * Update roadmap links to reflect current release status
     * Remove completed releases from "Planned Major Releases" section (delegate to changelog)
     * Update cross-release dependencies if they reference completed releases
@@ -45,9 +45,9 @@ strategic guide.
     * Ensure release status changes are accurately reflected
 7. **Validate Synchronization**
     * Verify roadmap "Planned Major Releases" table matches current project folder structure:
-        * All releases in `docs-project/backlog/` appear in roadmap
-        * No releases in `docs-project/done/` appear in roadmap  
-        * Active releases in `docs-project/current/` are properly represented
+        * All releases in `dev-taskflow/backlog/` appear in roadmap
+        * No releases in `dev-taskflow/done/` appear in roadmap  
+        * Active releases in `dev-taskflow/current/` are properly represented
     * Check cross-release dependencies for accuracy and remove references to completed releases
     * Validate roadmap format compliance against [Roadmap Definition Guide](../guides/roadmap-definition.g.md)
     * Confirm no broken references or outdated information remains
@@ -86,7 +86,7 @@ strategic guide.
 
 ## Output / Success Criteria
 
-* Updated `docs-project/roadmap.md` with changes applied.
+* Updated `dev-taskflow/roadmap.md` with changes applied.
 * Release status accurately reflects current project folder structure.
 * Completed releases removed from roadmap and delegated to changelog.
 * `Update History` includes a new entry with release status changes.

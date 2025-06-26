@@ -21,10 +21,10 @@ inputs, processes, and success criteria.
 
 ## Directory Structure
 
-The `docs-project` directory organizes project documentation and management:
+The `dev-taskflow` directory organizes project documentation and management:
 
 ```text
-docs-project
+dev-taskflow
 ├── architecture.md
 ├── backlog
 │   └── v.0.1.0-preflight-for-coding-agent
@@ -38,11 +38,11 @@ docs-project
 └── what-do-we-build.md
 ```
 
-(Use `tree docs-project -L 2` from the project root to view the current structure)
+(Use `tree dev-taskflow -L 2` from the project root to view the current structure)
 
 > **Strategic vs Operational Planning**
-> High-level direction is captured in the [Project Roadmap](docs-project/roadmap.md) and detailed in the
-> [Strategic Planning Guide](docs-dev/guides/strategic-planning.g.md).
+> High-level direction is captured in the [Project Roadmap](dev-taskflow/roadmap.md) and detailed in the
+> [Strategic Planning Guide](dev-handbook/guides/strategic-planning.g.md).
 > Release planning and day-to-day execution described in this guide must align with the roadmap's objectives
 > and timelines.
 
@@ -50,26 +50,26 @@ docs-project
 
 ### 2. Version Naming
 
-Tasks are managed within the `docs-project/` subdirectories, representing a simple Kanban-style flow:
+Tasks are managed within the `dev-taskflow/` subdirectories, representing a simple Kanban-style flow:
 
-- **`docs-project/backlog/`**: Contains directories for future, planned releases. Release directories must use
+- **`dev-taskflow/backlog/`**: Contains directories for future, planned releases. Release directories must use
   specific semantic versions, including the patch level, followed by a descriptive codename (e.g.,
-  `docs-project/backlog/v.0.3.0-new-feature-suite/`). Tasks are defined and planned here.
-- **`docs-project/current/`**: Contains the directory for the currently active release, following the same
+  `dev-taskflow/backlog/v.0.3.0-new-feature-suite/`). Tasks are defined and planned here.
+- **`dev-taskflow/current/`**: Contains the directory for the currently active release, following the same
   naming convention: a specific semantic version (including patch level) and a codename (e.g.,
-  `docs-project/current/v.0.2.0-streamline-workflow/`). Active development happens here.
-- **`docs-project/done/`**: An archive containing directories of completed and released work, with release
-  directories also following the `v.X.Y.Z-codename` convention (e.g., `docs-project/done/v.0.1.0-initial-setup/`).
+  `dev-taskflow/current/v.0.2.0-streamline-workflow/`). Active development happens here.
+- **`dev-taskflow/done/`**: An archive containing directories of completed and released work, with release
+  directories also following the `v.X.Y.Z-codename` convention (e.g., `dev-taskflow/done/v.0.1.0-initial-setup/`).
 
-Within a release directory (primarily in `docs-project/current/`), individual tasks are represented by
+Within a release directory (primarily in `dev-taskflow/current/`), individual tasks are represented by
 **structured Markdown files** (`.md`).
 
 #### Optional Release Backlog Subdirectory
 
 This holds notes or draft tasks. The AI agent can be instructed to run the
-`docs-dev/workflow-instructions/lets-spec-from-release-backlog.md` workflow instruction to process items from
+`dev-handbook/workflow-instructions/lets-spec-from-release-backlog.md` workflow instruction to process items from
 this internal backlog and integrate them as structured tasks into the *same* release\\\'s `tasks/` directory.
-This workflow instruction can also target a specific release in the main `docs-project/backlog/` if needed.
+This workflow instruction can also target a specific release in the main `dev-taskflow/backlog/` if needed.
 
 #### Standard Task File Format
 
@@ -93,7 +93,7 @@ Briefly describe the goal of this task. What should be achieved?
 - Specific steps required for implementation.
 - Pointers to relevant code sections or files.
 - Design considerations, constraints, or decisions made.
-- Links to relevant documentation (e.g., `docs-dev/guides/coding-standards.md`), ADRs (`docs-dev/decisions/...`),
+- Links to relevant documentation (e.g., `dev-handbook/guides/coding-standards.md`), ADRs (`dev-handbook/decisions/...`),
 > or external resources. **Always use root-relative paths (starting from the project root), not paths relative
 > to the task file (e.g., `../../guides/coding-standards.md`).**
 
@@ -157,26 +157,26 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 - PATCH: Bug fixes (0.0.x)
 
 1. **Planning**: Tasks are defined in the appropriate release directory (e.g., `v.0.3.0-example-feature/`)
-   within `docs-project/backlog/`. For example, a task file might be
-   `docs-project/backlog/v.0.3.0-example-feature/tasks/001-new-feature.md`.
+   within `dev-taskflow/backlog/`. For example, a task file might be
+   `dev-taskflow/backlog/v.0.3.0-example-feature/tasks/001-new-feature.md`.
 
 1. **Activation**: When a release becomes active, its directory (e.g., `v.0.2.0-active-sprint`) is moved from
-   `docs-project/backlog/` to `docs-project/current/`. For example:
-   `mv docs-project/backlog/v.0.2.0-active-sprint docs-project/current/`.
+   `dev-taskflow/backlog/` to `dev-taskflow/current/`. For example:
+   `mv dev-taskflow/backlog/v.0.2.0-active-sprint dev-taskflow/current/`.
 
-1. **Execution**: Developers work on tasks within `docs-project/current/{release_dir}/tasks/`, updating the
+1. **Execution**: Developers work on tasks within `dev-taskflow/current/{release_dir}/tasks/`, updating the
    status in the task file\'s frontmatter as they progress (`pending` -> `in-progress` -> `done`).
 
-1. **Completion**: Once all tasks for a release in `docs-project/current/` are marked `done`, the release
+1. **Completion**: Once all tasks for a release in `dev-taskflow/current/` are marked `done`, the release
    process begins.
 
 1. **Archiving**: After a release is successfully published, its directory (e.g., `v.0.2.0-active-sprint`) is moved
-   from `docs-project/current/` to `docs-project/done/` as part of the publish release process. This archival step
+   from `dev-taskflow/current/` to `dev-taskflow/done/` as part of the publish release process. This archival step
    signifies the completion of the release lifecycle and preserves the complete development context. For example:
-   `mv docs-project/current/v.0.2.0-active-sprint docs-project/done/`.
+   `mv dev-taskflow/current/v.0.2.0-active-sprint dev-taskflow/done/`.
 
-   The archival process is detailed in the [Publish Release Guide](docs-dev/guides/release-publish.g.md) and
-   executed through the [Publish Release Workflow](docs-dev/workflow-instructions/publish-release.wf.md).
+   The archival process is detailed in the [Publish Release Guide](dev-handbook/guides/release-publish.g.md) and
+   executed through the [Publish Release Workflow](dev-handbook/workflow-instructions/publish-release.wf.md).
 
 ### 4. Task Transitions
 
@@ -194,11 +194,11 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
   (as would be identified by `bin/tn`) is highlighted in the list.
 - **`bin/rc` (`get-current-release-path`)**: Determines the appropriate directory for storing newly created
   tasks and returns version information. Returns the path to the current release directory (e.g.,
-  `docs-project/current/v.X.Y.Z-codename`) and version string (e.g., `v.X.Y.Z`) when a current release exists,
-  or the backlog tasks path (`docs-dev/backlog/tasks`) and empty version when no current release is detected.
+  `dev-taskflow/current/v.X.Y.Z-codename`) and version string (e.g., `v.X.Y.Z`) when a current release exists,
+  or the backlog tasks path (`dev-handbook/backlog/tasks`) and empty version when no current release is detected.
   This tool is essential for automated task creation workflows.
-- **`bin/lint`**: Includes a task metadata linter (`docs-dev/tools/lint-task-metadata`) that validates task
-  files in `docs-project/backlog` and `docs-project/current` for correct ID format, required fields (status,
+- **`bin/lint`**: Includes a task metadata linter (`dev-handbook/tools/lint-task-metadata`) that validates task
+  files in `dev-taskflow/backlog` and `dev-taskflow/current` for correct ID format, required fields (status,
   priority), valid values, and other conventions.
 
 When moving a task between states, follow these guidelines:
@@ -225,7 +225,7 @@ Key checks when updating a task\'s `status` field:
 - If applicable, the Pull Request incorporating the changes has been reviewed and merged.
 - Any decisions made or significant learnings are documented (e.g., in the task file, an ADR in
 
-  > `docs-dev/decisions/`, or a `self-reflect` log).
+  > `dev-handbook/decisions/`, or a `self-reflect` log).
 
 Moving a whole release directory follows the same logic: ensure all contained tasks meet the criteria for the
 next state (`backlog` -> `current`, `current` -> `done`).
@@ -235,17 +235,17 @@ next state (`backlog` -> `current`, `current` -> `done`).
 #### Specification Workflows
 
 Tasks and release structures are typically generated through one of three primary workflows, facilitated by
-`lets-spec-*` workflow instructions (located in `docs-dev/workflow-instructions/`):
+`lets-spec-*` workflow instructions (located in `dev-handbook/workflow-instructions/`):
 
 1. **PR Feedback (`lets-spec-from-pr-comments`)**: Processes comments on a Pull Request to generate specific,
    actionable tasks (usually resulting in a Patch release) aimed at addressing the feedback. Tasks are created
-   directly in the `docs-project/current/` release directory.
+   directly in the `dev-taskflow/current/` release directory.
 1. **Feature Requirements (`lets-spec-from-frd`)**: Parses a Feature Requirement Document (FRD) to outline a new
    capability. This typically generates tasks for a Feature release, potentially planned in
-   `docs-project/backlog/` first.
+   `dev-taskflow/backlog/` first.
 1. **Product Requirements (`lets-spec-from-prd`)**: Parses a high-level Product Requirement Document (PRD). This
    often results in multiple releases (Major, Feature) and sets up the initial structure and tasks, usually
-   starting in `docs-project/backlog/`.
+   starting in `dev-taskflow/backlog/`.
 
 #### General Implementation Process (per task) - Integrating AI Collaboration
 
@@ -259,23 +259,23 @@ Tasks and release structures are typically generated through one of three primar
 1. **Test-Driven Development (AI-Assisted)**:
     - **Write Tests (Test Phase in `work-on-task`)**: Guide the AI to generate failing tests based on the planned
       structure and acceptance criteria using the testing phase described in the
-      `docs-dev/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
+      `dev-handbook/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
     - **Implement Code**: Provide the AI with specific, small steps from your plan (e.g., implement function X
       based on this signature and pseudocode). *Review generated code rigorously.*
     - **Refactor**: Guide the AI in refactoring for clarity and efficiency once tests pass.
 1. **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the
    AI to generate or help format commit messages according to conventions using the
-   `docs-dev/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
+   `dev-handbook/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
 1. **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection.
    Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and
    capture learnings. Use the [`create-reflection-note.wf.md`](../workflow-instructions/create-reflection-note.wf.md)
    workflow to capture these insights. These individual reflection notes (e.g., saved in
-   `docs-project/current/{release_dir}/reflections/YYYYMMDD-taskID.md`) serve as valuable input for the
+   `dev-taskflow/current/{release_dir}/reflections/YYYYMMDD-taskID.md`) serve as valuable input for the
    [`create-retrospective-document.wf.md`](../workflow-instructions/create-retrospective-document.wf.md) workflow.
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance.
 > Provide detailed context and specific instructions derived from your planning phase. Review all AI output
-> critically. Refer to `docs-dev/guides/coding-standards.md` for more on AI collaboration best practices.
+> critically. Refer to `dev-handbook/guides/coding-standards.md` for more on AI collaboration best practices.
 
 ## Agent Operational Boundaries
 
@@ -296,7 +296,7 @@ specific configurations of these paths for this project, please refer to the "Re
 
 ### Policy on Done Tasks with Changing Referenced Files
 
-While agents are automatically prevented from modifying done tasks via the `docs-project/done/**/*` ignore rule,
+While agents are automatically prevented from modifying done tasks via the `dev-taskflow/done/**/*` ignore rule,
 there are edge cases where human intervention may be necessary when referenced files change. This policy clarifies
 when such updates are acceptable:
 
@@ -345,14 +345,14 @@ This policy maintains the balance between preserving historical accuracy and ens
 
 Essential standards and guidelines:
 
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
-- [Testing Guidelines](docs-dev/guides/testing.g.md)
-- [Documentation Standards](docs-dev/guides/documentation.g.md)
-- [Publish Release Process](docs-dev/guides/release-publish.g.md) (Final deployment and archival)
-- [Error Handling](docs-dev/guides/error-handling.g.md)
-- [Performance](docs-dev/guides/performance.g.md)
-- [Security](docs-dev/guides/security.g.md)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+- [Testing Guidelines](dev-handbook/guides/testing.g.md)
+- [Documentation Standards](dev-handbook/guides/documentation.g.md)
+- [Publish Release Process](dev-handbook/guides/release-publish.g.md) (Final deployment and archival)
+- [Error Handling](dev-handbook/guides/error-handling.g.md)
+- [Performance](dev-handbook/guides/performance.g.md)
+- [Security](dev-handbook/guides/security.g.md)
 
-- [Troubleshooting Workflow](docs-dev/guides/debug-troubleshooting.g.md)
-- [Strategic Planning Guide](docs-dev/guides/strategic-planning.g.md)
-- [Project Roadmap](docs-project/roadmap.md)
+- [Troubleshooting Workflow](dev-handbook/guides/debug-troubleshooting.g.md)
+- [Strategic Planning Guide](dev-handbook/guides/strategic-planning.g.md)
+- [Project Roadmap](dev-taskflow/roadmap.md)

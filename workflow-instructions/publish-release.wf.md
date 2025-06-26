@@ -8,7 +8,7 @@
 * All features, documentation, and initial release preparations are finalized.
 * All planned tasks for the release are completed (`status: done`) or explicitly deferred with documented rationale.
 * You have necessary permissions to modify project documentation structure and create final release artifacts.
-* The main conceptual guide [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md) has been reviewed for understanding the overall philosophy and process.
+* The main conceptual guide [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md) has been reviewed for understanding the overall philosophy and process.
 
 ## Process Steps
 
@@ -40,14 +40,14 @@
 5. **Update Version Numbers:**
    * Update all project files containing version numbers (e.g., `package.json`, `Cargo.toml`, `VERSION` files)
    * Ensure version consistency across all relevant files
-   * _Refer to project-specific version file locations in [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md)_
+   * _Refer to project-specific version file locations in [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md)_
 
 6. **Generate Final Changelog:**
    * Create or update `CHANGELOG.md` at project root
    * Move entries from `[Unreleased]` section to new version section
    * Add release date: `## [X.Y.Z] - YYYY-MM-DD`
    * Include comparison links at bottom of file
-   * _Follow format specified in [`docs-dev/guides/changelog.g.md`](../guides/changelog.g.md)_
+   * _Follow format specified in [`dev-handbook/guides/changelog.g.md`](../guides/changelog.g.md)_
 
 7. **Validate Documentation Consistency:**
    * Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
@@ -75,7 +75,7 @@
 11. **Authenticate with Package Registry:**
     * Ensure authentication with relevant package registries (npm, PyPI, RubyGems, etc.)
     * Verify credentials are current and have appropriate permissions
-    * _Refer to language-specific guides in [`docs-dev/guides/release-publish/`](../guides/release-publish/) if available_
+    * _Refer to language-specific guides in [`dev-handbook/guides/release-publish/`](../guides/release-publish/) if available_
 
 12. **Execute Package Publication:**
     * Run language-specific publish command
@@ -90,10 +90,10 @@
 ### 5. Documentation Archival
 
 14. **Archive Release Documentation:**
-    * Create archive directory: `mkdir -p docs-project/done/`
-    * Move current release documentation: `mv docs-project/current/* docs-project/done/v<X.Y.Z>-<codename>/`
-    * Example: `mv docs-project/current/v.0.3.0-feedback-after-meta.v.0.2 docs-project/done/`
-    * Verify move completed successfully and `docs-project/current/` is empty
+    * Create archive directory: `mkdir -p dev-taskflow/done/`
+    * Move current release documentation: `mv dev-taskflow/current/* dev-taskflow/done/v<X.Y.Z>-<codename>/`
+    * Example: `mv dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2 dev-taskflow/done/`
+    * Verify move completed successfully and `dev-taskflow/current/` is empty
 
 15. **Update Roadmap (Remove Completed Release):**
     * Remove the completed release from roadmap's "Planned Major Releases" table
@@ -107,7 +107,7 @@
       ```
 
 16. **Commit Documentation Archival:**
-    * Stage archival changes: `git add docs-project/done/v<X.Y.Z>-<codename>/ docs-project/current/`
+    * Stage archival changes: `git add dev-taskflow/done/v<X.Y.Z>-<codename>/ dev-taskflow/current/`
     * Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
     * Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
 
@@ -190,7 +190,7 @@ Stop the process and consider rollback if:
    * Review build logs for specific errors
    * Verify all dependencies are available
    * Check for environment-specific issues
-   * Consult [`docs-dev/workflow-instructions/fix-tests.wf.md`](./fix-tests.wf.md) if test-related
+   * Consult [`dev-handbook/workflow-instructions/fix-tests.wf.md`](./fix-tests.wf.md) if test-related
 
 2. **Version Conflicts:**
    * Check for existing tags with same version number
@@ -209,13 +209,13 @@ Stop the process and consider rollback if:
 
 ## Reference Documentation
 
-* **Primary Conceptual Guide:** [`docs-dev/guides/release-publish.g.md`](../guides/release-publish.g.md)
-* **Changelog Standards:** [`docs-dev/guides/changelog.g.md`](../guides/changelog.g.md)
-* **Version Control Workflow:** [`docs-dev/guides/version-control-system.g.md`](../guides/version-control-system.g.md)
-* **Project Management Integration:** [`docs-dev/guides/project-management.g.md`](../guides/project-management.g.md)
+* **Primary Conceptual Guide:** [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md)
+* **Changelog Standards:** [`dev-handbook/guides/changelog.g.md`](../guides/changelog.g.md)
+* **Version Control Workflow:** [`dev-handbook/guides/version-control-system.g.md`](../guides/version-control-system.g.md)
+* **Project Management Integration:** [`dev-handbook/guides/project-management.g.md`](../guides/project-management.g.md)
 
-* **Quality Assurance:** [`docs-dev/guides/quality-assurance.g.md`](../guides/quality-assurance.g.md)
-* **Language-Specific Guides:** [`docs-dev/guides/release-publish/`](../guides/release-publish/) (if available)
+* **Quality Assurance:** [`dev-handbook/guides/quality-assurance.g.md`](../guides/quality-assurance.g.md)
+* **Language-Specific Guides:** [`dev-handbook/guides/release-publish/`](../guides/release-publish/) (if available)
 
 ## Success Criteria
 
@@ -223,7 +223,7 @@ The publish release workflow is complete when:
 
 * All version numbers are finalized and consistent
 * Package is successfully published to appropriate registries
-* Release documentation is archived in `docs-project/done/`
+* Release documentation is archived in `dev-taskflow/done/`
 * Git repository contains proper tags and commit history
 * Stakeholders are notified of release completion
 * Post-release monitoring is active

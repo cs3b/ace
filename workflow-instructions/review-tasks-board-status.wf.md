@@ -5,13 +5,13 @@
 Review current task statuses, dependencies, and priorities within the active release. This workflow helps to
 ensure tasks are progressing as expected, identify potential blockers early, and maintain alignment with overall
 project goals. It also involves clarifying triggers for when this review is most beneficial and ensuring
-terminology aligns with the [Project Management Guide](docs-dev/guides/project-management.g.md).
+terminology aligns with the [Project Management Guide](dev-handbook/guides/project-management.g.md).
 
 ## Prerequisites
 
-- Familiarity with the [Project Management Guide](docs-dev/guides/project-management.g.md), particularly task
+- Familiarity with the [Project Management Guide](dev-handbook/guides/project-management.g.md), particularly task
  statuses, dependencies, and priorities.
-- Task files within the active release (e.g., `docs-project/current/{release_dir}/tasks/`) follow the standard
+- Task files within the active release (e.g., `dev-taskflow/current/{release_dir}/tasks/`) follow the standard
   Markdown format, including `status:`, `priority:`, and `dependencies:` fields in their frontmatter.
 - Access to the project repository to run CLI tools.
 
@@ -40,7 +40,7 @@ The following steps and tools help in reviewing task statuses:
     - Review the output from `bin/tr` to understand the distribution of task statuses.
     - Cross-reference with task priorities (from frontmatter, visible via `cat` or by enhancing `bin/tr` if
       needed) to ensure high-priority items are being addressed.
-    - Manually inspect task files (`cat docs-project/current/{release_dir}/tasks/NN-task-name.md`) for any
+    - Manually inspect task files (`cat dev-taskflow/current/{release_dir}/tasks/NN-task-name.md`) for any
       specific notes or complexities if `bin/tr` output indicates issues.
 
 4. **(Optional) Contextual Review - Recent Changes:**
@@ -77,11 +77,11 @@ manage task statuses effectively.
 - Task priorities are confirmed or adjusted based on the current situation.
 - Any blockers preventing task progression are identified.
 - Action items for resolving blockers or adjusting plans are noted.
-- Terminology used aligns with the [Project Management Guide](docs-dev/guides/project-management.g.md).
+- Terminology used aligns with the [Project Management Guide](dev-handbook/guides/project-management.g.md).
 
 ## Reference Documentation
 
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (Defines task statuses, priorities, and overall
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Defines task statuses, priorities, and overall
   project structure)
 - Standard Task `.md` file format (as defined in `task-definition.g.md`)
 - CLI tool documentation (if available separately, e.g., `bin/tr --help`, `bin/tn --help`)

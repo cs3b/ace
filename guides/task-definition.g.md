@@ -27,7 +27,7 @@ minimize ambiguity and streamline the process of defining and executing document
 Example audit snippet to embed:
 
 ```bash
-tree -L 2 docs-dev/guides | sed 's/^/    /'
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 
 guides
 ├── coding-standards.md
@@ -52,14 +52,14 @@ guides
 | **Implementation Plan** | Divided into Planning Steps (`* [ ]`) for analysis/design and Execution Steps (`- [ ]`) for implementation actions. Consider embedding automated test/verification steps directly. | |
 | **Acceptance Criteria** | Definition of Done | Check‑list style `[ ]`. **Can include references to automated checks defined in the Implementation Plan's Planning and Execution sections or be high-level checks themselves.** |
 | **Out of Scope** | Prevent scope creep | What must *not* be touched? |
-| **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](docs-dev/guides/.meta/workflow-instructions-embeding-tests.g.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `docs-dev/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
+| **References & Risks** | Links to style guides, ADRs, **testing standards (like [Embedding Tests Guide](dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md))**; mitigations | Any scripts to run? **Use links relative to the project root (e.g., `dev-handbook/guides/some-guide.md`), not relative to the current file (`../guides/some-guide.md`)** |
 
 ---
 
 ## 2. Task Template
 
 A re-usable Markdown template for tasks is available at:
-[`docs-dev/guides/draft-release/v.x.x.x/tasks/_template.md`](./draft-release/v.x.x.x/tasks/_template.md)
+[`dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md`](./draft-release/v.x.x.x/tasks/_template.md)
 
 This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `bin/tnid` to generate the task ID.
 
@@ -78,14 +78,14 @@ This distinction supports workflow separation where review/planning phases focus
 > to generate the task ID for the `id` field in the front-matter.
 > This script ensures the ID is unique, correctly formatted, and uses the next sequential
 > number for the current release, as per the conventions in
-> `docs-dev/guides/project-management.md#task-id-convention`.
+> `dev-handbook/guides/project-management.md#task-id-convention`.
 
 ---
 
 ## 3. **Full Worked Example**
 
 A full worked example of a task, "Tailor Guides to Tech Stack," has been moved to a separate file:
-[`docs-dev/guides/draft-release/v.x.x.x/tasks/_example.md`](./draft-release/v.x.x.x/tasks/_example.md)
+[`dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md`](./draft-release/v.x.x.x/tasks/_example.md)
 
 This example demonstrates how to fill out the template for a real-world scenario.
 

@@ -33,7 +33,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Identify relevant existing code, patterns, or documentation.
   * Break down the task into smaller, manageable implementation steps.
   * Outline the required tests based on acceptance criteria.
-* **Workflow:** See [`work-on-task.wf.md`](docs-dev/workflow-instructions/work-on-task.wf.md)
+* **Workflow:** See [`work-on-task.wf.md`](dev-handbook/workflow-instructions/work-on-task.wf.md)
 
 ### Step 2: Write Tests (TDD - Red)
 
@@ -44,7 +44,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Write a specific test case that captures one aspect of the requirement.
   * Ensure the test clearly describes the expected outcome.
   * Run the test and confirm that it **fails** (this is the "Red" phase).
-* **Workflow:** See the testing section in [`work-on-task.wf.md`](docs-dev/workflow-instructions/work-on-task.wf.md)
+* **Workflow:** See the testing section in [`work-on-task.wf.md`](dev-handbook/workflow-instructions/work-on-task.wf.md)
 
 ### Step 3: Implement Code (TDD - Green)
 
@@ -61,7 +61,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Look for opportunities to remove duplication, improve variable names, simplify logic, or adhere better to coding
     standards.
   * Run tests after each small refactoring step to ensure no behavior was broken.
-* **Reference:** [Coding Standards](docs-dev/guides/coding-standards.g.md)
+* **Reference:** [Coding Standards](dev-handbook/guides/coding-standards.g.md)
 
 ### Step 5: Verify Locally
 
@@ -80,8 +80,8 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * **Critically review any AI-generated code before committing.**
   * Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
     standard.
-* **Workflow:** See [`commit.wf.md`](docs-dev/workflow-instructions/commit.wf.md)
-* **Reference:** [Version Control Guide](docs-dev/guides/version-control-system.g.md)
+* **Workflow:** See [`commit.wf.md`](dev-handbook/workflow-instructions/commit.wf.md)
+* **Reference:** [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
 
 ### Step 7: Self-Reflection
 
@@ -92,7 +92,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Identify any follow-up actions (e.g., refactoring needs, process improvements) and create backlog tasks if
     needed.
   * Log the reflection summary. Individual reflections can serve as input to the
-    [`create-retrospective-document.wf.md`](docs-dev/workflow-instructions/create-retrospective-document.wf.md) workflow.
+    [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) workflow.
 
 ### Step 8: Update Task Status
 
@@ -101,7 +101,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Update the status field (e.g., to `done`) in the task's `.md` file.
   * Move the task file to the appropriate `done` directory if applicable (refer to project management
     specifics).
-* **Reference:** [Project Management Guide](docs-dev/guides/project-management.g.md)
+* **Reference:** [Project Management Guide](dev-handbook/guides/project-management.g.md)
 
 ## 4. Key Principles & Best Practices
 
@@ -117,24 +117,24 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
 While the core cycle remains the same, specific commands and tools vary by technology stack. Refer to the relevant
 sub-guide for details:
 
-* [Ruby Application](docs-dev/guides/test-driven-development-cycle/ruby-application.md)
-* [Ruby Gem](docs-dev/guides/test-driven-development-cycle/ruby-gem.md)
-* [Rust CLI](docs-dev/guides/test-driven-development-cycle/rust-cli.md)
-* [Rust→Wasm Zed Extension](docs-dev/guides/test-driven-development-cycle/rust-wasm-zed.md)
-* [TypeScript + Vue](docs-dev/guides/test-driven-development-cycle/typescript-vue.md)
-* [TypeScript + Nuxt](docs-dev/guides/test-driven-development-cycle/typescript-nuxt.md)
-* [Meta (Documentation)](docs-dev/guides/test-driven-development-cycle/meta-documentation.md)
+* [Ruby Application](dev-handbook/guides/test-driven-development-cycle/ruby-application.md)
+* [Ruby Gem](dev-handbook/guides/test-driven-development-cycle/ruby-gem.md)
+* [Rust CLI](dev-handbook/guides/test-driven-development-cycle/rust-cli.md)
+* [Rust→Wasm Zed Extension](dev-handbook/guides/test-driven-development-cycle/rust-wasm-zed.md)
+* [TypeScript + Vue](dev-handbook/guides/test-driven-development-cycle/typescript-vue.md)
+* [TypeScript + Nuxt](dev-handbook/guides/test-driven-development-cycle/typescript-nuxt.md)
+* [Meta (Documentation)](dev-handbook/guides/test-driven-development-cycle/meta-documentation.md)
 
 ## 6. Related Documentation
 
 * **Workflow Instructions:**
-  * [`work-on-task.wf.md`](docs-dev/workflow-instructions/work-on-task.wf.md) (includes testing guidance)
-  * [`commit.wf.md`](docs-dev/workflow-instructions/commit.wf.md)
-  * [`log-compact-session.wf.md`](docs-dev/workflow-instructions/log-compact-session.wf.md) (for saving session context)
-  * [`create-retrospective-document.wf.md`](docs-dev/workflow-instructions/create-retrospective-document.wf.md) (for broader
+  * [`work-on-task.wf.md`](dev-handbook/workflow-instructions/work-on-task.wf.md) (includes testing guidance)
+  * [`commit.wf.md`](dev-handbook/workflow-instructions/commit.wf.md)
+  * [`log-compact-session.wf.md`](dev-handbook/workflow-instructions/log-compact-session.wf.md) (for saving session context)
+  * [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) (for broader
     reflection and learning synthesis)
 * **Core Guides:**
-  * [Testing Guide](docs-dev/guides/testing.g.md)
-  * [Version Control Guide](docs-dev/guides/version-control-system.g.md)
-  * [Coding Standards](docs-dev/guides/coding-standards.g.md)
-  * [Project Management Guide](docs-dev/guides/project-management.g.md)
+  * [Testing Guide](dev-handbook/guides/testing.g.md)
+  * [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+  * [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+  * [Project Management Guide](dev-handbook/guides/project-management.g.md)

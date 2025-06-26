@@ -141,6 +141,6 @@ refer to the examples in the [./security/](./security/) sub-directory.
 
 ## Related Documentation
 
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
-- [Quality Assurance](docs-dev/guides/quality-assurance.g.md) (Code Review)
-- [Error Handling](docs-dev/guides/error-handling.g.md) (Avoid leaking sensitive info)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
+- [Quality Assurance](dev-handbook/guides/quality-assurance.g.md) (Code Review)
+- [Error Handling](dev-handbook/guides/error-handling.g.md) (Avoid leaking sensitive info)

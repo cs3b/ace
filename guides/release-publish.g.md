@@ -59,18 +59,18 @@ Release documentation archival serves multiple purposes:
 
 ### Archival Structure
 
-Documentation moves from `docs-project/current/` to `docs-project/done/` following this pattern:
+Documentation moves from `dev-taskflow/current/` to `dev-taskflow/done/` following this pattern:
 
 ```
 Before Archival:
-docs-project/current/v.0.3.0-feedback-after-meta.v.0.2/
+dev-taskflow/current/v.0.3.0-feedback-after-meta.v.0.2/
 ├── tasks/
 ├── researches/
 ├── decisions/
 └── v.0.3.0-feedback-after-meta.v.0.2.md
 
 After Archival:
-docs-project/done/v.0.3.0-feedback-after-meta.v.0.2/
+dev-taskflow/done/v.0.3.0-feedback-after-meta.v.0.2/
 ├── tasks/
 ├── researches/
 ├── decisions/

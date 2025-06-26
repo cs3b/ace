@@ -1,6 +1,6 @@
 # Writing Development Guides
 
-This guide outlines best practices for creating and maintaining the development guides located within the `docs-dev/guides/` directory. These guides serve as the primary reference for project standards, processes, and technical approaches, intended for both human developers and AI agents collaborating on the project.
+This guide outlines best practices for creating and maintaining the development guides located within the `dev-handbook/guides/` directory. These guides serve as the primary reference for project standards, processes, and technical approaches, intended for both human developers and AI agents collaborating on the project.
 
 ## Goal of Guides
 
@@ -16,7 +16,7 @@ The primary goal of these guides is to:
 2.  **Accuracy & Up-to-Date:** Ensure information is correct and reflects the current project state and decisions. Update guides promptly when processes or standards change.
 3.  **Actionability:** Focus on providing practical, actionable advice and instructions. Explain the "how" and the "why".
 4.  **Structure & Scanability:** Use clear headings, subheadings, lists, and code blocks to organize information logically. Make it easy for readers (human or AI) to quickly find relevant sections.
-5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main [Project Management Guide](docs-dev/guides/project-management.g.md).
+5.  **Consistency:** Use consistent terminology, formatting, and structure across all guides. Refer to terms defined in other guides or the main [Project Management Guide](dev-handbook/guides/project-management.g.md).
 6.  **Examples:** Provide concrete examples (code snippets, file structures, command outputs) to illustrate concepts and instructions.
 7.  **Target Audience:** Write for both human developers (potentially new to the project) and AI agents. This means being explicit, structured, and providing sufficient context.
 8.  **Language Modularity:** When a guide mixes language‑specific details with general advice, extract each language's specifics into a dedicated sub‑guide (e.g., `testing/ruby-rspec.md`, `security/rust.md`). Keep the parent guide language‑agnostic.
@@ -53,7 +53,7 @@ While the specific sections will vary based on the guide's topic, aim for a gene
     *   Detail standards or rules with rationale.
 4.  **Examples:** Include well-formatted code blocks, file structure examples, or command outputs where appropriate. Use realistic (but potentially simplified) examples relevant to the toolkit's domain.
 5.  **Best Practices/Tips:** Offer actionable advice or highlight common pitfalls.
-5.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](docs-dev/guides/project-management.g.md)`), **not** relative to the current file (e.g., `../project-management.g.md`).
+5.  **Related Documentation:** Link to other relevant guides, workflow instructions, or templates using paths relative to the project root (e.g., `[Project Management Guide](dev-handbook/guides/project-management.g.md)`), **not** relative to the current file (e.g., `../project-management.g.md`).
 
 ## Language‑Specific Sub‑Guides
 
@@ -67,12 +67,12 @@ When splitting language‑dependent examples out of a general guide, follow thes
 3. **Cross‑Linking**  
    * At the top of each sub‑guide add a short note:  
      ```markdown
-     > This page is a language‑specific companion to [Testing Guide](docs-dev/guides/testing.g.md)
+     > This page is a language‑specific companion to [Testing Guide](dev-handbook/guides/testing.g.md)
      ```  
    * Add reciprocal links from the parent guide to its sub‑guides.
 
 3. **Index Updates**  
-   * Whenever you add or delete a sub‑guide, update `docs-dev/guides/README.md` (or `index.md`) so the navigation tree stays accurate.
+   * Whenever you add or delete a sub‑guide, update `dev-handbook/guides/README.md` (or `index.md`) so the navigation tree stays accurate.
 
 4. **Example Tree**
 
@@ -91,7 +91,7 @@ When splitting language‑dependent examples out of a general guide, follow thes
 - **Explicit Instructions:** Use action verbs and clearly define steps.
 - **Define Terminology:** If introducing a specific term, define it clearly or link to where it's defined (using root-relative paths).
 - **Contextual Links:** Link to related guides or specific sections where appropriate using root-relative paths to build a connected knowledge graph.
-- **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format with proper file extensions e.g.: `[Writing Guides Guide](docs-dev/guides/.meta/writing-guides-guide.md)`, `[Commit Workflow](docs-dev/workflow-instructions/commit.wf.md)`. Avoid using just the path in backticks unless discussing the path itself.
+- **Use Standard Markdown Links:** When linking to other guides, workflow instructions, or project documents, always use the standard Markdown link format with proper file extensions e.g.: `[Writing Guides Guide](dev-handbook/guides/.meta/writing-guides-guide.md)`, `[Commit Workflow](dev-handbook/workflow-instructions/commit.wf.md)`. Avoid using just the path in backticks unless discussing the path itself.
 - **Code Examples:** Use clear, minimal, and correct code examples. Specify the language in fenced code blocks (e.g., ```ruby).
 
 ## Checkbox Usage Guidelines
@@ -154,7 +154,7 @@ Copy this template for your PRs:
 ## Maintaining Guides
 
 - **Review Regularly:** Periodically review guides for accuracy and relevance, especially when related processes change.
-- **Run a Directory Audit before Large Refactors:** Use `tree -L 2 docs-dev/guides` (or similar) to list the current structure, paste the excerpt into your refactor ticket, and build an explicit file‑manifest from it.
+- **Run a Directory Audit before Large Refactors:** Use `tree -L 2 dev-handbook/guides` (or similar) to list the current structure, paste the excerpt into your refactor ticket, and build an explicit file‑manifest from it.
 - **Update After Decisions:** If an ADR changes a standard or process, update the corresponding guide(s).
 - **Refactor When Needed:** Don't hesitate to restructure or rewrite sections for clarity as the project evolves.
 

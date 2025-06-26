@@ -1,7 +1,7 @@
 # Implementing Task Cycle: Meta (Documentation)
 
 This details specific steps for the task cycle when the work involves modifying project documentation (guides, tasks,
-research, etc.) within `docs-dev/` or `docs-project/`.
+research, etc.) within `dev-handbook/` or `dev-taskflow/`.
 
 1. Draft or update task/guide/research markdown file(s).
 2. Run `bin/lint` (which includes link checking) and address any reported issues.

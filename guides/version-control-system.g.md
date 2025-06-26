@@ -244,7 +244,7 @@ Common file groupings (examples):
 
 - Source code: `src/`, `lib/`, `app/`
 - Tests: `tests/`, `spec/`, `__tests__/`
-- Documentation: `docs/`, `docs-dev/`
+- Documentation: `docs/`, `dev-handbook/`
 - Configuration: `config/`, `*.json`, `*.yaml`, `*.toml`
 - Build/Package: `Makefile`, `Dockerfile`, `package.json`, `pom.xml`, `setup.py`, `Cargo.toml`
 
@@ -308,12 +308,12 @@ Ensure version numbers are consistent across:
 - Git tags (e.g., `v0.3.0`)
 - Project files (`package.json`, `Cargo.toml`, `VERSION` files)
 - Documentation and changelog entries
-- Release folder names in `docs-project/`
+- Release folder names in `dev-taskflow/`
 
 ## Related Documentation
 
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (Task workflow integration)
-- [Publish Release Guide](docs-dev/guides/release-publish.g.md) (Release versioning and archival)
-- [Changelog Guide](docs-dev/guides/changelog.g.md) (Version linking and format)
-- [Quality Assurance Guide](docs-dev/guides/quality-assurance.g.md) (PR Template, Code Review)
-- Relevant Workflow Instructions: `docs-dev/workflow-instructions/commit.wf.md`, `docs-dev/workflow-instructions/publish-release.wf.md`
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Task workflow integration)
+- [Publish Release Guide](dev-handbook/guides/release-publish.g.md) (Release versioning and archival)
+- [Changelog Guide](dev-handbook/guides/changelog.g.md) (Version linking and format)
+- [Quality Assurance Guide](dev-handbook/guides/quality-assurance.g.md) (PR Template, Code Review)
+- Relevant Workflow Instructions: `dev-handbook/workflow-instructions/commit.wf.md`, `dev-handbook/workflow-instructions/publish-release.wf.md`

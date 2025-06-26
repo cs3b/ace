@@ -6,7 +6,7 @@ This guide defines the project's overall testing strategy, outlines best practic
 tests, and explains conventions for organizing and executing tests to ensure code quality and reliability.
 
 This document outlines general testing strategies and best practices. Project-specific configurations or
-conventions should be documented in `docs-project/testing-guide.md` (if it exists).
+conventions should be documented in `dev-taskflow/testing-guide.md` (if it exists).
 
 ## 1. Testing Strategy
 
@@ -136,14 +136,14 @@ to an AI agent when generating or modifying code.
 ## Related Documentation
 
 * Technology-Specific Guides:
-  * [Ruby (RSpec) Testing Guide](docs-dev/guides/testing/ruby-rspec.md)
-  * [Ruby (RSpec) Configuration Examples](docs-dev/guides/testing/ruby-rspec-config-examples.md)
-  * [Rust Testing Guide](docs-dev/guides/testing/rust.md)
-  * [TypeScript (Bun) Testing Guide](docs-dev/guides/testing/typescript-bun.md)
-* [Coding Standards Guide](docs-dev/guides/coding-standards.g.md)
-* [Quality Assurance Guide](docs-dev/guides/quality-assurance.g.md) (Test Coverage, CI)
-* [Performance Tuning Guide](docs-dev/guides/performance.g.md) (Performance Testing)
+  * [Ruby (RSpec) Testing Guide](dev-handbook/guides/testing/ruby-rspec.md)
+  * [Ruby (RSpec) Configuration Examples](dev-handbook/guides/testing/ruby-rspec-config-examples.md)
+  * [Rust Testing Guide](dev-handbook/guides/testing/rust.md)
+  * [TypeScript (Bun) Testing Guide](dev-handbook/guides/testing/typescript-bun.md)
+* [Coding Standards Guide](dev-handbook/guides/coding-standards.g.md)
+* [Quality Assurance Guide](dev-handbook/guides/quality-assurance.g.md) (Test Coverage, CI)
+* [Performance Tuning Guide](dev-handbook/guides/performance.g.md) (Performance Testing)
 
-* [Troubleshooting Workflow](docs-dev/guides/debug-troubleshooting.g.md)
-* Relevant Workflow Instructions: `docs-dev/workflow-instructions/work-on-task.wf.md` (includes testing
-  guidance), `docs-dev/workflow-instructions/fix-tests.wf.md` (for diagnosing and fixing failing tests)
+* [Troubleshooting Workflow](dev-handbook/guides/debug-troubleshooting.g.md)
+* Relevant Workflow Instructions: `dev-handbook/workflow-instructions/work-on-task.wf.md` (includes testing
+  guidance), `dev-handbook/workflow-instructions/fix-tests.wf.md` (for diagnosing and fixing failing tests)

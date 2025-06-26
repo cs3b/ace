@@ -21,7 +21,7 @@ rather than general application bugs.
 
 A systematic approach to diagnose and fix failing tests - distinct from general bug fixing. This workflow focuses
 specifically on test failures, which often require specialized knowledge of testing frameworks and patterns. For
-detailed testing practices and framework info, see [Testing Guide](docs-dev/guides/testing.g.md).
+detailed testing practices and framework info, see [Testing Guide](dev-handbook/guides/testing.g.md).
 
 ## When to Use This Workflow
 
@@ -80,8 +80,8 @@ This workflow is NOT intended for:
 
 ## Reference Documentation
 
-- [Testing Guide](docs-dev/guides/testing.g.md)
-- [Coding Standards](docs-dev/guides/coding-standards.g.md)
+- [Testing Guide](dev-handbook/guides/testing.g.md)
+- [Coding Standards](dev-handbook/guides/coding-standards.g.md)
 
 ## Output / Success Criteria
 

@@ -12,22 +12,22 @@ as structured notes, suitable as input for the `breakdown-notes-into-tasks` work
 
 ## Prerequisites
 
-* A target release directory exists (either in `docs-project/current/` or `docs-project/backlog/`).
+* A target release directory exists (either in `dev-taskflow/current/` or `dev-taskflow/backlog/`).
 * The target release directory contains an internal `backlog/` subdirectory.
 * Items (e.g., `.md` notes, draft task descriptions) exist within the `{target_release_path}/backlog/` directory.
 
 ## Input
 
-* Target release directory path (defaults to the single directory in `docs-project/current/`,
-  otherwise requires an explicit path like `docs-project/backlog/v1.3.0-Enhancements/`).
+* Target release directory path (defaults to the single directory in `dev-taskflow/current/`,
+  otherwise requires an explicit path like `dev-taskflow/backlog/v1.3.0-Enhancements/`).
 * Content of the items within the `{target_release_path}/backlog/` directory.
 
 ## Process Steps
 
 1. **Identify Target Release:**
     * Determine the target release directory path.
-        * Default: The single directory within `docs-project/current/`.
-        * Explicit: Use the path provided by the user (e.g., `docs-project/backlog/vX.Y.Z-Codename/`).
+        * Default: The single directory within `dev-taskflow/current/`.
+        * Explicit: Use the path provided by the user (e.g., `dev-taskflow/backlog/vX.Y.Z-Codename/`).
     * Verify the existence of the target release directory and its internal `backlog/` subdirectory.
 
 2. **Review Backlog Items:**

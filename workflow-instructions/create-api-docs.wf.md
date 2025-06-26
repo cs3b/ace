@@ -18,7 +18,7 @@ documentation tools (e.g., YARD for Ruby) and adhering to project documentation 
    exceptions, usage patterns, and any performance or thread-safety considerations.
 3. **Write Doc Comments:** Add or update documentation comments directly in the source code using the
    standard tool syntax (e.g., YARD tags like `@param`, `@return`, `@raise`, `@example`, `@note`, `@see`).
-    - Follow guidelines in `docs-dev/guides/documentation.md` for content and style.
+    - Follow guidelines in `dev-handbook/guides/documentation.md` for content and style.
     - Include clear descriptions, parameter details, return value explanations, usage examples, and notes
       on constraints or important behaviors.
 4. **Generate Documentation:** Run the documentation generation tool (e.g., `bundle exec yard doc` from
@@ -35,11 +35,11 @@ documentation tools (e.g., YARD for Ruby) and adhering to project documentation 
 ## Output / Success Criteria
 
 - Source code contains updated, accurate documentation comments for the target interfaces.
-- Documentation comments follow project standards (`docs-dev/guides/documentation.md`).
+- Documentation comments follow project standards (`dev-handbook/guides/documentation.md`).
 - Generated API documentation (e.g., HTML files) is up-to-date and reflects the code comments.
 - Documentation covers key aspects: purpose, params, returns, examples, exceptions, notes.
 
 ## Reference Documentation
 
-- [Documentation Standards Guide](docs-dev/guides/documentation.g.md) (Provides specific examples and tag usage)
-- [Coding Standards Guide](docs-dev/guides/coding-standards.g.md)
+- [Documentation Standards Guide](dev-handbook/guides/documentation.g.md) (Provides specific examples and tag usage)
+- [Coding Standards Guide](dev-handbook/guides/coding-standards.g.md)

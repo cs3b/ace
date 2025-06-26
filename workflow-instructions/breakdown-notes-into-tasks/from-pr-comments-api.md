@@ -3,7 +3,7 @@
 This document outlines steps to:
 
 1. Fetch GitHub Pull Request (PR) comments and reviews using the API
-   (via `docs-dev/tools/fetch-github-pr-data.rb`).
+   (via `dev-handbook/tools/fetch-github-pr-data.rb`).
 2. Analyze this data to extract structured requirements.
 These requirements serve as input for creating actionable development tasks using the main
 `breakdown-notes-into-tasks` workflow.
@@ -17,9 +17,9 @@ typically for a Patch release addressing the feedback.
 ## Prerequisites
 
 * Ruby environment and required gems installed (for the `fetch-github-pr-data.rb` script).
-* A `.env` file in `docs-dev/tools/` with a valid `GITHUB_TOKEN`.
+* A `.env` file in `dev-handbook/tools/` with a valid `GITHUB_TOKEN`.
 * A valid GitHub Pull Request URL.
-* A target release directory path identified (e.g., `docs-project/current/vX.Y.Z-feedback-to-pr-NNN/`).
+* A target release directory path identified (e.g., `dev-taskflow/current/vX.Y.Z-feedback-to-pr-NNN/`).
 
 ## Input
 
@@ -32,7 +32,7 @@ typically for a Patch release addressing the feedback.
     * Use the provided target release directory path.
     * If not provided, determine the appropriate path. For example, based on the current project
       version and PR number, this might be
-      `docs-project/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`.
+      `dev-taskflow/current/v{current_patch+1}-feedback-to-pr-{pr_number}/`.
       Confirm with the user and create if necessary.
 
 2. **Fetch PR Data via API:**
@@ -40,7 +40,7 @@ typically for a Patch release addressing the feedback.
     * Execute the fetching script:
 
         ```bash
-        ruby docs-dev/tools/fetch-github-pr-data.rb \
+        ruby dev-handbook/tools/fetch-github-pr-data.rb \
           --owner {owner} \
           --repo {repo} \
           --pr {number} \

@@ -2,7 +2,7 @@
 
 For each workflow instruction write a claude command
 
-docs-dev/workflow-instructions
+dev-handbook/workflow-instructions
 ├── docs
 │   ├── generate-adr.md
 │   ├── generate-api-docs.md
@@ -36,7 +36,7 @@ docs-dev/workflow-instructions
 Below is a template for one commmand:
 
 ```md .claude/commands/lets-commit.md
-READ and RUN INSTRUCTIONS in docs-dev/workflow-instructions/lets-commit.md
+READ and RUN INSTRUCTIONS in dev-handbook/workflow-instructions/lets-commit.md
 (also read internally linked other documents within this document)
 ```
 

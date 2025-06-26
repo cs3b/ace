@@ -39,7 +39,7 @@ debugging to seeking help.
 ## Utilizing Documentation and Research
 
 * **Internal Docs:** Before extensive debugging, always check project-specific documentation (`README.md`,
-  architecture diagrams in `docs-project/`, specific guides in `docs-dev/guides/`).
+  architecture diagrams in `dev-taskflow/`, specific guides in `dev-handbook/guides/`).
 * **External Research:** Use search engines effectively. Formulate precise queries including error messages,
   technology names, and library versions.
 

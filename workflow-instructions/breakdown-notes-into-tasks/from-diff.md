@@ -13,7 +13,7 @@ implementation).
 ## Prerequisites
 
 * Git diff content available (file, command output, commit range).
-* A target release directory identified (e.g., `docs-project/current/vX.Y.Z/` or `docs-project/backlog/vA.B.C/`).
+* A target release directory identified (e.g., `dev-taskflow/current/vX.Y.Z/` or `dev-taskflow/backlog/vA.B.C/`).
 
 ## Input
 

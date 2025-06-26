@@ -95,7 +95,7 @@ Our development workflow centers around:
 
 ## Task & Release Management
 
-Project tasks and release planning are managed within the `docs-project` directory using a simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
+Project tasks and release planning are managed within the `dev-taskflow` directory using a simple Kanban-style flow (`backlog/`, `current/`, `done/`) with structured Markdown task files.
 
 Key guides for this process:
 

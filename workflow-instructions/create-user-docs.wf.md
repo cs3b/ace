@@ -26,7 +26,7 @@ or significant change.
     - API Reference (if applicable, link to generated API docs)
     - Integration Examples
     - Migration Guide (if applicable)
-    - *(Refer to `docs-dev/guides/draft-release/v.x.x.x/docs/_template.md` for a template)*
+    - *(Refer to `dev-handbook/guides/draft-release/v.x.x.x/docs/_template.md` for a template)*
 4. **Draft Content:** Write the documentation content, focusing on clarity, accuracy, and practical examples.
     - Include code snippets for examples.
     - Explain the "why" as well as the "how".
@@ -35,7 +35,7 @@ or significant change.
    spelling. Ensure examples work.
 6. **Save/Commit:** Save the documentation in the appropriate location (e.g., `docs/`, `examples/`,
    `README.md` at project root, or within a release directory
-   `docs-project/current/{release_dir}/user-experience/` or `docs-project/current/{release_dir}/docs/`).
+   `dev-taskflow/current/{release_dir}/user-experience/` or `dev-taskflow/current/{release_dir}/docs/`).
    Commit the changes.
 
 ## Input
@@ -49,11 +49,11 @@ or significant change.
 - User documentation for the specified feature/change is created or updated.
 - Documentation is clear, accurate, and appropriate for the target audience.
 - Key aspects (usage, configuration, examples) are covered.
-- Documentation follows project standards (`docs-dev/guides/documentation.md`).
+- Documentation follows project standards (`dev-handbook/guides/documentation.md`).
 - Documentation is saved in the correct location.
 
 ## Reference Documentation
 
-- [Documentation Standards Guide](docs-dev/guides/documentation.g.md)
-- [User Docs Template](docs-dev/guides/draft-release/v.x.x.x/docs/_template.md)
-- [User Experience Template](docs-dev/guides/draft-release/v.x.x.x/user-experience/_template.md)
+- [Documentation Standards Guide](dev-handbook/guides/documentation.g.md)
+- [User Docs Template](dev-handbook/guides/draft-release/v.x.x.x/docs/_template.md)
+- [User Experience Template](dev-handbook/guides/draft-release/v.x.x.x/user-experience/_template.md)

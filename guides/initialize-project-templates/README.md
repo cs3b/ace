@@ -5,7 +5,7 @@
 ## Overview
 
 <!-- Brief description of what this project does and why it exists -->
-<!-- See docs-dev/guides/documentation.g.md for documentation structure guidelines -->
+<!-- See dev-handbook/guides/documentation.g.md for documentation structure guidelines -->
 
 ## Features
 
@@ -80,8 +80,8 @@ cd <project-directory>
 
 ```
 project-root/
-├── docs-dev/          # Development guides and workflows
-├── docs-project/      # Project-specific documentation
+├── dev-handbook/          # Development guides and workflows
+├── dev-taskflow/      # Project-specific documentation
 ├── bin/              # Executable scripts
 ├── src/              # Source code (adjust as needed)
 ├── tests/            # Test files
@@ -94,7 +94,7 @@ project-root/
 2. **Testing**: Run `bin/test` to execute the test suite
 3. **Linting**: Run `bin/lint` to check code quality
 4. **Building**: Run `bin/build` to build the project
-5. **Documentation**: Update relevant docs in `docs-project/`
+5. **Documentation**: Update relevant docs in `dev-taskflow/`
 
 ### Contributing
 
@@ -163,7 +163,7 @@ bin/test
 - [Architecture](docs/architecture.md) - Technical architecture
 - [What We Build](docs/what-do-we-build.md) - Project vision and goals
 
-For guidance on documentation structure and best practices, see the [Documentation Guide](docs-dev/guides/documentation.g.md).
+For guidance on documentation structure and best practices, see the [Documentation Guide](dev-handbook/guides/documentation.g.md).
 
 ## License
 

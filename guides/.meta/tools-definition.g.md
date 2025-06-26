@@ -1,13 +1,13 @@
 # Development Tools Guide
 
-This guide outlines best practices for creating, maintaining, and using development tools located within the `docs-dev/tools/` directory. These tools are helper scripts and utilities designed to automate common tasks, enforce standards, and support the overall development workflow for both human developers and AI agents.
+This guide outlines best practices for creating, maintaining, and using development tools located within the `dev-handbook/tools/` directory. These tools are helper scripts and utilities designed to automate common tasks, enforce standards, and support the overall development workflow for both human developers and AI agents.
 
 ## Goal of Tools
 
 The primary goal of development tools is to:
 - Automate repetitive or complex development tasks.
 - Ensure consistency in project operations (e.g., task management, documentation checks).
-- Provide support for workflows defined in `docs-dev/workflow-instructions/`.
+- Provide support for workflows defined in `dev-handbook/workflow-instructions/`.
 - Enhance developer productivity and reduce manual error.
 - Be easily usable by both human developers and AI agents.
 
@@ -22,11 +22,11 @@ The primary goal of development tools is to:
 7.  **Cross-Platform Compatibility (where feasible):** Strive to make tools runnable on common development operating systems (Linux, macOS). If a tool has specific OS dependencies (e.g., `tree` command), document them.
 8.  **Error Handling:** Tools should provide clear error messages and exit with non-zero status codes on failure.
 9.  **Minimal Dependencies:** Prefer tools written in standard scripting languages (e.g., Bash, Ruby, Python) that are commonly available or have minimal external dependencies. If dependencies are required, document them.
-10. **Project-Relative Paths**: Tools should assume they are run from the project root (an assumption typically ensured by `bin/` wrappers). Paths within tools (e.g., to access `docs-project/` files) should be constructed relative to this root (e.g., `docs-project/current/vX.Y.Z/tasks/001.md`) and not include the top-level project directory name.
+10. **Project-Relative Paths**: Tools should assume they are run from the project root (an assumption typically ensured by `bin/` wrappers). Paths within tools (e.g., to access `dev-taskflow/` files) should be constructed relative to this root (e.g., `dev-taskflow/current/vX.Y.Z/tasks/001.md`) and not include the top-level project directory name.
 
 ## Naming Conventions
 
-To ensure clarity and consistency, tools within the `docs-dev/tools/` directory should follow these naming conventions:
+To ensure clarity and consistency, tools within the `dev-handbook/tools/` directory should follow these naming conventions:
 
 1.  **Verb-Prefix:** Tool names should start with a verb that describes their primary action.
     *   Examples: `get-next-task`, `build-contextual-prompt`, `lint-md-links`, `show-directory-tree`.
@@ -50,7 +50,7 @@ To ensure clarity and consistency, tools within the `docs-dev/tools/` directory 
 
 # Function to print usage instructions
 # def print_usage
-#   puts "Usage: docs-dev/tools/tool-name [OPTIONS] [ARGUMENTS]"
+#   puts "Usage: dev-handbook/tools/tool-name [OPTIONS] [ARGUMENTS]"
 #   puts ""
 #   puts "Options:"
 #   puts "  -o, --option  Description of option"
@@ -60,7 +60,7 @@ To ensure clarity and consistency, tools within the `docs-dev/tools/` directory 
 # Parse command-line arguments (using OptParse or similar)
 # options = {}
 # OptionParser.new do |opts|
-#   opts.banner = "Usage: docs-dev/tools/tool-name [options] [arguments]"
+#   opts.banner = "Usage: dev-handbook/tools/tool-name [options] [arguments]"
 #   opts.on("-h", "--help", "Prints this help") do
 #     print_usage
 #     exit
@@ -82,16 +82,16 @@ To ensure clarity and consistency, tools within the `docs-dev/tools/` directory 
 
 ## `bin/` Wrappers
 
-Simple, frequently used tools from `docs-dev/tools/` may have thin wrapper scripts in the project's root `bin/` directory for easier access from anywhere in the project.
+Simple, frequently used tools from `dev-handbook/tools/` may have thin wrapper scripts in the project's root `bin/` directory for easier access from anywhere in the project.
 
-- **Naming:** Wrappers in `bin/` should typically be short, memorable, and reflect the tool's purpose (e.g., `bin/tn` for `docs-dev/tools/get-next-task`, `bin/gl` for `docs-dev/tools/get-recent-git-log`).
-- **Functionality:** These wrappers should primarily set up the correct execution path to the actual tool in `docs-dev/tools/` and pass along any arguments. These wrappers should be kept as minimal as possible. If no special environment setup or argument manipulation is needed beyond what the target script handles, a simple `exec` call (like the example below for Ruby scripts, or its shell script equivalent) is preferred.
+- **Naming:** Wrappers in `bin/` should typically be short, memorable, and reflect the tool's purpose (e.g., `bin/tn` for `dev-handbook/tools/get-next-task`, `bin/gl` for `dev-handbook/tools/get-recent-git-log`).
+- **Functionality:** These wrappers should primarily set up the correct execution path to the actual tool in `dev-handbook/tools/` and pass along any arguments. These wrappers should be kept as minimal as possible. If no special environment setup or argument manipulation is needed beyond what the target script handles, a simple `exec` call (like the example below for Ruby scripts, or its shell script equivalent) is preferred.
 
 Example `bin/tn` wrapper:
 ```ruby
 #!/usr/bin/env ruby
 # bin/tn: Thin wrapper for get-next-task utility
-exec(File.expand_path('../docs-dev/tools/get-next-task', __dir__), *ARGV)
+exec(File.expand_path('../dev-handbook/tools/get-next-task', __dir__), *ARGV)
 ```
 
 ## Adding a New Tool
@@ -101,11 +101,11 @@ exec(File.expand_path('../docs-dev/tools/get-next-task', __dir__), *ARGV)
 3.  **Implement Logic:** Write the tool, adhering to the core principles and naming conventions.
 4.  **Add Usage Info:** Include a help option (`-h`, `--help`) or clear comments explaining how to use the tool.
 5.  **Test Thoroughly:** Ensure the tool works as expected in various scenarios, including edge cases and error conditions. Document example invocations or create test cases if the tool's logic is complex. Verify that the tool produces correct output and handles failures gracefully (e.g., proper exit codes, informative error messages).
-6.  **Place in `docs-dev/tools/`:** Add the new tool to the `docs-dev/tools/` directory.
+6.  **Place in `dev-handbook/tools/`:** Add the new tool to the `dev-handbook/tools/` directory.
 7.  **(Optional) Create `bin/` Wrapper:** If the tool is frequently used, consider adding a wrapper in the root `bin/` directory.
 8.  **Update Documentation:**
     *   If the tool is significant or complex, add a section to this guide describing it.
-    *   Update `docs-dev/guides/README.md` if necessary to reflect the new tool's availability, especially if it supports a key workflow.
+    *   Update `dev-handbook/guides/README.md` if necessary to reflect the new tool's availability, especially if it supports a key workflow.
     *   Mention the tool in relevant workflow instructions or other guides if it automates a step.
 
 ## Maintaining Tools
@@ -125,13 +125,13 @@ exec(File.expand_path('../docs-dev/tools/get-next-task', __dir__), *ARGV)
 **Usage:**
 ```bash
 # Basic usage - generate prompt from diff file
-docs-dev/tools/generate-doc-review-prompt -d changes.diff
+dev-handbook/tools/generate-doc-review-prompt -d changes.diff
 
 # Specify custom output location
-docs-dev/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
+dev-handbook/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
 
 # Include full documentation content for detailed analysis
-docs-dev/tools/generate-doc-review-prompt -d changes.diff --include-content
+dev-handbook/tools/generate-doc-review-prompt -d changes.diff --include-content
 ```
 
 **Options:**
@@ -145,6 +145,6 @@ docs-dev/tools/generate-doc-review-prompt -d changes.diff --include-content
 
 **Dependencies:** Standard Ruby libraries only (optparse, pathname, fileutils).
 
-**Related Documentation:** See [Code Review: Diff-Based Documentation Updates](docs-dev/guides/code-review-diff-for-docs-update.g.md) for comprehensive workflow guidance.
+**Related Documentation:** See [Code Review: Diff-Based Documentation Updates](dev-handbook/guides/code-review-diff-for-docs-update.g.md) for comprehensive workflow guidance.
 
 By following these guidelines, we can build a robust and useful set of development tools that enhance our workflow.

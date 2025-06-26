@@ -11,7 +11,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 - Familiarity with the project's version control guidelines.
 
 Follow these steps to create well-structured commits.
-For detailed conventions and practical examples, first read [Version Control Guide](docs-dev/guides/version-control-system.g.md)
+For detailed conventions and practical examples, first read [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
 
 ## Process Steps
 
@@ -19,7 +19,7 @@ For detailed conventions and practical examples, first read [Version Control Gui
     - Review modified files (`git status`, `git diff`).
     - Ensure new code has corresponding tests.
     - Verify tests pass (using your project's standard test command, e.g., `your_test_runner_command`. See
-      `docs-dev/guides/testing/<your_lang>.md` or `docs-dev/guides/task-cycle/<your_lang>.md` for details).
+      `dev-handbook/guides/testing/<your_lang>.md` or `dev-handbook/guides/task-cycle/<your_lang>.md` for details).
     - Check test coverage if applicable (using your project's standard coverage command,
       e.g., `your_coverage_command`. See testing guides for details).
     - Group related changes logically (e.g., feature implementation + tests + docs).
@@ -48,7 +48,7 @@ For detailed conventions and practical examples, first read [Version Control Gui
 
 ## Reference Guides
 
-- [Version Control Guide](docs-dev/guides/version-control-system.g.md)
-- [Documentation Guide](docs-dev/guides/documentation.g.md)
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (Task status updates)
-- [Testing Guides](docs-dev/guides/testing)
+- [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+- [Documentation Guide](dev-handbook/guides/documentation.g.md)
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Task status updates)
+- [Testing Guides](dev-handbook/guides/testing)

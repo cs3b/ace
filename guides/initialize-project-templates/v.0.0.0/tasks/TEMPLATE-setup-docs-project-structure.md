@@ -6,7 +6,7 @@ estimate: 1h
 dependencies: []
 ---
 
-# TEMPLATE: Setup docs-project Structure
+# TEMPLATE: Setup dev-taskflow Structure
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
@@ -24,15 +24,15 @@ Initialize the foundational documentation structure for the project using the do
 
 #### Create
 
-- docs-project/ directory structure (backlog/, current/, done/, decisions/)
-- docs-project/what-do-we-build.md
-- docs-project/architecture.md
-- docs-project/blueprint.md
+- dev-taskflow/ directory structure (backlog/, current/, done/, decisions/)
+- dev-taskflow/what-do-we-build.md
+- dev-taskflow/architecture.md
+- dev-taskflow/blueprint.md
 - bin/ scripts copied from docs-dev binstubs
 
 #### Modify
 
-- .gitignore (if exists) to include docs-project patterns
+- .gitignore (if exists) to include dev-taskflow patterns
 - Project README.md (if enhancement needed)
 
 #### Delete
@@ -54,7 +54,7 @@ Initialize the foundational documentation structure for the project using the do
   > TEST: Submodule Check
   > Type: Pre-condition Check
   > Assert: docs-dev directory exists and contains necessary templates
-  > Command: test -d docs-dev/guides/initialize-project-templates
+  > Command: test -d dev-handbook/guides/initialize-project-templates
 - [ ] Review existing project files (README.md, PRD.md) for content extraction
 
 ### Execution Steps
@@ -62,13 +62,13 @@ Initialize the foundational documentation structure for the project using the do
 - [ ] Run initialize-project-structure.wf.md workflow
   > TEST: Structure Creation
   > Type: Action Validation
-  > Assert: docs-project directory structure created successfully
-  > Command: test -d docs-project/backlog && test -d docs-project/current && test -d docs-project/done
+  > Assert: dev-taskflow directory structure created successfully
+  > Command: test -d dev-taskflow/backlog && test -d dev-taskflow/current && test -d dev-taskflow/done
 - [ ] Verify core documentation files generated
   > TEST: Core Docs Generated
   > Type: Action Validation
   > Assert: All core documentation files exist and contain project-specific content
-  > Command: test -f docs-project/what-do-we-build.md && test -f docs-project/architecture.md && test -f docs-project/blueprint.md
+  > Command: test -f dev-taskflow/what-do-we-build.md && test -f dev-taskflow/architecture.md && test -f dev-taskflow/blueprint.md
 - [ ] Confirm bin scripts are executable and functional
   > TEST: Bin Scripts Setup
   > Type: Action Validation
@@ -77,7 +77,7 @@ Initialize the foundational documentation structure for the project using the do
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Complete docs-project directory structure exists
+- [ ] AC 1: Complete dev-taskflow directory structure exists
 - [ ] AC 2: Core documentation files generated with project-specific content
 - [ ] AC 3: bin scripts functional and executable
 - [ ] AC 4: All automated tests in Implementation Plan pass
@@ -92,6 +92,6 @@ Initialize the foundational documentation structure for the project using the do
 
 ## References
 
-- docs-dev/workflow-instructions/initialize-project-structure.wf.md
-- docs-dev/guides/initialize-project-templates/ (various templates)
-- docs-dev/guides/project-management.g.md
+- dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+- dev-handbook/guides/initialize-project-templates/ (various templates)
+- dev-handbook/guides/project-management.g.md

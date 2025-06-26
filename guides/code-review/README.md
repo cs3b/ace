@@ -7,7 +7,7 @@ This directory contains tools and templates for AI-assisted code review of Ruby 
 The code review system consists of three main components:
 
 1. **`bin/cr`** - Command-line wrapper for easy access
-2. **`docs-dev/tools/generate-code-review-prompt`** - Ruby script that generates review prompts
+2. **`dev-handbook/tools/generate-code-review-prompt`** - Ruby script that generates review prompts
 3. **`_code-review-from-diff.md`** - Comprehensive review template
 
 Together with the documentation review system (`bin/cr-docs`), these tools ensure both code and documentation maintain high quality standards.
@@ -136,8 +136,8 @@ The tool automatically collects:
 - Gem dependencies from Gemfile
 
 When using `--include-dependencies`, it also collects:
-- Full content of project documentation from `docs-project/*.md`
-- Full content of Architecture Decision Records from `docs-project/decisions/` and `docs-project/current/*/decisions/`
+- Full content of project documentation from `dev-taskflow/*.md`
+- Full content of Architecture Decision Records from `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/`
 - Full content of root documentation files (`*.md` in project root)
 - Full Gemfile and gemspec content for context
 

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Update the `docs-project/blueprint.md` file with a concise summary of the current project structure, key files, and
+Update the `dev-taskflow/blueprint.md` file with a concise summary of the current project structure, key files, and
 links to core project documents. The blueprint provides essential orientation for developers and AI agents to quickly
 understand the project organization.
 
@@ -19,12 +19,12 @@ how to navigate the codebase.
 
 ## Process Steps
 
-1. **Identify Core Project Documents:** Verify `docs-project/what-do-we-build.md` and `docs-project/architecture.md`
+1. **Identify Core Project Documents:** Verify `dev-taskflow/what-do-we-build.md` and `dev-taskflow/architecture.md`
    are present.
 
 2. **Update High-Level Structure Overview:**
     - Include a brief description of main directories and their purpose.
-    - Explain the relationship between key directories (e.g., `docs-dev` vs. `docs-project`).
+    - Explain the relationship between key directories (e.g., `dev-handbook` vs. `dev-taskflow`).
     - Document any submodules if applicable.
 
 3. **Analyze Project Structure:**
@@ -39,7 +39,7 @@ how to navigate the codebase.
 
 5. **Update Links:** Ensure the Markdown links to `what-do-we-build.md` and `architecture.md` are correct within `blueprint.md`.
 
-6. **Save:** Save the updated `docs-project/blueprint.md` file.
+6. **Save:** Save the updated `dev-taskflow/blueprint.md` file.
 
 ## Input
 
@@ -48,7 +48,7 @@ how to navigate the codebase.
 
 ## Output / Success Criteria
 
-- `docs-project/blueprint.md` file is created or updated.
+- `dev-taskflow/blueprint.md` file is created or updated.
 - The file contains a clear definition of what constitutes a "blueprint" in this project.
 - The file provides a concise overview of key directories and their purpose.
 - The file includes instructions for viewing the complete directory structure.

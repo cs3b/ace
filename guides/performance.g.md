@@ -198,5 +198,5 @@ hooks), please refer to the examples in the [./performance/](./performance/) sub
 
 ## Related Documentation
 
-- [Testing Guidelines](docs-dev/guides/testing.md) (Benchmarking, Load Testing)
-- [Quality Assurance](docs-dev/guides/quality-assurance.md) (Monitoring)
+- [Testing Guidelines](dev-handbook/guides/testing.md) (Benchmarking, Load Testing)
+- [Quality Assurance](dev-handbook/guides/quality-assurance.md) (Monitoring)

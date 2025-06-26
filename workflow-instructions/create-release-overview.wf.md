@@ -2,25 +2,25 @@
 
 ## Goal
 
-Generate or update the main release overview document (e.g., `docs-project/current/{release_dir}/README.md` or
+Generate or update the main release overview document (e.g., `dev-taskflow/current/{release_dir}/README.md` or
 `v.X.Y.Z-Codename.md`) summarizing the release goals, key changes, requirements, and plan.
 
 ## Prerequisites
 
-- A release directory exists (e.g., in `docs-project/current/`).
+- A release directory exists (e.g., in `dev-taskflow/current/`).
 - Tasks for the release are defined or becoming clear.
 - The release type (Patch, Feature, Major) is known.
 
 ## Process Steps
 
-1. **Identify Target Release:** Confirm the release directory path (e.g., `docs-project/current/v1.2.3-myfeature`).
+1. **Identify Target Release:** Confirm the release directory path (e.g., `dev-taskflow/current/v1.2.3-myfeature`).
 2. **Gather Context:**
     - Review the tasks defined within the release (`{release_path}/tasks/*.md`).
     - Review relevant source documents (e.g., PRD, FRD, PR comments that initiated the release).
     - Review recent commit history if the release is already in progress.
 
 - Draft/Update Overview Document: Create or edit the main `README.md` (or `v.X.Y.Z-*.md`) file for the release.
-  Use the structure from the template (`docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`) as a guide.
+  Use the structure from the template (`dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`) as a guide.
   Key sections include:
   - **Release Overview:** Brief summary.
   - **Release Information:** Type, Dates, Status.
@@ -47,7 +47,7 @@ Generate or update the main release overview document (e.g., `docs-project/curre
 
 ## Reference Documentation
 
-- [Writing Workflow Instructions Guide](docs-dev/guides/.meta/workflow-instructions-definition.g.md)
-- [Release Overview Template](docs-dev/guides/draft-release/v.x.x.x/v.x.x.x-codename.md)
-- [Project Management Guide](docs-dev/guides/project-management.g.md)
-- [Release Process Guide](docs-dev/guides/release-publish.g.md)
+- [Writing Workflow Instructions Guide](dev-handbook/guides/.meta/workflow-instructions-definition.g.md)
+- [Release Overview Template](dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md)
+- [Project Management Guide](dev-handbook/guides/project-management.g.md)
+- [Release Process Guide](dev-handbook/guides/release-publish.g.md)

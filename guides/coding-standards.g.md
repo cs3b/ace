@@ -8,7 +8,7 @@ and consistent code within this project. Adhering to these standards facilitates
 
 This document outlines general coding standards applicable across the project. Project-specific
 conventions or language-specific rules beyond these general principles may be documented
-in the relevant `docs-project/` directory or linked from the `docs/blueprint.md`.
+in the relevant `dev-taskflow/` directory or linked from the `docs/blueprint.md`.
 
 ## General Principles
 
@@ -46,21 +46,21 @@ Please refer to the relevant guide for your language:
 - Use specific, informative error classes. Define a base error class for the project/library.
 - Provide context with errors (e.g., relevant data, operation being performed).
 - Handle errors appropriately (log, retry, raise, return error values) based on the context.
-- See [Error Handling Guide](docs-dev/guides/error-handling.g.md) for more details.
+- See [Error Handling Guide](dev-handbook/guides/error-handling.g.md) for more details.
 
 ## Testing
 
 - Write tests for new code (unit, integration, E2E as appropriate).
 - Ensure tests cover primary functionality, edge cases, and error conditions.
 - Keep tests independent and fast.
-- See [Testing Guidelines](docs-dev/guides/testing.g.md) for more details.
+- See [Testing Guidelines](dev-handbook/guides/testing.g.md) for more details.
 
 ## Documentation
 
 - Document public APIs (classes, methods, modules) using standard documentation tools (e.g., YARD for Ruby).
 - Add comments to explain complex logic or non-obvious decisions within method bodies.
 - Keep documentation up-to-date with code changes.
-- See [Documentation Standards](docs-dev/guides/documentation.g.md) for more details.
+- See [Documentation Standards](dev-handbook/guides/documentation.g.md) for more details.
 
 ## File Organization
 
@@ -78,7 +78,7 @@ to a junior developer needing clear guidance.
   "Slow Vibe Coding" principle mentioned in Project Management.
 - **Provide Context:** Give the AI sufficient context, including relevant code snippets, project structure
   (`docs/blueprint.md`), architecture (`docs/architecture.md`), existing patterns, and the
-  specific task definition (`.md` file within `docs-project`).
+  specific task definition (`.md` file within `dev-taskflow`).
 - **Use Specific, Concise Instructions:** Avoid vague requests. Break down complex tasks into smaller,
   well-defined steps. Use clear action verbs and specify the desired outcome. Consider using "prompt hygiene"
   like "ONLY IMPLEMENT EXACTLY THIS STEP" for focused changes.
@@ -96,7 +96,7 @@ to a junior developer needing clear guidance.
 - **Avoid "Hacky" Prompts:** Modern models respond better to clear instructions than tricks like excessive
   capitalization or emotional appeals.
 
-Refer to the [Project Management Guide](docs-dev/guides/project-management.g.md) for how AI collaboration fits
+Refer to the [Project Management Guide](dev-handbook/guides/project-management.g.md) for how AI collaboration fits
 into the task workflow.
 
 (Example structure - adjust based on project)
@@ -111,15 +111,15 @@ project-root/
 │   └── support/
 ├── config/       # Configuration files
 ├── docs/         # User-facing documentation
-├── docs-dev/     # Internal development documentation
+├── dev-handbook/     # Internal development documentation
 ├── bin/          # Executable scripts
 └── Rakefile / Makefile / etc. # Build/task runner configuration
 ```
 
 ## Related Documentation
 
-- [Error Handling Guide](docs-dev/guides/error-handling.g.md)
-- [Testing Guidelines](docs-dev/guides/testing.g.md)
-- [Documentation Standards](docs-dev/guides/documentation.g.md)
-- [Temporary File Management Guidelines](docs-dev/guides/temporary-file-management.g.md)
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (AI Collaboration context)
+- [Error Handling Guide](dev-handbook/guides/error-handling.g.md)
+- [Testing Guidelines](dev-handbook/guides/testing.g.md)
+- [Documentation Standards](dev-handbook/guides/documentation.g.md)
+- [Temporary File Management Guidelines](dev-handbook/guides/temporary-file-management.g.md)
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (AI Collaboration context)

@@ -17,7 +17,7 @@ reviewed (e.g., new feature, bug fix, refactoring) and project standards.
     - Affected components or modules.
     - Potential impacts (breaking changes, dependencies, performance, security).
 2. **Select Base Checklist:** Start with the standard review checklist template found in
-   `docs-dev/guides/quality-assurance.md` (under "Review Checklist").
+   `dev-handbook/guides/quality-assurance.md` (under "Review Checklist").
 3. **Tailor Checklist:** Adapt the base checklist based on the specific changes:
     - Add checks relevant to the modified areas (e.g., "Verify new API endpoint follows REST
       principles").
@@ -35,10 +35,10 @@ reviewed (e.g., new feature, bug fix, refactoring) and project standards.
 ## Output / Success Criteria
 
 - A code review checklist tailored to the specific changes is generated.
-- The checklist is based on the project's standard checklist (`docs-dev/guides/quality-assurance.md`).
+- The checklist is based on the project's standard checklist (`dev-handbook/guides/quality-assurance.md`).
 - The checklist highlights relevant areas for review based on the changes' scope and potential impact.
 
 ## Reference Documentation
 
-- [Quality Assurance Guide](docs-dev/guides/quality-assurance.g.md) (Contains base checklist and PR template)
-- [Coding Standards Guide](docs-dev/guides/coding-standards.g.md)
+- [Quality Assurance Guide](dev-handbook/guides/quality-assurance.g.md) (Contains base checklist and PR template)
+- [Coding Standards Guide](dev-handbook/guides/coding-standards.g.md)

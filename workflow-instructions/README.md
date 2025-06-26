@@ -14,7 +14,7 @@ user) to perform common development and project management tasks.
 
 ## Project Initialization & Setup
 
-- [Initialize Project Structure](./initialize-project-structure.wf.md): Initialize `docs-dev` and `docs-project` structures.
+- [Initialize Project Structure](./initialize-project-structure.wf.md): Initialize `docs-dev` and `dev-taskflow` structures.
 - [Update Blueprint](./update-blueprint.wf.md): Update the `docs/blueprint.md` project overview.
 
 ## Draft Releases

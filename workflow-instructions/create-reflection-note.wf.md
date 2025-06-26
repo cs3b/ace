@@ -8,12 +8,12 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Prerequisites
 
-- The reflection template is available at `docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`.
+- The reflection template is available at `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`.
 - Understanding of the proposed naming convention
   and location for reflection notes:
   - **Location:** Within a specific release directory, e.g.,
-    (e.g., `docs-project/current/{release_dir}/reflections/\\` or
-    `docs-project/backlog/{release_dir}/reflections/\\`)
+    (e.g., `dev-taskflow/current/{release_dir}/reflections/\\` or
+    `dev-taskflow/backlog/{release_dir}/reflections/\\`)
   - **Filename:** `YYYYMMDD-brief-description.md` (e.g., `20231027-thoughts-on-task-123.md`).
   - The `reflections/` subdirectory should be created within the target release directory if it doesn't exist.
 
@@ -24,19 +24,19 @@ reflection template. These notes are intended for later synthesis, primarily as 
     - The user provides a brief topic, task ID, or description for the note (e.g., "reflections on
       component X refactor", "learnings from bug Y").
     - The user specifies the target release (e.g., "current release", or the name/path of a specific
-      release in `docs-project/backlog/`). If not specified, the agent should assume the "current" release.
+      release in `dev-taskflow/backlog/`). If not specified, the agent should assume the "current" release.
 
 2. **Prepare File:**
     - The agent determines the path to the target release directory.
         - For "current release": This usually involves identifying the symbolic link or directory at
-          `docs-project/current/`. The agent might need to list contents or use a helper
+          `dev-taskflow/current/`. The agent might need to list contents or use a helper
           script/tool if available to resolve this to a concrete path
-          (e.g., `docs-project/current/vX.Y.Z-release-name`).
-        - For a backlog release: The user should provide the path or name (e.g., `docs-project/backlog/vA.B.C-future-release`).
+          (e.g., `dev-taskflow/current/vX.Y.Z-release-name`).
+        - For a backlog release: The user should provide the path or name (e.g., `dev-taskflow/backlog/vA.B.C-future-release`).
     - The agent constructs the full path for the reflection note:
       `TARGET_RELEASE_PATH/reflections/YYYYMMDD-user-provided-description.md`.
         - Example for current release:
-          `docs-project/current/{resolved_release_dir}/reflections/`
+          `dev-taskflow/current/{resolved_release_dir}/reflections/`
           `YYYYMMDD-user-provided-description.md`.
     - The agent ensures the `TARGET_RELEASE_PATH/reflections/` directory exists. If not, it should be
       created. (Note: `edit_file` tool with `create_or_overwrite = True` typically handles parent directory
@@ -44,7 +44,7 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 3. **Populate from Template:**
     - The agent reads the content of the standard reflection template:
-      `docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`.
+      `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`.
     - The agent creates the new reflection note file (using the full path determined in Step 2) and
       populates it with the template's content (which includes level 1 headings for sections).
 
@@ -75,7 +75,7 @@ reflection template. These notes are intended for later synthesis, primarily as 
 ## Output / Success Criteria
 
 - A new Markdown file is created within the `reflections/` subdirectory of the target release
-  (e.g., `docs-project/current/{release_dir}/reflections/\` or `docs-project/backlog/{release_dir}/reflections/\`)
+  (e.g., `dev-taskflow/current/{release_dir}/reflections/\` or `dev-taskflow/backlog/{release_dir}/reflections/\`)
   with a name following the `YYYYMMDD-brief-description.md` convention.
 - The `reflections/` subdirectory within the target release directory is created if it did not previously exist.
 - The new file is populated with user-provided reflections.
@@ -85,6 +85,6 @@ reflection template. These notes are intended for later synthesis, primarily as 
 
 ## Reference Documentation
 
-88 | - [Reflection Template (`_template.md`)](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
+88 | - [Reflection Template (`_template.md`)](dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md)
 89 | - [`create-retrospective-document.wf.md` Workflow Instruction](./create-retrospective-document.wf.md)
-90 | - [Writing Workflow Instructions Guide](docs-dev/guides/.meta/workflow-instructions-definition.g.md)
+90 | - [Writing Workflow Instructions Guide](dev-handbook/guides/.meta/workflow-instructions-definition.g.md)

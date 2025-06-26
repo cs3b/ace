@@ -11,7 +11,7 @@ with project goals, architecture, and recent changes. Identify areas requiring u
   (guides, architecture, blueprint), including a review of recent code changes.
 - The task to be reviewed exists as a Markdown file, ideally following the structure defined in the
   [Write Actionable Task Guide](../guides/task-definition.g.md).
-- The task file is located within the `docs-project/{backlog|current}/{release_dir}/tasks/` directory.
+- The task file is located within the `dev-taskflow/{backlog|current}/{release_dir}/tasks/` directory.
 
 ## Input
 
@@ -33,9 +33,9 @@ with project goals, architecture, and recent changes. Identify areas requiring u
       [Architecture](docs/architecture.md) and [Blueprint](docs/blueprint.md). Identify any
       potential architectural conflicts or structural challenges.
     - **Review Recent Git and Task History:**
-        - Use the `bin/gl` tool (powered by `docs-dev/tools/get-recent-git-log`) to view recent commits across the
+        - Use the `bin/gl` tool (powered by `dev-handbook/tools/get-recent-git-log`) to view recent commits across the
           main repo and submodules, sorted by date. This helps identify changes that may impact the task.
-        - Use the `bin/tr` tool (powered by `docs-dev/tools/get-recent-tasks`) to quickly summarize recently updated
+        - Use the `bin/tr` tool (powered by `dev-handbook/tools/get-recent-tasks`) to quickly summarize recently updated
           or completed tasks. This helps track project progress and find related or recently finished work.
         - Both tools support the `--last` argument to filter by time window (e.g., `--last 2.days`).
         - Consider recent code and task changes when reviewing assumptions, requirements, and implementation plans.
@@ -48,7 +48,7 @@ with project goals, architecture, and recent changes. Identify areas requiring u
         - Ambiguity in description or requirements.
         - Inconsistencies with project standards ([Coding Standards](../guides/coding-standards.g.md),
           [Documentation Standards](../guides/documentation.g.md), etc.).
-        - Impact from recent code changes or architectural decisions ([ADRs](docs-project/decisions/)).
+        - Impact from recent code changes or architectural decisions ([ADRs](dev-taskflow/decisions/)).
         - Missing or unclear Implementation Plan steps.
         - Implementation Plan not following the current Planning Steps/Execution Steps structure.
         - Inadequate or unverifiable Acceptance Criteria.
@@ -122,4 +122,4 @@ with project goals, architecture, and recent changes. Identify areas requiring u
 - [What We Build](docs/what-do-we-build.md)
 - [Architecture](docs/architecture.md)
 - [Blueprint](docs/blueprint.md)
-- [Version Control Guide](docs-dev/guides/version-control-system.g.md) (For understanding Git history review)
+- [Version Control Guide](dev-handbook/guides/version-control-system.g.md) (For understanding Git history review)

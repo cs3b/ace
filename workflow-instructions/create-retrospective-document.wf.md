@@ -11,29 +11,29 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
 
 - A defined period for the retrospective (e.g., a completed release cycle, a specific project phase).
 - Access to relevant data sources for the period, such as:
-  Completed task files (`docs-project/done/{release_dir}/tasks/*.md` or
-  `docs-project/current/{release_dir}/tasks/*.md` if reflecting mid-release).
-  - Architectural Decision Records (ADRs) (`docs-project/adr/`).
+  Completed task files (`dev-taskflow/done/{release_dir}/tasks/*.md` or
+  `dev-taskflow/current/{release_dir}/tasks/*.md` if reflecting mid-release).
+  - Architectural Decision Records (ADRs) (`dev-taskflow/adr/`).
   Individual reflection logs (e.g.,
-  `docs-project/done/{release_dir}/reflections/YYYYMMDD-taskID.md` or similar user-maintained logs).
-  - Compact session logs (`docs-project/current/{release_dir}/sessions/*.md` or
-    `docs-project/done/{release_dir}/sessions/*.md`).
+  `dev-taskflow/done/{release_dir}/reflections/YYYYMMDD-taskID.md` or similar user-maintained logs).
+  - Compact session logs (`dev-taskflow/current/{release_dir}/sessions/*.md` or
+    `dev-taskflow/done/{release_dir}/sessions/*.md`).
   - Commit history (`git log`).
-  - The standard retrospective template (`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`).
+  - The standard retrospective template (`dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`).
 
 ## Process Steps
 
 1. **Define Scope & Identify Target Release/Period:**
     - Confirm the release or period for which the retrospective is being created (e.g.,
-      `docs-project/done/v1.2.0`, or "Sprint X").
-    - Locate the primary directory for this period if applicable (e.g., `docs-project/done/{release_dir}/`).
+      `dev-taskflow/done/v1.2.0`, or "Sprint X").
+    - Locate the primary directory for this period if applicable (e.g., `dev-taskflow/done/{release_dir}/`).
 
 2. **Create Retrospective Document:**
-    Standard location: `docs-project/done/{release_dir}/retrospective.md` or
-    `docs-project/retrospectives/YYYYMMDD-retrospective.md` if not tied to a specific release
+    Standard location: `dev-taskflow/done/{release_dir}/retrospective.md` or
+    `dev-taskflow/retrospectives/YYYYMMDD-retrospective.md` if not tied to a specific release
     `done` directory.
     - Apply the standard retrospective template
-      (`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`) to this new file.
+      (`dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`) to this new file.
 
 3. **Gather & Synthesize Information:**
     - **Completed Tasks:** Review task files (`.md`) for objectives, outcomes, challenges, and time taken.
@@ -58,7 +58,7 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
     - Extract concrete, actionable improvements from the "Start Doing" section.
     - For each action item, consider its impact, effort, and owner.
     - Plan how these action items will be tracked (e.g., creating new tasks in
-      `docs-project/backlog/`, adding to a process improvement board).
+      `dev-taskflow/backlog/`, adding to a process improvement board).
 
 6. **Save and Share:**
     - Save the completed retrospective document.
@@ -66,7 +66,7 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
 
 ## Input
 
-- Path to the target release directory (if applicable, e.g., `docs-project/done/{release_dir}/`).
+- Path to the target release directory (if applicable, e.g., `dev-taskflow/done/{release_dir}/`).
 - Dates defining the retrospective period (if not tied to a specific release).
 - Access to data sources:
   - Task files.
@@ -81,13 +81,13 @@ and direct user/team input, to analyze what went well, what didn\'t, and identif
 
 - A `retrospective.md` file is created within the completed release directory.
 The file uses the standard retrospective template structure
-(`docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md`).
+(`dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md`).
 - Key insights (Stop/Continue/Start) are captured based on the release cycle.
 - Actionable improvements are identified.
 
 ## Reference Documentation
 
-- [Retrospective Template](docs-dev/guides/draft-release/v.x.x.x/reflections/_template.md)
-- [`log-compact-session` Workflow Instruction](docs-dev/workflow-instructions/log-compact-session.wf.md)
+- [Retrospective Template](dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md)
+- [`log-compact-session` Workflow Instruction](dev-handbook/workflow-instructions/log-compact-session.wf.md)
   (Potential input for retrospectives)
-- [Project Management Guide](docs-dev/guides/project-management.g.md) (For context on tasks, releases)
+- [Project Management Guide](dev-handbook/guides/project-management.g.md) (For context on tasks, releases)
