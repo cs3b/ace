@@ -8,6 +8,20 @@ AI-assisted development workflow in a new or existing project.
 
 **Idempotency**: This workflow is designed to be idempotent. Rerunning it will skip already completed steps or safely update existing files without overwriting customized content.
 
+## High-Level Execution Plan
+
+### Planning Phase
+* [ ] Assess existing project structure and documentation
+* [ ] Determine which templates to use based on project type
+* [ ] Plan directory structure creation strategy
+
+### Execution Phase
+- [ ] Create dev-taskflow and docs-dev directory structures
+- [ ] Generate core documentation from embedded templates
+- [ ] Setup bin/ scripts with appropriate stubs
+- [ ] Initialize v.0.0.0 bootstrap release tracking
+- [ ] Review and update source documentation
+
 ## Process Steps
 
 1. **Project Structure Setup**:
@@ -20,10 +34,9 @@ AI-assisted development workflow in a new or existing project.
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
-        - If yes: Use this file as the primary source. If the existing `PRD.md` lacks structure, populate it using the template from `dev-handbook/guides/initialize-project-templates/PRD.md`.
-        - If no: Check if `README.md` exists at the project root. Use this file as the primary
-          source. If the existing `README.md` lacks project information, enhance it using the template from `dev-handbook/guides/initialize-project-templates/README.md`.
-        - If neither exists: Create initial `PRD.md` and `README.md` files using the templates in `dev-handbook/guides/initialize-project-templates/` and prepare to use interactive prompts to populate them.
+        - If yes: Use this file as the primary source. If the existing `PRD.md` lacks structure, populate it using the embedded PRD template below.
+        - If no: Check if `README.md` exists at the project root. Use this file as the primary source. If the existing `README.md` lacks project information, enhance it using the embedded README template below.
+        - If neither exists: Create initial `PRD.md` and `README.md` files using the embedded templates below and prepare to use interactive prompts to populate them.
     - **Extract/Prompt**: Extract core information **including primary technology stack**
       (e.g., Ruby, Rust, TypeScript) from the identified source file (`PRD.md` or `README.md`).
       If no source file or incomplete information, use interactive prompts to gather missing details.
@@ -35,34 +48,29 @@ AI-assisted development workflow in a new or existing project.
         - "What external APIs or services will this project integrate with?"
     - **Generate**: Create/update `dev-taskflow/what-do-we-build.md`, `dev-taskflow/architecture.md`
       (ensuring it includes a 'Technology Stack' section), and `dev-taskflow/blueprint.md`
-      (typically placed directly in `dev-taskflow/`) based on the gathered information and templates from `dev-handbook/guides/initialize-project-templates/`.
+      (typically placed directly in `dev-taskflow/`) based on the gathered information and embedded templates below.
 
 3. **Setup Project `bin/` Scripts from Binstubs**:
     - **Create Project `bin/` Directory**:
         - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
-    - **Identify Binstub Templates**:
-        - The standard binstub templates are located in `dev-handbook/tools/_binstubs/`. These typically
-          include `test`, `lint`, `build`, `run`, `tn`, `tr`, and `tree`.
-    - **Copy Binstubs to Project `bin/`**:
-        - For each file in `dev-handbook/tools/_binstubs/`:
-            - Let `binstub_name` be the name of the file (e.g., `test`).
-            - Check if `bin/{binstub_name}` already exists in the project.
-            - If `bin/{binstub_name}` does **not** exist, copy
-              `dev-handbook/tools/_binstubs/{binstub_name}` to `bin/{binstub_name}`.
-            - If `bin/{binstub_name}` **does** exist, skip it to avoid overwriting existing
-              project-specific scripts. Inform the user which scripts were skipped.
-    - **Make Copied Scripts Executable**:
-        - For all scripts newly copied into `bin/`, make them executable: `chmod +x bin/*`.
+    - **Create Standard Binstubs**:
+        - Create the following standard scripts in `bin/` using embedded templates below:
+          - `test` - Run project tests
+          - `lint` - Run project linting
+          - `build` - Build project artifacts
+          - `run` - Run the application
+          - `tn` - Get next task ID
+          - `tr` - List recent tasks
+          - `tree` - Show project structure
+        - Skip any that already exist to avoid overwriting
+    - **Make Scripts Executable**:
+        - For all scripts newly created in `bin/`, make them executable: `chmod +x bin/*`.
     - **Guidance on Binstubs**:
-        - Remind the user that scripts like `bin/test`, `bin/lint`, `bin/build`, and `bin/run` are
-          general placeholders. They will need to be tailored with project-specific commands based
-          on the technology stack chosen for the project. For detailed explanations of each binstub's purpose and common implementations, refer to the 'Command-line Tools (bin/)' section in `dev-taskflow/architecture.md`.
-        - Scripts like `bin/tn`, `bin/tr`, and `bin/tree` are often thin wrappers for tools in
-          `dev-handbook/tools/`. They should function if the underlying tools are present and correctly
-          referenced within the wrappers.
+        - Scripts like `bin/test`, `bin/lint`, `bin/build`, and `bin/run` are general placeholders that need to be tailored with project-specific commands based on the technology stack.
+        - Scripts like `bin/tn`, `bin/tr`, and `bin/tree` should work if the underlying Ruby tools are present.
 
 4. **Setup v.0.0.0 Bootstrap Release Tracking**:
-    - **Copy v.0.0.0 Template**: Copy the complete v.0.0.0 template structure from `dev-handbook/guides/initialize-project-templates/v.0.0.0/` to `dev-taskflow/current/v.0.0.0-bootstrap/`.
+    - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using embedded templates below.
     - **Customize Template Tasks**: Replace template placeholders in copied task files:
         - Replace `TEMPLATE-task.X` IDs with actual task IDs using `bin/tnid v.0.0.0` for each task.
         - Replace `[PLACEHOLDER]` values in the release overview file with actual project information.
@@ -120,7 +128,7 @@ The workflow instruction generates this file with:
 - Core design principles
 - Target use cases
 
-The generated file follows the template structure from `dev-handbook/guides/initialize-project-templates/what-do-we-build.md` with sections for project overview, key features, design principles, and target use cases.
+The generated file includes sections for project overview, key features, design principles, and target use cases (see embedded template below).
 
 ### dev-taskflow/architecture.md
 
@@ -132,7 +140,7 @@ The workflow instruction analyzes the project structure and gathered info to gen
 - Data flow diagrams (if inferrable)
 - Extension points
 
-The generated file follows the template structure from `dev-handbook/guides/initialize-project-templates/architecture.md` with sections for technology stack, system architecture, command-line tools, and development patterns.
+The generated file includes sections for technology stack, system architecture, command-line tools, and development patterns (see embedded template below).
 
 ### dev-taskflow/blueprint.md
 
@@ -140,7 +148,7 @@ The workflow instruction generates this file, which serves as a quick reference 
 and key operational guidelines for an AI agent. It includes sections for read-only and ignored paths
 to guide agent behavior.
 
-The generated file follows the template structure from `dev-handbook/guides/initialize-project-templates/blueprint.md` with sections for project organization, technology stack, read-only paths, and ignored paths.
+The generated file includes sections for project organization, technology stack, read-only paths, and ignored paths (see embedded template below).
 
 ## Output / Success Criteria
 
@@ -187,32 +195,660 @@ Initialize an AI-driven development environment by creating necessary documentat
 ## Behavior
 
 - Preserves existing documentation if found, enhancing it with template structure when needed.
-- Extracts project information from `PRD.md` or `README.md` when available, using templates for missing sections.
-- Creates consistent structure for AI-driven development using established templates.
+- Extracts project information from `PRD.md` or `README.md` when available, using embedded templates for missing sections.
+- Creates consistent structure for AI-driven development using embedded templates.
 - Uses interactive prompts with comprehensive example questions when source documents are unavailable.
 
-## Reference Documentation
+## Embedded Templates
 
-- [Project Management Guide](dev-handbook/guides/project-management.g.md) (Explains the created structure)
-- [Picking Codenames Guide](dev-handbook/guides/release-codenames.g.md) (Guidance for selecting appropriate codenames)
-- [PRD Template](dev-handbook/guides/initialize-project-templates/PRD.md) (Template for Product Requirements Documents)
-- [README Template](dev-handbook/guides/initialize-project-templates/README.md) (Template for project README files)
-- [What We Build Template](dev-handbook/guides/initialize-project-templates/what-do-we-build.md) (Template for project vision)
-- [Architecture Template](dev-handbook/guides/initialize-project-templates/architecture.md) (Template for technical architecture)
-- [Blueprint Template](dev-handbook/guides/initialize-project-templates/blueprint.md) (Template for project structure overview)
-- [v.0.0.0 Bootstrap Template](dev-handbook/guides/initialize-project-templates/v.0.0.0/) (Template for v.0.0.0 release tracking)
-- [Draft Release Workflow](dev-handbook/workflow-instructions/draft-release.wf.md) (For future release planning)
+### PRD Template
+```markdown
+# Product Requirements Document (PRD)
 
-## Setup Requirements
+## Executive Summary
+[Brief overview of the project, its purpose, and key objectives]
 
-- Project root directory must be accessible.
-- Write permissions for `docs-dev` and `dev-taskflow` directories.
-- `README.md` or `PRD.md` (optional) for project information extraction.
-- Access to template files in `dev-handbook/guides/initialize-project-templates/`.
+## Problem Statement
+[Clear description of the problem being solved]
+
+## Target Users
+[Primary and secondary user personas]
+
+## Core Features
+1. [Feature 1]: [Description]
+2. [Feature 2]: [Description]
+3. [Feature 3]: [Description]
+
+## Technical Requirements
+- **Primary Stack**: [e.g., Ruby on Rails, Node.js, Python/Django]
+- **Database**: [e.g., PostgreSQL, MongoDB]
+- **External Services**: [APIs, third-party services]
+- **Performance Requirements**: [Response times, throughput]
+
+## Success Metrics
+- [Metric 1]: [Target value]
+- [Metric 2]: [Target value]
+
+## Constraints & Assumptions
+- [Constraint 1]
+- [Assumption 1]
+
+## Timeline & Milestones
+- v0.1.0: [Foundation - Core architecture]
+- v0.2.0: [MVP - Basic features]
+- v0.3.0: [Beta - Feature complete]
+- v1.0.0: [Production ready]
+```
+
+### README Template
+```markdown
+# [Project Name]
+
+[One-line description of the project]
+
+## Overview
+[2-3 paragraphs explaining what the project does and why it exists]
+
+## Features
+- [Key feature 1]
+- [Key feature 2]
+- [Key feature 3]
+
+## Technology Stack
+- **Language**: [Primary language]
+- **Framework**: [Main framework]
+- **Database**: [Database system]
+- **Testing**: [Test framework]
+
+## Getting Started
+
+### Prerequisites
+- [Requirement 1]
+- [Requirement 2]
+
+### Installation
+```bash
+# Clone the repository
+git clone [repository-url]
+cd [project-name]
+
+# Install dependencies
+[package-manager] install
+
+# Setup database
+[database-setup-command]
+```
+
+### Running the Application
+```bash
+bin/run
+```
+
+### Running Tests
+```bash
+bin/test
+```
+
+## Development
+- `bin/lint` - Run linting
+- `bin/build` - Build the project
+- `bin/test` - Run tests
+- `bin/tn` - Get next task
+- `bin/tr` - List recent tasks
+
+## Contributing
+[Contributing guidelines or link to CONTRIBUTING.md]
+
+## License
+[License information]
+```
+
+### What We Build Template
+```markdown
+# What Do We Build?
+
+## Project Overview
+[Project name] is [brief description of what it is and does].
+
+## Core Purpose
+[2-3 sentences about the fundamental reason this project exists]
+
+## Key Features
+
+### Feature 1: [Name]
+[Description of the feature and its value]
+
+### Feature 2: [Name]
+[Description of the feature and its value]
+
+### Feature 3: [Name]
+[Description of the feature and its value]
+
+## Design Principles
+1. **[Principle 1]**: [Explanation]
+2. **[Principle 2]**: [Explanation]
+3. **[Principle 3]**: [Explanation]
+
+## Target Use Cases
+- **Use Case 1**: [Description]
+- **Use Case 2**: [Description]
+- **Use Case 3**: [Description]
+
+## Non-Goals
+- [What this project explicitly does not do]
+- [Scope limitation 1]
+- [Scope limitation 2]
+
+## Success Criteria
+- [Measurable outcome 1]
+- [Measurable outcome 2]
+- [Measurable outcome 3]
+```
+
+### Architecture Template
+```markdown
+# Architecture
+
+## Technology Stack
+
+### Core Technologies
+- **Primary Language**: [e.g., Ruby 3.2]
+- **Framework**: [e.g., Rails 7.1]
+- **Database**: [e.g., PostgreSQL 15]
+- **Testing**: [e.g., RSpec, Jest]
+
+### Supporting Tools
+- **Linting**: [e.g., RuboCop, ESLint]
+- **CI/CD**: [e.g., GitHub Actions]
+- **Containerization**: [e.g., Docker]
+
+## System Architecture
+
+### High-Level Overview
+[ASCII diagram or description of major components]
+
+### Components
+
+#### [Component 1]
+- **Purpose**: [What it does]
+- **Technology**: [Specific tech used]
+- **Interfaces**: [How it connects to other components]
+
+#### [Component 2]
+- **Purpose**: [What it does]
+- **Technology**: [Specific tech used]
+- **Interfaces**: [How it connects to other components]
+
+## Data Flow
+1. [Step 1 in typical data flow]
+2. [Step 2 in typical data flow]
+3. [Step 3 in typical data flow]
+
+## Command-line Tools (bin/)
+
+### Core Development Commands
+- `bin/test` - Runs the test suite
+  - Example: `rspec` for Ruby, `npm test` for Node.js
+- `bin/lint` - Runs code quality checks
+  - Example: `rubocop` for Ruby, `eslint` for JavaScript
+- `bin/build` - Builds the project
+  - Example: `bundle install`, `npm run build`
+- `bin/run` - Starts the application
+  - Example: `rails server`, `npm start`
+
+### Task Management Commands
+- `bin/tn` - Shows next task to work on
+- `bin/tr` - Lists recent tasks
+- `bin/tree` - Shows project structure
+
+## Development Patterns
+
+### Code Organization
+- [Pattern 1]: [Description]
+- [Pattern 2]: [Description]
+
+### Testing Strategy
+- Unit tests for [what]
+- Integration tests for [what]
+- End-to-end tests for [what]
+
+### Error Handling
+- [Approach to error handling]
+- [Logging strategy]
+
+## Security Considerations
+- [Security measure 1]
+- [Security measure 2]
+- [Security measure 3]
+
+## Performance Considerations
+- [Performance consideration 1]
+- [Performance consideration 2]
+- [Performance consideration 3]
+```
+
+### Blueprint Template
+```markdown
+# Blueprint
+
+## Project Organization
+
+### Directory Structure
+```
+.
+├── bin/                    # Executable scripts
+├── dev-taskflow/          # Task management
+│   ├── backlog/          # Future releases
+│   ├── current/          # Active release
+│   └── done/             # Completed releases
+├── docs-dev/             # Development documentation
+├── src/                  # Source code (or app/, lib/, etc.)
+├── test/                 # Test files (or spec/, tests/, etc.)
+└── [project-specific directories]
+```
+
+### Key Files
+- `README.md` - Project overview and setup
+- `PRD.md` - Product requirements (if applicable)
+- `.gitignore` - Git ignore rules
+- `[build-file]` - Build configuration (package.json, Gemfile, etc.)
+
+## Technology Stack
+- **Language**: [Primary language and version]
+- **Framework**: [Main framework and version]
+- **Database**: [Database system and version]
+- **Key Libraries**: 
+  - [Library 1]: [Purpose]
+  - [Library 2]: [Purpose]
+
+## Development Workflow
+1. Use `bin/tn` to get next task
+2. Update task status to in-progress
+3. Implement changes following coding standards
+4. Run `bin/test` to verify changes
+5. Run `bin/lint` to check code quality
+6. Commit changes with conventional commits
+7. Update task status to done
+
+## Coding Standards
+- [Standard 1]
+- [Standard 2]
+- [Standard 3]
+
+## Read-Only Paths
+AI agents should treat these paths as read-only:
+- `dev-taskflow/done/**/*` - Archived releases
+- [Project-specific read-only paths]
+
+## Ignored Paths
+AI agents should ignore these paths:
+- `.git/` - Git internals
+- `node_modules/` - Dependencies (if applicable)
+- `vendor/` - Vendor dependencies (if applicable)
+- `tmp/` - Temporary files
+- `log/` - Log files
+- `coverage/` - Test coverage reports
+- [Project-specific ignored paths]
+
+## Extension Points
+- [Where/how to add new features]
+- [Plugin/module system if applicable]
+- [Configuration extension points]
+```
+
+### Binstub Templates
+
+#### bin/test
+```bash
+#!/usr/bin/env bash
+# Run project tests
+
+# TODO: Replace with project-specific test command
+# Examples:
+# - Ruby: bundle exec rspec
+# - Node.js: npm test
+# - Python: pytest
+# - Rust: cargo test
+
+echo "Error: bin/test not configured for this project"
+echo "Please update this script with your project's test command"
+exit 1
+```
+
+#### bin/lint
+```bash
+#!/usr/bin/env bash
+# Run project linting
+
+# TODO: Replace with project-specific lint command
+# Examples:
+# - Ruby: bundle exec rubocop
+# - Node.js: npm run lint
+# - Python: flake8 . && black --check .
+# - Rust: cargo clippy
+
+echo "Error: bin/lint not configured for this project"
+echo "Please update this script with your project's lint command"
+exit 1
+```
+
+#### bin/build
+```bash
+#!/usr/bin/env bash
+# Build project artifacts
+
+# TODO: Replace with project-specific build command
+# Examples:
+# - Ruby: bundle install
+# - Node.js: npm install && npm run build
+# - Python: pip install -r requirements.txt
+# - Rust: cargo build --release
+
+echo "Error: bin/build not configured for this project"
+echo "Please update this script with your project's build command"
+exit 1
+```
+
+#### bin/run
+```bash
+#!/usr/bin/env bash
+# Run the application
+
+# TODO: Replace with project-specific run command
+# Examples:
+# - Ruby: bundle exec rails server
+# - Node.js: npm start
+# - Python: python app.py
+# - Rust: cargo run
+
+echo "Error: bin/run not configured for this project"
+echo "Please update this script with your project's run command"
+exit 1
+```
+
+#### bin/tn
+```bash
+#!/usr/bin/env bash
+# Get next task ID
+
+ruby dev-handbook/tools/tn.rb "$@"
+```
+
+#### bin/tr
+```bash
+#!/usr/bin/env bash
+# List recent tasks
+
+ruby dev-handbook/tools/tr.rb "$@"
+```
+
+#### bin/tree
+```bash
+#!/usr/bin/env bash
+# Show project structure
+
+tree -I 'node_modules|vendor|.git|coverage|tmp|log' "$@"
+```
+
+### v.0.0.0 Release Templates
+
+#### Release Overview Template
+```markdown
+---
+status: in-progress
+start_date: YYYY-MM-DD
+end_date: 
+codename: bootstrap
+---
+
+# v.0.0.0 Bootstrap
+
+## Overview
+
+The v.0.0.0 Bootstrap release establishes the foundational project structure and documentation required for AI-assisted development workflow. This release focuses on setting up the development environment, creating core documentation, and establishing the project management framework.
+
+## Goals
+
+1. **Project Structure**: Establish dev-taskflow and docs-dev directories with proper organization
+2. **Core Documentation**: Create what-do-we-build.md, architecture.md, and blueprint.md files
+3. **Development Tools**: Set up bin/ scripts for common development tasks
+4. **Project Definition**: Complete PRD.md with comprehensive project requirements
+5. **Roadmap Creation**: Establish initial project roadmap through v1.0.0
+
+## Key Deliverables
+
+- ✅ dev-taskflow directory structure (backlog/, current/, done/)
+- ✅ Core documentation files created from templates
+- ✅ bin/ scripts initialized (test, lint, build, run, tn, tr, tree)
+- ⏳ PRD.md completed with all project requirements
+- ⏳ Initial roadmap defined through v1.0.0
+
+## Success Criteria
+
+- [ ] All core directories and files are created
+- [ ] PRD clearly defines project goals and requirements
+- [ ] Architecture documentation reflects chosen technology stack
+- [ ] Blueprint provides clear guidance for AI agents
+- [ ] Roadmap outlines path to v1.0.0
+- [ ] All bin/ scripts are executable and documented
+
+## Timeline
+
+- Start: YYYY-MM-DD
+- Target: 1-2 days for structure setup
+- PRD completion: Depends on project complexity
+```
+
+#### Task Templates
+
+##### v.0.0.0+task.1: Setup Structure
+```markdown
+---
+id: v.0.0.0+task.1
+status: done
+priority: high
+estimate: 1h
+dependencies: []
+---
+
+# Setup dev-taskflow Structure
+
+## Objective
+
+Create the foundational directory structure for task management and project documentation.
+
+## Scope of Work
+
+- Create dev-taskflow/ directory with subdirectories
+- Create docs-dev/ directory if using submodule approach
+- Set up proper Git configuration
+- Create initial .gitignore entries
+
+### Deliverables
+
+#### Create
+- dev-taskflow/backlog/
+- dev-taskflow/current/
+- dev-taskflow/done/
+- dev-taskflow/decisions/
+- dev-taskflow/decisions/.keep
+
+## Implementation
+
+### Execution Steps
+- [x] Create dev-taskflow directory structure
+- [x] Create docs-dev directory or verify submodule
+- [x] Add directories to Git
+- [x] Update .gitignore if needed
+
+## Acceptance Criteria
+
+- [x] All directories exist with proper permissions
+- [x] Git recognizes the new structure
+- [x] .keep files prevent empty directory removal
+```
+
+##### v.0.0.0+task.2: Create Core Docs
+```markdown
+---
+id: v.0.0.0+task.2
+status: in-progress
+priority: high
+estimate: 2h
+dependencies: [v.0.0.0+task.1]
+---
+
+# Create Core Documentation
+
+## Objective
+
+Generate the three foundational documentation files that guide project development and AI agent interaction.
+
+## Scope of Work
+
+- Extract or gather project information
+- Create what-do-we-build.md
+- Create architecture.md with technology stack
+- Create blueprint.md with project structure
+
+### Deliverables
+
+#### Create
+- dev-taskflow/what-do-we-build.md
+- dev-taskflow/architecture.md
+- dev-taskflow/blueprint.md
+
+## Implementation
+
+### Planning Steps
+* [x] Identify source documentation (PRD.md or README.md)
+* [x] Extract project information or prepare prompts
+* [ ] Gather technology stack details
+
+### Execution Steps
+- [ ] Generate what-do-we-build.md from template
+- [ ] Generate architecture.md with tech stack
+- [ ] Generate blueprint.md with structure rules
+- [ ] Review and refine generated content
+
+## Acceptance Criteria
+
+- [ ] All three core files exist
+- [ ] Technology stack is documented
+- [ ] Project vision is clear
+- [ ] AI agent guidelines are included
+```
+
+##### v.0.0.0+task.3: Complete PRD
+```markdown
+---
+id: v.0.0.0+task.3
+status: pending
+priority: high
+estimate: 3h
+dependencies: [v.0.0.0+task.2]
+---
+
+# Complete Product Requirements Document
+
+## Objective
+
+Finalize the PRD.md with comprehensive project requirements, ensuring all sections are complete and reviewed by stakeholders.
+
+## Scope of Work
+
+- Review and enhance PRD structure
+- Fill in all placeholder sections
+- Add detailed feature descriptions
+- Define success metrics
+- Get stakeholder approval
+
+### Deliverables
+
+#### Modify
+- PRD.md (complete all sections)
+
+## Implementation
+
+### Planning Steps
+* [ ] Review current PRD content
+* [ ] Identify missing sections
+* [ ] Gather additional requirements
+
+### Execution Steps
+- [ ] Complete executive summary
+- [ ] Refine problem statement
+- [ ] Detail all core features
+- [ ] Specify technical requirements
+- [ ] Define measurable success metrics
+- [ ] Add constraints and assumptions
+- [ ] Create initial timeline
+- [ ] Review with stakeholders
+
+## Acceptance Criteria
+
+- [ ] All PRD sections are complete
+- [ ] No placeholders remain
+- [ ] Technical requirements are specific
+- [ ] Success metrics are measurable
+- [ ] Stakeholder approval obtained
+```
+
+##### v.0.0.0+task.4: Create Roadmap
+```markdown
+---
+id: v.0.0.0+task.4
+status: pending
+priority: high
+estimate: 2h
+dependencies: [v.0.0.0+task.3]
+---
+
+# Create Initial Project Roadmap
+
+## Objective
+
+Establish the project roadmap from v0.1.0 through v1.0.0, defining major milestones and release objectives.
+
+## Scope of Work
+
+- Define release milestones
+- Assign features to releases
+- Create high-level timeline
+- Document in roadmap.md
+
+### Deliverables
+
+#### Create
+- dev-taskflow/roadmap.md
+
+## Implementation
+
+### Planning Steps
+* [ ] Review PRD for feature priorities
+* [ ] Identify logical feature groupings
+* [ ] Estimate development phases
+
+### Execution Steps
+- [ ] Define v0.1.0 (Foundation) scope
+- [ ] Define v0.2.0 (MVP) scope
+- [ ] Define v0.3.0 (Beta) scope
+- [ ] Define v1.0.0 (Production) scope
+- [ ] Create roadmap.md document
+- [ ] Add timeline estimates
+
+## Acceptance Criteria
+
+- [ ] Roadmap covers v0.1.0 to v1.0.0
+- [ ] Each release has clear objectives
+- [ ] Feature assignments are logical
+- [ ] Timeline is realistic
+- [ ] Document follows roadmap format
+```
 
 ## Notes
 
-- The workflow instruction preserves existing documentation if found, enhancing it with template structure.
-- Uses templates to ensure consistent, comprehensive documentation across projects.
-- Provides interactive prompts with example questions when source documents are unavailable.
-- Creates idempotent workflow that can be safely rerun without overwriting customizations.
+- The workflow preserves existing documentation if found, enhancing it with template structure
+- Uses embedded templates to ensure consistent, comprehensive documentation across projects
+- Provides interactive prompts with example questions when source documents are unavailable
+- Creates idempotent workflow that can be safely rerun without overwriting customizations

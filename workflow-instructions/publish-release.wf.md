@@ -1,14 +1,39 @@
 # Publish Release Workflow Instruction
 
-**Goal:** Execute the final deployment and archival phase of project releases, transitioning from active development to published state. This workflow handles version finalization, documentation archival, release validation, and post-release activities.
+## Goal
 
-**Prerequisites:**
+Execute the final deployment and archival phase of project releases, transitioning from active development to published state. This workflow handles version finalization, documentation archival, release validation, and post-release activities.
 
-* Run the [`load-env`](./load-env.wf.md) workflow instruction first to load project context,
-* All features, documentation, and initial release preparations are finalized.
-* All planned tasks for the release are completed (`status: done`) or explicitly deferred with documented rationale.
-* You have necessary permissions to modify project documentation structure and create final release artifacts.
-* The main conceptual guide [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md) has been reviewed for understanding the overall philosophy and process.
+## Prerequisites
+
+- All features, documentation, and initial release preparations are finalized
+- All planned tasks for the release are completed (`status: done`) or explicitly deferred with documented rationale
+- You have necessary permissions to modify project documentation structure and create final release artifacts
+- Git repository access with push permissions
+- Package registry credentials (if applicable)
+
+## Project Context Loading
+
+* Load project objectives: `docs/what-do-we-build.md`
+* Load current release status: `dev-taskflow/current/*/`
+* Check roadmap for release details: `dev-taskflow/roadmap.md`
+* Verify changelog exists: `CHANGELOG.md`
+
+## High-Level Execution Plan
+
+### Planning Phase
+* [ ] Validate release readiness and all tasks complete
+* [ ] Determine final version number from release folder
+* [ ] Review quality checks and test results
+
+### Execution Phase
+- [ ] Update version numbers across all project files
+- [ ] Generate and update changelog
+- [ ] Create Git tag and push changes
+- [ ] Publish package to registry (if applicable)
+- [ ] Archive release documentation
+- [ ] Update roadmap to remove completed release
+- [ ] Communicate release completion
 
 ## Process Steps
 
@@ -40,14 +65,47 @@
 5. **Update Version Numbers:**
    * Update all project files containing version numbers (e.g., `package.json`, `Cargo.toml`, `VERSION` files)
    * Ensure version consistency across all relevant files
-   * _Refer to project-specific version file locations in [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md)_
+   * Common version file locations:
+     - `package.json` (Node.js)
+     - `Cargo.toml` (Rust)
+     - `setup.py` or `pyproject.toml` (Python)
+     - `Gemfile` or `*.gemspec` (Ruby)
+     - `VERSION` or `version.txt` files
 
 6. **Generate Final Changelog:**
    * Create or update `CHANGELOG.md` at project root
    * Move entries from `[Unreleased]` section to new version section
    * Add release date: `## [X.Y.Z] - YYYY-MM-DD`
    * Include comparison links at bottom of file
-   * _Follow format specified in [`dev-handbook/guides/changelog.g.md`](../guides/changelog.g.md)_
+   * Follow standard changelog format:
+     ```markdown
+     # Changelog
+     All notable changes to this project will be documented in this file.
+     
+     The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+     and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+     
+     ## [Unreleased]
+     
+     ## [X.Y.Z] - YYYY-MM-DD
+     ### Added
+     - New features
+     
+     ### Changed
+     - Changes in existing functionality
+     
+     ### Deprecated
+     - Soon-to-be removed features
+     
+     ### Removed
+     - Removed features
+     
+     ### Fixed
+     - Bug fixes
+     
+     ### Security
+     - Vulnerability fixes
+     ```
 
 7. **Validate Documentation Consistency:**
    * Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
@@ -75,12 +133,20 @@
 11. **Authenticate with Package Registry:**
     * Ensure authentication with relevant package registries (npm, PyPI, RubyGems, etc.)
     * Verify credentials are current and have appropriate permissions
-    * _Refer to language-specific guides in [`dev-handbook/guides/release-publish/`](../guides/release-publish/) if available_
+    * Common authentication methods:
+      - npm: `npm login` or use `.npmrc` with auth token
+      - PyPI: `pip install twine` and use `.pypirc`
+      - RubyGems: `gem signin` or use API key
+      - Cargo: `cargo login` with token
 
 12. **Execute Package Publication:**
     * Run language-specific publish command
     * Monitor publication process for errors or warnings
-    * _Commands vary by technology stack - consult project-specific documentation_
+    * Common publish commands:
+      - npm: `npm publish`
+      - PyPI: `twine upload dist/*`
+      - RubyGems: `gem push *.gem`
+      - Cargo: `cargo publish`
 
 13. **Verify Package Availability:**
     * Confirm package appears on registry website
@@ -99,7 +165,12 @@
     * Remove the completed release from roadmap's "Planned Major Releases" table
     * Update cross-release dependencies that reference the completed release
     * Update roadmap's `last_reviewed` date and add entry to Update History
-    * Follow [Roadmap Definition Guide](../guides/roadmap-definition.g.md) release removal process
+    * Follow roadmap update process:
+      - Locate the completed release in "Planned Major Releases" table
+      - Remove the entire row for the completed release
+      - Update any cross-release dependencies
+      - Update `last_reviewed` date at top of file
+      - Add entry to "Update History" section
     * Commit roadmap changes with message format:
 
       ```bash
@@ -190,7 +261,11 @@ Stop the process and consider rollback if:
    * Review build logs for specific errors
    * Verify all dependencies are available
    * Check for environment-specific issues
-   * Consult [`dev-handbook/workflow-instructions/fix-tests.wf.md`](./fix-tests.wf.md) if test-related
+   * For test-related issues:
+     - Review test output for specific failures
+     - Check for environment-specific test dependencies
+     - Verify test database/fixtures are properly configured
+     - Consider running tests in isolation to identify conflicts
 
 2. **Version Conflicts:**
    * Check for existing tags with same version number
@@ -207,15 +282,61 @@ Stop the process and consider rollback if:
    * Verify Git repository status before major moves
    * Backup critical documentation before archival
 
-## Reference Documentation
+## Package Registry Commands Reference
 
-* **Primary Conceptual Guide:** [`dev-handbook/guides/release-publish.g.md`](../guides/release-publish.g.md)
-* **Changelog Standards:** [`dev-handbook/guides/changelog.g.md`](../guides/changelog.g.md)
-* **Version Control Workflow:** [`dev-handbook/guides/version-control-system.g.md`](../guides/version-control-system.g.md)
-* **Project Management Integration:** [`dev-handbook/guides/project-management.g.md`](../guides/project-management.g.md)
+### npm (Node.js)
+```bash
+# Login
+npm login
 
-* **Quality Assurance:** [`dev-handbook/guides/quality-assurance.g.md`](../guides/quality-assurance.g.md)
-* **Language-Specific Guides:** [`dev-handbook/guides/release-publish/`](../guides/release-publish/) (if available)
+# Publish
+npm publish
+
+# Publish with specific tag
+npm publish --tag beta
+
+# Check published version
+npm view <package-name> version
+```
+
+### PyPI (Python)
+```bash
+# Install publishing tools
+pip install build twine
+
+# Build distribution
+python -m build
+
+# Upload to PyPI
+twine upload dist/*
+
+# Upload to TestPyPI first
+twine upload --repository testpypi dist/*
+```
+
+### RubyGems (Ruby)
+```bash
+# Build gem
+gem build *.gemspec
+
+# Push to RubyGems
+gem push *.gem
+
+# Check published version
+gem list -r <gem-name>
+```
+
+### Cargo (Rust)
+```bash
+# Login with token
+cargo login <token>
+
+# Publish
+cargo publish
+
+# Dry run
+cargo publish --dry-run
+```
 
 ## Success Criteria
 
