@@ -1,6 +1,6 @@
 ---
 id: v.0.2.0+task.70
-status: todo
+status: done
 priority: medium
 estimate: 1-2 hours
 dependencies: []
@@ -54,21 +54,21 @@ end
 ## Implementation Plan
 
 ### Execution Steps
-- [ ] Locate the existing "security validation" context in `spec/integration/llm_query_integration_spec.rb`
-- [ ] Add the new test case within that context
-- [ ] Ensure the test uses a denied path pattern that will trigger path validation failure
-- [ ] Verify the test expects proper error exit code (1) and error message format
-- [ ] Run the specific test to confirm it passes: `bundle exec rspec spec/integration/llm_query_integration_spec.rb -e "blocks writing to a denied path even when --force is used"`
-- [ ] Run the full integration test suite to ensure no regressions
+- [x] Locate the existing "security validation" context in `spec/integration/llm_query_integration_spec.rb`
+- [x] Add the new test case within that context
+- [x] Ensure the test uses a denied path pattern that will trigger path validation failure
+- [x] Verify the test expects proper error exit code (1) and error message format
+- [x] Run the specific test to confirm it passes: `bundle exec rspec spec/integration/llm_query_integration_spec.rb -e "blocks writing to a denied path even when --force is used"`
+- [x] Run the full integration test suite to ensure no regressions
 
 ## Acceptance Criteria
 
-- [ ] New test case added to existing security validation context
-- [ ] Test verifies that `--force` flag does not bypass path validation for denied paths
-- [ ] Test expects appropriate exit code (1) and error message pattern
-- [ ] Test passes when run individually and as part of the full suite
-- [ ] No existing tests are broken by the addition
-- [ ] Test follows the same pattern as other security validation tests in the same context
+- [x] New test case added to existing security validation context
+- [x] Test verifies that `--force` flag does not bypass path validation for denied paths
+- [x] Test expects appropriate exit code (1) and error message pattern
+- [x] Test passes when run individually and as part of the full suite
+- [x] No existing tests are broken by the addition
+- [x] Test follows the same pattern as other security validation tests in the same context
 
 ## Out of Scope
 
