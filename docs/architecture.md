@@ -55,15 +55,15 @@ For visual representations of the architecture, see [Architecture Diagrams](./ar
 #### Molecules (Composition Layer)
 - **Purpose**: Simple compositions of Atoms that form reusable operations.
 - **Technology**: Ruby classes that combine multiple Atoms for specific tasks.
-- **Key Components**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`, `ExecutableWrapper`.
-- **Key Responsibilities**: Building HTTP requests, parsing API responses, managing credentials, wrapping system executables.
+- **Key Components**: `APICredentials`, `HTTPRequestBuilder`, `APIResponseParser`, `ExecutableWrapper`, `SecurePathValidator`, `FileOperationConfirmer`, `FileIOHandler`.
+- **Key Responsibilities**: Building HTTP requests, parsing API responses, managing credentials, wrapping system executables, validating file paths for security, confirming file operations safely, handling file I/O with security integration.
 - **Location**: `lib/coding_agent_tools/molecules/`.
 
 #### Atoms (Utility Layer)
 - **Purpose**: Smallest, indivisible units of functionality with no dependencies on other gem components.
 - **Technology**: Simple Ruby classes or modules providing basic utilities.
-- **Key Components**: `EnvReader`, `HTTPClient`, `JSONFormatter`.
-- **Key Responsibilities**: Reading environment variables, making HTTP requests, formatting JSON data.
+- **Key Components**: `EnvReader`, `HTTPClient`, `JSONFormatter`, `SecurityLogger`.
+- **Key Responsibilities**: Reading environment variables, making HTTP requests, formatting JSON data, security-focused logging with sanitization.
 - **Location**: `lib/coding_agent_tools/atoms/`.
 
 #### Models (Data Layer)
@@ -77,8 +77,8 @@ For visual representations of the architecture, see [Architecture Diagrams](./ar
 
 The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns. For detailed classification rules and practical guidelines, see the [ATOM Component Classification House Rules](docs-dev/guides/atom-house-rules.md):
 
--   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, utility functions for string normalization, basic file readers).
--   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).
+-   **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., `EnvReader` for environment variables, `HTTPClient` for external API calls, `JSONFormatter` for data serialization/deserialization, `SecurityLogger` for security-focused logging with automatic sanitization, utility functions for string normalization, basic file readers).
+-   **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation or behavior. They encapsulate a single, focused piece of logic and are behavior-oriented helpers (e.g., `ExecutableWrapper` for CLI script execution, `APICredentials` for managing authentication details, `HTTPRequestBuilder` for constructing API requests, `APIResponseParser` for handling API responses, `SecurePathValidator` for path security validation, `FileOperationConfirmer` for safe file operation confirmations, `FileIOHandler` for secure file I/O operations, configuration loaders using file access and parsing atoms, basic Git clients using command execution atoms).
 -   **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., `GeminiClient` for interacting with the Gemini API, `LMStudioClient` for local LLM interactions, `PromptProcessor` for preparing and parsing LLM prompts, LLM queriers, commit message suggesters). These handle the core business logic and workflows.
 -   **Ecosystems (`lib/coding_agent_tools/ecosystems/`)**: Cohesive groupings of Organisms and other components that deliver a larger, bounded context or subsystem. The overall CLI application, orchestrated by `dry-cli`, can be considered the primary ecosystem.
 -   **Models (`lib/coding_agent_tools/models/`)**: Plain Old Ruby Objects (POROs), typically implemented as Structs, that act as pure, immutable data carriers. They have no external dependencies or I/O operations and focus solely on data representation (e.g., `LlmModelInfo` for language model metadata, `Task` for task representation, `LLMResponse` for API response data).
@@ -138,16 +138,183 @@ For a complete directory structure and file listings, see the [Project Blueprint
 
 ## Security Considerations
 
-The gem implements a comprehensive, multi-layered security framework:
+The gem implements a comprehensive, multi-layered security framework designed to protect against common attack vectors while maintaining usability for legitimate operations. The security architecture follows defense-in-depth principles with multiple validation layers, secure defaults, and comprehensive logging.
 
--   **Path Traversal Prevention**: `SecurePathValidator` provides robust defense against directory escape attacks using allowlists, denylists, and path normalization.
--   **Secure File Operations**: `FileIOHandler` integrates path validation and user confirmation for all file write operations, with `--force` flag support for automation.
--   **Interactive Safety**: `FileOperationConfirmer` provides safe defaults for CI environments while offering user confirmation in interactive sessions.
--   **Credential Protection**: `SecurityLogger` automatically redacts sensitive information (API keys, emails, IPs) from all log outputs.
--   **API Key/Token Handling**: Secrets are read from environment variables or standard configuration locations, never hardcoded.
--   **XDG Compliance**: Cache and configuration files follow XDG Base Directory specifications for secure, predictable storage locations.
+### Security Architecture Overview
 
-For detailed security architecture, see the [Architecture Diagrams](./architecture/diagrams.md).
+The security framework consists of three core components working together:
+
+1. **SecurityLogger (Atom)**: Provides security-focused logging with automatic sanitization
+2. **SecurePathValidator (Molecule)**: Validates and sanitizes file paths to prevent traversal attacks
+3. **FileOperationConfirmer (Molecule)**: Handles safe file operation confirmations with CI/interactive detection
+
+These components integrate seamlessly with the `FileIOHandler` molecule to provide secure file operations throughout the application.
+
+### Security Components
+
+#### SecurityLogger (Atom)
+
+**Purpose**: Security-focused logging with automatic sanitization of sensitive information.
+
+**Key Features**:
+- **Automatic Redaction**: Removes API keys (20+ character alphanumeric strings), email addresses, and IP addresses from log messages
+- **Path Sanitization**: Protects user privacy by hiding home directory details and absolute paths outside current directory
+- **Event Classification**: Different log levels for different security events (WARN for traversal attempts, INFO for invalid paths, DEBUG for normal operations)
+- **Structured Logging**: Consistent format with event types, sanitized details, and contextual metadata
+
+**Integration**: Used by all security components to ensure sensitive information never appears in logs, even during security violations.
+
+#### SecurePathValidator (Molecule)
+
+**Purpose**: Comprehensive path validation and sanitization to prevent path traversal attacks and unauthorized access.
+
+**Security Features**:
+- **Path Traversal Prevention**: Detects and blocks classic traversal patterns (`../`, `..\\`, URL-encoded variants)
+- **Allowlist-Based Access Control**: Only permits access to explicitly allowed base paths (current directory, temporary directories)
+- **Denylist Protection**: Blocks access to system directories (`/etc`, `/usr/bin`, `/var/log`, `.git`, `.ssh`, etc.)
+- **Path Normalization**: Uses `Pathname#cleanpath` and `File.realpath` to resolve symlinks and relative components
+- **Input Validation**: Checks for null bytes, control characters, excessive length, and path depth limits
+
+**Configuration Options**:
+- `allowed_base_paths`: Base directories where operations are permitted
+- `denied_patterns`: Regex patterns for forbidden paths  
+- `max_path_depth`: Maximum directory nesting level (default: 20)
+- `max_path_length`: Maximum path character length (default: 4096)
+
+**Validation Process**:
+1. Basic input validation (null bytes, control characters, length limits)
+2. Path traversal pattern detection
+3. Path normalization and resolution
+4. Denylist pattern matching
+5. Allowlist base path verification
+6. Security event logging
+
+#### FileOperationConfirmer (Molecule)
+
+**Purpose**: Safe file operation confirmations with intelligent environment detection.
+
+**Key Features**:
+- **Environment Detection**: Automatically detects CI environments (GitHub Actions, GitLab CI, Travis, etc.) and TTY availability
+- **Safe Defaults**: In non-interactive environments, denies overwrite operations unless `--force` flag is provided
+- **Interactive Prompts**: In interactive environments, prompts users for confirmation with timeout protection
+- **Security Logging**: All confirmation decisions are logged with context and reasoning
+
+**CI Environment Detection**: Checks for environment variables (`CI`, `GITHUB_ACTIONS`, `GITLAB_CI`, etc.) and TTY availability to determine if user interaction is possible.
+
+### Security Data Flow
+
+The security validation flow follows this pattern for file operations:
+
+```
+1. User Request (file path) 
+   ↓
+2. SecurePathValidator.validate_path()
+   ├─ Basic validation (null bytes, length, characters)
+   ├─ Path traversal detection
+   ├─ Path normalization
+   ├─ Denylist pattern checking
+   ├─ Allowlist verification
+   └─ Security event logging
+   ↓
+3. FileOperationConfirmer.confirm_overwrite() (if file exists)
+   ├─ Environment detection (CI vs interactive)
+   ├─ Force flag checking
+   ├─ User confirmation (if interactive)
+   └─ Security event logging
+   ↓
+4. FileIOHandler file operation
+   └─ Operation success logging
+```
+
+### Integration with Existing Architecture
+
+#### FileIOHandler Integration
+
+The `FileIOHandler` molecule serves as the primary integration point for security components:
+
+- **Path Validation**: All file paths are validated through `SecurePathValidator` before any file operations
+- **Overwrite Confirmation**: File overwrites are confirmed through `FileOperationConfirmer` unless `--force` is specified
+- **Security Logging**: All file operations are logged through `SecurityLogger` with appropriate detail sanitization
+
+#### Component Dependencies
+
+```
+FileIOHandler (Molecule)
+├─ SecurePathValidator (Molecule)
+│  └─ SecurityLogger (Atom)
+├─ FileOperationConfirmer (Molecule)  
+│  └─ SecurityLogger (Atom)
+└─ SecurityLogger (Atom)
+```
+
+#### ATOM Architecture Compliance
+
+The security components follow the established ATOM pattern:
+
+- **SecurityLogger (Atom)**: No dependencies on other gem components, purely functional
+- **SecurePathValidator (Molecule)**: Composes SecurityLogger atom for event logging
+- **FileOperationConfirmer (Molecule)**: Composes SecurityLogger atom for confirmation logging
+- **FileIOHandler (Molecule)**: Orchestrates security molecules for comprehensive protection
+
+### Security Configuration
+
+#### Environment Variables
+
+Security behavior is influenced by standard environment variables:
+
+- **`HOME`**: Used for path sanitization to hide user directory details
+- **CI Detection Variables**: `CI`, `GITHUB_ACTIONS`, `GITLAB_CI`, `TRAVIS`, etc. for environment detection
+- **Temporary Directory Variables**: `TMPDIR`, `TMP`, `TEMP` for allowed path discovery
+
+#### Default Security Settings
+
+- **Allowed Paths**: Current directory (`.`), system temporary directories (`/tmp`, `/var/tmp`, macOS variants)
+- **Denied Patterns**: System directories, configuration directories, hidden directories (`.git`, `.ssh`, `.aws`)
+- **Limits**: 20 directory levels max, 4096 character path length max
+- **Logging Level**: INFO level for security events (configurable)
+
+### Threat Model and Mitigations
+
+#### Path Traversal Attacks
+- **Threat**: Malicious paths attempting to access files outside allowed directories
+- **Mitigation**: Multi-layer validation including pattern detection, normalization, and allowlist checking
+- **Examples**: `../../../etc/passwd`, `..%2f..%2fetc%2fpasswd`, symlink-based traversal
+
+#### Information Disclosure
+- **Threat**: Sensitive information (API keys, paths, emails) appearing in logs
+- **Mitigation**: Comprehensive sanitization in SecurityLogger before any log output
+- **Coverage**: API keys, email addresses, IP addresses, absolute paths, home directory details
+
+#### Unauthorized File Operations
+- **Threat**: Accidental or malicious file overwrites in sensitive locations
+- **Mitigation**: Overwrite confirmation with safe defaults and environment-aware behavior
+- **Protection**: CI environments default to deny, interactive environments prompt for confirmation
+
+#### Privilege Escalation
+- **Threat**: Access to system files or directories through gem operations
+- **Mitigation**: Strict allowlist and denylist controls preventing access to system directories
+- **Coverage**: `/etc`, `/usr/bin`, `/var/log`, `/root`, and other system paths
+
+### Security Testing
+
+The security components include comprehensive test coverage:
+
+- **Unit Tests**: Individual component behavior and security validations
+- **Integration Tests**: Component interaction and end-to-end security flows
+- **Security Test Cases**: Specific attack vector testing (path traversal, null bytes, etc.)
+- **Edge Case Testing**: Boundary conditions, error handling, and failure scenarios
+
+### Security Monitoring
+
+Security events are categorized and logged with appropriate severity levels:
+
+- **WARN Level**: Active attack attempts (path traversal, denied access)
+- **INFO Level**: Policy violations (invalid paths, overwrite denials)  
+- **DEBUG Level**: Normal operations and successful validations
+
+All security events include sanitized context information for forensic analysis while protecting sensitive data.
+
+For visual representations of the security architecture, see [Architecture Diagrams](./architecture/diagrams.md).
 
 ## Performance Considerations
 
