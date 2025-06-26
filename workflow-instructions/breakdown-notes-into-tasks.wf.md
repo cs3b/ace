@@ -2,111 +2,252 @@
 
 ## Goal
 
-To orchestrate the processing of various raw inputs (like PRDs, git diffs, backlog notes) by guiding the
-selection of an appropriate sub-workflow, and then to take the structured output from that
-sub-workflow, refine it, verify it with the user, and ultimately create formal, actionable task files.
+Transform unstructured notes, feedback, or requirements into well-structured, actionable task files. This workflow handles any type of input - whether it's user feedback, requirement documents, ideas, or file contents - and creates properly formatted tasks following project standards.
 
-## Project Context
+## Prerequisites
 
-* Review project objectives: [docs/what-do-we-build.md](docs/what-do-we-build.md)
-* Examine high-level architecture: [docs/architecture.md](docs/architecture.md)
-* Check project structure and key files: [docs/blueprint.md](docs/blueprint.md).
-* [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)
-* [Embedding Tests in AI Agent Workflows Guide](dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md)
+* Raw notes or requirements to process (text, files, or user feedback)
+* Access to `dev-taskflow/` directory for task storage
+* The `bin/tnid` command available for generating task IDs
+* The `bin/rc` command available for determining current release context
 
-## Input
+## Project Context Loading
 
-* The initial raw input material (e.g., a PRD file, git diff output, PR comments, unstructured backlog notes).
-* The type of this input, to help select the correct sub-workflow from (one of):
-```text
-dev-handbook/workflow-instructions/breakdown-notes-into-tasks/
-├── from-concepts-in-backlog.md
-├── from-diff.md
-├── from-frd.md
-├── from-pr-comments-api.md
-├── from-pr-comments-mcp.md
-├── from-prd.md
-└── from-release-backlog.md
-```
-* (Implicit) Current project context, including information about the current release if applicable.
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
 
 ## Process Steps
 
-1. **Select and Execute Input Processing Sub-Workflow:**
-    * Based on the nature of your initial raw input, navigate to the `breakdown-notes-into-tasks/` subdirectory.
-    * Choose and execute the appropriate sub-workflow from this directory (e.g., `from-prd.md` if your
-      input is a Product Requirements Document, `from-diff.md` for a git diff, etc.).
-    * **Input to Sub-Workflow:** Your raw input material.
-    * **Output of Sub-Workflow:** A set of structured notes or analysis, specific to the input type.
+1. **Gather Input Material**
+   * Collect raw input from user, which could be:
+     - Direct text/feedback in the conversation
+     - File paths to documents containing requirements
+     - Mixed input with both text and file references
+   * If files are referenced, read their contents
+   * Combine all inputs into a single working document
 
-2. **Receive and Review Structured Input from Sub-Workflow:**
-    * Take the structured notes/analysis produced by the selected sub-workflow.
-    * Review this input to understand the items, their initial structuring, and any preliminary
-      analysis performed by the sub-workflow.
+2. **Analyze and Structure Content**
+   * Read through all input material comprehensively
+   * Identify distinct actionable items by looking for:
+     - Feature requests or enhancements
+     - Bug reports or issues to fix
+     - Documentation needs
+     - Research or investigation requirements
+     - Architecture decisions needed
+     - Testing requirements
+   * Group related items that form cohesive work units
+   * Note any ambiguous or unclear items for clarification
 
-3. **Further Breakdown and Refinement (if necessary):**
-    * Analyze the structured input from the sub-workflow. Determine if any of the identified items need
-      to be broken down into smaller, more distinct actionable units.
-    * For each unit (original or newly broken down), refine its objective, scope, and key details.
-    * Group related units if they logically form a single, cohesive piece of work for a task.
+3. **Create Initial Task Breakdown**
+   * For each identified actionable item or group:
+     - Write a clear task title (Verb + Object format)
+     - Summarize the objective and why it's needed
+     - Identify key deliverables (files to create/modify/delete)
+     - Estimate complexity and time required
+     - Note any dependencies on other tasks
+     - Identify which release/version it belongs to
 
-4. **Finalize Structure for User Verification:**
-    * Organize the refined units into a clear, itemized list.
-    * Ensure each item in the list represents a potential task and includes its core elements (objective,
-      key details, source references from the sub-workflow's output or original input).
-    * This initial structured list is prepared for user verification.
+4. **Present for User Verification**
+   * Show the user a structured list of proposed tasks:
+     ```
+     Proposed Tasks:
+     1. [Task Title] - [Brief description]
+        - Objective: [Why this is needed]
+        - Estimate: [Time estimate]
+        - Priority: [high/medium/low]
+     
+     2. [Next Task Title] - [Brief description]
+        ...
+     ```
+   * Ask for confirmation or adjustments:
+     - Are all items captured?
+     - Is the grouping logical?
+     - Are priorities correct?
+     - Any missing context or requirements?
 
-5. **User Verification of Structured Tasks:**
-    * Before proceeding to formal task creation, present the structured list of potential tasks to the user for review.
-    > VERIFY: Structured Task Review
-    > Type: User Feedback
-    > Prompt: Please review the following list of structured potential tasks. Do they accurately capture
-    > the actionable items from the input, are they logically grouped, and are the key details sufficient
-    > for creating formal tasks?
-    > Options: (Yes, proceed / No, needs revision)
-    * If the user indicates revisions are needed, return to step 3 (Further Breakdown and Refinement) with the user's feedback.
+5. **Create Formal Task Files**
+   * Once approved, create task files using this embedded template:
+   
+   ```markdown
+   ---
+   id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
+   status: pending
+   priority: [high | medium | low]
+   estimate: Nh
+   dependencies: []
+   ---
 
-6. **Formalize and Store Task(s):**
-    * Once the user approves the structured tasks, for each item:
-        * Formalize its structure according to the template and guidelines in the [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md).
-          **Crucially, ensure the `id` in the front-matter is generated by running `bin/tnid` from the project root.**
-          This includes populating sections such as Front-matter, Directory Audit, Scope of Work, Deliverables,
-          Phases, Implementation Plan (with embedded tests where appropriate), and Acceptance Criteria.
-    * **Task Storage:**
-        * Determine the appropriate storage location for the formalized task file(s) using the `bin/rc` tool:
+   # [Task Title - Verb + Object]
 
-            ```bash
-            # Get the current release path and version
-            output=$(bin/rc)
-            task_dir=$(echo "$output" | sed -n '1p')
-            version=$(echo "$output" | sed -n '2p')
-            ```
+   ## 0. Directory Audit ✅
+   
+   _Command run:_
+   ```bash
+   tree -L 2 [relevant-directory] | sed 's/^/    /'
+   ```
+   
+   _Result excerpt:_
+   ```
+   [insert tree output here]
+   ```
 
-            * **Current Release:** If the tool returns a current release directory path (e.g.,
-              `dev-taskflow/current/v.X.Y.Z-codename`), create a `tasks/` subdirectory within it if one doesn't
-              already exist. Store the formalized task file(s) there. The version information can be used for
-              task metadata or naming if needed.
-            * **Backlog:** If the tool returns the backlog path (`dev-handbook/backlog/tasks`), store the
-              formalized task file(s) there. Create the directory if it doesn\'t exist.
-        * Ensure all necessary directories (including the base task directory and any subdirectories)
-          are created before attempting to save files.
-    * The output of this step is one or more formal task files, each adhering to the specified format
-      and stored in the correct location.
+   ## Objective
+   
+   [Why are we doing this? What value does it provide?]
+   [Link back to original requirement/feedback if applicable]
+
+   ## Scope of Work
+   
+   - [What will be touched/changed]
+   - [Key areas of impact]
+   - [Technical components involved]
+   
+   ### Deliverables
+   
+   #### Create
+   - path/to/new/file.ext
+   
+   #### Modify  
+   - path/to/existing/file.ext
+   
+   #### Delete
+   - path/to/obsolete/file.ext
+
+   ## Phases
+   
+   1. Research/Analysis - [What needs to be understood]
+   2. Design/Planning - [Architecture or approach decisions]
+   3. Implementation - [Core development work]
+   4. Testing/Validation - [How we verify success]
+
+   ## Implementation Plan
+
+   ### Planning Steps
+   
+   * [ ] [Research/analysis task - use asterisk markers]
+     > TEST: Pre-condition Check
+     > Type: Pre-condition Check
+     > Assert: [What needs to be verified before starting]
+     > Command: [Test command if applicable]
+   
+   ### Execution Steps
+   
+   - [ ] [Concrete implementation action - use hyphen markers]
+     > TEST: Action Validation
+     > Type: Action Validation
+     > Assert: [Expected outcome to verify]
+     > Command: [Test command to validate]
+
+   ## Acceptance Criteria
+   
+   - [ ] All deliverables created/modified as specified
+   - [ ] [Specific functionality working as expected]
+   - [ ] All automated tests pass
+   - [ ] Documentation updated
+   - [ ] Original requirement fully addressed
+
+   ## Out of Scope
+   
+   - ❌ [What won't be touched in this task]
+   - ❌ [Clear boundaries to prevent scope creep]
+
+   ## References
+   
+   - Original requirement: [Link or description]
+   - Related guides: [If applicable]
+   - Dependencies: [Links to other tasks]
+   ```
+
+6. **Determine Storage Location**
+   * Use `bin/rc` to get current release context:
+     ```bash
+     output=$(bin/rc)
+     task_dir=$(echo "$output" | sed -n '1p')
+     version=$(echo "$output" | sed -n '2p')
+     ```
+   * Storage rules:
+     - If current release exists: Store in `{task_dir}/tasks/`
+     - If no current release: Store in `dev-taskflow/backlog/tasks/`
+     - Create directories if they don't exist
+
+7. **Generate Task IDs and Save Files**
+   * For each task:
+     - Run `bin/tnid {version}` to generate unique ID
+     - Create filename: `{id}-{kebab-case-title}.md`
+     - Save to determined location
+     - Track created files for summary
+
+8. **Provide Summary**
+   * List all created tasks with their:
+     - IDs
+     - Titles
+     - File paths
+     - Priority and estimates
+   * Suggest next steps or related workflows
+
+## Key Guidelines
+
+### Task Granularity
+- **Ideal task size**: 4-10 hours of focused work
+- **Too large**: Break into subtasks or phases
+- **Too small**: Combine with related items
+- **Epic threshold**: Tasks over 25h should be epics
+
+### Task Grouping Logic
+- Group by feature area or component
+- Group by technical dependency
+- Group by deliverable type (docs, tests, implementation)
+- Keep cross-cutting concerns separate
+
+### Priority Assessment
+- **High**: Blocks other work, critical path, or urgent fixes
+- **Medium**: Important features or improvements
+- **Low**: Nice-to-have, optimizations, or deferrables
+
+### Quality Checks
+- Every task must have clear acceptance criteria
+- Deliverables must be specific file paths
+- Implementation steps should be concrete actions
+- Out of scope prevents feature creep
+- References maintain traceability
+
+## Input
+
+* Raw notes in any format:
+  - User feedback or requirements in chat
+  - File paths to requirement documents
+  - Mixed text and file references
+  - Ideas, bugs, features, or improvements
 
 ## Output / Success Criteria
 
-**Output:**
+* All actionable items from input are captured as formal tasks
+* Tasks follow the standard template with all sections complete
+* Each task has a unique ID generated by `bin/tnid`
+* Tasks are stored in the correct location based on release context
+* User has reviewed and approved the task breakdown
+* Clear traceability from original input to created tasks
 
-* One or more user-verified, formalized task files, created according to the [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md).
-* Task files are stored in the appropriate project location (e.g., current release's `tasks/` folder or `dev-handbook/backlog/tasks/`).
+## Error Handling
 
-**Success Criteria:**
+* **Ambiguous input**: Ask user for clarification
+* **Missing context**: Request additional details
+* **No current release**: Default to backlog storage
+* **ID generation fails**: Use manual numbering with warning
+* **File conflicts**: Alert user and suggest alternatives
 
-* All relevant actionable items from the original input are identified, refined, and captured in formal tasks.
-* Tasks are logically grouped and broken down to an appropriate level of granularity.
-* Each created task file fully adheres to the structure, content guidelines, and formatting specified
-  in the [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md).
-* Task files are correctly named and stored in the designated directory based on the current release context or backlog status.
-* The user has reviewed and approved the content and structure of the finalized task(s) before saving.
+## Usage Examples
 
-## Reference Documentation
+**Example 1: User feedback in chat**
+> "We need to add dark mode support, fix the login timeout issue, and update the API docs"
+
+**Example 2: Requirements document**
+> "Break down the requirements in dev-taskflow/backlog/new-features.md into tasks"
+
+**Example 3: Mixed input**
+> "Create tasks for the refactoring ideas I mentioned plus what's in the technical-debt.md file"
+
+---
+
+This workflow handles all types of input uniformly, creating consistent, well-structured tasks regardless of the source material. For specialized inputs like PR comments, use appropriate tools to fetch the data, then process through this workflow.

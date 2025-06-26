@@ -4,130 +4,348 @@
 
 Guide the AI agent and developer through **drafting a new release** in the project backlog.
 This includes creating the initial release directory structure under `dev-taskflow/backlog/`,
-copying the standard templates from `dev-handbook/guides/draft-release/`, and breaking the
+setting up the standard subdirectories, creating the release overview document, and breaking the
 user-provided release scope into actionable tasks.
 
 ## Prerequisites
 
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
-* The current project version is known or can be discovered from the project’s version file.
-* Familiarity with the task writing standards and template structure (see
-  [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)).
+* The current project version is known or can be discovered from the project's version file.
 * Access to the `dev-taskflow/` and `dev-handbook/` directories.
 * The `bin/tnid` command is available and functional for generating task IDs.
 
+## Project Context Loading
+
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
+
 ## Process Steps
 
-1. **Load Context**
-   * Read this instruction file and all referenced guides:
-     * [Draft Release Templates](dev-handbook/guides/draft-release/README.md)
-     * Language-specific sub-guides in `dev-handbook/guides/draft-release/` as needed.
-
-2. **Gather Release Metadata**
+1. **Gather Release Metadata**
    * Ask the user for:
-     * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version.
-     * Release codename (derive from user input if not explicitly given, using the [Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md) for inspiration).
+     * Desired specific semantic version (e.g., `v.0.1.0`, `v.1.2.3`). This must include the patch version following MAJOR.MINOR.PATCH format.
+     * Release codename (derive from user input if not explicitly given, using project-themed naming).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-3. **Create Release Directory and Overview File**
+2. **Create Release Directory and Structure**
    * Create the target release directory using the specific semantic version:
      `dev-taskflow/backlog/v.X.Y.Z-codename/` (e.g., `dev-taskflow/backlog/v.0.3.0-new-feature/`).
-   * Create standard sub-directories within the new release directory (e.g., `tasks/`, `docs/`, `decisions/`,
-     `codemods/`, `reflections/`, `researches/`, `test-cases/`, `user-experience/`) mirroring the structure found
-     in `dev-handbook/guides/draft-release/v.x.x.x/`. Do **not** copy the `_template.md` files into these
-     subdirectories at this stage.
-   * Copy the main release overview template file from `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md`
-     to `dev-taskflow/backlog/v.X.Y.Z-codename/v.x.x.x-codename.md`.
-   * Rename the newly copied overview file in the target directory to `v.X.Y.Z-codename.md` (matching the
-     directory’s version and codename).
+   * Create standard sub-directories within the new release directory:
+     ```
+     dev-taskflow/backlog/v.X.Y.Z-codename/
+     ├── tasks/
+     ├── docs/
+     ├── decisions/
+     ├── codemods/
+     ├── reflections/
+     ├── researches/
+     ├── test-cases/
+     └── user-experience/
+     ```
+
+3. **Create Release Overview Document**
+   * Create the release overview file at: `dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md`
+   * Use the following embedded template:
+
+   ```markdown
+   # v.X.Y.Z [Codename]
+
+   ## Release Overview
+   <!-- Brief description of the release's purpose and value proposition. -->
+
+   ## Release Information
+   - **Type**: [Major | Feature | Bug Fix]
+   - **Start Date**: YYYY-MM-DD
+   - **Target Date**: YYYY-MM-DD  
+   - **Status**: Planning
+
+   ## Collected Notes
+   <!-- Raw notes provided by the user -->
+
+   ## Goals & Requirements
+
+   ### Primary Goals
+   - [ ] <!-- Goal 1 with specific metrics -->
+   - [ ] <!-- Goal 2 with acceptance criteria -->
+   - [ ] <!-- Goal 3 with success strategy -->
+
+   ### Dependencies
+   - <!-- External dependencies -->
+   - <!-- Internal dependencies -->
+
+   ### Risks & Mitigation
+   - <!-- Risk 1: Description | Mitigation strategy -->
+   - <!-- Risk 2: Description | Mitigation strategy -->
+
+   ## Implementation Plan
+
+   ### Core Components
+   1. **Design & Architecture**
+      - [ ] <!-- Architecture decision/design task -->
+      - [ ] <!-- API design task -->
+   
+   2. **Dependencies**  
+      - [ ] <!-- Dependency setup task -->
+      - [ ] <!-- Integration task -->
+   
+   3. **Implementation Phases**
+      - [ ] <!-- Phase 1: Foundation -->
+      - [ ] <!-- Phase 2: Core features -->
+      - [ ] <!-- Phase 3: Polish and testing -->
+
+   ## Quality Assurance
+
+   ### Test Coverage
+   - [ ] Unit Tests (>80% coverage)
+   - [ ] Integration Tests
+   - [ ] Performance Tests
+   - [ ] User Acceptance Tests
+
+   ### Documentation
+   - [ ] API Documentation
+   - [ ] User Guide
+   - [ ] Developer Guide
+   - [ ] CHANGELOG Entry
+
+   ## Release Checklist
+   - [ ] All planned features implemented and tested
+   - [ ] All tests passing (unit, integration, e2e)
+   - [ ] Documentation complete and reviewed
+   - [ ] CHANGELOG.md updated with all changes
+   - [ ] Version numbers updated in relevant files
+   - [ ] Security review completed
+   - [ ] Performance benchmarks meet targets
+   - [ ] Backward compatibility verified
+   - [ ] Migration guide prepared (if needed)
+   - [ ] Release notes drafted
+
+   ## Notes
+   <!-- Additional context, decisions, or clarifications -->
+   ```
 
 4. **Populate Overview Document**
-   * Open the new overview file and fill in:
-     * Release title, goals, and **Collected Notes** section containing the raw user input.
-     * Initial high-level implementation plan (checkbox list) to be refined later.
+   * Fill in the release overview with:
+     * Release title with version and codename
+     * Release type based on semantic versioning rules
+     * Start date (today) and estimated target date
+     * Copy raw user input into **Collected Notes** section
+     * Extract primary goals from the user's notes
+     * Initial high-level implementation plan (to be refined)
 
 5. **Break Down Scope Into Tasks**
-   * Use the [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
-     if the raw notes are lengthy or unstructured.
-   * For each distinct item in the (possibly refined) user input:
-     a. Select the appropriate template family (`tasks`, `decisions`, `docs`, etc.).
-     b. Create a new file in the appropriate subdirectory of `dev-taskflow/backlog/v.X.Y.Z-codename/`
-        (e.g., `tasks/`, `docs/`) by copying the corresponding `_template.md` from
-        `dev-handbook/guides/draft-release/v.x.x.x/[template-family]/_template.md`.
-     c. Replace placeholder fields:
-        * `id`: Use `bin/tnid v.X.Y.Z` (where `v.X.Y.Z` is the specific version of the current release being
-          prepared) to generate the next task ID in the format `v.X.Y.Z+task.<sequential_number>`.
-        * `status`: `pending`
-        * Title and content derived from the user note.
-     d. In the original user note (file or pasted text), append a comment with the created task id for
-        traceability.
+   * Analyze the raw notes to identify distinct actionable items
+   * Group related items that form cohesive work units
+   * For each distinct item or group:
+     a. Determine the appropriate category:
+        - `tasks/` - Implementation work
+        - `decisions/` - Architecture decisions (ADRs)
+        - `docs/` - Documentation tasks
+        - `researches/` - Investigation/spike tasks
+        - `test-cases/` - Test scenario definitions
+        - `user-experience/` - UX/UI related tasks
+     
+     b. Create a new task file using the embedded task template:
+        ```markdown
+        ---
+        id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
+        status: pending
+        priority: [high | medium | low]
+        estimate: Nh
+        dependencies: []
+        ---
+
+        # [Verb + Object]
+
+        ## 0. Directory Audit ✅
+        
+        _Command run:_
+        ```bash
+        tree -L 2 [relevant-directory] | sed 's/^/    /'
+        ```
+        
+        _Result excerpt:_
+        ```
+        [insert tree output here]
+        ```
+
+        ## Objective
+        
+        [Why are we doing this? What value does it provide?]
+
+        ## Scope of Work
+        
+        - [What will be touched/changed]
+        - [Key areas of impact]
+        
+        ### Deliverables
+        
+        #### Create
+        - path/to/new/file.ext
+        
+        #### Modify  
+        - path/to/existing/file.ext
+        
+        #### Delete
+        - path/to/obsolete/file.ext
+
+        ## Phases
+        
+        1. [Audit/Research phase]
+        2. [Design/Planning phase]
+        3. [Implementation phase]
+        4. [Testing/Validation phase]
+
+        ## Implementation Plan
+
+        ### Planning Steps
+        
+        * [ ] [Research/analysis task - use asterisk markers]
+          > TEST: Pre-condition Check
+          > Type: [Pre-condition Check | Action Validation]
+          > Assert: [What needs to be verified]
+          > Command: bin/test --check-something
+        
+        ### Execution Steps
+        
+        - [ ] [Concrete implementation action - use hyphen markers]
+          > TEST: Action Validation
+          > Type: Action Validation
+          > Assert: [Expected outcome]
+          > Command: bin/test --verify-result
+
+        ## Acceptance Criteria
+        
+        - [ ] All deliverables created/modified as specified
+        - [ ] [Specific functionality working]
+        - [ ] All automated tests pass
+        - [ ] Documentation updated
+
+        ## Out of Scope
+        
+        - ❌ [What won't be touched in this task]
+        - ❌ [Clear boundaries]
+
+        ## References
+        
+        - [Relevant guide or documentation]
+        - [Related task or ADR]
+        ```
+     
+     c. Key rules for task creation:
+        * Use `bin/tnid v.X.Y.Z` to generate the next sequential task ID
+        * Task filename format: `v.X.Y.Z+task.N-kebab-case-title.md`
+        * Planning steps use asterisk markers (`* [ ]`)
+        * Execution steps use hyphen markers (`- [ ]`)
+        * Always include a directory audit for context
+        * Embed test verification inline with steps
+        * Clear deliverables (Create/Modify/Delete)
+        * Define what's out of scope
 
 6. **Ensure Completeness**
-   * Verify that **every sentence or bullet** from the user input maps to at least one task file. Highlight any
-     ambiguous or under-specified note in the chat and request clarification.
+   * Verify that **every sentence or bullet** from the user input maps to at least one task file
+   * Check for:
+     - Ambiguous requirements that need clarification
+     - Missing acceptance criteria
+     - Undefined dependencies between tasks
+     - Unrealistic time estimates
+   * Highlight any issues and request clarification from the user
 
 7. **Update Roadmap**
-   * Add the new release to the roadmap's "Planned Major Releases" table
-   * Include version, codename, target window, goals, and key epics
-   * Update roadmap's `last_reviewed` date and add entry to Update History
-   * Follow [Update Roadmap Workflow](update-roadmap.wf.md) for roadmap modifications
-   * Commit roadmap changes separately with message format:
-
+   * Add the new release to the roadmap's "Planned Major Releases" table:
+     ```markdown
+     | Version | Codename | Target Window | Goals | Key Epics |
+     |---------|----------|---------------|-------|-----------|
+     | v.X.Y.Z | Codename | Month YYYY    | Brief | Epic list |
+     ```
+   * Update roadmap's `last_reviewed` date
+   * Add entry to Update History section
+   * Commit roadmap changes separately with message:
      ```bash
-     "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
+     git commit -m "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
 8. **Validate Directory Structure**
-   * Verify all required directories were created successfully.
-   * Confirm the overview file exists and contains the correct version/codename.
-   * Check that task files have proper IDs and are properly formatted.
-
-9. **Prepare Commit Message (Do NOT Execute)**
-   * Output the following command **verbatim** for the user's convenience, ensuring `v.X.Y.Z` is the specific
-     version:
-
+   * Run validation checks:
      ```bash
-     "chore(backlog): scaffold release v.X.Y.Z-codename – initial structure and tasks"
+     # Verify directory structure
+     ls -la dev-taskflow/backlog/v.X.Y.Z-codename/
+     
+     # Check subdirectories
+     for dir in tasks docs decisions codemods reflections researches test-cases user-experience; do
+       [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || echo "✗ $dir missing"
+     done
+     
+     # Verify overview file
+     [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md" ] && echo "✓ Overview file" || echo "✗ Overview file missing"
+     
+     # Count created tasks
+     find dev-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
      ```
 
-   * Do **not** run the command automatically.
+9. **Prepare Commit Message (Do NOT Execute)**
+   * Display the following git command for the user:
+     ```bash
+     bin/gc -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
+     ```
+   * Do **not** run the command automatically
 
 10. **Review With User**
-   * List all newly created files and their ids.
-   * Ask the user to confirm or adjust:
-     * Version and codename
-     * Any task titles or descriptions that are unclear.
-   * Iterate until the user is satisfied.
+    * Present summary:
+      - Release version and codename
+      - Number of tasks created in each category
+      - List of all task IDs and titles
+    * Ask for confirmation on:
+      - Task priorities and estimates
+      - Any unclear task descriptions
+      - Missing tasks or requirements
+    * Iterate until the user is satisfied
 
 ## Input
 
-* Semantic version and codename (may be requested interactively).
-* Raw release scope notes (features, fixes, refactors, docs, etc.).
+* Semantic version and codename (requested interactively if not provided)
+* Raw release scope notes (features, fixes, refactors, docs, etc.)
 
 ## Output / Success Criteria
 
-* A new directory `dev-taskflow/backlog/v.X.Y.Z-codename/` exists (where `v.X.Y.Z` is the specific version).
-* Standard sub-directories (e.g., `tasks/`, `docs/`) and the root overview document are in place within the
-  new release directory.
-* All user notes have corresponding task/ADR/doc files with unique ids in the format `v.X.Y.Z+task.N`.
-* Roadmap updated with new release information and committed separately.
-* Git commit message is displayed in chat ready.
-* User has confirmed that tasks are sufficiently concrete or provided clarifications.
+* A new directory `dev-taskflow/backlog/v.X.Y.Z-codename/` exists with all subdirectories
+* Release overview document created and populated with user's notes
+* All user notes have corresponding task files with unique IDs
+* Each task follows the standard format with clear objectives and acceptance criteria
+* Roadmap updated with new release information and committed
+* Git commit command displayed (not executed)
+* User has reviewed and confirmed all generated tasks
 
-## Reference Documentation
+## Common Patterns
 
-* [Draft Release Templates](dev-handbook/guides/draft-release/README.md)
-* [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
-* [Write Actionable Task Guide](dev-handbook/guides/task-definition.g.md)
-* [Project Management Guide](dev-handbook/guides/project-management.g.md)
-* [Picking Project Codenames Guide](dev-handbook/guides/release-codenames.g.md)
-* [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+### Semantic Versioning Rules
+- **MAJOR** (X.0.0): Incompatible API changes
+- **MINOR** (x.Y.0): New functionality, backward compatible
+- **PATCH** (x.y.Z): Bug fixes, backward compatible
+
+### Task Priority Guidelines
+- **High**: Blocks other work or critical path
+- **Medium**: Important but not blocking
+- **Low**: Nice-to-have or can be deferred
+
+### Estimate Guidelines
+- Simple task: 1-4h
+- Medium complexity: 5-10h
+- Complex task: 11-25h
+- Epic (break down): >25h
+
+## Error Handling
+
+* If `bin/tnid` fails: Use manual numbering starting from last known ID
+* If directory exists: Ask user whether to merge or use different version
+* If user notes are vague: Request specific examples or acceptance criteria
+* If no codename provided: Suggest based on project theme or feature focus
 
 ## Usage Example
->
-> “Prepare a new release with the notes in `dev-taskflow/backlog/ideas.md`.
-> Expected version: `v.0.3.0`, codename: `atlas`.”
+> "Prepare a new release with the notes in `dev-taskflow/backlog/ideas.md`.
+> Expected version: `v.0.3.0`, codename: `atlas`."
 
 ---
 
-This workflow focuses on **drafting** a release in the backlog. For information on finalizing and publishing a completed release, see the [Publish Release Guide](dev-handbook/guides/release-publish.g.md).
+This workflow focuses on **drafting** a release in the backlog. Once development begins, the release
+moves to `current/`. For publishing completed releases, use the publish-release workflow.

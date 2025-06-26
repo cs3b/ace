@@ -1,116 +1,206 @@
 # Workflow Instruction: Update Roadmap
 
-**Goal:** Propose, review, and apply updates to `dev-taskflow/roadmap.md` ensuring the roadmap remains an accurate
-strategic guide.
+**Goal:** Propose, review, and apply updates to `dev-taskflow/roadmap.md` ensuring the roadmap remains an accurate strategic guide.
 
 ## Prerequisites
 
-* Current project context loaded via `load-env`.
-* Write access to `dev-taskflow/roadmap.md`.
+* Write access to `dev-taskflow/roadmap.md`
+* Understanding of semantic versioning (v.X.Y.Z format)
+* Access to project folder structure (`dev-taskflow/backlog/`, `current/`, `done/`)
+
+## Project Context Loading
+
+* Load project objectives: `docs/what-do-we-build.md`
+* Load architecture overview: `docs/architecture.md`
+* Load project structure: `docs/blueprint.md`
 
 ## Process Steps
 
-1. **Select Roadmap**
-    * Confirm the file exists at `dev-taskflow/roadmap.md`.
-    * Load its content.
-2. **Validate Structure**
-    * Validate roadmap format against [Roadmap Definition Guide](../guides/roadmap-definition.g.md).
-    * If validation fails, refer to definition guide for correction requirements.
+1. **Load and Validate Roadmap**
+   * Confirm the file exists at `dev-taskflow/roadmap.md`
+   * Load its content and validate structure against embedded format requirements (see below)
+   * If validation fails, note specific violations for correction
+
+2. **Validate Roadmap Structure**
+   The roadmap MUST contain these sections in order:
+   
+   ```yaml
+   ---
+   title: Project Roadmap
+   last_reviewed: YYYY-MM-DD
+   status: [draft|active|archived]
+   ---
+   ```
+   
+   Required sections:
+   1. **Project Vision** - Inspirational statement of long-term mission
+   2. **Strategic Objectives** - Measurable 6-12 month outcomes
+   3. **Key Themes & Epics** - Grouped work areas
+   4. **Planned Major Releases** - Concrete release targets
+   5. **Cross-Release Dependencies** - Dependencies between releases
+   6. **Update History** - Change tracking
+
 3. **Update Release Status**
-    * Check current release folder locations:
-        * `dev-taskflow/backlog/` - Future releases (should appear in roadmap)
-        * `dev-taskflow/current/` - Active releases (should be linked in roadmap)
-        * `dev-taskflow/done/` - Completed releases (should be removed from roadmap)
-    * Update roadmap links to reflect current release status
-    * Remove completed releases from "Planned Major Releases" section (delegate to changelog)
-    * Update cross-release dependencies if they reference completed releases
+   * Check current release folder locations:
+     - `dev-taskflow/backlog/` - Future releases (should appear in roadmap)
+     - `dev-taskflow/current/` - Active releases (should be linked in roadmap)
+     - `dev-taskflow/done/` - Completed releases (should be removed from roadmap)
+   * Update roadmap links to reflect current release status
+   * Remove completed releases from "Planned Major Releases" section
+   * Update cross-release dependencies if they reference completed releases
 
 4. **Draft Changes**
-    * Source proposed changes from the **input document or prompt** (very often a PRD) to ensure alignment with
-      new strategic information.
-    * Use a markdown checklist to outline proposed changes, e.g.:
+   * Source proposed changes from the input document or prompt
+   * Create a markdown checklist of proposed changes:
+   
+   ```markdown
+   - [ ] Add Objective: "Simplify contributor onboarding" (metric: onboarding ≤30 min)
+   - [ ] Add Release v.0.4.0 "Autopilot" Q1 2026
+   - [ ] Remove completed release v.0.2.0 from roadmap (moved to done/)
+   ```
 
-    ```markdown
-    - [ ] Add Objective: "Simplify contributor onboarding" (metric: onboarding ≤30 min)
-    - [ ] Add Release v.0.4.0 "Autopilot" Q1 2026
-    - [ ] Remove completed release v.0.2.0 from roadmap (moved to done/)
-    ```
+5. **Apply Updates Using Embedded Formats**
 
-5. **Internal Review**
-    * Share draft (PR or discussion).
-    * Gather feedback and reach consensus.
-6. **Apply Updates**
-    * Edit `roadmap.md`, increment `last_reviewed`, update relevant tables.
-    * Append an entry to **Update History**.
-    * Ensure release status changes are accurately reflected
-7. **Validate Synchronization**
-    * Verify roadmap "Planned Major Releases" table matches current project folder structure:
-        * All releases in `dev-taskflow/backlog/` appear in roadmap
-        * No releases in `dev-taskflow/done/` appear in roadmap  
-        * Active releases in `dev-taskflow/current/` are properly represented
-    * Check cross-release dependencies for accuracy and remove references to completed releases
-    * Validate roadmap format compliance against [Roadmap Definition Guide](../guides/roadmap-definition.g.md)
-    * Confirm no broken references or outdated information remains
+   **Strategic Objectives Table Format:**
+   ```markdown
+   | # | Objective | Success Metric |
+   |---|-----------|----------------|
+   | 1 | [Outcome-focused objective] | [Measurable criteria] |
+   ```
+   
+   **Key Themes & Epics Table Format:**
+   ```markdown
+   | Theme | Description | Linked Epics |
+   |-------|-------------|-------------|
+   | [Theme Name] | [Brief description] | [Epic identifiers] |
+   ```
+   
+   **Planned Major Releases Table Format:**
+   ```markdown
+   | Version | Codename | Target Window | Goals | Key Epics |
+   |---------|----------|---------------|-------|-----------|
+   | v.X.Y.Z | "[Name]" | [Quarter Year] | [Primary goals] | [Related epics] |
+   ```
+   
+   **Update History Table Format:**
+   ```markdown
+   | Date | Summary | Author |
+   |------|---------|--------|
+   | YYYY-MM-DD | [Brief change description] | [Author name] |
+   ```
+
+6. **Apply Specific Updates**
+   * Edit `roadmap.md` following the format requirements:
+     - Increment `last_reviewed` date in front matter
+     - Apply all drafted changes to relevant sections
+     - Add new entry to Update History table with today's date
+     - Ensure version format follows v.X.Y.Z pattern
+     - Use "QX YYYY" format for target windows
+
+7. **Validate Post-Update**
+   * Verify roadmap sections are complete and in correct order
+   * Check that all tables have correct column headers
+   * Confirm release folders match roadmap entries:
+     - All releases in `backlog/` appear in roadmap
+     - No releases in `done/` appear in roadmap
+     - Active releases in `current/` are properly represented
+   * Validate no broken references remain
+   * Ensure Update History includes new entry
+
 8. **Commit Changes**
-    * Follow `commit.md` guideline. Example message:
-      > docs(roadmap): add onboarding objective & "Autopilot" release
-      > docs(roadmap): update release status - remove completed v.0.2.0
+   * Use specific commit messages based on change type:
+     - New release: `docs(roadmap): add release v.X.Y.Z-codename to planned releases`
+     - Remove completed: `docs(roadmap): remove completed v.X.Y.Z-codename from planned releases`
+     - Update objectives: `docs(roadmap): update strategic objectives for Q3 2025`
+     - General updates: `docs(roadmap): [specific change description]`
+
 9. **Notify Stakeholders**
-    * Post link to PR/revision in communication channel.
+   * Post link to changes in communication channel
+   * Highlight significant strategic changes
+
+## Roadmap Format Requirements
+
+### Front Matter Validation
+- MUST use YAML format with exactly these fields
+- `title` must be "Project Roadmap"
+- `last_reviewed` must use ISO date (YYYY-MM-DD)
+- `status` must be one of: draft, active, archived
+
+### Content Guidelines
+- **Vision**: 1-3 sentences, inspirational, avoid technical jargon
+- **Objectives**: Outcome-focused (not activity-focused), measurable metrics
+- **Themes**: 2-4 word names, 1-2 sentence descriptions
+- **Releases**: Semantic versioning, memorable codenames in quotes
+- **Dependencies**: Focus on blocking dependencies only
+- **History**: Add entry for every significant change
+
+### Quality Criteria
+- Language must be clear and professional
+- All content should support the project vision
+- Information must be current and relevant
+- Cross-references must be accurate
 
 ## Error Handling
 
 **Format Validation Failures:**
-
-* If roadmap format validation fails in step 2, halt process and report specific violations
-* Require format corrections before proceeding with any updates
-* Reference [Roadmap Definition Guide](../guides/roadmap-definition.g.md) for correction requirements
+* Halt process and report specific violations
+* List each section that doesn't meet requirements
+* Require corrections before proceeding
 
 **Release Status Inconsistencies:**
+* Report which releases are in wrong locations
+* List discrepancies between folders and roadmap
+* Require manual reconciliation
 
-* If release folder locations don't match roadmap entries in step 3, report discrepancies
-* Require manual reconciliation of project structure or roadmap content
-* Document any changes needed to achieve consistency
+**Cross-Reference Errors:**
+* Identify all broken references
+* List dependencies that reference non-existent items
+* Update or remove broken references
 
-**Cross-Reference Validation Errors:**
+**Git Operation Failures:**
+* Preserve roadmap changes locally
+* Report specific Git error
+* Allow manual commit if needed
 
-* If broken references are found in step 7, halt process and report specific issues
-* Require dependency resolution or reference updates before committing
-* Validate all references are reachable after corrections
+## Integration with Release Workflows
 
-**Commit/Push Failures:**
+This workflow is called by:
+* **Draft-Release Workflow**: After creating new release structure (step 7)
+* **Publish-Release Workflow**: When archiving completed releases (step 15)
 
-* If Git operations fail in step 8, preserve roadmap changes for manual resolution
-* Report specific Git error details and suggested recovery actions
-* Allow manual commit completion outside workflow if needed
+Requirements:
+* Roadmap updates MUST be committed separately from other changes
+* Failed updates in release workflows should halt the process
+* Always validate against actual folder structure
 
 ## Output / Success Criteria
 
-* Updated `dev-taskflow/roadmap.md` with changes applied.
-* Release status accurately reflects current project folder structure.
-* Completed releases removed from roadmap and delegated to changelog.
-* `Update History` includes a new entry with release status changes.
-* Commit merged following review.
+* Updated `dev-taskflow/roadmap.md` with all changes applied
+* Release status accurately reflects project folder structure
+* Completed releases removed and noted in Update History
+* All validation checks pass
+* Commit successfully merged
 
-## Cross-Workflow Dependencies
+## Common Patterns
 
-This workflow integrates with release lifecycle management workflows:
+### Adding a New Release
+```markdown
+| v.0.4.0 | "Autopilot" | Q1 2026 | Enable autonomous task execution | AI Integration, Workflow Engine |
+```
 
-* **Called by Draft-Release Workflow**: After step 6 (Ensure Completeness) to add new releases to roadmap
-* **Called by Publish-Release Workflow**: During step 15 to remove completed releases from roadmap
-* **Calls Commit Workflow**: For all roadmap changes following standard commit practices
+### Removing Completed Release
+1. Delete entire row from Planned Major Releases table
+2. Remove any references from Cross-Release Dependencies
+3. Add Update History entry: "Remove completed v.X.Y.Z from roadmap"
 
-**Integration Requirements:**
+### Updating Objectives
+```markdown
+| 3 | Improve developer onboarding experience | Average setup time ≤ 30 minutes |
+```
 
-* Roadmap updates MUST be committed separately from release scaffolding/archival
-* Failed roadmap updates in release workflows SHOULD trigger process halt or rollback consideration
-* Release status validation MUST check actual project folder structure (`backlog/`, `current/`, `done/`)
+## Usage Example
+> "Update the roadmap to add the new v.0.4.0 'Autopilot' release and remove the completed v.0.2.0 release"
 
-## Reference Documentation
+---
 
-* [Roadmap Definition Guide](../guides/roadmap-definition.g.md)
-* [Strategic Planning Guide](../guides/strategic-planning.g.md)
-* [`breakdown-notes-into-tasks.wf.md` Workflow](breakdown-notes-into-tasks.wf.md)
-* [Draft Release Workflow](draft-release.wf.md)
-* [Publish Release Workflow](publish-release.wf.md)
-* [Commit Workflow](commit.wf.md)
+This workflow maintains the strategic roadmap document, ensuring it accurately reflects project direction and current release status through structured validation and updates.
