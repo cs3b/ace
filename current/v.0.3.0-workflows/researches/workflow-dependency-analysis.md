@@ -359,10 +359,76 @@ create-reflection-note.wf.md → create-retrospective-document.wf.md
 3. Add comprehensive error handling
 4. Create workflow orchestration engine
 
+## Recommended Changes Based on Analysis
+
+### Workflows to Remove/Consolidate
+
+Based on the analysis and recommendations, the following workflows should be removed or consolidated:
+
+1. **`create-retrospective-document.wf.md`** - Remove entirely
+2. **`create-review-checklist.wf.md`** - Remove entirely
+3. **`review-tasks-board-status.wf.md`** - Remove entirely
+4. **`create-release-overview.wf.md`** - Remove (merge valuable content into `publish-release.wf.md`)
+5. **`load-env.wf.md`** - Rename to `load-project-context.wf.md` and limit to loading `docs/*.md` files only
+
+### Guide Dependencies to Remove
+
+The following guide dependencies should be removed from workflows:
+
+**From `task-definition.g.md`:**
+- Remove from `initialize-project-structure.wf.md`
+- Remove from `work-on-task.wf.md`
+
+**From `documentation.g.md`:**
+- Remove from `commit.wf.md`
+
+**From `testing.g.md`:**
+- Remove from `commit.wf.md`
+
+**From `version-control-system.g.md`:**
+- Remove from `draft-release.wf.md`
+- Remove from `publish-release.wf.md`
+
+**From `project-management.g.md`:**
+- Remove from `commit.wf.md`
+- Remove from `create-retrospective-document.wf.md`
+
+**From `coding-standards.g.md`:**
+- Add to `work-on-task.wf.md`
+- Remove from `review-task.wf.md`
+- Remove from `create-api-docs.wf.md`
+
+### Tool Dependencies to Update
+
+**Remove tool mentions from workflows:**
+- `bin/tnid`: Remove from `review-task.wf.md` and `initialize-project-structure.wf.md`
+- `bin/rc`: Remove from `log-compact-session.wf.md`
+- `bin/tn`, `bin/tr`: Remove from `update-blueprint.wf.md`, `initialize-project-structure.wf.md`, `review-tasks-board-status.wf.md`
+
+**Workflow behavior updates:**
+- `create-reflection-note.wf.md`: Update to self-review current session if no context provided
+
+### Workflow Simplification
+
+1. **`breakdown-notes-into-tasks.wf.md`** - Create separate task to simplify and remove 7 sub-workflows
+2. **Dynamic paths** - Prefer using tools for dynamic path resolution where available
+3. **User interactions** - Only require when information is missing or decisions are essential
+
+### Key Principles for Refactoring
+
+1. **No workflow-to-workflow dependencies** - Guides and templates are acceptable, but workflows should not depend on other workflows
+2. **Avoid circular dependencies** - Complex dependencies should be simplified where possible
+3. **Autonomous execution** - User verification only when agent cannot confidently proceed
+4. **Tool-based resolution** - Use existing tools for dynamic content rather than hardcoded paths
+
 ## Conclusion
 
 The current workflow system requires significant refactoring to enable independent execution by coding agents. The analysis reveals that most workflows are designed for human-guided execution with manual context loading and verification steps.
 
-Priority should be given to embedding essential context and standardizing dependency patterns, as these changes will provide immediate benefits for agent autonomy while maintaining human usability.
+Priority should be given to:
+1. Removing redundant workflows and consolidating functionality
+2. Eliminating unnecessary guide dependencies
+3. Simplifying complex workflow chains
+4. Enabling autonomous execution with minimal user intervention
 
 The dependency mapping shows clear workflow families that can be optimized together, providing a structured approach to the refactoring effort.
