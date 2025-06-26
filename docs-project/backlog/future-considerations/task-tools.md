@@ -1,1 +1,0 @@
-- allow to check status of release (summary, all task done, how many pending)

@@ -1,4 +1,0 @@
-#!/usr/bin/env fish
-
-echo "Pushing main repository..."
-git push
