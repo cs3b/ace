@@ -143,4 +143,4 @@ end
 
 # --- Output New Task ID ---
 next_task_number = max_task_number + 1
-puts "#{authoritative_version_str}+task.#{next_task_number}"
+puts "#{authoritative_version_str}+task.#{next_task_number.to_s.rjust(2, '0')}"
