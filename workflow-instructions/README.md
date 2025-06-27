@@ -40,5 +40,5 @@ user) to perform common development and project management tasks.
 ## Project Management & Reflection
 
 - [Update Roadmap](./update-roadmap.wf.md): Update project roadmap and task priorities.
-- [Log Compact Session](./log-compact-session.wf.md): Log a compact summary of the current session for context saving/reloading.
+- [Save Session Context](./save-session-context.md): Log a compact summary of the current session for context saving/reloading.
 - [Create Reflection Note](./create-reflection-note.wf.md): Capture individual observations and learnings using the standard reflection template.

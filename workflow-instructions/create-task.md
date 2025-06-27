@@ -73,7 +73,7 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
 
    ```markdown
    ---
-   id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
+   id: v.X.Y.Z+task.NN  # Generated using bin/tnid v.X.Y.Z (zero-padded format)
    status: pending
    priority: [high | medium | low]
    estimate: Nh
@@ -182,7 +182,7 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
 
 7. **Generate Task IDs and Save Files**
    * For each task:
-     * Run `bin/tnid {version}` to generate unique ID
+     * Run `bin/tnid {version}` to generate unique ID with zero-padded format (e.g., task.01, task.02)
      * Create filename: `{id}-{kebab-case-title}.md`
      * Save to determined location
      * Track created files for summary

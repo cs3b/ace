@@ -129,7 +129,7 @@ sub-guide for details:
 * **Workflow Instructions:**
   * [`work-on-task.wf.md`](dev-handbook/workflow-instructions/work-on-task.wf.md) (includes testing guidance)
   * [`commit.wf.md`](dev-handbook/workflow-instructions/commit.wf.md)
-  * [`log-compact-session.wf.md`](dev-handbook/workflow-instructions/log-compact-session.wf.md) (for saving session context)
+  * [`save-session-context.md`](dev-handbook/workflow-instructions/save-session-context.md) (for saving session context)
 * **Core Guides:**
   * [Testing Guide](dev-handbook/guides/testing.g.md)
   * [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
