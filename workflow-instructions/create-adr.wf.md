@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a structured Architecture Decision Record (ADR) document in the `docs/architecture-decisions/` directory to
+Create a structured Architecture Decision Record (ADR) document in the `docs/decisions/` directory to
 capture a significant architectural decision, its context, rationale, and consequences.
 
 ## Prerequisites
@@ -36,7 +36,7 @@ Create an ADR when:
    - What are the evaluation criteria?
 
 3. **Draft ADR:** Create a new file following this naming convention:
-   - File name: `docs/architecture-decisions/ADR-XXX-decision-title.md`
+   - File name: `docs/decisions/ADR-XXX-decision-title.md`
    - Where XXX is the next sequential number (e.g., ADR-001, ADR-002)
    - Use kebab-case for the decision title in the filename
 
@@ -142,7 +142,7 @@ What becomes easier or more difficult to do because of this change?
 
 ## Output / Success Criteria
 
-- A new ADR `.md` file is created in `docs/architecture-decisions/`
+- A new ADR `.md` file is created in `docs/decisions/`
 - The ADR follows the template structure completely
 - The problem, decision, and rationale are clearly documented
 - All significant consequences (positive, negative, neutral) are recorded
