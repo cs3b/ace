@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.13
-status: in-progress
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -89,7 +89,7 @@ Rename the workflow instruction file `breakdown-notes-into-tasks.wf.md` to `crea
   > Assert: File successfully renamed and git history preserved
   > Command: ls -la dev-handbook/workflow-instructions/create-task.md
 
-* [ ] Update any found references to use the new filename
+* [x] Update any found references to use the new filename
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: All references updated to new filename
@@ -97,11 +97,11 @@ Rename the workflow instruction file `breakdown-notes-into-tasks.wf.md` to `crea
 
 ## Acceptance Criteria
 
-* [ ] File successfully renamed from breakdown-notes-into-tasks.wf.md to create-task.md
-* [ ] Git history preserved through proper git mv usage
-* [ ] All references to the old filename updated (if any exist)
-* [ ] File content remains unchanged
-* [ ] No broken links or references result from the rename
+* [x] File successfully renamed from breakdown-notes-into-tasks.wf.md to create-task.md
+* [x] Git history preserved through proper git mv usage
+* [x] All references to the old filename updated (if any exist)
+* [x] File content remains unchanged
+* [x] No broken links or references result from the rename
 
 ## Out of Scope
 
