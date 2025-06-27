@@ -15,10 +15,10 @@ Automated documentation review workflow using multiple LLM providers for compreh
 **Default parameters for documentation reviews:**
 - **Include content**: Use `--include-content` for detailed analysis when needed
 - **Timeout**: 600 seconds (10 minutes) for complex reviews
-- **System prompt**: `.dev/handbook/gds/review/_system.md`
+- **System prompt**: `dev-local/handbook/gds/review/_system.md`
 - **Default provider**: `gpro` (Google Gemini 2.5 Pro)
 - **Repository**: All git operations use `git -C` to avoid directory changes
-- **Handbook prompt**: `.dev/handbook/gds/review/_handbook.md`
+- **Handbook prompt**: `dev-local/handbook/gds/review/_handbook.md`
 - **Context**: All `docs/*.md` files from main repository included as context
 
 ## Quick Start (Staged/Uncommitted Changes)
@@ -40,7 +40,7 @@ git -C "$PROJECT_ROOT/dev-handbook" diff --cached > input.diff
 
 # 5. Run review with default provider (gpro)
 "$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
   --timeout 600 \
   --output dr-report-gpro.md
 ```
@@ -72,7 +72,7 @@ git -C "$PROJECT_ROOT/dev-handbook" diff --cached > input.diff
 # Option B: From all uncommitted changes (staged + unstaged)
 git -C "$PROJECT_ROOT/dev-handbook" diff HEAD > input.diff
 
-# Option C: From specific commits/branches  
+# Option C: From specific commits/branches
 git -C "$PROJECT_ROOT/dev-handbook" diff HEAD~3..HEAD > input.diff
 git -C "$PROJECT_ROOT/dev-handbook" diff main..feature-branch > input.diff
 
@@ -100,14 +100,14 @@ git -C "$PROJECT_ROOT/dev-handbook" show <commit-hash> > input.diff
 ```bash
 # Default: Run with gpro only
 "$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
   --timeout 600 \
   --output dr-report-gpro.md
 
 # Multiple providers (for critical handbook updates)
 for provider in gpro csonet; do
   "$PROJECT_ROOT/dev-tools/exe/llm-query" $provider dr-prompt.md \
-    --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+    --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
     --timeout 300 \
     --output "dr-report-${provider}.md"
 done
@@ -116,7 +116,7 @@ done
 providers=(gpro csonet o4 mistral)
 for provider in "${providers[@]}"; do
   "$PROJECT_ROOT/dev-tools/exe/llm-query" $provider dr-prompt.md \
-    --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+    --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
     --timeout 300 \
     --output "dr-report-${provider}.md"
 done
@@ -137,7 +137,7 @@ cd "$REVIEW_DIR"
 git -C "$PROJECT_ROOT/dev-handbook" diff > input.diff
 "$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
 "$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
   --timeout 300 -o dr-report-gpro.md
 ```
 
@@ -180,14 +180,14 @@ git -C "$PROJECT_ROOT/dev-handbook" diff main..HEAD > input.diff
 # Generate and run review
 "$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
 "$PROJECT_ROOT/dev-tools/exe/llm-query" csonet dr-prompt.md \
-  --system "$PROJECT_ROOT/.dev/handbook/gds/review/_system.md" \
+  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
   --timeout 300 -o dr-report-csonet.md
 ```
 
 ## Provider Selection Guide
 
 - **google:gemini-2.5-pro (gpro)**: Excellent at comprehensive documentation analysis
-- **anthropic:claude-4-0-sonnet-latest (csonet)**: Strong at identifying documentation gaps  
+- **anthropic:claude-4-0-sonnet-latest (csonet)**: Strong at identifying documentation gaps
 - **openai:gpt-4o (o4)**: Good at structured documentation recommendations
 - **mistral:mistral-large-latest (mistral)**: Fast reviews for quick documentation checks
 
@@ -196,7 +196,7 @@ git -C "$PROJECT_ROOT/dev-handbook" diff main..HEAD > input.diff
 ```
 dev-taskflow/current/{current-release}/handbook_review/task-N/
 ├── input.diff              # Git diff of dev-handbook changes
-├── dr-prompt.md            # Generated review prompt with docs context  
+├── dr-prompt.md            # Generated review prompt with docs context
 ├── dr-report-gpro.md       # Google Gemini review
 ├── dr-report-csonet.md     # Claude Sonnet review
 ├── dr-report-o4.md         # OpenAI GPT-4o review
@@ -221,7 +221,7 @@ After running multiple providers, combine and compare their recommendations:
 ```bash
 # Combine all documentation review reports
 "$PROJECT_ROOT/dev-tools/exe/llm-query" gpro \
-  "$PROJECT_ROOT/.dev/handbook/gds/review/_handbook.md" \
+  "$PROJECT_ROOT/dev-local/handbook/gds/review/_handbook.md" \
   --input "dr-report-*.md" \
   --timeout 300 \
   --output dr-meta-review.md
