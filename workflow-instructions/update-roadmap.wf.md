@@ -23,7 +23,7 @@
 
 2. **Validate Roadmap Structure**
    The roadmap MUST contain these sections in order:
-   
+
    ```yaml
    ---
    title: Project Roadmap
@@ -31,7 +31,7 @@
    status: [draft|active|archived]
    ---
    ```
-   
+
    Required sections:
    1. **Project Vision** - Inspirational statement of long-term mission
    2. **Strategic Objectives** - Measurable 6-12 month outcomes
@@ -42,9 +42,9 @@
 
 3. **Update Release Status**
    * Check current release folder locations:
-     - `dev-taskflow/backlog/` - Future releases (should appear in roadmap)
-     - `dev-taskflow/current/` - Active releases (should be linked in roadmap)
-     - `dev-taskflow/done/` - Completed releases (should be removed from roadmap)
+     * `dev-taskflow/backlog/` - Future releases (should appear in roadmap)
+     * `dev-taskflow/current/` - Active releases (should be linked in roadmap)
+     * `dev-taskflow/done/` - Completed releases (should be removed from roadmap)
    * Update roadmap links to reflect current release status
    * Remove completed releases from "Planned Major Releases" section
    * Update cross-release dependencies if they reference completed releases
@@ -52,7 +52,7 @@
 4. **Draft Changes**
    * Source proposed changes from the input document or prompt
    * Create a markdown checklist of proposed changes:
-   
+
    ```markdown
    - [ ] Add Objective: "Simplify contributor onboarding" (metric: onboarding ≤30 min)
    - [ ] Add Release v.0.4.0 "Autopilot" Q1 2026
@@ -62,27 +62,31 @@
 5. **Apply Updates Using Embedded Formats**
 
    **Strategic Objectives Table Format:**
+
    ```markdown
    | # | Objective | Success Metric |
    |---|-----------|----------------|
    | 1 | [Outcome-focused objective] | [Measurable criteria] |
    ```
-   
+
    **Key Themes & Epics Table Format:**
+
    ```markdown
    | Theme | Description | Linked Epics |
    |-------|-------------|-------------|
    | [Theme Name] | [Brief description] | [Epic identifiers] |
    ```
-   
+
    **Planned Major Releases Table Format:**
+
    ```markdown
    | Version | Codename | Target Window | Goals | Key Epics |
    |---------|----------|---------------|-------|-----------|
    | v.X.Y.Z | "[Name]" | [Quarter Year] | [Primary goals] | [Related epics] |
    ```
-   
+
    **Update History Table Format:**
+
    ```markdown
    | Date | Summary | Author |
    |------|---------|--------|
@@ -91,28 +95,28 @@
 
 6. **Apply Specific Updates**
    * Edit `roadmap.md` following the format requirements:
-     - Increment `last_reviewed` date in front matter
-     - Apply all drafted changes to relevant sections
-     - Add new entry to Update History table with today's date
-     - Ensure version format follows v.X.Y.Z pattern
-     - Use "QX YYYY" format for target windows
+     * Increment `last_reviewed` date in front matter
+     * Apply all drafted changes to relevant sections
+     * Add new entry to Update History table with today's date
+     * Ensure version format follows v.X.Y.Z pattern
+     * Use "QX YYYY" format for target windows
 
 7. **Validate Post-Update**
    * Verify roadmap sections are complete and in correct order
    * Check that all tables have correct column headers
    * Confirm release folders match roadmap entries:
-     - All releases in `backlog/` appear in roadmap
-     - No releases in `done/` appear in roadmap
-     - Active releases in `current/` are properly represented
+     * All releases in `backlog/` appear in roadmap
+     * No releases in `done/` appear in roadmap
+     * Active releases in `current/` are properly represented
    * Validate no broken references remain
    * Ensure Update History includes new entry
 
 8. **Commit Changes**
    * Use specific commit messages based on change type:
-     - New release: `docs(roadmap): add release v.X.Y.Z-codename to planned releases`
-     - Remove completed: `docs(roadmap): remove completed v.X.Y.Z-codename from planned releases`
-     - Update objectives: `docs(roadmap): update strategic objectives for Q3 2025`
-     - General updates: `docs(roadmap): [specific change description]`
+     * New release: `docs(roadmap): add release v.X.Y.Z-codename to planned releases`
+     * Remove completed: `docs(roadmap): remove completed v.X.Y.Z-codename from planned releases`
+     * Update objectives: `docs(roadmap): update strategic objectives for Q3 2025`
+     * General updates: `docs(roadmap): [specific change description]`
 
 9. **Notify Stakeholders**
    * Post link to changes in communication channel
@@ -121,43 +125,47 @@
 ## Roadmap Format Requirements
 
 ### Front Matter Validation
-- MUST use YAML format with exactly these fields
-- `title` must be "Project Roadmap"
-- `last_reviewed` must use ISO date (YYYY-MM-DD)
-- `status` must be one of: draft, active, archived
+* MUST use YAML format with exactly these fields
+* `title` must be "Project Roadmap"
+* `last_reviewed` must use ISO date (YYYY-MM-DD)
+* `status` must be one of: draft, active, archived
 
 ### Content Guidelines
-- **Vision**: 1-3 sentences, inspirational, avoid technical jargon
-- **Objectives**: Outcome-focused (not activity-focused), measurable metrics
-- **Themes**: 2-4 word names, 1-2 sentence descriptions
-- **Releases**: Semantic versioning, memorable codenames in quotes
-- **Dependencies**: Focus on blocking dependencies only
-- **History**: Add entry for every significant change
+* **Vision**: 1-3 sentences, inspirational, avoid technical jargon
+* **Objectives**: Outcome-focused (not activity-focused), measurable metrics
+* **Themes**: 2-4 word names, 1-2 sentence descriptions
+* **Releases**: Semantic versioning, memorable codenames in quotes
+* **Dependencies**: Focus on blocking dependencies only
+* **History**: Add entry for every significant change
 
 ### Quality Criteria
-- Language must be clear and professional
-- All content should support the project vision
-- Information must be current and relevant
-- Cross-references must be accurate
+* Language must be clear and professional
+* All content should support the project vision
+* Information must be current and relevant
+* Cross-references must be accurate
 
 ## Error Handling
 
 **Format Validation Failures:**
+
 * Halt process and report specific violations
 * List each section that doesn't meet requirements
 * Require corrections before proceeding
 
 **Release Status Inconsistencies:**
+
 * Report which releases are in wrong locations
 * List discrepancies between folders and roadmap
 * Require manual reconciliation
 
 **Cross-Reference Errors:**
+
 * Identify all broken references
 * List dependencies that reference non-existent items
 * Update or remove broken references
 
 **Git Operation Failures:**
+
 * Preserve roadmap changes locally
 * Report specific Git error
 * Allow manual commit if needed
@@ -165,10 +173,12 @@
 ## Integration with Release Workflows
 
 This workflow is called by:
+
 * **Draft-Release Workflow**: After creating new release structure (step 7)
 * **Publish-Release Workflow**: When archiving completed releases (step 15)
 
 Requirements:
+
 * Roadmap updates MUST be committed separately from other changes
 * Failed updates in release workflows should halt the process
 * Always validate against actual folder structure
@@ -184,21 +194,25 @@ Requirements:
 ## Common Patterns
 
 ### Adding a New Release
+
 ```markdown
 | v.0.4.0 | "Autopilot" | Q1 2026 | Enable autonomous task execution | AI Integration, Workflow Engine |
 ```
 
 ### Removing Completed Release
+
 1. Delete entire row from Planned Major Releases table
 2. Remove any references from Cross-Release Dependencies
 3. Add Update History entry: "Remove completed v.X.Y.Z from roadmap"
 
 ### Updating Objectives
+
 ```markdown
 | 3 | Improve developer onboarding experience | Average setup time ≤ 30 minutes |
 ```
 
 ## Usage Example
+>
 > "Update the roadmap to add the new v.0.4.0 'Autopilot' release and remove the completed v.0.2.0 release"
 
 ---

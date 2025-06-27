@@ -5,16 +5,27 @@ Focus on test quality, coverage, performance, and maintainability.
 Output MUST follow the exact section order and Markdown anchors given below so that automated comparison scripts can parse it.
 
 # SECTION LIST  ─ DO NOT CHANGE NAMES
+
 ## 1. Executive Summary
+
 ## 2. RSpec Best Practices Compliance
+
 ## 3. Test Coverage Analysis
+
 ## 4. Test Performance Assessment
+
 ## 5. Test Maintainability Review
+
 ## 6. Missing Test Scenarios
+
 ## 7. Test Data & Fixtures
+
 ## 8. Detailed File-by-File Feedback
+
 ## 9. Prioritised Action Items
+
 ## 10. Risk Assessment
+
 ## 11. Approval Recommendation
 
 Additional constraints
@@ -44,4 +55,4 @@ Focus areas for test review:
 • Proper use of shared examples
 
 Tone: concise, professional, actionable.
-If a section has nothing to report, write "_No issues found_".
+If a section has nothing to report, write "*No issues found*".

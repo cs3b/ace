@@ -89,9 +89,11 @@ This section clarifies the purpose and scope of each major documentation file. F
 #### Core Documentation Files
 
 ##### README.md (Project Root)
+
 **Purpose**: Entry point for new users and quick reference
 
 **Contains**:
+
 - Project badges and status
 - Brief project description (1-2 paragraphs)
 - Quick start installation instructions
@@ -102,6 +104,7 @@ This section clarifies the purpose and scope of each major documentation file. F
 - License information
 
 **Does NOT contain**:
+
 - Detailed technical architecture
 - Comprehensive feature documentation
 - Development environment setup details
@@ -112,9 +115,11 @@ This section clarifies the purpose and scope of each major documentation file. F
 Refer to the [README.md template](dev-handbook/guides/initialize-project-templates/README.md)
 
 ##### docs/what-do-we-build.md
+
 **Purpose**: Product vision and business context
 
 **Contains**:
+
 - Product vision statement
 - Key features and capabilities (business perspective)
 - User personas and their needs
@@ -125,6 +130,7 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Market positioning
 
 **Does NOT contain**:
+
 - Technical implementation details
 - Code structure or patterns
 - Development workflows
@@ -132,9 +138,11 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Dependencies lists
 
 ##### docs/architecture.md
+
 **Purpose**: Technical design and implementation details
 
 **Contains**:
+
 - System architecture overview
 - Technology stack with justifications
 - ATOM architecture pattern details (or your pattern)
@@ -147,15 +155,18 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Decision records references
 
 **Does NOT contain**:
+
 - Business goals or user personas
 - Installation instructions
 - Navigation guides for developers
 - Task management information
 
 ##### docs/blueprint.md
+
 **Purpose**: Project navigation guide (especially for AI agents)
 
 **Contains**:
+
 - Brief description of what a blueprint is
 - Links to core documents (what-we-build, architecture)
 - Project organization (directory structure)
@@ -166,15 +177,18 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Quick reference commands
 
 **Does NOT contain**:
+
 - Detailed technical explanations
 - Business vision or goals
 - Implementation patterns
 - Comprehensive dependency analysis
 
 ##### docs/SETUP.md
+
 **Purpose**: Development environment setup
 
 **Contains**:
+
 - System requirements
 - Installation prerequisites
 - Step-by-step setup instructions
@@ -184,15 +198,18 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Common setup issues and solutions
 
 **Does NOT contain**:
+
 - Development workflows
 - Architecture details
 - Testing strategies
 - Contributing guidelines
 
 ##### docs/DEVELOPMENT.md
+
 **Purpose**: Development workflow and practices
 
 **Contains**:
+
 - Daily development workflow
 - Testing strategies and examples
 - Build system commands
@@ -203,15 +220,18 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Links to specialized guides (e.g., VCR testing)
 
 **Does NOT contain**:
+
 - Initial setup instructions
 - Product vision
 - Architecture decisions
 - Basic usage examples
 
 ##### dev-taskflow/roadmap.md
+
 **Purpose**: Strategic planning and release management
 
 **Contains**:
+
 - Project vision summary
 - Strategic objectives with metrics
 - Release timeline and milestones
@@ -220,6 +240,7 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Update history
 
 **Does NOT contain**:
+
 - Technical implementation details
 - Current task lists
 - Development setup instructions
@@ -228,9 +249,11 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 #### Specialized Documentation
 
 ##### docs/llm-integration/
+
 **Purpose**: Feature-specific user guides
 
 **Example**: `gemini-query-guide.md`
+
 - Comprehensive usage instructions
 - Configuration options
 - Examples and use cases
@@ -238,9 +261,11 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 - Integration patterns
 
 ##### docs/architecture-decisions/
+
 **Purpose**: Architecture Decision Records (ADRs)
 
 **Contains**:
+
 - Technical decisions with context
 - Alternatives considered
 - Consequences and trade-offs
@@ -272,12 +297,14 @@ Refer to the [README.md template](dev-handbook/guides/initialize-project-templat
 #### Cross-Reference Patterns
 
 ##### When to Link
+
 - From README to detailed guides
 - From blueprint to all major documents
 - From overview documents to detailed implementations
 - From guides to related ADRs
 
 ##### How to Link
+
 - Use relative paths from the document location
 - Include section anchors for specific topics
 - Verify links work after moving documents

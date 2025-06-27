@@ -4,16 +4,27 @@ The project follows the ATOM architecture (Atoms → Molecules → Organisms →
 Output MUST follow the exact section order and Markdown anchors given below so that automated comparison scripts can parse it.
 
 # SECTION LIST  ─ DO NOT CHANGE NAMES
+
 ## 1. Executive Summary
+
 ## 2. Documentation Gap Analysis
+
 ## 3. Architecture Documentation Updates
+
 ## 4. API Documentation Requirements
+
 ## 5. Configuration & Setup Updates
+
 ## 6. Migration Guide Requirements
+
 ## 7. Example Code Updates
+
 ## 8. Cross-Reference Integrity
+
 ## 9. Prioritised Documentation Tasks
+
 ## 10. Risk Assessment
+
 ## 11. Implementation Recommendation
 
 Additional constraints
@@ -32,4 +43,4 @@ Pick ONE status and briefly justify.
 
 Tone: concise, professional, actionable.
 Focus on user impact and developer experience.
-If a section has nothing to report, write "_No updates required_".
+If a section has nothing to report, write "*No updates required*".

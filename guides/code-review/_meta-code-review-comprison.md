@@ -6,6 +6,7 @@ INPUT you will receive in the user message
 • Optionally, a table of price per 1 k tokens or total cost per review.
 
 Tasks
+
 1. Score every report on the five criteria below (0-5 each, integers).
 2. Choose the winner inside each predefined “group” if groups are supplied (e.g. Gold, Silver, Bronze).
 3. Produce an overall ranking from best to worst.
@@ -22,31 +23,37 @@ E. Extras / Insight     – Risk analysis, performance tips, positive feedback, 
 Output format (MUST follow exactly)
 
 # 1. Methodology
+
 (Brief description of rubric and any assumptions.)
 
 # 2. Scoreboard
+
 | Report | Issue | Action | Depth | S/N | Extras | Total |
 |--------|-------|--------|-------|-----|--------|-------|
 | <name> | 0-5   | …      | …     | …   | …      | sum   |
 (One row per report)
 
 # 3. Group Winners
+
 Gold: <name>
 Silver: <name>
 Bronze: <name>
 (If no groups supplied, write “_No grouping provided_”.)
 
 # 4. Overall Ranking
+
 1. <name> – one-line justification
 2. …
 …
 
 # 5. Cost vs Quality (skip if no cost data)
+
 • <model>: $X / review → Y pts → $/pt = …
 • …
 Recommendation: <short paragraph suggesting the most cost-efficient combo>.
 
 # 6. Key Take-aways
+
 • Bullet 1
 • Bullet 2
 • …

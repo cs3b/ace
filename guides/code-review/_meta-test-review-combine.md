@@ -6,6 +6,7 @@ INPUT you will receive in the user message
 • Each report follows the standard test review format with 11 sections.
 
 Tasks
+
 1. Identify consensus items across all reports (test issues all reviewers found).
 2. Highlight unique insights from individual reports that others missed.
 3. Resolve conflicting recommendations with clear rationale.
@@ -22,52 +23,66 @@ E. Best Practices – Which RSpec patterns need correction?
 Output format (MUST follow exactly)
 
 # 1. Consensus Analysis
+
 (Items identified by 2+ reviewers)
 
 # 2. Unique Insights by Provider
+
 | Provider | Unique Finding | Impact | Include? |
 |----------|----------------|--------|----------|
 | <name>   | ...            | ...    | Yes/No   |
 (One row per unique insight)
 
 # 3. Conflict Resolution
+
 (List any conflicting recommendations and resolution)
 
 # 4. Unified Test Improvement Plan
+
 ## 🔴 Critical Issues (Test failures/broken suite)
+
 - [ ] Issue 1: [File] - [Line] - [Problem] - [Fix]
 - [ ] Issue 2: ...
 
 ## 🟡 High Priority (Missing coverage)
+
 - [ ] Issue 1: [File] - [Scenario] - [Why critical]
 - [ ] Issue 2: ...
 
 ## 🟢 Medium Priority (Performance/maintainability)
+
 - [ ] Issue 1: [File] - [Pattern] - [Improvement]
 - [ ] Issue 2: ...
 
 ## 🔵 Nice-to-have (Style/organization)
+
 - [ ] Issue 1: [File] - [Enhancement]
 - [ ] Issue 2: ...
 
 # 5. Implementation Timeline
+
 Phase 1 (Immediate - Fix failures):
+
 - [ ] Task 1
 - [ ] Task 2
 
 Phase 2 (This sprint - Coverage):
+
 - [ ] Task 1
 - [ ] Task 2
 
 Phase 3 (Next sprint - Performance):
+
 - [ ] Task 1
 - [ ] Task 2
 
 Phase 4 (Backlog - Improvements):
+
 - [ ] Task 1
 - [ ] Task 2
 
 # 6. Test Suite Health Checklist
+
 - [ ] All tests passing
 - [ ] Coverage above 90%
 - [ ] No flaky tests
@@ -78,11 +93,13 @@ Phase 4 (Backlog - Improvements):
 - [ ] Good test isolation
 
 # 7. Key Recommendations
+
 • Recommendation 1
 • Recommendation 2
 • ...
 
 # 8. Patterns to Promote
+
 (Good patterns found that should be adopted more widely)
 • Pattern 1: [Description and example]
 • Pattern 2: ...

@@ -5,6 +5,7 @@
 This guide provides practical rules and decision-making tools for correctly classifying components within the ATOM architecture used in the Coding Agent Tools project. Understanding these rules is crucial for maintaining code organization, ensuring proper separation of concerns, and preventing architectural drift.
 
 The ATOM architecture organizes code into distinct layers based on complexity and responsibility:
+
 - **Models**: Pure data carriers
 - **Molecules**: Behavior-oriented helpers
 - **Organisms**: Complex business logic units
@@ -14,6 +15,7 @@ The ATOM architecture organizes code into distinct layers based on complexity an
 ## Why This Matters
 
 Proper component classification ensures:
+
 - **Maintainability**: Clear separation of concerns makes code easier to understand and modify
 - **Reusability**: Components at the right abstraction level can be reused effectively
 - **Testability**: Isolated responsibilities make unit testing straightforward
@@ -42,6 +44,7 @@ Use Models/                    Does it perform I/O operations?
 **Purpose**: Pure data carriers with no external dependencies or side effects.
 
 **Characteristics**:
+
 - Typically implemented as `Struct` classes
 - No I/O operations (no file access, no network calls, no database queries)
 - No external gem dependencies beyond Ruby standard library
@@ -49,6 +52,7 @@ Use Models/                    Does it perform I/O operations?
 - Immutable when possible
 
 **Good Examples**:
+
 ```ruby
 # ✅ Good: Pure data structure
 LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true) do
@@ -63,6 +67,7 @@ end
 ```
 
 **Bad Examples**:
+
 ```ruby
 # ❌ Bad: Contains I/O operations
 class UserProfile < Struct.new(:name, :email)
@@ -84,6 +89,7 @@ end
 **Purpose**: Behavior-oriented helpers that encapsulate focused, reusable logic.
 
 **Characteristics**:
+
 - Single responsibility principle
 - May perform I/O operations
 - Compose atoms and other basic utilities
@@ -92,6 +98,7 @@ end
 - Focused on "how" to do something
 
 **Good Examples**:
+
 ```ruby
 # ✅ Good: Focused helper with specific responsibility
 class HTTPRequestBuilder
@@ -119,6 +126,7 @@ end
 ```
 
 **Bad Examples**:
+
 ```ruby
 # ❌ Bad: Too much business logic (should be Organism)
 class OrderProcessor
@@ -148,6 +156,7 @@ end
 **Purpose**: Complex units that orchestrate molecules and atoms to achieve business goals.
 
 **Characteristics**:
+
 - Handle complete business use cases
 - Orchestrate multiple components
 - May maintain state across operations
@@ -155,6 +164,7 @@ end
 - Can be complex and feature-rich
 
 **Good Examples**:
+
 ```ruby
 # ✅ Good: Orchestrates multiple components for business purpose
 class GeminiClient
@@ -182,6 +192,7 @@ end
 ```
 
 **Bad Examples**:
+
 ```ruby
 # ❌ Bad: Simple utility (should be Molecule or Atom)
 class StringFormatter
@@ -206,21 +217,24 @@ end
 
 When creating a new class, ask yourself:
 
-### For Models:
+### For Models
+
 - [ ] Does this class only hold data?
 - [ ] Are there no I/O operations (file, network, database)?
 - [ ] Are there no external gem dependencies?
 - [ ] Could this be implemented as a Struct?
 - [ ] Does it focus on "what" the data represents?
 
-### For Molecules:
+### For Molecules
+
 - [ ] Does this class perform a specific, focused operation?
 - [ ] Does it compose simpler components (atoms)?
 - [ ] Is it reusable across different contexts?
 - [ ] Does it encapsulate "how" to do something?
 - [ ] Is the responsibility clear and single-focused?
 
-### For Organisms:
+### For Organisms
+
 - [ ] Does this class handle a complete business use case?
 - [ ] Does it orchestrate multiple molecules/atoms?
 - [ ] Is it complex enough to warrant the organism level?
@@ -234,6 +248,7 @@ When creating a new class, ask yourself:
 **Problem**: Placing pure data structures in `molecules/` or `organisms/`
 
 **Example**:
+
 ```ruby
 # ❌ Wrong location: molecules/model.rb
 class Model < Struct.new(:id, :name)
@@ -244,6 +259,7 @@ end
 ```
 
 **Solution**: Move to `models/` and rename appropriately
+
 ```ruby
 # ✅ Correct location: models/llm_model_info.rb
 LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true)
@@ -256,6 +272,7 @@ LlmModelInfo = Struct.new(:id, :name, :description, :default, keyword_init: true
 **Problem**: Putting complex orchestration logic in molecules
 
 **Example**:
+
 ```ruby
 # ❌ Wrong: Complex business logic in molecule
 class OrderHandler
@@ -270,6 +287,7 @@ end
 ```
 
 **Solution**: Move to organisms for complex business coordination
+
 ```ruby
 # ✅ Correct: Business orchestration in organism
 class OrderProcessor
@@ -286,6 +304,7 @@ end
 **Problem**: Over-engineering simple utilities as organisms
 
 **Example**:
+
 ```ruby
 # ❌ Wrong: Simple utility as organism
 class TextFormatter
@@ -296,6 +315,7 @@ end
 ```
 
 **Solution**: Use appropriate level (Atom or Molecule)
+
 ```ruby
 # ✅ Correct: Simple utility as atom or molecule
 module Atoms
@@ -312,16 +332,19 @@ end
 To maintain these standards as the project grows, consider implementing:
 
 ### Automated Checks
+
 - **RuboCop Rules**: Custom cops to detect misplaced components
 - **CI Pipeline Checks**: Automated validation during pull requests
 - **File Naming Conventions**: Enforce naming patterns that reflect component type
 
 ### Code Review Guidelines
+
 - **Classification Review**: Every new class should be reviewed for proper placement
 - **Architecture Review**: Periodic reviews of component boundaries
 - **Refactoring Guidelines**: Clear process for moving misplaced components
 
 ### Documentation Integration
+
 - **ADR Updates**: Keep Architecture Decision Records synchronized
 - **Cross-References**: Link to this guide from README and CONTRIBUTING files
 - **Examples**: Maintain current examples as the codebase evolves

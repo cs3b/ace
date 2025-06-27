@@ -10,7 +10,6 @@ This document provides a concise overview of the project's structure and organiz
 - [Architecture](docs/architecture.md) - System design and implementation principles
 - [Blueprint](docs/blueprint.md) - Project structure and organization
 
-
 ## Project Organization
 
 <!-- Describe your project's main directory structure -->

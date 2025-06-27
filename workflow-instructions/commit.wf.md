@@ -10,9 +10,31 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 - Files related to a single logical change are ready to be staged
 - Understanding of conventional commit format
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Review and validate changes are ready for commit
+- [ ] Verify all tests pass and code is linted
+- [ ] Ensure changes represent a single logical unit
+
+### Execution Steps
+
+- [ ] Stage related changes appropriately
+- [ ] Write conventional commit message following project standards
+- [ ] Create the commit with proper message
+- [ ] Update task status if applicable
+- [ ] Push changes when ready
+
 ## Process Steps
 
 1. **Review and Prepare Changes:**
+
    ```bash
    # View current status
    git status
@@ -23,7 +45,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    # Review specific file changes
    git diff path/to/file
    ```
-   
+
    **Validation checklist:**
    - [ ] Changes relate to a single logical unit
    - [ ] New code has corresponding tests
@@ -32,6 +54,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    - [ ] No debugging code or temporary files included
 
 2. **Stage Related Changes:**
+
    ```bash
    # Stage specific files
    git add path/to/file1 path/to/file2
@@ -42,15 +65,17 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    # Interactive staging for partial file changes
    git add -p
    ```
-   
+
    **Review staged changes:**
+
    ```bash
    git diff --staged
    ```
 
 3. **Write Conventional Commit Message:**
-   
+
    **Format:**
+
    ```
    type(scope): subject
    
@@ -58,7 +83,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    
    [optional footer(s)]
    ```
-   
+
    **Types:**
    - `feat`: New feature
    - `fix`: Bug fix
@@ -67,8 +92,9 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    - `refactor`: Code change that neither fixes nor adds feature
    - `test`: Adding missing tests
    - `chore`: Maintenance tasks, dependency updates
-   
+
    **Examples:**
+
    ```bash
    # Simple commit
    git commit -m "feat(auth): add password reset functionality"
@@ -82,7 +108,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    
    Fixes #123"
    ```
-   
+
    **Guidelines:**
    - Subject line: 50 characters or less
    - Use imperative mood ("add" not "added")
@@ -100,6 +126,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    - **Performance**: No obvious inefficiencies?
 
 5. **Create the Commit:**
+
    ```bash
    # Commit with editor for detailed message
    git commit
@@ -113,18 +140,23 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
 6. **Post-Commit Actions:**
    - Update task status if commit completes a task:
+
      ```yaml
      status: done
      ```
+
    - Push when ready:
+
      ```bash
      git push origin branch-name
      ```
+
    - Update any related documentation
 
 ## Commit Message Templates
 
 ### Feature Implementation
+
 ```
 feat(module): implement new functionality
 
@@ -136,6 +168,7 @@ Implements #task-id
 ```
 
 ### Bug Fix
+
 ```
 fix(component): resolve issue with data handling
 
@@ -150,6 +183,7 @@ Fixes #bug-id
 ```
 
 ### Refactoring
+
 ```
 refactor(service): simplify request handling logic
 
@@ -163,14 +197,18 @@ No functional changes
 ## Common Patterns
 
 ### Atomic Commits
+
 Each commit should:
+
 - Represent one logical change
 - Be revertable without breaking functionality
 - Include all related changes (code, tests, docs)
 - Pass all tests independently
 
 ### Interactive Staging
+
 For complex changes:
+
 ```bash
 # Stage hunks interactively
 git add -p
@@ -183,7 +221,9 @@ git add -p
 ```
 
 ### Commit Series
+
 When implementing a feature across multiple commits:
+
 1. Infrastructure/setup commits first
 2. Core implementation commits
 3. Test commits
@@ -193,6 +233,7 @@ When implementing a feature across multiple commits:
 ## Error Handling
 
 **Accidentally committed to wrong branch:**
+
 ```bash
 # Create new branch with current commits
 git branch new-branch
@@ -205,6 +246,7 @@ git checkout new-branch
 ```
 
 **Need to modify last commit:**
+
 ```bash
 # Add more changes
 git add files
@@ -217,6 +259,7 @@ git commit --amend
 ```
 
 **Committed sensitive data:**
+
 ```bash
 # Remove from history (requires force push)
 git filter-branch --force --index-filter \
@@ -224,7 +267,7 @@ git filter-branch --force --index-filter \
   --prune-empty --tag-name-filter cat -- --all
 ```
 
-## Output / Success Criteria
+## Success Criteria
 
 - Changes are grouped logically into atomic commits
 - Each commit message follows conventional format
@@ -234,8 +277,5 @@ git filter-branch --force --index-filter \
 - Changes pushed to appropriate branch
 
 ## Usage Example
+>
 > "I've finished implementing the user authentication feature. Help me commit these changes properly."
-
----
-
-This workflow ensures consistent, well-documented commits that maintain project history clarity and facilitate collaboration.

@@ -27,26 +27,31 @@ When code changes are made, documentation often falls behind, creating inconsist
 When reviewing a code diff, categorize every change:
 
 **New Features Added**
+
 - What new functionality was introduced?
 - What new APIs or interfaces were created?
 - What new configuration options were added?
 
 **Existing Features Modified**
+
 - What existing functionality changed behavior?
 - What APIs had signature changes?
 - What configuration options were modified?
 
 **Architecture & Design Changes**
+
 - What structural patterns were introduced or modified?
 - What design decisions were made?
 - What trade-offs were considered?
 
 **Breaking Changes**
+
 - What changes might break existing user workflows?
 - What deprecated functionality was removed?
 - What API changes are not backward compatible?
 
 **Dependencies & Infrastructure**
+
 - What external dependencies were added/removed/updated?
 - What build or deployment configuration changed?
 - What environment variables or settings changed?
@@ -56,26 +61,31 @@ When reviewing a code diff, categorize every change:
 Systematically assess each documentation category for required updates:
 
 **Architecture Decision Records (ADRs)**
+
 - New ADRs needed for architectural decisions made during implementation
 - Updates to existing ADRs when assumptions change
 - Documentation of alternatives considered and rejected
 
 **Project Documentation**
+
 - Updates to architecture overviews
 - Changes to project blueprints
 - Modifications to project scope or goals
 
 **Root Documentation**
+
 - README.md updates for new features or changed setup
 - CHANGELOG.md entries for version tracking
 - Installation or quick-start guide changes
 
 **Technical Documentation**
+
 - Setup and development workflow changes
 - Integration guide updates
 - Configuration documentation changes
 
 **Code Examples & Snippets**
+
 - Validation that existing examples still work
 - New usage examples for added features
 - Updates to API usage patterns
@@ -85,21 +95,25 @@ Systematically assess each documentation category for required updates:
 Organize documentation updates by priority:
 
 **🔴 Critical Updates** (Must be done immediately)
+
 - Security-related documentation changes
 - Breaking changes that affect user workflows
 - Incorrect information that could cause system failures
 
 **🟡 High Priority Updates** (Should be done soon)  
+
 - New feature documentation for user-facing changes
 - Developer onboarding documentation updates
 - API reference updates
 
 **🟢 Medium Priority Updates** (Should be done eventually)
+
 - Improved clarity or completeness
 - Updated code examples
 - Cross-reference corrections
 
 **🔵 Low Priority Updates** (Nice to have)
+
 - Minor inconsistencies
 - Style improvements
 - Optimization documentation
@@ -137,6 +151,7 @@ The comprehensive AI agent prompt template is available at:
 [dev-handbook/guides/code-review/_documentation-update-from-diff.md](dev-handbook/guides/code-review/_documentation-update-from-diff.md)
 
 This template provides structured instructions for AI agents to:
+
 - Perform systematic diff analysis
 - Assess documentation impact across all categories  
 - Create prioritized action plans
@@ -183,24 +198,28 @@ This template provides structured instructions for AI agents to:
 Before considering documentation updates complete:
 
 **Completeness**
+
 - All diff changes have corresponding documentation updates
 - All new features have usage examples
 - All breaking changes are clearly documented
 - All deprecated functionality includes migration paths
 
 **Accuracy**
+
 - Code examples are syntactically correct
 - CLI examples use correct syntax
 - Links and references are functional
 - Version numbers and dates are current
 
 **Consistency**
+
 - Documentation style matches project guidelines
 - Terminology is consistent across documents
 - Cross-references between documents are updated
 - Formatting follows established patterns
 
 **User Experience**
+
 - Changes are explained from user perspective
 - Migration paths are clear and actionable
 - Examples are practical and realistic

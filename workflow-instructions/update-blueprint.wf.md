@@ -20,19 +20,20 @@ how to navigate the codebase.
 
 ## Project Context Loading
 
-* Check existing blueprint: `dev-taskflow/blueprint.md`
-* Load project overview: `dev-taskflow/what-do-we-build.md`
-* Load architecture: `dev-taskflow/architecture.md`
-* Review current directory structure
+- Check existing blueprint: `dev-taskflow/blueprint.md`
+- Load project overview: `dev-taskflow/what-do-we-build.md`
+- Load architecture: `dev-taskflow/architecture.md`
+- Review current directory structure
 
 ## High-Level Execution Plan
 
 ### Planning Phase
-* [ ] Analyze current project structure
-* [ ] Identify key directories and files
-* [ ] Determine what has changed since last update
+- [ ] Analyze current project structure
+- [ ] Identify key directories and files
+- [ ] Determine what has changed since last update
 
 ### Execution Phase
+
 - [ ] Generate updated directory structure overview
 - [ ] Update key file descriptions
 - [ ] Verify and update document links
@@ -42,12 +43,13 @@ how to navigate the codebase.
 ## Process Steps
 
 1. **Identify Core Project Documents:**
-   * Verify `dev-taskflow/what-do-we-build.md` and `dev-taskflow/architecture.md` are present
-   * Check for any additional core documentation files
+   - Verify `dev-taskflow/what-do-we-build.md` and `dev-taskflow/architecture.md` are present
+   - Check for any additional core documentation files
 
 2. **Generate Blueprint Structure:**
-   
+
    **Use Embedded Blueprint Template:**
+
    ```markdown
    # Blueprint
    
@@ -55,6 +57,7 @@ how to navigate the codebase.
    
    ### Directory Structure
    ```
+
    .
    ├── bin/                    # Executable scripts
    ├── dev-taskflow/          # Task management
@@ -65,6 +68,7 @@ how to navigate the codebase.
    ├── src/                  # Source code (or app/, lib/, etc.)
    ├── test/                 # Test files (or spec/, tests/, etc.)
    └── [project-specific directories]
+
    ```
    
    ### Key Files
@@ -122,44 +126,47 @@ how to navigate the codebase.
    ```
 
 3. **Analyze Project Structure:**
-   * Use `tree` command or similar to get current structure:
+   - Use `tree` command or similar to get current structure:
+
      ```bash
      tree -I 'node_modules|vendor|.git|coverage|tmp|log' -L 3
      ```
-   * Identify main source directories (src/, app/, lib/, etc.)
-   * Note test directory location (test/, spec/, tests/, etc.)
-   * Document any submodules if present
+
+   - Identify main source directories (src/, app/, lib/, etc.)
+   - Note test directory location (test/, spec/, tests/, etc.)
+   - Document any submodules if present
 
 4. **Update Directory Descriptions:**
-   * Replace placeholder directories with actual project structure
-   * Add brief descriptions for each major directory
-   * Include relationship between directories if relevant
+   - Replace placeholder directories with actual project structure
+   - Add brief descriptions for each major directory
+   - Include relationship between directories if relevant
 
 5. **Identify Key Project-Specific Files:**
-   * List critical configuration files
-   * Include entry points and main modules
-   * Focus on files unique to this project
-   * Add version/build files (package.json, Gemfile, etc.)
+   - List critical configuration files
+   - Include entry points and main modules
+   - Focus on files unique to this project
+   - Add version/build files (package.json, Gemfile, etc.)
 
 6. **Extract Technology Stack:**
-   * Read from architecture.md or analyze project files
-   * Identify primary language and version
-   * List main framework and key libraries
-   * Include database and external services
+   - Read from architecture.md or analyze project files
+   - Identify primary language and version
+   - List main framework and key libraries
+   - Include database and external services
 
 7. **Define Agent Guidelines:**
-   * Specify read-only paths (archived releases, etc.)
-   * List ignored paths (dependencies, logs, etc.)
-   * Add project-specific restrictions
+   - Specify read-only paths (archived releases, etc.)
+   - List ignored paths (dependencies, logs, etc.)
+   - Add project-specific restrictions
 
 8. **Update Links and Save:**
-   * Ensure all internal document links are correct
-   * Verify file paths are relative to blueprint location
-   * Save the updated `dev-taskflow/blueprint.md` file
+   - Ensure all internal document links are correct
+   - Verify file paths are relative to blueprint location
+   - Save the updated `dev-taskflow/blueprint.md` file
 
 ## Common Directory Patterns
 
 ### Web Applications
+
 ```
 app/          # Application code
 config/       # Configuration files
@@ -168,6 +175,7 @@ views/        # Templates
 ```
 
 ### Libraries/Packages
+
 ```
 lib/          # Library source code
 examples/     # Usage examples
@@ -175,6 +183,7 @@ benchmarks/   # Performance tests
 ```
 
 ### Microservices
+
 ```
 services/     # Individual services
 shared/       # Shared code
@@ -184,18 +193,22 @@ infra/        # Infrastructure config
 ## Technology Stack Detection
 
 ### Node.js
+
 - Look for: `package.json`, `node_modules/`
 - Key files: `index.js`, `server.js`, `app.js`
 
 ### Ruby
+
 - Look for: `Gemfile`, `Rakefile`, `.ruby-version`
 - Key files: `config.ru`, `app.rb`
 
 ### Python
+
 - Look for: `requirements.txt`, `setup.py`, `pyproject.toml`
 - Key files: `__main__.py`, `app.py`, `main.py`
 
 ### Rust
+
 - Look for: `Cargo.toml`, `Cargo.lock`
 - Key files: `main.rs`, `lib.rs`
 
@@ -212,6 +225,7 @@ infra/        # Infrastructure config
 ## Usage Example
 
 Invoke this workflow when:
+
 - Significant structural changes have occurred
 - Before starting a major planning phase
 - When onboarding new team members or AI agents
@@ -223,6 +237,7 @@ Example:
 ## Best Practices
 
 **DO:**
+
 - Keep descriptions concise and focused
 - Update after major structural changes
 - Include technology versions when known
@@ -230,6 +245,7 @@ Example:
 - Use relative paths for all links
 
 **DON'T:**
+
 - Include temporary or generated files
 - Duplicate architecture documentation
 - List every single file

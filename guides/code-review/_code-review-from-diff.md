@@ -5,6 +5,7 @@ You are an expert Ruby developer, software architect, and code quality specialis
 ## Context: Project Standards
 
 This Ruby gem follows:
+
 - **ATOM architecture** pattern (Atoms, Molecules, Organisms, Ecosystems)
 - **Test-driven development** with RSpec (100% coverage target)
 - **CLI-first design** optimized for both humans and AI agents
@@ -15,29 +16,35 @@ This Ruby gem follows:
 ## Input Data
 
 ### Code Diff to Review
+
 ```diff
 [INSERT YOUR DIFF CONTENT HERE]
 ```
 
 ### Project Context Documentation
+
 *This section is populated when using the --include-dependencies flag*
 
 #### Project Documentation
+
 Location: `dev-taskflow/*.md` (excluding roadmap)
 Current files:
 [LIST YOUR PROJECT DOCUMENTATION FILES HERE]
 
 #### Architecture Decision Records (ADRs)
+
 Location: `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/*.md`
 Current files:
 [LIST YOUR CURRENT ADR FILES HERE]
 
 #### Root Documentation
+
 Location: `*.md` files in project root
 Current files:
 [LIST YOUR ROOT MARKDOWN FILES HERE]
 
 #### Gem Configuration
+
 Location: `Gemfile` and `*.gemspec`
 Current content:
 [INSERT GEMFILE AND GEMSPEC CONTENT HERE]
@@ -45,13 +52,16 @@ Current content:
 ### Current Project State
 
 #### Test Coverage
+
 Current coverage: [INSERT CURRENT COVERAGE %]
 Target coverage: 90%
 
 #### StandardRB Status
+
 Current offenses: [INSERT STANDARDRB STATUS]
 
 #### Gem Dependencies
+
 Current dependencies:
 [LIST CURRENT GEMFILE DEPENDENCIES]
 
@@ -62,21 +72,25 @@ Current dependencies:
 Analyze how the changes align with ATOM architecture:
 
 **1. Atom-Level Components**
+
 - Are new atoms truly atomic and reusable?
 - Do atoms have single, clear responsibilities?
 - Are atoms properly isolated with no external dependencies?
 
 **2. Molecule-Level Composition**
+
 - Do molecules properly compose atoms?
 - Is the composition logic clear and testable?
 - Are molecules focused on orchestration rather than implementation?
 
 **3. Organism-Level Integration**
+
 - Do organisms properly coordinate molecules?
 - Is business logic appropriately placed?
 - Are organisms maintaining proper boundaries?
 
 **4. Ecosystem-Level Patterns**
+
 - Does the change maintain ecosystem cohesion?
 - Are cross-cutting concerns properly addressed?
 - Is the plugin/extension architecture respected?
@@ -84,6 +98,7 @@ Analyze how the changes align with ATOM architecture:
 ### Phase 2: Ruby Gem Best Practices Review
 
 **1. Code Quality & Style**
+
 - [ ] Follows Ruby idioms and conventions
 - [ ] StandardRB compliance (or justified exceptions)
 - [ ] Consistent naming conventions
@@ -91,18 +106,21 @@ Analyze how the changes align with ATOM architecture:
 - [ ] No code smells or anti-patterns
 
 **2. Gem Structure**
+
 - [ ] Proper file organization following gem conventions
 - [ ] Correct use of lib/ directory structure
 - [ ] Appropriate version management
 - [ ] Gemspec file correctness
 
 **3. Dependencies**
+
 - [ ] Minimal dependency footprint
 - [ ] Version constraints appropriately specified
 - [ ] No unnecessary runtime dependencies
 - [ ] Development dependencies properly scoped
 
 **4. Performance Considerations**
+
 - [ ] No obvious performance bottlenecks
 - [ ] Efficient algorithms and data structures
 - [ ] Proper use of lazy evaluation where appropriate
@@ -111,12 +129,14 @@ Analyze how the changes align with ATOM architecture:
 ### Phase 3: Test Quality Assessment
 
 **1. Test Coverage**
+
 - Is every new method/class adequately tested?
 - Are edge cases covered?
 - Are error conditions tested?
 - Is the happy path thoroughly tested?
 
 **2. Test Design**
+
 - [ ] Tests follow RSpec best practices
 - [ ] Clear test descriptions using RSpec DSL
 - [ ] Proper use of contexts and examples
@@ -124,12 +144,14 @@ Analyze how the changes align with ATOM architecture:
 - [ ] Fast, isolated unit tests
 
 **3. Test Types**
+
 - [ ] Unit tests for atoms
 - [ ] Integration tests for molecules
 - [ ] System tests for organisms
 - [ ] CLI tests for command-line interface
 
 **4. Test Quality Metrics**
+
 - [ ] Tests are deterministic (no flaky tests)
 - [ ] Tests are independent and can run in any order
 - [ ] Tests use appropriate doubles/mocks/stubs
@@ -138,24 +160,28 @@ Analyze how the changes align with ATOM architecture:
 ### Phase 4: CLI Design Review
 
 **1. Command Structure**
+
 - [ ] Commands follow Unix philosophy
 - [ ] Clear, intuitive command naming
 - [ ] Consistent flag/option patterns
 - [ ] Proper use of subcommands
 
 **2. User Experience**
+
 - [ ] Helpful error messages
 - [ ] Appropriate output formatting
 - [ ] Progress indicators for long operations
 - [ ] Proper exit codes
 
 **3. AI Agent Compatibility**
+
 - [ ] Machine-parseable output options
 - [ ] Structured error reporting
 - [ ] Predictable behavior
 - [ ] Clear documentation of all options
 
 **4. Help Documentation**
+
 - [ ] Comprehensive --help output
 - [ ] Examples in help text
 - [ ] Clear option descriptions
@@ -164,18 +190,21 @@ Analyze how the changes align with ATOM architecture:
 ### Phase 5: Security & Safety Analysis
 
 **1. Input Validation**
+
 - All user inputs properly validated?
 - SQL injection prevention (if applicable)?
 - Command injection prevention?
 - Path traversal prevention?
 
 **2. Data Handling**
+
 - Sensitive data properly protected?
 - Appropriate use of ENV variables?
 - No hardcoded credentials?
 - Secure defaults?
 
 **3. Dependencies Security**
+
 - Known vulnerabilities in dependencies?
 - Unnecessary permission requirements?
 - Appropriate gem signing/verification?
@@ -183,24 +212,28 @@ Analyze how the changes align with ATOM architecture:
 ### Phase 6: API Design & Maintainability
 
 **1. Public API Surface**
+
 - [ ] Clear separation of public/private APIs
 - [ ] Consistent method signatures
 - [ ] Appropriate use of keyword arguments
 - [ ] Future-proof design patterns
 
 **2. Error Handling**
+
 - [ ] Custom exceptions where appropriate
 - [ ] Informative error messages
 - [ ] Proper error propagation
 - [ ] Graceful degradation
 
 **3. Code Maintainability**
+
 - [ ] Self-documenting code
 - [ ] Appropriate code comments
 - [ ] YARD documentation for public APIs
 - [ ] Reasonable method/class sizes
 
 **4. Backward Compatibility**
+
 - [ ] Breaking changes properly identified
 - [ ] Deprecation warnings added
 - [ ] Migration path provided
@@ -213,6 +246,7 @@ For each significant code change:
 #### [File: path/to/file.rb]
 
 **Code Quality Issues:**
+
 - Issue: [Description]
   - Severity: [Critical/High/Medium/Low]
   - Location: [Line numbers]
@@ -220,11 +254,13 @@ For each significant code change:
   - Example: [Code example if helpful]
 
 **Best Practice Violations:**
+
 - Violation: [Description]
   - Impact: [Why this matters]
   - Recommendation: [Better approach]
 
 **Refactoring Opportunities:**
+
 - Opportunity: [Description]
   - Current approach: [What's there now]
   - Suggested approach: [Better way]
@@ -233,29 +269,39 @@ For each significant code change:
 ### Phase 8: Prioritized Action Items
 
 ## 🔴 CRITICAL ISSUES (Must fix before merge)
+
 *Security vulnerabilities, data corruption risks, or breaking changes*
+
 - [ ] [Specific issue with file:line and fix description]
 
 ## 🟡 HIGH PRIORITY (Should fix before merge)
+
 *Significant bugs, performance issues, or design flaws*
+
 - [ ] [Specific issue with file:line and fix description]
 
 ## 🟢 MEDIUM PRIORITY (Consider fixing)
+
 *Code quality, maintainability, or minor bugs*
+
 - [ ] [Specific issue with file:line and fix description]
 
 ## 🔵 SUGGESTIONS (Nice to have)
+
 *Style improvements, refactoring opportunities*
+
 - [ ] [Specific issue with file:line and fix description]
 
 ### Phase 9: Positive Feedback
 
 **Well-Done Aspects:**
+
 - [What was done particularly well]
 - [Good patterns that should be replicated]
 - [Clever solutions worth highlighting]
 
 **Learning Opportunities:**
+
 - [Interesting techniques used]
 - [Patterns that could benefit the team]
 
@@ -340,36 +386,42 @@ Structure your comprehensive review as:
 Before completing your review, ensure you've considered:
 
 **Code Quality**
+
 - [ ] All new code follows Ruby idioms
 - [ ] No obvious bugs or logic errors
 - [ ] Appropriate error handling
 - [ ] Clear variable and method names
 
 **Architecture**
+
 - [ ] ATOM pattern properly followed
 - [ ] Proper separation of concerns
 - [ ] No circular dependencies
 - [ ] Clear module boundaries
 
 **Testing**
+
 - [ ] All new code has tests
 - [ ] Tests are meaningful and thorough
 - [ ] No decrease in coverage
 - [ ] Tests follow RSpec conventions
 
 **Documentation**
+
 - [ ] Public APIs documented
 - [ ] Complex logic explained
 - [ ] CHANGELOG entry needed?
 - [ ] README updates needed?
 
 **Performance**
+
 - [ ] No obvious bottlenecks
 - [ ] Appropriate algorithm choices
 - [ ] Resource usage considered
 - [ ] Scalability implications addressed
 
 **Security**
+
 - [ ] Input validation present
 - [ ] No security vulnerabilities
 - [ ] Secrets handled properly
@@ -378,6 +430,7 @@ Before completing your review, ensure you've considered:
 ## Critical Success Factors
 
 Your review must be:
+
 1. **Constructive**: Focus on improvement, not criticism
 2. **Specific**: Provide exact locations and examples
 3. **Actionable**: Every issue should have a suggested fix

@@ -12,15 +12,16 @@ Review and refine a task definition, potentially proposing an implementation app
 
 ## Project Context Loading
 
-* Load project objectives: `docs/what-do-we-build.md`
-* Load architecture overview: `docs/architecture.md`
-* Load project structure: `docs/blueprint.md`
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
 
 ## Process Steps
 
 1. **Load Task Content:**
-   * Read the task file from the provided path
-   * Parse the structure:
+   - Read the task file from the provided path
+   - Parse the structure:
+
      ```yaml
      ---
      id: v.X.Y.Z+task.N
@@ -30,7 +31,8 @@ Review and refine a task definition, potentially proposing an implementation app
      dependencies: []
      ---
      ```
-   * Extract key sections:
+
+   - Extract key sections:
      - Objective and description
      - Scope of work and deliverables
      - Implementation plan structure
@@ -38,13 +40,14 @@ Review and refine a task definition, potentially proposing an implementation app
      - Out of scope items
 
 2. **Review Task Against Context:**
-   
+
    **Project Alignment Check:**
    - Does the objective align with project goals?
    - Is the approach consistent with architecture?
    - Are deliverables appropriate for the project?
-   
+
    **Recent Changes Review:**
+
    ```bash
    # Review recent commits
    git log --oneline -20
@@ -55,26 +58,26 @@ Review and refine a task definition, potentially proposing an implementation app
    # Look for related completed tasks
    ls -t dev-taskflow/current/*/tasks/*.md | grep -E "(done|completed)" | head -10
    ```
-   
+
    **Dependency Validation:**
    - Are listed dependencies actually complete?
    - Are there hidden dependencies not listed?
    - Will recent changes impact this task?
 
 3. **Analyze Implementation Plan:**
-   
+
    **Structure Assessment:**
    - Check for proper Planning Steps (`* [ ]`) and Execution Steps (`- [ ]`)
    - Verify embedded tests are included where needed
    - Ensure logical flow from research to implementation
-   
+
    **Quality Criteria:**
    - [ ] Planning steps cover necessary research/design
    - [ ] Execution steps are concrete and actionable
    - [ ] Test blocks validate critical operations
    - [ ] Steps are properly sequenced
    - [ ] Effort estimates seem reasonable
-   
+
    **Common Issues to Check:**
    - Missing directory audits for context
    - Vague or ambiguous action items
@@ -83,19 +86,19 @@ Review and refine a task definition, potentially proposing an implementation app
    - Missing error handling considerations
 
 4. **Identify Improvement Areas:**
-   
+
    **Task Definition Issues:**
    - Ambiguous requirements
    - Incomplete acceptance criteria
    - Missing technical details
    - Unclear scope boundaries
-   
+
    **Implementation Plan Issues:**
    - Missing research/analysis steps
    - No test verification blocks
    - Skipping important validations
    - Ignoring edge cases
-   
+
    **Context Issues:**
    - Outdated assumptions
    - Conflicts with recent changes
@@ -103,8 +106,9 @@ Review and refine a task definition, potentially proposing an implementation app
    - Ignoring coding standards
 
 5. **Propose Refinements:**
-   
+
    **Enhanced Implementation Plan Template:**
+
    ```markdown
    ## Implementation Plan
    
@@ -151,13 +155,13 @@ Review and refine a task definition, potentially proposing an implementation app
    ```
 
 6. **Formulate Feedback Points:**
-   
+
    **Question Templates:**
    - "The objective mentions [X], but the scope includes [Y]. Should we...?"
    - "Recent changes to [component] may impact this. How should we adjust?"
    - "The acceptance criteria don't specify [important aspect]. What's expected?"
    - "Two approaches are viable: [A] vs [B]. Which aligns better with our goals?"
-   
+
    **Decision Points:**
    - Technical approach confirmation
    - Scope clarification
@@ -166,8 +170,9 @@ Review and refine a task definition, potentially proposing an implementation app
    - Risk assessment
 
 7. **Present Review Summary:**
-   
+
    **Review Report Structure:**
+
    ```markdown
    ## Task Review Summary
    
@@ -196,6 +201,7 @@ Review and refine a task definition, potentially proposing an implementation app
 ## Review Checklist
 
 **Task Completeness:**
+
 - [ ] Clear, measurable objective
 - [ ] Well-defined scope and deliverables
 - [ ] Comprehensive implementation plan
@@ -203,6 +209,7 @@ Review and refine a task definition, potentially proposing an implementation app
 - [ ] Explicit out-of-scope items
 
 **Technical Validity:**
+
 - [ ] Aligns with architecture
 - [ ] Follows coding standards
 - [ ] Considers recent changes
@@ -210,6 +217,7 @@ Review and refine a task definition, potentially proposing an implementation app
 - [ ] Includes error handling
 
 **Process Compliance:**
+
 - [ ] Uses correct task format
 - [ ] Has proper metadata
 - [ ] Includes embedded tests
@@ -228,27 +236,34 @@ Review and refine a task definition, potentially proposing an implementation app
 ## Common Patterns
 
 ### High-Risk Task Pattern
+
 Tasks touching core functionality need extra scrutiny:
+
 - More thorough testing requirements
 - Rollback plan considerations
 - Performance impact analysis
 - Security review requirements
 
 ### Refactoring Task Pattern
+
 Refactoring tasks should include:
+
 - Current state documentation
 - Refactoring strategy
 - Incremental milestones
 - Regression test plans
 
 ### New Feature Pattern
+
 New features require:
+
 - User story validation
 - API design review
 - Integration considerations
 - Documentation requirements
 
 ## Usage Example
+>
 > "Review task dev-taskflow/current/v.0.3.0/tasks/v.0.3.0+task.5-implement-oauth.md and identify any issues or improvements needed before implementation."
 
 ---

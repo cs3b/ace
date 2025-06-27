@@ -32,6 +32,7 @@ user-provided release scope into actionable tasks.
    * Create the target release directory using the specific semantic version:
      `dev-taskflow/backlog/v.X.Y.Z-codename/` (e.g., `dev-taskflow/backlog/v.0.3.0-new-feature/`).
    * Create standard sub-directories within the new release directory:
+
      ```
      dev-taskflow/backlog/v.X.Y.Z-codename/
      ├── tasks/
@@ -138,14 +139,15 @@ user-provided release scope into actionable tasks.
    * Group related items that form cohesive work units
    * For each distinct item or group:
      a. Determine the appropriate category:
-        - `tasks/` - Implementation work
-        - `decisions/` - Architecture decisions (ADRs)
-        - `docs/` - Documentation tasks
-        - `researches/` - Investigation/spike tasks
-        - `test-cases/` - Test scenario definitions
-        - `user-experience/` - UX/UI related tasks
-     
+        * `tasks/` - Implementation work
+        * `decisions/` - Architecture decisions (ADRs)
+        * `docs/` - Documentation tasks
+        * `researches/` - Investigation/spike tasks
+        * `test-cases/` - Test scenario definitions
+        * `user-experience/` - UX/UI related tasks
+
      b. Create a new task file using the embedded task template:
+
         ```markdown
         ---
         id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
@@ -163,73 +165,78 @@ user-provided release scope into actionable tasks.
         ```bash
         tree -L 2 [relevant-directory] | sed 's/^/    /'
         ```
-        
+
         _Result excerpt:_
+
         ```
         [insert tree output here]
         ```
 
-        ## Objective
-        
+     ## Objective
+
         [Why are we doing this? What value does it provide?]
 
-        ## Scope of Work
-        
-        - [What will be touched/changed]
-        - [Key areas of impact]
-        
-        ### Deliverables
-        
-        #### Create
-        - path/to/new/file.ext
-        
-        #### Modify  
-        - path/to/existing/file.ext
-        
-        #### Delete
-        - path/to/obsolete/file.ext
+     ## Scope of Work
 
-        ## Phases
-        
+        * [What will be touched/changed]
+        * [Key areas of impact]
+
+     ### Deliverables
+
+     #### Create
+
+        * path/to/new/file.ext
+
+     #### Modify  
+
+        * path/to/existing/file.ext
+
+     #### Delete
+
+        * path/to/obsolete/file.ext
+
+     ## Phases
+
         1. [Audit/Research phase]
         2. [Design/Planning phase]
         3. [Implementation phase]
         4. [Testing/Validation phase]
 
-        ## Implementation Plan
+     ## Implementation Plan
 
-        ### Planning Steps
-        
+     ### Planning Steps
+
         * [ ] [Research/analysis task - use asterisk markers]
           > TEST: Pre-condition Check
           > Type: [Pre-condition Check | Action Validation]
           > Assert: [What needs to be verified]
           > Command: bin/test --check-something
-        
-        ### Execution Steps
-        
-        - [ ] [Concrete implementation action - use hyphen markers]
+
+     ### Execution Steps
+
+        * [ ] [Concrete implementation action - use hyphen markers]
           > TEST: Action Validation
           > Type: Action Validation
           > Assert: [Expected outcome]
           > Command: bin/test --verify-result
 
-        ## Acceptance Criteria
-        
-        - [ ] All deliverables created/modified as specified
-        - [ ] [Specific functionality working]
-        - [ ] All automated tests pass
-        - [ ] Documentation updated
+     ## Acceptance Criteria
 
-        ## Out of Scope
-        
-        - ❌ [What won't be touched in this task]
-        - ❌ [Clear boundaries]
+        * [ ] All deliverables created/modified as specified
+        * [ ] [Specific functionality working]
+        * [ ] All automated tests pass
+        * [ ] Documentation updated
 
-        ## References
-        
-        - [Relevant guide or documentation]
-        - [Related task or ADR]
+     ## Out of Scope
+
+        * ❌ [What won't be touched in this task]
+        * ❌ [Clear boundaries]
+
+     ## References
+
+        * [Relevant guide or documentation]
+        * [Related task or ADR]
+
         ```
      
      c. Key rules for task creation:
@@ -245,28 +252,32 @@ user-provided release scope into actionable tasks.
 6. **Ensure Completeness**
    * Verify that **every sentence or bullet** from the user input maps to at least one task file
    * Check for:
-     - Ambiguous requirements that need clarification
-     - Missing acceptance criteria
-     - Undefined dependencies between tasks
-     - Unrealistic time estimates
+     * Ambiguous requirements that need clarification
+     * Missing acceptance criteria
+     * Undefined dependencies between tasks
+     * Unrealistic time estimates
    * Highlight any issues and request clarification from the user
 
 7. **Update Roadmap**
    * Add the new release to the roadmap's "Planned Major Releases" table:
+
      ```markdown
      | Version | Codename | Target Window | Goals | Key Epics |
      |---------|----------|---------------|-------|-----------|
      | v.X.Y.Z | Codename | Month YYYY    | Brief | Epic list |
      ```
+
    * Update roadmap's `last_reviewed` date
    * Add entry to Update History section
    * Commit roadmap changes separately with message:
+
      ```bash
      git commit -m "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
 8. **Validate Directory Structure**
    * Run validation checks:
+
      ```bash
      # Verify directory structure
      ls -la dev-taskflow/backlog/v.X.Y.Z-codename/
@@ -285,20 +296,22 @@ user-provided release scope into actionable tasks.
 
 9. **Prepare Commit Message (Do NOT Execute)**
    * Display the following git command for the user:
+
      ```bash
      bin/gc -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
      ```
+
    * Do **not** run the command automatically
 
 10. **Review With User**
     * Present summary:
-      - Release version and codename
-      - Number of tasks created in each category
-      - List of all task IDs and titles
+      * Release version and codename
+      * Number of tasks created in each category
+      * List of all task IDs and titles
     * Ask for confirmation on:
-      - Task priorities and estimates
-      - Any unclear task descriptions
-      - Missing tasks or requirements
+      * Task priorities and estimates
+      * Any unclear task descriptions
+      * Missing tasks or requirements
     * Iterate until the user is satisfied
 
 ## Input
@@ -319,20 +332,20 @@ user-provided release scope into actionable tasks.
 ## Common Patterns
 
 ### Semantic Versioning Rules
-- **MAJOR** (X.0.0): Incompatible API changes
-- **MINOR** (x.Y.0): New functionality, backward compatible
-- **PATCH** (x.y.Z): Bug fixes, backward compatible
+* **MAJOR** (X.0.0): Incompatible API changes
+* **MINOR** (x.Y.0): New functionality, backward compatible
+* **PATCH** (x.y.Z): Bug fixes, backward compatible
 
 ### Task Priority Guidelines
-- **High**: Blocks other work or critical path
-- **Medium**: Important but not blocking
-- **Low**: Nice-to-have or can be deferred
+* **High**: Blocks other work or critical path
+* **Medium**: Important but not blocking
+* **Low**: Nice-to-have or can be deferred
 
 ### Estimate Guidelines
-- Simple task: 1-4h
-- Medium complexity: 5-10h
-- Complex task: 11-25h
-- Epic (break down): >25h
+* Simple task: 1-4h
+* Medium complexity: 5-10h
+* Complex task: 11-25h
+* Epic (break down): >25h
 
 ## Error Handling
 
@@ -342,6 +355,7 @@ user-provided release scope into actionable tasks.
 * If no codename provided: Suggest based on project theme or feature focus
 
 ## Usage Example
+>
 > "Prepare a new release with the notes in `dev-taskflow/backlog/ideas.md`.
 > Expected version: `v.0.3.0`, codename: `atlas`."
 

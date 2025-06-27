@@ -5,6 +5,7 @@ You are an expert technical documentation analyst and software architect. Your t
 ## Context: Project Information
 
 This project follows:
+
 - **ATOM architecture** pattern (Atoms, Molecules, Organisms, Ecosystems)
 - **Test-driven development** with RSpec
 - **CLI-first design** for both humans and AI agents
@@ -14,6 +15,7 @@ This project follows:
 ## Input Data
 
 ### 1. Code Diff to Review
+
 ```diff
 [INSERT YOUR DIFF CONTENT HERE]
 ```
@@ -21,6 +23,7 @@ This project follows:
 ### 2. Current Documentation State
 
 #### Key Documentation Context
+
 Essential documentation files included for review context:
 [INSERT KEY DOCUMENTATION CONTENT HERE]
 
@@ -31,31 +34,37 @@ Essential documentation files included for review context:
 Analyze the diff and categorize every change:
 
 **1. New Features Added**
+
 - What new functionality was introduced?
 - What new APIs or interfaces were created?
 - What new configuration options were added?
 
 **2. Existing Features Modified**
+
 - What existing functionality changed behavior?
 - What APIs had signature changes?
 - What configuration options were modified?
 
 **3. Architecture & Design Changes**
+
 - What structural patterns were introduced or modified?
 - What design decisions were made?
 - What trade-offs were considered?
 
 **4. Breaking Changes**
+
 - What changes might break existing user workflows?
 - What deprecated functionality was removed?
 - What API changes are not backward compatible?
 
 **5. Dependencies & Infrastructure**
+
 - What external dependencies were added/removed/updated?
 - What build or deployment configuration changed?
 - What environment variables or settings changed?
 
 **6. Internal Refactoring**
+
 - What code organization changes occurred?
 - What performance optimizations were made?
 - What technical debt was addressed?
@@ -65,12 +74,14 @@ Analyze the diff and categorize every change:
 For each significant change identified, determine:
 
 **New ADRs Needed:**
+
 - What architectural decisions were made during implementation?
 - What alternatives were considered and rejected?
 - What constraints or requirements drove these decisions?
 - What are the long-term implications?
 
 **Existing ADRs to Update:**
+
 - What previously documented decisions need revision?
 - What assumptions are no longer valid?
 - What decisions need additional context or clarification?
@@ -80,20 +91,24 @@ For each significant change identified, determine:
 Systematically assess each documentation category:
 
 #### Architecture Decision Records (`dev-taskflow/decisions/`)
+
 - [ ] **New ADR Required**: [Topic] - [Reason for documentation]
 - [ ] **Update Existing ADR**: [File] - [Specific changes needed]
 
 #### Project Documentation (`dev-taskflow/*.md`)
+
 - [ ] **architecture.md**: [Specific sections needing updates]
 - [ ] **blueprint.md**: [Specific sections needing updates]
 - [ ] **what-do-we-build.md**: [Specific sections needing updates]
 
 #### Root Documentation (`*.md`)
+
 - [ ] **README.md**: [Specific sections needing updates]
 - [ ] **CHANGELOG.md**: [Version entry and changes to document]
 - [ ] **Other files**: [Specify files and required changes]
 
 #### Technical Documentation (`docs/**/*.md`)
+
 - [ ] **SETUP.md**: [Installation/setup changes needed]
 - [ ] **DEVELOPMENT.md**: [Development workflow changes needed]
 - [ ] **Other guides**: [Specify files and required changes]
@@ -103,26 +118,31 @@ Systematically assess each documentation category:
 Consider and document all additional updates needed:
 
 **Code Examples & Snippets**
+
 - Do existing code examples in documentation still work?
 - Do new features need usage examples?
 - Are there outdated API usage patterns?
 
 **CLI Documentation**
+
 - Do command-line help texts need updates?
 - Are there new CLI flags or options to document?
 - Do existing CLI examples still work?
 
 **Configuration Documentation**
+
 - Do environment variable examples need updates?
 - Are there new configuration options to document?
 - Do configuration file templates need updates?
 
 **Integration Guides**
+
 - Do third-party integration instructions need updates?
 - Are there new integration possibilities to document?
 - Do existing integration examples still work?
 
 **Migration Guides**
+
 - Do breaking changes need migration documentation?
 - Are there upgrade paths to document?
 - Do users need specific migration steps?
@@ -132,19 +152,27 @@ Consider and document all additional updates needed:
 Organize all identified updates by priority:
 
 ## 🔴 CRITICAL UPDATES (Must be done immediately)
+
 *These affect user safety, security, or basic functionality*
+
 - [ ] [Specific update with file path and detailed rationale]
 
 ## 🟡 HIGH PRIORITY UPDATES (Should be done soon)
+
 *These affect user experience or developer onboarding*
+
 - [ ] [Specific update with file path and detailed rationale]
 
 ## 🟢 MEDIUM PRIORITY UPDATES (Should be done eventually)
+
 *These improve clarity, completeness, or maintainability*
+
 - [ ] [Specific update with file path and detailed rationale]
 
 ## 🔵 LOW PRIORITY UPDATES (Nice to have)
+
 *These address minor inconsistencies or optimizations*
+
 - [ ] [Specific update with file path and detailed rationale]
 
 ### Phase 6: Detailed Implementation Specifications
@@ -152,6 +180,7 @@ Organize all identified updates by priority:
 For each update identified, provide:
 
 #### [File Path/Name]
+
 - **Section to Update**: [Specific section heading or line numbers]
 - **Current Content**: [Quote relevant current content if significant changes]
 - **Required Changes**: [Exactly what needs to be changed]
@@ -165,24 +194,28 @@ For each update identified, provide:
 Ensure your recommendations address:
 
 **Completeness**
+
 - [ ] All diff changes have corresponding documentation updates
 - [ ] All new features have usage examples
 - [ ] All breaking changes are clearly documented
 - [ ] All deprecated functionality is marked with migration paths
 
 **Accuracy**
+
 - [ ] All code examples are syntactically correct
 - [ ] All CLI examples use correct syntax
 - [ ] All links and references are functional
 - [ ] All version numbers and dates are correct
 
 **Consistency**
+
 - [ ] Documentation style matches project guidelines
 - [ ] Terminology is consistent across all documents
 - [ ] Cross-references between documents are updated
 - [ ] Formatting follows established patterns
 
 **User Experience**
+
 - [ ] Changes are explained from user perspective
 - [ ] Migration paths are clear and actionable
 - [ ] Examples are practical and realistic
@@ -246,6 +279,7 @@ Structure your comprehensive response as:
 ## Critical Success Factors
 
 Your analysis must be:
+
 1. **Exhaustive**: Miss nothing that could affect users or developers
 2. **Specific**: Provide exact file paths, section names, and change descriptions
 3. **Prioritized**: Clear ranking of importance and urgency

@@ -21,35 +21,36 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
 
 1. **Gather Input Material**
    * Collect raw input from user, which could be:
-     - Direct text/feedback in the conversation
-     - File paths to documents containing requirements
-     - Mixed input with both text and file references
+     * Direct text/feedback in the conversation
+     * File paths to documents containing requirements
+     * Mixed input with both text and file references
    * If files are referenced, read their contents
    * Combine all inputs into a single working document
 
 2. **Analyze and Structure Content**
    * Read through all input material comprehensively
    * Identify distinct actionable items by looking for:
-     - Feature requests or enhancements
-     - Bug reports or issues to fix
-     - Documentation needs
-     - Research or investigation requirements
-     - Architecture decisions needed
-     - Testing requirements
+     * Feature requests or enhancements
+     * Bug reports or issues to fix
+     * Documentation needs
+     * Research or investigation requirements
+     * Architecture decisions needed
+     * Testing requirements
    * Group related items that form cohesive work units
    * Note any ambiguous or unclear items for clarification
 
 3. **Create Initial Task Breakdown**
    * For each identified actionable item or group:
-     - Write a clear task title (Verb + Object format)
-     - Summarize the objective and why it's needed
-     - Identify key deliverables (files to create/modify/delete)
-     - Estimate complexity and time required
-     - Note any dependencies on other tasks
-     - Identify which release/version it belongs to
+     * Write a clear task title (Verb + Object format)
+     * Summarize the objective and why it's needed
+     * Identify key deliverables (files to create/modify/delete)
+     * Estimate complexity and time required
+     * Note any dependencies on other tasks
+     * Identify which release/version it belongs to
 
 4. **Present for User Verification**
    * Show the user a structured list of proposed tasks:
+
      ```
      Proposed Tasks:
      1. [Task Title] - [Brief description]
@@ -60,15 +61,16 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
      2. [Next Task Title] - [Brief description]
         ...
      ```
+
    * Ask for confirmation or adjustments:
-     - Are all items captured?
-     - Is the grouping logical?
-     - Are priorities correct?
-     - Any missing context or requirements?
+     * Are all items captured?
+     * Is the grouping logical?
+     * Are priorities correct?
+     * Any missing context or requirements?
 
 5. **Create Formal Task Files**
    * Once approved, create task files using this embedded template:
-   
+
    ```markdown
    ---
    id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
@@ -86,36 +88,40 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
    ```bash
    tree -L 2 [relevant-directory] | sed 's/^/    /'
    ```
-   
+
    _Result excerpt:_
+
    ```
    [insert tree output here]
    ```
 
    ## Objective
-   
+
    [Why are we doing this? What value does it provide?]
    [Link back to original requirement/feedback if applicable]
 
    ## Scope of Work
-   
-   - [What will be touched/changed]
-   - [Key areas of impact]
-   - [Technical components involved]
-   
+
+   * [What will be touched/changed]
+   * [Key areas of impact]
+   * [Technical components involved]
+
    ### Deliverables
-   
+
    #### Create
-   - path/to/new/file.ext
-   
+
+   * path/to/new/file.ext
+
    #### Modify  
-   - path/to/existing/file.ext
-   
+
+   * path/to/existing/file.ext
+
    #### Delete
-   - path/to/obsolete/file.ext
+
+   * path/to/obsolete/file.ext
 
    ## Phases
-   
+
    1. Research/Analysis - [What needs to be understood]
    2. Design/Planning - [Architecture or approach decisions]
    3. Implementation - [Core development work]
@@ -124,101 +130,104 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
    ## Implementation Plan
 
    ### Planning Steps
-   
+
    * [ ] [Research/analysis task - use asterisk markers]
      > TEST: Pre-condition Check
      > Type: Pre-condition Check
      > Assert: [What needs to be verified before starting]
      > Command: [Test command if applicable]
-   
+
    ### Execution Steps
-   
-   - [ ] [Concrete implementation action - use hyphen markers]
+
+   * [ ] [Concrete implementation action - use hyphen markers]
      > TEST: Action Validation
      > Type: Action Validation
      > Assert: [Expected outcome to verify]
      > Command: [Test command to validate]
 
    ## Acceptance Criteria
-   
-   - [ ] All deliverables created/modified as specified
-   - [ ] [Specific functionality working as expected]
-   - [ ] All automated tests pass
-   - [ ] Documentation updated
-   - [ ] Original requirement fully addressed
+
+   * [ ] All deliverables created/modified as specified
+   * [ ] [Specific functionality working as expected]
+   * [ ] All automated tests pass
+   * [ ] Documentation updated
+   * [ ] Original requirement fully addressed
 
    ## Out of Scope
-   
-   - ❌ [What won't be touched in this task]
-   - ❌ [Clear boundaries to prevent scope creep]
+
+   * ❌ [What won't be touched in this task]
+   * ❌ [Clear boundaries to prevent scope creep]
 
    ## References
-   
-   - Original requirement: [Link or description]
-   - Related guides: [If applicable]
-   - Dependencies: [Links to other tasks]
+
+   * Original requirement: [Link or description]
+   * Related guides: [If applicable]
+   * Dependencies: [Links to other tasks]
+
    ```
 
 6. **Determine Storage Location**
    * Use `bin/rc` to get current release context:
+
      ```bash
      output=$(bin/rc)
      task_dir=$(echo "$output" | sed -n '1p')
      version=$(echo "$output" | sed -n '2p')
      ```
+
    * Storage rules:
-     - If current release exists: Store in `{task_dir}/tasks/`
-     - If no current release: Store in `dev-taskflow/backlog/tasks/`
-     - Create directories if they don't exist
+     * If current release exists: Store in `{task_dir}/tasks/`
+     * If no current release: Store in `dev-taskflow/backlog/tasks/`
+     * Create directories if they don't exist
 
 7. **Generate Task IDs and Save Files**
    * For each task:
-     - Run `bin/tnid {version}` to generate unique ID
-     - Create filename: `{id}-{kebab-case-title}.md`
-     - Save to determined location
-     - Track created files for summary
+     * Run `bin/tnid {version}` to generate unique ID
+     * Create filename: `{id}-{kebab-case-title}.md`
+     * Save to determined location
+     * Track created files for summary
 
 8. **Provide Summary**
    * List all created tasks with their:
-     - IDs
-     - Titles
-     - File paths
-     - Priority and estimates
+     * IDs
+     * Titles
+     * File paths
+     * Priority and estimates
    * Suggest next steps or related workflows
 
 ## Key Guidelines
 
 ### Task Granularity
-- **Ideal task size**: 4-10 hours of focused work
-- **Too large**: Break into subtasks or phases
-- **Too small**: Combine with related items
-- **Epic threshold**: Tasks over 25h should be epics
+* **Ideal task size**: 4-10 hours of focused work
+* **Too large**: Break into subtasks or phases
+* **Too small**: Combine with related items
+* **Epic threshold**: Tasks over 25h should be epics
 
 ### Task Grouping Logic
-- Group by feature area or component
-- Group by technical dependency
-- Group by deliverable type (docs, tests, implementation)
-- Keep cross-cutting concerns separate
+* Group by feature area or component
+* Group by technical dependency
+* Group by deliverable type (docs, tests, implementation)
+* Keep cross-cutting concerns separate
 
 ### Priority Assessment
-- **High**: Blocks other work, critical path, or urgent fixes
-- **Medium**: Important features or improvements
-- **Low**: Nice-to-have, optimizations, or deferrables
+* **High**: Blocks other work, critical path, or urgent fixes
+* **Medium**: Important features or improvements
+* **Low**: Nice-to-have, optimizations, or deferrables
 
 ### Quality Checks
-- Every task must have clear acceptance criteria
-- Deliverables must be specific file paths
-- Implementation steps should be concrete actions
-- Out of scope prevents feature creep
-- References maintain traceability
+* Every task must have clear acceptance criteria
+* Deliverables must be specific file paths
+* Implementation steps should be concrete actions
+* Out of scope prevents feature creep
+* References maintain traceability
 
 ## Input
 
 * Raw notes in any format:
-  - User feedback or requirements in chat
-  - File paths to requirement documents
-  - Mixed text and file references
-  - Ideas, bugs, features, or improvements
+  * User feedback or requirements in chat
+  * File paths to requirement documents
+  * Mixed text and file references
+  * Ideas, bugs, features, or improvements
 
 ## Output / Success Criteria
 

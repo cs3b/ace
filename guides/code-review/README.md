@@ -31,6 +31,7 @@ bin/cr -d changes.diff --verbose
 ## How It Works
 
 1. **Create a diff file** containing the changes you want reviewed:
+
    ```bash
    git diff > changes.diff
    # or for staged changes
@@ -40,6 +41,7 @@ bin/cr -d changes.diff --verbose
    ```
 
 2. **Generate the review prompt**:
+
    ```bash
    bin/cr -d changes.diff
    ```
@@ -51,42 +53,49 @@ bin/cr -d changes.diff --verbose
 The code review system analyzes:
 
 ### Architecture & Design
+
 - ATOM pattern compliance (Atoms, Molecules, Organisms, Ecosystems)
 - Separation of concerns
 - Module boundaries and dependencies
 - Design patterns and anti-patterns
 
 ### Ruby Best Practices
+
 - Idiomatic Ruby code
 - Gem structure and conventions
 - Dependency management
 - Performance considerations
 
 ### Code Quality
+
 - RuboCop compliance
 - Code smells and refactoring opportunities
 - Naming conventions
 - Method and class complexity
 
 ### Testing
+
 - Test coverage impact
 - RSpec best practices
 - Test design and organization
 - Edge case coverage
 
 ### Security
+
 - Input validation
 - Dependency vulnerabilities
 - Secure coding practices
 - Data handling safety
 
 ### CLI Design
+
 - Command structure and usability
 - Error messages and help text
 - AI agent compatibility
 - Unix philosophy adherence
 
 ### Project Context (with --include-dependencies)
+
 - Full content of project documentation files
 - Full content of Architecture Decision Records (ADRs)
 - Full content of root documentation (README, CHANGELOG, etc.)
@@ -95,18 +104,21 @@ The code review system analyzes:
 ## Benefits
 
 ### For Individual Developers
+
 - **Learning Tool**: Get detailed feedback on Ruby best practices
 - **Quality Gates**: Catch issues before they reach code review
 - **Consistency**: Maintain consistent code standards
 - **Time Savings**: Identify issues early in development
 
 ### For Teams
+
 - **Onboarding**: Help new team members understand standards
 - **Knowledge Sharing**: Document architectural decisions
 - **Review Efficiency**: Focus human reviews on higher-level concerns
 - **Quality Metrics**: Track code quality trends over time
 
 ### For AI-Assisted Development
+
 - **Structured Feedback**: Consistent, parseable review format
 - **Comprehensive Analysis**: Cover more ground than manual reviews
 - **Pattern Recognition**: Identify recurring issues across codebase
@@ -131,11 +143,13 @@ bin/cr-docs -d changes.diff -o doc-review.md
 ### Custom Project State Collection
 
 The tool automatically collects:
+
 - Current test coverage (from coverage/index.html)
 - StandardRB status and offense count (via bin/lint)
 - Gem dependencies from Gemfile
 
 When using `--include-dependencies`, it also collects:
+
 - Full content of project documentation from `dev-taskflow/*.md`
 - Full content of Architecture Decision Records from `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/`
 - Full content of root documentation files (`*.md` in project root)
@@ -144,6 +158,7 @@ When using `--include-dependencies`, it also collects:
 ### Review Priority Levels
 
 Reviews are organized by priority:
+
 - 🔴 **CRITICAL**: Security, data corruption, breaking changes
 - 🟡 **HIGH**: Significant bugs, performance issues
 - 🟢 **MEDIUM**: Code quality, maintainability
@@ -152,6 +167,7 @@ Reviews are organized by priority:
 ### Customizing Reviews
 
 You can modify the review template (`_code-review-from-diff.md`) to:
+
 - Add project-specific checks
 - Emphasize certain aspects
 - Include custom rubrics
@@ -160,6 +176,7 @@ You can modify the review template (`_code-review-from-diff.md`) to:
 ## Example Workflow
 
 1. **Make changes to your Ruby gem**:
+
    ```bash
    # Implement new feature
    vim lib/my_gem/new_feature.rb
@@ -169,12 +186,14 @@ You can modify the review template (`_code-review-from-diff.md`) to:
    ```
 
 2. **Generate diff**:
+
    ```bash
    git add .
    git diff --cached > feature.diff
    ```
 
 3. **Generate review prompt**:
+
    ```bash
    bin/cr -d feature.diff
    ```
@@ -186,6 +205,7 @@ You can modify the review template (`_code-review-from-diff.md`) to:
    - Iterate as needed
 
 5. **Update documentation if needed**:
+
    ```bash
    bin/cr-docs -d feature.diff
    ```
@@ -201,10 +221,13 @@ You can modify the review template (`_code-review-from-diff.md`) to:
 ### Troubleshooting
 
 ### "Template not found" Error
+
 Ensure you're running from the project root or that `docs-dev` is properly set up.
 
 ### Coverage/StandardRB Not Available
+
 Install and configure these tools for richer analysis:
+
 ```bash
 bundle add simplecov --group test
 bundle add standard --group development
@@ -213,7 +236,9 @@ bundle add standard --group development
 Ensure you have a `bin/lint` script that runs StandardRB for linting analysis.
 
 ### Large Diffs
+
 For very large diffs, consider:
+
 - Breaking into smaller logical chunks
 - Focusing on specific subsystems
 - Using `--include-dependencies` sparingly

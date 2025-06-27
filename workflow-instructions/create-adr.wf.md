@@ -10,9 +10,30 @@ capture a significant architectural decision, its context, rationale, and conseq
 - A clear architectural problem or choice needs to be documented.
 - An understanding of what makes a decision architecturally significant (impacts structure, introduces dependencies, changes patterns, affects scalability, etc.).
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Identify and validate the architectural decision needs documentation
+- [ ] Gather comprehensive context and alternatives
+- [ ] Determine ADR number and file naming
+
+### Execution Steps
+
+- [ ] Draft ADR using embedded template
+- [ ] Review and validate ADR content
+- [ ] Create ADR file in proper location
+- [ ] Update any related documentation
+
 ## When to Create an ADR
 
 Create an ADR when:
+
 - Choosing between competing libraries or frameworks
 - Defining core interfaces or data structures
 - Changing major workflows or processes
@@ -111,14 +132,15 @@ What becomes easier or more difficult to do because of this change?
    - Are all significant consequences documented?
    - Would a developer in 2 years understand why this decision was made?
 
-7. **Save and Commit:** 
+7. **Save and Commit:**
    - Save the ADR in `docs/architecture-decisions/`
    - Commit with a message like: "docs: Add ADR-XXX for [decision topic]"
    - Update any related documentation that references this decision
 
 ## ADR Writing Best Practices
 
-### DO:
+### DO
+
 - Write in full sentences with proper grammar
 - Use present tense for context and decision
 - Be specific about technologies, versions, and constraints
@@ -126,7 +148,8 @@ What becomes easier or more difficult to do because of this change?
 - Link to external resources for deep dives
 - Number ADRs sequentially (ADR-001, ADR-002, etc.)
 
-### DON'T:
+### DON'T
+
 - Write novels - be concise but complete
 - Use ambiguous language ("might", "could", "should consider")
 - Forget to date the decision
