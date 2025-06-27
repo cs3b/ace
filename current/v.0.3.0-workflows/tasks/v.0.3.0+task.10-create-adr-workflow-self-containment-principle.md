@@ -43,7 +43,7 @@ Create an Architecture Decision Record (ADR) to formally document the pivotal de
 
 #### Create
 
-- dev-taskflow/current/v.0.3.0-workflows/decisions/ADR-XXX-workflow-self-containment-principle.md
+- docs/decisions/ADR-001-workflow-self-containment-principle.md
 
 #### Modify
 
@@ -82,7 +82,7 @@ Create an Architecture Decision Record (ADR) to formally document the pivotal de
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: ADR number is sequential and doesn't conflict
-  > Command: `ls dev-taskflow/current/v.0.3.0-workflows/decisions/ADR-*.md | sort`
+  > Command: `ls docs/decisions/ADR-*.md | sort`
 
 - [x] Create comprehensive ADR with following sections:
   - Title: Workflow Self-Containment Principle
@@ -95,13 +95,13 @@ Create an Architecture Decision Record (ADR) to formally document the pivotal de
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: ADR contains all required sections with detailed content
-  > Command: `grep -E "^## " dev-taskflow/current/v.0.3.0-workflows/decisions/ADR-*-workflow-self-containment-principle.md`
+  > Command: `grep -E "^## " docs/decisions/ADR-001-workflow-self-containment-principle.md`
 
 - [x] Include specific examples of old vs new workflow patterns
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: ADR contains concrete examples and implications
-  > Command: `grep -c "example\|before\|after" dev-taskflow/current/v.0.3.0-workflows/decisions/ADR-*-workflow-self-containment-principle.md`
+  > Command: `grep -c "example\|before\|after" docs/decisions/ADR-001-workflow-self-containment-principle.md`
 
 ## Acceptance Criteria
 
