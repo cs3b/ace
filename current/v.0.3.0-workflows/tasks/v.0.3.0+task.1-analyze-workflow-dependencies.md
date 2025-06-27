@@ -81,13 +81,13 @@ Analyze all 21 existing workflow instruction files to identify cross-dependencie
 
 ### Planning Steps
 
-* [x] Survey all workflow instruction files in dev-handbook/workflow-instructions/
+- [x] Survey all workflow instruction files in dev-handbook/workflow-instructions/
   > TEST: Complete Workflow Inventory
   > Type: Pre-condition Check
   > Assert: All workflow files are identified and catalogued
   > Command: bin/test --check-file-exists dev-taskflow/backlog/v.0.3.0-workflows/researches/workflow-inventory.md
-* [x] Research coding agent integration requirements for Claude Code, Windsurf, and Zed
-* [x] Analyze patterns in current workflow cross-references
+- [x] Research coding agent integration requirements for Claude Code, Windsurf, and Zed
+- [x] Analyze patterns in current workflow cross-references
 
 ### Execution Steps
 

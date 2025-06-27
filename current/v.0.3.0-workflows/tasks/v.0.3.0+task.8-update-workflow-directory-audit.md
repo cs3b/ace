@@ -64,13 +64,13 @@ Update the directory audit section in the analyze-workflow-dependencies task to 
 
 ### Planning Steps
 
-* [ ] Generate complete listing of all 21 workflow files
+- [ ] Generate complete listing of all 21 workflow files
   > TEST: Complete File List Generated
   > Type: Pre-condition Check
   > Assert: All workflow files listed with accurate count
   > Command: bin/test --check-file-count dev-handbook/workflow-instructions "*.wf.md" 21
-* [ ] Categorize workflows by type for better organization
-* [ ] Plan documentation update strategy
+- [ ] Categorize workflows by type for better organization
+- [ ] Plan documentation update strategy
 
 ### Execution Steps
 

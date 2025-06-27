@@ -11,11 +11,13 @@ dependencies: [v.0.3.0+task.10]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/guides/.meta | sed 's/^/    /'
 ```
 
 _Result excerpt:_
+
 ```
 dev-handbook/guides/.meta/
 ├── guides-definition.g.md
@@ -39,12 +41,15 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 ### Deliverables
 
 #### Create
+
 - None
 
 #### Modify
+
 - dev-handbook/guides/.meta/guides-definition.g.md
 
 #### Delete
+
 - None
 
 ## Phases
@@ -58,13 +63,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 ### Planning Steps
 
-* [ ] Review current guides-definition.g.md content and structure
+- [ ] Review current guides-definition.g.md content and structure
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Current guide definition is understood and documented
   > Command: `grep -E "^## |^### " dev-handbook/guides/.meta/guides-definition.g.md`
 
-* [ ] Identify sections that need updates based on new workflow model
+- [ ] Identify sections that need updates based on new workflow model
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All sections requiring updates are identified

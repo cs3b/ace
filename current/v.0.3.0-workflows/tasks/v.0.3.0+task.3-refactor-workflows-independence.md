@@ -84,13 +84,13 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
 
 ### Planning Steps
 
-* [x] Review dependency analysis findings from task v.0.3.0+task.1
+- [x] Review dependency analysis findings from task v.0.3.0+task.1
   > TEST: Analysis Review Complete
   > Type: Pre-condition Check
   > Assert: Dependency analysis results are incorporated into refactoring plan
   > Command: bin/test --check-dependency-review workflow-independence-plan.md
-* [x] Plan specific refactoring approach for each workflow
-* [x] Design context embedding strategy
+- [x] Plan specific refactoring approach for each workflow
+- [x] Design context embedding strategy
 
 ### Execution Steps
 

@@ -63,13 +63,13 @@ Add standardized agent integration sections to each workflow instruction file, p
 
 ### Planning Steps
 
-* [ ] Review agent integration requirements from task v.0.3.0+task.1
+- [ ] Review agent integration requirements from task v.0.3.0+task.1
   > TEST: Requirements Integration Complete
   > Type: Pre-condition Check
   > Assert: Agent requirements are incorporated into integration plan
   > Command: bin/test --check-requirements-review agent-integration-plan.md
-* [ ] Design standardized integration section template
-* [ ] Plan agent-specific examples and usage patterns
+- [ ] Design standardized integration section template
+- [ ] Plan agent-specific examples and usage patterns
 
 ### Execution Steps
 

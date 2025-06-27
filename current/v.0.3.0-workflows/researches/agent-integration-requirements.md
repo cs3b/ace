@@ -61,13 +61,13 @@ Research how Claude Code, Windsurf, Zed, and other coding agents consume workflo
 
 ### Planning Steps
 
-* [ ] Identify available documentation for each target coding agent
+- [ ] Identify available documentation for each target coding agent
   > TEST: Documentation Sources Identified
   > Type: Pre-condition Check
   > Assert: Documentation links and sources are catalogued
   > Command: bin/test --check-research-sources agent-integration-requirements.md
-* [ ] Plan research methodology for each agent
-* [ ] Define evaluation criteria for integration compatibility
+- [ ] Plan research methodology for each agent
+- [ ] Define evaluation criteria for integration compatibility
 
 ### Execution Steps
 

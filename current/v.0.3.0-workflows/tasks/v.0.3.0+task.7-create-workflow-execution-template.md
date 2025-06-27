@@ -60,13 +60,13 @@ Create a standardized template for high-level execution plans that will be embed
 
 ### Planning Steps
 
-* [ ] Analyze work-on-task.wf.md structure and execution pattern
+- [ ] Analyze work-on-task.wf.md structure and execution pattern
   > TEST: Pattern Analysis Complete
   > Type: Pre-condition Check
   > Assert: Execution pattern elements identified and documented
   > Command: bin/test --check-pattern-analysis workflow-pattern-analysis.md
-* [ ] Review the 7-step execution pattern from requirements
-* [ ] Design standardized template structure
+- [ ] Review the 7-step execution pattern from requirements
+- [ ] Design standardized template structure
 
 ### Execution Steps
 

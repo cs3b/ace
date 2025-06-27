@@ -61,13 +61,13 @@ Create comprehensive test cases to validate that refactored workflows work corre
 
 ### Planning Steps
 
-* [ ] Analyze workflow functionality to identify testable aspects
+- [ ] Analyze workflow functionality to identify testable aspects
   > TEST: Test Coverage Analysis Complete
   > Type: Pre-condition Check
   > Assert: All critical workflow functions identified for testing
   > Command: bin/test --check-coverage-analysis test-coverage-matrix.md
-* [ ] Research testing approaches for each target agent
-* [ ] Plan test scenario matrix covering all combinations
+- [ ] Research testing approaches for each target agent
+- [ ] Plan test scenario matrix covering all combinations
 
 ### Execution Steps
 

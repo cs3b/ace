@@ -11,11 +11,13 @@ dependencies: [v.0.3.0+task.9]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 1 dev-handbook/workflow-instructions | sed 's/^/    /'
 ```
 
 _Result excerpt:_
+
 ```
 dev-handbook/workflow-instructions/
 ├── README.md
@@ -40,13 +42,16 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 ### Deliverables
 
 #### Create
+
 - None (refactoring existing files)
 
 #### Modify
+
 - All non-compliant workflow instruction files in dev-handbook/workflow-instructions/
 - Any workflow files lacking required self-containment sections
 
 #### Delete
+
 - Any workflow files that are fully obsoleted by refactored workflows
 
 ## Phases
@@ -60,13 +65,13 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 
 ### Planning Steps
 
-* [ ] Create comprehensive list of all workflow files in the system
+- [ ] Create comprehensive list of all workflow files in the system
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Complete inventory of all workflow files exists
   > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | sort`
 
-* [ ] Audit each workflow against self-containment criteria:
+- [ ] Audit each workflow against self-containment criteria:
   - Has Project Context Loading section
   - Has embedded templates (no external template references)
   - Has embedded common patterns (no guide references for procedures)
@@ -77,7 +82,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > Assert: Audit results categorize all workflows as compliant/non-compliant
   > Command: `grep -L "Project Context Loading" dev-handbook/workflow-instructions/*.wf.md`
 
-* [ ] Prioritize refactoring order based on workflow importance and complexity
+- [ ] Prioritize refactoring order based on workflow importance and complexity
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Refactoring plan exists with clear priorities

@@ -12,6 +12,7 @@ Successfully refactored all 21 workflow instructions (17 remaining after removin
 ### 1. Updated Meta Guides
 
 #### workflow-instructions-definition.g.md
+
 - Added self-containment as core principle #2
 - Introduced Project Context Loading as required section
 - Updated standard structure with High-Level Execution Plan
@@ -19,6 +20,7 @@ Successfully refactored all 21 workflow instructions (17 remaining after removin
 - Added workflow independence principles section
 
 #### workflow-instructions-embeding-tests.g.md
+
 - Added integration with self-contained workflows section
 - Updated examples to show technology-agnostic patterns
 - Added best practices for embedded tests
@@ -27,6 +29,7 @@ Successfully refactored all 21 workflow instructions (17 remaining after removin
 ### 2. Workflow Compliance Analysis
 
 Created `bin/check-workflow-compliance` tool that validates:
+
 - Required sections (Goal, Prerequisites, Project Context Loading, Process Steps)
 - Recommended sections (High-Level Execution Plan, Success Criteria, Embedded Templates, Best Practices)
 - Deprecated patterns (external references, cross-workflow dependencies)
@@ -37,6 +40,7 @@ Created `bin/check-workflow-compliance` tool that validates:
 ### 3. Document Dependency Analysis
 
 Created `bin/analyze-doc-dependencies` tool that:
+
 - Maps all cross-references between documents
 - Identifies most referenced files
 - Detects circular dependencies
@@ -44,6 +48,7 @@ Created `bin/analyze-doc-dependencies` tool that:
 - Generates JSON for further analysis
 
 **Key Findings**:
+
 - Most referenced: what-do-we-build.md (8), architecture.md (7), blueprint.md (6)
 - Found self-referential patterns in some guides (to be investigated)
 - No orphaned workflow files
@@ -51,6 +56,7 @@ Created `bin/analyze-doc-dependencies` tool that:
 ### 4. Workflow Independence Verification
 
 Created `bin/check-workflow-independence` tool that specifically checks:
+
 - Cross-workflow references
 - Workflow execution dependencies
 - External guide references outside context loading
@@ -85,11 +91,13 @@ Created `bin/check-workflow-independence` tool that specifically checks:
 ## Recommendations
 
 ### Immediate Actions
+
 1. Add Project Context Loading sections to 11 workflows missing them
 2. Review self-referential patterns in guides
 3. Consider adding High-Level Execution Plan to remaining workflows
 
 ### Future Improvements
+
 1. Automate compliance checking in CI/CD
 2. Create workflow template generator
 3. Build visual dependency explorer

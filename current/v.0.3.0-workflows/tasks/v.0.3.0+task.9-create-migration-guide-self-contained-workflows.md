@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.9
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -11,11 +11,13 @@ dependencies: []
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
+
 ```
 dev-handbook/guides/
 ├── README.md
@@ -40,13 +42,16 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 ### Deliverables
 
 #### Create
+
 - dev-handbook/guides/migration/migrating-to-self-contained-workflows.g.md
 - dev-handbook/guides/migration/ (directory if it doesn't exist)
 
 #### Modify
+
 - None
 
 #### Delete
+
 - None
 
 ## Phases
@@ -60,13 +65,13 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 
 ### Planning Steps
 
-* [ ] Analyze all workflow changes from the diff to understand full scope of breaking changes
+- [x] Analyze all workflow changes from the diff to understand full scope of breaking changes
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All workflow changes are documented and categorized
   > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | wc -l`
 
-* [ ] Identify all deprecated workflows and map to new replacements
+- [x] Identify all deprecated workflows and map to new replacements
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Complete mapping of old to new workflow patterns exists
@@ -74,13 +79,13 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 
 ### Execution Steps
 
-- [ ] Create migration directory structure if needed
+- [x] Create migration directory structure if needed
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Migration directory exists and is properly structured
   > Command: `ls -la dev-handbook/guides/migration/`
 
-- [ ] Write comprehensive migration guide with all required sections:
+- [x] Write comprehensive migration guide with all required sections:
   - Introduction explaining the paradigm shift rationale
   - Core principles of self-containment (Embed, Don't Reference)
   - Deprecated workflows table with replacements
@@ -91,7 +96,7 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
   > Assert: Migration guide exists and contains all required sections
   > Command: `grep -E "^## |^### " dev-handbook/guides/migration/migrating-to-self-contained-workflows.g.md`
 
-- [ ] Include specific examples from actual workflow transformations
+- [x] Include specific examples from actual workflow transformations
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Guide contains practical examples and checklists
@@ -99,14 +104,14 @@ Create a comprehensive migration guide (`guides/migration/migrating-to-self-cont
 
 ## Acceptance Criteria
 
-- [ ] Migration guide file created at specified path
-- [ ] Guide explains the "why" behind shift to self-containment
-- [ ] Complete table mapping deprecated workflows to replacements
-- [ ] Step-by-step refactoring checklist provided
-- [ ] Examples demonstrate transformation from reference-based to self-contained
-- [ ] Guide follows handbook formatting and style conventions
-- [ ] All deprecated workflow files are documented with migration paths
-- [ ] Guide addresses both human developers and AI agents
+- [x] Migration guide file created at specified path
+- [x] Guide explains the "why" behind shift to self-containment
+- [x] Complete table mapping deprecated workflows to replacements
+- [x] Step-by-step refactoring checklist provided
+- [x] Examples demonstrate transformation from reference-based to self-contained
+- [x] Guide follows handbook formatting and style conventions
+- [x] All deprecated workflow files are documented with migration paths
+- [x] Guide addresses both human developers and AI agents
 
 ## Out of Scope
 

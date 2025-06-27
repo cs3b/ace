@@ -37,12 +37,13 @@ Raw user input:
 
 Updated requirements:
 > To update all workflow instructions @dev-handbook/workflow-instructions/ (21 files total)
+>
 > - ensure they never call / reference other workflow instruction from itself
 > - every workflow instruction have high level plan (7-step execution pattern)
 > - every workflow instruction ensure we load project context, at bare minimum:
->   * Review project objectives: docs/what-do-we-build.md
->   * Examine high-level architecture: docs/architecture.md  
->   * Check project structure and key files: docs/blueprint.md
+>   - Review project objectives: docs/what-do-we-build.md
+>   - Examine high-level architecture: docs/architecture.md  
+>   - Check project structure and key files: docs/blueprint.md
 
 ## Implementation Plan
 
@@ -86,7 +87,7 @@ Updated requirements:
   - All required context is embedded in each workflow
 - [ ] Agent Integration Tests
   - Test all 21 workflows with Claude Code
-  - Test all 21 workflows with Windsurf 
+  - Test all 21 workflows with Windsurf
   - Test all 21 workflows with Zed
 - [ ] Standardization Tests
   - All workflows follow standardized template structure

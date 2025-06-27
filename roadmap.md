@@ -37,7 +37,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 ## 5. Cross-Release Dependencies
 
 - **External Service Dependencies:**
-    - "LLM Integration" (R-LLM-1, R-LLM-3) requires access to Google Gemini API and a local LM Studio installation.
+  - "LLM Integration" (R-LLM-1, R-LLM-3) requires access to Google Gemini API and a local LM Studio installation.
 
 ## 6. Update History
 
