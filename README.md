@@ -131,7 +131,7 @@ This often involves a preparatory step to structure the input, followed by task 
 
 ```text
 1. Prepare an analysis from your Feature Requirements Document (FRD):
-   Read and execute the workflow instruction `dev-handbook/workflow-instructions/breakdown-notes-into-tasks/from-frd.md`.
+   Read and execute the workflow instruction `dev-handbook/workflow-instructions/create-task.md`.
    (The AI will likely ask for the FRD content or path).
 
 2. Create tasks from the structured analysis:
@@ -140,9 +140,8 @@ This often involves a preparatory step to structure the input, followed by task 
    following the guidelines in `dev-handbook/guides/write-actionable-task.md`.
 ```
 
-(Note: The `dev-handbook/workflow-instructions/breakdown-notes-into-tasks/`
-directory contains various sub-workflows like `from-frd.md`, `from-prd.md`,
-`from-diff.md`, etc., to handle different input sources for task creation.)
+(Note: The `dev-handbook/workflow-instructions/create-task.md` workflow handles
+different input sources for task creation in a single, comprehensive workflow.)
 
 **3. Review a Task**
 To thoroughly review an existing task definition (e.g., the next one suggested
