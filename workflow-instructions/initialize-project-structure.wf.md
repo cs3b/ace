@@ -3,7 +3,7 @@
 ## Goal
 
 Initialize the `dev-handbook` and `dev-taskflow` directory structures and create core documentation files
-(`what-do-we-build.md`, `architecture.md`, `blueprint.md`) to establish the foundation for an
+(`what-do-we-build.md`, `architecture.md`, `blueprint.md` in docs/ folder ) to establish the foundation for an
 AI-assisted development workflow in a new or existing project.
 
 **Idempotency**: This workflow is designed to be idempotent. Rerunning it will skip already completed steps or safely update existing files without overwriting customized content.
@@ -11,7 +11,10 @@ AI-assisted development workflow in a new or existing project.
 ## Process Steps
 
 1. **Project Structure Setup**:
-    - **Submodule Verification**: Verify that both required submodules (`dev-handbook` and `dev-tools`) are present and properly initialized.
+    - **Submodule Branch**: Verify the `dev-handbook` submodule is checked out to a branch other than
+      `main` or `master`. If it's on `main`/`master`, create and switch to a new branch
+      (e.g., `git checkout -b project-specific-docs`) to allow for project-specific tailoring
+      without affecting the upstream repository.
     - Create project management directories (`backlog`, `current`, `done`) inside the `dev-taskflow` directory.
 
 2. **Core Documentation Generation**:
