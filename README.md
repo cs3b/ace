@@ -21,14 +21,13 @@ gem install coding_agent_tools
 **2. Or, for local development/use from source:**
 
 Add this line to your application's Gemfile if you are using it as a dependency from a local path (e.g., as a submodule or a local copy):
+
 ```ruby
 gem 'coding_agent_tools', path: '.'
 ```
+
 Then execute:
-```bash
-bundle install
-```
-Or, if you are working directly within this cloned repository:
+
 ```bash
 bundle install
 ```
@@ -97,7 +96,7 @@ coding_agent_tools project release_context
 
 - **`exe/llm-query`**: Query any supported LLM provider using unified syntax
   - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--force] [--debug]`
-  - Examples: 
+  - Examples:
     - `exe/llm-query google:gemini-2.5-flash "What is Ruby?"`
     - `exe/llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output response.json`
     - `exe/llm-query openai:gpt-4o "Question" --system system.md --output result.md`
@@ -111,16 +110,17 @@ coding_agent_tools project release_context
 
 - **`exe/llm-models`**: List available AI models from various providers
   - Usage: `exe/llm-models [PROVIDER] [--filter FILTER] [--format json] [--refresh]`
-  - Examples: 
+  - Examples:
     - `exe/llm-models google --filter "gemini-pro"`
     - `exe/llm-models lmstudio --filter "mistral"`
     - `exe/llm-models google --refresh` (refresh cache)
   - **New Output Fields**: Now includes `Context Size` and `Max Output` token limits for better model selection
   - **Sample Output**:
+
     ```
     Available LM Studio Models:
     ==================================================
-    
+
     ID: mistralai/devstral-small-2505
     Name: Devstral Small
     Description: Specialized coding model, optimized for development tasks
@@ -128,6 +128,7 @@ coding_agent_tools project release_context
     Max Output: 16.4K tokens
     Status: Default model
     ```
+
   - Providers: `google` (default), `lmstudio`
   - Requires: `GOOGLE_API_KEY` for Google, LM Studio running on localhost:1234 for LMStudio
 
@@ -149,20 +150,26 @@ coding_agent_tools project release_context
 When using the `--output` flag with `exe/llm-query`, the tool includes built-in security features for file operations:
 
 **Interactive Mode** (terminals):
+
 - If the output file already exists, you'll receive a confirmation prompt:
+
   ```
-  File 'response.txt' already exists. Overwrite? [y/N]: 
+  File 'response.txt' already exists. Overwrite? [y/N]:
   ```
+
 - Type `y` or `yes` to confirm overwrite, or `n`/`no` (or just press Enter) to cancel
 
 **Non-Interactive Mode** (CI/automation):
+
 - In CI environments or non-TTY contexts, overwrite attempts are automatically denied for safety
 - Use the `--force` (or `-f`) flag to bypass confirmation prompts:
+
   ```bash
   exe/llm-query google "Question" --output response.txt --force
   ```
 
 **Examples**:
+
 ```bash
 # Interactive confirmation (will prompt if file exists)
 exe/llm-query google "What is Ruby?" --output answer.txt
@@ -181,6 +188,7 @@ This behavior ensures safe file operations while maintaining compatibility with 
 All LLM queries automatically include cost tracking and usage analytics. Here's what you'll see:
 
 **Basic Query with Cost Summary:**
+
 ```bash
 $ exe/llm-query google:gemini-2.5-flash "What is Ruby programming?"
 
@@ -197,6 +205,7 @@ Cost Breakdown:
 ```
 
 **Usage Report Generation:**
+
 ```bash
 $ exe/llm-usage-report --date-range today
 
@@ -221,6 +230,7 @@ Timestamp           Provider     Model                   Input   Output   Cached
 ```
 
 This helps you:
+
 - **Monitor Costs**: Track spending across providers and models
 - **Optimize Usage**: Compare model costs and performance
 - **Budget Planning**: Generate reports for cost analysis
@@ -250,6 +260,7 @@ See the [Architecture Document](docs/architecture.md) for more details.
 For detailed instructions on configuring API keys (e.g., `GEMINI_API_KEY`) and setting up LM Studio, please refer to the [Setup Guide](docs/SETUP.md#api-keys-optional).
 
 ### LM Studio
+
 Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API credentials required for default localhost usage.
 
 ## 📋 Requirements
@@ -261,11 +272,13 @@ Ensure LM Studio is running on `localhost:1234` for offline LLM queries. No API 
 ## 🎯 Use Cases
 
 ### For AI Agents
+
 - Deterministic CLI interface for automation
 - Reliable Git and task management operations
 - Structured JSON output with `--json` flag
 
 ### For Developers
+
 - Rapid repository setup and configuration
 - AI-generated commit messages based on diffs
 - Streamlined task navigation in documentation-driven workflows
@@ -277,6 +290,7 @@ Currently in active development (v0.1.0 focusing on establishing the gem structu
 ## 💻 Development
 
 For complete development information including environment setup, testing, build tools, and contribution workflow, see:
+
 - **[Development Guide](docs/DEVELOPMENT.md)** - Complete development workflow and contributor quick start
 - **[Setup Guide](docs/SETUP.md)** - Environment setup instructions
 - **[Contributing](.github/CONTRIBUTING.md)** - Contribution guidelines and standards
@@ -284,11 +298,13 @@ For complete development information including environment setup, testing, build
 ## 📚 Documentation
 
 ### User Documentation
+
 - **[Setup Guide](docs/SETUP.md)** - Development environment setup
 - **[Development Guide](docs/DEVELOPMENT.md)** - Workflow and best practices
 - **[Contributing](.github/CONTRIBUTING.md)** - How to contribute
 
 ### Project Documentation
+
 - [Project Vision](docs/what-do-we-build.md) - Goals and use cases
 - [Architecture](docs/architecture.md) - System design and patterns
 - [Documentation Structure Guide](dev-handbook/guides/documentation.g.md) - Clarifies overall documentation organization and responsibilities
