@@ -24,13 +24,11 @@ Automated documentation review workflow using multiple LLM providers for compreh
 ## Quick Start (Staged/Uncommitted Changes)
 
 ```bash
-# 1. Set project root and get current release
+# 1. Set project root
 PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-CURRENT_RELEASE=$("$PROJECT_ROOT/bin/rc")
 
 # 2. Create timestamped review directory and switch to it
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$REVIEW_DIR"
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
 cd "$REVIEW_DIR"
 
 # 3. Stage all changes in dev-handbook and generate diff
@@ -51,18 +49,15 @@ git -C "$PROJECT_ROOT/dev-handbook" diff --cached > input.diff
 
 ### 1. Prepare Review Environment
 ```bash
-# Set project root and get current release
+# Set project root
 PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-CURRENT_RELEASE=$("$PROJECT_ROOT/bin/rc")
 
 # Create review directory with timestamp (default for uncommitted changes)
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$REVIEW_DIR"
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
 cd "$REVIEW_DIR"
 
-# Or use specific task naming
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/task-N"
-mkdir -p "$REVIEW_DIR"
+# Or for specific git ranges
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "main..HEAD")
 cd "$REVIEW_DIR"
 ```
 
@@ -131,13 +126,11 @@ done
 
 ### Basic Review
 ```bash
-# Set project root and get current release
+# Set project root
 PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-CURRENT_RELEASE=$("$PROJECT_ROOT/bin/rc")
 
 # Quick review of current dev-handbook changes
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/task-42"
-mkdir -p "$REVIEW_DIR"
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
 cd "$REVIEW_DIR"
 
 # Generate diff and review
@@ -150,13 +143,11 @@ git -C "$PROJECT_ROOT/dev-handbook" diff > input.diff
 
 ### Comprehensive Review
 ```bash
-# Set project root and get current release
+# Set project root
 PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-CURRENT_RELEASE=$("$PROJECT_ROOT/bin/rc")
 
 # Full content review with multiple providers
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/task-42"
-mkdir -p "$REVIEW_DIR"
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "HEAD~5..HEAD")
 cd "$REVIEW_DIR"
 
 # Generate diff with full content
@@ -174,13 +165,11 @@ done
 
 ### Review PR Changes
 ```bash
-# Set project root and get current release
+# Set project root
 PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-CURRENT_RELEASE=$("$PROJECT_ROOT/bin/rc")
 
 # Review specific PR dev-handbook changes
-REVIEW_DIR="$PROJECT_ROOT/dev-taskflow/current/$CURRENT_RELEASE/handbook_review/pr-123"
-mkdir -p "$REVIEW_DIR"
+REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "main..pr-123")
 cd "$REVIEW_DIR"
 
 # Checkout PR and generate diff

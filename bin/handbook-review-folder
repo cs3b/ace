@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+require 'pathname'
+require 'time'
+
+# Get script directory
+SCRIPT_DIR = Pathname.new(__FILE__).parent.realpath
+PROJECT_ROOT = SCRIPT_DIR.parent
+
+def usage
+  puts <<~USAGE
+    Usage: #{$0} [git-range]
+
+    Creates a timestamped review folder in current release and outputs the path.
+
+    Arguments:
+      git-range    Git range specification (e.g., "main..HEAD", "abc123..HEAD", "HEAD~3..HEAD")
+                   If not provided, defaults to uncommitted changes
+
+    Examples:
+      #{$0}                    # uncommitted changes
+      #{$0} main..HEAD         # commits from main to HEAD
+      #{$0} abc123             # commits from abc123 to HEAD (exclusive of abc123)
+      #{$0} HEAD~5..HEAD       # last 5 commits
+
+    Output: Full path to created review directory
+  USAGE
+end
+
+def get_current_release
+  rc_script = (PROJECT_ROOT / "bin" / "rc")
+  unless rc_script.exist?
+    raise "Release context script not found: #{rc_script}"
+  end
+
+  release = `#{rc_script}`.strip
+  if $?.exitstatus != 0 || release.empty?
+    raise "Failed to get current release"
+  end
+
+  release.split("\n").first
+end
+
+def create_review_folder(git_range = nil)
+  current_release = get_current_release
+  timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+
+  # Determine folder name based on git range
+  if git_range.nil? || git_range.empty?
+    folder_name = "uncommitted-changes-#{timestamp}"
+  else
+    # Clean up git range for folder name (replace problematic chars)
+    safe_range = git_range.gsub(/[^a-zA-Z0-9._-]/, '-')
+    folder_name = "#{safe_range}-#{timestamp}"
+  end
+
+  review_dir = PROJECT_ROOT / current_release / "handbook_review" / folder_name
+
+  # Create the directory
+  review_dir.mkpath
+
+  review_dir.to_s
+end
+
+# Main execution
+if ARGV.include?('-h') || ARGV.include?('--help')
+  usage
+  exit 0
+end
+
+begin
+  git_range = ARGV[0]
+  folder_path = create_review_folder(git_range)
+  puts folder_path
+rescue => e
+  $stderr.puts "Error: #{e.message}"
+  exit 1
+end
