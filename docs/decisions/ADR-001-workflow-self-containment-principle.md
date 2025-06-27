@@ -83,24 +83,27 @@ All workflow instruction files must be completely self-contained and independent
 ## Alternatives Considered
 
 ### Alternative 1: Status Quo (Reference-Based Architecture)
+
 - **Description**: Continue with the existing system of cross-references and external dependencies
-- **Why it wasn't chosen**: 
+- **Why it wasn't chosen**:
   - Creates brittleness and complexity that hinders AI agent autonomy
   - Results in poor context window utilization
   - Makes workflows dependent on external changes
   - Requires complex orchestration logic for execution
 
 ### Alternative 2: Hybrid Model with Dependency Declaration
+
 - **Description**: Keep references but add explicit dependency sections and validation
-- **Why it wasn't chosen**: 
+- **Why it wasn't chosen**:
   - Still requires agents to manage multiple files and dependencies
   - Adds complexity without solving core autonomy issues
   - Doesn't address context window efficiency problems
   - Maintains brittleness issues with external changes
 
 ### Alternative 3: Centralized Workflow Engine
+
 - **Description**: Create a workflow orchestration system to manage dependencies automatically
-- **Why it wasn't chosen**: 
+- **Why it wasn't chosen**:
   - Adds significant system complexity
   - Creates a single point of failure
   - Doesn't improve individual workflow clarity
@@ -121,6 +124,7 @@ This decision establishes the foundational principle for all future workflow dev
 ## Examples
 
 ### Before: Reference-Based Pattern
+
 ```markdown
 ## Prerequisites
 - Load project context: `docs/what-do-we-build.md`
@@ -129,6 +133,7 @@ This decision establishes the foundational principle for all future workflow dev
 ```
 
 ### After: Self-Contained Pattern
+
 ```markdown
 ## Project Context Loading
 Load these project files to understand context:
@@ -139,10 +144,12 @@ Load these project files to understand context:
 ## Commit Format (Embedded)
 Use this conventional commit format:
 ```
+
 type(scope): description
 
 - Detail 1
 - Detail 2
+
 ```
 
 Types: feat, fix, docs, style, refactor, test, chore
@@ -162,6 +169,7 @@ dependencies: []
 ## Objective
 [Clear statement of what needs to be accomplished]
 ```
+
 ```
 
 This architectural decision ensures that all future workflows in the Coding Agent Handbook system prioritize agent autonomy, execution reliability, and maintenance simplicity over centralized template management.

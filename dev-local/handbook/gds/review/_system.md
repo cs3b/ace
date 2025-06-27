@@ -4,14 +4,23 @@ The project creates guides and workflows for AI-assisted development, organized 
 Output MUST follow the exact section order and Markdown anchors given below so that automated comparison scripts can parse it.
 
 # SECTION LIST  ─ DO NOT CHANGE NAMES
+
 ## 1. Executive Summary
+
 ## 2. Workflow Instructions Updates
+
 ## 3. Template & Example Updates
+
 ## 4. Integration Guide Requirements
+
 ## 5. AI Agent Instruction Updates
+
 ## 6. Cross-Reference Integrity
+
 ## 7. Prioritised Handbook Tasks
+
 ## 8. Risk Assessment
+
 ## 9. Implementation Recommendation
 
 Additional constraints
@@ -30,4 +39,4 @@ Pick ONE status and briefly justify.
 
 Tone: concise, professional, actionable.
 Focus on workflow effectiveness and AI agent experience.
-If a section has nothing to report, write "_No updates required_."
+If a section has nothing to report, write "*No updates required*."
