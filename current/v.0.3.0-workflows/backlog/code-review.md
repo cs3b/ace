@@ -13,6 +13,7 @@ Automated code review workflow using multiple LLM providers for comprehensive an
 ## Default Configuration
 
 **Default parameters for code reviews:**
+
 - **Include dependencies**: Always use `--include-dependencies` for comprehensive context
 - **Timeout**: 300 seconds (5 minutes) for complex reviews
 - **System prompt**: `dev-handbook/guides/code-review/_code-review-system.md`
@@ -50,6 +51,7 @@ exe/llm-query gpro cr-prompt.md \
 ## Workflow Steps
 
 ### 1. Prepare Review Environment
+
 ```bash
 # Create review directory with timestamp (default for uncommitted changes)
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
@@ -61,6 +63,7 @@ cd dev-taskflow/current/v.X.X.X-release/code_review/task-N/
 ```
 
 ### 2. Generate Diff
+
 ```bash
 # Option A: From staged (uncommitted) changes (DEFAULT)
 git add -A  # Ensure all changes are staged first
@@ -85,6 +88,7 @@ git stash show -p > input.diff
 ```
 
 ### 3. Filter Diff (Optional but Recommended)
+
 ```bash
 # Default: Filter out documentation, test cassettes, and hidden files
 ruby dev-tools/exe-old/filter-diff.rb input.diff \
@@ -103,6 +107,7 @@ ruby dev-tools/exe-old/filter-diff.rb input.diff -p .ignore-patterns -o input-fi
 ```
 
 ### 4. Generate Review Prompt (DEFAULT: with dependencies)
+
 ```bash
 # Default: With full context and dependencies (using filtered diff)
 bin/cr -d input-filtered.diff -o cr-prompt.md --include-dependencies
@@ -115,6 +120,7 @@ bin/cr -d input-filtered.diff -o cr-prompt.md
 ```
 
 ### 5. Run Code Review (DEFAULT: gpro)
+
 ```bash
 # Default: Run with gpro only
 exe/llm-query gpro cr-prompt.md \
@@ -143,6 +149,7 @@ done
 ## Example Usage
 
 ### Basic Review
+
 ```bash
 # Quick review of current working directory changes
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
@@ -153,6 +160,7 @@ exe/llm-query gpro cr-prompt.md --system dev-handbook/guides/code-review/_code-r
 ```
 
 ### Comprehensive Review
+
 ```bash
 # Full context review with multiple providers
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/code_review/task-42/
@@ -170,6 +178,7 @@ done
 ```
 
 ### Review PR Changes
+
 ```bash
 # Review specific PR changes
 gh pr checkout 123

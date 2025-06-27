@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.15
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -11,6 +11,7 @@ dependencies: []
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
 ```
@@ -30,7 +31,7 @@ _Result excerpt:_
     ├── fix-tests.wf.md
     ├── initialize-project-structure.wf.md
     ├── load-project-context.wf.md
-    ├── log-compact-session.wf.md
+    ├── save-session-context.md
     ├── publish-release.wf.md
     ├── README.md
     ├── review-task.wf.md
@@ -99,38 +100,38 @@ Update the task creation workflow (breakdown-notes-into-tasks.wf.md, which will 
 
 ### Execution Steps
 
-* [ ] Update the workflow template to use zero-padded task IDs in examples
+* [x] Update the workflow template to use zero-padded task IDs in examples
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Template shows zero-padded format (e.g., task.01, task.02)
-  > Command: grep -n "task\." dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+  > Command: grep -n "task\." dev-handbook/workflow-instructions/create-task.md
 
-* [ ] Update the task ID generation section to specify zero-padding requirement
+* [x] Update the task ID generation section to specify zero-padding requirement
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Instructions specify zero-padded format for task IDs
-  > Command: grep -A5 -B5 "bin/tnid" dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+  > Command: grep -A5 -B5 "bin/tnid" dev-handbook/workflow-instructions/create-task.md
 
-* [ ] Update filename creation instructions to use zero-padded format
+* [x] Update filename creation instructions to use zero-padded format
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Filename examples show zero-padded task IDs
-  > Command: grep -n "kebab-case-title" dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md
+  > Command: grep -n "kebab-case-title" dev-handbook/workflow-instructions/create-task.md
 
-* [ ] Modify bin/tnid to generate zero-padded task IDs
+* [x] Modify bin/tnid to generate zero-padded task IDs
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: bin/tnid generates IDs with zero-padding (e.g., task.01, task.02)
-  > Command: bin/tnid v.0.3.0 | grep -E "task\.0[0-9]+"
+  > Command: bin/tnid v.0.3.0 | grep -E "task\.[0-9]{2}"
 
 ## Acceptance Criteria
 
-* [ ] All task ID examples in the workflow use zero-padded format (01, 02, etc.)
-* [ ] Task ID generation instructions specify zero-padding requirement
-* [ ] Filename creation examples show zero-padded task IDs
-* [ ] bin/tnid command generates zero-padded task IDs consistently
-* [ ] No inconsistent single-digit task ID references remain in the workflow
-* [ ] Documentation clearly explains the zero-padded format standard
+* [x] All task ID examples in the workflow use zero-padded format (01, 02, etc.)
+* [x] Task ID generation instructions specify zero-padding requirement
+* [x] Filename creation examples show zero-padded task IDs
+* [x] bin/tnid command generates zero-padded task IDs consistently
+* [x] No inconsistent single-digit task ID references remain in the workflow
+* [x] Documentation clearly explains the zero-padded format standard
 
 ## Out of Scope
 

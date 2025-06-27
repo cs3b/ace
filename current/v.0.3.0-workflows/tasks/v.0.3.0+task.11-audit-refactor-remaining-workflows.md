@@ -93,7 +93,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   - create-user-docs.wf.md (304 lines)
   - initialize-project-structure.wf.md (854 lines)
   - load-project-context.wf.md (61 lines)
-  - log-compact-session.wf.md (234 lines)
+  - save-session-context.md (234 lines)
 
 - **COMPLIANT (Have Project Context Loading)**: 8 workflows
   - breakdown-notes-into-tasks.wf.md ✅
@@ -120,7 +120,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 
 2. **MEDIUM PRIORITY (Documentation Workflows)**
    - create-reflection-note.wf.md (244 lines)
-   - log-compact-session.wf.md (234 lines)
+   - save-session-context.md (234 lines)
    - create-api-docs.wf.md (296 lines)
    - create-user-docs.wf.md (304 lines)
 
@@ -152,7 +152,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 ✅ **MEDIUM PRIORITY WORKFLOWS REFACTORED:**
 
 - create-reflection-note.wf.md - Added all missing self-containment sections
-- log-compact-session.wf.md - Added all missing self-containment sections
+- save-session-context.md - Added all missing self-containment sections
 - create-api-docs.wf.md - Added all missing self-containment sections
 - create-user-docs.wf.md - Added all missing self-containment sections
 

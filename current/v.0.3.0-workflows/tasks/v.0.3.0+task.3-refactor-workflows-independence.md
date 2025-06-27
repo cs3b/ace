@@ -57,7 +57,7 @@ Refactor all 21 workflow instruction files to be self-contained and independent,
   - fix-tests.wf.md
   - initialize-project-structure.wf.md
   - load-env.wf.md
-  - log-compact-session.wf.md
+  - save-session-context.md
   - publish-release.wf.md
   - review-task.wf.md
   - review-tasks-board-status.wf.md

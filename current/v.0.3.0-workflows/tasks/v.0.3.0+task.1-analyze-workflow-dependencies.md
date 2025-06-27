@@ -33,7 +33,7 @@ _Result excerpt:_
     dev-handbook/workflow-instructions/fix-tests.wf.md
     dev-handbook/workflow-instructions/initialize-project-structure.wf.md
     dev-handbook/workflow-instructions/load-env.wf.md
-    dev-handbook/workflow-instructions/log-compact-session.wf.md
+    dev-handbook/workflow-instructions/save-session-context.md
     dev-handbook/workflow-instructions/publish-release.wf.md
     dev-handbook/workflow-instructions/review-task.wf.md
     dev-handbook/workflow-instructions/review-tasks-board-status.wf.md

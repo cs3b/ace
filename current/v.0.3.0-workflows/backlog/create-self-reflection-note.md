@@ -13,11 +13,12 @@
 
 5. Create file paths in
 Directory:
-  - current release (use tool `bin/rc`) and find directory reflections inside this release folder
+
+- current release (use tool `bin/rc`) and find directory reflections inside this release folder
 Filename:
-  - use tool call `now` to get current date
-  - with filename that have format <YYYYMMDD>-<HHMMSS>-<essence-of-the-session>.md
+- use tool call `now` to get current date
+- with filename that have format <YYYYMMDD>-<HHMMSS>-<essence-of-the-session>.md
 Full Path Example:
-  - dev-taskflow/current/v.0.2.0-synapse/reflections/20250621-124625-start-work-on-task.38.md)
+- dev-taskflow/current/v.0.2.0-synapse/reflections/20250621-124625-start-work-on-task.38.md)
 
 6. Save The results from step 4 and save it into path identified in point 5.

@@ -160,7 +160,7 @@ Most workflows require loading fundamental project context:
 **Other Template Dependencies:**
 
 - breakdown-notes-into-tasks.wf.md → Sub-workflow templates in `breakdown-notes-into-tasks/` directory
-- log-compact-session.wf.md → Embedded session log format template
+- save-session-context.md → Embedded session log format template
 - review-tasks-board-status.wf.md → Task `.md` file format expectations
 
 ### 4. Tool Dependencies (8 workflows)
@@ -187,7 +187,7 @@ Most workflows require loading fundamental project context:
 
 @#=> we don't need to mention this tool in below workflows
 
-- log-compact-session.wf.md
+- save-session-context.md
 
 **`bin/tn`, `bin/tr` - Task navigation (5 workflows):**
 
@@ -232,7 +232,7 @@ Most workflows require loading fundamental project context:
 **Session Management Chain:**
 @=> we should remove the `create-retrospective-document.wf.md` workflow
 
-- `create-retrospective-document.wf.md` → Uses outputs from `log-compact-session.wf.md`
+- `create-retrospective-document.wf.md` → Uses outputs from `save-session-context.md`
 - `create-retrospective-document.wf.md` → Uses outputs from `create-reflection-note.wf.md`
 
 **Sub-workflow Dependencies:**
@@ -329,7 +329,7 @@ create-test-cases.wf.md
 ### Session Management
 
 ```
-log-compact-session.wf.md → create-retrospective-document.wf.md
+save-session-context.md → create-retrospective-document.wf.md
 create-reflection-note.wf.md → create-retrospective-document.wf.md
 ```
 
@@ -463,7 +463,7 @@ The following guide dependencies should be removed from workflows:
 **Remove tool mentions from workflows:**
 
 - `bin/tnid`: Remove from `review-task.wf.md` and `initialize-project-structure.wf.md`
-- `bin/rc`: Remove from `log-compact-session.wf.md`
+- `bin/rc`: Remove from `save-session-context.md`
 - `bin/tn`, `bin/tr`: Remove from `update-blueprint.wf.md`, `initialize-project-structure.wf.md`, `review-tasks-board-status.wf.md`
 
 **Workflow behavior updates:**

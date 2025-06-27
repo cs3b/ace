@@ -11,6 +11,7 @@ dependencies: []
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
 ```
@@ -30,7 +31,7 @@ _Result excerpt:_
     ├── fix-tests.wf.md
     ├── initialize-project-structure.wf.md
     ├── load-project-context.wf.md
-    ├── log-compact-session.wf.md
+    ├── save-session-context.md
     ├── publish-release.wf.md
     ├── README.md
     ├── review-task.wf.md
