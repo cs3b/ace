@@ -64,7 +64,7 @@ All notable changes to this project will be documented in this file.
 ### v.0.3.0+tasks.16 - 2025-06-02 - Implement Agreed Naming Conventions for Guides and Workflow Instructions
 
 - **Implemented file extension conventions** to establish clear distinction between guides and workflow instructions:
-  - Applied `.wf.md` suffix to all 21 workflow instruction files (breakdown-notes-into-tasks, commit, create-adr, create-api-docs, create-reflection-note, create-release-overview, create-retrospective-document, create-review-checklist, create-test-cases, create-user-docs, draft-release, fix-tests, initialize-project-structure, load-env, log-compact-session, manage-roadmap, publish-release, review-task, review-tasks-board-status, update-blueprint, work-on-task)
+  - Applied `.wf.md` suffix to all 21 workflow instruction files (breakdown-notes-into-tasks, commit, create-adr, create-api-docs, create-reflection-note, create-release-overview, create-retrospective-document, create-review-checklist, create-test-cases, create-user-docs, draft-release, fix-tests, initialize-project-structure, load-env, save-session-context, manage-roadmap, publish-release, review-task, review-tasks-board-status, update-blueprint, work-on-task)
   - Applied `.g.md` suffix to all guide files with noun-based naming (changelog, coding-standards, documentation, error-handling, performance, project-management, quality-assurance, security, strategic-planning, temporary-file-management, testing, release-codenames, release-publish, testing-tdd-cycle, debug-troubleshooting, version-control-system, task-definition)
   - Moved and renamed workflow-specific guides: embedding-tests-in-workflows → .meta/workflow-embedding-tests.g.md, tools-guide → .meta/tools.g.md
 - **Updated meta-documentation** to reflect new naming conventions:
@@ -411,7 +411,7 @@ in the 2025-05-07 and 2025-05-08 git logs)
     - `init-project` to `initialize-project-structure`. (Task `14-review-rename-init-project-workflow`)
     - `generate-blueprint` reviewed and renamed. (Task `15-review-rename-generate-blueprint-workflow`)
     - Clarified and restructured project management (`review-tasks-board-status`) and reflection
-      (`log-compact-session`, `create-retrospective-document`) workflows. (Task
+      (`save-session-context`, `create-retrospective-document`) workflows. (Task
       `18-review-restructure-project-management-workflows`)
   - Reviewed and restructured documentation generation workflows (Task
     `17-review-documentation-generation-workflows` - details in 2025-05-07 log).

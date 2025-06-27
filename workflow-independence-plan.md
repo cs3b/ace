@@ -243,7 +243,7 @@ Based on the analysis, these workflows should be deleted:
 - Add blueprint format specification
 - Include update guidelines
 
-### 16. `log-compact-session.wf.md`
+### 16. `save-session-context.md`
 
 **Current Dependencies:**
 
@@ -330,7 +330,7 @@ Replace user verification with:
 13. `initialize-project-structure.wf.md`
 14. `create-reflection-note.wf.md`
 15. `update-blueprint.wf.md`
-16. `log-compact-session.wf.md`
+16. `save-session-context.md`
 
 ## Success Criteria
 
