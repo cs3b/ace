@@ -117,21 +117,22 @@ file, providing any necessary inputs like file paths.
 For [Claude Code](https://claude.ai/code) users, this repository includes native command integration through the `.claude/commands/` system. Each workflow instruction has a corresponding command:
 
 **Available Commands:**
-- `/commit` - Follow commit workflow
-- `/create-adr` - Create Architecture Decision Record
-- `/create-api-docs` - Generate API documentation
-- `/create-reflection-note` - Create project reflection
-- `/create-test-cases` - Generate test cases
-- `/create-user-docs` - Create user documentation
-- `/draft-release` - Draft new release
-- `/fix-tests` - Fix failing tests
-- `/initialize-project-structure` - Set up project structure
-- `/load-project-context` - Load project context
-- `/publish-release` - Publish release
-- `/review-task` - Review task definition
-- `/update-blueprint` - Update project blueprint
-- `/update-roadmap` - Update project roadmap
-- `/work-on-task` - Work on a task
+
+* `/commit` - Follow commit workflow
+* `/create-adr` - Create Architecture Decision Record
+* `/create-api-docs` - Generate API documentation
+* `/create-reflection-note` - Create project reflection
+* `/create-test-cases` - Generate test cases
+* `/create-user-docs` - Create user documentation
+* `/draft-release` - Draft new release
+* `/fix-tests` - Fix failing tests
+* `/initialize-project-structure` - Set up project structure
+* `/load-project-context` - Load project context
+* `/publish-release` - Publish release
+* `/review-task` - Review task definition
+* `/update-blueprint` - Update project blueprint
+* `/update-roadmap` - Update project roadmap
+* `/work-on-task` - Work on a task
 
 **Usage:** Simply type `/command-name` in Claude Code to execute the corresponding workflow. Each command automatically reads the full workflow instructions and commits changes when complete.
 
