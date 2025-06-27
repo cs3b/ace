@@ -10,22 +10,43 @@ Generate or update API documentation for public interfaces (classes, modules, me
 - Documentation generation tool configured (e.g., YARD for Ruby, JSDoc for JavaScript)
 - Understanding of the code's functionality and intended usage
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Identify target code requiring API documentation
+- [ ] Analyze code structure to understand interfaces and functionality
+- [ ] Determine appropriate documentation standards for the project's technology stack
+
+### Execution Steps
+
+- [ ] Write comprehensive documentation comments for all public APIs
+- [ ] Include usage examples and parameter descriptions
+- [ ] Generate and review documentation output
+- [ ] Fix any formatting or content issues
+- [ ] Commit documentation updates to version control
+
 ## Process Steps
 
 1. **Identify Target Code:**
-   * Determine which code needs documentation:
+   - Determine which code needs documentation:
      - New classes, modules, or methods
      - Modified public APIs
      - Undocumented public interfaces
      - Code with outdated documentation
-   * Priority order:
+   - Priority order:
      - Public APIs used by external consumers
      - Core domain models and services
      - Utility classes and helpers
      - Internal implementation details (lower priority)
 
 2. **Analyze Code Structure:**
-   * Review the code to understand:
+   - Review the code to understand:
      - Purpose and responsibility
      - Input parameters and their types
      - Return values and types
@@ -36,8 +57,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
      - Thread safety considerations
 
 3. **Write Documentation Comments:**
-   
+
    **Ruby/YARD Example:**
+
    ```ruby
    # Processes payment transactions using the configured gateway
    #
@@ -85,8 +107,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
      # Implementation
    end
    ```
-   
+
    **JavaScript/JSDoc Example:**
+
    ```javascript
    /**
     * Processes payment transactions using the configured gateway
@@ -133,14 +156,14 @@ Generate or update API documentation for public interfaces (classes, modules, me
    ```
 
 4. **Documentation Standards:**
-   
+
    **Required Elements:**
    - **Description**: Clear, concise explanation of what the code does
    - **Parameters**: All parameters with types and descriptions
    - **Return Value**: Type and description of what's returned
    - **Exceptions**: All possible exceptions/errors that can be thrown
    - **Examples**: At least one realistic usage example
-   
+
    **Optional Elements:**
    - **Notes**: Important behaviors, constraints, or warnings
    - **See Also**: Links to related classes, methods, or docs
@@ -149,8 +172,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    - **Todo**: Known limitations or future improvements
 
 5. **Common Documentation Patterns:**
-   
+
    **Class/Module Documentation:**
+
    ```ruby
    # Handles user authentication and session management
    #
@@ -170,8 +194,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    # @see SessionManager
    module Authentication
    ```
-   
+
    **Configuration/Options Documentation:**
+
    ```ruby
    # @param options [Hash] Configuration options
    # @option options [Integer] :timeout (30) Request timeout in seconds
@@ -179,8 +204,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    # @option options [Boolean] :ssl_verify (true) Whether to verify SSL
    # @option options [Logger] :logger (Rails.logger) Logger instance
    ```
-   
+
    **Callback/Block Documentation:**
+
    ```ruby
    # @yield [item] Gives each item to the block
    # @yieldparam item [Item] The current item being processed
@@ -188,6 +214,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
    ```
 
 6. **Generate and Review Documentation:**
+
    ```bash
    # Ruby/YARD
    bundle exec yard doc
@@ -199,7 +226,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
    # Python/Sphinx
    sphinx-build -b html source build
    ```
-   
+
    **Review Checklist:**
    - [ ] All public methods are documented
    - [ ] Parameter types are accurate
@@ -209,8 +236,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    - [ ] No spelling/grammar errors
 
 7. **Common Issues and Fixes:**
-   
+
    **Missing Types:**
+
    ```ruby
    # Bad - missing type information
    # @param user The user to process
@@ -218,8 +246,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    # Good - includes type
    # @param user [User] The user to process
    ```
-   
+
    **Vague Descriptions:**
+
    ```ruby
    # Bad - too vague
    # Processes the data
@@ -228,8 +257,9 @@ Generate or update API documentation for public interfaces (classes, modules, me
    # Validates and transforms user input data into a normalized format
    # suitable for database storage
    ```
-   
+
    **No Examples:**
+
    ```ruby
    # Bad - no usage example
    # @return [Hash] The result
@@ -243,6 +273,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
    ```
 
 8. **Commit Documentation Updates:**
+
    ```bash
    git add -A
    git commit -m "docs(api): update documentation for PaymentService
@@ -253,7 +284,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
    - Add parameter type information"
    ```
 
-## Output / Success Criteria
+## Success Criteria
 
 - All public APIs have complete documentation comments
 - Documentation includes all required elements (description, params, returns, examples)
@@ -265,6 +296,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
 ## Best Practices
 
 **DO:**
+
 - Write documentation as you code
 - Include real-world examples
 - Document edge cases and gotchas
@@ -273,6 +305,7 @@ Generate or update API documentation for public interfaces (classes, modules, me
 - Use consistent terminology
 
 **DON'T:**
+
 - Leave TODOs in public API docs
 - Include implementation details
 - Copy-paste without reviewing
@@ -289,7 +322,26 @@ Generate or update API documentation for public interfaces (classes, modules, me
 - **Java**: Javadoc (`javadoc`)
 - **C#**: XML Documentation (`///`)
 
+## Common Patterns
+
+### New Feature API Documentation
+
+Document public interfaces when adding new features or capabilities to existing modules.
+
+### Refactoring Documentation Updates
+
+Update API documentation when refactoring changes method signatures or behavior.
+
+### Legacy Code Documentation
+
+Add comprehensive documentation to existing code that lacks proper API documentation.
+
+### Documentation Generation Integration
+
+Integrate API documentation generation into the build process for automatic updates.
+
 ## Usage Example
+>
 > "I've added new public methods to the PaymentService class. Help me create proper API documentation for these methods."
 
 ---

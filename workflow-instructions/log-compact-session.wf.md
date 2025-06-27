@@ -10,25 +10,47 @@ Capture a compact summary of the current session (what was done, next steps, key
 - Clear understanding of what was accomplished
 - Knowledge of next steps or current blockers
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Analyze current session work and recent changes
+- [ ] Identify critical context and files for session restoration
+- [ ] Determine appropriate save location for session log
+
+### Execution Steps
+
+- [ ] Generate comprehensive session summary using embedded template
+- [ ] Create detailed context loading instructions
+- [ ] Include restoration commands and file paths
+- [ ] Save compact session log with timestamp
+- [ ] Provide confirmation and usage instructions
+
 ## Process Steps
 
 1. **Analyze Current Session:**
-   * Review recent work in the session:
+   - Review recent work in the session:
      - Main objectives addressed
      - Key files modified or created
      - Decisions made
      - Problems encountered
      - Current state of work
-   
-   * Identify critical context:
+
+   - Identify critical context:
      - Active task or feature
      - Important file paths
      - Unfinished work
      - Next immediate steps
 
 2. **Generate Session Summary:**
-   
+
    **Use Embedded Template:**
+
    ```markdown
    # Compact Session Log: YYYY-MM-DD HH:MM:SS
    
@@ -62,10 +84,12 @@ Capture a compact summary of the current session (what was done, next steps, key
    
    **Key Files to Load:**
    ```
+
    dev-taskflow/current/v.X.Y.Z/tasks/current-task.md
    src/main/feature/implementation.rb
    spec/feature/implementation_spec.rb
    docs/feature-guide.md
+
    ```
    
    **Recent Changes:**
@@ -87,10 +111,13 @@ Capture a compact summary of the current session (what was done, next steps, key
    bin/lint
    git status
    ```
+
    ---
+
    ```
 
 3. **Determine Save Location:**
+
    ```bash
    # Check for current release
    RELEASE_DIR=$(ls -d dev-taskflow/current/*/ 2>/dev/null | head -1)
@@ -110,15 +137,16 @@ Capture a compact summary of the current session (what was done, next steps, key
    ```
 
 4. **Include Restoration Instructions:**
-   
+
    **Essential Elements:**
    - Exact file paths to reopen
    - Current git branch/status
    - Environment state if relevant
    - Test commands to verify state
    - Clear next action
-   
+
    **Example Context Loading:**
+
    ```markdown
    ### Quick Restore Commands
    ```bash
@@ -137,11 +165,13 @@ Capture a compact summary of the current session (what was done, next steps, key
    # - Add remaining test cases for error scenarios
    # - Update API documentation
    ```
+
    ```
 
 5. **Save and Confirm:**
-   * Save the log to determined location
-   * Provide confirmation with path:
+   - Save the log to determined location
+   - Provide confirmation with path:
+
      ```
      Session log saved to: dev-taskflow/current/v.0.3.0/sessions/20240126-143022-compact-log.md
      
@@ -151,6 +181,7 @@ Capture a compact summary of the current session (what was done, next steps, key
 ## Usage Patterns
 
 ### End of Work Session
+
 ```markdown
 ## Request Summary
 Implemented user authentication feature with JWT tokens
@@ -171,6 +202,7 @@ Implemented user authentication feature with JWT tokens
 ```
 
 ### Context Switch
+
 ```markdown
 ## Request Summary
 Debugging production issue with payment processing
@@ -189,6 +221,7 @@ Debugging production issue with payment processing
 ```
 
 ### Token Limit Reached
+
 ```markdown
 ## Request Summary
 Refactoring legacy notification system (session truncated due to token limit)
@@ -206,6 +239,7 @@ Refactoring legacy notification system (session truncated due to token limit)
 ## Best Practices
 
 **DO:**
+
 - Keep summaries concise but complete
 - Include exact file paths and line numbers
 - Note any uncommitted changes
@@ -213,13 +247,14 @@ Refactoring legacy notification system (session truncated due to token limit)
 - Mention critical decisions or blockers
 
 **DON'T:**
+
 - Include lengthy code snippets
 - Duplicate information available in files
 - Forget to mention the current git state
 - Omit important context or decisions
 - Make summaries too verbose
 
-## Output / Success Criteria
+## Success Criteria
 
 - Compact session log created with all essential information
 - Clear instructions for resuming work
@@ -227,7 +262,26 @@ Refactoring legacy notification system (session truncated due to token limit)
 - Context sufficient to continue without confusion
 - Next steps explicitly defined
 
+## Common Patterns
+
+### Context Switch Logging
+
+Capture session state when switching between different features or bug fixes within the same project.
+
+### Token Limit Recovery
+
+Preserve detailed context when approaching conversation token limits to enable seamless continuation.
+
+### Work Session Boundaries
+
+Log session state at natural stopping points to enable clean resumption later.
+
+### Multi-Session Feature Development
+
+Maintain context across multiple development sessions for complex features requiring extended work.
+
 ## Usage Example
+>
 > "Create a session log - we've been working on the OAuth implementation and I need to switch contexts"
 
 ---

@@ -8,20 +8,6 @@ AI-assisted development workflow in a new or existing project.
 
 **Idempotency**: This workflow is designed to be idempotent. Rerunning it will skip already completed steps or safely update existing files without overwriting customized content.
 
-## High-Level Execution Plan
-
-### Planning Phase
-* [ ] Assess existing project structure and documentation
-* [ ] Determine which templates to use based on project type
-* [ ] Plan directory structure creation strategy
-
-### Execution Phase
-- [ ] Create dev-taskflow and docs-dev directory structures
-- [ ] Generate core documentation from embedded templates
-- [ ] Setup bin/ scripts with appropriate stubs
-- [ ] Initialize v.0.0.0 bootstrap release tracking
-- [ ] Review and update source documentation
-
 ## Process Steps
 
 1. **Project Structure Setup**:
@@ -102,6 +88,27 @@ AI-assisted development workflow in a new or existing project.
 - Optional: An existing `PRD.md` (within `dev-taskflow`) or `README.md` (at project root) can provide information for extraction.
 - Optional: Git repository initialized (the workflow instruction can add to `.gitignore`).
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Assess existing project structure and documentation
+- [ ] Determine which templates to use based on project type
+- [ ] Plan directory structure creation strategy
+
+### Execution Steps
+
+- [ ] Create dev-taskflow and docs-dev directory structures
+- [ ] Generate core documentation from embedded templates
+- [ ] Setup bin/ scripts with appropriate stubs
+- [ ] Initialize v.0.0.0 bootstrap release tracking
+- [ ] Review and update source documentation
+
 ## User Input (if PRD.md or README.md not present or incomplete)
 
 The workflow instruction will prompt for:
@@ -150,7 +157,7 @@ to guide agent behavior.
 
 The generated file includes sections for project organization, technology stack, read-only paths, and ignored paths (see embedded template below).
 
-## Output / Success Criteria
+## Success Criteria
 
 1. **Directory Structure**:
    - `docs-dev`, `dev-taskflow`, and `dev-taskflow/decisions` directories created with standard structure.
@@ -202,6 +209,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 ## Embedded Templates
 
 ### PRD Template
+
 ```markdown
 # Product Requirements Document (PRD)
 
@@ -241,6 +249,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 ```
 
 ### README Template
+
 ```markdown
 # [Project Name]
 
@@ -280,16 +289,19 @@ cd [project-name]
 ```
 
 ### Running the Application
+
 ```bash
 bin/run
 ```
 
 ### Running Tests
+
 ```bash
 bin/test
 ```
 
 ## Development
+
 - `bin/lint` - Run linting
 - `bin/build` - Build the project
 - `bin/test` - Run tests
@@ -297,10 +309,13 @@ bin/test
 - `bin/tr` - List recent tasks
 
 ## Contributing
+
 [Contributing guidelines or link to CONTRIBUTING.md]
 
 ## License
+
 [License information]
+
 ```
 
 ### What We Build Template
@@ -346,6 +361,7 @@ bin/test
 ```
 
 ### Architecture Template
+
 ```markdown
 # Architecture
 
@@ -428,6 +444,7 @@ bin/test
 ```
 
 ### Blueprint Template
+
 ```markdown
 # Blueprint
 
@@ -435,6 +452,7 @@ bin/test
 
 ### Directory Structure
 ```
+
 .
 ├── bin/                    # Executable scripts
 ├── dev-taskflow/          # Task management
@@ -445,6 +463,7 @@ bin/test
 ├── src/                  # Source code (or app/, lib/, etc.)
 ├── test/                 # Test files (or spec/, tests/, etc.)
 └── [project-specific directories]
+
 ```
 
 ### Key Files
@@ -499,6 +518,7 @@ AI agents should ignore these paths:
 ### Binstub Templates
 
 #### bin/test
+
 ```bash
 #!/usr/bin/env bash
 # Run project tests
@@ -516,6 +536,7 @@ exit 1
 ```
 
 #### bin/lint
+
 ```bash
 #!/usr/bin/env bash
 # Run project linting
@@ -533,6 +554,7 @@ exit 1
 ```
 
 #### bin/build
+
 ```bash
 #!/usr/bin/env bash
 # Build project artifacts
@@ -550,6 +572,7 @@ exit 1
 ```
 
 #### bin/run
+
 ```bash
 #!/usr/bin/env bash
 # Run the application
@@ -567,6 +590,7 @@ exit 1
 ```
 
 #### bin/tn
+
 ```bash
 #!/usr/bin/env bash
 # Get next task ID
@@ -575,6 +599,7 @@ ruby dev-handbook/tools/tn.rb "$@"
 ```
 
 #### bin/tr
+
 ```bash
 #!/usr/bin/env bash
 # List recent tasks
@@ -583,6 +608,7 @@ ruby dev-handbook/tools/tr.rb "$@"
 ```
 
 #### bin/tree
+
 ```bash
 #!/usr/bin/env bash
 # Show project structure
@@ -593,6 +619,7 @@ tree -I 'node_modules|vendor|.git|coverage|tmp|log' "$@"
 ### v.0.0.0 Release Templates
 
 #### Release Overview Template
+
 ```markdown
 ---
 status: in-progress
@@ -642,6 +669,7 @@ The v.0.0.0 Bootstrap release establishes the foundational project structure and
 #### Task Templates
 
 ##### v.0.0.0+task.1: Setup Structure
+
 ```markdown
 ---
 id: v.0.0.0+task.1
@@ -689,6 +717,7 @@ Create the foundational directory structure for task management and project docu
 ```
 
 ##### v.0.0.0+task.2: Create Core Docs
+
 ```markdown
 ---
 id: v.0.0.0+task.2
@@ -740,6 +769,7 @@ Generate the three foundational documentation files that guide project developme
 ```
 
 ##### v.0.0.0+task.3: Complete PRD
+
 ```markdown
 ---
 id: v.0.0.0+task.3
@@ -795,6 +825,7 @@ Finalize the PRD.md with comprehensive project requirements, ensuring all sectio
 ```
 
 ##### v.0.0.0+task.4: Create Roadmap
+
 ```markdown
 ---
 id: v.0.0.0+task.4
@@ -845,6 +876,24 @@ Establish the project roadmap from v0.1.0 through v1.0.0, defining major milesto
 - [ ] Timeline is realistic
 - [ ] Document follows roadmap format
 ```
+
+## Common Patterns
+
+### New Project Initialization
+
+Set up complete project structure and documentation for greenfield projects.
+
+### Legacy Project Modernization
+
+Add AI-assisted development structure to existing projects without proper organization.
+
+### Documentation Standardization
+
+Apply consistent documentation templates across multiple projects in an organization.
+
+### Bootstrap Release Management
+
+Establish v.0.0.0 release tracking to manage initial project setup tasks.
 
 ## Notes
 

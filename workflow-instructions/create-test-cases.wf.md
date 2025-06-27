@@ -11,17 +11,38 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 - Understanding of different test types and their purposes
 - Access to existing test patterns in the codebase
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Analyze requirements and identify testable components
+- [ ] Identify test scenarios across different categories (happy path, edge cases, errors)
+- [ ] Categorize tests by type (unit, integration, end-to-end, performance, security)
+
+### Execution Steps
+
+- [ ] Create comprehensive test case structure using embedded template
+- [ ] Generate test cases covering all identified scenarios
+- [ ] Include implementation hints and examples
+- [ ] Review and refine test cases for completeness
+- [ ] Save test cases in appropriate project location
+
 ## Process Steps
 
 1. **Analyze Requirements:**
-   * Review the feature/task details:
+   - Review the feature/task details:
      - Business requirements and user stories
      - Technical specifications
      - Acceptance criteria
      - Implementation approach
      - Dependencies and integrations
-   
-   * Identify testable components:
+
+   - Identify testable components:
      - Input validation rules
      - Business logic flows
      - Output expectations
@@ -29,29 +50,29 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
      - Performance requirements
 
 2. **Identify Test Scenarios:**
-   
+
    **Scenario Categories:**
-   
+
    **Happy Path (Core Functionality):**
    - Standard expected usage
    - Primary user workflows
    - Common configurations
    - Successful outcomes
-   
+
    **Edge Cases:**
    - Boundary values (min/max)
    - Empty or null inputs
    - Special characters
    - Large data sets
    - Concurrent operations
-   
+
    **Error Conditions:**
    - Invalid inputs
    - Missing required data
    - Service failures
    - Network timeouts
    - Permission denials
-   
+
    **Integration Points:**
    - External API calls
    - Database operations
@@ -60,31 +81,31 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - Third-party services
 
 3. **Categorize by Test Type:**
-   
+
    **Unit Tests** (Isolated component testing):
    - Individual functions/methods
    - Class behavior
    - Pure logic validation
    - Mock external dependencies
-   
+
    **Integration Tests** (Component interaction):
    - API endpoint testing
    - Database integration
    - Service communication
    - Configuration loading
-   
+
    **End-to-End Tests** (Full workflow):
    - Complete user journeys
    - Multi-step processes
    - Cross-system flows
    - UI interaction (if applicable)
-   
+
    **Performance Tests** (Speed and scale):
    - Response time benchmarks
    - Throughput limits
    - Resource usage
    - Concurrent user load
-   
+
    **Security Tests** (Vulnerability checks):
    - Authentication bypass
    - Authorization violations
@@ -92,8 +113,9 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - Data exposure
 
 4. **Create Test Case Structure:**
-   
+
    **Test Case Template:**
+
    ```markdown
    ## Test Case: [TC-001] [Descriptive Name]
    
@@ -140,12 +162,13 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
      }
    }
    ```
+
    ```
 
 5. **Generate Comprehensive Test Cases:**
-   
+
    **Example: User Authentication Feature**
-   
+
    ```markdown
    # Test Cases: User Authentication
    
@@ -244,7 +267,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    ```
 
 6. **Include Test Implementation Hints:**
-   
+
    ```markdown
    ## Implementation Notes
    
@@ -267,8 +290,9 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
      });
    });
    ```
-   
-   ### Integration Test Example (RSpec/Ruby):
+
+   ### Integration Test Example (RSpec/Ruby)
+
    ```ruby
    RSpec.describe 'Authentication API' do
      describe 'POST /api/login' do
@@ -289,10 +313,11 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
      end
    end
    ```
+
    ```
 
 7. **Review and Refine:**
-   
+
    **Test Case Review Checklist:**
    - [ ] All requirements have corresponding tests
    - [ ] Happy path scenarios covered
@@ -304,15 +329,16 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - [ ] Appropriate test types chosen
 
 8. **Save Test Cases:**
-   
+
    **File Organization:**
+
    ```
    dev-taskflow/current/v.X.Y.Z/test-cases/
    ├── feature-authentication-tests.md
    ├── api-endpoint-tests.md
    └── performance-benchmarks.md
    ```
-   
+
    **Naming Convention:**
    - `feature-[name]-tests.md` - Feature-specific tests
    - `api-[endpoint]-tests.md` - API testing
@@ -322,24 +348,27 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 ## Test Case Prioritization
 
 **High Priority:**
+
 - Core business logic
 - Security-critical features
 - User-facing functionality
 - Data integrity operations
 
 **Medium Priority:**
+
 - Secondary features
 - Admin functions
 - Reporting features
 - Performance optimizations
 
 **Low Priority:**
+
 - Nice-to-have features
 - Cosmetic issues
 - Rare edge cases
 - Internal tools
 
-## Output / Success Criteria
+## Success Criteria
 
 - Comprehensive test case list covering all requirements
 - Tests organized by type and priority
@@ -352,6 +381,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 ## Common Testing Patterns
 
 ### Boundary Testing
+
 ```markdown
 ### TC-030: Age Validation Boundaries
 **Test Cases**:
@@ -365,6 +395,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 ```
 
 ### State Transition Testing
+
 ```markdown
 ### TC-040: Order State Transitions
 **Valid Transitions**:
@@ -378,6 +409,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 ```
 
 ### Data Validation Matrix
+
 ```markdown
 ### TC-050: Input Validation
 | Field | Valid Values | Invalid Values | Expected Error |
@@ -387,7 +419,26 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 | Date | 2024-01-01 | 01-01-2024 | Invalid format |
 ```
 
+## Common Patterns
+
+### Feature Test Case Development
+
+Create comprehensive test suites when implementing new features with complex business logic.
+
+### API Endpoint Test Coverage
+
+Develop test cases for REST API endpoints covering various HTTP methods and response scenarios.
+
+### Security Feature Testing
+
+Generate security-focused test cases for authentication, authorization, and data protection features.
+
+### Performance Benchmark Testing
+
+Create performance test cases to establish and maintain system performance standards.
+
 ## Usage Example
+>
 > "I've implemented a new user registration feature with email verification. Create comprehensive test cases covering all aspects of the registration flow."
 
 ---

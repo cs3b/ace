@@ -10,19 +10,41 @@ Capture individual or team observations, learnings, and ideas for improvement du
 - Access to create files in the project structure
 - Current working session or specific context to reflect upon
 
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+
+## High-Level Execution Plan
+
+### Planning Steps
+- [ ] Determine the scope and context of the reflection (current session, specific task, or provided topic)
+- [ ] Identify the appropriate location for saving the reflection note
+- [ ] Analyze recent work patterns and extract key insights
+
+### Execution Steps
+
+- [ ] Create reflection structure using the embedded template
+- [ ] Gather and analyze reflection content from recent work or provided context
+- [ ] Populate reflection sections with meaningful insights and learnings
+- [ ] Save reflection note with appropriate filename and location
+- [ ] Commit reflection note to version control
+
 ## Process Steps
 
 1. **Determine Reflection Context:**
-   * If user provides specific context:
+   - If user provides specific context:
      - Use the provided topic, task, or time period
      - Focus reflection on that specific area
-   * If no context provided:
+   - If no context provided:
      - Self-review the current working session
      - Analyze recent changes and activities
      - Extract learnings from current work
 
 2. **Identify Target Location:**
-   * Determine where to save the reflection:
+   - Determine where to save the reflection:
+
      ```bash
      # Check for current release
      ls -d dev-taskflow/current/*/
@@ -33,14 +55,16 @@ Capture individual or team observations, learnings, and ideas for improvement du
      # If no current release
      dev-taskflow/reflections/
      ```
-   * Create reflections directory if needed
-   * Generate filename: `YYYYMMDD-brief-description.md`
+
+   - Create reflections directory if needed
+   - Generate filename: `YYYYMMDD-brief-description.md`
      - Example: `20240126-authentication-refactor-learnings.md`
      - Example: `20240126-session-review.md`
 
 3. **Create Reflection Structure:**
-   
+
    **Embedded Reflection Template:**
+
    ```markdown
    # Reflection: [Topic/Date]
    
@@ -85,21 +109,22 @@ Capture individual or team observations, learnings, and ideas for improvement du
    (Optional: Specific technical insights, code patterns, or implementation notes)
    
    ```
-   
+
    ## Additional Context
-   
+
    (Optional: Links to relevant PRs, tasks, or documentation)
+
    ```
 
 4. **Gather Reflection Content:**
-   
+
    **For Self-Review Session:**
    - Review recent git commits
    - Analyze completed tasks
    - Identify challenges faced
    - Note successful solutions
    - Extract patterns and learnings
-   
+
    **Reflection Prompts:**
    - What was the main goal of this work?
    - What obstacles were encountered?
@@ -109,8 +134,9 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - What knowledge was gained?
 
 5. **Populate Reflection:**
-   
+
    **Example Content Generation:**
+
    ```markdown
    # Reflection: Authentication System Refactor
    
@@ -154,10 +180,11 @@ Capture individual or team observations, learnings, and ideas for improvement du
    ```
 
 6. **Review and Save:**
-   * Ensure all sections have meaningful content
-   * Remove empty sections if not applicable
-   * Save file with descriptive filename
-   * Commit with appropriate message:
+   - Ensure all sections have meaningful content
+   - Remove empty sections if not applicable
+   - Save file with descriptive filename
+   - Commit with appropriate message:
+
      ```bash
      git add dev-taskflow/current/*/reflections/*.md
      git commit -m "docs(reflection): add learnings from [topic]"
@@ -168,6 +195,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 When no specific context is provided, follow this process:
 
 1. **Analyze Recent Work:**
+
    ```bash
    # Review recent commits
    git log --oneline -10
@@ -194,18 +222,22 @@ When no specific context is provided, follow this process:
 ## Common Reflection Patterns
 
 ### Technical Reflection
+
 Focus on code quality, architecture decisions, and technical learnings.
 
 ### Process Reflection
+
 Focus on workflow efficiency, team collaboration, and methodology.
 
 ### Problem-Solving Reflection
+
 Focus on how specific challenges were overcome and lessons learned.
 
 ### Learning Reflection
+
 Focus on new skills, tools, or concepts mastered during the work.
 
-## Output / Success Criteria
+## Success Criteria
 
 - Reflection note created with meaningful content
 - Insights captured for future reference
@@ -216,6 +248,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 ## Best Practices
 
 **DO:**
+
 - Be honest about challenges and failures
 - Focus on actionable improvements
 - Include specific examples
@@ -223,11 +256,30 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Date and contextualize reflections
 
 **DON'T:**
+
 - Make it a blame session
 - Be vague or generic
 - Skip the action items
 - Forget to save/commit
 - Write novels - keep it focused
+
+## Common Patterns
+
+### Session-End Reflection
+
+Capture insights at the end of a development session to preserve context and learnings for future work.
+
+### Feature Completion Reflection
+
+Document lessons learned after completing a significant feature or refactoring effort.
+
+### Problem-Solving Reflection
+
+Record insights gained while solving complex technical challenges or debugging issues.
+
+### Process Improvement Reflection
+
+Capture observations about development workflow effectiveness and areas for optimization.
 
 ## Usage Examples
 
