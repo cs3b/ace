@@ -38,8 +38,8 @@ Create a standardized template for high-level execution plans that will be embed
 
 #### Create
 
-- dev-handbook/guides/workflow-execution-template.md
-- dev-handbook/guides/workflow-context-loading-template.md
+- dev-handbook/guides/.meta/workflow-execution-template.md
+- dev-handbook/guides/.meta/workflow-context-loading-template.md
 
 #### Modify
 
