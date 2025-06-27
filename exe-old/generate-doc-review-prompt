@@ -221,9 +221,9 @@ class DocReviewPromptGenerator
   def read_prompt_template
     # Try multiple possible locations for the template
     possible_paths = [
-      File.join(__dir__, '..', 'guides', 'code-review', '_documentation-update-from-diff.md'),
-      File.join(@options[:project_root], 'dev-handbook', 'guides', 'code-review', '_documentation-update-from-diff.md'),
-      File.join(Dir.pwd, 'dev-handbook', 'guides', 'code-review', '_documentation-update-from-diff.md')
+      File.join(@options[:project_root], '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
+      File.join(Dir.pwd, '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
+      File.join(__dir__, '..', '..', '.dev', 'handbook', 'gds', 'review', '_handbook.md')
     ]
 
     template_path = possible_paths.find { |path| File.exist?(path) }
