@@ -178,8 +178,8 @@ git -C "$PROJECT_ROOT/dev-handbook" checkout pr-123
 git -C "$PROJECT_ROOT/dev-handbook" diff main..HEAD > input.diff
 
 # Generate and run review
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
-"$PROJECT_ROOT/dev-tools/exe/llm-query" csonet dr-prompt.md \
+"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md -t "$PROJECT_ROOT/dev-local/handbook/gds/review/_handbook.md"
+"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
   --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
   --timeout 300 -o dr-report-csonet.md
 ```
