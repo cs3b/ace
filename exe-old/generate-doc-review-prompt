@@ -12,6 +12,9 @@
 #   Specify custom output location:
 #     dev-handbook/tools/generate-doc-review-prompt -d changes.diff -o review-prompt.md
 #
+#   Use custom template file:
+#     dev-handbook/tools/generate-doc-review-prompt -d changes.diff -t custom-template.md
+#
 #   Include full documentation content for detailed analysis:
 #     dev-handbook/tools/generate-doc-review-prompt -d changes.diff --include-content
 
@@ -25,7 +28,8 @@ class DocReviewPromptGenerator
       diff_file: nil,
       output_file: nil,
       project_root: Dir.pwd,
-      include_content: false
+      include_content: false,
+      template_file: nil
     }
 
     parse_options
@@ -57,6 +61,7 @@ class DocReviewPromptGenerator
       opts.separator "Examples:"
       opts.separator "  #{File.basename($0)} -d changes.diff"
       opts.separator "  #{File.basename($0)} -d changes.diff -o custom-prompt.md"
+      opts.separator "  #{File.basename($0)} -d changes.diff -t custom-template.md"
       opts.separator "  #{File.basename($0)} -d changes.diff --include-content"
       opts.separator ""
       opts.separator "Options:"
@@ -68,6 +73,11 @@ class DocReviewPromptGenerator
       opts.on("-o", "--output FILE", "Output file for the prompt (optional)",
               "If not specified, generates: <diff-basename>-doc-review-prompt.md") do |file|
         @options[:output_file] = file
+      end
+
+      opts.on("-t", "--template FILE", "Path to the prompt template file (optional)",
+              "If not specified, searches for template in standard locations") do |file|
+        @options[:template_file] = file
       end
 
       opts.on("-r", "--root DIR", "Project root directory (default: current directory)") do |dir|
@@ -219,22 +229,31 @@ class DocReviewPromptGenerator
   end
 
   def read_prompt_template
-    # Try multiple possible locations for the template
-    possible_paths = [
-      File.join(@options[:project_root], '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
-      File.join(Dir.pwd, '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
-      File.join(__dir__, '..', '..', '.dev', 'handbook', 'gds', 'review', '_handbook.md')
-    ]
+    # Use custom template if specified
+    if @options[:template_file]
+      unless File.exist?(@options[:template_file])
+        puts "Error: Custom template file not found: #{@options[:template_file]}"
+        exit 1
+      end
+      template_path = @options[:template_file]
+    else
+      # Try multiple possible locations for the template
+      possible_paths = [
+        File.join(@options[:project_root], '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
+        File.join(Dir.pwd, '.dev', 'handbook', 'gds', 'review', '_handbook.md'),
+        File.join(__dir__, '..', '..', '.dev', 'handbook', 'gds', 'review', '_handbook.md')
+      ]
 
-    template_path = possible_paths.find { |path| File.exist?(path) }
+      template_path = possible_paths.find { |path| File.exist?(path) }
 
-    unless template_path
-      puts "Error: Prompt template not found. Searched in:"
-      possible_paths.each { |path| puts "  - #{path}" }
-      puts ""
-      puts "Make sure you're running from the project root or that the dev-handbook"
-      puts "directory structure is properly set up."
-      exit 1
+      unless template_path
+        puts "Error: Prompt template not found. Searched in:"
+        possible_paths.each { |path| puts "  - #{path}" }
+        puts ""
+        puts "Make sure you're running from the project root or that the dev-handbook"
+        puts "directory structure is properly set up."
+        exit 1
+      end
     end
 
     File.read(template_path)
@@ -255,7 +274,7 @@ class DocReviewPromptGenerator
 
   def format_key_docs(key_docs)
     return "No key documentation found" if key_docs.empty?
-    
+
     key_docs.join("\n\n")
   end
 
