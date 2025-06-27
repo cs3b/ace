@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.11
-status: in-progress
+status: done
 priority: high
 estimate: 16h
 dependencies: [v.0.3.0+task.9]
@@ -130,7 +130,7 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 
 ### Execution Steps
 
-- [ ] For each non-compliant workflow, perform systematic refactoring:
+- [x] For each non-compliant workflow, perform systematic refactoring:
   1. Add Project Context Loading section listing required files
   2. Identify and copy essential content from referenced guides
   3. Embed templates directly in workflow under Embedded Templates
@@ -142,28 +142,57 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > Assert: Each refactored workflow has all required sections
   > Command: `grep -E "^## Project Context Loading|^## Embedded Templates|^## Common Patterns" $WORKFLOW_FILE | wc -l`
 
-- [ ] Validate each refactored workflow is fully self-contained
+**REFACTORING COMPLETED:**
+✅ **HIGH PRIORITY WORKFLOWS REFACTORED:**
+
+- load-project-context.wf.md - Added High-Level Execution Plan and Common Patterns sections
+- commit.wf.md - Added Project Context Loading, High-Level Execution Plan sections
+- create-adr.wf.md - Added Project Context Loading, High-Level Execution Plan sections
+
+✅ **MEDIUM PRIORITY WORKFLOWS REFACTORED:**
+
+- create-reflection-note.wf.md - Added all missing self-containment sections
+- log-compact-session.wf.md - Added all missing self-containment sections
+- create-api-docs.wf.md - Added all missing self-containment sections
+- create-user-docs.wf.md - Added all missing self-containment sections
+
+✅ **LOW PRIORITY WORKFLOWS REFACTORED:**
+
+- create-test-cases.wf.md - Added all missing self-containment sections
+- initialize-project-structure.wf.md - Added all missing self-containment sections
+
+- [x] Validate each refactored workflow is fully self-contained
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No workflows contain procedural links to guides or other workflows
   > Command: `grep -E "\[.*\]\(.*\.g\.md\)|see.*workflow|run.*workflow" dev-handbook/workflow-instructions/*.wf.md`
 
-- [ ] Remove or consolidate any workflows that are completely redundant after refactoring
+**VALIDATION COMPLETED:**
+✅ All workflows validated as fully self-contained
+✅ No procedural links to external guides found
+✅ Only load-project-context.wf.md legitimately lacks "Project Context Loading" section (since it provides context)
+
+- [x] Remove or consolidate any workflows that are completely redundant after refactoring
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No duplicate or obsolete workflows remain
   > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | xargs grep -l "DEPRECATED\|OBSOLETE"`
 
+**REDUNDANCY CHECK COMPLETED:**
+✅ No workflows marked as DEPRECATED or OBSOLETE found
+✅ All 17 workflows serve distinct purposes and are needed
+✅ No consolidation required - each workflow addresses a unique process
+
 ## Acceptance Criteria
 
-- [ ] All workflow files audited against self-containment standard
-- [ ] Every workflow has Project Context Loading section
-- [ ] All templates and patterns embedded directly in workflows
-- [ ] No workflows contain procedural references to guides
-- [ ] No cross-workflow dependencies exist in prerequisites
-- [ ] All workflows follow the new structure from workflow-instructions-definition.g.md
-- [ ] Redundant or obsolete workflows removed or consolidated
-- [ ] All workflows can be executed independently by AI agents
+- [x] All workflow files audited against self-containment standard
+- [x] Every workflow has Project Context Loading section (except load-project-context.wf.md which provides context)
+- [x] All templates and patterns embedded directly in workflows
+- [x] No workflows contain procedural references to guides
+- [x] No cross-workflow dependencies exist in prerequisites
+- [x] All workflows follow the new structure from workflow-instructions-definition.g.md
+- [x] Redundant or obsolete workflows removed or consolidated
+- [x] All workflows can be executed independently by AI agents
 
 ## Out of Scope
 
