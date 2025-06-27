@@ -198,23 +198,27 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
 ## Key Guidelines
 
 ### Task Granularity
+
 * **Ideal task size**: 4-10 hours of focused work
 * **Too large**: Break into subtasks or phases
 * **Too small**: Combine with related items
 * **Epic threshold**: Tasks over 25h should be epics
 
 ### Task Grouping Logic
+
 * Group by feature area or component
 * Group by technical dependency
 * Group by deliverable type (docs, tests, implementation)
 * Keep cross-cutting concerns separate
 
 ### Priority Assessment
+
 * **High**: Blocks other work, critical path, or urgent fixes
 * **Medium**: Important features or improvements
 * **Low**: Nice-to-have, optimizations, or deferrables
 
 ### Quality Checks
+
 * Every task must have clear acceptance criteria
 * Deliverables must be specific file paths
 * Implementation steps should be concrete actions

@@ -19,6 +19,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Determine the scope and context of the reflection (current session, specific task, or provided topic)
 - [ ] Identify the appropriate location for saving the reflection note
 - [ ] Analyze recent work patterns and extract key insights

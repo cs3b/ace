@@ -97,6 +97,7 @@ AI-assisted development workflow in a new or existing project.
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Assess existing project structure and documentation
 - [ ] Determine which templates to use based on project type
 - [ ] Plan directory structure creation strategy

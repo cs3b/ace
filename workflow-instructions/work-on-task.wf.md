@@ -180,6 +180,7 @@
 ## Temporary File Management
 
 When working with temporary files:
+
 * Create in system temp directory or project-specific location
 * Use descriptive names with timestamps
 * Clean up after task completion

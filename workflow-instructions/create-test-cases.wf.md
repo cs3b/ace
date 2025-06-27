@@ -20,6 +20,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Analyze requirements and identify testable components
 - [ ] Identify test scenarios across different categories (happy path, edge cases, errors)
 - [ ] Categorize tests by type (unit, integration, end-to-end, performance, security)

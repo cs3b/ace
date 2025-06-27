@@ -19,6 +19,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Review and validate changes are ready for commit
 - [ ] Verify all tests pass and code is linted
 - [ ] Ensure changes represent a single logical unit

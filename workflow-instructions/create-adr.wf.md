@@ -19,6 +19,7 @@ capture a significant architectural decision, its context, rationale, and conseq
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Identify and validate the architectural decision needs documentation
 - [ ] Gather comprehensive context and alternatives
 - [ ] Determine ADR number and file naming

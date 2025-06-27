@@ -125,12 +125,14 @@
 ## Roadmap Format Requirements
 
 ### Front Matter Validation
+
 * MUST use YAML format with exactly these fields
 * `title` must be "Project Roadmap"
 * `last_reviewed` must use ISO date (YYYY-MM-DD)
 * `status` must be one of: draft, active, archived
 
 ### Content Guidelines
+
 * **Vision**: 1-3 sentences, inspirational, avoid technical jargon
 * **Objectives**: Outcome-focused (not activity-focused), measurable metrics
 * **Themes**: 2-4 word names, 1-2 sentence descriptions
@@ -139,6 +141,7 @@
 * **History**: Add entry for every significant change
 
 ### Quality Criteria
+
 * Language must be clear and professional
 * All content should support the project vision
 * Information must be current and relevant

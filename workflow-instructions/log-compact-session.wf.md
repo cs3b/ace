@@ -19,6 +19,7 @@ Capture a compact summary of the current session (what was done, next steps, key
 ## High-Level Execution Plan
 
 ### Planning Steps
+
 - [ ] Analyze current session work and recent changes
 - [ ] Identify critical context and files for session restoration
 - [ ] Determine appropriate save location for session log

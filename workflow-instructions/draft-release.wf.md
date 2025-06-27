@@ -332,16 +332,19 @@ user-provided release scope into actionable tasks.
 ## Common Patterns
 
 ### Semantic Versioning Rules
+
 * **MAJOR** (X.0.0): Incompatible API changes
 * **MINOR** (x.Y.0): New functionality, backward compatible
 * **PATCH** (x.y.Z): Bug fixes, backward compatible
 
 ### Task Priority Guidelines
+
 * **High**: Blocks other work or critical path
 * **Medium**: Important but not blocking
 * **Low**: Nice-to-have or can be deferred
 
 ### Estimate Guidelines
+
 * Simple task: 1-4h
 * Medium complexity: 5-10h
 * Complex task: 11-25h
