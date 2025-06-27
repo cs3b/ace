@@ -4,11 +4,9 @@ Idea is to have tools for coding agent that reduce number of calls to get precis
 
 - lint erros -> todolist and so on
 
-
 Multi Params Tool Call ->
 
 commit certain files with certain message / intention as one tool call
-
 
 allow to pass multiple calls in one tool call and get return that is sorted by the calls
 

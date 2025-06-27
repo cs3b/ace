@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.11
-status: pending
+status: in-progress
 priority: high
 estimate: 16h
 dependencies: [v.0.3.0+task.9]
@@ -65,13 +65,13 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
 
 ### Planning Steps
 
-- [ ] Create comprehensive list of all workflow files in the system
+- [x] Create comprehensive list of all workflow files in the system
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Complete inventory of all workflow files exists
   > Command: `find dev-handbook/workflow-instructions -name "*.wf.md" | sort`
 
-- [ ] Audit each workflow against self-containment criteria:
+- [x] Audit each workflow against self-containment criteria:
   - Has Project Context Loading section
   - Has embedded templates (no external template references)
   - Has embedded common patterns (no guide references for procedures)
@@ -82,11 +82,51 @@ Systematically audit and refactor ALL remaining workflow instruction files (`.wf
   > Assert: Audit results categorize all workflows as compliant/non-compliant
   > Command: `grep -L "Project Context Loading" dev-handbook/workflow-instructions/*.wf.md`
 
-- [ ] Prioritize refactoring order based on workflow importance and complexity
+**AUDIT RESULTS:**
+
+- **NON-COMPLIANT (Missing Project Context Loading)**: 9 workflows
+  - commit.wf.md (240 lines)
+  - create-adr.wf.md (158 lines)
+  - create-api-docs.wf.md (296 lines)
+  - create-reflection-note.wf.md (244 lines)
+  - create-test-cases.wf.md (394 lines)
+  - create-user-docs.wf.md (304 lines)
+  - initialize-project-structure.wf.md (854 lines)
+  - load-project-context.wf.md (61 lines)
+  - log-compact-session.wf.md (234 lines)
+
+- **COMPLIANT (Have Project Context Loading)**: 8 workflows
+  - breakdown-notes-into-tasks.wf.md ✅
+  - draft-release.wf.md ✅
+  - fix-tests.wf.md ✅
+  - publish-release.wf.md ✅
+  - review-task.wf.md ✅
+  - update-blueprint.wf.md ✅
+  - update-roadmap.wf.md ✅
+  - work-on-task.wf.md ✅
+
+- [x] Prioritize refactoring order based on workflow importance and complexity
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Refactoring plan exists with clear priorities
   > Command: `wc -l dev-handbook/workflow-instructions/*.wf.md | sort -n`
+
+**REFACTORING PRIORITY ORDER:**
+
+1. **HIGH PRIORITY (Core Workflows)**
+   - load-project-context.wf.md (61 lines) - Most fundamental workflow
+   - commit.wf.md (240 lines) - Essential development workflow
+   - create-adr.wf.md (158 lines) - Architectural decision making
+
+2. **MEDIUM PRIORITY (Documentation Workflows)**
+   - create-reflection-note.wf.md (244 lines)
+   - log-compact-session.wf.md (234 lines)
+   - create-api-docs.wf.md (296 lines)
+   - create-user-docs.wf.md (304 lines)
+
+3. **LOW PRIORITY (Complex/Specialized)**
+   - create-test-cases.wf.md (394 lines) - Complex but less frequently used
+   - initialize-project-structure.wf.md (854 lines) - Largest and most complex
 
 ### Execution Steps
 

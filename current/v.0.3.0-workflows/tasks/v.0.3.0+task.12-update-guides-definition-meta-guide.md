@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.12
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: [v.0.3.0+task.10]
@@ -63,13 +63,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 ### Planning Steps
 
-- [ ] Review current guides-definition.g.md content and structure
+- [x] Review current guides-definition.g.md content and structure
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Current guide definition is understood and documented
   > Command: `grep -E "^## |^### " dev-handbook/guides/.meta/guides-definition.g.md`
 
-- [ ] Identify sections that need updates based on new workflow model
+- [x] Identify sections that need updates based on new workflow model
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All sections requiring updates are identified
@@ -77,13 +77,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 ### Execution Steps
 
-- [ ] Update "Core Principles" section to include new principle: "Guides explain the 'Why', Workflows explain the 'How'"
+- [x] Update "Core Principles" section to include new principle: "Guides explain the 'Why', Workflows explain the 'How'"
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: New principle is clearly stated in Core Principles
   > Command: `grep -A 5 -B 5 "Why.*How" dev-handbook/guides/.meta/guides-definition.g.md`
 
-- [ ] Add explicit content guidelines distinguishing guides from workflows:
+- [x] Add explicit content guidelines distinguishing guides from workflows:
   - Guides should focus on principles, concepts, best practices, and deep-dive knowledge
   - Guides should avoid step-by-step procedural instructions
   - Procedural instructions belong in self-contained workflow files
@@ -93,13 +93,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
   > Assert: Clear content guidelines are established
   > Command: `grep -i "procedural\|step-by-step\|workflow.*action" dev-handbook/guides/.meta/guides-definition.g.md`
 
-- [ ] Update "Guide Structure" section to reflect new relationship with workflows
+- [x] Update "Guide Structure" section to reflect new relationship with workflows
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Guide structure reflects conceptual vs procedural separation
   > Command: `grep -A 10 "Guide Structure" dev-handbook/guides/.meta/guides-definition.g.md`
 
-- [ ] Add examples of appropriate vs inappropriate guide content
+- [x] Add examples of appropriate vs inappropriate guide content
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Examples clearly illustrate the new guide philosophy
@@ -107,13 +107,13 @@ Update the `guides/.meta/guides-definition.g.md` file to reflect the fundamental
 
 ## Acceptance Criteria
 
-- [ ] New principle "Guides explain the 'Why', Workflows explain the 'How'" is clearly stated
-- [ ] Content guidelines explicitly prohibit procedural instructions in guides
-- [ ] Guide structure section reflects new conceptual focus
-- [ ] Examples demonstrate appropriate vs inappropriate guide content
-- [ ] Updated definition aligns with workflow self-containment principle
-- [ ] Document maintains consistency with existing handbook style
-- [ ] Changes are backward compatible with existing conceptual guides
+- [x] New principle "Guides explain the 'Why', Workflows explain the 'How'" is clearly stated
+- [x] Content guidelines explicitly prohibit procedural instructions in guides
+- [x] Guide structure section reflects new conceptual focus
+- [x] Examples demonstrate appropriate vs inappropriate guide content
+- [x] Updated definition aligns with workflow self-containment principle
+- [x] Document maintains consistency with existing handbook style
+- [x] Changes are backward compatible with existing conceptual guides
 
 ## Out of Scope
 

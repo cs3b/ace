@@ -63,13 +63,13 @@ Create comprehensive documentation explaining the workflow independence approach
 
 ### Planning Steps
 
-* [ ] Review completed workflow refactoring work
+- [ ] Review completed workflow refactoring work
   > TEST: Refactoring Review Complete
   > Type: Pre-condition Check
   > Assert: Workflow refactoring results are documented and understood
   > Command: bin/test --check-refactoring-review workflow-independence-analysis.md
-* [ ] Plan guide structure and content outline
-* [ ] Identify key concepts and examples to include
+- [ ] Plan guide structure and content outline
+- [ ] Identify key concepts and examples to include
 
 ### Execution Steps
 
