@@ -91,8 +91,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Update documentation (guides, ADRs, comments) if necessary.
   * Identify any follow-up actions (e.g., refactoring needs, process improvements) and create backlog tasks if
     needed.
-  * Log the reflection summary. Individual reflections can serve as input to the
-    [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) workflow.
+  * Log the reflection summary using the [`create-reflection-note.wf.md`](dev-handbook/workflow-instructions/create-reflection-note.wf.md) workflow.
 
 ### Step 8: Update Task Status
 
@@ -131,8 +130,6 @@ sub-guide for details:
   * [`work-on-task.wf.md`](dev-handbook/workflow-instructions/work-on-task.wf.md) (includes testing guidance)
   * [`commit.wf.md`](dev-handbook/workflow-instructions/commit.wf.md)
   * [`log-compact-session.wf.md`](dev-handbook/workflow-instructions/log-compact-session.wf.md) (for saving session context)
-  * [`create-retrospective-document.wf.md`](dev-handbook/workflow-instructions/create-retrospective-document.wf.md) (for broader
-    reflection and learning synthesis)
 * **Core Guides:**
   * [Testing Guide](dev-handbook/guides/testing.g.md)
   * [Version Control Guide](dev-handbook/guides/version-control-system.g.md)

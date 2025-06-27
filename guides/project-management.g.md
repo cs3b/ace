@@ -256,22 +256,21 @@ Tasks and release structures are typically generated through one of three primar
     - Outline the intended design, interfaces, and test structures.
     - Gather necessary context (relevant existing code, patterns, `docs/blueprint.md`,
       `docs/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
-1. **Test-Driven Development (AI-Assisted)**:
+2. **Test-Driven Development (AI-Assisted)**:
     - **Write Tests (Test Phase in `work-on-task`)**: Guide the AI to generate failing tests based on the planned
       structure and acceptance criteria using the testing phase described in the
       `dev-handbook/workflow-instructions/work-on-task.md` workflow. *Review generated tests carefully.*
     - **Implement Code**: Provide the AI with specific, small steps from your plan (e.g., implement function X
       based on this signature and pseudocode). *Review generated code rigorously.*
     - **Refactor**: Guide the AI in refactoring for clarity and efficiency once tests pass.
-1. **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the
+3. **Documentation & Committing (`lets-commit`)**: Document decisions within the code or task file. Guide the
    AI to generate or help format commit messages according to conventions using the
    `dev-handbook/workflow-instructions/lets-commit.md` workflow. *Review commit messages.* Commit changes frequently.
-1. **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection.
-   Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and
-   capture learnings. Use the [`create-reflection-note.wf.md`](../workflow-instructions/create-reflection-note.wf.md)
-   workflow to capture these insights. These individual reflection notes (e.g., saved in
-   `dev-taskflow/current/{release_dir}/reflections/YYYYMMDD-taskID.md`) serve as valuable input for the
-   [`create-retrospective-document.wf.md`](../workflow-instructions/create-retrospective-document.wf.md) workflow.
+4. **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection.
+      Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation, and
+      capture learnings. Use the [`dev-handbook/workflow-instructions/create-reflection-note.wf.md`](../workflow-instructions/create-reflection-note.wf.md)
+      workflow to capture these insights. These individual reflection notes serve as valuable input for the
+      retrospective process.
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance.
 > Provide detailed context and specific instructions derived from your planning phase. Review all AI output
