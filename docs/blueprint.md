@@ -116,6 +116,7 @@ bin/lint
 # Build the gem
 bin/build
 ```
+
 *(Note: `bin/run` might be used for specific entry points if defined)*
 
 ### Common Workflows

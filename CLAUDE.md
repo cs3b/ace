@@ -15,6 +15,7 @@ This is the **Coding Agent Workflow Toolkit (Meta)** repository - a meta-reposit
 ## Key Commands
 
 ### Testing and Quality
+
 ```bash
 # Run all tests (executes bin/lint for this project)
 bin/test
@@ -27,6 +28,7 @@ bin/build
 ```
 
 ### Development Scripts
+
 ```bash
 # Get next task to work on
 bin/tn
@@ -49,6 +51,7 @@ bin/gpull  # git pull across all repos
 ```
 
 ### LLM Integration (via dev-tools submodule)
+
 ```bash
 # Query LLM providers
 dev-tools/exe/llm-query google:gemini-2.5-flash "prompt"
@@ -62,6 +65,7 @@ dev-tools/exe/llm-usage-report
 ```
 
 ### Node.js Dependencies
+
 ```bash
 # Install dependencies (for markdownlint)
 npm install
@@ -75,11 +79,13 @@ npx markdownlint-cli '**/*.md' --config .markdownlint.json
 This is a **meta-repository** using Git submodules to organize different aspects of the workflow toolkit:
 
 ### Submodule Structure
+
 - Each submodule is a separate Git repository with its own development lifecycle
 - Use `git submodule update --init --recursive` to initialize all submodules
 - Submodule commits must be made from within the submodule directory
 
 ### Key Directories
+
 - **bin/**: Project automation scripts and Git shortcuts
 - **docs/**: High-level architecture and blueprint documentation
 - **dev-handbook/**: Development guides and AI workflow instructions (submodule)
@@ -89,7 +95,9 @@ This is a **meta-repository** using Git submodules to organize different aspects
 ## Development Workflow
 
 ### Task Management
+
 Tasks are organized in the dev-taskflow/ submodule:
+
 - `dev-taskflow/backlog/`: Future tasks by release
 - `dev-taskflow/current/`: Active release tasks
 - `dev-taskflow/done/`: Completed releases
@@ -97,12 +105,15 @@ Tasks are organized in the dev-taskflow/ submodule:
 Use `bin/tn` to find the next actionable task and `bin/tr` for recent task activity.
 
 ### Documentation Standards
+
 - All Markdown files are linted with markdownlint
 - Custom Ruby scripts check for broken links and task metadata
 - Configuration in .markdownlint.json
 
 ### Git Submodules
+
 This project uses 3 Git submodules plus the root repository (4 total repositories):
+
 - **Root repository**: Main meta-repository
 - **dev-handbook/**: Development guides and workflows
 - **dev-taskflow/**: Task management structure  
