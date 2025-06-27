@@ -36,7 +36,7 @@ Edit `spec/.env` and add your actual API keys for recording new cassettes:
 GEMINI_API_KEY=your_actual_gemini_api_key_here
 ```
 
-Get your Gemini API key from: https://makersuite.google.com/app/apikey
+Get your Gemini API key from: <https://makersuite.google.com/app/apikey>
 
 **Note:** API keys are only needed for recording. Normal test runs and CI use pre-recorded cassettes.
 
@@ -117,6 +117,7 @@ spec/cassettes/
 ### Cassette Content
 
 Cassettes contain:
+
 - HTTP request details (method, URL, headers, body)
 - HTTP response details (status, headers, body)
 - Sensitive data is automatically filtered (API keys, etc.)
@@ -157,6 +158,7 @@ TEST_DEBUG=true bundle exec rspec
 ```
 
 Debug mode shows:
+
 - VCR recording/playback mode
 - API key status
 - Detailed VCR interactions (logged to `vcr_debug.log`)
@@ -166,6 +168,7 @@ Debug mode shows:
 ### Adding New Integration Tests
 
 1. Write your test with the `:vcr` tag:
+
    ```ruby
    it "does something with the API", :vcr do
      # Test code that makes HTTP requests
@@ -173,6 +176,7 @@ Debug mode shows:
    ```
 
 2. Run the test (VCR automatically records missing cassettes):
+
    ```bash
    bundle exec rspec spec/path/to/your_test.rb
    ```
@@ -182,11 +186,13 @@ Debug mode shows:
 ### Updating Existing Tests
 
 1. Delete the relevant cassette file:
+
    ```bash
    rm spec/cassettes/path/to/cassette.yml
    ```
 
 2. Run the test (VCR automatically re-records):
+
    ```bash
    bundle exec rspec spec/path/to/test.rb
    ```
@@ -194,6 +200,7 @@ Debug mode shows:
 ### Testing API Changes
 
 1. Remove existing cassettes and re-record:
+
    ```bash
    rm -rf spec/cassettes/
    VCR_RECORD=true bundle exec rspec spec/integration/
@@ -209,6 +216,7 @@ Debug mode shows:
 This error occurs when explicitly recording (`VCR_RECORD=true`) without a valid API key.
 
 **Solution:** Set a real API key in `spec/.env`:
+
 ```bash
 GEMINI_API_KEY=your_actual_api_key_here
 ```
@@ -218,6 +226,7 @@ GEMINI_API_KEY=your_actual_api_key_here
 This happens when in CI mode or when `VCR_RECORD=none` and a cassette is missing.
 
 **Solution:** Record the missing cassette in development:
+
 ```bash
 bundle exec rspec path/to/failing/test.rb
 ```
@@ -245,6 +254,7 @@ If you hit API rate limits while recording:
 1. **Use descriptive test names** - they become cassette filenames
 2. **Keep tests focused** - one API interaction per test when possible
 3. **Use custom cassette names** for shared scenarios:
+
    ```ruby
    it "does something", vcr: "custom_cassette_name" do
    ```
