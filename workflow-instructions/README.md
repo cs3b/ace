@@ -7,7 +7,7 @@ user) to perform common development and project management tasks.
 
 ## Core Workflow
 
-- [Load Environment](./load-env.wf.md): Load project context, guides, and task information.
+- [Load Project Context](./load-project-context.wf.md): Load project context, guides, and task information.
 - [Review Task](./review-task.wf.md): Review and analyze a task before implementation.
 - [Work on Task](./work-on-task.wf.md): Select and understand a task before implementation (includes TDD cycle).
 - [Commit](./commit.wf.md): Create well-structured Git commits.
@@ -17,47 +17,28 @@ user) to perform common development and project management tasks.
 - [Initialize Project Structure](./initialize-project-structure.wf.md): Initialize `docs-dev` and `dev-taskflow` structures.
 - [Update Blueprint](./update-blueprint.wf.md): Update the `docs/blueprint.md` project overview.
 
-## Draft Releases
+## Release Management
 
-- [Draft Release](./draft-release.wf.md): Prepare content, documentation, and perform pre-flight checks for a
-  release.
+- [Draft Release](./draft-release.wf.md): Prepare content, documentation, and perform pre-flight checks for a release.
+- [Publish Release](./publish-release.wf.md): Execute the release process (versioning, tagging, building, publishing).
 
-### Creating Tasks
+## Task Management
 
-- [Breakdown Notes into Tasks](./breakdown-notes-into-tasks.wf.md): Orchestrates processing of various inputs into
-  structured notes for task creation.
-  - [From Concepts in Backlog](./breakdown-notes-into-tasks/from-concepts-in-backlog.md)
-  - [From Diff](./breakdown-notes-into-tasks/from-diff.md)
-  - [From FRD](./breakdown-notes-into-tasks/from-frd.md)
-  - [From PR Comments (API)](./breakdown-notes-into-tasks/from-pr-comments-api.md)
-  - [From PR Comments (MCP)](./breakdown-notes-into-tasks/from-pr-comments-mcp.md)
-  - [From PRD](./breakdown-notes-into-tasks/from-prd.md)
-  - [From Release Backlog](./breakdown-notes-into-tasks/from-release-backlog.md)
+- [Breakdown Notes into Tasks](./breakdown-notes-into-tasks.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
 
 ## Documentation Generation
 
-- [Create ADR](./create-adr.wf.md)
-- [Create API Docs](./create-api-docs.wf.md)
-- [Create Release Overview](./create-release-overview.wf.md)
-- [Create Retrospective Document](./create-retrospective-document.wf.md)
-- [Create Review Checklist](./create-review-checklist.wf.md)
-- [Create Test Cases](./create-test-cases.wf.md)
-- [Create User Docs](./create-user-docs.wf.md)
+- [Create ADR](./create-adr.wf.md): Create structured Architecture Decision Record documents.
+- [Create API Docs](./create-api-docs.wf.md): Generate comprehensive API documentation with code comments and examples.
+- [Create Test Cases](./create-test-cases.wf.md): Generate comprehensive test cases and scenarios for features or APIs.
+- [Create User Docs](./create-user-docs.wf.md): Create user-facing documentation including guides, tutorials, and references.
 
-## Testing
+## Testing & Quality
 
 - [Fix Tests](./fix-tests.wf.md): Debug and fix failing tests.
 
 ## Project Management & Reflection
 
 - [Update Roadmap](./update-roadmap.wf.md): Update project roadmap and task priorities.
-- [Review Tasks Board Status](./review-tasks-board-status.wf.md): Review current task statuses, dependencies, and
-  priorities on the board.
-- [Log Compact Session](./log-compact-session.wf.md): Log a compact summary of the current session for context
-  saving/reloading.
-- [Create Reflection Note](./create-reflection-note.wf.md): Capture individual observations and learnings using the
-  standard reflection template.
-
-## Publish Release
-
-- [Publish Release](./publish-release.wf.md): Execute the release process (versioning, tagging, building, publishing).
+- [Log Compact Session](./log-compact-session.wf.md): Log a compact summary of the current session for context saving/reloading.
+- [Create Reflection Note](./create-reflection-note.wf.md): Capture individual observations and learnings using the standard reflection template.
