@@ -1,26 +1,42 @@
-I would like to make certain improvements to dev-handbook
+# Unified the way we embed templates in workflows
 
-1. extract templates to dev-handbook/templates/
-  currenlty we have them in guides e.g.:
-  - dev-handbook/guides/code-review
-  - dev-handbook/guides/initialize-project-templates
+## at create task workflow
 
-  we should add proper suffixes for each of them so they will never mixed with real one when search for files e.g.:
-  - .prompt.md
-  - .template.md
-  - ...
+a) go through all the workflow instructions and make list of all embeded templates / documents
 
-  # When preparing the task
-  a) search for all templates inside the guides
-  b) propose the structure e.g.:
-    - dev-handbook/guides/code-review/_code-review-system.md -> dev-handbook/templates/review-code/system.prompt.md
-    - dev-handbook/guides/code-review/_meta-code-review-comprison.md -> dev-handbook/templates/review-synthezizer/system.prompt.md
-    - dev-handbook/guides/initialize-project-templates/architecture.md -> dev/handbook/templates/docs/arhictecture.template.md
-    - ...
+b) compare this with what we have int dev-handbook/templates/**/*
+  - match the embede document with the template
+  - check the difference between them
+  - if template is not found propose where should we create it
 
-  # When executing the task (user will verify the task proposition in part b))
-  c) for all the templates move them to correct place
-  d) update all the reference for the old paths -> new paths
-     - scan dev-handbook
-     - scan dev-tools (also scripts as some of the are referenced there)
-  e) ensure there is no broken links
+## at work on task workflow
+
+c) create missing templates
+
+d) update the workflow guide how to embed templates
+
+- they should be at the very end of the workflow instruction with format
+
+- escaped with ```` four tics ````
+- path of document in the project (in the workflow part we should use only this name, and refer to templates at the end of the document)
+- (path for the template)
+
+
+````docs/architecture.md (dev-handbook/templates/project-docs/architecture.template.md)
+
+
+
+````
+
+e) write a script that update the content of the embeded documents:
+  `markdown-sync-embeded-documents dev-handbook/workflow-instructions/*.wf.md`
+
+- it scans for all the embeded templates in workflow instructions folder
+  (embeding starting block should follow the path: ````$path ($template_path)
+- it one by one it check of the content of the block is identical as in template if not it updates
+- present summary of have been done
+- commit changes bin/gc -i 'chore: sync embede templates in workflow instructions'
+
+f) run this script and ensure it update all the embeded templates
+
+g) update documentation about this script
