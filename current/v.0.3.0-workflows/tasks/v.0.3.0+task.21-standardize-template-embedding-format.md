@@ -127,7 +127,8 @@ Link back to original requirement: Standardized template embedding with referenc
 
 ## REOPENED: Convert to XML Template Format
 
-### Files with Four-Tick Escaping (16 files):
+### Files with Four-Tick Escaping (16 files)
+
 * [x] workflow-instructions/create-user-docs.wf.md
 * [ ] workflow-instructions/fix-tests.wf.md  
 * [x] workflow-instructions/create-adr.wf.md
@@ -145,7 +146,8 @@ Link back to original requirement: Standardized template embedding with referenc
 * [ ] workflow-instructions/work-on-task.wf.md
 * [ ] workflow-instructions/create-task.wf.md
 
-### Files with Template References (12 files):
+### Files with Template References (12 files)
+
 * [x] workflow-instructions/create-user-docs.wf.md
 * [x] workflow-instructions/create-adr.wf.md
 * [x] workflow-instructions/create-api-docs.wf.md
@@ -159,7 +161,8 @@ Link back to original requirement: Standardized template embedding with referenc
 * [x] workflow-instructions/update-blueprint.wf.md
 * [x] workflow-instructions/create-task.wf.md
 
-### Conversion Tasks:
+### Conversion Tasks
+
 1. [ ] Replace all four-tick escaping with three-tick for code examples
 2. [ ] Convert embedded templates to XML `<templates>` format  
 3. [ ] Move all templates to end of documents in XML sections
@@ -167,7 +170,8 @@ Link back to original requirement: Standardized template embedding with referenc
 
 **Total**: ~5291 four-tick instances to review, 66 template references to convert
 
-### COMPLETION SUMMARY:
+### COMPLETION SUMMARY
+
 ✅ **Templates Converted**: 12/12 files with template references completed
 ✅ **XML Format**: All templates now use `<templates>` structure  
 ✅ **Path Variables**: Using `{current-release-path}` and proper template paths

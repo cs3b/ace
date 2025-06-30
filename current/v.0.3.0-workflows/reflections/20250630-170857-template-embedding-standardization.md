@@ -30,17 +30,20 @@
 ## Action Items
 
 ### Stop Doing
+
 - Using four-tick escaping for general template embedding (reserve for markdown-within-markdown only)
 - Manual template format conversions without proper tracking mechanisms
 - Assuming string replacements will work without checking for uniqueness
 
 ### Continue Doing
+
 - Using comprehensive task tracking with detailed checklists for complex conversions
 - Systematic file-by-file approach for standardization tasks
 - Creating clear acceptance criteria before starting implementation
 - Following proper commit workflow with detailed messages
 
 ### Start Doing
+
 - Reading files completely before attempting edits to understand context
 - Using automation scripts for repetitive format conversions when possible
 - Documenting format standards clearly to prevent future confusion

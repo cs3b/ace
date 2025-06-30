@@ -19,6 +19,7 @@ Use the template: path (template_path)
 ```
 
 **Examples**:
+
 - `Use the ADR template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)`
 - `Follow the task format: path (dev-handbook/templates/release-tasks/task.template.md)`
 
@@ -34,6 +35,7 @@ All embedded templates must be placed at the end of the document in a dedicated 
 ````markdown
 [template content here]
 ````
+
 ```
 
 ### 3. Four-Tick Escaping
@@ -45,6 +47,7 @@ All embedded templates must use four backticks (`````) for proper markdown escap
 # Template Content
 [content here]
 ````
+
 ```
 
 ### 4. Template Path Format
@@ -76,6 +79,7 @@ Template paths must follow this structure:
 ````yaml
 [template 2 content if YAML]
 ````
+
 ```
 
 ### 2. Template Language Specification
@@ -168,6 +172,7 @@ Use appropriate language specifiers:
 ```
 
 3. Fill in the content
+
 ```
 
 ### After (Standardized Format)
@@ -188,6 +193,7 @@ Use appropriate language specifiers:
 ## Status
 [content]
 ````
+
 ```
 
 ## Future Considerations

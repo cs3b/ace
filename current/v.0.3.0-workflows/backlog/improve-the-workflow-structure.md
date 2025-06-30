@@ -1,10 +1,9 @@
 
-
 - review guides for workflow instructions
 - review all workflow instructions
 
-
 - embeding documents guide
+
 ````<type> <path> _(<template-path>)_
 
 
