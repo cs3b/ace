@@ -24,13 +24,13 @@ _Result excerpt:_
 
 ## Objective
 
-Create comprehensive documentation for the template synchronization process, including the markdown-sync-embedded-documents script usage, template embedding standards, and maintenance procedures. This documentation ensures the template sync system can be maintained and used effectively by future developers.
+Create operational documentation for the template synchronization process, focusing on script usage, maintenance procedures, and troubleshooting - complementing the existing template-embedding.g.md guide. This documentation ensures the template sync system can be maintained and used effectively by future developers.
 
 Link back to original requirement: Document the template sync script and process (improve-the-workflow-structure.md)
 
 ## Scope of Work
 
-* Document the template embedding standard and format
+* Reference existing template-embedding.g.md guide and focus on operational aspects
 * Create usage guide for markdown-sync-embedded-documents script
 * Document template directory organization and conventions
 * Provide maintenance guide for template synchronization system
@@ -40,7 +40,7 @@ Link back to original requirement: Document the template sync script and process
 #### Create
 
 * dev-handbook/guides/template-synchronization.md - comprehensive guide
-* dev-handbook/guides/template-embedding-standard.md - format specification
+* dev-handbook/guides/template-sync-operations.md - operational guide
 
 #### Modify  
 
@@ -76,7 +76,7 @@ Link back to original requirement: Document the template sync script and process
 
 ### Execution Steps
 
-* [ ] Document template embedding standard format and conventions
+* [ ] Reference existing template-embedding.g.md guide and identify operational gaps
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Embedding standard is clearly documented with examples
@@ -114,7 +114,7 @@ Link back to original requirement: Document the template sync script and process
 
 ## Acceptance Criteria
 
-* [ ] Template embedding standard is clearly documented with examples
+* [ ] Operational documentation complements existing template-embedding.g.md guide
 * [ ] Script usage guide covers all functionality and options
 * [ ] Template directory organization is well-explained
 * [ ] Maintenance procedures are documented for future developers

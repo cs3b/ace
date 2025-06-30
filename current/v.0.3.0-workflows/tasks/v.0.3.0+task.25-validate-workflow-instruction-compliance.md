@@ -31,7 +31,7 @@ Link back to original requirement: Ensure workflow instructions follow proper te
 ## Scope of Work
 
 * Validate all workflow instructions use standardized template embedding format
-* Check for proper template reference patterns (````path (template_path))
+* Check for proper template reference patterns (XML <templates> sections)
 * Verify workflow structure follows established guidelines
 * Identify and document any compliance issues
 * Ensure embedded templates are properly positioned at document end
@@ -79,8 +79,8 @@ Link back to original requirement: Ensure workflow instructions follow proper te
 * [ ] Validate template embedding format across all workflow files
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: All embedded templates use ````path (template_path) format
-  > Command: grep -r "````.*\.template\.md)" dev-handbook/workflow-instructions/
+  > Assert: All embedded templates use XML <templates> sections format
+  > Command: grep -r "<templates>" dev-handbook/workflow-instructions/
 
 * [ ] Check embedded templates are positioned at end of documents
   > TEST: Action Validation
@@ -121,7 +121,7 @@ Link back to original requirement: Ensure workflow instructions follow proper te
 ## Acceptance Criteria
 
 * [ ] All workflow instruction files validated against standardized format
-* [ ] Template embedding format compliance verified (````path (template_path))
+* [ ] Template embedding format compliance verified (XML <templates> sections)
 * [ ] Embedded templates properly positioned at document end
 * [ ] Template reference naming follows project conventions
 * [ ] Workflow structural guidelines are followed
