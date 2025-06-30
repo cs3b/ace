@@ -107,52 +107,7 @@ Review and refine a task definition, potentially proposing an implementation app
 
 5. **Propose Refinements:**
 
-   **Enhanced Implementation Plan Template:**
-
-   ```markdown
-   ## Implementation Plan
-   
-   ### Planning Steps
-   * [ ] Research existing implementation patterns
-     > TEST: Pattern Analysis
-     > Type: Pre-condition Check
-     > Assert: Similar patterns identified and documented
-     > Command: grep -r "pattern" lib/
-   
-   * [ ] Design solution approach
-     - Consider alternatives
-     - Document decision rationale
-     - Create high-level design
-   
-   * [ ] Identify impacted components
-     > TEST: Impact Analysis
-     > Type: Pre-condition Check
-     > Assert: All dependencies mapped
-     > Command: bin/deps --check component
-   
-   ### Execution Steps
-   - [ ] Implement core functionality
-     > TEST: Core Implementation
-     > Type: Action Validation
-     > Assert: Basic functionality works
-     > Command: bin/test spec/feature_spec.rb
-   
-   - [ ] Add error handling
-     - Handle edge cases
-     - Add appropriate logging
-     - Create helpful error messages
-   
-   - [ ] Write comprehensive tests
-     > TEST: Test Coverage
-     > Type: Action Validation
-     > Assert: Coverage > 90%
-     > Command: bin/test --coverage
-   
-   - [ ] Update documentation
-     - API documentation
-     - User guides
-     - Code comments
-   ```
+   Use the enhanced implementation plan template: path (dev-handbook/templates/release-tasks/task.template.md)
 
 6. **Formulate Feedback Points:**
 
@@ -170,33 +125,8 @@ Review and refine a task definition, potentially proposing an implementation app
    - Risk assessment
 
 7. **Present Review Summary:**
-
-   **Review Report Structure:**
-
-   ```markdown
-   ## Task Review Summary
    
-   ### Task: [ID] - [Title]
-   **Status**: Ready for implementation | Needs clarification | Requires updates
-   
-   ### Key Findings
-   1. [Finding 1 - e.g., aligns with architecture]
-   2. [Finding 2 - e.g., missing test criteria]
-   3. [Finding 3 - e.g., conflicts with recent changes]
-   
-   ### Proposed Improvements
-   - [Specific improvement 1]
-   - [Specific improvement 2]
-   
-   ### Questions for Clarification
-   1. [Question requiring user input]
-   2. [Design decision needed]
-   
-   ### Recommended Next Steps
-   - [ ] Address clarification points
-   - [ ] Update task definition
-   - [ ] Proceed with implementation
-   ```
+   Use the review report template: path (dev-handbook/templates/release-docs/documentation.template.md)
 
 ## Review Checklist
 
@@ -269,3 +199,79 @@ New features require:
 ---
 
 This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.
+
+## Embedded Templates
+
+### Enhanced Implementation Plan Template: path (dev-handbook/templates/release-tasks/task.template.md)
+
+````markdown
+## Implementation Plan
+
+### Planning Steps
+* [ ] Research existing implementation patterns
+  > TEST: Pattern Analysis
+  > Type: Pre-condition Check
+  > Assert: Similar patterns identified and documented
+  > Command: grep -r "pattern" lib/
+
+* [ ] Design solution approach
+  - Consider alternatives
+  - Document decision rationale
+  - Create high-level design
+
+* [ ] Identify impacted components
+  > TEST: Impact Analysis
+  > Type: Pre-condition Check
+  > Assert: All dependencies mapped
+  > Command: bin/deps --check component
+
+### Execution Steps
+- [ ] Implement core functionality
+  > TEST: Core Implementation
+  > Type: Action Validation
+  > Assert: Basic functionality works
+  > Command: bin/test spec/feature_spec.rb
+
+- [ ] Add error handling
+  - Handle edge cases
+  - Add appropriate logging
+  - Create helpful error messages
+
+- [ ] Write comprehensive tests
+  > TEST: Test Coverage
+  > Type: Action Validation
+  > Assert: Coverage > 90%
+  > Command: bin/test --coverage
+
+- [ ] Update documentation
+  - API documentation
+  - User guides
+  - Code comments
+````
+
+### Review Report Template: path (dev-handbook/templates/release-docs/documentation.template.md)
+
+````markdown
+## Task Review Summary
+
+### Task: [ID] - [Title]
+**Status**: Ready for implementation | Needs clarification | Requires updates
+
+### Key Findings
+1. [Finding 1 - e.g., aligns with architecture]
+2. [Finding 2 - e.g., missing test criteria]
+3. [Finding 3 - e.g., conflicts with recent changes]
+
+### Proposed Improvements
+- [Specific improvement 1]
+- [Specific improvement 2]
+
+### Questions for Clarification
+1. [Question requiring user input]
+2. [Design decision needed]
+
+### Recommended Next Steps
+- [ ] Address clarification points
+- [ ] Update task definition
+- [ ] Proceed with implementation
+````

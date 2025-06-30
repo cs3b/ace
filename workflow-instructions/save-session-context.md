@@ -49,73 +49,8 @@ Capture a compact summary of the current session (what was done, next steps, key
      - Next immediate steps
 
 2. **Generate Session Summary:**
-
-   **Use Embedded Template:**
-
-   ```markdown
-   # Compact Session Log: YYYY-MM-DD HH:MM:SS
    
-   ## Request Summary
-   [Concise summary of the user's main goal during this session]
-   Example: "User requested implementation of OAuth authentication feature"
-   
-   ## Work Completed
-   - [Key accomplishment 1]
-   - [Key accomplishment 2]
-   - [Files created/modified with paths]
-   
-   ## Current State
-   - Active task: [task ID and brief description]
-   - Work status: [in-progress/blocked/ready for review]
-   - Key files in focus:
-     - `path/to/file1.ext` - [what was done]
-     - `path/to/file2.ext` - [current state]
-   
-   ## Context Loading Prompt
-   
-   ---
-   ### Resume Session: [Brief Description]
-   
-   **Goal:** [Next immediate objective]
-   
-   **Session Context:**
-   - Working on: [current feature/task]
-   - Progress: [percentage or milestones completed]
-   - Release: [current release if applicable]
-   
-   **Key Files to Load:**
-   ```
-
-   dev-taskflow/current/v.X.Y.Z/tasks/current-task.md
-   src/main/feature/implementation.rb
-   spec/feature/implementation_spec.rb
-   docs/feature-guide.md
-
-   ```
-   
-   **Recent Changes:**
-   - [File]: [Brief description of changes]
-   - [File]: [Current state/what's pending]
-   
-   **Next Steps:**
-   1. [Immediate next action]
-   2. [Following action]
-   3. [Subsequent tasks]
-   
-   **Blockers/Decisions Needed:**
-   - [Any blockers or pending decisions]
-   
-   **Commands to Run:**
-   ```bash
-   # Useful commands to resume work
-   bin/test spec/feature_spec.rb
-   bin/lint
-   git status
-   ```
-
-   ---
-
-   ```
+   Use the session log template: path (dev-handbook/templates/release-reflections/retrospective.template.md)
 
 3. **Determine Save Location:**
 
@@ -288,3 +223,71 @@ Maintain context across multiple development sessions for complex features requi
 ---
 
 This workflow enables efficient context preservation and restoration, critical for managing complex development work across sessions or token limits.
+
+## Embedded Templates
+
+### Session Log Template: path (dev-handbook/templates/release-reflections/retrospective.template.md)
+
+````markdown
+# Compact Session Log: YYYY-MM-DD HH:MM:SS
+
+## Request Summary
+[Concise summary of the user's main goal during this session]
+Example: "User requested implementation of OAuth authentication feature"
+
+## Work Completed
+- [Key accomplishment 1]
+- [Key accomplishment 2]
+- [Files created/modified with paths]
+
+## Current State
+- Active task: [task ID and brief description]
+- Work status: [in-progress/blocked/ready for review]
+- Key files in focus:
+  - `path/to/file1.ext` - [what was done]
+  - `path/to/file2.ext` - [current state]
+
+## Context Loading Prompt
+
+---
+### Resume Session: [Brief Description]
+
+**Goal:** [Next immediate objective]
+
+**Session Context:**
+- Working on: [current feature/task]
+- Progress: [percentage or milestones completed]
+- Release: [current release if applicable]
+
+**Key Files to Load:**
+```
+
+dev-taskflow/current/v.X.Y.Z/tasks/current-task.md
+src/main/feature/implementation.rb
+spec/feature/implementation_spec.rb
+docs/feature-guide.md
+
+```
+
+**Recent Changes:**
+- [File]: [Brief description of changes]
+- [File]: [Current state/what's pending]
+
+**Next Steps:**
+1. [Immediate next action]
+2. [Following action]
+3. [Subsequent tasks]
+
+**Blockers/Decisions Needed:**
+- [Any blockers or pending decisions]
+
+**Commands to Run:**
+```bash
+# Useful commands to resume work
+bin/test spec/feature_spec.rb
+bin/lint
+git status
+```
+
+---
+````
