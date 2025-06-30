@@ -50,6 +50,22 @@ bin/gp     # git push across all repos
 bin/gpull  # git pull across all repos
 ```
 
+### Template Synchronization
+
+```bash
+# Synchronize embedded templates in workflow instructions
+bin/markdown-sync-embedded-documents
+
+# Preview changes without applying them
+bin/markdown-sync-embedded-documents --dry-run
+
+# Detailed output with verbose logging
+bin/markdown-sync-embedded-documents --verbose
+
+# Synchronize and automatically commit changes
+bin/markdown-sync-embedded-documents --verbose --commit
+```
+
 ### LLM Integration (via dev-tools submodule)
 
 ```bash
