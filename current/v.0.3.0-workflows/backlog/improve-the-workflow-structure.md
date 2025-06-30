@@ -15,9 +15,12 @@ I would like to make certain improvements to dev-handbook
   b) propose the structure e.g.:
     - dev-handbook/guides/code-review/_code-review-system.md -> dev-handbook/templates/review-code/system.prompt.md
     - dev-handbook/guides/code-review/_meta-code-review-comprison.md -> dev-handbook/templates/review-synthezizer/system.prompt.md
-    - dev-handbook/guides/initialize-project-templates/architecture.md -> docs/arhictecture.template.md
+    - dev-handbook/guides/initialize-project-templates/architecture.md -> dev/handbook/templates/docs/arhictecture.template.md
     - ...
 
   # When executing the task (user will verify the task proposition in part b))
   c) for all the templates move them to correct place
   d) update all the reference for the old paths -> new paths
+     - scan dev-handbook
+     - scan dev-tools (also scripts as some of the are referenced there)
+  e) ensure there is no broken links
