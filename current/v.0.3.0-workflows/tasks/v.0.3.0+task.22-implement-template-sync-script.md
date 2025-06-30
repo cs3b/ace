@@ -39,8 +39,9 @@ Link back to original requirement: Automated template synchronization script (im
 
 #### Create
 
-* bin/markdown-sync-embedded-documents - main script executable
-* lib/template_sync.rb - core synchronization logic (if using Ruby structure)
+* dev-tools/exe-old/markdown-sync-embedded-documents - main script implementation
+* dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents - binstub for the script
+* bin/markdown-sync-embedded-documents - thin wrapper pointing to exe-old script
 
 #### Modify  
 
@@ -75,10 +76,22 @@ Link back to original requirement: Automated template synchronization script (im
 
 ### Execution Steps
 
-* [ ] Create script to scan workflow files for embedded template patterns
+* [ ] Create main script in dev-tools/exe-old/markdown-sync-embedded-documents
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Script correctly identifies all embedded templates
+  > Command: dev-tools/exe-old/markdown-sync-embedded-documents --dry-run --verbose
+
+* [ ] Create binstub in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Binstub follows project patterns and makes script accessible
+  > Command: dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents --help
+
+* [ ] Create thin wrapper in bin/markdown-sync-embedded-documents
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Wrapper correctly delegates to exe-old script
   > Command: bin/markdown-sync-embedded-documents --dry-run --verbose
 
 * [ ] Implement content comparison logic between embedded and template files
@@ -113,6 +126,9 @@ Link back to original requirement: Automated template synchronization script (im
 
 ## Acceptance Criteria
 
+* [ ] Main script created in dev-tools/exe-old/markdown-sync-embedded-documents
+* [ ] Binstub created in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
+* [ ] Thin wrapper created in bin/markdown-sync-embedded-documents
 * [ ] Script successfully scans all workflow instruction files
 * [ ] Correctly identifies embedded templates using ````path (template_path) format
 * [ ] Accurately compares embedded content with template file content
@@ -121,6 +137,7 @@ Link back to original requirement: Automated template synchronization script (im
 * [ ] Provides comprehensive summary of changes made
 * [ ] Handles error cases gracefully with helpful messages
 * [ ] Can be run safely multiple times (idempotent)
+* [ ] Follows project's dev-tools/exe-old organizational pattern
 
 ## Out of Scope
 
