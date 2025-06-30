@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.16
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -66,43 +66,43 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 
 ### Planning Steps
 
-- [ ] Audit all references to `docs-dev` in the workflow file
+- [x] Audit all references to `docs-dev` in the workflow file
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All `docs-dev` references identified for replacement
   > Command: grep -n "docs-dev" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Identify all references to `dev-taskflow/decisions` directory
+- [x] Identify all references to `dev-taskflow/decisions` directory
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All deprecated decision directory references identified
   > Command: grep -n "dev-taskflow/decisions" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Locate documentation path references that need updating
+- [x] Locate documentation path references that need updating
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Outdated documentation paths identified
   > Command: grep -n "dev-taskflow/what-do-we-build\|dev-taskflow/architecture\|dev-taskflow/blueprint" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Find submodule verification references requiring updates
+- [x] Find submodule verification references requiring updates
   > TEST: Pre-condition Check
   > Type: Pre-condition Check  
   > Assert: Submodule verification patterns identified
   > Command: grep -n -A5 -B5 "submodule" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Locate binstubs path references needing correction
+- [x] Locate binstubs path references needing correction
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Outdated binstubs paths identified  
   > Command: grep -n "_binstubs\|tools/_binstubs" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Review workflow against workflow instruction standards
+- [x] Review workflow against workflow instruction standards
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Workflow standards guide available for reference
   > Command: ls -la dev-handbook/guides/.meta/workflow-instructions-definition.g.md
 
-- [ ] Review workflow against embedding tests guide
+- [x] Review workflow against embedding tests guide
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Embedding tests guide available for reference
@@ -110,55 +110,55 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 
 ### Execution Steps
 
-- [ ] Replace all `docs-dev` references with `dev-handbook`
+- [x] Replace all `docs-dev` references with `dev-handbook`
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No `docs-dev` references remain in the workflow
   > Command: grep "docs-dev" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
-- [ ] Remove all references to `dev-taskflow/decisions` directory creation
+- [x] Remove all references to `dev-taskflow/decisions` directory creation
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No `dev-taskflow/decisions` references remain
   > Command: grep "dev-taskflow/decisions" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
-- [ ] Update documentation paths from `dev-taskflow/` to `docs/` for core docs
+- [x] Update documentation paths from `dev-taskflow/` to `docs/` for core docs
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Core documentation references use `docs/` paths
   > Command: grep -E "docs/(what-do-we-build|architecture|blueprint)\.md" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Update submodule verification to only check two modules (dev-handbook, dev-tools)
+- [x] Update submodule verification to only check two modules (dev-handbook, dev-tools)
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Submodule references updated to current structure
   > Command: grep -C3 "submodule" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Update binstubs source path to `dev-tools/exe-old/_binstubs`
+- [x] Update binstubs source path to `dev-tools/exe-old/_binstubs`
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Binstubs path references correct source location
   > Command: grep "dev-tools/exe-old/_binstubs" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
-- [ ] Remove branch switching requirements for submodules
+- [x] Remove branch switching requirements for submodules
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: No branch switching instructions remain
   > Command: grep -i "checkout.*branch\|switch.*branch" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No matches found"
 
-- [ ] Update Project Context Loading section to use correct paths
+- [x] Update Project Context Loading section to use correct paths
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Project Context Loading uses `docs/` paths
   > Command: grep -A5 "Project Context Loading" dev-handbook/workflow-instructions/initialize-project-structure.wf.md | grep "docs/"
 
-- [ ] Apply workflow instruction standards from definition guide
+- [x] Apply workflow instruction standards from definition guide
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Workflow follows standard structure and format
   > Command: diff -u <(grep "^##" dev-handbook/guides/.meta/workflow-instructions-definition.g.md) <(grep "^##" dev-handbook/workflow-instructions/initialize-project-structure.wf.md) || echo "Structure differences noted"
 
-- [ ] Apply embedding tests standards from embedding tests guide
+- [x] Apply embedding tests standards from embedding tests guide
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Workflow follows embedding test patterns
@@ -166,18 +166,18 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 
 ## Acceptance Criteria
 
-- [ ] All `docs-dev` references replaced with `dev-handbook`
-- [ ] All `dev-taskflow/decisions` references removed (directory no longer used)
-- [ ] Core documentation paths updated to use `docs/` instead of `dev-taskflow/`
-- [ ] Submodule verification updated to only check two modules (dev-handbook and dev-tools)
-- [ ] Binstubs creation references correct source path (`dev-tools/exe-old/_binstubs`)
-- [ ] Branch switching requirements for submodules removed
-- [ ] Project Context Loading section uses correct `docs/` paths
-- [ ] All embedded templates and examples use updated paths
-- [ ] Workflow is internally consistent with no contradictory path references
-- [ ] All referenced paths exist in the current project structure
-- [ ] Workflow follows workflow instruction definition standards
-- [ ] Workflow includes appropriate embedded tests following embedding tests guide
+- [x] All `docs-dev` references replaced with `dev-handbook`
+- [x] All `dev-taskflow/decisions` references removed (directory no longer used)
+- [x] Core documentation paths updated to use `docs/` instead of `dev-taskflow/`
+- [x] Submodule verification updated to only check two modules (dev-handbook and dev-tools)
+- [x] Binstubs creation references correct source path (`dev-tools/exe-old/_binstubs`)
+- [x] Branch switching requirements for submodules removed
+- [x] Project Context Loading section uses correct `docs/` paths
+- [x] All embedded templates and examples use updated paths
+- [x] Workflow is internally consistent with no contradictory path references
+- [x] All referenced paths exist in the current project structure
+- [x] Workflow follows workflow instruction definition standards
+- [x] Workflow includes appropriate embedded tests following embedding tests guide
 
 ## Out of Scope
 
