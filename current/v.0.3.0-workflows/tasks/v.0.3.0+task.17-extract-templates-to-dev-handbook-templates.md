@@ -67,27 +67,27 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 
 **Code Review Templates:**
 * `dev-handbook/guides/code-review/_code-review-system.md` → `dev-handbook/templates/review-code/system.prompt.md`
-* `dev-handbook/guides/code-review/_code-review-from-diff.md` → `dev-handbook/templates/review-code/from-diff.prompt.md`
+* `dev-handbook/guides/code-review/_code-review-from-diff.md` → `dev-handbook/templates/review-code/diff.prompt.md`
 * `dev-handbook/guides/code-review/_doc-review-system.md` → `dev-handbook/templates/review-docs/system.prompt.md`
-* `dev-handbook/guides/code-review/_documentation-update-from-diff.md` → `dev-handbook/templates/review-docs/update-from-diff.prompt.md`
+* `dev-handbook/guides/code-review/_documentation-update-from-diff.md` → `dev-handbook/templates/review-docs/diff.prompt.md`
 * `dev-handbook/guides/code-review/_test-review-system.md` → `dev-handbook/templates/review-test/system.prompt.md`
-* `dev-handbook/guides/code-review/_meta-code-review-comprison.md` → `dev-handbook/templates/review-synthesizer/code-comparison.prompt.md`
-* `dev-handbook/guides/code-review/_meta-doc-review-combine.md` → `dev-handbook/templates/review-synthesizer/docs-combine.prompt.md`
-* `dev-handbook/guides/code-review/_meta-test-review-combine.md` → `dev-handbook/templates/review-synthesizer/test-combine.prompt.md`
+* `dev-handbook/guides/code-review/_meta-code-review-comprison.md` → `dev-handbook/templates/review-synthesizer/system.prompt.md`
+* `dev-handbook/guides/code-review/_meta-doc-review-combine.md` → `dev-handbook/templates/review-synthesizer/docs-system.prompt.md`
+* `dev-handbook/guides/code-review/_meta-test-review-combine.md` → `dev-handbook/templates/review-synthesizer/test-system.prompt.md`
 
 **Release Management Templates:**
 * `dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md` → `dev-handbook/templates/release-tasks/task.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md` → `dev-handbook/templates/release-tasks/example.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md` → `dev-handbook/templates/release-decisions/adr.template.md`
+* `dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md` → `dev-handbook/templates/release-tasks/example.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md` → `dev-handbook/templates/release-reflections/retrospective.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/docs/_template.md` → `dev-handbook/templates/release-docs/documentation.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/researches/_template.md` → `dev-handbook/templates/release-research/investigation.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/test-cases/_template.md` → `dev-handbook/templates/release-testing/test-case.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/user-experience/_template.md` → `dev-handbook/templates/release-ux/user-experience.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/codemods/_template.md` → `dev-handbook/templates/release-codemods/transformation.template.md`
-* `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md` → `dev-handbook/templates/release-planning/release-plan.template.md`
+* `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md` → `dev-handbook/templates/release-planning/release-readme.template.md`
 
 **Project Initialization Templates:**
+* `dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md` → `dev-handbook/templates/project-docs/decisions/adr.template.md`
 * `dev-handbook/guides/initialize-project-templates/PRD.md` → `dev-handbook/templates/project-docs/prd.template.md`
 * `dev-handbook/guides/initialize-project-templates/architecture.md` → `dev-handbook/templates/project-docs/architecture.template.md`
 * `dev-handbook/guides/initialize-project-templates/blueprint.md` → `dev-handbook/templates/project-docs/blueprint.template.md`
