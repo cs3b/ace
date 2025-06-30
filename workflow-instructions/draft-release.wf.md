@@ -200,11 +200,8 @@ user-provided release scope into actionable tasks.
 This workflow focuses on **drafting** a release in the backlog. Once development begins, the release
 moves to `current/`. For publishing completed releases, use the publish-release workflow.
 
-## Embedded Templates
-
-### Release Overview Template: path (dev-handbook/templates/release-management/release-overview.template.md)
-
-````markdown
+<templates>
+    <template path="{current-release-path}/v.x.y.z-release-name.md" template-path="dev-handbook/templates/release-management/release-overview.template.md">
 # v.X.Y.Z [Codename]
 
 ## Release Overview
@@ -278,11 +275,9 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 
 ## Notes
 <!-- Additional context, decisions, or clarifications -->
-````
-
-### Task Template: path (dev-handbook/templates/release-tasks/task.template.md)
-
-````markdown
+    </template>
+    
+    <template path="{current-release-path}/tasks/v.x.y.z+task.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
 ---
 id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
 status: pending
@@ -370,4 +365,5 @@ _Result excerpt:_
 
 * [Relevant guide or documentation]
 * [Related task or ADR]
-````
+    </template>
+</templates>

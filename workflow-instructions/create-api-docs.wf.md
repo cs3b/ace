@@ -260,11 +260,8 @@ Integrate API documentation generation into the build process for automatic upda
 
 This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.
 
-## Embedded Templates
-
-### Ruby YARD Template: path (dev-handbook/templates/code-docs/ruby-yard.template.md)
-
-````ruby
+<templates>
+    <template path="{current-project-path}/src/services/PaymentService.rb" template-path="dev-handbook/templates/code-docs/ruby-yard.template.md">
 # Processes payment transactions using the configured gateway
 #
 # This service handles payment processing including validation,
@@ -310,11 +307,9 @@ This workflow ensures comprehensive, consistent API documentation that helps dev
 def process(amount:, currency:, payment_method:, **options)
   # Implementation
 end
-````
-
-### JavaScript JSDoc Template: path (dev-handbook/templates/code-docs/javascript-jsdoc.template.md)
-
-````javascript
+    </template>
+    
+    <template path="{current-project-path}/src/services/PaymentService.js" template-path="dev-handbook/templates/code-docs/javascript-jsdoc.template.md">
 /**
  * Processes payment transactions using the configured gateway
  * 
@@ -357,4 +352,5 @@ end
 async process({ amount, currency, paymentMethod, options = {} }) {
   // Implementation
 }
-````
+    </template>
+</templates>

@@ -276,11 +276,8 @@ Create learning-oriented guides that walk users through complete workflows.
 
 This workflow ensures comprehensive, user-friendly documentation that enables successful adoption and use of your features.
 
-## Embedded Templates
-
-### User Documentation Template: path (dev-handbook/templates/user-docs/user-guide.template.md)
-
-````markdown
+<templates>
+    <template path="{current-project-path}/docs/user-guide.md" template-path="dev-handbook/templates/user-docs/user-guide.template.md">
 # [Feature Name]
 
 ## Overview
@@ -377,4 +374,5 @@ A: Clear, helpful answer.
 - Link to related features
 - External documentation
 - Video tutorials
-````
+    </template>
+</templates>

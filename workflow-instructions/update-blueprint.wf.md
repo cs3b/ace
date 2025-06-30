@@ -178,11 +178,8 @@ Example:
 - Include sensitive information
 - Use absolute file paths
 
-## Embedded Templates
-
-### Blueprint Template: path (dev-handbook/templates/project-docs/blueprint.template.md)
-
-````markdown
+<templates>
+    <template path="docs/blueprint.md" template-path="dev-handbook/templates/project-docs/blueprint.template.md">
 # Blueprint
 
 ## Project Organization
@@ -255,4 +252,5 @@ AI agents should ignore these paths:
 - [What We Build](./what-do-we-build.md) - Project vision and goals
 - [Architecture](./architecture.md) - Technical architecture and design
 - [Roadmap](./roadmap.md) - Release planning (if exists)
-````
+    </template>
+</templates>

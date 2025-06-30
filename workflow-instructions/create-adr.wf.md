@@ -124,11 +124,8 @@ Create an ADR when:
 - ADR-004-choose-postgresql-over-mongodb
 - ADR-005-use-jwt-for-authentication
 
-## Embedded Templates
-
-### ADR Template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)
-
-````markdown
+<templates>
+    <template path="docs/decisions/ADR-XXX-decision-title.md" template-path="dev-handbook/templates/project-docs/decisions/adr.template.md">
 # ADR-XXX: Title of the Decision
 
 ## Status
@@ -183,4 +180,5 @@ What becomes easier or more difficult to do because of this change?
 
 - [External references, research papers, blog posts]
 - [Links to relevant documentation or discussions]
-````
+    </template>
+</templates>

@@ -328,11 +328,8 @@ The publish release workflow is complete when:
 - Post-release monitoring is active
 - Project status reflects published state
 
-## Embedded Templates
-
-### Changelog Template: path (dev-handbook/templates/release-management/changelog.template.md)
-
-````markdown
+<templates>
+    <template path="CHANGELOG.md" template-path="dev-handbook/templates/release-management/changelog.template.md">
 # Changelog
 All notable changes to this project will be documented in this file.
 
@@ -359,4 +356,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Vulnerability fixes
-````
+    </template>
+</templates>

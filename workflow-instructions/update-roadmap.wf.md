@@ -192,11 +192,8 @@ Requirements:
 
 This workflow maintains the strategic roadmap document, ensuring it accurately reflects project direction and current release status through structured validation and updates.
 
-## Embedded Templates
-
-### Roadmap Table Templates: path (dev-handbook/templates/release-planning/release-readme.template.md)
-
-````markdown
+<templates>
+    <template path="docs/roadmap.md" template-path="dev-handbook/templates/release-planning/release-readme.template.md">
 ## Strategic Objectives Table Format
 
 | # | Objective | Success Metric |
@@ -220,4 +217,5 @@ This workflow maintains the strategic roadmap document, ensuring it accurately r
 | Date | Summary | Author |
 |------|---------|--------|
 | YYYY-MM-DD | [Brief change description] | [Author name] |
-````
+    </template>
+</templates>

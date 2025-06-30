@@ -200,11 +200,8 @@ New features require:
 
 This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.
 
-## Embedded Templates
-
-### Enhanced Implementation Plan Template: path (dev-handbook/templates/release-tasks/task.template.md)
-
-````markdown
+<templates>
+    <template path="{current-release-path}/tasks/v.x.y.z+task.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
 ## Implementation Plan
 
 ### Planning Steps
@@ -247,11 +244,9 @@ This workflow ensures tasks are thoroughly vetted before implementation, reducin
   - API documentation
   - User guides
   - Code comments
-````
-
-### Review Report Template: path (dev-handbook/templates/release-docs/documentation.template.md)
-
-````markdown
+    </template>
+    
+    <template path="{current-release-path}/docs/task-review-report.md" template-path="dev-handbook/templates/release-docs/documentation.template.md">
 ## Task Review Summary
 
 ### Task: [ID] - [Title]
@@ -274,4 +269,5 @@ This workflow ensures tasks are thoroughly vetted before implementation, reducin
 - [ ] Address clarification points
 - [ ] Update task definition
 - [ ] Proceed with implementation
-````
+    </template>
+</templates>

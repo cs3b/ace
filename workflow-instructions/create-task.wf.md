@@ -172,9 +172,8 @@ This workflow handles all types of input uniformly, creating consistent, well-st
 
 ## Embedded Templates
 
-### Task Template: path (dev-handbook/templates/release-tasks/task.template.md)
-
-````markdown
+<templates>
+    <template path="{current-release-path}/tasks/v.x.y.z+task.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
 ---
 id: v.X.Y.Z+task.NN  # Generated using bin/tnid v.X.Y.Z (zero-padded format)
 status: pending
@@ -266,4 +265,5 @@ _Result excerpt:_
 * Original requirement: [Link or description]
 * Related guides: [If applicable]
 * Dependencies: [Links to other tasks]
-````
+    </template>
+</templates>

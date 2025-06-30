@@ -351,11 +351,8 @@ Create performance test cases to establish and maintain system performance stand
 
 This workflow ensures thorough test coverage through systematic identification and documentation of test scenarios across all testing levels.
 
-## Embedded Templates
-
-### Test Case Template: path (dev-handbook/templates/release-testing/test-case.template.md)
-
-````markdown
+<templates>
+    <template path="{current-release-path}/test-cases/TC-XXX-test-name.md" template-path="dev-handbook/templates/release-testing/test-case.template.md">
 ## Test Case: [TC-001] [Descriptive Name]
 
 **Category**: [Unit | Integration | E2E | Performance | Security]
@@ -446,4 +443,5 @@ RSpec.describe 'Authentication API' do
   end
 end
 ```
-````
+    </template>
+</templates>
