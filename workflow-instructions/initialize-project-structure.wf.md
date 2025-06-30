@@ -39,14 +39,14 @@ AI-assisted development workflow in a new or existing project.
     - **Create Project `bin/` Directory**:
         - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
     - **Create Standard Binstubs**:
-        - Create the following standard scripts in `bin/` using the appropriate binstub templates:
-          - `test` - Run project tests: path (dev-handbook/templates/project-build/test.binstub.sh)
-          - `lint` - Run project linting: path (dev-handbook/templates/project-build/lint.binstub.sh)
-          - `build` - Build project artifacts: path (dev-handbook/templates/project-build/build.binstub.sh)
-          - `run` - Run the application: path (dev-handbook/templates/project-build/run.binstub.sh)
-          - `tn` - Get next task ID: path (dev-handbook/templates/project-build/tn.binstub.sh)
-          - `tr` - List recent tasks: path (dev-handbook/templates/project-build/tr.binstub.sh)  
-          - `tree` - Show project structure: path (dev-handbook/templates/project-build/tree.binstub.sh)
+        - Create the following standard scripts in `bin/` by copying from `dev-tools/exe-old/_binstubs/`:
+          - `test` - Run project tests (copy from `dev-tools/exe-old/_binstubs/test`)
+          - `lint` - Run project linting (copy from `dev-tools/exe-old/_binstubs/lint`)
+          - `build` - Build project artifacts (copy from `dev-tools/exe-old/_binstubs/build`)
+          - `run` - Run the application (copy from `dev-tools/exe-old/_binstubs/run`)
+          - `tn` - Get next task ID (copy from `dev-tools/exe-old/_binstubs/tn`)
+          - `tr` - List recent tasks (copy from `dev-tools/exe-old/_binstubs/tr`)
+          - `tree` - Show project structure (copy from `dev-tools/exe-old/_binstubs/tree`)
         - Skip any that already exist to avoid overwriting
     - **Make Scripts Executable**:
         - For all scripts newly created in `bin/`, make them executable: `chmod +x bin/*`.
@@ -208,9 +208,10 @@ Initialize an AI-driven development environment by creating necessary documentat
 
 ## Embedded Templates
 
-### PRD Template: path (dev-handbook/templates/project-docs/prd.template.md)
+### PRD Template
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/project-docs/prd.template.md">
 # Product Requirements Document (PRD)
 
 ## Executive Summary
@@ -246,11 +247,13 @@ Initialize an AI-driven development environment by creating necessary documentat
 - v0.2.0: [MVP - Basic features]
 - v0.3.0: [Beta - Feature complete]
 - v1.0.0: [Production ready]
-````
+</template>
+</templates>
 
-### README Template: path (dev-handbook/templates/project-docs/README.template.md)
+### README Template
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/project-docs/README.template.md">
 # [Project Name]
 
 [One-line description of the project]
@@ -286,19 +289,19 @@ cd [project-name]
 
 # Setup database
 [database-setup-command]
-````
+```
 
 ### Running the Application
 
 ```bash
 bin/run
-````
+```
 
 ### Running Tests
 
 ```bash
 bin/test
-````
+```
 
 ## Development
 
@@ -315,12 +318,13 @@ bin/test
 ## License
 
 [License information]
+</template>
+</templates>
 
-````
+### What We Build Template
 
-### What We Build Template: path (dev-handbook/templates/project-docs/vision.template.md)
-
-````markdown
+<templates>
+<template path="dev-handbook/templates/project-docs/vision.template.md">
 # What Do We Build?
 
 ## Project Overview
@@ -359,11 +363,13 @@ bin/test
 - [Measurable outcome 1]
 - [Measurable outcome 2]
 - [Measurable outcome 3]
-````
+</template>
+</templates>
 
-### Architecture Template: path (dev-handbook/templates/project-docs/architecture.template.md)
+### Architecture Template
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/project-docs/architecture.template.md">
 # Architecture
 
 ## Technology Stack
@@ -442,18 +448,19 @@ bin/test
 - [Performance consideration 1]
 - [Performance consideration 2]
 - [Performance consideration 3]
-````
+</template>
+</templates>
 
-### Blueprint Template: path (dev-handbook/templates/project-docs/blueprint.template.md)
+### Blueprint Template
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/project-docs/blueprint.template.md">
 # Blueprint
 
 ## Project Organization
 
 ### Directory Structure
-````
-
+```
 .
 ├── bin/                    # Executable scripts
 ├── dev-taskflow/          # Task management
@@ -464,8 +471,7 @@ bin/test
 ├── src/                  # Source code (or app/, lib/, etc.)
 ├── test/                 # Test files (or spec/, tests/, etc.)
 └── [project-specific directories]
-
-````
+```
 
 ### Key Files
 - `README.md` - Project overview and setup
@@ -514,13 +520,17 @@ AI agents should ignore these paths:
 - [Where/how to add new features]
 - [Plugin/module system if applicable]
 - [Configuration extension points]
-````
+</template>
+</templates>
 
-### Binstub Templates: path (dev-handbook/templates/project-build/)
+### Binstub Templates
 
-#### bin/test: path (dev-handbook/templates/project-build/test.binstub.sh)
+**Note**: Binstub templates are sourced from `dev-tools/exe-old/_binstubs/` directory.
 
-````bash
+#### bin/test
+
+<templates>
+<template path="dev-tools/exe-old/_binstubs/test">
 #!/usr/bin/env bash
 # Run project tests
 
@@ -534,11 +544,13 @@ AI agents should ignore these paths:
 echo "Error: bin/test not configured for this project"
 echo "Please update this script with your project's test command"
 exit 1
-````
+</template>
+</templates>
 
-#### bin/lint: path (dev-handbook/templates/project-build/lint.binstub.sh)
+#### bin/lint
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/lint">
 #!/usr/bin/env bash
 # Run project linting
 
@@ -552,11 +564,13 @@ exit 1
 echo "Error: bin/lint not configured for this project"
 echo "Please update this script with your project's lint command"
 exit 1
-````
+</template>
+</templates>
 
-#### bin/build: path (dev-handbook/templates/project-build/build.binstub.sh)
+#### bin/build
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/build">
 #!/usr/bin/env bash
 # Build project artifacts
 
@@ -570,11 +584,13 @@ exit 1
 echo "Error: bin/build not configured for this project"
 echo "Please update this script with your project's build command"
 exit 1
-````
+</template>
+</templates>
 
-#### bin/run: path (dev-handbook/templates/project-build/run.binstub.sh)
+#### bin/run
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/run">
 #!/usr/bin/env bash
 # Run the application
 
@@ -588,40 +604,48 @@ exit 1
 echo "Error: bin/run not configured for this project"
 echo "Please update this script with your project's run command"
 exit 1
-````
+</template>
+</templates>
 
-#### bin/tn: path (dev-handbook/templates/project-build/tn.binstub.sh)
+#### bin/tn
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/tn">
 #!/usr/bin/env bash
 # Get next task ID
 
 ruby dev-tools/exe-old/tn.rb "$@"
-````
+</template>
+</templates>
 
-#### bin/tr: path (dev-handbook/templates/project-build/tr.binstub.sh)
+#### bin/tr
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/tr">
 #!/usr/bin/env bash
 # List recent tasks
 
 ruby dev-tools/exe-old/tr.rb "$@"
-````
+</template>
+</templates>
 
-#### bin/tree: path (dev-handbook/templates/project-build/tree.binstub.sh)
+#### bin/tree
 
-````bash
+<templates>
+<template path="dev-tools/exe-old/_binstubs/tree">
 #!/usr/bin/env bash
 # Show project structure
 
 tree -I 'node_modules|vendor|.git|coverage|tmp|log' "$@"
-````
+</template>
+</templates>
 
-### v.0.0.0 Release Templates: path (dev-handbook/templates/release-v.0.0.0/)
+### v.0.0.0 Release Templates
 
-#### Release Overview Template: path (dev-handbook/templates/release-v.0.0.0/release-overview.template.md)
+#### Release Overview Template
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/release-v.0.0.0/release-overview.template.md">
 ---
 status: in-progress
 start_date: YYYY-MM-DD
@@ -665,13 +689,15 @@ The v.0.0.0 Bootstrap release establishes the foundational project structure and
 - Start: YYYY-MM-DD
 - Target: 1-2 days for structure setup
 - PRD completion: Depends on project complexity
-````
+</template>
+</templates>
 
-#### Task Templates: path (dev-handbook/templates/release-v.0.0.0/)
+#### Task Templates
 
-##### v.0.0.0+task.1: Setup Structure: path (dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md)
+##### v.0.0.0+task.1: Setup Structure
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md">
 ---
 id: v.0.0.0+task.1
 status: done
@@ -713,11 +739,13 @@ Create the foundational directory structure for task management and project docu
 - [x] All directories exist with proper permissions
 - [x] Git recognizes the new structure
 - [x] .keep files prevent empty directory removal
-````
+</template>
+</templates>
 
-##### v.0.0.0+task.2: Create Core Docs: path (dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md)
+##### v.0.0.0+task.2: Create Core Docs
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md">
 ---
 id: v.0.0.0+task.2
 status: in-progress
@@ -765,11 +793,13 @@ Generate the three foundational documentation files that guide project developme
 - [ ] Technology stack is documented
 - [ ] Project vision is clear
 - [ ] AI agent guidelines are included
-````
+</template>
+</templates>
 
-##### v.0.0.0+task.3: Complete PRD: path (dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md)
+##### v.0.0.0+task.3: Complete PRD
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md">
 ---
 id: v.0.0.0+task.3
 status: pending
@@ -821,11 +851,13 @@ Finalize the PRD.md with comprehensive project requirements, ensuring all sectio
 - [ ] Technical requirements are specific
 - [ ] Success metrics are measurable
 - [ ] Stakeholder approval obtained
-````
+</template>
+</templates>
 
-##### v.0.0.0+task.4: Create Roadmap: path (dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md)
+##### v.0.0.0+task.4: Create Roadmap
 
-````markdown
+<templates>
+<template path="dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md">
 ---
 id: v.0.0.0+task.4
 status: pending
@@ -874,7 +906,8 @@ Establish the project roadmap from v0.1.0 through v1.0.0, defining major milesto
 - [ ] Feature assignments are logical
 - [ ] Timeline is realistic
 - [ ] Document follows roadmap format
-````
+</template>
+</templates>
 
 ## Common Patterns
 
