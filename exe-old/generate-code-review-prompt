@@ -436,9 +436,9 @@ class CodeReviewPromptGenerator
   def read_prompt_template
     # Try multiple possible locations for the template
     possible_paths = [
-      File.join(__dir__, '..', 'guides', 'code-review', '_code-review-from-diff.md'),
-      File.join(@options[:project_root], 'dev-handbook', 'guides', 'code-review', '_code-review-from-diff.md'),
-      File.join(Dir.pwd, 'dev-handbook', 'guides', 'code-review', '_code-review-from-diff.md')
+      File.join(__dir__, '..', 'templates', 'review-code', 'diff.prompt.md'),
+      File.join(@options[:project_root], 'dev-handbook', 'templates', 'review-code', 'diff.prompt.md'),
+      File.join(Dir.pwd, 'dev-handbook', 'templates', 'review-code', 'diff.prompt.md')
     ]
 
     template_path = possible_paths.find { |path| File.exist?(path) }
