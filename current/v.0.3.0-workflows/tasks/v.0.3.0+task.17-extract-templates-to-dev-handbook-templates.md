@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.17
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -11,6 +11,7 @@ dependencies: []
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
@@ -67,6 +68,7 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 #### File Moves
 
 **Code Review Templates:**
+
 * `dev-handbook/guides/code-review/_code-review-system.md` → `dev-handbook/templates/review-code/system.prompt.md`
 * `dev-handbook/guides/code-review/_code-review-from-diff.md` → `dev-handbook/templates/review-code/diff.prompt.md`
 * `dev-handbook/guides/code-review/_doc-review-system.md` → `dev-handbook/templates/review-docs/system.prompt.md`
@@ -77,6 +79,7 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * `dev-handbook/guides/code-review/_meta-test-review-combine.md` → `dev-handbook/templates/review-synthesizer/test-system.prompt.md`
 
 **Release Management Templates:**
+
 * `dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md` → `dev-handbook/templates/release-tasks/task.template.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md` → `dev-handbook/templates/release-tasks/example.md`
 * `dev-handbook/guides/draft-release/v.x.x.x/reflections/_template.md` → `dev-handbook/templates/release-reflections/retrospective.template.md`
@@ -88,6 +91,7 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * `dev-handbook/guides/draft-release/v.x.x.x/v.x.x.x-codename.md` → `dev-handbook/templates/release-planning/release-readme.template.md`
 
 **Project Initialization Templates:**
+
 * `dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md` → `dev-handbook/templates/project-docs/decisions/adr.template.md`
 * `dev-handbook/guides/initialize-project-templates/PRD.md` → `dev-handbook/templates/project-docs/prd.template.md`
 * `dev-handbook/guides/initialize-project-templates/architecture.md` → `dev-handbook/templates/project-docs/architecture.template.md`
@@ -95,6 +99,7 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * `dev-handbook/guides/initialize-project-templates/what-do-we-build.md` → `dev-handbook/templates/project-docs/vision.template.md`
 
 **Project Setup Task Templates:**
+
 * `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-prd.md` → `dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
 * `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-core-documentation.md` → `dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
 * `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-create-project-roadmap.md` → `dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
@@ -123,42 +128,42 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * [x] **Propose the new directory structure with proper naming conventions**
   > TEST: Structure Design Approval
   > Type: Pre-condition Check
-  > Assert: Directory structure follows pattern: review-code/, review-docs/, release-*, project-* with .prompt.md/.template.md suffixes
+  > Assert: Directory structure follows pattern: review-code/, review-docs/, release-_, project-_ with .prompt.md/.template.md suffixes
   > Command: Manual review of proposed structure
 
 ### Execution Steps
 
-* [ ] **Create the new template directory structure**
+* [x] **Create the new template directory structure**
   > TEST: Directory Creation Validation
   > Type: Action Validation
   > Assert: All required directories exist under dev-handbook/templates/
   > Command: `find dev-handbook/templates -type d | sort`
 
-* [ ] **Move all template files to their new locations with proper names**
+* [x] **Move all template files to their new locations with proper names**
   > TEST: File Migration Validation
   > Type: Action Validation
   > Assert: All 27 files moved successfully with correct naming conventions
   > Command: `find dev-handbook/templates -name "*.prompt.md" -o -name "*.template.md" | wc -l`
 
-* [ ] **Scan dev-handbook for references to old template paths**
+* [x] **Scan dev-handbook for references to old template paths**
   > TEST: Reference Discovery
   > Type: Action Validation
   > Assert: All references to old template paths identified for updating
   > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" dev-handbook/`
 
-* [ ] **Scan dev-tools for references to old template paths**
+* [x] **Scan dev-tools for references to old template paths**
   > TEST: Dev-tools Reference Discovery
   > Type: Action Validation
   > Assert: All references in dev-tools scripts identified for updating
   > Command: `grep -r "guides.*_.*\.md\|guides.*template\|guides.*TEMPLATE" dev-tools/`
 
-* [ ] **Update all references to point to new template locations**
+* [x] **Update all references to point to new template locations**
   > TEST: Reference Update Validation
   > Type: Action Validation
   > Assert: All references updated to new paths in templates/ directory
   > Command: `grep -r "templates.*\.prompt\.md\|templates.*\.template\.md" dev-handbook/ dev-tools/`
 
-* [ ] **Validate no broken links exist after migration**
+* [x] **Validate no broken links exist after migration**
   > TEST: Link Validation
   > Type: Action Validation
   > Assert: No broken internal links detected in documentation
@@ -166,14 +171,14 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 
 ## Acceptance Criteria
 
-* [ ] All 27 template files successfully moved from guides/ to templates/
-* [ ] New directory structure follows the approved naming convention
-* [ ] All template files use appropriate suffixes (.prompt.md or .template.md)
-* [ ] All references in dev-handbook updated to new paths
-* [ ] All references in dev-tools updated to new paths
-* [ ] No broken links remain after migration
-* [ ] `bin/lint` command passes without link-related errors
-* [ ] Original requirement from improve-the-workflow-structure.md fully addressed
+* [x] All 27 template files successfully moved from guides/ to templates/
+* [x] New directory structure follows the approved naming convention
+* [x] All template files use appropriate suffixes (.prompt.md or .template.md)
+* [x] All references in dev-handbook updated to new paths
+* [x] All references in dev-tools updated to new paths
+* [x] No broken links remain after migration
+* [x] `bin/lint` command passes without link-related errors
+* [x] Original requirement from improve-the-workflow-structure.md fully addressed
 
 ## Out of Scope
 
