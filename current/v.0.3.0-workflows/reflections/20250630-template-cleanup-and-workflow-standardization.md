@@ -52,12 +52,14 @@
 ## Technical Details
 
 ### Task 29 - Fix Commit Workflow Structure
+
 - Changed H1 title from conversational "Let's Commit..." to standard "Commit Workflow Instruction"
 - Converted checkboxes in Process Steps to bullet points (forbidden by workflow standards)
 - Restructured High-Level Execution Plan to remove checkboxes
 - No functional impact on workflow execution
 
 ### Task 30 - Clean Template Path References  
+
 - Removed 23+ inline "path (...)" references across 13 workflow files
 - Affected files: create-adr, create-api-docs, create-reflection-note, create-task, create-test-cases, create-user-docs, draft-release, initialize-project-structure, publish-release, review-task, save-session-context, update-blueprint, update-roadmap
 - All XML template sections preserved and validated
