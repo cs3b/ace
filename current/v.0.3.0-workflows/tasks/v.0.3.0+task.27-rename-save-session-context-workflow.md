@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.27
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
