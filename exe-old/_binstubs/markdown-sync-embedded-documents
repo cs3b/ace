@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+# binstub: markdown-sync-embedded-documents - Template synchronization utility
+exec(File.expand_path('../markdown-sync-embedded-documents', __dir__), *ARGV)
