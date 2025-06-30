@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.26
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -69,36 +69,36 @@ Update the core project documentation files to properly embrace and reference th
 
 ### Planning Steps
 
-* [ ] Review current content of all three core docs to understand existing structure
+* [x] Review current content of all three core docs to understand existing structure
   > TEST: Core Docs Review Complete
   > Type: Pre-condition Check
   > Assert: All three core docs have been read and their current state understood
   > Command: bin/test --check-docs-reviewed
-* [ ] Search codebase for any guidance suggesting not to link to docs/
-* [ ] Identify all references that need updating
+* [x] Search codebase for any guidance suggesting not to link to docs/
+* [x] Identify all references that need updating
 
 ### Execution Steps
 
-* [ ] Update docs/architecture.md to properly describe the docs/ directory structure
+* [x] Update docs/architecture.md to properly describe the docs/ directory structure
   > TEST: Architecture Doc Updated
   > Type: Content Validation
   > Assert: architecture.md contains accurate description of docs/ subdirectories
   > Command: bin/test --check-architecture-structure
-* [ ] Update docs/blueprint.md to reference the correct paths for decisions/, migrations/
-* [ ] Update docs/what-do-we-build.md with proper internal document references
-* [ ] Fix any workflow instructions that incorrectly advise against docs/ linking
+* [x] Update docs/blueprint.md to reference the correct paths for decisions/, migrations/
+* [x] Update docs/what-do-we-build.md with proper internal document references
+* [x] Fix any workflow instructions that incorrectly advise against docs/ linking
   > TEST: No Anti-Pattern References
   > Type: Content Search
   > Assert: No files contain guidance against linking to docs/
   > Command: bin/test --check-no-anti-docs-patterns
-* [ ] Ensure all files distinguish between permanent (docs/) and temporal (dev-taskflow/) content
+* [x] Ensure all files distinguish between permanent (docs/) and temporal (dev-taskflow/) content
 
 ## Acceptance Criteria
 
-* [ ] All three core docs accurately describe the docs/ directory structure
-* [ ] No conflicting guidance about linking to docs/ exists in the codebase
-* [ ] Clear distinction documented between docs/ (permanent) and dev-taskflow/ (point-in-time)
-* [ ] All internal references use correct paths
+* [x] All three core docs accurately describe the docs/ directory structure
+* [x] No conflicting guidance about linking to docs/ exists in the codebase
+* [x] Clear distinction documented between docs/ (permanent) and dev-taskflow/ (point-in-time)
+* [x] All internal references use correct paths
 
 ## Out of Scope
 
