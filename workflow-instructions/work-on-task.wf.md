@@ -177,6 +177,17 @@
    * Update task status to `done`
    * Commit all changes with descriptive message
 
+## Codemod and Script Management
+
+When creating scripts to manipulate text or files (codemods):
+
+* **Location**: Create all codemods in the current release directory: `dev-taskflow/current/v.X.Y.Z-release/codemods/`
+* **Purpose**: Scripts that automate text transformations, file modifications, or batch operations
+* **Naming**: Use descriptive names reflecting the transformation (e.g., `convert-templates.sh`, `migrate-yaml-format.rb`)
+* **Documentation**: Include comments explaining the transformation logic
+* **Testing**: Test on small samples before applying to entire codebase
+* **Cleanup**: Keep codemods for release documentation and future reference
+
 ## Temporary File Management
 
 When working with temporary files:
