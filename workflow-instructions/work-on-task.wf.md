@@ -177,6 +177,31 @@
    * Update task status to `done`
    * Commit all changes with descriptive message
 
+## Task Documentation Organization
+
+When creating task-related documentation and deliverables:
+
+### Document Placement Rules
+
+* **Task-specific documentation**: Create in `dev-taskflow/current/v.X.Y.Z-release/docs/`
+* **Task-specific naming**: Prefix documents with task number (e.g., `25-validation-criteria-checklist.md`)
+* **Analysis documents**: Research findings, compliance reports, validation results
+* **Planning documents**: Implementation plans, action plans, design specifications
+* **Process documentation**: Procedures, guidelines, validation criteria
+
+### Examples
+
+* **Analysis Report**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-report.md`
+* **Action Plan**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-workflow-compliance-fixes.md`
+* **Process Guide**: `dev-taskflow/current/v.0.3.0-workflows/docs/25-validation-criteria-checklist.md`
+
+### Documentation Standards
+
+* **Clear naming**: Use descriptive names that explain the document purpose
+* **Task reference**: Always prefix with task number for traceability
+* **Structured content**: Include headers, sections, and clear organization
+* **Actionable content**: Provide concrete steps, criteria, or recommendations
+
 ## Codemod and Script Management
 
 When creating scripts to manipulate text or files (codemods):
