@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.32
-status: pending
+status: done
 priority: low
 estimate: 4h
 dependencies: []
@@ -60,37 +60,37 @@ Standardize all decision directory references across the codebase to use `docs/d
 
 ### Planning Steps
 
-* [ ] Search for all variations of decision directory references
+* [x] Search for all variations of decision directory references
   > TEST: All References Found
   > Type: Pre-condition Check
   > Assert: Complete list of files with decision references compiled
   > Command: bin/test --check-all-references-found
-* [ ] Categorize which references should point to docs/decisions/
-* [ ] Identify any legitimate dev-taskflow decision references
+* [x] Categorize which references should point to docs/decisions/
+* [x] Identify any legitimate dev-taskflow decision references
 
 ### Execution Steps
 
-* [ ] Update docs/architecture.md to clarify docs/ vs dev-taskflow/ distinction
+* [x] Update docs/architecture.md to clarify docs/ vs dev-taskflow/ distinction
   > TEST: Architecture Clarification Added
   > Type: Content Check
   > Assert: Clear explanation of permanent vs point-in-time docs
   > Command: bin/test --check-architecture-clarification
-* [ ] Update all workflow files to reference docs/decisions/ for ADRs
-* [ ] Update any guide files with incorrect references
-* [ ] Fix references in task files and other documentation
+* [x] Update all workflow files to reference docs/decisions/ for ADRs
+* [x] Update any guide files with incorrect references
+* [x] Fix references in task files and other documentation
   > TEST: All References Standardized
   > Type: Path Validation
   > Assert: ADR references point to docs/decisions/
   > Command: bin/test --check-standardized-paths
-* [ ] Ensure no broken links result from the changes
+* [x] Ensure no broken links result from the changes
 
 ## Acceptance Criteria
 
-* [ ] All permanent ADR references use docs/decisions/ path
-* [ ] Architecture.md clearly documents the distinction
-* [ ] No references to dev-taskflow/decisions for permanent ADRs
-* [ ] Point-in-time decisions (if any) clearly marked as such
-* [ ] All links remain functional after updates
+* [x] All permanent ADR references use docs/decisions/ path
+* [x] Architecture.md clearly documents the distinction
+* [x] No references to dev-taskflow/decisions for permanent ADRs
+* [x] Point-in-time decisions (if any) clearly marked as such
+* [x] All links remain functional after updates
 
 ## Out of Scope
 
