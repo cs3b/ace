@@ -261,53 +261,83 @@ Integrate API documentation generation into the build process for automatic upda
 This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.
 
 <templates>
-    <template path="dev-handbook/templates/code-docs/ruby-yard.template.md">
-# Processes payment transactions using the configured gateway
+    <template path="dev-handbook/templates/code-docs/ruby-yard.template.md"># Ruby YARD Documentation Template
+
+```ruby
+# [Brief description of what this method/class does]
 #
-# This service handles payment processing including validation,
-# gateway communication, and error handling. It supports multiple
-# payment methods and implements retry logic for transient failures.
+# [Detailed description including purpose, behavior, and context.
+# Explain what the method/class does, why it's useful, and how it fits
+# into the larger system.]
 #
-# @example Process a credit card payment
-#   payment_service = PaymentService.new
-#   result = payment_service.process(
-#     amount: 99.99,
-#     currency: 'USD',
-#     payment_method: credit_card
-#   )
+# @example [Example title]
+#   [code example showing basic usage]
 #
-# @example Handle payment errors
-#   begin
-#     result = payment_service.process(payment_data)
-#   rescue PaymentService::InvalidAmount => e
-#     Rails.logger.error("Invalid amount: #{e.message}")
-#   end
+# @example [Another example title] 
+#   [code example showing advanced usage or error handling]
 #
-# @param amount [BigDecimal] The payment amount (must be positive)
-# @param currency [String] ISO 4217 currency code (e.g., 'USD', 'EUR')
-# @param payment_method [PaymentMethod] The payment method to use
-# @param options [Hash] Additional options
-# @option options [Boolean] :capture (true) Whether to capture immediately
-# @option options [String] :idempotency_key Unique key for idempotent requests
+# @param [parameter_name] [Type] [Description of parameter]
+# @param [another_param] [Type] [Description with constraints/validation]
+# @param [options] [Hash] [Description of options hash]
+# @option options [Type] :option_name (default_value) [Description]
+# @option options [Type] :another_option [Description]
 #
-# @return [PaymentResult] The result object containing transaction details
+# @return [ReturnType] [Description of what is returned]
 #
-# @raise [InvalidAmount] if amount is negative or zero
-# @raise [UnsupportedCurrency] if currency is not supported
-# @raise [GatewayError] if gateway communication fails
+# @raise [ExceptionClass] [Description of when this exception is raised]
+# @raise [AnotherException] [Description of another exception condition]
 #
-# @note This method is thread-safe
-# @note Transactions are automatically logged for audit purposes
+# @note [Important note about usage, threading, performance, etc.]
+# @note [Another important note]
 #
-# @see PaymentResult
-# @see PaymentMethod
-# @see https://docs.example.com/payments
+# @see [RelatedClass]
+# @see [RelatedMethod]
+# @see [URL to external documentation]
 #
-# @since 2.1.0
-def process(amount:, currency:, payment_method:, **options)
+# @since [version when this was added]
+# @deprecated [version when deprecated] Use [alternative] instead
+#
+def method_name(parameter_name:, another_param:, **options)
   # Implementation
 end
-    </template>
+```
+
+## YARD Tag Reference
+
+### Basic Tags
+
+- `@param` - Parameter documentation
+- `@return` - Return value documentation  
+- `@raise` - Exception documentation
+- `@example` - Code examples
+- `@note` - Important notes
+- `@see` - Cross-references
+
+### Metadata Tags
+
+- `@since` - Version when added
+- `@deprecated` - Deprecation notice
+- `@author` - Author information
+- `@version` - Version information
+
+### Advanced Tags
+
+- `@option` - Hash option documentation
+- `@overload` - Method overloads
+- `@yield` - Block documentation
+- `@yieldparam` - Block parameter documentation
+- `@yieldreturn` - Block return documentation
+
+## Documentation Guidelines
+
+1. **Start with a brief one-line summary**
+2. **Follow with detailed description if needed**
+3. **Provide realistic examples**
+4. **Document all parameters and return values**
+5. **Include exception conditions**
+6. **Add notes for important behavior**
+7. **Use cross-references for related code**
+</template>
 
     <template path="dev-handbook/templates/code-docs/javascript-jsdoc.template.md"># JavaScript JSDoc Documentation Template
 

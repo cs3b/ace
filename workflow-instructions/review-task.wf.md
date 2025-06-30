@@ -201,52 +201,103 @@ New features require:
 This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.
 
 <templates>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path="dev-handbook/templates/release-tasks/task.template.md">---
+id: <run bin/tnid to generate ID>
+status: pending
+priority: <high/medium/low>
+estimate: <n>h
+dependencies: [<ticket-ids>]
+---
+
+# <Verb + Object>
+
+## 0. Directory Audit ✅
+
+_Command run:_
+
+```bash
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+<insert tree here>
+```
+
+## Objective
+
+Why are we doing this?
+
+## Scope of Work
+
+- Bullet 1 …
+- Bullet 2 …
+
+### Deliverables
+
+#### Create
+
+- path/to/file.ext
+
+#### Modify
+
+- path/to/other.ext
+
+#### Delete
+
+- path/to/obsolete.ext
+
+## Phases
+
+1. Audit
+2. Extract …
+3. Refactor …
+
 ## Implementation Plan
+
+*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
 
 ### Planning Steps
 
-- [ ] Research existing implementation patterns
-  > TEST: Pattern Analysis
-  > Type: Pre-condition Check
-  > Assert: Similar patterns identified and documented
-  > Command: grep -r "pattern" lib/
+*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-- [ ] Design solution approach
-  - Consider alternatives
-  - Document decision rationale
-  - Create high-level design
-
-- [ ] Identify impacted components
-  > TEST: Impact Analysis
+- [ ] Analyze current system/codebase to understand existing patterns
+  > TEST: Understanding Check
   > Type: Pre-condition Check
-  > Assert: All dependencies mapped
-  > Command: bin/deps --check component
+  > Assert: Key components and their relationships are identified
+  > Command: bin/test --check-analysis-complete
+- [ ] Research best practices and design approach
+- [ ] Plan detailed implementation strategy
 
 ### Execution Steps
 
-- [ ] Implement core functionality
-  > TEST: Core Implementation
+*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
+
+- [ ] Step 1: Describe the first implementation action.
+- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
+  > TEST: Verify Action 2 Outcome
   > Type: Action Validation
-  > Assert: Basic functionality works
-  > Command: bin/test spec/feature_spec.rb
+  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
+  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
+- [ ] ... Add more implementation steps as needed.
 
-- [ ] Add error handling
-  - Handle edge cases
-  - Add appropriate logging
-  - Create helpful error messages
+## Acceptance Criteria
 
-- [ ] Write comprehensive tests
-  > TEST: Test Coverage
-  > Type: Action Validation
-  > Assert: Coverage > 90%
-  > Command: bin/test --coverage
+*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-- [ ] Update documentation
-  - API documentation
-  - User guides
-  - Code comments
-    </template>
+- [ ] AC 1: All specified deliverables created/modified.
+- [ ] AC 2: Key functionalities (if applicable) are working as described.
+- [ ] AC 3: All automated checks in the Implementation Plan pass.
+
+## Out of Scope
+
+- ❌ …
+
+## References
+
+```
+</template>
 
     <template path="dev-handbook/templates/release-docs/documentation.template.md"># Feature Documentation
 
