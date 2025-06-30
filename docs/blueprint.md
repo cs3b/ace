@@ -74,6 +74,8 @@ AI agents should treat the following paths as read-only unless explicitly instru
 - `dev-tools/exe-old/_binstubs/**/*`
 - `dev-handbook/guides/initialize-project-templates/**/*`
 - `dev-taskflow/done/**/*` (Completed tasks should not be modified)
+- `dev-taskflow/current/*/handbook_review/**/*` (Historical review snapshots should not be modified)
+- `dev-taskflow/*/handbook_review/**/*` (All historical review snapshots should not be modified)
 - `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
 - `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
 - `.gitignore` (Modify carefully when adding/removing ignored patterns)

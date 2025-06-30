@@ -283,7 +283,7 @@ All notable changes to this project will be documented in this file.
     - Populated "Ignored Paths" with default common patterns (e.g., `dev-taskflow/done/**/*`,
       `**/node_modules/**`).
     - Added project-specific "Read-Only Paths" (e.g., `dev-taskflow/releases/**/*`,
-      `dev-taskflow/decisions/**/*`).
+      `docs/decisions/**/*`).
   - Updated `dev-handbook/workflow-instructions/initialize-project-structure.md` to include these new
     sections and their default content when generating a new `blueprint.md`.
   - Added a new "Agent Operational Boundaries" section to `dev-handbook/guides/project-management.md`

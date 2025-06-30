@@ -181,6 +181,22 @@ These scripts are intended to be idempotent where possible and provide a consist
 
 The primary Ruby source code resides in the `lib/coding_agent_tools/` directory, organized according to the ATOM pattern. Tests are located in the `spec/` directory.
 
+### Documentation Directory Structure
+
+The project uses a clear distinction between permanent and temporal documentation:
+
+- **`docs/`** - Contains permanent project documentation that serves as the canonical reference across all releases:
+  - `docs/decisions/` - Architecture Decision Records (ADRs) that document permanent architectural choices
+  - Core project documentation (architecture.md, blueprint.md, what-do-we-build.md)
+  - Migration records and other permanent reference materials
+
+- **`dev-taskflow/`** - Contains project-specific, point-in-time documentation tied to specific releases:
+  - `dev-taskflow/current/*/decisions/` - Release-specific decisions and analysis
+  - Task management files organized by release cycle
+  - Temporal documentation that may become historical
+
+**Important**: When referencing Architecture Decision Records (ADRs), always use `docs/decisions/` for permanent architectural decisions that apply across the entire project lifecycle. Use `dev-taskflow/current/*/decisions/` only for release-specific decisions that are tied to a particular development cycle.
+
 ## Development Patterns
 
 - **ATOM-Based Hierarchy**: The core library implementation (`lib/coding_agent_tools/`) follows an Atoms, Molecules, Organisms, Ecosystems hierarchy to ensure modularity, reusability, testability, and maintainability.
