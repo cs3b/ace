@@ -1,0 +1,19 @@
+{
+  "/code-review": {
+    "workspace_restrictions": {
+      "allowed_roots": ["/Users/michalczyz/Projects/coding-agent-tools"],
+      "blocked_patterns": ["../", "~", "/Users/michalczyz/.*"]
+    },
+    "tools": {
+      "Edit": "project_only",
+      "Write": "project_only",
+      "MultiEdit": "project_only"
+    }
+  },
+  "/create-self-reflection-note": {
+    "workspace_restrictions": {
+      "allowed_roots": ["/Users/michalczyz/Projects/coding-agent-tools"],
+      "enforce_project_boundary": true
+    }
+  }
+}
