@@ -127,7 +127,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
 ## References
 
 - PRD.md (target file)
-- dev-handbook/guides/initialize-project-templates/PRD.md (template reference)
+- dev-handbook/templates/project-docs/prd.template.md (template reference)
 - dev-taskflow/what-do-we-build.md (alignment reference)
 - dev-taskflow/architecture.md (technical alignment reference)
 - dev-handbook/guides/project-management.g.md

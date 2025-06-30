@@ -54,7 +54,7 @@ Initialize the foundational documentation structure for the project using the do
   > TEST: Submodule Check
   > Type: Pre-condition Check
   > Assert: docs-dev directory exists and contains necessary templates
-  > Command: test -d dev-handbook/guides/initialize-project-templates
+  > Command: test -d dev-handbook/templates/project-docs
 - [ ] Review existing project files (README.md, PRD.md) for content extraction
 
 ### Execution Steps
@@ -93,5 +93,5 @@ Initialize the foundational documentation structure for the project using the do
 ## References
 
 - dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-- dev-handbook/guides/initialize-project-templates/ (various templates)
+- dev-handbook/templates/project-docs/ (various templates)
 - dev-handbook/guides/project-management.g.md

@@ -122,7 +122,7 @@ Create a comprehensive project roadmap that outlines planned releases, major mil
 
 - dev-taskflow/roadmap.md (target file)
 - PRD.md (requirements source)
-- dev-handbook/guides/roadmap-templates/ (if available)
+- dev-handbook/templates/release-planning/ (roadmap templates)
 - dev-handbook/workflow-instructions/draft-release.wf.md
 - dev-handbook/guides/project-management.g.md
 - dev-handbook/guides/release-codenames.g.md

@@ -24,7 +24,7 @@ user) to perform common development and project management tasks.
 
 ## Task Management
 
-- [Create Task](./create-task.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
+- [Create Task](./create-task.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
 
 ## Documentation Generation
 

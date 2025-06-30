@@ -112,7 +112,7 @@ This section clarifies the purpose and scope of each major documentation file. F
 
 **Example Structure**:
 
-Refer to the [README.md template](dev-handbook/guides/initialize-project-templates/README.md)
+Refer to the README.md template in the project initialization templates
 
 ##### docs/what-do-we-build.md
 
@@ -351,4 +351,4 @@ languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to th
 
 - [Coding Standards](dev-handbook/guides/coding-standards.g.md)
 - [Project Management Guide](dev-handbook/guides/project-management.g.md) (Task format, ADRs)
-- [ADR Template](dev-handbook/guides/draft-release/v.x.x.x/decisions/_template.md)
+- [ADR Template](dev-handbook/templates/project-docs/decisions/adr.template.md)

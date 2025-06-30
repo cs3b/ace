@@ -69,7 +69,7 @@ AI-assisted development workflow in a new or existing project.
     - Identify the primary source document (`PRD.md` or `README.md`) determined in Step 2.
     - Update the primary source document with the gathered project information (name, purpose, technology stack, key features, etc.).
     - For any information that was not fully gathered or requires further detail, add clear notes or placeholders within the document indicating where more information is needed.
-    - Ensure the updated document aligns with the structure of the relevant template (`dev-handbook/guides/initialize-project-templates/PRD.md` or `dev-handbook/guides/initialize-project-templates/README.md`) if templates were used to initially populate the file.
+    - Ensure the updated document aligns with the structure of the relevant template (`dev-handbook/templates/project-docs/prd.template.md` or README.md template) if templates were used to initially populate the file.
 
 6. **Provide Next Steps Guidance**:
     - **Display v.0.0.0 Tasks**: List the created v.0.0.0 tasks and their current status, explaining what remains to be completed.

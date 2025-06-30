@@ -64,7 +64,7 @@ draft-release/
 3. Create appropriate subdirectories in your release directory (tasks, docs, decisions, etc.)
 4. Copy the needed specialized templates to their respective subdirectories.
 5. When referencing these templates from workflows, use the path
-   `dev-handbook/guides/draft-release/v.x.x.x/[template-category]/_template.md`.
+   `dev-handbook/templates/release-[category]/[type].template.md`.
 
 ## Integration with Workflows
 
@@ -78,7 +78,7 @@ These templates are referenced directly from the `draft-release.md` workflow ins
 For more details on how these templates integrate with the project management workflow, refer to:
 
 - [Project Management Guide](dev-handbook/guides/project-management.g.md)
-- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/breakdown-notes-into-tasks.wf.md)
+- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/create-task.wf.md)
 - [Publish Release Guide](dev-handbook/guides/release-publish.g.md)
 
 ## Customization

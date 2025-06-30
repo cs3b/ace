@@ -59,7 +59,7 @@ guides
 ## 2. Task Template
 
 A re-usable Markdown template for tasks is available at:
-[`dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md`](./draft-release/v.x.x.x/tasks/_template.md)
+[`dev-handbook/templates/release-tasks/task.template.md`](../templates/release-tasks/task.template.md)
 
 This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `bin/tnid` to generate the task ID.
 
@@ -85,7 +85,7 @@ This distinction supports workflow separation where review/planning phases focus
 ## 3. **Full Worked Example**
 
 A full worked example of a task, "Tailor Guides to Tech Stack," has been moved to a separate file:
-[`dev-handbook/guides/draft-release/v.x.x.x/tasks/_example.md`](./draft-release/v.x.x.x/tasks/_example.md)
+[`dev-handbook/templates/release-tasks/example.md`](../templates/release-tasks/example.md)
 
 This example demonstrates how to fill out the template for a real-world scenario.
 

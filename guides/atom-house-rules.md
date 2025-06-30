@@ -352,7 +352,6 @@ To maintain these standards as the project grows, consider implementing:
 ## Cross-References
 
 - [Architecture Documentation](docs/architecture.md) - Overall system architecture
-- [ADR-006: ATOM Architecture House Rules](dev-taskflow/current/v.0.2.0-synapse/decisions/ADR-006-ATOM-Architecture-House-Rules.md) - Official architecture decisions
 - [Coding Standards](dev-handbook/guides/coding-standards.g.md) - General coding practices
 - [Testing Guidelines](dev-handbook/guides/testing.g.md) - Testing patterns for each component type
 

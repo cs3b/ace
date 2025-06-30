@@ -88,10 +88,10 @@ Our development workflow centers around:
 ### Project Initialization
 
 - **[Initialize Project Templates](./initialize-project-templates/README.md)** - Templates for initializing new projects.
-  - [Architecture Template](./initialize-project-templates/architecture.md)
-  - [Blueprint Template](./initialize-project-templates/blueprint.md)
-  - [PRD Template](./initialize-project-templates/PRD.md)
-  - [What Do We Build Template](./initialize-project-templates/what-do-we-build.md)
+  - [Architecture Template](../templates/project-docs/architecture.template.md)
+  - [Blueprint Template](../templates/project-docs/blueprint.template.md)
+  - [PRD Template](../templates/project-docs/prd.template.md)
+  - [What Do We Build Template](../templates/project-docs/vision.template.md)
 
 ## Task & Release Management
 

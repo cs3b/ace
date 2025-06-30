@@ -148,7 +148,7 @@ bin/cr-docs -d changes.diff --include-content
 ### AI Agent Prompt Template
 
 The comprehensive AI agent prompt template is available at:
-[dev-handbook/guides/code-review/_documentation-update-from-diff.md](dev-handbook/guides/code-review/_documentation-update-from-diff.md)
+[dev-handbook/templates/review-docs/diff.prompt.md](dev-handbook/templates/review-docs/diff.prompt.md)
 
 This template provides structured instructions for AI agents to:
 

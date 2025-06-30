@@ -103,7 +103,7 @@ Enhance and complete the core documentation files generated during project struc
 
 ## References
 
-- dev-handbook/guides/initialize-project-templates/ (documentation templates)
+- dev-handbook/templates/project-docs/ (documentation templates)
 - dev-taskflow/what-do-we-build.md (target file)
 - dev-taskflow/architecture.md (target file)
 - dev-taskflow/blueprint.md (target file)

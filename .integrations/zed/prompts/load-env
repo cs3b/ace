@@ -19,13 +19,13 @@ and all files referenced
 /file docs-dev/guides/version-control.md
 /file docs-dev/guides/publish-release.md
 /file docs-dev/guides/documentation.md
-/file docs-dev/guides/prepare-release/v.x.x.x/decisions/_template.md
+/file docs-dev/templates/project-docs/decisions/adr.template.md
 /file docs-dev/guides/security.md
 /file docs-project/what-do-we-build.md
 /file docs-project/architecture.md
 /file docs-project/blueprint.md
 /file docs-dev/guides/README.md
-/file docs-dev/guides/prepare-release/v.x.x.x/docs/_template.md
+/file docs-dev/templates/release-docs/documentation.template.md
 /file docs-dev/guides/writing-workflow-instructions.md
 /file docs-dev/tools/fetch-github-pr-data.rb
 /file docs-dev/workflow-instructions/generate-blueprint.md
