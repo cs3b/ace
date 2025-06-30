@@ -1,36 +1,104 @@
-# Test Cases
+# Test Cases: [Feature Name]
 
-## Feature: [Feature Name]
+## Test Case: [TC-001] [Descriptive Name]
 
-### Unit Tests
+**Category**: [Unit | Integration | E2E | Performance | Security]
+**Priority**: [High | Medium | Low]
+**Component**: [Component/Module being tested]
 
-- [ ] Test basic functionality
-- [ ] Test edge cases
-- [ ] Test error handling
+### Description
 
-### Integration Tests
+Brief explanation of what this test validates.
 
-- [ ] Test interaction with dependency A
-- [ ] Test interaction with dependency B
+### Prerequisites
 
-### Performance Tests
+- Required test data
+- System state
+- Configuration settings
+- External dependencies
 
-- [ ] Benchmark basic operations
-- [ ] Test under load
+### Test Steps
 
-### Migration Tests
+1. [Action 1]
+   - Input: [Specific data/parameters]
+   - Action: [What to do]
+2. [Action 2]
+   - Input: [Specific data/parameters]
+   - Action: [What to do]
+3. [Verification]
+   - Check: [What to verify]
 
-- [ ] Test upgrade path
-- [ ] Test backward compatibility
+### Expected Results
 
-## Test Environment Setup
+- [Expected outcome 1]
+- [Expected outcome 2]
+- [System state after test]
 
-```ruby
-# Required setup code
+### Actual Results
+
+(To be filled during test execution)
+
+- [ ] Pass
+- [ ] Fail
+- Notes:
+
+### Test Data
+
+```json
+{
+  "input": "example",
+  "config": {
+    "setting": "value"
+  }
+}
 ```
 
-## Sample Test Data
+## Test Implementation Examples
+
+### Jest/JavaScript Example
+
+```javascript
+describe('[Feature Name]', () => {
+  test('[Test Case Description]', () => {
+    // Arrange
+    const input = 'test data';
+    
+    // Act
+    const result = featureFunction(input);
+    
+    // Assert
+    expect(result).toBe('expected value');
+  });
+});
+```
+
+### RSpec/Ruby Example
 
 ```ruby
-# Test fixtures
+describe '[Feature Name]' do
+  it '[Test Case Description]' do
+    # Arrange
+    input = 'test data'
+    
+    # Act
+    result = feature_function(input)
+    
+    # Assert
+    expect(result).to eq('expected value')
+  end
+end
+```
+
+### Pytest/Python Example
+
+```python
+def test_feature_name():
+    # Arrange
+    input_data = 'test data'
+    
+    # Act
+    result = feature_function(input_data)
+    
+    # Assert
+    assert result == 'expected value'
 ```
