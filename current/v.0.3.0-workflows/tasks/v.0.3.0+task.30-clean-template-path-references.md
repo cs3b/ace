@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.30
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -66,26 +66,26 @@ Several workflow files correctly use the XML `<templates>` block but also contai
 
 ### Planning Steps
 
-* [ ] Search for all workflow files containing "path (" pattern
+* [x] Search for all workflow files containing "path (" pattern
   > TEST: All Files Identified
   > Type: Pre-condition Check
   > Assert: Complete list of affected files compiled
   > Command: bin/test --check-files-identified
-* [ ] Review each file to understand context of path references
-* [ ] Ensure XML templates exist for all removed references
+* [x] Review each file to understand context of path references
+* [x] Ensure XML templates exist for all removed references
 
 ### Execution Steps
 
-* [ ] Remove inline "path (...)" text from create-adr.wf.md
-* [ ] Remove inline "path (...)" text from create-api-docs.wf.md
-* [ ] Remove inline "path (...)" text from create-reflection-note.wf.md
-* [ ] Remove inline "path (...)" text from create-task.wf.md
+* [x] Remove inline "path (...)" text from create-adr.wf.md
+* [x] Remove inline "path (...)" text from create-api-docs.wf.md
+* [x] Remove inline "path (...)" text from create-reflection-note.wf.md
+* [x] Remove inline "path (...)" text from create-task.wf.md
   > TEST: No Stray Path References
   > Type: Content Search
   > Assert: No "path (" patterns remain in workflow bodies
   > Command: bin/test --check-no-path-references
-* [ ] Remove from any other identified workflow files
-* [ ] Verify each file still has proper XML template declarations
+* [x] Remove from any other identified workflow files
+* [x] Verify each file still has proper XML template declarations
   > TEST: XML Templates Present
   > Type: Structure Check
   > Assert: All modified files have valid <templates> sections
@@ -93,11 +93,11 @@ Several workflow files correctly use the XML `<templates>` block but also contai
 
 ## Acceptance Criteria
 
-* [ ] No inline "path (...)" references remain in workflow instruction bodies
-* [ ] All templates are referenced only through XML `<templates>` blocks
-* [ ] Workflow readability maintained or improved
-* [ ] No functional changes to workflow execution
-* [ ] Single source of truth established for all templates
+* [x] No inline "path (...)" references remain in workflow instruction bodies
+* [x] All templates are referenced only through XML `<templates>` blocks
+* [x] Workflow readability maintained or improved
+* [x] No functional changes to workflow execution
+* [x] Single source of truth established for all templates
 
 ## Out of Scope
 
