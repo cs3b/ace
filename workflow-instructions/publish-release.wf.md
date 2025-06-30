@@ -79,36 +79,7 @@ Execute the final deployment and archival phase of project releases, transitioni
    - Move entries from `[Unreleased]` section to new version section
    - Add release date: `## [X.Y.Z] - YYYY-MM-DD`
    - Include comparison links at bottom of file
-   - Follow standard changelog format:
-
-     ```markdown
-     # Changelog
-     All notable changes to this project will be documented in this file.
-     
-     The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-     and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-     
-     ## [Unreleased]
-     
-     ## [X.Y.Z] - YYYY-MM-DD
-     ### Added
-     - New features
-     
-     ### Changed
-     - Changes in existing functionality
-     
-     ### Deprecated
-     - Soon-to-be removed features
-     
-     ### Removed
-     - Removed features
-     
-     ### Fixed
-     - Bug fixes
-     
-     ### Security
-     - Vulnerability fixes
-     ```
+   - Follow the changelog template: path (dev-handbook/templates/release-management/changelog.template.md)
 
 7. **Validate Documentation Consistency:**
    - Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
@@ -356,3 +327,36 @@ The publish release workflow is complete when:
 - Stakeholders are notified of release completion
 - Post-release monitoring is active
 - Project status reflects published state
+
+## Embedded Templates
+
+### Changelog Template: path (dev-handbook/templates/release-management/changelog.template.md)
+
+````markdown
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [X.Y.Z] - YYYY-MM-DD
+### Added
+- New features
+
+### Changed
+- Changes in existing functionality
+
+### Deprecated
+- Soon-to-be removed features
+
+### Removed
+- Removed features
+
+### Fixed
+- Bug fixes
+
+### Security
+- Vulnerability fixes
+````
