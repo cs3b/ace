@@ -60,38 +60,8 @@
    ```
 
 5. **Apply Updates Using Embedded Formats**
-
-   **Strategic Objectives Table Format:**
-
-   ```markdown
-   | # | Objective | Success Metric |
-   |---|-----------|----------------|
-   | 1 | [Outcome-focused objective] | [Measurable criteria] |
-   ```
-
-   **Key Themes & Epics Table Format:**
-
-   ```markdown
-   | Theme | Description | Linked Epics |
-   |-------|-------------|-------------|
-   | [Theme Name] | [Brief description] | [Epic identifiers] |
-   ```
-
-   **Planned Major Releases Table Format:**
-
-   ```markdown
-   | Version | Codename | Target Window | Goals | Key Epics |
-   |---------|----------|---------------|-------|-----------|
-   | v.X.Y.Z | "[Name]" | [Quarter Year] | [Primary goals] | [Related epics] |
-   ```
-
-   **Update History Table Format:**
-
-   ```markdown
-   | Date | Summary | Author |
-   |------|---------|--------|
-   | YYYY-MM-DD | [Brief change description] | [Author name] |
-   ```
+   
+   Use the roadmap table templates: path (dev-handbook/templates/release-planning/release-readme.template.md)
 
 6. **Apply Specific Updates**
    * Edit `roadmap.md` following the format requirements:
@@ -221,3 +191,33 @@ Requirements:
 ---
 
 This workflow maintains the strategic roadmap document, ensuring it accurately reflects project direction and current release status through structured validation and updates.
+
+## Embedded Templates
+
+### Roadmap Table Templates: path (dev-handbook/templates/release-planning/release-readme.template.md)
+
+````markdown
+## Strategic Objectives Table Format
+
+| # | Objective | Success Metric |
+|---|-----------|----------------|
+| 1 | [Outcome-focused objective] | [Measurable criteria] |
+
+## Key Themes & Epics Table Format
+
+| Theme | Description | Linked Epics |
+|-------|-------------|-------------|
+| [Theme Name] | [Brief description] | [Epic identifiers] |
+
+## Planned Major Releases Table Format
+
+| Version | Codename | Target Window | Goals | Key Epics |
+|---------|----------|---------------|-------|-----------|
+| v.X.Y.Z | "[Name]" | [Quarter Year] | [Primary goals] | [Related epics] |
+
+## Update History Table Format
+
+| Date | Summary | Author |
+|------|---------|--------|
+| YYYY-MM-DD | [Brief change description] | [Author name] |
+````

@@ -48,83 +48,8 @@ how to navigate the codebase.
    - Check for any additional core documentation files
 
 2. **Generate Blueprint Structure:**
-
-   **Use Embedded Blueprint Template:**
-
-   ```markdown
-   # Blueprint
    
-   ## Project Organization
-   
-   ### Directory Structure
-   ```
-
-   .
-   ├── bin/                    # Executable scripts
-   ├── dev-taskflow/          # Task management
-   │   ├── backlog/          # Future releases
-   │   ├── current/          # Active release
-   │   └── done/             # Completed releases
-   ├── docs-dev/             # Development documentation
-   ├── src/                  # Source code (or app/, lib/, etc.)
-   ├── test/                 # Test files (or spec/, tests/, etc.)
-   └── [project-specific directories]
-
-   ```
-   
-   ### Key Files
-   - `README.md` - Project overview and setup
-   - `PRD.md` - Product requirements (if applicable)
-   - `.gitignore` - Git ignore rules
-   - `[build-file]` - Build configuration (package.json, Gemfile, etc.)
-   
-   ## Technology Stack
-   - **Language**: [Primary language and version]
-   - **Framework**: [Main framework and version]
-   - **Database**: [Database system and version]
-   - **Key Libraries**: 
-     - [Library 1]: [Purpose]
-     - [Library 2]: [Purpose]
-   
-   ## Development Workflow
-   1. Use `bin/tn` to get next task
-   2. Update task status to in-progress
-   3. Implement changes following coding standards
-   4. Run `bin/test` to verify changes
-   5. Run `bin/lint` to check code quality
-   6. Commit changes with conventional commits
-   7. Update task status to done
-   
-   ## Coding Standards
-   - [Standard 1]
-   - [Standard 2]
-   - [Standard 3]
-   
-   ## Read-Only Paths
-   AI agents should treat these paths as read-only:
-   - `dev-taskflow/done/**/*` - Archived releases
-   - [Project-specific read-only paths]
-   
-   ## Ignored Paths
-   AI agents should ignore these paths:
-   - `.git/` - Git internals
-   - `node_modules/` - Dependencies (if applicable)
-   - `vendor/` - Vendor dependencies (if applicable)
-   - `tmp/` - Temporary files
-   - `log/` - Log files
-   - `coverage/` - Test coverage reports
-   - [Project-specific ignored paths]
-   
-   ## Extension Points
-   - [Where/how to add new features]
-   - [Plugin/module system if applicable]
-   - [Configuration extension points]
-   
-   ## Core Documentation
-   - [What We Build](./what-do-we-build.md) - Project vision and goals
-   - [Architecture](./architecture.md) - Technical architecture and design
-   - [Roadmap](./roadmap.md) - Release planning (if exists)
-   ```
+   Use the blueprint template: path (dev-handbook/templates/project-docs/blueprint.template.md)
 
 3. **Analyze Project Structure:**
    - Use `tree` command or similar to get current structure:
@@ -252,3 +177,82 @@ Example:
 - List every single file
 - Include sensitive information
 - Use absolute file paths
+
+## Embedded Templates
+
+### Blueprint Template: path (dev-handbook/templates/project-docs/blueprint.template.md)
+
+````markdown
+# Blueprint
+
+## Project Organization
+
+### Directory Structure
+```
+
+.
+├── bin/                    # Executable scripts
+├── dev-taskflow/          # Task management
+│   ├── backlog/          # Future releases
+│   ├── current/          # Active release
+│   └── done/             # Completed releases
+├── docs-dev/             # Development documentation
+├── src/                  # Source code (or app/, lib/, etc.)
+├── test/                 # Test files (or spec/, tests/, etc.)
+└── [project-specific directories]
+
+```
+
+### Key Files
+- `README.md` - Project overview and setup
+- `PRD.md` - Product requirements (if applicable)
+- `.gitignore` - Git ignore rules
+- `[build-file]` - Build configuration (package.json, Gemfile, etc.)
+
+## Technology Stack
+- **Language**: [Primary language and version]
+- **Framework**: [Main framework and version]
+- **Database**: [Database system and version]
+- **Key Libraries**: 
+  - [Library 1]: [Purpose]
+  - [Library 2]: [Purpose]
+
+## Development Workflow
+1. Use `bin/tn` to get next task
+2. Update task status to in-progress
+3. Implement changes following coding standards
+4. Run `bin/test` to verify changes
+5. Run `bin/lint` to check code quality
+6. Commit changes with conventional commits
+7. Update task status to done
+
+## Coding Standards
+- [Standard 1]
+- [Standard 2]
+- [Standard 3]
+
+## Read-Only Paths
+AI agents should treat these paths as read-only:
+- `dev-taskflow/done/**/*` - Archived releases
+- [Project-specific read-only paths]
+
+## Ignored Paths
+AI agents should ignore these paths:
+- `.git/` - Git internals
+- `node_modules/` - Dependencies (if applicable)
+- `vendor/` - Vendor dependencies (if applicable)
+- `tmp/` - Temporary files
+- `log/` - Log files
+- `coverage/` - Test coverage reports
+- [Project-specific ignored paths]
+
+## Extension Points
+- [Where/how to add new features]
+- [Plugin/module system if applicable]
+- [Configuration extension points]
+
+## Core Documentation
+- [What We Build](./what-do-we-build.md) - Project vision and goals
+- [Architecture](./architecture.md) - Technical architecture and design
+- [Roadmap](./roadmap.md) - Release planning (if exists)
+````

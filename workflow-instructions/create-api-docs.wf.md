@@ -60,101 +60,12 @@ Generate or update API documentation for public interfaces (classes, modules, me
 3. **Write Documentation Comments:**
 
    **Ruby/YARD Example:**
-
-   ```ruby
-   # Processes payment transactions using the configured gateway
-   #
-   # This service handles payment processing including validation,
-   # gateway communication, and error handling. It supports multiple
-   # payment methods and implements retry logic for transient failures.
-   #
-   # @example Process a credit card payment
-   #   payment_service = PaymentService.new
-   #   result = payment_service.process(
-   #     amount: 99.99,
-   #     currency: 'USD',
-   #     payment_method: credit_card
-   #   )
-   #
-   # @example Handle payment errors
-   #   begin
-   #     result = payment_service.process(payment_data)
-   #   rescue PaymentService::InvalidAmount => e
-   #     Rails.logger.error("Invalid amount: #{e.message}")
-   #   end
-   #
-   # @param amount [BigDecimal] The payment amount (must be positive)
-   # @param currency [String] ISO 4217 currency code (e.g., 'USD', 'EUR')
-   # @param payment_method [PaymentMethod] The payment method to use
-   # @param options [Hash] Additional options
-   # @option options [Boolean] :capture (true) Whether to capture immediately
-   # @option options [String] :idempotency_key Unique key for idempotent requests
-   #
-   # @return [PaymentResult] The result object containing transaction details
-   #
-   # @raise [InvalidAmount] if amount is negative or zero
-   # @raise [UnsupportedCurrency] if currency is not supported
-   # @raise [GatewayError] if gateway communication fails
-   #
-   # @note This method is thread-safe
-   # @note Transactions are automatically logged for audit purposes
-   #
-   # @see PaymentResult
-   # @see PaymentMethod
-   # @see https://docs.example.com/payments
-   #
-   # @since 2.1.0
-   def process(amount:, currency:, payment_method:, **options)
-     # Implementation
-   end
-   ```
+   
+   Use the Ruby YARD template: path (dev-handbook/templates/code-docs/ruby-yard.template.md)
 
    **JavaScript/JSDoc Example:**
-
-   ```javascript
-   /**
-    * Processes payment transactions using the configured gateway
-    * 
-    * @description This service handles payment processing including validation,
-    * gateway communication, and error handling. Supports multiple payment methods.
-    *
-    * @param {number} amount - The payment amount in cents
-    * @param {string} currency - ISO 4217 currency code
-    * @param {PaymentMethod} paymentMethod - Payment method object
-    * @param {Object} [options={}] - Additional options
-    * @param {boolean} [options.capture=true] - Whether to capture immediately
-    * @param {string} [options.idempotencyKey] - Unique key for idempotent requests
-    * 
-    * @returns {Promise<PaymentResult>} Promise resolving to payment result
-    * 
-    * @throws {InvalidAmountError} Amount must be positive
-    * @throws {UnsupportedCurrencyError} Currency not supported
-    * @throws {GatewayError} Gateway communication failure
-    * 
-    * @example
-    * // Process a payment
-    * const result = await paymentService.process({
-    *   amount: 9999,
-    *   currency: 'USD',
-    *   paymentMethod: creditCard
-    * });
-    * 
-    * @example
-    * // With error handling
-    * try {
-    *   const result = await paymentService.process(paymentData);
-    * } catch (error) {
-    *   if (error instanceof InvalidAmountError) {
-    *     console.error('Invalid amount:', error.message);
-    *   }
-    * }
-    * 
-    * @since 2.1.0
-    */
-   async process({ amount, currency, paymentMethod, options = {} }) {
-     // Implementation
-   }
-   ```
+   
+   Use the JavaScript JSDoc template: path (dev-handbook/templates/code-docs/javascript-jsdoc.template.md)
 
 4. **Documentation Standards:**
 
@@ -348,3 +259,102 @@ Integrate API documentation generation into the build process for automatic upda
 ---
 
 This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.
+
+## Embedded Templates
+
+### Ruby YARD Template: path (dev-handbook/templates/code-docs/ruby-yard.template.md)
+
+````ruby
+# Processes payment transactions using the configured gateway
+#
+# This service handles payment processing including validation,
+# gateway communication, and error handling. It supports multiple
+# payment methods and implements retry logic for transient failures.
+#
+# @example Process a credit card payment
+#   payment_service = PaymentService.new
+#   result = payment_service.process(
+#     amount: 99.99,
+#     currency: 'USD',
+#     payment_method: credit_card
+#   )
+#
+# @example Handle payment errors
+#   begin
+#     result = payment_service.process(payment_data)
+#   rescue PaymentService::InvalidAmount => e
+#     Rails.logger.error("Invalid amount: #{e.message}")
+#   end
+#
+# @param amount [BigDecimal] The payment amount (must be positive)
+# @param currency [String] ISO 4217 currency code (e.g., 'USD', 'EUR')
+# @param payment_method [PaymentMethod] The payment method to use
+# @param options [Hash] Additional options
+# @option options [Boolean] :capture (true) Whether to capture immediately
+# @option options [String] :idempotency_key Unique key for idempotent requests
+#
+# @return [PaymentResult] The result object containing transaction details
+#
+# @raise [InvalidAmount] if amount is negative or zero
+# @raise [UnsupportedCurrency] if currency is not supported
+# @raise [GatewayError] if gateway communication fails
+#
+# @note This method is thread-safe
+# @note Transactions are automatically logged for audit purposes
+#
+# @see PaymentResult
+# @see PaymentMethod
+# @see https://docs.example.com/payments
+#
+# @since 2.1.0
+def process(amount:, currency:, payment_method:, **options)
+  # Implementation
+end
+````
+
+### JavaScript JSDoc Template: path (dev-handbook/templates/code-docs/javascript-jsdoc.template.md)
+
+````javascript
+/**
+ * Processes payment transactions using the configured gateway
+ * 
+ * @description This service handles payment processing including validation,
+ * gateway communication, and error handling. Supports multiple payment methods.
+ *
+ * @param {number} amount - The payment amount in cents
+ * @param {string} currency - ISO 4217 currency code
+ * @param {PaymentMethod} paymentMethod - Payment method object
+ * @param {Object} [options={}] - Additional options
+ * @param {boolean} [options.capture=true] - Whether to capture immediately
+ * @param {string} [options.idempotencyKey] - Unique key for idempotent requests
+ * 
+ * @returns {Promise<PaymentResult>} Promise resolving to payment result
+ * 
+ * @throws {InvalidAmountError} Amount must be positive
+ * @throws {UnsupportedCurrencyError} Currency not supported
+ * @throws {GatewayError} Gateway communication failure
+ * 
+ * @example
+ * // Process a payment
+ * const result = await paymentService.process({
+ *   amount: 9999,
+ *   currency: 'USD',
+ *   paymentMethod: creditCard
+ * });
+ * 
+ * @example
+ * // With error handling
+ * try {
+ *   const result = await paymentService.process(paymentData);
+ * } catch (error) {
+ *   if (error instanceof InvalidAmountError) {
+ *     console.error('Invalid amount:', error.message);
+ *   }
+ * }
+ * 
+ * @since 2.1.0
+ */
+async process({ amount, currency, paymentMethod, options = {} }) {
+  // Implementation
+}
+````
