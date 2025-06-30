@@ -277,7 +277,7 @@ Create learning-oriented guides that walk users through complete workflows.
 This workflow ensures comprehensive, user-friendly documentation that enables successful adoption and use of your features.
 
 <templates>
-    <template path="{current-project-path}/docs/user-guide.md" template-path="dev-handbook/templates/user-docs/user-guide.template.md">
+    <template path="dev-handbook/templates/user-docs/user-guide.template.md">
 # [Feature Name]
 
 ## Overview

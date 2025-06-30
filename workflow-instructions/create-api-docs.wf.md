@@ -261,7 +261,7 @@ Integrate API documentation generation into the build process for automatic upda
 This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.
 
 <templates>
-    <template path="{current-project-path}/src/services/PaymentService.rb" template-path="dev-handbook/templates/code-docs/ruby-yard.template.md">
+    <template path="dev-handbook/templates/code-docs/ruby-yard.template.md">
 # Processes payment transactions using the configured gateway
 #
 # This service handles payment processing including validation,
@@ -309,49 +309,99 @@ def process(amount:, currency:, payment_method:, **options)
 end
     </template>
 
-    <template path="{current-project-path}/src/services/PaymentService.js" template-path="dev-handbook/templates/code-docs/javascript-jsdoc.template.md">
-/**
+    <template path="dev-handbook/templates/code-docs/javascript-jsdoc.template.md"># JavaScript JSDoc Documentation Template
 
-- Processes payment transactions using the configured gateway
--
-- @description This service handles payment processing including validation,
-- gateway communication, and error handling. Supports multiple payment methods.
--
-- @param {number} amount - The payment amount in cents
-- @param {string} currency - ISO 4217 currency code
-- @param {PaymentMethod} paymentMethod - Payment method object
-- @param {Object} [options={}] - Additional options
-- @param {boolean} [options.capture=true] - Whether to capture immediately
-- @param {string} [options.idempotencyKey] - Unique key for idempotent requests
--
-- @returns {Promise<PaymentResult>} Promise resolving to payment result
--
-- @throws {InvalidAmountError} Amount must be positive
-- @throws {UnsupportedCurrencyError} Currency not supported
-- @throws {GatewayError} Gateway communication failure
--
-- @example
-- // Process a payment
-- const result = await paymentService.process({
-- amount: 9999,
-- currency: 'USD',
-- paymentMethod: creditCard
-- });
--
-- @example
-- // With error handling
-- try {
-- const result = await paymentService.process(paymentData);
-- } catch (error) {
-- if (error instanceof InvalidAmountError) {
--     console.error('Invalid amount:', error.message);
-- }
-- }
--
-- @since 2.1.0
+```javascript
+/**
+ * [Brief description of what this function/class does]
+ * 
+ * @description [Detailed description including purpose, behavior, and context.
+ * Explain what the function/class does, why it's useful, and how it fits
+ * into the larger system.]
+ *
+ * @param {Type} parameterName - [Description of parameter]
+ * @param {Type} anotherParam - [Description with constraints/validation]
+ * @param {Object} [options={}] - [Description of options object]
+ * @param {Type} [options.optionName=defaultValue] - [Description of option]
+ * @param {Type} [options.anotherOption] - [Description of another option]
+ * 
+ * @returns {Type|Promise<Type>} [Description of what is returned]
+ * 
+ * @throws {ErrorClass} [Description of when this error is thrown]
+ * @throws {AnotherError} [Description of another error condition]
+ * 
+ * @example
+ * // [Example title - basic usage]
+ * const result = functionName(param1, param2);
+ * 
+ * @example
+ * // [Example title - advanced usage]
+ * try {
+ *   const result = await functionName({
+ *     param: 'value',
+ *     options: { setting: true }
+ *   });
+ * } catch (error) {
+ *   console.error('Error:', error.message);
+ * }
+ * 
+ * @since [version when added]
+ * @deprecated [version when deprecated] Use [alternative] instead
  */
-async process({ amount, currency, paymentMethod, options = {} }) {
+function functionName(parameterName, anotherParam, options = {}) {
   // Implementation
 }
-    </template>
+```
+
+## JSDoc Tag Reference
+
+### Basic Tags
+
+- `@param {Type} name - description` - Parameter documentation
+- `@returns {Type} description` - Return value documentation  
+- `@throws {ErrorType} description` - Exception documentation
+- `@example` - Code examples
+- `@description` - Detailed description
+
+### Type Annotations
+
+- `{string}` - String type
+- `{number}` - Number type
+- `{boolean}` - Boolean type
+- `{Object}` - Object type
+- `{Array<Type>}` - Array of specific type
+- `{Type|null}` - Union types
+- `{Promise<Type>}` - Promise types
+
+### Optional Parameters
+
+- `{Type} [paramName]` - Optional parameter
+- `{Type} [paramName=defaultValue]` - Optional with default
+
+### Metadata Tags
+
+- `@since` - Version when added
+- `@deprecated` - Deprecation notice
+- `@author` - Author information
+- `@version` - Version information
+
+### Advanced Tags
+
+- `@namespace` - Namespace documentation
+- `@class` - Class documentation
+- `@module` - Module documentation
+- `@async` - Async function marker
+- `@static` - Static method marker
+
+## Documentation Guidelines
+
+1. **Use TypeScript-style type annotations**
+2. **Provide clear parameter descriptions**
+3. **Include realistic examples**
+4. **Document all possible exceptions**
+5. **Use @description for complex explanations**
+6. **Mark optional parameters clearly**
+7. **Include version information for new features**
+</template>
+
 </templates>

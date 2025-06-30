@@ -201,10 +201,11 @@ New features require:
 This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.
 
 <templates>
-    <template path="{current-release-path}/tasks/v.x.y.z+task.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path="dev-handbook/templates/release-tasks/task.template.md">
 ## Implementation Plan
 
 ### Planning Steps
+
 - [ ] Research existing implementation patterns
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
@@ -247,34 +248,50 @@ This workflow ensures tasks are thoroughly vetted before implementation, reducin
   - Code comments
     </template>
 
-    <template path="{current-release-path}/docs/task-review-report.md" template-path="dev-handbook/templates/release-docs/documentation.template.md">
+    <template path="dev-handbook/templates/release-docs/documentation.template.md"># Feature Documentation
 
-## Task Review Summary
+## Quick Start
 
-### Task: [ID] - [Title]
+```ruby
+# Simple example demonstrating core functionality
+```
 
-**Status**: Ready for implementation | Needs clarification | Requires updates
+## Key Concepts
 
-### Key Findings
+- Concept 1
+- Concept 2
 
-1. [Finding 1 - e.g., aligns with architecture]
-2. [Finding 2 - e.g., missing test criteria]
-3. [Finding 3 - e.g., conflicts with recent changes]
+## Usage Examples
 
-### Proposed Improvements
+### Basic Usage
 
-- [Specific improvement 1]
-- [Specific improvement 2]
+```ruby
+# Code example
+```
 
-### Questions for Clarification
+### Advanced Patterns
 
-1. [Question requiring user input]
-2. [Design decision needed]
+```ruby
+# More complex example
+```
 
-### Recommended Next Steps
+## API Reference
 
-- [ ] Address clarification points
-- [ ] Update task definition
-- [ ] Proceed with implementation
-    </template>
+### Class/Module Name
+
+- Method signatures
+- Parameters
+- Return values
+
+## Integration Examples
+
+- How to integrate with other gems/frameworks
+- Common patterns
+
+## Performance Considerations
+
+- Benchmarks
+- Best practices
+</template>
+
 </templates>

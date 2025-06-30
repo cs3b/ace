@@ -125,8 +125,7 @@ Create an ADR when:
 - ADR-005-use-jwt-for-authentication
 
 <templates>
-    <template path="docs/decisions/ADR-XXX-decision-title.md" template-path="dev-handbook/templates/project-docs/decisions/adr.template.md">
-# ADR-XXX: Title of the Decision
+    <template path="dev-handbook/templates/project-docs/decisions/adr.template.md"># ADR-XXX: Title of the Decision
 
 ## Status
 
@@ -137,13 +136,9 @@ Date: YYYY-MM-DD
 
 What is the issue that we're seeing that is motivating this decision or change?
 
-[Describe the forces at play, including technological, business, and organizational constraints. Include any relevant background information, current state, and why a decision needs to be made now.]
-
 ## Decision
 
 What is the change that we're proposing and/or doing?
-
-[State the decision clearly and concisely. Use active voice. Be specific about what will be done.]
 
 ## Consequences
 
@@ -151,35 +146,36 @@ What becomes easier or more difficult to do because of this change?
 
 ### Positive
 
-- [Benefit 1: Describe specific improvements]
-- [Benefit 2: Include measurable outcomes where possible]
+- Benefit 1
+- Benefit 2
 
 ### Negative
 
-- [Challenge 1: Be honest about drawbacks]
-- [Challenge 2: Include mitigation strategies if applicable]
+- Challenge 1
+- Challenge 2
 
 ### Neutral
 
-- [Impact 1: Changes that are neither good nor bad]
-- [Impact 2: Side effects that need to be noted]
+- Impact 1
+- Impact 2
 
 ## Alternatives Considered
 
-- **Alternative 1**: [Brief description]
-  - Why it wasn't chosen: [Specific reasons]
-- **Alternative 2**: [Brief description]
-  - Why it wasn't chosen: [Specific reasons]
+- Alternative 1
+  - Why it wasn't chosen
+- Alternative 2
+  - Why it wasn't chosen
 
 ## Related Decisions
 
-- [Link to related ADRs using relative paths]
-- [Link to related documentation]
+- Link to related ADRs
+- Link to related documentation
 
 ## References
 
-- [External references, research papers, blog posts]
-- [Links to relevant documentation or discussions]
-    </template>
+- External references
+- Research papers
+- Blog posts
+</template>
 
 </templates>

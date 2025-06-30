@@ -25,25 +25,24 @@ Use XML-based template embedding for clean, parseable template inclusion:
 
 ```xml
 <templates>
-    <template path="{target-path}" template-path="{source-template-path}">
+    <template path="{source-template-path}">
     <!-- Template content goes here -->
     </template>
     
-    <template path="{another-target-path}" template-path="{another-template-path}">
+    <template path="{another-source-template-path}">
     <!-- Another template content -->
     </template>
 </templates>
 ```
 
 **Components:**
-- `path`: Target location where template will be used (supports variables like `{current-release-path}`)
-- `template-path`: Source template file path in `dev-handbook/templates/`
+- `path`: Source template file path in `dev-handbook/templates/` (supports variables like `{current-release-path}`)
 - Template content: Embedded directly within the `<template>` tags
 
 **Examples:**
 ```xml
 <templates>
-    <template path="{current-release-path}/tasks/v.x.y.z.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path="dev-handbook/templates/release-tasks/task.template.md">
 ---
 id: v.X.Y.Z+task.N
 status: pending
@@ -54,7 +53,7 @@ priority: medium
 Task description and requirements.
     </template>
     
-    <template path="docs/decisions/adr-NNN-title.md" template-path="dev-handbook/templates/project-docs/decisions/adr.template.md">
+    <template path="dev-handbook/templates/project-docs/decisions/adr.template.md">
 # ADR-NNN: Decision Title
 
 ## Status
@@ -74,7 +73,7 @@ Use XML `<templates>` sections for all embedded template content (NO escaping ne
 
 ```xml
 <templates>
-    <template path="{target-path}" template-path="dev-handbook/templates/example.template.md">
+    <template path="dev-handbook/templates/example.template.md">
 <!-- Template content here -->
     </template>
 </templates>
@@ -120,12 +119,12 @@ All embedded templates must be placed at the end of workflow documents using XML
 
 ```xml
 <templates>
-    <template path="{target-path}" template-path="{source-template-path}">
+    <template path="{source-template-path}">
 <!-- Template content here -->
     </template>
     
     <!-- another template -->
-    <template path="{another-path}" template-path="{another-source}">
+    <template path="{another-source-template-path}">
 <!-- Another template content -->
     </template>
 </templates>
@@ -161,7 +160,7 @@ Templates should be organized in logical directories under `dev-handbook/templat
 
 **Validate template tags:**
 ```regex
-<template\s+path="[^"]+"\s+template-path="[^"]+">[\s\S]*?</template>
+<template\s+path="[^"]+">[\s\S]*?</template>
 ```
 
 **Find templates missing required attributes:**
@@ -169,11 +168,6 @@ Templates should be organized in logical directories under `dev-handbook/templat
 <template(?!.*path=").*>
 ```
 This finds template tags without path attribute.
-
-```regex
-<template(?!.*template-path=").*>
-```
-This finds template tags without template-path attribute.
 
 **Find incorrect four-tick usage in template files:**
 ```regex
@@ -209,7 +203,7 @@ id: task.1
 
 ```xml
 <templates>
-    <template path="{target-path}" template-path="dev-handbook/templates/task.template.md">
+    <template path="dev-handbook/templates/task.template.md">
 ---
 id: task.1
 status: pending
@@ -248,7 +242,7 @@ Task description.
 | **Parsing** | Native XML parsing | Complex regex patterns |
 | **Metadata** | Structured attributes | Embedded in markdown headers |
 | **Multiple templates** | Clean separation | Header confusion |
-| **Path references** | `template-path` attribute | Parenthetical format |
+| **Path references** | `path` attribute | Parenthetical format |
 | **Validation** | XML schema validation | Custom regex patterns |
 | **Readability** | Self-contained blocks | Mixed with markdown formatting |
 
@@ -258,14 +252,14 @@ The standardized format enables future automated synchronization through:
 
 **Template Update Scripts:**
 - Parse XML `<templates>` sections from workflow files
-- Extract `template-path` attributes to locate source templates
+- Extract `path` attributes to locate source templates
 - Compare embedded content with actual template files
 - Update embedded content when templates change
 - Generate reports of synchronization actions
 
 **Validation Scripts:**
 - Parse XML structure to validate template syntax
-- Verify all `template-path` attributes point to existing files
+- Verify all `path` attributes point to existing files
 - Check that embedded template content matches source files
 - Validate XML format compliance throughout workflow files
 - Report inconsistencies and formatting issues
@@ -276,7 +270,7 @@ When updating existing workflow files to follow these standards:
 
 1. **Identify Embedded Templates**: Find existing template content in workflow files
 2. **Convert to XML**: Replace markdown headers and four-tick blocks with XML format
-3. **Add Attributes**: Ensure all templates have `path` and `template-path` attributes
+3. **Add Attributes**: Ensure all templates have `path` attributes pointing to source template files
 4. **Move to End**: Relocate all templates to `<templates>` section at document end
 5. **Update References**: Convert in-text template references to mention XML format
 6. **Verify Compliance**: Run validation patterns to check XML structure and attributes

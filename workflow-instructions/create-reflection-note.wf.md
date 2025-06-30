@@ -247,7 +247,7 @@ Capture observations about development workflow effectiveness and areas for opti
 This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.
 
 <templates>
-    <template path="{current-release-path}/reflections/YYYYMMDD-HHMMSS-reflection-topic.md" template-path="dev-handbook/templates/release-reflections/retrospective.template.md">
+    <template path="dev-handbook/templates/release-reflections/retrospective.template.md">
 # Reflection: [Topic/Date]
 
 **Date**: YYYY-MM-DD

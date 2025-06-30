@@ -329,8 +329,8 @@ The publish release workflow is complete when:
 - Project status reflects published state
 
 <templates>
-    <template path="CHANGELOG.md" template-path="dev-handbook/templates/release-management/changelog.template.md">
-# Changelog
+    <template path="dev-handbook/templates/release-management/changelog.template.md"># Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -363,5 +363,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Vulnerability fixes
-    </template>
+</template>
+
 </templates>

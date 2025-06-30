@@ -173,98 +173,101 @@ This workflow handles all types of input uniformly, creating consistent, well-st
 ## Embedded Templates
 
 <templates>
-    <template path="{current-release-path}/tasks/v.x.y.z+task.nnn-task-name.md" template-path="dev-handbook/templates/release-tasks/task.template.md">
----
-id: v.X.Y.Z+task.NN  # Generated using bin/tnid v.X.Y.Z (zero-padded format)
+    <template path="dev-handbook/templates/release-tasks/task.template.md">---
+id: <run bin/tnid to generate ID>
 status: pending
-priority: [high | medium | low]
-estimate: Nh
-dependencies: []
+priority: <high/medium/low>
+estimate: <n>h
+dependencies: [<ticket-ids>]
 ---
 
-# [Task Title - Verb + Object]
+# <Verb + Object>
 
 ## 0. Directory Audit ✅
 
 _Command run:_
 
 ```bash
-tree -L 2 [relevant-directory] | sed 's/^/    /'
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-[insert tree output here]
+<insert tree here>
 ```
 
 ## Objective
 
-[Why are we doing this? What value does it provide?]
-[Link back to original requirement/feedback if applicable]
+Why are we doing this?
 
 ## Scope of Work
 
-* [What will be touched/changed]
-* [Key areas of impact]
-* [Technical components involved]
+* Bullet 1 …
+* Bullet 2 …
 
 ### Deliverables
 
 #### Create
 
-* path/to/new/file.ext
+* path/to/file.ext
 
-#### Modify  
+#### Modify
 
-* path/to/existing/file.ext
+* path/to/other.ext
 
 #### Delete
 
-* path/to/obsolete/file.ext
+* path/to/obsolete.ext
 
 ## Phases
 
-1. Research/Analysis - [What needs to be understood]
-2. Design/Planning - [Architecture or approach decisions]
-3. Implementation - [Core development work]
-4. Testing/Validation - [How we verify success]
+1. Audit
+2. Extract …
+3. Refactor …
 
 ## Implementation Plan
 
+*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
+
 ### Planning Steps
 
-* [ ] [Research/analysis task - use asterisk markers]
-  > TEST: Pre-condition Check
+*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
+
+* [ ] Analyze current system/codebase to understand existing patterns
+  > TEST: Understanding Check
   > Type: Pre-condition Check
-  > Assert: [What needs to be verified before starting]
-  > Command: [Test command if applicable]
+  > Assert: Key components and their relationships are identified
+  > Command: bin/test --check-analysis-complete
+* [ ] Research best practices and design approach
+* [ ] Plan detailed implementation strategy
 
 ### Execution Steps
 
-* [ ] [Concrete implementation action - use hyphen markers]
-  > TEST: Action Validation
+*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
+
+* [ ] Step 1: Describe the first implementation action.
+* [ ] Step 2: Describe the second action, which produces a verifiable outcome.
+  > TEST: Verify Action 2 Outcome
   > Type: Action Validation
-  > Assert: [Expected outcome to verify]
-  > Command: [Test command to validate]
+  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
+  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
+* [ ] ... Add more implementation steps as needed.
 
 ## Acceptance Criteria
 
-* [ ] All deliverables created/modified as specified
-* [ ] [Specific functionality working as expected]
-* [ ] All automated tests pass
-* [ ] Documentation updated
-* [ ] Original requirement fully addressed
+*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-## Out of Scope
+* [ ] AC 1: All specified deliverables created/modified.
+* [ ] AC 2: Key functionalities (if applicable) are working as described.
+* [ ] AC 3: All automated checks in the Implementation Plan pass.
 
-* ❌ [What won't be touched in this task]
-* ❌ [Clear boundaries to prevent scope creep]
+## Out of Scope
+
+* ❌ …
 
 ## References
 
-* Original requirement: [Link or description]
-* Related guides: [If applicable]
-* Dependencies: [Links to other tasks]
-    </template>
+```
+</template>
 </templates>

@@ -352,7 +352,8 @@ Create performance test cases to establish and maintain system performance stand
 This workflow ensures thorough test coverage through systematic identification and documentation of test scenarios across all testing levels.
 
 <templates>
-    <template path="{current-release-path}/test-cases/TC-XXX-test-name.md" template-path="dev-handbook/templates/release-testing/test-case.template.md">
+    <template path="dev-handbook/templates/release-testing/test-case.template.md"># Test Cases: [Feature Name]
+
 ## Test Case: [TC-001] [Descriptive Name]
 
 **Category**: [Unit | Integration | E2E | Performance | Security]
@@ -406,51 +407,55 @@ Brief explanation of what this test validates.
 }
 ```
 
-## Implementation Notes
+## Test Implementation Examples
 
-### Unit Test Example (Jest/JavaScript)
+### Jest/JavaScript Example
 
 ```javascript
-describe('PasswordValidator', () => {
-  test('TC-001: Valid password validation', () => {
-    const result = validatePassword('SecureP@ss123');
-    expect(result).toBe(true);
-  });
-  
-  test.each([
-    ['123456', false, 'too simple'],
-    ['password', false, 'common word'],
-    ['short', false, 'too short'],
-    ['', false, 'empty'],
-    [null, false, 'null input']
-  ])('TC-002: Rejects %s (%s)', (password, expected, reason) => {
-    expect(validatePassword(password)).toBe(expected);
+describe('[Feature Name]', () => {
+  test('[Test Case Description]', () => {
+    // Arrange
+    const input = 'test data';
+    
+    // Act
+    const result = featureFunction(input);
+    
+    // Assert
+    expect(result).toBe('expected value');
   });
 });
 ```
 
-### Integration Test Example (RSpec/Ruby)
+### RSpec/Ruby Example
 
 ```ruby
-RSpec.describe 'Authentication API' do
-  describe 'POST /api/login' do
-    context 'TC-010: with valid credentials' do
-      let(:user) { create(:user, password: 'ValidPass123!') }
-      
-      it 'returns success with JWT token' do
-        post '/api/login', params: {
-          email: user.email,
-          password: 'ValidPass123!'
-        }
-        
-        expect(response).to have_http_status(200)
-        expect(json_response['token']).to be_present
-        expect(decoded_token['user_id']).to eq(user.id)
-      end
-    end
+describe '[Feature Name]' do
+  it '[Test Case Description]' do
+    # Arrange
+    input = 'test data'
+    
+    # Act
+    result = feature_function(input)
+    
+    # Assert
+    expect(result).to eq('expected value')
   end
 end
 ```
 
-    </template>
+### Pytest/Python Example
+
+```python
+def test_feature_name():
+    # Arrange
+    input_data = 'test data'
+    
+    # Act
+    result = feature_function(input_data)
+    
+    # Assert
+    assert result == 'expected value'
+```
+
+</template>
 </templates>

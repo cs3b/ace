@@ -179,87 +179,161 @@ Example:
 - Use absolute file paths
 
 <templates>
-    <template path="docs/blueprint.md" template-path="dev-handbook/templates/project-docs/blueprint.template.md">
-# Blueprint
+    <template path="dev-handbook/templates/project-docs/blueprint.template.md"># Project Blueprint: [Project Name]
+
+## What is a Blueprint?
+
+This document provides a concise overview of the project's structure and organization, highlighting key directories and files to help developers (especially AI assistants) quickly understand how to navigate the codebase. It should be updated periodically using the `update-blueprint` workflow.
+
+## Core Project Documents
+
+- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+- [Architecture](docs/architecture.md) - System design and implementation principles
+- [Blueprint](docs/blueprint.md) - Project structure and organization
 
 ## Project Organization
 
-### Directory Structure
+<!-- Describe your project's main directory structure -->
 
+This project follows a documentation-first approach with these primary directories:
+
+- **dev-handbook/** - Development resources and workflows
+  - **guides/** - Best practices and standards for development
+  - **tools/** - Utility scripts to support development workflows
+  - **workflow-instructions/** - Structured commands for AI agents
+  - **zed/** - Editor integration (if applicable)
+
+- **dev-taskflow/** - Project-specific documentation
+  - **current/** - Active release cycle work
+  - **backlog/** - Pending tasks for future releases
+  - **done/** - Completed releases and tasks
+  - **decisions/** - Architecture Decision Records (ADRs)
+
+- **bin/** - Executable scripts for project management and automation
+
+- **src/** - Source code (adjust directory names as needed)
+  - **[component1]/** - Core functionality
+  - **[component2]/** - Additional features
+  - **utils/** - Shared utilities
+
+- **tests/** - Test files and test utilities
+
+- **config/** - Configuration files
+
+<!-- Add your project-specific directories here -->
+
+## View Complete Directory Structure
+
+To see the complete filtered directory structure, run:
+
+```bash
+bin/tree
 ```
 
-.
-├── bin/                    # Executable scripts
-├── dev-taskflow/          # Task management
-│   ├── backlog/          # Future releases
-│   ├── current/          # Active release
-│   └── done/             # Completed releases
-├── docs-dev/             # Development documentation
-├── src/                  # Source code (or app/, lib/, etc.)
-├── test/                 # Test files (or spec/, tests/, etc.)
-└── [project-specific directories]
+This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
 
-```
+## Key Project-Specific Files
 
-### Key Files
+<!-- List important files that developers should know about -->
 
-- `README.md` - Project overview and setup
-- `PRD.md` - Product requirements (if applicable)
-- `.gitignore` - Git ignore rules
-- `[build-file]` - Build configuration (package.json, Gemfile, etc.)
+- [Workflow Instructions](dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](dev-handbook/guides/README.md) - Development standards and best practices
+- [Configuration](README.md) - Configuration documentation (if applicable)
 
 ## Technology Stack
 
-- **Language**: [Primary language and version]
-- **Framework**: [Main framework and version]
-- **Database**: [Database system and version]
-- **Key Libraries**:
+<!-- Summarize the main technologies used -->
 
-## Development Workflow
-
-1. Use `bin/tn` to get next task
-2. Update task status to in-progress
-3. Implement changes following coding standards
-4. Run `bin/test` to verify changes
-5. Run `bin/lint` to check code quality
-6. Commit changes with conventional commits
-7. Update task status to done
-
-## Coding Standards
-
-- [Standard 1]
-- [Standard 2]
-- [Standard 3]
+- **Primary Language**: [e.g., JavaScript, Python, Rust]
+- **Framework**: [e.g., React, Django, Axum]
+- **Database**: [e.g., PostgreSQL, MongoDB, SQLite]
+- **Key Libraries**: [List important dependencies]
+- **Development Tools**: [e.g., Docker, Webpack, Cargo]
 
 ## Read-Only Paths
 
-AI agents should treat these paths as read-only:
+This section lists files and directories that the agent should treat as read-only. Attempts to modify these paths should be flagged or prevented.
 
-- `dev-taskflow/done/**/*` - Archived releases
-- [Project-specific read-only paths]
+<!-- Add project-specific read-only paths -->
+- `dev-taskflow/decisions/**/*`
+- `dev-taskflow/done/**/*`
+- `*.lock` # Dependency lock files
+- `dist/**/*` # Built artifacts
+- `build/**/*` # Build output
 
 ## Ignored Paths
 
-AI agents should ignore these paths:
+This section lists files, directories, or glob patterns that the agent should ignore entirely during its operations (e.g., when searching, reading, or editing files).
 
-- `.git/` - Git internals
-- `node_modules/` - Dependencies (if applicable)
-- `vendor/` - Vendor dependencies (if applicable)
-- `tmp/` - Temporary files
-- `log/` - Log files
-- `coverage/` - Test coverage reports
-- [Project-specific ignored paths]
+- `dev-taskflow/done/**/*` # Default: Protects completed tasks and releases
+- `**/node_modules/**`
+- `**/.git/**`
+- `**/__pycache__/**`
+- `**/target/**` # Rust build artifacts
+- `**/dist/**` # Built distributions
+- `**/build/**` # Build artifacts
+- `**/.env` # Environment files
+- `**/.env.*` # Environment variants
+- `*.session.log`
+- `*.lock`
+- `*.tmp`
+- `*~` # Backup files
+- `**/.DS_Store` # macOS system files
+- `**/Thumbs.db` # Windows system files
 
-## Extension Points
+## Entry Points
 
-- [Where/how to add new features]
-- [Plugin/module system if applicable]
-- [Configuration extension points]
+<!-- Document the main ways to start or interact with the project -->
 
-## Core Documentation
+### Development
 
-- [What We Build](./what-do-we-build.md) - Project vision and goals
-- [Architecture](./architecture.md) - Technical architecture and design
-- [Roadmap](./roadmap.md) - Release planning (if exists)
-    </template>
+```bash
+# Start development server
+bin/run
+
+# Run tests
+bin/test
+
+# Build for production
+bin/build
+```
+
+### Common Workflows
+
+- **New Feature**: Use `bin/tn` to find next task, follow task workflow
+- **Bug Fix**: Create task in backlog, prioritize, implement
+- **Documentation**: Update relevant files in `dev-taskflow/`
+
+## Dependencies
+
+<!-- List major external dependencies and their purposes -->
+
+### Runtime Dependencies
+
+- [Library 1]: Purpose and version constraints
+- [Library 2]: Purpose and version constraints
+
+### Development Dependencies
+
+## Submodules
+
+<!-- Document any Git submodules used -->
+
+### docs-dev (if applicable)
+
+- Path: `docs-dev`
+- Repository: [Repository URL]
+- Purpose: Development workflows and guides
+- **Important**: Commits for this submodule must be made from within the submodule directory
+
+### [Other Submodules]
+
+- Path: `[path]`
+- Repository: [Repository URL]
+- Purpose: [Description]
+
+---
+
+*This blueprint should be updated when significant structural changes are made to the project. Use the `update-blueprint` workflow to keep it current.*
+</template>
 </templates>
