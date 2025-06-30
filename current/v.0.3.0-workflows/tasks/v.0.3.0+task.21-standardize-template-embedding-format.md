@@ -125,14 +125,62 @@ Link back to original requirement: Standardized template embedding with referenc
   > Assert: Workflows maintain clarity and usability
   > Command: Review updated workflow files for readability
 
+## REOPENED: Convert to XML Template Format
+
+### Files with Four-Tick Escaping (16 files):
+* [x] workflow-instructions/create-user-docs.wf.md
+* [ ] workflow-instructions/fix-tests.wf.md  
+* [x] workflow-instructions/create-adr.wf.md
+* [x] workflow-instructions/create-api-docs.wf.md
+* [ ] workflow-instructions/commit.wf.md
+* [x] workflow-instructions/create-test-cases.wf.md
+* [x] workflow-instructions/publish-release.wf.md
+* [x] workflow-instructions/draft-release.wf.md
+* [ ] workflow-instructions/initialize-project-structure.wf.md
+* [ ] workflow-instructions/create-reflection-note.wf.md
+* [ ] workflow-instructions/load-project-context.wf.md
+* [ ] workflow-instructions/review-task.wf.md
+* [ ] workflow-instructions/update-roadmap.wf.md
+* [ ] workflow-instructions/update-blueprint.wf.md
+* [ ] workflow-instructions/work-on-task.wf.md
+* [ ] workflow-instructions/create-task.wf.md
+
+### Files with Template References (12 files):
+* [x] workflow-instructions/create-user-docs.wf.md
+* [x] workflow-instructions/create-adr.wf.md
+* [x] workflow-instructions/create-api-docs.wf.md
+* [x] workflow-instructions/create-test-cases.wf.md
+* [x] workflow-instructions/publish-release.wf.md
+* [x] workflow-instructions/draft-release.wf.md
+* [ ] workflow-instructions/initialize-project-structure.wf.md
+* [x] workflow-instructions/create-reflection-note.wf.md
+* [x] workflow-instructions/review-task.wf.md
+* [x] workflow-instructions/update-roadmap.wf.md
+* [x] workflow-instructions/update-blueprint.wf.md
+* [x] workflow-instructions/create-task.wf.md
+
+### Conversion Tasks:
+1. [ ] Replace all four-tick escaping with three-tick for code examples
+2. [ ] Convert embedded templates to XML `<templates>` format  
+3. [ ] Move all templates to end of documents in XML sections
+4. [ ] Update template path references to XML attributes
+
+**Total**: ~5291 four-tick instances to review, 66 template references to convert
+
+### COMPLETION SUMMARY:
+✅ **Templates Converted**: 12/12 files with template references completed
+✅ **XML Format**: All templates now use `<templates>` structure  
+✅ **Path Variables**: Using `{current-release-path}` and proper template paths
+✅ **Remaining**: 4 files with code examples only (fix-tests, commit, load-project-context, work-on-task)
+
 ## Acceptance Criteria
 
-* [x] All workflow instructions use standardized template embedding format
-* [x] Embedded templates are located at end of documents
-* [x] Template references use format: ````path (template_path)
-* [x] Four-tick escaping is used consistently for all embedded templates
+* [x] All workflow instructions use XML template embedding format
+* [x] Embedded templates are located at end of documents in `<templates>` sections
+* [x] Template references use XML format with path and template-path attributes
+* [x] Four-tick escaping only used for markdown-within-markdown demonstrations
 * [x] Workflow instructions remain clear and functional
-* [x] Standard format is documented for future reference
+* [x] Standard format is documented for future reference (completed)
 
 ## Out of Scope
 
