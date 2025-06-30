@@ -13,6 +13,7 @@ Automated documentation review workflow using multiple LLM providers for compreh
 ## Default Configuration
 
 **Default parameters for documentation reviews:**
+
 - **Include content**: Use `--include-content` for detailed analysis when needed
 - **Timeout**: 300 seconds (5 minutes) for complex reviews
 - **System prompt**: `dev-handbook/guides/code-review/_doc-review-system.md`
@@ -46,6 +47,7 @@ dev-tools/dev-tools/exe/llm-query gpro dr-prompt.md \
 ## Workflow Steps
 
 ### 1. Prepare Review Environment
+
 ```bash
 # Create review directory with timestamp (default for uncommitted changes)
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/doc_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
@@ -57,6 +59,7 @@ cd dev-taskflow/current/v.X.X.X-release/doc_review/task-N/
 ```
 
 ### 2. Generate Diff (lib directory only)
+
 ```bash
 # Option A: From staged (uncommitted) changes (DEFAULT)
 git add -A  # Ensure all changes are staged first
@@ -81,6 +84,7 @@ git show <commit-hash> -- 'lib/**' > input.diff
 ```
 
 ### 3. Generate Review Prompt
+
 ```bash
 # Default: Basic prompt generation
 bin/cr-docs -d input.diff -o dr-prompt.md
@@ -90,6 +94,7 @@ bin/cr-docs -d input.diff -o dr-prompt.md --include-content
 ```
 
 ### 4. Run Documentation Review (DEFAULT: gpro)
+
 ```bash
 # Default: Run with gpro only
 dev-tools/dev-tools/exe/llm-query gpro dr-prompt.md \
@@ -118,6 +123,7 @@ done
 ## Example Usage
 
 ### Basic Review
+
 ```bash
 # Quick review of current lib changes
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/doc_review/task-42/
@@ -128,6 +134,7 @@ dev-tools/dev-tools/exe/llm-query gpro dr-prompt.md --system dev-handbook/guides
 ```
 
 ### Comprehensive Review
+
 ```bash
 # Full content review with multiple providers
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/doc_review/task-42/
@@ -145,6 +152,7 @@ done
 ```
 
 ### Review PR Changes
+
 ```bash
 # Review specific PR lib changes
 gh pr checkout 123

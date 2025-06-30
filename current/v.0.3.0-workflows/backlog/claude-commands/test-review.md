@@ -13,6 +13,7 @@ Automated test review workflow using multiple LLM providers for comprehensive an
 ## Default Configuration
 
 **Default parameters for test reviews:**
+
 - **Include documentation**: Use `--include-docs` to add documentation context
 - **Timeout**: 300 seconds (5 minutes) for complex reviews
 - **System prompt**: `dev-handbook/guides/code-review/_test-review-system.md`
@@ -49,6 +50,7 @@ dev-tools/dev-tools/exe/llm-query gpro tr-prompt.md \
 ## Workflow Steps
 
 ### 1. Prepare Review Environment
+
 ```bash
 # Create review directory with timestamp (default for uncommitted changes)
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/test_review/uncommitted-changes-$(date +%Y%m%d-%H%M%S)
@@ -60,6 +62,7 @@ cd dev-taskflow/current/v.X.X.X-release/test_review/task-N/
 ```
 
 ### 2. Generate Diff (spec directory only, no cassettes)
+
 ```bash
 # Option A: From staged (uncommitted) changes (DEFAULT)
 git add -A  # Ensure all changes are staged first
@@ -84,6 +87,7 @@ git show <commit-hash> -- 'spec/**' ':!spec/cassettes/**' > input.diff
 ```
 
 ### 3. Generate Review Prompt
+
 ```bash
 # Default: Basic prompt generation
 bin/test-review -d input.diff -o tr-prompt.md
@@ -96,6 +100,7 @@ bin/test-review -d input.diff -o tr-prompt.md --include-implementation
 ```
 
 ### 4. Run Test Review (DEFAULT: gpro)
+
 ```bash
 # Default: Run with gpro only
 dev-tools/dev-tools/exe/llm-query gpro tr-prompt.md \
@@ -124,6 +129,7 @@ done
 ## Example Usage
 
 ### Basic Review
+
 ```bash
 # Quick review of current spec changes
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/test_review/task-42/
@@ -134,6 +140,7 @@ dev-tools/dev-tools/exe/llm-query gpro tr-prompt.md --system dev-handbook/guides
 ```
 
 ### Comprehensive Review
+
 ```bash
 # Full context review with multiple providers
 mkdir -p dev-taskflow/current/v.0.2.0-synapse/test_review/task-42/
@@ -151,6 +158,7 @@ done
 ```
 
 ### Review PR Test Changes
+
 ```bash
 # Review specific PR test changes
 gh pr checkout 123

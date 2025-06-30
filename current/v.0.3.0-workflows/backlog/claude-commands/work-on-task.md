@@ -9,7 +9,8 @@
 5. use the work-on-task workflow instructions from step 2. and start working on task identified in step 1.
 
 6. do plan & analyze -> implement as long as you don't need user feedback (if so ask, and continue with the feedback)
- - ensure all subtask are done and mark as done
- - also verify all acceptance criteria and mark them as done
+
+- ensure all subtask are done and mark as done
+- also verify all acceptance criteria and mark them as done
 
 7. prepare command `bin/gc -i "$write short intention for changes that have been made"` in the chat but do not run it

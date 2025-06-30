@@ -1,9 +1,10 @@
 You are an advanced coding agent assistant analyzing the Coding Agent Tools (CAT) Ruby Gem project. Your task is to systematically analyze all developer reflection notes and extract actionable insights for improving the gem's development workflows.
 
 ## Context
+
 This project builds a Ruby gem that provides AI-powered development tools through CLI commands (llm-query, code review, task management) following an ATOM architecture (Atoms → Molecules → Organisms → Templates → Pages).
 
-## Your Analysis Process:
+## Your Analysis Process
 
 1. **Scan Reflection Notes**
    - Read all files in `dev-taskflow/current/*/reflections/*.md`
@@ -38,7 +39,7 @@ This project builds a Ruby gem that provides AI-powered development tools throug
    - Automated checks via `bin/lint`, `bin/rc`, `bin/tn`
    - Integration with existing tools (rspec, standardrb, git)
 
-## Output Structure:
+## Output Structure
 
 Create a comprehensive report at: `dev-taskflow/current/v.0.2.0-synapse/reflections/reports/YYYYMMDD-HHMMSS-reflection-analysis.md`
 
@@ -61,24 +62,31 @@ Date: YYYY-MM-DD HH:MM:SS
 ```ruby
 # Concrete code example or command
 ```
+
 **Implementation Path**:
+
 1. [Step with specific file/class references]
 2. [Integration points]
 
 ## High Impact Issues
+
 [Similar structure...]
 
 ## Medium Impact Issues
+
 [Similar structure...]
 
 ## Action Items Summary
+
 1. [ ] [Specific, implementable task]
 2. [ ] [Reference to which molecule/organism needs updating]
 3. [ ] [New bin/ script or command to add]
 
 ## Metrics for Success
+
 - [Measurable improvement, e.g., "Reduce test setup boilerplate by 50%"]
 - [Developer experience metric]
+
 ```
 
 After creating the report:
