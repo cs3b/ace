@@ -61,7 +61,7 @@
 
 5. **Apply Updates Using Embedded Formats**
 
-   Use the roadmap table templates: path (dev-handbook/templates/release-planning/release-readme.template.md)
+   Use the roadmap table templates:
 
 6. **Apply Specific Updates**
    * Edit `roadmap.md` following the format requirements:

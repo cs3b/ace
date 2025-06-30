@@ -69,7 +69,7 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
      * Any missing context or requirements?
 
 5. **Create Formal Task Files**
-   * Once approved, create task files using the task template: path (dev-handbook/templates/release-tasks/task.template.md)
+   * Once approved, create task files using the task template:
 
 6. **Determine Storage Location**
    * Use `bin/rc` to get current release context:

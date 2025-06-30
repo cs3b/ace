@@ -107,7 +107,7 @@ Review and refine a task definition, potentially proposing an implementation app
 
 5. **Propose Refinements:**
 
-   Use the enhanced implementation plan template: path (dev-handbook/templates/release-tasks/task.template.md)
+   Use the enhanced implementation plan template:
 
 6. **Formulate Feedback Points:**
 
@@ -126,7 +126,7 @@ Review and refine a task definition, potentially proposing an implementation app
 
 7. **Present Review Summary:**
 
-   Use the task review summary template: path (dev-handbook/templates/review-tasks/task-review-summary.template.md)
+   Use the task review summary template:
 
 ## Review Checklist
 

@@ -115,7 +115,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 
 4. **Create Test Case Structure:**
 
-   Use the test case template: path (dev-handbook/templates/release-testing/test-case.template.md)
+   Use the test case template:
 
 5. **Generate Comprehensive Test Cases:**
 
@@ -220,7 +220,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 
 6. **Include Test Implementation Hints:**
 
-   Use the test implementation examples: path (dev-handbook/templates/release-testing/test-case.template.md)
+   Use the test implementation examples:
 
 7. **Review and Refine:**
 

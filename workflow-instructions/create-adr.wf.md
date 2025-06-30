@@ -62,7 +62,7 @@ Create an ADR when:
    - Where XXX is the next sequential number (e.g., ADR-001, ADR-002)
    - Use kebab-case for the decision title in the filename
 
-4. **Fill in the ADR using the template:** path (dev-handbook/templates/project-docs/decisions/adr.template.md)
+4. **Fill in the ADR using the template:**
 
 5. **Write Clear Content:** Follow these principles:
    - **Context**: Explain the "why" comprehensively. Future readers should understand the situation without additional context.

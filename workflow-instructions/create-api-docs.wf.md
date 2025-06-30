@@ -61,11 +61,11 @@ Generate or update API documentation for public interfaces (classes, modules, me
 
    **Ruby/YARD Example:**
 
-   Use the Ruby YARD template: path (dev-handbook/templates/code-docs/ruby-yard.template.md)
+   Use the Ruby YARD template:
 
    **JavaScript/JSDoc Example:**
 
-   Use the JavaScript JSDoc template: path (dev-handbook/templates/code-docs/javascript-jsdoc.template.md)
+   Use the JavaScript JSDoc template:
 
 4. **Documentation Standards:**
 

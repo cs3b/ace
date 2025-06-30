@@ -64,7 +64,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
 3. **Create Reflection Structure:**
 
-   Use the reflection template: path (dev-handbook/templates/release-reflections/retrospective.template.md)
+   Use the reflection template:
 
 4. **Gather Reflection Content:**
 

@@ -49,7 +49,7 @@ how to navigate the codebase.
 
 2. **Generate Blueprint Structure:**
 
-   Use the blueprint template: path (dev-handbook/templates/project-docs/blueprint.template.md)
+   Use the blueprint template:
 
 3. **Analyze Project Structure:**
    - Use `tree` command or similar to get current structure:

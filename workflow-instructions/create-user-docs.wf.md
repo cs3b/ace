@@ -60,7 +60,7 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
 
 3. **Create Documentation Structure:**
 
-   Use the user documentation template: path (dev-handbook/templates/user-docs/user-guide.template.md)
+   Use the user documentation template:
 
 4. **Write Clear Content:**
 

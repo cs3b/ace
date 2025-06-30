@@ -47,7 +47,7 @@ user-provided release scope into actionable tasks.
 
 3. **Create Release Overview Document**
    * Create the release overview file at: `dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md`
-   * Use the release overview template: path (dev-handbook/templates/release-management/release-overview.template.md)
+   * Use the release overview template:
 
 4. **Populate Overview Document**
    * Fill in the release overview with:
@@ -70,7 +70,7 @@ user-provided release scope into actionable tasks.
         * `test-cases/` - Test scenario definitions
         * `user-experience/` - UX/UI related tasks
 
-     b. Create a new task file using the task template: path (dev-handbook/templates/release-tasks/task.template.md)
+     b. Create a new task file using the task template:
 
      c. Key rules for task creation:
         * Use `bin/tnid v.X.Y.Z` to generate the next sequential task ID

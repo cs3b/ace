@@ -79,7 +79,7 @@ Execute the final deployment and archival phase of project releases, transitioni
    - Move entries from `[Unreleased]` section to new version section
    - Add release date: `## [X.Y.Z] - YYYY-MM-DD`
    - Include comparison links at bottom of file
-   - Follow the changelog template: path (dev-handbook/templates/release-management/changelog.template.md)
+   - Follow the changelog template:
 
 7. **Validate Documentation Consistency:**
    - Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
