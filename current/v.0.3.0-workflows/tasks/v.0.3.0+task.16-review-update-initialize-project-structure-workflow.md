@@ -39,6 +39,7 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 - Update binstubs creation to reference correct source path (`dev-tools/exe-old/_binstubs`)
 - Remove branch switching requirements for submodules
 - Update all embedded templates and examples to use correct paths
+- Review workflow against workflow instruction standards and embedding tests
 
 ### Deliverables
 
@@ -95,6 +96,18 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
   > Assert: Outdated binstubs paths identified  
   > Command: grep -n "_binstubs\|tools/_binstubs" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
 
+- [ ] Review workflow against workflow instruction standards
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: Workflow standards guide available for reference
+  > Command: ls -la dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+
+- [ ] Review workflow against embedding tests guide
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: Embedding tests guide available for reference
+  > Command: ls -la dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
+
 ### Execution Steps
 
 - [ ] Replace all `docs-dev` references with `dev-handbook`
@@ -139,6 +152,18 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
   > Assert: Project Context Loading uses `docs/` paths
   > Command: grep -A5 "Project Context Loading" dev-handbook/workflow-instructions/initialize-project-structure.wf.md | grep "docs/"
 
+- [ ] Apply workflow instruction standards from definition guide
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Workflow follows standard structure and format
+  > Command: diff -u <(grep "^##" dev-handbook/guides/.meta/workflow-instructions-definition.g.md) <(grep "^##" dev-handbook/workflow-instructions/initialize-project-structure.wf.md) || echo "Structure differences noted"
+
+- [ ] Apply embedding tests standards from embedding tests guide
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: Workflow follows embedding test patterns
+  > Command: grep -c "TEST:" dev-handbook/workflow-instructions/initialize-project-structure.wf.md || echo "No embedded tests found"
+
 ## Acceptance Criteria
 
 - [ ] All `docs-dev` references replaced with `dev-handbook`
@@ -151,6 +176,8 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 - [ ] All embedded templates and examples use updated paths
 - [ ] Workflow is internally consistent with no contradictory path references
 - [ ] All referenced paths exist in the current project structure
+- [ ] Workflow follows workflow instruction definition standards
+- [ ] Workflow includes appropriate embedded tests following embedding tests guide
 
 ## Out of Scope
 
@@ -167,3 +194,5 @@ Review and update `dev-handbook/workflow-instructions/initialize-project-structu
 - Core documentation location: docs/ (what-do-we-build.md, architecture.md, blueprint.md)
 - Current submodules: dev-handbook, dev-tools (not dev-taskflow)
 - Task creation standard: Zero-padded task IDs (v.0.3.0+task.16)
+- Workflow instruction standards: dev-handbook/guides/.meta/workflow-instructions-definition.g.md
+- Embedding tests guide: dev-handbook/guides/.meta/workflow-instructions-embeding-tests.g.md
