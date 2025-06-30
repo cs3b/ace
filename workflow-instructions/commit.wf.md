@@ -1,4 +1,4 @@
-# Let's Commit Workflow Instruction
+# Commit Workflow Instruction
 
 ## Goal
 
@@ -20,17 +20,17 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
 ### Planning Steps
 
-- [ ] Review and validate changes are ready for commit
-- [ ] Verify all tests pass and code is linted
-- [ ] Ensure changes represent a single logical unit
+- Review and validate changes are ready for commit
+- Verify all tests pass and code is linted
+- Ensure changes represent a single logical unit
 
 ### Execution Steps
 
-- [ ] Stage related changes appropriately
-- [ ] Write conventional commit message following project standards
-- [ ] Create the commit with proper message
-- [ ] Update task status if applicable
-- [ ] Push changes when ready
+- Stage related changes appropriately
+- Write conventional commit message following project standards
+- Create the commit with proper message
+- Update task status if applicable
+- Push changes when ready
 
 ## Process Steps
 
@@ -48,11 +48,11 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    ```
 
    **Validation checklist:**
-   - [ ] Changes relate to a single logical unit
-   - [ ] New code has corresponding tests
-   - [ ] All tests pass (`bin/test`)
-   - [ ] Code has been linted (`bin/lint`)
-   - [ ] No debugging code or temporary files included
+   - Changes relate to a single logical unit
+   - New code has corresponding tests
+   - All tests pass (`bin/test`)
+   - Code has been linted (`bin/lint`)
+   - No debugging code or temporary files included
 
 2. **Stage Related Changes:**
 
