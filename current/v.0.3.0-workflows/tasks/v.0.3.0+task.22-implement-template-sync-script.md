@@ -11,6 +11,7 @@ dependencies: [v.0.3.0+task.21]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-tools | sed 's/^/    /'
 ```
@@ -66,7 +67,7 @@ Link back to original requirement: Automated template synchronization script (im
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Template embedding format is clearly defined and implemented
-  > Command: grep "````.*\.template\.md)" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep "````._\.template\.md)" dev-handbook/workflow-instructions/_.wf.md
 
 * [ ] Design script architecture and command-line interface
   > TEST: Pre-condition Check

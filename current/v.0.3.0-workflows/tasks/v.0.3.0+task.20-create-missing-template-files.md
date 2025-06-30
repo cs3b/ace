@@ -11,6 +11,7 @@ dependencies: [v.0.3.0+task.19]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 4 dev-handbook/templates | sed 's/^/    /'
 ```

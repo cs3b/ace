@@ -11,6 +11,7 @@ dependencies: [v.0.3.0+task.18]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 3 dev-handbook/templates | sed 's/^/    /'
 ```
@@ -64,7 +65,7 @@ Link back to original requirement: Template unification and synchronization (imp
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Embedded templates audit is complete and accessible
-  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/embedded-templates-audit.md
+  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/docs/embedded-templates-audit.md
 
 * [ ] Examine current template directory structure and contents
   > TEST: Pre-condition Check

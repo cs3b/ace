@@ -11,6 +11,7 @@ dependencies: [v.0.3.0+task.20]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
 ```
@@ -89,7 +90,7 @@ Link back to original requirement: Standardized template embedding with referenc
 * [ ] Implement four-tick escaping format for embedded templates
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: All embedded templates use ```` four-tick escaping
+  > Assert: All embedded templates use ````four-tick escaping
   > Command: grep -c "````" dev-handbook/workflow-instructions/*.wf.md
 
 * [ ] Add template path references in format: ````path (template_path)
