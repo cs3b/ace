@@ -1,4 +1,5 @@
 ## 1. Executive Summary
+
 Several workflow-instruction files deviate from the handbook standards (naming, checkbox usage, template embedding). The most disruptive gaps:
 • `save-session-context.md` breaks the mandatory `.wf.md` suffix → blocks automated loaders.
 • `commit.wf.md` embeds check-boxes inside Process sections (forbidden) and uses “Let’s” in the H1 (discouraged).
@@ -6,6 +7,7 @@ Several workflow-instruction files deviate from the handbook standards (naming, 
 Fixing these items will restore strict self-containment, ensure parsing reliability, and keep AI agents predictable.
 
 ## 2. Workflow Instructions Updates
+
 | Missing / Incorrect | Required Workflow Action | File Path | Priority |
 |---------------------|--------------------------|-----------|----------|
 | Wrong extension (.md) | Rename to comply with `<verb>-<context>.wf.md` | `dev-handbook/workflow-instructions/save-session-context.md` | 🔴 |
@@ -15,23 +17,29 @@ Fixing these items will restore strict self-containment, ensure parsing reliabil
 | Add “## Project Context Loading” heading (missing) | Insert standard section | `commit.wf.md` (present? verify) | 🟢 |
 
 ## 3. Template & Example Updates
+
 ✅ Most templates are now properly embedded via XML.
 ⚠️  `commit.wf.md` provides commit-message examples but not via `<templates>`; consider embedding a commit-message template for reuse.
 
 ## 4. Integration Guide Requirements
+
 *No updates required*.
 
 ## 5. AI Agent Instruction Updates
+
 ⚠️ Violations (checkbox misuse & bad file suffix) may cause agent mis-parsing / failure to load workflow. Update files as per §2 to maintain deterministic behaviour.
 
 ## 6. Cross-Reference Integrity
+
 | Issue | Impact |
 |-------|--------|
 | README lists “Save Session Context” but file will move to `.wf.md` – update link after rename | Broken link risk |
 | Internal “path (…template.md)” strings could mislead agents to external files despite embedded XML | Minor confusion |
 
 ## 7. Prioritised Handbook Tasks
+
 🔴 Critical
+
 - Rename `save-session-context.md` → `save-session-context.wf.md` & adjust all links.
 🟡 High
 - Fix checkbox misuse in `commit.wf.md` Process section.
@@ -42,6 +50,7 @@ Fixing these items will restore strict self-containment, ensure parsing reliabil
 - Embed a reusable commit-message XML template for consistency.
 
 ## 8. Risk Assessment
+
 Current deviations can:
 • Break automatic workflow discovery (wrong suffix) → agent stalls.
 • Cause parsing errors when check-boxes appear where bullets expected.
@@ -49,6 +58,7 @@ Current deviations can:
 Overall project workflow reliability downgraded from 99 % target to ~90 % until patched.
 
 ## 9. Implementation Recommendation
+
 [ ] ✅ Handbook coverage is complete
 [x] ⚠️ Minor guide updates needed
 [ ] ❌ Major workflow updates required (blocking)
