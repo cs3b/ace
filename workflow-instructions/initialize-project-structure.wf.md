@@ -2,7 +2,7 @@
 
 ## Goal
 
-Initialize the `docs-dev` and `dev-taskflow` directory structures and create core documentation files
+Initialize the `dev-handbook` and `dev-taskflow` directory structures and create core documentation files
 (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) to establish the foundation for an
 AI-assisted development workflow in a new or existing project.
 
@@ -11,12 +11,8 @@ AI-assisted development workflow in a new or existing project.
 ## Process Steps
 
 1. **Project Structure Setup**:
-    - **Submodule Branch**: Verify the `docs-dev` submodule is checked out to a branch other than
-      `main` or `master`. If it's on `main`/`master`, create and switch to a new branch
-      (e.g., `git checkout -b project-specific-docs`) to allow for project-specific tailoring
-      without affecting the upstream repository.
+    - **Submodule Verification**: Verify that both required submodules (`dev-handbook` and `dev-tools`) are present and properly initialized.
     - Create project management directories (`backlog`, `current`, `done`) inside the `dev-taskflow` directory.
-    - Create the `dev-taskflow/decisions/` directory and an empty `.keep` file within it (`dev-taskflow/decisions/.keep`).
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
@@ -32,9 +28,9 @@ AI-assisted development workflow in a new or existing project.
         - "What are 2-3 key features this project will provide?"
         - "Who are the primary users or target audience?"
         - "What external APIs or services will this project integrate with?"
-    - **Generate**: Create/update `dev-taskflow/what-do-we-build.md`, `dev-taskflow/architecture.md`
-      (ensuring it includes a 'Technology Stack' section), and `dev-taskflow/blueprint.md`
-      (typically placed directly in `dev-taskflow/`) based on the gathered information and embedded templates below.
+    - **Generate**: Create/update `docs/what-do-we-build.md`, `docs/architecture.md`
+      (ensuring it includes a 'Technology Stack' section), and `docs/blueprint.md`
+      based on the gathered information and embedded templates below.
 
 3. **Setup Project `bin/` Scripts from Binstubs**:
     - **Create Project `bin/` Directory**:
@@ -104,7 +100,7 @@ AI-assisted development workflow in a new or existing project.
 
 ### Execution Steps
 
-- [ ] Create dev-taskflow and docs-dev directory structures
+- [ ] Create dev-taskflow directory structure and verify submodules
 - [ ] Generate core documentation from embedded templates
 - [ ] Setup bin/ scripts with appropriate stubs
 - [ ] Initialize v.0.0.0 bootstrap release tracking
@@ -127,7 +123,7 @@ The workflow instruction will prompt for:
 
 ## Generated Documentation
 
-### dev-taskflow/what-do-we-build.md
+### docs/what-do-we-build.md
 
 The workflow instruction generates this file with:
 
@@ -138,7 +134,7 @@ The workflow instruction generates this file with:
 
 The generated file includes sections for project overview, key features, design principles, and target use cases (see embedded template below).
 
-### dev-taskflow/architecture.md
+### docs/architecture.md
 
 The workflow instruction analyzes the project structure and gathered info to generate:
 
@@ -150,7 +146,7 @@ The workflow instruction analyzes the project structure and gathered info to gen
 
 The generated file includes sections for technology stack, system architecture, command-line tools, and development patterns (see embedded template below).
 
-### dev-taskflow/blueprint.md
+### docs/blueprint.md
 
 The workflow instruction generates this file, which serves as a quick reference for project structure
 and key operational guidelines for an AI agent. It includes sections for read-only and ignored paths
@@ -161,22 +157,22 @@ The generated file includes sections for project organization, technology stack,
 ## Success Criteria
 
 1. **Directory Structure**:
-   - `docs-dev`, `dev-taskflow`, and `dev-taskflow/decisions` directories created with standard structure.
+   - `dev-handbook`, `dev-taskflow` directories present with standard structure.
    - Proper permissions set.
    - Git integration configured (`.gitignore` updated).
 
 2. **Core Documentation**:
-   - `dev-taskflow/what-do-we-build.md` created with clear project vision using the template structure.
-   - `dev-taskflow/architecture.md` reflects actual project structure and includes the primary
+   - `docs/what-do-we-build.md` created with clear project vision using the template structure.
+   - `docs/architecture.md` reflects actual project structure and includes the primary
      technology stack with command-line tools documentation.
-   - `dev-taskflow/blueprint.md` generated with sections for "Read-Only Paths" (including a
+   - `docs/blueprint.md` generated with sections for "Read-Only Paths" (including a
      placeholder for project-specific rules) and "Ignored Paths" (pre-populated with defaults like
      `dev-taskflow/done/**/*` and common examples).
    - Documentation is concise yet complete and follows established templates.
 
 3. **Basic `bin/` Scripts Initialized**:
    - The project's `bin/` directory exists.
-   - Binstubs from `dev-handbook/tools/_binstubs/` (like `test`, `lint`, `build`, `run`, `tn`, `tr`,
+   - Binstubs from `dev-tools/exe-old/_binstubs/` (like `test`, `lint`, `build`, `run`, `tn`, `tr`,
      `tree`) have been copied to the project's `bin/` directory if they didn't already exist.
    - Copied scripts in `bin/` are executable.
    - User is aware that some `bin/` scripts (`test`, `lint`, `build`, `run`) are placeholders
@@ -198,7 +194,7 @@ The generated file includes sections for project organization, technology stack,
 ## Workflow Instruction Context
 
 Initialize an AI-driven development environment by creating necessary documentation structure
-(`docs-dev`, `dev-taskflow`) and core architectural documents using standardized templates. This command sets up the foundation for effective AI agent collaboration with consistent, well-structured project documentation.
+(`dev-handbook`, `dev-taskflow`) and core architectural documents using standardized templates. This command sets up the foundation for effective AI agent collaboration with consistent, well-structured project documentation.
 
 ## Behavior
 
@@ -460,7 +456,7 @@ bin/test
 │   ├── backlog/          # Future releases
 │   ├── current/          # Active release
 │   └── done/             # Completed releases
-├── docs-dev/             # Development documentation
+├── dev-handbook/         # Development documentation (submodule)
 ├── src/                  # Source code (or app/, lib/, etc.)
 ├── test/                 # Test files (or spec/, tests/, etc.)
 └── [project-specific directories]
@@ -596,7 +592,7 @@ exit 1
 #!/usr/bin/env bash
 # Get next task ID
 
-ruby dev-handbook/tools/tn.rb "$@"
+ruby dev-tools/exe-old/tn.rb "$@"
 ```
 
 #### bin/tr
@@ -605,7 +601,7 @@ ruby dev-handbook/tools/tn.rb "$@"
 #!/usr/bin/env bash
 # List recent tasks
 
-ruby dev-handbook/tools/tr.rb "$@"
+ruby dev-tools/exe-old/tr.rb "$@"
 ```
 
 #### bin/tree
@@ -637,7 +633,7 @@ The v.0.0.0 Bootstrap release establishes the foundational project structure and
 
 ## Goals
 
-1. **Project Structure**: Establish dev-taskflow and docs-dev directories with proper organization
+1. **Project Structure**: Establish dev-taskflow directory structure and verify submodules
 2. **Core Documentation**: Create what-do-we-build.md, architecture.md, and blueprint.md files
 3. **Development Tools**: Set up bin/ scripts for common development tasks
 4. **Project Definition**: Complete PRD.md with comprehensive project requirements
@@ -689,7 +685,7 @@ Create the foundational directory structure for task management and project docu
 ## Scope of Work
 
 - Create dev-taskflow/ directory with subdirectories
-- Create docs-dev/ directory if using submodule approach
+- Verify dev-handbook and dev-tools submodules are present
 - Set up proper Git configuration
 - Create initial .gitignore entries
 
@@ -699,14 +695,12 @@ Create the foundational directory structure for task management and project docu
 - dev-taskflow/backlog/
 - dev-taskflow/current/
 - dev-taskflow/done/
-- dev-taskflow/decisions/
-- dev-taskflow/decisions/.keep
 
 ## Implementation
 
 ### Execution Steps
 - [x] Create dev-taskflow directory structure
-- [x] Create docs-dev directory or verify submodule
+- [x] Verify dev-handbook and dev-tools submodules
 - [x] Add directories to Git
 - [x] Update .gitignore if needed
 
@@ -744,9 +738,9 @@ Generate the three foundational documentation files that guide project developme
 ### Deliverables
 
 #### Create
-- dev-taskflow/what-do-we-build.md
-- dev-taskflow/architecture.md
-- dev-taskflow/blueprint.md
+- docs/what-do-we-build.md
+- docs/architecture.md
+- docs/blueprint.md
 
 ## Implementation
 
