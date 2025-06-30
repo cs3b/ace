@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.21
-status: pending
+status: done
 priority: medium
 estimate: 5h
 dependencies: [v.0.3.0+task.20]
@@ -19,7 +19,27 @@ tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
 _Result excerpt:_
 
 ```
-[To be populated during execution]
+dev-handbook/workflow-instructions
+├── commit.wf.md
+├── create-adr.wf.md
+├── create-api-docs.wf.md
+├── create-reflection-note.wf.md
+├── create-task.wf.md
+├── create-test-cases.wf.md
+├── create-user-docs.wf.md
+├── draft-release.wf.md
+├── fix-tests.wf.md
+├── initialize-project-structure.wf.md
+├── load-project-context.wf.md
+├── publish-release.wf.md
+├── README.md
+├── review-task.wf.md
+├── save-session-context.md
+├── update-blueprint.wf.md
+├── update-roadmap.wf.md
+└── work-on-task.wf.md
+
+1 directory, 18 files
 ```
 
 ## Objective
@@ -107,12 +127,12 @@ Link back to original requirement: Standardized template embedding with referenc
 
 ## Acceptance Criteria
 
-* [ ] All workflow instructions use standardized template embedding format
-* [ ] Embedded templates are located at end of documents
-* [ ] Template references use format: ````path (template_path)
-* [ ] Four-tick escaping is used consistently for all embedded templates
-* [ ] Workflow instructions remain clear and functional
-* [ ] Standard format is documented for future reference
+* [x] All workflow instructions use standardized template embedding format
+* [x] Embedded templates are located at end of documents
+* [x] Template references use format: ````path (template_path)
+* [x] Four-tick escaping is used consistently for all embedded templates
+* [x] Workflow instructions remain clear and functional
+* [x] Standard format is documented for future reference
 
 ## Out of Scope
 
