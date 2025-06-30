@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+# bin/markdown-sync-embedded-documents: Thin wrapper for template synchronization utility
+exec(File.expand_path('../dev-tools/exe-old/markdown-sync-embedded-documents', __dir__), *ARGV)
