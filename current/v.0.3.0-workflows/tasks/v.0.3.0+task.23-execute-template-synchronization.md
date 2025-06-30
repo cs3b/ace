@@ -3,7 +3,7 @@ id: v.0.3.0+task.23
 status: pending
 priority: low
 estimate: 2h
-dependencies: [v.0.3.0+task.22]
+dependencies: [v.0.3.0+task.22, v.0.3.0+task.25]
 ---
 
 # Execute Template Synchronization
@@ -11,6 +11,7 @@ dependencies: [v.0.3.0+task.22]
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 dev-handbook/workflow-instructions | sed 's/^/    /'
 ```
@@ -69,7 +70,7 @@ Link back to original requirement: Execute template sync and commit changes (imp
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: All embedded templates follow ````path (template_path) format
-  > Command: grep -c "````.*\.template\.md)" dev-handbook/workflow-instructions/*.wf.md
+  > Command: grep -c "````._\.template\.md)" dev-handbook/workflow-instructions/_.wf.md
 
 ### Execution Steps
 
