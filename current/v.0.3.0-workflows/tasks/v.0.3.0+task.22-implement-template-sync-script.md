@@ -24,15 +24,18 @@ _Result excerpt:_
 
 ## Objective
 
-Create the `markdown-sync-embedded-documents` script that automatically synchronizes embedded template content in workflow instructions with their corresponding template files. This script will scan for embedded templates, compare content with template files, update differences, and commit changes automatically.
+Create the `markdown-sync-embedded-documents` script that automatically synchronizes XML-embedded template content in workflow instructions with their corresponding template files. This script will scan for XML `<templates>` sections, parse embedded templates using the simplified single `path` attribute format, compare content with template files, update differences, and commit changes automatically.
 
 Link back to original requirement: Automated template synchronization script (improve-the-workflow-structure.md)
 
 ## Scope of Work
 
-* Develop script to scan workflow instructions for embedded templates
-* Implement content comparison between embedded templates and template files
-* Create automatic update mechanism for out-of-sync content
+* Update template embedding guide to use simplified single `path` attribute format
+* Update all workflow instructions to remove `template-path` and use only `path`
+* Develop script to scan workflow instructions for XML `<templates>` sections
+* Implement XML parsing to extract template content using single `path` attribute
+* Create content comparison between embedded templates and template files
+* Implement automatic update mechanism for out-of-sync content
 * Add commit functionality with standardized commit message
 * Include summary reporting of changes made
 
@@ -63,11 +66,23 @@ Link back to original requirement: Automated template synchronization script (im
 
 ### Planning Steps
 
-* [ ] Analyze standardized template embedding format from previous task
+* [ ] Update template embedding guide to use single `path` attribute
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
-  > Assert: Template embedding format is clearly defined and implemented
-  > Command: grep "````._\.template\.md)" dev-handbook/workflow-instructions/_.wf.md
+  > Assert: Guide uses only `path` attribute pointing to template file
+  > Command: grep -A 5 -B 5 'template-path' dev-handbook/guides/.meta/template-embedding.g.md
+
+* [ ] Update all workflow instructions to use single `path` attribute
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: All workflow files use simplified XML format with single `path` attribute
+  > Command: grep -r 'template-path' dev-handbook/workflow-instructions/*.wf.md
+
+* [ ] Analyze simplified XML template embedding format
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: Simplified XML template embedding format is clearly defined and implemented
+  > Command: grep -r "<templates>" dev-handbook/workflow-instructions/*.wf.md
 
 * [ ] Design script architecture and command-line interface
   > TEST: Pre-condition Check
@@ -80,7 +95,7 @@ Link back to original requirement: Automated template synchronization script (im
 * [ ] Create main script in dev-tools/exe-old/markdown-sync-embedded-documents
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: Script correctly identifies all embedded templates
+  > Assert: Script correctly identifies all XML template sections
   > Command: dev-tools/exe-old/markdown-sync-embedded-documents --dry-run --verbose
 
 * [ ] Create binstub in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
@@ -95,17 +110,17 @@ Link back to original requirement: Automated template synchronization script (im
   > Assert: Wrapper correctly delegates to exe-old script
   > Command: bin/markdown-sync-embedded-documents --dry-run --verbose
 
-* [ ] Implement content comparison logic between embedded and template files
+* [ ] Implement XML parsing for simplified format and content comparison logic
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: Script accurately detects content differences
-  > Command: Test with known different content scenarios
+  > Assert: Script accurately parses simplified XML format and detects content differences
+  > Command: Test with known different XML template content scenarios using single path attribute
 
-* [ ] Add update mechanism to replace embedded content with template content
+* [ ] Add XML-aware update mechanism to replace embedded content with template content
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: Script correctly updates embedded content
-  > Command: Verify updated content matches template files
+  > Assert: Script correctly updates XML-embedded content while preserving single path attribute
+  > Command: Verify updated content matches template files and simplified XML structure is maintained
 
 * [ ] Implement automatic commit functionality with standardized message
   > TEST: Action Validation
@@ -119,11 +134,11 @@ Link back to original requirement: Automated template synchronization script (im
   > Assert: Script provides clear summary of synchronization actions
   > Command: Review script output for completeness
 
-* [ ] Create comprehensive error handling and validation
+* [ ] Create comprehensive XML validation and error handling
   > TEST: Action Validation
   > Type: Action Validation
-  > Assert: Script handles edge cases and provides helpful error messages
-  > Command: Test script with various error scenarios
+  > Assert: Script validates simplified XML structure and handles edge cases with helpful error messages
+  > Command: Test script with malformed XML, missing path attribute, and various error scenarios
 
 ## Acceptance Criteria
 
@@ -131,20 +146,27 @@ Link back to original requirement: Automated template synchronization script (im
 * [ ] Binstub created in dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents
 * [ ] Thin wrapper created in bin/markdown-sync-embedded-documents
 * [ ] Script successfully scans all workflow instruction files
-* [ ] Correctly identifies embedded templates using ````path (template_path) format
-* [ ] Accurately compares embedded content with template file content
-* [ ] Updates out-of-sync embedded templates with template file content
+* [ ] Correctly identifies XML template sections using simplified `<templates>` format with single `path` attribute
+* [ ] Accurately parses single `path` attribute and compares embedded content with template file content
+* [ ] Updates out-of-sync XML-embedded templates with template file content
 * [ ] Commits changes with standardized commit message format
 * [ ] Provides comprehensive summary of changes made
 * [ ] Handles error cases gracefully with helpful messages
 * [ ] Can be run safely multiple times (idempotent)
 * [ ] Follows project's dev-tools/exe-old organizational pattern
+* [ ] Template embedding guide updated to use single `path` attribute format
+* [ ] All workflow instructions updated to remove `template-path` and use only `path`
+* [ ] Validates simplified XML template structure using updated regex patterns
+* [ ] Supports single `path` attribute validation pointing to template files
+* [ ] Handles variable substitution in paths (e.g., `{current-release-path}`)
+* [ ] Preserves XML formatting and indentation during updates
 
 ## Out of Scope
 
 * ❌ Modifying template files (only updates embedded content)
 * ❌ Creating missing template files (handled in previous task)
-* ❌ Changing template embedding format (defined in previous task)
+* ❌ Reverting to old four-tick format templates (XML format is standard)
+❌ Adding back dual-attribute system (simplified to single `path` attribute)
 
 ## References
 
