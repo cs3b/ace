@@ -90,7 +90,7 @@ For each significant change identified, determine:
 
 Systematically assess each documentation category:
 
-#### Architecture Decision Records (`dev-taskflow/decisions/`)
+#### Architecture Decision Records (`docs/decisions/`)
 
 - [ ] **New ADR Required**: [Topic] - [Reason for documentation]
 - [ ] **Update Existing ADR**: [File] - [Specific changes needed]

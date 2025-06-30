@@ -151,7 +151,7 @@ The tool automatically collects:
 When using `--include-dependencies`, it also collects:
 
 - Full content of project documentation from `dev-taskflow/*.md`
-- Full content of Architecture Decision Records from `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/`
+- Full content of Architecture Decision Records from `docs/decisions/` and `dev-taskflow/current/*/decisions/`
 - Full content of root documentation files (`*.md` in project root)
 - Full Gemfile and gemspec content for context
 

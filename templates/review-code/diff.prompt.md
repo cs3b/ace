@@ -33,7 +33,7 @@ Current files:
 
 #### Architecture Decision Records (ADRs)
 
-Location: `dev-taskflow/decisions/` and `dev-taskflow/current/*/decisions/*.md`
+Location: `docs/decisions/` and `dev-taskflow/current/*/decisions/*.md`
 Current files:
 [LIST YOUR CURRENT ADR FILES HERE]
 

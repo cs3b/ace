@@ -74,7 +74,7 @@ This will show all project files while filtering out temporary files, session lo
 This section lists files and directories that the agent should treat as read-only. Attempts to modify these paths should be flagged or prevented.
 
 <!-- Add project-specific read-only paths -->
-- `dev-taskflow/decisions/**/*`
+- `docs/decisions/**/*`
 - `dev-taskflow/done/**/*`
 - `*.lock` # Dependency lock files
 - `dist/**/*` # Built artifacts
