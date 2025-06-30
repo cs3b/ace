@@ -141,8 +141,14 @@ These scripts are intended to be idempotent where possible and provide a consist
 │   ├── current/           # Task files for the current release
 │   ├── done/              # Completed task files
 │   ├── decisions/         # Architecture Decision Records (.keep file ensures directory exists)
-│   ├── architecture.md    # This document
+│   ├── architecture.md    # This document  
 │   ├── blueprint.md       # Project structure overview and AI guidelines
+│   └── what-do-we-build.md # Project vision and goals
+├── docs/                  # Core project documentation (permanent reference materials)
+│   ├── decisions/         # Architecture Decision Records (ADRs)
+│   ├── migrations/        # Documentation migration records
+│   ├── architecture.md    # System architecture documentation
+│   ├── blueprint.md       # Project structure and navigation guide
 │   └── what-do-we-build.md # Project vision and goals
 ├── dev-tools/exe/                   # Gem executables (e.g., coding_agent_tools)
 ├── lib/                   # Ruby gem source code
@@ -231,7 +237,7 @@ The ATOM architecture provides several extension points:
 
 Significant architectural decisions are documented as Architecture Decision Records (ADRs).
 
-For detailed decision records, see [dev-taskflow/decisions/](../../../coding-agent-tools/dev-taskflow/decisions/).
+For detailed decision records, see [docs/decisions/](./decisions/).
 
 ## Troubleshooting
 

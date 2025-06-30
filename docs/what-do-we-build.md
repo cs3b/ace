@@ -92,7 +92,7 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 - Integrations with Git CLI and GitHub REST API (v3).
 - Tools to interact with documentation-based task backlogs (e.g., in `dev-taskflow`).
 - Comprehensive unit and integration tests.
-- Documentation (`dev-taskflow/`) detailing usage and architecture.
+- Documentation (`docs/`, `dev-taskflow/`) detailing usage and architecture.
 
 ### What We Don't Build (v1)
 

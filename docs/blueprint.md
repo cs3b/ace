@@ -19,11 +19,14 @@ This project follows a documentation-first approach with these primary directori
   - **workflow-instructions/** - Structured commands for AI agents
   - **zed/** - Editor integration (if applicable)
 
-- **dev-taskflow/** - Project-specific documentation, task management, and decisions
+- **docs/** - Core project documentation (permanent reference materials)
+  - **decisions/** - Architecture Decision Records (ADRs)
+  - **migrations/** - Documentation migration records
+
+- **dev-taskflow/** - Project-specific documentation, task management, and temporal content
   - **backlog/** - Pending tasks for future releases
   - **current/** - Active release cycle work
   - **done/** - Completed releases and tasks
-  - **decisions/** - Architecture Decision Records (ADRs)
 
 - **bin/** - Executable scripts (binstubs/wrappers) for project automation (e.g., `bin/test`, `bin/tn`)
 
@@ -63,11 +66,13 @@ This will show all project files while filtering out temporary files, session lo
 
 AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks. Modifying these files without careful consideration can break core project workflows or documentation standards.
 
+- `docs/**/*` (Core documentation - modify only for explicit maintenance tasks)
+- `docs/decisions/**/*` (Modify only when adding or updating ADRs)
+- `docs/migrations/**/*` (Documentation migration records)
 - `dev-handbook/guides/**/*`
 - `dev-handbook/workflow-instructions/**/*`
 - `dev-tools/exe-old/_binstubs/**/*`
 - `dev-handbook/guides/initialize-project-templates/**/*`
-- `dev-taskflow/decisions/**/*` (Modify only when adding or updating ADRs)
 - `dev-taskflow/done/**/*` (Completed tasks should not be modified)
 - `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
 - `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
