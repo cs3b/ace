@@ -16,9 +16,9 @@ AI-assisted development workflow in a new or existing project.
 
 2. **Core Documentation Generation**:
     - **Identify Source**: Check if `PRD.md` exists at the project root.
-        - If yes: Use this file as the primary source. If the existing `PRD.md` lacks structure, populate it using the embedded PRD template below.
-        - If no: Check if `README.md` exists at the project root. Use this file as the primary source. If the existing `README.md` lacks project information, enhance it using the embedded README template below.
-        - If neither exists: Create initial `PRD.md` and `README.md` files using the embedded templates below and prepare to use interactive prompts to populate them.
+        - If yes: Use this file as the primary source. If the existing `PRD.md` lacks structure, populate it using the PRD template: path (dev-handbook/templates/project-docs/prd.template.md).
+        - If no: Check if `README.md` exists at the project root. Use this file as the primary source. If the existing `README.md` lacks project information, enhance it using the README template: path (dev-handbook/templates/project-docs/README.template.md).
+        - If neither exists: Create initial `PRD.md` and `README.md` files using the project templates and prepare to use interactive prompts to populate them.
     - **Extract/Prompt**: Extract core information **including primary technology stack**
       (e.g., Ruby, Rust, TypeScript) from the identified source file (`PRD.md` or `README.md`).
       If no source file or incomplete information, use interactive prompts to gather missing details.
@@ -30,20 +30,23 @@ AI-assisted development workflow in a new or existing project.
         - "What external APIs or services will this project integrate with?"
     - **Generate**: Create/update `docs/what-do-we-build.md`, `docs/architecture.md`
       (ensuring it includes a 'Technology Stack' section), and `docs/blueprint.md`
-      based on the gathered information and embedded templates below.
+      based on the gathered information using the appropriate templates:
+      - What We Build: path (dev-handbook/templates/project-docs/vision.template.md)
+      - Architecture: path (dev-handbook/templates/project-docs/architecture.template.md)  
+      - Blueprint: path (dev-handbook/templates/project-docs/blueprint.template.md)
 
 3. **Setup Project `bin/` Scripts from Binstubs**:
     - **Create Project `bin/` Directory**:
         - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
     - **Create Standard Binstubs**:
-        - Create the following standard scripts in `bin/` using embedded templates below:
-          - `test` - Run project tests
-          - `lint` - Run project linting
-          - `build` - Build project artifacts
-          - `run` - Run the application
-          - `tn` - Get next task ID
-          - `tr` - List recent tasks
-          - `tree` - Show project structure
+        - Create the following standard scripts in `bin/` using the appropriate binstub templates:
+          - `test` - Run project tests: path (dev-handbook/templates/project-build/test.binstub.sh)
+          - `lint` - Run project linting: path (dev-handbook/templates/project-build/lint.binstub.sh)
+          - `build` - Build project artifacts: path (dev-handbook/templates/project-build/build.binstub.sh)
+          - `run` - Run the application: path (dev-handbook/templates/project-build/run.binstub.sh)
+          - `tn` - Get next task ID: path (dev-handbook/templates/project-build/tn.binstub.sh)
+          - `tr` - List recent tasks: path (dev-handbook/templates/project-build/tr.binstub.sh)  
+          - `tree` - Show project structure: path (dev-handbook/templates/project-build/tree.binstub.sh)
         - Skip any that already exist to avoid overwriting
     - **Make Scripts Executable**:
         - For all scripts newly created in `bin/`, make them executable: `chmod +x bin/*`.
@@ -52,7 +55,7 @@ AI-assisted development workflow in a new or existing project.
         - Scripts like `bin/tn`, `bin/tr`, and `bin/tree` should work if the underlying Ruby tools are present.
 
 4. **Setup v.0.0.0 Bootstrap Release Tracking**:
-    - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using embedded templates below.
+    - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using the bootstrap release template: path (dev-handbook/templates/release-v.0.0.0/release-structure.template.md).
     - **Customize Template Tasks**: Replace template placeholders in copied task files:
         - Replace `TEMPLATE-task.X` IDs with actual task IDs using `bin/tnid v.0.0.0` for each task.
         - Replace `[PLACEHOLDER]` values in the release overview file with actual project information.
@@ -132,7 +135,7 @@ The workflow instruction generates this file with:
 - Core design principles
 - Target use cases
 
-The generated file includes sections for project overview, key features, design principles, and target use cases (see embedded template below).
+The generated file includes sections for project overview, key features, design principles, and target use cases using the vision template: path (dev-handbook/templates/project-docs/vision.template.md).
 
 ### docs/architecture.md
 
@@ -144,7 +147,7 @@ The workflow instruction analyzes the project structure and gathered info to gen
 - Data flow diagrams (if inferrable)
 - Extension points
 
-The generated file includes sections for technology stack, system architecture, command-line tools, and development patterns (see embedded template below).
+The generated file includes sections for technology stack, system architecture, command-line tools, and development patterns using the architecture template: path (dev-handbook/templates/project-docs/architecture.template.md).
 
 ### docs/blueprint.md
 
@@ -152,7 +155,7 @@ The workflow instruction generates this file, which serves as a quick reference 
 and key operational guidelines for an AI agent. It includes sections for read-only and ignored paths
 to guide agent behavior.
 
-The generated file includes sections for project organization, technology stack, read-only paths, and ignored paths (see embedded template below).
+The generated file includes sections for project organization, technology stack, read-only paths, and ignored paths using the blueprint template: path (dev-handbook/templates/project-docs/blueprint.template.md).
 
 ## Success Criteria
 
@@ -199,15 +202,15 @@ Initialize an AI-driven development environment by creating necessary documentat
 ## Behavior
 
 - Preserves existing documentation if found, enhancing it with template structure when needed.
-- Extracts project information from `PRD.md` or `README.md` when available, using embedded templates for missing sections.
-- Creates consistent structure for AI-driven development using embedded templates.
+- Extracts project information from `PRD.md` or `README.md` when available, using project templates for missing sections.
+- Creates consistent structure for AI-driven development using standardized templates.
 - Uses interactive prompts with comprehensive example questions when source documents are unavailable.
 
 ## Embedded Templates
 
-### PRD Template
+### PRD Template: path (dev-handbook/templates/project-docs/prd.template.md)
 
-```markdown
+````markdown
 # Product Requirements Document (PRD)
 
 ## Executive Summary
@@ -243,7 +246,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 - v0.2.0: [MVP - Basic features]
 - v0.3.0: [Beta - Feature complete]
 - v1.0.0: [Production ready]
-```
+````
 
 ### README Template
 
@@ -893,6 +896,6 @@ Establish v.0.0.0 release tracking to manage initial project setup tasks.
 ## Notes
 
 - The workflow preserves existing documentation if found, enhancing it with template structure
-- Uses embedded templates to ensure consistent, comprehensive documentation across projects
+- Uses standardized templates to ensure consistent, comprehensive documentation across projects
 - Provides interactive prompts with example questions when source documents are unavailable
 - Creates idempotent workflow that can be safely rerun without overwriting customizations
