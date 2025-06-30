@@ -69,8 +69,8 @@ Link back to original requirement: Execute template sync and commit changes (imp
 * [ ] Confirm all workflow files use standardized template embedding format
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
-  > Assert: All embedded templates follow XML <templates> format
-  > Command: grep -c "````._\.template\.md)lt;templates````._\.template\.md)gt;" dev-handbook/workflow-instructions/_.wf.md
+  > Assert: All embedded templates follow ````path (template_path) format
+  > Command: grep -c "````._\.template\.md)" dev-handbook/workflow-instructions/_.wf.md
 
 ### Execution Steps
 
