@@ -114,57 +114,8 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - Data exposure
 
 4. **Create Test Case Structure:**
-
-   **Test Case Template:**
-
-   ```markdown
-   ## Test Case: [TC-001] [Descriptive Name]
    
-   **Category**: [Unit | Integration | E2E | Performance | Security]
-   **Priority**: [High | Medium | Low]
-   **Component**: [Component/Module being tested]
-   
-   ### Description
-   Brief explanation of what this test validates.
-   
-   ### Prerequisites
-   - Required test data
-   - System state
-   - Configuration settings
-   - External dependencies
-   
-   ### Test Steps
-   1. [Action 1]
-      - Input: [Specific data/parameters]
-      - Action: [What to do]
-   2. [Action 2]
-      - Input: [Specific data/parameters]
-      - Action: [What to do]
-   3. [Verification]
-      - Check: [What to verify]
-   
-   ### Expected Results
-   - [Expected outcome 1]
-   - [Expected outcome 2]
-   - [System state after test]
-   
-   ### Actual Results
-   (To be filled during test execution)
-   - [ ] Pass
-   - [ ] Fail
-   - Notes: 
-   
-   ### Test Data
-   ```json
-   {
-     "input": "example",
-     "config": {
-       "setting": "value"
-     }
-   }
-   ```
-
-   ```
+   Use the test case template: path (dev-handbook/templates/release-testing/test-case.template.md)
 
 5. **Generate Comprehensive Test Cases:**
 
@@ -268,54 +219,8 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    ```
 
 6. **Include Test Implementation Hints:**
-
-   ```markdown
-   ## Implementation Notes
    
-   ### Unit Test Example (Jest/JavaScript):
-   ```javascript
-   describe('PasswordValidator', () => {
-     test('TC-001: Valid password validation', () => {
-       const result = validatePassword('SecureP@ss123');
-       expect(result).toBe(true);
-     });
-     
-     test.each([
-       ['123456', false, 'too simple'],
-       ['password', false, 'common word'],
-       ['short', false, 'too short'],
-       ['', false, 'empty'],
-       [null, false, 'null input']
-     ])('TC-002: Rejects %s (%s)', (password, expected, reason) => {
-       expect(validatePassword(password)).toBe(expected);
-     });
-   });
-   ```
-
-   ### Integration Test Example (RSpec/Ruby)
-
-   ```ruby
-   RSpec.describe 'Authentication API' do
-     describe 'POST /api/login' do
-       context 'TC-010: with valid credentials' do
-         let(:user) { create(:user, password: 'ValidPass123!') }
-         
-         it 'returns success with JWT token' do
-           post '/api/login', params: {
-             email: user.email,
-             password: 'ValidPass123!'
-           }
-           
-           expect(response).to have_http_status(200)
-           expect(json_response['token']).to be_present
-           expect(decoded_token['user_id']).to eq(user.id)
-         end
-       end
-     end
-   end
-   ```
-
-   ```
+   Use the test implementation examples: path (dev-handbook/templates/release-testing/test-case.template.md)
 
 7. **Review and Refine:**
 
@@ -445,3 +350,100 @@ Create performance test cases to establish and maintain system performance stand
 ---
 
 This workflow ensures thorough test coverage through systematic identification and documentation of test scenarios across all testing levels.
+
+## Embedded Templates
+
+### Test Case Template: path (dev-handbook/templates/release-testing/test-case.template.md)
+
+````markdown
+## Test Case: [TC-001] [Descriptive Name]
+
+**Category**: [Unit | Integration | E2E | Performance | Security]
+**Priority**: [High | Medium | Low]
+**Component**: [Component/Module being tested]
+
+### Description
+Brief explanation of what this test validates.
+
+### Prerequisites
+- Required test data
+- System state
+- Configuration settings
+- External dependencies
+
+### Test Steps
+1. [Action 1]
+   - Input: [Specific data/parameters]
+   - Action: [What to do]
+2. [Action 2]
+   - Input: [Specific data/parameters]
+   - Action: [What to do]
+3. [Verification]
+   - Check: [What to verify]
+
+### Expected Results
+- [Expected outcome 1]
+- [Expected outcome 2]
+- [System state after test]
+
+### Actual Results
+(To be filled during test execution)
+- [ ] Pass
+- [ ] Fail
+- Notes: 
+
+### Test Data
+```json
+{
+  "input": "example",
+  "config": {
+    "setting": "value"
+  }
+}
+```
+
+## Implementation Notes
+
+### Unit Test Example (Jest/JavaScript):
+```javascript
+describe('PasswordValidator', () => {
+  test('TC-001: Valid password validation', () => {
+    const result = validatePassword('SecureP@ss123');
+    expect(result).toBe(true);
+  });
+  
+  test.each([
+    ['123456', false, 'too simple'],
+    ['password', false, 'common word'],
+    ['short', false, 'too short'],
+    ['', false, 'empty'],
+    [null, false, 'null input']
+  ])('TC-002: Rejects %s (%s)', (password, expected, reason) => {
+    expect(validatePassword(password)).toBe(expected);
+  });
+});
+```
+
+### Integration Test Example (RSpec/Ruby)
+
+```ruby
+RSpec.describe 'Authentication API' do
+  describe 'POST /api/login' do
+    context 'TC-010: with valid credentials' do
+      let(:user) { create(:user, password: 'ValidPass123!') }
+      
+      it 'returns success with JWT token' do
+        post '/api/login', params: {
+          email: user.email,
+          password: 'ValidPass123!'
+        }
+        
+        expect(response).to have_http_status(200)
+        expect(json_response['token']).to be_present
+        expect(decoded_token['user_id']).to eq(user.id)
+      end
+    end
+  end
+end
+```
+````

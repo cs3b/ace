@@ -62,64 +62,7 @@ Create an ADR when:
    - Where XXX is the next sequential number (e.g., ADR-001, ADR-002)
    - Use kebab-case for the decision title in the filename
 
-4. **Fill in the ADR using this template:**
-
-```markdown
-# ADR-XXX: Title of the Decision
-
-## Status
-
-[Proposed | Accepted | Deprecated | Superseded]
-Date: YYYY-MM-DD
-
-## Context
-
-What is the issue that we're seeing that is motivating this decision or change?
-
-[Describe the forces at play, including technological, business, and organizational constraints. Include any relevant background information, current state, and why a decision needs to be made now.]
-
-## Decision
-
-What is the change that we're proposing and/or doing?
-
-[State the decision clearly and concisely. Use active voice. Be specific about what will be done.]
-
-## Consequences
-
-What becomes easier or more difficult to do because of this change?
-
-### Positive
-
-- [Benefit 1: Describe specific improvements]
-- [Benefit 2: Include measurable outcomes where possible]
-
-### Negative
-
-- [Challenge 1: Be honest about drawbacks]
-- [Challenge 2: Include mitigation strategies if applicable]
-
-### Neutral
-
-- [Impact 1: Changes that are neither good nor bad]
-- [Impact 2: Side effects that need to be noted]
-
-## Alternatives Considered
-
-- **Alternative 1**: [Brief description]
-  - Why it wasn't chosen: [Specific reasons]
-- **Alternative 2**: [Brief description]
-  - Why it wasn't chosen: [Specific reasons]
-
-## Related Decisions
-
-- [Link to related ADRs using relative paths]
-- [Link to related documentation]
-
-## References
-
-- [External references, research papers, blog posts]
-- [Links to relevant documentation or discussions]
-```
+4. **Fill in the ADR using the template:** path (dev-handbook/templates/project-docs/decisions/adr.template.md)
 
 5. **Write Clear Content:** Follow these principles:
    - **Context**: Explain the "why" comprehensively. Future readers should understand the situation without additional context.
@@ -180,3 +123,64 @@ What becomes easier or more difficult to do because of this change?
 - ADR-003-implement-event-sourcing
 - ADR-004-choose-postgresql-over-mongodb
 - ADR-005-use-jwt-for-authentication
+
+## Embedded Templates
+
+### ADR Template: path (dev-handbook/templates/project-docs/decisions/adr.template.md)
+
+````markdown
+# ADR-XXX: Title of the Decision
+
+## Status
+
+[Proposed | Accepted | Deprecated | Superseded]
+Date: YYYY-MM-DD
+
+## Context
+
+What is the issue that we're seeing that is motivating this decision or change?
+
+[Describe the forces at play, including technological, business, and organizational constraints. Include any relevant background information, current state, and why a decision needs to be made now.]
+
+## Decision
+
+What is the change that we're proposing and/or doing?
+
+[State the decision clearly and concisely. Use active voice. Be specific about what will be done.]
+
+## Consequences
+
+What becomes easier or more difficult to do because of this change?
+
+### Positive
+
+- [Benefit 1: Describe specific improvements]
+- [Benefit 2: Include measurable outcomes where possible]
+
+### Negative
+
+- [Challenge 1: Be honest about drawbacks]
+- [Challenge 2: Include mitigation strategies if applicable]
+
+### Neutral
+
+- [Impact 1: Changes that are neither good nor bad]
+- [Impact 2: Side effects that need to be noted]
+
+## Alternatives Considered
+
+- **Alternative 1**: [Brief description]
+  - Why it wasn't chosen: [Specific reasons]
+- **Alternative 2**: [Brief description]
+  - Why it wasn't chosen: [Specific reasons]
+
+## Related Decisions
+
+- [Link to related ADRs using relative paths]
+- [Link to related documentation]
+
+## References
+
+- [External references, research papers, blog posts]
+- [Links to relevant documentation or discussions]
+````

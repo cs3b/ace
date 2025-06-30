@@ -69,102 +69,7 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
      * Any missing context or requirements?
 
 5. **Create Formal Task Files**
-   * Once approved, create task files using this embedded template:
-
-   ```markdown
-   ---
-   id: v.X.Y.Z+task.NN  # Generated using bin/tnid v.X.Y.Z (zero-padded format)
-   status: pending
-   priority: [high | medium | low]
-   estimate: Nh
-   dependencies: []
-   ---
-
-   # [Task Title - Verb + Object]
-
-   ## 0. Directory Audit ✅
-   
-   _Command run:_
-   ```bash
-   tree -L 2 [relevant-directory] | sed 's/^/    /'
-   ```
-
-   _Result excerpt:_
-
-   ```
-   [insert tree output here]
-   ```
-
-   ## Objective
-
-   [Why are we doing this? What value does it provide?]
-   [Link back to original requirement/feedback if applicable]
-
-   ## Scope of Work
-
-   * [What will be touched/changed]
-   * [Key areas of impact]
-   * [Technical components involved]
-
-   ### Deliverables
-
-   #### Create
-
-   * path/to/new/file.ext
-
-   #### Modify  
-
-   * path/to/existing/file.ext
-
-   #### Delete
-
-   * path/to/obsolete/file.ext
-
-   ## Phases
-
-   1. Research/Analysis - [What needs to be understood]
-   2. Design/Planning - [Architecture or approach decisions]
-   3. Implementation - [Core development work]
-   4. Testing/Validation - [How we verify success]
-
-   ## Implementation Plan
-
-   ### Planning Steps
-
-   * [ ] [Research/analysis task - use asterisk markers]
-     > TEST: Pre-condition Check
-     > Type: Pre-condition Check
-     > Assert: [What needs to be verified before starting]
-     > Command: [Test command if applicable]
-
-   ### Execution Steps
-
-   * [ ] [Concrete implementation action - use hyphen markers]
-     > TEST: Action Validation
-     > Type: Action Validation
-     > Assert: [Expected outcome to verify]
-     > Command: [Test command to validate]
-
-   ## Acceptance Criteria
-
-   * [ ] All deliverables created/modified as specified
-   * [ ] [Specific functionality working as expected]
-   * [ ] All automated tests pass
-   * [ ] Documentation updated
-   * [ ] Original requirement fully addressed
-
-   ## Out of Scope
-
-   * ❌ [What won't be touched in this task]
-   * ❌ [Clear boundaries to prevent scope creep]
-
-   ## References
-
-   * Original requirement: [Link or description]
-   * Related guides: [If applicable]
-   * Dependencies: [Links to other tasks]
-
-   ```
+   * Once approved, create task files using the task template: path (dev-handbook/templates/release-tasks/task.template.md)
 
 6. **Determine Storage Location**
    * Use `bin/rc` to get current release context:
@@ -264,3 +169,101 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
 ---
 
 This workflow handles all types of input uniformly, creating consistent, well-structured tasks regardless of the source material. For specialized inputs like PR comments, use appropriate tools to fetch the data, then process through this workflow.
+
+## Embedded Templates
+
+### Task Template: path (dev-handbook/templates/release-tasks/task.template.md)
+
+````markdown
+---
+id: v.X.Y.Z+task.NN  # Generated using bin/tnid v.X.Y.Z (zero-padded format)
+status: pending
+priority: [high | medium | low]
+estimate: Nh
+dependencies: []
+---
+
+# [Task Title - Verb + Object]
+
+## 0. Directory Audit ✅
+
+_Command run:_
+```bash
+tree -L 2 [relevant-directory] | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+[insert tree output here]
+```
+
+## Objective
+
+[Why are we doing this? What value does it provide?]
+[Link back to original requirement/feedback if applicable]
+
+## Scope of Work
+
+* [What will be touched/changed]
+* [Key areas of impact]
+* [Technical components involved]
+
+### Deliverables
+
+#### Create
+
+* path/to/new/file.ext
+
+#### Modify  
+
+* path/to/existing/file.ext
+
+#### Delete
+
+* path/to/obsolete/file.ext
+
+## Phases
+
+1. Research/Analysis - [What needs to be understood]
+2. Design/Planning - [Architecture or approach decisions]
+3. Implementation - [Core development work]
+4. Testing/Validation - [How we verify success]
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] [Research/analysis task - use asterisk markers]
+  > TEST: Pre-condition Check
+  > Type: Pre-condition Check
+  > Assert: [What needs to be verified before starting]
+  > Command: [Test command if applicable]
+
+### Execution Steps
+
+* [ ] [Concrete implementation action - use hyphen markers]
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: [Expected outcome to verify]
+  > Command: [Test command to validate]
+
+## Acceptance Criteria
+
+* [ ] All deliverables created/modified as specified
+* [ ] [Specific functionality working as expected]
+* [ ] All automated tests pass
+* [ ] Documentation updated
+* [ ] Original requirement fully addressed
+
+## Out of Scope
+
+* ❌ [What won't be touched in this task]
+* ❌ [Clear boundaries to prevent scope creep]
+
+## References
+
+* Original requirement: [Link or description]
+* Related guides: [If applicable]
+* Dependencies: [Links to other tasks]
+````
