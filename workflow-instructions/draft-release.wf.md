@@ -47,83 +47,7 @@ user-provided release scope into actionable tasks.
 
 3. **Create Release Overview Document**
    * Create the release overview file at: `dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md`
-   * Use the following embedded template:
-
-   ```markdown
-   # v.X.Y.Z [Codename]
-
-   ## Release Overview
-   <!-- Brief description of the release's purpose and value proposition. -->
-
-   ## Release Information
-   - **Type**: [Major | Feature | Bug Fix]
-   - **Start Date**: YYYY-MM-DD
-   - **Target Date**: YYYY-MM-DD  
-   - **Status**: Planning
-
-   ## Collected Notes
-   <!-- Raw notes provided by the user -->
-
-   ## Goals & Requirements
-
-   ### Primary Goals
-   - [ ] <!-- Goal 1 with specific metrics -->
-   - [ ] <!-- Goal 2 with acceptance criteria -->
-   - [ ] <!-- Goal 3 with success strategy -->
-
-   ### Dependencies
-   - <!-- External dependencies -->
-   - <!-- Internal dependencies -->
-
-   ### Risks & Mitigation
-   - <!-- Risk 1: Description | Mitigation strategy -->
-   - <!-- Risk 2: Description | Mitigation strategy -->
-
-   ## Implementation Plan
-
-   ### Core Components
-   1. **Design & Architecture**
-      - [ ] <!-- Architecture decision/design task -->
-      - [ ] <!-- API design task -->
-   
-   2. **Dependencies**  
-      - [ ] <!-- Dependency setup task -->
-      - [ ] <!-- Integration task -->
-   
-   3. **Implementation Phases**
-      - [ ] <!-- Phase 1: Foundation -->
-      - [ ] <!-- Phase 2: Core features -->
-      - [ ] <!-- Phase 3: Polish and testing -->
-
-   ## Quality Assurance
-
-   ### Test Coverage
-   - [ ] Unit Tests (>80% coverage)
-   - [ ] Integration Tests
-   - [ ] Performance Tests
-   - [ ] User Acceptance Tests
-
-   ### Documentation
-   - [ ] API Documentation
-   - [ ] User Guide
-   - [ ] Developer Guide
-   - [ ] CHANGELOG Entry
-
-   ## Release Checklist
-   - [ ] All planned features implemented and tested
-   - [ ] All tests passing (unit, integration, e2e)
-   - [ ] Documentation complete and reviewed
-   - [ ] CHANGELOG.md updated with all changes
-   - [ ] Version numbers updated in relevant files
-   - [ ] Security review completed
-   - [ ] Performance benchmarks meet targets
-   - [ ] Backward compatibility verified
-   - [ ] Migration guide prepared (if needed)
-   - [ ] Release notes drafted
-
-   ## Notes
-   <!-- Additional context, decisions, or clarifications -->
-   ```
+   * Use the release overview template: path (dev-handbook/templates/release-management/release-overview.template.md)
 
 4. **Populate Overview Document**
    * Fill in the release overview with:
@@ -146,98 +70,7 @@ user-provided release scope into actionable tasks.
         * `test-cases/` - Test scenario definitions
         * `user-experience/` - UX/UI related tasks
 
-     b. Create a new task file using the embedded task template:
-
-        ```markdown
-        ---
-        id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
-        status: pending
-        priority: [high | medium | low]
-        estimate: Nh
-        dependencies: []
-        ---
-
-        # [Verb + Object]
-
-        ## 0. Directory Audit ✅
-        
-        _Command run:_
-        ```bash
-        tree -L 2 [relevant-directory] | sed 's/^/    /'
-        ```
-
-        _Result excerpt:_
-
-        ```
-        [insert tree output here]
-        ```
-
-     ## Objective
-
-        [Why are we doing this? What value does it provide?]
-
-     ## Scope of Work
-
-        * [What will be touched/changed]
-        * [Key areas of impact]
-
-     ### Deliverables
-
-     #### Create
-
-        * path/to/new/file.ext
-
-     #### Modify  
-
-        * path/to/existing/file.ext
-
-     #### Delete
-
-        * path/to/obsolete/file.ext
-
-     ## Phases
-
-        1. [Audit/Research phase]
-        2. [Design/Planning phase]
-        3. [Implementation phase]
-        4. [Testing/Validation phase]
-
-     ## Implementation Plan
-
-     ### Planning Steps
-
-        * [ ] [Research/analysis task - use asterisk markers]
-          > TEST: Pre-condition Check
-          > Type: [Pre-condition Check | Action Validation]
-          > Assert: [What needs to be verified]
-          > Command: bin/test --check-something
-
-     ### Execution Steps
-
-        * [ ] [Concrete implementation action - use hyphen markers]
-          > TEST: Action Validation
-          > Type: Action Validation
-          > Assert: [Expected outcome]
-          > Command: bin/test --verify-result
-
-     ## Acceptance Criteria
-
-        * [ ] All deliverables created/modified as specified
-        * [ ] [Specific functionality working]
-        * [ ] All automated tests pass
-        * [ ] Documentation updated
-
-     ## Out of Scope
-
-        * ❌ [What won't be touched in this task]
-        * ❌ [Clear boundaries]
-
-     ## References
-
-        * [Relevant guide or documentation]
-        * [Related task or ADR]
-
-        ```
+     b. Create a new task file using the task template: path (dev-handbook/templates/release-tasks/task.template.md)
      
      c. Key rules for task creation:
         * Use `bin/tnid v.X.Y.Z` to generate the next sequential task ID
@@ -366,3 +199,175 @@ user-provided release scope into actionable tasks.
 
 This workflow focuses on **drafting** a release in the backlog. Once development begins, the release
 moves to `current/`. For publishing completed releases, use the publish-release workflow.
+
+## Embedded Templates
+
+### Release Overview Template: path (dev-handbook/templates/release-management/release-overview.template.md)
+
+````markdown
+# v.X.Y.Z [Codename]
+
+## Release Overview
+<!-- Brief description of the release's purpose and value proposition. -->
+
+## Release Information
+- **Type**: [Major | Feature | Bug Fix]
+- **Start Date**: YYYY-MM-DD
+- **Target Date**: YYYY-MM-DD  
+- **Status**: Planning
+
+## Collected Notes
+<!-- Raw notes provided by the user -->
+
+## Goals & Requirements
+
+### Primary Goals
+- [ ] <!-- Goal 1 with specific metrics -->
+- [ ] <!-- Goal 2 with acceptance criteria -->
+- [ ] <!-- Goal 3 with success strategy -->
+
+### Dependencies
+- <!-- External dependencies -->
+- <!-- Internal dependencies -->
+
+### Risks & Mitigation
+- <!-- Risk 1: Description | Mitigation strategy -->
+- <!-- Risk 2: Description | Mitigation strategy -->
+
+## Implementation Plan
+
+### Core Components
+1. **Design & Architecture**
+   - [ ] <!-- Architecture decision/design task -->
+   - [ ] <!-- API design task -->
+
+2. **Dependencies**  
+   - [ ] <!-- Dependency setup task -->
+   - [ ] <!-- Integration task -->
+
+3. **Implementation Phases**
+   - [ ] <!-- Phase 1: Foundation -->
+   - [ ] <!-- Phase 2: Core features -->
+   - [ ] <!-- Phase 3: Polish and testing -->
+
+## Quality Assurance
+
+### Test Coverage
+- [ ] Unit Tests (>80% coverage)
+- [ ] Integration Tests
+- [ ] Performance Tests
+- [ ] User Acceptance Tests
+
+### Documentation
+- [ ] API Documentation
+- [ ] User Guide
+- [ ] Developer Guide
+- [ ] CHANGELOG Entry
+
+## Release Checklist
+- [ ] All planned features implemented and tested
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Documentation complete and reviewed
+- [ ] CHANGELOG.md updated with all changes
+- [ ] Version numbers updated in relevant files
+- [ ] Security review completed
+- [ ] Performance benchmarks meet targets
+- [ ] Backward compatibility verified
+- [ ] Migration guide prepared (if needed)
+- [ ] Release notes drafted
+
+## Notes
+<!-- Additional context, decisions, or clarifications -->
+````
+
+### Task Template: path (dev-handbook/templates/release-tasks/task.template.md)
+
+````markdown
+---
+id: v.X.Y.Z+task.N  # Generated using bin/tnid v.X.Y.Z
+status: pending
+priority: [high | medium | low]
+estimate: Nh
+dependencies: []
+---
+
+# [Verb + Object]
+
+## 0. Directory Audit ✅
+
+_Command run:_
+```bash
+tree -L 2 [relevant-directory] | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+[insert tree output here]
+```
+
+## Objective
+
+[Why are we doing this? What value does it provide?]
+
+## Scope of Work
+
+* [What will be touched/changed]
+* [Key areas of impact]
+
+### Deliverables
+
+#### Create
+
+* path/to/new/file.ext
+
+#### Modify  
+
+* path/to/existing/file.ext
+
+#### Delete
+
+* path/to/obsolete/file.ext
+
+## Phases
+
+1. [Audit/Research phase]
+2. [Design/Planning phase]
+3. [Implementation phase]
+4. [Testing/Validation phase]
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] [Research/analysis task - use asterisk markers]
+  > TEST: Pre-condition Check
+  > Type: [Pre-condition Check | Action Validation]
+  > Assert: [What needs to be verified]
+  > Command: bin/test --check-something
+
+### Execution Steps
+
+* [ ] [Concrete implementation action - use hyphen markers]
+  > TEST: Action Validation
+  > Type: Action Validation
+  > Assert: [Expected outcome]
+  > Command: bin/test --verify-result
+
+## Acceptance Criteria
+
+* [ ] All deliverables created/modified as specified
+* [ ] [Specific functionality working]
+* [ ] All automated tests pass
+* [ ] Documentation updated
+
+## Out of Scope
+
+* ❌ [What won't be touched in this task]
+* ❌ [Clear boundaries]
+
+## References
+
+* [Relevant guide or documentation]
+* [Related task or ADR]
+````
