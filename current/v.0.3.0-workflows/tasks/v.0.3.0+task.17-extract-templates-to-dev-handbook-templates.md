@@ -49,16 +49,17 @@ _Result excerpt:_
 Improve the workflow structure by extracting all template files from `dev-handbook/guides/` to a dedicated `dev-handbook/templates/` directory with proper naming conventions. This will:
 
 1. **Separate templates from guides**: Clear distinction between reusable templates and instructional guides
-2. **Implement consistent naming**: Use `.prompt.md` and `.template.md` suffixes to prevent confusion with actual documentation
-3. **Improve discoverability**: Organize templates by category for easier navigation
-4. **Prevent mixing**: Ensure templates are never mixed with real documentation when searching for files
+2. **Categorize template types**: Organize document templates, task templates, and system prompts separately
+3. **Implement consistent naming**: Use `.prompt.md` and `.template.md` suffixes to prevent confusion with actual documentation
+4. **Improve discoverability**: Organize templates by category for easier navigation
+5. **Prevent mixing**: Ensure templates are never mixed with real documentation when searching for files
 
 Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backlog/improve-the-workflow-structure.md`
 
 ## Scope of Work
 
 * **Primary Focus**: Move 27 identified template files from `dev-handbook/guides/` to `dev-handbook/templates/`
-* **Key Areas**: Code review prompts, release management templates, project initialization templates
+* **Key Areas**: System prompts, document templates, task templates, release management templates
 * **Technical Components**: File system reorganization, reference updates, link validation
 
 ### Deliverables
@@ -94,11 +95,11 @@ Link back to original requirement: `dev-taskflow/current/v.0.3.0-workflows/backl
 * `dev-handbook/guides/initialize-project-templates/what-do-we-build.md` → `dev-handbook/templates/project-docs/vision.template.md`
 
 **Project Setup Task Templates:**
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-prd.md` → `dev-handbook/templates/project-tasks/complete-prd.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-core-documentation.md` → `dev-handbook/templates/project-tasks/complete-documentation.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-create-project-roadmap.md` → `dev-handbook/templates/project-tasks/create-roadmap.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-setup-docs-project-structure.md` → `dev-handbook/templates/project-tasks/setup-structure.template.md`
-* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-archive-v000-release.md` → `dev-handbook/templates/project-tasks/archive-release.template.md`
+* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-prd.md` → `dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md`
+* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-complete-core-documentation.md` → `dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md`
+* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-create-project-roadmap.md` → `dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md`
+* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-setup-docs-project-structure.md` → `dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md`
+* `dev-handbook/guides/initialize-project-templates/v.0.0.0/tasks/TEMPLATE-archive-v000-release.md` → `dev-handbook/templates/release-v.0.0.0/05-archive-release.task.template.md`
 
 **Total:** 27 template files to be moved from `guides/` to `templates/` with proper naming conventions
 
