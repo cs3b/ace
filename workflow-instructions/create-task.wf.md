@@ -187,6 +187,7 @@ dependencies: []
 ## 0. Directory Audit ✅
 
 _Command run:_
+
 ```bash
 tree -L 2 [relevant-directory] | sed 's/^/    /'
 ```

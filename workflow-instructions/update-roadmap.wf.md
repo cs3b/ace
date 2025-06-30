@@ -60,7 +60,7 @@
    ```
 
 5. **Apply Updates Using Embedded Formats**
-   
+
    Use the roadmap table templates: path (dev-handbook/templates/release-planning/release-readme.template.md)
 
 6. **Apply Specific Updates**
@@ -217,5 +217,6 @@ This workflow maintains the strategic roadmap document, ensuring it accurately r
 | Date | Summary | Author |
 |------|---------|--------|
 | YYYY-MM-DD | [Brief change description] | [Author name] |
+
     </template>
 </templates>

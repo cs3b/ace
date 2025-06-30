@@ -59,7 +59,7 @@ Create or update user-facing documentation (e.g., README additions, tutorials, u
      - Error scenarios and troubleshooting
 
 3. **Create Documentation Structure:**
-   
+
    Use the user documentation template: path (dev-handbook/templates/user-docs/user-guide.template.md)
 
 4. **Write Clear Content:**
@@ -281,9 +281,11 @@ This workflow ensures comprehensive, user-friendly documentation that enables su
 # [Feature Name]
 
 ## Overview
+
 Brief description of what this feature does and why users would want it.
 
 ## Quick Start
+
 Minimal steps to get started with the most common use case.
 
 ```bash

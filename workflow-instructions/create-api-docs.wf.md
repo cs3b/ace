@@ -60,11 +60,11 @@ Generate or update API documentation for public interfaces (classes, modules, me
 3. **Write Documentation Comments:**
 
    **Ruby/YARD Example:**
-   
+
    Use the Ruby YARD template: path (dev-handbook/templates/code-docs/ruby-yard.template.md)
 
    **JavaScript/JSDoc Example:**
-   
+
    Use the JavaScript JSDoc template: path (dev-handbook/templates/code-docs/javascript-jsdoc.template.md)
 
 4. **Documentation Standards:**
@@ -308,46 +308,47 @@ def process(amount:, currency:, payment_method:, **options)
   # Implementation
 end
     </template>
-    
+
     <template path="{current-project-path}/src/services/PaymentService.js" template-path="dev-handbook/templates/code-docs/javascript-jsdoc.template.md">
 /**
- * Processes payment transactions using the configured gateway
- * 
- * @description This service handles payment processing including validation,
- * gateway communication, and error handling. Supports multiple payment methods.
- *
- * @param {number} amount - The payment amount in cents
- * @param {string} currency - ISO 4217 currency code
- * @param {PaymentMethod} paymentMethod - Payment method object
- * @param {Object} [options={}] - Additional options
- * @param {boolean} [options.capture=true] - Whether to capture immediately
- * @param {string} [options.idempotencyKey] - Unique key for idempotent requests
- * 
- * @returns {Promise<PaymentResult>} Promise resolving to payment result
- * 
- * @throws {InvalidAmountError} Amount must be positive
- * @throws {UnsupportedCurrencyError} Currency not supported
- * @throws {GatewayError} Gateway communication failure
- * 
- * @example
- * // Process a payment
- * const result = await paymentService.process({
- *   amount: 9999,
- *   currency: 'USD',
- *   paymentMethod: creditCard
- * });
- * 
- * @example
- * // With error handling
- * try {
- *   const result = await paymentService.process(paymentData);
- * } catch (error) {
- *   if (error instanceof InvalidAmountError) {
- *     console.error('Invalid amount:', error.message);
- *   }
- * }
- * 
- * @since 2.1.0
+
+- Processes payment transactions using the configured gateway
+-
+- @description This service handles payment processing including validation,
+- gateway communication, and error handling. Supports multiple payment methods.
+-
+- @param {number} amount - The payment amount in cents
+- @param {string} currency - ISO 4217 currency code
+- @param {PaymentMethod} paymentMethod - Payment method object
+- @param {Object} [options={}] - Additional options
+- @param {boolean} [options.capture=true] - Whether to capture immediately
+- @param {string} [options.idempotencyKey] - Unique key for idempotent requests
+-
+- @returns {Promise<PaymentResult>} Promise resolving to payment result
+-
+- @throws {InvalidAmountError} Amount must be positive
+- @throws {UnsupportedCurrencyError} Currency not supported
+- @throws {GatewayError} Gateway communication failure
+-
+- @example
+- // Process a payment
+- const result = await paymentService.process({
+- amount: 9999,
+- currency: 'USD',
+- paymentMethod: creditCard
+- });
+-
+- @example
+- // With error handling
+- try {
+- const result = await paymentService.process(paymentData);
+- } catch (error) {
+- if (error instanceof InvalidAmountError) {
+-     console.error('Invalid amount:', error.message);
+- }
+- }
+-
+- @since 2.1.0
  */
 async process({ amount, currency, paymentMethod, options = {} }) {
   // Implementation

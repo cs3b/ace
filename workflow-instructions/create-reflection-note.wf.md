@@ -63,7 +63,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
      - Example: `20240126-session-review.md`
 
 3. **Create Reflection Structure:**
-   
+
    Use the reflection template: path (dev-handbook/templates/release-reflections/retrospective.template.md)
 
 4. **Gather Reflection Content:**
@@ -275,14 +275,17 @@ This workflow helps capture valuable insights and learnings, creating a knowledg
 ## Action Items
 
 ### Stop Doing
+
 - [Practice or approach to discontinue]
 - [Ineffective pattern to avoid]
 
 ### Continue Doing
+
 - [Successful practice to maintain]
 - [Effective approach to keep using]
 
 ### Start Doing
+
 - [New practice to adopt]
 - [Improvement to implement]
 

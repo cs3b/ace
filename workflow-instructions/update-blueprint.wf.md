@@ -48,7 +48,7 @@ how to navigate the codebase.
    - Check for any additional core documentation files
 
 2. **Generate Blueprint Structure:**
-   
+
    Use the blueprint template: path (dev-handbook/templates/project-docs/blueprint.template.md)
 
 3. **Analyze Project Structure:**
@@ -185,6 +185,7 @@ Example:
 ## Project Organization
 
 ### Directory Structure
+
 ```
 
 .
@@ -201,20 +202,21 @@ Example:
 ```
 
 ### Key Files
+
 - `README.md` - Project overview and setup
 - `PRD.md` - Product requirements (if applicable)
 - `.gitignore` - Git ignore rules
 - `[build-file]` - Build configuration (package.json, Gemfile, etc.)
 
 ## Technology Stack
+
 - **Language**: [Primary language and version]
 - **Framework**: [Main framework and version]
 - **Database**: [Database system and version]
-- **Key Libraries**: 
-  - [Library 1]: [Purpose]
-  - [Library 2]: [Purpose]
+- **Key Libraries**:
 
 ## Development Workflow
+
 1. Use `bin/tn` to get next task
 2. Update task status to in-progress
 3. Implement changes following coding standards
@@ -224,17 +226,22 @@ Example:
 7. Update task status to done
 
 ## Coding Standards
+
 - [Standard 1]
 - [Standard 2]
 - [Standard 3]
 
 ## Read-Only Paths
+
 AI agents should treat these paths as read-only:
+
 - `dev-taskflow/done/**/*` - Archived releases
 - [Project-specific read-only paths]
 
 ## Ignored Paths
+
 AI agents should ignore these paths:
+
 - `.git/` - Git internals
 - `node_modules/` - Dependencies (if applicable)
 - `vendor/` - Vendor dependencies (if applicable)
@@ -244,11 +251,13 @@ AI agents should ignore these paths:
 - [Project-specific ignored paths]
 
 ## Extension Points
+
 - [Where/how to add new features]
 - [Plugin/module system if applicable]
 - [Configuration extension points]
 
 ## Core Documentation
+
 - [What We Build](./what-do-we-build.md) - Project vision and goals
 - [Architecture](./architecture.md) - Technical architecture and design
 - [Roadmap](./roadmap.md) - Release planning (if exists)

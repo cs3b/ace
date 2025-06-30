@@ -114,7 +114,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - Data exposure
 
 4. **Create Test Case Structure:**
-   
+
    Use the test case template: path (dev-handbook/templates/release-testing/test-case.template.md)
 
 5. **Generate Comprehensive Test Cases:**
@@ -219,7 +219,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    ```
 
 6. **Include Test Implementation Hints:**
-   
+
    Use the test implementation examples: path (dev-handbook/templates/release-testing/test-case.template.md)
 
 7. **Review and Refine:**
@@ -360,15 +360,18 @@ This workflow ensures thorough test coverage through systematic identification a
 **Component**: [Component/Module being tested]
 
 ### Description
+
 Brief explanation of what this test validates.
 
 ### Prerequisites
+
 - Required test data
 - System state
 - Configuration settings
 - External dependencies
 
 ### Test Steps
+
 1. [Action 1]
    - Input: [Specific data/parameters]
    - Action: [What to do]
@@ -379,17 +382,21 @@ Brief explanation of what this test validates.
    - Check: [What to verify]
 
 ### Expected Results
+
 - [Expected outcome 1]
 - [Expected outcome 2]
 - [System state after test]
 
 ### Actual Results
+
 (To be filled during test execution)
+
 - [ ] Pass
 - [ ] Fail
-- Notes: 
+- Notes:
 
 ### Test Data
+
 ```json
 {
   "input": "example",
@@ -401,7 +408,8 @@ Brief explanation of what this test validates.
 
 ## Implementation Notes
 
-### Unit Test Example (Jest/JavaScript):
+### Unit Test Example (Jest/JavaScript)
+
 ```javascript
 describe('PasswordValidator', () => {
   test('TC-001: Valid password validation', () => {
@@ -443,5 +451,6 @@ RSpec.describe 'Authentication API' do
   end
 end
 ```
+
     </template>
 </templates>

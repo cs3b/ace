@@ -49,7 +49,7 @@ Capture a compact summary of the current session (what was done, next steps, key
      - Next immediate steps
 
 2. **Generate Session Summary:**
-   
+
    Use the session log template: path (dev-handbook/templates/release-reflections/retrospective.template.md)
 
 3. **Determine Save Location:**
