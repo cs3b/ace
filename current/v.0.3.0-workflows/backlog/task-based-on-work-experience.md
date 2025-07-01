@@ -58,13 +58,131 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Item 225**: Update workflow instructions to avoid cross-references
 - **Item 229**: Compress guides into rules for current tasks
 
+### Concrete Implementation Strategies
+
+#### Strategy A: LLM-Query Integration for Labor-Intensive Workflows
+**Leverage existing `dev-tools/exe/llm-query` infrastructure for workflow optimization**
+
+- **Target workflows**: "load project context" and similar file-reading intensive operations
+- **Model selection**: Use cheapest/fastest models (gflash, haiku) for simple file concatenation and reading tasks
+- **Implementation**: Modify workflow instructions to delegate file reading to cheap models via llm-query
+- **Cost optimization**: Reduce token costs by 60-80% for context loading operations
+- **Integration points**: Workflow instructions that currently read multiple documentation files
+
+#### Strategy B: LLM-Agent Command Infrastructure  
+**Create `llm-agent` command similar to `llm-query` but for coding agent orchestration**
+
+- **API design**: Similar to llm-query but with agent+model selection (e.g., `claude:sonet`, `codex:o3`)
+- **Agent configurations**: Each coding agent needs different setup:
+  - **Claude Code**: Current directory passing, full tool access, session management
+  - **Codex/OpenAI**: API key management, limited tool subset, context boundaries
+  - **Local agents**: LM Studio integration, custom tool permissions
+- **Command structure**: `llm-agent claude:sonet "implement feature X" --context=session`
+- **Tool permissions**: Configurable tool access per agent type and model
+- **Directory management**: Automatic current directory context passing per agent
+
+#### Strategy C: Project Content Utility Command
+**Alternative approach: Build utility commands for context preparation**
+
+- **File concatenation**: Command to combine multiple project files into single context
+- **Path resolution**: Helper for agents struggling to find specific files
+- **Context templates**: Pre-built context packages for common scenarios
+- **Usage**: `project-context load-architecture` or `project-context find-file task-management`
+- **Integration**: Used by both human developers and AI agents for consistent context access
+
 ### Improvement Recommendations
 
-1. **Implement Context Caching**: Build system to cache project context and reuse across tasks
-2. **Create Agent Hierarchy**: Main agent delegates to specialized sub-agents for different tasks
-3. **Token Optimization**: Track token usage and optimize prompts for efficiency
-4. **Smart Context Loading**: Preload context on cheaper models, then transfer to premium models
-5. **Batch Processing Framework**: Group similar tasks and process with appropriate model tiers
+1. **Implement LLM-Query Workflow Integration** (Strategy A): Modify workflow instructions to delegate file-reading tasks to cheap models via existing `dev-tools/exe/llm-query` infrastructure. Target 60-80% cost reduction for context loading operations.
+
+2. **Build LLM-Agent Command Infrastructure** (Strategy B): Create `llm-agent` command with agent+model selection (`claude:sonet`, `codex:o3`) and configurable tool permissions. Enable agent orchestration with proper directory and context management.
+
+3. **Develop Project Content Utilities** (Strategy C): Build helper commands for file concatenation, path resolution, and context template management. Alternative to complex agent setups for simple context needs.
+
+4. **Create Agent Hierarchy**: Implement main agent orchestrating specialized sub-agents using the new llm-agent infrastructure. Each sub-agent handles specific task types with appropriate model tiers.
+
+5. **Implement Smart Context Caching**: Build system to cache project context and reuse across tasks, integrated with both llm-query and llm-agent commands for maximum efficiency.
+
+6. **Token Usage Optimization**: Track and optimize token consumption across all agent interactions, with specific focus on measuring cost savings from Strategy A implementations.
+
+7. **Batch Processing Framework**: Group similar tasks and process with appropriate model tiers using the new agent infrastructure for parallel execution and cost optimization.
+
+### Implementation Specifications
+
+#### Command Line Interface Specifications
+
+**LLM-Agent Command Structure:**
+```bash
+# Basic usage
+llm-agent <agent>:<model> "<task>" [options]
+
+# Examples
+llm-agent claude:sonet "implement feature X" --context=session --tools=all
+llm-agent codex:o3 "fix bug in auth.rb" --context=minimal --tools=edit,read
+llm-agent local:hermes "analyze logs" --context=files --tools=read
+
+# Options
+--context=<session|minimal|files|none>    # Context level
+--tools=<all|edit,read|read>              # Tool permissions  
+--directory=<path>                        # Working directory
+--cost-limit=<tokens>                     # Token budget limit
+--model-fallback=<model>                  # Backup model if primary fails
+```
+
+**Project-Context Command Structure:**
+```bash
+# Context loading
+project-context load-architecture         # Load arch docs
+project-context load-blueprint            # Load project structure
+project-context load-tasks               # Load current tasks
+
+# File operations  
+project-context find-file <pattern>       # Find files by pattern
+project-context concat-docs <type>        # Combine documentation
+project-context prepare-context <workflow> # Workflow-specific context
+
+# Cache management
+project-context cache-clear              # Clear cached context
+project-context cache-status             # Show cache statistics
+```
+
+#### Integration Points with Existing Infrastructure
+
+**Dev-Tools Integration:**
+- Extend `dev-tools/exe/llm-query` with agent orchestration capabilities
+- Reuse existing provider configurations (Google, LM Studio, etc.)
+- Leverage current authentication and API key management
+- Build on existing cost tracking and usage reporting
+
+**Workflow Instruction Integration:**
+- Modify `dev-handbook/workflow-instructions/load-project-context.wf.md` to use cheap models
+- Update task-related workflows to delegate context loading
+- Add agent selection guidance to workflow templates
+- Include cost optimization targets in workflow success criteria
+
+**Tool Permission Matrix:**
+| Agent Type | Read | Edit | Bash | Task | WebFetch | Git |
+|------------|------|------|------|------|----------|-----|
+| claude:sonet | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| claude:haiku | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ |
+| codex:o3 | ✓ | ✓ | Limited | ✗ | ✗ | ✓ |
+| local:hermes | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+
+#### Cost Optimization Targets
+
+**Phase 1 (Workflow Integration):**
+- Reduce context loading costs by 60-80% using cheap models for file reading
+- Target workflows: load-project-context, task preparation, documentation review
+- Expected monthly savings: $200-400 for active development teams
+
+**Phase 2 (Agent Infrastructure):**
+- Enable parallel processing with cost-aware model selection
+- Implement automatic model fallback based on task complexity
+- Target 40% overall reduction in agent orchestration costs
+
+**Phase 3 (Advanced Optimization):**
+- Context caching with 90% cache hit rate for repeated operations
+- Batch processing with optimal model selection per task type
+- Integration with existing dev-tools cost tracking for comprehensive monitoring
 
 ---
 
