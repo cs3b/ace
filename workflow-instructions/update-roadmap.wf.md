@@ -193,89 +193,51 @@ Requirements:
 This workflow maintains the strategic roadmap document, ensuring it accurately reflects project direction and current release status through structured validation and updates.
 
 <templates>
-    <template path="dev-handbook/templates/release-planning/release-readme.template.md"># v.x.x.x [Codename]
+    <template path="dev-handbook/templates/project-docs/roadmap/roadmap.template.md">---
+title: Project Roadmap
+last_reviewed: YYYY-MM-DD
+status: [draft|active|archived]
+---
 
-## Release Overview
+# Project Roadmap
 
-Brief description of the release's main purpose and value proposition.
+## 1. Project Vision
 
-## Release Information
+[Inspirational statement describing the long-term mission and value the project brings to users. Keep concise (1-3 sentences) and focused on outcomes rather than technical details.]
 
-* **Type**: [Major | Feature | Bug Fix]
-* **Start Date**: YYYY-MM-DD
-* **Target Date**: YYYY-MM-DD
-* **Release Date**: YYYY-MM-DD
-* **Status**: [Planning | In Progress | Released]
+## 2. Strategic Objectives
 
-## Goals & Requirements
+| # | Objective | Success Metric |
+|---|-----------|----------------|
+| 1 | [Outcome-focused objective] | [Measurable criteria] |
+| 2 | [Outcome-focused objective] | [Measurable criteria] |
 
-### Primary Goals
+## 3. Key Themes & Epics
 
-* [ ] Goal 1
-  * Success Metrics:
-  * Acceptance Criteria:
-  * Implementation Strategy:
-  * Dependencies & Status:
-  * Risks & Mitigations:
+| Theme | Description | Linked Epics |
+|-------|-------------|-------------|
+| [Theme Name] | [Brief description of theme purpose] | [Epic identifiers] |
+| [Theme Name] | [Brief description of theme purpose] | [Epic identifiers] |
 
-## Implementation Plan
+## 4. Planned Major Releases
 
-### Core Components
+| Version | Codename | Target Window | Goals | Key Epics |
+|---------|----------|---------------|-------|-----------|
+| v.X.Y.Z | "[Name]" | QX YYYY | [Primary goals] | [Related epics] |
+| v.X.Y.Z | "[Name]" | QX YYYY | [Primary goals] | [Related epics] |
 
-1. **Design & Architecture**:
-   * [ ] Public interfaces
-   * [ ] Class/module structure
-   * [ ] Breaking changes & migrations
+## 5. Cross-Release Dependencies
 
-   ```ruby
-   # Core interfaces/components needed
-   ```
+* [Dependency description linking specific epics/releases]
+* [Dependency description linking specific epics/releases]
 
-2. **Dependencies**:
-   * [ ] External gems
-   * [ ] Internal components
-   * [ ] Configuration changes
+## 6. Update History
 
-3. **Implementation Phases**:
-   * [ ] Phase 1: Preparation
-     * Setup & infrastructure
-     * Interface definitions
-   * [ ] Phase 2: Core Development
-     * Component implementations
-     * Integration work
-   * [ ] Phase 3: Testing & Validation
-     * Unit & integration tests
-     * Performance benchmarks
-   * [ ] Phase 4: Documentation & Release
-     * API docs & examples
-     * Release preparation
+| Date | Summary | Author |
+|------|---------|--------|
+| YYYY-MM-DD | [Brief change description] | [Author name] |
+| YYYY-MM-DD | Initial roadmap creation | [Author name] |
 
-## Quality Assurance
-
-### Test Coverage
-
-* [ ] Unit Tests
-  * Core functionality
-  * Edge cases
-* [ ] Integration Tests
-  * Component interaction
-  * System integration
-* [ ] Performance Tests
-  * Benchmarks
-  * Load testing
-
-## Release Checklist
-
-* [ ] All features implemented
-* [ ] Tests passing & coverage met
-* [ ] Documentation complete
-  * API documentation
-  * Usage examples
-  * Migration guide
-* [ ] Performance verified
-* [ ] Security review complete
-* [ ] CHANGELOG updated
-* [ ] Release notes prepared
 </template>
 
 </templates>
