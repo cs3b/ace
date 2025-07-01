@@ -158,42 +158,15 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
 ### Feature Implementation
 
-```
-feat(module): implement new functionality
-
-- Add main feature logic
-- Include comprehensive tests
-- Update documentation
-
-Implements #task-id
-```
+Use the feature implementation template for new functionality (see embedded template below).
 
 ### Bug Fix
 
-```
-fix(component): resolve issue with data handling
-
-Root cause: Incorrect null check in process method
-Solution: Add proper validation before processing
-
-- Fix null pointer exception
-- Add test cases for edge scenarios
-- Update error messages
-
-Fixes #bug-id
-```
+Use the bug fix template for resolving issues (see embedded template below).
 
 ### Refactoring
 
-```
-refactor(service): simplify request handling logic
-
-- Extract common patterns to helper methods
-- Reduce code duplication
-- Improve readability
-
-No functional changes
-```
+Use the refactoring template for code improvements without functional changes (see embedded template below).
 
 ## Common Patterns
 
@@ -280,3 +253,38 @@ git filter-branch --force --index-filter \
 ## Usage Example
 >
 > "I've finished implementing the user authentication feature. Help me commit these changes properly."
+
+<templates>
+<template path="dev-handbook/templates/commit/feature-implementation.template.md">
+feat(module): implement new functionality
+
+- Add main feature logic
+- Include comprehensive tests
+- Update documentation
+
+Implements #task-id
+</template>
+
+<template path="dev-handbook/templates/commit/bug-fix.template.md">
+fix(component): resolve issue with data handling
+
+Root cause: Incorrect null check in process method
+Solution: Add proper validation before processing
+
+- Fix null pointer exception
+- Add test cases for edge scenarios
+- Update error messages
+
+Fixes #bug-id
+</template>
+
+<template path="dev-handbook/templates/commit/refactoring.template.md">
+refactor(service): simplify request handling logic
+
+- Extract common patterns to helper methods
+- Reduce code duplication
+- Improve readability
+
+No functional changes
+</template>
+</templates>
