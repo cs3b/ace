@@ -49,7 +49,8 @@
 
 **Task 36 Fix**: Updated `dev-handbook/workflow-instructions/create-adr.wf.md` line 80 from `docs/architecture-decisions/` to `docs/decisions/` to align with canonical ADR storage location.
 
-**Task 35 Fix**: 
+**Task 35 Fix**:
+
 - Created new template `dev-handbook/templates/project-docs/roadmap/roadmap.template.md` following roadmap-definition.g.md structure
 - Updated `dev-handbook/workflow-instructions/update-roadmap.wf.md` template reference from release-readme.template.md to roadmap.template.md
 - Removed irrelevant release template content from the workflow

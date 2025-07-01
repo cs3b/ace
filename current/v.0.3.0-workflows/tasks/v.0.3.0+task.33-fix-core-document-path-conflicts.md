@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.33
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -132,24 +132,24 @@ Resolve critical path inconsistencies across workflow files where some workflows
 
 ### Planning Steps
 
-* [ ] Analyze all workflow files for references to core documents
+* [x] Analyze all workflow files for references to core documents
   > TEST: Path Reference Audit
   > Type: Pre-condition Check
   > Assert: All core document references are identified and catalogued
   > Command: bin/test --check-core-doc-references
-* [ ] Verify canonical locations of core documents in `docs/` directory
-* [ ] Document current inconsistencies and required changes
+* [x] Verify canonical locations of core documents in `docs/` directory
+* [x] Document current inconsistencies and required changes
 
 ### Execution Steps
 
-* [ ] Fix initialize-project-structure.wf.md "Project Context Loading" section paths
-* [ ] Fix update-blueprint.wf.md target file path from dev-taskflow/ to docs/
+* [x] Fix initialize-project-structure.wf.md "Project Context Loading" section paths
+* [x] Fix update-blueprint.wf.md target file path from dev-taskflow/ to docs/
   > TEST: Verify Blueprint Path Update
   > Type: Action Validation
   > Assert: update-blueprint.wf.md correctly targets docs/blueprint.md
   > Command: bin/test --check-workflow-paths dev-handbook/workflow-instructions/update-blueprint.wf.md
-* [ ] Update load-project-context.wf.md if path conflicts exist
-* [ ] Verify all workflow files use consistent `docs/` references for core documents
+* [x] Update load-project-context.wf.md if path conflicts exist
+* [x] Verify all workflow files use consistent `docs/` references for core documents
   > TEST: Verify Core Document Path Consistency
   > Type: Action Validation
   > Assert: All workflows reference core documents in docs/ directory consistently
@@ -157,10 +157,10 @@ Resolve critical path inconsistencies across workflow files where some workflows
 
 ## Acceptance Criteria
 
-* [ ] AC 1: All workflow files reference core documents (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) consistently in the `docs/` directory
-* [ ] AC 2: initialize-project-structure.wf.md "Project Context Loading" section points to correct `docs/` paths
-* [ ] AC 3: update-blueprint.wf.md targets the correct `docs/blueprint.md` file
-* [ ] AC 4: No workflow files contain conflicting path references to core documents
+* [x] AC 1: All workflow files reference core documents (`what-do-we-build.md`, `architecture.md`, `blueprint.md`) consistently in the `docs/` directory
+* [x] AC 2: initialize-project-structure.wf.md "Project Context Loading" section points to correct `docs/` paths
+* [x] AC 3: update-blueprint.wf.md targets the correct `docs/blueprint.md` file
+* [x] AC 4: No workflow files contain conflicting path references to core documents
 
 ## Out of Scope
 
