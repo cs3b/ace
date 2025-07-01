@@ -1,4 +1,4 @@
-# Workflow Instruction: Breakdown Notes into Tasks
+# Create Tasks
 
 ## Goal
 
@@ -183,18 +183,26 @@ dependencies: [<ticket-ids>]
 
 # <Verb + Object>
 
-## 0. Directory Audit ✅
+## 0. Context Audit ✅
 
-_Command run:_
+_Optional: Run relevant audit command based on task requirements_
+
+_Command run (example):_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+# Choose appropriate command based on task context:
+# For guides/documentation: tree -L 2 dev-handbook/guides | sed 's/^/    /'
+# For code structure: tree -L 3 lib/ | sed 's/^/    /'
+# For test files: find spec/ -name "*.rb" -type f | head -10
+# For general overview: ls -la
+
+<insert relevant command here>
 ```
 
 _Result excerpt:_
 
 ```
-<insert tree here>
+<insert audit results here>
 ```
 
 ## Objective
