@@ -2,7 +2,7 @@
 
 ## Goal
 
-Update the `dev-taskflow/blueprint.md` file with a concise summary of the current project structure, key files, and
+Update the `docs/blueprint.md` file with a concise summary of the current project structure, key files, and
 links to core project documents. The blueprint provides essential orientation for developers and AI agents to quickly
 understand the project organization.
 
@@ -20,9 +20,9 @@ how to navigate the codebase.
 
 ## Project Context Loading
 
-- Check existing blueprint: `dev-taskflow/blueprint.md`
-- Load project overview: `dev-taskflow/what-do-we-build.md`
-- Load architecture: `dev-taskflow/architecture.md`
+- Check existing blueprint: `docs/blueprint.md`
+- Load project overview: `docs/what-do-we-build.md`
+- Load architecture: `docs/architecture.md`
 - Review current directory structure
 
 ## High-Level Execution Plan
@@ -44,7 +44,7 @@ how to navigate the codebase.
 ## Process Steps
 
 1. **Identify Core Project Documents:**
-   - Verify `dev-taskflow/what-do-we-build.md` and `dev-taskflow/architecture.md` are present
+   - Verify `docs/what-do-we-build.md` and `docs/architecture.md` are present
    - Check for any additional core documentation files
 
 2. **Generate Blueprint Structure:**
@@ -87,7 +87,7 @@ how to navigate the codebase.
 8. **Update Links and Save:**
    - Ensure all internal document links are correct
    - Verify file paths are relative to blueprint location
-   - Save the updated `dev-taskflow/blueprint.md` file
+   - Save the updated `docs/blueprint.md` file
 
 ## Common Directory Patterns
 
@@ -140,7 +140,7 @@ infra/        # Infrastructure config
 
 ## Output / Success Criteria
 
-- `dev-taskflow/blueprint.md` file is created or updated
+- `docs/blueprint.md` file is created or updated
 - Contains accurate directory structure representation
 - Technology stack is correctly identified
 - Key files are listed with descriptions
