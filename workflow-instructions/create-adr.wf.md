@@ -77,7 +77,7 @@ Create an ADR when:
    - Would a developer in 2 years understand why this decision was made?
 
 7. **Save and Commit:**
-   - Save the ADR in `docs/architecture-decisions/`
+   - Save the ADR in `docs/decisions/`
    - Commit with a message like: "docs: Add ADR-XXX for [decision topic]"
    - Update any related documentation that references this decision
 
