@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.36
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -129,22 +129,22 @@ Fix the incorrect directory path reference in `create-adr.wf.md` Step 7, which c
 
 ### Planning Steps
 
-* [ ] Locate Step 7 in create-adr.wf.md and identify the incorrect path reference
+* [x] Locate Step 7 in create-adr.wf.md and identify the incorrect path reference
   > TEST: Path Reference Location
   > Type: Pre-condition Check
   > Assert: Incorrect path reference in Step 7 is identified
   > Command: bin/test --check-adr-path-reference
-* [ ] Verify the canonical ADR directory location in project structure
-* [ ] Check for other potential path references that might need updating
+* [x] Verify the canonical ADR directory location in project structure
+* [x] Check for other potential path references that might need updating
 
 ### Execution Steps
 
-* [ ] Update Step 7 path reference from `docs/architecture-decisions/` to `docs/decisions/`
+* [x] Update Step 7 path reference from `docs/architecture-decisions/` to `docs/decisions/`
   > TEST: Verify Path Update
   > Type: Action Validation
   > Assert: create-adr.wf.md Step 7 references correct docs/decisions/ path
   > Command: bin/test --check-corrected-adr-path dev-handbook/workflow-instructions/create-adr.wf.md
-* [ ] Verify no other incorrect path references exist in the workflow
+* [x] Verify no other incorrect path references exist in the workflow
   > TEST: Complete Path Consistency Check
   > Type: Action Validation
   > Assert: All path references in create-adr.wf.md are correct
@@ -152,10 +152,10 @@ Fix the incorrect directory path reference in `create-adr.wf.md` Step 7, which c
 
 ## Acceptance Criteria
 
-* [ ] AC 1: create-adr.wf.md Step 7 references the correct `docs/decisions/` directory
-* [ ] AC 2: No incorrect `docs/architecture-decisions/` references remain in the workflow
-* [ ] AC 3: Path references are consistent with canonical project structure
-* [ ] AC 4: Workflow will correctly create ADRs in the proper location
+* [x] AC 1: create-adr.wf.md Step 7 references the correct `docs/decisions/` directory
+* [x] AC 2: No incorrect `docs/architecture-decisions/` references remain in the workflow
+* [x] AC 3: Path references are consistent with canonical project structure
+* [x] AC 4: Workflow will correctly create ADRs in the proper location
 
 ## Out of Scope
 

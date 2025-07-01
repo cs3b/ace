@@ -55,11 +55,13 @@
 ## Technical Details
 
 **Standardization Pattern Applied:**
-- From: `dev-taskflow/decisions/` or `current/*/decisions/` 
+
+- From: `dev-taskflow/decisions/` or `current/*/decisions/`
 - To: `docs/decisions/` (for permanent ADRs)
 - Preserved: `dev-taskflow/current/*/decisions/` (for temporal decisions)
 
 **Files Successfully Updated:**
+
 - `docs/architecture.md` - Added documentation distinction section
 - `CHANGELOG.md` - Updated read-only paths
 - `dev-handbook/guides/code-review/README.md` - Updated ADR collection paths
@@ -70,6 +72,7 @@
 - `docs/blueprint.md` - Added handbook_review to read-only paths
 
 **Verification Results:**
+
 - No broken links introduced
 - All acceptance criteria met
 - Task metadata linter passed
