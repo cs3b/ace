@@ -24,6 +24,7 @@ The Coding Agent Workflow Toolkit contains 16 workflow instruction files that em
 ### Analysis from Template Standardization Work
 
 Analysis of 16 workflow files revealed:
+
 - **5,291 four-tick instances** requiring review for conversion
 - **66 template references** needing structured metadata
 - **12 files with embeddable templates** requiring systematic organization
@@ -125,7 +126,7 @@ All embedded templates in workflow instruction files must use XML-based embeddin
 
 ## References
 
-- **Implementation Tasks**: 
+- **Implementation Tasks**:
   - v.0.3.0+task.21: Standardize Template Embedding Format
   - v.0.3.0+task.22: Implement Template Sync Script
 - **Analysis**: Template embedding format standardization research
@@ -154,6 +155,7 @@ estimate: 4h
 ## Objective
 [Description here]
 ````
+
 ````
 
 ### After: XML Template Format

@@ -24,6 +24,7 @@ The Coding Agent Workflow Toolkit contained 27 template files scattered througho
 ### Analysis from Template Extraction Work
 
 Survey of `dev-handbook/guides/` revealed:
+
 - **27 template files** scattered across 8 different directories
 - **5 different naming conventions** used inconsistently
 - **No clear categorization** by template type or purpose  
