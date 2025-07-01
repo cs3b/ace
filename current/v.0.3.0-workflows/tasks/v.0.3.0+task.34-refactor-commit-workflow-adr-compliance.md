@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.34
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -137,30 +137,30 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 
 ### Planning Steps
 
-* [ ] Analyze current commit.wf.md template structure and identify all embedded templates
+* [x] Analyze current commit.wf.md template structure and identify all embedded templates
   > TEST: Template Structure Analysis
   > Type: Pre-condition Check
   > Assert: All commit message templates are identified and catalogued
   > Command: bin/test --check-commit-templates
-* [ ] Review ADR-002 requirements for XML template format
-* [ ] Plan template file organization in dev-handbook/templates/commit/ directory
+* [x] Review ADR-002 requirements for XML template format
+* [x] Plan template file organization in dev-handbook/templates/commit/ directory
 
 ### Execution Steps
 
-* [ ] Create dev-handbook/templates/commit/ directory structure
-* [ ] Extract conventional commit template to separate file
-  > TEST: Verify Conventional Commit Template
+* [x] Create dev-handbook/templates/commit/ directory structure
+* [x] Extract feature implementation commit template to separate file
+  > TEST: Verify Feature Implementation Template
   > Type: Action Validation
-  > Assert: Conventional commit template is properly extracted and formatted
-  > Command: bin/test --check-template-file dev-handbook/templates/commit/conventional-commit.template.md
-* [ ] Extract intention-based commit template to separate file
-* [ ] Extract multi-repo commit template to separate file
-* [ ] Update commit.wf.md to use XML `<templates>` format with proper path references
+  > Assert: Feature implementation template is properly extracted and formatted
+  > Command: bin/test --check-template-file dev-handbook/templates/commit/feature-implementation.template.md
+* [x] Extract bug fix commit template to separate file
+* [x] Extract refactoring commit template to separate file
+* [x] Update commit.wf.md to use XML `<templates>` format with proper path references
   > TEST: Verify XML Template Embedding
   > Type: Action Validation
   > Assert: commit.wf.md uses proper XML template embedding format
   > Command: bin/test --check-xml-templates dev-handbook/workflow-instructions/commit.wf.md
-* [ ] Verify template synchronization system can discover new templates
+* [x] Verify template synchronization system can discover new templates
   > TEST: Template Sync Compatibility
   > Type: Action Validation
   > Assert: Template sync system can process commit templates
@@ -168,10 +168,10 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 
 ## Acceptance Criteria
 
-* [ ] AC 1: commit.wf.md uses XML `<templates>` format instead of markdown code blocks
-* [ ] AC 2: All commit message templates are extracted to dev-handbook/templates/commit/ directory
-* [ ] AC 3: Template synchronization system can discover and process the extracted templates
-* [ ] AC 4: Workflow complies with ADR-002 XML template embedding requirements
+* [x] AC 1: commit.wf.md uses XML `<templates>` format instead of markdown code blocks
+* [x] AC 2: All commit message templates are extracted to dev-handbook/templates/commit/ directory
+* [x] AC 3: Template synchronization system can discover and process the extracted templates
+* [x] AC 4: Workflow complies with ADR-002 XML template embedding requirements
 
 ## Out of Scope
 
