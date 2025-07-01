@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.37
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -130,27 +130,27 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
 
 ### Planning Steps
 
-* [ ] Review current create-task.wf.md structure and identify naming inconsistencies
+* [x] Review current create-task.wf.md structure and identify naming inconsistencies
   > TEST: Naming Consistency Analysis
   > Type: Pre-condition Check
   > Assert: Title-filename mismatch and overly specific audit step are identified
   > Command: bin/test --check-workflow-naming-consistency
-* [ ] Determine appropriate generalization for directory audit step
-* [ ] Consider making directory audit step optional or contextual
+* [x] Determine appropriate generalization for directory audit step
+* [x] Consider making directory audit step optional or contextual
 
 ### Execution Steps
 
-* [ ] Update H1 title from "Breakdown Notes into Tasks" to "Create Tasks"
+* [x] Update H1 title from "Breakdown Notes into Tasks" to "Create Tasks"
   > TEST: Verify Title Update
   > Type: Action Validation
   > Assert: Workflow title matches filename convention
   > Command: bin/test --check-workflow-title dev-handbook/workflow-instructions/create-task.wf.md
-* [ ] Generalize directory audit step to be less specific than `dev-handbook/guides`
+* [x] Generalize directory audit step to be less specific than `dev-handbook/guides`
   > TEST: Verify Directory Audit Generalization
   > Type: Action Validation
   > Assert: Directory audit step is appropriately generalized
   > Command: bin/test --check-audit-step-generalization dev-handbook/workflow-instructions/create-task.wf.md
-* [ ] Update embedded template to reflect the generalized directory audit approach
+* [x] Update embedded template to reflect the generalized directory audit approach
   > TEST: Template Consistency Check
   > Type: Action Validation
   > Assert: Embedded template reflects generalized approach
@@ -158,10 +158,10 @@ Standardize the naming inconsistency in `create-task.wf.md` by updating the H1 t
 
 ## Acceptance Criteria
 
-* [ ] AC 1: Workflow H1 title is "Create Tasks" matching the filename convention
-* [ ] AC 2: Directory audit step is generalized and not overly specific to `dev-handbook/guides`
-* [ ] AC 3: Workflow maintains its functionality while being more broadly applicable
-* [ ] AC 4: Embedded template reflects the updated approach
+* [x] AC 1: Workflow H1 title is "Create Tasks" matching the filename convention
+* [x] AC 2: Directory audit step is generalized and not overly specific to `dev-handbook/guides`
+* [x] AC 3: Workflow maintains its functionality while being more broadly applicable
+* [x] AC 4: Embedded template reflects the updated approach
 
 ## Out of Scope
 
