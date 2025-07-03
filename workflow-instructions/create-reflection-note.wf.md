@@ -246,7 +246,7 @@ Capture observations about development workflow effectiveness and areas for opti
 
 This workflow helps capture valuable insights and learnings, creating a knowledge base that improves future development work.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/release-reflections/retrospective.template.md">
 # Reflection: [Topic/Date]
 
@@ -297,4 +297,4 @@ This workflow helps capture valuable insights and learnings, creating a knowledg
 
 (Optional: Links to relevant PRs, tasks, or documentation)
     </template>
-</templates>
+</documents>

@@ -276,7 +276,7 @@ Create learning-oriented guides that walk users through complete workflows.
 
 This workflow ensures comprehensive, user-friendly documentation that enables successful adoption and use of your features.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/user-docs/user-guide.template.md">
 # [Feature Name]
 
@@ -377,4 +377,4 @@ A: Clear, helpful answer.
 - External documentation
 - Video tutorials
     </template>
-</templates>
+</documents>

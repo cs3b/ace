@@ -200,7 +200,7 @@ New features require:
 
 This workflow ensures tasks are thoroughly vetted before implementation, reducing rework and improving quality through systematic review.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/release-tasks/task.template.md">---
 id: <run bin/tnid to generate ID>
 status: pending
@@ -440,4 +440,4 @@ Why are we doing this?
 - [ ] Step 3: Who and when
 </template>
 
-</templates>
+</documents>

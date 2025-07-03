@@ -192,7 +192,7 @@ Requirements:
 
 This workflow maintains the strategic roadmap document, ensuring it accurately reflects project direction and current release status through structured validation and updates.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/project-docs/roadmap/roadmap.template.md">---
 title: Project Roadmap
 last_reviewed: YYYY-MM-DD
@@ -240,4 +240,4 @@ status: [draft|active|archived]
 
 </template>
 
-</templates>
+</documents>

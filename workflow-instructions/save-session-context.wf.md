@@ -230,7 +230,7 @@ This workflow enables efficient context preservation and restoration, critical f
 
 Reference the session context template for creating compact session logs.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/session-management/session-context.template.md">
 # Compact Session Log: YYYY-MM-DD HH:MM:SS
 
@@ -304,4 +304,4 @@ git status
 
 ---
     </template>
-</templates>
+</documents>

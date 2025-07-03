@@ -254,7 +254,7 @@ git filter-branch --force --index-filter \
 >
 > "I've finished implementing the user authentication feature. Help me commit these changes properly."
 
-<templates>
+<documents>
 <template path="dev-handbook/templates/commit/feature-implementation.template.md">
 feat(module): implement new functionality
 
@@ -287,4 +287,4 @@ refactor(service): simplify request handling logic
 
 No functional changes
 </template>
-</templates>
+</documents>

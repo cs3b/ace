@@ -260,7 +260,7 @@ Integrate API documentation generation into the build process for automatic upda
 
 This workflow ensures comprehensive, consistent API documentation that helps developers understand and use your code effectively.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/code-docs/ruby-yard.template.md"># Ruby YARD Documentation Template
 
 ```ruby
@@ -434,4 +434,4 @@ function functionName(parameterName, anotherParam, options = {}) {
 7. **Include version information for new features**
 </template>
 
-</templates>
+</documents>

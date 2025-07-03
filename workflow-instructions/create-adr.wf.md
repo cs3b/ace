@@ -124,7 +124,7 @@ Create an ADR when:
 - ADR-004-choose-postgresql-over-mongodb
 - ADR-005-use-jwt-for-authentication
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/project-docs/decisions/adr.template.md"># ADR-XXX: Title of the Decision
 
 ## Status
@@ -178,4 +178,4 @@ What becomes easier or more difficult to do because of this change?
 - Blog posts
 </template>
 
-</templates>
+</documents>

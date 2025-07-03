@@ -200,7 +200,7 @@ user-provided release scope into actionable tasks.
 This workflow focuses on **drafting** a release in the backlog. Once development begins, the release
 moves to `current/`. For publishing completed releases, use the publish-release workflow.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/release-management/release-overview.template.md">
 # v.X.Y.Z [Codename]
 
@@ -383,4 +383,4 @@ Why are we doing this?
 
 ```
 </template>
-</templates>
+</documents>

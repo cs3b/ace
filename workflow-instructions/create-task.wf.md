@@ -172,7 +172,7 @@ This workflow handles all types of input uniformly, creating consistent, well-st
 
 ## Embedded Templates
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/release-tasks/task.template.md">---
 id: <run bin/tnid to generate ID>
 status: pending
@@ -270,4 +270,4 @@ Why are we doing this?
 
 ```
 </template>
-</templates>
+</documents>

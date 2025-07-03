@@ -178,7 +178,7 @@ Example:
 - Include sensitive information
 - Use absolute file paths
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/project-docs/blueprint.template.md"># Project Blueprint: [Project Name]
 
 ## What is a Blueprint?
@@ -336,4 +336,4 @@ bin/build
 
 *This blueprint should be updated when significant structural changes are made to the project. Use the `update-blueprint` workflow to keep it current.*
 </template>
-</templates>
+</documents>

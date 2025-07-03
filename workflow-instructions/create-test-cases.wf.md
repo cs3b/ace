@@ -351,7 +351,7 @@ Create performance test cases to establish and maintain system performance stand
 
 This workflow ensures thorough test coverage through systematic identification and documentation of test scenarios across all testing levels.
 
-<templates>
+<documents>
     <template path="dev-handbook/templates/release-testing/test-case.template.md"># Test Cases: [Feature Name]
 
 ## Test Case: [TC-001] [Descriptive Name]
@@ -458,4 +458,4 @@ def test_feature_name():
 ```
 
 </template>
-</templates>
+</documents>
