@@ -59,8 +59,7 @@ development tasks, intended for AI or human execution.
   * `load-env.wf.md`: Instructs on loading the development environment context.
   * `work-on-task.wf.md`: Defines the process for starting, working on, and completing a development task.
   * `review-task.wf.md`: Guides the review and refinement of a task definition.
-  * `breakdown-notes-into-tasks/`: Contains sub-workflows to process various
-  inputs (FRDs, PRDs, diffs, etc.) into structured notes for task creation.
+  * `create-task.wf.md`: Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
   * *(Other workflow instructions as developed, e.g., `refactor-codebase.md`,
   `run-tests-and-report.md`)*
 * **`tools/`**: (This directory might be added for utility scripts)
