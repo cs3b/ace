@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.41
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.3.0+task.40]
@@ -40,25 +40,25 @@ Update the template synchronization guides to reflect the new universal document
 
 ### Planning Steps
 
-* [ ] Analyze current guides to identify all sections requiring updates
-* [ ] Review Task 40 implementation to understand new system capabilities
-* [ ] Plan guide restructuring to cover both templates and guides
+* [x] Analyze current guides to identify all sections requiring updates
+* [x] Review Task 40 implementation to understand new system capabilities
+* [x] Plan guide restructuring to cover both templates and guides
 
 ### Execution Steps
 
-* [ ] Step 1: Create updated document-synchronization.md with new format examples
+* [x] Step 1: Create updated document-synchronization.md with new format examples
   > TEST: Guide Content Validation
   > Type: Action Validation
   > Assert: All XML examples use <documents> format
   > Command: rg "<templates>" dev-handbook/guides/document-synchronization.md
-* [ ] Step 2: Add guide embedding documentation and examples
-* [ ] Step 3: Update directory structure section to include guides
-* [ ] Step 4: Reference ADR-004 and ADR-005 in architecture decisions
-* [ ] Step 5: Create updated document-sync-operations.md with new commands
-* [ ] Step 6: Update all bash validation scripts for <documents> format
-* [ ] Step 7: Add troubleshooting section for guide validation
-* [ ] Step 8: Remove old template-synchronization.md and template-sync-operations.md files
-* [ ] Step 9: Update any references to old guide names in other documentation
+* [x] Step 2: Add guide embedding documentation and examples
+* [x] Step 3: Update directory structure section to include guides
+* [x] Step 4: Reference ADR-004 and ADR-005 in architecture decisions
+* [x] Step 5: Create updated document-sync-operations.md with new commands
+* [x] Step 6: Update all bash validation scripts for <documents> format
+* [x] Step 7: Add troubleshooting section for guide validation
+* [x] Step 8: Remove old template-synchronization.md and template-sync-operations.md files
+* [x] Step 9: Update any references to old guide names in other documentation
   > TEST: Reference Update Validation
   > Type: Action Validation
   > Assert: No references to old guide names remain
@@ -66,13 +66,13 @@ Update the template synchronization guides to reflect the new universal document
 
 ## Acceptance Criteria
 
-* [ ] AC 1: New guides document <documents> format as primary approach
-* [ ] AC 2: All XML examples use universal document embedding format
-* [ ] AC 3: Guide embedding is documented with examples
-* [ ] AC 4: All bash commands and scripts updated for new format
-* [ ] AC 5: ADR-004 and ADR-005 are referenced appropriately
-* [ ] AC 6: Old template-specific guides are removed
-* [ ] AC 7: All references to old guides are updated
+* [x] AC 1: New guides document <documents> format as primary approach
+* [x] AC 2: All XML examples use universal document embedding format
+* [x] AC 3: Guide embedding is documented with examples
+* [x] AC 4: All bash commands and scripts updated for new format
+* [x] AC 5: ADR-004 and ADR-005 are referenced appropriately
+* [x] AC 6: Old template-specific guides are removed
+* [x] AC 7: All references to old guides are updated
 
 ## Out of Scope
 

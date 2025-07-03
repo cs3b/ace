@@ -79,6 +79,7 @@ end
 ### Document Type Validation
 
 Implemented path validation that differs by document type:
+
 - Templates: Must be in `dev-handbook/templates/` with `.template.md` extension
 - Guides: Must be in `dev-handbook/guides/` with `.g.md` extension
 
@@ -95,6 +96,7 @@ Successfully migrated 14 workflow files from `<templates>` to `<documents>` form
 - **Enhanced Sync Script**: [dev-tools/exe-old/markdown-sync-embedded-documents](../../../dev-tools/exe-old/markdown-sync-embedded-documents)
 
 ### Commits
+
 - Dev-handbook: `eda2c2a` - feat: Implement document embedding system
 - Dev-taskflow: `d3b39ac` - feat: Implement universal document embedding system  
 - Main: `263f8e4` - feat: Implement universal document embedding system

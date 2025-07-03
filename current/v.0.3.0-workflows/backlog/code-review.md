@@ -2,7 +2,30 @@
 
 Reviewing changes is important, we should use models that works on large context (agent usually cannot do this on scale).
 
-We have current: \
+In the end we should have
+
+# System Prompt
+
+- review code
+- review tests
+- review docs
+
+# What we Review
+
+- diff (or filtered diff)
+- files (tree, part of tree )
+
+# Context Project
+
+- we load project review (usually what we have in dev-handbook/workflow-instructions/load-project-context.wf.md -> docs/**/*.md)
+
+# Examples
+
+- review my diff from recent tag to HEAD use mixed prompt (review code / tests / docs ) and add context of project
+- review my whole lib/**/* using review code prompt
+- review my docs against recent changes in diff, and point me to what documentation should we update, what adr create
+
+We have currently:
 
 Tools:
 ######
