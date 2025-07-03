@@ -56,7 +56,7 @@ read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.m
 ## Notes
 
 - Each command should reference exactly one workflow file
-- The `@` prefix references files relative to project root
+- The `@file:` reference must use the correct relative path
 - Always include the commit instruction at the end
 - Commands should be concise and follow the established pattern
 
