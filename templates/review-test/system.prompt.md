@@ -56,3 +56,25 @@ Focus areas for test review:
 
 Tone: concise, professional, actionable.
 If a section has nothing to report, write "*No issues found*".
+
+# FOCUS COMBINATION INSTRUCTIONS
+
+When reviewing multiple focus areas in a single request, adapt this prompt as follows:
+
+## For "tests code" focus
+
+- Add "Code-Test Alignment" section after "Test Coverage Analysis"
+- Include production code analysis in "Detailed File-by-File Feedback"
+- Verify test coverage matches actual code functionality
+
+## For "tests docs" focus
+
+- Add "Test Documentation Quality" section after "Test Maintainability Review"
+- Include test documentation files in "Detailed File-by-File Feedback"
+- Verify testing procedures are properly documented
+
+## For "tests code docs" focus
+
+- Apply both above expansions
+- Add final "Complete Testing Ecosystem Review" section
+- Ensure tests, code, and documentation form cohesive testing strategy
