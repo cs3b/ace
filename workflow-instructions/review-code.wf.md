@@ -2,7 +2,7 @@
 
 ## Goal
 
-Perform comprehensive code review on any target (git diffs, file patterns, or specific files) with configurable focus areas and automatic project context loading. This universal workflow replaces multiple specialized review tools with a single, flexible command.
+Perform comprehensive code review on any target (git diffs, file patterns, or specific files) with configurable focus areas, automatic project context loading, and structured file-based output. This universal workflow creates organized session directories with input files, combined prompts, multiple LLM reports, and synthesized results.
 
 ## Prerequisites
 
@@ -10,6 +10,9 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 - LLM query tools available (`dev-tools/exe/llm-query`)
 - Git CLI available for diff operations
 - Project documentation exists in `docs/` directory
+- Write access to `dev-taskflow/current/` directory structure
+- Multiple LLM provider access (Google Pro, Anthropic Opus)
+- Understanding of session directory structure and file naming conventions
 
 ## Command Structure
 
@@ -39,11 +42,20 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
   - `none` - Skip project context loading
   - `path/to/custom.md` - Load custom context file
 
+## Project Context Loading
+
+* Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
+* Load project structure: `docs/blueprint.md`
+* Load project vision: `docs/what-do-we-build.md`
+* Load review templates: `dev-handbook/templates/review-*/system.prompt.md`
+* Load existing session patterns: `dev-taskflow/current/*/code_review/*/`
+
 ## High-Level Execution Plan
 
 ### Planning Steps
 
 - [ ] Parse and validate command parameters
+- [ ] Create structured session directory
 - [ ] Determine target content type (git diff vs file content)
 - [ ] Select appropriate review templates based on focus
 - [ ] Resolve project context loading strategy
@@ -51,14 +63,43 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 ### Execution Steps
 
 - [ ] Load project context (if enabled)
-- [ ] Extract target content (git diff or file content)
-- [ ] Select and prepare review prompts
-- [ ] Execute LLM review query
-- [ ] Format and present results
+- [ ] Extract target content and save to input file
+- [ ] Build combined prompt file with context + content + template
+- [ ] Execute multiple LLM review queries (Google Pro, Anthropic Opus)
+- [ ] Save individual model reports
+- [ ] Generate session summary and file index
 
 ## Process Steps
 
-### 1. Parameter Validation
+### 1. Session Directory Creation
+
+Create structured session directory for organized output:
+
+```bash
+# Generate session directory name
+SESSION_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+SESSION_NAME="${focus}-${target//\//-}-${SESSION_TIMESTAMP}"
+SESSION_DIR="dev-taskflow/current/v.0.3.0-workflows/code_review/${SESSION_NAME}"
+
+# Create session directory
+mkdir -p "${SESSION_DIR}"
+
+# Create session metadata
+cat > "${SESSION_DIR}/session.meta" <<EOF
+command: @review-code ${focus} ${target} ${context:-auto}
+timestamp: $(date -Iseconds)
+target: ${target}
+focus: ${focus}
+context: ${context:-auto}
+EOF
+```
+
+**Validation:**
+* Session directory created successfully
+* Session metadata file contains all parameters
+* Directory structure follows established pattern
+
+### 2. Parameter Validation
 
 Validate the command parameters:
 
@@ -83,39 +124,79 @@ Based on context parameter:
 
 - **custom path**: Load specified context file instead of defaults
 
-### 3. Target Content Resolution
+### 3. Target Content Resolution and File Creation
 
-Resolve target content based on type:
+Resolve target content and save to structured input files:
 
-#### Git Ranges/Diffs
+#### Git Ranges/Diffs → input.diff
 
 ```bash
 # For commit ranges
-git diff [range] --no-color
+git diff [range] --no-color > "${SESSION_DIR}/input.diff"
 
 # For staged changes
-git diff --staged --no-color
+git diff --staged --no-color > "${SESSION_DIR}/input.diff"
 
 # For unstaged changes
-git diff --no-color
+git diff --no-color > "${SESSION_DIR}/input.diff"
 
 # For working directory changes
-git diff HEAD --no-color
+git diff HEAD --no-color > "${SESSION_DIR}/input.diff"
+
+# Add diff metadata
+echo "# Diff Metadata" > "${SESSION_DIR}/input.meta"
+echo "target: ${target}" >> "${SESSION_DIR}/input.meta"
+echo "type: git_diff" >> "${SESSION_DIR}/input.meta"
+echo "size: $(wc -l < "${SESSION_DIR}/input.diff") lines" >> "${SESSION_DIR}/input.meta"
 ```
 
-#### File Patterns
+#### File Patterns → input.xml
 
 ```bash
-# Use find or glob to resolve patterns
-find . -path "./target-pattern" -type f
+# Create XML container for multiple files
+echo '<?xml version="1.0" encoding="UTF-8"?>' > "${SESSION_DIR}/input.xml"
+echo '<documents>' >> "${SESSION_DIR}/input.xml"
+
+# Use find or glob to resolve patterns and embed content
+find . -path "./target-pattern" -type f | while read -r file; do
+    echo "  <document path=\"$file\">" >> "${SESSION_DIR}/input.xml"
+    echo "    <![CDATA[" >> "${SESSION_DIR}/input.xml"
+    cat "$file" >> "${SESSION_DIR}/input.xml"
+    echo "    ]]>" >> "${SESSION_DIR}/input.xml"
+    echo "  </document>" >> "${SESSION_DIR}/input.xml"
+done
+
+echo '</documents>' >> "${SESSION_DIR}/input.xml"
+
+# Add file pattern metadata
+echo "target: ${target}" > "${SESSION_DIR}/input.meta"
+echo "type: file_pattern" >> "${SESSION_DIR}/input.meta"
+echo "files: $(find . -path "./target-pattern" -type f | wc -l)" >> "${SESSION_DIR}/input.meta"
 ```
 
-#### Specific Files
+#### Specific Files → input.xml
 
 ```bash
-# Read file content directly
-cat path/to/file.rb
+# Create XML container for single file
+echo '<?xml version="1.0" encoding="UTF-8"?>' > "${SESSION_DIR}/input.xml"
+echo '<documents>' >> "${SESSION_DIR}/input.xml"
+echo "  <document path=\"${target}\">" >> "${SESSION_DIR}/input.xml"
+echo "    <![CDATA[" >> "${SESSION_DIR}/input.xml"
+cat "${target}" >> "${SESSION_DIR}/input.xml"
+echo "    ]]>" >> "${SESSION_DIR}/input.xml"
+echo "  </document>" >> "${SESSION_DIR}/input.xml"
+echo '</documents>' >> "${SESSION_DIR}/input.xml"
+
+# Add single file metadata
+echo "target: ${target}" > "${SESSION_DIR}/input.meta"
+echo "type: single_file" >> "${SESSION_DIR}/input.meta"
+echo "size: $(wc -l < "${target}") lines" >> "${SESSION_DIR}/input.meta"
 ```
+
+**Validation:**
+* Input file (input.diff or input.xml) created successfully
+* Input metadata file contains target information
+* Content properly formatted and readable
 
 ### 4. Review Template Selection
 
@@ -126,44 +207,205 @@ Select appropriate universal templates based on focus:
 - **docs**: Use `dev-handbook/templates/review-docs/system.prompt.md` (universal template with combination instructions)
 - **combined**: Use primary template with combination instructions activated, then synthesize with `dev-handbook/templates/review-synthesizer/system.prompt.md`
 
-### 5. LLM Query Construction
+### 5. Combined Prompt Construction
 
-Build the complete prompt:
-
-```
-[SYSTEM PROMPT from template]
-
-# Project Context
-[PROJECT CONTEXT if enabled]
-
-# Review Target
-[TARGET CONTENT - diff or file content]
-
-# Focus Areas
-[FOCUS-SPECIFIC INSTRUCTIONS]
-```
-
-### 6. LLM Execution
-
-Execute the review query:
+Build the complete prompt and save to prompt.md:
 
 ```bash
-# Use existing LLM tools
-dev-tools/exe/llm-query [model] "[constructed-prompt]"
+# Build combined prompt file
+cat > "${SESSION_DIR}/prompt.md" <<EOF
+# Code Review Prompt - ${focus} Focus
+
+Generated: $(date -Iseconds)
+Target: ${target}
+Focus: ${focus}
+Context: ${context:-auto}
+
+## System Prompt
+
+EOF
+
+# Add system prompt from template
+cat "dev-handbook/templates/review-${focus}/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
+
+echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
+
+# Add project context if enabled
+if [[ "${context:-auto}" != "none" ]]; then
+    if [[ "${context:-auto}" == "auto" ]]; then
+        echo "### Project Structure (docs/blueprint.md)" >> "${SESSION_DIR}/prompt.md"
+        cat "docs/blueprint.md" >> "${SESSION_DIR}/prompt.md"
+        echo -e "\n\n### Project Vision (docs/what-do-we-build.md)" >> "${SESSION_DIR}/prompt.md"
+        cat "docs/what-do-we-build.md" >> "${SESSION_DIR}/prompt.md"
+    else
+        echo "### Custom Context (${context})" >> "${SESSION_DIR}/prompt.md"
+        cat "${context}" >> "${SESSION_DIR}/prompt.md"
+    fi
+fi
+
+echo -e "\n\n## Review Target\n" >> "${SESSION_DIR}/prompt.md"
+
+# Add target content
+if [[ -f "${SESSION_DIR}/input.diff" ]]; then
+    echo "### Git Diff Changes" >> "${SESSION_DIR}/prompt.md"
+    cat "${SESSION_DIR}/input.diff" >> "${SESSION_DIR}/prompt.md"
+elif [[ -f "${SESSION_DIR}/input.xml" ]]; then
+    echo "### File Content" >> "${SESSION_DIR}/prompt.md"
+    cat "${SESSION_DIR}/input.xml" >> "${SESSION_DIR}/prompt.md"
+fi
+
+echo -e "\n\n## Focus Areas\n" >> "${SESSION_DIR}/prompt.md"
+echo "Comprehensive ${focus} review focusing on:" >> "${SESSION_DIR}/prompt.md"
+
+case "${focus}" in
+    "code")
+        echo "- Code quality, architecture, security, performance" >> "${SESSION_DIR}/prompt.md"
+        echo "- ATOM architecture compliance" >> "${SESSION_DIR}/prompt.md"
+        echo "- Ruby best practices and conventions" >> "${SESSION_DIR}/prompt.md"
+        ;;
+    "tests")
+        echo "- Test coverage, quality, maintainability" >> "${SESSION_DIR}/prompt.md"
+        echo "- RSpec best practices" >> "${SESSION_DIR}/prompt.md"
+        echo "- Test architecture and organization" >> "${SESSION_DIR}/prompt.md"
+        ;;
+    "docs")
+        echo "- Documentation gaps, updates, cross-references" >> "${SESSION_DIR}/prompt.md"
+        echo "- Architecture documentation alignment" >> "${SESSION_DIR}/prompt.md"
+        echo "- User experience and clarity" >> "${SESSION_DIR}/prompt.md"
+        ;;
+esac
 ```
 
-### 7. Result Processing
+**Validation:**
+* prompt.md file created with all sections
+* System prompt template included correctly
+* Project context loaded based on parameter
+* Target content properly embedded
+* Focus-specific instructions added
 
-For combined reviews:
+### 6. Multi-Model LLM Execution
 
-- Execute separate queries for each focus area
-- Use synthesizer template to compare and rank results
-- Present unified output
+Execute reviews with multiple LLM providers:
 
-For single focus reviews:
+```bash
+# Execute Google Pro review
+echo "Executing Google Pro review..."
+dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-gpro.md" 2>&1
 
-- Present direct LLM output
-- Apply consistent formatting
+# Check Google Pro execution status
+if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
+    echo "✅ Google Pro review completed successfully"
+else
+    echo "❌ Google Pro review failed or produced empty output"
+    echo "Error details:" >> "${SESSION_DIR}/execution.log"
+    tail -n 20 "${SESSION_DIR}/cr-report-gpro.md" >> "${SESSION_DIR}/execution.log"
+fi
+
+# Execute Anthropic Opus review
+echo "Executing Anthropic Opus review..."
+dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-opus.md" 2>&1
+
+# Check Anthropic Opus execution status
+if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-opus.md" ]]; then
+    echo "✅ Anthropic Opus review completed successfully"
+else
+    echo "❌ Anthropic Opus review failed or produced empty output"
+    echo "Error details:" >> "${SESSION_DIR}/execution.log"
+    tail -n 20 "${SESSION_DIR}/cr-report-opus.md" >> "${SESSION_DIR}/execution.log"
+fi
+
+# Create execution summary
+cat > "${SESSION_DIR}/execution.summary" <<EOF
+Session: ${SESSION_NAME}
+Timestamp: $(date -Iseconds)
+Target: ${target}
+Focus: ${focus}
+
+Execution Results:
+- Google Pro: $([ -s "${SESSION_DIR}/cr-report-gpro.md" ] && echo "✅ Success" || echo "❌ Failed")
+- Anthropic Opus: $([ -s "${SESSION_DIR}/cr-report-opus.md" ] && echo "✅ Success" || echo "❌ Failed")
+
+Files Generated:
+$(ls -la "${SESSION_DIR}"/ | grep -E '\.(md|meta|log)$')
+EOF
+```
+
+**Validation:**
+* Both LLM providers executed successfully
+* Report files contain structured review content
+* Execution log captures any errors or issues
+* Summary file provides execution overview
+
+### 7. Session Finalization and Index Creation
+
+Create session index and prepare for synthesis:
+
+```bash
+# Create session index file
+cat > "${SESSION_DIR}/README.md" <<EOF
+# Code Review Session: ${SESSION_NAME}
+
+**Generated**: $(date -Iseconds)  
+**Command**: \`@review-code ${focus} ${target} ${context:-auto}\`  
+**Target**: ${target}  
+**Focus**: ${focus}  
+**Context**: ${context:-auto}
+
+## Session Files
+
+### Input Files
+- [\`session.meta\`](./session.meta) - Session metadata and parameters
+- [\`input.meta\`](./input.meta) - Target content metadata
+$([ -f "${SESSION_DIR}/input.diff" ] && echo "- [\\`input.diff\\`](./input.diff) - Git diff content")
+$([ -f "${SESSION_DIR}/input.xml" ] && echo "- [\\`input.xml\\`](./input.xml) - File content in XML format")
+
+### Prompt and Execution
+- [\`prompt.md\`](./prompt.md) - Combined review prompt (context + content + template)
+- [\`execution.summary\`](./execution.summary) - LLM execution results
+- [\`execution.log\`](./execution.log) - Detailed execution logs (if errors occurred)
+
+### Review Reports
+$([ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "- [\\`cr-report-gpro.md\\`](./cr-report-gpro.md) - Google Pro review report")
+$([ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "- [\\`cr-report-opus.md\\`](./cr-report-opus.md) - Anthropic Opus review report")
+
+## Next Steps
+
+To synthesize multiple reports into a unified analysis:
+
+\`\`\`bash
+@review-synthesizer dir:${SESSION_DIR}/
+\`\`\`
+
+This will create \`cr-report.md\` with the final synthesized review.
+
+## Session Statistics
+
+- **Input Size**: $([ -f "${SESSION_DIR}/input.diff" ] && wc -l < "${SESSION_DIR}/input.diff" || echo "N/A") lines
+- **Prompt Size**: $(wc -w < "${SESSION_DIR}/prompt.md") words
+- **Reports Generated**: $(ls "${SESSION_DIR}"/cr-report-*.md 2>/dev/null | wc -l)
+- **Total Session Files**: $(ls "${SESSION_DIR}"/ | wc -l)
+EOF
+
+# Display session completion summary
+echo ""
+echo "🎉 Code Review Session Completed: ${SESSION_NAME}"
+echo ""
+echo "📁 Session Directory: ${SESSION_DIR}/"
+echo "📋 Session Index: ${SESSION_DIR}/README.md"
+echo ""
+echo "📊 Generated Reports:"
+[ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "   ✅ Google Pro: cr-report-gpro.md"
+[ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "   ✅ Anthropic Opus: cr-report-opus.md"
+echo ""
+echo "🔄 Next Step: Run @review-synthesizer dir:${SESSION_DIR}/ to create unified report"
+echo ""
+```
+
+**Validation:**
+* Session index (README.md) created with all file references
+* Execution summary shows successful LLM runs
+* Session directory contains all expected files
+* Clear next steps provided for synthesis
 
 ## Implementation Templates
 
@@ -276,12 +518,17 @@ dev-tools/exe/llm-query gemini "$(cat code-review-prompt.md)"
 ## Success Criteria
 
 - Command successfully parses all parameter combinations
-- Target content is correctly resolved (git diffs, file patterns, specific files)
-- Appropriate review templates are selected based on focus
-- Project context is loaded according to specification
-- LLM queries execute successfully with well-formed prompts
-- Results are presented in consistent, actionable format
-- Combined reviews provide synthesized analysis when requested
+- Session directory created with proper naming convention
+- Target content correctly resolved and saved to input files (input.diff or input.xml)
+- Combined prompt file (prompt.md) contains all required sections
+- Appropriate review templates selected and embedded based on focus
+- Project context loaded and included according to specification
+- Multiple LLM queries execute successfully (Google Pro, Anthropic Opus)
+- Individual report files (cr-report-*.md) generated with structured content
+- Session index (README.md) provides complete file overview
+- Execution summary documents successful runs and any errors
+- Session directory ready for synthesis workflow integration
+- All files follow established naming conventions and structure
 
 ## Error Handling
 
