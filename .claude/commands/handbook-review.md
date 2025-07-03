@@ -1,228 +1,339 @@
-# Documentation Review Workflow
+# Handbook Review Command
 
-Automated documentation review workflow using multiple LLM providers for comprehensive analysis.
+Comprehensive wrapper for reviewing dev-handbook changes using the unified review-code workflow with handbook-specific configuration.
 
-**When providing a commit hash as argument**: The commit is used as the starting point (exclusive) - the review will include all commits from AFTER that commit up to HEAD.
+## Command Usage
 
-## Prerequisites
+```
+@handbook-review [target] [git-range]
+```
 
-- Ensure all changes are committed or stashed
-- Available providers: `google:gemini-2.5-pro` (gpro), `anthropic:claude-4-0-sonnet-latest` (csonet), `openai:gpt-4o` (o4), `mistral:mistral-large-latest` (mistral)
-- Scripts: `bin/cr-docs` (prompt generator), `dev-tools/exe/llm-query` (LLM interface)
+### Parameters
 
-## Default Configuration
+- **target** (required): What to review in dev-handbook
+  - `workflows` - Review workflow-instructions files
+  - `guides` - Review guide files  
+  - `templates` - Review template files
+  - `all` - Review all handbook content
 
-**Default parameters for documentation reviews:**
-- **Include content**: Use `--include-content` for detailed analysis when needed
-- **Timeout**: 600 seconds (10 minutes) for complex reviews
-- **System prompt**: `dev-local/handbook/gds/review/_system.md`
-- **Default provider**: `gpro` (Google Gemini 2.5 Pro)
-- **Repository**: All git operations use `git -C` to avoid directory changes
-- **Handbook prompt**: `dev-local/handbook/gds/review/_handbook.md`
-- **Context**: All `docs/*.md` files from main repository included as context
+- **git-range** (optional): Git range for diff-based review
+  - `v.0.2.0..HEAD` - From tag to HEAD
+  - `HEAD~5..HEAD` - Recent commits
+  - `41a9da9f..HEAD` - From specific commit
+  - If omitted, reviews working directory changes
 
-## Quick Start (Staged/Uncommitted Changes)
+## Pre-Configured Parameters
+
+This command automatically sets:
+- **Focus**: `docs` (uses documentation review approach)
+- **Context**: `docs/**/*.md` (project documentation context)
+- **System Prompt**: `dev-local/handbook/tpl/review/system.prompt.md` (handbook-specific)
+- **Session Directory**: `code_review/YYYYMMDD-HHMMSS-handbook-[target]/`
+- **Repository Context**: dev-handbook submodule only
+
+## Implementation
+
+Execute handbook review by calling review-code workflow with pre-configured parameters:
 
 ```bash
-# 1. Set project root
-PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
+# Set up session variables
+TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+TARGET="${1:-all}"
+GIT_RANGE="${2:-}"
 
-# 2. Create timestamped review directory and switch to it
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
-cd "$REVIEW_DIR"
+# Validate target parameter
+case "$TARGET" in
+    "workflows"|"guides"|"templates"|"all")
+        ;;
+    *)
+        echo "❌ Invalid target: $TARGET"
+        echo "Valid targets: workflows, guides, templates, all"
+        exit 1
+        ;;
+esac
 
-# 3. Stage all changes in dev-handbook and generate diff
-git -C "$PROJECT_ROOT/dev-handbook" add -A
-git -C "$PROJECT_ROOT/dev-handbook" diff --cached > input.diff
+# Create session directory with handbook-specific naming
+SESSION_NAME="${TIMESTAMP}-handbook-${TARGET}"
+SESSION_DIR="dev-taskflow/current/v.0.3.0-workflows/code_review/${SESSION_NAME}"
+mkdir -p "${SESSION_DIR}"
 
-# 4. Generate review prompt with documentation context
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
+# Create session metadata
+cat > "${SESSION_DIR}/session.meta" <<EOF
+command: @handbook-review ${TARGET} ${GIT_RANGE}
+timestamp: $(date -Iseconds)
+target: ${TARGET}
+git_range: ${GIT_RANGE:-working}
+focus: docs (handbook-specific)
+context: docs/**/*.md
+system_prompt: dev-local/handbook/tpl/review/system.prompt.md
+repository: dev-handbook (submodule)
+EOF
 
-# 5. Run review with default provider (gpro)
-"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-  --timeout 600 \
-  --output dr-report-gpro.md
+# Change to dev-handbook submodule directory
+cd dev-handbook
+
+# Generate target content based on parameters
+if [[ -n "$GIT_RANGE" ]]; then
+    echo "📝 Generating diff for git range: $GIT_RANGE"
+    
+    # Create git diff from dev-handbook submodule
+    git diff ${GIT_RANGE} --no-color > "../${SESSION_DIR}/input.diff"
+    
+    # Add diff metadata
+    cat > "../${SESSION_DIR}/input.meta" <<EOF
+target: ${TARGET}
+git_range: ${GIT_RANGE}
+type: git_diff
+repository: dev-handbook
+size: $(wc -l < "../${SESSION_DIR}/input.diff") lines
+EOF
+
+else
+    echo "📁 Generating file content for target: $TARGET"
+    
+    # Create XML container for handbook files
+    echo '<?xml version="1.0" encoding="UTF-8"?>' > "../${SESSION_DIR}/input.xml"
+    echo '<documents>' >> "../${SESSION_DIR}/input.xml"
+    
+    # Add files based on target
+    case "$TARGET" in
+        "workflows")
+            find workflow-instructions -name "*.wf.md" -type f | while read -r file; do
+                echo "  <document path=\"$file\">" >> "../${SESSION_DIR}/input.xml"
+                echo "    <![CDATA[" >> "../${SESSION_DIR}/input.xml"
+                cat "$file" >> "../${SESSION_DIR}/input.xml"
+                echo "    ]]>" >> "../${SESSION_DIR}/input.xml"
+                echo "  </document>" >> "../${SESSION_DIR}/input.xml"
+            done
+            ;;
+        "guides")
+            find guides -name "*.g.md" -type f | while read -r file; do
+                echo "  <document path=\"$file\">" >> "../${SESSION_DIR}/input.xml"
+                echo "    <![CDATA[" >> "../${SESSION_DIR}/input.xml"
+                cat "$file" >> "../${SESSION_DIR}/input.xml"
+                echo "    ]]>" >> "../${SESSION_DIR}/input.xml"
+                echo "  </document>" >> "../${SESSION_DIR}/input.xml"
+            done
+            ;;
+        "templates")
+            find templates -name "*.md" -type f | while read -r file; do
+                echo "  <document path=\"$file\">" >> "../${SESSION_DIR}/input.xml"
+                echo "    <![CDATA[" >> "../${SESSION_DIR}/input.xml"
+                cat "$file" >> "../${SESSION_DIR}/input.xml"
+                echo "    ]]>" >> "../${SESSION_DIR}/input.xml"
+                echo "  </document>" >> "../${SESSION_DIR}/input.xml"
+            done
+            ;;
+        "all")
+            find . -name "*.md" -type f -not -path "./.git/*" | while read -r file; do
+                echo "  <document path=\"$file\">" >> "../${SESSION_DIR}/input.xml"
+                echo "    <![CDATA[" >> "../${SESSION_DIR}/input.xml"
+                cat "$file" >> "../${SESSION_DIR}/input.xml"
+                echo "    ]]>" >> "../${SESSION_DIR}/input.xml"
+                echo "  </document>" >> "../${SESSION_DIR}/input.xml"
+            done
+            ;;
+    esac
+    
+    echo '</documents>' >> "../${SESSION_DIR}/input.xml"
+    
+    # Add file pattern metadata
+    file_count=$(find . -name "*.md" -type f | wc -l)
+    cat > "../${SESSION_DIR}/input.meta" <<EOF
+target: ${TARGET}
+type: file_pattern
+repository: dev-handbook
+files: ${file_count}
+EOF
+fi
+
+# Return to main repository
+cd ..
+
+# Build handbook-specific prompt
+cat > "${SESSION_DIR}/prompt.md" <<EOF
+# Handbook Review Prompt - ${TARGET} Focus
+
+Generated: $(date -Iseconds)
+Target: ${TARGET}
+Git Range: ${GIT_RANGE:-working directory}
+Focus: docs (handbook-specific analysis)
+Context: docs/**/*.md
+
+## System Prompt
+
+EOF
+
+# Add handbook-specific system prompt
+cat "dev-local/handbook/tpl/review/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
+
+echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
+
+# Add project context from docs/
+echo "### Project Structure (docs/blueprint.md)" >> "${SESSION_DIR}/prompt.md"
+cat "docs/blueprint.md" >> "${SESSION_DIR}/prompt.md"
+echo -e "\n\n### Project Vision (docs/what-do-we-build.md)" >> "${SESSION_DIR}/prompt.md"
+cat "docs/what-do-we-build.md" >> "${SESSION_DIR}/prompt.md"
+
+echo -e "\n\n## Review Target\n" >> "${SESSION_DIR}/prompt.md"
+
+# Add target content
+if [[ -f "${SESSION_DIR}/input.diff" ]]; then
+    echo "### Git Diff Changes (dev-handbook)" >> "${SESSION_DIR}/prompt.md"
+    cat "${SESSION_DIR}/input.diff" >> "${SESSION_DIR}/prompt.md"
+elif [[ -f "${SESSION_DIR}/input.xml" ]]; then
+    echo "### Handbook Content (${TARGET})" >> "${SESSION_DIR}/prompt.md"
+    cat "${SESSION_DIR}/input.xml" >> "${SESSION_DIR}/prompt.md"
+fi
+
+echo -e "\n\n## Focus Areas\n" >> "${SESSION_DIR}/prompt.md"
+echo "Comprehensive handbook review focusing on:" >> "${SESSION_DIR}/prompt.md"
+echo "- Workflow instructions effectiveness and AI agent compatibility" >> "${SESSION_DIR}/prompt.md"
+echo "- Guide completeness and cross-reference integrity" >> "${SESSION_DIR}/prompt.md"
+echo "- Template consistency and embedding standards" >> "${SESSION_DIR}/prompt.md"
+echo "- Documentation gaps and architecture alignment" >> "${SESSION_DIR}/prompt.md"
+
+# Execute multi-model reviews
+echo ""
+echo "🧠 Executing handbook review with multiple models..."
+
+# Execute Google Pro review
+echo "📊 Executing Google Pro review..."
+dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-gpro.md" 2>&1
+
+if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
+    echo "✅ Google Pro review completed successfully"
+else
+    echo "❌ Google Pro review failed"
+    echo "Error details:" >> "${SESSION_DIR}/execution.log"
+    tail -n 20 "${SESSION_DIR}/cr-report-gpro.md" >> "${SESSION_DIR}/execution.log"
+fi
+
+# Execute Anthropic Claude review
+echo "📊 Executing Anthropic Claude review..."
+dev-tools/exe/llm-query anthropic:claude-3-sonnet-20240229 "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-claude.md" 2>&1
+
+if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-claude.md" ]]; then
+    echo "✅ Anthropic Claude review completed successfully"
+else
+    echo "❌ Anthropic Claude review failed"
+    echo "Error details:" >> "${SESSION_DIR}/execution.log"
+    tail -n 20 "${SESSION_DIR}/cr-report-claude.md" >> "${SESSION_DIR}/execution.log"
+fi
+
+# Create execution summary
+cat > "${SESSION_DIR}/execution.summary" <<EOF
+Handbook Review Session: ${SESSION_NAME}
+Timestamp: $(date -Iseconds)
+Target: ${TARGET}
+Git Range: ${GIT_RANGE:-working directory}
+
+Execution Results:
+- Google Pro: $([ -s "${SESSION_DIR}/cr-report-gpro.md" ] && echo "✅ Success" || echo "❌ Failed")
+- Anthropic Claude: $([ -s "${SESSION_DIR}/cr-report-claude.md" ] && echo "✅ Success" || echo "❌ Failed")
+
+Files Generated:
+$(ls -la "${SESSION_DIR}/" | grep -E '\.(md|meta|log)$')
+EOF
+
+# Create session index
+cat > "${SESSION_DIR}/README.md" <<EOF
+# Handbook Review Session: ${SESSION_NAME}
+
+**Generated**: $(date -Iseconds)  
+**Command**: \`@handbook-review ${TARGET} ${GIT_RANGE}\`  
+**Target**: ${TARGET}  
+**Git Range**: ${GIT_RANGE:-working directory}  
+**Repository**: dev-handbook (submodule)
+
+## Session Files
+
+### Input Files
+- [\`session.meta\`](./session.meta) - Session metadata and parameters
+- [\`input.meta\`](./input.meta) - Target content metadata
+$([ -f "${SESSION_DIR}/input.diff" ] && echo "- [\`input.diff\`](./input.diff) - Git diff content from dev-handbook")
+$([ -f "${SESSION_DIR}/input.xml" ] && echo "- [\`input.xml\`](./input.xml) - Handbook file content in XML format")
+
+### Prompt and Execution
+- [\`prompt.md\`](./prompt.md) - Complete handbook review prompt
+- [\`execution.summary\`](./execution.summary) - LLM execution results
+$([ -f "${SESSION_DIR}/execution.log" ] && echo "- [\`execution.log\`](./execution.log) - Detailed execution logs")
+
+### Review Reports
+$([ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "- [\`cr-report-gpro.md\`](./cr-report-gpro.md) - Google Pro handbook review")
+$([ -f "${SESSION_DIR}/cr-report-claude.md" ] && echo "- [\`cr-report-claude.md\`](./cr-report-claude.md) - Anthropic Claude handbook review")
+
+## Next Steps
+
+To synthesize multiple reports into a unified analysis:
+
+\`\`\`bash
+@review-synthesizer dir:${SESSION_DIR}/
+\`\`\`
+
+This will create \`cr-report.md\` with the final synthesized handbook review.
+
+## Session Statistics
+
+- **Target**: ${TARGET}
+- **Input Type**: $([ -f "${SESSION_DIR}/input.diff" ] && echo "Git diff" || echo "File content")
+- **Input Size**: $([ -f "${SESSION_DIR}/input.diff" ] && wc -l < "${SESSION_DIR}/input.diff" || echo "N/A") lines
+- **Prompt Size**: $(wc -w < "${SESSION_DIR}/prompt.md") words
+- **Reports Generated**: $(ls "${SESSION_DIR}"/cr-report-*.md 2>/dev/null | wc -l)
+- **Total Session Files**: $(ls "${SESSION_DIR}"/ | wc -l)
+EOF
+
+# Display completion summary
+echo ""
+echo "🎉 Handbook Review Session Completed: ${SESSION_NAME}"
+echo ""
+echo "📁 Session Directory: ${SESSION_DIR}/"
+echo "📋 Session Index: ${SESSION_DIR}/README.md"
+echo ""
+echo "📈 Generated Reports:"
+[ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "   ✅ Google Pro: cr-report-gpro.md"
+[ -f "${SESSION_DIR}/cr-report-claude.md" ] && echo "   ✅ Anthropic Claude: cr-report-claude.md"
+echo ""
+echo "🔄 Next Step: Run @review-synthesizer dir:${SESSION_DIR}/ to create unified report"
+echo ""
 ```
 
-## Workflow Steps
+## Usage Examples
 
-### 1. Prepare Review Environment
-```bash
-# Set project root
-PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-
-# Create review directory with timestamp (default for uncommitted changes)
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
-cd "$REVIEW_DIR"
-
-# Or for specific git ranges
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "main..HEAD")
-cd "$REVIEW_DIR"
+### Review workflow instructions changes from recent tag
+```
+@handbook-review workflows v.0.2.0..HEAD
 ```
 
-### 2. Generate Diff (using git -C)
-```bash
-# Working from review directory, use git -C to target dev-handbook
-
-# Option A: From staged (uncommitted) changes (DEFAULT)
-git -C "$PROJECT_ROOT/dev-handbook" add -A  # Ensure all changes are staged first
-git -C "$PROJECT_ROOT/dev-handbook" diff --cached > input.diff
-
-# Option B: From all uncommitted changes (staged + unstaged)
-git -C "$PROJECT_ROOT/dev-handbook" diff HEAD > input.diff
-
-# Option C: From specific commits/branches
-git -C "$PROJECT_ROOT/dev-handbook" diff HEAD~3..HEAD > input.diff
-git -C "$PROJECT_ROOT/dev-handbook" diff main..feature-branch > input.diff
-
-# Option D: From tag/reference to HEAD (RECOMMENDED for releases)
-git -C "$PROJECT_ROOT/dev-handbook" diff v.0.2.1+task.61..HEAD > input.diff
-git -C "$PROJECT_ROOT/dev-handbook" diff v.0.2.1..HEAD > input.diff
-
-# Option E: From commit hash to HEAD (exclusive of starting commit)
-git -C "$PROJECT_ROOT/dev-handbook" diff <commit-hash>..HEAD > input.diff
-
-# Option F: From commit hash (single commit only - NOT recommended for reviews)
-git -C "$PROJECT_ROOT/dev-handbook" show <commit-hash> > input.diff
+### Review all guides in working directory  
+```
+@handbook-review guides
 ```
 
-### 3. Generate Review Prompt
-```bash
-# Default: Basic prompt generation
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
-
-# With full documentation content (for detailed analysis)
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md --include-content
+### Review templates with git range
+```
+@handbook-review templates HEAD~3..HEAD
 ```
 
-### 4. Run Documentation Review (DEFAULT: gpro)
-```bash
-# Default: Run with gpro only
-"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-  --timeout 600 \
-  --output dr-report-gpro.md
-
-# Multiple providers (for critical handbook updates)
-for provider in gpro csonet; do
-  "$PROJECT_ROOT/dev-tools/exe/llm-query" $provider dr-prompt.md \
-    --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-    --timeout 300 \
-    --output "dr-report-${provider}.md"
-done
-
-# All providers
-providers=(gpro csonet o4 mistral)
-for provider in "${providers[@]}"; do
-  "$PROJECT_ROOT/dev-tools/exe/llm-query" $provider dr-prompt.md \
-    --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-    --timeout 300 \
-    --output "dr-report-${provider}.md"
-done
+### Review all handbook content
+```
+@handbook-review all
 ```
 
-## Example Usage
-
-### Basic Review
-```bash
-# Set project root
-PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-
-# Quick review of current dev-handbook changes
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder")
-cd "$REVIEW_DIR"
-
-# Generate diff and review
-git -C "$PROJECT_ROOT/dev-handbook" diff > input.diff
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md
-"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-  --timeout 300 -o dr-report-gpro.md
-```
-
-### Comprehensive Review
-```bash
-# Set project root
-PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-
-# Full content review with multiple providers
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "HEAD~5..HEAD")
-cd "$REVIEW_DIR"
-
-# Generate diff with full content
-git -C "$PROJECT_ROOT/dev-handbook" diff HEAD~5..HEAD > input.diff
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md --include-content
-
-# Run multiple providers
-for provider in gpro csonet; do
-  "$PROJECT_ROOT/dev-tools/exe/llm-query" $provider dr-prompt.md \
-    --system "$PROJECT_ROOT/dev-handbook/guides/code-review/_doc-review-system.md" \
-    --timeout 300 \
-    --output "dr-report-${provider}.md"
-done
-```
-
-### Review PR Changes
-```bash
-# Set project root
-PROJECT_ROOT="/Users/michalczyz/Projects/CodingAgent/handbook-meta"
-
-# Review specific PR dev-handbook changes
-REVIEW_DIR=$("$PROJECT_ROOT/bin/handbook-review-folder" "main..pr-123")
-cd "$REVIEW_DIR"
-
-# Checkout PR and generate diff
-git -C "$PROJECT_ROOT/dev-handbook" fetch origin pull/123/head:pr-123
-git -C "$PROJECT_ROOT/dev-handbook" checkout pr-123
-git -C "$PROJECT_ROOT/dev-handbook" diff main..HEAD > input.diff
-
-# Generate and run review
-"$PROJECT_ROOT/bin/cr-docs" -d input.diff -o dr-prompt.md -t "$PROJECT_ROOT/dev-local/handbook/gds/review/_handbook.md"
-"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro dr-prompt.md \
-  --system "$PROJECT_ROOT/dev-local/handbook/gds/review/_system.md" \
-  --timeout 300 -o dr-report-csonet.md
-```
-
-## Provider Selection Guide
-
-- **google:gemini-2.5-pro (gpro)**: Excellent at comprehensive documentation analysis
-- **anthropic:claude-4-0-sonnet-latest (csonet)**: Strong at identifying documentation gaps
-- **openai:gpt-4o (o4)**: Good at structured documentation recommendations
-- **mistral:mistral-large-latest (mistral)**: Fast reviews for quick documentation checks
-
-## Output Files Structure
+## Session Output Structure
 
 ```
-dev-taskflow/current/{current-release}/handbook_review/task-N/
-├── input.diff              # Git diff of dev-handbook changes
-├── dr-prompt.md            # Generated review prompt with docs context
-├── dr-report-gpro.md       # Google Gemini review
-├── dr-report-csonet.md     # Claude Sonnet review
-├── dr-report-o4.md         # OpenAI GPT-4o review
-└── dr-report-mistral.md    # Mistral review
+code_review/YYYYMMDD-HHMMSS-handbook-[target]/
+├── session.meta              # Session configuration and metadata
+├── input.diff               # Git diff (if git-range provided)
+├── input.xml                # File content (if target pattern used)
+├── input.meta               # Input content metadata
+├── prompt.md                # Complete handbook review prompt
+├── cr-report-gpro.md        # Google Pro review report
+├── cr-report-claude.md      # Anthropic Claude review report
+├── execution.summary        # LLM execution results
+├── execution.log           # Error logs (if any failures)
+└── README.md               # Session index and next steps
 ```
 
-## Important Notes
-
-- **Focus**: Only reviews changes in `dev-handbook/` submodule repository
-- **Context**: Automatically includes all `docs/*.md` files from main repository for reference
-- **Path handling**: Uses `bin/rc` for dynamic release paths and `git -C` for repository operations
-- **Working directory**: All operations performed from review directory with absolute paths
-- Use `--include-content` flag for detailed documentation analysis
-- Use `--timeout 300` for complex reviews to avoid timeouts
-- Archive completed reviews in appropriate release folders
-- Multiple provider reviews recommended for major documentation updates
-
-## Meta-Review for Documentation
-
-After running multiple providers, combine and compare their recommendations:
-
-```bash
-# Combine all documentation review reports
-"$PROJECT_ROOT/dev-tools/exe/llm-query" gpro \
-  "$PROJECT_ROOT/dev-local/handbook/gds/review/_handbook.md" \
-  --input "dr-report-*.md" \
-  --timeout 300 \
-  --output dr-meta-review.md
-```
+This command provides handbook-specific review capabilities while leveraging the unified review-code workflow infrastructure.

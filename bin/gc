@@ -33,6 +33,15 @@ else
 end
 popd
 
+echo "Commit changes in submodule: dev-tools..."
+pushd dev-tools
+if test -n "$intention"
+    gcama -i "$intention"
+else
+    gcama
+end
+popd
+
 echo "Commit changes in main repository..."
 if test -n "$intention"
     gcama -i "$intention"
