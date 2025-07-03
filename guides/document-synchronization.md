@@ -1,16 +1,17 @@
-# Template Synchronization System
+# Document Synchronization System
 
-This guide covers the operational aspects of the template synchronization system, including script usage, maintenance procedures, and troubleshooting. For template embedding standards and format, see [Template Embedding Guide](../.meta/gds/template-embedding.g.md).
+This guide covers the operational aspects of the document synchronization system, including script usage, maintenance procedures, and troubleshooting. The system supports embedding both templates and guides within workflow instructions using a universal document embedding format.
 
 ## Overview
 
-The template synchronization system keeps embedded templates in workflow instructions synchronized with their corresponding template files in the `dev-handbook/templates/` directory. This ensures consistency and enables automated template updates across the development handbook.
+The document synchronization system keeps embedded documents in workflow instructions synchronized with their corresponding source files. This ensures consistency and enables automated document updates across the development handbook.
 
 ### Key Components
 
 - **Sync Script**: `bin/markdown-sync-embedded-documents` - CLI tool for synchronization
 - **Template Directory**: `dev-handbook/templates/` - Central template repository  
-- **Workflow Instructions**: `dev-handbook/workflow-instructions/` - Files with embedded templates
+- **Guide Directory**: `dev-handbook/guides/` - Reference documentation and best practices
+- **Workflow Instructions**: `dev-handbook/workflow-instructions/` - Files with embedded documents
 - **XML Format**: Standardized embedding format for automated parsing
 
 ## Script Usage
@@ -61,7 +62,7 @@ bin/markdown-sync-embedded-documents --verbose
 git diff
 
 # 4. Commit if satisfied
-git add -A && git commit -m "chore: sync embedded templates"
+git add -A && git commit -m "chore: sync embedded documents"
 ```
 
 **Automated/CI Workflow:**
@@ -78,9 +79,9 @@ bin/markdown-sync-embedded-documents --verbose --commit
 bin/markdown-sync-embedded-documents --dry-run --verbose
 ```
 
-## Template Directory Organization
+## Document Directory Organization
 
-### Directory Structure
+### Template Directory Structure
 
 Templates are organized by purpose and type:
 
@@ -115,43 +116,99 @@ dev-handbook/templates/
     └── user-guide.template.md
 ```
 
+### Guide Directory Structure
+
+Guides are organized by purpose and include `.g.md` extension:
+
+```
+dev-handbook/guides/
+├── development/             # Development practices
+│   ├── testing.g.md
+│   ├── code-review.g.md
+│   └── debugging.g.md
+├── project-management/      # Project management guides
+│   ├── task-management.g.md
+│   └── release-planning.g.md
+├── documentation/           # Documentation standards
+│   ├── writing-style.g.md
+│   └── template-creation.g.md
+└── workflows/               # Workflow-specific guides
+    ├── git-workflow.g.md
+    └── deployment.g.md
+```
+
 ### Naming Conventions
 
-- **File Extension**: All templates use `.template.md` extension
+- **Template Extension**: All templates use `.template.md` extension
+- **Guide Extension**: All guides use `.g.md` extension
 - **Directory Names**: Descriptive, kebab-case names indicating purpose
-- **File Names**: Clear, specific names without redundant "template" prefix
+- **File Names**: Clear, specific names without redundant type prefix
 
-### Template Path References
+## Universal Document Embedding Format
 
-In workflow instructions, reference templates using full paths:
+### New Format Structure
+
+The system now supports a universal document embedding format using `<documents>` containers:
+
+```xml
+<documents>
+    <template path="dev-handbook/templates/release-tasks/task.template.md">
+        <!-- Template content -->
+    </template>
+    
+    <guide path="dev-handbook/guides/development/testing.g.md">
+        <!-- Guide content -->
+    </guide>
+</documents>
+```
+
+### Supported Document Types
+
+#### Templates (`<template>` tags)
+
+- **Path Pattern**: `dev-handbook/templates/**/*.template.md`
+- **Purpose**: Reusable template content for document creation
+- **Validation**: Must exist in templates directory
+
+#### Guides (`<guide>` tags)
+
+- **Path Pattern**: `dev-handbook/guides/**/*.g.md`
+- **Purpose**: Reference documentation and best practices
+- **Validation**: Must exist in guides directory
+
+### Backward Compatibility
+
+The system maintains backward compatibility with the legacy `<templates>` format:
 
 ```xml
 <templates>
     <template path="dev-handbook/templates/release-tasks/task.template.md">
-    <!-- Template content -->
+        <!-- Template content -->
     </template>
 </templates>
 ```
+
+Both formats are supported during the transition period.
 
 ## Synchronization Process
 
 ### How Synchronization Works
 
-1. **Discovery**: Script scans workflow instruction files for `<templates>` sections
+1. **Discovery**: Script scans workflow instruction files for `<documents>` and `<templates>` sections
 2. **Extraction**: Parses XML to find `path` attributes and embedded content
-3. **Comparison**: Compares embedded content with actual template files
+3. **Comparison**: Compares embedded content with actual source files
 4. **Synchronization**: Updates embedded content when differences are found
 5. **Reporting**: Provides summary of changes made
 
 ### What Gets Synchronized
 
-- **Template Content**: Complete content from template files
-- **Formatting**: Preserves original template formatting and structure
-- **Metadata**: YAML frontmatter and all template sections
+- **Document Content**: Complete content from source files
+- **Formatting**: Preserves original document formatting and structure
+- **Metadata**: YAML frontmatter and all document sections
 
 ### What Doesn't Get Synchronized
 
-- **Workflow Instructions**: Only template sections are modified
+- **Workflow Instructions**: Only document sections are modified
 - **Comments**: XML comments and workflow logic remain unchanged
 - **File Structure**: No files are created or deleted, only content updated
 
@@ -162,7 +219,7 @@ In workflow instructions, reference templates using full paths:
 **Monthly Review:**
 
 ```bash
-# Check for out-of-sync templates
+# Check for out-of-sync documents
 bin/markdown-sync-embedded-documents --dry-run --verbose
 
 # Apply updates if needed
@@ -172,44 +229,50 @@ bin/markdown-sync-embedded-documents --verbose --commit
 **Before Releases:**
 
 ```bash
-# Ensure all templates are synchronized
+# Ensure all documents are synchronized
 bin/markdown-sync-embedded-documents --verbose
-git add -A && git commit -m "chore: sync templates before release"
+git add -A && git commit -m "chore: sync documents before release"
 ```
 
-**After Template Changes:**
+**After Document Changes:**
 
 ```bash
-# Immediate synchronization after updating templates
+# Immediate synchronization after updating documents
 bin/markdown-sync-embedded-documents --verbose --commit
 ```
 
-### Template Management
+### Document Management
 
 **Adding New Templates:**
 
 1. Create template file in appropriate `dev-handbook/templates/` subdirectory
-2. Add XML reference in workflow instruction files
+2. Add XML reference in workflow instruction files using `<documents>` format
 3. Run synchronization to populate embedded content
 
-**Updating Existing Templates:**
+**Adding New Guides:**
 
-1. Modify template file in `dev-handbook/templates/`
+1. Create guide file in appropriate `dev-handbook/guides/` subdirectory with `.g.md` extension
+2. Add XML reference in workflow instruction files using `<guide>` tag
+3. Run synchronization to populate embedded content
+
+**Updating Existing Documents:**
+
+1. Modify source file in `dev-handbook/templates/` or `dev-handbook/guides/`
 2. Run synchronization to update all embedded instances
 3. Review changes and commit
 
-**Removing Templates:**
+**Removing Documents:**
 
-1. Remove XML template references from workflow files
-2. Delete template file from `dev-handbook/templates/`
+1. Remove XML document references from workflow files
+2. Delete source file from appropriate directory
 3. Commit changes
 
 ### Validation and Quality Control
 
-**Check Template Consistency:**
+**Check Document Consistency:**
 
 ```bash
-# Verify all embedded templates are up-to-date
+# Verify all embedded documents are up-to-date
 bin/markdown-sync-embedded-documents --dry-run
 ```
 
@@ -217,30 +280,37 @@ bin/markdown-sync-embedded-documents --dry-run
 
 ```bash
 # Use grep to find potential format issues
+grep -r "<documents>" dev-handbook/workflow-instructions/
+grep -r "</documents>" dev-handbook/workflow-instructions/
 grep -r "<templates>" dev-handbook/workflow-instructions/
 grep -r "</templates>" dev-handbook/workflow-instructions/
 ```
 
-**Check for Missing Templates:**
+**Check for Missing Documents:**
 
 ```bash
 # Find broken template references
 find dev-handbook/templates -name "*.template.md" -exec basename {} \; | sort > /tmp/templates.txt
 grep -r 'path="dev-handbook/templates/' dev-handbook/workflow-instructions/ | grep -o '[^"]*\.template\.md' | sort > /tmp/referenced.txt
 diff /tmp/templates.txt /tmp/referenced.txt
+
+# Find broken guide references
+find dev-handbook/guides -name "*.g.md" -exec basename {} \; | sort > /tmp/guides.txt
+grep -r 'path="dev-handbook/guides/' dev-handbook/workflow-instructions/ | grep -o '[^"]*\.g\.md' | sort > /tmp/guide-refs.txt
+diff /tmp/guides.txt /tmp/guide-refs.txt
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-**Template Not Synchronizing:**
+**Document Not Synchronizing:**
 
 Check these potential causes:
 
 1. XML format errors in workflow file
-2. Incorrect path attribute in template reference
-3. Template file doesn't exist at specified path
+2. Incorrect path attribute in document reference
+3. Source file doesn't exist at specified path
 4. File permissions preventing writes
 
 ```bash
@@ -258,15 +328,36 @@ ls -la bin/markdown-sync-embedded-documents
 **Path Resolution Issues:**
 
 ```bash
-# Check if template files exist
+# Check if document files exist
 find dev-handbook/templates -name "*.template.md" | head -10
+find dev-handbook/guides -name "*.g.md" | head -10
 ```
 
 **Content Differences Persist:**
 
 1. Check for hidden characters or encoding issues
-2. Verify template file contains expected content  
-3. Ensure XML template section is properly formatted
+2. Verify source file contains expected content  
+3. Ensure XML document section is properly formatted
+
+### Guide-Specific Troubleshooting
+
+**Guide Not Found:**
+
+```bash
+# Verify guide exists with correct extension
+ls -la dev-handbook/guides/**/*.g.md
+```
+
+**Mixed Document Types:**
+
+```bash
+# Find workflows using both formats
+grep -r -l "<documents>" dev-handbook/workflow-instructions/ | while read file; do
+  if grep -q "<templates>" "$file"; then
+    echo "Mixed format in: $file"
+  fi
+done
+```
 
 ### Error Messages
 
@@ -276,10 +367,16 @@ find dev-handbook/templates -name "*.template.md" | head -10
 - Check for typos in template path
 - Ensure template file has `.template.md` extension
 
+**"Guide file not found":**
+
+- Verify path attribute points to existing file
+- Check for typos in guide path
+- Ensure guide file has `.g.md` extension
+
 **"Invalid XML format":**
 
-- Check for missing closing tags (`</template>`, `</templates>`)
-- Verify proper nesting of template sections
+- Check for missing closing tags (`</template>`, `</guide>`, `</documents>`)
+- Verify proper nesting of document sections
 - Ensure path attribute is properly quoted
 
 **"Permission denied":**
@@ -300,8 +397,9 @@ git checkout HEAD -- dev-handbook/workflow-instructions/
 **Manual Synchronization:**
 
 ```bash
-# Copy template content manually if script fails
+# Copy document content manually if script fails
 cp dev-handbook/templates/path/to/template.md /tmp/
+cp dev-handbook/guides/path/to/guide.g.md /tmp/
 # Edit workflow file manually to embed content
 ```
 
@@ -324,7 +422,7 @@ bin/markdown-sync-embedded-documents --verbose
 # .git/hooks/pre-commit
 bin/markdown-sync-embedded-documents --dry-run
 if [ $? -ne 0 ]; then
-  echo "Template synchronization would make changes. Run sync first."
+  echo "Document synchronization would make changes. Run sync first."
   exit 1
 fi
 ```
@@ -332,7 +430,7 @@ fi
 **IDE Integration:**
 
 - Configure editor to run sync script as custom task
-- Set up file watchers on template directory for automatic sync
+- Set up file watchers on template and guide directories for automatic sync
 - Use project-specific commands in IDE terminal
 
 ### CI/CD Integration
@@ -340,14 +438,14 @@ fi
 **GitHub Actions Example:**
 
 ```yaml
-- name: Synchronize Templates
+- name: Synchronize Documents
   run: |
     bin/markdown-sync-embedded-documents --verbose
     if [ -n "$(git status --porcelain)" ]; then
-      git config user.name "Template Sync Bot"
+      git config user.name "Document Sync Bot"
       git config user.email "bot@example.com"
       git add -A
-      git commit -m "chore: sync embedded templates [bot]"
+      git commit -m "chore: sync embedded documents [bot]"
       git push
     fi
 ```
@@ -356,39 +454,46 @@ fi
 
 ```bash
 # Add to project bin/ scripts for common tasks
-echo '#!/bin/bash' > bin/sync-templates
-echo 'bin/markdown-sync-embedded-documents --verbose --commit' >> bin/sync-templates
-chmod +x bin/sync-templates
+echo '#!/bin/bash' > bin/sync-documents
+echo 'bin/markdown-sync-embedded-documents --verbose --commit' >> bin/sync-documents
+chmod +x bin/sync-documents
 ```
 
 ## Best Practices
 
-### Template Development
+### Document Development
 
-1. **Test Templates Thoroughly**: Verify template content before embedding
-2. **Use Descriptive Paths**: Choose clear, logical template paths
+1. **Test Documents Thoroughly**: Verify document content before embedding
+2. **Use Descriptive Paths**: Choose clear, logical document paths
 3. **Maintain Consistency**: Follow established naming and organization patterns
-4. **Document Changes**: Include template updates in commit messages
+4. **Document Changes**: Include document updates in commit messages
 
 ### Synchronization Workflow
 
 1. **Dry Run First**: Always preview changes before applying
 2. **Review Changes**: Manually inspect diffs after synchronization  
-3. **Atomic Commits**: Commit template changes separately from other modifications
+3. **Atomic Commits**: Commit document changes separately from other modifications
 4. **Regular Maintenance**: Run synchronization regularly to prevent drift
 
 ### Collaboration
 
-1. **Coordinate Updates**: Communicate template changes to team members
-2. **Batch Updates**: Group related template changes together
-3. **Clear Commit Messages**: Use consistent commit message format for template sync
-4. **Document Rationale**: Explain significant template changes in commit messages
+1. **Coordinate Updates**: Communicate document changes to team members
+2. **Batch Updates**: Group related document changes together
+3. **Clear Commit Messages**: Use consistent commit message format for document sync
+4. **Document Rationale**: Explain significant document changes in commit messages
+
+## Architecture References
+
+This system is built on the following architectural decisions:
+
+- [ADR-004: Consistent Path Standards](../../docs/decisions/ADR-004-consistent-path-standards.md)
+- [ADR-005: Universal Document Embedding System](../../docs/decisions/ADR-005-universal-document-embedding-system.md)
 
 ## Related Documentation
 
-- [Template Embedding Guide](../.meta/gds/template-embedding.g.md) - Standards and XML format
+- [Document Sync Operations Guide](./document-sync-operations.md) - Quick reference for common operations
 - [Workflow Instructions](../workflow-instructions/) - Implementation examples
 - [Project Management Guide](./project-management.g.md) - Development workflow context
 - [Version Control Guide](./version-control-system.g.md) - Git workflow integration
 
-This operational guide ensures the template synchronization system can be maintained and used effectively by all team members, supporting consistent and up-to-date template content across the development handbook.
+This comprehensive guide ensures the document synchronization system can be maintained and used effectively by all team members, supporting consistent and up-to-date document content across the development handbook.
