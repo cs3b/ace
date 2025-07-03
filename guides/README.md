@@ -24,8 +24,8 @@ Our development workflow centers around:
 - **[Picking Codenames Guide](./release-codenames.g.md)**: Guidelines for selecting project codenames.
 - **[Template Synchronization Guide](./template-synchronization.md)**: Comprehensive guide for template sync system operation and maintenance.
 - **[Template Sync Operations](./template-sync-operations.md)**: Quick reference for template synchronization workflows and commands.
-- **[Template Embedding Standards](./.meta/template-embedding.g.md)**: XML format standards for embedding templates in workflow instructions.
-- **[Embedding Tests in Workflows](./.meta/workflow-instructions-embeding-tests.g.md)**: Standard for incorporating tests in workflow instructions.
+- **[Template Embedding Standards](../.meta/gds/template-embedding.g.md)**: XML format standards for embedding templates in workflow instructions.
+- **[Embedding Tests in Workflows](./embedded-testing-guide.g.md)**: Standard for incorporating tests in workflow instructions.
 - **[Test-Driven Development Cycle](./testing-tdd-cycle.g.md)**: Core TDD practices and implementation cycle.
   - [Meta Documentation TDD](./test-driven-development-cycle/meta-documentation.md)
   - [Ruby Application TDD](./test-driven-development-cycle/ruby-application.md)

@@ -1,6 +1,6 @@
 # Template Synchronization System
 
-This guide covers the operational aspects of the template synchronization system, including script usage, maintenance procedures, and troubleshooting. For template embedding standards and format, see [Template Embedding Guide](./.meta/template-embedding.g.md).
+This guide covers the operational aspects of the template synchronization system, including script usage, maintenance procedures, and troubleshooting. For template embedding standards and format, see [Template Embedding Guide](../.meta/gds/template-embedding.g.md).
 
 ## Overview
 
@@ -386,7 +386,7 @@ chmod +x bin/sync-templates
 
 ## Related Documentation
 
-- [Template Embedding Guide](./.meta/template-embedding.g.md) - Standards and XML format
+- [Template Embedding Guide](../.meta/gds/template-embedding.g.md) - Standards and XML format
 - [Workflow Instructions](../workflow-instructions/) - Implementation examples
 - [Project Management Guide](./project-management.g.md) - Development workflow context
 - [Version Control Guide](./version-control-system.g.md) - Git workflow integration
