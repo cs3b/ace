@@ -1,3 +1,3 @@
-read whole file and follow [@publish-release.md](@file:dev-handbook/workflow-instructions/publish-release.wf.md)
+read whole file and follow @dev-handbook/workflow-instructions/publish-release.wf.md
 
 /commit

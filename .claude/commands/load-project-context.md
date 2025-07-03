@@ -1,3 +1,3 @@
-read whole file and follow [@load-project-context.md](@file:dev-handbook/workflow-instructions/load-project-context.wf.md)
+read whole file and follow @dev-handbook/workflow-instructions/load-project-context.wf.md
 
 /commit

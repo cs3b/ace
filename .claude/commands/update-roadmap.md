@@ -1,3 +1,3 @@
-read whole file and follow [@update-roadmap.md](@file:dev-handbook/workflow-instructions/update-roadmap.wf.md)
+read whole file and follow @dev-handbook/workflow-instructions/update-roadmap.wf.md
 
 /commit

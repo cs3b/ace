@@ -4,7 +4,7 @@ First, check the project setup to determine the appropriate commit strategy:
 2. Check for submodules: `git submodule status` or `ls -la .gitmodules`
 3. Check git status: `git status`
 
-Then read whole file and follow [@commit.md](@file:dev-handbook/workflow-instructions/commit.wf.md)
+Then read whole file and follow @dev-handbook/workflow-instructions/commit.wf.md
 
 Execute the appropriate commit strategy:
 - **If bin/gc exists**: Use `bin/gc -i "intention-of-changes"` for multi-repo commits
