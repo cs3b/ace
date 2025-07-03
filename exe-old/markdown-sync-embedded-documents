@@ -131,17 +131,42 @@ class TemplateSync
   def extract_templates(content)
     templates = []
     
-    # Find all <templates> sections
-    content.scan(/<templates>(.*?)<\/templates>/m) do |templates_section|
-      section_content = templates_section[0]
+    # Extract from new <documents> format
+    content.scan(/<documents>(.*?)<\/documents>/m) do |documents_section|
+      section_content = documents_section[0]
       
-      # Extract individual template tags with simplified single path attribute
+      # Process <template> tags
       section_content.scan(/<template\s+path="([^"]+)">(.*?)<\/template>/m) do |path, template_content|
         templates << {
           path: path,
-          content: template_content
+          content: template_content,
+          type: :template
         }
-        debug("    Extracted template: #{path}")
+        debug("    Extracted template from <documents>: #{path}")
+      end
+      
+      # Process <guide> tags
+      section_content.scan(/<guide\s+path="([^"]+)">(.*?)<\/guide>/m) do |path, guide_content|
+        templates << {
+          path: path,
+          content: guide_content,
+          type: :guide
+        }
+        debug("    Extracted guide from <documents>: #{path}")
+      end
+    end
+    
+    # Extract from legacy <templates> format (backward compatibility)
+    content.scan(/<templates>(.*?)<\/templates>/m) do |templates_section|
+      section_content = templates_section[0]
+      
+      section_content.scan(/<template\s+path="([^"]+)">(.*?)<\/template>/m) do |path, template_content|
+        templates << {
+          path: path,
+          content: template_content,
+          type: :template
+        }
+        debug("    Extracted template from <templates>: #{path}")
       end
     end
 
@@ -151,14 +176,16 @@ class TemplateSync
   def process_template(template_info, workflow_file_path)
     template_path = template_info[:path]
     embedded_content = template_info[:content]
+    document_type = template_info[:type] || :template
 
-    debug("    Processing template: #{template_path}")
+    debug("    Processing #{document_type}: #{template_path}")
 
-    # Validate template path
-    unless template_path.start_with?("dev-handbook/templates/") && template_path.end_with?(".template.md")
+    # Validate document path based on type
+    validation_result = validate_document_path(template_path, document_type)
+    if validation_result[:error]
       return {
         status: :error,
-        error: "Invalid template path: #{template_path} (must be in dev-handbook/templates/ and end with .template.md)"
+        error: validation_result[:error]
       }
     end
 
@@ -187,10 +214,11 @@ class TemplateSync
         return { status: :updated }
       else
         # Update the embedded content
-        updated_content = update_embedded_template(
+        updated_content = update_embedded_document(
           File.read(workflow_file_path),
           template_path,
-          file_content
+          file_content,
+          document_type
         )
         return {
           status: :updated,
@@ -213,18 +241,57 @@ class TemplateSync
     content.strip.gsub(/\r\n/, "\n")
   end
 
-  def update_embedded_template(workflow_content, template_path, new_content)
-    # Replace the content between <template path="..."> and </template>
-    # while preserving the XML structure and path attribute
-    
-    escaped_path = Regexp.escape(template_path)
-    pattern = /(<template\s+path="#{escaped_path}">)(.*?)(<\/template>)/m
-    
-    workflow_content.gsub(pattern) do |match|
-      opening_tag = $1
-      closing_tag = $3
-      "#{opening_tag}#{new_content}#{closing_tag}"
+  def validate_document_path(path, document_type)
+    case document_type
+    when :template
+      unless path.start_with?("dev-handbook/templates/") && path.end_with?(".template.md")
+        return {
+          error: "Invalid template path: #{path} (must be in dev-handbook/templates/ and end with .template.md)"
+        }
+      end
+    when :guide
+      unless path.start_with?("dev-handbook/guides/") && path.end_with?(".g.md")
+        return {
+          error: "Invalid guide path: #{path} (must be in dev-handbook/guides/ and end with .g.md)"
+        }
+      end
+    else
+      return {
+        error: "Unknown document type: #{document_type}"
+      }
     end
+    
+    { error: nil }
+  end
+
+  def update_embedded_document(workflow_content, document_path, new_content, document_type)
+    # Replace the content between document tags while preserving XML structure
+    
+    escaped_path = Regexp.escape(document_path)
+    
+    # Try new <documents> format first
+    if document_type == :template
+      # Try <documents><template> format
+      pattern = /(<documents>.*?<template\s+path="#{escaped_path}">)(.*?)(<\/template>.*?<\/documents>)/m
+      if workflow_content.match(pattern)
+        return workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+      end
+    elsif document_type == :guide
+      # Try <documents><guide> format
+      pattern = /(<documents>.*?<guide\s+path="#{escaped_path}">)(.*?)(<\/guide>.*?<\/documents>)/m
+      if workflow_content.match(pattern)
+        return workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+      end
+    end
+    
+    # Fall back to legacy <templates><template> format
+    pattern = /(<template\s+path="#{escaped_path}">)(.*?)(<\/template>)/m
+    workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+  end
+  
+  # Legacy method name for backward compatibility
+  def update_embedded_template(workflow_content, template_path, new_content)
+    update_embedded_document(workflow_content, template_path, new_content, :template)
   end
 
   def show_diff(embedded_content, file_content, template_path)
