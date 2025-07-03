@@ -16,28 +16,28 @@ For each workflow instruction file, create a corresponding command file:
 
 ### 2. Command Template
 
-Use this template for each command file:
+Use below template, if custom template is missing (at the end of the file) for each command file:
 
 ```md
-READ the WHOLE workflow and follow instructions in [@workflow-name.md](@file:dev-handbook/workflow-instructions/workflow-name.wf.md)
+read whole file and follow [@workflow-name.md](@file:dev-handbook/workflow-instructions/workflow-name.wf.md)
 
-Commit all changes you have made, after you are sure the work is done
+/commit
 ```
 
 ### 3. Example Commands
 
 #### create-task.md
 ```md
-READ the WHOLE workflow and follow instructions in [@create-task.md](@file:dev-handbook/workflow-instructions/create-task.wf.md)
+read whole file and follow [@create-task.md](@file:dev-handbook/workflow-instructions/create-task.wf.md)
 
-Commit all changes you have made, after you are sure the work is done
+/commit
 ```
 
 #### work-on-task.md
 ```md
-READ the WHOLE workflow and follow instructions in [@work-on-task.md](@file:dev-handbook/workflow-instructions/work-on-task.wf.md)
+read whole file and follow [@work-on-task.md](@file:dev-handbook/workflow-instructions/work-on-task.wf.md)
 
-Commit all changes you have made, after you are sure the work is done
+/commit
 ```
 
 ## Implementation Steps
@@ -59,3 +59,31 @@ Commit all changes you have made, after you are sure the work is done
 - The `@file:` reference must use the correct relative path
 - Always include the commit instruction at the end
 - Commands should be concise and follow the established pattern
+
+
+<templates>
+
+<template workflow="load-project-context.wf.md">
+read whole file and follow [@load-project-context.md](@file:dev-handbook/workflow-instructions/load-project-context.wf.md)
+
+/commit
+</template>
+
+<template workflow="commit.wf.md">
+First, check the project setup to determine the appropriate commit strategy:
+
+1. Check if `bin/gc` exists: `ls -la bin/gc`
+2. Check for submodules: `git submodule status` or `ls -la .gitmodules`
+3. Check git status: `git status`
+
+Then read whole file and follow [@commit.md](@file:dev-handbook/workflow-instructions/commit.wf.md)
+
+Execute the appropriate commit strategy:
+- **If bin/gc exists**: Use `bin/gc -i "intention-of-changes"` for multi-repo commits
+- **If submodules exist**: Handle submodule commits first, then main repo
+- **If single repo**: Follow standard git commit workflow
+
+The workflow handles all necessary commits - do not create additional commits afterward
+</template>
+
+</templates>
