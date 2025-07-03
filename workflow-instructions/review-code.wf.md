@@ -290,7 +290,7 @@ Execute reviews with multiple LLM providers:
 ```bash
 # Execute Google Pro review
 echo "Executing Google Pro review..."
-dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-gpro.md" 2>&1
+dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" --system "${SYSTEM_PROMPT_PATH}" --output "${SESSION_DIR}/cr-report-gpro.md"
 
 # Check Google Pro execution status
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
@@ -303,7 +303,7 @@ fi
 
 # Execute Anthropic Opus review
 echo "Executing Anthropic Opus review..."
-dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-opus.md" 2>&1
+dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 "$(cat "${SESSION_DIR}/prompt.md")" --system "${SYSTEM_PROMPT_PATH}" --output "${SESSION_DIR}/cr-report-opus.md"
 
 # Check Anthropic Opus execution status
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-opus.md" ]]; then
@@ -360,7 +360,8 @@ $([ -f "${SESSION_DIR}/input.diff" ] && echo "- [\\`input.diff\\`](./input.diff)
 $([ -f "${SESSION_DIR}/input.xml" ] && echo "- [\\`input.xml\\`](./input.xml) - File content in XML format")
 
 ### Prompt and Execution
-- [\`prompt.md\`](./prompt.md) - Combined review prompt (context + content + template)
+- [\`prompt.md\`](./prompt.md) - User prompt (PROJECT CONTEXT + FOCUS REVIEW)
+- [\`system.prompt.combined.md\`](./system.prompt.combined.md) - Combined system prompt (for multi-focus reviews)
 - [\`execution.summary\`](./execution.summary) - LLM execution results
 - [\`execution.log\`](./execution.log) - Detailed execution logs (if errors occurred)
 
