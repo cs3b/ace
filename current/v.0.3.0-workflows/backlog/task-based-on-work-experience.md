@@ -61,6 +61,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 ### Concrete Implementation Strategies
 
 #### Strategy A: LLM-Query Integration for Labor-Intensive Workflows
+
 **Leverage existing `dev-tools/exe/llm-query` infrastructure for workflow optimization**
 
 - **Target workflows**: "load project context" and similar file-reading intensive operations
@@ -70,6 +71,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Integration points**: Workflow instructions that currently read multiple documentation files
 
 #### Strategy B: LLM-Agent Command Infrastructure  
+
 **Create `llm-agent` command similar to `llm-query` but for coding agent orchestration**
 
 - **API design**: Similar to llm-query but with agent+model selection (e.g., `claude:sonet`, `codex:o3`)
@@ -82,6 +84,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Directory management**: Automatic current directory context passing per agent
 
 #### Strategy C: Project Content Utility Command
+
 **Alternative approach: Build utility commands for context preparation**
 
 - **File concatenation**: Command to combine multiple project files into single context
@@ -90,27 +93,143 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Usage**: `project-context load-architecture` or `project-context find-file task-management`
 - **Integration**: Used by both human developers and AI agents for consistent context access
 
+#### Strategy D: Simple Context Command (MVP Approach)
+**Build a single `bin/context` command that combines file reading and command execution**
+
+- **Command structure**: `bin/context --files <file1,file2> --cmds "<cmd1,cmd2>"`
+- **Purpose**: Universal context loading for any workflow that needs files + command outputs
+- **Example usage**: `bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"`
+- **Benefits**: 
+  - **Immediate value**: Solves 80% of context loading with 20% of complexity
+  - **Universal**: Works for any workflow needing files + commands
+  - **Simple**: No agent configuration, permissions, or orchestration needed
+  - **Foundation**: Can be enhanced later with caching, optimization, etc.
+- **Implementation**: Single shell script or Ruby command in `bin/` directory
+- **Integration**: Replace multi-step file reading in workflow instructions with single `bin/context` calls
+
 ### Improvement Recommendations
 
-1. **Implement LLM-Query Workflow Integration** (Strategy A): Modify workflow instructions to delegate file-reading tasks to cheap models via existing `dev-tools/exe/llm-query` infrastructure. Target 60-80% cost reduction for context loading operations.
+**Priority 1 (MVP - Immediate Implementation):**
 
-2. **Build LLM-Agent Command Infrastructure** (Strategy B): Create `llm-agent` command with agent+model selection (`claude:sonet`, `codex:o3`) and configurable tool permissions. Enable agent orchestration with proper directory and context management.
+1. **Implement Simple Context Command** (Strategy D): Build `bin/context --files <files> --cmds "<commands>"` as immediate solution. Provides 80% of benefits with minimal complexity. Can be implemented in 1-2 hours and used immediately across all workflows.
 
-3. **Develop Project Content Utilities** (Strategy C): Build helper commands for file concatenation, path resolution, and context template management. Alternative to complex agent setups for simple context needs.
+**Priority 2 (Enhanced Efficiency):**
 
-4. **Create Agent Hierarchy**: Implement main agent orchestrating specialized sub-agents using the new llm-agent infrastructure. Each sub-agent handles specific task types with appropriate model tiers.
+2. **Implement LLM-Query Workflow Integration** (Strategy A): Enhance `bin/context` to optionally delegate file reading to cheap models via `dev-tools/exe/llm-query`. Target 60-80% cost reduction for large context operations.
 
-5. **Implement Smart Context Caching**: Build system to cache project context and reuse across tasks, integrated with both llm-query and llm-agent commands for maximum efficiency.
+3. **Add Context Caching to bin/context**: Extend simple command with file modification time checking and cached results. Achieve 90% cache hit rate for repeated operations.
 
-6. **Token Usage Optimization**: Track and optimize token consumption across all agent interactions, with specific focus on measuring cost savings from Strategy A implementations.
+**Priority 3 (Advanced Features):**
 
-7. **Batch Processing Framework**: Group similar tasks and process with appropriate model tiers using the new agent infrastructure for parallel execution and cost optimization.
+4. **Build LLM-Agent Command Infrastructure** (Strategy B): Create `llm-agent` command with agent+model selection (`claude:sonet`, `codex:o3`) for complex orchestration scenarios. Build on proven `bin/context` foundation.
+
+5. **Develop Project Content Utilities** (Strategy C): Build specialized commands for common patterns discovered through `bin/context` usage analytics.
+
+**Priority 4 (Optimization):**
+
+6. **Create Agent Hierarchy**: Implement main agent orchestrating specialized sub-agents using the new llm-agent infrastructure. Each sub-agent handles specific task types with appropriate model tiers.
+
+7. **Token Usage Optimization**: Track and optimize token consumption across all agent interactions, with specific focus on measuring cost savings from Strategy A implementations.
+
+8. **Batch Processing Framework**: Group similar tasks and process with appropriate model tiers using the proven agent infrastructure for parallel execution and cost optimization.
 
 ### Implementation Specifications
 
-#### Command Line Interface Specifications
+#### bin/context Command Specification (Priority 1)
+
+**Basic Command Structure:**
+```bash
+bin/context --files <file1,file2,file3> --cmds "<cmd1,cmd2>" [options]
+```
+
+**Core Examples:**
+```bash
+# Load project context for work-on-task workflow
+bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"
+
+# Load task context with git status
+bin/context --files current/task-42.md --cmds "bin/tn,git status"
+
+# Load guides with test results
+bin/context --files dev-handbook/guides/testing.md --cmds "bin/test,bin/lint"
+
+# Load release context
+bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
+```
+
+**Output Format:**
+```
+=== FILE: docs/what-do-we-build.md ===
+[file content]
+
+=== FILE: docs/architecture.md ===
+[file content]
+
+=== COMMAND: bin/tn ===
+[command output]
+
+=== COMMAND: git status ===
+[command output]
+```
+
+**Options:**
+```bash
+--files <paths>          # Comma-separated file paths
+--cmds "<commands>"      # Comma-separated commands in quotes
+--format <text|json>     # Output format (default: text)
+--cache                  # Use cached results if available
+--quiet                  # Suppress section headers
+--working-dir <path>     # Execute commands from specific directory
+
+# Truncation Management Options
+--max-size <chars>       # Auto-truncate if output exceeds size (default: 15000)
+--smart-truncate         # Use LLM summarization for large content
+--buffer-large           # Store large outputs in temp files, return references
+--file-strategy <mode>   # How to handle large files: full|head|tail|summarize
+--cmd-strategy <mode>    # How to handle large command output: full|errors-only|summarize
+--preview-mode           # Return summaries with expansion commands
+```
+
+**Integration with Workflows:**
+Replace current multi-step patterns like:
+```bash
+# Before (multiple tool calls)
+Read docs/what-do-we-build.md
+Read docs/architecture.md  
+Read docs/blueprint.md
+Bash bin/tn
+
+# After (single call)
+bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"
+```
+
+**Truncation Handling Examples:**
+```bash
+# Handle large documentation with smart summarization
+bin/context --files docs/large-spec.md --smart-truncate --file-strategy=summarize
+
+# Get test results but only show errors to avoid spam
+bin/context --files current/task-42.md --cmds "bin/test" --cmd-strategy=errors-only
+
+# Buffer large outputs for later access
+bin/context --files docs/* --cmds "bin/test" --buffer-large --max-size 8000
+
+# Preview mode for exploration
+bin/context --files docs/architecture.md --preview-mode
+# Returns: "Architecture summary: [key points]. Use 'bin/context --expand arch-1' for full content"
+```
+
+**Output Size Management:**
+- **Default behavior**: Auto-truncate at 15,000 characters with intelligent boundaries
+- **Smart truncation**: Use cheap LLM models (gflash/haiku) to summarize large content
+- **Local buffering**: Store full content in `/tmp/context-{hash}`, return file reference
+- **Content-aware**: Different strategies for files vs command outputs
+- **Progressive access**: Initial summaries with expansion capabilities
+
+#### Advanced Command Specifications (Priority 3+)
 
 **LLM-Agent Command Structure:**
+
 ```bash
 # Basic usage
 llm-agent <agent>:<model> "<task>" [options]
@@ -129,6 +248,7 @@ llm-agent local:hermes "analyze logs" --context=files --tools=read
 ```
 
 **Project-Context Command Structure:**
+
 ```bash
 # Context loading
 project-context load-architecture         # Load arch docs
@@ -148,18 +268,21 @@ project-context cache-status             # Show cache statistics
 #### Integration Points with Existing Infrastructure
 
 **Dev-Tools Integration:**
+
 - Extend `dev-tools/exe/llm-query` with agent orchestration capabilities
 - Reuse existing provider configurations (Google, LM Studio, etc.)
 - Leverage current authentication and API key management
 - Build on existing cost tracking and usage reporting
 
 **Workflow Instruction Integration:**
+
 - Modify `dev-handbook/workflow-instructions/load-project-context.wf.md` to use cheap models
 - Update task-related workflows to delegate context loading
 - Add agent selection guidance to workflow templates
 - Include cost optimization targets in workflow success criteria
 
 **Tool Permission Matrix:**
+
 | Agent Type | Read | Edit | Bash | Task | WebFetch | Git |
 |------------|------|------|------|------|----------|-----|
 | claude:sonet | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -167,22 +290,39 @@ project-context cache-status             # Show cache statistics
 | codex:o3 | ✓ | ✓ | Limited | ✗ | ✗ | ✓ |
 | local:hermes | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 
-#### Cost Optimization Targets
+#### Cost/Benefit Analysis
 
-**Phase 1 (Workflow Integration):**
-- Reduce context loading costs by 60-80% using cheap models for file reading
-- Target workflows: load-project-context, task preparation, documentation review
-- Expected monthly savings: $200-400 for active development teams
+**Phase 1 (bin/context MVP):**
+- **Development cost**: 1-2 hours implementation time
+- **Immediate benefits**: 
+  - Reduce workflow step count by 75% (4 tool calls → 1 tool call)
+  - Eliminate context switching between file reading and command execution
+  - Consistent output format for AI agents to process
+  - No token cost optimization yet, but dramatic productivity improvement
+- **ROI**: Immediate positive return from first use
 
-**Phase 2 (Agent Infrastructure):**
-- Enable parallel processing with cost-aware model selection
-- Implement automatic model fallback based on task complexity
-- Target 40% overall reduction in agent orchestration costs
+**Phase 2 (Enhanced bin/context):**
+- **Development cost**: 4-8 hours for caching and llm-query integration
+- **Benefits**:
+  - Reduce context loading costs by 60-80% using cheap models for file reading
+  - Cache hit rate of 90% for repeated operations
+  - Target workflows: load-project-context, task preparation, documentation review
+- **Expected monthly savings**: $200-400 for active development teams
 
-**Phase 3 (Advanced Optimization):**
-- Context caching with 90% cache hit rate for repeated operations
-- Batch processing with optimal model selection per task type
-- Integration with existing dev-tools cost tracking for comprehensive monitoring
+**Phase 3 (Agent Infrastructure):**
+- **Development cost**: 2-4 weeks for full llm-agent implementation
+- **Benefits**:
+  - Enable parallel processing with cost-aware model selection
+  - Implement automatic model fallback based on task complexity
+  - Target 40% overall reduction in agent orchestration costs
+- **Built on**: Proven `bin/context` foundation with real usage data
+
+**Phase 4 (Advanced Optimization):**
+- **Development cost**: 4-6 weeks for batch processing and full integration
+- **Benefits**:
+  - Batch processing with optimal model selection per task type
+  - Integration with existing dev-tools cost tracking for comprehensive monitoring
+  - Full agent hierarchy with specialized sub-agents
 
 ---
 
