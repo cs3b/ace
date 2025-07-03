@@ -199,7 +199,7 @@ echo "🧠 Executing handbook review with multiple models..."
 
 # Execute Google Pro review
 echo "📊 Executing Google Pro review..."
-dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-gpro.md" 2>&1
+dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" --system "dev-local/handbook/tpl/review/system.prompt.md" --output "${SESSION_DIR}/cr-report-gpro.md"
 
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
     echo "✅ Google Pro review completed successfully"
@@ -211,7 +211,7 @@ fi
 
 # Execute Anthropic Claude review
 echo "📊 Executing Anthropic Claude review..."
-dev-tools/exe/llm-query anthropic:claude-3-sonnet-20240229 "$(cat "${SESSION_DIR}/prompt.md")" > "${SESSION_DIR}/cr-report-claude.md" 2>&1
+dev-tools/exe/llm-query anthropic:claude-3-sonnet-20240229 "$(cat "${SESSION_DIR}/prompt.md")" --system "dev-local/handbook/tpl/review/system.prompt.md" --output "${SESSION_DIR}/cr-report-claude.md"
 
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-claude.md" ]]; then
     echo "✅ Anthropic Claude review completed successfully"
@@ -255,7 +255,7 @@ $([ -f "${SESSION_DIR}/input.diff" ] && echo "- [\`input.diff\`](./input.diff) -
 $([ -f "${SESSION_DIR}/input.xml" ] && echo "- [\`input.xml\`](./input.xml) - Handbook file content in XML format")
 
 ### Prompt and Execution
-- [\`prompt.md\`](./prompt.md) - Complete handbook review prompt
+- [\`prompt.md\`](./prompt.md) - User prompt (PROJECT CONTEXT + FOCUS REVIEW)
 - [\`execution.summary\`](./execution.summary) - LLM execution results
 $([ -f "${SESSION_DIR}/execution.log" ] && echo "- [\`execution.log\`](./execution.log) - Detailed execution logs")
 
