@@ -1,0 +1,9 @@
+command: @handbook-review workflows 
+timestamp: 2025-07-03T23:23:38+01:00
+target: workflows
+git_range: working
+focus: docs (handbook-specific)
+context: docs/**/*.md
+system_prompt: dev-local/handbook/tpl/review/system.prompt.md
+repository: dev-handbook (submodule)
+EOF < /dev/null
