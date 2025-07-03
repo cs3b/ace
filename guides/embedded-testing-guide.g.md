@@ -120,6 +120,7 @@ Embedded tests are crucial for maintaining workflow independence:
 4. **Technology-Agnostic Commands**: Use placeholder commands that can be adapted to different stacks
 
 ### Example: Self-Contained Test in Planning Step
+
 ```markdown
 ### Planning Steps
 * [ ] Review dependency analysis findings
@@ -239,6 +240,7 @@ isn't available, with comments showing language-specific alternatives:
 5. **Document Expected Output**: Be clear about what constitutes success
 
 ### Example: Technology-Agnostic Test
+
 ```markdown
 > TEST: Project Tests Pass
 > Type: Post-condition Check
