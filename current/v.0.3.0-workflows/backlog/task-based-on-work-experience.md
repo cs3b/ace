@@ -94,12 +94,13 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Integration**: Used by both human developers and AI agents for consistent context access
 
 #### Strategy D: Simple Context Command (MVP Approach)
+
 **Build a single `bin/context` command that combines file reading and command execution**
 
 - **Command structure**: `bin/context --files <file1,file2> --cmds "<cmd1,cmd2>"`
 - **Purpose**: Universal context loading for any workflow that needs files + command outputs
 - **Example usage**: `bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"`
-- **Benefits**: 
+- **Benefits**:
   - **Immediate value**: Solves 80% of context loading with 20% of complexity
   - **Universal**: Works for any workflow needing files + commands
   - **Simple**: No agent configuration, permissions, or orchestration needed
@@ -138,11 +139,13 @@ This document consolidates 68+ development insights gathered from real-world exp
 #### bin/context Command Specification (Priority 1)
 
 **Basic Command Structure:**
+
 ```bash
 bin/context --files <file1,file2,file3> --cmds "<cmd1,cmd2>" [options]
 ```
 
 **Core Examples:**
+
 ```bash
 # Load project context for work-on-task workflow
 bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"
@@ -158,6 +161,7 @@ bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
 ```
 
 **Output Format:**
+
 ```
 === FILE: docs/what-do-we-build.md ===
 [file content]
@@ -173,6 +177,7 @@ bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
 ```
 
 **Options:**
+
 ```bash
 --files <paths>          # Comma-separated file paths
 --cmds "<commands>"      # Comma-separated commands in quotes
@@ -192,6 +197,7 @@ bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
 
 **Integration with Workflows:**
 Replace current multi-step patterns like:
+
 ```bash
 # Before (multiple tool calls)
 Read docs/what-do-we-build.md
@@ -204,6 +210,7 @@ bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint
 ```
 
 **Truncation Handling Examples:**
+
 ```bash
 # Handle large documentation with smart summarization
 bin/context --files docs/large-spec.md --smart-truncate --file-strategy=summarize
@@ -220,6 +227,7 @@ bin/context --files docs/architecture.md --preview-mode
 ```
 
 **Output Size Management:**
+
 - **Default behavior**: Auto-truncate at 15,000 characters with intelligent boundaries
 - **Smart truncation**: Use cheap LLM models (gflash/haiku) to summarize large content
 - **Local buffering**: Store full content in `/tmp/context-{hash}`, return file reference
@@ -293,8 +301,9 @@ project-context cache-status             # Show cache statistics
 #### Cost/Benefit Analysis
 
 **Phase 1 (bin/context MVP):**
+
 - **Development cost**: 1-2 hours implementation time
-- **Immediate benefits**: 
+- **Immediate benefits**:
   - Reduce workflow step count by 75% (4 tool calls → 1 tool call)
   - Eliminate context switching between file reading and command execution
   - Consistent output format for AI agents to process
@@ -302,6 +311,7 @@ project-context cache-status             # Show cache statistics
 - **ROI**: Immediate positive return from first use
 
 **Phase 2 (Enhanced bin/context):**
+
 - **Development cost**: 4-8 hours for caching and llm-query integration
 - **Benefits**:
   - Reduce context loading costs by 60-80% using cheap models for file reading
@@ -310,6 +320,7 @@ project-context cache-status             # Show cache statistics
 - **Expected monthly savings**: $200-400 for active development teams
 
 **Phase 3 (Agent Infrastructure):**
+
 - **Development cost**: 2-4 weeks for full llm-agent implementation
 - **Benefits**:
   - Enable parallel processing with cost-aware model selection
@@ -318,6 +329,7 @@ project-context cache-status             # Show cache statistics
 - **Built on**: Proven `bin/context` foundation with real usage data
 
 **Phase 4 (Advanced Optimization):**
+
 - **Development cost**: 4-6 weeks for batch processing and full integration
 - **Benefits**:
   - Batch processing with optimal model selection per task type
