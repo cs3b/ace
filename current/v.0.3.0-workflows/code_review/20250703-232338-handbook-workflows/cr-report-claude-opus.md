@@ -30,6 +30,7 @@ The diff shows comprehensive workflow instruction additions covering 17 new work
 ## 2. Workflow Instructions Updates
 
 **🟢 New Workflows Added (17 total):**
+
 - `create-user-docs.wf.md` - User documentation creation workflow
 - `fix-tests.wf.md` - Test failure diagnosis and resolution
 - `save-session-context.wf.md` - Session state preservation
@@ -51,6 +52,7 @@ The diff shows comprehensive workflow instruction additions covering 17 new work
 - `create-task.wf.md` - Task creation from unstructured input
 
 **🟡 Workflow Patterns Identified:**
+
 - Heavy use of embedded templates within workflows
 - Consistent structure: Goal → Prerequisites → Context Loading → Process Steps
 - Integration with `bin/` commands throughout
@@ -59,6 +61,7 @@ The diff shows comprehensive workflow instruction additions covering 17 new work
 ## 3. Template & Example Updates
 
 **🟢 Embedded Templates Found:**
+
 - User documentation template in `create-user-docs.wf.md`
 - Session context template in `save-session-context.wf.md`
 - ADR template in `create-adr.wf.md`
@@ -71,6 +74,7 @@ The diff shows comprehensive workflow instruction additions covering 17 new work
 
 **⚠️ Template Organization Issue:**
 Templates are embedded within workflow files rather than referenced from central template directory. This could lead to:
+
 - Duplication and inconsistency
 - Difficulty in template maintenance
 - Version control challenges
@@ -78,6 +82,7 @@ Templates are embedded within workflow files rather than referenced from central
 ## 4. Integration Guide Requirements
 
 **🔴 Missing Guides – Required Workflow – File Path – Priority:**
+
 - **AI Agent Integration Guide** – All workflows – `guides/ai-agent-integration.g.md` – **Critical**
 - **Workflow Orchestration Guide** – Multi-workflow sequences – `guides/workflow-orchestration.g.md` – **High**
 - **Template Management Guide** – Template usage patterns – `guides/template-management.g.md` – **High**
@@ -86,6 +91,7 @@ Templates are embedded within workflow files rather than referenced from central
 ## 5. AI Agent Instruction Updates
 
 **🟢 AI-Specific Features Added:**
+
 - Explicit AI agent guidelines in `initialize-project-structure.wf.md`
 - Read-only and ignored paths for AI agents
 - Structured output formats for parsing
@@ -93,6 +99,7 @@ Templates are embedded within workflow files rather than referenced from central
 - Multi-model LLM execution patterns
 
 **🟡 AI Experience Enhancements Needed:**
+
 - Workflow dependency graph visualization
 - Error recovery procedures for each workflow
 - Progressive disclosure of complex workflows
@@ -101,12 +108,14 @@ Templates are embedded within workflow files rather than referenced from central
 ## 6. Cross-Reference Integrity
 
 **🔴 Critical Cross-Reference Issues:**
+
 1. Workflows reference `dev-handbook/templates/` paths that may not exist
 2. Multiple references to `dev-tools/exe/llm-query` without documentation
 3. References to `bin/tnid`, `bin/rc`, `bin/gc` commands without specification
 4. Inconsistent template path references between workflows
 
 **🟡 Documentation Dependencies:**
+
 - Workflows assume existence of `docs/what-do-we-build.md`, `docs/architecture.md`, `docs/blueprint.md`
 - Heavy reliance on `dev-taskflow/` directory structure
 - Integration with submodules not fully documented
@@ -114,6 +123,7 @@ Templates are embedded within workflow files rather than referenced from central
 ## 7. Prioritised Handbook Tasks
 
 ### 🔴 Critical (workflow-blocking)
+
 1. **Create AI Agent Integration Guide**
    - Document how AI agents should interpret and execute workflows
    - Define error handling and recovery procedures
@@ -130,6 +140,7 @@ Templates are embedded within workflow files rather than referenced from central
    - Create installation/setup guide
 
 ### 🟡 High Priority
+
 1. **Create Workflow Orchestration Guide**
    - Document workflow sequences and dependencies
    - Provide decision trees for workflow selection
@@ -141,6 +152,7 @@ Templates are embedded within workflow files rather than referenced from central
    - Update workflows to reference central templates
 
 ### 🟢 Medium Priority
+
 1. **Add Workflow Examples**
    - Create real-world usage examples for each workflow
    - Include error scenarios and resolutions
@@ -152,6 +164,7 @@ Templates are embedded within workflow files rather than referenced from central
    - Troubleshooting checklist
 
 ### 🔵 Nice-to-have
+
 1. **Workflow Visualization**
    - Create workflow dependency diagrams
    - Interactive workflow selector tool
@@ -160,12 +173,14 @@ Templates are embedded within workflow files rather than referenced from central
 ## 8. Risk Assessment
 
 **🔴 High Risk Areas:**
+
 1. **Template Management Chaos**: Embedded templates in 17+ files create maintenance nightmare
 2. **Missing Integration Documentation**: AI agents lack guidance on workflow orchestration
 3. **External Tool Dependencies**: Undocumented dependencies on `dev-tools` utilities
 4. **Cross-Reference Fragility**: Hardcoded paths may break with restructuring
 
 **🟡 Medium Risk Areas:**
+
 1. **Workflow Complexity**: Some workflows exceed 1000 lines, challenging for AI comprehension
 2. **Error Recovery Gaps**: Limited guidance on handling workflow failures
 3. **Version Compatibility**: No clear versioning strategy for workflows
@@ -181,6 +196,7 @@ Templates are embedded within workflow files rather than referenced from central
 **Justification:** While the workflow additions are comprehensive and well-structured, the lack of integration guides, missing template files, and undocumented external dependencies create blocking issues for AI agents attempting to use these workflows. The embedded template pattern, while functional, presents significant maintenance challenges that should be addressed before the system scales further.
 
 **Immediate Actions Required:**
+
 1. Create AI Agent Integration Guide with workflow orchestration patterns
 2. Document all external tool dependencies and bin commands
 3. Resolve template path references and establish template management strategy

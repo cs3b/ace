@@ -9,13 +9,16 @@
 ## Session Files
 
 ### Input Files
+
 - [`session.meta`](./session.meta) - Session metadata and parameters
 - [`input.xml`](./input.xml) - Workflow instruction files in XML format (19 files)
 
 ### Execution
+
 - [`execution.summary`](./execution.summary) - LLM execution results
 
 ### Review Reports
+
 - [`cr-report-gpro.md`](./cr-report-gpro.md) - Google Pro workflow review (✅ Success)
 - ❌ Anthropic Claude review failed (401 API Error)
 

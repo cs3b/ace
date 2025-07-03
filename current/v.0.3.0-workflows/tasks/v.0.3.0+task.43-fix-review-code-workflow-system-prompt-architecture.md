@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.43
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -52,24 +52,24 @@ Resolve critical system prompt duplication in review workflows where system prom
 
 ### Planning Steps
 
-* [ ] Analyze current prompt construction in review-code.wf.md lines 224-229
+* [x] Analyze current prompt construction in review-code.wf.md lines 224-229
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: System prompt duplication patterns are identified
   > Command: grep -n "System Prompt" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Review handbook-review command for consistent separation patterns
-* [ ] Identify all locations where system prompts are incorrectly embedded
+* [x] Review handbook-review command for consistent separation patterns
+* [x] Identify all locations where system prompts are incorrectly embedded
 
 ### Execution Steps
 
-* [ ] Remove lines 224-229 from review-code.wf.md that embed system prompt
-* [ ] Update prompt construction to exclude system prompt section
+* [x] Remove lines 224-229 from review-code.wf.md that embed system prompt
+* [x] Update prompt construction to exclude system prompt section
   > TEST: Verify System Prompt Removal
   > Type: Action Validation
   > Assert: prompt.md construction no longer includes system prompt content
   > Command: grep -A 10 "## System Prompt" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Verify LLM command patterns maintain --system flag (line 293)
-* [ ] Test handbook-review command end-to-end with proper separation
+* [x] Verify LLM command patterns maintain --system flag (line 293)
+* [x] Test handbook-review command end-to-end with proper separation
   > TEST: Verify Handbook Review Function
   > Type: Integration Test
   > Assert: handbook-review creates prompt.md without system prompt duplication
@@ -77,10 +77,10 @@ Resolve critical system prompt duplication in review workflows where system prom
 
 ## Acceptance Criteria
 
-* [ ] AC 1: review-code.wf.md no longer embeds system prompts in prompt.md
-* [ ] AC 2: All LLM commands use --system flag for system prompt separation
-* [ ] AC 3: handbook-review command works without prompt duplication
-* [ ] AC 4: Generated prompt.md files contain only user prompt content
+* [x] AC 1: review-code.wf.md no longer embeds system prompts in prompt.md
+* [x] AC 2: All LLM commands use --system flag for system prompt separation
+* [x] AC 3: handbook-review command works without prompt duplication
+* [x] AC 4: Generated prompt.md files contain only user prompt content
 
 ## Out of Scope
 

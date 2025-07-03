@@ -59,6 +59,7 @@
 ## Technical Details
 
 The handbook review process successfully analyzed 19 workflow instruction files:
+
 - **Input**: 222KB XML file with embedded workflow content
 - **Processing**: 56,142 input tokens, 2,569 output tokens
 - **Cost**: $0.095868 (Google Pro model)

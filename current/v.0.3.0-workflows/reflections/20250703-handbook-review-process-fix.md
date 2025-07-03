@@ -51,10 +51,12 @@
 ## Technical Details
 
 **Files Modified:**
+
 - `dev-handbook/workflow-instructions/review-code.wf.md`: Added system prompt parameter handling and --output flag usage
 - `.claude/commands/handbook-review.md`: Fixed prompt construction and updated llm-query calls
 
 **Key Changes:**
+
 - Separated system prompts from user prompts using `--system` flag
 - Updated prompt headers to use "PROJECT CONTEXT" and "FOCUS REVIEW"
 - Replaced shell redirection with `--output` flag

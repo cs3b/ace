@@ -58,16 +58,19 @@
 ## Technical Details
 
 **Key Architecture Fix**: Removed system prompt duplication in handbook-review command:
+
 - Before: System prompt embedded in prompt.md AND passed via --system flag
 - After: Clean separation with system prompt only via --system flag
 
-**Prompt Structure Improvement**: 
+**Prompt Structure Improvement**:
+
 - Before: Raw input.xml (222KB) passed directly to LLM
 - After: Complete prompt.md (225KB) with YAML frontmatter + project context + target content
 
 **Task Creation Summary**:
+
 - Task 43: Fix system prompt duplication (6h, high priority)
-- Task 44: Implement XML prompt structure (5h, high priority) 
+- Task 44: Implement XML prompt structure (5h, high priority)
 - Task 45: Add YAML frontmatter (2h, medium priority)
 - Task 46: Ensure complete content inclusion (3h, medium priority)
 - Task 47: Consolidate document embedding guides (4h, medium priority)
