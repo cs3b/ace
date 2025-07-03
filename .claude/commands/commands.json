@@ -15,5 +15,22 @@
       "allowed_roots": ["/Users/michalczyz/Projects/coding-agent-tools"],
       "enforce_project_boundary": true
     }
-  }
+  },
+  "/commit": {},
+  "/create-adr": {},
+  "/create-api-docs": {},
+  "/create-reflection-note": {},
+  "/create-task": {},
+  "/create-test-cases": {},
+  "/create-user-docs": {},
+  "/draft-release": {},
+  "/fix-tests": {},
+  "/initialize-project-structure": {},
+  "/load-project-context": {},
+  "/publish-release": {},
+  "/review-task": {},
+  "/save-session-context": {},
+  "/update-blueprint": {},
+  "/update-roadmap": {},
+  "/work-on-task": {}
 }
