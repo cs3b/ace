@@ -929,58 +929,134 @@ Finalize the PRD.md with comprehensive project requirements, ensuring all sectio
 ##### v.0.0.0+task.4: Create Roadmap
 
 <templates>
-<template path="dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md">
----
-id: v.0.0.0+task.4
+<template path="dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md">---
+id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using bin/tnid
 status: pending
 priority: high
 estimate: 2h
-dependencies: [v.0.0.0+task.3]
+dependencies: [TEMPLATE-task.3]
 ---
 
-# Create Initial Project Roadmap
+# TEMPLATE: Create Project Roadmap
+
+**TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
+
+1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+2. Replace dependency IDs with actual task IDs
+3. Remove this template note section
+4. Customize content for specific project needs
 
 ## Objective
 
-Establish the project roadmap from v0.1.0 through v1.0.0, defining major milestones and release objectives.
+Create a comprehensive project roadmap that outlines planned releases, major milestones, and strategic development phases. The roadmap establishes a structured approach to release management starting with v.0.1.0 foundation setup and extending to future major releases.
 
 ## Scope of Work
-
-- Define release milestones
-- Assign features to releases
-- Create high-level timeline
-- Document in roadmap.md
 
 ### Deliverables
 
 #### Create
 
-- dev-taskflow/roadmap.md
+- dev-taskflow/roadmap.md (complete project roadmap)
 
-## Implementation
+#### Modify
+
+- None
+
+#### Delete
+
+- None
+
+## Phases
+
+1. Release Planning - Define major release milestones and scope
+2. Timeline Development - Establish realistic development timelines
+3. Dependency Mapping - Identify cross-release dependencies and prerequisites
+4. Roadmap Documentation - Create structured roadmap document
+5. Stakeholder Review - Validate roadmap with project stakeholders
+
+## Implementation Plan
 
 ### Planning Steps
 
-- [ ] Review PRD for feature priorities
-- [ ] Identify logical feature groupings
-- [ ] Estimate development phases
+- [ ] Review completed PRD for feature scope and priority insights
+  > TEST: PRD Review for Roadmap Planning
+  > Type: Pre-condition Check
+  > Assert: PRD is complete and contains feature priorities
+  > Command: test -f PRD.md && grep -q "Priority\|Milestone\|Phase" PRD.md
+- [ ] Analyze project complexity to determine appropriate release cadence
+- [ ] Research roadmap templates and industry best practices
+- [ ] Plan v.0.1.0 foundation release scope based on PRD requirements
 
 ### Execution Steps
 
-- [ ] Define v0.1.0 (Foundation) scope
-- [ ] Define v0.2.0 (MVP) scope
-- [ ] Define v0.3.0 (Beta) scope
-- [ ] Define v1.0.0 (Production) scope
-- [ ] Create roadmap.md document
-- [ ] Add timeline estimates
+- [ ] Create roadmap.md with standard structure and metadata
+  > TEST: Roadmap File Creation
+  > Type: Action Validation
+  > Assert: roadmap.md exists with proper template structure
+  > Command: test -f dev-taskflow/roadmap.md && grep -q "# Project Roadmap\|## Release Overview" dev-taskflow/roadmap.md
+- [ ] Define v.0.1.0 foundation release with core infrastructure setup
+  > TEST: v.0.1.0 Release Defined
+  > Type: Action Validation
+  > Assert: roadmap contains detailed v.0.1.0 release specification
+  > Command: grep -q "## v\.0\.1\.0.*Foundation\|Infrastructure Setup" dev-taskflow/roadmap.md
+- [ ] Plan v.0.2.0 and v.0.3.0 releases with major feature milestones
+  > TEST: Future Releases Planned
+  > Type: Action Validation
+  > Assert: roadmap includes v.0.2.0 and v.0.3.0 planning
+  > Command: grep -q "## v\.0\.2\.0\|## v\.0\.3\.0" dev-taskflow/roadmap.md
+- [ ] Document release dependencies, prerequisites, and success criteria
+  > TEST: Release Dependencies Documented
+  > Type: Action Validation
+  > Assert: roadmap includes dependencies and success criteria for each release
+  > Command: grep -q "Dependencies\|Prerequisites\|Success Criteria" dev-taskflow/roadmap.md
+- [ ] Include timeline estimates and target delivery windows
+  > TEST: Timeline Information Complete
+  > Type: Action Validation
+  > Assert: roadmap contains realistic timeline estimates
+  > Command: grep -q "Target Date\|Timeline\|Estimated Duration" dev-taskflow/roadmap.md
+- [ ] Add release management processes and guidelines
+  > TEST: Process Documentation Complete
+  > Type: Action Validation
+  > Assert: roadmap includes release management processes
+  > Command: grep -q "Release Process\|Management\|Guidelines" dev-taskflow/roadmap.md
+- [ ] Review roadmap with stakeholders for feasibility and alignment
+  > VERIFY: Stakeholder Roadmap Review
+  > Type: User Feedback
+  > Prompt: Please review the created roadmap.md. Does it provide a realistic and achievable development plan? Are the release scopes appropriate and the timelines feasible? Are there any missing milestones or unrealistic expectations?
+  > Options: (Approved / Needs Timeline Adjustment / Scope Changes Required / Major Revision Needed)
+- [ ] Finalize roadmap with approval markers and version information
+  > TEST: Roadmap Finalization
+  > Type: Post-condition Check
+  > Assert: roadmap is complete with approval and version tracking
+  > Command: grep -q "Version\|Last Updated\|Status.*Approved" dev-taskflow/roadmap.md
 
 ## Acceptance Criteria
 
-- [ ] Roadmap covers v0.1.0 to v1.0.0
-- [ ] Each release has clear objectives
-- [ ] Feature assignments are logical
-- [ ] Timeline is realistic
-- [ ] Document follows roadmap format
+- [ ] AC 1: roadmap.md exists with comprehensive project development plan
+- [ ] AC 2: v.0.1.0 foundation release clearly defined with infrastructure focus
+- [ ] AC 3: Future releases (v.0.2.0, v.0.3.0+) planned with feature milestones
+- [ ] AC 4: Release dependencies and prerequisites documented
+- [ ] AC 5: Realistic timeline estimates provided for all planned releases
+- [ ] AC 6: Release management processes and guidelines included
+- [ ] AC 7: Stakeholder review completed with feedback incorporated
+- [ ] AC 8: All automated tests in Implementation Plan pass
+
+## Out of Scope
+
+- ❌ Detailed task breakdown for future releases (done during draft-release workflow)
+- ❌ Resource allocation and team assignment planning
+- ❌ Budget and cost estimation for releases
+- ❌ Risk assessment and mitigation strategies (covered in individual releases)
+- ❌ Market timing and external dependency coordination
+
+## References
+
+- dev-taskflow/roadmap.md (target file)
+- PRD.md (requirements source)
+- dev-handbook/templates/release-planning/ (roadmap templates)
+- dev-handbook/workflow-instructions/draft-release.wf.md
+- dev-handbook/guides/project-management.g.md
+- dev-handbook/guides/release-codenames.g.md
 </template>
 
 </templates>

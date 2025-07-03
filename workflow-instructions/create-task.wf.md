@@ -183,26 +183,18 @@ dependencies: [<ticket-ids>]
 
 # <Verb + Object>
 
-## 0. Context Audit ✅
+## 0. Directory Audit ✅
 
-_Optional: Run relevant audit command based on task requirements_
-
-_Command run (example):_
+_Command run:_
 
 ```bash
-# Choose appropriate command based on task context:
-# For guides/documentation: tree -L 2 dev-handbook/guides | sed 's/^/    /'
-# For code structure: tree -L 3 lib/ | sed 's/^/    /'
-# For test files: find spec/ -name "*.rb" -type f | head -10
-# For general overview: ls -la
-
-<insert relevant command here>
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
 ```
 
 _Result excerpt:_
 
 ```
-<insert audit results here>
+<insert tree here>
 ```
 
 ## Objective
