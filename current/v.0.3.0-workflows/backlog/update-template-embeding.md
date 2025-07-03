@@ -7,3 +7,5 @@ We have a certain infrastructure for embeding templates, but similar we can do w
         <-- content -->
     </guide>
 </guides>
+
+when we sync workflows - we should sync all guides / templates
