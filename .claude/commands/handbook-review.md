@@ -150,7 +150,7 @@ fi
 # Return to main repository
 cd ..
 
-# Build handbook-specific prompt
+# Build handbook-specific prompt (USER PROMPT ONLY - system prompt passed separately)
 cat > "${SESSION_DIR}/prompt.md" <<EOF
 # Handbook Review Prompt - ${TARGET} Focus
 
@@ -159,13 +159,7 @@ Target: ${TARGET}
 Git Range: ${GIT_RANGE:-working directory}
 Focus: docs (handbook-specific analysis)
 Context: docs/**/*.md
-
-## System Prompt
-
 EOF
-
-# Add handbook-specific system prompt
-cat "dev-local/handbook/tpl/review/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
 
 echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
 
