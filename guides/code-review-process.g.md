@@ -27,18 +27,21 @@ Effective code review ensures that changes meet quality standards across multipl
 Code reviews should systematically evaluate three key dimensions:
 
 **Code Quality Review**
+
 - Architecture and design patterns
 - Security and performance considerations  
 - Ruby/language best practices
 - Code organization and maintainability
 
-**Testing Review** 
+**Testing Review**
+
 - Test coverage for new and modified functionality
 - Test quality and maintainability
 - Integration with existing test suite
 - Performance test considerations
 
 **Documentation Review**
+
 - Impact on user-facing documentation
 - Architecture decision records (ADRs)
 - Code examples and API documentation
@@ -47,12 +50,14 @@ Code reviews should systematically evaluate three key dimensions:
 ### Review Methodology
 
 **Structured Analysis**
+
 - Categorize changes by type (new features, modifications, breaking changes)
 - Assess impact across all three focus areas
 - Identify dependencies and cross-cutting concerns
 - Document architectural decisions and trade-offs
 
 **Multi-Model Approach**
+
 - Leverage multiple AI models for comprehensive analysis
 - Compare findings to identify consensus vs. unique insights
 - Synthesize results into unified recommendations
@@ -63,21 +68,25 @@ Code reviews should systematically evaluate three key dimensions:
 Organize review findings by impact and urgency:
 
 **🔴 Critical** (Must be done immediately)
+
 - Security vulnerabilities or unsafe patterns
 - Breaking changes affecting user workflows  
 - Logic errors or incorrect implementations
 
 **🟡 High Priority** (Should be done soon)
+
 - Significant architectural concerns
 - Missing test coverage for critical paths
 - User-facing documentation gaps
 
 **🟢 Medium Priority** (Should be done eventually)
+
 - Code quality improvements
 - Test maintainability enhancements
 - Documentation clarity improvements
 
 **🔵 Low Priority** (Nice to have)
+
 - Style and consistency improvements
 - Performance optimizations
 - Minor documentation updates
@@ -113,16 +122,19 @@ Reviews are executed through standardized commands that create organized session
 ### Development Phases
 
 **Pre-Development**
+
 - Consider review scope and potential impact areas
 - Plan for documentation and testing requirements
 - Identify architectural decisions that will need documentation
 
 **During Implementation**
+
 - Make incremental commits that are easy to review
 - Document design decisions as they are made
 - Keep test coverage aligned with code changes
 
 **Post-Implementation**
+
 - Execute comprehensive reviews across all focus areas
 - Address critical and high-priority findings
 - Validate that all aspects meet project standards
@@ -130,11 +142,13 @@ Reviews are executed through standardized commands that create organized session
 ### Release Integration
 
 **Pre-Release**
+
 - Comprehensive review of all changes since last release
 - Validation of documentation accuracy and completeness
 - Synthesis of findings across multiple reviews
 
 **Release Process**
+
 - Final validation of critical issues resolution
 - Documentation of breaking changes and migration paths
 - Quality assurance checklist completion
@@ -196,10 +210,12 @@ Reviews are executed through standardized commands that create organized session
 ## Related Resources
 
 ### Implementation Workflows
+
 - [Review Code Workflow](../workflow-instructions/review-code.wf.md) - Detailed review execution process
 - [Review Synthesizer Workflow](../workflow-instructions/review-synthesizer.wf.md) - Multi-report analysis
 
 ### Standards and Guidelines  
+
 - [Documentation Guide](./documentation.g.md) - Documentation standards and practices
 - [Quality Assurance Guide](./quality-assurance.g.md) - Overall quality standards
 - [Version Control System Guide](./version-control-system.g.md) - Git workflow integration

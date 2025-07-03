@@ -15,10 +15,10 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 
 ## Project Context Loading
 
-* Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
-* Load synthesizer template: `dev-handbook/templates/review-synthesizer/system.prompt.md`
-* Load session patterns: `dev-taskflow/current/*/code_review/*/`
-* Load project structure: `docs/blueprint.md`
+- Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
+- Load synthesizer template: `dev-handbook/templates/review-synthesizer/system.prompt.md`
+- Load session patterns: `dev-taskflow/current/*/code_review/*/`
+- Load project structure: `docs/blueprint.md`
 
 ## Command Structure
 
@@ -184,10 +184,10 @@ fi
 ```
 
 **Validation:**
-* Reports source properly identified and validated
-* Synthesis directory created or identified
-* All cr-report-*.md files found and combined
-* Combined reports file created successfully
+- Reports source properly identified and validated
+- Synthesis directory created or identified
+- All cr-report-*.md files found and combined
+- Combined reports file created successfully
 
 ### 2. Session Context Integration and Report Validation
 
@@ -253,10 +253,10 @@ echo "📊 Ready to synthesize $report_count individual reports"
 ```
 
 **Validation:**
-* Session metadata integrated if available
-* All required report sections validated
-* Report count confirmed
-* Synthesis metadata file created
+- Session metadata integrated if available
+- All required report sections validated
+- Report count confirmed
+- Synthesis metadata file created
 
 ### 3. Enhanced Synthesis Prompt Construction
 
@@ -309,11 +309,11 @@ echo "📏 Prompt size: $(wc -w < "${SYNTHESIS_DIR}/synthesis.prompt.md") words"
 ```
 
 **Validation:**
-* Synthesis prompt file created with all sections
-* Synthesizer system prompt template included
-* Session context integrated if available
-* Combined reports properly embedded
-* Synthesis instructions clearly specified
+- Synthesis prompt file created with all sections
+- Synthesizer system prompt template included
+- Session context integrated if available
+- Combined reports properly embedded
+- Synthesis instructions clearly specified
 
 ### 4. Multi-Model Synthesis Execution
 
@@ -379,10 +379,10 @@ EOF
 ```
 
 **Validation:**
-* Primary synthesis executed successfully
-* Final cr-report.md created with metadata
-* Secondary synthesis attempted if primary succeeded
-* Execution summary documents results
+- Primary synthesis executed successfully
+- Final cr-report.md created with metadata
+- Secondary synthesis attempted if primary succeeded
+- Execution summary documents results
 
 ### 5. Result Processing and Session Integration
 
@@ -459,10 +459,10 @@ fi
 ```
 
 **Validation:**
-* Synthesis output structure validated
-* Key metrics extracted from final report
-* Session index updated with synthesis results
-* Complete workflow documentation provided
+- Synthesis output structure validated
+- Key metrics extracted from final report
+- Session index updated with synthesis results
+- Complete workflow documentation provided
 
 ### 6. Final Session Summary and Next Steps
 
@@ -518,10 +518,10 @@ fi
 ```
 
 **Validation:**
-* Comprehensive completion summary displayed
-* File generation status confirmed
-* Next steps clearly outlined
-* Critical items highlighted for attention
+- Comprehensive completion summary displayed
+- File generation status confirmed
+- Next steps clearly outlined
+- Critical items highlighted for attention
 
 ## Implementation Examples
 

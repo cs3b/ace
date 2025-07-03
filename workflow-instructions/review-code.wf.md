@@ -44,11 +44,11 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 
 ## Project Context Loading
 
-* Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
-* Load project structure: `docs/blueprint.md`
-* Load project vision: `docs/what-do-we-build.md`
-* Load review templates: `dev-handbook/templates/review-*/system.prompt.md`
-* Load existing session patterns: `dev-taskflow/current/*/code_review/*/`
+- Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
+- Load project structure: `docs/blueprint.md`
+- Load project vision: `docs/what-do-we-build.md`
+- Load review templates: `dev-handbook/templates/review-*/system.prompt.md`
+- Load existing session patterns: `dev-taskflow/current/*/code_review/*/`
 
 ## High-Level Execution Plan
 
@@ -95,9 +95,9 @@ EOF
 ```
 
 **Validation:**
-* Session directory created successfully
-* Session metadata file contains all parameters
-* Directory structure follows established pattern
+- Session directory created successfully
+- Session metadata file contains all parameters
+- Directory structure follows established pattern
 
 ### 2. Parameter Validation
 
@@ -194,9 +194,9 @@ echo "size: $(wc -l < "${target}") lines" >> "${SESSION_DIR}/input.meta"
 ```
 
 **Validation:**
-* Input file (input.diff or input.xml) created successfully
-* Input metadata file contains target information
-* Content properly formatted and readable
+- Input file (input.diff or input.xml) created successfully
+- Input metadata file contains target information
+- Content properly formatted and readable
 
 ### 4. Review Template Selection
 
@@ -221,12 +221,7 @@ Target: ${target}
 Focus: ${focus}
 Context: ${context:-auto}
 
-## System Prompt
-
 EOF
-
-# Add system prompt from template
-cat "dev-handbook/templates/review-${focus}/system.prompt.md" >> "${SESSION_DIR}/prompt.md"
 
 echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
 
@@ -277,11 +272,11 @@ esac
 ```
 
 **Validation:**
-* prompt.md file created with all sections
-* System prompt template included correctly
-* Project context loaded based on parameter
-* Target content properly embedded
-* Focus-specific instructions added
+- prompt.md file created with all sections
+- System prompt template included correctly
+- Project context loaded based on parameter
+- Target content properly embedded
+- Focus-specific instructions added
 
 ### 6. Multi-Model LLM Execution
 
@@ -331,10 +326,10 @@ EOF
 ```
 
 **Validation:**
-* Both LLM providers executed successfully
-* Report files contain structured review content
-* Execution log captures any errors or issues
-* Summary file provides execution overview
+- Both LLM providers executed successfully
+- Report files contain structured review content
+- Execution log captures any errors or issues
+- Summary file provides execution overview
 
 ### 7. Session Finalization and Index Creation
 
@@ -403,10 +398,10 @@ echo ""
 ```
 
 **Validation:**
-* Session index (README.md) created with all file references
-* Execution summary shows successful LLM runs
-* Session directory contains all expected files
-* Clear next steps provided for synthesis
+- Session index (README.md) created with all file references
+- Execution summary shows successful LLM runs
+- Session directory contains all expected files
+- Clear next steps provided for synthesis
 
 ## Implementation Templates
 
