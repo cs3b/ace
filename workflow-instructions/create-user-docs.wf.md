@@ -376,5 +376,6 @@ A: Clear, helpful answer.
 - Link to related features
 - External documentation
 - Video tutorials
-    </template>
+</template>
+
 </documents>
