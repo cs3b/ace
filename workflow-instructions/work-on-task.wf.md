@@ -135,7 +135,7 @@ For experienced users, here's the condensed workflow:
    **Code Quality:**
    * Use consistent indentation (2 spaces for Ruby)
    * Limit line length (100-120 characters)
-   * Run linters/formatters before committing
+   * Run linters/formatters during development
    * Write tests for new functionality
    * Document public APIs and complex logic
 
@@ -193,7 +193,7 @@ For experienced users, here's the condensed workflow:
      ```
 
    * Update task status to `done`
-   * Changes are ready for commit
+   * Work is complete and ready for review
 
 ## Task Documentation Organization
 
@@ -501,7 +501,7 @@ When working with temporary files:
 1. Break down task into smaller, manageable chunks
 2. Focus on core objectives first
 3. Create subtasks or follow-up tasks for secondary concerns
-4. Complete task in phases with intermediate commits
+4. Complete task in phases with intermediate validation
 5. Ask user about task scope reduction if overwhelming
 
 **Prevention:**
@@ -563,7 +563,7 @@ When errors occur during task execution:
 * All embedded tests pass
 * Acceptance criteria met
 * Task status updated to `done`
-* Changes committed with appropriate message
+* Work completed with proper validation
 * Code follows project standards
 * Documentation updated as needed
 
@@ -575,19 +575,6 @@ When errors occur during task execution:
 2. Tasks with met dependencies
 3. Tasks matching current skills/context
 4. Smaller tasks for quick wins
-
-### Commit Message Format
-
-```
-type(scope): description
-
-- Detail 1
-- Detail 2
-
-Refs: #task-id
-```
-
-Types: feat, fix, docs, style, refactor, test, chore
 
 ### Test-Driven Development
 

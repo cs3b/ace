@@ -101,7 +101,7 @@ initialize-project-structure → load-project-context → draft-release (v.0.1.0
 **Workflow Sequence**:
 
 ```
-create-task → review-task → work-on-task → review-code → commit
+create-task → review-task → work-on-task → commit → review-code
 ```
 
 **Key Decision Points**:
@@ -134,13 +134,13 @@ create-task → review-task → work-on-task → review-code → commit
 **Workflow Sequence (Fast Track)**:
 
 ```
-work-on-task → fix-tests → commit
+work-on-task → commit → fix-tests
 ```
 
 **Workflow Sequence (Standard)**:
 
 ```
-create-task → work-on-task → fix-tests → review-code → commit
+create-task → work-on-task → commit → fix-tests → review-code
 ```
 
 **Key Decision Points**:
@@ -356,14 +356,14 @@ Requirements → create-task → review-task → work-on-task → commit
 
 - `create-task` → `review-task`: Task file with embedded plan
 - `review-task` → `work-on-task`: Reviewed and approved task
-- `work-on-task` → `commit`: Completed implementation
+- `work-on-task` outputs: Completed implementation ready for commit
 
 ### Pattern 3: Quality Gates
 
 **Pattern**: Multiple quality checks during development
 
 ```
-work-on-task → review-code → fix-tests → commit
+work-on-task → commit → review-code → fix-tests
 ```
 
 **Integration Points**:
@@ -690,8 +690,8 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | Scenario | Sequence | Duration |
 |----------|----------|----------|
 | **New Project** | `initialize-project-structure` → `load-project-context` → `draft-release` | 2-4h |
-| **Feature Development** | `create-task` → `review-task` → `work-on-task` → `review-code` → `commit` | 4-16h |
-| **Bug Fix** | `work-on-task` → `fix-tests` → `commit` | 1-8h |
+| **Feature Development** | `create-task` → `review-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
+| **Bug Fix** | `work-on-task` → `commit` → `fix-tests` | 1-8h |
 | **Release** | `synthesize-reviews` → `create-reflection-note` → `publish-release` → `update-roadmap` | 2-6h |
 | **Code Review** | `review-code` → `synthesize-reviews` → `create-task` | 1-4h |
 
