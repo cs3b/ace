@@ -77,10 +77,10 @@ Create docs/tools.md as a single source of truth for all tools, commands, and ut
 * [ ] Create docs/tools.md with standard structure
 * [ ] Extract and migrate tool documentation from blueprint.md
 * [ ] Document all bin/ commands with:
-  - Purpose and description
-  - Usage syntax
-  - Examples
-  - Dependencies
+  * Purpose and description
+  * Usage syntax
+  * Examples
+  * Dependencies
   > TEST: Bin Commands Documented
   > Type: Content Validation
   > Assert: All bin/ commands have documentation

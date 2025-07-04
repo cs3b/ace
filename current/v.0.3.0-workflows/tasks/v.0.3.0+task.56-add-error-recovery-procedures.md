@@ -97,10 +97,10 @@ Add workflow failure handling and recovery guidance to improve robustness. This 
 * [ ] Add error handling to release workflows (version conflicts, incomplete tasks)
 * [ ] Add error handling to work-on-task.wf.md (missing dependencies, test failures)
 * [ ] Create standardized error recovery patterns:
-  - Retry strategies
-  - Rollback procedures
-  - State recovery
-  - Manual intervention points
+  * Retry strategies
+  * Rollback procedures
+  * State recovery
+  * Manual intervention points
 * [ ] Document in each workflow's Error Handling section
   > TEST: Error Sections Complete
   > Type: Documentation Validation

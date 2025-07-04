@@ -78,22 +78,22 @@ Create a workflow to maintain and update the docs/tools.md file when tools chang
 ### Execution Steps
 
 * [ ] Create tool entry template with sections for:
-  - Tool name and location
-  - Purpose and description
-  - Usage syntax
-  - Examples
-  - Dependencies
-  - Related tools
+  * Tool name and location
+  * Purpose and description
+  * Usage syntax
+  * Examples
+  * Dependencies
+  * Related tools
 * [ ] Create update-tools-documentation.wf.md workflow
   > TEST: Workflow Structure Valid
   > Type: Syntax Validation
   > Assert: Workflow follows project standards
   > Command: bin/lint dev-handbook/workflow-instructions/update-tools-documentation.wf.md
 * [ ] Include steps for:
-  - Identifying changed/new tools
-  - Using tool entry template
-  - Updating docs/tools.md
-  - Validating documentation completeness
+  * Identifying changed/new tools
+  * Using tool entry template
+  * Updating docs/tools.md
+  * Validating documentation completeness
 * [ ] Add embedded template reference in workflow
 * [ ] Include validation checklist
   > TEST: Workflow Complete
