@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.45
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: [v.0.3.0+task.44]
@@ -56,35 +56,35 @@ Replace plain text metadata headers in review prompts with machine-readable YAML
 
 ### Planning Steps
 
-* [ ] Analyze current plain text header format in review-code.wf.md
+* [x] Analyze current plain text header format in review-code.wf.md
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current metadata format is documented
   > Command: grep -A 10 "Generated:" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Define standard YAML frontmatter fields for all review types
-* [ ] Research YAML frontmatter best practices for LLM prompts
+* [x] Define standard YAML frontmatter fields for all review types
+* [x] Research YAML frontmatter best practices for LLM prompts
 
 ### Execution Steps
 
-* [ ] Replace plain text metadata with YAML frontmatter in prompt construction
+* [x] Replace plain text metadata with YAML frontmatter in prompt construction
   > TEST: Verify YAML Format
   > Type: Format Validation
   > Assert: Generated prompts have valid YAML frontmatter
   > Command: head -10 prompt.md | yaml-lint
-* [ ] Update all review focus areas (code/tests/docs) to use YAML headers
-* [ ] Add session metadata fields (generated, target, focus, context, git_range)
+* [x] Update all review focus areas (code/tests/docs) to use YAML headers
+* [x] Add session metadata fields (generated, target, focus, context, git_range)
   > TEST: Verify Metadata Completeness
   > Type: Content Validation
   > Assert: All required metadata fields are present
   > Command: grep -E '^(generated|target|focus|context):' prompt.md
-* [ ] Test YAML frontmatter with different review scenarios
+* [x] Test YAML frontmatter with different review scenarios
 
 ## Acceptance Criteria
 
-* [ ] AC 1: All generated prompts include valid YAML frontmatter
-* [ ] AC 2: Metadata fields are complete and consistently formatted
-* [ ] AC 3: YAML frontmatter is machine-readable and parseable
-* [ ] AC 4: Prompts remain compatible with existing LLM processing
+* [x] AC 1: All generated prompts include valid YAML frontmatter
+* [x] AC 2: Metadata fields are complete and consistently formatted
+* [x] AC 3: YAML frontmatter is machine-readable and parseable
+* [x] AC 4: Prompts remain compatible with existing LLM processing
 
 ## Out of Scope
 
