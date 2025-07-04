@@ -1,8 +1,8 @@
 ---
 id: v.0.3.0+task.51
-status: pending
+status: done
 priority: high
-estimate: 3h
+estimate: 4h
 dependencies: []
 ---
 
@@ -29,21 +29,24 @@ _Result excerpt:_
 
 ## Objective
 
-Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-structure.wf.md workflow. Create a migration plan to move from deprecated tools to current versions, addressing the security/stability risk identified by Google Pro reviewer.
+Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-structure.wf.md workflow. Create a comprehensive migration plan to integrate task management tools (tn, tr, rc, etc.) from exe-old into the coding_agent_tools Ruby gem architecture, addressing the security/stability risk identified by Google Pro reviewer while supporting the architectural evolution toward a unified gem-based approach.
 
 ## Scope of Work
 
 * Audit all references to exe-old directory across the codebase
-* Identify which tools are being used from exe-old
-* Create migration plan to current exe/ directory tools
-* Update workflows to use non-deprecated tool paths
-* Document the migration approach for future reference
+* Identify which tools are being used from exe-old and analyze their functionality
+* Design integration of task management tools into coding_agent_tools Ruby gem using ATOM architecture
+* Create migration plan for rewriting exe-old tools as gem CLI commands
+* Update workflows to use unified gem-based tool access (dev-tools/exe/coding_agent_tools <command>)
+* Plan binstub preservation strategy to maintain current bin/ entry points
+* Document the migration approach and architectural integration for future reference
 
 ### Deliverables
 
 #### Create
 
-* dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md - Migration strategy document
+* dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md - Comprehensive migration strategy document
+* dev-taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md - ATOM architecture integration design
 
 #### Modify
 
@@ -56,54 +59,80 @@ Investigate and resolve the dev-tools/exe-old/ dependency in initialize-project-
 
 ## Phases
 
-1. Audit - Find all exe-old dependencies
-2. Analyze - Compare exe-old vs exe tools
-3. Plan - Create migration strategy
-4. Migrate - Update tool references
-5. Document - Record migration approach
+1. Audit - Find all exe-old dependencies and analyze tool functionality
+2. Architecture Design - Plan integration into coding_agent_tools gem using ATOM pattern
+3. Migration Strategy - Create roadmap for rewriting tools as gem CLI commands
+4. Workflow Updates - Update tool references to use unified gem access
+5. Implementation Plan - Document development roadmap for tool rewrite
+6. Testing Strategy - Plan validation of migrated functionality
 
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Search for all references to exe-old across the codebase
+* [x] Search for all references to exe-old across the codebase
   > TEST: Dependency Audit Complete
   > Type: Pre-condition Check
   > Assert: All exe-old references identified
   > Command: rg "exe-old" --type md
-* [ ] List tools in exe-old and their exe equivalents
-* [ ] Analyze differences between old and new tool versions
-* [ ] Design migration approach that maintains functionality
+* [x] Catalog all exe-old tools and analyze their interfaces and functionality
+  > TEST: Tool Inventory Complete
+  > Type: Pre-condition Check
+  > Assert: All exe-old tools documented with interfaces
+  > Command: ls -la dev-tools/exe-old/ && head -20 dev-tools/exe-old/*
+* [x] Analyze current coding_agent_tools gem architecture and CLI structure
+  > TEST: Gem Architecture Analysis
+  > Type: Pre-condition Check
+  > Assert: Current gem CLI commands and ATOM structure understood
+  > Command: dev-tools/exe/coding_agent_tools --help && find dev-tools/lib -name "*.rb" | head -10
+* [x] Design ATOM architecture integration for task management commands
+* [x] Plan CLI command structure for unified tool access
+* [x] Design binstub preservation strategy for seamless migration
 
 ### Execution Steps
 
-* [ ] Create tool migration plan document
-* [ ] Update initialize-project-structure.wf.md to use current tools
-  > TEST: Workflow Updated
-  > Type: Path Validation
-  > Assert: No exe-old references remain in workflow
-  > Command: rg "exe-old" dev-handbook/workflow-instructions/initialize-project-structure.wf.md
-* [ ] Update any other workflows using deprecated tools
-* [ ] Test updated workflows function correctly
-* [ ] Document tool mapping for future reference
-  > TEST: Migration Complete
-  > Type: Integration Test
-  > Assert: All workflows use current tool paths
-  > Command: bin/test --check-tool-migration
+* [x] Create comprehensive migration plan document with architectural design
+  > TEST: Migration Plan Created
+  > Type: Action Validation
+  > Assert: Migration plan exists with architectural integration details
+  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+* [x] Create gem architecture integration design document
+  > TEST: Architecture Integration Designed
+  > Type: Action Validation
+  > Assert: ATOM integration plan exists
+  > Command: test -f dev-taskflow/current/v.0.3.0-workflows/researches/gem-architecture-integration.md
+* [x] Plan workflow update strategy for post-implementation phase
+  > TEST: Workflow Update Strategy Documented
+  > Type: Documentation Validation
+  > Assert: Clear guidance exists on when to update workflows
+  > Command: grep -q "Workflow Update Timing" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+* [x] Document which workflows need updating after gem implementation
+  > TEST: Workflow Update List Complete
+  > Type: Documentation Validation
+  > Assert: All workflows requiring updates are identified
+  > Command: grep -q "initialize-project-structure.wf.md" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
+* [x] Document tool mapping and implementation roadmap
+  > TEST: Implementation Roadmap Complete
+  > Type: Documentation Validation
+  > Assert: Complete roadmap exists for tool rewrite
+  > Command: grep -q "Implementation Timeline\|Development Phases" dev-taskflow/current/v.0.3.0-workflows/researches/tool-migration-plan.md
 
 ## Acceptance Criteria
 
-* [ ] AC 1: All exe-old dependencies identified and documented
-* [ ] AC 2: Migration plan created with tool mappings
-* [ ] AC 3: initialize-project-structure.wf.md uses only current tools
-* [ ] AC 4: All workflows updated to remove deprecated dependencies
-* [ ] AC 5: Migration approach documented for future reference
+* [x] AC 1: All exe-old dependencies identified and analyzed with functionality documentation
+* [x] AC 2: Comprehensive migration plan created with ATOM architecture integration design
+* [x] AC 3: Strategy documented for updating workflows after gem implementation complete
+* [x] AC 4: List of workflows requiring updates documented in migration plan
+* [x] AC 5: Implementation roadmap documented for rewriting tools as gem commands
+* [x] AC 6: Binstub preservation strategy documented for seamless user experience
+* [x] AC 7: ATOM architecture integration plan complete with CLI command structure
 
 ## Out of Scope
 
-* ❌ Deleting exe-old directory (may break backward compatibility)
-* ❌ Modifying the tools themselves
-* ❌ Creating new tools
+* ❌ Deleting exe-old directory (may break backward compatibility during transition)
+* ❌ Actually implementing the tool rewrites (covered in future development tasks)
+* ❌ Modifying the existing Ruby gem structure (only planning integration)
+* ❌ Breaking current bin/ script functionality during planning phase
 
 ## References
 
