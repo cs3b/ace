@@ -5,6 +5,7 @@ This guide establishes standards for embedding documents (templates and guides) 
 ## Goal
 
 Define clear principles and standards for:
+
 - How to properly embed documents using universal `<documents>` XML format
 - Document organization and placement within workflow files
 - Maintaining document consistency across workflow instructions
@@ -42,12 +43,14 @@ Use the universal `<documents>` container for clean, parseable document inclusio
 ```
 
 **Components:**
+
 - `<documents>`: Universal container for all embedded documents
 - `<template path="...">`: Embedded template content from `dev-handbook/templates/`
 - `<guide path="...">`: Embedded guide content from `dev-handbook/guides/`
 - `path`: Source document file path (supports variables like `{current-release-path}`)
 
 **Examples:**
+
 ```xml
 <documents>
     <template path="dev-handbook/templates/release-tasks/task.template.md">
@@ -100,6 +103,7 @@ Use XML `<documents>` sections for all embedded document content (NO escaping ne
 ### Three-Tick Escaping (```): For All Code Examples
 
 Use standard three-tick escaping for:
+
 - Command examples
 - Code snippets  
 - Configuration examples
@@ -121,6 +125,7 @@ version: 1.0
 settings:
   debug: false
 ```
+
 ```
 
 ### Four-Tick Escaping (````): Not for Documents
@@ -165,6 +170,7 @@ All embedded documents must be placed at the end of workflow documents using XML
 ## Document Path Conventions
 
 ### Templates
+
 Templates should be organized in logical directories under `dev-handbook/templates/`:
 
 - `project-docs/` - Core project documentation templates
@@ -175,6 +181,7 @@ Templates should be organized in logical directories under `dev-handbook/templat
 - `workflow-components/` - Reusable workflow step templates
 
 ### Guides
+
 Guides should be organized under `dev-handbook/guides/`:
 
 - Root level: Core development guides (`.g.md` extension)
@@ -184,6 +191,7 @@ Guides should be organized under `dev-handbook/guides/`:
 ## Content Guidelines
 
 ### Template Content Standards
+
 - Always include YAML frontmatter for metadata
 - Use clear placeholder syntax (e.g., `{variable-name}`)
 - Provide comprehensive documentation comments
@@ -191,6 +199,7 @@ Guides should be organized under `dev-handbook/guides/`:
 - Include validation criteria where applicable
 
 ### Guide Content Standards
+
 - Use clear, actionable headings
 - Provide concrete examples and code snippets
 - Include troubleshooting sections where relevant
@@ -210,6 +219,7 @@ The universal `<documents>` format integrates with the automated synchronization
 ## Migration from Legacy Formats
 
 ### From Individual Template Containers
+
 ```xml
 <!-- Old format -->
 <templates>
@@ -223,6 +233,7 @@ The universal `<documents>` format integrates with the automated synchronization
 ```
 
 ### From Mixed Formats
+
 Consolidate all document types into single `<documents>` containers:
 
 ```xml

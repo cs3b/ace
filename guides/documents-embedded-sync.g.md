@@ -224,6 +224,7 @@ bin/markdown-sync-embedded-documents --verbose
 ### Common Issues
 
 #### Missing Source Files
+
 ```bash
 # Check for broken references
 bin/markdown-sync-embedded-documents --dry-run --verbose | grep "ERROR"
@@ -232,6 +233,7 @@ bin/markdown-sync-embedded-documents --dry-run --verbose | grep "ERROR"
 ```
 
 #### XML Format Errors
+
 ```bash
 # Validate XML structure in workflow files
 find dev-handbook/workflow-instructions -name "*.wf.md" -exec xmllint --xpath "//documents" {} \; 2>/dev/null
@@ -241,6 +243,7 @@ grep -r "<documents>" dev-handbook/workflow-instructions/ | grep -v -E "(</docum
 ```
 
 #### Sync Failures
+
 ```bash
 # Run with verbose output to identify issues
 bin/markdown-sync-embedded-documents --dry-run --verbose

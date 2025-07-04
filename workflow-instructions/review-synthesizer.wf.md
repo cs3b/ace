@@ -489,12 +489,14 @@ fi
 - Fallback to external tools if direct synthesis unsuitable
 
 **When to Use Direct Synthesis:**
+
 - Default choice for most synthesis scenarios
 - AI agent has sufficient context understanding
 - Reports are reasonably sized (<50k words total)
 - No specific external model requirements
 
 **When to Fall Back to External Tools:**
+
 - Extremely large report sets (>50k words)
 - Specific model comparison requirements
 - Agent indicates direct synthesis limitations
