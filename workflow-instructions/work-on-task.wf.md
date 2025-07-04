@@ -14,19 +14,34 @@
 * Load architecture overview: `docs/architecture.md`
 * Load project structure: `docs/blueprint.md`
 
-## Process Steps
+## Quick Start
+
+For experienced users, here's the condensed workflow:
+
+1. **Read linked documents** - Load project context and workflow instructions
+2. **Select task** - Use `bin/tn` to get next task or specify task path
+3. **Mark in-progress** - Update task status to `in-progress`
+4. **Execute plan** - Work through planning and execution steps autonomously
+5. **Validate completion** - Verify all subtasks and acceptance criteria are done
+6. **Autonomous work** - Continue until user feedback is needed, then ask and proceed
+
+## Detailed Process Steps
 
 1. **Select Task File:**
-   * Identify the current release directory:
+   * Use automated task selection tool:
+
+     ```bash
+     # Get next task to work on
+     bin/tn
+     ```
+
+   * Alternatively, manually select by listing available tasks:
 
      ```bash
      # Find current release directory
      ls -1 dev-taskflow/current/
-     ```
 
-   * List available tasks:
-
-     ```bash
+     # List available tasks
      ls -1 dev-taskflow/current/*/tasks/*.md
      ```
 
@@ -48,13 +63,13 @@
      estimate: Nh
      dependencies: []
      ---
-     
+
      # Task Title
-     
+
      ## Implementation Plan
      ### Planning Steps
      * [ ] Research/analysis steps (asterisk markers)
-     ### Execution Steps  
+     ### Execution Steps
      - [ ] Implementation actions (hyphen markers)
      ```
 
@@ -71,7 +86,9 @@
    * Save the updated task file
 
 4. **Execute Task Plan Step-by-Step:**
-   * Process each checklist item in order:
+   * Process each checklist item in order
+   * **Work autonomously** - Continue implementing until user feedback is needed
+   * If user input is required, ask and continue with the feedback
 
    **For Planning Steps (`* [ ]`):**
    * Execute research, analysis, or design work
@@ -152,13 +169,14 @@
 
 7. **Final Review & Completion:**
    * Review all completed checklist items
-   * Verify against Acceptance Criteria:
+   * **Ensure all subtasks are done** - Mark each as complete
+   * **Verify all acceptance criteria** - Mark them as done:
 
      ```markdown
      ## Acceptance Criteria
-     - [ ] All deliverables created/modified
-     - [ ] Key functionalities working
-     - [ ] All automated checks pass
+     - [x] All deliverables created/modified
+     - [x] Key functionalities working
+     - [x] All automated checks pass
      ```
 
    * Run final validation:
@@ -166,16 +184,16 @@
      ```bash
      # Run project tests
      bin/test
-     
+
      # Run linting
      bin/lint
-     
+
      # Build if applicable
      bin/build
      ```
 
    * Update task status to `done`
-   * Commit all changes with descriptive message
+   * Changes are ready for commit (user will handle git operations)
 
 ## Task Documentation Organization
 

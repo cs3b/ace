@@ -14,17 +14,20 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 ## Project Context Loading
 
 **Essential project context:**
+
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
 
 **Before starting test fixes:**
+
 1. Check recent changes: `git log --oneline -10`
 2. Review test configuration: Look for `test/`, `spec/`, or `tests/` directories
 3. Understand testing framework: Check `Gemfile`, `package.json`, or `requirements.txt`
 4. If `docs/testing.md` exists, read it for project-specific testing guidelines
 
 **During test fixing:**
+
 - Check for existing similar tests for patterns
 - Verify fixes align with project architecture
 
@@ -439,12 +442,14 @@ class TestUserService:
 ## Automated Fix Patterns
 
 **Pattern Recognition:**
+
 - Update deprecated method calls
 - Fix changed API signatures
 - Update test data for schema changes
 - Resolve path changes after refactoring
 
 **Quick Commands:**
+
 ```bash
 # Update all tests using old method
 find . -name "*test*" -type f -exec sed -i 's/old_method/new_method/g' {} \;
@@ -457,6 +462,7 @@ bin/test --update-factories
 ```
 
 **Common Automated Fixes:**
+
 - Replace `should` with `expect` in RSpec
 - Update `assert_equal` to `assert_equals` in unittest
 - Fix imports after module reorganization
@@ -467,6 +473,7 @@ bin/test --update-factories
 > "The test suite is failing with 5 errors in the user authentication module. Help me fix these test failures."
 
 **Response Process:**
+
 1. Run `bin/test --next-failure` to identify first failing test
 2. Investigate root cause and implement fix
 3. Continue with `bin/test --next-failure` until no more failures
