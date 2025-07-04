@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.52
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -66,25 +66,25 @@ Resolve all template path references across 17+ workflows to restore system inte
 
 ### Planning Steps
 
-* [ ] Create comprehensive map of template usage across workflows
+* [x] Create comprehensive map of template usage across workflows
   > TEST: Template Map Complete
   > Type: Pre-condition Check
   > Assert: All template references documented
   > Command: rg "<template path=" dev-handbook/workflow-instructions/
-* [ ] Check each referenced template path for existence
-* [ ] Identify patterns in path errors (relative vs absolute, wrong directories)
-* [ ] Plan systematic fix approach
+* [x] Check each referenced template path for existence
+* [x] Identify patterns in path errors (relative vs absolute, wrong directories)
+* [x] Plan systematic fix approach
 
 ### Execution Steps
 
-* [ ] Fix template paths in workflow files (batch by error type)
+* [x] Fix template paths in workflow files (batch by error type)
   > TEST: Template Paths Valid
   > Type: Path Validation
   > Assert: All template paths point to existing files
   > Command: bin/test --check-template-paths
-* [ ] Ensure all paths follow consistent format (relative from handbook root)
-* [ ] Verify embedded template content loads correctly
-* [ ] Run linting on all modified workflow files
+* [x] Ensure all paths follow consistent format (relative from handbook root)
+* [x] Verify embedded template content loads correctly
+* [x] Run linting on all modified workflow files
   > TEST: Workflows Valid
   > Type: Syntax Validation
   > Assert: All workflow files pass linting
@@ -92,11 +92,11 @@ Resolve all template path references across 17+ workflows to restore system inte
 
 ## Acceptance Criteria
 
-* [ ] AC 1: All template path references audited and mapped
-* [ ] AC 2: Broken template paths identified and fixed
-* [ ] AC 3: Template paths follow consistent format
-* [ ] AC 4: All workflows pass linting after fixes
-* [ ] AC 5: Template embedding functions correctly
+* [x] AC 1: All template path references audited and mapped
+* [x] AC 2: Broken template paths identified and fixed
+* [x] AC 3: Template paths follow consistent format
+* [x] AC 4: All workflows pass linting after fixes
+* [x] AC 5: Template embedding functions correctly
 
 ## Out of Scope
 

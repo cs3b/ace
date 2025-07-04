@@ -274,6 +274,7 @@ exec(File.expand_path('../dev-tools/exe/coding_agent_tools', __dir__), 'task', '
 ### Workflow Update Timing
 
 **IMPORTANT**: Workflow instructions must NOT be updated until AFTER the gem implementation is complete and tested. This ensures:
+
 - Current workflows continue to function during development
 - No broken references to non-existent gem commands
 - Proper testing of new gem commands before workflow integration
