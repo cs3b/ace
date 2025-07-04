@@ -1,4 +1,4 @@
-# Review Synthesizer Workflow Instruction
+# Synthesize Reviews Workflow Instruction
 
 ## Goal
 
@@ -8,7 +8,7 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 
 - Multiple review reports in markdown format (cr-report-*.md files)
 - Review reports follow standard section formats (11-section structure)
-- Access to `dev-handbook/templates/review-synthesizer/system.prompt.md`
+- Access to `dev-handbook/templates/synthesize-reviews/system.prompt.md`
 - LLM query tools available (`dev-tools/exe/llm-query`)
 - Write access to session directories in `dev-taskflow/current/`
 - Understanding of review session directory structure
@@ -16,14 +16,14 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 ## Project Context Loading
 
 - Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
-- Load synthesizer template: `dev-handbook/templates/review-synthesizer/system.prompt.md`
+- Load synthesizer template: `dev-handbook/templates/synthesize-reviews/system.prompt.md`
 - Load session patterns: `dev-taskflow/current/*/code_review/*/`
 - Load project structure: `docs/blueprint.md`
 
 ## Command Structure
 
 ```
-@review-synthesizer [reports-source]
+@synthesize-reviews [reports-source]
 ```
 
 ### Parameters
@@ -278,7 +278,7 @@ Reports Count: $report_count
 EOF
 
 # Add synthesizer system prompt
-cat "dev-handbook/templates/review-synthesizer/system.prompt.md" >> "${SYNTHESIS_DIR}/synthesis.prompt.md"
+cat "dev-handbook/templates/synthesize-reviews/system.prompt.md" >> "${SYNTHESIS_DIR}/synthesis.prompt.md"
 
 echo -e "\n\n## Session Context\n" >> "${SYNTHESIS_DIR}/synthesis.prompt.md"
 
@@ -895,7 +895,7 @@ fi
 ### Example 1: Synthesize Multiple Provider Reports
 
 ```
-@review-synthesizer files:gemini-review.md,claude-review.md,gpt-review.md
+@synthesize-reviews files:gemini-review.md,claude-review.md,gpt-review.md
 ```
 
 - Combines reports from different LLM providers
@@ -906,7 +906,7 @@ fi
 ### Example 2: Synthesize Focus Area Reports
 
 ```
-@review-synthesizer files:code-review.md,test-review.md,docs-review.md
+@synthesize-reviews files:code-review.md,test-review.md,docs-review.md
 ```
 
 - Combines different focus area reviews
@@ -917,7 +917,7 @@ fi
 ### Example 3: Synthesize Directory of Reports
 
 ```
-@review-synthesizer dir:./reviews/latest/
+@synthesize-reviews dir:./reviews/latest/
 ```
 
 - Processes all markdown files in directory
@@ -928,7 +928,7 @@ fi
 ### Example 4: Interactive Synthesis
 
 ```
-@review-synthesizer interactive
+@synthesize-reviews interactive
 ```
 
 - Allows pasting of review reports directly
@@ -1029,7 +1029,7 @@ The synthesizer produces structured output with these key sections:
 
 ```bash
 # AI agent performs synthesis directly using built-in capabilities
-@review-synthesizer dir:dev-taskflow/current/v.0.3.0-workflows/code_review/handbook-review/
+@synthesize-reviews dir:dev-taskflow/current/v.0.3.0-workflows/code_review/handbook-review/
 
 # Expected output:
 # 🧠 Initiating direct synthesis (default approach)...
@@ -1045,7 +1045,7 @@ The synthesizer produces structured output with these key sections:
 
 ```bash
 # Large synthesis that triggers fallback to external tools
-@review-synthesizer dir:very-large-review-session/
+@synthesize-reviews dir:very-large-review-session/
 
 # Expected output:
 # 🧠 Initiating direct synthesis (default approach)...
@@ -1063,7 +1063,7 @@ The synthesizer produces structured output with these key sections:
 
 ```bash
 # Synthesis of multiple review perspectives
-@review-synthesizer session:comprehensive-handbook-review
+@synthesize-reviews session:comprehensive-handbook-review
 
 # Processes multiple reports:
 # - cr-report-gpro.md (Google Pro review)
