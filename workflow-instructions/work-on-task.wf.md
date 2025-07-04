@@ -193,7 +193,7 @@ For experienced users, here's the condensed workflow:
      ```
 
    * Update task status to `done`
-   * Changes are ready for commit (user will handle git operations)
+   * Changes are ready for commit
 
 ## Task Documentation Organization
 
@@ -249,7 +249,7 @@ When working with temporary files:
 **Symptoms:**
 
 * Task dependencies not completed (`dependencies: [task-ids]`)
-* Required tools or files not available  
+* Required tools or files not available
 * Prerequisite project state not established
 
 **Recovery Steps:**

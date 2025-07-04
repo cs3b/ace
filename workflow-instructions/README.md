@@ -38,7 +38,7 @@ The AI-assisted development workflow ecosystem consists of 19 interconnected wor
 ### 4. Code Quality & Review
 
 - **review-code** - Comprehensive code review with configurable focus areas
-- **review-synthesizer** - Synthesize multiple review reports into unified recommendations
+- **synthesize-reviews** - Synthesize multiple review reports into unified recommendations
 - **fix-tests** - Systematically diagnose and fix failing tests
 
 ### 5. Documentation
@@ -173,7 +173,7 @@ create-task → work-on-task → fix-tests → review-code → commit
 **Workflow Sequence**:
 
 ```
-review-synthesizer → create-reflection-note → publish-release → update-roadmap
+synthesize-reviews → create-reflection-note → publish-release → update-roadmap
 ```
 
 **Key Decision Points**:
@@ -207,7 +207,7 @@ review-synthesizer → create-reflection-note → publish-release → update-roa
 **Workflow Sequence**:
 
 ```
-review-code → review-synthesizer → create-task (for fixes)
+review-code → synthesize-reviews → create-task (for fixes)
 ```
 
 **Key Decision Points**:
@@ -275,7 +275,7 @@ START: What is the current situation?
 │   ├── Need code review?
 │   │   └── → review-code
 │   ├── Have multiple review reports?
-│   │   └── → review-synthesizer
+│   │   └── → synthesize-reviews
 │   └── Tests are failing?
 │       └── → fix-tests
 │
@@ -370,7 +370,7 @@ work-on-task → review-code → fix-tests → commit
 
 - Tests failing during `work-on-task` → trigger `fix-tests`
 - Code changes ready → trigger `review-code`
-- Multiple reviews → trigger `review-synthesizer`
+- Multiple reviews → trigger `synthesize-reviews`
 
 ### Pattern 4: Release Lifecycle
 
@@ -628,7 +628,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
    Output: Comprehensive review of release candidate
    ```
 
-2. **Synthesize Reviews** (`review-synthesizer`)
+2. **Synthesize Reviews** (`synthesize-reviews`)
 
    ```
    Input: Multiple review reports
@@ -680,7 +680,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 |----------|-----------|-------|
 | **Foundation** | `initialize-project-structure`, `load-project-context` | New projects, custom work outside workflows |
 | **Task Management** | `create-task`, `review-task`, `work-on-task` | Feature development, implementation |
-| **Quality** | `review-code`, `review-synthesizer`, `fix-tests` | Code review, quality assurance |
+| **Quality** | `review-code`, `synthesize-reviews`, `fix-tests` | Code review, quality assurance |
 | **Release** | `draft-release`, `publish-release`, `update-roadmap` | Release management |
 | **Documentation** | `create-adr`, `create-api-docs`, `create-user-docs`, `update-blueprint` | Documentation generation |
 | **Session** | `save-session-context`, `create-reflection-note`, `commit` | Session management |
@@ -692,8 +692,8 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | **New Project** | `initialize-project-structure` → `load-project-context` → `draft-release` | 2-4h |
 | **Feature Development** | `create-task` → `review-task` → `work-on-task` → `review-code` → `commit` | 4-16h |
 | **Bug Fix** | `work-on-task` → `fix-tests` → `commit` | 1-8h |
-| **Release** | `review-synthesizer` → `create-reflection-note` → `publish-release` → `update-roadmap` | 2-6h |
-| **Code Review** | `review-code` → `review-synthesizer` → `create-task` | 1-4h |
+| **Release** | `synthesize-reviews` → `create-reflection-note` → `publish-release` → `update-roadmap` | 2-6h |
+| **Code Review** | `review-code` → `synthesize-reviews` → `create-task` | 1-4h |
 
 ### Decision Points Checklist
 

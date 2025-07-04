@@ -212,7 +212,7 @@ Reviews are executed through standardized commands that create organized session
 ### Implementation Workflows
 
 - [Review Code Workflow](../workflow-instructions/review-code.wf.md) - Detailed review execution process
-- [Review Synthesizer Workflow](../workflow-instructions/review-synthesizer.wf.md) - Multi-report analysis
+- [Synthesize Reviews Workflow](../workflow-instructions/synthesize-reviews.wf.md) - Multi-report analysis
 
 ### Standards and Guidelines  
 

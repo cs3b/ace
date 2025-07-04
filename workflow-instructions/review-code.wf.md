@@ -207,7 +207,7 @@ Select appropriate universal templates based on focus:
 - **code**: Use `dev-handbook/templates/review-code/system.prompt.md` (universal template with combination instructions)
 - **tests**: Use `dev-handbook/templates/review-test/system.prompt.md` (universal template with combination instructions)
 - **docs**: Use `dev-handbook/templates/review-docs/system.prompt.md` (universal template with combination instructions)
-- **combined**: Use primary template with combination instructions activated, then synthesize with `dev-handbook/templates/review-synthesizer/system.prompt.md`
+- **combined**: Use primary template with combination instructions activated, then synthesize with `dev-handbook/templates/synthesize-reviews/system.prompt.md`
 
 ### 5. Combined Prompt Construction
 
@@ -394,7 +394,7 @@ $([ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "- [\\`cr-report-opus.md\\`]
 To synthesize multiple reports into a unified analysis:
 
 \`\`\`bash
-@review-synthesizer dir:${SESSION_DIR}/
+@synthesize-reviews dir:${SESSION_DIR}/
 \`\`\`
 
 This will create \`cr-report.md\` with the final synthesized review.
@@ -418,7 +418,7 @@ echo "📊 Generated Reports:"
 [ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "   ✅ Google Pro: cr-report-gpro.md"
 [ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "   ✅ Anthropic Opus: cr-report-opus.md"
 echo ""
-echo "🔄 Next Step: Run @review-synthesizer dir:${SESSION_DIR}/ to create unified report"
+echo "🔄 Next Step: Run @synthesize-reviews dir:${SESSION_DIR}/ to create unified report"
 echo ""
 ```
 
@@ -460,7 +460,7 @@ Output: Structured documentation review with 11 sections
 #### Combined Review Template Usage
 
 ```
-System Prompt: dev-handbook/templates/review-synthesizer/system.prompt.md
+System Prompt: dev-handbook/templates/synthesize-reviews/system.prompt.md
 Focus: Meta-review comparing multiple review outputs
 Output: Comparative analysis with scoring and recommendations
 ```
