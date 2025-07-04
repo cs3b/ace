@@ -22,9 +22,8 @@ Our development workflow centers around:
 - **[Strategic Planning Guide](./strategic-planning.g.md)**: High-level strategic planning and roadmap management.
 - **[Changelog Guide](./changelog.g.md)**: Standards for maintaining project changelogs.
 - **[Picking Codenames Guide](./release-codenames.g.md)**: Guidelines for selecting project codenames.
-- **[Document Synchronization Guide](./document-synchronization.md)**: Comprehensive guide for document sync system operation and maintenance.
-- **[Document Sync Operations](./document-sync-operations.md)**: Quick reference for document synchronization workflows and commands.
-- **[Template Embedding Standards](../.meta/gds/template-embedding.g.md)**: XML format standards for embedding templates in workflow instructions.
+- **[Documents Embedding Guide](./documents-embedding.g.md)**: XML format standards and principles for embedding templates and guides in workflow instructions.
+- **[Documents Embedded Sync Guide](./documents-embedded-sync.g.md)**: Comprehensive guide for the bin/markdown-sync-embedded-documents tool and sync operations.
 - **[Embedding Tests in Workflows](./embedded-testing-guide.g.md)**: Standard for incorporating tests in workflow instructions.
 - **[Test-Driven Development Cycle](./testing-tdd-cycle.g.md)**: Core TDD practices and implementation cycle.
   - [Meta Documentation TDD](./test-driven-development-cycle/meta-documentation.md)
