@@ -84,6 +84,13 @@ Create, update, and maintain workflow instruction files following established st
      </templates>
      ```
 
+   * **IMPORTANT: Dual Template Editing Required**
+     - When modifying embedded templates, you MUST update BOTH:
+       1. The source template file (e.g., `dev-handbook/templates/*/template.md`)
+       2. The embedded template in the workflow instruction file
+     - This ensures consistency between the source and embedded versions
+     - Use template synchronization tools when available to maintain alignment
+
    * Embed common commands and examples directly in process steps
    * Include technology-agnostic patterns with specific examples
    * Provide error handling and troubleshooting guidance

@@ -185,10 +185,282 @@ user-provided release scope into actionable tasks.
 
 ## Error Handling
 
-* If `bin/tnid` fails: Use manual numbering starting from last known ID
-* If directory exists: Ask user whether to merge or use different version
-* If user notes are vague: Request specific examples or acceptance criteria
-* If no codename provided: Suggest based on project theme or feature focus
+### Common Issues
+
+**Task ID Generation Failures:**
+
+**Symptoms:**
+
+* `bin/tnid` command not found or fails
+* Duplicate task ID generation
+* Inconsistent numbering sequence
+
+**Recovery Steps:**
+
+1. Check if `bin/tnid` script exists and is executable: `ls -la bin/tnid`
+2. Try alternative task ID generation:
+
+   ```bash
+   # Find last task ID manually
+   find dev-taskflow/current -name "*.md" | grep -E "task\.[0-9]+" | sort -V | tail -1
+   
+   # Generate next ID manually
+   # If last was task.55, use task.56
+   ```
+
+3. Use manual numbering starting from last known ID
+4. Ensure task ID uniqueness across all releases
+5. Ask user to verify task numbering approach
+
+**Prevention:**
+
+* Test `bin/tnid` functionality before starting release creation
+* Verify project tooling is properly set up
+* Keep backup task numbering strategy ready
+
+**Version Conflicts:**
+
+**Symptoms:**
+
+* Release directory already exists for specified version
+* Version number conflicts with existing releases
+* Semantic versioning violations
+
+**Recovery Steps:**
+
+1. Check existing releases: `ls -la dev-taskflow/backlog/`
+2. Ask user whether to:
+   * Merge with existing release (if same version)
+   * Use different version number
+   * Replace existing release (destructive)
+3. Validate semantic versioning rules:
+
+   ```bash
+   # Check if version follows MAJOR.MINOR.PATCH
+   echo "v.0.3.0" | grep -E "v\.[0-9]+\.[0-9]+\.[0-9]+"
+   ```
+
+4. Suggest appropriate version number based on scope
+5. Document version choice reasoning
+
+**Prevention:**
+
+* Check for existing releases before creating new ones
+* Validate version format early in process
+* Discuss versioning strategy with user upfront
+
+**Directory Creation Failures:**
+
+**Symptoms:**
+
+* Cannot create release directory structure
+* Permission denied on filesystem operations
+* Missing parent directories
+
+**Recovery Steps:**
+
+1. Check current directory and permissions: `pwd && ls -la`
+2. Verify `dev-taskflow/backlog/` exists and is writable
+3. Create missing parent directories:
+
+   ```bash
+   mkdir -p dev-taskflow/backlog/
+   ```
+
+4. Check disk space availability: `df -h`
+5. Ask user to check filesystem permissions if issues persist
+
+**Prevention:**
+
+* Verify dev-taskflow structure exists before starting
+* Check write permissions early in process
+* Use absolute paths for directory operations
+
+**Template File Missing:**
+
+**Symptoms:**
+
+* Cannot find release overview template
+* Task template files not available
+* Template content appears corrupted
+
+**Recovery Steps:**
+
+1. Check template file existence:
+
+   ```bash
+   ls -la dev-handbook/templates/release-management/
+   ls -la dev-handbook/templates/release-tasks/
+   ```
+
+2. Verify dev-handbook submodule is initialized:
+
+   ```bash
+   git submodule status
+   git submodule update --init --recursive
+   ```
+
+3. Use fallback basic template format if templates unavailable
+4. Create minimal template structure manually
+5. Ask user to check submodule configuration
+
+**Prevention:**
+
+* Verify template availability before release creation
+* Check dev-handbook submodule status
+* Have fallback template formats ready
+
+**Incomplete User Input:**
+
+**Symptoms:**
+
+* User provides vague or incomplete release scope
+* Missing acceptance criteria in task descriptions
+* Unclear requirements or dependencies
+
+**Recovery Steps:**
+
+1. Request specific examples for vague requirements
+2. Ask clarifying questions about acceptance criteria:
+   * What specific outcomes are expected?
+   * How will success be measured?
+   * What are the dependencies?
+3. Break down large, unclear items into smaller tasks
+4. Iterate with user until requirements are clear
+5. Document assumptions and get user confirmation
+
+**Prevention:**
+
+* Ask detailed questions about release scope upfront
+* Provide examples of well-formed requirements
+* Clarify acceptance criteria for each major item
+
+**Roadmap Update Failures:**
+
+**Symptoms:**
+
+* Cannot locate roadmap file
+* Roadmap format doesn't match expected structure
+* Git commit fails during roadmap update
+
+**Recovery Steps:**
+
+1. Search for roadmap file in multiple locations:
+
+   ```bash
+   find . -name "*roadmap*" -type f
+   find . -name "*ROADMAP*" -type f
+   ```
+
+2. Check roadmap file format and structure
+3. Create minimal roadmap entry if format is unclear
+4. Skip roadmap update if file is problematic (document in notes)
+5. Ask user about roadmap file location and format
+
+**Prevention:**
+
+* Verify roadmap file existence and format before editing
+* Understand project's roadmap structure
+* Have backup approach for roadmap updates
+
+**Task Breakdown Failures:**
+
+**Symptoms:**
+
+* Cannot map user notes to actionable tasks
+* Tasks are too large or too small
+* Missing dependencies between tasks
+* Unrealistic time estimates
+
+**Recovery Steps:**
+
+1. Review user notes sentence by sentence
+2. Group related items that form cohesive work units
+3. Break down tasks that are too large (>25h estimate)
+4. Combine tasks that are too small (<1h estimate)
+5. Map dependencies between tasks explicitly
+6. Ask user to validate task breakdown and estimates
+
+**Prevention:**
+
+* Understand task sizing guidelines (1-4h simple, 5-10h medium, 11-25h complex)
+* Consider implementation phases and dependencies
+* Get user feedback on task breakdown approach
+
+**No Codename Provided:**
+
+**Symptoms:**
+
+* User doesn't specify release codename
+* Need to generate appropriate codename
+* Codename conflicts with existing releases
+
+**Recovery Steps:**
+
+1. Suggest codename based on:
+   * Project theme or domain
+   * Major feature focus
+   * Alphabetical progression
+   * Version milestone significance
+2. Check for codename conflicts in existing releases
+3. Ask user to approve suggested codename
+4. Use version number as fallback if no theme available
+
+**Prevention:**
+
+* Have codename generation strategy ready
+* Understand project's naming conventions
+* Prepare themed suggestions based on project domain
+
+**Validation Step Failures:**
+
+**Symptoms:**
+
+* Directory structure validation finds missing components
+* File count doesn't match expected task creation
+* Release overview file incomplete or corrupted
+
+**Recovery Steps:**
+
+1. Re-run directory structure creation for missing components
+2. Verify each required subdirectory exists:
+
+   ```bash
+   for dir in tasks docs decisions codemods reflections researches test-cases user-experience; do
+     [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || mkdir -p "dev-taskflow/backlog/v.X.Y.Z-codename/$dir"
+   done
+   ```
+
+3. Regenerate missing files using templates
+4. Validate release overview file content and format
+5. Recount created tasks and verify against user scope
+
+**Prevention:**
+
+* Run validation steps incrementally during creation
+* Use templates consistently for all file creation
+* Double-check file creation success after each step
+
+### Recovery Framework for Release Creation
+
+When errors occur during release creation:
+
+1. **Assessment Phase:**
+   * Can the release creation continue with workarounds?
+   * Are the errors due to environment/setup issues?
+   * Do we have enough information to proceed?
+
+2. **Recovery Actions:**
+   * Document error details and attempted solutions
+   * Use fallback approaches where possible
+   * Get user input for unclear requirements
+   * Create minimal viable release structure if needed
+
+3. **Validation and Communication:**
+   * Verify partial results meet minimum requirements
+   * Explain limitations or compromises to user
+   * Get user approval before proceeding with reduced scope
+   * Document decisions for future reference
 
 ## Usage Example
 >

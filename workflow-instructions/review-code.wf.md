@@ -554,12 +554,252 @@ dev-tools/exe/llm-query gemini "$(cat code-review-prompt.md)"
 
 ## Error Handling
 
-- **Invalid focus**: Display available focus options
-- **Invalid target**: Validate git ranges, file patterns, file existence
-- **Invalid context**: Verify context file exists or use defaults
-- **Git command failures**: Provide clear error messages
-- **LLM query failures**: Retry with simplified prompt or different model
-- **Template missing**: Fallback to basic review format
+### Common Issues
+
+**LLM API Failures:**
+
+**Symptoms:**
+
+- 401 Unauthorized responses from LLM providers
+- "Invalid API key" or token expiration messages
+- Authentication failures during review execution
+
+**Recovery Steps:**
+
+1. Verify API key environment variables are set:
+
+   ```bash
+   echo $GEMINI_API_KEY
+   echo $ANTHROPIC_API_KEY
+   ```
+
+2. Test with simple API call first
+3. Check API key format and permissions
+4. If single provider fails, continue with available providers
+5. Ask user to verify/refresh credentials if all providers fail
+6. Document which provider failed in execution.log
+
+**Prevention:**
+
+- Validate API keys before starting review session
+- Check provider status pages for outages
+- Have multiple LLM providers configured as fallbacks
+
+**Rate Limiting and Quotas:**
+
+**Symptoms:**
+
+- API returns 429 (Too Many Requests)
+- "Rate limit exceeded" or "Quota exhausted" messages
+- Review execution slower than expected
+
+**Recovery Steps:**
+
+1. Check rate limit headers for reset timing
+2. Implement exponential backoff:
+
+   ```bash
+   # Wait progressively longer between retries
+   sleep 30 && retry_command
+   sleep 60 && retry_command
+   ```
+
+3. Switch to alternative LLM provider if available
+4. For non-urgent reviews, schedule for later execution
+5. Continue with partial results if some providers succeed
+6. Document rate limiting in execution summary
+
+**Prevention:**
+
+- Check API quotas before expensive operations
+- Use lighter/faster models for exploratory reviews
+- Space out large review operations
+
+**Timeout Failures:**
+
+**Symptoms:**
+
+- LLM operations hang or timeout
+- Large content processing failures
+- Model context length exceeded errors
+
+**Recovery Steps:**
+
+1. Cancel hung operation if possible: `Ctrl+C`
+2. Reduce content size by summarizing or chunking:
+
+   ```bash
+   # Split large diffs into smaller chunks
+   git diff --stat v.0.2.0..HEAD
+   ```
+
+3. Increase timeout for legitimate large operations
+4. Switch to higher-capacity model if available
+5. Process content in smaller batches
+
+**Prevention:**
+
+- Estimate content size before processing: `git diff --stat`
+- Set appropriate timeouts based on content size
+- Use streaming responses for large operations when available
+
+**Session Directory Creation Failures:**
+
+**Symptoms:**
+
+- Cannot create session directory
+- Permission denied on filesystem operations
+- Session timestamp conflicts
+
+**Recovery Steps:**
+
+1. Check current directory permissions: `pwd && ls -la`
+2. Verify `dev-taskflow/current/` directory exists and is writable
+3. Try alternative session directory location
+4. Fix timestamp conflicts by adding random suffix
+5. Ask user to check filesystem permissions
+
+**Prevention:**
+
+- Check write permissions before creating session directory
+- Use absolute paths for session creation
+- Verify dev-taskflow structure exists
+
+**Git Operation Failures:**
+
+**Symptoms:**
+
+- `git diff` commands fail or return empty results
+- Invalid git ranges or commit references
+- Repository not in expected state
+
+**Recovery Steps:**
+
+1. Verify git repository status: `git status`
+2. Check if commit ranges exist: `git log --oneline v.0.2.0..HEAD`
+3. For invalid ranges, ask user for correct commit references
+4. Validate file patterns exist: `find . -name "pattern"`
+5. Use `git fetch` to update remote references if needed
+
+**Prevention:**
+
+- Validate git ranges before processing: `git rev-parse`
+- Check repository state: `git status`
+- Verify file patterns match existing files
+
+**Template Missing or Corrupted:**
+
+**Symptoms:**
+
+- Review template files not found in expected locations
+- Template content appears corrupted or incomplete
+- System prompt generation fails
+
+**Recovery Steps:**
+
+1. Check template file existence:
+
+   ```bash
+   ls -la dev-handbook/templates/review-*/system.prompt.md
+   ```
+
+2. Verify template content is readable and complete
+3. Use fallback basic review format if templates unavailable
+4. Regenerate prompt manually with project context
+5. Ask user to check dev-handbook submodule status
+
+**Prevention:**
+
+- Verify template availability before review execution
+- Check dev-handbook submodule is properly initialized
+- Have fallback review formats available
+
+**Invalid Parameters:**
+
+**Symptoms:**
+
+- Command parsing fails with unrecognized parameters
+- Focus area not supported
+- Target files or ranges don't exist
+
+**Recovery Steps:**
+
+1. **Invalid focus**: Display available focus options (`code`, `tests`, `docs`)
+2. **Invalid target**: Validate git ranges, file patterns, file existence
+3. **Invalid context**: Verify context file exists or use defaults
+4. Show command usage examples
+5. Ask user to clarify intended review scope
+
+**Prevention:**
+
+- Validate all parameters before execution
+- Provide clear usage examples in error messages
+- Use tab completion for file patterns where possible
+
+**Large Content Handling:**
+
+**Symptoms:**
+
+- Review content exceeds LLM context limits
+- Processing extremely large diffs or file sets
+- Memory or performance issues
+
+**Recovery Steps:**
+
+1. Automatically truncate very large diffs with warning
+2. Process large file sets in batches
+3. Summarize content before sending to LLM
+4. Use diff statistics instead of full content for overview
+5. Ask user to narrow review scope
+
+**Prevention:**
+
+- Check content size before processing: `wc -l input.diff`
+- Warn users about large review scope
+- Optimize prompt length to stay within model limits
+
+**Multi-Model Execution Failures:**
+
+**Symptoms:**
+
+- Only some LLM providers succeed
+- Inconsistent results across models
+- Partial session completion
+
+**Recovery Steps:**
+
+1. Continue with successful provider results
+2. Document failed providers in execution.log
+3. Retry failed providers with simplified prompts
+4. Generate session summary with available results
+5. Note limitations in final report
+
+**Prevention:**
+
+- Test all providers before starting multi-model execution
+- Have clear fallback strategies for provider failures
+- Set realistic expectations for multi-provider availability
+
+### Error Recovery Framework
+
+When errors occur during review execution:
+
+1. **Immediate Assessment:**
+   - Can the review continue with partial results?
+   - Is this a temporary or permanent failure?
+   - Are there alternative approaches available?
+
+2. **Recovery Actions:**
+   - Document error details in `execution.log`
+   - Try alternative providers or simplified approaches
+   - Continue with available results if possible
+   - Update session summary with limitations
+
+3. **User Communication:**
+   - Provide clear error descriptions
+   - Explain what results are available
+   - Suggest next steps or alternatives
+   - Document any required user actions
 
 ## Integration Points
 

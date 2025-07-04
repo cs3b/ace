@@ -206,7 +206,142 @@ When implementing a feature across multiple commits:
 
 ## Error Handling
 
-**Accidentally committed to wrong branch:**
+### Common Issues
+
+**Merge Conflicts During Commit:**
+
+**Symptoms:**
+
+- `git pull` fails with conflict markers
+- Files contain `<<<<<<<`, `=======`, `>>>>>>>` markers
+- Cannot proceed with commit
+
+**Recovery Steps:**
+
+1. Stop current operation: `git merge --abort` if in middle of merge
+2. Review conflicted files: `git status`
+3. For simple conflicts, resolve manually:
+
+   ```bash
+   # Edit conflicted files, remove markers, choose correct content
+   git add resolved-file.ext
+   git commit
+   ```
+
+4. For complex conflicts, escalate to user with clear description
+5. Validate resolution: `git status` should show clean working tree
+
+**Prevention:**
+
+- Always `git pull` before making changes
+- Check for upstream changes: `git fetch && git status`
+
+**Pre-commit Hook Failures:**
+
+**Symptoms:**
+
+- `git commit` fails with hook error messages
+- Lint, formatting, or test failures during commit
+- Code style violations reported
+
+**Recovery Steps:**
+
+1. Read hook error message carefully
+2. Fix identified issues:
+
+   ```bash
+   # Run linting
+   bin/lint
+   
+   # Run tests
+   bin/test
+   
+   # Fix any reported issues
+   ```
+
+3. Re-stage fixed files: `git add .`
+4. Retry commit: `git commit`
+5. If hook is incorrectly configured, ask user for guidance
+
+**Prevention:**
+
+- Run `bin/lint` before committing
+- Run `bin/test` before committing
+- Review quality standards in project documentation
+
+**Authentication Failures:**
+
+**Symptoms:**
+
+- `git push` fails with 403/401 errors
+- SSH key or token rejection
+- Permission denied messages
+
+**Recovery Steps:**
+
+1. Check authentication status: `git remote -v`
+2. Test connection: `ssh -T git@github.com`
+3. Verify repository permissions
+4. If token expired, ask user to refresh credentials
+5. Document the issue for user resolution
+
+**Prevention:**
+
+- Test git authentication before starting: `git fetch`
+- Verify push permissions for target repository
+
+**File Path Issues:**
+
+**Symptoms:**
+
+- `git add` fails with "pathspec did not match"
+- Files not staged as expected
+- Untracked files not being added
+
+**Recovery Steps:**
+
+1. Verify file existence: `ls -la path/to/file`
+2. Check current directory: `pwd`
+3. Use `git status` to see actual file states
+4. For renamed files, use `git add -A` to stage all changes
+5. For new files, ensure proper paths and no typos
+
+**Prevention:**
+
+- Use `git status` to verify file states before staging
+- Use tab completion for file paths
+- Double-check file names and locations
+
+**Large File Issues:**
+
+**Symptoms:**
+
+- Git warns about large files
+- Push fails due to file size limits
+- Performance degradation
+
+**Recovery Steps:**
+
+1. Identify large files: `git ls-files | xargs ls -la | sort -nr -k5`
+2. Remove large files from staging: `git reset HEAD large-file.ext`
+3. Add to .gitignore if appropriate
+4. For legitimate large files, consider Git LFS
+5. Ask user about file handling strategy
+
+**Prevention:**
+
+- Review file sizes before staging
+- Use .gitignore for build artifacts and large binaries
+- Consider Git LFS for necessary large files
+
+**Accidentally Committed to Wrong Branch:**
+
+**Symptoms:**
+
+- Realized commit was made to incorrect branch
+- Need to move commits to different branch
+
+**Recovery Steps:**
 
 ```bash
 # Create new branch with current commits
@@ -219,7 +354,15 @@ git reset --hard origin/main
 git checkout new-branch
 ```
 
-**Need to modify last commit:**
+**Need to Modify Last Commit:**
+
+**Symptoms:**
+
+- Typo in commit message
+- Forgot to include file in commit
+- Need to update commit content
+
+**Recovery Steps:**
 
 ```bash
 # Add more changes
@@ -232,7 +375,14 @@ git commit --amend --no-edit
 git commit --amend
 ```
 
-**Committed sensitive data:**
+**Committed Sensitive Data:**
+
+**Symptoms:**
+
+- Accidentally committed passwords, keys, or secrets
+- Need to remove from git history
+
+**Recovery Steps:**
 
 ```bash
 # Remove from history (requires force push)
@@ -240,6 +390,34 @@ git filter-branch --force --index-filter \
   "git rm --cached --ignore-unmatch path/to/sensitive-file" \
   --prune-empty --tag-name-filter cat -- --all
 ```
+
+**⚠️ Warning:** This requires force push and affects all collaborators
+
+**Empty or Invalid Commit Message:**
+
+**Symptoms:**
+
+- Commit fails due to empty message
+- Message doesn't follow conventional format
+- Git editor opens unexpectedly
+
+**Recovery Steps:**
+
+1. If in editor, write proper commit message and save
+2. If commit failed, retry with proper message:
+
+   ```bash
+   git commit -m "type(scope): proper description"
+   ```
+
+3. For amending message: `git commit --amend`
+4. Follow conventional commit format from workflow guidelines
+
+**Prevention:**
+
+- Always write descriptive commit messages
+- Follow project's conventional commit format
+- Review message before committing
 
 ## Success Criteria
 
