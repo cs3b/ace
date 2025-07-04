@@ -18,9 +18,14 @@ Review and refine a task definition, potentially proposing an implementation app
 
 ## Process Steps
 
-1. **Load Task Content:**
-   - Read the task file from the provided path
-   - Parse the structure:
+1. **Identify and Load Task:**
+   - **Task Selection:**
+     - If specific task provided: Use the provided task path
+     - If no task specified: Run `bin/tn` to get the next task to review
+     - Document the selected task path for reference
+   - **Load Task Content:**
+     - Read the task file from the identified path
+     - Parse the structure:
 
      ```yaml
      ---
@@ -51,10 +56,10 @@ Review and refine a task definition, potentially proposing an implementation app
    ```bash
    # Review recent commits
    git log --oneline -20
-   
+
    # Check recently modified files in task area
    git diff --name-only HEAD~10
-   
+
    # Look for related completed tasks
    ls -t dev-taskflow/current/*/tasks/*.md | grep -E "(done|completed)" | head -10
    ```
@@ -64,7 +69,29 @@ Review and refine a task definition, potentially proposing an implementation app
    - Are there hidden dependencies not listed?
    - Will recent changes impact this task?
 
-3. **Analyze Implementation Plan:**
+3. **Conduct Task-Specific Research:**
+   - **Identify Research Topics:**
+     - What domain knowledge is required for this task?
+     - Which technologies or patterns are involved?
+     - What are the key decision points in the implementation?
+   - **Research Current Best Practices:**
+     - Industry standards for the task's domain
+     - Recent developments in relevant technologies
+     - Proven patterns and approaches
+   - **Identify Potential Gotchas:**
+     - Common pitfalls in similar implementations
+     - Integration challenges with existing systems
+     - Performance or security considerations
+   - **Project-Specific Considerations:**
+     - How does this task fit within our architecture?
+     - Are there project-specific constraints or requirements?
+     - What should we be especially careful about given our context?
+   - **Document Research Findings:**
+     - Summarize key insights
+     - Note any recommendations or concerns
+     - Identify areas requiring further investigation
+
+4. **Analyze Implementation Plan:**
 
    **Structure Assessment:**
    - Check for proper Planning Steps (`* [ ]`) and Execution Steps (`- [ ]`)
@@ -85,7 +112,7 @@ Review and refine a task definition, potentially proposing an implementation app
    - Unrealistic scope or timeline
    - Missing error handling considerations
 
-4. **Identify Improvement Areas:**
+5. **Identify Improvement Areas:**
 
    **Task Definition Issues:**
    - Ambiguous requirements
@@ -105,11 +132,27 @@ Review and refine a task definition, potentially proposing an implementation app
    - Missing architectural considerations
    - Ignoring coding standards
 
-5. **Propose Refinements:**
+6. **Validate Task Currency and Update:**
+   - **Project Status Validation:**
+     - Is the task still relevant to current project goals?
+     - Are the assumptions still valid given recent changes?
+     - Do the deliverables align with current architecture?
+   - **Task Update Process:**
+     - Identify specific content that needs updating
+     - Propose necessary changes to task definition
+     - Update implementation plan based on research findings
+     - Revise acceptance criteria if needed
+   - **User Confirmation:**
+     - Present proposed changes to user
+     - Explain rationale for each modification
+     - Request approval before applying changes
+     - Document any user feedback or decisions
+
+7. **Propose Refinements:**
 
    Use the enhanced implementation plan template:
 
-6. **Formulate Feedback Points:**
+8. **Formulate Feedback Points:**
 
    **Question Templates:**
    - "The objective mentions [X], but the scope includes [Y]. Should we...?"
@@ -124,7 +167,24 @@ Review and refine a task definition, potentially proposing an implementation app
    - Resource allocation
    - Risk assessment
 
-7. **Present Review Summary:**
+9. **Implementation Readiness Assessment:**
+   - **Readiness Checklist:**
+     - [ ] All research findings incorporated
+     - [ ] Task definition is current and accurate
+     - [ ] Implementation plan is detailed and actionable
+     - [ ] Dependencies are resolved or clearly tracked
+     - [ ] User feedback has been addressed
+     - [ ] Acceptance criteria are complete and testable
+   - **Final Validation:**
+     - Confirm task aligns with current project state
+     - Verify all improvement areas have been addressed
+     - Ensure implementation approach is sound
+   - **Go/No-Go Decision:**
+     - **✅ Ready for Implementation**: All criteria met, proceed with confidence
+     - **⚠️ Ready with Conditions**: Minor issues noted, proceed with caution
+     - **❌ Not Ready**: Critical issues must be resolved before implementation
+
+10. **Present Review Summary:**
 
    Use the task review summary template:
 
@@ -373,7 +433,7 @@ Why are we doing this?
 - Issue 1: Description and recommendation
 - Issue 2: Description and recommendation
 
-### 🟢 Medium Priority Issues  
+### 🟢 Medium Priority Issues
 
 - Issue 1: Description and recommendation
 - Issue 2: Description and recommendation
