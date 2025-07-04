@@ -67,9 +67,11 @@ A complete, end-to-end development lifecycle has been introduced:
   - `save-session-context.wf.md`: Saves a compact summary of the current work session.
 
 ### Existing Workflows Modified
+
 - *No updates required* (All workflows are new).
 
 ### Breaking Workflow Changes
+
 - *No updates required* (No previous workflows to break).
 
 ## 3. Template & Example Updates
@@ -128,12 +130,14 @@ Cross-referencing between related workflows is present but incomplete. A more in
 ## 7. Prioritised Handbook Tasks
 
 🔴 **Critical (workflow-blocking)**
+
 - **Task:** Create the "Core Development Lifecycle" guide to document the end-to-end process.
   - **Reason:** Without this, the collection of workflows is a set of disconnected tools, making it impossible for an agent to autonomously manage a feature from concept to completion.
 - **Task:** Fix the `create-user-docs.wf.md` workflow to correctly embed or link its corresponding template.
   - **Reason:** The workflow is currently broken and cannot be executed as written.
 
 🟡 **High**
+
 - **Task:** Investigate and resolve the dependency on `dev-tools/exe-old/`. Update `initialize-project-structure.wf.md` to use current, supported tools.
   - **Reason:** This dependency represents a significant stability and security risk to the entire system.
 - **Task:** Create the "AI Agent Command Integration" guide to document command wrappers like `@review-code`.
@@ -142,12 +146,14 @@ Cross-referencing between related workflows is present but incomplete. A more in
   - **Reason:** Improves workflow discoverability and enables more autonomous agent behavior.
 
 🟢 **Medium**
+
 - **Task:** Standardize the phrasing used to reference templates across all workflow instructions.
   - **Reason:** Improves consistency and reduces ambiguity for the AI agent.
 - **Task:** Create a developer setup guide that details the required `bin/` scripts and other tooling dependencies.
   - **Reason:** Ensures developers and agents have a correctly configured environment.
 
 🔵 **Nice-to-have**
+
 - **Task:** Add a Mermaid diagram to the "Core Development Lifecycle" guide to visually represent the workflow.
   - **Reason:** Enhances human comprehension of the complex system.
 

@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.44
-status: pending
+status: done
 priority: high
 estimate: 5h
 dependencies: [v.0.3.0+task.43]
@@ -57,37 +57,37 @@ Transform review prompt construction from plain markdown to structured XML forma
 
 ### Planning Steps
 
-* [ ] Analyze current prompt construction patterns in review-code.wf.md
+* [x] Analyze current prompt construction patterns in review-code.wf.md
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current markdown prompt structure is documented
   > Command: grep -A 20 "Combined Prompt Construction" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Design XML schema with semantic tags (project-context, focus-areas, review-target)
-* [ ] Plan YAML frontmatter integration with XML structure
+* [x] Design XML schema with semantic tags (project-context, focus-areas, review-target)
+* [x] Plan YAML frontmatter integration with XML structure
 
 ### Execution Steps
 
-* [ ] Replace plain markdown headers with YAML frontmatter in prompt construction
+* [x] Replace plain markdown headers with YAML frontmatter in prompt construction
   > TEST: Verify YAML Frontmatter
   > Type: Action Validation
   > Assert: Generated prompts include proper YAML metadata
   > Command: head -10 example-prompt.md | grep -E '^(---|\w+:)'
-* [ ] Transform project context loading to XML document format
-* [ ] Update focus areas to use structured XML tags instead of markdown lists
-* [ ] Implement complete input content append (not truncated embedding)
+* [x] Transform project context loading to XML document format
+* [x] Update focus areas to use structured XML tags instead of markdown lists
+* [x] Implement complete input content append (not truncated embedding)
   > TEST: Verify Complete Content Inclusion
   > Type: Content Validation
   > Assert: Full input.xml content is included in prompt
   > Command: diff -q input.xml <(tail -c +$(grep -n "<?xml" prompt.md | cut -d: -f1 | head -1) prompt.md)
-* [ ] Create example XML prompts for code/tests/docs focus areas
+* [x] Create example XML prompts for code/tests/docs focus areas
 
 ## Acceptance Criteria
 
-* [ ] AC 1: Prompts use YAML frontmatter for metadata
-* [ ] AC 2: Project context embedded as XML documents with CDATA
-* [ ] AC 3: Focus areas structured with semantic XML tags
-* [ ] AC 4: Complete input content included without truncation
-* [ ] AC 5: Generated prompts are valid XML and processable by LLMs
+* [x] AC 1: Prompts use YAML frontmatter for metadata
+* [x] AC 2: Project context embedded as XML documents with CDATA
+* [x] AC 3: Focus areas structured with semantic XML tags
+* [x] AC 4: Complete input content included without truncation
+* [x] AC 5: Generated prompts are valid XML and processable by LLMs
 
 ## Out of Scope
 
