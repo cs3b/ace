@@ -95,6 +95,7 @@ EOF
 ```
 
 **Validation:**
+
 - Session directory created successfully
 - Session metadata file contains all parameters
 - Directory structure follows established pattern
@@ -194,6 +195,7 @@ echo "size: $(wc -l < "${target}") lines" >> "${SESSION_DIR}/input.meta"
 ```
 
 **Validation:**
+
 - Input file (input.diff or input.xml) created successfully
 - Input metadata file contains target information
 - Content properly formatted and readable
@@ -212,66 +214,88 @@ Select appropriate universal templates based on focus:
 Build the complete prompt and save to prompt.md:
 
 ```bash
-# Build combined prompt file
+# Build combined prompt file with YAML frontmatter
 cat > "${SESSION_DIR}/prompt.md" <<EOF
-# Code Review Prompt - ${focus} Focus
+---
+generated: $(date -Iseconds)
+target: ${target}
+focus: ${focus}
+context: ${context:-auto}
+type: review-prompt
+---
 
-Generated: $(date -Iseconds)
-Target: ${target}
-Focus: ${focus}
-Context: ${context:-auto}
-
+<review-prompt>
 EOF
 
-echo -e "\n\n## Project Context\n" >> "${SESSION_DIR}/prompt.md"
+echo -e "\n  <project-context>" >> "${SESSION_DIR}/prompt.md"
 
 # Add project context if enabled
 if [[ "${context:-auto}" != "none" ]]; then
     if [[ "${context:-auto}" == "auto" ]]; then
-        echo "### Project Structure (docs/blueprint.md)" >> "${SESSION_DIR}/prompt.md"
+        echo "    <document type=\"blueprint\">" >> "${SESSION_DIR}/prompt.md"
+        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
         cat "docs/blueprint.md" >> "${SESSION_DIR}/prompt.md"
-        echo -e "\n\n### Project Vision (docs/what-do-we-build.md)" >> "${SESSION_DIR}/prompt.md"
+        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
+        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <document type=\"vision\">" >> "${SESSION_DIR}/prompt.md"
+        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
         cat "docs/what-do-we-build.md" >> "${SESSION_DIR}/prompt.md"
+        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
+        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
     else
-        echo "### Custom Context (${context})" >> "${SESSION_DIR}/prompt.md"
+        echo "    <document type=\"custom\">" >> "${SESSION_DIR}/prompt.md"
+        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
         cat "${context}" >> "${SESSION_DIR}/prompt.md"
+        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
+        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
     fi
 fi
 
-echo -e "\n\n## Review Target\n" >> "${SESSION_DIR}/prompt.md"
+echo "  </project-context>" >> "${SESSION_DIR}/prompt.md"
+
+echo -e "\n  <review-target" >> "${SESSION_DIR}/prompt.md"
 
 # Add target content
 if [[ -f "${SESSION_DIR}/input.diff" ]]; then
-    echo "### Git Diff Changes" >> "${SESSION_DIR}/prompt.md"
+    echo " type=\"diff\">" >> "${SESSION_DIR}/prompt.md"
+    echo "    <![CDATA[" >> "${SESSION_DIR}/prompt.md"
     cat "${SESSION_DIR}/input.diff" >> "${SESSION_DIR}/prompt.md"
+    echo "    ]]>" >> "${SESSION_DIR}/prompt.md"
 elif [[ -f "${SESSION_DIR}/input.xml" ]]; then
-    echo "### File Content" >> "${SESSION_DIR}/prompt.md"
+    echo " type=\"file\">" >> "${SESSION_DIR}/prompt.md"
+    echo "    <![CDATA[" >> "${SESSION_DIR}/prompt.md"
     cat "${SESSION_DIR}/input.xml" >> "${SESSION_DIR}/prompt.md"
+    echo "    ]]>" >> "${SESSION_DIR}/prompt.md"
 fi
 
-echo -e "\n\n## Focus Areas\n" >> "${SESSION_DIR}/prompt.md"
-echo "Comprehensive ${focus} review focusing on:" >> "${SESSION_DIR}/prompt.md"
+echo "  </review-target>" >> "${SESSION_DIR}/prompt.md"
+
+echo -e "\n  <focus-areas type=\"${focus}\">" >> "${SESSION_DIR}/prompt.md"
 
 case "${focus}" in
     "code")
-        echo "- Code quality, architecture, security, performance" >> "${SESSION_DIR}/prompt.md"
-        echo "- ATOM architecture compliance" >> "${SESSION_DIR}/prompt.md"
-        echo "- Ruby best practices and conventions" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Code quality, architecture, security, performance</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>ATOM architecture compliance</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Ruby best practices and conventions</area>" >> "${SESSION_DIR}/prompt.md"
         ;;
     "tests")
-        echo "- Test coverage, quality, maintainability" >> "${SESSION_DIR}/prompt.md"
-        echo "- RSpec best practices" >> "${SESSION_DIR}/prompt.md"
-        echo "- Test architecture and organization" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Test coverage, quality, maintainability</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>RSpec best practices</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Test architecture and organization</area>" >> "${SESSION_DIR}/prompt.md"
         ;;
     "docs")
-        echo "- Documentation gaps, updates, cross-references" >> "${SESSION_DIR}/prompt.md"
-        echo "- Architecture documentation alignment" >> "${SESSION_DIR}/prompt.md"
-        echo "- User experience and clarity" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Documentation gaps, updates, cross-references</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Architecture documentation alignment</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>User experience and clarity</area>" >> "${SESSION_DIR}/prompt.md"
         ;;
 esac
+
+echo "  </focus-areas>" >> "${SESSION_DIR}/prompt.md"
+echo "</review-prompt>" >> "${SESSION_DIR}/prompt.md"
 ```
 
 **Validation:**
+
 - prompt.md file created with all sections
 - System prompt template included correctly
 - Project context loaded based on parameter
@@ -326,6 +350,7 @@ EOF
 ```
 
 **Validation:**
+
 - Both LLM providers executed successfully
 - Report files contain structured review content
 - Execution log captures any errors or issues
@@ -398,6 +423,7 @@ echo ""
 ```
 
 **Validation:**
+
 - Session index (README.md) created with all file references
 - Execution summary shows successful LLM runs
 - Session directory contains all expected files

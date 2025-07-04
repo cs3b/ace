@@ -184,6 +184,7 @@ fi
 ```
 
 **Validation:**
+
 - Reports source properly identified and validated
 - Synthesis directory created or identified
 - All cr-report-*.md files found and combined
@@ -253,6 +254,7 @@ echo "📊 Ready to synthesize $report_count individual reports"
 ```
 
 **Validation:**
+
 - Session metadata integrated if available
 - All required report sections validated
 - Report count confirmed
@@ -309,6 +311,7 @@ echo "📏 Prompt size: $(wc -w < "${SYNTHESIS_DIR}/synthesis.prompt.md") words"
 ```
 
 **Validation:**
+
 - Synthesis prompt file created with all sections
 - Synthesizer system prompt template included
 - Session context integrated if available
@@ -379,6 +382,7 @@ EOF
 ```
 
 **Validation:**
+
 - Primary synthesis executed successfully
 - Final cr-report.md created with metadata
 - Secondary synthesis attempted if primary succeeded
@@ -459,6 +463,7 @@ fi
 ```
 
 **Validation:**
+
 - Synthesis output structure validated
 - Key metrics extracted from final report
 - Session index updated with synthesis results
@@ -518,6 +523,7 @@ fi
 ```
 
 **Validation:**
+
 - Comprehensive completion summary displayed
 - File generation status confirmed
 - Next steps clearly outlined
