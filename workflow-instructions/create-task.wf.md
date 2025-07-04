@@ -86,13 +86,30 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
      * Create directories if they don't exist
 
 7. **Generate Task IDs and Save Files**
-   * For each task:
+   * **Important**: Generate only one task ID at a time to ensure proper sequencing
+   * For each task sequentially:
      * Run `bin/tnid {version}` to generate unique ID with zero-padded format (e.g., task.01, task.02)
      * Create filename: `{id}-{kebab-case-title}.md`
      * Save to determined location
      * Track created files for summary
+     * **Before proceeding**: Request next task ID only after current task file is created and saved
 
-8. **Provide Summary**
+8. **Ensure Task Creation Completion**
+   * Verify all planned tasks have been created:
+     * Cross-reference against initial task breakdown list
+     * Confirm each task file exists at expected location
+     * Validate task IDs are sequential and properly formatted
+   * Address any missing or incomplete tasks:
+     * Identify uncreated tasks from original breakdown
+     * Generate missing task IDs and create remaining files
+     * Resolve any file conflicts or errors
+   * **Validation Checklist:**
+     * [ ] All tasks from user approval list are created
+     * [ ] Task files follow proper naming convention
+     * [ ] All task files contain complete template content
+     * [ ] Task IDs are sequential without gaps
+
+9. **Provide Summary**
    * List all created tasks with their:
      * IDs
      * Titles
