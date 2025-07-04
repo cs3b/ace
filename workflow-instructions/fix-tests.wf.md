@@ -13,9 +13,20 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 
 ## Project Context Loading
 
+**Essential project context:**
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
+
+**Before starting test fixes:**
+1. Check recent changes: `git log --oneline -10`
+2. Review test configuration: Look for `test/`, `spec/`, or `tests/` directories
+3. Understand testing framework: Check `Gemfile`, `package.json`, or `requirements.txt`
+4. If `docs/testing.md` exists, read it for project-specific testing guidelines
+
+**During test fixing:**
+- Check for existing similar tests for patterns
+- Verify fixes align with project architecture
 
 ## When to Use This Workflow
 
@@ -32,7 +43,75 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 - Feature development or new requirements
 - Performance optimization unrelated to tests
 
-## Process Steps
+## Claude Commands for Test Fixing
+
+**Primary command for iterative fixing:**
+
+```bash
+# Find and work on next failing test
+bin/test --next-failure
+```
+
+**Test discovery commands:**
+
+```bash
+# Quick test status check
+bin/test --status
+
+# List all failing tests
+bin/test --list-failures
+
+# Run specific test file
+bin/test path/to/test_file.rb
+
+# Run with detailed output
+bin/test --verbose
+
+# Run only failing tests
+bin/test --only-failures
+```
+
+## Iterative Fix Process
+
+**Main Loop (repeat until no failures):**
+
+1. **Identify Next Failure:**
+
+   ```bash
+   bin/test --next-failure
+   ```
+
+2. **Investigate Root Cause:**
+   - Read test file and understand what it's testing
+   - Check recent changes that might have broken it
+   - Look for patterns with other failures
+
+3. **Implement Solution:**
+   - Fix the underlying issue (not just the test)
+   - Ensure fix doesn't break other tests
+   - Ask user only if solution is unclear
+
+4. **Verify Fix:**
+
+   ```bash
+   # Run the specific test
+   bin/test path/to/fixed_test.rb
+   
+   # Run related tests
+   bin/test --related path/to/fixed_test.rb
+   ```
+
+5. **Loop Back:**
+   - Return to step 1 until `bin/test --next-failure` returns no errors
+
+**Final Verification:**
+
+```bash
+# Run full test suite
+bin/test
+```
+
+## Legacy Process Steps (for reference)
 
 1. **Initial Analysis:**
 
@@ -173,6 +252,25 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
    sleep 0.1
    ```
 
+## Quick Troubleshooting Decision Tree
+
+**Test Failure Type → Action:**
+
+- **Syntax Error** → Fix code syntax immediately
+- **Missing Method/Class** → Check if file moved or renamed
+- **Database Error** → Run `bin/test --setup-db` or equivalent
+- **Timeout** → Check for infinite loops or increase timeout
+- **Permission Error** → Check file permissions and dependencies
+- **Network Error** → Mock external services or check connectivity
+- **Environment Error** → Verify system dependencies and configuration
+
+**Quick First Steps:**
+
+1. **Recent Changes?** → `git log --oneline -10` and check related files
+2. **Dependencies Updated?** → Run `bundle install`, `npm install`, etc.
+3. **Environment Issues?** → Check Ruby/Python/Node versions
+4. **Database Issues?** → Reset test database and clear caches
+
 ## Common Test Issues and Solutions
 
 ### 1. Database State Issues
@@ -223,6 +321,33 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 - Use test data builders efficiently
 - Minimize database operations
 - Parallelize test execution
+
+## Time Management and Efficiency
+
+**Quick wins first:**
+
+- Fix syntax errors immediately
+- Resolve missing imports/requires
+- Update outdated assertions
+
+**Batch similar fixes:**
+
+- Group tests by failure type
+- Fix all database-related issues together
+- Update all tests using deprecated methods
+
+**Know when to ask:**
+
+- Business logic questions
+- Complex architectural decisions
+- Unclear requirements or specifications
+
+**Time-saving techniques:**
+
+- Use `bin/test --next-failure` for systematic progress
+- Run specific test files instead of full suite during development
+- Use test-specific debugging tools (`--verbose`, `--backtrace`)
+- Fix root causes instead of individual symptoms
 
 ## Testing Principles
 
@@ -311,9 +436,41 @@ class TestUserService:
         assert result.success == True
 ```
 
+## Automated Fix Patterns
+
+**Pattern Recognition:**
+- Update deprecated method calls
+- Fix changed API signatures
+- Update test data for schema changes
+- Resolve path changes after refactoring
+
+**Quick Commands:**
+```bash
+# Update all tests using old method
+find . -name "*test*" -type f -exec sed -i 's/old_method/new_method/g' {} \;
+
+# Fix common RSpec deprecations
+bin/test --fix-deprecations
+
+# Update factory references
+bin/test --update-factories
+```
+
+**Common Automated Fixes:**
+- Replace `should` with `expect` in RSpec
+- Update `assert_equal` to `assert_equals` in unittest
+- Fix imports after module reorganization
+- Update configuration paths after restructuring
+
 ## Usage Example
 >
 > "The test suite is failing with 5 errors in the user authentication module. Help me fix these test failures."
+
+**Response Process:**
+1. Run `bin/test --next-failure` to identify first failing test
+2. Investigate root cause and implement fix
+3. Continue with `bin/test --next-failure` until no more failures
+4. Run full test suite `bin/test` to verify all tests pass
 
 ---
 
