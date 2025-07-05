@@ -368,6 +368,6 @@ Track key metrics to improve the release process:
 
 ## Related Documentation
 
-- [Version Control Guide](./version-control-system.g.md) (Git workflow and tagging)
+- [Version Control Git Guide](./version-control-system-git.g.md) (Git workflow and tagging)
 - [Project Management Guide](./project-management.g.md) (Task and release coordination)
 - [Quality Assurance Guide](./quality-assurance.g.md) (Release validation standards)

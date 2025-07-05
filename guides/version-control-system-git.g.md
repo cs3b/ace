@@ -818,4 +818,3 @@ git config --global pull.rebase false
 - [GitHub Flow](https://guides.github.com/introduction/flow/) - Simplified branching workflow
 - [Atlassian Git Tutorials](https://www.atlassian.com/git/tutorials) - Visual Git learning resources
 - [Conventional Commits](https://www.conventionalcommits.org/) - Commit message specification
-

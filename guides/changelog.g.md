@@ -317,7 +317,7 @@ For projects without public repositories, use internal tracking systems or omit 
 
 ## Related Documentation
 
-- [Version Control Guide](./version-control-system.g.md) (Commit message standards)
+- [Version Control Message Guide](./version-control-system-message.g.md) (Commit message standards)
 - [Project Management Guide](./project-management.g.md) (Release workflow integration)
 - [Publish Release Guide](./release-publish.g.md) (Release process overview)
 - [Publish Release Workflow](../workflow-instructions/publish-release.wf.md) (Step-by-step release actions)

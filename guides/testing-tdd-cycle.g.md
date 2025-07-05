@@ -81,7 +81,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
     standard.
 * **Workflow:** See [`commit.wf.md`](dev-handbook/workflow-instructions/commit.wf.md)
-* **Reference:** [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+* **Reference:** [Version Control Git Guide](dev-handbook/guides/version-control-system-git.g.md)
 
 ### Step 7: Self-Reflection
 
@@ -132,6 +132,6 @@ sub-guide for details:
   * [`save-session-context.wf.md`](dev-handbook/workflow-instructions/save-session-context.wf.md) (for saving session context)
 * **Core Guides:**
   * [Testing Guide](dev-handbook/guides/testing.g.md)
-  * [Version Control Guide](dev-handbook/guides/version-control-system.g.md)
+  * [Version Control Git Guide](dev-handbook/guides/version-control-system-git.g.md)
   * [Coding Standards](dev-handbook/guides/coding-standards.g.md)
   * [Project Management Guide](dev-handbook/guides/project-management.g.md)

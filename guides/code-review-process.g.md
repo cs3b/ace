@@ -218,7 +218,7 @@ Reviews are executed through standardized commands that create organized session
 
 - [Documentation Guide](./documentation.g.md) - Documentation standards and practices
 - [Quality Assurance Guide](./quality-assurance.g.md) - Overall quality standards
-- [Version Control System Guide](./version-control-system.g.md) - Git workflow integration
+- [Version Control Git Guide](./version-control-system-git.g.md) - Git workflow integration
 
 ---
 

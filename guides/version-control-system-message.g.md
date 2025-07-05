@@ -487,7 +487,7 @@ fi
 
 ## Related Documents
 
-- [Version Control System Guide](./version-control-system.g.md) - Complete version control practices
+- [Version Control Git Guide](./version-control-system-git.g.md) - Complete Git workflow practices
 - [Commit Workflow](../workflow-instructions/commit.wf.md) - Step-by-step commit process
 - [Code Review Process](./code-review-process.g.md) - Review guidelines including commit quality
 

@@ -75,7 +75,9 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
 3. **Write Conventional Commit Message:**
 
-   **Format:**
+   Follow the Conventional Commits specification detailed in the [Version Control Message Guide](../guides/version-control-system-message.g.md).
+
+   **Quick Reference:**
 
    ```
    type(scope): subject
@@ -85,38 +87,24 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    [optional footer(s)]
    ```
 
-   **Types:**
-   - `feat`: New feature
-   - `fix`: Bug fix
-   - `docs`: Documentation only
-   - `style`: Formatting, missing semicolons, etc.
-   - `refactor`: Code change that neither fixes nor adds feature
-   - `test`: Adding missing tests
-   - `chore`: Maintenance tasks, dependency updates
+   **Common Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+   **Key Guidelines:**
+   - Subject: 50 characters or less, imperative mood
+   - Body: 72 characters per line, explain what and why
+   - Footer: Reference issues/tasks, document breaking changes
 
    **Examples:**
 
    ```bash
-   # Simple commit
    git commit -m "feat(auth): add password reset functionality"
-   
-   # Commit with body
    git commit -m "fix(api): handle null values in user response
-   
+
    - Add null checks for optional fields
    - Update tests to cover edge cases
-   - Fix TypeScript types
-   
+
    Fixes #123"
    ```
-
-   **Guidelines:**
-   - Subject line: 50 characters or less
-   - Use imperative mood ("add" not "added")
-   - Don't end subject with period
-   - Separate subject from body with blank line
-   - Body lines: 72 characters or less
-   - Reference issues/tasks when applicable
 
 4. **AI-Generated Code Review:**
    If changes were AI-assisted:
@@ -206,35 +194,9 @@ When implementing a feature across multiple commits:
 
 ## Error Handling
 
-### Common Issues
+For comprehensive Git troubleshooting, see the [Version Control Git Guide](../guides/version-control-system-git.g.md#troubleshooting-common-issues).
 
-**Merge Conflicts During Commit:**
-
-**Symptoms:**
-
-- `git pull` fails with conflict markers
-- Files contain `<<<<<<<`, `=======`, `>>>>>>>` markers
-- Cannot proceed with commit
-
-**Recovery Steps:**
-
-1. Stop current operation: `git merge --abort` if in middle of merge
-2. Review conflicted files: `git status`
-3. For simple conflicts, resolve manually:
-
-   ```bash
-   # Edit conflicted files, remove markers, choose correct content
-   git add resolved-file.ext
-   git commit
-   ```
-
-4. For complex conflicts, escalate to user with clear description
-5. Validate resolution: `git status` should show clean working tree
-
-**Prevention:**
-
-- Always `git pull` before making changes
-- Check for upstream changes: `git fetch && git status`
+### Workflow-Specific Issues
 
 **Pre-commit Hook Failures:**
 
@@ -242,156 +204,15 @@ When implementing a feature across multiple commits:
 
 - `git commit` fails with hook error messages
 - Lint, formatting, or test failures during commit
-- Code style violations reported
 
 **Recovery Steps:**
 
 1. Read hook error message carefully
-2. Fix identified issues:
-
-   ```bash
-   # Run linting
-   bin/lint
-   
-   # Run tests
-   bin/test
-   
-   # Fix any reported issues
-   ```
-
+2. Fix identified issues: `bin/lint` and `bin/test`
 3. Re-stage fixed files: `git add .`
 4. Retry commit: `git commit`
-5. If hook is incorrectly configured, ask user for guidance
 
-**Prevention:**
-
-- Run `bin/lint` before committing
-- Run `bin/test` before committing
-- Review quality standards in project documentation
-
-**Authentication Failures:**
-
-**Symptoms:**
-
-- `git push` fails with 403/401 errors
-- SSH key or token rejection
-- Permission denied messages
-
-**Recovery Steps:**
-
-1. Check authentication status: `git remote -v`
-2. Test connection: `ssh -T git@github.com`
-3. Verify repository permissions
-4. If token expired, ask user to refresh credentials
-5. Document the issue for user resolution
-
-**Prevention:**
-
-- Test git authentication before starting: `git fetch`
-- Verify push permissions for target repository
-
-**File Path Issues:**
-
-**Symptoms:**
-
-- `git add` fails with "pathspec did not match"
-- Files not staged as expected
-- Untracked files not being added
-
-**Recovery Steps:**
-
-1. Verify file existence: `ls -la path/to/file`
-2. Check current directory: `pwd`
-3. Use `git status` to see actual file states
-4. For renamed files, use `git add -A` to stage all changes
-5. For new files, ensure proper paths and no typos
-
-**Prevention:**
-
-- Use `git status` to verify file states before staging
-- Use tab completion for file paths
-- Double-check file names and locations
-
-**Large File Issues:**
-
-**Symptoms:**
-
-- Git warns about large files
-- Push fails due to file size limits
-- Performance degradation
-
-**Recovery Steps:**
-
-1. Identify large files: `git ls-files | xargs ls -la | sort -nr -k5`
-2. Remove large files from staging: `git reset HEAD large-file.ext`
-3. Add to .gitignore if appropriate
-4. For legitimate large files, consider Git LFS
-5. Ask user about file handling strategy
-
-**Prevention:**
-
-- Review file sizes before staging
-- Use .gitignore for build artifacts and large binaries
-- Consider Git LFS for necessary large files
-
-**Accidentally Committed to Wrong Branch:**
-
-**Symptoms:**
-
-- Realized commit was made to incorrect branch
-- Need to move commits to different branch
-
-**Recovery Steps:**
-
-```bash
-# Create new branch with current commits
-git branch new-branch
-
-# Reset current branch
-git reset --hard origin/main
-
-# Switch to new branch
-git checkout new-branch
-```
-
-**Need to Modify Last Commit:**
-
-**Symptoms:**
-
-- Typo in commit message
-- Forgot to include file in commit
-- Need to update commit content
-
-**Recovery Steps:**
-
-```bash
-# Add more changes
-git add files
-
-# Amend without changing message
-git commit --amend --no-edit
-
-# Or change the message too
-git commit --amend
-```
-
-**Committed Sensitive Data:**
-
-**Symptoms:**
-
-- Accidentally committed passwords, keys, or secrets
-- Need to remove from git history
-
-**Recovery Steps:**
-
-```bash
-# Remove from history (requires force push)
-git filter-branch --force --index-filter \
-  "git rm --cached --ignore-unmatch path/to/sensitive-file" \
-  --prune-empty --tag-name-filter cat -- --all
-```
-
-**⚠️ Warning:** This requires force push and affects all collaborators
+**Prevention:** Always run `bin/lint` and `bin/test` before committing
 
 **Empty or Invalid Commit Message:**
 
@@ -404,19 +225,12 @@ git filter-branch --force --index-filter \
 **Recovery Steps:**
 
 1. If in editor, write proper commit message and save
-2. If commit failed, retry with proper message:
-
-   ```bash
-   git commit -m "type(scope): proper description"
-   ```
-
+2. If commit failed, retry with proper message following [Conventional Commits format](../guides/version-control-system-message.g.md)
 3. For amending message: `git commit --amend`
-4. Follow conventional commit format from workflow guidelines
 
 **Prevention:**
 
-- Always write descriptive commit messages
-- Follow project's conventional commit format
+- Follow the [Version Control Message Guide](../guides/version-control-system-message.g.md)
 - Review message before committing
 
 ## Success Criteria
@@ -465,4 +279,9 @@ refactor(service): simplify request handling logic
 
 No functional changes
 </template>
+
+<guide path="dev-handbook/guides/version-control-system-message.g.md">
+Complete reference guide for version control commit message standards using Conventional Commits specification.
+Provides comprehensive documentation of commit types, scopes, formatting rules, examples, and best practices.
+</guide>
 </documents>
