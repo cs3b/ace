@@ -209,6 +209,25 @@ Select appropriate universal templates based on focus:
 - **docs**: Use `dev-handbook/templates/review-docs/system.prompt.md` (universal template with combination instructions)
 - **combined**: Use primary template with combination instructions activated, then synthesize with `dev-handbook/templates/synthesize-reviews/system.prompt.md`
 
+```bash
+# Set system prompt path based on focus
+case "${focus}" in
+    "code")
+        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-code/system.prompt.md"
+        ;;
+    "tests")
+        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-test/system.prompt.md"
+        ;;
+    "docs")
+        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-docs/system.prompt.md"
+        ;;
+    *)
+        # For combined reviews, use the primary focus template
+        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-code/system.prompt.md"
+        ;;
+esac
+```
+
 ### 5. Combined Prompt Construction
 
 Build the complete prompt and save to prompt.md:
@@ -309,7 +328,11 @@ Execute reviews with multiple LLM providers:
 ```bash
 # Execute Google Pro review
 echo "Executing Google Pro review..."
-dev-tools/exe/llm-query google:gemini-2.5-pro "$(cat "${SESSION_DIR}/prompt.md")" --system "${SYSTEM_PROMPT_PATH}" --output "${SESSION_DIR}/cr-report-gpro.md"
+dev-tools/exe/llm-query google:gemini-2.5-pro \
+    "$(cat "${SESSION_DIR}/prompt.md")" \
+    --system "${SYSTEM_PROMPT_PATH}" \
+    --timeout 500 \
+    --output "${SESSION_DIR}/cr-report-gpro.md"
 
 # Check Google Pro execution status
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
@@ -322,7 +345,11 @@ fi
 
 # Execute Anthropic Opus review
 echo "Executing Anthropic Opus review..."
-dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 "$(cat "${SESSION_DIR}/prompt.md")" --system "${SYSTEM_PROMPT_PATH}" --output "${SESSION_DIR}/cr-report-opus.md"
+dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 \
+    "$(cat "${SESSION_DIR}/prompt.md")" \
+    --system "${SYSTEM_PROMPT_PATH}" \
+    --timeout 500 \
+    --output "${SESSION_DIR}/cr-report-opus.md"
 
 # Check Anthropic Opus execution status
 if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-opus.md" ]]; then
@@ -433,10 +460,14 @@ echo ""
 
 ### Focus Area Templates
 
+Each template is used as a system prompt via the `--system` flag in the llm-query command,
+keeping system instructions separate from the user prompt content.
+
 #### Code Review Template Usage
 
 ```
-System Prompt: dev-handbook/templates/review-code/system.prompt.md
+System Prompt File: dev-handbook/templates/review-code/system.prompt.md
+Usage: --system dev-handbook/templates/review-code/system.prompt.md
 Focus: Ruby gem best practices, architecture compliance (see docs/architecture.md), security, performance
 Output: Structured code review with 11 sections
 ```
@@ -444,7 +475,8 @@ Output: Structured code review with 11 sections
 #### Test Review Template Usage
 
 ```
-System Prompt: dev-handbook/templates/review-test/system.prompt.md
+System Prompt File: dev-handbook/templates/review-test/system.prompt.md
+Usage: --system dev-handbook/templates/review-test/system.prompt.md
 Focus: RSpec best practices, coverage, maintainability, performance
 Output: Structured test review with 11 sections
 ```
@@ -452,7 +484,8 @@ Output: Structured test review with 11 sections
 #### Documentation Review Template Usage
 
 ```
-System Prompt: dev-handbook/templates/review-docs/system.prompt.md
+System Prompt File: dev-handbook/templates/review-docs/system.prompt.md
+Usage: --system dev-handbook/templates/review-docs/system.prompt.md
 Focus: Documentation gaps, architecture updates, cross-references
 Output: Structured documentation review with 11 sections
 ```
@@ -460,7 +493,8 @@ Output: Structured documentation review with 11 sections
 #### Combined Review Template Usage
 
 ```
-System Prompt: dev-handbook/templates/synthesize-reviews/system.prompt.md
+System Prompt File: dev-handbook/templates/synthesize-reviews/system.prompt.md
+Usage: --system dev-handbook/templates/synthesize-reviews/system.prompt.md
 Focus: Meta-review comparing multiple review outputs
 Output: Comparative analysis with scoring and recommendations
 ```
@@ -529,7 +563,11 @@ Output: Comparative analysis with scoring and recommendations
 dev-tools/exe/generate-review-prompt --focus code --target v.0.2.0..HEAD --output code-review-prompt.md
 
 # Process with LLM
-dev-tools/exe/llm-query gemini "$(cat code-review-prompt.md)"
+dev-tools/exe/llm-query google:gemini-2.5-pro \
+    "$(cat code-review-prompt.md)" \
+    --system dev-handbook/templates/review-code/system.prompt.md \
+    --timeout 500 \
+    --output code-review-result.md
 ```
 
 - Generates fully hydrated prompt with embedded content
