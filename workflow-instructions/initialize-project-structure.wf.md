@@ -526,7 +526,7 @@ bin/test
 3. Implement changes following coding standards
 4. Run `bin/test` to verify changes
 5. Run `bin/lint` to check code quality
-6. Commit changes with conventional commits
+6. Commit changes with [conventional commits](commit.wf.md) (see embedded guide)
 7. Update task status to done
 
 ## Coding Standards

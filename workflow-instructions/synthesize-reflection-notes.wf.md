@@ -358,7 +358,7 @@ Generated: $(date -Iseconds)
 
 ## Methodology
 
-This synthesis analyzes $reflection_count reflection notes to propose specific, implementable solutions for the Coding Agent Tools (CAT) Ruby Gem project. Solutions are framed using the gem's own capabilities and follow the ATOM architecture pattern.
+This synthesis analyzes $reflection_count reflection notes to propose specific, implementable solutions for the project. Solutions are framed using the project's own capabilities and follow the architecture patterns defined in docs/architecture.md.
 
 ## CAT-Specific Solution Categories
 
@@ -367,8 +367,8 @@ This synthesis analyzes $reflection_count reflection notes to propose specific, 
 - Enhanced parameter handling and validation
 - Improved error messaging and user guidance
 
-### ATOM Architecture Improvements  
-- New organisms/molecules for common patterns
+### Architecture Improvements  
+- New components for common patterns (see docs/architecture.md for project patterns)
 - Better separation of concerns in existing components
 - Enhanced dependency injection and testability
 
@@ -389,7 +389,7 @@ EOF
 # Generate solution proposals based on identified patterns
 SOLUTION_CATEGORIES=(
     "CLI Command Enhancements"
-    "ATOM Architecture Improvements"
+    "Architecture Improvements"
     "Development Workflow Automation"
     "Testing Infrastructure"
 )
@@ -414,7 +414,7 @@ for category in "${SOLUTION_CATEGORIES[@]}"; do
 \`\`\`
 
 **Implementation Path**:
-1. Create new [organism/molecule/command] in appropriate ATOM directory
+1. Create new components following project architecture (see docs/architecture.md)
 2. Add comprehensive test coverage with mocking strategy
 3. Update CLI interface to expose new functionality  
 4. Integrate with existing \`bin/\` commands for workflow automation
@@ -463,7 +463,7 @@ cat >> "${SYNTHESIS_DIR}/solution-proposals.md" <<EOF
 - 30%+ reduction in development friction
 - Improved AI agent automation reliability  
 - Enhanced developer experience across all personas
-- Better alignment with ATOM architecture principles
+- Better alignment with project architecture principles (see docs/architecture.md)
 
 EOF
 
@@ -581,7 +581,7 @@ echo "📋 Summary available at: ${SYNTHESIS_DIR}/synthesis-summary.md"
 - Solution proposals include concrete implementation paths with file references
 - Archival process preserves original reflections with proper organization
 - Synthesis report provides actionable roadmap for development improvements
-- All analysis tied specifically to CAT Ruby gem context and ATOM architecture
+- All analysis tied specifically to project context and architecture (see docs/architecture.md)
 
 ## CAT-Specific Enhancement Patterns
 
@@ -589,7 +589,7 @@ echo "📋 Summary available at: ${SYNTHESIS_DIR}/synthesis-summary.md"
 
 - VCR cassette management for LLM provider testing
 - Mock strategies for external API integration
-- Test utilities following ATOM pattern organization
+- Test utilities following project architecture organization (see docs/architecture.md)
 
 ### CLI Command Structure
 
@@ -597,9 +597,9 @@ echo "📋 Summary available at: ${SYNTHESIS_DIR}/synthesis-summary.md"
 - Enhanced user experience for AI agent automation
 - Consistent interface patterns across all commands
 
-### ATOM Pattern Adherence
+### Architecture Pattern Adherence
 
-- Clear boundaries between atoms, molecules, and organisms
+- Clear component boundaries as defined in docs/architecture.md
 - Dependency injection patterns for better testability
 - Modular design supporting extension points
 
@@ -661,14 +661,14 @@ echo "📋 Summary available at: ${SYNTHESIS_DIR}/synthesis-summary.md"
 ### Benefits for CAT Development
 
 - **Accelerated Problem Resolution**: Systematic identification of recurring development friction points
-- **Architecture Compliance**: Validation against ATOM pattern and CLI-first design principles  
+- **Architecture Compliance**: Validation against project architecture patterns and design principles (see docs/architecture.md)  
 - **Prioritized Roadmap**: Impact-based categorization guides development resource allocation
 - **Knowledge Preservation**: Archival prevents loss of valuable learning insights
 - **Actionable Solutions**: Concrete implementation paths with specific file and component references
 
 ---
 
-This workflow enables comprehensive analysis of development learnings, providing teams with data-driven insights for improving the Coding Agent Tools Ruby Gem project while maintaining focus on the ATOM architecture and CLI-first design principles.
+This workflow enables comprehensive analysis of development learnings, providing teams with data-driven insights for improving projects while maintaining focus on the project architecture and design principles defined in docs/architecture.md.
 
 <documents>
 <template path="dev-handbook/templates/release-reflections/synthesis-analysis.template.md">
@@ -691,7 +691,7 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 
 - Systematic scanning across dev-taskflow release structure
 - Pattern extraction using CAT-specific challenge categories
-- Architecture compliance validation against ATOM design principles
+- Architecture compliance validation against project design principles (see docs/architecture.md)
 - Impact-based prioritization using project-specific criteria
 - Solution framing using gem's own CLI capabilities and architecture
 
@@ -706,14 +706,14 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 - From [reflection source]: [specific instance]
 - From [task/session]: [specific instance]
 
-**Architecture Impact**: [Analysis against docs/architecture.md and ATOM principles]
+**Architecture Impact**: [Analysis against docs/architecture.md and project principles]
 **Root Cause**: [Analysis based on CAT gem structure and workflow]
 
 **Proposed Solution**:
 
 ```ruby
 # Concrete implementation approach
-# [CAT-specific code example using ATOM pattern]
+# [Project-specific code example following architecture patterns]
 ```
 
 **Implementation Path**:
@@ -749,10 +749,10 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 
 ## Architecture Compliance Analysis
 
-### ATOM Pattern Adherence
+### Architecture Pattern Adherence
 
 **Violations Found**: [Count and description]
-**Boundary Issues**: [Atoms/Molecules/Organisms separation problems]
+**Boundary Issues**: [Component separation problems as defined in docs/architecture.md]
 **Recommendations**: [Specific refactoring suggestions]
 
 ### CLI-First Design Compliance
@@ -775,11 +775,11 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 **Solution**: [New commands or enhanced parameters]
 **Implementation**: [bin/ script updates and organism creation]
 
-### ATOM Architecture Improvements
+### Architecture Improvements
 
 **Problem**: [Boundary violations or missing abstractions]
-**Solution**: [New molecules/organisms for common patterns]
-**Implementation**: [lib/coding_agent_tools/ structure updates]
+**Solution**: [New components for common patterns following project architecture (see docs/architecture.md)]
+**Implementation**: [Project structure updates following established patterns]
 
 ### Development Workflow Automation
 
@@ -839,7 +839,7 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 - **Developer Productivity**: 30-50% reduction in common friction points
 - **AI Agent Reliability**: 90%+ success rate for automated workflows
 - **Test Infrastructure**: 50% reduction in test setup and maintenance overhead
-- **Code Quality**: Improved ATOM pattern compliance and maintainability
+- **Code Quality**: Improved architecture pattern compliance and maintainability (see docs/architecture.md)
 
 **Resource Requirements**:
 
@@ -858,7 +858,7 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 ### Short-term (Next 2 Sprints)
 
 - [ ] [High-impact workflow automation enhancement]
-- [ ] [ATOM architecture boundary clarification]
+- [ ] [Architecture boundary clarification following docs/architecture.md]
 - [ ] [Developer experience optimization]
 
 ### Medium-term (Next Quarter)
@@ -879,7 +879,7 @@ This synthesis analyzed [count] reflection notes from [releases] to identify rec
 ### Qualitative Metrics
 
 - **Developer Satisfaction**: Reduced friction in daily workflows
-- **Code Quality**: Improved ATOM pattern adherence
+- **Code Quality**: Improved architecture pattern adherence (see docs/architecture.md)
 - **Maintainability**: Clear component boundaries and responsibilities
 - **Documentation Quality**: Self-service capability for common tasks
 

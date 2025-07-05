@@ -275,7 +275,7 @@ echo -e "\n  <focus-areas type=\"${focus}\">" >> "${SESSION_DIR}/prompt.md"
 case "${focus}" in
     "code")
         echo "    <area>Code quality, architecture, security, performance</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>ATOM architecture compliance</area>" >> "${SESSION_DIR}/prompt.md"
+        echo "    <area>Architecture compliance (see docs/architecture.md)</area>" >> "${SESSION_DIR}/prompt.md"
         echo "    <area>Ruby best practices and conventions</area>" >> "${SESSION_DIR}/prompt.md"
         ;;
     "tests")
@@ -437,7 +437,7 @@ echo ""
 
 ```
 System Prompt: dev-handbook/templates/review-code/system.prompt.md
-Focus: Ruby gem best practices, ATOM architecture, security, performance
+Focus: Ruby gem best practices, architecture compliance (see docs/architecture.md), security, performance
 Output: Structured code review with 11 sections
 ```
 
