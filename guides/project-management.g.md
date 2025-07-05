@@ -348,6 +348,7 @@ Essential standards and guidelines:
 - [Testing Guidelines](dev-handbook/guides/testing.g.md)
 - [Documentation Standards](dev-handbook/guides/documentation.g.md)
 - [Publish Release Process](dev-handbook/guides/release-publish.g.md) (Final deployment and archival)
+- [Release Codenames Guide](dev-handbook/guides/project-management/release-codenames.g.md) (Philosophy and approach for release naming)
 - [Error Handling](dev-handbook/guides/error-handling.g.md)
 - [Performance](dev-handbook/guides/performance.g.md)
 - [Security](dev-handbook/guides/security.g.md)
