@@ -38,6 +38,11 @@
   - Impact: Unnecessary prompt bloat, incorrect tool usage pattern
   - Root Cause: Lack of knowledge about `--system` parameter in llm-query tool
 
+- **Missing Direct Output Usage**: Not using `--output` flag for direct file output
+  - Occurrences: 1 implementation gap
+  - Impact: Missing cost information and usage metrics that are included with direct output
+  - Root Cause: Unfamiliarity with `--output` parameter benefits
+
 #### Medium Impact Issues
 
 - **User Corrections Required**: Multiple instances where user had to correct approach
@@ -63,6 +68,7 @@
 
 - **Review Workflow Update**: Modify `review-code.wf.md` to use proper system prompt handling
 - **Combined Prompt Optimization**: Remove system prompt from combined prompt generation
+- **Direct Output Implementation**: Use `--output` flag for direct file output to capture cost information
 - **Parameter Documentation**: Document all available llm-query parameters and usage patterns
 
 #### Communication Protocols
@@ -96,6 +102,7 @@
 ### Start Doing
 
 - Use `--system` flag for proper system prompt separation in llm-query
+- Use `--output` flag for direct file output to capture cost information and usage metrics
 - Validate tool parameters before implementation
 - Document proper usage patterns for future reference
 - Create system prompt optimization in review workflow
@@ -104,16 +111,21 @@
 
 **Current Implementation Issue:**
 ```bash
-# WRONG: Including system prompt in combined prompt
+# WRONG: Including system prompt in combined prompt and missing direct output
 cat system-prompt.md >> combined-prompt.md
-dev-tools/exe/llm-query gpro "$(cat combined-prompt.md)"
+dev-tools/exe/llm-query gpro "$(cat combined-prompt.md)" > gpro-review.md
 ```
 
 **Corrected Implementation:**
 ```bash
-# CORRECT: Using --system flag for proper separation
-dev-tools/exe/llm-query gpro --system system-prompt.md --timeout 500 "$(cat content-prompt.md)"
+# CORRECT: Using --system flag and --output for proper separation and cost tracking
+dev-tools/exe/llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "$(cat content-prompt.md)"
 ```
+
+**Benefits of --output flag:**
+- Captures cost information and usage metrics
+- Provides better tracking of LLM usage patterns
+- Enables cost analysis and optimization opportunities
 
 **Key Files Modified:**
 - Session directory: `dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/`
@@ -128,6 +140,7 @@ dev-tools/exe/llm-query gpro --system system-prompt.md --timeout 500 "$(cat cont
 - **Analysis Method**: GPRO only (no synthesis as requested)
 
 **Next Steps:**
-1. Update `review-code.wf.md` to use proper system prompt handling
-2. Document llm-query parameters and usage patterns
-3. Test corrected implementation with future reviews
+1. Update `review-code.wf.md` to use proper system prompt handling with `--system` flag
+2. Implement `--output` flag usage for direct file output and cost tracking
+3. Document llm-query parameters and usage patterns
+4. Test corrected implementation with future reviews
