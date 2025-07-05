@@ -6,8 +6,9 @@
 **Target:** All 20 workflow instruction files
 **Review Method:** GPRO only (no synthesis)
 
-## Files Generated:
-- 
+## Files Generated
+
+-
 - .
 - ..
 - combined-prompt.md

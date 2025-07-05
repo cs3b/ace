@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.65
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -73,18 +73,18 @@ Create a dedicated guide for version control message standards, specifically doc
   > Type: Pre-condition Check
   > Assert: Current message conventions identified and documented
   > Command: bin/test --check-commit-conventions-analyzed
-* [ ] Review commit.wf.md workflow for Conventional Commits requirements
-* [ ] Plan guide structure covering types, scopes, format rules, and examples
+* [x] Review commit.wf.md workflow for Conventional Commits requirements
+* [x] Plan guide structure covering types, scopes, format rules, and examples
 
 ### Execution Steps
 
-* [ ] Create version control message guide with Conventional Commits specification
+* [x] Create version control message guide with Conventional Commits specification
   > TEST: Verify Guide Creation
   > Type: Action Validation
   > Assert: Guide file created with complete Conventional Commits specification
   > Command: bin/test --check-guide-completeness dev-handbook/guides/development/version-control-message.g.md
-* [ ] Include comprehensive examples for all commit types (feat, fix, refactor, docs, etc.)
-* [ ] Update development guides README to reference new guide
+* [x] Include comprehensive examples for all commit types (feat, fix, refactor, docs, etc.)
+* [x] Update development guides README to reference new guide
   > TEST: Verify README Reference
   > Type: Action Validation
   > Assert: README includes proper reference to new message guide
@@ -92,10 +92,10 @@ Create a dedicated guide for version control message standards, specifically doc
 
 ## Acceptance Criteria
 
-* [ ] AC 1: Guide provides complete Conventional Commits specification with types, scopes, and format rules
-* [ ] AC 2: Examples included for all major commit types (feat, fix, refactor, docs, style, test, chore)
-* [ ] AC 3: Guide explains when to use each commit type with clear criteria
-* [ ] AC 4: Guide is referenced from development README and linkable from workflows
+* [x] AC 1: Guide provides complete Conventional Commits specification with types, scopes, and format rules
+* [x] AC 2: Examples included for all major commit types (feat, fix, refactor, docs, style, test, chore)
+* [x] AC 3: Guide explains when to use each commit type with clear criteria
+* [x] AC 4: Guide is referenced from development README and linkable from workflows
 
 ## Out of Scope
 
@@ -109,3 +109,4 @@ Create a dedicated guide for version control message standards, specifically doc
 * Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Related workflow: commit.wf.md
 * User note: "the guide should go to dev-handbook/guides/version-control-system.g.md - we should split this guide to two parts: a) version-control-system-message.g.md b) version-control-system-git.g.md"
+
