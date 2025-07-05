@@ -36,6 +36,7 @@ Our development workflow centers around:
 
 ### Technical & Language Guides
 
+- **[ATOM Pattern Guide](./atom-pattern.g.md)** - Component classification rules and decision-making tools for the ATOM architecture pattern.
 - **[Code Review: Diff-Based Documentation Updates](./code-review-diff-for-docs-update.g.md)** - Systematic approach for reviewing code diffs and updating related documentation.
 - **[Coding Standards](./coding-standards.g.md)** - Code style and general best practices.
   - [Ruby Coding Standards](./coding-standards/ruby.md)
@@ -70,7 +71,6 @@ Our development workflow centers around:
   - [Ruby Troubleshooting](./troubleshooting/ruby.md)
   - [Rust Troubleshooting](./troubleshooting/rust.md)
   - [TypeScript Troubleshooting](./troubleshooting/typescript.md)
-- **[Version Control](./version-control-system.g.md)** - Git workflow and commit standards.
 - **[Version Control Message Guide](./version-control-system-message.g.md)** - Comprehensive commit message standards using Conventional Commits specification.
 - **[Version Control Git Guide](./version-control-system-git.g.md)** - Comprehensive Git workflow procedures, branching strategies, and collaboration patterns.
   - [Ruby Version Control](./version-control/ruby.md)
