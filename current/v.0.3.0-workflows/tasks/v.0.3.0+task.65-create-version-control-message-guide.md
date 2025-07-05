@@ -109,4 +109,3 @@ Create a dedicated guide for version control message standards, specifically doc
 * Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Related workflow: commit.wf.md
 * User note: "the guide should go to dev-handbook/guides/version-control-system.g.md - we should split this guide to two parts: a) version-control-system-message.g.md b) version-control-system-git.g.md"
-
