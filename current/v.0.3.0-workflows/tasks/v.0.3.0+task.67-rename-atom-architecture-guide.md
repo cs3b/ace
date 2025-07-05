@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.67
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -68,23 +68,23 @@ Rename the existing ATOM architecture guide from `atom-house-rules.md` to `atom-
 
 ### Planning Steps
 
-* [ ] Locate existing ATOM architecture guide and analyze content
+* [x] Locate existing ATOM architecture guide and analyze content
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current ATOM guide identified and content analyzed
   > Command: bin/test --check-atom-guide-analyzed
-* [ ] Search for all references to atom-house-rules.md in project files
-* [ ] Plan systematic renaming approach to avoid broken links
+* [x] Search for all references to atom-house-rules.md in project files
+* [x] Plan systematic renaming approach to avoid broken links
 
 ### Execution Steps
 
-* [ ] Rename atom-house-rules.md to atom-pattern.g.md
+* [x] Rename atom-house-rules.md to atom-pattern.g.md
   > TEST: Verify File Rename
   > Type: Action Validation
   > Assert: File successfully renamed and content preserved
   > Command: bin/test --check-file-rename atom-house-rules.md atom-pattern.g.md
-* [ ] Update all references to old filename throughout project
-* [ ] Update guides README to reference renamed guide
+* [x] Update all references to old filename throughout project
+* [x] Update guides README to reference renamed guide
   > TEST: Verify Reference Updates
   > Type: Action Validation
   > Assert: All references updated and functional
@@ -92,10 +92,10 @@ Rename the existing ATOM architecture guide from `atom-house-rules.md` to `atom-
 
 ## Acceptance Criteria
 
-* [ ] AC 1: File renamed from atom-house-rules.md to atom-pattern.g.md
-* [ ] AC 2: All references to old filename updated throughout project
-* [ ] AC 3: Guide is properly indexed in guides README
-* [ ] AC 4: All links to the guide are functional
+* [x] AC 1: File renamed from atom-house-rules.md to atom-pattern.g.md
+* [x] AC 2: All references to old filename updated throughout project
+* [x] AC 3: Guide is properly indexed in guides README
+* [x] AC 4: All links to the guide are functional
 
 ## Out of Scope
 
