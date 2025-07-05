@@ -22,12 +22,14 @@ This command automatically sets:
 - **Focus**: `docs` (uses documentation review approach)
 - **Context**: `docs/**/*.md` (project documentation context)
 - **System Prompt**: `dev-local/handbook/tpl/review/system.prompt.md` (handbook-specific)
+- **Timeout**: `500` seconds (for processing large handbook content)
+- **Output**: Direct file output with cost tracking enabled
 - **Session Directory**: current release directory (run `bin/rc`) + `/code_review/YYYYMMDD-HHMMSS-handbook-[target]/`
 - **Repository Context**: dev-handbook submodule only
 
 ## Command Execution
 
-This command executes the `/code-review` workflow (it's not a bash command, just another instruction to coding agent) with pre-configured parameters:
+This command executes the `/code-review` workflow with pre-configured parameters. The system prompt is passed via the `--system` flag to ensure proper separation from user prompts:
 
 ```claude
 /code-review docs [git-range]
