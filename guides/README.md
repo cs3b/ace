@@ -71,6 +71,7 @@ Our development workflow centers around:
   - [Rust Troubleshooting](./troubleshooting/rust.md)
   - [TypeScript Troubleshooting](./troubleshooting/typescript.md)
 - **[Version Control](./version-control-system.g.md)** - Git workflow and commit standards.
+- **[Version Control Message Guide](./version-control-system-message.g.md)** - Comprehensive commit message standards using Conventional Commits specification.
   - [Ruby Version Control](./version-control/ruby.md)
   - [Rust Version Control](./version-control/rust.md)
   - [TypeScript Version Control](./version-control/typescript.md)
