@@ -74,7 +74,9 @@ bin/test --verbose
 bin/test --only-failures
 ```
 
-## Iterative Fix Process
+## Primary Fix Process: Iterative Approach
+
+**This is the recommended method for fixing test failures systematically and efficiently.**
 
 **Main Loop (repeat until no failures):**
 
@@ -113,147 +115,6 @@ bin/test --only-failures
 # Run full test suite
 bin/test
 ```
-
-## Legacy Process Steps (for reference)
-
-1. **Initial Analysis:**
-
-   ```bash
-   # Run full test suite
-   bin/test
-   
-   # Run only failing tests
-   bin/test --only-failures
-   
-   # Run with detailed output
-   bin/test --verbose
-   ```
-
-   **Capture:**
-   - Failing test names and locations
-   - Error messages and stack traces
-   - Test execution time (for timeout issues)
-   - Pattern of failures (consistent vs intermittent)
-
-2. **Prioritize Failures:**
-
-   **Priority order:**
-   1. **Unit tests** - Usually fastest to fix and run
-   2. **Integration tests** - May involve multiple components
-   3. **End-to-end tests** - Most complex, slowest to debug
-
-   **Within each level, prioritize:**
-   - Tests blocking other work
-   - Tests with clear error messages
-   - Recently modified tests
-   - Core functionality tests
-
-3. **Isolate and Diagnose:**
-
-   **Run specific test:**
-
-   ```bash
-   # Ruby/RSpec example
-   bin/test spec/path/to/failing_spec.rb:42
-   
-   # Run specific test by name pattern
-   bin/test --name "test_user_authentication"
-   
-   # Run next failure
-   bin/test --next-failure
-   ```
-
-   **Common failure patterns:**
-   - **Assertion failures**: Expected vs actual mismatch
-   - **Setup errors**: Missing test data or configuration
-   - **Timeout errors**: Slow operations or deadlocks
-   - **Dependency errors**: Missing mocks or stubs
-   - **State pollution**: Tests affecting each other
-
-4. **Diagnose Root Cause:**
-
-   **Environment Issues:**
-
-   ```bash
-   # Check language version
-   ruby -v
-   python --version
-   node -v
-   
-   # Verify dependencies
-   bundle install
-   npm install
-   pip install -r requirements.txt
-   
-   # Reset test database
-   bin/rails db:test:prepare
-   
-   # Clear caches
-   rm -rf tmp/*
-   rm -rf .pytest_cache
-   ```
-
-   **Test Isolation Problems:**
-   - Check setup/teardown methods
-   - Verify database transactions/rollbacks
-   - Look for shared state between tests
-   - Review test execution order dependencies
-
-   **Common Fixes:**
-
-   ```ruby
-   # Example: Ensure clean state
-   before(:each) do
-     DatabaseCleaner.clean
-     Rails.cache.clear
-   end
-   
-   # Example: Fix timing issues
-   it "processes asynchronously" do
-     perform_async_operation
-     wait_for { async_result }.to be_present
-   end
-   
-   # Example: Proper mocking
-   allow(ExternalService).to receive(:call).and_return(mock_response)
-   ```
-
-5. **Implement Fix:**
-
-   **Fix categories:**
-   - **Test code fix**: Update assertions, fix test logic
-   - **Application code fix**: Fix actual bug revealed by test
-   - **Test data fix**: Correct fixtures or factories
-   - **Infrastructure fix**: Update test helpers or configuration
-
-   **Verification steps:**
-   1. Run the specific failing test
-   2. Run all tests in the same file
-   3. Run all tests in the same module/component
-   4. Run full test suite
-
-6. **Document and Commit:**
-
-   **Document in commit message:**
-
-   ```
-   fix(tests): resolve flaky user authentication test
-   
-   - Add proper database cleanup in teardown
-   - Fix race condition in async callback
-   - Increase timeout for CI environment
-   
-   The test was failing intermittently due to database
-   state pollution from previous tests.
-   ```
-
-   **Add code comments if needed:**
-
-   ```ruby
-   # IMPORTANT: This sleep is required because the external
-   # service has a rate limit. See issue #123
-   sleep 0.1
-   ```
 
 ## Quick Troubleshooting Decision Tree
 
