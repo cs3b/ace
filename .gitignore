@@ -1,2 +1,5 @@
 *-prompt.md
 *.diff
+
+**/code_review/*/context.md
+**/code_review/*/input.md

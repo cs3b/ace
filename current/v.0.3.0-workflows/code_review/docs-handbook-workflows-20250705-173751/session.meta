@@ -1,0 +1,7 @@
+command: handbook-review workflows
+timestamp: 2025-07-05T17:38:00+01:00
+target: dev-handbook/workflow-instructions/**/*
+focus: docs
+context: docs/**/*.md
+review_approach: gpro_only
+EOF < /dev/null
