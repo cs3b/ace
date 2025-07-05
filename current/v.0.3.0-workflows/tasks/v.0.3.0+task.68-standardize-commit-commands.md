@@ -2,7 +2,7 @@
 id: v.0.3.0+task.68
 status: pending
 priority: high
-estimate: 4h
+estimate: 2h
 dependencies: []
 ---
 
@@ -45,14 +45,16 @@ dev-handbook/workflow-instructions
 
 ## Objective
 
-Resolve the inconsistency between documented commit commands by standardizing on `bin/gc -i` (git commit with intention) as the default approach throughout all workflows and documentation. This addresses the conflict between the Project Blueprint advocating for `bin/git-commit-with-message` and `commit.wf.md` detailing the use of standard `git commit`.
+Complete the standardization of commit commands by updating remaining inconsistencies to use `bin/gc -i` (git commit with intention) as the default approach. Recent version control documentation consolidation work (commit 2121aa8) has already updated `commit.wf.md` to reference proper commit message standards, but some inconsistencies remain, particularly in the Project Blueprint which still references `bin/git-commit-with-message`.
 
 ## Scope of Work
 
-* Update commit.wf.md to use `bin/gc -i` as the primary commit method
-* Update Project Blueprint to reflect the standardized commit approach
-* Search for and update any other references to inconsistent commit commands
-* Ensure all documentation consistently references the intention-based commit approach
+* Update commit.wf.md to use `bin/gc -i` for actual commit commands (workflow already references proper message standards)
+* Update Project Blueprint to replace `bin/git-commit-with-message` with standardized `bin/gc -i` approach
+* Search for and update any remaining references to inconsistent commit commands
+* Validate that all documentation consistently references the intention-based commit approach
+
+**Note**: Recent consolidation work (commit 2121aa8) has already streamlined commit.wf.md to reference the Version Control Message Guide, but the actual commit commands in the workflow still use standard `git commit`.
 
 ### Deliverables
 
@@ -72,43 +74,52 @@ Resolve the inconsistency between documented commit commands by standardizing on
 
 ## Phases
 
-1. Audit current commit command usage across all documentation
-2. Identify all inconsistencies between different commit approaches
-3. Update all references to use standardized bin/gc -i approach
-4. Validate consistency across all documentation
+1. Verify current state post-consolidation (commit 2121aa8)
+2. Focus on remaining inconsistencies (primarily blueprint.md)
+3. Update commit.wf.md to use bin/gc -i for actual commit commands
+4. Validate final consistency across all documentation
 
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Audit all commit command references in workflows and documentation
+* [ ] Verify bin/gc -i command functionality and behavior
+  > TEST: Command Functionality Check
+  > Type: Pre-condition Check
+  > Assert: bin/gc -i command exists and works as expected
+  > Command: bin/gc -i "test: verify commit command functionality"
+* [ ] Audit remaining commit command inconsistencies post-consolidation
   > TEST: Understanding Check
   > Type: Pre-condition Check
-  > Assert: All commit command inconsistencies identified and catalogued
-  > Command: bin/test --check-commit-command-audit
-* [ ] Analyze the intention-based commit approach in existing bin/gc script
-* [ ] Plan systematic update approach for all affected files
+  > Assert: All remaining inconsistencies identified (focus on blueprint.md)
+  > Command: bin/test --check-remaining-commit-inconsistencies
+* [ ] Plan focused update approach for remaining files
 
 ### Execution Steps
 
-* [ ] Update commit.wf.md to use bin/gc -i as primary commit method
+* [ ] Update Project Blueprint to replace bin/git-commit-with-message with bin/gc -i
+  > TEST: Verify Blueprint Update
+  > Type: Action Validation
+  > Assert: Blueprint updated to reference bin/gc -i approach
+  > Command: bin/test --check-blueprint-commit-command
+* [ ] Update commit.wf.md to use bin/gc -i for actual commit commands
   > TEST: Verify Commit Workflow Update
   > Type: Action Validation
   > Assert: Commit workflow updated to use bin/gc -i consistently
   > Command: bin/test --check-commit-workflow-standardized
-* [ ] Update Project Blueprint to reference standardized commit approach
-* [ ] Search for and update any other references to inconsistent commit commands
-  > TEST: Verify Command Consistency
+* [ ] Search for and update any remaining references to inconsistent commit commands
+  > TEST: Verify Final Consistency
   > Type: Action Validation
   > Assert: All documentation consistently references bin/gc -i approach
-  > Command: bin/test --check-commit-command-consistency
+  > Command: bin/test --check-final-commit-command-consistency
 
 ## Acceptance Criteria
 
-* [ ] AC 1: commit.wf.md updated to use bin/gc -i as primary commit method
-* [ ] AC 2: Project Blueprint updated to reflect standardized commit approach
+* [ ] AC 1: Project Blueprint updated to use bin/gc -i instead of bin/git-commit-with-message
+* [ ] AC 2: commit.wf.md updated to use bin/gc -i for actual commit commands
 * [ ] AC 3: All documentation consistently references intention-based commit approach
 * [ ] AC 4: No conflicting commit command references remain in documentation
+* [ ] AC 5: bin/gc -i command verified to work correctly
 
 ## Out of Scope
 
@@ -122,3 +133,6 @@ Resolve the inconsistency between documented commit commands by standardizing on
 * Source: dev-taskflow/current/v.0.3.0-workflows/code_review/docs-handbook-workflows-20250705-173751/gpro-review.md
 * Inconsistency: "The Project Blueprint references bin/git-commit-with-message, but commit.wf.md details using the standard git commit command"
 * User note: "we should standardize use of bin/gc -i as default way"
+* **Recent context**: Version control documentation consolidation completed (commit 2121aa8, 2025-07-05)
+* **Current state**: commit.wf.md already references proper message standards but uses standard git commands
+* **Remaining gap**: blueprint.md still references bin/git-commit-with-message (line 133)
