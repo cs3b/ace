@@ -156,21 +156,21 @@ Extract complex shell script logic from workflow instruction files into dedicate
 ### Key Modules to Extract
 
 1. **Session Management Module** (~100 lines)
-   - Timestamp generation and formatting
-   - Directory creation with metadata
-   - Session finalization and indexing
+   * Timestamp generation and formatting
+   * Directory creation with metadata
+   * Session finalization and indexing
 
 2. **Git Operations Module** (~150 lines)
-   - Complex diff generation
-   - File content extraction with XML wrapping
-   - Target resolution logic
+   * Complex diff generation
+   * File content extraction with XML wrapping
+   * Target resolution logic
 
 3. **LLM Execution Module** (~200 lines)
-   - Multi-provider parallel execution
-   - Error handling and retry logic
-   - Output validation and logging
+   * Multi-provider parallel execution
+   * Error handling and retry logic
+   * Output validation and logging
 
 4. **Report Generation Module** (~150 lines)
-   - Dynamic markdown generation
-   - Statistics calculation
-   - File link construction
+   * Dynamic markdown generation
+   * Statistics calculation
+   * File link construction

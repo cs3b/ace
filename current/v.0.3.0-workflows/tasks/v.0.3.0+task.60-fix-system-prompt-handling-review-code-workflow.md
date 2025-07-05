@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.60
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -139,41 +139,41 @@ Fix the critical system prompt handling flaw in the review-code workflow where s
 
 ### Planning Steps
 
-* [ ] Analyze current system prompt handling in review-code workflow
+* [x] Analyze current system prompt handling in review-code workflow
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All problematic system prompt handling patterns are identified
   > Command: grep -n "system.prompt" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Research proper `--system` flag usage patterns in llm-query tool
-* [ ] Plan detailed refactoring approach for multi-model execution sections
+* [x] Research proper `--system` flag usage patterns in llm-query tool
+* [x] Plan detailed refactoring approach for multi-model execution sections
 
 ### Execution Steps
 
-* [ ] Update the Multi-Model LLM Execution section (lines 308-350) to use `--system` flag instead of embedding system prompts
+* [x] Update the Multi-Model LLM Execution section (lines 308-350) to use `--system` flag instead of embedding system prompts
   > TEST: Verify System Flag Usage
   > Type: Action Validation
   > Assert: All llm-query commands use `--system` flag with proper template paths
   > Command: grep -A 3 -B 3 "llm-query.*--system" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Remove system prompt embedding from Combined Prompt Construction section (lines 217-295)
+* [x] Remove system prompt embedding from Combined Prompt Construction section (lines 217-295)
   > TEST: Verify System Prompt Removal
   > Type: Action Validation
   > Assert: System prompt content is not embedded in combined prompt construction
   > Command: grep -n "system.prompt" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Update all usage examples to demonstrate proper `--system` flag usage
+* [x] Update all usage examples to demonstrate proper `--system` flag usage
   > TEST: Verify Example Consistency
   > Type: Action Validation
   > Assert: All examples show correct system prompt parameter usage
   > Command: grep -n "dev-tools/exe/llm-query" dev-handbook/workflow-instructions/review-code.wf.md
-* [ ] Update template selection documentation to clarify system prompt file usage
-* [ ] Validate that corrected implementation matches reflection note recommendations
+* [x] Update template selection documentation to clarify system prompt file usage
+* [x] Validate that corrected implementation matches reflection note recommendations
 
 ## Acceptance Criteria
 
-* [ ] All LLM query commands use `--system` flag with proper template file paths
-* [ ] System prompt content is completely removed from combined prompt construction
-* [ ] All usage examples demonstrate correct system prompt parameter usage
-* [ ] Template selection section properly documents system prompt file usage
-* [ ] Implementation matches the corrected pattern from reflection note: `llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "$(cat content-prompt.md)"`
+* [x] All LLM query commands use `--system` flag with proper template file paths
+* [x] System prompt content is completely removed from combined prompt construction
+* [x] All usage examples demonstrate correct system prompt parameter usage
+* [x] Template selection section properly documents system prompt file usage
+* [x] Implementation matches the corrected pattern from reflection note: `llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "$(cat content-prompt.md)"`
 
 ## Out of Scope
 
