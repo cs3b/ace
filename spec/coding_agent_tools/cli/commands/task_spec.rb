@@ -36,10 +36,10 @@ RSpec.describe "Task CLI Commands" do
         it "accepts positive limit values" do
           # Mock the TaskManager to avoid actual file system operations
           mock_task_manager = double("TaskManager")
-          mock_result = double("NextTaskResult", success?: true, found?: false)
+          mock_result = double("AllTasksResult", success?: true, tasks: [])
 
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
 
           expect { command.call(limit: 1) }.not_to raise_error
         end
@@ -49,8 +49,6 @@ RSpec.describe "Task CLI Commands" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_raise(StandardError.new("Test error"))
-          # Mock get_all_tasks for multiple tasks case
           allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
@@ -61,8 +59,6 @@ RSpec.describe "Task CLI Commands" do
         it "shows debug information when debug flag is set" do
           mock_task_manager = double("TaskManager")
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_raise(StandardError.new("Test error"))
-          # Mock get_all_tasks for multiple tasks case
           allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
@@ -82,11 +78,11 @@ RSpec.describe "Task CLI Commands" do
             status: "pending",
             dependencies: [])
         end
-        let(:mock_result) { double("NextTaskResult", success?: true, found?: true, task: mock_task) }
+        let(:mock_result) { double("AllTasksResult", success?: true, tasks: [mock_task]) }
 
         before do
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
         end
 
         it "displays task information for single task" do
