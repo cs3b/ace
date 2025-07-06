@@ -39,9 +39,28 @@ module CodingAgentTools
         @llm_commands_registered = true
       end
 
+      def self.register_task_commands
+        return if @task_commands_registered
+
+        require_relative "cli/commands/task/next"
+        require_relative "cli/commands/task/recent"
+        require_relative "cli/commands/task/all"
+        require_relative "cli/commands/task/generate_id"
+
+        register "task", aliases: [] do |prefix|
+          prefix.register "next", Commands::Task::Next
+          prefix.register "recent", Commands::Task::Recent
+          prefix.register "all", Commands::Task::All
+          prefix.register "generate-id", Commands::Task::GenerateId
+        end
+
+        @task_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
+        register_task_commands
         super
       end
     end
