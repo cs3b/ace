@@ -2,8 +2,8 @@
 
 require "spec_helper"
 
-RSpec.describe "task-manager executable" do
-  let(:executable_path) { File.expand_path("../../../exe/task-manager", __dir__) }
+RSpec.describe "Task Manager Integration" do
+  let(:executable_path) { File.expand_path("../../exe/task-manager", __dir__) }
 
   before do
     expect(File.exist?(executable_path)).to be(true), "task-manager executable should exist"
