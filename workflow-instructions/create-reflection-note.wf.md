@@ -36,7 +36,6 @@ Capture individual or team observations, learnings, and ideas for improvement du
 - [ ] Gather and analyze reflection content from recent work or provided context
 - [ ] Populate reflection sections with meaningful insights and learnings
 - [ ] Save reflection note with appropriate filename and location
-- [ ] Commit reflection note to version control
 
 ## Process Steps
 
@@ -282,7 +281,7 @@ Focus on new skills, tools, or concepts mastered during the work.
 - Make it a blame session
 - Be vague or generic
 - Skip the action items
-- Forget to save/commit
+- Forget to save file
 - Write novels - keep it focused
 
 ## Common Patterns
