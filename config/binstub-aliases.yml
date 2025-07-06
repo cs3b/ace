@@ -20,7 +20,7 @@ aliases:
     type: "shell"
     args_processing: "pass_through"
     execution_context: "project_root"
-    
+
   tr:
     description: "Get recent tasks"
     executable: "task-manager"
@@ -28,7 +28,7 @@ aliases:
     type: "shell"
     args_processing: "pass_through"
     execution_context: "project_root"
-    
+
   tal:
     description: "Get all tasks"
     executable: "task-manager"
@@ -36,7 +36,7 @@ aliases:
     type: "shell"
     args_processing: "pass_through"
     execution_context: "project_root"
-    
+
   tnid:
     description: "Get next task ID"
     executable: "task-manager"
@@ -45,20 +45,29 @@ aliases:
     args_processing: "pass_through"
     execution_context: "project_root"
 
+  # Release Manger
+
+  rc:
+    description: "Current Relese"
+    executable: "release-manager current"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
   # LLM Tools
-  llm:
+  llm-query:
     description: "Query LLM providers"
     executable: "llm-query"
     type: "shell"
     args_processing: "pass_through"
-    
-  models:
+
+  llm-models:
     description: "List available LLM models"
     executable: "llm-models"
     type: "shell"
     args_processing: "pass_through"
-    
-  usage:
+
+  llm-usage:
     description: "Generate LLM usage report"
     executable: "llm-usage-report"
     type: "shell"
