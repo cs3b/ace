@@ -19,6 +19,7 @@ aliases:
     command: "next"
     type: "shell"
     args_processing: "pass_through"
+    execution_context: "project_root"
     
   tr:
     description: "Get recent tasks"
@@ -26,6 +27,7 @@ aliases:
     command: "recent"
     type: "shell"
     args_processing: "pass_through"
+    execution_context: "project_root"
     
   tal:
     description: "Get all tasks"
@@ -33,6 +35,7 @@ aliases:
     command: "all"
     type: "shell"
     args_processing: "pass_through"
+    execution_context: "project_root"
     
   tnid:
     description: "Get next task ID"
@@ -40,6 +43,7 @@ aliases:
     command: "generate-id"
     type: "shell"
     args_processing: "pass_through"
+    execution_context: "project_root"
 
   # LLM Tools
   llm:
