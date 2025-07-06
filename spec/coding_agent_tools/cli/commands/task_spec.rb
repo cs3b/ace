@@ -19,7 +19,6 @@ RSpec.describe "Task CLI Commands" do
 
     describe "#call" do
       context "with valid arguments" do
-
         it "validates limit option" do
           allow(command).to receive(:warn)
           result = command.call(limit: -1)
@@ -38,8 +37,8 @@ RSpec.describe "Task CLI Commands" do
           # Mock the TaskManager to avoid actual file system operations
           mock_task_manager = double("TaskManager")
           mock_result = double("NextTaskResult", success?: true, found?: false)
-          
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_return(mock_result)
 
           expect { command.call(limit: 1) }.not_to raise_error
@@ -49,7 +48,7 @@ RSpec.describe "Task CLI Commands" do
       context "error handling" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_raise(StandardError.new("Test error"))
           # Mock get_all_tasks for multiple tasks case
           allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
@@ -61,7 +60,7 @@ RSpec.describe "Task CLI Commands" do
 
         it "shows debug information when debug flag is set" do
           mock_task_manager = double("TaskManager")
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_raise(StandardError.new("Test error"))
           # Mock get_all_tasks for multiple tasks case
           allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
@@ -77,16 +76,16 @@ RSpec.describe "Task CLI Commands" do
         let(:mock_task_manager) { double("TaskManager") }
         let(:mock_task) do
           double("Task",
-                 id: "v.0.3.0+task.01",
-                 title: "Test Task", 
-                 path: "/path/to/task.md",
-                 status: "pending",
-                 dependencies: [])
+            id: "v.0.3.0+task.01",
+            title: "Test Task",
+            path: "/path/to/task.md",
+            status: "pending",
+            dependencies: [])
         end
         let(:mock_result) { double("NextTaskResult", success?: true, found?: true, task: mock_task) }
 
         before do
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_next_actionable_task_with_highlight).and_return(mock_result)
         end
 
@@ -108,7 +107,6 @@ RSpec.describe "Task CLI Commands" do
 
     describe "#call" do
       context "with valid arguments" do
-
         it "validates limit option" do
           allow(command).to receive(:warn)
           result = command.call(limit: -1)
@@ -126,8 +124,8 @@ RSpec.describe "Task CLI Commands" do
         it "accepts valid time period formats" do
           mock_task_manager = double("TaskManager")
           mock_result = double("RecentTasksResult", success?: true, tasks: [])
-          
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_recent_tasks).and_return(mock_result)
 
           expect { command.call(last: "2.days", limit: 5) }.not_to raise_error
@@ -137,7 +135,7 @@ RSpec.describe "Task CLI Commands" do
       context "error handling" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_recent_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
@@ -153,12 +151,11 @@ RSpec.describe "Task CLI Commands" do
 
     describe "#call" do
       context "with valid arguments" do
-
         it "handles successful results" do
           mock_task_manager = double("TaskManager")
           mock_result = double("AllTasksResult", success?: true, tasks: [], has_cycles?: false, fully_sorted?: true)
-          
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
 
           expect(command.call).to eq(0)
@@ -185,7 +182,7 @@ RSpec.describe "Task CLI Commands" do
       context "error handling" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
-          allow(CodingAgentTools::Organisms::TaskManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
@@ -201,7 +198,6 @@ RSpec.describe "Task CLI Commands" do
 
     describe "#call" do
       context "with valid arguments" do
-
         it "validates limit option" do
           allow(command).to receive(:warn)
           result = command.call(limit: -1)
@@ -221,14 +217,14 @@ RSpec.describe "Task CLI Commands" do
       context "version detection" do
         it "extracts version from directory names correctly" do
           allow(command).to receive(:find_current_release_directory).and_return("/path/to/v.0.3.0-migration")
-          
+
           version = command.send(:detect_current_version)
           expect(version).to eq("v.0.3.0")
         end
 
         it "handles missing version gracefully" do
           allow(command).to receive(:find_current_release_directory).and_return(nil)
-          
+
           version = command.send(:detect_current_version)
           expect(version).to be_nil
         end
@@ -237,14 +233,14 @@ RSpec.describe "Task CLI Commands" do
       context "ID generation" do
         it "generates single ID correctly" do
           command.send(:generate_task_ids, "v.0.3.0", 5, 1)
-          
+
           output_content = output.string
           expect(output_content).to include("v.0.3.0+task.05")
         end
 
         it "generates multiple IDs correctly" do
           command.send(:generate_task_ids, "v.0.3.0", 5, 3)
-          
+
           output_content = output.string
           expect(output_content).to include("Generated 3 task IDs:")
           expect(output_content).to include("v.0.3.0+task.05")
