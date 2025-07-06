@@ -113,6 +113,26 @@ module CodingAgentTools
           return path
         end
 
+        # Detect path traversal attempts - if path contains .. sequences, treat as potential attack
+        if path.include?("..")
+          # Expand path to see where it leads
+          begin
+            expanded = File.expand_path(path)
+          rescue
+            return "[invalid-path]"
+          end
+          
+          # For path traversal attempts, hide the path components
+          components = Pathname.new(expanded).each_filename.to_a
+          if components.length > 2
+            return "[hidden]/#{components[-2..].join("/")}"
+          elsif components.length > 0
+            return "[hidden]/#{components.join("/")}"
+          else
+            return "[hidden]"
+          end
+        end
+
         # Expand path to handle relative components and get absolute form
         begin
           expanded = File.expand_path(path)

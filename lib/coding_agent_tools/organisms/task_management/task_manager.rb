@@ -217,7 +217,7 @@ module CodingAgentTools
           end
 
           # Sort candidates by priority logic
-          candidates.sort_by do |task|
+          sorted_candidates = candidates.sort_by do |task|
             status_priority = case task.status&.downcase
             when "in-progress" then 0
             when "pending" then 1
@@ -228,7 +228,7 @@ module CodingAgentTools
             [status_priority, task_sequential_num, task.id.to_s]
           end
 
-          candidates.first
+          sorted_candidates.first
         end
 
         # Parse task sequential number for sorting

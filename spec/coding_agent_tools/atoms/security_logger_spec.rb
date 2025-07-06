@@ -130,7 +130,8 @@ RSpec.describe CodingAgentTools::Atoms::SecurityLogger do
       log_output.rewind
       output = log_output.read
       # Within current directory, absolute paths are sanitized to show home-relative
-      expect(output).to include("path=~/Projects/coding-agent-tools/test.txt")
+      expected_path = current_file.sub(ENV["HOME"], "~")
+      expect(output).to include("path=#{expected_path}")
     end
 
     it "handles empty paths" do
