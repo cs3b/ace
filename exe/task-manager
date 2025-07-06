@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+# Task Manager - Direct interface to task management functionality
+# This provides a focused entry point for task operations
+
+# Set up load paths for development if necessary
+$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+
+require "coding_agent_tools/cli/commands/task/next"
+require "coding_agent_tools/cli/commands/task/recent"
+require "coding_agent_tools/cli/commands/task/all"
+require "coding_agent_tools/cli/commands/task/generate_id"
+require "dry/cli"
+
+module TaskManagerCli
+  module Commands
+    extend Dry::CLI::Registry
+
+    # Register task commands directly under the root
+    register "next", CodingAgentTools::Cli::Commands::Task::Next
+    register "recent", CodingAgentTools::Cli::Commands::Task::Recent
+    register "all", CodingAgentTools::Cli::Commands::Task::All
+    register "generate-id", CodingAgentTools::Cli::Commands::Task::GenerateId
+
+    # Version command
+    class Version < Dry::CLI::Command
+      desc "Print version"
+
+      def call(*)
+        require "coding_agent_tools/version"
+        puts "Task Manager #{CodingAgentTools::VERSION}"
+      end
+    end
+
+    register "version", Version, aliases: ["v", "-v", "--version"]
+  end
+end
+
+begin
+  Dry::CLI.new(TaskManagerCli::Commands).call
+rescue Dry::CLI::Error => e
+  warn "Error: #{e.message}"
+  exit 1
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end
