@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -73,7 +74,8 @@ module CodingAgentTools
 
           def find_current_release_directory
             # Look for current release directory
-            current_dir = File.join("dev-taskflow", "current")
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            current_dir = File.join(project_root, "dev-taskflow", "current")
             return nil unless File.exist?(current_dir)
 
             # Find the first directory that looks like a release
@@ -107,9 +109,10 @@ module CodingAgentTools
 
           def find_release_directory(version)
             # Look in both current and done directories
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             search_dirs = [
-              File.join("dev-taskflow", "current"),
-              File.join("dev-taskflow", "done")
+              File.join(project_root, "dev-taskflow", "current"),
+              File.join(project_root, "dev-taskflow", "done")
             ]
 
             search_dirs.each do |base_dir|

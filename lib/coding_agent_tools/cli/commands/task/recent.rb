@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../organisms/task_management/task_manager"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -33,9 +34,9 @@ module CodingAgentTools
             limit ||= options[:limit] || 10
             
             since_seconds = parse_time_period(options[:last])
-            # Use parent directory as base path when in dev-tools
-            base_path = Dir.pwd.end_with?("dev-tools") ? ".." : "."
-            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: base_path)
+            # Use ProjectRootDetector for reliable path resolution
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: project_root)
 
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,

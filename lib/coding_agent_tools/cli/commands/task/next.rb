@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../organisms/task_management/task_manager"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -27,9 +28,9 @@ module CodingAgentTools
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 1
 
-            # Use parent directory as base path when in dev-tools
-            base_path = Dir.pwd.end_with?("dev-tools") ? ".." : "."
-            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: base_path)
+            # Use ProjectRootDetector for reliable path resolution
+            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: project_root)
 
             if limit == 1
               # Return single task for backward compatibility

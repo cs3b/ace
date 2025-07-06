@@ -4,7 +4,9 @@
 # This ensures that `lib` is on the load path.
 # If the gem is installed, this line is not strictly necessary but doesn't hurt.
 # If running from the project's exe directory, it's crucial.
-$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "coding_agent_tools/cli" # Loads dry/cli and our command registry
 
