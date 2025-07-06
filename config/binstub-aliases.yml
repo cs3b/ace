@@ -1,0 +1,61 @@
+# Binstub Aliases Configuration
+# Defines shell binstubs to be generated and their target executables
+#
+# Schema:
+#   aliases:
+#     binstub_name:
+#       description: "Brief description of what this binstub does"
+#       executable: "path/to/executable"
+#       type: "shell" | "ruby"
+#       args_processing: "pass_through" | "custom"
+
+version: "1.0"
+
+aliases:
+  # Task Management Tools
+  tn:
+    description: "Get next task"
+    executable: "task-manager"
+    command: "next"
+    type: "shell"
+    args_processing: "pass_through"
+    
+  tr:
+    description: "Get recent tasks"
+    executable: "task-manager"
+    command: "recent"
+    type: "shell"
+    args_processing: "pass_through"
+    
+  tal:
+    description: "Get all tasks"
+    executable: "task-manager"
+    command: "all"
+    type: "shell"
+    args_processing: "pass_through"
+    
+  tnid:
+    description: "Get next task ID"
+    executable: "task-manager"
+    command: "generate-id"
+    type: "shell"
+    args_processing: "pass_through"
+
+  # LLM Tools
+  llm:
+    description: "Query LLM providers"
+    executable: "llm-query"
+    type: "shell"
+    args_processing: "pass_through"
+    
+  models:
+    description: "List available LLM models"
+    executable: "llm-models"
+    type: "shell"
+    args_processing: "pass_through"
+    
+  usage:
+    description: "Generate LLM usage report"
+    executable: "llm-usage-report"
+    type: "shell"
+    args_processing: "pass_through"
