@@ -1,0 +1,153 @@
+#!/bin/sh
+# Standalone security linting script for Coding Agent Tools gem
+# Runs Gitleaks secrets scanner with project configuration
+
+set -e
+
+# Default settings
+SCAN_FULL=false
+SCAN_GIT_HISTORY=false
+VERBOSE=false
+
+# Parse command line arguments
+while [ $# -gt 0 ]; do
+  case $1 in
+    --full)
+      SCAN_FULL=true
+      shift
+      ;;
+    --git-past)
+      SCAN_GIT_HISTORY=true
+      shift
+      ;;
+    --verbose|-v)
+      VERBOSE=true
+      shift
+      ;;
+    --help|-h)
+      echo "Usage: $0 [OPTIONS]"
+      echo ""
+      echo "Options:"
+      echo "  --full          Scan all files including large ones (>1MB)"
+      echo "  --git-past      Scan entire git history for secrets"
+      echo "  --verbose, -v   Enable verbose output"
+      echo "  --help, -h      Show this help message"
+      echo ""
+      echo "This script scans for secrets using Gitleaks and respects:"
+      echo "  - .gitignore patterns (ignored files are skipped)"
+      echo "  - .gitleaks.toml configuration"
+      echo "  - File size limits (1MB by default, --full to override)"
+      echo ""
+      echo "Examples:"
+      echo "  $0                    # Basic scan of current files"
+      echo "  $0 --full            # Scan including large files"
+      echo "  $0 --git-past        # Scan entire git history"
+      echo "  $0 --full --git-past # Full historical scan"
+      exit 0
+      ;;
+    *)
+      echo "ERROR: Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
+# Check if Gitleaks is available
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "INFO: Gitleaks not installed - skipping secrets scanning"
+  echo "      For enhanced security, consider installing Gitleaks:"
+  echo "      https://github.com/gitleaks/gitleaks#installation"
+  echo "      Gitleaks complements GitHub's native push protection with local scanning"
+  exit 0
+fi
+
+echo "INFO: Running Gitleaks secrets scanner from dev-tools directory: $(pwd)"
+
+# Build gitleaks command
+GITLEAKS_CMD="gitleaks detect"
+
+# Add verbose flag if requested
+if [ "$VERBOSE" = true ]; then
+  GITLEAKS_CMD="$GITLEAKS_CMD --verbose"
+fi
+
+# Configure scan mode
+if [ "$SCAN_GIT_HISTORY" = true ]; then
+  echo "INFO: Scanning entire git history for secrets..."
+  # Remove --no-git flag to scan git history
+  GITLEAKS_CMD="$GITLEAKS_CMD --log-opts='--all'"
+else
+  echo "INFO: Scanning current files only..."
+  GITLEAKS_CMD="$GITLEAKS_CMD --no-git"
+fi
+
+# Configure file size limits
+if [ "$SCAN_FULL" = true ]; then
+  echo "INFO: Scanning all files including large ones..."
+  # Override the config file size limit
+  GITLEAKS_CONFIG_OVERRIDE="$(mktemp)"
+
+  # Copy existing config and modify size limit
+  if [ -f ".gitleaks.toml" ]; then
+    cp ".gitleaks.toml" "$GITLEAKS_CONFIG_OVERRIDE"
+    # Remove or comment out size limits in the temp config
+    sed -i.bak '/maxTargetMegaBytes/d' "$GITLEAKS_CONFIG_OVERRIDE" 2>/dev/null || true
+  else
+    # Create minimal config for full scan
+    cat > "$GITLEAKS_CONFIG_OVERRIDE" << 'EOF'
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Minimal config for full scan"
+paths = []
+regexes = []
+EOF
+  fi
+
+  GITLEAKS_CMD="$GITLEAKS_CMD --config=$GITLEAKS_CONFIG_OVERRIDE"
+else
+  echo "INFO: Respecting file size limits (1MB) - use --full to override"
+fi
+
+# Add gitignore respect
+# Gitleaks automatically respects .gitignore by default when using --no-git
+# For git history scans, we rely on git's own ignore handling
+
+# Execute the scan
+echo "INFO: Executing: $GITLEAKS_CMD"
+eval "$GITLEAKS_CMD"
+
+# Capture exit code
+gitleaks_exit_code=$?
+
+# Clean up temporary config if created
+if [ "$SCAN_FULL" = true ] && [ -n "$GITLEAKS_CONFIG_OVERRIDE" ] && [ -f "$GITLEAKS_CONFIG_OVERRIDE" ]; then
+  rm -f "$GITLEAKS_CONFIG_OVERRIDE" "$GITLEAKS_CONFIG_OVERRIDE.bak" 2>/dev/null || true
+fi
+
+# Handle results
+if [ $gitleaks_exit_code -eq 0 ]; then
+  echo "SUCCESS: No secrets detected"
+  if [ "$SCAN_GIT_HISTORY" = true ]; then
+    echo "INFO: Git history scan completed successfully"
+  fi
+  if [ "$SCAN_FULL" = true ]; then
+    echo "INFO: Full file scan (including large files) completed successfully"
+  fi
+else
+  echo "ERROR: Secrets detected by Gitleaks"
+  echo "Please review and remove detected secrets before committing"
+  echo ""
+  echo "For help with remediation:"
+  echo "  - Use environment variables for secrets: ENV['API_KEY']"
+  echo "  - Add secrets to .env file (not committed to git)"
+  echo "  - Use placeholder values in tests and documentation"
+  echo "  - See: docs/dev-guides/security-secrets-scanning.g.md"
+  echo ""
+  echo "For installation instructions, see: https://github.com/gitleaks/gitleaks#installation"
+  exit 1
+fi
+
+echo "INFO: Security scanning completed successfully"
