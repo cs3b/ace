@@ -41,8 +41,8 @@ module CodingAgentTools
           warnings = []
           tasks = []
 
-          task_files = Atoms::TaskManagement::FileSystemScanner.find_files_by_extension(
-            directory_path, ".md", recursive: recursive, max_files: max_files
+          task_files = Atoms::TaskManagement::FileSystemScanner.scan_directory(
+            directory_path, patterns: ["*.md"], recursive: recursive, max_files: max_files
           )
 
           task_files.each do |relative_path|
