@@ -185,8 +185,10 @@ Review and refine a task definition, potentially proposing an implementation app
      - **❌ Not Ready**: Critical issues must be resolved before implementation
 
 10. **Present Review Summary:**
-
    Use the task review summary template:
+
+11. **Update the task:**
+   Use all the gatherd information
 
 ## Review Checklist
 
