@@ -839,6 +839,461 @@ When errors occur during review execution:
    - Suggest next steps or alternatives
    - Document any required user actions
 
+## Context Window Management
+
+### Overview
+
+Large code reviews can exceed LLM context windows, requiring strategic content chunking and prioritization. This section provides comprehensive guidance for handling substantial diffs, file sets, and review content that may exceed token limits while maintaining review quality and context.
+
+### LLM Context Limits
+
+Different LLM providers have varying context window sizes:
+
+- **Claude 3.5 Sonnet**: 200,000 tokens (~150,000 words)
+- **GPT-4 Turbo**: 128,000 tokens (~96,000 words)
+- **Gemini 2.5 Pro**: 2,000,000 tokens (~1,500,000 words)
+- **Claude 3 Opus**: 200,000 tokens (~150,000 words)
+
+### Content Size Estimation
+
+Before processing, estimate content size to determine if chunking is needed:
+
+```bash
+# Check diff size
+git diff --stat v.0.2.0..HEAD
+git diff v.0.2.0..HEAD | wc -l
+
+# Check file pattern size
+find . -name "*.rb" -exec wc -l {} + | tail -1
+
+# Check total content size in words
+git diff v.0.2.0..HEAD | wc -w
+```
+
+### Chunking Indicators
+
+Implement chunking when content exceeds these thresholds:
+
+- **Diff content**: >10,000 lines or >50,000 words
+- **File patterns**: >20 files or >100,000 lines total
+- **Combined context**: Project context + review content >75% of model limit
+- **Error indicators**: "Context length exceeded" or timeout errors
+
+### File Prioritization Strategies
+
+When chunking is required, prioritize files based on:
+
+#### High Priority (Review First)
+- **Core architecture files**: `lib/coding_agent_tools/*.rb`
+- **Public APIs**: Classes with `public` methods, CLI commands
+- **Security-critical**: Authentication, authorization, credential handling
+- **Recent changes**: Files with most commits in target range
+- **Complex logic**: Files with high cyclomatic complexity
+
+#### Medium Priority
+- **Business logic**: Organisms and molecules with core functionality
+- **Configuration**: Settings, constants, initialization files
+- **Integration points**: Files interfacing with external services
+- **Test files**: Specs covering critical functionality
+
+#### Low Priority (Review Last)
+- **Documentation**: README, guides, inline comments
+- **Utilities**: Helper functions, formatters, validators
+- **Generated files**: Auto-generated code, build artifacts
+- **Development tools**: Scripts, development-only code
+
+### Chunking Approaches
+
+#### 1. Logical Chunking (Preferred)
+
+Split content by logical boundaries:
+
+```bash
+# Split by file type
+git diff v.0.2.0..HEAD -- "*.rb" > ruby-changes.diff
+git diff v.0.2.0..HEAD -- "*.md" > doc-changes.diff
+
+# Split by directory
+git diff v.0.2.0..HEAD -- "lib/" > lib-changes.diff
+git diff v.0.2.0..HEAD -- "spec/" > spec-changes.diff
+
+# Split by feature area
+git diff v.0.2.0..HEAD -- "*client*" > client-changes.diff
+git diff v.0.2.0..HEAD -- "*auth*" > auth-changes.diff
+```
+
+#### 2. Size-Based Chunking
+
+Split large diffs by line count:
+
+```bash
+# Split diff into chunks of 5000 lines each
+git diff v.0.2.0..HEAD > full.diff
+split -l 5000 full.diff chunk-
+```
+
+#### 3. File-Based Chunking
+
+Process files individually when patterns are too large:
+
+```bash
+# Get list of changed files
+git diff --name-only v.0.2.0..HEAD | while read file; do
+    echo "Processing: $file"
+    git diff v.0.2.0..HEAD -- "$file" > "chunk-${file//\//-}.diff"
+done
+```
+
+#### 4. Priority-Based Chunking
+
+Create chunks based on file priority:
+
+```bash
+# High priority files first
+git diff v.0.2.0..HEAD -- "lib/coding_agent_tools/*.rb" > high-priority.diff
+
+# Medium priority files
+git diff v.0.2.0..HEAD -- "lib/coding_agent_tools/*/*.rb" > medium-priority.diff
+
+# Low priority files
+git diff v.0.2.0..HEAD -- "spec/" "docs/" > low-priority.diff
+```
+
+### Context Overflow Error Handling
+
+#### Detection Patterns
+
+Common error messages indicating context overflow:
+
+- "Context length exceeded"
+- "Token limit exceeded"
+- "Request too large"
+- "Maximum context size"
+- Timeout errors with large prompts
+
+#### Recovery Strategies
+
+**Immediate Actions:**
+1. Save current session state
+2. Reduce content size by 50%
+3. Retry with simplified prompt
+4. Document overflow in execution.log
+
+**Content Reduction Techniques:**
+
+```bash
+# Reduce diff context lines
+git diff -U1 v.0.2.0..HEAD  # Minimal context
+git diff --stat v.0.2.0..HEAD  # Summary only
+
+# Focus on specific file types
+git diff v.0.2.0..HEAD -- "*.rb" | head -5000
+
+# Remove whitespace-only changes
+git diff -w v.0.2.0..HEAD
+```
+
+#### Automated Recovery
+
+```bash
+# Function to handle context overflow
+handle_context_overflow() {
+    local original_content="$1"
+    local chunk_size=5000
+    
+    echo "⚠️  Context overflow detected. Implementing chunking strategy..."
+    
+    # Split content into manageable chunks
+    echo "$original_content" | split -l $chunk_size - chunk-
+    
+    # Process each chunk separately
+    for chunk in chunk-*; do
+        echo "Processing chunk: $chunk"
+        process_review_chunk "$chunk"
+    done
+    
+    # Combine results
+    combine_chunked_results
+}
+```
+
+### Maintaining Context Across Chunks
+
+#### Context Preservation Techniques
+
+1. **Shared Context File**: Create reusable context for all chunks
+2. **Progressive Context**: Build context incrementally across chunks
+3. **Cross-Reference Links**: Link findings between chunks
+4. **Summary Continuity**: Maintain running summary across chunks
+
+#### Implementation Example
+
+```bash
+# Create shared context file
+cat > shared-context.md <<EOF
+# Shared Review Context
+
+## Project Overview
+$(cat docs/what-do-we-build.md)
+
+## Architecture Summary
+$(cat docs/architecture.md | head -50)
+
+## Review Scope
+Target: $target
+Focus: $focus
+Total Files: $(git diff --name-only $target | wc -l)
+
+## Chunking Strategy
+- Strategy: Logical chunking by directory
+- Chunk Size: ~5000 lines per chunk
+- Priority: High-priority files first
+EOF
+
+# Use shared context in each chunk review
+for chunk in chunk-*; do
+    cat shared-context.md "$chunk" | llm-query --focus "$focus"
+done
+```
+
+### Performance Optimization
+
+#### Parallel Processing
+
+```bash
+# Process multiple chunks in parallel
+process_chunks_parallel() {
+    local chunks=("$@")
+    
+    for chunk in "${chunks[@]}"; do
+        {
+            echo "Processing $chunk in background..."
+            process_review_chunk "$chunk" > "result-$chunk.md"
+        } &
+    done
+    
+    # Wait for all background jobs
+    wait
+    
+    echo "All chunks processed. Combining results..."
+    combine_results
+}
+```
+
+#### Caching Strategies
+
+```bash
+# Cache project context to avoid repeated loading
+cache_project_context() {
+    local cache_file="$SESSION_DIR/project-context.cache"
+    
+    if [[ ! -f "$cache_file" ]]; then
+        echo "Building project context cache..."
+        build_project_context > "$cache_file"
+    fi
+    
+    echo "Using cached project context: $cache_file"
+}
+```
+
+### Chunking Workflow Implementation
+
+#### Step 1: Content Analysis
+
+```bash
+analyze_content_size() {
+    local target="$1"
+    local line_count word_count
+    
+    case "$target" in
+        *..*)
+            # Git range
+            line_count=$(git diff "$target" | wc -l)
+            word_count=$(git diff "$target" | wc -w)
+            ;;
+        *.*)
+            # File pattern
+            line_count=$(find . -name "$target" -exec wc -l {} + | tail -1 | awk '{print $1}')
+            word_count=$(find . -name "$target" -exec wc -w {} + | tail -1 | awk '{print $1}')
+            ;;
+    esac
+    
+    echo "Content size: $line_count lines, $word_count words"
+    
+    # Determine if chunking is needed
+    if [[ $line_count -gt 10000 ]] || [[ $word_count -gt 50000 ]]; then
+        echo "CHUNKING_REQUIRED"
+        return 1
+    else
+        echo "CHUNKING_NOT_REQUIRED"
+        return 0
+    fi
+}
+```
+
+#### Step 2: Chunking Strategy Selection
+
+```bash
+select_chunking_strategy() {
+    local target="$1"
+    local content_size="$2"
+    
+    case "$target" in
+        *..*)
+            # Git ranges: use logical chunking by directory
+            echo "LOGICAL_DIRECTORY"
+            ;;
+        *.*)
+            # File patterns: use file-based chunking
+            echo "FILE_BASED"
+            ;;
+        *)
+            # Default: size-based chunking
+            echo "SIZE_BASED"
+            ;;
+    esac
+}
+```
+
+#### Step 3: Chunk Processing
+
+```bash
+process_with_chunking() {
+    local target="$1"
+    local focus="$2"
+    local strategy="$3"
+    
+    echo "🔄 Processing with chunking strategy: $strategy"
+    
+    case "$strategy" in
+        "LOGICAL_DIRECTORY")
+            process_logical_chunks "$target" "$focus"
+            ;;
+        "FILE_BASED")
+            process_file_chunks "$target" "$focus"
+            ;;
+        "SIZE_BASED")
+            process_size_chunks "$target" "$focus"
+            ;;
+    esac
+    
+    # Combine and synthesize results
+    synthesize_chunked_results
+}
+```
+
+### Quality Assurance for Chunked Reviews
+
+#### Completeness Checks
+
+```bash
+verify_chunk_completeness() {
+    local original_files chunk_files
+    
+    # Get list of files in original diff
+    original_files=$(git diff --name-only "$target" | sort)
+    
+    # Get list of files in all chunks
+    chunk_files=$(cat chunk-*/files.list | sort | uniq)
+    
+    # Compare coverage
+    if diff <(echo "$original_files") <(echo "$chunk_files") > /dev/null; then
+        echo "✅ All files covered in chunks"
+    else
+        echo "❌ Some files missing from chunks"
+        diff <(echo "$original_files") <(echo "$chunk_files")
+    fi
+}
+```
+
+#### Cross-Chunk Consistency
+
+```bash
+check_cross_chunk_consistency() {
+    local reports=("$@")
+    
+    echo "Checking consistency across chunk reports..."
+    
+    # Extract key findings from each report
+    for report in "${reports[@]}"; do
+        grep -E "^## (Critical|High|Medium)" "$report" > "${report}.findings"
+    done
+    
+    # Look for contradictory findings
+    echo "Analyzing findings for consistency..."
+    compare_findings *.findings
+}
+```
+
+### Example Chunking Scenarios
+
+#### Scenario 1: Large Feature Branch Review
+
+```bash
+# Target: Feature branch with 50+ files changed
+@review-code code feature-branch..main
+
+# Automatic chunking triggered
+# Strategy: Logical chunking by component
+# Chunks: 
+#   - Core logic changes (lib/coding_agent_tools/*.rb)
+#   - CLI changes (lib/coding_agent_tools/cli/*.rb)
+#   - Client changes (lib/coding_agent_tools/organisms/*client*.rb)
+#   - Test changes (spec/)
+```
+
+#### Scenario 2: Documentation Review
+
+```bash
+# Target: All markdown files
+@review-code docs **/*.md
+
+# Chunking by document type:
+#   - API documentation (docs/user/*.md)
+#   - Development guides (docs/development/*.md)
+#   - Architecture docs (docs/architecture.md, docs/blueprint.md)
+```
+
+#### Scenario 3: Refactoring Review
+
+```bash
+# Target: Large refactoring diff
+@review-code code v.0.2.0..v.0.3.0
+
+# Priority-based chunking:
+#   - High priority: Public API changes
+#   - Medium priority: Internal refactoring
+#   - Low priority: Test updates and documentation
+```
+
+### Integration with Existing Error Handling
+
+The context window management integrates seamlessly with existing error handling:
+
+1. **Detection**: Context overflow errors caught by existing error handlers
+2. **Recovery**: Automatic fallback to chunking strategies
+3. **Logging**: Context management logged in execution.log
+4. **User Communication**: Clear messaging about chunking decisions
+
+### Performance Metrics
+
+Track chunking performance for optimization:
+
+```bash
+# Log chunking metrics
+log_chunking_metrics() {
+    local session_dir="$1"
+    
+    cat >> "$session_dir/chunking.metrics" <<EOF
+Chunking Session: $(date -Iseconds)
+Original Size: $(cat "$session_dir/original.size")
+Chunk Count: $(ls "$session_dir"/chunk-* | wc -l)
+Processing Time: $(cat "$session_dir/processing.time")
+Success Rate: $(calculate_success_rate "$session_dir")
+EOF
+}
+```
+
 ## Integration Points
 
 ### Existing Tools
