@@ -108,7 +108,7 @@ class CassetteLinter
     puts "• Verbose API responses with unnecessary fields"
     puts
     puts "Solution: Add VCR before_record filtering in spec/support/vcr.rb"
-    puts "See: docs/architecture/dev-guides/testing-with-vcr.md#cassette-size-optimization"
+    puts "See: docs/development/guides/testing-with-vcr.md#cassette-size-optimization"
     puts
   end
 
@@ -191,7 +191,7 @@ if __FILE__ == $0
       puts "  bin/lint-cassettes --threshold 25   # Use 25KB threshold"
       puts
       puts "This tool warns about large VCR cassettes but never fails."
-      puts "See docs/architecture/dev-guides/testing-with-vcr.md for optimization tips."
+      puts "See docs/development/guides/testing-with-vcr.md for optimization tips."
       exit 0
     end
   end
