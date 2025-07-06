@@ -23,6 +23,7 @@ how to navigate the codebase.
 - Check existing blueprint: `docs/blueprint.md`
 - Load project overview: `docs/what-do-we-build.md`
 - Load architecture: `docs/architecture.md`
+- Check for tools documentation: `docs/tools.md`
 - Review current directory structure
 
 ## High-Level Execution Plan
@@ -31,6 +32,7 @@ how to navigate the codebase.
 
 - [ ] Analyze current project structure
 - [ ] Identify key directories and files
+- [ ] Check for existing specialized documentation (tools.md, etc.)
 - [ ] Determine what has changed since last update
 
 ### Execution Phase
@@ -72,6 +74,7 @@ how to navigate the codebase.
    - Include entry points and main modules
    - Focus on files unique to this project
    - Add version/build files (package.json, Gemfile, etc.)
+   - **For tools**: If `docs/tools.md` exists, reference it instead of duplicating tool lists
 
 6. **Extract Technology Stack:**
    - Read from architecture.md or analyze project files
@@ -147,6 +150,7 @@ infra/        # Infrastructure config
 - Read-only and ignored paths are specified
 - All document links are valid and relative
 - Information complements (not duplicates) other docs
+- Tools information references `docs/tools.md` if it exists rather than duplicating
 
 ## Usage Example
 
@@ -174,6 +178,7 @@ Example:
 
 - Include temporary or generated files
 - Duplicate architecture documentation
+- Duplicate detailed tools information (if `docs/tools.md` exists, reference it instead)
 - List every single file
 - Include sensitive information
 - Use absolute file paths
@@ -281,22 +286,15 @@ This section lists files, directories, or glob patterns that the agent should ig
 - `**/.DS_Store` # macOS system files
 - `**/Thumbs.db` # Windows system files
 
-## Entry Points
+## Available Tools
 
-<!-- Document the main ways to start or interact with the project -->
+<!-- If docs/tools.md exists, reference it instead of listing all tools -->
 
-### Development
+The project provides executable commands for development and end-user functionality.
 
-```bash
-# Start development server
-bin/run
+For comprehensive documentation of all available tools, usage examples, and workflows, see the **[Tools Reference](docs/tools.md)**.
 
-# Run tests
-bin/test
-
-# Build for production
-bin/build
-```
+<!-- If docs/tools.md doesn't exist, then document the main tools here -->
 
 ### Common Workflows
 
