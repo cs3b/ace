@@ -20,6 +20,7 @@ module CodingAgentTools
       def initialize(config_path, target_directory)
         @config_path = config_path
         @target_directory = target_directory
+        @operation_confirmer = CodingAgentTools::Molecules::FileOperationConfirmer.new
       end
 
       # Installs all binstubs defined in the configuration
@@ -116,10 +117,8 @@ module CodingAgentTools
       # @param alias_name [String] Name of the alias
       # @return [Boolean] Whether to overwrite
       def should_overwrite?(file_path, alias_name)
-        CodingAgentTools::Molecules::FileOperationConfirmer.confirm_overwrite(
-          file_path,
-          "binstub '#{alias_name}'"
-        )
+        result = @operation_confirmer.confirm_overwrite(file_path)
+        result.confirmed?
       end
 
       # Writes binstub content to file with proper permissions
