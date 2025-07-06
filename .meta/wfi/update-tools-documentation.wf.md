@@ -2,7 +2,7 @@
 
 ## Goal
 
-Maintain and update the comprehensive tools documentation (docs/tools.md) when new tools are added or existing tools are modified, ensuring accurate and complete documentation for all development tools and gem executables.
+Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.md) when new tools are added or existing tools are modified, ensuring accurate and complete documentation for all development tools and gem executables.
 
 ## Prerequisites
 
@@ -10,15 +10,15 @@ Maintain and update the comprehensive tools documentation (docs/tools.md) when n
 - Existing tool functionality has been modified or enhanced
 - Understanding of tool's purpose, usage, and integration
 - Access to the tool's source code and help documentation
-- Write access to docs/tools.md (symlinked to dev-tools/docs/tools.md)
+- Write access to dev-tools/docs/tools.md
 
 ## Project Context Loading
 
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
-- Review current tools documentation: `docs/tools.md`
-- Check tool help output: `tool-name --help`
+- Review current tools documentation: `dev-tools/docs/tools.md`
+- Understand tool functionality through testing and source review
 
 ## High-Level Execution Plan
 
@@ -41,21 +41,23 @@ Maintain and update the comprehensive tools documentation (docs/tools.md) when n
 1. **Identify Tool Category and Purpose:**
 
    **Tool Type Classification:**
-   - **`bin/` tools**: Development tools for working on the project
+   - **Development tools**: Used for project development workflows
      - Git workflow tools (gc, gl, gp, gpull)
      - Task management tools (tn, tr, tal, tnid, rc)
      - Quality & testing tools (test, lint, build)
      - Development utilities (console, tree, cr*)
-   - **`dev-tools/exe/` tools**: Gem executables for end users
+   - **Gem executables**: Available globally after gem installation
      - LLM integration tools (llm-query, llm-models, llm-usage-report)
      - Main CLI interface (coding_agent_tools)
-     - Code review & analysis tools
+     - Code review & analysis tools (task-manager, generate-review-prompt)
 
    **Purpose Analysis:**
    ```bash
-   # Get tool help and usage information
+   # Test tool functionality directly (fish integration makes exe/ tools available)
    tool-name --help
-   tool-name -h
+   
+   # For development tools, test from project root
+   bin/tool-name --help
    
    # Check tool source for additional context
    cat bin/tool-name
@@ -64,11 +66,11 @@ Maintain and update the comprehensive tools documentation (docs/tools.md) when n
 
 2. **Locate Correct Documentation Section:**
 
-   **Current tools.md structure:**
+   **Current dev-tools/docs/tools.md structure:**
    - Overview
-   - Setup Requirements
-   - Development Tools (`bin/`)
-   - Gem Executables (`dev-tools/exe/`)
+   - Setup Requirements  
+   - Development Tools (bin/)
+   - Gem Executables (available via fish integration)
    - Tool Categories
    - Common Workflows
    - Migration Status
@@ -85,47 +87,27 @@ Maintain and update the comprehensive tools documentation (docs/tools.md) when n
 ```markdown
 #### `tool-name` - Brief Description
 
-**Purpose:** Clear explanation of what the tool does and why it exists.
+Brief explanation of what the tool does and its primary use case.
 
-**Usage:**
 ```bash
-# Basic usage example
-tool-name [options] [arguments]
+# Most common usage pattern with useful options
+tool-name --most-useful-option "example value"
 
-# Common use case 1
-tool-name --example "sample input"
-
-# Common use case 2 with explanation
-tool-name --flag value  # Explanation of this usage
+# Alternative usage for different scenario
+tool-name --other-useful-flag
 ```
 
 **Key Features:**
-- Feature 1: Description
-- Feature 2: Description
-- Feature 3: Description
-
-**Options:**
-- `--option1`: Description of option
-- `--option2 VALUE`: Description of option with value
-- `--help`: Show help information
-
-**Examples:**
-```bash
-# Example 1: Most common usage
-tool-name --common-flag
-
-# Example 2: Advanced usage
-tool-name --advanced-option "complex value"
-
-# Example 3: Integration with other tools
-tool-name | other-tool
+- Main feature that users care about
+- Secondary important feature
+- Integration capability (if applicable)
 ```
 
-**Integration Notes:**
-- Works with: List of related tools or workflows
-- Required by: List of dependent processes
-- Part of: Workflow or category description
-```
+**Template Notes:**
+- **No --help duplication**: Provide brief, focused information instead of repeating help output
+- **Tool name only**: Use `tool-name` not `dev-tools/exe/tool-name` (fish integration handles paths)
+- **Practical examples**: Show real-world usage with most useful options
+- **Concise descriptions**: Focus on what users need to know, not implementation details
 
 ### Category Entry Template
 
@@ -137,15 +119,15 @@ tool-name | other-tool
 
    **For New Tools:**
    1. Create tool entry using the template
-   2. Place in appropriate category section
+   2. Place in appropriate category section  
    3. Add to tool categories listing
    4. Include in workflow examples if applicable
    5. Update migration status if relevant
 
    **Location Guidelines:**
-   - `bin/` tools: Add to "Development Tools (`bin/`)" section
-   - `dev-tools/exe/` tools: Add to "Gem Executables (`dev-tools/exe/`)" section
-   - Use appropriate subsection (Git Workflow, Task Management, etc.)
+   - **Development tools**: Add to "Development Tools" section with `bin/` prefix for invocation
+   - **Gem executables**: Add to "Gem Executables" section using tool name only (fish integration available)
+   - Use appropriate subsection (Git Workflow, Task Management, LLM Integration, etc.)
 
 5. **Update Existing Tool Documentation:**
 
@@ -224,72 +206,82 @@ tool-name | other-tool
 
 ## Examples
 
-### Example 1: Adding a New bin/ Tool
+### Example 1: Adding a New Development Tool
 
-**Tool:** `bin/new-validator`
+**Tool:** `bin/code-validator`
 
 **Documentation Entry:**
 ```markdown
-#### `bin/new-validator` - Code Quality Validator
+#### `bin/code-validator` - Multi-Language Code Quality Validator
 
-**Purpose:** Validates code quality across multiple dimensions including style, security, and best practices before commits.
+Validates code quality across multiple dimensions including style, security, and best practices before commits.
 
-**Usage:**
 ```bash
-# Validate current changes
-bin/new-validator
+# Validate current changes with security focus
+bin/code-validator --rules security,style
 
-# Validate specific files
-bin/new-validator path/to/file.rb path/to/other.js
-
-# Validate with specific rules
-bin/new-validator --rules security,style
+# Quick validation with auto-fix
+bin/code-validator --fix
 ```
 
 **Key Features:**
 - Multi-language support (Ruby, JavaScript, etc.)
-- Configurable rule sets
-- Integration with git hooks
-- Detailed violation reports
-
-**Examples:**
-```bash
-# Quick validation before commit
-bin/new-validator
-
-# Security-focused validation
-bin/new-validator --rules security
-
-# Validate and auto-fix issues
-bin/new-validator --fix
-```
+- Configurable rule sets with security focus
+- Git hook integration for automated validation
 ```
 
 **Category Update:**
 ```markdown
 ### Quality & Testing Tools
-- **new-validator**: Multi-language code quality validation
+- **code-validator**: Multi-language code quality validation with security focus
 ```
 
-### Example 2: Updating an Existing dev-tools/exe/ Tool
+### Example 2: Adding a New Gem Executable
+
+**Tool:** `task-analyzer` (new exe/ tool)
+
+**Documentation Entry:**
+```markdown
+#### `task-analyzer` - Project Task Analysis Tool
+
+Analyzes task complexity, dependencies, and estimates across project releases.
+
+```bash
+# Analyze current release tasks with complexity metrics
+task-analyzer --complexity --current
+
+# Generate dependency graph for specific task
+task-analyzer --deps v.0.3.0+task.15
+```
+
+**Key Features:**
+- Task complexity analysis with estimation accuracy
+- Dependency graph visualization
+- Release progress tracking with bottleneck identification
+```
+
+### Example 3: Updating Existing Tool (Simplified Approach)
 
 **Tool:** `llm-query` (adding new provider support)
 
 **Update to existing entry:**
 ```markdown
 #### `llm-query` - Unified LLM Query Interface
-```bash
-# NEW: Claude/Anthropic support
-dev-tools/exe/llm-query anthropic "Explain ATOM architecture"
 
-# NEW: Local model support
-dev-tools/exe/llm-query local "Write a function" --model llama-7b
+Query multiple LLM providers with unified syntax and cost tracking.
+
+```bash
+# Query with cost tracking and provider selection
+llm-query anthropic "Explain ATOM architecture" --track-cost
+
+# Local model with specific model selection  
+llm-query local "Write a function" --model llama-7b
 ```
 
 **Key Features:**
 - Multi-provider support: Google, OpenAI, Anthropic, Local models
-- Cost tracking across providers (NEW)
-- Response caching for efficiency
+- Real-time cost tracking across all providers
+- Response caching with performance optimization
 ```
 
 ## Error Handling
@@ -328,57 +320,73 @@ dev-tools/exe/llm-query local "Write a function" --model llama-7b
 **Test 1: Documentation Structure Integrity**
 ```bash
 # Verify markdown structure is valid
-markdownlint docs/tools.md
+markdownlint dev-tools/docs/tools.md
 
-# Check for broken links
-markdown-link-check docs/tools.md
+# Check for broken links (if markdown-link-check available)
+markdown-link-check dev-tools/docs/tools.md 2>/dev/null || echo "Link checker not available"
 ```
 
-**Test 2: Tool Functionality Verification**
+**Test 2: Tool Availability Verification**
 ```bash
-# Test documented examples work
-grep -A 5 -B 5 "```bash" docs/tools.md | bash -n
+# Check that documented gem executables are available (fish integration)
+grep -o '#### `[^`]*`' dev-tools/docs/tools.md | grep -v 'bin/' | while read line; do
+  tool=$(echo $line | sed 's/#### `\([^`]*\)`.*/\1/')
+  command -v "$tool" >/dev/null || echo "Tool not available: $tool"
+done
 
-# Verify tool help output matches documentation
-for tool in bin/* dev-tools/exe/*; do
-  $tool --help > /tmp/help-output.txt
-  grep -q "$(basename $tool)" docs/tools.md || echo "Missing: $tool"
+# Check development tools exist
+grep -o '#### `bin/[^`]*`' dev-tools/docs/tools.md | while read line; do
+  tool=$(echo $line | sed 's/#### `\([^`]*\)`.*/\1/')
+  [ -f "$tool" ] || echo "Development tool missing: $tool"
 done
 ```
 
 **Test 3: Category Completeness**
 ```bash
-# Ensure all tools are categorized
-comm -23 <(ls bin/ dev-tools/exe/ | sort) <(grep -o '`[^`]*`' docs/tools.md | tr -d '`' | sort)
+# Ensure all bin/ tools are documented
+for tool in bin/*; do
+  basename_tool=$(basename "$tool")
+  grep -q "bin/$basename_tool" dev-tools/docs/tools.md || echo "Missing bin/ tool: $basename_tool"
+done
+
+# Ensure all exe/ tools are documented  
+for tool in dev-tools/exe/*; do
+  basename_tool=$(basename "$tool")
+  grep -q "#### \`$basename_tool\`" dev-tools/docs/tools.md || echo "Missing exe/ tool: $basename_tool"
+done
 ```
 
 **Test 4: Workflow Example Validation**
 ```bash
-# Test workflow examples from Common Workflows section
-sed -n '/## Common Workflows/,/## /p' docs/tools.md | grep -A 10 "```bash" | bash -n
+# Test that examples use correct tool naming (no full paths for exe/ tools)
+if grep -q "dev-tools/exe/" dev-tools/docs/tools.md; then
+  echo "WARNING: Found full paths to exe/ tools - should use tool name only"
+  grep -n "dev-tools/exe/" dev-tools/docs/tools.md
+fi
 ```
 
 ### Integration Points Verification
 
-- [ ] All tools in bin/ are documented
-- [ ] All tools in dev-tools/exe/ are documented  
+- [ ] All tools in bin/ are documented with `bin/` prefix
+- [ ] All tools in dev-tools/exe/ are documented using tool name only
 - [ ] Tool categories are complete and accurate
-- [ ] Workflow examples include relevant new tools
+- [ ] Workflow examples use correct tool naming conventions
 - [ ] Cross-references between tools are maintained
-- [ ] Migration status reflects current tool locations
+- [ ] No full paths to exe/ tools (fish integration handles this)
 
 ## Usage Example
 
-> **Scenario:** Adding documentation for new tool `bin/analyze-dependencies`
+> **Scenario:** Adding documentation for new gem executable `dependency-analyzer`
 >
-> 1. Identify tool type: `bin/` development tool
-> 2. Test tool functionality: `bin/analyze-dependencies --help`
-> 3. Create documentation entry using template
-> 4. Place in "Development Utilities" subsection
-> 5. Add to tool categories under "Development"
-> 6. Include in workflow example for dependency analysis
-> 7. Run validation checklist
-> 8. Test documentation accuracy
+> 1. Identify tool type: gem executable (dev-tools/exe/)
+> 2. Test tool functionality: `dependency-analyzer --help`
+> 3. Create documentation entry using simplified template
+> 4. Use tool name only: `dependency-analyzer` (not `dev-tools/exe/dependency-analyzer`)
+> 5. Place in "Gem Executables" section under appropriate subsection
+> 6. Add to tool categories under target user type
+> 7. Include useful examples with practical options
+> 8. Run validation checklist
+> 9. Verify fish integration works correctly
 
 ---
 
