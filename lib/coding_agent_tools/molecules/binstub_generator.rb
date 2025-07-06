@@ -19,6 +19,7 @@ module CodingAgentTools
         executable = alias_config["executable"]
         command = alias_config["command"]
         description = alias_config["description"]
+        execution_context = alias_config["execution_context"] || "dev_tools"
 
         if command
           target_command = "./exe/#{executable} #{command}"
@@ -26,6 +27,42 @@ module CodingAgentTools
           target_command = "./exe/#{executable}"
         end
 
+        case execution_context
+        when "project_root"
+          generate_project_root_binstub(description, target_command)
+        else
+          generate_dev_tools_binstub(description, target_command)
+        end
+      end
+
+      private
+
+      # Generates binstub that runs from project root directory
+      def self.generate_project_root_binstub(description, target_command)
+        <<~SHELL_SCRIPT
+          #!/bin/sh
+          # #{description}
+
+          set -e
+
+          # Save original directory
+          ORIGINAL_DIR="$(pwd)"
+
+          # Trap to ensure we always return to original directory
+          trap 'cd "$ORIGINAL_DIR"' EXIT
+
+          # Change to project root directory where taskflow is accessible
+          cd "$(dirname "$0")/.."
+
+          echo "INFO: #{description} from project root directory: $(pwd)"
+
+          # Execute the command from dev-tools subdirectory
+          cd dev-tools && #{target_command} "$@"
+        SHELL_SCRIPT
+      end
+
+      # Generates binstub that runs from dev-tools directory
+      def self.generate_dev_tools_binstub(description, target_command)
         <<~SHELL_SCRIPT
           #!/bin/sh
           # #{description}
