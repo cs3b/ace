@@ -1,0 +1,274 @@
+# frozen_string_literal: true
+
+require_relative "../../atoms/taskflow_management/directory_navigator"
+require_relative "../../molecules/taskflow_management/release_path_resolver"
+
+module CodingAgentTools
+  module Organisms
+    module TaskflowManagement
+      # ReleaseManager provides a unified interface for all release operations
+      # This organism consolidates release management functionality that was
+      # previously scattered across multiple molecules and scripts
+      class ReleaseManager
+        # Release information structure with enhanced metadata
+        ReleaseInfo = Struct.new(:path, :version, :name, :type, :status, :task_count, :created_at, :modified_at) do
+          def completed?
+            type == :done
+          end
+
+          def current?
+            type == :current
+          end
+
+          def backlog?
+            type == :backlog
+          end
+        end
+
+        # Manager result structure for consistent API
+        ManagerResult = Struct.new(:data, :success, :error_message) do
+          def success?
+            success
+          end
+
+          def failed?
+            !success
+          end
+        end
+
+        # Initialize ReleaseManager
+        # @param base_path [String] Base path for release resolution
+        def initialize(base_path: ".")
+          @base_path = base_path
+          @directory_navigator = Atoms::TaskflowManagement::DirectoryNavigator
+          @release_resolver = Molecules::TaskflowManagement::ReleasePathResolver
+        end
+
+        # Get current release information
+        # @return [ManagerResult] Result containing current release info or error
+        def current
+          result = @release_resolver.get_current_release(base_path: @base_path)
+          
+          if result.success?
+            release_info = enhance_release_info(result.release_info, :current)
+            ManagerResult.new(release_info, true, nil)
+          else
+            ManagerResult.new(nil, false, result.error_message)
+          end
+        rescue => e
+          ManagerResult.new(nil, false, "Error getting current release: #{e.message}")
+        end
+
+        # Find next available release in backlog (lowest version ready to move to current)
+        # @return [ManagerResult] Result containing next release info or error
+        def next
+          # Since backlog doesn't contain versioned releases based on our analysis,
+          # we'll implement a placeholder that can be enhanced when backlog structure changes
+          backlog_path = File.join(@base_path, "dev-taskflow/backlog")
+          
+          unless File.exist?(backlog_path) && File.directory?(backlog_path)
+            return ManagerResult.new(nil, false, "Backlog directory not found: #{backlog_path}")
+          end
+
+          # Look for any directory that could be a versioned release
+          potential_release_paths = find_potential_releases_in_backlog(backlog_path)
+          
+          if potential_release_paths.empty?
+            return ManagerResult.new(nil, true, "No versioned releases found in backlog")
+          end
+
+          # Convert paths to release info objects first
+          potential_releases = potential_release_paths.map { |path| create_release_info(path, :backlog) }
+          
+          # Sort by version and return the lowest
+          sorted_releases = sort_releases_by_version(potential_releases)
+          next_release = sorted_releases.first
+          
+          ManagerResult.new(next_release, true, nil)
+        rescue => e
+          ManagerResult.new(nil, false, "Error finding next release: #{e.message}")
+        end
+
+        # Generate next available task ID with minor version bump
+        # @return [ManagerResult] Result containing generated task ID or error
+        def generate_id
+          # Get all releases to find the latest version
+          all_releases_result = all
+          return all_releases_result unless all_releases_result.success?
+
+          latest_version = find_latest_version(all_releases_result.data)
+          next_version = bump_minor_version(latest_version)
+          next_task_number = find_next_task_number(next_version)
+          
+          new_task_id = "#{next_version}+task.#{next_task_number}"
+          ManagerResult.new(new_task_id, true, nil)
+        rescue => e
+          ManagerResult.new(nil, false, "Error generating task ID: #{e.message}")
+        end
+
+        # List all releases across done/current/backlog with metadata
+        # @return [ManagerResult] Result containing array of all releases or error
+        def all
+          all_releases = []
+          
+          # Scan done releases
+          all_releases.concat(scan_releases_in_directory("done", :done))
+          
+          # Scan current releases
+          all_releases.concat(scan_releases_in_directory("current", :current))
+          
+          # Scan backlog releases
+          all_releases.concat(scan_releases_in_directory("backlog", :backlog))
+          
+          # Sort by version (semantic version comparison)
+          sorted_releases = sort_releases_by_version(all_releases)
+          
+          ManagerResult.new(sorted_releases, true, nil)
+        rescue => e
+          ManagerResult.new([], false, "Error listing all releases: #{e.message}")
+        end
+
+        private
+
+        # Enhance release info with additional metadata
+        def enhance_release_info(basic_info, type)
+          return nil unless basic_info
+
+          path = basic_info.respond_to?(:path) ? basic_info.path : basic_info[:path]
+          version = basic_info.respond_to?(:version) ? basic_info.version : basic_info[:version]
+          name = basic_info.respond_to?(:name) ? basic_info.name : File.basename(path)
+
+          create_release_info_with_metadata(path, version, name, type)
+        end
+
+        # Create enhanced release info with metadata
+        def create_release_info_with_metadata(path, version, name, type)
+          task_count = count_tasks_in_release(path)
+          created_at = File.exist?(path) ? File.ctime(path) : nil
+          modified_at = File.exist?(path) ? File.mtime(path) : nil
+          
+          # Determine status based on task completion
+          status = determine_release_status(path, type)
+          
+          ReleaseInfo.new(path, version, name, type, status, task_count, created_at, modified_at)
+        end
+
+        # Create basic release info
+        def create_release_info(path, type)
+          name = File.basename(path)
+          version = extract_version_from_name(name)
+          create_release_info_with_metadata(path, version, name, type)
+        end
+
+        # Count tasks in a release directory
+        def count_tasks_in_release(path)
+          return 0 unless File.exist?(path) && File.directory?(path)
+          
+          tasks_dir = File.join(path, "tasks")
+          return 0 unless File.exist?(tasks_dir) && File.directory?(tasks_dir)
+          
+          Dir.glob(File.join(tasks_dir, "*.md")).count
+        end
+
+        # Determine release status based on task completion
+        def determine_release_status(path, type)
+          return "archived" if type == :done
+          return "active" if type == :current
+          return "planned" if type == :backlog
+          "unknown"
+        end
+
+        # Find potential releases in backlog directory
+        def find_potential_releases_in_backlog(backlog_path)
+          potential_releases = []
+          
+          Dir.entries(backlog_path).each do |entry|
+            next if entry.start_with?(".")
+            
+            entry_path = File.join(backlog_path, entry)
+            next unless File.directory?(entry_path)
+            
+            # Check if directory name suggests it's a versioned release
+            if entry.match?(/^v\.\d+\.\d+\.\d+/)
+              potential_releases << entry_path
+            end
+          end
+          
+          potential_releases
+        end
+
+        # Scan releases in a specific directory
+        def scan_releases_in_directory(directory_name, type)
+          releases = []
+          base_dir = File.join(@base_path, "dev-taskflow", directory_name)
+          
+          return releases unless File.exist?(base_dir) && File.directory?(base_dir)
+          
+          Dir.entries(base_dir).each do |entry|
+            next if entry.start_with?(".")
+            
+            entry_path = File.join(base_dir, entry)
+            next unless File.directory?(entry_path)
+            
+            releases << create_release_info(entry_path, type)
+          end
+          
+          releases
+        end
+
+        # Sort releases by semantic version
+        def sort_releases_by_version(releases)
+          releases.sort_by do |release|
+            version = release.version || release.name
+            parse_semantic_version(version)
+          end
+        end
+
+        # Parse semantic version for sorting
+        def parse_semantic_version(version_string)
+          # Extract version numbers from strings like "v.0.3.0-migration" or "v.0.1.0-foundation"
+          match = version_string.match(/v\.(\d+)\.(\d+)\.(\d+)/)
+          if match
+            [match[1].to_i, match[2].to_i, match[3].to_i]
+          else
+            # Fallback for non-semantic versions - sort alphabetically
+            [999, 999, 999, version_string]
+          end
+        end
+
+        # Extract version from directory name
+        def extract_version_from_name(name)
+          match = name.match(/^(v\.\d+\.\d+\.\d+)/)
+          match ? match[1] : name
+        end
+
+        # Find latest version from all releases
+        def find_latest_version(releases)
+          return "v.0.0.0" if releases.empty?  # Changed from v.0.1.0 to v.0.0.0
+          
+          # Get the highest version
+          latest_release = releases.max_by { |release| parse_semantic_version(release.version || release.name) }
+          latest_release.version || extract_version_from_name(latest_release.name)
+        end
+
+        # Bump minor version (e.g., v.0.3.0 -> v.0.4.0)
+        def bump_minor_version(version)
+          match = version.match(/^v\.(\d+)\.(\d+)\.(\d+)/)
+          if match
+            major, minor, patch = match[1].to_i, match[2].to_i, match[3].to_i
+            "v.#{major}.#{minor + 1}.#{patch}"
+          else
+            "v.0.1.0"  # Default fallback
+          end
+        end
+
+        # Find next task number for a version
+        def find_next_task_number(version)
+          # For now, start with task 1 for new versions
+          # This could be enhanced to scan existing tasks for the version
+          1
+        end
+      end
+    end
+  end
+end
