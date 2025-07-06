@@ -17,14 +17,14 @@
 #   Output to file for later processing:
 #     dev-tools/exe/generate-review-prompt --focus code --target HEAD~5..HEAD --output review-prompt.md
 
-require 'optparse'
-require 'pathname'
-require 'fileutils'
-require 'open3'
-require 'tmpdir'
+require "optparse"
+require "pathname"
+require "fileutils"
+require "open3"
+require "tmpdir"
 
 class ReviewPromptGenerator
-  VALID_FOCUSES = ['code', 'tests', 'docs'].freeze
+  VALID_FOCUSES = ["code", "tests", "docs"].freeze
   VALID_TARGETS = %w[staged unstaged working].freeze
   VALID_CONTEXTS = %w[auto none].freeze
 
@@ -32,7 +32,7 @@ class ReviewPromptGenerator
     @options = {
       focus: nil,
       target: nil,
-      context: 'auto',
+      context: "auto",
       output_file: nil,
       project_root: Dir.pwd,
       verbose: false,
@@ -75,26 +75,26 @@ class ReviewPromptGenerator
       opts.separator "Options:"
 
       opts.on("-f", "--focus FOCUS", "Review focus area(s): code, tests, docs, or combinations",
-              "Examples: 'code', 'tests', 'code tests', 'code tests docs'") do |focus|
+        "Examples: 'code', 'tests', 'code tests', 'code tests docs'") do |focus|
         @options[:focus] = focus
       end
 
       opts.on("-t", "--target TARGET", "Target to review: git range, file pattern, or special keyword",
-              "Git ranges: v.0.2.0..HEAD, HEAD~5..HEAD",
-              "File patterns: 'lib/**/*.rb', 'spec/**/*.rb'",
-              "Special: staged, unstaged, working") do |target|
+        "Git ranges: v.0.2.0..HEAD, HEAD~5..HEAD",
+        "File patterns: 'lib/**/*.rb', 'spec/**/*.rb'",
+        "Special: staged, unstaged, working") do |target|
         @options[:target] = target
       end
 
       opts.on("-c", "--context CONTEXT", "Project context loading: auto, none, or file path",
-              "auto: Load docs/{what-do-we-build,architecture,blueprint}.md",
-              "none: Skip project context loading",
-              "path: Load custom context file") do |context|
+        "auto: Load docs/{what-do-we-build,architecture,blueprint}.md",
+        "none: Skip project context loading",
+        "path: Load custom context file") do |context|
         @options[:context] = context
       end
 
       opts.on("-o", "--output FILE", "Output file for generated prompt",
-              "If not specified, generates: review-prompt-[timestamp].md") do |file|
+        "If not specified, generates: review-prompt-[timestamp].md") do |file|
         @options[:output_file] = file
       end
 
@@ -103,7 +103,7 @@ class ReviewPromptGenerator
       end
 
       opts.on("-m", "--model-hint MODEL", "Hint for target LLM model (affects prompt optimization)",
-              "Examples: gemini, claude, gpt") do |model|
+        "Examples: gemini, claude, gpt") do |model|
         @options[:model_hint] = model
       end
 
@@ -121,7 +121,7 @@ class ReviewPromptGenerator
   def validate_options
     unless @options[:focus]
       puts "Error: Focus area is required. Use --focus to specify."
-      puts "Valid focuses: #{VALID_FOCUSES.join(', ')} or combinations"
+      puts "Valid focuses: #{VALID_FOCUSES.join(", ")} or combinations"
       exit 1
     end
 
@@ -139,7 +139,7 @@ class ReviewPromptGenerator
     # Auto-generate output file name if not provided
     unless @options[:output_file]
       timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-      focus_slug = @options[:focus].gsub(/\s+/, '-')
+      focus_slug = @options[:focus].gsub(/\s+/, "-")
       @options[:output_file] = "review-prompt-#{focus_slug}-#{timestamp}.md"
     end
 
@@ -147,8 +147,8 @@ class ReviewPromptGenerator
     focus_areas = parse_focus_areas
     invalid_focuses = focus_areas - VALID_FOCUSES
     unless invalid_focuses.empty?
-      puts "Error: Invalid focus area(s): #{invalid_focuses.join(', ')}"
-      puts "Valid focuses: #{VALID_FOCUSES.join(', ')}"
+      puts "Error: Invalid focus area(s): #{invalid_focuses.join(", ")}"
+      puts "Valid focuses: #{VALID_FOCUSES.join(", ")}"
       exit 1
     end
   end
@@ -162,12 +162,12 @@ class ReviewPromptGenerator
     log_verbose "Resolving target content for: #{target}"
 
     case target
-    when 'staged'
-      get_git_diff('--staged')
-    when 'unstaged'
-      get_git_diff('')
-    when 'working'
-      get_git_diff('HEAD')
+    when "staged"
+      get_git_diff("--staged")
+    when "unstaged"
+      get_git_diff("")
+    when "working"
+      get_git_diff("HEAD")
     when /\.\./
       # Git range (e.g., v.0.2.0..HEAD, HEAD~5..HEAD)
       get_git_diff(target)
@@ -187,12 +187,12 @@ class ReviewPromptGenerator
 
   def get_git_diff(range_or_options)
     cmd = if range_or_options.empty?
-            'git diff --no-color'
-          elsif range_or_options.include?('--')
-            "git diff #{range_or_options} --no-color"
-          else
-            "git diff #{range_or_options} --no-color"
-          end
+      "git diff --no-color"
+    elsif range_or_options.include?("--")
+      "git diff #{range_or_options} --no-color"
+    else
+      "git diff #{range_or_options} --no-color"
+    end
 
     log_verbose "Executing: #{cmd}"
     output, status = Open3.capture2e(cmd, chdir: @options[:project_root])
@@ -213,9 +213,9 @@ class ReviewPromptGenerator
 
   def get_file_pattern_content(pattern)
     log_verbose "Resolving file pattern: #{pattern}"
-    
+
     files = Dir.glob(File.join(@options[:project_root], pattern))
-    
+
     if files.empty?
       puts "Warning: No files found matching pattern: #{pattern}"
       return "No files found matching pattern"
@@ -246,33 +246,31 @@ class ReviewPromptGenerator
     relative_path = Pathname.new(full_path).relative_path_from(Pathname.new(@options[:project_root]))
     extension = get_file_extension(full_path)
 
-    content = [
+    [
       "### File: #{relative_path}",
       "```#{extension}",
       File.read(full_path),
       "```"
     ].join("\n")
-
-    content
   end
 
   def get_file_extension(file_path)
     ext = File.extname(file_path)[1..]
     case ext
-    when 'rb' then 'ruby'
-    when 'md' then 'markdown'
-    when 'yml', 'yaml' then 'yaml'
-    when 'json' then 'json'
-    else ext || 'text'
+    when "rb" then "ruby"
+    when "md" then "markdown"
+    when "yml", "yaml" then "yaml"
+    when "json" then "json"
+    else ext || "text"
     end
   end
 
   def load_project_context
     case @options[:context]
-    when 'none'
+    when "none"
       log_verbose "Skipping project context loading"
-      return nil
-    when 'auto'
+      nil
+    when "auto"
       log_verbose "Loading automatic project context"
       load_default_project_context
     else
@@ -285,9 +283,9 @@ class ReviewPromptGenerator
   def load_default_project_context
     project_root = Pathname.new(@options[:project_root])
     context_files = [
-      'docs/what-do-we-build.md',
-      'docs/architecture.md', 
-      'docs/blueprint.md'
+      "docs/what-do-we-build.md",
+      "docs/architecture.md",
+      "docs/blueprint.md"
     ]
 
     context_parts = []
@@ -295,7 +293,7 @@ class ReviewPromptGenerator
       full_path = project_root / file_path
       if full_path.exist?
         log_verbose "Loading context file: #{file_path}"
-        context_parts << "## #{File.basename(file_path, '.md').gsub('-', ' ').titleize}"
+        context_parts << "## #{File.basename(file_path, ".md").tr("-", " ").titleize}"
         context_parts << File.read(full_path)
         context_parts << ""
       else
@@ -313,7 +311,7 @@ class ReviewPromptGenerator
 
   def load_custom_context(context_path)
     full_path = File.expand_path(context_path, @options[:project_root])
-    
+
     unless File.exist?(full_path)
       puts "Error: Custom context file not found: #{full_path}"
       exit 1
@@ -331,20 +329,20 @@ class ReviewPromptGenerator
       # Multiple focus areas - use primary and add combination instructions
       primary_focus = focus_areas.first
       prompt = load_single_focus_prompt(primary_focus)
-      
+
       # Add combination instructions
-      combination_key = focus_areas.sort.join(' ')
+      combination_key = focus_areas.sort.join(" ")
       prompt + build_combination_instructions(combination_key)
     end
   end
 
   def load_single_focus_prompt(focus)
     template_path = File.join(
-      @options[:project_root], 
-      'dev-handbook', 
-      'templates', 
-      "review-#{focus}", 
-      'system.prompt.md'
+      @options[:project_root],
+      "dev-handbook",
+      "templates",
+      "review-#{focus}",
+      "system.prompt.md"
     )
 
     unless File.exist?(template_path)
@@ -358,18 +356,18 @@ class ReviewPromptGenerator
 
   def build_combination_instructions(combination_key)
     instructions = "\n\n# ACTIVE FOCUS COMBINATION\n\n"
-    
-    case combination_key
-    when 'code tests'
-      instructions += "Apply 'code tests' focus combination instructions from the system prompt."
-    when 'code docs'
-      instructions += "Apply 'code docs' focus combination instructions from the system prompt."
-    when 'docs tests'
-      instructions += "Apply 'docs tests' focus combination instructions from the system prompt."
-    when 'code docs tests'
-      instructions += "Apply 'code tests docs' focus combination instructions from the system prompt."
+
+    instructions += case combination_key
+    when "code tests"
+      "Apply 'code tests' focus combination instructions from the system prompt."
+    when "code docs"
+      "Apply 'code docs' focus combination instructions from the system prompt."
+    when "docs tests"
+      "Apply 'docs tests' focus combination instructions from the system prompt."
+    when "code docs tests"
+      "Apply 'code tests docs' focus combination instructions from the system prompt."
     else
-      instructions += "This is a custom focus combination. Adapt the review to cover all specified areas comprehensively."
+      "This is a custom focus combination. Adapt the review to cover all specified areas comprehensively."
     end
 
     instructions
@@ -393,7 +391,7 @@ class ReviewPromptGenerator
     prompt_parts << ""
     prompt_parts << "# CONTENT TO REVIEW"
     prompt_parts << ""
-    if @options[:target].include?('..') || VALID_TARGETS.include?(@options[:target])
+    if @options[:target].include?("..") || VALID_TARGETS.include?(@options[:target])
       prompt_parts << "## Code Diff"
       prompt_parts << "```diff"
       prompt_parts << target_content
@@ -407,7 +405,7 @@ class ReviewPromptGenerator
     prompt_parts << ""
     prompt_parts << "# REVIEW INSTRUCTIONS"
     prompt_parts << ""
-    prompt_parts << "Please perform a comprehensive #{focus_areas.join(' and ')} review of the provided content."
+    prompt_parts << "Please perform a comprehensive #{focus_areas.join(" and ")} review of the provided content."
     prompt_parts << "Follow the structured format specified in the system prompt."
     prompt_parts << "Focus on actionable recommendations with specific file locations and line numbers where applicable."
 
@@ -417,11 +415,11 @@ class ReviewPromptGenerator
       prompt_parts << "# MODEL OPTIMIZATION"
       prompt_parts << ""
       case @options[:model_hint].downcase
-      when 'gemini'
+      when "gemini"
         prompt_parts << "Optimize response for Google Gemini: Use clear section headers and bullet points."
-      when 'claude'
+      when "claude"
         prompt_parts << "Optimize response for Claude: Provide detailed analysis with specific examples."
-      when 'gpt'
+      when "gpt"
         prompt_parts << "Optimize response for GPT: Use structured format with consistent terminology."
       end
     end
@@ -432,7 +430,7 @@ class ReviewPromptGenerator
   def write_prompt_file(content)
     output_path = File.expand_path(@options[:output_file], @options[:project_root])
     FileUtils.mkdir_p(File.dirname(output_path))
-    
+
     File.write(output_path, content)
     log_verbose "Wrote #{content.length} bytes to #{output_path}"
   rescue => e
@@ -448,7 +446,7 @@ end
 # String extensions for titleization
 class String
   def titleize
-    self.split(/[\s_-]+/).map(&:capitalize).join(' ')
+    split(/[\s_-]+/).map(&:capitalize).join(" ")
   end
 end
 

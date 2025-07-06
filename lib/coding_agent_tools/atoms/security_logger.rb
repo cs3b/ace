@@ -121,7 +121,7 @@ module CodingAgentTools
           rescue
             return "[invalid-path]"
           end
-          
+
           # For path traversal attempts, hide the path components
           components = Pathname.new(expanded).each_filename.to_a
           if components.length > 2

@@ -73,14 +73,14 @@ module CodingAgentTools
           def handle_multiple_tasks(task_manager, options)
             # Get all tasks and filter for actionable ones
             all_result = task_manager.get_all_tasks
-            
+
             unless all_result.success?
               error_output("Error: #{all_result.message}")
               return
             end
 
             actionable_tasks = filter_actionable_tasks(all_result.tasks)
-            
+
             if actionable_tasks.empty?
               puts "No actionable tasks found"
               return
@@ -88,7 +88,7 @@ module CodingAgentTools
 
             # Limit results
             limited_tasks = actionable_tasks.take(options[:limit])
-            
+
             limited_tasks.each_with_index do |task, index|
               puts "" if index > 0  # Add blank line between tasks
               display_task_info(task, index + 1, limited_tasks.size)
@@ -104,12 +104,12 @@ module CodingAgentTools
             if index && total
               puts "Task #{index}/#{total}:"
             end
-            
+
             puts "  ID:    #{task.id}"
             puts "  Title: #{task.title || extract_title_from_content(task)}"
             puts "  Path:  #{task.path}"
             puts "  Status: #{task.status}"
-            
+
             if task.dependencies && !task.dependencies.empty?
               deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
               puts "  Dependencies: #{deps}"

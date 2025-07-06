@@ -107,7 +107,7 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
     context "when an error occurs during installation" do
       it "records errors and continues with other files" do
         # Make target directory read-only to cause write errors
-        File.chmod(0444, target_directory)
+        File.chmod(0o444, target_directory)
 
         result = installer.install_all(verbose: false)
 
@@ -116,7 +116,7 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
         expect(result[:errors].map { |e| e[:alias] }).to contain_exactly("tn", "llm")
       ensure
         # Restore permissions for cleanup
-        File.chmod(0755, target_directory)
+        File.chmod(0o755, target_directory)
       end
     end
   end

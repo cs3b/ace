@@ -82,14 +82,14 @@ module CodingAgentTools
         verbose = options.fetch(:verbose, false)
 
         config = CodingAgentTools::Atoms::YamlReader.read_file(config_path)
-        
+
         unless config["aliases"]&.key?(alias_name)
           raise CodingAgentTools::Error, "Alias '#{alias_name}' not found in configuration"
         end
 
         alias_config = config["aliases"][alias_name]
         content = CodingAgentTools::Molecules::BinstubGenerator.generate_shell_binstub(alias_name, alias_config)
-        
+
         file_path = File.join(target_directory, alias_name)
 
         if File.exist?(file_path) && !force
@@ -129,7 +129,7 @@ module CodingAgentTools
       # @param verbose [Boolean] Whether to provide verbose output
       def write_binstub_file(file_path, content, verbose)
         File.write(file_path, content)
-        File.chmod(0755, file_path)  # Make executable
+        File.chmod(0o755, file_path)  # Make executable
         puts "Installed: #{File.basename(file_path)}" if verbose
       end
     end

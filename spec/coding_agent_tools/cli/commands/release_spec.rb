@@ -76,19 +76,17 @@ RSpec.describe "Release CLI Commands" do
   describe CodingAgentTools::Cli::Commands::Release::GenerateId do
     subject(:command) { described_class.new }
 
-    context "when generating single ID" do
-      it "returns task ID in text format" do
-        expect { expect(command.call).to eq(0) }.to output(/v\.\d+\.\d+\.\d+\+task\.\d+/).to_stdout
+    context "when generating release" do
+      it "returns version and path in text format" do
+        expect { expect(command.call).to eq(0) }.to output(/version: v\.\d+\.\d+\.\d+\npath: .*/).to_stdout
       end
 
-      it "returns task ID in JSON format" do
+      it "returns release info in JSON format" do
         expect { expect(command.call(format: "json")).to eq(0) }.to output(/"success": true/).to_stdout
       end
-    end
 
-    context "when generating multiple IDs" do
-      it "returns multiple task IDs" do
-        expect { expect(command.call(count: 3)).to eq(0) }.to output(/Generated 3 task IDs/).to_stdout
+      it "accepts codename parameter" do
+        expect { expect(command.call(codename: "testname")).to eq(0) }.to output(/version: v\.\d+\.\d+\.\d+\npath: .*testname/).to_stdout
       end
     end
   end

@@ -32,7 +32,7 @@ module CodingAgentTools
             limit ||= options[:limit] || 1
 
             release_version = version || detect_current_version
-            
+
             unless release_version
               error_output("Error: Could not determine release version. Please provide version argument.")
               return 1
@@ -63,12 +63,10 @@ module CodingAgentTools
 
             # Extract version from directory name
             dir_name = File.basename(current_release_path)
-            if dir_name.match(/^(v\.\d+\.\d+\.\d+)/)
+            if dir_name =~ /^(v\.\d+\.\d+\.\d+)/
               $1
-            elsif dir_name.match(/^(v\.\d+\.\d+)/)
+            elsif dir_name =~ /^(v\.\d+\.\d+)/
               $1
-            else
-              nil
             end
           end
 
@@ -94,11 +92,11 @@ module CodingAgentTools
 
             # Find all task files and extract numbers
             task_files = Dir.glob(File.join(tasks_dir, "*.md"))
-            
+
             max_number = 0
             task_files.each do |file|
               basename = File.basename(file, ".md")
-              if basename.match(/#{Regexp.escape(version)}\+task\.(\d+)/)
+              if basename =~ /#{Regexp.escape(version)}\+task\.(\d+)/
                 task_num = $1.to_i
                 max_number = [max_number, task_num].max
               end
@@ -120,7 +118,7 @@ module CodingAgentTools
 
               Dir.glob(File.join(base_dir, "*")).each do |path|
                 next unless File.directory?(path)
-                
+
                 dir_name = File.basename(path)
                 if dir_name.include?(version)
                   return path
@@ -133,12 +131,12 @@ module CodingAgentTools
 
           def generate_task_ids(version, start_number, count)
             if count == 1
-              puts "#{version}+task.#{start_number.to_s.rjust(2, '0')}"
+              puts "#{version}+task.#{start_number.to_s.rjust(2, "0")}"
             else
               puts "Generated #{count} task IDs:"
               count.times do |i|
                 task_number = start_number + i
-                puts "  #{version}+task.#{task_number.to_s.rjust(2, '0')}"
+                puts "  #{version}+task.#{task_number.to_s.rjust(2, "0")}"
               end
             end
           end
