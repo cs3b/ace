@@ -79,7 +79,7 @@ RSpec.describe "Task CLI Commands" do
           double("Task",
                  id: "v.0.3.0+task.01",
                  title: "Test Task", 
-                 file_path: "/path/to/task.md",
+                 path: "/path/to/task.md",
                  status: "pending",
                  dependencies: [])
         end
