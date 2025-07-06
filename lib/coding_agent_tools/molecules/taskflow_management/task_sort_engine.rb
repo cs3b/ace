@@ -69,65 +69,78 @@ module CodingAgentTools
         
         private
         
-        # Apply implementation-order sorting (topological sort with enhanced ordering)
+        # Apply implementation-order sorting (ID-based with dependency constraints)
         def self.apply_implementation_order_sort(tasks, sorts)
           # Create task map
           task_map = {}
           tasks.each { |task| task_map[task.id] = task }
           
-          # Initialize tracking variables
-          sorted_tasks = []
-          processed_ids = Set.new
+          # Start with tasks sorted by ID (natural order)
+          sorted_tasks = tasks.sort_by do |task|
+            [
+              get_sort_metadata(task),                    # Optional sort metadata
+              parse_task_sequential_number(task.id),     # Task sequential number
+              task.id.to_s                              # Task ID for deterministic ordering
+            ]
+          end
           
-          # Calculate in-degrees and build dependency graph
-          in_degree = Hash.new(0)
+          # Build dependency graph
           task_dependents = Hash.new { |h, k| h[k] = [] }
+          task_dependencies = Hash.new { |h, k| h[k] = [] }
           
           tasks.each do |task|
             dependencies = extract_dependencies(task)
             dependencies.each do |dep_id|
               # Only consider intra-release dependencies
               if task_map.key?(dep_id)
-                in_degree[task.id] += 1
                 task_dependents[dep_id] << task.id
+                task_dependencies[task.id] << dep_id
               end
             end
           end
           
-          # Iteratively process tasks with zero in-degree
-          loop do
-            # Find tasks ready to process (in-degree 0 and not processed)
-            ready_task_ids = task_map.keys.select do |task_id|
-              in_degree[task_id] == 0 && !processed_ids.include?(task_id)
-            end
+          # Apply dependency constraints with minimal reordering
+          # Use a simple approach: for each task, ensure all its dependencies appear before it
+          max_iterations = sorted_tasks.length * 2
+          iteration = 0
+          
+          while iteration < max_iterations
+            iteration += 1
+            made_changes = false
             
-            break if ready_task_ids.empty?
-            
-            # Sort this batch using enhanced implementation order logic
-            ready_task_ids.sort_by! do |task_id|
-              task = task_map[task_id]
-              [
-                get_sort_metadata(task),                    # Optional sort metadata
-                parse_task_sequential_number(task.id),     # Task sequential number
-                task.id.to_s                              # Task ID for deterministic ordering
-              ]
-            end
-            
-            # Process each ready task
-            ready_task_ids.each do |task_id|
-              task = task_map[task_id]
-              sorted_tasks << task
-              processed_ids.add(task_id)
+            # Check each task to see if it needs to be moved
+            (0...sorted_tasks.length).each do |i|
+              task = sorted_tasks[i]
+              dependencies = task_dependencies[task.id]
               
-              # Update in-degree for dependent tasks
-              task_dependents[task_id].each do |dependent_id|
-                in_degree[dependent_id] -= 1 if task_map.key?(dependent_id)
+              next if dependencies.empty?
+              
+              # Find the latest position of any dependency
+              latest_dep_position = -1
+              dependencies.each do |dep_id|
+                dep_position = sorted_tasks.find_index { |t| t.id == dep_id }
+                if dep_position && dep_position > latest_dep_position
+                  latest_dep_position = dep_position
+                end
+              end
+              
+              # If this task appears before its latest dependency, move it after
+              if latest_dep_position >= 0 && i <= latest_dep_position
+                # Remove task from current position
+                task_to_move = sorted_tasks.delete_at(i)
+                # Insert after the latest dependency
+                sorted_tasks.insert(latest_dep_position, task_to_move)
+                made_changes = true
+                break  # Restart the check after making a change
               end
             end
+            
+            # If no changes were made, we're done
+            break unless made_changes
           end
           
-          # Check for cycles
-          cycle_detected = sorted_tasks.length < tasks.length
+          # Check for cycles (if we hit max iterations)
+          cycle_detected = iteration >= max_iterations
           
           SortResult.new(
             sorted_tasks,
