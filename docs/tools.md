@@ -4,8 +4,8 @@
 
 This document provides a comprehensive reference for all current development tools in the Coding Agent Tools project. The tools are organized into two main categories:
 
-- **`bin/`** - Development tools used when working on the project itself
-- **`dev-tools/exe/`** - The actual gem executables that users will run after installing the gem
+- **Development Tools** - Project-specific tools accessed via `bin/` for development workflows
+- **Gem Executables** - User-facing tools available directly by name via fish integration
 
 ## Setup Requirements
 
@@ -165,63 +165,124 @@ bin/run
 bin/setup
 ```
 
-## Gem Executables (`dev-tools/exe/`)
+## Gem Executables (available via fish integration)
 
 ### LLM Integration Tools
 
 #### `llm-query` - Unified LLM Query Interface
+
+Query multiple LLM providers with unified syntax and cost tracking.
+
 ```bash
-# Query any supported LLM provider
-dev-tools/exe/llm-query google "What is Ruby?"
-dev-tools/exe/llm-query anthropic "Explain ATOM architecture"
-dev-tools/exe/llm-query openai "Write a function"
+# Query with cost tracking and provider selection
+llm-query anthropic "Explain ATOM architecture" --track-cost
+
+# Multi-provider usage with model specification
+llm-query google "What is Ruby?" --model gemini-pro
 ```
+
+**Key Features:**
+- Multi-provider support: Google, OpenAI, Anthropic, Local models
+- Real-time cost tracking across all providers
+- Response caching with performance optimization
 
 #### `llm-models` - List Available Models
-```bash
-# List all available models from all providers
-dev-tools/exe/llm-models
 
-# List models from specific provider
-dev-tools/exe/llm-models google
-dev-tools/exe/llm-models anthropic
-dev-tools/exe/llm-models openai
+Discover available models across all configured LLM providers with caching.
+
+```bash
+# List models from specific provider with details
+llm-models google --detailed
+
+# Quick model availability check across all providers
+llm-models --all
 ```
+
+**Key Features:**
+- Cross-provider model discovery with intelligent caching
+- Model capability and pricing information
+- Availability status with connection testing
 
 #### `llm-usage-report` - Usage and Cost Analysis
-```bash
-# Generate comprehensive usage report
-dev-tools/exe/llm-usage-report
 
-# Generate report for specific time period
-dev-tools/exe/llm-usage-report --since "2024-01-01"
+Generate comprehensive usage and cost reports for LLM interactions.
+
+```bash
+# Monthly cost analysis with breakdown by provider
+llm-usage-report --monthly --breakdown
+
+# Custom date range with detailed metrics
+llm-usage-report --since "2024-01-01" --verbose
 ```
+
+**Key Features:**
+- Detailed cost analysis with provider breakdown
+- Usage patterns and trend analysis
+- Export capabilities for accounting integration
 
 ### Main CLI Interface
 
 #### `coding_agent_tools` - Main CLI
-```bash
-# Display available commands
-dev-tools/exe/coding_agent_tools
 
-# Access help for specific commands
-dev-tools/exe/coding_agent_tools help
+Primary command-line interface providing access to all gem functionality.
+
+```bash
+# Show available commands and subcommands
+coding_agent_tools help
+
+# Access specific command help
+coding_agent_tools llm help
 ```
+
+**Key Features:**
+- Unified entry point for all gem commands
+- Structured subcommand organization
+- Consistent help and documentation access
+
+### Task Management
+
+#### `task-manager` - Project Task Management
+
+Advanced task management for project workflows with dependency tracking.
+
+```bash
+# Find next available task with priority consideration
+task-manager next --priority high
+
+# List tasks with status filtering
+task-manager list --status pending --current
+```
+
+**Key Features:**
+- Intelligent task selection with dependency resolution
+- Cross-release task tracking and status management  
+- Integration with documentation-based task workflows
 
 ### Code Review & Analysis
 
 #### `generate-review-prompt` - Advanced Review Generator
+
+Generate comprehensive code review prompts from git changes and project context.
+
 ```bash
-# Generate comprehensive code review prompt
-dev-tools/exe/generate-review-prompt
+# Generate review prompt from current git diff
+generate-review-prompt --context-lines 5
+
+# Include file-specific analysis with architectural considerations
+generate-review-prompt --detailed --arch-focus
 ```
+
+**Key Features:**
+- Git-aware change analysis with context extraction
+- Project-specific architectural guidance integration
+- Customizable review depth and focus areas
 
 ## Tool Categories
 
 ### By Function
 
 - **Git Operations**: `gc`, `gl`, `gp`, `gpull`
-- **Task Management**: `tn`, `tr`, `tal`, `tnid`, `rc`
+- **Task Management**: `tn`, `tr`, `tal`, `tnid`, `rc`, `task-manager`
 - **Quality Assurance**: `test`, `lint`, `lint-cassettes`, `lint-security`, `build`
 - **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`
 - **Code Review**: `cr`, `cr-docs`, `test-review`, `generate-review-prompt`
@@ -229,60 +290,61 @@ dev-tools/exe/generate-review-prompt
 
 ### By Target Users
 
-- **AI Coding Agents**: `tn`, `tr`, `tal`, `llm-query`, `llm-models`, `gc`
+- **AI Coding Agents**: `tn`, `tr`, `tal`, `task-manager`, `llm-query`, `llm-models`, `gc`
 - **Human Developers**: `console`, `tree`, `cr`, `test`, `lint`, `build`
-- **Both**: `llm-usage-report`, `coding_agent_tools`
+- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`
 
 ## Common Workflows
 
 ### For AI Coding Agents
 
 ```bash
-# 1. Find next task
-bin/tn
+# 1. Find next task using advanced task manager
+task-manager next --priority high
 
-# 2. Query LLM for guidance
-dev-tools/exe/llm-query google "How to implement feature X?"
+# 2. Query LLM for guidance with cost tracking
+llm-query google "How to implement feature X?" --track-cost
 
-# 3. Run tests
-bin/test
+# 3. Run tests and quality checks
+bin/test && bin/lint
 
-# 4. Commit changes
+# 4. Commit changes with intention-based message
 bin/gc -i "implement feature X"
 ```
 
 ### For Human Developers
 
 ```bash
-# 1. Setup environment
+# 1. Setup development environment
 bin/setup
 
-# 2. Run quality checks
-bin/test && bin/lint
+# 2. Run comprehensive quality checks
+bin/test && bin/lint && bin/lint-security
 
-# 3. Review code
-bin/cr
+# 3. Generate and review code analysis
+generate-review-prompt --detailed
 
-# 4. Build gem
+# 4. Build and verify gem
 bin/build
 ```
 
 ## Migration Status
 
-**Current State**: The project is transitioning from `bin/` to `dev-tools/exe/` for user-facing commands. Some commands exist in both locations during this migration period.
+**Current State**: The project has successfully implemented fish shell integration for gem executables. All `dev-tools/exe/` tools are available directly by name without path prefixes.
 
-**Future Direction**: 
-- User-facing commands will be moved to `dev-tools/exe/`
-- Development tools will remain in `bin/`
-- Legacy commands will be deprecated gradually
+**Tool Access Methods**: 
+- **Development tools**: Use `bin/` prefix for project-specific development workflows
+- **Gem executables**: Use tool name directly (fish integration provides automatic path resolution)
+- **Legacy references**: Old `dev-tools/exe/` paths still work but are not recommended
 
 ## Notes
 
-- All tools support `--help` flag for detailed usage information
-- Most tools integrate with the project's security framework
-- LLM tools cache results for improved performance
-- Task management tools integrate with the `dev-taskflow/` documentation system
-- Git tools operate across all 4 repositories in the multi-repository structure
+- **Fish Integration**: All gem executables are available directly by name after setup
+- **Development Tools**: Project-specific `bin/` tools require the `bin/` prefix for clarity
+- **Security Framework**: Most tools integrate with the project's comprehensive security validation
+- **Performance**: LLM tools include intelligent caching and cost tracking
+- **Multi-Repository**: Git tools operate seamlessly across all 4 project repositories
+- **Task Integration**: Task management tools work with documentation-based workflows in `dev-taskflow/`
 
 ---
 
