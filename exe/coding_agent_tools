@@ -8,6 +8,10 @@ $LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
 
 require "coding_agent_tools/cli" # Loads dry/cli and our command registry
 
+# Register all commands
+# CodingAgentTools::Cli::Commands.register_llm_commands  # Skip LLM for now due to dependency issues
+CodingAgentTools::Cli::Commands.register_task_commands
+
 begin
   Dry::CLI.new(CodingAgentTools::Cli::Commands).call
 rescue Dry::CLI::Error => e
