@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    coding_agent_tools (0.1.0)
+    coding_agent_tools (0.2.71)
       addressable (~> 2.8)
       csv (~> 3.0)
       dotenv (~> 2.0)
