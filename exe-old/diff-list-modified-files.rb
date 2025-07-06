@@ -18,11 +18,11 @@
 # Example:
 #   diff-list-modified-files --diff changes.diff --format md --filter-include "*.rb,*.md" --filter-exclude "test/*" --output report.md
 
-require 'optparse'
-require 'fileutils'
+require "optparse"
+require "fileutils"
 
 options = {
-  format: 'md',
+  format: "md",
   filter_include: nil,
   filter_exclude: nil,
   diff_file: nil,
@@ -32,27 +32,27 @@ options = {
 opts = OptionParser.new do |opts|
   opts.banner = "Usage: diff-list-modified-files [options]"
 
-  opts.on('-d', '--diff FILE', 'Path to diff file (if omitted, reads from STDIN)') do |file|
+  opts.on("-d", "--diff FILE", "Path to diff file (if omitted, reads from STDIN)") do |file|
     options[:diff_file] = file
   end
 
-  opts.on('-f', '--format FORMAT', 'Output format: list or md (default: md)') do |format|
+  opts.on("-f", "--format FORMAT", "Output format: list or md (default: md)") do |format|
     options[:format] = format
   end
 
-  opts.on('--filter-include PATTERNS', 'Comma-separated glob patterns to include') do |patterns|
-    options[:filter_include] = patterns.split(',').map(&:strip)
+  opts.on("--filter-include PATTERNS", "Comma-separated glob patterns to include") do |patterns|
+    options[:filter_include] = patterns.split(",").map(&:strip)
   end
 
-  opts.on('--filter-exclude PATTERNS', 'Comma-separated glob patterns to exclude') do |patterns|
-    options[:filter_exclude] = patterns.split(',').map(&:strip)
+  opts.on("--filter-exclude PATTERNS", "Comma-separated glob patterns to exclude") do |patterns|
+    options[:filter_exclude] = patterns.split(",").map(&:strip)
   end
 
-  opts.on('-o', '--output FILE', 'Output file path (default: STDOUT)') do |file|
+  opts.on("-o", "--output FILE", "Output file path (default: STDOUT)") do |file|
     options[:output] = file
   end
 
-  opts.on('-h', '--help', 'Displays help') do
+  opts.on("-h", "--help", "Displays help") do
     puts opts
     exit
   end
@@ -61,15 +61,15 @@ end
 begin
   opts.parse!(ARGV)
 rescue OptionParser::InvalidOption => e
-  STDERR.puts e.message
+  warn e.message
   exit 1
 end
 
 # Read diff content from file or STDIN
-diff_content = ''
+diff_content = ""
 if options[:diff_file]
   unless File.exist?(options[:diff_file])
-    STDERR.puts "Diff file #{options[:diff_file]} does not exist."
+    warn "Diff file #{options[:diff_file]} does not exist."
     exit 1
   end
   diff_content = File.read(options[:diff_file])
@@ -81,11 +81,11 @@ end
 # Look for lines starting with "+++ " that indicate the new file path.
 modified_files = []
 diff_content.each_line do |line|
-  if line.start_with?('+++ ')
+  if line.start_with?("+++ ")
     # Remove the '+++ ' prefix and any leading markers such as "a/" or "b/"
     path = line[4..-1].strip
-    next if path == '/dev/null'
-    path.sub!(/^(a|b)\//, '')
+    next if path == "/dev/null"
+    path.sub!(/^(a|b)\//, "")
     modified_files << path unless path.empty?
   end
 end
@@ -135,7 +135,7 @@ modified_files.sort!
 # Generate output.
 output_str = ""
 
-if options[:format] == 'list'
+if options[:format] == "list"
   # List format: each file on a separate line.
   output_str = modified_files.join("\n")
 else
@@ -169,7 +169,7 @@ if options[:output]
     File.write(options[:output], output_str)
     puts "Output written to #{options[:output]}"
   rescue => e
-    STDERR.puts "Error writing output file: #{e.message}"
+    warn "Error writing output file: #{e.message}"
     exit 1
   end
 else

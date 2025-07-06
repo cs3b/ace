@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # get-recent-git-log: Show recent git log for one or more repos, with options for submodules
-require 'optparse'
-require 'time'
+require "optparse"
+require "time"
 
 # Parse --last and --include flags
 def parse_last_arg(arg)
@@ -19,38 +19,38 @@ end
 
 opts = {include_dev_handbook: false, include_dev_taskflow: false}
 OptionParser.new do |opt|
-  opt.on('--last PERIOD', '-last PERIOD', 'Time window (e.g. 2.hours, 1.day)') { |v| opts[:last] = v }
-  opt.on('--include-dev-handbook', 'Include dev-handbook submodule') { opts[:include_dev_handbook] = true }
-  opt.on('--include-dev-taskflow', 'Include dev-taskflow submodule') { opts[:include_dev_taskflow] = true }
+  opt.on("--last PERIOD", "-last PERIOD", "Time window (e.g. 2.hours, 1.day)") { |v| opts[:last] = v }
+  opt.on("--include-dev-handbook", "Include dev-handbook submodule") { opts[:include_dev_handbook] = true }
+  opt.on("--include-dev-taskflow", "Include dev-taskflow submodule") { opts[:include_dev_taskflow] = true }
 end.parse!(ARGV)
 
-since_seconds = parse_last_arg(opts[:last] || '1.day')
+since_seconds = parse_last_arg(opts[:last] || "1.day")
 since_time = Time.now - since_seconds
-since_str = since_time.strftime('%Y-%m-%dT%H:%M:%S')
+since_str = since_time.strftime("%Y-%m-%dT%H:%M:%S")
 
 # Discover submodule paths if needed
 dev_handbook_path = nil
 dev_taskflow_path = nil
-if File.exist?('.gitmodules')
-  File.readlines('.gitmodules').each do |line|
+if File.exist?(".gitmodules")
+  File.readlines(".gitmodules").each do |line|
     dev_handbook_path = $1.strip if line =~ /path = (dev-handbook)/
     dev_taskflow_path = $1.strip if line =~ /path = (dev-taskflow)/
   end
 end
 
-repos = [['.', 'main']]
-repos << [dev_handbook_path, 'dev-handbook'] if opts[:include_dev_handbook] && dev_handbook_path
-repos << [dev_taskflow_path, 'dev-taskflow'] if opts[:include_dev_taskflow] && dev_taskflow_path
+repos = [[".", "main"]]
+repos << [dev_handbook_path, "dev-handbook"] if opts[:include_dev_handbook] && dev_handbook_path
+repos << [dev_taskflow_path, "dev-taskflow"] if opts[:include_dev_taskflow] && dev_taskflow_path
 
 entries = []
 repos.each do |path, label|
   Dir.chdir(path) do
     log = `git log --since='#{since_str}' --pretty=format:'%ct|%h|%an|%B<<END>>'`
-    log.split('<<END>>').each do |entry|
+    log.split("<<END>>").each do |entry|
       next if entry.strip.empty?
       header, *msg_lines = entry.strip.lines
       next unless header
-      ts, sha, author = header.strip.split('|', 3)
+      ts, sha, author = header.strip.split("|", 3)
       msg = msg_lines.join.strip
       entries << {repo: label, ts: ts.to_i, sha: sha, author: author, msg: msg}
     end
@@ -60,6 +60,6 @@ end
 entries.sort_by! { |e| -e[:ts] }
 
 entries.each do |e|
-  t = Time.at(e[:ts]).strftime('%Y-%m-%d %H:%M')
+  t = Time.at(e[:ts]).strftime("%Y-%m-%d %H:%M")
   puts "[#{e[:repo]}] #{t} #{e[:sha]} #{e[:author]}:\n#{e[:msg]}\n---"
 end

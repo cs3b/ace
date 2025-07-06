@@ -21,10 +21,10 @@ module CodingAgentTools
         description = alias_config["description"]
         execution_context = alias_config["execution_context"] || "dev_tools"
 
-        if command
-          target_command = "./exe/#{executable} #{command}"
+        target_command = if command
+          "./exe/#{executable} #{command}"
         else
-          target_command = "./exe/#{executable}"
+          "./exe/#{executable}"
         end
 
         case execution_context

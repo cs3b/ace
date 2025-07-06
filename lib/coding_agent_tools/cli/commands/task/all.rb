@@ -58,7 +58,7 @@ module CodingAgentTools
           def display_header(result, options)
             puts "All Tasks (#{result.tasks.size} total):"
             puts "=" * 50
-            
+
             unless result.fully_sorted?
               if result.has_cycles?
                 puts colorize("⚠️  WARNING: Dependency cycles detected!", :yellow)
@@ -85,7 +85,7 @@ module CodingAgentTools
             puts "     Title: #{task.title || extract_title_from_content(task)}"
             puts "     Status: #{status_display}"
             puts "     Path: #{task.path}"
-            
+
             if task.dependencies && !task.dependencies.empty?
               deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
               puts "     Dependencies: #{deps}"

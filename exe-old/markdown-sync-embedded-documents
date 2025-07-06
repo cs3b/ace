@@ -41,12 +41,12 @@ class TemplateSync
   end
 
   def run
-    puts "#{@dry_run ? 'DRY RUN MODE - No files will be modified' : 'Synchronizing templates'}"
+    puts "#{@dry_run ? "DRY RUN MODE - No files will be modified" : "Synchronizing templates"}"
     puts "Scanning workflow files in: #{@path}"
     puts
 
     workflow_files = find_workflow_files(@path)
-    
+
     if workflow_files.empty?
       puts "No workflow files found in #{@path}"
       return 0
@@ -60,12 +60,12 @@ class TemplateSync
     end
 
     print_summary
-    
+
     if @commit && @changes_made && !@dry_run
       commit_changes
     end
 
-    @stats[:errors] > 0 ? 1 : 0
+    (@stats[:errors] > 0) ? 1 : 0
   end
 
   private
@@ -74,7 +74,7 @@ class TemplateSync
     pattern = File.join(base_path, "**/*.wf.md")
     debug("Scanning directory: #{base_path}")
     debug("Using pattern: #{pattern}")
-    
+
     files = Dir.glob(pattern)
     debug("Found #{files.length} workflow files")
     files
@@ -87,14 +87,14 @@ class TemplateSync
     begin
       content = File.read(file_path)
       templates = extract_templates(content)
-      
+
       if templates.empty?
         info("  No templates found")
         return
       end
 
       debug("  Found #{templates.length} template(s)")
-      
+
       updated_content = content
       file_changed = false
 
@@ -120,7 +120,6 @@ class TemplateSync
         File.write(file_path, updated_content)
         debug("  Wrote updated content to #{file_path}")
       end
-
     rescue => e
       puts "  ❌ Error processing file: #{e.message}"
       @stats[:errors] += 1
@@ -130,11 +129,11 @@ class TemplateSync
 
   def extract_templates(content)
     templates = []
-    
+
     # Extract from new <documents> format
     content.scan(/<documents>(.*?)<\/documents>/m) do |documents_section|
       section_content = documents_section[0]
-      
+
       # Process <template> tags
       section_content.scan(/<template\s+path="([^"]+)">(.*?)<\/template>/m) do |path, template_content|
         templates << {
@@ -144,7 +143,7 @@ class TemplateSync
         }
         debug("    Extracted template from <documents>: #{path}")
       end
-      
+
       # Process <guide> tags
       section_content.scan(/<guide\s+path="([^"]+)">(.*?)<\/guide>/m) do |path, guide_content|
         templates << {
@@ -155,11 +154,11 @@ class TemplateSync
         debug("    Extracted guide from <documents>: #{path}")
       end
     end
-    
+
     # Extract from legacy <templates> format (backward compatibility)
     content.scan(/<templates>(.*?)<\/templates>/m) do |templates_section|
       section_content = templates_section[0]
-      
+
       section_content.scan(/<template\s+path="([^"]+)">(.*?)<\/template>/m) do |path, template_content|
         templates << {
           path: path,
@@ -208,10 +207,10 @@ class TemplateSync
     # Compare content
     if content_differs?(embedded_content, file_content)
       debug("    Content differs, updating...")
-      
+
       if @dry_run
         show_diff(embedded_content, file_content, template_path)
-        return { status: :updated }
+        {status: :updated}
       else
         # Update the embedded content
         updated_content = update_embedded_document(
@@ -220,14 +219,14 @@ class TemplateSync
           file_content,
           document_type
         )
-        return {
+        {
           status: :updated,
           content: updated_content
         }
       end
     else
       debug("    Content is up-to-date")
-      return { status: :up_to_date }
+      {status: :up_to_date}
     end
   end
 
@@ -238,7 +237,7 @@ class TemplateSync
 
   def normalize_content(content)
     # Remove leading/trailing whitespace and normalize line endings
-    content.strip.gsub(/\r\n/, "\n")
+    content.strip.gsub("\r\n", "\n")
   end
 
   def validate_document_path(path, document_type)
@@ -260,15 +259,15 @@ class TemplateSync
         error: "Unknown document type: #{document_type}"
       }
     end
-    
-    { error: nil }
+
+    {error: nil}
   end
 
   def update_embedded_document(workflow_content, document_path, new_content, document_type)
     # Replace the content between document tags while preserving XML structure
-    
+
     escaped_path = Regexp.escape(document_path)
-    
+
     # Try new <documents> format first
     if document_type == :template
       # Try <documents><template> format
@@ -283,12 +282,12 @@ class TemplateSync
         return workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
       end
     end
-    
+
     # Fall back to legacy <templates><template> format
     pattern = /(<template\s+path="#{escaped_path}">)(.*?)(<\/template>)/m
     workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
   end
-  
+
   # Legacy method name for backward compatibility
   def update_embedded_template(workflow_content, template_path, new_content)
     update_embedded_document(workflow_content, template_path, new_content, :template)
@@ -298,16 +297,16 @@ class TemplateSync
     puts "  📋 WOULD UPDATE: #{template_path}"
     puts "  "
     puts "  Differences found:"
-    
+
     embedded_lines = embedded_content.split("\n")
     file_lines = file_content.split("\n")
-    
+
     max_lines = [embedded_lines.length, file_lines.length].max
-    
+
     (0...max_lines).each do |i|
       old_line = embedded_lines[i] || ""
       new_line = file_lines[i] || ""
-      
+
       if old_line != new_line
         puts "  - Line #{i + 1}: [OLD] #{old_line}"
         puts "  + Line #{i + 1}: [NEW] #{new_line}"
@@ -320,15 +319,15 @@ class TemplateSync
     puts
     puts "Summary:"
     puts "  Files processed: #{@stats[:files_processed]}"
-    
+
     if @dry_run
-      puts "  Would synchronize: #{@stats[:templates_synchronized]} template#{@stats[:templates_synchronized] == 1 ? '' : 's'}"
-      puts "  Would skip: #{@stats[:templates_up_to_date]} template#{@stats[:templates_up_to_date] == 1 ? '' : 's'} (up-to-date)"
+      puts "  Would synchronize: #{@stats[:templates_synchronized]} template#{(@stats[:templates_synchronized] == 1) ? "" : "s"}"
+      puts "  Would skip: #{@stats[:templates_up_to_date]} template#{(@stats[:templates_up_to_date] == 1) ? "" : "s"} (up-to-date)"
     else
       puts "  Templates synchronized: #{@stats[:templates_synchronized]}"
       puts "  Templates up-to-date: #{@stats[:templates_up_to_date]}"
     end
-    
+
     if @stats[:errors] > 0
       puts "  Errors: #{@stats[:errors]}"
     end
@@ -337,7 +336,7 @@ class TemplateSync
 
   def commit_changes
     puts "Committing changes..."
-    
+
     # Check if we're in a git repository
     unless system("git rev-parse --git-dir > /dev/null 2>&1")
       puts "  ❌ Error: Not in a git repository"
@@ -346,11 +345,11 @@ class TemplateSync
 
     # Add changed files
     system("git add -A")
-    
+
     # Create commit message
     commit_message = "chore: sync embedded templates\n\n"
     if @stats[:templates_synchronized] > 0
-      commit_message += "- Synchronized #{@stats[:templates_synchronized]} template#{@stats[:templates_synchronized] == 1 ? '' : 's'}"
+      commit_message += "- Synchronized #{@stats[:templates_synchronized]} template#{(@stats[:templates_synchronized] == 1) ? "" : "s"}"
       if @stats[:templates_up_to_date] > 0
         commit_message += ", #{@stats[:templates_up_to_date]} up-to-date"
       end
@@ -379,7 +378,7 @@ end
 # Command-line option parsing
 def parse_options
   options = {}
-  
+
   OptionParser.new do |opts|
     opts.banner = "Usage: markdown-sync-embedded-documents [options]"
     opts.separator ""
@@ -436,7 +435,7 @@ if __FILE__ == $0
     exit 1
   rescue => e
     puts "Unexpected error: #{e.message}"
-    puts e.backtrace if ENV['DEBUG']
+    puts e.backtrace if ENV["DEBUG"]
     exit 1
   end
 end

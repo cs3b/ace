@@ -9,44 +9,44 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
   before do
     detector.reset_cache!
     detector.debug_mode = false
-    @original_project_root = ENV['PROJECT_ROOT']
-    ENV.delete('PROJECT_ROOT')
+    @original_project_root = ENV["PROJECT_ROOT"]
+    ENV.delete("PROJECT_ROOT")
   end
 
   after do
     detector.reset_cache!
     detector.debug_mode = false
     if @original_project_root
-      ENV['PROJECT_ROOT'] = @original_project_root
+      ENV["PROJECT_ROOT"] = @original_project_root
     else
-      ENV.delete('PROJECT_ROOT')
+      ENV.delete("PROJECT_ROOT")
     end
   end
 
   describe ".find_project_root" do
     context "with PROJECT_ROOT environment variable" do
       let(:temp_dir) { Dir.mktmpdir }
-      
+
       after { FileUtils.rm_rf(temp_dir) }
 
       it "uses PROJECT_ROOT as highest priority when valid" do
         # Create a valid project root
         git_dir = File.join(temp_dir, ".git")
         FileUtils.mkdir_p(git_dir)
-        
-        ENV['PROJECT_ROOT'] = temp_dir
-        
+
+        ENV["PROJECT_ROOT"] = temp_dir
+
         # Start from a different directory
         other_dir = Dir.mktmpdir
         FileUtils.rm_rf(other_dir) # Clean up immediately as we don't need it
-        
+
         result = detector.find_project_root("/some/other/path")
         expect(result).to eq(temp_dir)
       end
 
       it "warns and falls back when PROJECT_ROOT is invalid" do
-        ENV['PROJECT_ROOT'] = "/nonexistent/path"
-        
+        ENV["PROJECT_ROOT"] = "/nonexistent/path"
+
         # Should fall back to normal detection
         result = detector.find_project_root(Dir.pwd)
         expect(result).to be_a(String)
@@ -54,8 +54,8 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       end
 
       it "validates PROJECT_ROOT has expected markers" do
-        ENV['PROJECT_ROOT'] = temp_dir
-        
+        ENV["PROJECT_ROOT"] = temp_dir
+
         # Empty directory should not be considered valid
         expect {
           detector.find_project_root("/some/path")
@@ -68,9 +68,9 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         dev_handbook_dir = File.join(temp_dir, "dev-handbook")
         FileUtils.mkdir_p(dev_tools_dir)
         FileUtils.mkdir_p(dev_handbook_dir)
-        
-        ENV['PROJECT_ROOT'] = temp_dir
-        
+
+        ENV["PROJECT_ROOT"] = temp_dir
+
         result = detector.find_project_root("/some/other/path")
         expect(result).to eq(temp_dir)
       end
@@ -80,7 +80,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       let(:temp_project_root) { Dir.mktmpdir }
       let(:dev_tools_dir) { File.join(temp_project_root, "dev-tools") }
       let(:deep_subdir) { File.join(dev_tools_dir, "lib", "deep", "nested") }
-      
+
       after { FileUtils.rm_rf(temp_project_root) }
 
       it "detects project root from dev-tools subdirectory" do
@@ -88,7 +88,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         git_dir = File.join(temp_project_root, ".git")
         FileUtils.mkdir_p(git_dir)
         FileUtils.mkdir_p(deep_subdir)
-        
+
         result = detector.find_project_root(deep_subdir)
         expect(result).to eq(temp_project_root)
       end
@@ -96,12 +96,12 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       it "detects project root from dev-handbook subdirectory" do
         dev_handbook_dir = File.join(temp_project_root, "dev-handbook")
         handbook_subdir = File.join(dev_handbook_dir, "guides")
-        
+
         # Create project structure with .git marker
         git_dir = File.join(temp_project_root, ".git")
         FileUtils.mkdir_p(git_dir)
         FileUtils.mkdir_p(handbook_subdir)
-        
+
         result = detector.find_project_root(handbook_subdir)
         expect(result).to eq(temp_project_root)
       end
@@ -109,12 +109,12 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       it "detects project root from dev-taskflow subdirectory" do
         dev_taskflow_dir = File.join(temp_project_root, "dev-taskflow")
         taskflow_subdir = File.join(dev_taskflow_dir, "current", "tasks")
-        
+
         # Create project structure with Gemfile marker
         gemfile = File.join(temp_project_root, "Gemfile")
         FileUtils.mkdir_p(taskflow_subdir)
         FileUtils.touch(gemfile)
-        
+
         result = detector.find_project_root(taskflow_subdir)
         expect(result).to eq(temp_project_root)
       end
@@ -124,19 +124,19 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         isolated_root = Dir.mktmpdir
         isolated_dev_tools = File.join(isolated_root, "dev-tools", "lib", "deep")
         FileUtils.mkdir_p(isolated_dev_tools)
-        
+
         # Should not find the parent as project root (no markers)
         expect {
           detector.find_project_root(isolated_dev_tools)
         }.to raise_error(CodingAgentTools::Error, /Could not detect project root/)
-        
+
         FileUtils.rm_rf(isolated_root)
       end
     end
 
     context "with enhanced error messages" do
       let(:temp_dir) { Dir.mktmpdir }
-      
+
       after { FileUtils.rm_rf(temp_dir) }
 
       it "suggests setting PROJECT_ROOT when detection fails" do
@@ -186,7 +186,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       it "recalculates when start path changes" do
         start_path1 = Dir.pwd
         start_path2 = File.join(Dir.pwd, "lib") # Use a subdirectory that exists
-        
+
         result1 = detector.find_project_root(start_path1)
         result2 = detector.find_project_root(start_path2)
 
@@ -200,21 +200,21 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         temp_project = Dir.mktmpdir
         git_dir = File.join(temp_project, ".git")
         FileUtils.mkdir_p(git_dir)
-        
+
         start_path = Dir.pwd
         result1 = detector.find_project_root(start_path)
-        
+
         # Set PROJECT_ROOT to different location and ensure cache is invalidated
-        ENV['PROJECT_ROOT'] = temp_project
+        ENV["PROJECT_ROOT"] = temp_project
         result2 = detector.find_project_root(start_path)
-        
+
         # Should use PROJECT_ROOT now
         expect(result2).to eq(temp_project)
         expect(result2).not_to eq(result1)
-        
+
         # Verify cache key changed
         expect(detector.instance_variable_get(:@cached_cache_key)).to include(temp_project)
-        
+
         FileUtils.rm_rf(temp_project)
       end
     end

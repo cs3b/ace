@@ -22,7 +22,7 @@ module ReleaseManagerCli
     register "current", CodingAgentTools::Cli::Commands::Release::Current
     register "next", CodingAgentTools::Cli::Commands::Release::Next
     register "all", CodingAgentTools::Cli::Commands::Release::All
-    register "generate-id", CodingAgentTools::Cli::Commands::Release::GenerateId
+    register "create-release-dir", CodingAgentTools::Cli::Commands::Release::GenerateId
 
     # Version command
     class Version < Dry::CLI::Command

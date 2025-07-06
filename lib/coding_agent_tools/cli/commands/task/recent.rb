@@ -32,7 +32,7 @@ module CodingAgentTools
           def call(**options)
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
-            
+
             since_seconds = parse_time_period(options[:last])
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
@@ -90,7 +90,7 @@ module CodingAgentTools
 
             # Limit results
             limited_tasks = result.tasks.take(options[:limit])
-            
+
             puts "Recent Tasks (#{limited_tasks.size}/#{result.count} shown):"
             puts "=" * 50
 
@@ -105,11 +105,11 @@ module CodingAgentTools
             puts "  Title: #{task.title || extract_title_from_content(task)}"
             puts "  Path:  #{task.path}"
             puts "  Status: #{task.status}"
-            
+
             if task.respond_to?(:mtime)
               puts "  Modified: #{format_time(task.mtime)}"
             end
-            
+
             if task.dependencies && !task.dependencies.empty?
               deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
               puts "  Dependencies: #{deps}"

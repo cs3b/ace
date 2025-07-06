@@ -6,9 +6,9 @@ module CodingAgentTools
       class << self
         def find_project_root(start_path = nil)
           start_path ||= File.dirname(File.expand_path($PROGRAM_NAME))
-          
+
           # Check cache first
-          cache_key = "#{start_path}:#{ENV['PROJECT_ROOT']}"
+          cache_key = "#{start_path}:#{ENV["PROJECT_ROOT"]}"
           return @cached_root if @cached_root && @cached_cache_key == cache_key
 
           @cached_cache_key = cache_key
@@ -30,9 +30,9 @@ module CodingAgentTools
 
         def detect_root(start_path)
           # 1. Highest priority: PROJECT_ROOT environment variable
-          if ENV['PROJECT_ROOT']
-            debug_log "Checking PROJECT_ROOT environment variable: #{ENV['PROJECT_ROOT']}"
-            env_root = File.expand_path(ENV['PROJECT_ROOT'])
+          if ENV["PROJECT_ROOT"]
+            debug_log "Checking PROJECT_ROOT environment variable: #{ENV["PROJECT_ROOT"]}"
+            env_root = File.expand_path(ENV["PROJECT_ROOT"])
             if validate_project_root(env_root)
               debug_log "Using PROJECT_ROOT from environment: #{env_root}"
               return env_root
@@ -97,12 +97,12 @@ module CodingAgentTools
 
         def validate_project_root(path)
           return false unless File.directory?(path)
-          
+
           # Check if it has any of our expected markers
           if root_marker_exists?(path)
             return true
           end
-          
+
           # Or contains the expected multi-repo structure (at least 2 dev-* directories)
           dev_dirs_present = DEV_DIRECTORIES.count { |dir| File.directory?(File.join(path, dir)) }
           dev_dirs_present >= 2
@@ -111,16 +111,16 @@ module CodingAgentTools
         def check_special_directories(current_path)
           # Check if we're in or under a dev-* directory
           path_parts = current_path.split(File::SEPARATOR)
-          
+
           dev_dir_index = path_parts.rindex { |part| DEV_DIRECTORIES.include?(part) }
           return nil unless dev_dir_index
-          
+
           # Get the parent directory of the dev-* directory
           parent_path = File.join(*path_parts[0...dev_dir_index])
           parent_path = "/" if parent_path.empty?
-          
+
           debug_log "Found dev-* directory '#{path_parts[dev_dir_index]}', checking parent: #{parent_path}"
-          
+
           # Validate that the parent is actually a project root
           if validate_project_root(parent_path)
             parent_path

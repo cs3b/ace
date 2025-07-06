@@ -35,7 +35,7 @@ module CodingAgentTools
         def call(target_dir: nil, **options)
           target_directory = target_dir || Dir.pwd
           config_path = options[:config] || default_config_path
-          
+
           unless File.exist?(config_path)
             puts "Error: Configuration file not found: #{config_path}"
             puts "Use --config to specify a different configuration file."
@@ -55,7 +55,7 @@ module CodingAgentTools
             install_specific_alias(installer, options[:alias], options)
           else
             install_all_aliases(installer, options)
-            
+
             # Optionally suggest PATH setup after installing binstubs
             suggest_path_setup(target_directory, options) unless options[:alias]
           end
@@ -94,7 +94,7 @@ module CodingAgentTools
 
         def install_all_aliases(installer, options)
           puts "Installing binstubs..." if options[:verbose]
-          
+
           results = installer.install_all(options)
 
           # Report results
@@ -120,39 +120,39 @@ module CodingAgentTools
 
         def setup_path_scripts(target_directory, options)
           puts "Setting up PATH scripts..." if options[:verbose]
-          
+
           # Copy PATH setup scripts from config to target directory
           config_source_dir = File.expand_path("../../../../config/bin-setup-env", __dir__)
           target_setup_dir = File.join(target_directory, "bin-setup-env")
-          
+
           unless File.directory?(config_source_dir)
             puts "Error: PATH setup templates not found at #{config_source_dir}"
             exit 1
           end
-          
+
           # Create target directory
           FileUtils.mkdir_p(target_setup_dir)
-          
+
           # Copy all setup files
           setup_files = %w[setup.sh setup.fish setup-env]
           copied_files = []
-          
+
           setup_files.each do |file|
             source_file = File.join(config_source_dir, file)
             target_file = File.join(target_setup_dir, file)
-            
+
             if File.exist?(source_file)
               if !File.exist?(target_file) || options[:force]
                 FileUtils.cp(source_file, target_file)
-                FileUtils.chmod(0755, target_file) if file == "setup-env"
+                FileUtils.chmod(0o755, target_file) if file == "setup-env"
                 copied_files << file
                 puts "  ✓ #{file}" if options[:verbose]
-              else
-                puts "  - #{file} (already exists)" if options[:verbose]
+              elsif options[:verbose]
+                puts "  - #{file} (already exists)"
               end
             end
           end
-          
+
           if copied_files.any?
             puts "Successfully created PATH setup scripts in: #{target_setup_dir}"
             puts ""
@@ -170,7 +170,7 @@ module CodingAgentTools
 
         def suggest_path_setup(target_directory, options)
           return if options[:verbose] # Don't show suggestions in verbose mode
-          
+
           puts ""
           puts "💡 Tip: To add tools to your PATH, run:"
           puts "   coding_agent_tools install-binstubs --setup-path"
