@@ -144,7 +144,7 @@ else
   echo "  - Use environment variables for secrets: ENV['API_KEY']"
   echo "  - Add secrets to .env file (not committed to git)"
   echo "  - Use placeholder values in tests and documentation"
-  echo "  - See: docs/dev-guides/security-secrets-scanning.g.md"
+  echo "  - See: docs/development/guides/security-secrets-scanning.g.md"
   echo ""
   echo "For installation instructions, see: https://github.com/gitleaks/gitleaks#installation"
   exit 1
