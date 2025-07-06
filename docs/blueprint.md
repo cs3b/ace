@@ -1,4 +1,4 @@
-# Project Blueprint: Coding Agent Tools Ruby Gem
+# Project Blueprint: Coding Agent Workflow Toolkit (Meta)
 
 ## What is a Blueprint?
 
@@ -11,30 +11,31 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Project Organization
 
-This project follows a documentation-first approach with these primary directories:
+This is a **meta-repository** using Git submodules to organize different aspects of the workflow toolkit:
 
 - **dev-handbook/** - Development resources and workflows (Git submodule)
   - **guides/** - Best practices and standards for development
-  - **tools/** - Utility scripts to support development workflows (e.g., for task management, tree display)
+  - **tools/** - Utility scripts to support development workflows
   - **workflow-instructions/** - Structured commands for AI agents
-  - **zed/** - Editor integration (if applicable)
+  - **templates/** - Project templates and document templates
+  - **zed/** - Editor integration
+
+- **dev-taskflow/** - Project-specific documentation and task management (Git submodule)
+  - **backlog/** - Pending tasks for future releases
+  - **current/** - Active release cycle work
+  - **done/** - Completed releases and tasks
+  - **decisions/** - Architecture Decision Records (ADRs)
+
+- **dev-tools/** - Ruby gem with CLI tools for LLM integration (Git submodule)
+  - **lib/** - Ruby gem source code, organized by the ATOM architecture pattern
+  - **spec/** - RSpec test files (unit, integration, CLI)
+  - **exe/** - Executable CLI tools for LLM integration
 
 - **docs/** - Core project documentation (permanent reference materials)
   - **decisions/** - Architecture Decision Records (ADRs)
   - **migrations/** - Documentation migration records
 
-- **dev-taskflow/** - Project-specific documentation, task management, and temporal content
-  - **backlog/** - Pending tasks for future releases
-  - **current/** - Active release cycle work
-  - **done/** - Completed releases and tasks
-
-- **bin/** - Executable scripts (binstubs/wrappers) for project automation (e.g., `bin/test`, `bin/tn`)
-
-- **lib/** - Ruby gem source code, organized by the ATOM architecture pattern
-
-- **spec/** - RSpec test files (unit, integration, CLI)
-
-<!-- Add your project-specific directories here -->
+- **bin/** - Project automation scripts and Git shortcuts
 
 ## View Complete Directory Structure
 
@@ -48,65 +49,66 @@ This will show all project files while filtering out temporary files, session lo
 
 ## Key Project-Specific Files
 
-- [Product Requirements Document (PRD)](../../PRD.md) - Primary source of truth for project goals and requirements
-- [Main README](../../README.md) - Project overview and quick start
-- [Workflow Instructions](../../dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
-- [Project Guides](../../dev-handbook/guides/README.md) - Development standards and best practices
-- `coding_agent_tools.gemspec` - Ruby gem definition and dependencies
-- `Gemfile` - Bundler dependency management
+- [Main README](../README.md) - Project overview and quick start
+- [CLAUDE.md](../CLAUDE.md) - Project instructions for Claude Code
+- [Workflow Instructions](../dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
+- [Project Guides](../dev-handbook/guides/README.md) - Development standards and best practices
+- `package.json` - Node.js dependencies (for markdownlint)
+- `dev-tools/coding_agent_tools.gemspec` - Ruby gem definition and dependencies
+- `dev-tools/Gemfile` - Bundler dependency management for dev-tools submodule
 
 ## Technology Stack
 
-- **Primary Language**: Ruby (>= 3.2)
-- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model)
-- **Key Libraries/Tools**: Bundler, RSpec, Aruba, RuboCop
-- **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API
+- **Primary Language**: Ruby (>= 3.2) for dev-tools submodule
+- **Documentation**: Markdown with markdownlint for quality control
+- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model) for dev-tools
+- **Key Libraries/Tools**: 
+  - Ruby: Bundler, RSpec, Aruba, RuboCop (in dev-tools)
+  - Node.js: markdownlint-cli for documentation quality
+  - Git submodules for project organization
+- **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API (via dev-tools)
 
 ## Read-Only Paths
 
-AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks. Modifying these files without careful consideration can break core project workflows or documentation standards.
+AI agents should treat the following paths as read-only unless explicitly instructed to modify them for specific maintenance or update tasks:
 
-- `docs/**/*` (Core documentation - modify only for explicit maintenance tasks)
-- `docs/decisions/**/*` (Modify only when adding or updating ADRs)
-- `docs/migrations/**/*` (Documentation migration records)
-- `dev-handbook/guides/**/*`
-- `dev-handbook/workflow-instructions/**/*`
-- `dev-tools/exe-old/_binstubs/**/*`
-- `dev-handbook/guides/initialize-project-templates/**/*`
-- `dev-taskflow/done/**/*` (Completed tasks should not be modified)
-- `dev-taskflow/current/*/handbook_review/**/*` (Historical review snapshots should not be modified)
-- `dev-taskflow/*/handbook_review/**/*` (All historical review snapshots should not be modified)
-- `lib/**/*` (Treat the core gem implementation as stable unless working on a specific feature or bug fix requiring changes here)
-- `spec/**/*` (Treat tests as read-only unless writing new tests or fixing broken ones related to code changes)
-- `.gitignore` (Modify carefully when adding/removing ignored patterns)
-- `Gemfile.lock` (Manage dependencies via `bundle add`/`remove` or explicit instruction)
-- `bin/*` (Modify only when updating binstub templates or adding new project-specific scripts)
-- `*.lock` # Dependency lock files (e.g., Gemfile.lock)
-- `dist/**/*` # Built artifacts
-- `build/**/*` # Build output
-- `pkg/**/*` # Gem packages
+- `docs/decisions/**/*` # Architecture Decision Records
+- `docs/migrations/**/*` # Documentation migration records
+- `dev-handbook/guides/**/*` # Development guides (submodule)
+- `dev-handbook/workflow-instructions/**/*` # AI workflow instructions (submodule)
+- `dev-handbook/templates/**/*` # Project templates (submodule)
+- `dev-taskflow/done/**/*` # Completed tasks should not be modified
+- `dev-taskflow/current/*/handbook_review/**/*` # Historical review snapshots
+- `dev-taskflow/*/handbook_review/**/*` # All historical review snapshots
+- `dev-tools/lib/**/*` # Ruby gem source code (submodule)
+- `dev-tools/spec/**/*` # Test files (submodule)
+- `dev-tools/exe/**/*` # CLI executables (submodule)
+- `*.lock` # Dependency lock files
+- `package-lock.json` # Node.js dependency lock
+- `dev-tools/Gemfile.lock` # Ruby dependency lock
 
 ## Ignored Paths
 
-AI agents should generally ignore the contents of the following paths during tasks such as searching for tasks, summarizing project state, or performing code analysis, unless the task explicitly requires interacting with these directories (e.g., cleaning build artifacts). These paths often contain transient data, dependencies, or build artifacts.
+AI agents should generally ignore the contents of the following paths during normal operations:
 
-- `dev-taskflow/done/**/*` # Completed tasks (already read-only, but explicitly ignored for general tasks)
-- `vendor/**/*` (Bundler dependencies)
-- `tmp/**/*`
-- `log/**/*`
-- `.git/**/*`
-- `.bundle/**/*`
-- `coverage/**/*` (Test coverage reports)
-- `node_modules/**/*` (If applicable for frontend/tooling)
-- `.idea/**/*`, `.vscode/**/*` (Editor specific configurations)
-- `**/.*.swp`, `**/.*.swo` (Swap files)
-- `/.DS_Store` (macOS system files)
-- `**/Thumbs.db` (Windows system files)
+- `dev-taskflow/done/**/*` # Completed tasks and releases
+- `dev-taskflow/sessions/**/*` # Session logs
+- `node_modules/**/*` # Node.js dependencies
+- `dev-tools/vendor/**/*` # Bundler dependencies
+- `tmp/**/*` # Temporary files
+- `log/**/*` # Log files
+- `.git/**/*` # Git internals
+- `.bundle/**/*` # Bundle cache
+- `coverage/**/*` # Test coverage reports
+- `.idea/**/*`, `.vscode/**/*` # Editor configurations
+- `**/.*.swp`, `**/.*.swo` # Swap files
+- `**/.DS_Store` # macOS system files
+- `**/Thumbs.db` # Windows system files
 - `**/.env` # Environment files
 - `**/.env.*` # Environment variants
-- `*.session.log`
-- `*.lock`
-- `*.tmp`
+- `*.session.log` # Session logs
+- `*.lock` # Lock files
+- `*.tmp` # Temporary files
 - `*~` # Backup files
 
 ## Entry Points
@@ -114,54 +116,80 @@ AI agents should generally ignore the contents of the following paths during tas
 ### Development
 
 ```bash
-# Run the test suite
+# Run all tests (executes bin/lint for this project)
 bin/test
 
-# Run code quality checks
+# Run linting (markdownlint + custom Ruby scripts)
 bin/lint
 
-# Build the gem
+# Build project (placeholder - this is a documentation project)
 bin/build
-```
 
-*(Note: `bin/run` might be used for specific entry points if defined)*
+# Get project tree structure
+bin/tree
+```
 
 ### Common Workflows
 
-- **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on.
-- **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks.
-- **Commit Changes**: Use `bin/git-commit-with-message` to stage changes and generate a commit message.
-- **Query LLM**: Use `bin/llm-gemini-query` or `bin/lms-studio-query` to interact with language models.
+- **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on
+- **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks
+- **Get Current Release**: Use `bin/rc` to get current release context
+- **Multi-repo Git Operations**: Use `bin/gs`, `bin/gl`, `bin/gc`, `bin/gp`, `bin/gpull` for operations across all 4 repositories
+- **Template Synchronization**: Use `bin/markdown-sync-embedded-documents` to sync embedded templates
+- **Query LLM**: Use `dev-tools/exe/llm-query` to interact with language models
 
-Refer to the [Architecture document](./architecture.md#command-line-tools-bin) for a more detailed list and description of `bin/` commands.
+### Git Submodules
+
+```bash
+# Initialize all submodules
+git submodule update --init --recursive
+
+# Work in a specific submodule
+cd dev-handbook  # or dev-taskflow, dev-tools
+# Make changes and commit from within submodule
+```
 
 ## Dependencies
 
-### Runtime Dependencies (Key Examples)
+### Runtime Dependencies
 
-- Ruby (>= 3.2)
-- Bundler
-- Gems for Google Gemini API interaction
-- Gems/tools for LM Studio interaction
-- Standard system Git CLI
-- Gems for GitHub REST API interaction (e.g., octokit)
+- **Git**: Required for submodule operations and version control
+- **Ruby (>= 3.2)**: Required for dev-tools submodule utilities
+- **Node.js**: Required for markdownlint documentation quality control
+- **Bundler**: For Ruby gem dependency management in dev-tools
 
-### Development Dependencies (Key Examples)
+### Development Dependencies
 
-- RSpec
-- Aruba
-- RuboCop
-- `dev-tools/exe-old/*` scripts (used by some `bin/` wrappers)
+- **markdownlint-cli**: For documentation quality control
+- **RSpec**: For testing in dev-tools submodule
+- **RuboCop**: For code quality in dev-tools submodule
+- **Custom Ruby scripts**: For project-specific linting and utilities
 
 ## Submodules
+
+This project uses 3 Git submodules plus the root repository (4 total repositories):
 
 ### dev-handbook
 
 - Path: `dev-handbook`
-- Repository: [Repository URL - assumed external]
-- Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
-- **Important**: Commits for this submodule must be made from within the submodule directory (`../../dev-handbook`).
+- Repository: [External repository]
+- Purpose: Development guides and workflow instructions for AI agents
+- **Important**: Commits for this submodule must be made from within the submodule directory
+
+### dev-taskflow
+
+- Path: `dev-taskflow`
+- Repository: [External repository]
+- Purpose: Task management structure with backlog/, current/, done/ organization
+- **Important**: Commits for this submodule must be made from within the submodule directory
+
+### dev-tools
+
+- Path: `dev-tools`
+- Repository: [External repository]
+- Purpose: Ruby gem with CLI tools for LLM integration and development automation
+- **Important**: Commits for this submodule must be made from within the submodule directory
 
 ---
 
-*This blueprint serves as a quick reference and guide for automated agents. It should be updated if the project structure, key technologies, or operational guidelines change significantly.*
+*This blueprint should be updated when significant structural changes are made to the project. Use the `update-blueprint` workflow to keep it current.*
