@@ -7,7 +7,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 **Enhanced Capabilities:**
 
 - **Conversation Analysis**: Analyze current conversation context to identify challenges, user input requirements, tool limitations, and improvement opportunities
-- **Self-Reflection**: Review development sessions to extract learnings from work patterns, blockers, and successful approaches  
+- **Self-Reflection**: Review development sessions to extract learnings from work patterns, blockers, and successful approaches
 - **Pattern Recognition**: Group challenges by type and prioritize by impact to focus on high-value improvements
 
 ## Prerequisites
@@ -60,14 +60,14 @@ Capture individual or team observations, learnings, and ideas for improvement du
      ```bash
      # Get current release information
      bin/rc
-     
+
      # Check for current release directory structure
      ls -d dev-taskflow/current/*/
-     
+
      # Target directory priority:
      # 1. Current release reflections (preferred)
      dev-taskflow/current/{release}/reflections/
-     
+
      # 2. General reflections (fallback)
      dev-taskflow/reflections/
      ```
@@ -114,40 +114,40 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
    ```markdown
    # Reflection: Authentication System Refactor
-   
+
    **Date**: 2024-01-26
    **Context**: Refactoring the authentication system to support OAuth
    **Author**: Development Team
-   
+
    ## What Went Well
-   
+
    - Clear separation of authentication strategies made the code more maintainable
    - Test-driven approach caught several edge cases early
    - Pair programming sessions improved code quality
-   
+
    ## What Could Be Improved
-   
+
    - Initial time estimates were too optimistic
    - Documentation was updated after implementation rather than alongside
    - Integration tests took longer than expected to stabilize
-   
+
    ## Key Learnings
-   
+
    - OAuth implementation complexity varies significantly between providers
    - Mocking external authentication services requires careful consideration
    - Early spike solutions save time in the long run
-   
+
    ## Action Items
-   
+
    ### Stop Doing
    - Estimating OAuth integration as "simple"
    - Leaving documentation until the end
-   
+
    ### Continue Doing
    - TDD approach for security-critical features
    - Regular pair programming sessions
    - Creating spike solutions for unknowns
-   
+
    ### Start Doing
    - Document authentication flows before implementation
    - Create integration test fixtures early
@@ -158,12 +158,6 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - Ensure all sections have meaningful content
    - Remove empty sections if not applicable
    - Save file with descriptive filename
-   - Commit with appropriate message:
-
-     ```bash
-     git add dev-taskflow/current/*/reflections/*.md
-     git commit -m "docs(reflection): add learnings from [topic]"
-     ```
 
 ## Conversation Analysis Process
 
@@ -185,7 +179,7 @@ For conversation-based self-reflection, follow these specialized steps:
 3. **Pattern Grouping and Impact Analysis:**
    - Group identified challenges by common causes or types:
      - **Communication Issues**: Unclear requirements, missing context
-     - **Technical Constraints**: Tool limitations, environment issues  
+     - **Technical Constraints**: Tool limitations, environment issues
      - **Process Gaps**: Missing workflow steps, inadequate guidance
      - **Knowledge Gaps**: Unfamiliar tools, incomplete understanding
    - Sort groups by impact level:
@@ -227,10 +221,10 @@ When no specific context is provided, follow this process:
    ```bash
    # Review recent commits
    git log --oneline -10
-   
+
    # Check modified files
    git diff --name-only HEAD~5
-   
+
    # Review completed tasks
    ls -t dev-taskflow/current/*/tasks/*.md | head -5
    ```
