@@ -102,7 +102,7 @@ module CodingAgentTools
           def display_task_info(task)
             puts "  ID:    #{task.id}"
             puts "  Title: #{task.title || extract_title_from_content(task)}"
-            puts "  Path:  #{task.file_path}"
+            puts "  Path:  #{task.path}"
             puts "  Status: #{task.status}"
             
             if task.respond_to?(:mtime)

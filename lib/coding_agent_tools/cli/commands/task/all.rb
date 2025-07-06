@@ -83,7 +83,7 @@ module CodingAgentTools
             puts "#{position.to_s.rjust(3)}. #{task.id}"
             puts "     Title: #{task.title || extract_title_from_content(task)}"
             puts "     Status: #{status_display}"
-            puts "     Path: #{task.file_path}"
+            puts "     Path: #{task.path}"
             
             if task.dependencies && !task.dependencies.empty?
               deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies

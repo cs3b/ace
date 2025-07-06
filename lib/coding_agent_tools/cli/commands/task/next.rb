@@ -106,7 +106,7 @@ module CodingAgentTools
             
             puts "  ID:    #{task.id}"
             puts "  Title: #{task.title || extract_title_from_content(task)}"
-            puts "  Path:  #{task.file_path}"
+            puts "  Path:  #{task.path}"
             puts "  Status: #{task.status}"
             
             if task.dependencies && !task.dependencies.empty?
