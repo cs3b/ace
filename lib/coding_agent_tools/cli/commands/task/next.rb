@@ -3,6 +3,8 @@
 require "dry/cli"
 require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/task_sort_engine"
+require_relative "../../../molecules/taskflow_management/task_filter_engine"
 
 module CodingAgentTools
   module Cli
@@ -18,10 +20,19 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
 
+          option :sort, type: :string,
+            desc: "Sort criteria (e.g., 'priority:desc,id:asc' or 'implementation-order')"
+
+          option :filter, type: :array,
+            desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
+
           example [
             "",
             "--limit 3",
-            "--debug"
+            "--debug",
+            "--sort priority:desc,id:asc",
+            "--filter status:pending --filter priority:high",
+            "--sort implementation-order"
           ]
 
           def call(**options)
@@ -32,13 +43,47 @@ module CodingAgentTools
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
+            # Get all tasks first
+            tasks_result = task_manager.get_all_tasks
+            unless tasks_result.success?
+              error_output("Error: #{tasks_result.message}")
+              return 1
+            end
+
+            # Apply default filters for next command (pending and in-progress only)
+            filter_strings = options[:filter] || CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine.default_next_filters
+            filter_result = CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine.apply_filter_strings(tasks_result.tasks, filter_strings)
+            unless filter_result[:errors].empty?
+              filter_result[:errors].each { |error| error_output("Filter error: #{error}") }
+              return 1
+            end
+            tasks = filter_result[:tasks]
+
+            # Apply sorting (default to implementation-order)
+            sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_next_sort
+            sort_result_hash = CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.apply_sort_string(tasks, sort_string)
+            unless sort_result_hash[:errors].empty?
+              sort_result_hash[:errors].each { |error| error_output("Sort error: #{error}") }
+              return 1
+            end
+
+            final_result = sort_result_hash[:result]
+            
+            if final_result.sorted_tasks.empty?
+              puts "No actionable tasks found"
+              return 0
+            end
+
+            # Limit results
+            limited_tasks = final_result.sorted_tasks.take(limit)
+
             if limit == 1
-              # Return single task for backward compatibility
-              result = task_manager.find_next_actionable_task_with_highlight
-              handle_single_task_result(result, options)
+              display_task_info(limited_tasks.first)
             else
-              # Return multiple tasks
-              handle_multiple_tasks(task_manager, options.merge(limit: limit))
+              limited_tasks.each_with_index do |task, index|
+                puts "" if index > 0  # Add blank line between tasks
+                display_task_info(task, index + 1, limited_tasks.size)
+              end
             end
             0
           rescue => e
@@ -56,49 +101,6 @@ module CodingAgentTools
             limit_int
           end
 
-          def handle_single_task_result(result, options)
-            unless result.success?
-              error_output("Error: #{result.message}")
-              return
-            end
-
-            unless result.found?
-              puts "No actionable tasks found"
-              return
-            end
-
-            display_task_info(result.task)
-          end
-
-          def handle_multiple_tasks(task_manager, options)
-            # Get all tasks and filter for actionable ones
-            all_result = task_manager.get_all_tasks
-
-            unless all_result.success?
-              error_output("Error: #{all_result.message}")
-              return
-            end
-
-            actionable_tasks = filter_actionable_tasks(all_result.tasks)
-
-            if actionable_tasks.empty?
-              puts "No actionable tasks found"
-              return
-            end
-
-            # Limit results
-            limited_tasks = actionable_tasks.take(options[:limit])
-
-            limited_tasks.each_with_index do |task, index|
-              puts "" if index > 0  # Add blank line between tasks
-              display_task_info(task, index + 1, limited_tasks.size)
-            end
-          end
-
-          def filter_actionable_tasks(tasks)
-            # Filter for tasks that are not done and could be actionable
-            tasks.select { |task| task.status != "done" }
-          end
 
           def display_task_info(task, index = nil, total = nil)
             if index && total

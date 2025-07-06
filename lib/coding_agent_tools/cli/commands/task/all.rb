@@ -3,6 +3,8 @@
 require "dry/cli"
 require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/task_sort_engine"
+require_relative "../../../molecules/taskflow_management/task_filter_engine"
 
 module CodingAgentTools
   module Cli
@@ -18,46 +20,83 @@ module CodingAgentTools
           option :show_cycles, type: :boolean, default: false,
             desc: "Show additional information about dependency cycles"
 
+          option :sort, type: :string,
+            desc: "Sort criteria (e.g., 'priority:desc,id:asc' or 'implementation-order')"
+
+          option :filter, type: :array,
+            desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
+
           example [
             "",
             "--debug",
-            "--show-cycles"
+            "--show-cycles",
+            "--sort priority:desc,id:asc",
+            "--filter status:pending --filter priority:high",
+            "--sort implementation-order"
           ]
 
           def call(**options)
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
-            result = task_manager.get_all_tasks
-
-            handle_result(result, options)
-            0
+            
+            # Get all tasks first
+            tasks_result = task_manager.get_all_tasks
+            unless tasks_result.success?
+              error_output("Error: #{tasks_result.message}")
+              return 1
+            end
+            
+            # Apply filtering if specified
+            filter_strings = options[:filter] || []
+            tasks = tasks_result.tasks
+            if !filter_strings.empty?
+              filter_result = CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine.apply_filter_strings(tasks, filter_strings)
+              unless filter_result[:errors].empty?
+                filter_result[:errors].each { |error| error_output("Filter error: #{error}") }
+                return 1
+              end
+              tasks = filter_result[:tasks]
+            end
+            
+            # Apply sorting (default to implementation-order)
+            sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_all_sort
+            sort_result_hash = CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.apply_sort_string(tasks, sort_string)
+            unless sort_result_hash[:errors].empty?
+              sort_result_hash[:errors].each { |error| error_output("Sort error: #{error}") }
+              return 1
+            end
+            
+            final_result = sort_result_hash[:result]
+            handle_result(final_result, options)
+            return 0
           rescue => e
             handle_error(e, options[:debug])
-            1
+            return 1
           end
 
           private
 
           def handle_result(result, options)
-            unless result.success?
-              error_output("Error: #{result.message}")
-              return
-            end
-
-            if result.tasks.empty?
-              puts "No tasks found in current release"
+            if result.sorted_tasks.empty?
+              puts "No tasks found matching criteria"
               return
             end
 
             display_header(result, options)
-            display_tasks(result.tasks)
-            display_footer(result, options) if options[:show_cycles]
+            display_tasks(result.sorted_tasks)
+            display_footer(result, options) if options[:show_cycles] || result.has_cycles?
           end
 
           def display_header(result, options)
-            puts "All Tasks (#{result.tasks.size} total):"
+            puts "All Tasks (#{result.sorted_tasks.size} total):"
             puts "=" * 50
+
+            # Show sort/filter metadata if available
+            if result.sort_metadata && !result.sort_metadata.empty?
+              sort_type = result.sort_metadata[:sort_type] || "custom"
+              puts colorize("ℹ️  Sorted by: #{sort_type}", :blue)
+            end
 
             unless result.fully_sorted?
               if result.has_cycles?
