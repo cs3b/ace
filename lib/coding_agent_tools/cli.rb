@@ -57,10 +57,21 @@ module CodingAgentTools
         @task_commands_registered = true
       end
 
+      def self.register_binstub_commands
+        return if @binstub_commands_registered
+
+        require_relative "cli/commands/install_binstubs"
+
+        register "install-binstubs", Commands::InstallBinstubs
+
+        @binstub_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
         register_task_commands
+        register_binstub_commands
         super
       end
     end
