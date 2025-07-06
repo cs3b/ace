@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require_relative "../../../organisms/task_management/task_manager"
+require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
@@ -30,7 +30,7 @@ module CodingAgentTools
 
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: project_root)
+            task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             if limit == 1
               # Return single task for backward compatibility

@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+# Release Manager - Direct interface to release management functionality
+# This provides a focused entry point for release operations
+
+# Set up load paths for development if necessary
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/cli/commands/release/current"
+require "coding_agent_tools/cli/commands/release/next"
+require "coding_agent_tools/cli/commands/release/all"
+require "coding_agent_tools/cli/commands/release/generate_id"
+require "dry/cli"
+
+module ReleaseManagerCli
+  module Commands
+    extend Dry::CLI::Registry
+
+    # Register release commands directly under the root
+    register "current", CodingAgentTools::Cli::Commands::Release::Current
+    register "next", CodingAgentTools::Cli::Commands::Release::Next
+    register "all", CodingAgentTools::Cli::Commands::Release::All
+    register "generate-id", CodingAgentTools::Cli::Commands::Release::GenerateId
+
+    # Version command
+    class Version < Dry::CLI::Command
+      desc "Print version"
+
+      def call(*)
+        require "coding_agent_tools/version"
+        puts "Release Manager #{CodingAgentTools::VERSION}"
+      end
+    end
+
+    register "version", Version, aliases: ["v", "-v", "--version"]
+  end
+end
+
+begin
+  Dry::CLI.new(ReleaseManagerCli::Commands).call
+rescue Dry::CLI::Error => e
+  warn "Error: #{e.message}"
+  exit 1
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end

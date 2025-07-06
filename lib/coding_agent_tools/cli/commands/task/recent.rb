@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require_relative "../../../organisms/task_management/task_manager"
+require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
@@ -36,7 +36,7 @@ module CodingAgentTools
             since_seconds = parse_time_period(options[:last])
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-            task_manager = CodingAgentTools::Organisms::TaskManagement::TaskManager.new(base_path: project_root)
+            task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,
