@@ -17,30 +17,38 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 ## Command Structure
 
 ```
-@review-code [focus] [target] [context]
+code-review FOCUS TARGET [OPTIONS]
 ```
 
 ### Parameters
 
-- **focus** (required): Review focus area(s)
+- **FOCUS** (required): Review focus area(s) - space-separated for multiple
   - `code` - Code quality, architecture, security, performance
   - `tests` - Test coverage, quality, maintainability
   - `docs` - Documentation gaps, updates, cross-references
-  - `code tests docs` - Combined review (synthesized output)
+  - `"code tests"` - Combined review (use quotes for multiple)
+  - `"code tests docs"` - Full review across all areas
 
-- **target** (required): What to review
+- **TARGET** (required): What to review
   - `v.0.2.0..HEAD` - Git commit range
   - `HEAD~5..HEAD` - Recent commits
-  - `tests/**/*.rb` - File patterns
+  - `'tests/**/*.rb'` - File patterns (use quotes for globs)
   - `lib/specific_file.rb` - Specific file
   - `staged` - Staged changes (`git diff --staged`)
   - `unstaged` - Unstaged changes (`git diff`)
   - `working` - All working directory changes (`git diff HEAD`)
 
-- **context** (optional): Project context control
+### Options
+
+- **--context=VALUE**: Project context control
   - `auto` (default) - Auto-load project context from `docs/`
   - `none` - Skip project context loading
   - `path/to/custom.md` - Load custom context file
+- **--base-path=VALUE**: Base path for session storage (default: current release)
+- **--dry-run**: Show what would be done without creating session
+- **--session=VALUE**: Resume existing session by ID
+- **--model=VALUE**: LLM model to use (e.g., `google:gemini-2.5-pro`)
+- **--output=VALUE**: Output file for review report
 
 ## Project Context Loading
 
@@ -54,44 +62,37 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 
 ### Planning Steps
 
-- [ ] Parse and validate command parameters
-- [ ] Create structured session directory
-- [ ] Determine target content type (git diff vs file content)
-- [ ] Select appropriate review templates based on focus
-- [ ] Resolve project context loading strategy
+- [ ] Validate command parameters and options
+- [ ] Determine review scope and requirements
+- [ ] Check for existing sessions to resume
 
 ### Execution Steps
 
-- [ ] Load project context (if enabled)
-- [ ] Extract target content and save to input file
-- [ ] Build combined prompt file with context + content + template
-- [ ] Execute multiple LLM review queries (Google Pro, Anthropic Opus)
-- [ ] Save individual model reports
-- [ ] Generate session summary and file index
+- [ ] Run `code-review` command with appropriate parameters
+- [ ] Monitor execution progress and handle any errors
+- [ ] Review generated reports and session artifacts
+- [ ] Optionally synthesize multiple reports if needed
 
 ## Process Steps
 
 ### 1. Session Directory Creation
 
-Create structured session directory for organized output:
+Create structured session directory using the `code-review-prepare` command:
 
 ```bash
-# Generate session directory name
-SESSION_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-SESSION_NAME="${focus}-${target//\//-}-${SESSION_TIMESTAMP}"
-SESSION_DIR="dev-taskflow/current/v.0.3.0-workflows/code_review/${SESSION_NAME}"
+# Create session directory with automatic naming and metadata
+code-review-prepare session-dir --focus "${focus}" --target "${target}" --base-path "dev-taskflow/current/v.0.3.0-workflows"
 
-# Create session directory
-mkdir -p "${SESSION_DIR}"
+# The command automatically:
+# - Generates timestamp-based session name
+# - Creates directory structure
+# - Writes session metadata
+# - Returns session directory path
+```
 
-# Create session metadata
-cat > "${SESSION_DIR}/session.meta" <<EOF
-command: @review-code ${focus} ${target} ${context:-auto}
-timestamp: $(date -Iseconds)
-target: ${target}
-focus: ${focus}
-context: ${context:-auto}
-EOF
+**Command Output Example:**
+```
+Session directory created: dev-taskflow/current/v.0.3.0-workflows/code_review/code-HEAD~1..HEAD-20250107-143052
 ```
 
 **Validation:**
@@ -99,6 +100,7 @@ EOF
 - Session directory created successfully
 - Session metadata file contains all parameters
 - Directory structure follows established pattern
+- Session ID available for resuming with `--session`
 
 ### 2. Parameter Validation
 
@@ -110,88 +112,54 @@ Validate the command parameters:
 
 ### 2. Project Context Loading
 
-Based on context parameter:
+Use the `code-review-prepare project-context` command to handle context loading:
 
-- **auto** (default): Load project context from:
+```bash
+# Auto-load project context (default)
+code-review-prepare project-context --context auto
 
-  ```bash
-  # Load core project documents
-  docs/what-do-we-build.md
-  docs/architecture.md
-  docs/blueprint.md
-  ```
+# Skip context loading
+code-review-prepare project-context --context none
 
-- **none**: Skip project context loading entirely
+# Load custom context file
+code-review-prepare project-context --context path/to/custom.md
+```
 
-- **custom path**: Load specified context file instead of defaults
+The command automatically:
+- Loads appropriate files based on context mode
+- Formats content for LLM consumption
+- Saves to session directory as `project-context.md`
+- Handles missing files gracefully
 
 ### 3. Target Content Resolution and File Creation
 
-Resolve target content and save to structured input files:
-
-#### Git Ranges/Diffs → input.diff
+Use the `code-review-prepare project-target` command to extract and format target content:
 
 ```bash
-# For commit ranges
-git diff [range] --no-color > "${SESSION_DIR}/input.diff"
+# Extract target content based on type
+code-review-prepare project-target --target "${target}"
 
-# For staged changes
-git diff --staged --no-color > "${SESSION_DIR}/input.diff"
-
-# For unstaged changes
-git diff --no-color > "${SESSION_DIR}/input.diff"
-
-# For working directory changes
-git diff HEAD --no-color > "${SESSION_DIR}/input.diff"
-
-# Add diff metadata
-echo "# Diff Metadata" > "${SESSION_DIR}/input.meta"
-echo "target: ${target}" >> "${SESSION_DIR}/input.meta"
-echo "type: git_diff" >> "${SESSION_DIR}/input.meta"
-echo "size: $(wc -l < "${SESSION_DIR}/input.diff") lines" >> "${SESSION_DIR}/input.meta"
+# The command automatically:
+# - Detects target type (git range, file pattern, or special keyword)
+# - Extracts appropriate content
+# - Formats as diff or XML based on content type
+# - Generates metadata file
+# - Saves to session directory
 ```
 
-#### File Patterns → input.xml
+**Command Examples:**
 
 ```bash
-# Create XML container for multiple files
-echo '<?xml version="1.0" encoding="UTF-8"?>' > "${SESSION_DIR}/input.xml"
-echo '<documents>' >> "${SESSION_DIR}/input.xml"
+# Git range → creates input.diff
+code-review-prepare project-target --target "v.0.2.0..HEAD"
 
-# Use find or glob to resolve patterns and embed content
-find . -path "./target-pattern" -type f | while read -r file; do
-    echo "  <document path=\"$file\">" >> "${SESSION_DIR}/input.xml"
-    echo "    <![CDATA[" >> "${SESSION_DIR}/input.xml"
-    cat "$file" >> "${SESSION_DIR}/input.xml"
-    echo "    ]]>" >> "${SESSION_DIR}/input.xml"
-    echo "  </document>" >> "${SESSION_DIR}/input.xml"
-done
+# File pattern → creates input.xml
+code-review-prepare project-target --target "tests/**/*.rb"
 
-echo '</documents>' >> "${SESSION_DIR}/input.xml"
-
-# Add file pattern metadata
-echo "target: ${target}" > "${SESSION_DIR}/input.meta"
-echo "type: file_pattern" >> "${SESSION_DIR}/input.meta"
-echo "files: $(find . -path "./target-pattern" -type f | wc -l)" >> "${SESSION_DIR}/input.meta"
-```
-
-#### Specific Files → input.xml
-
-```bash
-# Create XML container for single file
-echo '<?xml version="1.0" encoding="UTF-8"?>' > "${SESSION_DIR}/input.xml"
-echo '<documents>' >> "${SESSION_DIR}/input.xml"
-echo "  <document path=\"${target}\">" >> "${SESSION_DIR}/input.xml"
-echo "    <![CDATA[" >> "${SESSION_DIR}/input.xml"
-cat "${target}" >> "${SESSION_DIR}/input.xml"
-echo "    ]]>" >> "${SESSION_DIR}/input.xml"
-echo "  </document>" >> "${SESSION_DIR}/input.xml"
-echo '</documents>' >> "${SESSION_DIR}/input.xml"
-
-# Add single file metadata
-echo "target: ${target}" > "${SESSION_DIR}/input.meta"
-echo "type: single_file" >> "${SESSION_DIR}/input.meta"
-echo "size: $(wc -l < "${target}") lines" >> "${SESSION_DIR}/input.meta"
+# Special keywords → creates input.diff
+code-review-prepare project-target --target "staged"
+code-review-prepare project-target --target "unstaged"
+code-review-prepare project-target --target "working"
 ```
 
 **Validation:**
@@ -199,119 +167,42 @@ echo "size: $(wc -l < "${target}") lines" >> "${SESSION_DIR}/input.meta"
 - Input file (input.diff or input.xml) created successfully
 - Input metadata file contains target information
 - Content properly formatted and readable
+- File size and type automatically tracked
 
 ### 4. Review Template Selection
 
-Select appropriate universal templates based on focus:
+The `code-review` command automatically selects appropriate templates based on focus:
 
-- **code**: Use `dev-handbook/templates/review-code/system.prompt.md` (universal template with combination instructions)
-- **tests**: Use `dev-handbook/templates/review-test/system.prompt.md` (universal template with combination instructions)
-- **docs**: Use `dev-handbook/templates/review-docs/system.prompt.md` (universal template with combination instructions)
-- **combined**: Use primary template with combination instructions activated, then synthesize with `dev-handbook/templates/synthesize-reviews/system.prompt.md`
+- **code**: Uses `dev-handbook/templates/review-code/system.prompt.md`
+- **tests**: Uses `dev-handbook/templates/review-test/system.prompt.md`
+- **docs**: Uses `dev-handbook/templates/review-docs/system.prompt.md`
+- **combined**: Uses multiple templates and synthesizes results
 
-```bash
-# Set system prompt path based on focus
-case "${focus}" in
-    "code")
-        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-code/system.prompt.md"
-        ;;
-    "tests")
-        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-test/system.prompt.md"
-        ;;
-    "docs")
-        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-docs/system.prompt.md"
-        ;;
-    *)
-        # For combined reviews, use the primary focus template
-        SYSTEM_PROMPT_PATH="dev-handbook/templates/review-code/system.prompt.md"
-        ;;
-esac
-```
+Template selection is handled internally by the command based on the FOCUS parameter.
 
 ### 5. Combined Prompt Construction
 
-Build the complete prompt and save to prompt.md:
+Use the `code-review-prepare prompt` command to build the complete review prompt:
 
 ```bash
-# Build combined prompt file with YAML frontmatter
-cat > "${SESSION_DIR}/prompt.md" <<EOF
----
-generated: $(date -Iseconds)
-target: ${target}
-focus: ${focus}
-context: ${context:-auto}
-type: review-prompt
----
+# Build combined prompt with all components
+code-review-prepare prompt \
+  --focus "${focus}" \
+  --target "${target}" \
+  --context "${context:-auto}"
 
-<review-prompt>
-EOF
-
-echo -e "\n  <project-context>" >> "${SESSION_DIR}/prompt.md"
-
-# Add project context if enabled
-if [[ "${context:-auto}" != "none" ]]; then
-    if [[ "${context:-auto}" == "auto" ]]; then
-        echo "    <document type=\"blueprint\">" >> "${SESSION_DIR}/prompt.md"
-        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
-        cat "docs/blueprint.md" >> "${SESSION_DIR}/prompt.md"
-        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
-        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <document type=\"vision\">" >> "${SESSION_DIR}/prompt.md"
-        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
-        cat "docs/what-do-we-build.md" >> "${SESSION_DIR}/prompt.md"
-        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
-        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
-    else
-        echo "    <document type=\"custom\">" >> "${SESSION_DIR}/prompt.md"
-        echo "      <![CDATA[" >> "${SESSION_DIR}/prompt.md"
-        cat "${context}" >> "${SESSION_DIR}/prompt.md"
-        echo "      ]]>" >> "${SESSION_DIR}/prompt.md"
-        echo "    </document>" >> "${SESSION_DIR}/prompt.md"
-    fi
-fi
-
-echo "  </project-context>" >> "${SESSION_DIR}/prompt.md"
-
-echo -e "\n  <review-target" >> "${SESSION_DIR}/prompt.md"
-
-# Add target content
-if [[ -f "${SESSION_DIR}/input.diff" ]]; then
-    echo " type=\"diff\">" >> "${SESSION_DIR}/prompt.md"
-    echo "    <![CDATA[" >> "${SESSION_DIR}/prompt.md"
-    cat "${SESSION_DIR}/input.diff" >> "${SESSION_DIR}/prompt.md"
-    echo "    ]]>" >> "${SESSION_DIR}/prompt.md"
-elif [[ -f "${SESSION_DIR}/input.xml" ]]; then
-    echo " type=\"file\">" >> "${SESSION_DIR}/prompt.md"
-    echo "    <![CDATA[" >> "${SESSION_DIR}/prompt.md"
-    cat "${SESSION_DIR}/input.xml" >> "${SESSION_DIR}/prompt.md"
-    echo "    ]]>" >> "${SESSION_DIR}/prompt.md"
-fi
-
-echo "  </review-target>" >> "${SESSION_DIR}/prompt.md"
-
-echo -e "\n  <focus-areas type=\"${focus}\">" >> "${SESSION_DIR}/prompt.md"
-
-case "${focus}" in
-    "code")
-        echo "    <area>Code quality, architecture, security, performance</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>Architecture compliance (see docs/architecture.md)</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>Ruby best practices and conventions</area>" >> "${SESSION_DIR}/prompt.md"
-        ;;
-    "tests")
-        echo "    <area>Test coverage, quality, maintainability</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>RSpec best practices</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>Test architecture and organization</area>" >> "${SESSION_DIR}/prompt.md"
-        ;;
-    "docs")
-        echo "    <area>Documentation gaps, updates, cross-references</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>Architecture documentation alignment</area>" >> "${SESSION_DIR}/prompt.md"
-        echo "    <area>User experience and clarity</area>" >> "${SESSION_DIR}/prompt.md"
-        ;;
-esac
-
-echo "  </focus-areas>" >> "${SESSION_DIR}/prompt.md"
-echo "</review-prompt>" >> "${SESSION_DIR}/prompt.md"
+# The command automatically:
+# - Combines project context (if loaded)
+# - Includes target content (diff or files)
+# - Adds focus-specific instructions
+# - Generates YAML frontmatter
+# - Saves as prompt.md in session directory
 ```
+
+**Command Output:**
+- Creates `prompt.md` with structured review prompt
+- Includes all necessary context and content
+- Ready for LLM processing
 
 **Validation:**
 
@@ -323,138 +214,74 @@ echo "</review-prompt>" >> "${SESSION_DIR}/prompt.md"
 
 ### 6. Multi-Model LLM Execution
 
-Execute reviews with multiple LLM providers:
+The `code-review` command handles all LLM execution automatically:
 
 ```bash
-# Execute Google Pro review
-echo "Executing Google Pro review..."
-dev-tools/exe/llm-query google:gemini-2.5-pro \
-    "$(cat "${SESSION_DIR}/prompt.md")" \
-    --system "${SYSTEM_PROMPT_PATH}" \
-    --timeout 500 \
-    --output "${SESSION_DIR}/cr-report-gpro.md"
+# Execute complete code review
+code-review "${focus}" "${target}" \
+  --context "${context:-auto}" \
+  --model "google:gemini-2.5-pro" \
+  --output "${output_file}"
 
-# Check Google Pro execution status
-if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-gpro.md" ]]; then
-    echo "✅ Google Pro review completed successfully"
-else
-    echo "❌ Google Pro review failed or produced empty output"
-    echo "Error details:" >> "${SESSION_DIR}/execution.log"
-    tail -n 20 "${SESSION_DIR}/cr-report-gpro.md" >> "${SESSION_DIR}/execution.log"
-fi
+# Or use default multi-model execution
+code-review "${focus}" "${target}"
 
-# Execute Anthropic Opus review
-echo "Executing Anthropic Opus review..."
-dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 \
-    "$(cat "${SESSION_DIR}/prompt.md")" \
-    --system "${SYSTEM_PROMPT_PATH}" \
-    --timeout 500 \
-    --output "${SESSION_DIR}/cr-report-opus.md"
+# Resume a previous session
+code-review "${focus}" "${target}" \
+  --session "review-20240106-143052"
 
-# Check Anthropic Opus execution status
-if [[ $? -eq 0 ]] && [[ -s "${SESSION_DIR}/cr-report-opus.md" ]]; then
-    echo "✅ Anthropic Opus review completed successfully"
-else
-    echo "❌ Anthropic Opus review failed or produced empty output"
-    echo "Error details:" >> "${SESSION_DIR}/execution.log"
-    tail -n 20 "${SESSION_DIR}/cr-report-opus.md" >> "${SESSION_DIR}/execution.log"
-fi
-
-# Create execution summary
-cat > "${SESSION_DIR}/execution.summary" <<EOF
-Session: ${SESSION_NAME}
-Timestamp: $(date -Iseconds)
-Target: ${target}
-Focus: ${focus}
-
-Execution Results:
-- Google Pro: $([ -s "${SESSION_DIR}/cr-report-gpro.md" ] && echo "✅ Success" || echo "❌ Failed")
-- Anthropic Opus: $([ -s "${SESSION_DIR}/cr-report-opus.md" ] && echo "✅ Success" || echo "❌ Failed")
-
-Files Generated:
-$(ls -la "${SESSION_DIR}"/ | grep -E '\.(md|meta|log)$')
-EOF
+# Dry run to see what would be done
+code-review "${focus}" "${target}" --dry-run
 ```
+
+The command automatically:
+- Executes with configured LLM providers
+- Handles multi-model reviews when appropriate
+- Creates structured report files
+- Manages error handling and retries
+- Generates execution summary
 
 **Validation:**
 
-- Both LLM providers executed successfully
+- LLM execution completed successfully
 - Report files contain structured review content
 - Execution log captures any errors or issues
 - Summary file provides execution overview
 
 ### 7. Session Finalization and Index Creation
 
-Create session index and prepare for synthesis:
+The `code-review` command automatically creates session documentation:
 
-```bash
-# Create session index file
-cat > "${SESSION_DIR}/README.md" <<EOF
-# Code Review Session: ${SESSION_NAME}
+**Generated Files:**
+- `session.meta` - Session metadata and parameters
+- `input.meta` - Target content metadata
+- `input.diff` or `input.xml` - Extracted content
+- `prompt.md` - Combined review prompt
+- `cr-report-*.md` - Review reports (one per model)
+- `execution.summary` - Execution results
+- `README.md` - Session index with all file references
 
-**Generated**: $(date -Iseconds)  
-**Command**: \`@review-code ${focus} ${target} ${context:-auto}\`  
-**Target**: ${target}  
-**Focus**: ${focus}  
-**Context**: ${context:-auto}
+**Session Output Example:**
+```
+🎉 Code Review Session Completed: code-HEAD~1..HEAD-20240106-143052
 
-## Session Files
+📁 Session Directory: dev-taskflow/current/v.0.3.0-workflows/code_review/code-HEAD~1..HEAD-20240106-143052/
+📋 Session Index: README.md
 
-### Input Files
-- [\`session.meta\`](./session.meta) - Session metadata and parameters
-- [\`input.meta\`](./input.meta) - Target content metadata
-$([ -f "${SESSION_DIR}/input.diff" ] && echo "- [\\`input.diff\\`](./input.diff) - Git diff content")
-$([ -f "${SESSION_DIR}/input.xml" ] && echo "- [\\`input.xml\\`](./input.xml) - File content in XML format")
+📊 Generated Reports:
+   ✅ cr-report.md (final review)
+   ✅ cr-report-gpro.md (if multi-model)
+   ✅ cr-report-opus.md (if multi-model)
 
-### Prompt and Execution
-- [\`prompt.md\`](./prompt.md) - User prompt (PROJECT CONTEXT + FOCUS REVIEW)
-- [\`system.prompt.combined.md\`](./system.prompt.combined.md) - Combined system prompt (for multi-focus reviews)
-- [\`execution.summary\`](./execution.summary) - LLM execution results
-- [\`execution.log\`](./execution.log) - Detailed execution logs (if errors occurred)
-
-### Review Reports
-$([ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "- [\\`cr-report-gpro.md\\`](./cr-report-gpro.md) - Google Pro review report")
-$([ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "- [\\`cr-report-opus.md\\`](./cr-report-opus.md) - Anthropic Opus review report")
-
-## Next Steps
-
-To synthesize multiple reports into a unified analysis:
-
-\`\`\`bash
-@synthesize-reviews dir:${SESSION_DIR}/
-\`\`\`
-
-This will create \`cr-report.md\` with the final synthesized review.
-
-## Session Statistics
-
-- **Input Size**: $([ -f "${SESSION_DIR}/input.diff" ] && wc -l < "${SESSION_DIR}/input.diff" || echo "N/A") lines
-- **Prompt Size**: $(wc -w < "${SESSION_DIR}/prompt.md") words
-- **Reports Generated**: $(ls "${SESSION_DIR}"/cr-report-*.md 2>/dev/null | wc -l)
-- **Total Session Files**: $(ls "${SESSION_DIR}"/ | wc -l)
-EOF
-
-# Display session completion summary
-echo ""
-echo "🎉 Code Review Session Completed: ${SESSION_NAME}"
-echo ""
-echo "📁 Session Directory: ${SESSION_DIR}/"
-echo "📋 Session Index: ${SESSION_DIR}/README.md"
-echo ""
-echo "📊 Generated Reports:"
-[ -f "${SESSION_DIR}/cr-report-gpro.md" ] && echo "   ✅ Google Pro: cr-report-gpro.md"
-[ -f "${SESSION_DIR}/cr-report-opus.md" ] && echo "   ✅ Anthropic Opus: cr-report-opus.md"
-echo ""
-echo "🔄 Next Step: Run @synthesize-reviews dir:${SESSION_DIR}/ to create unified report"
-echo ""
+🔄 For multi-report synthesis: synthesize-reviews --session-dir <path>
 ```
 
 **Validation:**
 
-- Session index (README.md) created with all file references
-- Execution summary shows successful LLM runs
-- Session directory contains all expected files
-- Clear next steps provided for synthesis
+- Session documentation created automatically
+- All review artifacts properly organized
+- Session can be resumed with `--session` flag
+- Ready for synthesis or further analysis
 
 ## Implementation Templates
 
@@ -503,8 +330,8 @@ Output: Comparative analysis with scoring and recommendations
 
 ### Example 1: Code Review of Recent Changes
 
-```
-@review-code code v.0.2.0..HEAD
+```bash
+code-review code v.0.2.0..HEAD
 ```
 
 - Reviews code changes from v.0.2.0 to HEAD
@@ -514,8 +341,8 @@ Output: Comparative analysis with scoring and recommendations
 
 ### Example 2: Test Review Without Context
 
-```
-@review-code tests tests/**/*.rb context:none
+```bash
+code-review tests 'tests/**/*.rb' --context none
 ```
 
 - Reviews all test files matching pattern
@@ -525,8 +352,8 @@ Output: Comparative analysis with scoring and recommendations
 
 ### Example 3: Documentation Review with Custom Context
 
-```
-@review-code docs v.0.2.0..HEAD context:custom-requirements.md
+```bash
+code-review docs v.0.2.0..HEAD --context custom-requirements.md
 ```
 
 - Reviews documentation changes in commit range
@@ -536,8 +363,8 @@ Output: Comparative analysis with scoring and recommendations
 
 ### Example 4: Combined Review of Staged Changes
 
-```
-@review-code code tests docs staged
+```bash
+code-review "code tests docs" staged
 ```
 
 - Reviews all staged changes
@@ -547,8 +374,8 @@ Output: Comparative analysis with scoring and recommendations
 
 ### Example 5: Specific File Review
 
-```
-@review-code code lib/coding_agent_tools/organisms/commit_message_generator.rb
+```bash
+code-review code lib/coding_agent_tools/organisms/commit_message_generator.rb
 ```
 
 - Reviews specific file
@@ -556,24 +383,38 @@ Output: Comparative analysis with scoring and recommendations
 - Auto-loads project context
 - Focuses on code quality for single file
 
-### Example 6: Non-Interactive Prompt Generation
+### Example 6: Resume Previous Session
 
 ```bash
-# Generate prompt file for batch processing
-dev-tools/exe/generate-review-prompt --focus code --target v.0.2.0..HEAD --output code-review-prompt.md
-
-# Process with LLM
-dev-tools/exe/llm-query google:gemini-2.5-pro \
-    "$(cat code-review-prompt.md)" \
-    --system dev-handbook/templates/review-code/system.prompt.md \
-    --timeout 500 \
-    --output code-review-result.md
+# Resume a previous review session
+code-review code v.0.2.0..HEAD --session review-20240106-143052
 ```
 
-- Generates fully hydrated prompt with embedded content
-- Suitable for batch processing or large diffs
-- Avoids agent context limitations
-- Ready for direct LLM processing
+- Resumes existing session with all context
+- Continues from previous state
+- Useful for iterative reviews
+
+### Example 7: Dry Run Mode
+
+```bash
+# See what would be done without execution
+code-review "code tests" HEAD~5..HEAD --dry-run
+```
+
+- Shows planned actions without creating session
+- Validates parameters and configuration
+- Useful for testing command setup
+
+### Example 8: Custom Model Selection
+
+```bash
+# Use specific LLM model
+code-review code staged --model anthropic:claude-3-opus-20240229
+```
+
+- Overrides default model selection
+- Useful for specific review requirements
+- Supports all configured LLM providers
 
 ## Success Criteria
 
@@ -611,11 +452,11 @@ dev-tools/exe/llm-query google:gemini-2.5-pro \
    echo $ANTHROPIC_API_KEY
    ```
 
-2. Test with simple API call first
-3. Check API key format and permissions
-4. If single provider fails, continue with available providers
-5. Ask user to verify/refresh credentials if all providers fail
-6. Document which provider failed in execution.log
+2. Test with `llm-models` command to verify connectivity
+3. Retry with different model using `--model` option
+4. Use `--dry-run` to test without API calls
+5. Check session logs if using `--session`
+6. Review error details in session execution.log
 
 **Prevention:**
 
@@ -715,9 +556,9 @@ dev-tools/exe/llm-query google:gemini-2.5-pro \
 
 1. Verify git repository status: `git status`
 2. Check if commit ranges exist: `git log --oneline v.0.2.0..HEAD`
-3. For invalid ranges, ask user for correct commit references
-4. Validate file patterns exist: `find . -name "pattern"`
-5. Use `git fetch` to update remote references if needed
+3. Use `code-review --help` to verify valid target formats
+4. Test with simpler target first (e.g., `HEAD~1..HEAD`)
+5. Use quotes for file patterns: `'**/*.rb'`
 
 **Prevention:**
 
@@ -762,11 +603,11 @@ dev-tools/exe/llm-query google:gemini-2.5-pro \
 
 **Recovery Steps:**
 
-1. **Invalid focus**: Display available focus options (`code`, `tests`, `docs`)
-2. **Invalid target**: Validate git ranges, file patterns, file existence
-3. **Invalid context**: Verify context file exists or use defaults
-4. Show command usage examples
-5. Ask user to clarify intended review scope
+1. Run `code-review --help` to see valid options
+2. Use quotes for multiple focus areas: `"code tests"`
+3. Verify file paths and git ranges exist
+4. Use `--dry-run` to validate parameters
+5. Check example usage in help output
 
 **Prevention:**
 
@@ -834,10 +675,10 @@ When errors occur during review execution:
    - Update session summary with limitations
 
 3. **User Communication:**
-   - Provide clear error descriptions
-   - Explain what results are available
-   - Suggest next steps or alternatives
-   - Document any required user actions
+   - The `code-review` command provides clear error messages
+   - Session logs contain detailed error information
+   - Use `--session` to resume after fixing issues
+   - Check execution.summary for partial results
 
 ## Context Window Management
 
@@ -1333,4 +1174,10 @@ EOF
 
 ---
 
-This workflow provides a unified interface for all code review scenarios while maintaining the flexibility and power of specialized review tools. It serves as the implementation foundation for the `/review-code` Claude Code command.
+This workflow provides a streamlined interface for all code review scenarios using the Ruby gem commands (`code-review` and `code-review-prepare`). The new commands simplify the review process while maintaining all the power and flexibility of the original workflow, with added benefits of:
+
+- Automatic session management and resumption
+- Built-in error handling and recovery
+- Simplified command interface
+- Consistent output structure
+- Easy integration with other tools
