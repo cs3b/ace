@@ -50,12 +50,13 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   end
 
   before do
-    # Default to valid paths and no confirmation needed
+    # Default to valid paths and confirmed operations
     allow(path_validator).to receive(:validate_path).and_return(
       double(invalid?: false, error_message: nil)
     )
-    allow(operation_confirmer).to receive(:should_confirm?).and_return(false)
-    allow(operation_confirmer).to receive(:confirm_overwrite).and_return(true)
+    allow(operation_confirmer).to receive(:confirm_overwrite).and_return(
+      double(confirmed?: true, denied?: false, reason: nil, auto_decision?: false)
+    )
   end
 
   describe "#synchronize_document", :security do
@@ -83,19 +84,18 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
       end
 
       it "confirms operation when needed" do
-        allow(operation_confirmer).to receive(:should_confirm?).and_return(true)
-        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(true)
+        confirmation_result = double(confirmed?: true, denied?: false, reason: nil, auto_decision?: false)
+        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
 
         result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
 
-        expect(operation_confirmer).to have_received(:should_confirm?).with("workflow.md")
         expect(operation_confirmer).to have_received(:confirm_overwrite).with("workflow.md")
         expect(result.success?).to be true
       end
 
       it "handles operation cancellation" do
-        allow(operation_confirmer).to receive(:should_confirm?).and_return(true)
-        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(false)
+        confirmation_result = double(confirmed?: false, denied?: true, reason: "User cancelled", auto_decision?: false)
+        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
 
         result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
 
