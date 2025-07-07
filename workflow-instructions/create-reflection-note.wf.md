@@ -57,18 +57,14 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - Determine where to save the reflection using current release context:
 
      ```bash
-     # Get current release information
-     bin/rc
-
-     # Check for current release directory structure
-     ls -d dev-taskflow/current/*/
-
-     # Target directory priority:
-     # 1. Current release reflections (preferred)
-     dev-taskflow/current/{release}/reflections/
-
-     # 2. General reflections (fallback)
-     dev-taskflow/reflections/
+     # Get current release information and path automatically
+     nav-path reflection-new --title '<reflection-title>'
+     
+     # This tool will:
+     # 1. Determine current release context automatically
+     # 2. Create target directory if needed
+     # 3. Generate appropriate filename with timestamp
+     # 4. Return full path for reflection file
      ```
 
    - **Enhanced Directory Resolution:**
