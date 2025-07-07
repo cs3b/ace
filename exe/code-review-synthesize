@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Coding Agent Tools - Code Review Synthesis Command
+#
+# This executable provides a code review synthesis workflow that orchestrates
+# LLM calls to synthesize multiple code review reports into a unified analysis.
+# It follows the project's established ATOM architecture and CLI patterns.
+#
+# Usage: code-review-synthesize <report1> <report2> [report3...] [options]
+#
+# Examples:
+#   code-review-synthesize cr-report-claude-opus.md cr-report-gpt4.md
+#   code-review-synthesize cr-report-*.md --model anthropic:claude-4-0-sonnet-latest
+#   code-review-synthesize cr-report-*.md --output final-synthesis.md
+#   code-review-synthesize cr-report-*.md --force
+#
+# Features:
+#   - Automatic session directory inference from report paths
+#   - Intelligent output file sequencing (preserve existing LLM results)
+#   - Default integration with synthesis system prompt template
+#   - Support for all llm-query providers and models
+#   - Unified analysis with conflict resolution
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["code", "review-synthesize"],
+  registration_method: :register_code_commands,
+  executable_name: "code-review-synthesize"
+).call
