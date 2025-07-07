@@ -66,11 +66,13 @@ module CodingAgentTools
           if files.any?
             add_result = add(files, options)
             return add_result unless add_result[:success]
-          elsif options[:all]
+          elsif !options[:only_this_repo]
+            # Default behavior: stage all changes across all repositories
+            # Only skip this if --only-this-repo flag is specified
             add_result = add_all(options)
             return add_result unless add_result[:success]
           end
-          # Note: When no files and no --all flag, commit only already staged changes
+          # Note: With --only-this-repo flag, commit only already staged changes
 
           if options[:message]
             commit_with_message(options[:message], options)
