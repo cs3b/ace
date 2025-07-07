@@ -97,6 +97,21 @@ module CodingAgentTools
         @code_review_prepare_commands_registered = true
       end
 
+      def self.register_nav_commands
+        return if @nav_commands_registered
+
+        require_relative "cli/commands/nav"
+        require_relative "cli/commands/nav/path"
+        require_relative "cli/commands/nav/tree"
+
+        register "nav", aliases: [] do |prefix|
+          prefix.register "path", Commands::Nav::Path
+          prefix.register "tree", Commands::Nav::Tree
+        end
+
+        @nav_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -104,6 +119,7 @@ module CodingAgentTools
         register_binstub_commands
         register_code_commands
         register_code_review_prepare_commands
+        register_nav_commands
         super
       end
     end

@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+
+# Nav Ls - Direct interface to intelligent directory listing functionality
+# This provides a focused entry point for ls operations with path autocorrection
+
+# Set up load paths for development if necessary
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools"
+require "coding_agent_tools/molecules"
+require "coding_agent_tools/cli/commands/nav/ls"
+
+# Simple direct execution - bypass Dry::CLI complexity for a dedicated executable
+begin
+  if ARGV.include?("--help") || ARGV.include?("-h")
+    puts "Nav Ls - Intelligent directory listing with path autocorrection"
+    puts ""
+    puts "Usage:"
+    puts "  nav-ls [PATH] [OPTIONS]"
+    puts ""
+    puts "Options:"
+    puts "  --long          Use long format (ls -l)"
+    puts "  --all           Show hidden files (ls -a)"
+    puts "  --autocorrect   Enable path autocorrection (default: true)"
+    puts "  --no-autocorrect Disable path autocorrection"
+    puts ""
+    puts "Examples:"
+    puts "  nav-ls"
+    puts "  nav-ls guides"
+    puts "  nav-ls docs --long"
+    puts "  nav-ls . --all"
+    puts "  nav-ls tasks --long --all"
+    exit 0
+  end
+
+  if ARGV.include?("--version") || ARGV.include?("-v")
+    require "coding_agent_tools/version"
+    puts "Nav Ls #{CodingAgentTools::VERSION}"
+    exit 0
+  end
+
+  # Parse arguments manually
+  options = {}
+  path = nil
+  
+  # Extract path argument (first non-option argument)
+  non_option_args = ARGV.reject { |arg| arg.start_with?("--") }
+  path = non_option_args.first unless non_option_args.empty?
+  
+  if ARGV.include?("--long")
+    options[:long] = true
+  end
+  
+  if ARGV.include?("--all")
+    options[:all] = true
+  end
+  
+  if ARGV.include?("--no-autocorrect")
+    options[:autocorrect] = false
+  elsif ARGV.include?("--autocorrect")
+    options[:autocorrect] = true
+  else
+    options[:autocorrect] = true  # default
+  end
+
+  # Execute the nav ls command
+  command = CodingAgentTools::Cli::Commands::Nav::Ls.new
+  command.call(path: path, **options)
+
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end
