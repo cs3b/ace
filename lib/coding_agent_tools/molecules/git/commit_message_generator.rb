@@ -85,11 +85,23 @@ module CodingAgentTools
 
             execute_llm_command(command, "LLM")
           ensure
-            # Clean up temporary files
-            system_file.close
-            system_file.unlink
-            prompt_file.close
-            prompt_file.unlink
+            # Allow any background threads from Open3.capture3 to finish before cleanup
+            sleep(0.1)
+            
+            # Clean up temporary files with defensive error handling
+            begin
+              system_file.close
+              prompt_file.close
+              
+              # Small delay before unlinking to ensure file handles are fully released
+              sleep(0.05)
+              
+              system_file.unlink
+              prompt_file.unlink
+            rescue => cleanup_error
+              # Log cleanup errors but don't fail the operation
+              puts "Warning: Error during tempfile cleanup: #{cleanup_error.message}" if debug
+            end
           end
         end
 
