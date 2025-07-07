@@ -193,11 +193,9 @@ module CodingAgentTools
             SyncResult.new(:updated, nil, nil, diff_preview)
           else
             # Use FileOperationConfirmer for confirmation if needed
-            if operation_confirmer.should_confirm?(workflow_file_path)
-              confirmed = operation_confirmer.confirm_overwrite(workflow_file_path)
-              unless confirmed
-                return SyncResult.new(:error, nil, "Operation cancelled by user", nil)
-              end
+            confirmation_result = operation_confirmer.confirm_overwrite(workflow_file_path)
+            unless confirmation_result.confirmed?
+              return SyncResult.new(:error, nil, "Operation cancelled by user", nil)
             end
 
             # Update the embedded content
