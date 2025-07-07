@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Coding Agent Tools - Handbook CLI
+#
+# This executable provides handbook functionality including template synchronization
+# and other handbook-related operations.
+#
+# Usage: handbook [SUBCOMMAND] [options]
+#
+# Examples:
+#   handbook sync-templates
+#   handbook sync-templates --dry-run
+#   handbook sync-templates --path custom/path --verbose
+#   handbook sync-templates --commit
+#
+# Subcommands:
+#   sync-templates  Synchronize XML-embedded template content with files
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["handbook"],
+  registration_method: :register_handbook_commands,
+  executable_name: "handbook"
+).call

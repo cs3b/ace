@@ -112,6 +112,18 @@ module CodingAgentTools
         @nav_commands_registered = true
       end
 
+      def self.register_handbook_commands
+        return if @handbook_commands_registered
+
+        require_relative "cli/commands/handbook/sync_templates"
+
+        register "handbook", aliases: [] do |prefix|
+          prefix.register "sync-templates", Commands::Handbook::SyncTemplates
+        end
+
+        @handbook_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -120,6 +132,7 @@ module CodingAgentTools
         register_code_commands
         register_code_review_prepare_commands
         register_nav_commands
+        register_handbook_commands
         super
       end
     end
