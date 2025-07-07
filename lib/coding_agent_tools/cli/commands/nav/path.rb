@@ -53,11 +53,31 @@ module CodingAgentTools
             if result[:success]
               case result[:type]
               when :single
+                # Standard single result
+                if result[:autocorrect_message]
+                  puts result[:autocorrect_message]
+                end
                 puts result[:path]
               when :multiple
-                puts "Multiple matches found:"
-                result[:paths].each_with_index do |path, index|
-                  puts "#{index + 1}) #{path}"
+                # Use smart prioritization for multiple matches
+                prioritized = path_resolver.prioritize_matches(result[:paths])
+                puts "Autocorrected: '#{actual_input}' → '#{prioritized[:best]}'"
+                puts prioritized[:best]
+                
+                # Show alternatives if any exist
+                unless prioritized[:alternatives].empty?
+                  puts path_resolver.format_alternative_matches(prioritized[:alternatives])
+                end
+              when :scoped_multiple
+                # Scoped pattern with multiple matches
+                if result[:autocorrect_message]
+                  puts result[:autocorrect_message]
+                end
+                puts result[:path]
+                
+                # Show scoped alternatives if any exist
+                if result[:alternative_message] && !result[:alternative_message].empty?
+                  puts result[:alternative_message]
                 end
               end
             else

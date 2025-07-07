@@ -74,6 +74,10 @@ module CodingAgentTools
             "max_scan_depth" => 10,
             "operation_timeout" => 30
           }
+        },
+        "scoped_autocorrect" => {
+          "scope_mappings" => {},
+          "scope_autocorrect" => {}
         }
       }.freeze
 
@@ -118,6 +122,7 @@ module CodingAgentTools
         validate_section!(config, "security", Hash)
         validate_section!(config, "integration", Hash)
         validate_section!(config, "performance", Hash)
+        validate_section!(config, "scoped_autocorrect", Hash)
       end
 
       def validate_section!(config, section_name, expected_type)

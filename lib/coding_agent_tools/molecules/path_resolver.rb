@@ -3,29 +3,42 @@
 require "pathname"
 require "fileutils"
 require "find"
+require_relative "path_config_loader"
+require_relative "project_sandbox"
 
 module CodingAgentTools
   module Molecules
     class PathResolver
       def initialize(config_loader = nil, sandbox = nil)
         @config_loader = config_loader || PathConfigLoader.new
-        @sandbox = sandbox || ProjectSandbox.new
         @config = @config_loader.load
+        
+        # Initialize sandbox with security configuration
+        @sandbox = sandbox || ProjectSandbox.new(
+          nil, # project_root (auto-detect)
+          @config.dig("security", "allowed_patterns"), # may be nil for permissive mode
+          @config.dig("security", "forbidden_patterns")
+        )
       end
 
       def resolve_path(path_input, type: :file)
         return failure("Path input cannot be nil") if path_input.nil?
         return failure("Path input cannot be empty") if path_input.to_s.strip.empty?
 
-        case type
-        when :file
-          resolve_file_path(path_input)
-        when :task_new, :docs_new, :reflection_new
-          generate_new_path(path_input, type)
-        when :task
-          resolve_task_path(path_input)
+        # Check if input uses scoped pattern syntax (scope:pattern)
+        if path_input.include?(":") && type == :file
+          resolve_scoped_pattern(path_input)
         else
-          failure("Unknown path type: #{type}")
+          case type
+          when :file
+            resolve_file_path(path_input)
+          when :task_new, :docs_new, :reflection_new
+            generate_new_path(path_input, type)
+          when :task
+            resolve_task_path(path_input)
+          else
+            failure("Unknown path type: #{type}")
+          end
         end
       end
 
@@ -35,10 +48,13 @@ module CodingAgentTools
         file_types = options.fetch(:file_types, preferred_file_types)
         include_directories = options.fetch(:include_directories, false)
 
+        # Normalize and extract meaningful parts from the pattern
+        normalized_pattern = normalize_pattern(pattern)
+        
         matches = []
         
         repositories.each do |repo|
-          repo_matches = scan_repository_for_pattern(repo, pattern, file_types, include_directories)
+          repo_matches = scan_repository_for_pattern(repo, normalized_pattern, file_types, include_directories)
           matches.concat(repo_matches)
           break if matches.length >= max_results
         end
@@ -75,6 +91,67 @@ module CodingAgentTools
         
         # Multiple matches - return all for user selection
         success_with_options(fuzzy_matches)
+      end
+
+      # Scoped pattern resolution (public method)
+      def resolve_scoped_pattern(input)
+        scope_part, pattern_part = input.split(":", 2)
+        return failure("Empty scope or pattern") if scope_part.strip.empty? || pattern_part.strip.empty?
+
+        # Simple scope resolution - get scope config
+        scoped_config = @config.dig("scoped_autocorrect") || {}
+        scope_autocorrect = scoped_config.dig("scope_autocorrect") || {}
+        scope_mappings = scoped_config.dig("scope_mappings") || {}
+        
+        # Autocorrect scope - check exact match, case-insensitive, and partial matches
+        corrected_scope = scope_part
+        if scope_autocorrect.key?(scope_part)
+          corrected_scope = scope_autocorrect[scope_part]
+        else
+          # Case-insensitive check
+          scope_autocorrect.each do |from, to|
+            if scope_part.downcase == from.downcase
+              corrected_scope = to
+              break
+            end
+          end
+        end
+        
+        # Get scope paths
+        scope_paths = scope_mappings[corrected_scope] || []
+        return failure("No scope matches found for '#{scope_part}' (autocorrected to '#{corrected_scope}')") if scope_paths.empty?
+        
+        # Find matches in scope directories
+        all_matches = []
+        scope_paths.each do |scope_path|
+          full_scope_path = File.join(@sandbox.project_root, scope_path)
+          next unless Dir.exist?(full_scope_path)
+          
+          matches = find_matching_paths(pattern_part, repositories: [{"path" => scope_path}], max_results: 10)
+          all_matches.concat(matches)
+        end
+        
+        return failure("No patterns found for '#{pattern_part}' in scope '#{corrected_scope}'") if all_matches.empty?
+        
+        # Build result
+        if all_matches.length == 1
+          result = { success: true, path: all_matches.first, type: :single }
+          if scope_part != corrected_scope
+            result[:autocorrect_message] = "Autocorrected scope: '#{scope_part}' → '#{corrected_scope}'"
+          end
+          result
+        else
+          prioritized = prioritize_matches(all_matches)
+          result = { success: true, path: prioritized[:best], type: :scoped_multiple }
+          if scope_part != corrected_scope
+            result[:autocorrect_message] = "Autocorrected scope: '#{scope_part}' → '#{corrected_scope}'"
+          end
+          result[:alternatives] = prioritized[:alternatives]
+          if prioritized[:alternatives].any?
+            result[:alternative_message] = "\nOther scope combinations:\n  - #{corrected_scope}: #{prioritized[:alternatives].length} more match#{'es' if prioritized[:alternatives].length > 1}"
+          end
+          result
+        end
       end
 
       private
@@ -229,17 +306,68 @@ module CodingAgentTools
           
           relative_path = path.sub(@sandbox.project_root + "/", "")
           
-          # Simple pattern matching - could be enhanced with more sophisticated matching
-          if File.fnmatch?("*#{pattern}*", File.basename(path), File::FNM_CASEFOLD) ||
-             File.fnmatch?("*#{pattern}*", relative_path, File::FNM_CASEFOLD)
-            matches << path
+          # Enhanced fuzzy pattern matching
+          basename = File.basename(path)
+          dirname = File.dirname(relative_path)
+          
+          # Check various matching strategies
+          match_found = false
+          
+          # 1. Exact substring match (highest priority)
+          if basename.downcase.include?(pattern.downcase) ||
+             relative_path.downcase.include?(pattern.downcase)
+            match_found = true
           end
+          
+          # 2. Fuzzy prefix matching (e.g., "dev" matches "dev-tools")
+          if basename.downcase.start_with?(pattern.downcase) ||
+             dirname.split("/").any? { |part| part.downcase.start_with?(pattern.downcase) }
+            match_found = true
+          end
+          
+          # 3. Word boundary matching (e.g., "tools" matches "dev-tools")
+          if basename.downcase.split(/[-_]/).any? { |part| part.start_with?(pattern.downcase) } ||
+             relative_path.downcase.split(/[\/\-_]/).any? { |part| part.start_with?(pattern.downcase) }
+            match_found = true
+          end
+          
+          # 4. Character similarity for very short patterns
+          if pattern.length <= 3 && calculate_similarity_score(pattern, basename) > 0.6
+            match_found = true
+          end
+          
+          matches << path if match_found
           
           # Limit results to prevent performance issues
           break if matches.length >= 50
         end
 
-        matches.sort_by { |path| [repo["priority"], File.basename(path)] }
+        # Sort matches by relevance score
+        matches.sort_by do |path|
+          basename = File.basename(path)
+          relative_path = path.sub(@sandbox.project_root + "/", "")
+          
+          # Calculate relevance score (lower is better for sorting)
+          score = 0
+          
+          # Exact match gets highest priority
+          if basename.downcase == pattern.downcase
+            score = 0
+          # Exact prefix match
+          elsif basename.downcase.start_with?(pattern.downcase)
+            score = 1
+          # Contains pattern
+          elsif basename.downcase.include?(pattern.downcase)
+            score = 2
+          # Directory contains pattern
+          elsif relative_path.downcase.include?(pattern.downcase)
+            score = 3
+          else
+            score = 4
+          end
+          
+          [score, repo["priority"], basename.length, basename]
+        end
       rescue StandardError
         []
       end
@@ -263,6 +391,159 @@ module CodingAgentTools
           .take(10)
       end
 
+      def prioritize_matches(matches, current_dir = nil)
+        return { best: matches.first, alternatives: [] } if matches.length <= 1
+        
+        current_dir ||= Dir.pwd
+        
+        scored_matches = matches.map do |match|
+          score = calculate_proximity_score(match, current_dir)
+          [match, score]
+        end
+        
+        sorted_matches = scored_matches.sort_by { |_, score| -score }
+        best_match = sorted_matches.first[0]
+        alternatives = sorted_matches[1..-1].map { |match, _| match }
+        
+        { best: best_match, alternatives: alternatives }
+      end
+
+      def calculate_proximity_score(target_path, current_dir)
+        target_abs = File.expand_path(target_path)
+        current_abs = File.expand_path(current_dir)
+        
+        # 100 points: Within current directory tree (target is subdirectory of current)
+        if target_abs.start_with?(current_abs + "/")
+          return 100
+        end
+        
+        # 90 points: Current directory is within target tree (current is subdirectory of target)
+        if current_abs.start_with?(target_abs + "/")
+          return 90
+        end
+        
+        # 80 points: Sibling directories (same parent)
+        if File.dirname(target_abs) == File.dirname(current_abs)
+          return 80
+        end
+        
+        # 70 points: In same repository (share common dev-* ancestor)
+        target_repo = extract_repository_name(target_abs)
+        current_repo = extract_repository_name(current_abs)
+        if target_repo && current_repo && target_repo == current_repo
+          return 70
+        end
+        
+        # 60 points: Same repository type but different repos
+        if target_repo && current_repo
+          return 60
+        end
+        
+        # 40 points: Within project root
+        if target_abs.start_with?(@sandbox.project_root)
+          return 40
+        end
+        
+        # 20 points: Any other match
+        20
+      end
+
+      def extract_repository_name(path)
+        relative_path = path.sub(@sandbox.project_root + "/", "")
+        path_parts = relative_path.split("/")
+        
+        # Look for dev-* directory in path
+        dev_dir = path_parts.find { |part| part.start_with?("dev-") }
+        return dev_dir if dev_dir
+        
+        # If path starts with a known repository name
+        first_part = path_parts.first
+        if %w[dev-tools dev-handbook dev-taskflow].include?(first_part)
+          return first_part
+        end
+        
+        nil
+      end
+
+      def normalize_pattern(pattern)
+        return pattern if pattern.nil? || pattern.empty?
+        
+        # Clean up path traversal patterns
+        normalized = pattern.to_s.strip
+        
+        # Step 1: Handle paths that traverse above project root
+        normalized = clean_path_traversal(normalized)
+        
+        # Step 2: Extract meaningful parts from complex paths
+        path_parts = normalized.split("/").reject(&:empty?)
+        
+        # Step 3: Apply autocorrect mappings to each part
+        corrected_parts = path_parts.map { |part| apply_autocorrect_mappings(part) }
+        
+        # If we have path parts, use the last non-empty one as the search pattern
+        if corrected_parts.any?
+          meaningful_part = corrected_parts.last
+          # If it looks like a filename with extension, remove extension for fuzzy matching
+          meaningful_part = File.basename(meaningful_part, ".*") if meaningful_part.include?(".")
+          meaningful_part
+        else
+          apply_autocorrect_mappings(normalized)
+        end
+      end
+
+      def clean_path_traversal(path)
+        # Convert path to absolute, then check if it's above project root
+        begin
+          expanded_path = File.expand_path(path, @sandbox.project_root)
+          
+          # If the expanded path is above or outside project root, extract meaningful parts
+          unless expanded_path.start_with?(@sandbox.project_root)
+            # Extract just the filename/directory name from complex traversal
+            path_parts = path.split("/").reject { |part| part == "." || part == ".." || part.empty? }
+            return path_parts.last || path
+          end
+          
+          # Make relative to project root
+          expanded_path.sub(@sandbox.project_root + "/", "")
+        rescue StandardError
+          # If path expansion fails, clean it manually
+          path.gsub(/^(\.\.?\/)+/, "").split("/").reject(&:empty?).last || path
+        end
+      end
+
+      def apply_autocorrect_mappings(text)
+        return text if text.nil? || text.empty?
+        
+        # Get autocorrect mappings from config
+        mappings = @config.dig("autocorrect_mappings") || {}
+        
+        # Apply direct mappings
+        return mappings[text] if mappings.key?(text)
+        
+        # Apply case-insensitive mappings
+        mappings.each do |from, to|
+          if text.downcase == from.downcase
+            return to
+          end
+        end
+        
+        # Apply partial mappings (e.g., within longer paths)
+        mappings.each do |from, to|
+          if text.downcase.include?(from.downcase)
+            return text.gsub(/#{Regexp.escape(from)}/i, to)
+          end
+        end
+        
+        text
+      end
+
+      def format_alternative_matches(alternatives)
+        return "" if alternatives.empty?
+        
+        formatted_alternatives = alternatives.map { |alt| "  - #{alt}" }.join("\n")
+        "\nOther matching paths:\n#{formatted_alternatives}"
+      end
+
       def calculate_similarity_score(pattern, path)
         # Simple similarity calculation - could use more sophisticated algorithms
         basename = File.basename(path, ".*").downcase
@@ -282,17 +563,6 @@ module CodingAgentTools
         common_chars.to_f / max_chars
       end
 
-      def success(path)
-        { success: true, path: path, type: :single }
-      end
-
-      def success_with_options(paths)
-        { success: true, paths: paths, type: :multiple }
-      end
-
-      def failure(error)
-        { success: false, error: error }
-      end
     end
   end
 end
