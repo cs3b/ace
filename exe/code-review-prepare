@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Coding Agent Tools - Code Review Prepare Command
+#
+# This executable provides sub-commands for preparing code review components.
+# It allows step-by-step preparation of session directories, content extraction,
+# context loading, and prompt building.
+#
+# Usage: code-review-prepare <subcommand> [options]
+#
+# Sub-commands:
+#   session-dir     - Create session directory structure
+#   project-context - Extract and save project context
+#   project-target  - Extract target content (diff or files)
+#   prompt         - Build combined review prompt
+#
+# Examples:
+#   code-review-prepare session-dir --focus code --target HEAD~1..HEAD
+#   code-review-prepare project-context --session-dir /path/to/session
+#   code-review-prepare project-target --target 'lib/**/*.rb' --session-dir /path/to/session
+#   code-review-prepare prompt --session-dir /path/to/session --focus code
+
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/molecules/executable_wrapper"
+
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["code-review-prepare"],
+  registration_method: :register_code_review_prepare_commands,
+  executable_name: "code-review-prepare"
+).call

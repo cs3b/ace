@@ -67,11 +67,43 @@ module CodingAgentTools
         @binstub_commands_registered = true
       end
 
+      def self.register_code_commands
+        return if @code_commands_registered
+
+        require_relative "cli/commands/code/review"
+
+        register "code", aliases: [] do |prefix|
+          prefix.register "review", Commands::Code::Review
+        end
+
+        @code_commands_registered = true
+      end
+
+      def self.register_code_review_prepare_commands
+        return if @code_review_prepare_commands_registered
+
+        require_relative "cli/commands/code/review_prepare/session_dir"
+        require_relative "cli/commands/code/review_prepare/project_context"
+        require_relative "cli/commands/code/review_prepare/project_target"
+        require_relative "cli/commands/code/review_prepare/prompt"
+
+        register "code-review-prepare", aliases: [] do |prefix|
+          prefix.register "session-dir", Commands::Code::ReviewPrepare::SessionDir
+          prefix.register "project-context", Commands::Code::ReviewPrepare::ProjectContext
+          prefix.register "project-target", Commands::Code::ReviewPrepare::ProjectTarget
+          prefix.register "prompt", Commands::Code::ReviewPrepare::Prompt
+        end
+
+        @code_review_prepare_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
         register_task_commands
         register_binstub_commands
+        register_code_commands
+        register_code_review_prepare_commands
         super
       end
     end
