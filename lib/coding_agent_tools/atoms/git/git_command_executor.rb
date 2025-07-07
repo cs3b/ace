@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "timeout"
 
 module CodingAgentTools
   module Atoms
@@ -48,7 +49,21 @@ module CodingAgentTools
         end
 
         def execute_with_capture(full_command)
-          stdout_str, stderr_str, status = Open3.capture3(full_command)
+          # Add timeout to prevent hanging indefinitely (e.g., interactive editors)
+          timeout_seconds = 30
+          
+          begin
+            stdout_str, stderr_str, status = Timeout.timeout(timeout_seconds) do
+              Open3.capture3(full_command)
+            end
+          rescue Timeout::Error
+            raise GitCommandError.new(
+              "Git command timed out after #{timeout_seconds} seconds: #{full_command}",
+              command: full_command,
+              exit_status: 124, # Standard timeout exit code
+              stderr_output: "Command timed out"
+            )
+          end
           
           unless status.success?
             raise GitCommandError.new(

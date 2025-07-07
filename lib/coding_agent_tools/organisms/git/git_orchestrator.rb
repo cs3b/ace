@@ -376,7 +376,13 @@ module CodingAgentTools
               message = generator.generate_message(diff)
               
               escaped_message = Shellwords.escape(message)
-              commit_command = options[:no_edit] ? "commit -m #{escaped_message}" : "commit --edit -m #{escaped_message}"
+              # Default to non-interactive commits for programmatic operations
+              # Only use --edit when explicitly requested AND in an interactive context
+              if options[:edit] && $stdin.tty?
+                commit_command = "commit --edit -m #{escaped_message}"
+              else
+                commit_command = "commit -m #{escaped_message}"
+              end
               
               commands_by_repo[repo[:name]] = [commit_command]
             rescue CodingAgentTools::Molecules::Git::CommitMessageGenerationError => e
