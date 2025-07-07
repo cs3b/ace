@@ -87,3 +87,60 @@ aliases:
     type: "shell"
     args_processing: "pass_through"
     execution_context: "dev_tools"
+
+  # Git Commands (Multi-Repository Support)
+  gc:
+    description: "Git commit with LLM-generated messages across repositories"
+    executable: "git-commit"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gs:
+    description: "Git status across all repositories"
+    executable: "git-status"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  ga:
+    description: "Git add with intelligent path grouping"
+    executable: "git-add"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gp:
+    description: "Git push across repositories"
+    executable: "git-push"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gpull:
+    description: "Git pull across repositories"
+    executable: "git-pull"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gl:
+    description: "Git log with unified timeline"
+    executable: "git-log"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gd:
+    description: "Git diff across repositories"
+    executable: "git-diff"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gf:
+    description: "Git fetch across repositories"
+    executable: "git-fetch"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"

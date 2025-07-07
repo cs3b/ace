@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/coding_agent_tools"
+require_relative "../lib/coding_agent_tools/cli/commands/git/commit"
+
+begin
+  command = CodingAgentTools::Cli::Commands::Git::Commit.new
+  
+  # Parse arguments manually for this executable
+  options = {}
+  files = []
+  
+  i = 0
+  while i < ARGV.length
+    arg = ARGV[i]
+    
+    case arg
+    when "--debug", "-d"
+      options[:debug] = true
+    when "--intention", "-i"
+      i += 1
+      options[:intention] = ARGV[i] if i < ARGV.length
+    when "--local", "-l"
+      options[:local] = true
+    when "--no-edit", "-n"
+      options[:no_edit] = true
+    when "--message", "-m"
+      i += 1
+      options[:message] = ARGV[i] if i < ARGV.length
+    when "--all", "-a"
+      options[:all] = true
+    when "--concurrent"
+      options[:concurrent] = true
+    when "--main-only"
+      options[:main_only] = true
+    when "--submodules-only"
+      options[:submodules_only] = true
+    when /^--repository=(.+)/, /^-C(.+)/
+      options[:repository] = $1
+    when "--repository", "-C"
+      i += 1
+      options[:repository] = ARGV[i] if i < ARGV.length
+    when /^--model=(.+)/
+      options[:model] = $1
+    when "--model"
+      i += 1
+      options[:model] = ARGV[i] if i < ARGV.length
+    else
+      # If it doesn't start with -, it's a file
+      files << arg unless arg.start_with?("-")
+    end
+    
+    i += 1
+  end
+  
+  exit_code = command.call(files: files, **options)
+  exit(exit_code)
+rescue => e
+  warn "Error: #{e.message}"
+  exit 1
+end

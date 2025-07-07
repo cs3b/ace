@@ -138,6 +138,32 @@ module CodingAgentTools
         @reflection_commands_registered = true
       end
 
+      def self.register_git_commands
+        return if @git_commands_registered
+
+        require_relative "cli/commands/git/status"
+        require_relative "cli/commands/git/commit"
+        require_relative "cli/commands/git/add"
+        require_relative "cli/commands/git/push"
+        require_relative "cli/commands/git/pull"
+        require_relative "cli/commands/git/log"
+        require_relative "cli/commands/git/diff"
+        require_relative "cli/commands/git/fetch"
+
+        register "git", aliases: [] do |prefix|
+          prefix.register "status", Commands::Git::Status
+          prefix.register "commit", Commands::Git::Commit
+          prefix.register "add", Commands::Git::Add
+          prefix.register "push", Commands::Git::Push
+          prefix.register "pull", Commands::Git::Pull
+          prefix.register "log", Commands::Git::Log
+          prefix.register "diff", Commands::Git::Diff
+          prefix.register "fetch", Commands::Git::Fetch
+        end
+
+        @git_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -148,6 +174,7 @@ module CodingAgentTools
         register_nav_commands
         register_handbook_commands
         register_reflection_commands
+        register_git_commands
         super
       end
     end
