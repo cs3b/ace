@@ -103,9 +103,12 @@ module CodingAgentTools
             end
           end
 
-          # Shutdown thread pool
+          # Shutdown thread pool gracefully
           pool.shutdown
-          pool.wait_for_termination(5)
+          unless pool.wait_for_termination(30)
+            # If threads don't finish within 30 seconds, force kill
+            pool.kill
+          end
 
           {
             results: results,
