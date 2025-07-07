@@ -190,6 +190,9 @@ Review and refine a task definition, potentially proposing an implementation app
 11. **Update the task:**
    Use all the gatherd information
 
+12. **Present questions to user again, so they will not be missed**
+   Repeat what do you have in point 8.
+
 ## Review Checklist
 
 **Task Completeness:**
