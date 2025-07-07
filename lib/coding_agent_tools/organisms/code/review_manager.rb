@@ -26,8 +26,9 @@ module CodingAgentTools
         # @param target [String] review target
         # @param context [String] context mode
         # @param base_path [String] base path for sessions
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] {session: ReviewSession, success: Boolean, error: String}
-        def create_review_session(focus, target, context = "auto", base_path = nil)
+        def create_review_session(focus, target, context = "auto", base_path = nil, system_prompt_override = nil)
           begin
             # Create session
             session = @session_manager.create_session(
@@ -49,7 +50,7 @@ module CodingAgentTools
             @context_loader.save_context(context_model, session.directory_path)
             
             # Build and save prompt
-            prompt = @prompt_builder.build_review_prompt(session, target_model, context_model)
+            prompt = @prompt_builder.build_review_prompt(session, target_model, context_model, system_prompt_override)
             
             # Write session summary
             write_session_summary(session, target_model, context_model, prompt)
@@ -106,12 +107,13 @@ module CodingAgentTools
         # @param focus [String] review focus
         # @param target [String] review target
         # @param context [String] context mode
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] preparation results
-        def prepare_review(focus, target, context = "auto")
+        def prepare_review(focus, target, context = "auto", system_prompt_override = nil)
           {
             target_info: analyze_target(target),
             context_info: @context_loader.check_availability,
-            system_prompt: @prompt_builder.select_system_prompt(focus),
+            system_prompt: @prompt_builder.select_system_prompt(focus, system_prompt_override),
             focus_areas: focus.split.flat_map { |f| CodingAgentTools::Models::Code::ReviewPrompt.get_focus_descriptions(f) }
           }
         end

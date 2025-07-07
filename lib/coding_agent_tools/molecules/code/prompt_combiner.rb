@@ -23,10 +23,11 @@ module CodingAgentTools
         # @param target_content [String] extracted target content
         # @param context [Models::Code::ReviewContext] loaded context
         # @param focus [String] review focus
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Models::Code::ReviewPrompt] complete prompt
-        def build_prompt(session, target_content, context, focus)
+        def build_prompt(session, target_content, context, focus, system_prompt_override = nil)
           # Select system prompt path
-          system_prompt_path = select_system_prompt(focus)
+          system_prompt_path = select_system_prompt(focus, system_prompt_override)
           
           # Get focus area descriptions
           focus_areas = get_focus_areas(focus)
@@ -79,8 +80,12 @@ module CodingAgentTools
 
         # Select system prompt based on focus
         # @param focus [String] review focus
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [String] system prompt path
-        def select_system_prompt(focus)
+        def select_system_prompt(focus, system_prompt_override = nil)
+          # Use override if provided
+          return system_prompt_override if system_prompt_override && !system_prompt_override.empty?
+          
           # Handle multi-focus by using primary focus
           primary_focus = focus.split.first
           

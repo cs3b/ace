@@ -18,8 +18,9 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] review session
         # @param target [Models::Code::ReviewTarget] review target
         # @param context [Models::Code::ReviewContext] review context
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Models::Code::ReviewPrompt] complete prompt
-        def build_review_prompt(session, target, context)
+        def build_review_prompt(session, target, context, system_prompt_override = nil)
           # Load target content from session files
           target_content = load_target_content(session, target)
           
@@ -28,7 +29,8 @@ module CodingAgentTools
             session,
             target_content,
             context,
-            session.focus
+            session.focus,
+            system_prompt_override
           )
           
           # Save prompt to session
@@ -43,9 +45,10 @@ module CodingAgentTools
 
         # Select system prompt based on focus
         # @param focus [String] review focus
+        # @param system_prompt_override [String] optional custom system prompt file path
         # @return [String] system prompt path
-        def select_system_prompt(focus)
-          @prompt_combiner.select_system_prompt(focus)
+        def select_system_prompt(focus, system_prompt_override = nil)
+          @prompt_combiner.select_system_prompt(focus, system_prompt_override)
         end
 
         # Build prompt for immediate use (without saving)

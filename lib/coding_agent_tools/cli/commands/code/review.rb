@@ -36,12 +36,16 @@ module CodingAgentTools
           option :output, type: :string,
             desc: "Output file for review report"
 
+          option :system_prompt, type: :string,
+            desc: "Custom system prompt file path (overrides focus-based selection)"
+
           example [
             "code HEAD~1..HEAD",
             "tests 'spec/**/*.rb' --context none",
             "docs staged --context docs/project-overview.md",
             "'code tests' v0.2.0..v0.3.0",
-            "code --session review-20240106-143052"
+            "code --session review-20240106-143052",
+            "code HEAD~1..HEAD --system-prompt custom-review.md"
           ]
 
           def call(focus:, target:, **options)
@@ -50,6 +54,18 @@ module CodingAgentTools
             unless valid_focus
               error_output("Error: Invalid focus. Must be one or more of: code, tests, docs")
               return 1
+            end
+
+            # Validate custom system prompt if provided
+            if options[:system_prompt]
+              unless File.exist?(options[:system_prompt])
+                error_output("Error: Custom system prompt file not found: #{options[:system_prompt]}")
+                return 1
+              end
+              unless File.readable?(options[:system_prompt])
+                error_output("Error: Custom system prompt file not readable: #{options[:system_prompt]}")
+                return 1
+              end
             end
 
             # Handle session resume
@@ -73,7 +89,8 @@ module CodingAgentTools
               focus,
               target,
               options[:context] || "auto",
-              options[:base_path]
+              options[:base_path],
+              options[:system_prompt]
             )
 
             if result[:success]
@@ -115,7 +132,7 @@ module CodingAgentTools
           def dry_run_review(review_manager, focus, target, options)
             info_output("🔍 Dry run - Analyzing review configuration:")
             
-            prep_result = review_manager.prepare_review(focus, target, options[:context])
+            prep_result = review_manager.prepare_review(focus, target, options[:context], options[:system_prompt])
             
             info_output("\nTarget Analysis:")
             info_output("  Type: #{prep_result[:target_info][:type]}")
@@ -131,7 +148,8 @@ module CodingAgentTools
               info_output("  ❌ No project context found")
             end
             
-            info_output("\nSystem Prompt: #{prep_result[:system_prompt]}")
+            system_prompt_info = options[:system_prompt] ? "#{prep_result[:system_prompt]} (custom)" : prep_result[:system_prompt]
+            info_output("\nSystem Prompt: #{system_prompt_info}")
             
             info_output("\nFocus Areas:")
             prep_result[:focus_areas].each do |area|
