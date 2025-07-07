@@ -563,6 +563,19 @@ module CodingAgentTools
         common_chars.to_f / max_chars
       end
 
+      # Result helper methods
+      def success(path)
+        { success: true, type: :single, path: path }
+      end
+
+      def failure(error)
+        { success: false, error: error }
+      end
+
+      def success_with_options(paths)
+        { success: true, type: :multiple, paths: paths }
+      end
+
     end
   end
 end
