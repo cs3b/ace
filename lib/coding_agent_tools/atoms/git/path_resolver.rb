@@ -77,9 +77,9 @@ module CodingAgentTools
         end
 
         def normalize_path(path)
-          # Handle relative paths from current directory
+          # Handle relative paths from project root
           if Pathname.new(path).relative?
-            File.expand_path(path, Dir.pwd)
+            File.expand_path(path, @project_root)
           else
             File.expand_path(path)
           end

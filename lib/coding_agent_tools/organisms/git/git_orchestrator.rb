@@ -1,0 +1,547 @@
+# frozen_string_literal: true
+
+require "time"
+require "shellwords"
+require_relative "../../atoms/git/git_command_executor"
+require_relative "../../atoms/git/repository_scanner"
+require_relative "../../atoms/git/submodule_detector"
+require_relative "../../atoms/git/path_resolver"
+require_relative "../../atoms/git/status_color_formatter"
+require_relative "../../atoms/git/log_color_formatter"
+require_relative "../../molecules/git/path_dispatcher"
+require_relative "../../molecules/git/multi_repo_coordinator"
+require_relative "../../molecules/git/concurrent_executor"
+require_relative "../../molecules/git/commit_message_generator"
+
+module CodingAgentTools
+  module Organisms
+    module Git
+      class GitOrchestrationError < StandardError; end
+
+      class GitOrchestrator
+        def initialize(project_root = nil, options = {})
+          @project_root = project_root || CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+          @debug = options.fetch(:debug, false)
+          @repositories = CodingAgentTools::Atoms::Git::RepositoryScanner.discover_repositories(@project_root)
+        end
+
+        # Status operations
+        def status(options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          result = coordinator.execute_across_repositories("status", options.merge(capture_output: true))
+          
+          format_status_output(result, options)
+        end
+
+        # Log operations  
+        def log(options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          log_command = build_log_command(options)
+          result = coordinator.execute_across_repositories(log_command, options.merge(capture_output: true))
+          
+          format_log_output(result, options)
+        end
+
+        # Add operations with path intelligence
+        def add(paths, options = {})
+          return { success: false, error: "No paths provided" } if paths.nil? || paths.empty?
+
+          dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
+          dispatch_info = dispatcher.dispatch_paths(paths)
+          
+          commands_by_repo = build_add_commands(dispatch_info, options)
+          
+          if options[:concurrent]
+            ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          else
+            execute_sequentially(commands_by_repo, options)
+          end
+        end
+
+        # Commit operations with LLM integration
+        def commit(options = {})
+          files = options[:files] || []
+          
+          # Stage files if provided
+          if files.any?
+            add_result = add(files, options)
+            return add_result unless add_result[:success]
+          elsif options[:all]
+            add_result = add_all(options)
+            return add_result unless add_result[:success]
+          end
+
+          if options[:message]
+            commit_with_message(options[:message], options)
+          else
+            commit_with_llm_message(options)
+          end
+        end
+
+        # Push operations
+        def push(options = {})
+          push_command = build_push_command(options)
+          
+          if options[:concurrent]
+            execute_push_concurrent(push_command, options)
+          else
+            execute_push_sequential(push_command, options)
+          end
+        end
+
+        # Pull operations
+        def pull(options = {})
+          pull_command = build_pull_command(options)
+          
+          if options[:concurrent]
+            execute_pull_concurrent(pull_command, options)
+          else
+            execute_pull_sequential(pull_command, options)
+          end
+        end
+
+        # Other git operations
+        def diff(options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          diff_command = build_diff_command(options)
+          coordinator.execute_across_repositories(diff_command, options.merge(capture_output: true))
+        end
+
+        def fetch(options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          fetch_command = build_fetch_command(options)
+          coordinator.execute_across_repositories(fetch_command, options.merge(capture_output: true))
+        end
+
+        # Repository information
+        def repositories
+          @repositories
+        end
+
+        private
+
+        attr_reader :project_root, :debug, :repositories
+
+        # Status formatting
+        def format_status_output(result, options)
+          formatted_output = []
+          color_formatter = CodingAgentTools::Atoms::Git::StatusColorFormatter.new(options)
+          
+          result[:results].each do |repo_name, repo_result|
+            next unless repo_result[:success]
+            
+            output = repo_result[:stdout] || ""
+            next if output.strip.empty? && !options[:verbose]
+            
+            formatted_line = color_formatter.format_repository_status(repo_name, output)
+            formatted_output << formatted_line
+          end
+          
+          result.merge(formatted_output: formatted_output.join("\n\n"))
+        end
+
+        # Log command building and formatting
+        def build_log_command(options)
+          cmd_parts = ["log"]
+          
+          # Always include timestamp for sorting, but format according to user preference
+          if options[:oneline]
+            # For oneline, include timestamp at the end in a parseable format
+            cmd_parts << "--pretty=format:#{Shellwords.escape('%h %s (%ci)')}"
+          else
+            # For regular format, use default but add timestamp marker for parsing
+            cmd_parts << "--date=iso"
+            cmd_parts << "--pretty=format:#{Shellwords.escape('TIMESTAMP:%ci%ncommit %H%nAuthor: %an <%ae>%nDate:   %ci%n%n%w(0,4,4)%s%n%+b')}"
+          end
+          
+          cmd_parts << "--graph" if options[:graph]
+          cmd_parts << "--since=#{Shellwords.escape(options[:since])}" if options[:since]
+          cmd_parts << "--until=#{Shellwords.escape(options[:until])}" if options[:until]
+          cmd_parts << "--author=#{Shellwords.escape(options[:author])}" if options[:author]
+          cmd_parts << "--grep=#{Shellwords.escape(options[:grep])}" if options[:grep]
+          cmd_parts << "-n #{options[:max_count]}" if options[:max_count]
+          
+          cmd_parts.join(" ")
+        end
+
+        def format_log_output(result, options)
+          if options[:separated]
+            format_separated_log(result, options)
+          else
+            # Default to unified format so each commit shows its repository
+            format_unified_log(result, options)
+          end
+        end
+
+        def format_unified_log(result, options = {})
+          all_commits = []
+          
+          result[:results].each do |repo_name, repo_result|
+            next unless repo_result[:success]
+            
+            output = repo_result[:stdout] || ""
+            commits = parse_commits_from_output(output, repo_name)
+            all_commits.concat(commits)
+          end
+          
+          # Sort by commit date (newest first)
+          all_commits.sort_by! { |commit| -commit[:timestamp].to_i }
+          
+          # Format output with proper padding and separation
+          formatted_output = format_commits_with_padding(all_commits, options)
+          
+          result.merge(formatted_output: formatted_output)
+        end
+
+        def format_separated_log(result, options = {})
+          formatted_output = []
+          
+          result[:results].each do |repo_name, repo_result|
+            next unless repo_result[:success]
+            
+            output = repo_result[:stdout] || ""
+            next if output.strip.empty?
+            
+            formatted_output << "[#{repo_name}] Recent commits:"
+            output.lines.each { |line| formatted_output << "  #{line.rstrip}" }
+            formatted_output << ""
+          end
+          
+          result.merge(formatted_output: formatted_output.join("\n"))
+        end
+
+        # Format commits with proper padding and visual separation
+        def format_commits_with_padding(all_commits, options = {})
+          return "" if all_commits.empty?
+          
+          # Initialize color formatter
+          color_formatter = CodingAgentTools::Atoms::Git::LogColorFormatter.new(options)
+          
+          # Find the longest repository name for alignment
+          max_repo_length = all_commits.map { |commit| commit[:repo].length }.max
+          
+          formatted_lines = []
+          
+          all_commits.each_with_index do |commit, index|
+            repo_name = commit[:repo]
+            
+            # Create padded repository name (without color for padding calculation)
+            plain_repo = "[#{repo_name}]"
+            padded_repo_plain = plain_repo.ljust(max_repo_length + 2)
+            
+            # Apply color to the padded repository name
+            colored_repo = color_formatter.should_use_color? ? 
+              color_formatter.send(:colorize, padded_repo_plain, :repo_name) : 
+              padded_repo_plain
+            
+            # Apply color formatting to commit content
+            colored_content = color_formatter.format_commit(commit)
+            
+            # Handle multi-line commits differently
+            if commit[:type] == :multiline
+              lines = colored_content.split("\n")
+              lines.each_with_index do |line, line_index|
+                if line_index == 0
+                  formatted_lines << "#{colored_repo} #{line}"
+                else
+                  # Indent continuation lines to align with content
+                  padding = " " * (max_repo_length + 3)
+                  formatted_lines << "#{padding} #{line}"
+                end
+              end
+            else
+              # Single line commits
+              formatted_lines << "#{colored_repo} #{colored_content}"
+            end
+            
+            # Add spacing between commits for better readability
+            formatted_lines << "" unless index == all_commits.length - 1
+          end
+          
+          formatted_lines.join("\n")
+        end
+
+        # Parse commits from git output, handling both oneline and full formats
+        def parse_commits_from_output(output, repo_name)
+          commits = []
+          
+          if output.include?("TIMESTAMP:")
+            # Handle full commit format with TIMESTAMP markers
+            commit_blocks = output.split(/^TIMESTAMP:/)
+            commit_blocks.shift if commit_blocks.first&.strip&.empty? # Remove empty first block
+            
+            commit_blocks.each do |block|
+              lines = block.strip.split("\n")
+              next if lines.empty?
+              
+              timestamp_str = lines.first.strip
+              commit_content = lines[1..-1].join("\n")
+              
+              begin
+                timestamp = Time.parse(timestamp_str)
+                commits << {
+                  repo: repo_name,
+                  timestamp: timestamp,
+                  display_line: commit_content,
+                  type: :multiline
+                }
+              rescue => e
+                # Skip commits with unparseable timestamps
+              end
+            end
+          else
+            # Handle oneline format
+            output.lines.each do |line|
+              next if line.strip.empty?
+              commit_info = parse_commit_line(line.rstrip, repo_name)
+              commits << commit_info if commit_info
+            end
+          end
+          
+          commits
+        end
+
+        # Parse commit line to extract timestamp for sorting (oneline format)
+        def parse_commit_line(line, repo_name)
+          # Handle oneline format: hash message (timestamp)
+          if line.match(/^(\w+)\s+(.+?)\s+\((\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+[+-]\d{4})\)$/)
+            hash_part = $1
+            message_part = $2
+            timestamp_str = $3
+            
+            begin
+              timestamp = Time.parse(timestamp_str)
+              display_line = "#{hash_part} #{message_part}"
+              
+              {
+                repo: repo_name,
+                timestamp: timestamp,
+                display_line: display_line,
+                type: :oneline
+              }
+            rescue => e
+              nil # Skip unparseable lines
+            end
+          else
+            nil # Skip non-matching lines
+          end
+        end
+
+        # Add command building
+        def build_add_commands(dispatch_info, options)
+          commands_by_repo = {}
+          
+          dispatch_info.each do |repo_name, repo_info|
+            paths = repo_info[:paths]
+            next if paths.empty?
+            
+            add_cmd_parts = ["add"]
+            add_cmd_parts << "--all" if options[:all]
+            add_cmd_parts << "--update" if options[:update]
+            add_cmd_parts << "--force" if options[:force]
+            add_cmd_parts << "--patch" if options[:patch]
+            add_cmd_parts.concat(paths.map { |p| Shellwords.escape(p) })
+            
+            commands_by_repo[repo_name] = [add_cmd_parts.join(" ")]
+          end
+          
+          commands_by_repo
+        end
+
+        def add_all(options)
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          coordinator.execute_across_repositories("add --all", options)
+        end
+
+        # Commit operations
+        def commit_with_message(message, options)
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          escaped_message = Shellwords.escape(message)
+          commit_command = "commit -m #{escaped_message}"
+          coordinator.execute_across_repositories(commit_command, options)
+        end
+
+        def commit_with_llm_message(options)
+          commands_by_repo = {}
+          
+          # Generate commit message for each repository that has staged changes
+          repositories.each do |repo|
+            next unless repo[:exists] && repo[:is_git_repo]
+            
+            diff = get_staged_diff(repo)
+            next if diff.strip.empty?
+            
+            begin
+              generator = CodingAgentTools::Molecules::Git::CommitMessageGenerator.new(options)
+              message = generator.generate_message(diff)
+              
+              escaped_message = Shellwords.escape(message)
+              commit_command = options[:no_edit] ? "commit -m #{escaped_message}" : "commit --edit -m #{escaped_message}"
+              
+              commands_by_repo[repo[:name]] = [commit_command]
+            rescue CodingAgentTools::Molecules::Git::CommitMessageGenerationError => e
+              return { success: false, error: "Failed to generate commit message for #{repo[:name]}: #{e.message}" }
+            end
+          end
+          
+          if commands_by_repo.empty?
+            return { success: false, error: "No staged changes to commit" }
+          end
+          
+          if options[:concurrent]
+            ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          else
+            execute_sequentially(commands_by_repo, options)
+          end
+        end
+
+        def get_staged_diff(repository)
+          repository_path = repository[:name] == "main" ? nil : repository[:path]
+          executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
+          
+          begin
+            result = executor.execute("diff --staged")
+            result[:stdout] || ""
+          rescue CodingAgentTools::Atoms::Git::GitCommandError
+            ""
+          end
+        end
+
+        # Push/Pull operations
+        def build_push_command(options)
+          cmd_parts = ["push"]
+          cmd_parts << "--force" if options[:force]
+          cmd_parts << "--dry-run" if options[:dry_run]
+          cmd_parts << "--set-upstream" if options[:set_upstream]
+          cmd_parts << "--tags" if options[:tags]
+          cmd_parts << options[:remote] if options[:remote]
+          cmd_parts << options[:branch] if options[:branch]
+          
+          cmd_parts.join(" ")
+        end
+
+        def build_pull_command(options)
+          cmd_parts = ["pull"]
+          cmd_parts << "--rebase" if options[:rebase]
+          cmd_parts << "--ff-only" if options[:ff_only]
+          cmd_parts << "--no-commit" if options[:no_commit]
+          cmd_parts << "--strategy=#{options[:strategy]}" if options[:strategy]
+          cmd_parts << options[:remote] if options[:remote]
+          cmd_parts << options[:branch] if options[:branch]
+          
+          cmd_parts.join(" ")
+        end
+
+        def build_diff_command(options)
+          cmd_parts = ["diff"]
+          cmd_parts << "--staged" if options[:staged]
+          cmd_parts << "--name-only" if options[:name_only]
+          cmd_parts << "--stat" if options[:stat]
+          
+          cmd_parts.join(" ")
+        end
+
+        def build_fetch_command(options)
+          cmd_parts = ["fetch"]
+          cmd_parts << "--all" if options[:all]
+          cmd_parts << "--prune" if options[:prune]
+          cmd_parts << "--tags" if options[:tags]
+          cmd_parts << options[:remote] if options[:remote]
+          
+          cmd_parts.join(" ")
+        end
+
+        # Execution methods
+        def execute_push_concurrent(command, options)
+          # For push, execute submodules first, then main
+          submodule_commands = {}
+          main_command = nil
+          
+          repositories.each do |repo|
+            next unless repo[:exists] && repo[:is_git_repo]
+            
+            if repo[:name] == "main"
+              main_command = { "main" => [command] }
+            else
+              submodule_commands[repo[:name]] = [command]
+            end
+          end
+          
+          # Execute submodules concurrently
+          submodule_result = ConcurrentExecutor.execute_concurrently(submodule_commands, options)
+          
+          # Then execute main repository
+          if main_command && submodule_result[:success]
+            main_result = execute_sequentially(main_command, options)
+            
+            # Merge results
+            submodule_result[:results].merge!(main_result[:results])
+            submodule_result[:success] = submodule_result[:success] && main_result[:success]
+            submodule_result[:errors].concat(main_result[:errors])
+          end
+          
+          submodule_result
+        end
+
+        def execute_push_sequential(command, options)
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          coordinator.execute_across_repositories(command, options)
+        end
+
+        def execute_pull_concurrent(command, options)
+          commands_by_repo = {}
+          
+          repositories.each do |repo|
+            next unless repo[:exists] && repo[:is_git_repo]
+            commands_by_repo[repo[:name]] = [command]
+          end
+          
+          ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+        end
+
+        def execute_pull_sequential(command, options)
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          coordinator.execute_across_repositories(command, options)
+        end
+
+        def execute_sequentially(commands_by_repo, options)
+          results = {}
+          errors = []
+          
+          commands_by_repo.each do |repo_name, commands|
+            begin
+              repository = repositories.find { |r| r[:name] == repo_name }
+              repository_path = repo_name == "main" ? nil : repository[:path]
+              executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
+              
+              repo_results = []
+              commands.each do |command|
+                result = executor.execute(command, capture_output: options.fetch(:capture_output, true))
+                repo_results << result
+              end
+              
+              results[repo_name] = {
+                success: true,
+                commands: repo_results,
+                repository: repo_name
+              }
+            rescue => e
+              errors << {
+                repository: repo_name,
+                error: e,
+                message: e.message
+              }
+              results[repo_name] = { success: false, error: e.message }
+            end
+          end
+          
+          {
+            success: errors.empty?,
+            results: results,
+            errors: errors
+          }
+        end
+      end
+    end
+  end
+end
