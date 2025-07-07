@@ -4,8 +4,7 @@ require "spec_helper"
 
 RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   let(:path_validator) { instance_double(CodingAgentTools::Molecules::SecurePathValidator) }
-  let(:operation_confirmer) { instance_double(CodingAgentTools::Molecules::FileOperationConfirmer) }
-  let(:synchronizer) { described_class.new(path_validator: path_validator, operation_confirmer: operation_confirmer) }
+  let(:synchronizer) { described_class.new(path_validator: path_validator) }
 
   let(:template_document) do
     CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
@@ -50,12 +49,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   end
 
   before do
-    # Default to valid paths and confirmed operations
+    # Default to valid paths
     allow(path_validator).to receive(:validate_path).and_return(
       double(invalid?: false, error_message: nil)
-    )
-    allow(operation_confirmer).to receive(:confirm_overwrite).and_return(
-      double(confirmed?: true, denied?: false, reason: nil, auto_decision?: false)
     )
   end
 
@@ -67,7 +63,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
         allow(File).to receive(:read).with(template_document.path).and_return(file_content)
       end
 
-      it "uses SecurePathValidator and FileOperationConfirmer" do
+      it "uses SecurePathValidator for security validation" do
         result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
 
         expect(path_validator).to have_received(:validate_path).with(template_document.path)
@@ -83,24 +79,13 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
         expect(result.updated_content).to include("This is updated content.")
       end
 
-      it "confirms operation when needed" do
-        confirmation_result = double(confirmed?: true, denied?: false, reason: nil, auto_decision?: false)
-        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
-
+      it "updates content without confirmation for template sync" do
         result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
 
-        expect(operation_confirmer).to have_received(:confirm_overwrite).with("workflow.md")
         expect(result.success?).to be true
-      end
-
-      it "handles operation cancellation" do
-        confirmation_result = double(confirmed?: false, denied?: true, reason: "User cancelled", auto_decision?: false)
-        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
-
-        result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
-
-        expect(result.error?).to be true
-        expect(result.error_message).to include("cancelled by user")
+        expect(result.updated?).to be true
+        expect(result.updated_content).to include("# Updated Content")
+        expect(result.updated_content).to include("This is updated content.")
       end
     end
 
@@ -189,7 +174,6 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
     let(:dry_run_synchronizer) do
       described_class.new(
         path_validator: path_validator,
-        operation_confirmer: operation_confirmer,
         dry_run: true
       )
     end

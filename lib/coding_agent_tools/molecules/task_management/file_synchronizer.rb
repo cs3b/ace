@@ -40,11 +40,9 @@ module CodingAgentTools
         end
 
         # @param path_validator [SecurePathValidator] Path security validator
-        # @param operation_confirmer [FileOperationConfirmer] File operation confirmer  
         # @param dry_run [Boolean] Whether to run in dry-run mode
-        def initialize(path_validator: nil, operation_confirmer: nil, dry_run: false)
+        def initialize(path_validator: nil, dry_run: false)
           @path_validator = path_validator || create_path_validator
-          @operation_confirmer = operation_confirmer || create_operation_confirmer
           @dry_run = dry_run
           @stats = SyncStats.new
         end
@@ -140,7 +138,7 @@ module CodingAgentTools
 
         private
 
-        attr_reader :path_validator, :operation_confirmer, :dry_run
+        attr_reader :path_validator, :dry_run
 
         def validate_document_path(document)
           # Use SecurePathValidator for path validation
@@ -192,13 +190,7 @@ module CodingAgentTools
             diff_preview = generate_diff_preview(document.content, target_content, document.path)
             SyncResult.new(:updated, nil, nil, diff_preview)
           else
-            # Use FileOperationConfirmer for confirmation if needed
-            confirmation_result = operation_confirmer.confirm_overwrite(workflow_file_path)
-            unless confirmation_result.confirmed?
-              return SyncResult.new(:error, nil, "Operation cancelled by user", nil)
-            end
-
-            # Update the embedded content
+            # Update the embedded content (no confirmation needed for template sync)
             updated_content = update_embedded_document(workflow_content, document, target_content)
             SyncResult.new(:updated, updated_content, nil, nil)
           end
@@ -229,10 +221,6 @@ module CodingAgentTools
 
         def create_path_validator
           CodingAgentTools::Molecules::SecurePathValidator.new
-        end
-
-        def create_operation_confirmer
-          CodingAgentTools::Molecules::FileOperationConfirmer.new
         end
       end
     end
