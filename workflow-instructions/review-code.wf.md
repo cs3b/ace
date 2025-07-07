@@ -49,6 +49,7 @@ code-review FOCUS TARGET [OPTIONS]
 - **--session=VALUE**: Resume existing session by ID
 - **--model=VALUE**: LLM model to use (e.g., `google:gemini-2.5-pro`)
 - **--output=VALUE**: Output file for review report
+- **--system-prompt=VALUE**: Custom system prompt file path (overrides focus-based selection)
 
 ## Project Context Loading
 
@@ -178,7 +179,7 @@ The `code-review` command automatically selects appropriate templates based on f
 - **docs**: Uses `dev-handbook/templates/review-docs/system.prompt.md`
 - **combined**: Uses multiple templates and synthesizes results
 
-Template selection is handled internally by the command based on the FOCUS parameter.
+Template selection is handled internally by the command based on the FOCUS parameter, but can be overridden using the `--system-prompt` option to specify a custom system prompt file.
 
 ### 5. Combined Prompt Construction
 
@@ -416,6 +417,24 @@ code-review code staged --model anthropic:claude-3-opus-20240229
 - Useful for specific review requirements
 - Supports all configured LLM providers
 
+### Example 9: Custom System Prompt
+
+```bash
+# Use custom system prompt instead of focus-based selection
+code-review code HEAD~1..HEAD --system-prompt my-custom-review.md
+
+# Custom prompt for specialized review type
+code-review tests 'spec/**/*.rb' --system-prompt security-focused-review.md
+
+# Combine with other options
+code-review docs staged --system-prompt docs-style-guide.md --context none
+```
+
+- Overrides automatic system prompt selection based on focus
+- Useful for specialized review types or custom review criteria
+- Custom prompt file must exist and be readable
+- Works with all focus types and other command options
+
 ## Success Criteria
 
 - Command successfully parses all parameter combinations
@@ -600,14 +619,16 @@ code-review code staged --model anthropic:claude-3-opus-20240229
 - Command parsing fails with unrecognized parameters
 - Focus area not supported
 - Target files or ranges don't exist
+- Custom system prompt file not found or not readable
 
 **Recovery Steps:**
 
 1. Run `code-review --help` to see valid options
 2. Use quotes for multiple focus areas: `"code tests"`
 3. Verify file paths and git ranges exist
-4. Use `--dry-run` to validate parameters
-5. Check example usage in help output
+4. Check custom system prompt file exists: `ls -la my-custom-prompt.md`
+5. Use `--dry-run` to validate parameters
+6. Check example usage in help output
 
 **Prevention:**
 
