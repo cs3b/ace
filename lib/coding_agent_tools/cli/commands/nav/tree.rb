@@ -18,6 +18,8 @@ module CodingAgentTools
             # Initialize components
             config_loader = CodingAgentTools::Molecules::TreeConfigLoader.new
             config = config_loader.load
+            @path_resolver = CodingAgentTools::Molecules::PathResolver.new
+            @alternatives = []
 
             # Resolve target directory
             target_dir = resolve_target_directory(path, options[:autocorrect])
@@ -41,6 +43,11 @@ module CodingAgentTools
 
               if exit_status == 0
                 puts output
+                
+                # Show alternatives if any exist
+                unless @alternatives.empty?
+                  puts @path_resolver.format_alternative_matches(@alternatives)
+                end
               else
                 puts "Error executing tree command: #{tree_command}"
                 puts "Output: #{output}" unless output.strip.empty?
@@ -100,11 +107,40 @@ module CodingAgentTools
               return nil
             end
 
-            # Use path resolver to find the directory
-            path_resolver = CodingAgentTools::Molecules::PathResolver.new
-            
+            # Check if input uses scoped pattern syntax (scope:pattern)
+            if path.include?(":")
+              result = @path_resolver.resolve_scoped_pattern(path)
+              
+              if result[:success]
+                resolved_path = result[:path]
+                
+                # Show autocorrection messages
+                if result[:autocorrect_message]
+                  puts result[:autocorrect_message]
+                end
+                
+                # Check if resolved path is a directory
+                if Dir.exist?(resolved_path)
+                  puts "Best match: '#{resolved_path}'"
+                  # Store alternatives for scoped results
+                  if result[:type] == :scoped_multiple && result[:alternatives]
+                    @alternatives = result[:alternatives].select { |p| Dir.exist?(p) }
+                  end
+                  return resolved_path
+                else
+                  # If it's a file, use its directory
+                  dir_path = File.dirname(resolved_path)
+                  puts "Best match: '#{dir_path}' (parent directory of found file)"
+                  return dir_path
+                end
+              else
+                puts "Error: #{result[:error]}"
+                return nil
+              end
+            end
+
             # Try directory-specific search first
-            matches = path_resolver.find_matching_paths(path, include_directories: true, max_results: 5)
+            matches = @path_resolver.find_matching_paths(path, include_directories: true, max_results: 5)
             directories = matches.select { |p| Dir.exist?(p) }
             
             if directories.length == 1
@@ -112,16 +148,17 @@ module CodingAgentTools
               puts "Autocorrected: '#{path}' → '#{resolved_path}'"
               return resolved_path
             elsif directories.length > 1
-              puts "Multiple directory matches found for '#{path}':"
-              directories.each_with_index do |dir_path, index|
-                puts "#{index + 1}) #{dir_path}"
-              end
-              puts "Please be more specific or use the full path"
-              return nil
+              # Use smart prioritization for multiple directory matches
+              prioritized = @path_resolver.prioritize_matches(directories)
+              puts "Autocorrected: '#{path}' → '#{prioritized[:best]}'"
+              
+              # Store alternatives to show later
+              @alternatives = prioritized[:alternatives]
+              return prioritized[:best]
             end
             
             # Fall back to file search
-            result = path_resolver.resolve_path(path, type: :file)
+            result = @path_resolver.resolve_path(path, type: :file)
 
             if result[:success]
               case result[:type]
@@ -138,13 +175,17 @@ module CodingAgentTools
                   return dir_path
                 end
               when :multiple
-                puts "Multiple matches found for '#{path}':"
-                result[:paths].each_with_index do |match_path, index|
-                  display_path = Dir.exist?(match_path) ? match_path : File.dirname(match_path)
-                  puts "#{index + 1}) #{display_path}"
+                # Convert file paths to directory paths and use smart prioritization
+                display_paths = result[:paths].map do |match_path|
+                  Dir.exist?(match_path) ? match_path : File.dirname(match_path)
                 end
-                puts "Please be more specific or use the full path"
-                return nil
+                
+                prioritized = @path_resolver.prioritize_matches(display_paths.uniq)
+                puts "Autocorrected: '#{path}' → '#{prioritized[:best]}' (parent directory of found file)"
+                
+                # Store alternatives to show later
+                @alternatives = prioritized[:alternatives]
+                return prioritized[:best]
               end
             else
               puts "Error: #{result[:error]}"
