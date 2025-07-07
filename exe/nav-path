@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+
+# Nav Path - Direct interface to intelligent path resolution functionality
+# This provides a focused entry point for path operations
+
+# Set up load paths for development if necessary
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools"
+require "coding_agent_tools/molecules"
+require "coding_agent_tools/cli/commands/nav/path"
+
+# Simple direct execution - bypass Dry::CLI complexity for a dedicated executable
+begin
+  if ARGV.empty? || ARGV.include?("--help") || ARGV.include?("-h")
+    puts "Nav Path - Intelligent path resolution and generation"
+    puts ""
+    puts "Usage:"
+    puts "  nav-path TYPE INPUT [OPTIONS]"
+    puts "  nav-path TYPE --title 'Title'"
+    puts ""
+    puts "Types:"
+    puts "  task-new        Generate new task path"
+    puts "  task           Resolve existing task by ID"
+    puts "  docs-new       Generate new documentation path"
+    puts "  reflection-new Generate new reflection path"
+    puts "  file           Autocorrect and resolve file path"
+    puts ""
+    puts "Options:"
+    puts "  --title TITLE   Title for new path generation"
+    puts ""
+    puts "Examples:"
+    puts "  nav-path task-new --title 'My New Task'"
+    puts "  nav-path task 42"
+    puts "  nav-path file README"
+    exit 0
+  end
+
+  if ARGV.include?("--version") || ARGV.include?("-v")
+    require "coding_agent_tools/version"
+    puts "Nav Path #{CodingAgentTools::VERSION}"
+    exit 0
+  end
+
+  # Parse arguments manually for this simple case
+  type = ARGV[0]
+  
+  # Look for --title option first
+  title = nil
+  title_index = ARGV.index("--title")
+  if title_index && title_index + 1 < ARGV.length
+    title = ARGV[title_index + 1]
+  end
+  
+  # Get input argument (skip --title and its value)
+  input = nil
+  if ARGV.length > 1 && !ARGV[1].start_with?("--")
+    input = ARGV[1]
+  end
+
+  # Execute the nav path command
+  command = CodingAgentTools::Cli::Commands::Nav::Path.new
+  options = {}
+  options[:title] = title if title
+  command.call(type: type, input: input, **options)
+
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end
