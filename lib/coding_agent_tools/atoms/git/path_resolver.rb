@@ -77,11 +77,29 @@ module CodingAgentTools
         end
 
         def normalize_path(path)
-          # Handle relative paths from project root
           if Pathname.new(path).relative?
-            File.expand_path(path, @project_root)
+            # For relative paths, we need to determine the context:
+            # 1. If path contains repo prefix (e.g., "dev-tools/file"), expand from project root
+            # 2. If path is local (e.g., "file"), expand from current working directory to nearest git repo
+            
+            if path_contains_repository_prefix?(path)
+              # Path like "dev-tools/exe/git-log" - expand from project root
+              File.expand_path(path, @project_root)
+            else
+              # Path like "exe/git-log" - expand from current directory (should be within a repo)
+              File.expand_path(path, Dir.pwd)
+            end
           else
             File.expand_path(path)
+          end
+        end
+
+        def path_contains_repository_prefix?(path)
+          # Check if the path starts with any known repository name
+          repository_names = repositories.map { |repo| repo[:name] }
+          
+          repository_names.any? do |repo_name|
+            path.start_with?("#{repo_name}/")
           end
         end
 
