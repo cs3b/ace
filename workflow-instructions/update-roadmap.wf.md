@@ -228,8 +228,8 @@ status: [draft|active|archived]
 
 ## 5. Cross-Release Dependencies
 
-* [Dependency description linking specific epics/releases]
-* [Dependency description linking specific epics/releases]
+- [Dependency description linking specific epics/releases]
+- [Dependency description linking specific epics/releases]
 
 ## 6. Update History
 
@@ -237,7 +237,6 @@ status: [draft|active|archived]
 |------|---------|--------|
 | YYYY-MM-DD | [Brief change description] | [Author name] |
 | YYYY-MM-DD | Initial roadmap creation | [Author name] |
-
 </template>
 
 </documents>

@@ -473,92 +473,92 @@ This workflow focuses on **drafting** a release in the backlog. Once development
 moves to `current/`. For publishing completed releases, use the publish-release workflow.
 
 <documents>
-    <template path="dev-handbook/templates/release-management/release-overview.template.md">
-# v.X.Y.Z [Codename]
+    <template path="dev-handbook/templates/release-management/release-overview.template.md"># v.X.Y.Z [Codename]
 
 ## Release Overview
+
 <!-- Brief description of the release's purpose and value proposition. -->
 
 ## Release Information
 
-* **Type**: [Major | Feature | Bug Fix]
-* **Start Date**: YYYY-MM-DD
-* **Target Date**: YYYY-MM-DD  
-* **Status**: Planning
+- **Type**: [Major | Feature | Bug Fix]
+- **Start Date**: YYYY-MM-DD
+- **Target Date**: YYYY-MM-DD  
+- **Status**: Planning
 
 ## Collected Notes
+
 <!-- Raw notes provided by the user -->
 
 ## Goals & Requirements
 
 ### Primary Goals
 
-* [ ] <!-- Goal 1 with specific metrics -->
-* [ ] <!-- Goal 2 with acceptance criteria -->
-* [ ] <!-- Goal 3 with success strategy -->
+- [ ] <!-- Goal 1 with specific metrics -->
+- [ ] <!-- Goal 2 with acceptance criteria -->
+- [ ] <!-- Goal 3 with success strategy -->
 
 ### Dependencies
 
-* <!-- External dependencies -->
-* <!-- Internal dependencies -->
+- <!-- External dependencies -->
+- <!-- Internal dependencies -->
 
 ### Risks & Mitigation
 
-* <!-- Risk 1: Description | Mitigation strategy -->
-* <!-- Risk 2: Description | Mitigation strategy -->
+- <!-- Risk 1: Description | Mitigation strategy -->
+- <!-- Risk 2: Description | Mitigation strategy -->
 
 ## Implementation Plan
 
 ### Core Components
 
 1. **Design & Architecture**
-   * [ ] <!-- Architecture decision/design task -->
-   * [ ] <!-- API design task -->
+   - [ ] <!-- Architecture decision/design task -->
+   - [ ] <!-- API design task -->
 
 2. **Dependencies**  
-   * [ ] <!-- Dependency setup task -->
-   * [ ] <!-- Integration task -->
+   - [ ] <!-- Dependency setup task -->
+   - [ ] <!-- Integration task -->
 
 3. **Implementation Phases**
-   * [ ] <!-- Phase 1: Foundation -->
-   * [ ] <!-- Phase 2: Core features -->
-   * [ ] <!-- Phase 3: Polish and testing -->
+   - [ ] <!-- Phase 1: Foundation -->
+   - [ ] <!-- Phase 2: Core features -->
+   - [ ] <!-- Phase 3: Polish and testing -->
 
 ## Quality Assurance
 
 ### Test Coverage
 
-* [ ] Unit Tests (>80% coverage)
-* [ ] Integration Tests
-* [ ] Performance Tests
-* [ ] User Acceptance Tests
+- [ ] Unit Tests (>80% coverage)
+- [ ] Integration Tests
+- [ ] Performance Tests
+- [ ] User Acceptance Tests
 
 ### Documentation
 
-* [ ] API Documentation
-* [ ] User Guide
-* [ ] Developer Guide
-* [ ] CHANGELOG Entry
+- [ ] API Documentation
+- [ ] User Guide
+- [ ] Developer Guide
+- [ ] CHANGELOG Entry
 
 ## Release Checklist
 
-* [ ] All planned features implemented and tested
-* [ ] All tests passing (unit, integration, e2e)
-* [ ] Documentation complete and reviewed
-* [ ] CHANGELOG.md updated with all changes
-* [ ] Version numbers updated in relevant files
-* [ ] Security review completed
-* [ ] Performance benchmarks meet targets
-* [ ] Backward compatibility verified
-* [ ] Migration guide prepared (if needed)
-* [ ] Release notes drafted
+- [ ] All planned features implemented and tested
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Documentation complete and reviewed
+- [ ] CHANGELOG.md updated with all changes
+- [ ] Version numbers updated in relevant files
+- [ ] Security review completed
+- [ ] Performance benchmarks meet targets
+- [ ] Backward compatibility verified
+- [ ] Migration guide prepared (if needed)
+- [ ] Release notes drafted
 
 ## Notes
-<!-- Additional context, decisions, or clarifications -->
-    </template>
+
+<!-- Additional context, decisions, or clarifications --></template>
     
     <template path="dev-handbook/templates/release-tasks/task.template.md">---
-
 id: <run bin/tnid to generate ID>
 status: pending
 priority: <high/medium/low>
@@ -588,22 +588,22 @@ Why are we doing this?
 
 ## Scope of Work
 
-* Bullet 1 …
-* Bullet 2 …
+- Bullet 1 …
+- Bullet 2 …
 
 ### Deliverables
 
 #### Create
 
-* path/to/file.ext
+- path/to/file.ext
 
 #### Modify
 
-* path/to/other.ext
+- path/to/other.ext
 
 #### Delete
 
-* path/to/obsolete.ext
+- path/to/obsolete.ext
 
 ## Phases
 
@@ -619,37 +619,37 @@ Why are we doing this?
 
 *Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-* [ ] Analyze current system/codebase to understand existing patterns
+- [ ] Analyze current system/codebase to understand existing patterns
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
   > Command: bin/test --check-analysis-complete
-* [ ] Research best practices and design approach
-* [ ] Plan detailed implementation strategy
+- [ ] Research best practices and design approach
+- [ ] Plan detailed implementation strategy
 
 ### Execution Steps
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-* [ ] Step 1: Describe the first implementation action.
-* [ ] Step 2: Describe the second action, which produces a verifiable outcome.
+- [ ] Step 1: Describe the first implementation action.
+- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
   > TEST: Verify Action 2 Outcome
   > Type: Action Validation
   > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
   > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-* [ ] ... Add more implementation steps as needed.
+- [ ] ... Add more implementation steps as needed.
 
 ## Acceptance Criteria
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-* [ ] AC 1: All specified deliverables created/modified.
-* [ ] AC 2: Key functionalities (if applicable) are working as described.
-* [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [ ] AC 1: All specified deliverables created/modified.
+- [ ] AC 2: Key functionalities (if applicable) are working as described.
+- [ ] AC 3: All automated checks in the Implementation Plan pass.
 
 ## Out of Scope
 
-* ❌ …
+- ❌ …
 
 ## References
 

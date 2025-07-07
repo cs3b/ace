@@ -438,7 +438,7 @@ Why are we doing this?
 - Issue 1: Description and recommendation
 - Issue 2: Description and recommendation
 
-### 🟢 Medium Priority Issues
+### 🟢 Medium Priority Issues  
 
 - Issue 1: Description and recommendation
 - Issue 2: Description and recommendation

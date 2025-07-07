@@ -286,15 +286,22 @@ This section lists files, directories, or glob patterns that the agent should ig
 - `**/.DS_Store` # macOS system files
 - `**/Thumbs.db` # Windows system files
 
-## Available Tools
+## Entry Points
 
-<!-- If docs/tools.md exists, reference it instead of listing all tools -->
+<!-- Document the main ways to start or interact with the project -->
 
-The project provides executable commands for development and end-user functionality.
+### Development
 
-For comprehensive documentation of all available tools, usage examples, and workflows, see the **[Tools Reference](docs/tools.md)**.
+```bash
+# Start development server
+bin/run
 
-<!-- If docs/tools.md doesn't exist, then document the main tools here -->
+# Run tests
+bin/test
+
+# Build for production
+bin/build
+```
 
 ### Common Workflows
 

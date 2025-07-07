@@ -280,505 +280,503 @@ refactor(service): simplify request handling logic
 No functional changes
 </template>
 
-<guide path="dev-handbook/guides/version-control-system-message.g.md">
-    # Version Control System Message Guide
+<guide path="dev-handbook/guides/version-control-system-message.g.md"># Version Control System Message Guide
 
-    ## Purpose
+## Purpose
 
-    This guide provides comprehensive documentation for version control commit message standards, specifically documenting the Conventional Commits specification required by project workflows. It serves as a standalone reference for creating clear, consistent, and actionable commit messages.
+This guide provides comprehensive documentation for version control commit message standards, specifically documenting the Conventional Commits specification required by project workflows. It serves as a standalone reference for creating clear, consistent, and actionable commit messages.
 
-    ## Conventional Commits Specification
+## Conventional Commits Specification
 
-    ### Message Structure
+### Message Structure
 
-    All commit messages must follow the Conventional Commits specification:
+All commit messages must follow the Conventional Commits specification:
 
-    ```
-    <type>(<scope>): <subject>
+```
+<type>(<scope>): <subject>
 
-    <body>
+<body>
 
-    <footer>
-    ```
+<footer>
+```
 
-    ### Components
+### Components
 
-    #### Type (Required)
+#### Type (Required)
 
-    The type indicates the nature of the change:
+The type indicates the nature of the change:
 
-    - **feat**: A new feature for the user
-    - **fix**: A bug fix
-    - **docs**: Documentation only changes
-    - **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
-    - **refactor**: A code change that neither fixes a bug nor adds a feature
-    - **test**: Adding missing tests or correcting existing tests
-    - **chore**: Changes to the build process or auxiliary tools and libraries
+- **feat**: A new feature for the user
+- **fix**: A bug fix
+- **docs**: Documentation only changes
+- **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing tests or correcting existing tests
+- **chore**: Changes to the build process or auxiliary tools and libraries
 
-    #### Scope (Optional)
+#### Scope (Optional)
 
-    The scope indicates the section of the codebase affected:
+The scope indicates the section of the codebase affected:
 
-    - **Common scopes**: `api`, `ui`, `auth`, `db`, `config`, `cli`, `docs`
-    - **Component scopes**: `parser`, `router`, `validator`, `middleware`
-    - **Domain scopes**: `users`, `orders`, `payments`, `inventory`
+- **Common scopes**: `api`, `ui`, `auth`, `db`, `config`, `cli`, `docs`
+- **Component scopes**: `parser`, `router`, `validator`, `middleware`
+- **Domain scopes**: `users`, `orders`, `payments`, `inventory`
 
-    #### Subject (Required)
+#### Subject (Required)
 
-    The subject contains a succinct description of the change:
+The subject contains a succinct description of the change:
 
-    - Use imperative mood ("add" not "added" or "adds")
-    - Keep it 50 characters or less
-    - Do not capitalize the first letter
-    - Do not end with a period
+- Use imperative mood ("add" not "added" or "adds")
+- Keep it 50 characters or less
+- Do not capitalize the first letter
+- Do not end with a period
 
-    #### Body (Optional)
+#### Body (Optional)
 
-    The body provides additional context:
+The body provides additional context:
 
-    - Wrap lines at 72 characters
-    - Explain the what and why, not the how
-    - Use bullet points for multiple items
-    - Separate from subject with blank line
+- Wrap lines at 72 characters
+- Explain the what and why, not the how
+- Use bullet points for multiple items
+- Separate from subject with blank line
 
-    #### Footer (Optional)
+#### Footer (Optional)
 
-    The footer contains metadata:
+The footer contains metadata:
 
-    - **Breaking changes**: Use `BREAKING CHANGE:` prefix
-    - **Issue references**: Use `Fixes #123`, `Closes #456`
-    - **Co-authors**: Use `Co-authored-by: Name <email>`
+- **Breaking changes**: Use `BREAKING CHANGE:` prefix
+- **Issue references**: Use `Fixes #123`, `Closes #456`
+- **Co-authors**: Use `Co-authored-by: Name <email>`
 
-    ## Commit Types in Detail
+## Commit Types in Detail
 
-    ### feat: New Features
+### feat: New Features
 
-    Use `feat` for new functionality that adds value to users:
+Use `feat` for new functionality that adds value to users:
 
-    ```git
-    feat(auth): add password reset functionality
+```git
+feat(auth): add password reset functionality
 
-    Implement secure password reset flow with email verification.
-    - Add password reset request endpoint
-    - Create secure token generation
-    - Implement email notification system
-    - Add password reset confirmation page
+Implement secure password reset flow with email verification.
+- Add password reset request endpoint
+- Create secure token generation
+- Implement email notification system
+- Add password reset confirmation page
 
-    Implements #234
-    ```
+Implements #234
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - Always include tests for new features
-    - Update documentation when adding user-facing features
-    - Consider breaking changes and version impact
+- Always include tests for new features
+- Update documentation when adding user-facing features
+- Consider breaking changes and version impact
 
-    ### fix: Bug Fixes
+### fix: Bug Fixes
 
-    Use `fix` for resolving issues or correcting unintended behavior:
+Use `fix` for resolving issues or correcting unintended behavior:
 
-    ```git
-    fix(api): handle null values in user response
+```git
+fix(api): handle null values in user response
 
-    Root cause: Missing null check in user serialization
-    Solution: Add proper validation before processing
+Root cause: Missing null check in user serialization
+Solution: Add proper validation before processing
 
-    - Add null checks for optional fields
-    - Update tests to cover edge cases
-    - Fix TypeScript types for nullable fields
+- Add null checks for optional fields
+- Update tests to cover edge cases
+- Fix TypeScript types for nullable fields
 
-    Fixes #123
-    ```
+Fixes #123
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - Include root cause analysis when helpful
-    - Reference the issue being fixed
-    - Ensure fix is covered by tests
+- Include root cause analysis when helpful
+- Reference the issue being fixed
+- Ensure fix is covered by tests
 
-    ### docs: Documentation
+### docs: Documentation
 
-    Use `docs` for documentation-only changes:
+Use `docs` for documentation-only changes:
 
-    ```git
-    docs(readme): update installation instructions
+```git
+docs(readme): update installation instructions
 
-    - Add prerequisites section
-    - Update Node.js version requirement
-    - Include troubleshooting steps
-    - Fix formatting issues
-    ```
+- Add prerequisites section
+- Update Node.js version requirement
+- Include troubleshooting steps
+- Fix formatting issues
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - No functional code changes
-    - May include example updates
-    - Can affect README, comments, or separate docs
+- No functional code changes
+- May include example updates
+- Can affect README, comments, or separate docs
 
-    ### style: Code Style
+### style: Code Style
 
-    Use `style` for formatting changes that don't affect logic:
+Use `style` for formatting changes that don't affect logic:
 
-    ```git
-    style(parser): fix indentation and spacing
+```git
+style(parser): fix indentation and spacing
 
-    - Standardize indentation to 2 spaces
-    - Remove trailing whitespace
-    - Fix line length violations
-    - Organize imports alphabetically
-    ```
+- Standardize indentation to 2 spaces
+- Remove trailing whitespace
+- Fix line length violations
+- Organize imports alphabetically
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - No functional changes
-    - Often automated by linters/formatters
-    - Include scope of formatting changes
+- No functional changes
+- Often automated by linters/formatters
+- Include scope of formatting changes
 
-    ### refactor: Code Improvements
+### refactor: Code Improvements
 
-    Use `refactor` for code changes that improve structure without changing behavior:
+Use `refactor` for code changes that improve structure without changing behavior:
 
-    ```git
-    refactor(service): simplify request handling logic
+```git
+refactor(service): simplify request handling logic
 
-    - Extract common patterns to helper methods
-    - Reduce code duplication
-    - Improve readability and maintainability
-    - Consolidate error handling
+- Extract common patterns to helper methods
+- Reduce code duplication
+- Improve readability and maintainability
+- Consolidate error handling
 
-    No functional changes
-    ```
+No functional changes
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - Explicitly state "No functional changes"
-    - Include reasoning for refactoring
-    - Ensure all tests still pass
+- Explicitly state "No functional changes"
+- Include reasoning for refactoring
+- Ensure all tests still pass
 
-    ### test: Testing
+### test: Testing
 
-    Use `test` for adding or modifying tests:
+Use `test` for adding or modifying tests:
 
-    ```git
-    test(validator): add comprehensive email validation tests
+```git
+test(validator): add comprehensive email validation tests
 
-    - Test valid email formats
-    - Test invalid email formats
-    - Test edge cases (empty, null, special chars)
-    - Add performance tests for large inputs
-    ```
+- Test valid email formats
+- Test invalid email formats
+- Test edge cases (empty, null, special chars)
+- Add performance tests for large inputs
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - Focus on test coverage improvements
-    - May include test infrastructure changes
-    - Can be combined with fixes or features
+- Focus on test coverage improvements
+- May include test infrastructure changes
+- Can be combined with fixes or features
 
-    ### chore: Maintenance
+### chore: Maintenance
 
-    Use `chore` for maintenance tasks that don't affect source code:
+Use `chore` for maintenance tasks that don't affect source code:
 
-    ```git
-    chore(deps): update dependencies to latest versions
+```git
+chore(deps): update dependencies to latest versions
 
-    - Update Express to v4.18.2
-    - Update Jest to v29.0.0
-    - Update TypeScript to v4.8.0
-    - Resolve security vulnerabilities
-    ```
+- Update Express to v4.18.2
+- Update Jest to v29.0.0
+- Update TypeScript to v4.8.0
+- Resolve security vulnerabilities
+```
 
-    **Guidelines:**
+**Guidelines:**
 
-    - Dependency updates
-    - Build tool changes
-    - CI/CD configuration
-    - Development environment changes
+- Dependency updates
+- Build tool changes
+- CI/CD configuration
+- Development environment changes
 
-    ## Scope Usage Guidelines
+## Scope Usage Guidelines
 
-    ### When to Include Scope
+### When to Include Scope
 
-    **Always include scope when:**
+**Always include scope when:**
 
-    - Multiple modules exist in the project
-    - Change affects a specific component
-    - Scope provides meaningful context
+- Multiple modules exist in the project
+- Change affects a specific component
+- Scope provides meaningful context
 
-    **Optional scope when:**
+**Optional scope when:**
 
-    - Change affects entire application
-    - Scope would be too generic (`app`, `main`)
-    - Project has simple structure
+- Change affects entire application
+- Scope would be too generic (`app`, `main`)
+- Project has simple structure
 
-    ### Scope Naming Conventions
+### Scope Naming Conventions
 
-    - **Lowercase**: Use lowercase for scopes
-    - **Kebab-case**: Use hyphens for multi-word scopes (`user-auth`)
-    - **Consistent**: Use established scopes from project history
-    - **Descriptive**: Make scope meaningful to team members
+- **Lowercase**: Use lowercase for scopes
+- **Kebab-case**: Use hyphens for multi-word scopes (`user-auth`)
+- **Consistent**: Use established scopes from project history
+- **Descriptive**: Make scope meaningful to team members
 
-    ### Common Scope Patterns
+### Common Scope Patterns
 
-    #### By Layer
+#### By Layer
 
-    - `api`: Backend API changes
-    - `ui`: User interface changes
-    - `db`: Database-related changes
-    - `config`: Configuration changes
+- `api`: Backend API changes
+- `ui`: User interface changes
+- `db`: Database-related changes
+- `config`: Configuration changes
 
-    #### By Feature
+#### By Feature
 
-    - `auth`: Authentication and authorization
-    - `search`: Search functionality
-    - `payments`: Payment processing
-    - `notifications`: Notification system
+- `auth`: Authentication and authorization
+- `search`: Search functionality
+- `payments`: Payment processing
+- `notifications`: Notification system
 
-    #### By Component
+#### By Component
 
-    - `parser`: Code parsing logic
-    - `router`: Routing logic
-    - `validator`: Validation logic
-    - `middleware`: Middleware components
+- `parser`: Code parsing logic
+- `router`: Routing logic
+- `validator`: Validation logic
+- `middleware`: Middleware components
 
-    ## Breaking Changes
+## Breaking Changes
 
-    ### Format for Breaking Changes
+### Format for Breaking Changes
 
-    Breaking changes must be indicated in the footer:
+Breaking changes must be indicated in the footer:
 
-    ```git
-    feat(api): update user authentication endpoint
+```git
+feat(api): update user authentication endpoint
 
-    Change authentication endpoint to use JWT tokens instead of sessions.
+Change authentication endpoint to use JWT tokens instead of sessions.
 
-    BREAKING CHANGE: Authentication endpoint now requires JWT token in Authorization header instead of session cookies. Update client applications to use new authentication flow.
+BREAKING CHANGE: Authentication endpoint now requires JWT token in Authorization header instead of session cookies. Update client applications to use new authentication flow.
 
-    Implements #456
-    ```
+Implements #456
+```
 
-    ### Guidelines for Breaking Changes
+### Guidelines for Breaking Changes
 
-    - Always use `BREAKING CHANGE:` prefix in footer
-    - Explain what changed and why
-    - Provide migration guidance
-    - Consider major version bump
-    - Document in changelog
+- Always use `BREAKING CHANGE:` prefix in footer
+- Explain what changed and why
+- Provide migration guidance
+- Consider major version bump
+- Document in changelog
 
-    ## Multi-line Messages
+## Multi-line Messages
 
-    ### When to Use Body
+### When to Use Body
 
-    Use body section when:
+Use body section when:
 
-    - Change requires explanation
-    - Multiple files affected
-    - Context needed for reviewers
-    - Implementation details important
+- Change requires explanation
+- Multiple files affected
+- Context needed for reviewers
+- Implementation details important
 
-    ### Body Structure
+### Body Structure
 
-    ```git
-    feat(search): implement advanced search filters
+```git
+feat(search): implement advanced search filters
 
-    Add support for complex search queries with multiple criteria.
-    This enables users to search by date range, category, and tags
-    simultaneously, improving search precision.
+Add support for complex search queries with multiple criteria.
+This enables users to search by date range, category, and tags
+simultaneously, improving search precision.
 
-    Implementation details:
-    - Add query builder for complex conditions
-    - Create filter component for UI
-    - Implement search result ranking
-    - Add caching for performance
+Implementation details:
+- Add query builder for complex conditions
+- Create filter component for UI
+- Implement search result ranking
+- Add caching for performance
 
-    Implements #789
-    ```
+Implements #789
+```
 
-    ## Common Patterns
+## Common Patterns
 
-    ### Revert Commits
+### Revert Commits
 
-    ```git
-    revert: "feat(auth): add password reset functionality"
+```git
+revert: "feat(auth): add password reset functionality"
 
-    This reverts commit abc123def456.
+This reverts commit abc123def456.
 
-    Reason: Password reset feature caused issues in production
-    with email delivery service.
-    ```
+Reason: Password reset feature caused issues in production
+with email delivery service.
+```
 
-    ### Co-authored Commits
+### Co-authored Commits
 
-    ```git
-    feat(api): implement user profile endpoints
+```git
+feat(api): implement user profile endpoints
 
-    Add CRUD operations for user profiles with validation.
+Add CRUD operations for user profiles with validation.
 
-    Co-authored-by: Alice Developer <alice@example.com>
-    Co-authored-by: Bob Engineer <bob@example.com>
-    ```
+Co-authored-by: Alice Developer <alice@example.com>
+Co-authored-by: Bob Engineer <bob@example.com>
+```
 
-    ### Multiple Issue References
+### Multiple Issue References
 
-    ```git
-    fix(validator): resolve validation edge cases
+```git
+fix(validator): resolve validation edge cases
 
-    - Fix null handling in email validator
-    - Resolve regex issues with special characters
-    - Update error messages for clarity
+- Fix null handling in email validator
+- Resolve regex issues with special characters
+- Update error messages for clarity
 
-    Fixes #123, #456
-    Closes #789
-    ```
+Fixes #123, #456
+Closes #789
+```
 
-    ## Validation Rules
+## Validation Rules
 
-    ### Automated Validation
+### Automated Validation
 
-    Projects should implement git hooks to validate commit messages:
+Projects should implement git hooks to validate commit messages:
 
-    ```bash
-    # Example: Validate Conventional Commits format
-    if ! echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore)(\(\S+\))?:\s.+'; then
-      echo "ERROR: Invalid commit message format." >&2
-      echo "Please follow the Conventional Commits specification: <type>(<scope>): <subject>" >&2
-      echo "Example: feat(api): add new endpoint" >&2
-      exit 1
-    fi
-    ```
+```bash
+# Example: Validate Conventional Commits format
+if ! echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore)(\(\S+\))?:\s.+'; then
+  echo "ERROR: Invalid commit message format." >&2
+  echo "Please follow the Conventional Commits specification: <type>(<scope>): <subject>" >&2
+  echo "Example: feat(api): add new endpoint" >&2
+  exit 1
+fi
+```
 
-    ### Manual Validation Checklist
+### Manual Validation Checklist
 
-    Before committing, verify:
+Before committing, verify:
 
-    - [ ] Type is one of: feat, fix, docs, style, refactor, test, chore
-    - [ ] Scope is lowercase and descriptive (if included)
-    - [ ] Subject uses imperative mood
-    - [ ] Subject is 50 characters or less
-    - [ ] Subject doesn't end with period
-    - [ ] Body lines are 72 characters or less
-    - [ ] Footer includes issue references
-    - [ ] Breaking changes are properly documented
+- [ ] Type is one of: feat, fix, docs, style, refactor, test, chore
+- [ ] Scope is lowercase and descriptive (if included)
+- [ ] Subject uses imperative mood
+- [ ] Subject is 50 characters or less
+- [ ] Subject doesn't end with period
+- [ ] Body lines are 72 characters or less
+- [ ] Footer includes issue references
+- [ ] Breaking changes are properly documented
 
-    ## Common Anti-patterns
+## Common Anti-patterns
 
-    ### Avoid These Patterns
+### Avoid These Patterns
 
-    **Vague messages:**
+**Vague messages:**
 
-    ```git
-    # Bad
-    fix: bug fix
+```git
+# Bad
+fix: bug fix
 
-    # Good
-    fix(auth): handle expired tokens gracefully
-    ```
+# Good
+fix(auth): handle expired tokens gracefully
+```
 
-    **Past tense:**
+**Past tense:**
 
-    ```git
-    # Bad
-    feat(api): added new endpoint
+```git
+# Bad
+feat(api): added new endpoint
 
-    # Good
-    feat(api): add new endpoint
-    ```
+# Good
+feat(api): add new endpoint
+```
 
-    **Capitalized subject:**
+**Capitalized subject:**
 
-    ```git
-    # Bad
-    feat(ui): Add dark mode toggle
+```git
+# Bad
+feat(ui): Add dark mode toggle
 
-    # Good
-    feat(ui): add dark mode toggle
-    ```
+# Good
+feat(ui): add dark mode toggle
+```
 
-    **Missing type:**
+**Missing type:**
 
-    ```git
-    # Bad
-    update user validation
+```git
+# Bad
+update user validation
 
-    # Good
-    refactor(validator): update user validation logic
-    ```
+# Good
+refactor(validator): update user validation logic
+```
 
-    ## Integration with Workflows
+## Integration with Workflows
 
-    ### Semantic Versioning
+### Semantic Versioning
 
-    Commit types determine version bumps:
+Commit types determine version bumps:
 
-    - **feat**: Minor version bump (1.0.0 → 1.1.0)
-    - **fix**: Patch version bump (1.0.0 → 1.0.1)
-    - **BREAKING CHANGE**: Major version bump (1.0.0 → 2.0.0)
+- **feat**: Minor version bump (1.0.0 → 1.1.0)
+- **fix**: Patch version bump (1.0.0 → 1.0.1)
+- **BREAKING CHANGE**: Major version bump (1.0.0 → 2.0.0)
 
-    ### Changelog Generation
+### Changelog Generation
 
-    Conventional commits enable automated changelog generation:
+Conventional commits enable automated changelog generation:
 
-    ```markdown
-    ## [1.2.0] - 2023-12-01
+```markdown
+## [1.2.0] - 2023-12-01
 
-    ### Features
-    - **auth**: add password reset functionality (#234)
-    - **search**: implement advanced search filters (#789)
+### Features
+- **auth**: add password reset functionality (#234)
+- **search**: implement advanced search filters (#789)
 
-    ### Bug Fixes
-    - **api**: handle null values in user response (#123)
-    - **validator**: resolve validation edge cases (#456)
+### Bug Fixes
+- **api**: handle null values in user response (#123)
+- **validator**: resolve validation edge cases (#456)
 
-    ### Breaking Changes
-    - **api**: update user authentication endpoint (#456)
-    ```
+### Breaking Changes
+- **api**: update user authentication endpoint (#456)
+```
 
-    ## Tools and Automation
+## Tools and Automation
 
-    ### Recommended Tools
+### Recommended Tools
 
-    - **commitizen**: Interactive commit message prompts
-    - **commitlint**: Automated commit message validation
-    - **conventional-changelog**: Automated changelog generation
-    - **semantic-release**: Automated version management
+- **commitizen**: Interactive commit message prompts
+- **commitlint**: Automated commit message validation
+- **conventional-changelog**: Automated changelog generation
+- **semantic-release**: Automated version management
 
-    ### Git Hook Example
+### Git Hook Example
 
-    ```bash
-    #!/bin/sh
-    # .git/hooks/commit-msg
+```bash
+#!/bin/sh
+# .git/hooks/commit-msg
 
-    commit_regex='^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .{1,50}'
+commit_regex='^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .{1,50}'
 
-    if ! grep -qE "$commit_regex" "$1"; then
-        echo "Invalid commit message format."
-        echo "Please use: <type>(<scope>): <subject>"
-        echo "Example: feat(api): add user authentication"
-        exit 1
-    fi
-    ```
+if ! grep -qE "$commit_regex" "$1"; then
+    echo "Invalid commit message format."
+    echo "Please use: <type>(<scope>): <subject>"
+    echo "Example: feat(api): add user authentication"
+    exit 1
+fi
+```
 
-    ## Best Practices Summary
+## Best Practices Summary
 
-    1. **Be consistent**: Follow the same patterns across your project
-    2. **Be descriptive**: Write clear, meaningful commit messages
-    3. **Be atomic**: One logical change per commit
-    4. **Be imperative**: Use imperative mood in subject line
-    5. **Be concise**: Keep subject line under 50 characters
-    6. **Be thorough**: Include context in body when needed
-    7. **Be traceable**: Reference issues and pull requests
-    8. **Be breaking-aware**: Document breaking changes clearly
+1. **Be consistent**: Follow the same patterns across your project
+2. **Be descriptive**: Write clear, meaningful commit messages
+3. **Be atomic**: One logical change per commit
+4. **Be imperative**: Use imperative mood in subject line
+5. **Be concise**: Keep subject line under 50 characters
+6. **Be thorough**: Include context in body when needed
+7. **Be traceable**: Reference issues and pull requests
+8. **Be breaking-aware**: Document breaking changes clearly
 
-    ## Related Documents
+## Related Documents
 
-    - [Version Control Git Guide](./version-control-system-git.g.md) - Complete Git workflow practices
-    - [Commit Workflow](../workflow-instructions/commit.wf.md) - Step-by-step commit process
-    - [Code Review Process](./code-review-process.g.md) - Review guidelines including commit quality
+- [Version Control Git Guide](./version-control-system-git.g.md) - Complete Git workflow practices
+- [Commit Workflow](../workflow-instructions/commit.wf.md) - Step-by-step commit process
+- [Code Review Process](./code-review-process.g.md) - Review guidelines including commit quality
 
-    ## References
+## References
 
-    - [Conventional Commits Specification](https://www.conventionalcommits.org/)
-    - [Semantic Versioning](https://semver.org/)
-    - [Git Best Practices](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project)
-
+- [Conventional Commits Specification](https://www.conventionalcommits.org/)
+- [Semantic Versioning](https://semver.org/)
+- [Git Best Practices](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project)
 </guide>
 </documents>
