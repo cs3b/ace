@@ -263,7 +263,14 @@ module CodingAgentTools
         end
 
         def log(message)
-          if config.verbose || message.include?("✅") || message.include?("❌") || message.include?("ℹ️") || message.empty?
+          # Always show errors and summary
+          if message.include?("❌") || message.start_with?("Summary:") || message.start_with?("  Files processed:") || 
+             message.start_with?("  Documents synchronized:") || message.start_with?("  Documents up-to-date:") ||
+             message.start_with?("  Would synchronize:") || message.start_with?("  Would skip:") ||
+             message.start_with?("  Errors:") || message.start_with?("  Warnings:") || message.empty?
+            puts message
+          # Show all messages in verbose mode
+          elsif config.verbose
             puts message
           end
         end
