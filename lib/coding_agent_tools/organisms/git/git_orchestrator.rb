@@ -62,11 +62,15 @@ module CodingAgentTools
         def commit(options = {})
           files = options[:files] || []
           
-          # Stage files if provided
+          # Stage files if provided, or stage all changes by default
           if files.any?
             add_result = add(files, options)
             return add_result unless add_result[:success]
           elsif options[:all]
+            add_result = add_all(options)
+            return add_result unless add_result[:success]
+          else
+            # Default behavior: stage all changes across all repositories
             add_result = add_all(options)
             return add_result unless add_result[:success]
           end
