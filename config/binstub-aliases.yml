@@ -72,3 +72,18 @@ aliases:
     executable: "llm-usage-report"
     type: "shell"
     args_processing: "pass_through"
+
+  # Navigation Tools
+  np:
+    description: "Navigation path resolution and generation"
+    executable: "nav-path"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "dev_tools"
+
+  nt:
+    description: "Navigation tree with filtering and autocorrection"
+    executable: "nav-tree"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "dev_tools"
