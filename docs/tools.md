@@ -1,8 +1,60 @@
 # Coding Agent Tools - Development Tools Reference
 
-## Overview
+## Main Cheat-sheet
 
-This document provides a comprehensive reference for all gem executables in the Coding Agent Tools project. All tools are available directly by name via fish integration, encouraging usage from any directory level without path prefixes.
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `code-review` | Interactive code review tool | `--interactive`, `--batch` |
+| `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
+| `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
+| `generate-review-prompt` | Code review prompt generator | `--context-lines`, `--detailed` |
+| `git-add` | Enhanced git add | `--interactive`, `--pattern` |
+| `git-commit` | Enhanced git commit | `--guided`, `--auto-format` |
+| `git-diff` | Enhanced git diff | `--staged`, `--stat` |
+| `git-fetch` | Enhanced git fetch | `--all-repos`, `--report` |
+| `git-log` | Enhanced git log | `--enhanced`, `--project-context` |
+| `git-pull` | Enhanced git pull | `--resolve-conflicts`, `--all-repos` |
+| `git-push` | Enhanced git push | `--safe`, `--all-repos` |
+| `git-status` | Enhanced git status | `--project-context`, `--all-repos` |
+| `handbook` | Development handbook access | `sync-templates` |
+| `llm-query` | Unified LLM query interface | `--model`, `--output` |
+| `nav-ls` | Enhanced directory listing | `--project-context`, `--filter` |
+| `nav-path` | Intelligent path navigation | `task-new`, `file` |
+| `nav-tree` | Enhanced project tree | `--project-structure`, `--filter` |
+| `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
+| `release-manager` | Release management tool | `current`, `report` |
+| `task-manager` | Project task management | `next`, `all` |
+
+## Persona Cheat-sheets
+
+### AI Agent
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `llm-query` | Query AI models | `--model`, `--output` |
+| `nav-path` | Navigate project paths | `task-new`, `file` |
+| `release-manager` | Manage releases | `current`, `report` |
+| `task-manager` | Manage tasks | `next`, `all` |
+
+### Human Developer
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `code-review` | Review code interactively | `--interactive`, `--batch` |
+| `handbook` | Access development guides | `sync-templates` |
+| `reflection-synthesize` | Generate session reports | `--session`, `--focus` |
+
+### Git Power-User
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `git-add` | Enhanced file staging | `--interactive`, `--pattern` |
+| `git-commit` | Smart commit tool | `--guided`, `--auto-format` |
+| `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
+| `git-status` | Multi-repo status | `--all-repos`, `--project-context` |
+
+### Release Manager
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `release-manager` | Release coordination | `current`, `report` |
+| `task-manager` | Track deliverables | `next`, `all` |
 
 ## Setup Requirements
 
@@ -15,469 +67,466 @@ This document provides a comprehensive reference for all gem executables in the 
 ### Environment Setup
 ```bash
 # Initial setup (run from dev-tools/ directory)
-./bin/setup
+cd dev-tools && bundle install
 
 # Load Ruby console with gem loaded (run from dev-tools/ directory)
-./bin/console
+cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
 ```
 
-## Gem Executables (available via fish integration)
+## Gem Executables
 
-### LLM Integration Tools
-
-#### `llm-query` - Unified LLM Query Interface
-
-Query multiple LLM providers with unified syntax and cost tracking.
+### `llm-query` – Unified LLM query interface
+<details><summary>Details</summary>
 
 ```bash
-# Query with specific provider and model
-llm-query google:gemini-2.5-flash "What is Ruby programming language?"
-
-# Query with provider using default model
-llm-query anthropic "Explain ATOM architecture"
-
-# Query with output to file (format inferred from extension)
-llm-query openai:gpt-4o "Code review" --output review.json
-
-# Query with system instruction and temperature
-llm-query gflash "Write a function" --system "You are a Ruby expert" --temperature 0.7
-
-# Use convenient aliases
-llm-query csonet "Explain AI" # claude-4-0-sonnet-latest
-llm-query o4mini "Quick help" # gpt-4o-mini
+llm-query [PROVIDER:MODEL] [PROMPT] [OPTIONS]
 ```
 
-**Key Features:**
-- Multi-provider support: Google, OpenAI, Anthropic, Mistral, LM Studio
-- Convenient aliases for commonly used models
-- File input/output with automatic format detection
-- Temperature control and system instructions
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--model` | Specify AI model | Provider default |
+| `--output` | Output file path | stdout |
+| `--system` | System instruction | None |
+| `--temperature` | Response randomness | 0.7 |
 
-#### `llm-models` - List Available Models
+**Examples**
+```bash
+llm-query google:gemini-2.5-flash "What is Ruby?"
+llm-query anthropic "Explain ATOM architecture" --output review.json
+llm-query csonet "Write a function" --system "You are a Ruby expert"
+```
+</details>
 
-Discover available models across all configured LLM providers with caching.
+
+### `task-manager` – Project task management
+<details><summary>Details</summary>
 
 ```bash
-# List models from specific provider with details
-llm-models google --detailed
-
-# Quick model availability check across all providers
-llm-models --all
+task-manager [COMMAND] [OPTIONS]
 ```
 
-**Key Features:**
-- Cross-provider model discovery with intelligent caching
-- Model capability and pricing information
-- Availability status with connection testing
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `next` | Show next actionable task | N/A |
+| `all` | List all tasks | N/A |
+| `recent` | Show recently modified tasks | N/A |
+| `generate-id` | Generate new task ID | N/A |
 
-#### `llm-usage-report` - Usage and Cost Analysis
-
-Generate comprehensive usage and cost reports for LLM interactions.
-
+**Examples**
 ```bash
-# Monthly cost analysis with breakdown by provider
-llm-usage-report --monthly --breakdown
-
-# Custom date range with detailed metrics
-llm-usage-report --since "2024-01-01" --verbose
-```
-
-**Key Features:**
-- Detailed cost analysis with provider breakdown
-- Usage patterns and trend analysis
-- Export capabilities for accounting integration
-
-### Main CLI Interface
-
-#### `coding_agent_tools` - Main CLI
-
-Primary command-line interface providing access to all gem functionality.
-
-```bash
-# Show available commands and subcommands
-coding_agent_tools help
-
-# Access specific command help
-coding_agent_tools llm help
-```
-
-**Key Features:**
-- Unified entry point for all gem commands
-- Structured subcommand organization
-- Consistent help and documentation access
-
-### Task Management
-
-#### `task-manager` - Project Task Management
-
-Advanced task management for project workflows with dependency tracking.
-
-```bash
-# Find next actionable task to work on
 task-manager next
-
-# List all tasks in current release with dependency order
 task-manager all
-
-# Find recently modified tasks
 task-manager recent
-
-# Generate new task ID for current release
-task-manager generate-id
 ```
+</details>
 
-**Key Features:**
-- Intelligent task selection with dependency resolution
-- Cross-release task tracking and status management  
-- Integration with documentation-based task workflows
-
-### Code Review & Analysis
-
-#### `generate-review-prompt` - Advanced Review Generator
-
-Generate comprehensive code review prompts from git changes and project context.
+### `generate-review-prompt` – Code review prompt generator
+<details><summary>Details</summary>
 
 ```bash
-# Generate review prompt from current git diff
-generate-review-prompt --context-lines 5
+generate-review-prompt [OPTIONS]
+```
 
-# Include file-specific analysis with architectural considerations
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--context-lines` | Context lines around changes | `3` |
+| `--detailed` | Include detailed analysis | `false` |
+| `--arch-focus` | Architectural considerations | `false` |
+
+**Examples**
+```bash
+generate-review-prompt --context-lines 5
 generate-review-prompt --detailed --arch-focus
 ```
+</details>
 
-**Key Features:**
-- Git-aware change analysis with context extraction
-- Project-specific architectural guidance integration
-- Customizable review depth and focus areas
+### `code-review` – Interactive code review tool
+<details><summary>Details</summary>
 
-#### `code-review` - Interactive Code Review Tool
 ```bash
-# Interactive code review with guided prompts
-code-review --interactive
+code-review [OPTIONS]
+```
 
-# Batch review with automated analysis
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--interactive` | Interactive review mode | `false` |
+| `--batch` | Batch processing mode | `false` |
+| `--output-format` | Output format | `text` |
+
+**Examples**
+```bash
+code-review --interactive
 code-review --batch --output-format json
 ```
+</details>
 
-**Key Features:**
-- Interactive review workflow with guided prompts
-- Automated analysis with customizable depth
-- Multiple output formats for integration
+### `code-review-prepare` – Review preparation tool
+<details><summary>Details</summary>
 
-#### `code-review-prepare` - Review Preparation Tool
 ```bash
-# Prepare review context with project analysis
-code-review-prepare --context full
+code-review-prepare [OPTIONS]
+```
 
-# Quick preparation with diff focus
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--context` | Context level | `basic` |
+| `--diff-only` | Focus on diff only | `false` |
+
+**Examples**
+```bash
+code-review-prepare --context full
 code-review-prepare --diff-only
 ```
+</details>
 
-**Key Features:**
-- Context preparation for efficient reviews
-- Project-aware analysis and categorization
-- Diff-focused preparation for targeted reviews
+### `code-review-synthesize` – Review synthesis tool
+<details><summary>Details</summary>
 
-#### `code-review-synthesize` - Review Synthesis Tool
 ```bash
-# Synthesize review results into actionable report
-code-review-synthesize --format report
+code-review-synthesize [OPTIONS]
+```
 
-# Generate synthesis with recommendations
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--format` | Output format | `text` |
+| `--include-recommendations` | Include recommendations | `false` |
+
+**Examples**
+```bash
+code-review-synthesize --format report
 code-review-synthesize --include-recommendations
 ```
+</details>
 
-**Key Features:**
-- Review result synthesis with actionable insights
-- Recommendation generation for improvement
-- Multiple output formats for reporting
+### `reflection-synthesize` – Reflection report generator
+<details><summary>Details</summary>
 
-#### `reflection-synthesize` - Reflection Report Generator
 ```bash
-# Generate reflection report from session data
-reflection-synthesize --session current
+reflection-synthesize [OPTIONS]
+```
 
-# Custom reflection with specific focus areas
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--session` | Session identifier | `current` |
+| `--focus` | Focus areas | All areas |
+
+**Examples**
+```bash
+reflection-synthesize --session current
 reflection-synthesize --focus architecture,testing
 ```
+</details>
 
-**Key Features:**
-- Session-based reflection report generation
-- Focus area customization for targeted analysis
-- Integration with development workflow patterns
+### `git-add` – Enhanced git add
+<details><summary>Details</summary>
 
-### Git Command Wrappers
-
-#### `git-add` - Enhanced Git Add
 ```bash
-# Add files with interactive selection
-git-add --interactive
+git-add [OPTIONS]
+```
 
-# Add with pattern matching
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--interactive` | Interactive file selection | `false` |
+| `--pattern` | Pattern matching | None |
+
+**Examples**
+```bash
+git-add --interactive
 git-add --pattern "*.rb"
 ```
+</details>
 
-**Key Features:**
-- Interactive file selection with preview
-- Pattern-based addition with safety checks
-- Integration with project workflow patterns
+### `git-commit` – Enhanced git commit
+<details><summary>Details</summary>
 
-#### `git-commit` - Enhanced Git Commit
 ```bash
-# Commit with guided message generation
-git-commit --guided
+git-commit [OPTIONS]
+```
 
-# Commit with automatic formatting
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--guided` | Guided message generation | `false` |
+| `--auto-format` | Automatic formatting | `false` |
+
+**Examples**
+```bash
+git-commit --guided
 git-commit --auto-format
 ```
+</details>
 
-**Key Features:**
-- Guided commit message generation
-- Automatic formatting following project standards
-- Integration with multi-repository workflows
+### `git-diff` – Enhanced git diff
+<details><summary>Details</summary>
 
-#### `git-diff` - Enhanced Git Diff
 ```bash
-# Show differences across repositories
-git-diff
+git-diff [OPTIONS]
+```
 
-# Show staged changes only
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--staged` | Show staged changes only | `false` |
+| `--name-only` | Show file names only | `false` |
+| `--stat` | Show diffstat summary | `false` |
+| `--repository` | Specific repository context | Current |
+
+**Examples**
+```bash
 git-diff --staged
-
-# Show only names of changed files
-git-diff --name-only
-
-# Show diffstat summary
 git-diff --stat
-
-# Process specific repository context
 git-diff --repository dev-tools
 ```
+</details>
 
-**Key Features:**
-- Multi-repository diff operations
-- Staged and unstaged change analysis
-- Repository-specific context support
+### `git-fetch` – Enhanced git fetch
+<details><summary>Details</summary>
 
-#### `git-fetch` - Enhanced Git Fetch
 ```bash
-# Fetch with multi-repository support
-git-fetch --all-repos
+git-fetch [OPTIONS]
+```
 
-# Fetch with status reporting
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--all-repos` | Fetch all repositories | `false` |
+| `--report` | Status reporting | `false` |
+
+**Examples**
+```bash
+git-fetch --all-repos
 git-fetch --report
 ```
+</details>
 
-**Key Features:**
-- Multi-repository fetch operations
-- Status reporting and conflict detection
-- Integration with project coordination
+### `git-log` – Enhanced git log
+<details><summary>Details</summary>
 
-#### `git-log` - Enhanced Git Log
 ```bash
-# Log with enhanced formatting
-git-log --enhanced
+git-log [OPTIONS]
+```
 
-# Log with project context
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--enhanced` | Enhanced formatting | `false` |
+| `--project-context` | Project context | `false` |
+
+**Examples**
+```bash
+git-log --enhanced
 git-log --project-context
 ```
+</details>
 
-**Key Features:**
-- Enhanced formatting with project context
-- Multi-repository log coordination
-- Integration with task management workflows
+### `git-pull` – Enhanced git pull
+<details><summary>Details</summary>
 
-#### `git-pull` - Enhanced Git Pull
 ```bash
-# Pull with conflict resolution support
-git-pull --resolve-conflicts
+git-pull [OPTIONS]
+```
 
-# Pull with multi-repository coordination
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--resolve-conflicts` | Conflict resolution | `false` |
+| `--all-repos` | All repositories | `false` |
+
+**Examples**
+```bash
+git-pull --resolve-conflicts
 git-pull --all-repos
 ```
+</details>
 
-**Key Features:**
-- Conflict resolution support with guidance
-- Multi-repository coordination
-- Integration with development workflows
+### `git-push` – Enhanced git push
+<details><summary>Details</summary>
 
-#### `git-push` - Enhanced Git Push
 ```bash
-# Push with safety checks
-git-push --safe
+git-push [OPTIONS]
+```
 
-# Push with multi-repository coordination
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--safe` | Safety checks | `false` |
+| `--all-repos` | All repositories | `false` |
+
+**Examples**
+```bash
+git-push --safe
 git-push --all-repos
 ```
+</details>
 
-**Key Features:**
-- Safety checks and validation before push
-- Multi-repository coordination
-- Integration with CI/CD workflows
+### `git-status` – Enhanced git status
+<details><summary>Details</summary>
 
-#### `git-status` - Enhanced Git Status
 ```bash
-# Status with project context
-git-status --project-context
+git-status [OPTIONS]
+```
 
-# Status with multi-repository view
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--project-context` | Project context | `false` |
+| `--all-repos` | All repositories | `false` |
+
+**Examples**
+```bash
+git-status --project-context
 git-status --all-repos
 ```
+</details>
 
-**Key Features:**
-- Project-aware status reporting
-- Multi-repository status coordination
-- Integration with task management
+### `nav-ls` – Enhanced directory listing
+<details><summary>Details</summary>
 
-### Navigation & Documentation
-
-#### `nav-ls` - Enhanced Directory Listing
 ```bash
-# List with project context
-nav-ls --project-context
+nav-ls [OPTIONS]
+```
 
-# List with filtering options
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--project-context` | Project context | `false` |
+| `--filter` | File pattern filter | None |
+
+**Examples**
+```bash
+nav-ls --project-context
 nav-ls --filter "*.rb"
 ```
+</details>
 
-**Key Features:**
-- Project-aware directory listing
-- Advanced filtering and categorization
-- Integration with navigation workflows
+### `nav-path` – Intelligent path navigation
+<details><summary>Details</summary>
 
-#### `nav-path` - Intelligent Path Navigation
 ```bash
-# Generate new task path with title
-nav-path task-new --title "Feature Name"
-
-# Resolve existing task by ID
-nav-path task 42
-
-# Autocorrect and resolve file path
-nav-path file README
-
-# Generate new documentation path
-nav-path docs-new --title "Documentation Title"
-
-# Generate new reflection path
-nav-path reflection-new --title "Session Reflection"
+nav-path [COMMAND] [OPTIONS]
 ```
 
-**Key Features:**
-- Intelligent path generation for tasks, docs, and reflections
-- File path autocorrection and resolution
-- Integration with task management workflows
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `task-new` | Generate new task path | N/A |
+| `task` | Resolve task by ID | N/A |
+| `file` | Resolve file path | N/A |
+| `--title` | Title for new items | Required |
 
-#### `nav-tree` - Enhanced Project Tree
+**Examples**
 ```bash
-# Tree with project structure awareness
-nav-tree --project-structure
+nav-path task-new --title "Feature Name"
+nav-path task 42
+nav-path file README
+```
+</details>
 
-# Tree with filtering options
+### `nav-tree` – Enhanced project tree
+<details><summary>Details</summary>
+
+```bash
+nav-tree [OPTIONS]
+```
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--project-structure` | Project structure aware | `false` |
+| `--filter` | Content filter | None |
+
+**Examples**
+```bash
+nav-tree --project-structure
 nav-tree --filter source
 ```
+</details>
 
-**Key Features:**
-- Project structure awareness
-- Advanced filtering and categorization
-- Integration with development workflows
+### `handbook` – Development handbook access
+<details><summary>Details</summary>
 
-#### `handbook` - Development Handbook Access
 ```bash
-# Synchronize XML-embedded template content with template files
+handbook [COMMAND]
+```
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `sync-templates` | Sync template content | N/A |
+
+**Examples**
+```bash
 handbook sync-templates
 ```
+</details>
 
-**Key Features:**
-- Template synchronization with XML-embedded content
-- Development handbook management
-- Integration with development processes
+### `release-manager` – Release management tool
+<details><summary>Details</summary>
 
-### Release Management
-
-#### `release-manager` - Release Management Tool
 ```bash
-# Manage current release
-release-manager current
-
-# Generate release reports
-release-manager report --format detailed
+release-manager [COMMAND] [OPTIONS]
 ```
 
-**Key Features:**
-- Comprehensive release management
-- Report generation with detailed analytics
-- Integration with task management workflows
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `current` | Show current release | N/A |
+| `report` | Generate reports | N/A |
+| `--format` | Report format | `standard` |
+
+**Examples**
+```bash
+release-manager current
+release-manager report --format detailed
+```
+</details>
 
 ## Tool Categories
 
 ### By Function
-
+- **Code Review**: `code-review`, `code-review-prepare`, `code-review-synthesize`, `generate-review-prompt`
 - **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
-- **Task Management**: `task-manager`, `release-manager`
-- **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`
-- **Code Review**: `generate-review-prompt`, `code-review`, `code-review-prepare`, `code-review-synthesize`
-- **Navigation & Documentation**: `nav-ls`, `nav-path`, `nav-tree`, `handbook`
+- **LLM Integration**: `llm-query`
+- **Navigation & Documentation**: `handbook`, `nav-ls`, `nav-path`, `nav-tree`
+- **Project Management**: `release-manager`, `task-manager`
 - **Reflection & Analysis**: `reflection-synthesize`
 
-### By Target Users
-
-- **AI Coding Agents**: `task-manager`, `llm-query`, `llm-models`, `nav-path`, `release-manager`
-- **Human Developers**: `handbook`, `code-review`, `reflection-synthesize`
-- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`, `git-*`, `nav-ls`, `nav-tree`
+### By Persona
+- **AI Agent**: `llm-query`, `nav-path`, `release-manager`, `task-manager`
+- **Human Developer**: `code-review`, `handbook`, `reflection-synthesize`
+- **Git Power-User**: `git-add`, `git-commit`, `git-diff`, `git-status`
+- **Release Manager**: `release-manager`, `task-manager`
 
 ## Common Workflows
 
-### For AI Coding Agents
-
+### AI Agent Workflow
 ```bash
-# 1. Find next task using advanced task manager
+# Find next task and navigate
 task-manager next
+nav-path task 42
 
-# 2. Query LLM for guidance
+# Query AI for implementation guidance
 llm-query google "How to implement feature X?"
 
-# 3. Navigate to relevant files using intelligent path resolution
-nav-path file README
-
-# 4. Generate new task when needed
+# Generate new task when needed
 nav-path task-new --title "Implement feature X"
 ```
 
-### For Human Developers
-
+### Human Developer Workflow
 ```bash
-# 1. Synchronize handbook templates
+# Sync documentation and review code
 handbook sync-templates
+code-review --interactive
 
-# 2. Show git differences across repositories
-git-diff --stat
-
-# 3. Use task management for organization
+# Track recent work and generate reflection
 task-manager recent
-
-# 4. Query LLM with specific output format
-llm-query anthropic "Code review suggestions" --output review.md
+reflection-synthesize --session current
 ```
 
-## Migration Status
-
-**Current State**: The project encourages direct command usage via fish shell integration. All gem executables are available directly by name from any directory without path prefixes.
-
-**Tool Access Philosophy**: 
-- **Direct Usage**: All tools are available directly by name (e.g., `task-manager`, `llm-query`)
-- **No Binstubs**: Development binstubs are not documented to encourage direct command usage
-- **Fish Integration**: Automatic path resolution for seamless operation from any directory
+### Git Power-User Workflow
+```bash
+# Enhanced git operations across repositories
+git-status --all-repos
+git-diff --stat
+git-commit --guided
+git-push --safe
+```
 
 ## Notes
 
-- **Fish Integration**: All gem executables are available directly by name after setup
-- **Direct Commands**: Use commands directly from any directory without path prefixes
-- **Security Framework**: Most tools integrate with the project's comprehensive security validation
-- **Performance**: LLM tools include intelligent caching and cost tracking
-- **Git Enhancement**: Git command wrappers provide enhanced functionality over standard git commands
-- **Task Integration**: Task management tools work with documentation-based workflows in `dev-taskflow/`
+- All tools available directly by name via fish integration
+- Use `tool-name --help` for detailed usage information
+- Git wrappers provide enhanced functionality over standard git commands
+- LLM integration includes intelligent caching and cost tracking
 
 ---
 
-*This documentation covers gem executables only, encouraging direct command usage from any directory. For the most up-to-date information, run individual tools with `--help` flag.*
+*For the most up-to-date information, run individual tools with `--help` flag.*
