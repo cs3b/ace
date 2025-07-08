@@ -59,7 +59,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
      ```bash
      # Get current release information and path automatically
      nav-path reflection-new --title '<reflection-title>'
-     
+
      # This tool will:
      # 1. Determine current release context automatically
      # 2. Create target directory if needed
@@ -67,20 +67,6 @@ Capture individual or team observations, learnings, and ideas for improvement du
      # 4. Return full path for reflection file
      ```
 
-   - **Enhanced Directory Resolution:**
-     - Use `nav-path reflection-new` to get current release context automatically
-     - Create reflections directory if it doesn't exist
-     - Follow current release structure for organization
-
-   - Create reflections directory if needed
-   - Generate filename with enhanced timestamp format:
-     - **Standard Format**: `YYYYMMDD-brief-description.md`
-       - Example: `20240126-authentication-refactor-learnings.md`
-       - Example: `20240126-session-review.md`
-     - **Conversation Analysis Format**: `YYYYMMDD-HHMMSS-essence-of-session.md`
-       - Example: `20240126-143022-task-workflow-improvements.md`
-       - Example: `20240126-151245-token-limit-challenges.md`
-       - Use current timestamp command for precise timing
 
 3. **Create Reflection Structure:**
 
@@ -214,14 +200,14 @@ When no specific context is provided, follow this process:
 1. **Analyze Recent Work:**
 
    ```bash
-   # Review recent commits
-   git log --oneline -10
+   # Review recent commits with enhanced context
+   git-log --oneline -10
 
-   # Check modified files
-   git diff --name-only HEAD~5
+   # Check modified files with intelligent diff
+   git-diff --name-only HEAD~5
 
-   # Review completed tasks
-   ls -t dev-taskflow/current/*/tasks/*.md | head -5
+   # Review completed tasks using task manager
+   task-manager recent --limit 5 --filter status:done
    ```
 
 2. **Extract Insights:**

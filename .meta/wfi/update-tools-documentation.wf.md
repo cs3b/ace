@@ -2,12 +2,12 @@
 
 ## Goal
 
-Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.md) when new tools are added or existing tools are modified, ensuring accurate and complete documentation for all development tools and gem executables.
+Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.md) when new gem executables are added or existing tools are modified, ensuring accurate and complete documentation for gem executables only. This workflow excludes bin/* tools (binstubs) to encourage using commands directly at any directory level.
 
 ## Prerequisites
 
-- New tool has been added to bin/ or dev-tools/exe/ directories
-- Existing tool functionality has been modified or enhanced
+- New gem executable has been added to dev-tools/exe/ directory
+- Existing gem executable functionality has been modified or enhanced
 - Understanding of tool's purpose, usage, and integration
 - Access to the tool's source code and help documentation
 - Write access to dev-tools/docs/tools.md
@@ -24,17 +24,18 @@ Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.
 
 ### Planning Steps
 
-- [ ] Identify tool type and category (bin/ or dev-tools/exe/)
-- [ ] Analyze tool functionality and usage patterns
+- [ ] Identify gem executable functionality and usage patterns
 - [ ] Determine appropriate documentation section placement
+- [ ] Remove any bin/* tool references (binstubs not documented)
 
 ### Execution Steps
 
-- [ ] Create or update tool documentation entry using template
+- [ ] Create or update gem executable documentation entry using template
 - [ ] Add tool to appropriate category section
 - [ ] Include usage examples and common workflows
 - [ ] Update tool listing and categorization sections
 - [ ] Validate documentation completeness and accuracy
+- [ ] Ensure no bin/* tool references remain
 
 ## Process Steps
 
@@ -62,15 +63,16 @@ Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.
 
 2. **Locate Correct Documentation Section:**
 
-   **Current dev-tools/docs/tools.md structure (Focus: Gem Executables Section):**
+   **Current dev-tools/docs/tools.md structure (Gem Executables Only):**
    - Overview
    - Setup Requirements  
-   - Development Tools (bin/) - **SKIP**
    - Gem Executables (available via fish integration) - **FOCUS HERE**
    - Tool Categories
    - Common Workflows
    - Migration Status
    - Notes
+   
+   **IMPORTANT: No bin/* tools (binstubs) should be documented. Remove all references.**
 
 3. **Create Tool Documentation Entry:**
 
@@ -123,7 +125,8 @@ tool-name --other-useful-flag
    **Location Guidelines (Gem Executables Only):**
    - **Gem executables**: Add to "Gem Executables" section using tool name only (fish integration available)
    - Use appropriate subsection (Git Workflow, Task Management, LLM Integration, etc.)
-   - **Skip development tools**: Focus only on dev-tools/exe/ directory
+   - **Remove bin/* tools**: Delete all binstub documentation to encourage direct command usage
+   - **Focus only on dev-tools/exe/ directory**
 
 5. **Update Existing Tool Documentation:**
 
@@ -338,6 +341,12 @@ for tool in dev-tools/exe/*; do
   basename_tool=$(basename "$tool")
   grep -q "#### \`$basename_tool\`" dev-tools/docs/tools.md || echo "Missing exe/ tool: $basename_tool"
 done
+
+# Ensure no bin/* tools are documented (should be removed)
+if grep -q "#### \`bin/" dev-tools/docs/tools.md; then
+  echo "ERROR: Found bin/* tool documentation - should be removed"
+  grep -n "#### \`bin/" dev-tools/docs/tools.md
+fi
 ```
 
 **Test 4: Workflow Example Validation**
@@ -356,6 +365,7 @@ fi
 - [ ] Workflow examples use correct tool naming conventions
 - [ ] Cross-references between gem executables are maintained
 - [ ] No full paths to exe/ tools (fish integration handles this)
+- [ ] No bin/* tool references remain (binstubs excluded)
 
 ## Usage Example
 
