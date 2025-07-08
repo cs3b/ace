@@ -12,18 +12,18 @@ module CodingAgentTools
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true, "autofix" => true },
-              "security" => { "enabled" => true, "full_scan" => false },
-              "cassettes" => { "enabled" => true, "threshold" => 51200 } # 50KB
+              "standardrb" => {"enabled" => true, "autofix" => true},
+              "security" => {"enabled" => true, "full_scan" => false},
+              "cassettes" => {"enabled" => true, "threshold" => 51200} # 50KB
             }
           },
           "markdown" => {
             "enabled" => true,
             "linters" => {
-              "styleguide" => { "enabled" => true, "autofix" => true },
-              "link_validation" => { "enabled" => true },
-              "template_embedding" => { "enabled" => true },
-              "task_metadata" => { "enabled" => true }
+              "styleguide" => {"enabled" => true, "autofix" => true},
+              "link_validation" => {"enabled" => true},
+              "template_embedding" => {"enabled" => true},
+              "task_metadata" => {"enabled" => true}
             },
             "order" => ["task_metadata", "link_validation", "template_embedding", "styleguide"]
           },
@@ -43,23 +43,23 @@ module CodingAgentTools
 
         def load
           config = DEFAULT_CONFIG.dup
-          
+
           if config_path && File.exist?(config_path)
             custom_config = load_yaml_file(config_path)
             config = deep_merge(config, custom_config) if custom_config
           end
-          
+
           config
         end
 
         def validate
-          return { valid: false, error: "Config file not found" } unless config_path
-          
+          return {valid: false, error: "Config file not found"} unless config_path
+
           begin
             config = load_yaml_file(config_path)
             validate_structure(config)
-          rescue StandardError => e
-            { valid: false, error: e.message }
+          rescue => e
+            {valid: false, error: e.message}
           end
         end
 
@@ -67,18 +67,18 @@ module CodingAgentTools
 
         def find_config_path(path)
           return path if path && File.exist?(path)
-          
+
           # Look for .coding-agent/lint.yml in project root
           root = find_project_root
           default_path = File.join(root, ".coding-agent", "lint.yml")
-          
+
           File.exist?(default_path) ? default_path : nil
         end
 
         def find_project_root
           # Look for common project markers
           markers = [".git", "Gemfile", "package.json", ".coding-agent"]
-          
+
           current = Pathname.pwd
           until current.root?
             markers.each do |marker|
@@ -86,7 +86,7 @@ module CodingAgentTools
             end
             current = current.parent
           end
-          
+
           Dir.pwd
         end
 
@@ -108,27 +108,27 @@ module CodingAgentTools
 
         def validate_structure(config)
           errors = []
-          
+
           # Validate top-level keys
           %w[ruby markdown].each do |lang|
             if config[lang] && !config[lang].is_a?(Hash)
               errors << "#{lang} must be a hash"
             end
           end
-          
+
           # Validate linter configurations
           if config["ruby"] && config["ruby"]["linters"]
             validate_linters(config["ruby"]["linters"], "ruby", errors)
           end
-          
+
           if config["markdown"] && config["markdown"]["linters"]
             validate_linters(config["markdown"]["linters"], "markdown", errors)
           end
-          
+
           if errors.empty?
-            { valid: true }
+            {valid: true}
           else
-            { valid: false, errors: errors }
+            {valid: false, errors: errors}
           end
         end
 
@@ -137,7 +137,7 @@ module CodingAgentTools
             errors << "#{language}.linters must be a hash"
             return
           end
-          
+
           linters.each do |name, settings|
             unless settings.is_a?(Hash)
               errors << "#{language}.linters.#{name} must be a hash"

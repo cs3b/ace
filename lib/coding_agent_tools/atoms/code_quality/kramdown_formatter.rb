@@ -25,13 +25,13 @@ module CodingAgentTools
         def format(content)
           doc = parse_markdown(content)
           formatted = doc.to_kramdown
-          
+
           {
             success: true,
             formatted: formatted,
             changed: content != formatted
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: e.message,
@@ -49,24 +49,24 @@ module CodingAgentTools
 
           content = File.read(file_path)
           result = format(content)
-          
+
           if result[:success] && result[:changed] && !@options[:dry_run]
             File.write(file_path, result[:formatted])
             result[:file_updated] = true
           end
-          
+
           result
         end
 
         def validate_syntax(content)
           doc = parse_markdown(content)
           warnings = doc.warnings
-          
+
           {
             valid: warnings.empty?,
             warnings: warnings
           }
-        rescue StandardError => e
+        rescue => e
           {
             valid: false,
             error: e.message

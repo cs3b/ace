@@ -23,7 +23,7 @@ module CodingAgentTools
         def validate(paths = ["."])
           md_files = collect_markdown_files(paths)
           findings = []
-          
+
           md_files.each do |file|
             validate_file_templates(file, findings)
           end
@@ -60,21 +60,21 @@ module CodingAgentTools
         def validate_file_templates(file, findings)
           content = File.read(file)
           in_code_block = false
-          
+
           content.each_line.with_index do |line, idx|
             # Skip code blocks
             if line.strip.start_with?("```", "~~~")
               in_code_block = !in_code_block
               next
             end
-            
+
             next if in_code_block
-            
+
             # Check each pattern
             TEMPLATE_PATTERNS.each do |pattern|
               line.scan(pattern) do |match|
                 template_path = match.first
-                
+
                 unless template_exists?(template_path)
                   findings << {
                     file: file,
@@ -93,9 +93,9 @@ module CodingAgentTools
           template_dirs.any? do |dir|
             full_path = File.join(dir, template_path)
             File.exist?(full_path) || File.exist?("#{full_path}.md")
-          end || 
-          # Also check if it's an absolute path or relative to current dir
-          File.exist?(template_path)
+          end ||
+            # Also check if it's an absolute path or relative to current dir
+            File.exist?(template_path)
         end
 
         def format_error(finding)

@@ -16,15 +16,15 @@ module CodingAgentTools
 
         def resolve(path)
           return path if Pathname.new(path).absolute?
-          
+
           # Try relative to current directory first
           current_relative = File.expand_path(path)
           return current_relative if File.exist?(current_relative)
-          
+
           # Try relative to project root
           root_relative = File.join(project_root, path)
           return root_relative if File.exist?(root_relative)
-          
+
           # Return the path as-is if not found
           path
         end
@@ -32,7 +32,7 @@ module CodingAgentTools
         def relative_to_root(path)
           absolute_path = Pathname.new(File.expand_path(path))
           root_path = Pathname.new(project_root)
-          
+
           begin
             absolute_path.relative_path_from(root_path).to_s
           rescue ArgumentError
@@ -57,7 +57,7 @@ module CodingAgentTools
 
           # Fallback to manual detection
           markers = [".git", "Gemfile", ".coding-agent", "coding_agent_tools.gemspec"]
-          
+
           current = Pathname.pwd
           until current.root?
             markers.each do |marker|
@@ -67,7 +67,7 @@ module CodingAgentTools
             end
             current = current.parent
           end
-          
+
           Dir.pwd
         end
       end

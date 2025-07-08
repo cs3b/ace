@@ -28,7 +28,7 @@ module CodingAgentTools
           end
 
           large_cassettes = find_large_cassettes
-          
+
           {
             success: true, # Always succeeds, only warns
             findings: large_cassettes,
@@ -44,19 +44,19 @@ module CodingAgentTools
 
         def find_large_cassettes
           cassette_files = Dir.glob(cassettes_dir.join("**", "*.{json,yml}"))
-          
+
           large_files = []
-          
+
           cassette_files.each do |file_path|
             file_size = File.size(file_path)
-            
+
             if file_size > threshold
               relative_path = begin
                 Pathname.new(file_path).relative_path_from(Pathname.pwd)
               rescue ArgumentError
                 file_path
               end
-              
+
               large_files << {
                 path: relative_path.to_s,
                 size: file_size,
@@ -64,7 +64,7 @@ module CodingAgentTools
               }
             end
           end
-          
+
           # Sort by size, largest first
           large_files.sort_by { |file| -file[:size] }
         end
