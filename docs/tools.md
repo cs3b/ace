@@ -75,6 +75,18 @@ bin/tr
 bin/tal
 ```
 
+#### `bin/llm-models` - List Available Models (Development)
+```bash
+# List available models (development version)
+bin/llm-models
+```
+
+#### `bin/llm-query` - Query LLM Services (Development)
+```bash
+# Query LLM services (development version)
+bin/llm-query anthropic "test query"
+```
+
 #### `bin/tnid` - Generate Next Task ID
 ```bash
 # Generate next available task ID
@@ -149,6 +161,39 @@ bin/cr-docs
 ```bash
 # Generate test review prompt
 bin/test-review
+```
+
+#### `bin/llm-usage` - LLM Usage Quick Check
+```bash
+# Quick usage check for LLM services
+bin/llm-usage
+```
+
+#### `bin/markdown-sync-embedded-documents` - Markdown Document Synchronizer
+```bash
+# Synchronize embedded documents in markdown files
+bin/markdown-sync-embedded-documents
+```
+
+#### `bin/np` - New Project Generator
+```bash
+# Generate new project structure
+bin/np
+```
+
+#### `bin/nt` - New Task Generator
+```bash
+# Generate new task with structured metadata
+bin/nt
+```
+
+#### `bin/setup-env` - Environment Setup Script
+```bash
+# Setup development environment
+bin/setup-env
+
+# Fish shell specific setup
+bin/setup-env.fish
 ```
 
 ### Build & Deployment Tools
@@ -277,22 +322,269 @@ generate-review-prompt --detailed --arch-focus
 - Project-specific architectural guidance integration
 - Customizable review depth and focus areas
 
+#### `code-review` - Interactive Code Review Tool
+```bash
+# Interactive code review with guided prompts
+code-review --interactive
+
+# Batch review with automated analysis
+code-review --batch --output-format json
+```
+
+**Key Features:**
+- Interactive review workflow with guided prompts
+- Automated analysis with customizable depth
+- Multiple output formats for integration
+
+#### `code-review-prepare` - Review Preparation Tool
+```bash
+# Prepare review context with project analysis
+code-review-prepare --context full
+
+# Quick preparation with diff focus
+code-review-prepare --diff-only
+```
+
+**Key Features:**
+- Context preparation for efficient reviews
+- Project-aware analysis and categorization
+- Diff-focused preparation for targeted reviews
+
+#### `code-review-synthesize` - Review Synthesis Tool
+```bash
+# Synthesize review results into actionable report
+code-review-synthesize --format report
+
+# Generate synthesis with recommendations
+code-review-synthesize --include-recommendations
+```
+
+**Key Features:**
+- Review result synthesis with actionable insights
+- Recommendation generation for improvement
+- Multiple output formats for reporting
+
+#### `reflection-synthesize` - Reflection Report Generator
+```bash
+# Generate reflection report from session data
+reflection-synthesize --session current
+
+# Custom reflection with specific focus areas
+reflection-synthesize --focus architecture,testing
+```
+
+**Key Features:**
+- Session-based reflection report generation
+- Focus area customization for targeted analysis
+- Integration with development workflow patterns
+
+### Git Command Wrappers
+
+#### `git-add` - Enhanced Git Add
+```bash
+# Add files with interactive selection
+git-add --interactive
+
+# Add with pattern matching
+git-add --pattern "*.rb"
+```
+
+**Key Features:**
+- Interactive file selection with preview
+- Pattern-based addition with safety checks
+- Integration with project workflow patterns
+
+#### `git-commit` - Enhanced Git Commit
+```bash
+# Commit with guided message generation
+git-commit --guided
+
+# Commit with automatic formatting
+git-commit --auto-format
+```
+
+**Key Features:**
+- Guided commit message generation
+- Automatic formatting following project standards
+- Integration with multi-repository workflows
+
+#### `git-diff` - Enhanced Git Diff
+```bash
+# Diff with context highlighting
+git-diff --context-highlight
+
+# Diff with file-specific analysis
+git-diff --file-analysis
+```
+
+**Key Features:**
+- Context-aware diff highlighting
+- File-specific analysis and categorization
+- Integration with review workflows
+
+#### `git-fetch` - Enhanced Git Fetch
+```bash
+# Fetch with multi-repository support
+git-fetch --all-repos
+
+# Fetch with status reporting
+git-fetch --report
+```
+
+**Key Features:**
+- Multi-repository fetch operations
+- Status reporting and conflict detection
+- Integration with project coordination
+
+#### `git-log` - Enhanced Git Log
+```bash
+# Log with enhanced formatting
+git-log --enhanced
+
+# Log with project context
+git-log --project-context
+```
+
+**Key Features:**
+- Enhanced formatting with project context
+- Multi-repository log coordination
+- Integration with task management workflows
+
+#### `git-pull` - Enhanced Git Pull
+```bash
+# Pull with conflict resolution support
+git-pull --resolve-conflicts
+
+# Pull with multi-repository coordination
+git-pull --all-repos
+```
+
+**Key Features:**
+- Conflict resolution support with guidance
+- Multi-repository coordination
+- Integration with development workflows
+
+#### `git-push` - Enhanced Git Push
+```bash
+# Push with safety checks
+git-push --safe
+
+# Push with multi-repository coordination
+git-push --all-repos
+```
+
+**Key Features:**
+- Safety checks and validation before push
+- Multi-repository coordination
+- Integration with CI/CD workflows
+
+#### `git-status` - Enhanced Git Status
+```bash
+# Status with project context
+git-status --project-context
+
+# Status with multi-repository view
+git-status --all-repos
+```
+
+**Key Features:**
+- Project-aware status reporting
+- Multi-repository status coordination
+- Integration with task management
+
+### Navigation & Documentation
+
+#### `nav-ls` - Enhanced Directory Listing
+```bash
+# List with project context
+nav-ls --project-context
+
+# List with filtering options
+nav-ls --filter "*.rb"
+```
+
+**Key Features:**
+- Project-aware directory listing
+- Advanced filtering and categorization
+- Integration with navigation workflows
+
+#### `nav-path` - Intelligent Path Navigation
+```bash
+# Navigate with fuzzy matching
+nav-path task README
+
+# Navigate with path generation
+nav-path task-new --title "Feature Name"
+```
+
+**Key Features:**
+- Fuzzy matching for rapid navigation
+- Path generation with context awareness
+- Integration with task management workflows
+
+#### `nav-tree` - Enhanced Project Tree
+```bash
+# Tree with project structure awareness
+nav-tree --project-structure
+
+# Tree with filtering options
+nav-tree --filter source
+```
+
+**Key Features:**
+- Project structure awareness
+- Advanced filtering and categorization
+- Integration with development workflows
+
+#### `handbook` - Development Handbook Access
+```bash
+# Access handbook with search
+handbook --search "workflow"
+
+# Access specific handbook section
+handbook --section "development"
+```
+
+**Key Features:**
+- Searchable development handbook access
+- Section-based navigation
+- Integration with development processes
+
+### Release Management
+
+#### `release-manager` - Release Management Tool
+```bash
+# Manage current release
+release-manager current
+
+# Generate release reports
+release-manager report --format detailed
+```
+
+**Key Features:**
+- Comprehensive release management
+- Report generation with detailed analytics
+- Integration with task management workflows
+
 ## Tool Categories
 
 ### By Function
 
-- **Git Operations**: `gc`, `gl`, `gp`, `gpull`
-- **Task Management**: `tn`, `tr`, `tal`, `tnid`, `rc`, `task-manager`
+- **Git Operations**: `gc`, `gl`, `gp`, `gpull`, `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
+- **Task Management**: `tn`, `tr`, `tal`, `tnid`, `rc`, `task-manager`, `nt`, `np`, `release-manager`
 - **Quality Assurance**: `test`, `lint`, `lint-cassettes`, `lint-security`, `build`
-- **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`
-- **Code Review**: `cr`, `cr-docs`, `test-review`, `generate-review-prompt`
-- **Development**: `console`, `tree`, `run`, `setup`
+- **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`, `llm-usage`
+- **Code Review**: `cr`, `cr-docs`, `test-review`, `generate-review-prompt`, `code-review`, `code-review-prepare`, `code-review-synthesize`
+- **Navigation & Documentation**: `nav-ls`, `nav-path`, `nav-tree`, `handbook`, `tree`
+- **Development**: `console`, `run`, `setup`, `setup-env`
+- **Documentation**: `markdown-sync-embedded-documents`
+- **Reflection & Analysis**: `reflection-synthesize`
 
 ### By Target Users
 
-- **AI Coding Agents**: `tn`, `tr`, `tal`, `task-manager`, `llm-query`, `llm-models`, `gc`
-- **Human Developers**: `console`, `tree`, `cr`, `test`, `lint`, `build`
-- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`
+- **AI Coding Agents**: `tn`, `tr`, `tal`, `task-manager`, `llm-query`, `llm-models`, `gc`, `nt`, `np`, `nav-path`, `release-manager`
+- **Human Developers**: `console`, `tree`, `cr`, `test`, `lint`, `build`, `handbook`, `code-review`, `reflection-synthesize`
+- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`, `git-*`, `nav-ls`, `nav-tree`, `markdown-sync-embedded-documents`
 
 ## Common Workflows
 
@@ -330,12 +622,12 @@ bin/build
 
 ## Migration Status
 
-**Current State**: The project has successfully implemented fish shell integration for gem executables. All `dev-tools/exe/` tools are available directly by name without path prefixes.
+**Current State**: The project has successfully implemented fish shell integration for gem executables. All gem executables are available directly by name without path prefixes.
 
 **Tool Access Methods**: 
 - **Development tools**: Use `bin/` prefix for project-specific development workflows
 - **Gem executables**: Use tool name directly (fish integration provides automatic path resolution)
-- **Legacy references**: Old `dev-tools/exe/` paths still work but are not recommended
+- **Legacy references**: Old full path references still work but are not recommended
 
 ## Notes
 
