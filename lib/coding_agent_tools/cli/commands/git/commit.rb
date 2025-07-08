@@ -88,6 +88,9 @@ module CodingAgentTools
           private
 
           def build_commit_options(files, options)
+            # Debug: Show what we get from options
+            puts "DEBUG: build_commit_options received options = #{options.inspect}" if options[:debug]
+            
             commit_opts = {
               files: files,
               capture_output: true
@@ -97,7 +100,7 @@ module CodingAgentTools
             commit_opts[:repository] = options[:repository] if options[:repository]
             commit_opts[:main_only] = options[:main_only] if options[:main_only]
             commit_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-            commit_opts[:only_this_repo] = options[:only_this_repo] if options[:only_this_repo]
+            commit_opts[:only_this_repo] = options[:only_this_repo]
             
             # Commit behavior
             commit_opts[:all] = options[:all] if options[:all]
