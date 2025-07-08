@@ -9,7 +9,7 @@ require_relative "../support/env_helper"
 
 RSpec.describe "LLM File I/O Integration", type: :integration do
   include CliHelpers
-  
+
   let(:temp_dir) { Dir.mktmpdir("llm_integration_test") }
   let(:prompt_file) { File.join(temp_dir, "test_prompt.txt") }
   let(:system_file) { File.join(temp_dir, "system_prompt.md") }

@@ -12,7 +12,7 @@ module CliHelpers
 
     def initialize(stdout:, stderr:, exit_code:)
       @stdout = stdout
-      @stderr = stderr  
+      @stderr = stderr
       @exit_code = exit_code
     end
 
@@ -68,7 +68,6 @@ module CliHelpers
         stderr: stderr_capture.string,
         exit_code: exit_code || 0
       )
-
     rescue SystemExit => e
       # Handle explicit exit calls
       CliResult.new(
@@ -87,7 +86,7 @@ module CliHelpers
       # Restore original streams and environment
       $stdout = original_stdout
       $stderr = original_stderr
-      
+
       # Restore environment variables
       ENV.clear
       original_env.each { |key, value| ENV[key] = value }
@@ -103,7 +102,7 @@ module CliHelpers
     # Parse arguments manually for dry-cli
     # This is a simplified parser - for complex cases, fall back to subprocess
     if args.empty?
-      $stderr.puts 'ERROR: "llm-query" was called with no arguments'
+      warn 'ERROR: "llm-query" was called with no arguments'
       return 1
     end
 
@@ -139,8 +138,8 @@ module CliHelpers
 
     # Check for missing arguments
     if args.length < 2
-      $stderr.puts %Q{ERROR: "llm-query" was called with arguments #{args.inspect}}
-      $stderr.puts "Usage: llm-query PROVIDER_MODEL PROMPT [OPTIONS]"
+      warn %(ERROR: "llm-query" was called with arguments #{args.inspect})
+      warn "Usage: llm-query PROVIDER_MODEL PROMPT [OPTIONS]"
       return 1
     end
 
@@ -149,16 +148,16 @@ module CliHelpers
 
     # Check for invalid provider
     if provider_model == "invalid_provider"
-      $stderr.puts "Error: Unknown provider: invalid_provider"
+      warn "Error: Unknown provider: invalid_provider"
       return 1
     end
 
     # Parse options first to check for validation errors
     options = parse_llm_query_options(args[2..])
-    
+
     # Check for invalid format
     if options[:format] && !%w[text json markdown].include?(options[:format])
-      $stderr.puts "ERROR: Invalid format '#{options[:format]}'. Valid formats: text, json, markdown"
+      warn "ERROR: Invalid format '#{options[:format]}'. Valid formats: text, json, markdown"
       return 1
     end
 
@@ -167,18 +166,18 @@ module CliHelpers
     begin
       # Create command instance
       command = CodingAgentTools::Cli::Commands::LLM::Query.new
-      
+
       # Call the command
       exit_code = command.call(
         provider_model: provider_model,
         prompt: prompt,
         **options
       )
-      
-      return exit_code || 0
+
+      exit_code || 0
     rescue => e
-      $stderr.puts "Error: #{e.message}"
-      return 1
+      warn "Error: #{e.message}"
+      1
     end
   end
 
@@ -204,7 +203,7 @@ module CliHelpers
     when "version"
       require_relative "../../lib/coding_agent_tools/version"
       $stdout.puts "Task Manager #{CodingAgentTools::VERSION}"
-      return 0
+      0
 
     when "next"
       if subcommand_args.include?("--help")
@@ -223,32 +222,32 @@ module CliHelpers
 
       require_relative "../../lib/coding_agent_tools/cli/commands/task/next"
       command = CodingAgentTools::Cli::Commands::Task::Next.new
-      
+
       # Parse options
       options = parse_task_next_options(subcommand_args)
-      return command.call(**options)
+      command.call(**options)
 
     when "generate-id"
       require_relative "../../lib/coding_agent_tools/cli/commands/task/generate_id"
       command = CodingAgentTools::Cli::Commands::Task::GenerateId.new
-      
+
       # Parse arguments for generate-id
       if subcommand_args.length < 1
-        $stderr.puts "ERROR: release argument is required"
+        warn "ERROR: release argument is required"
         return 1
       end
 
       options = parse_generate_id_options(subcommand_args)
-      return command.call(release: subcommand_args[0], **options)
+      command.call(release: subcommand_args[0], **options)
 
     when "invalid-command"
       # Invalid commands show help by default
       execute_task_manager_command(["--help"])
-      return 1
+      1
 
     else
-      $stderr.puts "Unknown command: #{subcommand}"
-      return 1
+      warn "Unknown command: #{subcommand}"
+      1
     end
   end
 
@@ -256,10 +255,10 @@ module CliHelpers
   def parse_llm_query_options(args)
     options = {}
     i = 0
-    
+
     while i < args.length
       arg = args[i]
-      
+
       case arg
       when "--output", "-o"
         options[:output] = args[i + 1]
@@ -295,7 +294,7 @@ module CliHelpers
         i += 1
       end
     end
-    
+
     options
   end
 
@@ -303,10 +302,10 @@ module CliHelpers
   def parse_task_next_options(args)
     options = {}
     i = 0
-    
+
     while i < args.length
       arg = args[i]
-      
+
       case arg
       when "--limit"
         options[:limit] = args[i + 1].to_i
@@ -314,7 +313,7 @@ module CliHelpers
       when /^--limit=(.+)$/
         limit_value = $1.to_i
         if limit_value < 0
-          $stderr.puts "Limit must be a positive integer"
+          warn "Limit must be a positive integer"
           return {}
         end
         options[:limit] = limit_value
@@ -326,7 +325,7 @@ module CliHelpers
         i += 1
       end
     end
-    
+
     options
   end
 
@@ -334,15 +333,15 @@ module CliHelpers
   def parse_generate_id_options(args)
     options = {}
     i = 1  # Skip the release argument
-    
+
     while i < args.length
       arg = args[i]
-      
+
       case arg
       when "--limit"
         limit_value = args[i + 1].to_i
         if limit_value < 0
-          $stderr.puts "Limit must be a positive integer"
+          warn "Limit must be a positive integer"
           return {}
         end
         options[:limit] = limit_value
@@ -350,7 +349,7 @@ module CliHelpers
       when /^--limit=(.+)$/
         limit_value = $1.to_i
         if limit_value < 0
-          $stderr.puts "Limit must be a positive integer"
+          warn "Limit must be a positive integer"
           return {}
         end
         options[:limit] = limit_value
@@ -359,7 +358,7 @@ module CliHelpers
         i += 1
       end
     end
-    
+
     options
   end
 end

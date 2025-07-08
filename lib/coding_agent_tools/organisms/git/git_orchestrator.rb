@@ -209,9 +209,7 @@ module CodingAgentTools
         end
 
         # Repository information
-        def repositories
-          @repositories
-        end
+        attr_reader :repositories
 
         private
 
@@ -370,7 +368,7 @@ module CodingAgentTools
               next if lines.empty?
 
               timestamp_str = lines.first.strip
-              commit_content = lines[1..-1].join("\n")
+              commit_content = lines[1..].join("\n")
 
               begin
                 timestamp = Time.parse(timestamp_str)

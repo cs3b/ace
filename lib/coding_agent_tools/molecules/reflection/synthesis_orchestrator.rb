@@ -93,10 +93,8 @@ module CodingAgentTools
           if timestamp_info.valid?
             content << "**Analysis Period**: #{timestamp_info.from_date} to #{timestamp_info.to_date}"
             content << "**Duration**: #{timestamp_info.days_covered} days"
-            content << "**Total Reflections**: #{reflections.length}"
-          else
-            content << "**Total Reflections**: #{reflections.length}"
           end
+          content << "**Total Reflections**: #{reflections.length}"
 
           content << ""
           content << "---"

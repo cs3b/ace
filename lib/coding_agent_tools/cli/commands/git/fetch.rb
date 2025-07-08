@@ -88,17 +88,15 @@ module CodingAgentTools
           end
 
           def display_fetch_success(result, options)
-            if result[:results]
-              result[:results].each do |repo_name, repo_result|
-                next unless repo_result[:success]
+            result[:results]&.each do |repo_name, repo_result|
+              next unless repo_result[:success]
 
-                output = repo_result[:stdout] || ""
-                if output.strip.empty?
-                  puts "[#{repo_name}] Fetch completed (no new changes)"
-                else
-                  puts "[#{repo_name}] Fetch completed:"
-                  output.lines.each { |line| puts "  #{line.rstrip}" }
-                end
+              output = repo_result[:stdout] || ""
+              if output.strip.empty?
+                puts "[#{repo_name}] Fetch completed (no new changes)"
+              else
+                puts "[#{repo_name}] Fetch completed:"
+                output.lines.each { |line| puts "  #{line.rstrip}" }
               end
             end
 

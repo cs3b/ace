@@ -47,13 +47,13 @@ begin
   command = CodingAgentTools::Cli::Commands::Git::Status.new
   exit_code = command.call(**ARGV.each_with_object({}) { |arg, hash|
     if arg.start_with?("--")
-      key_value = arg[2..-1].split("=", 2)
+      key_value = arg[2..].split("=", 2)
       key = key_value[0].tr("-", "_").to_sym
       value = key_value[1] || true
       hash[key] = value
     elsif arg.start_with?("-")
       # Handle short flags
-      flag = arg[1..-1]
+      flag = arg[1..]
       case flag
       when "d"
         hash[:debug] = true

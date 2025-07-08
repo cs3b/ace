@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "Task Manager Integration" do
   include CliHelpers
-  
+
   let(:executable_path) { File.expand_path("../../exe/task-manager", __dir__) }
 
   before do

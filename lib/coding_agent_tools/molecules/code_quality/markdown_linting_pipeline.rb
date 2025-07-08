@@ -55,14 +55,14 @@ module CodingAgentTools
           validator = Atoms::CodeQuality::TaskMetadataValidator.new(
             project_root: path_resolver.project_root
           )
-          
+
           resolved_paths = paths.map { |p| path_resolver.resolve(p) }
           result = validator.validate(resolved_paths)
 
           results[:linters][:task_metadata] = result
           results[:success] &&= result[:success]
           results[:total_issues] += (result[:errors] || []).size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:task_metadata] = {
             success: false,
             error: e.message
@@ -74,14 +74,14 @@ module CodingAgentTools
           validator = Atoms::CodeQuality::MarkdownLinkValidator.new(
             root: path_resolver.project_root
           )
-          
+
           resolved_paths = paths.map { |p| path_resolver.resolve(p) }
           result = validator.validate(resolved_paths)
 
           results[:linters][:link_validation] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:link_validation] = {
             success: false,
             error: e.message
@@ -91,14 +91,14 @@ module CodingAgentTools
 
         def run_template_embedding(paths, results)
           validator = Atoms::CodeQuality::TemplateEmbeddingValidator.new
-          
+
           resolved_paths = paths.map { |p| path_resolver.resolve(p) }
           result = validator.validate(resolved_paths)
 
           results[:linters][:template_embedding] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:template_embedding] = {
             success: false,
             error: e.message
@@ -110,10 +110,10 @@ module CodingAgentTools
           formatter = Atoms::CodeQuality::KramdownFormatter.new(
             dry_run: !autofix
           )
-          
+
           findings = []
           resolved_paths = paths.map { |p| path_resolver.resolve(p) }
-          
+
           # Find all markdown files
           md_files = resolved_paths.flat_map do |path|
             if File.directory?(path)
@@ -129,7 +129,7 @@ module CodingAgentTools
             result = formatter.format_file(file)
             if result[:changed]
               # Make path relative to project root
-              relative_path = file.start_with?(path_resolver.project_root) ? 
+              relative_path = file.start_with?(path_resolver.project_root) ?
                               file.sub("#{path_resolver.project_root}/", "") : file
               findings << {
                 file: relative_path,
@@ -145,9 +145,9 @@ module CodingAgentTools
             total_files: md_files.size,
             files_changed: findings.size
           }
-          
+
           results[:total_issues] += findings.size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:styleguide] = {
             success: false,
             error: e.message

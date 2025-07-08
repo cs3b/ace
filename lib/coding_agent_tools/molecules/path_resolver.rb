@@ -177,7 +177,6 @@ module CodingAgentTools
           if scope_part != corrected_scope
             result[:autocorrect_message] = "Autocorrected scope: '#{scope_part}' → '#{corrected_scope}'"
           end
-          result
         else
           prioritized = prioritize_matches(all_matches)
           result = {success: true, path: prioritized[:best], type: :scoped_multiple}
@@ -188,8 +187,8 @@ module CodingAgentTools
           if prioritized[:alternatives].any?
             result[:alternative_message] = "\nOther scope combinations:\n  - #{corrected_scope}: #{prioritized[:alternatives].length} more match#{"es" if prioritized[:alternatives].length > 1}"
           end
-          result
         end
+        result
       end
 
       private
@@ -291,7 +290,7 @@ module CodingAgentTools
       def extract_task_number_from_context
         # Try to extract task number from current working context
         # This could be enhanced to look at current git branch, directory, etc.
-        "#{rand(100)}"  # Simple fallback
+        rand(100).to_s  # Simple fallback
       end
 
       def slugify(text)
@@ -439,7 +438,7 @@ module CodingAgentTools
 
         sorted_matches = scored_matches.sort_by { |_, score| -score }
         best_match = sorted_matches.first[0]
-        alternatives = sorted_matches[1..-1].map { |match, _| match }
+        alternatives = sorted_matches[1..].map { |match, _| match }
 
         {best: best_match, alternatives: alternatives}
       end

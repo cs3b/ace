@@ -38,7 +38,7 @@ module CodingAgentTools
                 []
               end
             end
-            
+
             files_to_check.each do |file|
               validate_task_file(file, errors, findings)
             end
@@ -180,7 +180,7 @@ module CodingAgentTools
 
         def make_path_relative(path)
           return path unless path && File.absolute_path?(path) && project_root
-          
+
           path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
         end
       end

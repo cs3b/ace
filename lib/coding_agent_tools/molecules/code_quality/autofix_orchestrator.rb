@@ -42,7 +42,7 @@ module CodingAgentTools
 
           # Compare before and after results
           compare_results(before_results, after_results, validation)
-          
+
           validation
         end
 
@@ -55,7 +55,7 @@ module CodingAgentTools
           if standardrb[:fixed]
             # Count correctable issues that were likely fixed
             fixed_count = standardrb[:findings].count { |f| f[:correctable] }
-            
+
             if fixed_count > 0
               summary[:total_fixed] += fixed_count
               summary[:fixes_applied] << {
@@ -78,7 +78,7 @@ module CodingAgentTools
           return unless styleguide
 
           fixed_count = styleguide[:findings].count { |f| f[:fixed] }
-          
+
           if fixed_count > 0
             summary[:total_fixed] += fixed_count
             summary[:fixes_applied] << {
@@ -123,7 +123,7 @@ module CodingAgentTools
           # Ruby issues
           results.dig(:ruby, :linters)&.each do |linter, data|
             next unless data[:findings]
-            
+
             data[:findings].each do |finding|
               issues << {
                 type: "ruby_#{linter}",
@@ -160,9 +160,9 @@ module CodingAgentTools
         def find_matching_issue(issue, issue_list)
           issue_list.find do |other|
             issue[:type] == other[:type] &&
-            issue[:file] == other[:file] &&
-            issue[:line] == other[:line] &&
-            issue[:message] == other[:message]
+              issue[:file] == other[:file] &&
+              issue[:line] == other[:line] &&
+              issue[:message] == other[:message]
           end
         end
       end

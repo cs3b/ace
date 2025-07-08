@@ -138,7 +138,7 @@ module CodingAgentTools
 
           content = StringIO.new
           content.puts "---"
-          content.puts frontmatter.to_yaml.lines[1..-1].join
+          content.puts frontmatter.to_yaml.lines[1..].join
           content.puts "---"
           content.puts
           content.puts "<review-prompt>"
