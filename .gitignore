@@ -41,3 +41,4 @@ docs-project/**/*_review/**/*prompt*.md
 .lint-report.md
 .lint-diff-review.md
 .lint-issue-*.md
+.lint-errors-*.md
