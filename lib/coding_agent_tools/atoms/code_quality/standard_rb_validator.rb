@@ -103,7 +103,7 @@ module CodingAgentTools
 
           data["files"]&.each do |file_data|
             file_path = file_data["path"]
-            
+
             # Adjust path to be relative to project root (not dev-tools)
             # Since we're running from dev-tools, prepend "dev-tools/" to make it project-relative
             adjusted_path = File.join("dev-tools", file_path)
