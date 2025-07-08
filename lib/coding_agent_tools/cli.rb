@@ -149,6 +149,11 @@ module CodingAgentTools
         require_relative "cli/commands/git/log"
         require_relative "cli/commands/git/diff"
         require_relative "cli/commands/git/fetch"
+        require_relative "cli/commands/git/checkout"
+        require_relative "cli/commands/git/switch"
+        require_relative "cli/commands/git/mv"
+        require_relative "cli/commands/git/rm"
+        require_relative "cli/commands/git/restore"
 
         register "git", aliases: [] do |prefix|
           prefix.register "status", Commands::Git::Status
@@ -159,6 +164,11 @@ module CodingAgentTools
           prefix.register "log", Commands::Git::Log
           prefix.register "diff", Commands::Git::Diff
           prefix.register "fetch", Commands::Git::Fetch
+          prefix.register "checkout", Commands::Git::Checkout
+          prefix.register "switch", Commands::Git::Switch
+          prefix.register "mv", Commands::Git::Mv
+          prefix.register "rm", Commands::Git::Rm
+          prefix.register "restore", Commands::Git::Restore
         end
 
         @git_commands_registered = true
