@@ -8,19 +8,19 @@
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
 | `generate-review-prompt` | Code review prompt generator | `--context-lines`, `--detailed` |
-| `git-add` | Enhanced git add | `--interactive`, `--pattern` |
-| `git-commit` | Enhanced git commit | `--guided`, `--auto-format` |
+| `git-add` | Enhanced git add | `--patch`, `--all` |
+| `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
 | `git-diff` | Enhanced git diff | `--staged`, `--stat` |
-| `git-fetch` | Enhanced git fetch | `--all-repos`, `--report` |
-| `git-log` | Enhanced git log | `--enhanced`, `--project-context` |
-| `git-pull` | Enhanced git pull | `--resolve-conflicts`, `--all-repos` |
-| `git-push` | Enhanced git push | `--safe`, `--all-repos` |
-| `git-status` | Enhanced git status | `--project-context`, `--all-repos` |
+| `git-fetch` | Enhanced git fetch | `--all`, `--prune` |
+| `git-log` | Enhanced git log | `--oneline`, `--graph` |
+| `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
+| `git-push` | Enhanced git push | `--force`, `--dry-run` |
+| `git-status` | Enhanced git status | `--verbose`, `--short` |
 | `handbook` | Development handbook access | `sync-templates` |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
-| `nav-ls` | Enhanced directory listing | `--project-context`, `--filter` |
+| `nav-ls` | Enhanced directory listing | `--long`, `--all` |
 | `nav-path` | Intelligent path navigation | `task-new`, `file` |
-| `nav-tree` | Enhanced project tree | `--project-structure`, `--filter` |
+| `nav-tree` | Enhanced project tree | `--context`, `--depth` |
 | `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
 | `release-manager` | Release management tool | `current`, `report` |
 | `task-manager` | Project task management | `next`, `all` |
@@ -45,10 +45,10 @@
 ### Git Power-User
 | Tool | Purpose | Key Flags |
 |------|---------|-----------|
-| `git-add` | Enhanced file staging | `--interactive`, `--pattern` |
-| `git-commit` | Smart commit tool | `--guided`, `--auto-format` |
+| `git-add` | Enhanced file staging | `--patch`, `--all` |
+| `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
 | `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
-| `git-status` | Multi-repo status | `--all-repos`, `--project-context` |
+| `git-status` | Multi-repo status | `--verbose`, `--short` |
 
 ### Release Manager
 | Tool | Purpose | Key Flags |
@@ -226,13 +226,15 @@ git-add [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--interactive` | Interactive file selection | `false` |
-| `--pattern` | Pattern matching | None |
+| `--patch` | Interactively choose hunks to add | `false` |
+| `--all` | Add all changes (new, modified, deleted) | `false` |
+| `--update` | Add only modified and deleted files | `false` |
+| `--repository` | Specify repository context | Current |
 
 **Examples**
 ```bash
-git-add --interactive
-git-add --pattern "*.rb"
+git-add --patch
+git-add --all --repository dev-tools
 ```
 </details>
 
@@ -245,13 +247,16 @@ git-commit [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--guided` | Guided message generation | `false` |
-| `--auto-format` | Automatic formatting | `false` |
+| `--intention` | Intention context for commit message | None |
+| `--no-edit` | Skip editor and commit directly | `false` |
+| `--message` | Use provided message instead of LLM | None |
+| `--all` | Stage all changes before committing | `false` |
+| `--model` | Specify LLM model | Default model |
 
 **Examples**
 ```bash
-git-commit --guided
-git-commit --auto-format
+git-commit --intention "fix typo"
+git-commit --no-edit --all
 ```
 </details>
 
@@ -286,13 +291,15 @@ git-fetch [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--all-repos` | Fetch all repositories | `false` |
-| `--report` | Status reporting | `false` |
+| `--all` | Fetch all remotes | `false` |
+| `--prune` | Remove stale remote references | `false` |
+| `--tags` | Fetch tags | `false` |
+| `--repository` | Specify repository context | Current |
 
 **Examples**
 ```bash
-git-fetch --all-repos
-git-fetch --report
+git-fetch --all --prune
+git-fetch --tags --repository dev-tools
 ```
 </details>
 
@@ -305,13 +312,15 @@ git-log [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--enhanced` | Enhanced formatting | `false` |
-| `--project-context` | Project context | `false` |
+| `--oneline` | Show commits in oneline format | `false` |
+| `--graph` | Show commit graph | `false` |
+| `--since` | Show commits since date | None |
+| `--author` | Show commits by specific author | None |
 
 **Examples**
 ```bash
-git-log --enhanced
-git-log --project-context
+git-log --oneline
+git-log --graph --since "1 week ago"
 ```
 </details>
 
@@ -324,13 +333,15 @@ git-pull [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--resolve-conflicts` | Conflict resolution | `false` |
-| `--all-repos` | All repositories | `false` |
+| `--rebase` | Rebase instead of merge | `false` |
+| `--ff-only` | Only allow fast-forward merges | `false` |
+| `--no-commit` | Don't commit automatic merge | `false` |
+| `--strategy` | Merge strategy to use | Default |
 
 **Examples**
 ```bash
-git-pull --resolve-conflicts
-git-pull --all-repos
+git-pull --rebase
+git-pull --ff-only --repository dev-tools
 ```
 </details>
 
@@ -343,13 +354,15 @@ git-push [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--safe` | Safety checks | `false` |
-| `--all-repos` | All repositories | `false` |
+| `--force` | Force push (use with caution) | `false` |
+| `--dry-run` | Show what would be pushed | `false` |
+| `--set-upstream` | Set upstream tracking | `false` |
+| `--tags` | Push tags along with commits | `false` |
 
 **Examples**
 ```bash
-git-push --safe
-git-push --all-repos
+git-push --dry-run
+git-push --set-upstream --repository dev-tools
 ```
 </details>
 
@@ -362,13 +375,15 @@ git-status [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--project-context` | Project context | `false` |
-| `--all-repos` | All repositories | `false` |
+| `--verbose` | Show detailed status information | `false` |
+| `--short` | Give output in short format | `false` |
+| `--repository` | Specify repository context | Current |
+| `--porcelain` | Give output in porcelain format | `false` |
 
 **Examples**
 ```bash
-git-status --project-context
-git-status --all-repos
+git-status --verbose
+git-status --short --repository dev-tools
 ```
 </details>
 
@@ -381,13 +396,14 @@ nav-ls [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--project-context` | Project context | `false` |
-| `--filter` | File pattern filter | None |
+| `--long` | Use long format (ls -l) | `false` |
+| `--all` | Show hidden files (ls -a) | `false` |
+| `--autocorrect` | Enable path autocorrection | `true` |
 
 **Examples**
 ```bash
-nav-ls --project-context
-nav-ls --filter "*.rb"
+nav-ls --long docs/
+nav-ls --all --long src/
 ```
 </details>
 
@@ -422,13 +438,14 @@ nav-tree [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--project-structure` | Project structure aware | `false` |
-| `--filter` | Content filter | None |
+| `--context` | Tree context (default, dev, tasks, full) | `default` |
+| `--depth` | Maximum tree depth | Unlimited |
+| `--autocorrect` | Enable path autocorrection | `true` |
 
 **Examples**
 ```bash
-nav-tree --project-structure
-nav-tree --filter source
+nav-tree --context dev
+nav-tree --depth 3 docs/
 ```
 </details>
 
@@ -514,10 +531,10 @@ reflection-synthesize --session current
 ### Git Power-User Workflow
 ```bash
 # Enhanced git operations across repositories
-git-status --all-repos
+git-status --verbose
 git-diff --stat
-git-commit --guided
-git-push --safe
+git-commit --intention "update features"
+git-push
 ```
 
 ## Notes
