@@ -13,7 +13,7 @@ module CodingAgentTools
         # @return [Hash] {success: Boolean, error: String}
         def create(path)
           validate_path(path)
-          
+
           begin
             FileUtils.mkdir_p(path)
             {
@@ -43,7 +43,7 @@ module CodingAgentTools
         # @return [Hash] {success: Boolean, created: Boolean, error: String}
         def create_if_not_exists(path)
           validate_path(path)
-          
+
           if File.exist?(path)
             if File.directory?(path)
               {
@@ -87,8 +87,8 @@ module CodingAgentTools
         # @param tmpdir [String] parent directory for temp dir (default: system temp)
         # @return [Hash] {path: String, success: Boolean, error: String}
         def create_temp(prefix = "review", tmpdir = nil)
-          require 'tmpdir'
-          
+          require "tmpdir"
+
           begin
             temp_path = Dir.mktmpdir(prefix, tmpdir)
             {

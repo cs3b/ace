@@ -28,7 +28,7 @@ module CodingAgentTools
 
             def call(**options)
               session_manager = CodingAgentTools::Organisms::Code::SessionManager.new
-              
+
               begin
                 session = session_manager.create_session(
                   focus: options[:focus],
@@ -36,7 +36,7 @@ module CodingAgentTools
                   context_mode: "auto",
                   base_path: options[:base_path]
                 )
-                
+
                 puts "✅ Created session directory: #{session.directory_path}"
                 puts "📁 Session ID: #{session.session_id}"
                 0

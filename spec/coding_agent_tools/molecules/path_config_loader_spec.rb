@@ -26,7 +26,7 @@ RSpec.describe CodingAgentTools::Molecules::PathConfigLoader do
     it "detects project root when not provided" do
       # Create a .git directory to mark as project root
       FileUtils.mkdir_p(File.join(temp_dir, ".git"))
-      
+
       Dir.chdir(temp_dir) do
         loader = described_class.new
         expect(File.realpath(File.dirname(loader.default_config_path))).to eq(File.realpath(config_dir))
@@ -82,7 +82,7 @@ RSpec.describe CodingAgentTools::Molecules::PathConfigLoader do
         expect(config["project"]["name"]).to eq("custom-project")
         expect(config["repositories"]["scan_order"].first["name"]).to eq("custom-repo")
         expect(config["security"]["enforce_sandbox"]).to be false
-        
+
         # Defaults should still be present for unspecified sections
         expect(config["path_patterns"]["task_new"]).to be_a(Hash)
         expect(config["resolution"]["fuzzy"]["enabled"]).to be true
@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Molecules::PathConfigLoader do
 
     context "when project section is not a Hash" do
       before do
-        File.write(config_path, { "project" => "invalid" }.to_yaml)
+        File.write(config_path, {"project" => "invalid"}.to_yaml)
       end
 
       it "raises an error" do
@@ -124,7 +124,7 @@ RSpec.describe CodingAgentTools::Molecules::PathConfigLoader do
 
     context "when repositories section is not a Hash" do
       before do
-        File.write(config_path, { "repositories" => "invalid" }.to_yaml)
+        File.write(config_path, {"repositories" => "invalid"}.to_yaml)
       end
 
       it "raises an error" do
@@ -185,8 +185,8 @@ RSpec.describe CodingAgentTools::Molecules::PathConfigLoader do
       {
         "repositories" => {
           "scan_order" => [
-            { "name" => "first", "path" => ".", "priority" => 1 },
-            { "name" => "second", "path" => "sub", "priority" => 2 }
+            {"name" => "first", "path" => ".", "priority" => 1},
+            {"name" => "second", "path" => "sub", "priority" => 2}
           ]
         }
       }

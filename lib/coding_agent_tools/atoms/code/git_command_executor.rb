@@ -19,7 +19,7 @@ module CodingAgentTools
         def execute(command, args = [])
           full_command = ["git", command] + args
           result = @shell_executor.execute(full_command.join(" "))
-          
+
           {
             output: result.stdout,
             success: result.success?,
@@ -58,7 +58,7 @@ module CodingAgentTools
         # @return [Array<String>] command arguments
         def build_diff_args(target, options)
           base_args = ["--no-color"] + options
-          
+
           case target
           when "staged"
             ["--staged"] + base_args

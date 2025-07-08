@@ -22,25 +22,23 @@ module CodingAgentTools
         def execute_across_repositories(command, options = {})
           repositories_to_process = filter_repositories(options)
           validate_repositories(repositories_to_process)
-          
+
           results = {}
           errors = []
-          
+
           repositories_to_process.each do |repository|
-            begin
-              result = execute_for_repository(repository, command, options)
-              results[repository[:name]] = result
-            rescue => e
-              error_info = {
-                repository: repository[:name],
-                error: e,
-                message: e.message
-              }
-              errors << error_info
-              results[repository[:name]] = { success: false, error: e.message }
-            end
+            result = execute_for_repository(repository, command, options)
+            results[repository[:name]] = result
+          rescue => e
+            error_info = {
+              repository: repository[:name],
+              error: e,
+              message: e.message
+            }
+            errors << error_info
+            results[repository[:name]] = {success: false, error: e.message}
           end
-          
+
           {
             success: errors.empty?,
             results: results,
@@ -77,24 +75,24 @@ module CodingAgentTools
 
         def validate_repositories(repos_to_process)
           invalid_repos = repos_to_process.reject { |repo| repo[:exists] && repo[:is_git_repo] }
-          
+
           unless invalid_repos.empty?
             invalid_names = invalid_repos.map { |repo| repo[:name] }
-            raise MultiRepoCoordinationError, 
-              "Invalid repositories (not git repos or don't exist): #{invalid_names.join(', ')}"
+            raise MultiRepoCoordinationError,
+              "Invalid repositories (not git repos or don't exist): #{invalid_names.join(", ")}"
           end
         end
 
         def execute_for_repository(repository, command, options)
-          repository_path = repository[:name] == "main" ? nil : repository[:path]
-          
+          repository_path = (repository[:name] == "main") ? nil : repository[:path]
+
           # Build the command with any repository-specific modifications
           final_command = build_repository_command(command, repository, options)
-          
+
           # Execute the command
           executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
           result = executor.execute(final_command, capture_output: options.fetch(:capture_output, true))
-          
+
           # Add repository context to result
           result.merge(
             repository: repository[:name],

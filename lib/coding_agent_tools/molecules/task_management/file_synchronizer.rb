@@ -143,7 +143,7 @@ module CodingAgentTools
         def validate_document_path(document)
           # Use SecurePathValidator for path validation
           validation_result = path_validator.validate_path(document.path)
-          
+
           if validation_result.invalid?
             return {error: "Security validation failed: #{validation_result.error_message}"}
           end
@@ -166,14 +166,12 @@ module CodingAgentTools
         end
 
         def read_target_file(file_path)
-          begin
-            content = File.read(file_path)
-            {content: content, error: nil}
-          rescue Errno::ENOENT
-            {content: nil, error: "Target file not found: #{file_path}"}
-          rescue => e
-            {content: nil, error: "Failed to read target file #{file_path}: #{e.message}"}
-          end
+          content = File.read(file_path)
+          {content: content, error: nil}
+        rescue Errno::ENOENT
+          {content: nil, error: "Target file not found: #{file_path}"}
+        rescue => e
+          {content: nil, error: "Failed to read target file #{file_path}: #{e.message}"}
         end
 
         def content_differs?(embedded_content, file_content)

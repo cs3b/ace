@@ -22,7 +22,7 @@ module CodingAgentTools
         end
 
         def execute_concurrently(commands_by_repo)
-          return { success: true, results: {}, errors: [] } if commands_by_repo.empty?
+          return {success: true, results: {}, errors: []} if commands_by_repo.empty?
 
           # Separate main repository for sequential execution
           main_commands = commands_by_repo.delete("main")
@@ -49,7 +49,7 @@ module CodingAgentTools
                 error: e,
                 message: e.message
               }
-              results["main"] = { success: false, error: e.message }
+              results["main"] = {success: false, error: e.message}
             end
           end
 
@@ -67,7 +67,7 @@ module CodingAgentTools
         def execute_submodules_concurrently(submodule_commands)
           results = {}
           errors = []
-          
+
           # Create thread pool for concurrent execution
           pool = Concurrent::FixedThreadPool.new(thread_pool_size)
           futures = []
@@ -76,31 +76,29 @@ module CodingAgentTools
             future = Concurrent::Future.execute(executor: pool) do
               execute_repository_commands(repo_name, commands)
             end
-            futures << { repo_name: repo_name, future: future }
+            futures << {repo_name: repo_name, future: future}
           end
 
           # Wait for all futures to complete with timeout
           futures.each do |future_info|
-            begin
-              result = future_info[:future].value(timeout)
-              results[future_info[:repo_name]] = result
-            rescue Concurrent::TimeoutError
-              error_info = {
-                repository: future_info[:repo_name],
-                error: "Timeout after #{timeout} seconds",
-                message: "Repository operation timed out"
-              }
-              errors << error_info
-              results[future_info[:repo_name]] = { success: false, error: "Timeout" }
-            rescue => e
-              error_info = {
-                repository: future_info[:repo_name],
-                error: e,
-                message: e.message
-              }
-              errors << error_info
-              results[future_info[:repo_name]] = { success: false, error: e.message }
-            end
+            result = future_info[:future].value(timeout)
+            results[future_info[:repo_name]] = result
+          rescue Concurrent::TimeoutError
+            error_info = {
+              repository: future_info[:repo_name],
+              error: "Timeout after #{timeout} seconds",
+              message: "Repository operation timed out"
+            }
+            errors << error_info
+            results[future_info[:repo_name]] = {success: false, error: "Timeout"}
+          rescue => e
+            error_info = {
+              repository: future_info[:repo_name],
+              error: e,
+              message: e.message
+            }
+            errors << error_info
+            results[future_info[:repo_name]] = {success: false, error: e.message}
           end
 
           # Shutdown thread pool gracefully
@@ -121,32 +119,30 @@ module CodingAgentTools
         end
 
         def execute_repository_commands(repo_name, commands)
-          return { success: true, commands: [], outputs: [] } if commands.empty?
+          return {success: true, commands: [], outputs: []} if commands.empty?
 
-          repository_path = repo_name == "main" ? nil : repo_name
+          repository_path = (repo_name == "main") ? nil : repo_name
           executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
-          
+
           command_results = []
-          
+
           commands.each do |command|
-            begin
-              result = executor.execute(command, capture_output: capture_output)
-              command_results << {
-                command: command,
-                success: true,
-                output: result[:stdout],
-                stderr: result[:stderr]
-              }
-            rescue CodingAgentTools::Atoms::Git::GitCommandError => e
-              command_results << {
-                command: command,
-                success: false,
-                error: e.message,
-                stderr: e.stderr_output
-              }
-              # Stop processing further commands on error
-              break
-            end
+            result = executor.execute(command, capture_output: capture_output)
+            command_results << {
+              command: command,
+              success: true,
+              output: result[:stdout],
+              stderr: result[:stderr]
+            }
+          rescue CodingAgentTools::Atoms::Git::GitCommandError => e
+            command_results << {
+              command: command,
+              success: false,
+              error: e.message,
+              stderr: e.stderr_output
+            }
+            # Stop processing further commands on error
+            break
           end
 
           {

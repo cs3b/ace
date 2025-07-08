@@ -29,47 +29,45 @@ module CodingAgentTools
         # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] {session: ReviewSession, success: Boolean, error: String}
         def create_review_session(focus, target, context = "auto", base_path = nil, system_prompt_override = nil)
-          begin
-            # Create session
-            session = @session_manager.create_session(
-              focus: focus,
-              target: target,
-              context_mode: context,
-              base_path: base_path
-            )
-            
-            # Extract and save content
-            target_model = @content_extractor.extract_and_save(target, session.directory_path)
-            
-            if target_model.type == "error"
-              raise "Failed to extract target content: #{target_model.size_info[:error]}"
-            end
-            
-            # Load and save context
-            context_model = @context_loader.load_context(context, session)
-            @context_loader.save_context(context_model, session.directory_path)
-            
-            # Build and save prompt
-            prompt = @prompt_builder.build_review_prompt(session, target_model, context_model, system_prompt_override)
-            
-            # Write session summary
-            write_session_summary(session, target_model, context_model, prompt)
-            
-            {
-              session: session,
-              target: target_model,
-              context: context_model,
-              prompt: prompt,
-              success: true,
-              error: nil
-            }
-          rescue => e
-            {
-              session: nil,
-              success: false,
-              error: e.message
-            }
+          # Create session
+          session = @session_manager.create_session(
+            focus: focus,
+            target: target,
+            context_mode: context,
+            base_path: base_path
+          )
+
+          # Extract and save content
+          target_model = @content_extractor.extract_and_save(target, session.directory_path)
+
+          if target_model.type == "error"
+            raise "Failed to extract target content: #{target_model.size_info[:error]}"
           end
+
+          # Load and save context
+          context_model = @context_loader.load_context(context, session)
+          @context_loader.save_context(context_model, session.directory_path)
+
+          # Build and save prompt
+          prompt = @prompt_builder.build_review_prompt(session, target_model, context_model, system_prompt_override)
+
+          # Write session summary
+          write_session_summary(session, target_model, context_model, prompt)
+
+          {
+            session: session,
+            target: target_model,
+            context: context_model,
+            prompt: prompt,
+            success: true,
+            error: nil
+          }
+        rescue => e
+          {
+            session: nil,
+            success: false,
+            error: e.message
+          }
         end
 
         # Execute review using LLM
@@ -90,17 +88,15 @@ module CodingAgentTools
         # @param reports [Array<Hash>] review reports
         # @return [Hash] {success: Boolean, error: String}
         def finalize_session(session, reports = [])
-          begin
-            # Update session index
-            update_session_index(session, reports)
-            
-            # Write execution summary
-            write_execution_summary(session, reports)
-            
-            { success: true, error: nil }
-          rescue => e
-            { success: false, error: e.message }
-          end
+          # Update session index
+          update_session_index(session, reports)
+
+          # Write execution summary
+          write_execution_summary(session, reports)
+
+          {success: true, error: nil}
+        rescue => e
+          {success: false, error: e.message}
         end
 
         # Prepare review components without creating session
@@ -125,11 +121,11 @@ module CodingAgentTools
         # @return [Hash] target analysis
         def analyze_target(target)
           if @content_extractor.instance_variable_get(:@diff_extractor).git_diff_target?(target)
-            { type: "git_diff", format: "diff" }
+            {type: "git_diff", format: "diff"}
           elsif File.exist?(target) && !File.directory?(target)
-            { type: "single_file", format: "xml", path: target }
+            {type: "single_file", format: "xml", path: target}
           else
-            { type: "file_pattern", format: "xml", pattern: target }
+            {type: "file_pattern", format: "xml", pattern: target}
           end
         end
 
@@ -140,7 +136,7 @@ module CodingAgentTools
         # @param prompt [Models::Code::ReviewPrompt] prompt
         def write_session_summary(session, target, context, prompt)
           summary_path = File.join(session.directory_path, "session-summary.md")
-          
+
           summary = <<~SUMMARY
             # Code Review Session Summary
             
@@ -182,7 +178,7 @@ module CodingAgentTools
             code-review --session #{session.session_id}
             ```
           SUMMARY
-          
+
           File.write(summary_path, summary)
         end
 
@@ -191,30 +187,30 @@ module CodingAgentTools
         # @param reports [Array<Hash>] review reports
         def update_session_index(session, reports)
           index_path = File.join(session.directory_path, "README.md")
-          
+
           # Read existing content
           existing = File.exist?(index_path) ? File.read(index_path) : ""
-          
+
           # Add reports section
           reports_section = <<~REPORTS
             
             ## Review Reports
             
           REPORTS
-          
+
           reports.each do |report|
             reports_section += "- [`#{report[:name]}`](./#{report[:file]}) - #{report[:model]}\n"
           end
-          
+
           # Update content
-          if existing.include?("## Review Reports")
+          updated = if existing.include?("## Review Reports")
             # Replace existing section
-            updated = existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
+            existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
           else
             # Append new section
-            updated = existing + "\n" + reports_section
+            existing + "\n" + reports_section
           end
-          
+
           File.write(index_path, updated)
         end
 
@@ -223,7 +219,7 @@ module CodingAgentTools
         # @param reports [Array<Hash>] review reports
         def write_execution_summary(session, reports)
           summary_path = File.join(session.directory_path, "execution.summary")
-          
+
           summary = <<~SUMMARY
             Session: #{session.session_name}
             Timestamp: #{Time.now.iso8601}
@@ -232,17 +228,17 @@ module CodingAgentTools
             
             Execution Results:
           SUMMARY
-          
+
           reports.each do |report|
             summary += "- #{report[:model]}: #{report[:status]}\n"
           end
-          
+
           summary += <<~SUMMARY
             
             Files Generated:
             #{Dir.glob(File.join(session.directory_path, "*")).map { |f| File.basename(f) }.join("\n")}
           SUMMARY
-          
+
           File.write(summary_path, summary)
         end
       end

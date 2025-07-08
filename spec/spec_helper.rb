@@ -61,7 +61,7 @@ RSpec.configure do |config|
   config.around do |example|
     original_env = ENV.to_hash
     # Ensure tests run in CI mode to prevent interactive prompts
-    ENV['CI'] = 'true' unless ENV.key?('CI')
+    ENV["CI"] = "true" unless ENV.key?("CI")
     example.run
   ensure
     ENV.replace(original_env)

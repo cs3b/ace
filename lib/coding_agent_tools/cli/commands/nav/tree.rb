@@ -43,7 +43,7 @@ module CodingAgentTools
 
               if exit_status == 0
                 puts output
-                
+
                 # Show alternatives if any exist
                 unless @alternatives.empty?
                   puts @path_resolver.format_alternative_matches(@alternatives)
@@ -52,7 +52,7 @@ module CodingAgentTools
                 puts "Error executing tree command: #{tree_command}"
                 puts "Output: #{output}" unless output.strip.empty?
               end
-            rescue StandardError => e
+            rescue => e
               puts "Error: #{e.message}"
             end
           end
@@ -61,38 +61,37 @@ module CodingAgentTools
 
           def build_exclude_patterns(config, context_config)
             excludes = []
-            
+
             # Add global excludes
             excludes.concat(config["global_excludes"] || [])
-            
+
             # Add context-specific excludes
             excludes.concat(context_config["excludes"] || [])
-            
+
             # Add repository-specific excludes
             repo_excludes = config.dig("repositories", "specific_excludes") || {}
             repo_excludes.each do |repo, patterns|
               excludes.concat(patterns)
             end
-            
+
             excludes.uniq
           end
 
           def build_tree_command(target_dir, depth, excludes)
             cmd_parts = ["tree", "-L", depth.to_s]
-            
+
             # Add exclude patterns
             excludes.each do |pattern|
               cmd_parts << "-I" << "'#{pattern}'"
             end
-            
+
             # Add target directory (quoted for safety)
             cmd_parts << "'#{target_dir}'"
-            
+
             cmd_parts.join(" ")
           end
 
           def resolve_target_directory(path, autocorrect)
-            
             # If no path provided, use current directory
             return "." unless path
 
@@ -110,15 +109,15 @@ module CodingAgentTools
             # Check if input uses scoped pattern syntax (scope:pattern)
             if path.include?(":")
               result = @path_resolver.resolve_scoped_pattern(path)
-              
+
               if result[:success]
                 resolved_path = result[:path]
-                
+
                 # Show autocorrection messages
                 if result[:autocorrect_message]
                   puts result[:autocorrect_message]
                 end
-                
+
                 # Check if resolved path is a directory
                 if Dir.exist?(resolved_path)
                   puts "Best match: '#{resolved_path}'"
@@ -142,7 +141,7 @@ module CodingAgentTools
             # Try directory-specific search first
             matches = @path_resolver.find_matching_paths(path, include_directories: true, max_results: 5)
             directories = matches.select { |p| Dir.exist?(p) }
-            
+
             if directories.length == 1
               resolved_path = directories.first
               puts "Autocorrected: '#{path}' → '#{resolved_path}'"
@@ -151,12 +150,12 @@ module CodingAgentTools
               # Use smart prioritization for multiple directory matches
               prioritized = @path_resolver.prioritize_matches(directories)
               puts "Autocorrected: '#{path}' → '#{prioritized[:best]}'"
-              
+
               # Store alternatives to show later
               @alternatives = prioritized[:alternatives]
               return prioritized[:best]
             end
-            
+
             # Fall back to file search
             result = @path_resolver.resolve_path(path, type: :file)
 
@@ -167,35 +166,35 @@ module CodingAgentTools
                 # Check if resolved path is a directory
                 if Dir.exist?(resolved_path)
                   puts "Autocorrected: '#{path}' → '#{resolved_path}'"
-                  return resolved_path
+                  resolved_path
                 else
                   # If it's a file, use its directory
                   dir_path = File.dirname(resolved_path)
                   puts "Autocorrected: '#{path}' → '#{dir_path}' (parent directory of found file)"
-                  return dir_path
+                  dir_path
                 end
               when :multiple
                 # Convert file paths to directory paths and use smart prioritization
                 display_paths = result[:paths].map do |match_path|
                   Dir.exist?(match_path) ? match_path : File.dirname(match_path)
                 end
-                
+
                 prioritized = @path_resolver.prioritize_matches(display_paths.uniq)
                 puts "Autocorrected: '#{path}' → '#{prioritized[:best]}' (parent directory of found file)"
-                
+
                 # Store alternatives to show later
                 @alternatives = prioritized[:alternatives]
-                return prioritized[:best]
+                prioritized[:best]
               end
             else
               puts "Error: #{result[:error]}"
-              return nil
+              nil
             end
           end
 
           def show_autocorrection_info(config)
             return unless config.dig("autocorrect", "enabled")
-            
+
             puts ""
             puts "💡 Path Autocorrection Available:"
             puts "   Use 'nav path file PATTERN' to find and autocorrect file paths"

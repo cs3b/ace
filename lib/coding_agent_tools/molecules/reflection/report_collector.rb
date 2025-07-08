@@ -55,7 +55,7 @@ module CodingAgentTools
           return false unless @valid_extensions.include?(File.extname(path).downcase)
           return false unless File.readable?(path)
           return false if File.zero?(path)
-          
+
           # Basic content validation - check for reflection-like structure
           content = File.read(path, encoding: "utf-8")
           has_reflection_markers?(content)

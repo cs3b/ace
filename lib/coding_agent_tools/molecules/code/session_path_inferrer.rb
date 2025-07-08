@@ -40,8 +40,8 @@ module CodingAgentTools
 
           # Try different session detection strategies
           session_info = detect_session_directory(current_dir) ||
-                        detect_taskflow_session(current_dir) ||
-                        detect_generic_session(current_dir)
+            detect_taskflow_session(current_dir) ||
+            detect_generic_session(current_dir)
 
           session_info || InferenceResult.new
         end
@@ -53,7 +53,7 @@ module CodingAgentTools
         # @return [InferenceResult, nil] Session information if found
         def detect_session_directory(directory)
           session_meta_path = File.join(directory, "session.meta")
-          
+
           return nil unless File.exist?(session_meta_path)
 
           # Parse session metadata
@@ -74,23 +74,23 @@ module CodingAgentTools
         def detect_taskflow_session(directory)
           # Look for taskflow patterns: dev-taskflow/current/*/code_review/*
           path_parts = directory.split(File::SEPARATOR)
-          
+
           # Find code_review index
           code_review_index = path_parts.rindex("code_review")
           return nil unless code_review_index
 
           # Check if it's in a taskflow structure
-          if code_review_index >= 2 && 
-             path_parts[code_review_index - 2] == "dev-taskflow" &&
-             path_parts[code_review_index - 1] == "current"
+          if code_review_index >= 2 &&
+              path_parts[code_review_index - 2] == "dev-taskflow" &&
+              path_parts[code_review_index - 1] == "current"
 
             session_id = path_parts[code_review_index + 1] if path_parts[code_review_index + 1]
-            
+
             InferenceResult.new(
               session_directory: directory,
               session_type: "taskflow_session",
               session_id: session_id,
-              metadata: { "taskflow_pattern" => true }
+              metadata: {"taskflow_pattern" => true}
             )
           end
         end
@@ -101,7 +101,7 @@ module CodingAgentTools
         def detect_generic_session(directory)
           # Look for session-like indicators in directory structure
           session_indicators = check_session_indicators(directory)
-          
+
           return nil unless session_indicators[:is_session]
 
           session_id = extract_session_id_from_path(directory)
@@ -118,13 +118,17 @@ module CodingAgentTools
         # @param directory [String] Directory to check
         # @return [Hash] Session indicators found
         def check_session_indicators(directory)
-          indicators = { is_session: false }
+          indicators = {is_session: false}
 
           return indicators unless File.directory?(directory)
 
           # Check for session-like files and patterns
-          files = Dir.entries(directory) rescue []
-          
+          files = begin
+            Dir.entries(directory)
+          rescue
+            []
+          end
+
           # Session indicator files
           session_files = %w[
             input.diff input.xml project_context.md combined_prompt.md
@@ -161,15 +165,15 @@ module CodingAgentTools
         # @return [Hash] Parsed metadata
         def parse_session_metadata(meta_path)
           metadata = {}
-          
+
           begin
             content = File.read(meta_path, encoding: "UTF-8")
-            
+
             # Parse simple key: value pairs
             content.each_line do |line|
               line = line.strip
               next if line.empty? || line.start_with?("#")
-              
+
               if line.include?(":")
                 key, value = line.split(":", 2)
                 metadata[key.strip] = value.strip if key && value
@@ -187,7 +191,7 @@ module CodingAgentTools
         # @return [String, nil] Extracted session ID
         def extract_session_id_from_path(directory)
           dir_name = File.basename(directory)
-          
+
           # Try different session ID patterns
           if dir_name.match?(/\d{8}-\d{6}/) # YYYYMMDD-HHMMSS
             dir_name

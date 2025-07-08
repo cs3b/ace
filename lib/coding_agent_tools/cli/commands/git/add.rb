@@ -53,13 +53,13 @@ module CodingAgentTools
           def call(files:, **options)
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             orchestrator = CodingAgentTools::Organisms::Git::GitOrchestrator.new(project_root, options)
-            
+
             # Build add options
             add_options = build_add_options(files, options)
-            
+
             # Execute add across repositories
             result = orchestrator.add(files, add_options)
-            
+
             if result[:success]
               display_add_success(result, options)
               0
@@ -78,19 +78,19 @@ module CodingAgentTools
             add_opts = {
               capture_output: true
             }
-            
+
             # Repository filtering
             add_opts[:repository] = options[:repository] if options[:repository]
             add_opts[:main_only] = options[:main_only] if options[:main_only]
             add_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-            
+
             # Add behavior
             add_opts[:all] = options[:all] if options[:all]
             add_opts[:update] = options[:update] if options[:update]
             add_opts[:patch] = options[:patch] if options[:patch]
             add_opts[:force] = options[:force] if options[:force]
             add_opts[:concurrent] = options[:concurrent] if options[:concurrent]
-            
+
             add_opts
           end
 
@@ -98,7 +98,7 @@ module CodingAgentTools
             if result[:results]
               result[:results].each do |repo_name, repo_result|
                 next unless repo_result[:success]
-                
+
                 if repo_result[:commands]
                   # Multiple commands (from concurrent execution)
                   repo_result[:commands].each do |cmd_result|
@@ -110,7 +110,7 @@ module CodingAgentTools
                 end
               end
             end
-            
+
             if result[:repositories_processed]
               repos_list = result[:repositories_processed].join(", ")
               puts "Files added across repositories: #{repos_list}"
@@ -137,13 +137,13 @@ module CodingAgentTools
               # Single error (e.g., from orchestrator)
               error_output("Add failed: #{result[:error]}")
             end
-            
+
             if result[:errors]
               # Multiple errors from different repositories
               result[:errors].each do |error_info|
                 repo_name = error_info[:repository]
                 message = error_info[:message]
-                
+
                 if options[:debug] && error_info[:error]
                   error_output("[#{repo_name}] Error: #{error_info[:error].class.name}: #{message}")
                   if error_info[:error].respond_to?(:backtrace)
@@ -153,12 +153,12 @@ module CodingAgentTools
                   error_output("[#{repo_name}] Error: #{message}")
                 end
               end
-              
+
               unless options[:debug]
                 error_output("Use --debug flag for more information")
               end
             end
-            
+
             # Show any partial successes
             if result[:results]
               successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }

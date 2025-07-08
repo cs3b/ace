@@ -19,7 +19,7 @@ module CodingAgentTools
         return failure("Path cannot be empty") if path.to_s.strip.empty?
 
         normalized_path = normalize_path(path)
-        
+
         # Check if path is within project root
         unless within_project_root?(normalized_path)
           return failure("Path is outside project root: #{path}")
@@ -71,7 +71,7 @@ module CodingAgentTools
         else
           detect_project_root
         end
-        
+
         # Normalize the path to handle symlinks consistently
         if File.exist?(path)
           File.realpath(path)
@@ -87,7 +87,7 @@ module CodingAgentTools
       def normalize_path(path)
         # Expand path and resolve symlinks
         expanded = File.expand_path(path.to_s)
-        
+
         # Resolve symlinks if path exists
         if File.exist?(expanded)
           File.realpath(expanded)
@@ -98,24 +98,23 @@ module CodingAgentTools
 
       def within_project_root?(normalized_path)
         project_root_real = File.realpath(@project_root)
-        normalized_path_real = normalized_path
-        
+
         # Handle case where path doesn't exist yet
-        if !File.exist?(normalized_path)
-          normalized_path_real = normalized_path
+        normalized_path_real = if !File.exist?(normalized_path)
+          normalized_path
         else
-          normalized_path_real = File.realpath(normalized_path)
+          File.realpath(normalized_path)
         end
-        
+
         # Path must start with project root
-        normalized_path_real.start_with?(project_root_real + "/") || 
+        normalized_path_real.start_with?(project_root_real + "/") ||
           normalized_path_real == project_root_real
       end
 
       def matches_forbidden_pattern?(path)
         project_root_real = File.realpath(@project_root)
         relative_path = path.sub(project_root_real + "/", "")
-        
+
         @forbidden_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
         end
@@ -124,7 +123,7 @@ module CodingAgentTools
       def matches_allowed_pattern?(path)
         project_root_real = File.realpath(@project_root)
         relative_path = path.sub(project_root_real + "/", "")
-        
+
         @allowed_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
         end
@@ -133,7 +132,7 @@ module CodingAgentTools
       def default_allowed_patterns
         [
           "**/*.md",
-          "**/*.rb", 
+          "**/*.rb",
           "**/*.yml",
           "**/*.yaml",
           "**/*.sh",
@@ -159,11 +158,11 @@ module CodingAgentTools
       end
 
       def success(path)
-        { success: true, path: path }
+        {success: true, path: path}
       end
 
       def failure(error)
-        { success: false, error: error }
+        {success: false, error: error}
       end
     end
   end

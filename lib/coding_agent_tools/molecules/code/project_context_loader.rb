@@ -53,15 +53,15 @@ module CodingAgentTools
         def check_auto_availability
           found = []
           missing = []
-          
+
           AUTO_DOCUMENTS.each do |type, path|
             if @file_reader.readable?(path)
-              found << { type: type.to_s, path: path }
+              found << {type: type.to_s, path: path}
             else
-              missing << { type: type.to_s, path: path }
+              missing << {type: type.to_s, path: path}
             end
           end
-          
+
           {
             available: found.any?,
             found: found,
@@ -75,7 +75,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewContext] context with auto documents
         def load_auto_context
           documents = []
-          
+
           AUTO_DOCUMENTS.each do |type, path|
             result = @file_reader.read(path)
             if result[:success]
@@ -86,7 +86,7 @@ module CodingAgentTools
               }
             end
           end
-          
+
           Models::Code::ReviewContext.new(
             mode: "auto",
             documents: documents,
@@ -109,17 +109,17 @@ module CodingAgentTools
         # @return [Models::Code::ReviewContext] context with custom document
         def load_custom_context(path)
           result = @file_reader.read(path)
-          
-          if result[:success]
-            documents = [{
+
+          documents = if result[:success]
+            [{
               type: "custom",
               path: path,
               content: result[:content]
             }]
           else
-            documents = []
+            []
           end
-          
+
           Models::Code::ReviewContext.new(
             mode: "custom",
             documents: documents,

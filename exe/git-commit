@@ -6,15 +6,15 @@ require_relative "../lib/coding_agent_tools/cli/commands/git/commit"
 
 begin
   command = CodingAgentTools::Cli::Commands::Git::Commit.new
-  
+
   # Parse arguments manually for this executable
   options = {}
   files = []
-  
+
   i = 0
   while i < ARGV.length
     arg = ARGV[i]
-    
+
     case arg
     when "--debug", "-d"
       options[:debug] = true
@@ -50,10 +50,10 @@ begin
       # If it doesn't start with -, it's a file
       files << arg unless arg.start_with?("-")
     end
-    
+
     i += 1
   end
-  
+
   exit_code = command.call(files: files, **options)
   exit(exit_code)
 rescue => e

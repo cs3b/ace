@@ -23,10 +23,10 @@ module CodingAgentTools
           if File.exist?(pattern) && !File.directory?(pattern)
             return extract_single_file(pattern)
           end
-          
+
           # Find files matching pattern
           files = find_matching_files(pattern)
-          
+
           if files.empty?
             return {
               xml_content: nil,
@@ -35,10 +35,10 @@ module CodingAgentTools
               error: "No files found matching pattern: #{pattern}"
             }
           end
-          
+
           # Build XML content
           xml_content = build_xml_content(files)
-          
+
           {
             xml_content: xml_content,
             file_list: files,
@@ -55,36 +55,36 @@ module CodingAgentTools
           # Extract files
           result = extract_files(pattern)
           return result unless result[:success]
-          
+
           # Save XML file
           xml_file = File.join(session_dir, "input.xml")
           meta_file = File.join(session_dir, "input.meta")
-          
+
           begin
             File.write(xml_file, result[:xml_content])
-            
+
             # Determine type
             type = if File.exist?(pattern) && !File.directory?(pattern)
               "single_file"
             else
               "file_pattern"
             end
-            
+
             # Write metadata
             meta_content = <<~META
               target: #{pattern}
               type: #{type}
               files: #{result[:file_list].count}
             META
-            
+
             # Add size info for single file
             if type == "single_file" && result[:file_list].count == 1
               lines = File.readlines(result[:file_list].first).count
               meta_content += "size: #{lines} lines\n"
             end
-            
+
             File.write(meta_file, meta_content)
-            
+
             {
               xml_file: xml_file,
               meta_file: meta_file,
@@ -108,7 +108,7 @@ module CodingAgentTools
         # @return [Hash] extraction result
         def extract_single_file(file_path)
           result = @file_reader.read(file_path)
-          
+
           if result[:success]
             xml_content = build_xml_content([file_path])
             {
@@ -148,24 +148,24 @@ module CodingAgentTools
           doc = REXML::Document.new
           doc.add_element("documents")
           root = doc.root
-          
+
           files.each do |file_path|
             result = @file_reader.read(file_path)
             next unless result[:success]
-            
+
             document = root.add_element("document")
             document.add_attribute("path", file_path)
-            
+
             # Use CDATA for file content
             cdata = REXML::CData.new(result[:content])
             document.add_text(cdata)
           end
-          
+
           # Format with proper XML declaration
           output = StringIO.new
           formatter = REXML::Formatters::Pretty.new(2)
           formatter.write(doc, output)
-          
+
           "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n#{output.string}"
         end
       end

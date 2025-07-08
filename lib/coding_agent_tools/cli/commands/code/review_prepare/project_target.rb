@@ -26,13 +26,13 @@ module CodingAgentTools
 
             def call(**options)
               content_extractor = CodingAgentTools::Organisms::Code::ContentExtractor.new
-              
+
               begin
                 target = content_extractor.extract_and_save(
                   options[:target],
                   options[:session_dir]
                 )
-                
+
                 if target.type != "error"
                   puts "✅ Extracted target: #{target.type}"
                   puts "📄 Content type: #{target.content_type}"

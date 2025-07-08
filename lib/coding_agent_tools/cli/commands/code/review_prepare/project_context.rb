@@ -28,7 +28,7 @@ module CodingAgentTools
 
             def call(**options)
               context_loader = CodingAgentTools::Organisms::Code::ContextLoader.new
-              
+
               begin
                 # Create minimal session for context loading
                 session = CodingAgentTools::Models::Code::ReviewSession.new(
@@ -40,10 +40,10 @@ module CodingAgentTools
                   target: "unknown",
                   context_mode: options[:mode]
                 )
-                
+
                 context = context_loader.load_context(options[:mode], session)
                 result = context_loader.save_context(context, options[:session_dir])
-                
+
                 if result[:success]
                   puts "✅ Loaded context: #{context.mode}"
                   puts "📄 Documents: #{context.document_count}"

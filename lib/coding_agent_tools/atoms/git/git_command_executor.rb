@@ -30,7 +30,7 @@ module CodingAgentTools
 
         def execute(command, capture_output: true)
           full_command = build_command(command)
-          
+
           if capture_output
             execute_with_capture(full_command)
           else
@@ -54,28 +54,28 @@ module CodingAgentTools
         def resolve_repository_path(path)
           # If path is already absolute, use it as-is
           return path if File.absolute_path?(path)
-          
+
           # If relative path exists locally (from current directory), use it
           return path if File.exist?(path) && File.directory?(path)
-          
+
           # Otherwise, resolve relative to project root
           project_root = ProjectRootDetector.find_project_root
           absolute_path = File.join(project_root, path)
-          
+
           # Verify the resolved path exists
           unless File.exist?(absolute_path) && File.directory?(absolute_path)
             raise GitCommandError.new(
               "Repository path not found: #{path} (tried local: #{File.expand_path(path)}, global: #{absolute_path})"
             )
           end
-          
+
           absolute_path
         end
 
         def execute_with_capture(full_command)
           # Add timeout to prevent hanging indefinitely (e.g., interactive editors)
           timeout_seconds = 30
-          
+
           begin
             stdout_str, stderr_str, status = Timeout.timeout(timeout_seconds) do
               Open3.capture3(full_command)
@@ -88,7 +88,7 @@ module CodingAgentTools
               stderr_output: "Command timed out"
             )
           end
-          
+
           unless status.success?
             raise GitCommandError.new(
               "Git command failed: #{full_command}",
@@ -108,7 +108,7 @@ module CodingAgentTools
 
         def execute_without_capture(full_command)
           success = system(full_command)
-          
+
           unless success
             exit_status = $?.exitstatus
             raise GitCommandError.new(

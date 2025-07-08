@@ -41,7 +41,7 @@ module CodingAgentTools
         merge_with_defaults(config)
       rescue Psych::SyntaxError => e
         raise Error, "Invalid YAML in tree configuration: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise Error, "Failed to load tree configuration: #{e.message}"
       end
 
@@ -57,13 +57,13 @@ module CodingAgentTools
 
       def detect_project_root
         current_dir = Pathname.new(Dir.pwd)
-        
+
         loop do
           return current_dir.to_s if project_root_marker_exists?(current_dir)
-          
+
           parent = current_dir.parent
           break if parent == current_dir # reached filesystem root
-          
+
           current_dir = parent
         end
 
@@ -77,7 +77,7 @@ module CodingAgentTools
 
       def validate_config!(config)
         raise Error, "Configuration must be a Hash" unless config.is_a?(Hash)
-        
+
         if config["contexts"] && !config["contexts"].is_a?(Hash)
           raise Error, "contexts must be a Hash"
         end
@@ -93,12 +93,12 @@ module CodingAgentTools
 
       def merge_with_defaults(config)
         merged = DEFAULT_CONFIG.dup
-        
+
         # Deep merge contexts
         if config["contexts"]
           merged["contexts"] = DEFAULT_CONFIG["contexts"].merge(config["contexts"])
         end
-        
+
         # Merge other sections
         %w[default_depth global_excludes autocorrect repositories].each do |key|
           merged[key] = config[key] if config.key?(key)

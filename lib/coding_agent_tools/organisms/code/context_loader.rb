@@ -26,13 +26,13 @@ module CodingAgentTools
             custom_path = mode
             mode = "custom"
           end
-          
+
           # Load context
           context = @context_loader.load_context(mode, custom_path)
-          
+
           # Log context loading to session
           log_context_loading(context, session)
-          
+
           context
         end
 
@@ -41,10 +41,10 @@ module CodingAgentTools
         # @param session_dir [String] session directory path
         # @return [Hash] {success: Boolean, error: String}
         def save_context(context, session_dir)
-          return { success: true, error: nil } unless context.loaded?
-          
+          return {success: true, error: nil} unless context.loaded?
+
           context_file = File.join(session_dir, "context.yaml")
-          
+
           begin
             # Prepare context data for saving
             context_data = {
@@ -59,19 +59,19 @@ module CodingAgentTools
                 }
               end
             }
-            
+
             # Save context metadata
             File.write(context_file, context_data.to_yaml)
-            
+
             # Save individual context documents
             context.documents.each do |doc|
               doc_file = File.join(session_dir, "context-#{doc[:type]}.txt")
               File.write(doc_file, doc[:content])
             end
-            
-            { success: true, error: nil }
+
+            {success: true, error: nil}
           rescue => e
-            { success: false, error: "Failed to save context: #{e.message}" }
+            {success: false, error: "Failed to save context: #{e.message}"}
           end
         end
 
@@ -86,22 +86,22 @@ module CodingAgentTools
         # @return [String] human-readable summary
         def get_context_summary(context)
           return "No context loaded (mode: none)" unless context.loaded?
-          
+
           lines = ["Project Context (mode: #{context.mode}):"]
-          
+
           if context.using_auto_defaults?
             lines << "  Using standard project documents"
           elsif context.mode == "custom"
             lines << "  Using custom context file"
           end
-          
+
           lines << "  Documents loaded: #{context.document_count}"
           lines << "  Total size: #{format_size(context.total_size)}"
-          
+
           context.documents.each do |doc|
             lines << "  - #{doc[:type]}: #{doc[:path]} (#{format_size(doc[:content].size)})"
           end
-          
+
           lines.join("\n")
         end
 
@@ -112,7 +112,7 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] review session
         def log_context_loading(context, session)
           log_file = File.join(session.directory_path, "session.log")
-          
+
           log_entry = <<~LOG
             [#{Time.now.iso8601}] Context Loading
             Mode: #{context.mode}
@@ -121,7 +121,7 @@ module CodingAgentTools
             #{context.documents.map { |d| "  - #{d[:type]}: #{d[:path]}" }.join("\n")}
             
           LOG
-          
+
           File.open(log_file, "a") { |f| f.write(log_entry) }
         rescue
           # Ignore logging errors

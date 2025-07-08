@@ -22,7 +22,7 @@ module CodingAgentTools
 
         def infer_timestamp_range(reflection_files)
           dates = []
-          
+
           reflection_files.each do |file_path|
             file_dates = extract_dates_from_file(file_path)
             dates.concat(file_dates)
@@ -49,7 +49,7 @@ module CodingAgentTools
 
         def extract_dates_from_file(file_path)
           dates = []
-          
+
           # Try extracting from filename first
           filename = File.basename(file_path)
           filename_date = extract_date_from_string(filename)
@@ -77,12 +77,12 @@ module CodingAgentTools
               year = match[1].to_i
               month = match[2].to_i
               day = match[3].to_i
-              
+
               # Basic validation
               next if year < 2000 || year > 2030
               next if month < 1 || month > 12
               next if day < 1 || day > 31
-              
+
               return Date.new(year, month, day)
             rescue Date::Error
               # Invalid date, continue trying other patterns
@@ -95,11 +95,11 @@ module CodingAgentTools
 
         def extract_dates_from_content(content)
           dates = []
-          
+
           content.lines.each do |line|
             line.strip!
             next if line.empty?
-            
+
             # Look for date patterns in content
             date = extract_date_from_string(line)
             dates << date if date

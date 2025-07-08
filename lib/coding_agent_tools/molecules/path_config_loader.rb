@@ -94,7 +94,7 @@ module CodingAgentTools
         merge_with_defaults(config)
       rescue Psych::SyntaxError => e
         raise Error, "Invalid YAML in path configuration: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise Error, "Failed to load path configuration: #{e.message}"
       end
 
@@ -114,7 +114,7 @@ module CodingAgentTools
 
       def validate_config!(config)
         raise Error, "Configuration must be a Hash" unless config.is_a?(Hash)
-        
+
         validate_section!(config, "project", Hash)
         validate_section!(config, "repositories", Hash)
         validate_section!(config, "path_patterns", Hash)
@@ -127,7 +127,7 @@ module CodingAgentTools
 
       def validate_section!(config, section_name, expected_type)
         return unless config.key?(section_name)
-        
+
         unless config[section_name].is_a?(expected_type)
           raise Error, "#{section_name} must be a #{expected_type.name}"
         end
@@ -135,26 +135,26 @@ module CodingAgentTools
 
       def merge_with_defaults(config)
         merged = deep_merge(DEFAULT_CONFIG, config)
-        
+
         # Ensure scan_order maintains proper structure
         if config.dig("repositories", "scan_order")
           merged["repositories"]["scan_order"] = config["repositories"]["scan_order"]
         end
-        
+
         merged
       end
 
       def deep_merge(hash1, hash2)
         result = hash1.dup
-        
+
         hash2.each do |key, value|
-          if result[key].is_a?(Hash) && value.is_a?(Hash)
-            result[key] = deep_merge(result[key], value)
+          result[key] = if result[key].is_a?(Hash) && value.is_a?(Hash)
+            deep_merge(result[key], value)
           else
-            result[key] = value
+            value
           end
         end
-        
+
         result
       end
     end
