@@ -16,21 +16,40 @@ module CodingAgentTools
         VALID_PRIORITIES = ["low", "medium", "high", "critical"]
         ESTIMATE_REGEX = /^\d+(\.\d+)?(h|d|w|sp|pt|wk|mo)$/i
 
-        attr_reader :task_dirs
+        attr_reader :task_dirs, :project_root
 
         def initialize(options = {})
           @task_dirs = options[:task_dirs] || default_task_dirs
+          @project_root = options[:project_root]
         end
 
-        def validate
+        def validate(paths = nil)
           errors = []
           findings = []
 
-          task_dirs.each do |dir|
-            next unless Dir.exist?(dir)
-
-            Dir.glob(File.join(dir, "**", "*.md")).each do |file|
+          if paths && !paths.empty?
+            # Use provided paths instead of default task directories
+            files_to_check = paths.flat_map do |path|
+              if File.directory?(path)
+                Dir.glob(File.join(path, "**", "*.md"))
+              elsif path.end_with?(".md")
+                [path]
+              else
+                []
+              end
+            end
+            
+            files_to_check.each do |file|
               validate_task_file(file, errors, findings)
+            end
+          else
+            # Use default behavior for task directories
+            task_dirs.each do |dir|
+              next unless Dir.exist?(dir)
+
+              Dir.glob(File.join(dir, "**", "*.md")).each do |file|
+                validate_task_file(file, errors, findings)
+              end
             end
           end
 
@@ -52,12 +71,13 @@ module CodingAgentTools
 
         def validate_task_file(file_path, errors, findings)
           content = File.read(file_path)
-          frontmatter, body = parse_task_file_content(content, file_path, errors)
+          relative_path = make_path_relative(file_path)
+          frontmatter, body = parse_task_file_content(content, relative_path, errors)
 
           return unless frontmatter
 
-          validate_frontmatter(frontmatter, file_path, errors)
-          validate_h1_title(body, file_path, errors) if body
+          validate_frontmatter(frontmatter, relative_path, errors)
+          validate_h1_title(body, relative_path, errors) if body
         end
 
         def parse_task_file_content(content, file_path, errors)
@@ -156,6 +176,12 @@ module CodingAgentTools
           unless h1_match
             errors << "#{file_path}: Missing H1 title in body"
           end
+        end
+
+        def make_path_relative(path)
+          return path unless path && File.absolute_path?(path) && project_root
+          
+          path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
         end
       end
     end

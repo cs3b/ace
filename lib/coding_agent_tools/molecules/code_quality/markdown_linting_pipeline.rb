@@ -52,8 +52,12 @@ module CodingAgentTools
         private
 
         def run_task_metadata(paths, results)
-          validator = Atoms::CodeQuality::TaskMetadataValidator.new
-          result = validator.validate
+          validator = Atoms::CodeQuality::TaskMetadataValidator.new(
+            project_root: path_resolver.project_root
+          )
+          
+          resolved_paths = paths.map { |p| path_resolver.resolve(p) }
+          result = validator.validate(resolved_paths)
 
           results[:linters][:task_metadata] = result
           results[:success] &&= result[:success]
@@ -124,8 +128,11 @@ module CodingAgentTools
           md_files.each do |file|
             result = formatter.format_file(file)
             if result[:changed]
+              # Make path relative to project root
+              relative_path = file.start_with?(path_resolver.project_root) ? 
+                              file.sub("#{path_resolver.project_root}/", "") : file
               findings << {
-                file: file,
+                file: relative_path,
                 message: "Formatting changes needed",
                 fixed: result[:file_updated]
               }

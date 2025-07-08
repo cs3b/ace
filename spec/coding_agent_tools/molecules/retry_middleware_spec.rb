@@ -15,6 +15,9 @@ RSpec.describe CodingAgentTools::Molecules::RetryMiddleware do
     notifications.subscribe("retry_middleware.success.coding_agent_tools") { |event| events << event }
     notifications.subscribe("retry_middleware.retry.coding_agent_tools") { |event| events << event }
     notifications.subscribe("retry_middleware.failure.coding_agent_tools") { |event| events << event }
+
+    # Mock sleep to prevent actual delays in tests
+    allow_any_instance_of(CodingAgentTools::Molecules::RetryMiddleware).to receive(:sleep)
   end
 
   after do
