@@ -1,9 +1,9 @@
-# Coding Agent Tools - Development Tools Reference
+# Coding Agent Tools - Development Tools Reference   {#coding-agent-tools---development-tools-reference}
 
-## Main Cheat-sheet
+## Main Cheat-sheet   {#main-cheat-sheet}
 
 | Tool | Purpose | Key Flags |
-|------|---------|-----------|
+|----------
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
@@ -24,57 +24,60 @@
 | `release-manager` | Release management tool | `current`, `report` |
 | `task-manager` | Project task management | `next`, `all` |
 
-## Persona Cheat-sheets
+## Persona Cheat-sheets   {#persona-cheat-sheets}
 
-### AI Agent
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `llm-query` | Query AI models | `--model`, `--output` |
-| `nav-path` | Navigate project paths | `task-new`, `file` |
-| `release-manager` | Manage releases | `current`, `report` |
-| `task-manager` | Manage tasks | `next`, `all` |
+### AI Agent   {#ai-agent}
 
-### Human Developer
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `code-review` | Review code interactively | `--interactive`, `--batch` |
-| `handbook` | Access development guides | `sync-templates` |
-| `reflection-synthesize` | Generate session reports | `--session`, `--focus` |
+\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
+`llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
+\| Navigate project paths \| `task-new`, `file` \| \| `release-manager`
+\| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
+tasks \| `next`, `all` \|
 
-### Git Power-User
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `git-add` | Enhanced file staging | `--patch`, `--all` |
-| `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
-| `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
-| `git-status` | Multi-repo status | `--verbose`, `--short` |
+### Human Developer   {#human-developer}
 
-### Release Manager
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `release-manager` | Release coordination | `current`, `report` |
-| `task-manager` | Track deliverables | `next`, `all` |
+\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
+`code-review` \| Review code interactively \| `--interactive`, `--batch`
+\| \| `handbook` \| Access development guides \| `sync-templates` \| \|
+`reflection-synthesize` \| Generate session reports \| `--session`,
+`--focus` \|
 
-## Setup Requirements
+### Git Power-User   {#git-power-user}
 
-### Dependencies
-- **Ruby** >= 3.2.0
-- **Bundler** for dependency management  
-- **Git** CLI for repository operations
-- **dev-handbook** submodule for task management utilities
+\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
+`git-add` \| Enhanced file staging \| `--patch`, `--all` \| \|
+`git-commit` \| Smart commit tool \| `--intention`, `--no-edit` \| \|
+`git-diff` \| Advanced diff viewer \| `--staged`, `--stat` \| \|
+`git-status` \| Multi-repo status \| `--verbose`, `--short` \|
 
-### Environment Setup
-```bash
-# Initial setup (run from dev-tools/ directory)
-cd dev-tools && bundle install
+### Release Manager   {#release-manager}
 
-# Load Ruby console with gem loaded (run from dev-tools/ directory)
-cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
-```
+\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
+`release-manager` \| Release coordination \| `current`, `report` \| \|
+`task-manager` \| Track deliverables \| `next`, `all` \|
 
-## Gem Executables
+## Setup Requirements   {#setup-requirements}
 
-### `llm-query` – Unified LLM query interface
+### Dependencies   {#dependencies}
+
+* **Ruby** >= 3.2.0
+* **Bundler** for dependency management
+* **Git** CLI for repository operations
+* **dev-handbook** submodule for task management utilities
+
+### Environment Setup   {#environment-setup}
+
+    # Initial setup (run from dev-tools/ directory)
+    cd dev-tools && bundle install
+    
+    # Load Ruby console with gem loaded (run from dev-tools/ directory)
+    cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
+{: .language-bash}
+
+## Gem Executables   {#gem-executables}
+
+### `llm-query` – Unified LLM query interface   {#llm-query--unified-llm-query-interface}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -96,8 +99,8 @@ llm-query csonet "Write a function" --system "You are a Ruby expert"
 ```
 </details>
 
+### `task-manager` – Project task management   {#task-manager--project-task-management}
 
-### `task-manager` – Project task management
 <details><summary>Details</summary>
 
 ```bash
@@ -119,8 +122,8 @@ task-manager recent
 ```
 </details>
 
+### `code-review` – Interactive code review tool   {#code-review--interactive-code-review-tool}
 
-### `code-review` – Interactive code review tool
 <details><summary>Details</summary>
 
 ```bash
@@ -140,7 +143,8 @@ code-review --batch --output-format json
 ```
 </details>
 
-### `code-review-prepare` – Review preparation tool
+### `code-review-prepare` – Review preparation tool   {#code-review-prepare--review-preparation-tool}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -159,7 +163,8 @@ code-review-prepare --diff-only
 ```
 </details>
 
-### `code-review-synthesize` – Review synthesis tool
+### `code-review-synthesize` – Review synthesis tool   {#code-review-synthesize--review-synthesis-tool}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -178,7 +183,8 @@ code-review-synthesize --include-recommendations
 ```
 </details>
 
-### `reflection-synthesize` – Reflection report generator
+### `reflection-synthesize` – Reflection report generator   {#reflection-synthesize--reflection-report-generator}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -197,7 +203,8 @@ reflection-synthesize --focus architecture,testing
 ```
 </details>
 
-### `git-add` – Enhanced git add
+### `git-add` – Enhanced git add   {#git-add--enhanced-git-add}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -218,7 +225,8 @@ git-add --all --repository dev-tools
 ```
 </details>
 
-### `git-commit` – Enhanced git commit
+### `git-commit` – Enhanced git commit   {#git-commit--enhanced-git-commit}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -240,7 +248,8 @@ git-commit --no-edit --all
 ```
 </details>
 
-### `git-diff` – Enhanced git diff
+### `git-diff` – Enhanced git diff   {#git-diff--enhanced-git-diff}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -262,7 +271,8 @@ git-diff --repository dev-tools
 ```
 </details>
 
-### `git-fetch` – Enhanced git fetch
+### `git-fetch` – Enhanced git fetch   {#git-fetch--enhanced-git-fetch}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -283,7 +293,8 @@ git-fetch --tags --repository dev-tools
 ```
 </details>
 
-### `git-log` – Enhanced git log
+### `git-log` – Enhanced git log   {#git-log--enhanced-git-log}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -304,7 +315,8 @@ git-log --graph --since "1 week ago"
 ```
 </details>
 
-### `git-pull` – Enhanced git pull
+### `git-pull` – Enhanced git pull   {#git-pull--enhanced-git-pull}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -325,7 +337,8 @@ git-pull --ff-only --repository dev-tools
 ```
 </details>
 
-### `git-push` – Enhanced git push
+### `git-push` – Enhanced git push   {#git-push--enhanced-git-push}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -346,7 +359,8 @@ git-push --set-upstream --repository dev-tools
 ```
 </details>
 
-### `git-status` – Enhanced git status
+### `git-status` – Enhanced git status   {#git-status--enhanced-git-status}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -367,7 +381,8 @@ git-status --short --repository dev-tools
 ```
 </details>
 
-### `nav-ls` – Enhanced directory listing
+### `nav-ls` – Enhanced directory listing   {#nav-ls--enhanced-directory-listing}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -387,7 +402,8 @@ nav-ls --all --long src/
 ```
 </details>
 
-### `nav-path` – Intelligent path navigation
+### `nav-path` – Intelligent path navigation   {#nav-path--intelligent-path-navigation}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -409,7 +425,8 @@ nav-path file README
 ```
 </details>
 
-### `nav-tree` – Enhanced project tree
+### `nav-tree` – Enhanced project tree   {#nav-tree--enhanced-project-tree}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -429,7 +446,8 @@ nav-tree --depth 3 docs/
 ```
 </details>
 
-### `handbook` – Development handbook access
+### `handbook` – Development handbook access   {#handbook--development-handbook-access}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -446,7 +464,8 @@ handbook sync-templates
 ```
 </details>
 
-### `release-manager` – Release management tool
+### `release-manager` – Release management tool   {#release-manager--release-management-tool}
+
 <details><summary>Details</summary>
 
 ```bash
@@ -466,64 +485,73 @@ release-manager report --format detailed
 ```
 </details>
 
-## Tool Categories
+## Tool Categories   {#tool-categories}
 
-### By Function
-- **Code Review**: `code-review`, `code-review-prepare`, `code-review-synthesize`
-- **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
-- **LLM Integration**: `llm-query`
-- **Navigation & Documentation**: `handbook`, `nav-ls`, `nav-path`, `nav-tree`
-- **Project Management**: `release-manager`, `task-manager`
-- **Reflection & Analysis**: `reflection-synthesize`
+### By Function   {#by-function}
 
-### By Persona
-- **AI Agent**: `llm-query`, `nav-path`, `release-manager`, `task-manager`
-- **Human Developer**: `code-review`, `handbook`, `reflection-synthesize`
-- **Git Power-User**: `git-add`, `git-commit`, `git-diff`, `git-status`
-- **Release Manager**: `release-manager`, `task-manager`
+* **Code Review**: `code-review`, `code-review-prepare`,
+  `code-review-synthesize`
+* **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`,
+  `git-log`, `git-pull`, `git-push`, `git-status`
+* **LLM Integration**: `llm-query`
+* **Navigation & Documentation**: `handbook`, `nav-ls`, `nav-path`,
+  `nav-tree`
+* **Project Management**: `release-manager`, `task-manager`
+* **Reflection & Analysis**: `reflection-synthesize`
 
-## Common Workflows
+### By Persona   {#by-persona}
 
-### AI Agent Workflow
-```bash
-# Find next task and navigate
-task-manager next
-nav-path task 42
+* **AI Agent**: `llm-query`, `nav-path`, `release-manager`,
+  `task-manager`
+* **Human Developer**: `code-review`, `handbook`,
+  `reflection-synthesize`
+* **Git Power-User**: `git-add`, `git-commit`, `git-diff`, `git-status`
+* **Release Manager**: `release-manager`, `task-manager`
 
-# Query AI for implementation guidance
-llm-query google "How to implement feature X?"
+## Common Workflows   {#common-workflows}
 
-# Generate new task when needed
-nav-path task-new --title "Implement feature X"
-```
+### AI Agent Workflow   {#ai-agent-workflow}
 
-### Human Developer Workflow
-```bash
-# Sync documentation and review code
-handbook sync-templates
-code-review --interactive
+    # Find next task and navigate
+    task-manager next
+    nav-path task 42
+    
+    # Query AI for implementation guidance
+    llm-query google "How to implement feature X?"
+    
+    # Generate new task when needed
+    nav-path task-new --title "Implement feature X"
+{: .language-bash}
 
-# Track recent work and generate reflection
-task-manager recent
-reflection-synthesize --session current
-```
+### Human Developer Workflow   {#human-developer-workflow}
 
-### Git Power-User Workflow
-```bash
-# Enhanced git operations across repositories
-git-status --verbose
-git-diff --stat
-git-commit --intention "update features"
-git-push
-```
+    # Sync documentation and review code
+    handbook sync-templates
+    code-review --interactive
+    
+    # Track recent work and generate reflection
+    task-manager recent
+    reflection-synthesize --session current
+{: .language-bash}
 
-## Notes
+### Git Power-User Workflow   {#git-power-user-workflow}
 
-- All tools available directly by name via fish integration
-- Use `tool-name --help` for detailed usage information
-- Git wrappers provide enhanced functionality over standard git commands
-- LLM integration includes intelligent caching and cost tracking
+    # Enhanced git operations across repositories
+    git-status --verbose
+    git-diff --stat
+    git-commit --intention "update features"
+    git-push
+{: .language-bash}
 
----
+## Notes   {#notes}
 
-*For the most up-to-date information, run individual tools with `--help` flag.*
+* All tools available directly by name via fish integration
+* Use `tool-name --help` for detailed usage information
+* Git wrappers provide enhanced functionality over standard git commands
+* LLM integration includes intelligent caching and cost tracking
+
+* * *
+
+*For the most up-to-date information, run individual tools with `--help`
+flag.*
+

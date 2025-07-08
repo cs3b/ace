@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskManagement::ShellCommandExecutor do
     end
 
     it "handles timeout" do
-      result = described_class.execute("sleep 0.2", timeout: 0.1)
+      result = described_class.execute("sleep 2", timeout: 1)
       expect(result.success?).to be false
       expect(result.stderr).to include("timed out")
       expect(result.exit_code).to eq(-1)
