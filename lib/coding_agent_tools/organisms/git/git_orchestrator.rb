@@ -68,16 +68,16 @@ module CodingAgentTools
           if files.any?
             add_result = add(files, options)
             return add_result unless add_result[:success]
-          elsif !options[:only_this_repo]
+          elsif !options[:repo_only]
             # Default behavior: stage all changes across all repositories
-            # Only skip this if --only-this-repo flag is specified
-            puts "DEBUG: Running add_all because only_this_repo = #{options[:only_this_repo]}" if options[:debug]
+            # Only skip this if --repo-only flag is specified
+            puts "DEBUG: Running add_all because repo_only = #{options[:repo_only]}" if options[:debug]
             add_result = add_all(options)
             return add_result unless add_result[:success]
           else
-            puts "DEBUG: Skipping add_all because only_this_repo = #{options[:only_this_repo]}" if options[:debug]
+            puts "DEBUG: Skipping add_all because repo_only = #{options[:repo_only]}" if options[:debug]
           end
-          # Note: With --only-this-repo flag, commit only already staged changes
+          # Note: With --repo-only flag, commit only already staged changes
 
           if options[:message]
             commit_with_message(options[:message], options)

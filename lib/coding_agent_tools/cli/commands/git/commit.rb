@@ -44,7 +44,7 @@ module CodingAgentTools
           option :submodules_only, type: :boolean, default: false,
             desc: "Process submodules only"
 
-          option :only_this_repo, type: :boolean, default: false,
+          option :repo_only, type: :boolean, default: false,
             desc: "Process only the current repository instead of all repositories"
 
           argument :files, type: :array, required: false,
@@ -58,7 +58,7 @@ module CodingAgentTools
             "dev-handbook/guide.md lib/auth.rb",
             "--concurrent --intention 'update across all repos'",
             "--repository dev-tools --message 'update gem version'",
-            "--only-this-repo --intention 'local change only'",
+            "--repo-only --intention 'local change only'",
             "--model 'anthropic:claude-3.5-sonnet' --intention 'complex refactoring'",
             "--model 'google:gemini-2.5-flash' --intention 'simple fix'"
           ]
@@ -88,9 +88,6 @@ module CodingAgentTools
           private
 
           def build_commit_options(files, options)
-            # Debug: Show what we get from options
-            puts "DEBUG: build_commit_options received options = #{options.inspect}" if options[:debug]
-            
             commit_opts = {
               files: files,
               capture_output: true
@@ -100,7 +97,7 @@ module CodingAgentTools
             commit_opts[:repository] = options[:repository] if options[:repository]
             commit_opts[:main_only] = options[:main_only] if options[:main_only]
             commit_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-            commit_opts[:only_this_repo] = options[:only_this_repo]
+            commit_opts[:repo_only] = options[:repo_only]
             
             # Commit behavior
             commit_opts[:all] = options[:all] if options[:all]
