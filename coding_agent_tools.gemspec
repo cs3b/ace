@@ -43,6 +43,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "dry-configurable", "~> 1.0" # dry-monitor typically depends on this
   spec.add_dependency "addressable", "~> 2.8"
   spec.add_dependency "csv", "~> 3.0"
+  spec.add_dependency "kramdown", "~> 2.0"
+  spec.add_dependency "kramdown-parser-gfm", "~> 1.0"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
