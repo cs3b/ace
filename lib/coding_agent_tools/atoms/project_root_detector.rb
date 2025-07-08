@@ -5,7 +5,7 @@ module CodingAgentTools
     class ProjectRootDetector
       class << self
         def find_project_root(start_path = nil)
-          start_path ||= File.dirname(File.expand_path($PROGRAM_NAME))
+          start_path ||= Dir.pwd
 
           # Check cache first
           cache_key = "#{start_path}:#{ENV["PROJECT_ROOT"]}"
