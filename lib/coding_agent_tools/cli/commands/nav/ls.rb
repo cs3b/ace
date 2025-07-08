@@ -18,7 +18,7 @@ module CodingAgentTools
             # Initialize components
             @path_resolver = CodingAgentTools::Molecules::PathResolver.new
             @alternatives = []
-            
+
             # Resolve target directory
             target_dir = resolve_target_directory(path, options[:autocorrect])
             return unless target_dir
@@ -33,7 +33,7 @@ module CodingAgentTools
 
               if exit_status == 0
                 puts output
-                
+
                 # Show alternatives if any exist
                 unless @alternatives.empty?
                   puts @path_resolver.format_alternative_matches(@alternatives)
@@ -42,7 +42,7 @@ module CodingAgentTools
                 puts "Error executing ls command: #{ls_command}"
                 puts "Output: #{output}" unless output.strip.empty?
               end
-            rescue StandardError => e
+            rescue => e
               puts "Error: #{e.message}"
             end
           end
@@ -51,19 +51,19 @@ module CodingAgentTools
 
           def build_ls_command(target_dir, options)
             cmd_parts = ["ls"]
-            
+
             # Add flags based on options
             flags = []
             flags << "l" if options[:long]
             flags << "a" if options[:all]
-            
+
             unless flags.empty?
-              cmd_parts << "-#{flags.join('')}"
+              cmd_parts << "-#{flags.join("")}"
             end
-            
+
             # Add target directory (quoted for safety)
             cmd_parts << "'#{target_dir}'"
-            
+
             cmd_parts.join(" ")
           end
 
@@ -85,15 +85,15 @@ module CodingAgentTools
             # Check if input uses scoped pattern syntax (scope:pattern)
             if path.include?(":")
               result = @path_resolver.resolve_scoped_pattern(path)
-              
+
               if result[:success]
                 resolved_path = result[:path]
-                
+
                 # Show autocorrection messages
                 if result[:autocorrect_message]
                   puts result[:autocorrect_message]
                 end
-                
+
                 # Check if resolved path is a directory
                 if Dir.exist?(resolved_path)
                   puts "Best match: '#{resolved_path}'"
@@ -117,7 +117,7 @@ module CodingAgentTools
             # Try directory-specific search first
             matches = @path_resolver.find_matching_paths(path, include_directories: true, max_results: 5)
             directories = matches.select { |p| Dir.exist?(p) }
-            
+
             if directories.length == 1
               resolved_path = directories.first
               puts "Autocorrected: '#{path}' → '#{resolved_path}'"
@@ -126,12 +126,12 @@ module CodingAgentTools
               # Use smart prioritization for multiple directory matches
               prioritized = @path_resolver.prioritize_matches(directories)
               puts "Autocorrected: '#{path}' → '#{prioritized[:best]}'"
-              
+
               # Store alternatives to show later
               @alternatives = prioritized[:alternatives]
               return prioritized[:best]
             end
-            
+
             # Fall back to file search
             result = @path_resolver.resolve_path(path, type: :file)
 
@@ -142,29 +142,29 @@ module CodingAgentTools
                 # Check if resolved path is a directory
                 if Dir.exist?(resolved_path)
                   puts "Autocorrected: '#{path}' → '#{resolved_path}'"
-                  return resolved_path
+                  resolved_path
                 else
                   # If it's a file, use its directory
                   dir_path = File.dirname(resolved_path)
                   puts "Autocorrected: '#{path}' → '#{dir_path}' (parent directory of found file)"
-                  return dir_path
+                  dir_path
                 end
               when :multiple
                 # Convert file paths to directory paths and use smart prioritization
                 display_paths = result[:paths].map do |match_path|
                   Dir.exist?(match_path) ? match_path : File.dirname(match_path)
                 end
-                
+
                 prioritized = @path_resolver.prioritize_matches(display_paths.uniq)
                 puts "Autocorrected: '#{path}' → '#{prioritized[:best]}' (parent directory of found file)"
-                
+
                 # Store alternatives to show later
                 @alternatives = prioritized[:alternatives]
-                return prioritized[:best]
+                prioritized[:best]
               end
             else
               puts "Error: #{result[:error]}"
-              return nil
+              nil
             end
           end
         end

@@ -28,10 +28,10 @@ module CodingAgentTools
         def build_prompt(session, target_content, context, focus, system_prompt_override = nil)
           # Select system prompt path
           system_prompt_path = select_system_prompt(focus, system_prompt_override)
-          
+
           # Get focus area descriptions
           focus_areas = get_focus_areas(focus)
-          
+
           # Build combined content
           combined_content = build_combined_content(
             session: session,
@@ -39,7 +39,7 @@ module CodingAgentTools
             context: context,
             focus_areas: focus_areas
           )
-          
+
           # Create prompt model
           Models::Code::ReviewPrompt.new(
             session_id: session.session_id,
@@ -61,7 +61,7 @@ module CodingAgentTools
         # @return [Hash] {prompt_file: String, success: Boolean, error: String}
         def save_prompt(prompt, session_dir)
           prompt_file = File.join(session_dir, "prompt.md")
-          
+
           begin
             File.write(prompt_file, prompt.combined_content)
             {
@@ -85,10 +85,10 @@ module CodingAgentTools
         def select_system_prompt(focus, system_prompt_override = nil)
           # Use override if provided
           return system_prompt_override if system_prompt_override && !system_prompt_override.empty?
-          
+
           # Handle multi-focus by using primary focus
           primary_focus = focus.split.first
-          
+
           case primary_focus
           when "code"
             "dev-handbook/templates/review-code/system.prompt.md"
@@ -109,11 +109,11 @@ module CodingAgentTools
         # @return [Array<String>] focus area descriptions
         def get_focus_areas(focus)
           areas = []
-          
+
           focus.split.each do |focus_type|
             areas.concat(CodingAgentTools::Models::Code::ReviewPrompt.get_focus_descriptions(focus_type))
           end
-          
+
           areas
         end
 
@@ -126,7 +126,7 @@ module CodingAgentTools
         def build_combined_content(session:, target_content:, context:, focus_areas:)
           # Determine content type
           content_type = target_content.start_with?("<?xml") ? "file" : "diff"
-          
+
           # Build YAML frontmatter
           frontmatter = {
             "generated" => Time.now.iso8601,
@@ -135,14 +135,14 @@ module CodingAgentTools
             "context" => context.mode,
             "type" => "review-prompt"
           }
-          
+
           content = StringIO.new
           content.puts "---"
           content.puts frontmatter.to_yaml.lines[1..-1].join
           content.puts "---"
           content.puts
           content.puts "<review-prompt>"
-          
+
           # Add project context
           if context.loaded?
             content.puts "\n  <project-context>"
@@ -155,23 +155,23 @@ module CodingAgentTools
             end
             content.puts "  </project-context>"
           end
-          
+
           # Add review target
           content.puts "\n  <review-target type=\"#{content_type}\">"
           content.puts "    <![CDATA["
           content.puts target_content
           content.puts "    ]]>"
           content.puts "  </review-target>"
-          
+
           # Add focus areas
           content.puts "\n  <focus-areas type=\"#{session.focus}\">"
           focus_areas.each do |area|
             content.puts "    <area>#{area}</area>"
           end
           content.puts "  </focus-areas>"
-          
+
           content.puts "</review-prompt>"
-          
+
           content.string
         end
       end

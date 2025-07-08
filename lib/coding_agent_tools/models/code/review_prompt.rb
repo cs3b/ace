@@ -72,7 +72,7 @@ module CodingAgentTools
         # Check if using standard focus areas
         def using_standard_focus_areas?
           return false unless focus_areas
-          
+
           # Check if all focus areas match standard descriptions
           standard_areas = self.class.focus_area_descriptions.values.flatten
           focus_areas.all? { |area| standard_areas.include?(area) }
@@ -81,9 +81,9 @@ module CodingAgentTools
         # Extract YAML frontmatter if present
         def frontmatter
           return {} unless combined_content
-          
+
           if combined_content =~ /\A---\n(.*?)\n---\n/m
-            require 'yaml'
+            require "yaml"
             YAML.safe_load($1) || {}
           else
             {}

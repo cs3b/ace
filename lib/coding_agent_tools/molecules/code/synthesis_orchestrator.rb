@@ -57,25 +57,25 @@ module CodingAgentTools
           puts "📝 Building comprehensive synthesis prompt..."
           prompt_content = build_synthesis_prompt(reports, session_info, system_prompt_path)
           puts "✅ Synthesis prompt prepared (#{prompt_content.length} characters)"
-          
+
           # Handle output file sequencing
           puts "📂 Checking output file path and sequencing..."
           final_output_path = handle_output_sequencing(output_path, force)
           if final_output_path != output_path
             puts "📁 Using sequenced output path: #{File.basename(final_output_path)}"
           end
-          
+
           # Execute LLM query
           puts "🚀 Executing LLM synthesis (this may take a moment)..."
           execution_result = execute_llm_synthesis(model, prompt_content, final_output_path, format, debug)
-          
+
           end_time = Time.now
           execution_time = end_time - start_time
 
           if execution_result[:success]
             puts "✅ LLM synthesis completed successfully"
             metrics = extract_synthesis_metrics(execution_result, execution_time, reports.length)
-            
+
             SynthesisResult.new(
               output_path: final_output_path,
               metrics: metrics,
@@ -128,9 +128,9 @@ module CodingAgentTools
         # @return [String, nil] System prompt content
         def load_system_prompt(system_prompt_path)
           prompt_path = system_prompt_path || DEFAULT_SYSTEM_PROMPT
-          
+
           return nil unless prompt_path && File.exist?(prompt_path)
-          
+
           File.read(prompt_path, encoding: "UTF-8").strip
         rescue => e
           # Log error but continue without system prompt
@@ -143,11 +143,11 @@ module CodingAgentTools
         # @return [String] Session context content
         def build_session_context(session_info)
           context_parts = ["# Session Context"]
-          
+
           context_parts << "**Session Directory**: #{session_info.session_directory}"
           context_parts << "**Session Type**: #{session_info.session_type}"
           context_parts << "**Session ID**: #{session_info.session_id}" if session_info.session_id
-          
+
           if session_info.metadata && !session_info.metadata.empty?
             context_parts << "\n**Session Metadata**:"
             session_info.metadata.each do |key, value|
@@ -163,21 +163,21 @@ module CodingAgentTools
         # @return [String] Combined reports content
         def build_combined_reports_section(reports)
           section_parts = ["# Review Reports to Synthesize"]
-          
+
           section_parts << "The following #{reports.length} review reports need to be synthesized:"
           section_parts << ""
 
           reports.each_with_index do |report_path, index|
             section_parts << "## Report #{index + 1}: #{File.basename(report_path)}"
             section_parts << ""
-            
+
             begin
               report_content = File.read(report_path, encoding: "UTF-8").strip
               section_parts << report_content
             rescue => e
               section_parts << "**Error reading report**: #{e.message}"
             end
-            
+
             section_parts << ""
             section_parts << "---" unless index == reports.length - 1
             section_parts << ""
@@ -191,7 +191,7 @@ module CodingAgentTools
         # @return [String] Synthesis instructions
         def build_synthesis_instructions(report_count)
           instructions = ["# Synthesis Instructions"]
-          
+
           instructions << "Please synthesize these #{report_count} review reports into a unified analysis following these guidelines:"
           instructions << ""
           instructions << "## Synthesis Goals"
@@ -223,9 +223,9 @@ module CodingAgentTools
           return output_path if force || !File.exist?(output_path)
 
           # Find next available sequence number
-          base_path = output_path.sub(/\.([^.]+)$/, '')
+          base_path = output_path.sub(/\.([^.]+)$/, "")
           extension = File.extname(output_path)
-          
+
           sequence = 1
           loop do
             sequenced_path = "#{base_path}.#{sequence}#{extension}"
@@ -244,18 +244,18 @@ module CodingAgentTools
         def execute_llm_synthesis(model, prompt_content, output_path, format, debug)
           # Create temporary prompt file
           prompt_file = create_temp_prompt_file(prompt_content)
-          
+
           begin
             # Build llm-query command
             cmd = build_llm_query_command(model, prompt_file, output_path, format, debug)
-            
+
             # Execute command
             stdout, stderr, status = Open3.capture3(*cmd)
-            
+
             if status.success?
               # Extract metrics from llm-query output
               metrics = parse_llm_query_output(stdout, stderr)
-              
+
               {
                 success: true,
                 stdout: stdout,
@@ -281,11 +281,11 @@ module CodingAgentTools
         # @return [String] Path to temporary file
         def create_temp_prompt_file(content)
           require "tempfile"
-          
+
           temp_file = Tempfile.new(["synthesis-prompt", ".md"])
           temp_file.write(content)
           temp_file.close
-          
+
           temp_file.path
         end
 
@@ -299,13 +299,13 @@ module CodingAgentTools
         def build_llm_query_command(model, prompt_file, output_path, format, debug)
           # Find llm-query executable
           llm_query_path = find_llm_query_executable
-          
+
           cmd = [llm_query_path, model, prompt_file]
           cmd += ["--output", output_path]
           cmd += ["--format", format] if format && format != "text"
           cmd += ["--force"] # Always force since we handle sequencing ourselves
           cmd += ["--debug"] if debug
-          
+
           cmd
         end
 
@@ -315,11 +315,11 @@ module CodingAgentTools
           # Try relative path first (from dev-tools)
           relative_path = File.expand_path("../../../../../exe/llm-query", __FILE__)
           return relative_path if File.executable?(relative_path)
-          
+
           # Try PATH
           which_result = `which llm-query 2>/dev/null`.strip
           return which_result unless which_result.empty?
-          
+
           # Fallback to assumed location
           "llm-query"
         end
@@ -330,18 +330,18 @@ module CodingAgentTools
         # @return [Hash] Extracted metrics
         def parse_llm_query_output(stdout, stderr)
           metrics = {}
-          
+
           # Parse token usage from output
           output_text = stdout + stderr
-          
+
           if match = output_text.match(/Input:\s*(\d+)\s*tokens/)
             metrics[:input_tokens] = match[1].to_i
           end
-          
+
           if match = output_text.match(/Output:\s*(\d+)\s*tokens/)
             metrics[:output_tokens] = match[1].to_i
           end
-          
+
           if match = output_text.match(/Cost:\s*\$(\d+\.\d+)/)
             metrics[:cost] = match[1].to_f
           end
@@ -356,10 +356,10 @@ module CodingAgentTools
         # @return [Hash] Synthesis metrics
         def extract_synthesis_metrics(execution_result, execution_time, reports_count)
           metrics = execution_result[:metrics] || {}
-          
+
           metrics[:execution_time] = execution_time.round(2)
           metrics[:reports_count] = reports_count
-          
+
           metrics
         end
 

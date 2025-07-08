@@ -28,11 +28,11 @@ module CodingAgentTools
           session_name = @name_builder.build(focus, target, timestamp)
           session_id = "review-#{timestamp}"
           directory_path = File.join(base_path, session_name)
-          
+
           # Create the directory
           result = @directory_creator.create(directory_path)
           raise "Failed to create session directory: #{result[:error]}" unless result[:success]
-          
+
           # Create session metadata
           session = Models::Code::ReviewSession.new(
             session_id: session_id,
@@ -47,10 +47,10 @@ module CodingAgentTools
               base_path: base_path
             }
           )
-          
+
           # Write session metadata file
           write_session_metadata(session)
-          
+
           session
         end
 
@@ -63,10 +63,10 @@ module CodingAgentTools
         def build_full_session(focus, target, context_mode, base_path)
           session = build_session_directory(focus, target, base_path)
           session.context_mode = context_mode
-          
+
           # Update metadata file with context mode
           write_session_metadata(session)
-          
+
           session
         end
 
@@ -83,7 +83,7 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] session data
         def write_session_metadata(session)
           metadata_path = File.join(session.directory_path, "session.meta")
-          
+
           content = <<~METADATA
             command: @review-code #{session.focus} #{session.target} #{session.context_mode_with_default}
             timestamp: #{session.timestamp}
@@ -91,7 +91,7 @@ module CodingAgentTools
             focus: #{session.focus}
             context: #{session.context_mode_with_default}
           METADATA
-          
+
           File.write(metadata_path, content)
         end
       end

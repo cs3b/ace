@@ -26,7 +26,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
     it "detects project root when not provided" do
       # Create a .git directory to mark as project root
       FileUtils.mkdir_p(File.join(temp_dir, ".git"))
-      
+
       Dir.chdir(temp_dir) do
         loader = described_class.new
         expect(File.realpath(File.dirname(loader.default_config_path))).to eq(File.realpath(config_dir))
@@ -99,7 +99,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
 
     context "when contexts is not a Hash" do
       before do
-        File.write(config_path, { "contexts" => "invalid" }.to_yaml)
+        File.write(config_path, {"contexts" => "invalid"}.to_yaml)
       end
 
       it "raises an error" do
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
     it "finds project root with .coding-agent marker" do
       nested_dir = File.join(temp_dir, "nested", "deep")
       FileUtils.mkdir_p(nested_dir)
-      
+
       Dir.chdir(nested_dir) do
         loader = described_class.new
         expect(File.realpath(File.dirname(loader.default_config_path))).to eq(File.realpath(config_dir))
@@ -144,7 +144,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
       git_dir = File.join(temp_dir, ".git")
       nested_dir = File.join(temp_dir, "nested")
       FileUtils.mkdir_p([git_dir, nested_dir])
-      
+
       Dir.chdir(nested_dir) do
         loader = described_class.new
         expect(File.realpath(File.dirname(loader.default_config_path))).to eq(File.realpath(config_dir))
@@ -156,7 +156,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
       nested_dir = File.join(temp_dir, "nested")
       FileUtils.mkdir_p(nested_dir)
       FileUtils.touch(claude_file)
-      
+
       Dir.chdir(nested_dir) do
         loader = described_class.new
         expect(File.realpath(File.dirname(loader.default_config_path))).to eq(File.realpath(config_dir))
@@ -165,7 +165,7 @@ RSpec.describe CodingAgentTools::Molecules::TreeConfigLoader do
 
     it "falls back to current directory when no markers found" do
       isolated_dir = Dir.mktmpdir
-      
+
       begin
         Dir.chdir(isolated_dir) do
           loader = described_class.new

@@ -26,7 +26,7 @@ module CodingAgentTools
 
           validate_paths(paths)
           grouped_paths = @path_resolver.group_paths_by_repository(paths)
-          
+
           build_dispatch_commands(grouped_paths)
         end
 
@@ -40,7 +40,7 @@ module CodingAgentTools
 
         def validate_paths(paths)
           invalid_paths = paths.select { |path| path.nil? || path.strip.empty? }
-          
+
           unless invalid_paths.empty?
             raise PathDispatchError, "Invalid paths provided: #{invalid_paths.inspect}"
           end
@@ -48,10 +48,10 @@ module CodingAgentTools
 
         def build_dispatch_commands(grouped_paths)
           dispatch_info = {}
-          
+
           grouped_paths.each do |repo_name, file_paths|
             repository = find_repository_by_name(repo_name)
-            
+
             dispatch_info[repo_name] = {
               repository: repository,
               paths: file_paths,
@@ -59,17 +59,17 @@ module CodingAgentTools
               working_directory: repository[:full_path]
             }
           end
-          
+
           dispatch_info
         end
 
         def find_repository_by_name(name)
           repository = repositories.find { |repo| repo[:name] == name }
-          
+
           unless repository
             raise PathDispatchError, "Repository not found: #{name}"
           end
-          
+
           repository
         end
 

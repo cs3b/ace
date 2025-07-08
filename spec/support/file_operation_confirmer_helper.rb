@@ -13,7 +13,7 @@ RSpec.configure do |config|
           method.call(*args, **kwargs)
         else
           # Create instance with StringIO to prevent any TTY interaction
-          require 'stringio'
+          require "stringio"
           modified_kwargs = kwargs.dup
           modified_kwargs[:input] ||= StringIO.new
           modified_kwargs[:output] ||= StringIO.new

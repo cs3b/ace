@@ -12,8 +12,8 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
     {
       "repositories" => {
         "scan_order" => [
-          { "name" => "tools-meta", "path" => ".", "priority" => 1 },
-          { "name" => "dev-tools", "path" => "dev-tools", "priority" => 2 }
+          {"name" => "tools-meta", "path" => ".", "priority" => 1},
+          {"name" => "dev-tools", "path" => "dev-tools", "priority" => 2}
         ]
       },
       "path_patterns" => {
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
     # Setup test directory structure
     FileUtils.mkdir_p(File.join(temp_dir, "dev-tools", "lib"))
     FileUtils.mkdir_p(File.join(temp_dir, "dev-taskflow", "current", "v.0.3.0"))
-    
+
     # Create test files
     FileUtils.touch(File.join(temp_dir, "README.md"))
     FileUtils.touch(File.join(temp_dir, "dev-tools", "lib", "test.rb"))
@@ -47,7 +47,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
     # Setup mocks
     allow(config_loader).to receive(:load).and_return(config)
     allow(sandbox).to receive(:project_root).and_return(temp_dir)
-    allow(sandbox).to receive(:validate_path).and_return({ success: true, path: "/valid/path" })
+    allow(sandbox).to receive(:validate_path).and_return({success: true, path: "/valid/path"})
     allow(sandbox).to receive(:absolute_path).and_return(File.join(temp_dir, "README.md"))
   end
 
@@ -89,8 +89,8 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
     context "with file type" do
       it "resolves existing file path" do
         path = File.join(temp_dir, "README.md")
-        allow(sandbox).to receive(:validate_path).with(path).and_return({ success: true, path: path })
-        
+        allow(sandbox).to receive(:validate_path).with(path).and_return({success: true, path: path})
+
         result = resolver.resolve_path(path, type: :file)
         expect(result[:success]).to be true
         expect(result[:path]).to eq(path)
@@ -102,9 +102,9 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
         # Mock the execute_command method instead of backticks
         allow(resolver).to receive(:execute_command).with("release-manager current").and_return("v.0.3.0-migration")
         allow(resolver).to receive(:execute_command).with("task-manager generate-id").and_return("42")
-        
+
         expected_path = File.join(temp_dir, "dev-taskflow/current/v.0.3.0-migration/tasks/v.0.3.0-migration+task.42-test-task.md")
-        allow(sandbox).to receive(:validate_path).with(expected_path).and_return({ success: true, path: expected_path })
+        allow(sandbox).to receive(:validate_path).with(expected_path).and_return({success: true, path: expected_path})
 
         result = resolver.resolve_path("Test Task", type: :task_new)
         expect(result[:success]).to be true
@@ -125,8 +125,8 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
 
     it "finds files matching pattern" do
       pattern = "README"
-      allow(sandbox).to receive(:validate_path).and_return({ success: true, path: "/valid/path" })
-      
+      allow(sandbox).to receive(:validate_path).and_return({success: true, path: "/valid/path"})
+
       matches = resolver.find_matching_paths(pattern)
       expect(matches).to be_an(Array)
     end
@@ -223,15 +223,15 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
     it "handles command failures gracefully" do
       # Create a new resolver instance to test the actual execute_command method
       real_resolver = described_class.new(config_loader, sandbox)
-      
+
       # Mock the backtick execution to simulate command failure
       allow(real_resolver).to receive(:`).with("release-manager current 2>/dev/null").and_return("")
-      
+
       # Mock the $? global variable properly
       process_status = double("Process::Status")
       allow(process_status).to receive(:exitstatus).and_return(1)
       allow(real_resolver).to receive(:$?).and_return(process_status)
-      
+
       # Should fall back to default values for known commands
       fallback_result = real_resolver.send(:execute_command, "release-manager current")
       expect(fallback_result).to eq("v.0.3.0-migration")
@@ -280,16 +280,16 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
 
     it "resolves user_input to slugified title" do
       template = "tasks/{slug}.md"
-      variables = { "slug" => "user_input" }
-      
+      variables = {"slug" => "user_input"}
+
       result = resolver.send(:resolve_template_variables, template, variables, "Test Task")
       expect(result).to include("test-task")
     end
 
     it "resolves datetime variables" do
       template = "logs/{timestamp}.log"
-      variables = { "timestamp" => "datetime:%Y%m%d" }
-      
+      variables = {"timestamp" => "datetime:%Y%m%d"}
+
       result = resolver.send(:resolve_template_variables, template, variables, "")
       expect(result).to include(Time.now.strftime("%Y%m%d"))
     end

@@ -24,23 +24,23 @@ path_resolver = CodingAgentTools::Atoms::Git::PathResolver.new(repositories, pro
 
 test_paths.each do |path|
   puts "\n--- Debugging path: #{path} ---"
-  
+
   # Check if path is relative or absolute
   pathname = Pathname.new(path)
   puts "Is relative? #{pathname.relative?}"
-  
+
   # Show what expand_path does from current directory
   expanded_from_cwd = File.expand_path(path, Dir.pwd)
   puts "Expanded from CWD: #{expanded_from_cwd}"
-  
+
   # Show what expand_path does from project root
   expanded_from_root = File.expand_path(path, project_root)
   puts "Expanded from project root: #{expanded_from_root}"
-  
+
   # Show which one exists
   puts "Exists from CWD: #{File.exist?(expanded_from_cwd)}"
   puts "Exists from project root: #{File.exist?(expanded_from_root)}"
-  
+
   # Test our path resolution
   result = path_resolver.resolve_path(path)
   puts "PathResolver result: #{result[:absolute_path]}"

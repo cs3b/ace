@@ -74,8 +74,8 @@ module CodingAgentTools
             end
 
             # Get project root
-            project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-            
+            CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+
             # Create review manager
             review_manager = CodingAgentTools::Organisms::Code::ReviewManager.new
 
@@ -97,17 +97,17 @@ module CodingAgentTools
               session = result[:session]
               success_output("✅ Created review session: #{session.session_name}")
               success_output("📁 Session directory: #{session.directory_path}")
-              
+
               # Show summary
               show_session_summary(result)
-              
+
               # Execute review if model specified
               if options[:model]
                 execute_review_with_model(review_manager, session, options[:model], options[:output])
               else
                 info_output("\n🔄 Next step: Execute review with llm-query or code-review --session #{session.session_id}")
               end
-              
+
               0
             else
               error_output("Error: #{result[:error]}")
@@ -124,20 +124,20 @@ module CodingAgentTools
           def validate_focus(focus)
             valid_options = %w[code tests docs]
             focus_parts = focus.split
-            
+
             return false if focus_parts.empty?
             focus_parts.all? { |part| valid_options.include?(part) }
           end
 
           def dry_run_review(review_manager, focus, target, options)
             info_output("🔍 Dry run - Analyzing review configuration:")
-            
+
             prep_result = review_manager.prepare_review(focus, target, options[:context], options[:system_prompt])
-            
+
             info_output("\nTarget Analysis:")
             info_output("  Type: #{prep_result[:target_info][:type]}")
             info_output("  Format: #{prep_result[:target_info][:format]}")
-            
+
             info_output("\nContext Availability:")
             if prep_result[:context_info][:available]
               info_output("  ✅ Project context available")
@@ -147,15 +147,15 @@ module CodingAgentTools
             else
               info_output("  ❌ No project context found")
             end
-            
+
             system_prompt_info = options[:system_prompt] ? "#{prep_result[:system_prompt]} (custom)" : prep_result[:system_prompt]
             info_output("\nSystem Prompt: #{system_prompt_info}")
-            
+
             info_output("\nFocus Areas:")
             prep_result[:focus_areas].each do |area|
               info_output("  - #{area}")
             end
-            
+
             0
           end
 
@@ -169,7 +169,7 @@ module CodingAgentTools
             session = result[:session]
             target = result[:target]
             context = result[:context]
-            
+
             info_output("\n📊 Session Summary:")
             info_output("  Focus: #{session.focus}")
             info_output("  Target: #{target.type} (#{target.file_count} files, #{target.line_count} lines)")
@@ -178,10 +178,10 @@ module CodingAgentTools
 
           def execute_review_with_model(review_manager, session, model, output_file)
             info_output("\n🚀 Executing review with model: #{model}")
-            
+
             # This would integrate with LLM query
             result = review_manager.execute_review(session)
-            
+
             if result[:success]
               success_output("✅ Review completed successfully")
               if output_file

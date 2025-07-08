@@ -32,11 +32,11 @@ module CodingAgentTools
 
         def resolve_path(path)
           validate_path(path)
-          
+
           absolute_path = normalize_path(path)
           repository_info = find_repository_for_path(absolute_path)
           relative_path = calculate_relative_path(absolute_path, repository_info)
-          
+
           {
             original_path: path,
             absolute_path: absolute_path,
@@ -54,13 +54,13 @@ module CodingAgentTools
         def group_paths_by_repository(paths)
           resolved_paths = resolve_paths(paths)
           grouped = {}
-          
+
           resolved_paths.each do |path_info|
             repo_name = path_info[:repository]
             grouped[repo_name] ||= []
             grouped[repo_name] << path_info[:relative_path]
           end
-          
+
           grouped
         end
 
@@ -69,11 +69,13 @@ module CodingAgentTools
         attr_reader :repositories, :project_root
 
         def validate_path(path)
-          raise PathResolutionError.new(
-            "Path cannot be nil or empty",
-            path: path,
-            reason: :invalid_input
-          ) if path.nil? || path.strip.empty?
+          if path.nil? || path.strip.empty?
+            raise PathResolutionError.new(
+              "Path cannot be nil or empty",
+              path: path,
+              reason: :invalid_input
+            )
+          end
         end
 
         def normalize_path(path)
@@ -81,7 +83,7 @@ module CodingAgentTools
             # For relative paths, we need to determine the context:
             # 1. If path contains repo prefix (e.g., "dev-tools/file"), expand from project root
             # 2. If path is local (e.g., "file"), expand from current working directory to nearest git repo
-            
+
             if path_contains_repository_prefix?(path)
               # Path like "dev-tools/exe/git-log" - expand from project root
               File.expand_path(path, @project_root)
@@ -97,7 +99,7 @@ module CodingAgentTools
         def path_contains_repository_prefix?(path)
           # Check if the path starts with any known repository name
           repository_names = repositories.map { |repo| repo[:name] }
-          
+
           repository_names.any? do |repo_name|
             path.start_with?("#{repo_name}/")
           end
@@ -106,17 +108,17 @@ module CodingAgentTools
         def find_repository_for_path(absolute_path)
           # Sort repositories by path length (descending) to match most specific first
           sorted_repos = repositories.sort_by { |repo| -repo[:full_path].length }
-          
+
           matching_repo = sorted_repos.find do |repo|
             path_within_repository?(absolute_path, repo[:full_path])
           end
-          
+
           if matching_repo
             matching_repo
           else
             # Default to main repository if no specific match found
             main_repo = repositories.find { |repo| repo[:name] == "main" }
-            
+
             unless main_repo
               raise PathResolutionError.new(
                 "No repository found for path and no main repository available",
@@ -124,7 +126,7 @@ module CodingAgentTools
                 reason: :no_repository_match
               )
             end
-            
+
             main_repo
           end
         end
@@ -133,16 +135,16 @@ module CodingAgentTools
           # Normalize paths for comparison
           normalized_path = File.expand_path(absolute_path)
           normalized_repo_path = File.expand_path(repo_path)
-          
+
           # Check if path is exactly the repository root or within it
-          normalized_path == normalized_repo_path || 
+          normalized_path == normalized_repo_path ||
             normalized_path.start_with?(normalized_repo_path + File::SEPARATOR)
         end
 
         def calculate_relative_path(absolute_path, repository_info)
           repo_path = Pathname.new(repository_info[:full_path])
           file_path = Pathname.new(absolute_path)
-          
+
           begin
             relative_path = file_path.relative_path_from(repo_path)
             relative_path.to_s

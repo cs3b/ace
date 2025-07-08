@@ -74,7 +74,7 @@ module CodingAgentTools
         def load_system_prompt(system_prompt_path)
           return nil unless system_prompt_path
           return nil unless File.exist?(system_prompt_path)
-          
+
           begin
             File.read(system_prompt_path, encoding: "utf-8")
           rescue => e
@@ -85,11 +85,11 @@ module CodingAgentTools
 
         def prepare_reflection_content(reflections, timestamp_info)
           content = []
-          
+
           # Add synthesis context
           content << "# Reflection Notes for Synthesis"
           content << ""
-          
+
           if timestamp_info.valid?
             content << "**Analysis Period**: #{timestamp_info.from_date} to #{timestamp_info.to_date}"
             content << "**Duration**: #{timestamp_info.days_covered} days"
@@ -97,7 +97,7 @@ module CodingAgentTools
           else
             content << "**Total Reflections**: #{reflections.length}"
           end
-          
+
           content << ""
           content << "---"
           content << ""
@@ -107,16 +107,16 @@ module CodingAgentTools
             content << "## Reflection #{index + 1}: #{File.basename(reflection_path)}"
             content << ""
             content << "**Source**: `#{reflection_path}`"
-            content << "**Modified**: #{File.mtime(reflection_path).strftime('%Y-%m-%d %H:%M:%S')}"
+            content << "**Modified**: #{File.mtime(reflection_path).strftime("%Y-%m-%d %H:%M:%S")}"
             content << ""
-            
+
             begin
               reflection_content = File.read(reflection_path, encoding: "utf-8")
               content << reflection_content
             rescue => e
               content << "*Error reading reflection: #{e.message}*"
             end
-            
+
             content << ""
             content << "---"
             content << ""

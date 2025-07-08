@@ -26,7 +26,7 @@ path_resolver = CodingAgentTools::Atoms::Git::PathResolver.new(repositories, pro
 
 test_paths.each do |path|
   puts "\n--- Testing path: #{path} ---"
-  
+
   begin
     result = path_resolver.resolve_path(path)
     puts "Original path: #{result[:original_path]}"
@@ -45,13 +45,13 @@ grouped_paths = path_resolver.group_paths_by_repository(test_paths)
 
 grouped_paths.each do |repo_name, paths|
   puts "Repository: #{repo_name}"
-  puts "  Paths: #{paths.join(', ')}"
+  puts "  Paths: #{paths.join(", ")}"
 end
 
 puts "\n=== PROBLEM DEMONSTRATION ==="
 puts "Current behavior would generate:"
 grouped_paths.each do |repo_name, paths|
-  puts "git -C #{repo_name} add #{paths.join(' ')}"
+  puts "git -C #{repo_name} add #{paths.join(" ")}"
 end
 
 puts "\nCorrect behavior should generate:"

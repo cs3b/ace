@@ -27,10 +27,10 @@ module CodingAgentTools
               error: "Git is not available"
             }
           end
-          
+
           # Execute diff command
           result = @git_executor.diff(target_spec)
-          
+
           if result[:success]
             metadata = build_diff_metadata(target_spec, result[:output])
             {
@@ -57,14 +57,14 @@ module CodingAgentTools
           # Extract diff
           result = extract_diff(target_spec)
           return result unless result[:success]
-          
+
           # Save diff file
           diff_file = File.join(session_dir, "input.diff")
           meta_file = File.join(session_dir, "input.meta")
-          
+
           begin
             File.write(diff_file, result[:content])
-            
+
             # Write metadata
             meta_content = <<~META
               # Diff Metadata
@@ -73,7 +73,7 @@ module CodingAgentTools
               size: #{result[:metadata][:line_count]} lines
             META
             File.write(meta_file, meta_content)
-            
+
             {
               diff_file: diff_file,
               meta_file: meta_file,
@@ -96,7 +96,7 @@ module CodingAgentTools
         def git_diff_target?(target)
           return true if %w[staged unstaged working].include?(target)
           return true if target.include?("..")
-          return true if target =~ /^[a-f0-9]{7,40}$/  # Git SHA
+          return true if /^[a-f0-9]{7,40}$/.match?(target)  # Git SHA
           false
         end
 

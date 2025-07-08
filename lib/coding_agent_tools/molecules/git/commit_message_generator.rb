@@ -65,7 +65,7 @@ module CodingAgentTools
         def generate_with_llm(system_message, user_prompt)
           # Use template file path directly for system message
           system_template_path = find_system_prompt_template_path
-          
+
           # Create temporary file only for user prompt
           prompt_file = create_temp_file(user_prompt, "prompt", ".md")
 
@@ -84,14 +84,14 @@ module CodingAgentTools
           ensure
             # Allow any background threads from Open3.capture3 to finish before cleanup
             sleep(0.1)
-            
+
             # Clean up temporary files with defensive error handling
             begin
               prompt_file.close
-              
+
               # Small delay before unlinking to ensure file handles are fully released
               sleep(0.05)
-              
+
               prompt_file.unlink
             rescue => cleanup_error
               # Log cleanup errors but don't fail the operation
@@ -147,11 +147,11 @@ module CodingAgentTools
           # Try to find llm-query in the local exe directory first (for development)
           project_root = find_project_root
           local_exe = File.join(project_root, "dev-tools", "exe", "llm-query")
-          
+
           if File.executable?(local_exe)
             return local_exe
           end
-          
+
           # Fall back to system PATH
           "llm-query"
         end
@@ -159,19 +159,19 @@ module CodingAgentTools
         def find_project_root
           # Find project root by looking for characteristic files
           current_dir = Dir.pwd
-          
+
           loop do
             if File.exist?(File.join(current_dir, "dev-tools")) &&
-               File.exist?(File.join(current_dir, "dev-taskflow")) &&
-               File.exist?(File.join(current_dir, "CLAUDE.md"))
+                File.exist?(File.join(current_dir, "dev-taskflow")) &&
+                File.exist?(File.join(current_dir, "CLAUDE.md"))
               return current_dir
             end
-            
+
             parent = File.dirname(current_dir)
             break if parent == current_dir # reached filesystem root
             current_dir = parent
           end
-          
+
           # If we can't find the project root, return current directory
           Dir.pwd
         end

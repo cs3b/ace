@@ -12,7 +12,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     {
       "repositories" => {
         "scan_order" => [
-          { "name" => "tools-meta", "path" => ".", "priority" => 1 }
+          {"name" => "tools-meta", "path" => ".", "priority" => 1}
         ]
       },
       "resolution" => {
@@ -46,7 +46,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     FileUtils.mkdir_p(File.join(temp_dir, "lib"))
     FileUtils.mkdir_p(File.join(temp_dir, "bin"))
     FileUtils.mkdir_p(File.join(temp_dir, "docs"))
-    
+
     # Create test files
     FileUtils.touch(File.join(temp_dir, "README.md"))
     FileUtils.touch(File.join(temp_dir, "lib", "test_module.rb"))
@@ -57,7 +57,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     # Setup mocks
     allow(config_loader).to receive(:load).and_return(config)
     allow(sandbox).to receive(:project_root).and_return(temp_dir)
-    allow(sandbox).to receive(:validate_path).and_return({ success: true, path: "/valid/path" })
+    allow(sandbox).to receive(:validate_path).and_return({success: true, path: "/valid/path"})
   end
 
   after do
@@ -99,7 +99,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
       it "returns exact match immediately" do
         exact_path = File.join(temp_dir, "README.md")
         allow(autocorrector).to receive(:find_exact_matches).and_return([exact_path])
-        
+
         result = autocorrector.autocorrect("README.md")
         expect(result[:success]).to be true
         expect(result[:path]).to eq(exact_path)
@@ -111,7 +111,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
         allow(autocorrector).to receive(:find_exact_matches).and_return([])
         allow(autocorrector).to receive(:find_candidates).and_return([File.join(temp_dir, "lib", "test_module.rb")])
         allow(autocorrector).to receive(:fzf_enabled?).and_return(false)
-        
+
         result = autocorrector.autocorrect("test")
         expect(result[:success]).to be true
       end
@@ -121,11 +121,11 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
           File.join(temp_dir, "lib", "test_module.rb"),
           File.join(temp_dir, "lib", "testing_utils.rb")
         ]
-        
+
         allow(autocorrector).to receive(:find_exact_matches).and_return([])
         allow(autocorrector).to receive(:find_candidates).and_return(candidates)
         allow(autocorrector).to receive(:fzf_enabled?).and_return(false)
-        
+
         result = autocorrector.autocorrect("test")
         expect(result[:success]).to be true
         expect(result[:type]).to eq(:multiple)
@@ -136,7 +136,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
       it "returns failure" do
         allow(autocorrector).to receive(:find_exact_matches).and_return([])
         allow(autocorrector).to receive(:find_candidates).and_return([])
-        
+
         result = autocorrector.autocorrect("nonexistent")
         expect(result[:success]).to be false
         expect(result[:error]).to include("No similar paths found")
@@ -150,10 +150,10 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     it "returns scored suggestions" do
       candidates = [File.join(temp_dir, "lib", "test_module.rb")]
       allow(autocorrector).to receive(:find_candidates).and_return(candidates)
-      
+
       suggestions = autocorrector.suggest_corrections("test", 3)
       expect(suggestions).to be_an(Array)
-      
+
       if suggestions.any?
         suggestion = suggestions.first
         expect(suggestion).to have_key(:path)
@@ -174,10 +174,10 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     context "when FZF is available" do
       it "uses FZF for selection" do
         candidates = [File.join(temp_dir, "lib", "test_module.rb")]
-        
+
         allow(autocorrector).to receive(:fzf_available?).and_return(true)
         allow(autocorrector).to receive(:fzf_enabled?).and_return(true)
-        allow(autocorrector).to receive(:use_fzf_selection).with(candidates, "test").and_return({ success: true, path: candidates.first })
+        allow(autocorrector).to receive(:use_fzf_selection).with(candidates, "test").and_return({success: true, path: candidates.first})
 
         result = autocorrector.interactive_select("test", candidates)
         expect(result[:success]).to be true
@@ -187,7 +187,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
     context "when FZF is not available" do
       it "falls back to numbered selection" do
         candidates = [File.join(temp_dir, "lib", "test_module.rb")]
-        
+
         allow(autocorrector).to receive(:fzf_available?).and_return(false)
 
         result = autocorrector.interactive_select("test", candidates)
@@ -264,7 +264,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
         paths = autocorrector.send(:generate_search_paths, "test")
         bin_path = File.join(temp_dir, "bin", "test")
         lib_path = File.join(temp_dir, "lib", "test")
-        
+
         expect(paths).to include(bin_path)
         expect(paths).to include(lib_path)
       end
@@ -295,12 +295,12 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
 
       it "caches the availability check" do
         allow(autocorrector).to receive(:system).with("which fzf > /dev/null 2>&1").and_return(true)
-        
+
         # First call
         autocorrector.send(:fzf_available?)
         # Second call should use cached value
         autocorrector.send(:fzf_available?)
-        
+
         expect(autocorrector).to have_received(:system).once
       end
     end
@@ -313,7 +313,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
 
       it "respects configuration settings" do
         allow(autocorrector).to receive(:fzf_available?).and_return(true)
-        
+
         # Should be enabled by default based on config
         expect(autocorrector.send(:fzf_enabled?)).to be true
       end

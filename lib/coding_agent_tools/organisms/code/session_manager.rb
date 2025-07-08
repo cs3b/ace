@@ -31,7 +31,7 @@ module CodingAgentTools
           target = params[:target] || raise(ArgumentError, "target is required")
           context_mode = params[:context_mode] || "auto"
           base_path = params[:base_path] || default_base_path
-          
+
           # Build session with full parameters
           session = @session_builder.build_full_session(
             focus,
@@ -39,10 +39,10 @@ module CodingAgentTools
             context_mode,
             base_path
           )
-          
+
           # Create additional session files
           create_session_files(session)
-          
+
           session
         end
 
@@ -52,19 +52,19 @@ module CodingAgentTools
         # @return [Models::Code::ReviewSession, nil] loaded session or nil
         def load_session(session_id, base_path = nil)
           base_path ||= default_base_path
-          
+
           # Find session directory
           session_dir = find_session_directory(session_id, base_path)
           return nil unless session_dir
-          
+
           # Load metadata
           metadata_path = File.join(session_dir, "session.meta")
           return nil unless File.exist?(metadata_path)
-          
+
           # Parse metadata
           metadata = parse_session_metadata(metadata_path)
           return nil unless metadata
-          
+
           # Reconstruct session
           Models::Code::ReviewSession.new(
             session_id: session_id,
@@ -84,17 +84,17 @@ module CodingAgentTools
         def list_sessions(base_path = nil)
           base_path ||= default_base_path
           sessions = []
-          
+
           # Find all session directories
           Dir.glob(File.join(base_path, "*-*-*")).each do |dir|
             next unless File.directory?(dir)
-            
+
             metadata_path = File.join(dir, "session.meta")
             next unless File.exist?(metadata_path)
-            
+
             metadata = parse_session_metadata(metadata_path)
             next unless metadata
-            
+
             sessions << {
               session_name: File.basename(dir),
               timestamp: metadata[:timestamp],
@@ -103,7 +103,7 @@ module CodingAgentTools
               path: dir
             }
           end
-          
+
           # Sort by timestamp descending
           sessions.sort_by { |s| s[:timestamp] }.reverse
         end
@@ -116,7 +116,7 @@ module CodingAgentTools
           base_path ||= default_base_path
           cutoff_time = Time.now - (days * 24 * 60 * 60)
           removed = []
-          
+
           list_sessions(base_path).each do |session|
             session_time = Time.parse(session[:timestamp])
             if session_time < cutoff_time
@@ -124,7 +124,7 @@ module CodingAgentTools
               removed << session[:path]
             end
           end
-          
+
           removed
         end
 
@@ -169,7 +169,7 @@ module CodingAgentTools
         def parse_session_metadata(path)
           content = File.read(path)
           metadata = {}
-          
+
           content.each_line do |line|
             if line =~ /^(\w+):\s*(.+)$/
               key = $1.to_sym
@@ -177,7 +177,7 @@ module CodingAgentTools
               metadata[key] = value
             end
           end
-          
+
           metadata.empty? ? nil : metadata
         rescue
           nil
@@ -207,7 +207,7 @@ module CodingAgentTools
             
             Use the code-review command to execute the review.
           README
-          
+
           readme_path = File.join(session.directory_path, "README.md")
           File.write(readme_path, readme_content)
         end

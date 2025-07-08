@@ -25,7 +25,7 @@ module CodingAgentTools
           return [] unless git_repository_exists?
 
           submodules = []
-          
+
           begin
             # Try git submodule status first
             submodule_output = execute_git_command("submodule status")
@@ -34,7 +34,7 @@ module CodingAgentTools
             # Fallback to .gitmodules file if available
             submodules = parse_gitmodules_file
           end
-          
+
           # Validate that submodules actually exist and are git repositories
           submodules.select { |sm| validate_submodule(sm) }
         end
@@ -42,7 +42,7 @@ module CodingAgentTools
         def is_submodule?(path)
           absolute_path = File.expand_path(path)
           submodules = detect_submodules
-          
+
           submodules.any? { |sm| absolute_path.start_with?(sm[:full_path]) }
         end
 
@@ -52,28 +52,28 @@ module CodingAgentTools
 
         def parse_submodule_status(output)
           submodules = []
-          
+
           output.split("\n").each do |line|
             next if line.strip.empty?
-            
+
             # Parse line format: " commit_hash path (branch_info)"
             # Status characters: ' ' (initialized), '-' (not initialized), '+' (checked out)
             status_char = line[0]
             parts = line[1..-1].strip.split
             next if parts.length < 2
-            
+
             commit_hash = parts[0]
             submodule_path = parts[1]
             branch_info = parts[2..-1].join(" ") if parts.length > 2
-            
+
             submodules << build_submodule_info(
-              submodule_path, 
-              commit_hash, 
-              status_char, 
+              submodule_path,
+              commit_hash,
+              status_char,
               branch_info
             )
           end
-          
+
           submodules
         end
 
@@ -83,37 +83,37 @@ module CodingAgentTools
 
           submodules = []
           current_submodule = {}
-          
+
           File.readlines(gitmodules_path).each do |line|
             line = line.strip
             next if line.empty? || line.start_with?("#")
-            
-            if line.match(/^\[submodule "(.+)"\]$/)
+
+            if line =~ /^\[submodule "(.+)"\]$/
               # Save previous submodule if complete
               if current_submodule[:path]
                 submodules << build_submodule_info(current_submodule[:path])
               end
-              
+
               # Start new submodule
-              current_submodule = { name: $1 }
-            elsif line.match(/^\s*path\s*=\s*(.+)$/)
+              current_submodule = {name: $1}
+            elsif line =~ /^\s*path\s*=\s*(.+)$/
               current_submodule[:path] = $1.strip
-            elsif line.match(/^\s*url\s*=\s*(.+)$/)
+            elsif line =~ /^\s*url\s*=\s*(.+)$/
               current_submodule[:url] = $1.strip
             end
           end
-          
+
           # Don't forget the last submodule
           if current_submodule[:path]
             submodules << build_submodule_info(current_submodule[:path])
           end
-          
+
           submodules
         end
 
         def build_submodule_info(path, commit_hash = nil, status_char = nil, branch_info = nil)
           full_path = File.join(project_root, path)
-          
+
           {
             name: File.basename(path),
             path: path,
@@ -144,7 +144,7 @@ module CodingAgentTools
         def validate_submodule(submodule_info)
           return false unless submodule_info[:exists]
           return false unless submodule_info[:is_git_repo]
-          
+
           # Additional validation: check if it's actually a git repository
           git_repository_exists?(submodule_info[:full_path])
         end
@@ -157,14 +157,14 @@ module CodingAgentTools
         def execute_git_command(command)
           full_command = "git -C #{Shellwords.escape(project_root)} #{command}"
           stdout_str, stderr_str, status = Open3.capture3(full_command)
-          
+
           unless status.success?
             raise CodingAgentTools::Atoms::Git::GitCommandError.new(
               "Git command failed: #{full_command}",
               stderr_output: stderr_str.strip
             )
           end
-          
+
           stdout_str
         end
       end

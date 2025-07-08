@@ -40,7 +40,7 @@ module CodingAgentTools
           when "single_file", "file_pattern"
             save_file_content(target, session_dir)
           else
-            { success: false, error: "Unknown target type: #{target.type}" }
+            {success: false, error: "Unknown target type: #{target.type}"}
           end
         end
 
@@ -50,7 +50,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewTarget] extracted target
         def extract_and_save(target_spec, session_dir)
           target = extract_content(target_spec)
-          
+
           # Save if extraction was successful
           if target.type != "error"
             save_result = save_content(target, session_dir)
@@ -61,11 +61,11 @@ module CodingAgentTools
                 target_spec: target_spec,
                 resolved_paths: [],
                 content_type: "none",
-                size_info: { error: save_result[:error] }
+                size_info: {error: save_result[:error]}
               )
             end
           end
-          
+
           target
         end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewTarget] extracted target
         def extract_git_content(target)
           result = @diff_extractor.extract_diff(target)
-          
+
           if result[:success]
             Models::Code::ReviewTarget.new(
               type: "git_diff",
@@ -97,7 +97,7 @@ module CodingAgentTools
               target_spec: target,
               resolved_paths: [],
               content_type: "none",
-              size_info: { error: result[:error] }
+              size_info: {error: result[:error]}
             )
           end
         end
@@ -107,7 +107,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewTarget] extracted target
         def extract_single_file_content(target)
           result = @file_extractor.extract_files(target)
-          
+
           if result[:success]
             Models::Code::ReviewTarget.new(
               type: "single_file",
@@ -125,7 +125,7 @@ module CodingAgentTools
               target_spec: target,
               resolved_paths: [],
               content_type: "none",
-              size_info: { error: result[:error] }
+              size_info: {error: result[:error]}
             )
           end
         end
@@ -135,7 +135,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewTarget] extracted target
         def extract_pattern_content(target)
           result = @file_extractor.extract_files(target)
-          
+
           if result[:success]
             Models::Code::ReviewTarget.new(
               type: "file_pattern",
@@ -153,7 +153,7 @@ module CodingAgentTools
               target_spec: target,
               resolved_paths: [],
               content_type: "none",
-              size_info: { error: result[:error] }
+              size_info: {error: result[:error]}
             )
           end
         end

@@ -15,7 +15,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     FileUtils.mkdir_p(File.join(temp_dir, "dev-taskflow", "current"))
     FileUtils.mkdir_p(File.join(temp_dir, "bin"))
     FileUtils.mkdir_p(File.join(temp_dir, ".coding-agent"))
-    
+
     # Create some test files
     FileUtils.touch(File.join(temp_dir, "README.md"))
     FileUtils.touch(File.join(temp_dir, "dev-tools", "lib", "test.rb"))
@@ -44,9 +44,9 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     it "accepts custom allowed and forbidden patterns" do
       allowed = ["**/*.txt"]
       forbidden = ["**/secret/**"]
-      
+
       sandbox = described_class.new(project_root, allowed, forbidden)
-      
+
       # Should reject .rb files (not in allowed patterns)
       result = sandbox.validate_path(File.join(temp_dir, "test.rb"))
       expect(result[:success]).to be false
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       it "accepts paths within project root" do
         path = File.join(temp_dir, "README.md")
         result = sandbox.validate_path(path)
-        
+
         expect(result[:success]).to be true
         expect(result[:path]).to eq(File.realpath(path))
       end
@@ -101,7 +101,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       it "rejects paths outside project root" do
         outside_path = File.join(File.dirname(temp_dir), "outside.md")
         result = sandbox.validate_path(outside_path)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("outside project root")
       end
@@ -109,7 +109,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       it "rejects path traversal attempts" do
         traversal_path = File.join(temp_dir, "..", "..", "etc", "passwd")
         result = sandbox.validate_path(traversal_path)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("outside project root")
       end
@@ -118,7 +118,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
         git_path = File.join(temp_dir, ".git", "config")
         FileUtils.touch(git_path)  # Create the file so it passes project root check
         result = sandbox.validate_path(git_path)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("forbidden pattern")
       end
@@ -127,7 +127,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
         disallowed_path = File.join(temp_dir, "test.exe")
         FileUtils.touch(disallowed_path)  # Create the file so it passes project root check
         result = sandbox.validate_path(disallowed_path)
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("does not match any allowed pattern")
       end
@@ -285,10 +285,10 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     it "resolves symlinks within project" do
       target = File.join(temp_dir, "target.md")
       link = File.join(temp_dir, "link.md")
-      
+
       FileUtils.touch(target)
       File.symlink(target, link)
-      
+
       result = sandbox.validate_path(link)
       expect(result[:success]).to be true
       expect(result[:path]).to eq(File.realpath(target))
@@ -297,10 +297,10 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     it "rejects symlinks pointing outside project" do
       outside_target = File.join(File.dirname(temp_dir), "outside.md")
       inside_link = File.join(temp_dir, "link.md")
-      
+
       FileUtils.touch(outside_target)
       File.symlink(outside_target, inside_link)
-      
+
       result = sandbox.validate_path(inside_link)
       expect(result[:success]).to be false
       expect(result[:error]).to include("outside project root")
@@ -311,7 +311,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     it "finds project root with .coding-agent marker" do
       nested_dir = File.join(temp_dir, "nested", "deep")
       FileUtils.mkdir_p(nested_dir)
-      
+
       Dir.chdir(nested_dir) do
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
@@ -322,7 +322,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       # .git already created in before block
       nested_dir = File.join(temp_dir, "nested")
       FileUtils.mkdir_p(nested_dir)
-      
+
       Dir.chdir(nested_dir) do
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
@@ -334,7 +334,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       nested_dir = File.join(temp_dir, "nested")
       FileUtils.mkdir_p(nested_dir)
       FileUtils.touch(claude_file)
-      
+
       Dir.chdir(nested_dir) do
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))

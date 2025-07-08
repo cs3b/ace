@@ -11,7 +11,7 @@ module CodingAgentTools
         # @return [Hash] {content: String, success: Boolean, error: String}
         def read(path)
           validate_path(path)
-          
+
           begin
             content = File.read(path)
             {
@@ -46,7 +46,7 @@ module CodingAgentTools
         # @return [Hash] {content: String, success: Boolean, error: String}
         def read_with_limit(path, max_size)
           validate_path(path)
-          
+
           begin
             file_size = File.size(path)
             if file_size > max_size
@@ -56,7 +56,7 @@ module CodingAgentTools
                 error: "File too large: #{file_size} bytes (max: #{max_size})"
               }
             end
-            
+
             read(path)
           rescue => e
             {

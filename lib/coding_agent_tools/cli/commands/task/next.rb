@@ -68,7 +68,7 @@ module CodingAgentTools
             end
 
             final_result = sort_result_hash[:result]
-            
+
             if final_result.sorted_tasks.empty?
               puts "No actionable tasks found"
               return 0
@@ -100,7 +100,6 @@ module CodingAgentTools
             end
             limit_int
           end
-
 
           def display_task_info(task, index = nil, total = nil)
             if index && total

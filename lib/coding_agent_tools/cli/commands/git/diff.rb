@@ -44,13 +44,13 @@ module CodingAgentTools
           def call(**options)
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             orchestrator = CodingAgentTools::Organisms::Git::GitOrchestrator.new(project_root, options)
-            
+
             # Build diff options
             diff_options = build_diff_options(options)
-            
+
             # Execute diff across repositories
             result = orchestrator.diff(diff_options)
-            
+
             if result[:success]
               display_diff_output(result, options)
               0
@@ -69,31 +69,31 @@ module CodingAgentTools
             diff_opts = {
               capture_output: true
             }
-            
+
             # Repository filtering
             diff_opts[:repository] = options[:repository] if options[:repository]
             diff_opts[:main_only] = options[:main_only] if options[:main_only]
             diff_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-            
+
             # Git diff specific options
             diff_opts[:staged] = options[:staged] if options[:staged]
             diff_opts[:name_only] = options[:name_only] if options[:name_only]
             diff_opts[:stat] = options[:stat] if options[:stat]
-            
+
             diff_opts
           end
 
           def display_diff_output(result, options)
             has_changes = false
-            
+
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
-              
+
               output = repo_result[:stdout] || ""
               next if output.strip.empty?
-              
+
               has_changes = true
-              
+
               if options[:name_only]
                 puts "[#{repo_name}] Changed files:"
                 output.lines.each { |line| puts "  #{line.rstrip}" }
@@ -106,7 +106,7 @@ module CodingAgentTools
               end
               puts "" # Add spacing between repositories
             end
-            
+
             unless has_changes
               puts "No changes found across repositories"
             end
@@ -117,7 +117,7 @@ module CodingAgentTools
               result[:errors].each do |error_info|
                 repo_name = error_info[:repository]
                 message = error_info[:message]
-                
+
                 if options[:debug] && error_info[:error]
                   error_output("[#{repo_name}] Error: #{error_info[:error].class.name}: #{message}")
                   if error_info[:error].respond_to?(:backtrace)
@@ -127,12 +127,12 @@ module CodingAgentTools
                   error_output("[#{repo_name}] Error: #{message}")
                 end
               end
-              
+
               unless options[:debug]
                 error_output("Use --debug flag for more information")
               end
             end
-            
+
             # Show any partial successes
             if result[:results]
               successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }

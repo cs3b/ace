@@ -23,7 +23,7 @@ module CodingAgentTools
         def build_review_prompt(session, target, context, system_prompt_override = nil)
           # Load target content from session files
           target_content = load_target_content(session, target)
-          
+
           # Build prompt using combiner
           prompt = @prompt_combiner.build_prompt(
             session,
@@ -32,14 +32,14 @@ module CodingAgentTools
             session.focus,
             system_prompt_override
           )
-          
+
           # Save prompt to session
           save_result = @prompt_combiner.save_prompt(prompt, session.directory_path)
-          
+
           unless save_result[:success]
             raise "Failed to save prompt: #{save_result[:error]}"
           end
-          
+
           prompt
         end
 
@@ -68,14 +68,14 @@ module CodingAgentTools
             context_mode: context.mode,
             metadata: {}
           )
-          
+
           prompt = @prompt_combiner.build_prompt(
             temp_session,
             target_content,
             context,
             focus
           )
-          
+
           prompt.combined_content
         end
 
@@ -109,13 +109,13 @@ module CodingAgentTools
           else
             raise "Unknown content type: #{target.content_type}"
           end
-          
+
           result = @file_reader.read(content_file)
-          
+
           unless result[:success]
             raise "Failed to read target content: #{result[:error]}"
           end
-          
+
           result[:content]
         end
       end

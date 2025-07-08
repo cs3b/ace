@@ -34,7 +34,7 @@ module CodingAgentTools
 
           # Expand glob patterns and validate files
           expanded_reports = []
-          
+
           report_paths.each do |path|
             if path.include?("*") || path.include?("?") || path.include?("[")
               # Handle glob patterns
@@ -58,7 +58,7 @@ module CodingAgentTools
 
           # Filter for review report files
           review_reports = filter_review_reports(expanded_reports)
-          
+
           if review_reports.empty?
             return CollectionResult.new(error: "No valid review report files found")
           end
@@ -122,7 +122,7 @@ module CodingAgentTools
           # Check filename patterns that indicate review reports
           review_patterns = [
             /^cr-report/i,           # cr-report*.md
-            /review.*report/i,       # *review*report*.md  
+            /review.*report/i,       # *review*report*.md
             /report.*review/i,       # *report*review*.md
             /code.*review/i,         # *code*review*.md
             /review.*synthesis/i,    # *review*synthesis*.md
@@ -131,7 +131,7 @@ module CodingAgentTools
 
           # Check if filename matches any review pattern
           pattern_match = review_patterns.any? { |pattern| basename =~ pattern }
-          
+
           # Also check file content for review indicators if filename check fails
           content_match = false
           if !pattern_match && file_readable_sample?(file_path)
@@ -154,7 +154,7 @@ module CodingAgentTools
         def review_content_indicators?(file_path)
           # Read first 2KB to check for review content markers
           sample = File.read(file_path, 2048, encoding: "UTF-8")
-          
+
           # Look for common review report section headers
           review_headers = [
             /## Executive Summary/i,

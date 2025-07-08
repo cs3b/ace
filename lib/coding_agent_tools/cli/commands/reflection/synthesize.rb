@@ -55,13 +55,13 @@ module CodingAgentTools
             if reflection_notes.nil? || reflection_notes.empty?
               info_output("🔍 Auto-discovering reflection notes in current release...")
               reflection_notes = auto_discover_reflection_notes
-              
+
               if reflection_notes.empty?
                 error_output("No reflection notes found in current release.")
                 error_output("Create some reflection notes first or specify paths explicitly.")
                 return 1
               end
-              
+
               info_output("✅ Found #{reflection_notes.length} reflection notes")
             end
 
@@ -87,7 +87,7 @@ module CodingAgentTools
             info_output("📅 Inferring timestamp range from reflection notes...")
             timestamp_inferrer = Molecules::Reflection::TimestampInferrer.new
             timestamp_result = timestamp_inferrer.infer_timestamp_range(collection_result.reports)
-            
+
             if timestamp_result.valid?
               info_output("✅ Timestamp range: #{timestamp_result.from_date} to #{timestamp_result.to_date}")
             else
@@ -110,7 +110,7 @@ module CodingAgentTools
             # Execute synthesis
             info_output("🧠 Starting synthesis with model: #{options[:model]}")
             synthesis_orchestrator = Molecules::Reflection::SynthesisOrchestrator.new
-            
+
             synthesis_result = synthesis_orchestrator.synthesize_reflections(
               reflections: collection_result.reports,
               timestamp_info: timestamp_result,
@@ -125,10 +125,10 @@ module CodingAgentTools
             if synthesis_result.success?
               success_output("✅ Synthesis completed successfully")
               success_output("📄 Report saved to: #{synthesis_result.output_path}")
-              
+
               # Show synthesis metrics
               show_synthesis_metrics(synthesis_result)
-              
+
               # Archive reflection notes if requested
               if options[:archived]
                 archive_result = archive_reflection_notes(collection_result.reports)
@@ -139,11 +139,11 @@ module CodingAgentTools
                   error_output("⚠️  Warning: Could not archive reflection notes: #{archive_result[:error]}")
                 end
               end
-              
+
               0
             else
               error_output("❌ Synthesis failed: #{synthesis_result.error}")
-              return 1
+              1
             end
           rescue => e
             handle_error(e, options[:debug])
@@ -177,13 +177,13 @@ module CodingAgentTools
           def show_dry_run_info(collection_result, timestamp_result, output_path, system_prompt_path, options)
             info_output("🔍 Dry run - Reflection Synthesis Configuration:")
             info_output("")
-            
+
             info_output("Reflection Notes to Synthesize:")
             collection_result.reports.each_with_index do |report, index|
               info_output("  #{index + 1}. #{report}")
             end
             info_output("")
-            
+
             info_output("Timestamp Analysis:")
             if timestamp_result.valid?
               info_output("  ✅ Timestamp range detected: #{timestamp_result.from_date} to #{timestamp_result.to_date}")
@@ -193,7 +193,7 @@ module CodingAgentTools
               info_output("  📅 Using current date as fallback")
             end
             info_output("")
-            
+
             info_output("Synthesis Configuration:")
             info_output("  🤖 Model: #{options[:model]}")
             info_output("  📄 Output: #{output_path}")
@@ -201,7 +201,7 @@ module CodingAgentTools
             info_output("  🎯 System prompt: #{system_prompt_path}")
             info_output("  💪 Force overwrite: #{options[:force]}")
             info_output("")
-            
+
             0
           end
 
@@ -209,7 +209,7 @@ module CodingAgentTools
             # Use nav-path to find reflection notes in current release
             path_resolver = CodingAgentTools::Molecules::PathResolver.new
             result = path_resolver.find_reflection_paths_in_current_release
-            
+
             if result[:success]
               result[:paths] || []
             else
@@ -222,52 +222,51 @@ module CodingAgentTools
           end
 
           def archive_reflection_notes(reflection_paths)
-            return { success: false, error: "No reflection paths provided" } if reflection_paths.empty?
+            return {success: false, error: "No reflection paths provided"} if reflection_paths.empty?
 
             begin
               # Create archive directory
               timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
               archive_dir = find_archive_directory_for_reflection(reflection_paths.first, timestamp)
-              
+
               FileUtils.mkdir_p(archive_dir)
-              
+
               # Move each reflection to archive
               archived_count = 0
               reflection_paths.each do |reflection_path|
                 if File.exist?(reflection_path)
                   filename = File.basename(reflection_path)
                   archive_path = File.join(archive_dir, filename)
-                  
+
                   FileUtils.mv(reflection_path, archive_path)
                   archived_count += 1
                 end
               end
-              
+
               # Create archive summary
               create_archive_summary(archive_dir, reflection_paths, archived_count)
-              
-              { success: true, count: archived_count, archive_dir: archive_dir }
+
+              {success: true, count: archived_count, archive_dir: archive_dir}
             rescue => e
-              { success: false, error: e.message }
+              {success: false, error: e.message}
             end
           end
 
           def find_archive_directory_for_reflection(sample_reflection_path, timestamp)
             # Find the reflections directory for this reflection
             reflection_dir = File.dirname(sample_reflection_path)
-            
+
             # Create archived subdirectory
-            archive_dir = File.join(reflection_dir, "archived", "synthesis-#{timestamp}")
-            archive_dir
+            File.join(reflection_dir, "archived", "synthesis-#{timestamp}")
           end
 
           def create_archive_summary(archive_dir, original_paths, archived_count)
             summary_path = File.join(archive_dir, "archive-summary.md")
-            
+
             content = <<~MARKDOWN
               # Reflection Archive Summary
 
-              **Archive Date**: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}
+              **Archive Date**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
               **Reflections Archived**: #{archived_count}
               **Archive Directory**: #{archive_dir}
 
@@ -282,7 +281,7 @@ module CodingAgentTools
               3. Implement recommended improvements
               4. Conduct follow-up synthesis after next development cycle
             MARKDOWN
-            
+
             File.write(summary_path, content)
           end
 
@@ -290,12 +289,12 @@ module CodingAgentTools
             if synthesis_result.metrics
               info_output("")
               info_output("📊 Synthesis Metrics:")
-              
+
               metrics = synthesis_result.metrics
-              info_output("  📝 Reflections processed: #{metrics[:reflections_count] || 'unknown'}")
-              info_output("  ⏱️  Processing time: #{metrics[:execution_time] || 'unknown'}s") if metrics[:execution_time]
+              info_output("  📝 Reflections processed: #{metrics[:reflections_count] || "unknown"}")
+              info_output("  ⏱️  Processing time: #{metrics[:execution_time] || "unknown"}s") if metrics[:execution_time]
               info_output("  🔤 Output tokens: #{metrics[:output_tokens]}") if metrics[:output_tokens]
-              info_output("  💰 Cost: $#{sprintf('%.6f', metrics[:cost])}") if metrics[:cost]
+              info_output("  💰 Cost: $#{sprintf("%.6f", metrics[:cost])}") if metrics[:cost]
             end
           end
 

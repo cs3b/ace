@@ -77,7 +77,7 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
         # Mock the confirmer instance to return a denial result
         confirmer_instance = instance_double(CodingAgentTools::Molecules::FileOperationConfirmer)
         denial_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(false, "User declined", false)
-        
+
         allow(CodingAgentTools::Molecules::FileOperationConfirmer).to receive(:new).and_return(confirmer_instance)
         allow(confirmer_instance).to receive(:confirm_overwrite).and_return(denial_result)
 
@@ -157,10 +157,10 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
         # Mock the confirmer instance to return a denial result
         confirmer_instance = instance_double(CodingAgentTools::Molecules::FileOperationConfirmer)
         denial_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(false, "User declined", false)
-        
+
         allow(CodingAgentTools::Molecules::FileOperationConfirmer).to receive(:new).and_return(confirmer_instance)
         allow(confirmer_instance).to receive(:confirm_overwrite).and_return(denial_result)
-        
+
         # Create a new installer after mocking
         new_installer = described_class.new(config_file_path, target_directory)
 

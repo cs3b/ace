@@ -32,26 +32,26 @@ module CodingAgentTools
 
             def call(**options)
               prompt_builder = CodingAgentTools::Organisms::Code::PromptBuilder.new
-              
+
               begin
                 # Load session metadata
                 session = load_session_from_dir(options[:session_dir], options[:focus])
-                
+
                 # Detect target and context from session files
                 target = detect_target_from_session(options[:session_dir])
                 context = detect_context_from_session(options[:session_dir])
-                
+
                 # Build prompt
                 prompt = prompt_builder.build_review_prompt(session, target, context)
-                
+
                 # Save to custom output if specified
                 if options[:output]
                   File.write(options[:output], prompt.combined_content)
                   puts "✅ Prompt saved to: #{options[:output]}"
                 else
-                  puts "✅ Prompt saved to: #{File.join(options[:session_dir], 'prompt.md')}"
+                  puts "✅ Prompt saved to: #{File.join(options[:session_dir], "prompt.md")}"
                 end
-                
+
                 puts "📊 Prompt size: #{prompt.word_count} words"
                 puts "🎯 Focus areas: #{prompt.focus_areas.size}"
                 0

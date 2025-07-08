@@ -46,14 +46,14 @@ begin
 
   # Parse arguments manually for this simple case
   type = ARGV[0]
-  
+
   # Look for --title option first
   title = nil
   title_index = ARGV.index("--title")
   if title_index && title_index + 1 < ARGV.length
     title = ARGV[title_index + 1]
   end
-  
+
   # Get input argument (skip --title and its value)
   input = nil
   if ARGV.length > 1 && !ARGV[1].start_with?("--")
@@ -65,7 +65,6 @@ begin
   options = {}
   options[:title] = title if title
   command.call(type: type, input: input, **options)
-
 rescue => e
   warn "An unexpected error occurred: #{e.message}"
   warn e.backtrace.join("\n") if ENV["DEBUG"]

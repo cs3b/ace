@@ -68,13 +68,13 @@ module CodingAgentTools
           def call(**options)
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             orchestrator = CodingAgentTools::Organisms::Git::GitOrchestrator.new(project_root, options)
-            
+
             # Build log options
             log_options = build_log_options(options)
-            
+
             # Execute log across repositories
             result = orchestrator.log(log_options)
-            
+
             if result[:success]
               display_log_output(result, options)
               0
@@ -93,12 +93,12 @@ module CodingAgentTools
             log_opts = {
               capture_output: true
             }
-            
+
             # Repository filtering
             log_opts[:repository] = options[:repository] if options[:repository]
             log_opts[:main_only] = options[:main_only] if options[:main_only]
             log_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-            
+
             # Git log specific options
             log_opts[:oneline] = options[:oneline] if options[:oneline]
             log_opts[:graph] = options[:graph] if options[:graph]
@@ -108,11 +108,11 @@ module CodingAgentTools
             log_opts[:grep] = options[:grep] if options[:grep]
             log_opts[:max_count] = options[:max_count] if options[:max_count]
             log_opts[:separated] = options[:separated] if options[:separated]
-            
+
             # Color options
             log_opts[:no_color] = options[:no_color] if options[:no_color]
             log_opts[:force_color] = options[:force_color] if options[:force_color]
-            
+
             log_opts
           end
 
@@ -134,17 +134,17 @@ module CodingAgentTools
 
           def display_unified_log(result)
             all_commits = []
-            
+
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
-              
+
               output = repo_result[:stdout] || ""
               output.lines.each do |line|
                 next if line.strip.empty?
-                all_commits << { repo: repo_name, line: line.rstrip }
+                all_commits << {repo: repo_name, line: line.rstrip}
               end
             end
-            
+
             # For now, just group by repository (sorting by date would require parsing)
             all_commits.each do |commit|
               puts "[#{commit[:repo]}] #{commit[:line]}"
@@ -154,10 +154,10 @@ module CodingAgentTools
           def display_separated_log(result)
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
-              
+
               output = repo_result[:stdout] || ""
               next if output.strip.empty?
-              
+
               puts "[#{repo_name}] Recent commits:"
               output.lines.each { |line| puts "  #{line.rstrip}" }
               puts "" # Add spacing between repositories
@@ -169,7 +169,7 @@ module CodingAgentTools
               result[:errors].each do |error_info|
                 repo_name = error_info[:repository]
                 message = error_info[:message]
-                
+
                 if options[:debug] && error_info[:error]
                   error_output("[#{repo_name}] Error: #{error_info[:error].class.name}: #{message}")
                   if error_info[:error].respond_to?(:backtrace)
@@ -179,12 +179,12 @@ module CodingAgentTools
                   error_output("[#{repo_name}] Error: #{message}")
                 end
               end
-              
+
               unless options[:debug]
                 error_output("Use --debug flag for more information")
               end
             end
-            
+
             # Show any partial successes
             if result[:results]
               successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }

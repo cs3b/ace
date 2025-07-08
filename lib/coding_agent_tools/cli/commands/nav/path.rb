@@ -17,10 +17,10 @@ module CodingAgentTools
           def call(type:, input: nil, **options)
             # Initialize components
             path_resolver = CodingAgentTools::Molecules::PathResolver.new
-            
+
             # Get input from title option if not provided as argument
             actual_input = input || options[:title]
-            
+
             # reflection-list doesn't need input
             unless type == "reflection-list" || type == "reflection_list"
               if actual_input.nil? || actual_input.strip.empty?
@@ -52,10 +52,10 @@ module CodingAgentTools
             end
 
             # Resolve the path
-            if path_type == :reflection_list
-              result = path_resolver.find_reflection_paths_in_current_release
+            result = if path_type == :reflection_list
+              path_resolver.find_reflection_paths_in_current_release
             else
-              result = path_resolver.resolve_path(actual_input, type: path_type)
+              path_resolver.resolve_path(actual_input, type: path_type)
             end
 
             if result[:success]
@@ -74,7 +74,7 @@ module CodingAgentTools
                 prioritized = path_resolver.prioritize_matches(result[:paths])
                 puts "Autocorrected: '#{actual_input}' → '#{prioritized[:best]}'"
                 puts prioritized[:best]
-                
+
                 # Show alternatives if any exist
                 unless prioritized[:alternatives].empty?
                   puts path_resolver.format_alternative_matches(prioritized[:alternatives])
@@ -85,7 +85,7 @@ module CodingAgentTools
                   puts result[:autocorrect_message]
                 end
                 puts result[:path]
-                
+
                 # Show scoped alternatives if any exist
                 if result[:alternative_message] && !result[:alternative_message].empty?
                   puts result[:alternative_message]
@@ -94,7 +94,7 @@ module CodingAgentTools
             else
               puts "Error: #{result[:error]}"
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
           end
         end

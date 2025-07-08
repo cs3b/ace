@@ -14,14 +14,14 @@ module CodingAgentTools
         # Validate required fields
         def validate!
           raise ArgumentError, "mode is required" if mode.nil? || mode.empty?
-          
+
           valid_modes = %w[auto none custom]
-          raise ArgumentError, "mode must be one of: #{valid_modes.join(', ')}" unless valid_modes.include?(mode)
-          
+          raise ArgumentError, "mode must be one of: #{valid_modes.join(", ")}" unless valid_modes.include?(mode)
+
           if mode == "custom" && (documents.nil? || documents.empty?)
             raise ArgumentError, "documents required for custom mode"
           end
-          
+
           true
         end
 
@@ -38,21 +38,21 @@ module CodingAgentTools
         # Get total content size in characters
         def total_size
           return 0 unless documents
-          
+
           documents.sum { |doc| doc[:content]&.size || 0 }
         end
 
         # Get document by type
         def document_by_type(type)
           return nil unless documents
-          
+
           documents.find { |doc| doc[:type] == type }
         end
 
         # Get all document types
         def document_types
           return [] unless documents
-          
+
           documents.map { |doc| doc[:type] }.uniq
         end
 

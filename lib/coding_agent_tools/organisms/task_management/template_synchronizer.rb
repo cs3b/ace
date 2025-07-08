@@ -70,7 +70,7 @@ module CodingAgentTools
           end
 
           result = create_operation_result
-          
+
           if @config.commit && result.success? && result.changes_made? && !@config.dry_run
             commit_changes(result.stats)
             # Recreate result to include any commit errors
@@ -130,13 +130,13 @@ module CodingAgentTools
 
             parse_result.documents.each do |document|
               sync_result = file_synchronizer.synchronize_document(updated_content, document, file_path)
-              
+
               case sync_result.status
               when :updated
                 updated_content = sync_result.updated_content if sync_result.updated_content
                 file_changed = true
                 log("  ✅ Document synchronized: #{document.path}")
-                
+
                 if config.dry_run && sync_result.diff_preview
                   log(sync_result.diff_preview)
                 end
@@ -156,7 +156,6 @@ module CodingAgentTools
             elsif file_changed && config.dry_run
               @files_changed << file_path
             end
-
           rescue => e
             error_message = "Error processing file #{file_path}: #{e.message}"
             log("  ❌ #{error_message}")
@@ -193,18 +192,18 @@ module CodingAgentTools
 
         def create_commit_message(stats)
           message = "chore: sync embedded templates\n\n"
-          
+
           if stats.documents_synchronized > 0
-            message += "- Synchronized #{stats.documents_synchronized} document#{stats.documents_synchronized == 1 ? "" : "s"}"
+            message += "- Synchronized #{stats.documents_synchronized} document#{(stats.documents_synchronized == 1) ? "" : "s"}"
             if stats.documents_up_to_date > 0
               message += ", #{stats.documents_up_to_date} up-to-date"
             end
             message += "\n\n"
           end
-          
+
           message += "🤖 Generated with [Claude Code](https://claude.ai/code)\n\n"
           message += "Co-Authored-By: Claude <noreply@anthropic.com>"
-          
+
           message
         end
 
@@ -246,8 +245,8 @@ module CodingAgentTools
           log("  Files processed: #{result.stats.files_processed}")
 
           if config.dry_run
-            log("  Would synchronize: #{result.stats.documents_synchronized} document#{result.stats.documents_synchronized == 1 ? "" : "s"}")
-            log("  Would skip: #{result.stats.documents_up_to_date} document#{result.stats.documents_up_to_date == 1 ? "" : "s"} (up-to-date)")
+            log("  Would synchronize: #{result.stats.documents_synchronized} document#{(result.stats.documents_synchronized == 1) ? "" : "s"}")
+            log("  Would skip: #{result.stats.documents_up_to_date} document#{(result.stats.documents_up_to_date == 1) ? "" : "s"} (up-to-date)")
           else
             log("  Documents synchronized: #{result.stats.documents_synchronized}")
             log("  Documents up-to-date: #{result.stats.documents_up_to_date}")
@@ -266,10 +265,10 @@ module CodingAgentTools
 
         def log(message)
           # Always show errors and summary
-          if message.include?("❌") || message.start_with?("Summary:") || message.start_with?("  Files processed:") || 
-             message.start_with?("  Documents synchronized:") || message.start_with?("  Documents up-to-date:") ||
-             message.start_with?("  Would synchronize:") || message.start_with?("  Would skip:") ||
-             message.start_with?("  Errors:") || message.start_with?("  Warnings:") || message.empty?
+          if message.include?("❌") || message.start_with?("Summary:") || message.start_with?("  Files processed:") ||
+              message.start_with?("  Documents synchronized:") || message.start_with?("  Documents up-to-date:") ||
+              message.start_with?("  Would synchronize:") || message.start_with?("  Would skip:") ||
+              message.start_with?("  Errors:") || message.start_with?("  Warnings:") || message.empty?
             puts message
           # Show all messages in verbose mode
           elsif config.verbose

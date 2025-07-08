@@ -66,7 +66,7 @@ module CodingAgentTools
             info_output("📁 Inferring session directory from report paths...")
             session_inferrer = Molecules::Code::SessionPathInferrer.new
             inference_result = session_inferrer.infer_session_path(collection_result.reports.first)
-            
+
             if inference_result.has_session?
               info_output("✅ Session directory detected: #{File.basename(inference_result.session_directory)}")
             else
@@ -85,7 +85,7 @@ module CodingAgentTools
             # Execute synthesis
             info_output("🧠 Starting synthesis with model: #{options[:model]}")
             synthesis_orchestrator = Molecules::Code::SynthesisOrchestrator.new
-            
+
             synthesis_result = synthesis_orchestrator.synthesize_reports(
               reports: collection_result.reports,
               session_info: inference_result,
@@ -100,14 +100,14 @@ module CodingAgentTools
             if synthesis_result.success?
               success_output("✅ Synthesis completed successfully")
               success_output("📄 Report saved to: #{synthesis_result.output_path}")
-              
+
               # Show synthesis metrics
               show_synthesis_metrics(synthesis_result)
-              
+
               0
             else
               error_output("❌ Synthesis failed: #{synthesis_result.error}")
-              return 1
+              1
             end
           rescue => e
             handle_error(e, options[:debug])
@@ -131,13 +131,13 @@ module CodingAgentTools
           def show_dry_run_info(collection_result, inference_result, output_path, options)
             info_output("🔍 Dry run - Code Review Synthesis Configuration:")
             info_output("")
-            
+
             info_output("Reports to Synthesize:")
             collection_result.reports.each_with_index do |report, index|
               info_output("  #{index + 1}. #{report}")
             end
             info_output("")
-            
+
             info_output("Session Analysis:")
             if inference_result.session_directory
               info_output("  ✅ Session directory detected: #{inference_result.session_directory}")
@@ -147,15 +147,15 @@ module CodingAgentTools
               info_output("  📁 Working directory: #{Dir.pwd}")
             end
             info_output("")
-            
+
             info_output("Synthesis Configuration:")
             info_output("  🤖 Model: #{options[:model]}")
             info_output("  📄 Output: #{output_path}")
             info_output("  📝 Format: #{options[:format]}")
-            info_output("  🎯 System prompt: #{options[:system_prompt] || 'default'}")
+            info_output("  🎯 System prompt: #{options[:system_prompt] || "default"}")
             info_output("  💪 Force overwrite: #{options[:force]}")
             info_output("")
-            
+
             0
           end
 
@@ -163,12 +163,12 @@ module CodingAgentTools
             if synthesis_result.metrics
               info_output("")
               info_output("📊 Synthesis Metrics:")
-              
+
               metrics = synthesis_result.metrics
-              info_output("  📝 Reports processed: #{metrics[:reports_count] || 'unknown'}")
-              info_output("  ⏱️  Processing time: #{metrics[:execution_time] || 'unknown'}s") if metrics[:execution_time]
+              info_output("  📝 Reports processed: #{metrics[:reports_count] || "unknown"}")
+              info_output("  ⏱️  Processing time: #{metrics[:execution_time] || "unknown"}s") if metrics[:execution_time]
               info_output("  🔤 Output tokens: #{metrics[:output_tokens]}") if metrics[:output_tokens]
-              info_output("  💰 Cost: $#{sprintf('%.6f', metrics[:cost])}") if metrics[:cost]
+              info_output("  💰 Cost: $#{sprintf("%.6f", metrics[:cost])}") if metrics[:cost]
             end
           end
 

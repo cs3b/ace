@@ -39,14 +39,14 @@ module CodingAgentTools
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
-            
+
             # Get all tasks first
             tasks_result = task_manager.get_all_tasks
             unless tasks_result.success?
               error_output("Error: #{tasks_result.message}")
               return 1
             end
-            
+
             # Apply filtering if specified
             filter_strings = options[:filter] || []
             tasks = tasks_result.tasks
@@ -58,7 +58,7 @@ module CodingAgentTools
               end
               tasks = filter_result[:tasks]
             end
-            
+
             # Apply sorting (default to implementation-order)
             sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_all_sort
             sort_result_hash = CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.apply_sort_string(tasks, sort_string)
@@ -66,13 +66,13 @@ module CodingAgentTools
               sort_result_hash[:errors].each { |error| error_output("Sort error: #{error}") }
               return 1
             end
-            
+
             final_result = sort_result_hash[:result]
             handle_result(final_result, options)
-            return 0
+            0
           rescue => e
             handle_error(e, options[:debug])
-            return 1
+            1
           end
 
           private

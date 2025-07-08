@@ -12,15 +12,15 @@ module CodingAgentTools
           desc "Synchronize XML-embedded template content with their corresponding template files"
 
           option :path, type: :string, default: "dev-handbook/workflow-instructions",
-                 desc: "Directory to scan for workflow files"
+            desc: "Directory to scan for workflow files"
           option :dry_run, type: :boolean, default: false,
-                 desc: "Show what would be changed without modifying files"
+            desc: "Show what would be changed without modifying files"
           option :verbose, type: :boolean, default: false,
-                 desc: "Show detailed processing information"
+            desc: "Show detailed processing information"
           option :commit, type: :boolean, default: false,
-                 desc: "Automatically commit changes after synchronization"
+            desc: "Automatically commit changes after synchronization"
           option :help, type: :boolean, default: false,
-                 aliases: ["-h"], desc: "Show this help message"
+            aliases: ["-h"], desc: "Show this help message"
 
           example [
             "                                    # Sync all templates in default directory",
@@ -44,11 +44,10 @@ module CodingAgentTools
 
               result = synchronizer.synchronize
 
-              exit_code = result.success? ? 0 : 1
-              return exit_code
+              result.success? ? 0 : 1
             rescue => e
               handle_error(e, options[:verbose])
-              return 1
+              1
             end
           end
 
