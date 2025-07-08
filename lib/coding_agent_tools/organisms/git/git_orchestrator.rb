@@ -52,7 +52,7 @@ module CodingAgentTools
           commands_by_repo = build_add_commands(dispatch_info, options)
           
           if options[:concurrent]
-            ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+            CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
           else
             execute_sequentially(commands_by_repo, options)
           end
@@ -90,9 +90,20 @@ module CodingAgentTools
         def push(options = {})
           push_command = build_push_command(options)
           
-          if options[:concurrent]
+          puts "DEBUG: Push options = #{options.inspect}" if options[:debug]
+          
+          # Handle repository filtering
+          if options[:repo_only]
+            # Push only the current repository
+            current_repo = detect_current_repository
+            puts "DEBUG: Current repository detected as: #{current_repo}" if options[:debug]
+            coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+            coordinator.execute_across_repositories(push_command, options.merge(repository: current_repo))
+          elsif options[:concurrent]
+            # Default behavior: push all repositories concurrently (submodules first, then main)
             execute_push_concurrent(push_command, options)
           else
+            # Default behavior: push all repositories sequentially
             execute_push_sequential(push_command, options)
           end
         end
@@ -403,7 +414,7 @@ module CodingAgentTools
           end
           
           if options[:concurrent]
-            ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+            CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
           else
             execute_sequentially(commands_by_repo, options)
           end
@@ -465,6 +476,26 @@ module CodingAgentTools
           cmd_parts.join(" ")
         end
 
+        # Repository detection
+        def detect_current_repository
+          current_dir = Dir.pwd
+          
+          # Check if we're in a submodule first (more specific)
+          repositories.each do |repo|
+            if repo[:path] && current_dir.start_with?(repo[:path])
+              return repo[:name]
+            end
+          end
+          
+          # Check if we're in the main repository
+          if current_dir.start_with?(@project_root)
+            return "main"
+          end
+          
+          # Default to main if not found
+          "main"
+        end
+
         # Execution methods
         def execute_push_concurrent(command, options)
           # For push, execute submodules first, then main
@@ -482,7 +513,7 @@ module CodingAgentTools
           end
           
           # Execute submodules concurrently
-          submodule_result = ConcurrentExecutor.execute_concurrently(submodule_commands, options)
+          submodule_result = CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(submodule_commands, options)
           
           # Then execute main repository
           if main_command && submodule_result[:success]
@@ -510,7 +541,7 @@ module CodingAgentTools
             commands_by_repo[repo[:name]] = [command]
           end
           
-          ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
         end
 
         def execute_pull_sequential(command, options)
