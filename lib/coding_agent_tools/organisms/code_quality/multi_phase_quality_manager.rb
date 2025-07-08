@@ -35,6 +35,11 @@ module CodingAgentTools
           # Phase 1: Detection & Validation
           phase1_results = run_phase1(target, paths, autofix, show_details)
           
+          # Write detailed results to file if issues found
+          if phase1_results[:ruby] || phase1_results[:markdown]
+            write_detailed_report(phase1_results, target)
+          end
+          
           return phase1_results unless autofix
           
           # Phase 2: Moderate Autofix & Error Distribution
@@ -87,10 +92,8 @@ module CodingAgentTools
           results[:before_snapshot] = before_snapshot if before_snapshot
           display_phase1_summary(results)
           
-          # Show detailed results if requested
-          if show_details
-            display_detailed_results(results)
-          end
+          # Don't show detailed results in console anymore
+          # Detailed results are written to file instead
           
           results
         end
@@ -238,16 +241,23 @@ module CodingAgentTools
         def display_phase1_summary(results)
           puts "\n  Phase 1 Summary:"
           
+          total_issues = 0
           if results[:ruby]
             puts "  • Ruby linters: #{results[:ruby][:total_issues]} issues found"
+            total_issues += results[:ruby][:total_issues]
           end
           
           if results[:markdown]
             puts "  • Markdown linters: #{results[:markdown][:total_issues]} issues found"
+            total_issues += results[:markdown][:total_issues]
           end
           
           status = results[:success] ? "✅ PASSED" : "❌ FAILED"
           puts "  • Overall status: #{status}"
+          
+          if total_issues > 0 && !@dry_run
+            puts "\n  📄 Detailed report: .lint-report.md"
+          end
         end
 
         def display_phase2_summary(results)
@@ -328,6 +338,99 @@ module CodingAgentTools
             end
           else
             puts "    • #{finding}"
+          end
+        end
+
+        def write_detailed_report(results, target)
+          report_path = File.join(@path_resolver.project_root, ".lint-report.md")
+          
+          File.open(report_path, "w") do |f|
+            f.puts "# Code Quality Report"
+            f.puts "\n**Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
+            f.puts "**Target**: #{target}"
+            f.puts "\n## Summary"
+            
+            total_issues = 0
+            if results[:ruby]
+              f.puts "\n### Ruby Linters"
+              f.puts "- Total issues: #{results[:ruby][:total_issues]}"
+              total_issues += results[:ruby][:total_issues]
+            end
+            
+            if results[:markdown]
+              f.puts "\n### Markdown Linters"
+              f.puts "- Total issues: #{results[:markdown][:total_issues]}"
+              total_issues += results[:markdown][:total_issues]
+            end
+            
+            f.puts "\n**Total Issues Found**: #{total_issues}"
+            
+            # Write detailed findings
+            f.puts "\n## Detailed Findings"
+            
+            # Ruby findings
+            if results[:ruby] && results[:ruby][:linters]
+              results[:ruby][:linters].each do |linter_name, linter_result|
+                next unless linter_result[:findings] && !linter_result[:findings].empty?
+                
+                f.puts "\n### #{linter_name.to_s.upcase}"
+                f.puts "\n```"
+                linter_result[:findings].each do |finding|
+                  f.puts format_finding_for_report(finding, linter_name)
+                end
+                f.puts "```"
+              end
+            end
+            
+            # Markdown findings
+            if results[:markdown] && results[:markdown][:linters]
+              results[:markdown][:linters].each do |linter_name, linter_result|
+                if linter_result[:findings] && !linter_result[:findings].empty?
+                  f.puts "\n### #{linter_name.to_s.upcase}"
+                  f.puts "\n```"
+                  linter_result[:findings].each do |finding|
+                    f.puts format_finding_for_report(finding, linter_name)
+                  end
+                  f.puts "```"
+                elsif linter_result[:errors] && !linter_result[:errors].empty?
+                  f.puts "\n### #{linter_name.to_s.upcase} ERRORS"
+                  f.puts "\n```"
+                  linter_result[:errors].each do |error|
+                    f.puts "❌ #{error}"
+                  end
+                  f.puts "```"
+                end
+              end
+            end
+            
+            f.puts "\n## Next Steps"
+            f.puts "\n1. Review the issues listed above"
+            f.puts "2. Run `code-lint --autofix` to apply automatic fixes"
+            f.puts "3. Manually fix remaining issues"
+            f.puts "4. Re-run `code-lint` to verify all issues are resolved"
+          end
+        end
+
+        def format_finding_for_report(finding, linter_name)
+          case linter_name
+          when :standardrb
+            location = "#{finding[:file]}:#{finding[:line]}:#{finding[:column]}"
+            severity = finding[:severity] == "error" ? "ERROR" : "WARNING"
+            "#{severity}: #{location} - #{finding[:message]} (#{finding[:cop]})"
+          when :security
+            "Security Issue: #{finding}"
+          when :cassettes
+            "Cassette Issue: #{finding[:path]} - #{finding[:size_formatted]} (threshold exceeded)"
+          when :task_metadata, :link_validation, :template_embedding
+            if finding.is_a?(Hash)
+              file = finding[:file] || "unknown"
+              message = finding[:message] || finding[:template] || finding[:link] || "issue"
+              "#{file} - #{message}"
+            else
+              finding.to_s
+            end
+          else
+            finding.to_s
           end
         end
       end
