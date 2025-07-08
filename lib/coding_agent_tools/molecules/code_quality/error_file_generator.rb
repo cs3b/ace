@@ -7,10 +7,11 @@ module CodingAgentTools
     module CodeQuality
       # Molecule for generating error distribution files
       class ErrorFileGenerator
-        attr_reader :output_dir, :error_distributor
+        attr_reader :output_dir, :error_distributor, :project_root
 
         def initialize(output_dir: ".", max_files: 4)
           @output_dir = output_dir
+          @project_root = output_dir  # Store project root for making paths relative
           @error_distributor = Atoms::CodeQuality::ErrorDistributor.new(
             max_files: max_files,
             one_issue_per_file: true
@@ -83,8 +84,11 @@ module CodingAgentTools
         end
 
         def format_error(linter, language, finding)
+          file_path = finding[:file] || finding[:path] || "unknown"
+          relative_path = make_path_relative(file_path)
+          
           {
-            file: finding[:file] || finding[:path] || "unknown",
+            file: relative_path,
             type: "#{language}_#{linter}",
             message: finding[:message] || finding.to_s,
             line: finding[:line] || finding[:line_no],
@@ -154,6 +158,12 @@ module CodingAgentTools
           lines << "```"
           
           lines.join("\n")
+        end
+
+        def make_path_relative(path)
+          return path unless path && File.absolute_path?(path)
+          
+          path.start_with?(@project_root) ? path.sub("#{@project_root}/", "") : path
         end
       end
     end

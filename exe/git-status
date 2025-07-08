@@ -5,6 +5,45 @@ require_relative "../lib/coding_agent_tools"
 require_relative "../lib/coding_agent_tools/cli/commands/git/status"
 
 begin
+  # Check for help flag first
+  if ARGV.include?("--help") || ARGV.include?("-h")
+    puts <<~HELP
+      Command:
+        git-status
+
+      Usage:
+        git-status [OPTIONS]
+
+      Description:
+        Show status across all repositories with clear prefixes
+
+      Options:
+        --[no-]debug, -d                  # Enable debug output for verbose error information, default: false
+        --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., 'dev-tools')
+        --[no-]porcelain                  # Give the output in porcelain format, default: false
+        --[no-]short, -s                  # Give the output in short format, default: false
+        --[no-]verbose, -v                # Show detailed status information, default: false
+        --untracked-files=VALUE           # Show untracked files (no|normal|all), default: "normal"
+        --[no-]main-only                  # Process main repository only, default: false
+        --[no-]submodules-only            # Process submodules only, default: false
+        --[no-]no-color                   # Disable colored output, default: false
+        --[no-]force-color                # Force colored output even when not on TTY, default: true
+        --help, -h                        # Print this help
+
+      Examples:
+        git-status
+        git-status --short
+        git-status --verbose
+        git-status --porcelain
+        git-status --repository dev-tools
+        git-status --main-only
+        git-status --submodules-only
+        git-status --no-color
+        git-status --force-color
+    HELP
+    exit 0
+  end
+
   command = CodingAgentTools::Cli::Commands::Git::Status.new
   exit_code = command.call(**ARGV.each_with_object({}) { |arg, hash|
     if arg.start_with?("--")

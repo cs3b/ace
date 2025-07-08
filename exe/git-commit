@@ -16,6 +16,48 @@ begin
     arg = ARGV[i]
 
     case arg
+    when "--help", "-h"
+      puts <<~HELP
+        Command:
+          git-commit
+
+        Usage:
+          git-commit [OPTIONS] [FILES]
+
+        Description:
+          Commit changes across repositories with LLM-generated messages
+
+        Arguments:
+          FILES                             # Files to commit (optional)
+
+        Options:
+          --[no-]debug, -d                  # Enable debug output for verbose error information, default: false
+          --repository=VALUE, -C VALUE      # Specify explicit repository context (e.g., 'dev-tools')
+          --intention=VALUE, -i VALUE       # Intention context for commit message generation
+          --[no-]local, -l                  # Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503), default: false
+          --[no-]no-edit, -n                # Skip editor and commit directly with generated message, default: false
+          --message=VALUE, -m VALUE         # Use provided message instead of LLM generation
+          --[no-]all, -a                    # Stage all changes before committing, default: false
+          --model=VALUE                     # Specify LLM model (provider:model format, e.g., 'google:gemini-2.0-flash-lite', 'anthropic:claude-3.5-sonnet')
+          --[no-]concurrent                 # Execute commits concurrently across repositories, default: false
+          --[no-]main-only                  # Process main repository only, default: false
+          --[no-]submodules-only            # Process submodules only, default: false
+          --[no-]repo-only                  # Process only the current repository instead of all repositories, default: false
+          --help, -h                        # Print this help
+
+        Examples:
+          git-commit
+          git-commit --intention 'implement user authentication'
+          git-commit --message 'fix typo in documentation'
+          git-commit --intention 'refactor database layer'
+          git-commit dev-handbook/guide.md lib/auth.rb
+          git-commit --concurrent --intention 'update across all repos'
+          git-commit --repository dev-tools --message 'update gem version'
+          git-commit --repo-only --intention 'local change only'
+          git-commit --model 'anthropic:claude-3.5-sonnet' --intention 'complex refactoring'
+          git-commit --model 'google:gemini-2.5-flash' --intention 'simple fix'
+      HELP
+      exit 0
     when "--debug", "-d"
       options[:debug] = true
     when "--intention", "-i"
@@ -36,6 +78,8 @@ begin
       options[:main_only] = true
     when "--submodules-only"
       options[:submodules_only] = true
+    when "--repo-only"
+      options[:repo_only] = true
     when /^--repository=(.+)/, /^-C(.+)/
       options[:repository] = $1
     when "--repository", "-C"
