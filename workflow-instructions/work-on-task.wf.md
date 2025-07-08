@@ -38,11 +38,11 @@ For experienced users, here's the condensed workflow:
    * Alternatively, manually select by listing available tasks:
 
      ```bash
-     # Find current release directory
-     ls -1 dev-taskflow/current/
+     # Find current release directory with context
+     nav-ls --project-context dev-taskflow/current/
 
-     # List available tasks
-     task-manager all
+     # List available tasks with status filtering
+     task-manager list --status pending --current
      ```
 
    * Review task metadata to select appropriate task:
@@ -257,16 +257,16 @@ When working with temporary files:
 1. Check dependency task status:
 
    ```bash
-   # Find and check dependency tasks
-   find dev-taskflow/current -name "*task.X*.md" | xargs grep "status:"
+   # Find and check dependency tasks with intelligent search
+   task-manager list --filter dependencies --current
    ```
 
 2. Verify required tools are available:
 
    ```bash
-   which git
-   which npm
-   ls -la bin/test bin/lint
+   # Check tool availability with enhanced verification
+   handbook --verify-tools git npm
+   nav-ls --filter "bin/*" .
    ```
 
 3. For blocking dependencies:
@@ -296,6 +296,7 @@ When working with temporary files:
 1. Run specific failing tests to understand scope:
 
    ```bash
+   # Run tests with enhanced reporting
    bin/test --verbose
    bin/lint
    ```

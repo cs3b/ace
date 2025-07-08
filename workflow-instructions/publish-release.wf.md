@@ -89,18 +89,18 @@ Execute the final deployment and archival phase of project releases, transitioni
 ### 3. Release Artifact Creation
 
 8. **Commit Version Updates:**
-   - Stage all version-related changes: `git add <version_files> CHANGELOG.md`
-   - Commit with standardized message: `git commit -m "chore(release): prepare v<X.Y.Z> publication"`
-   - Example: `git commit -m "chore(release): prepare v0.3.0 publication"`
+   - Stage all version-related changes with enhanced validation: `git-add <version_files> CHANGELOG.md`
+   - Commit with guided message generation: `git-commit --guided -m "chore(release): prepare v<X.Y.Z> publication"`
+   - Example: `git-commit --guided -m "chore(release): prepare v0.3.0 publication"`
 
 9. **Create Release Tag:**
-   - Create annotated Git tag: `git tag -a v<X.Y.Z> -m "Release v<X.Y.Z> <codename>"`
+   - Create annotated Git tag with enhanced validation: `git tag -a v<X.Y.Z> -m "Release v<X.Y.Z> <codename>"`
    - Example: `git tag -a v0.3.0 -m "Release v0.3.0 feedback-after-meta"`
    - Verify tag creation: `git tag -l v<X.Y.Z>`
 
 10. **Push Release Changes:**
-    - Push commits: `git push origin <current_branch>`
-    - Push tags: `git push origin v<X.Y.Z>` or `git push origin --tags`
+    - Push commits with safety checks: `git-push --safe origin <current_branch>`
+    - Push tags with validation: `git-push --safe origin v<X.Y.Z>` or `git-push --safe origin --tags`
 
 ### 4. Package Publication (If Applicable)
 

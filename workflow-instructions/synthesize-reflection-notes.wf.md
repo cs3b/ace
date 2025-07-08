@@ -33,8 +33,11 @@ Use the `reflection-synthesize` command to automatically discover and process al
 ```bash
 echo "🧠 Starting automated reflection synthesis..."
 
-# Execute synthesis with auto-discovery and archival
-reflection-synthesize --archived
+# Execute synthesis with auto-discovery, archival, and cost tracking
+reflection-synthesize --archived --track-cost
+
+# Monitor LLM usage for synthesis operations
+llm-usage-report --session reflection-synthesis --verbose
 
 echo "✅ Synthesis and archival completed automatically"
 ```

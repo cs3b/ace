@@ -54,14 +54,18 @@ how to navigate the codebase.
    Use the blueprint template:
 
 3. **Analyze Project Structure:**
-   - Use `tree` command or similar to get current structure:
+   - Use enhanced tree navigation to get current structure:
 
      ```bash
-     tree -I 'node_modules|vendor|.git|coverage|tmp|log' -L 3
+     nav-tree --project-structure --filter source
      ```
 
-   - Identify main source directories (src/, app/, lib/, etc.)
-   - Note test directory location (test/, spec/, tests/, etc.)
+   - Identify main source directories with enhanced navigation:
+     ```bash
+     nav-ls --project-context --filter "src|app|lib"
+     ```
+   
+   - Note test directory location and submodules with context awareness
    - Document any submodules if present
 
 4. **Update Directory Descriptions:**

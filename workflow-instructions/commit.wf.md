@@ -37,14 +37,14 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 1. **Review and Prepare Changes:**
 
    ```bash
-   # View current status
-   git status
+   # View current status with project context
+   git-status --project-context
 
-   # Review unstaged changes
-   git diff
+   # Review unstaged changes with enhanced highlighting
+   git-diff --context-highlight
 
-   # Review specific file changes
-   git diff path/to/file
+   # Review specific file changes with analysis
+   git-diff --file-analysis path/to/file
    ```
 
    **Validation checklist:**
@@ -57,20 +57,20 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 2. **Stage Related Changes:**
 
    ```bash
-   # Stage specific files
-   git add path/to/file1 path/to/file2
+   # Stage specific files with enhanced validation
+   git-add path/to/file1 path/to/file2
 
-   # Stage all changes in a directory
-   git add path/to/directory/
+   # Stage all changes in a directory with pattern matching
+   git-add --pattern "path/to/directory/*"
 
-   # Interactive staging for partial file changes
-   git add -p
+   # Interactive staging with preview
+   git-add --interactive
    ```
 
    **Review staged changes:**
 
    ```bash
-   git diff --staged
+   git-diff --staged --context-highlight
    ```
 
 3. **Write Conventional Commit Message:**
@@ -117,14 +117,14 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 5. **Create the Commit:**
 
    ```bash
-   # Commit with editor for detailed message
-   git commit
+   # Commit with guided message generation
+   git-commit --guided
 
-   # Commit with inline message
-   git commit -m "type(scope): description"
+   # Commit with auto-formatting
+   git-commit --auto-format -m "type(scope): description"
 
-   # Amend last commit if needed
-   git commit --amend
+   # Amend last commit with enhanced validation
+   git-commit --amend --guided
    ```
 
 6. **Post-Commit Actions:**
@@ -134,10 +134,10 @@ Guide the developer through creating a well-structured, atomic Git commit follow
      status: done
      ```
 
-   - Push when ready:
+   - Push when ready with safety checks:
 
      ```bash
-     git push origin branch-name
+     git-push --safe origin branch-name
      ```
 
    - Update any related documentation
@@ -172,14 +172,15 @@ Each commit should:
 For complex changes:
 
 ```bash
-# Stage hunks interactively
-git add -p
+# Stage hunks interactively with preview
+git-add --interactive
 
-# Options:
+# Enhanced options:
 # y - stage this hunk
 # n - skip this hunk
 # s - split into smaller hunks
 # e - manually edit hunk
+# p - preview changes before staging
 ```
 
 ### Commit Series

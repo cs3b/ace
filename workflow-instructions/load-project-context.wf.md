@@ -84,8 +84,11 @@ This workflow is typically invoked:
 ### Verification Commands
 
 ```bash
-# Check if all context files exist
-ls -la docs/what-do-we-build.md docs/architecture.md docs/blueprint.md
+# Check if all context files exist with enhanced navigation
+nav-ls --project-context docs/
+
+# Access project documentation via handbook
+handbook --section "development"
 
 # Check file sizes to ensure they're populated
 wc -l docs/what-do-we-build.md docs/architecture.md docs/blueprint.md

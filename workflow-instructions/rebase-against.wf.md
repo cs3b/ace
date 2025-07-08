@@ -41,12 +41,11 @@ Rebase all repositories (main repository and submodules) against their respectiv
    
    **Branch Status Check:**
    ```bash
-   # Check main repository branch
-   git branch
-   git status
+   # Check main repository branch with project context
+   git-status --project-context
    
-   # Check each submodule branch
-   git submodule foreach 'echo "=== $name ===" && git branch && git status'
+   # Check each submodule branch with multi-repo support
+   git-status --all-repos
    ```
    
    **Critical Verification Points:**
@@ -87,12 +86,11 @@ Rebase all repositories (main repository and submodules) against their respectiv
    
    **Fetch Latest Changes:**
    ```bash
-   # Use multi-repository fetch if available
-   git-fetch
+   # Enhanced multi-repository fetch with reporting
+   git-fetch --all-repos --report
    
-   # Alternative: Individual repository fetch
-   git fetch
-   git submodule foreach 'git fetch'
+   # Alternative: Individual repository fetch with validation
+   git-fetch --report
    ```
    
    **Expected Outcomes:**
@@ -224,19 +222,14 @@ Rebase all repositories (main repository and submodules) against their respectiv
    
    **Branch Status Verification:**
    ```bash
-   # Verify all repositories are on correct feature branches
-   echo "=== Main Repository ==="
-   git branch
-   
-   echo "=== Submodules ==="
-   git submodule foreach 'echo "=== $name ===" && git branch'
+   # Verify all repositories with enhanced status
+   git-status --all-repos --project-context
    ```
    
    **Repository Status Check:**
    ```bash
-   # Check for any uncommitted changes
-   git status
-   git submodule foreach 'echo "=== $name ===" && git status'
+   # Check for any uncommitted changes across all repos
+   git-status --all-repos
    ```
 
 ## Conflict Resolution Patterns
