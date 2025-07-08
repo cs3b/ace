@@ -412,6 +412,10 @@ module CodingAgentTools
                     f.puts "❌ #{error}"
                   end
                   f.puts "```"
+                else
+                  # Show successful linters with no findings
+                  f.puts "\n### #{linter_name.to_s.upcase}"
+                  f.puts "\nNo issues found ✅"
                 end
               end
             end
