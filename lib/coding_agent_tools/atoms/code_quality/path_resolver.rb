@@ -49,12 +49,23 @@ module CodingAgentTools
         private
 
         def detect_project_root
-          # Use ProjectRootDetector if available
-          if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-            detector = CodingAgentTools::Atoms::ProjectRootDetector.new
-            return detector.root_path
+          # Try to use ProjectRootDetector if it's available
+          if defined?(::CodingAgentTools::Atoms::ProjectRootDetector)
+            root = ::CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            puts "[PathResolver] Project root detected via ProjectRootDetector: #{root}" if ENV["DEBUG"]
+            return root
           end
-
+          
+          # Try to load it explicitly for code_quality context
+          begin
+            require_relative "../project_root_detector"
+            root = ::CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+            puts "[PathResolver] Project root detected after require: #{root}" if ENV["DEBUG"]
+            return root
+          rescue LoadError, StandardError => e
+            puts "[PathResolver] Could not load ProjectRootDetector: #{e.message}" if ENV["DEBUG"]
+          end
+          
           # Fallback to manual detection
           markers = [".git", "Gemfile", ".coding-agent", "coding_agent_tools.gemspec"]
 
