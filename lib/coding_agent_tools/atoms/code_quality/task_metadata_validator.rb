@@ -28,7 +28,7 @@ module CodingAgentTools
 
           task_dirs.each do |dir|
             next unless Dir.exist?(dir)
-            
+
             Dir.glob(File.join(dir, "**", "*.md")).each do |file|
               validate_task_file(file, errors, findings)
             end
@@ -53,16 +53,16 @@ module CodingAgentTools
         def validate_task_file(file_path, errors, findings)
           content = File.read(file_path)
           frontmatter, body = parse_task_file_content(content, file_path, errors)
-          
+
           return unless frontmatter
-          
+
           validate_frontmatter(frontmatter, file_path, errors)
           validate_h1_title(body, file_path, errors) if body
         end
 
         def parse_task_file_content(content, file_path, errors)
           parts = content.split(/^---\s*$/m, 3)
-          
+
           unless parts.length > 2 && (parts[0].nil? || parts[0].strip.empty?)
             errors << "#{file_path}: Malformed frontmatter"
             return [nil, nil]
@@ -74,7 +74,7 @@ module CodingAgentTools
           begin
             frontmatter = YAML.safe_load(frontmatter_text)
             frontmatter = {} if frontmatter.nil? || frontmatter == false
-            
+
             unless frontmatter.is_a?(Hash)
               errors << "#{file_path}: Frontmatter is not a Hash"
               return [nil, body_text]
@@ -152,7 +152,7 @@ module CodingAgentTools
         def validate_h1_title(body, file_path, errors)
           lines = body.lines
           h1_match = lines.find { |line| line.strip.start_with?("# ") }
-          
+
           unless h1_match
             errors << "#{file_path}: Missing H1 title in body"
           end

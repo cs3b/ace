@@ -16,11 +16,11 @@ module CodingAgentTools
         end
 
         def distribute(errors)
-          return { distributions: [], total_errors: 0 } if errors.empty?
+          return {distributions: [], total_errors: 0} if errors.empty?
 
           grouped_errors = group_errors_by_file(errors)
           distributions = create_distributions(grouped_errors)
-          
+
           {
             distributions: distributions,
             total_errors: errors.size,
@@ -32,25 +32,25 @@ module CodingAgentTools
 
         def group_errors_by_file(errors)
           grouped = {}
-          
+
           errors.each do |error|
             file = error[:file] || error["file"] || "unknown"
             grouped[file] ||= []
             grouped[file] << error
           end
-          
+
           grouped
         end
 
         def create_distributions(grouped_errors)
           distributions = Array.new(max_files) { [] }
-          
+
           if one_issue_per_file
             distribute_one_per_file(grouped_errors, distributions)
           else
             distribute_evenly(grouped_errors, distributions)
           end
-          
+
           # Remove empty distributions
           distributions.reject(&:empty?).map.with_index do |errors, idx|
             {
@@ -63,22 +63,22 @@ module CodingAgentTools
 
         def distribute_one_per_file(grouped_errors, distributions)
           file_index = 0
-          
+
           grouped_errors.each do |file, errors|
             # Take only the first error from each file
             error = errors.first
-            
+
             # Distribute to next available distribution
             dist_index = file_index % max_files
             distributions[dist_index] << error
-            
+
             file_index += 1
           end
         end
 
         def distribute_evenly(grouped_errors, distributions)
           all_errors = grouped_errors.values.flatten
-          
+
           all_errors.each_with_index do |error, idx|
             dist_index = idx % max_files
             distributions[dist_index] << error

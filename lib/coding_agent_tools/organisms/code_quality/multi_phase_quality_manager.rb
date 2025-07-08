@@ -321,18 +321,21 @@ module CodingAgentTools
         def display_finding(finding, linter_name)
           case linter_name
           when :standardrb
-            location = "#{finding[:file]}:#{finding[:line]}:#{finding[:column]}"
+            relative_file = make_path_relative(finding[:file])
+            location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
             severity = finding[:severity] == "error" ? "❌" : "⚠️"
             puts "    #{severity} #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             puts "    ⚠️  Security: #{finding}"
           when :cassettes
-            puts "    ⚠️  #{finding[:path]} - #{finding[:size_formatted]} (threshold exceeded)"
+            relative_path = make_path_relative(finding[:path])
+            puts "    ⚠️  #{relative_path} - #{finding[:size_formatted]} (threshold exceeded)"
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
               file = finding[:file] || "unknown"
+              relative_file = file != "unknown" ? make_path_relative(file) : file
               message = finding[:message] || finding[:template] || finding[:link] || "issue"
-              puts "    ❌ #{file} - #{message}"
+              puts "    ❌ #{relative_file} - #{message}"
             else
               puts "    ❌ #{finding}"
             end
@@ -414,24 +417,35 @@ module CodingAgentTools
         def format_finding_for_report(finding, linter_name)
           case linter_name
           when :standardrb
-            location = "#{finding[:file]}:#{finding[:line]}:#{finding[:column]}"
+            # Make path relative to project root
+            relative_file = make_path_relative(finding[:file])
+            location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
             severity = finding[:severity] == "error" ? "ERROR" : "WARNING"
             "#{severity}: #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             "Security Issue: #{finding}"
           when :cassettes
-            "Cassette Issue: #{finding[:path]} - #{finding[:size_formatted]} (threshold exceeded)"
+            relative_path = make_path_relative(finding[:path])
+            "Cassette Issue: #{relative_path} - #{finding[:size_formatted]} (threshold exceeded)"
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
               file = finding[:file] || "unknown"
+              relative_file = file != "unknown" ? make_path_relative(file) : file
               message = finding[:message] || finding[:template] || finding[:link] || "issue"
-              "#{file} - #{message}"
+              "#{relative_file} - #{message}"
             else
               finding.to_s
             end
           else
             finding.to_s
           end
+        end
+
+        def make_path_relative(path)
+          return path unless path && File.absolute_path?(path)
+          
+          project_root = @path_resolver.project_root
+          path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
         end
       end
     end

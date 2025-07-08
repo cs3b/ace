@@ -18,7 +18,7 @@ module CodingAgentTools
 
         def validate
           ensure_gitleaks_available!
-          
+
           command = build_command
           output, status = execute_command(command)
 
@@ -35,10 +35,10 @@ module CodingAgentTools
 
         def build_command
           cmd = ["gitleaks", "detect"]
-          
+
           cmd << "--verbose" if options[:verbose]
           cmd << "--no-git" unless options[:git_history]
-          
+
           # Add config file if exists
           if File.exist?(".gitleaks.toml")
             cmd << "--config" << ".gitleaks.toml"
@@ -49,10 +49,10 @@ module CodingAgentTools
 
         def execute_command(command)
           require "open3"
-          
+
           stdout, stderr, status = Open3.capture3(command)
           output = stdout + stderr
-          
+
           [output, status.exitstatus]
         end
 
@@ -67,14 +67,14 @@ module CodingAgentTools
 
         def extract_findings(output)
           findings = []
-          
+
           # Parse Gitleaks output format
           output.each_line do |line|
             if line =~ /Finding:\s+(.+)/
               findings << $1.strip
             end
           end
-          
+
           findings
         end
       end

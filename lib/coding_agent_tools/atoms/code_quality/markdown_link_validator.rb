@@ -10,7 +10,7 @@ module CodingAgentTools
       class MarkdownLinkValidator
         LINK_REGEX = /\[[^\]]+\]\(([^)]+)\)/
         SCHEME_SKIP = %r{^(?:[a-z][a-z0-9+\-.]*://|mailto:)}i
-        
+
         attr_reader :root_path, :context_lines
 
         def initialize(options = {})
@@ -21,7 +21,7 @@ module CodingAgentTools
         def validate(paths = ["."])
           md_files = collect_markdown_files(paths)
           broken_links = []
-          
+
           md_files.each do |file|
             validate_file_links(file, broken_links)
           end
@@ -82,7 +82,7 @@ module CodingAgentTools
           # Try relative to source file first
           source_dir = Pathname.new(File.dirname(source_file))
           relative_path = source_dir.join(clean_target)
-          
+
           return true if File.exist?(relative_path)
 
           # Try from project root
@@ -93,7 +93,7 @@ module CodingAgentTools
         def extract_context(lines, index)
           start_idx = [index - context_lines, 0].max
           end_idx = [index + context_lines, lines.size - 1].min
-          
+
           lines[start_idx..end_idx]
         end
 

@@ -36,3 +36,8 @@ debug_error.rb
 docs-project/**/*_review/**/*.diff
 docs-project/**/*_review/**/*prompt*.md
 docs-project/**/*_review/**/*prompt*.md
+
+# Code quality reports
+.lint-report.md
+.lint-diff-review.md
+.lint-issue-*.md
