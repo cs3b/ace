@@ -38,6 +38,9 @@ module CodingAgentTools
           option :submodules_only, type: :boolean, default: false,
             desc: "Process submodules only"
 
+          option :repo_only, type: :boolean, default: false,
+            desc: "Process only the current repository instead of all repositories"
+
           argument :remote, type: :string, required: false,
             desc: "Remote name (default: origin)"
 
@@ -88,6 +91,7 @@ module CodingAgentTools
             push_opts[:repository] = options[:repository] if options[:repository]
             push_opts[:main_only] = options[:main_only] if options[:main_only]
             push_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
+            push_opts[:repo_only] = options[:repo_only]
             
             # Push behavior
             push_opts[:remote] = remote if remote
@@ -97,6 +101,7 @@ module CodingAgentTools
             push_opts[:set_upstream] = options[:set_upstream] if options[:set_upstream]
             push_opts[:tags] = options[:tags] if options[:tags]
             push_opts[:concurrent] = options[:concurrent] if options.key?(:concurrent)
+            push_opts[:debug] = options[:debug] if options[:debug]
             
             push_opts
           end
