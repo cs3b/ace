@@ -76,6 +76,12 @@ RSpec.describe "Release CLI Commands" do
   describe CodingAgentTools::Cli::Commands::Release::GenerateId do
     subject(:command) { described_class.new }
 
+    before do
+      # Mock the LLM API call to prevent slow external calls
+      allow_any_instance_of(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
+        .to receive(:generate_unique_codename).and_return("testcodename")
+    end
+
     context "when generating release" do
       it "returns version and path in text format" do
         expect { expect(command.call).to eq(0) }.to output(/version: v\.\d+\.\d+\.\d+\npath: .*/).to_stdout

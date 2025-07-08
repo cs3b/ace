@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskManagement::ShellCommandExecutor do
     end
 
     it "handles timeout" do
-      result = described_class.execute("sleep 2", timeout: 1)
+      result = described_class.execute("sleep 0.2", timeout: 0.1)
       expect(result.success?).to be false
       expect(result.stderr).to include("timed out")
       expect(result.exit_code).to eq(-1)
@@ -203,6 +203,11 @@ RSpec.describe CodingAgentTools::Atoms::TaskManagement::ShellCommandExecutor do
   end
 
   describe ".execute_with_retries" do
+    before do
+      # Mock sleep to prevent delays in retry tests
+      allow(described_class).to receive(:sleep)
+    end
+
     it "succeeds on first attempt when command works" do
       result = described_class.execute_with_retries('printf "success"')
       expect(result.success?).to be true
@@ -219,11 +224,11 @@ RSpec.describe CodingAgentTools::Atoms::TaskManagement::ShellCommandExecutor do
 
         # Start the retry in a separate thread
         result_thread = Thread.new do
-          described_class.execute_with_retries(command, max_retries: 3, retry_delay: 0.1)
+          described_class.execute_with_retries(command, max_retries: 3, retry_delay: 0.001)
         end
 
         # Create the flag file after a short delay to simulate eventual success
-        sleep(0.05)
+        sleep(0.001)
         File.write(flag_file, "")
 
         result = result_thread.value
@@ -232,19 +237,22 @@ RSpec.describe CodingAgentTools::Atoms::TaskManagement::ShellCommandExecutor do
     end
 
     it "returns final failure result after all retries exhausted" do
-      result = described_class.execute_with_retries("exit 1", max_retries: 2, retry_delay: 0.01)
+      result = described_class.execute_with_retries("exit 1", max_retries: 2, retry_delay: 0.001)
       expect(result.success?).to be false
       expect(result.exit_code).to eq(1)
     end
 
     it "respects retry parameters" do
-      start_time = Time.now
+      # Mock sleep to capture calls instead of measuring real time
+      sleep_calls = []
+      allow(described_class).to receive(:sleep) { |duration| sleep_calls << duration }
+
       result = described_class.execute_with_retries("exit 1", max_retries: 2, retry_delay: 0.1, timeout: 1)
-      duration = Time.now - start_time
 
       expect(result.success?).to be false
-      # Should take at least 2 * 0.1 seconds for retries
-      expect(duration).to be >= 0.2
+      # Should have called sleep twice (2 retries)
+      expect(sleep_calls.length).to eq(2)
+      expect(sleep_calls).to all(eq(0.1))
     end
   end
 end
