@@ -5,41 +5,42 @@ require "tempfile"
 
 RSpec.describe "llm-query integration", type: :integration do
   include ProcessHelpers
+  include CliHelpers
 
   let(:exe_name) { "llm-query" }
 
   describe "command execution" do
     it "shows help when requested" do
-      stdout, stderr, status = execute_gem_executable(exe_name, ["--help"])
+      result = execute_cli_command(exe_name, ["--help"])
 
-      expect(status).to be_success
-      expect(stdout).to match(/Query any LLM provider/)
-      expect(stdout).to match(/--format/)
-      expect(stdout).to match(/--\[no-\]debug/)
-      expect(stdout).to match(/--temperature/)
-      expect(stdout).to match(/Examples:/)
-      expect(stderr).to be_empty
+      expect(result).to be_success
+      expect(result.stdout).to match(/Query any LLM provider/)
+      expect(result.stdout).to match(/--format/)
+      expect(result.stdout).to match(/--\[no-\]debug/)
+      expect(result.stdout).to match(/--temperature/)
+      expect(result.stdout).to match(/Examples:/)
+      expect(result.stderr).to be_empty
     end
 
     it "requires provider model argument" do
-      _, stderr, status = execute_gem_executable(exe_name, [])
+      result = execute_cli_command(exe_name, [])
 
-      expect(status.exitstatus).to eq(1)
-      expect(stderr).to match(/ERROR: "llm-query" was called with no arguments/)
+      expect(result.exitstatus).to eq(1)
+      expect(result.stderr).to match(/ERROR: "llm-query" was called with no arguments/)
     end
 
     it "requires prompt argument" do
-      _, stderr, status = execute_gem_executable(exe_name, ["google"])
+      result = execute_cli_command(exe_name, ["google"])
 
-      expect(status.exitstatus).to eq(1)
-      expect(stderr).to match(/ERROR: "llm-query" was called with arguments \["google"\]/)
+      expect(result.exitstatus).to eq(1)
+      expect(result.stderr).to match(/ERROR: "llm-query" was called with arguments \["google"\]/)
     end
 
     it "shows error for invalid provider" do
-      _, stderr, status = execute_gem_executable(exe_name, ["invalid_provider", "test prompt"])
+      result = execute_cli_command(exe_name, ["invalid_provider", "test prompt"])
 
-      expect(status.exitstatus).to eq(1)
-      expect(stderr).to match(/Error: Unknown provider/)
+      expect(result.exitstatus).to eq(1)
+      expect(result.stderr).to match(/Error: Unknown provider/)
     end
   end
 

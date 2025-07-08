@@ -37,6 +37,8 @@ require_relative "support/matchers/http_matchers"
 
 # Load shared helpers
 require_relative "support/process_helpers"
+# CLI helpers for direct command invocation (performance optimization)
+require_relative "support/cli_helpers"
 # Helper for safe ENV manipulation in specs
 require_relative "support/env_helpers"
 # ANSI color testing infrastructure
