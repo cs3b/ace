@@ -76,7 +76,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
   describe "#synchronize", :initialize do
     it "organism initializes correctly and coordinates molecules" do
       result = nil
-      expect { result = synchronizer.synchronize }.to output(/Document synchronized/).to_stdout
+      expect { result = synchronizer.synchronize }.to output(/Summary:.*Documents synchronized: 2/m).to_stdout
 
       expect(xml_parser).to have_received(:parse)
       expect(file_synchronizer).to have_received(:synchronize_document)
@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
     context "when files are found and processed successfully" do
       it "returns successful result with statistics" do
         result = nil
-        expect { result = synchronizer.synchronize }.to output(/Document synchronized/).to_stdout
+        expect { result = synchronizer.synchronize }.to output(/Summary:.*Documents synchronized: 2/m).to_stdout
 
         expect(result.success?).to be true
         expect(result.stats).to eq mock_stats
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
       end
 
       it "writes updated content to files when not in dry-run mode" do
-        expect { synchronizer.synchronize }.to output(/Document synchronized/).to_stdout
+        expect { synchronizer.synchronize }.to output(/Summary:.*Documents synchronized: 2/m).to_stdout
 
         expect(File).to have_received(:write).with("spec/fixtures/test.wf.md", "Updated content")
       end
@@ -123,7 +123,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
 
       it "processes without making changes" do
         result = nil
-        expect { result = synchronizer.synchronize }.to output(/Document up-to-date/).to_stdout
+        expect { result = synchronizer.synchronize }.to output(/Summary:.*Documents up-to-date: 1/m).to_stdout
 
         expect(result.success?).to be true
         expect(result.changes_made?).to be false
@@ -190,7 +190,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
 
     it "dry-run shows changes without applying, respects security constraints" do
       result = nil
-      expect { result = dry_run_synchronizer.synchronize }.to output(/Document synchronized/).to_stdout
+      expect { result = dry_run_synchronizer.synchronize }.to output(/Summary:.*Would synchronize: 2 documents/m).to_stdout
 
       expect(result.success?).to be true
       expect(result.changes_made?).to be true
@@ -211,7 +211,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
 
     it "commits changes when commit option is enabled" do
       result = nil
-      expect { result = commit_synchronizer.synchronize }.to output(/Document synchronized.*Changes committed successfully/m).to_stdout
+      expect { result = commit_synchronizer.synchronize }.to output(/Summary:.*Documents synchronized: 2/m).to_stdout
 
       expect(result.success?).to be true
       expect(commit_synchronizer).to have_received(:system).with("git add -A")
@@ -225,7 +225,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
 
       it "reports error when not in git repository" do
         result = nil
-        expect { result = commit_synchronizer.synchronize }.to output(/Document synchronized.*Error.*Not in a git repository/m).to_stdout
+        expect { result = commit_synchronizer.synchronize }.to output(/❌ Error: Not in a git repository.*Summary:.*Documents synchronized: 2.*Errors: 1/m).to_stdout
 
         expect(result.failure?).to be true
         expect(result.errors).to include("Not in a git repository")
