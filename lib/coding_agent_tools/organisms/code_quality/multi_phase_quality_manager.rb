@@ -29,16 +29,16 @@ module CodingAgentTools
           result[:valid]
         end
 
-        def run(target: "all", autofix: false, review_diff: false)
+        def run(target: "all", paths: ["."], autofix: false, review_diff: false, show_details: false)
           puts "🔍 Starting Code Quality Validation"
           
           # Phase 1: Detection & Validation
-          phase1_results = run_phase1(target, autofix)
+          phase1_results = run_phase1(target, paths, autofix, show_details)
           
           return phase1_results unless autofix
           
           # Phase 2: Moderate Autofix & Error Distribution
-          phase2_results = run_phase2(phase1_results, review_diff)
+          phase2_results = run_phase2(phase1_results, target, paths, review_diff)
           
           # Prepare for Phase 3 (Agent Integration Foundation)
           phase3_results = prepare_phase3(phase2_results)
@@ -49,7 +49,7 @@ module CodingAgentTools
 
         private
 
-        def run_phase1(target, autofix)
+        def run_phase1(target, paths, autofix, show_details)
           puts "\n📋 Phase 1: Detection & Validation"
           
           results = {
@@ -70,7 +70,7 @@ module CodingAgentTools
               config: @config,
               path_resolver: @path_resolver
             )
-            results[:ruby] = ruby_pipeline.run(autofix: autofix)
+            results[:ruby] = ruby_pipeline.run(paths: paths, autofix: autofix)
             results[:success] &&= results[:ruby][:success]
           end
 
@@ -80,17 +80,22 @@ module CodingAgentTools
               config: @config,
               path_resolver: @path_resolver
             )
-            results[:markdown] = markdown_pipeline.run(autofix: autofix)
+            results[:markdown] = markdown_pipeline.run(paths: paths, autofix: autofix)
             results[:success] &&= results[:markdown][:success]
           end
 
           results[:before_snapshot] = before_snapshot if before_snapshot
           display_phase1_summary(results)
           
+          # Show detailed results if requested
+          if show_details
+            display_detailed_results(results)
+          end
+          
           results
         end
 
-        def run_phase2(phase1_results, review_diff)
+        def run_phase2(phase1_results, target, paths, review_diff)
           puts "\n🔧 Phase 2: Moderate Autofix & Error Distribution" unless @dry_run
           
           results = {
@@ -110,7 +115,7 @@ module CodingAgentTools
           # Re-validate after fixes
           if results[:autofix_summary][:total_fixed] > 0
             puts "  ↻ Re-validating after fixes..." unless @dry_run
-            revalidation = run_phase1(target, false)
+            revalidation = run_phase1(target, paths, false, false)
             results[:revalidation] = autofix_orchestrator.validate_fixes(
               phase1_results, 
               revalidation
@@ -267,6 +272,62 @@ module CodingAgentTools
             puts "  • Parallel agents supported: #{results[:agent_metadata][:parallel_agents]}"
           else
             puts "  • Agent coordination: NOT NEEDED (no errors to process)"
+          end
+        end
+
+        def display_detailed_results(results)
+          puts "\n📊 Detailed Results:"
+          
+          # Display Ruby linting results
+          if results[:ruby] && results[:ruby][:linters]
+            results[:ruby][:linters].each do |linter_name, linter_result|
+              next unless linter_result[:findings] && !linter_result[:findings].empty?
+              
+              puts "\n  #{linter_name.to_s.upcase}:"
+              linter_result[:findings].each do |finding|
+                display_finding(finding, linter_name)
+              end
+            end
+          end
+          
+          # Display Markdown linting results
+          if results[:markdown] && results[:markdown][:linters]
+            results[:markdown][:linters].each do |linter_name, linter_result|
+              if linter_result[:findings] && !linter_result[:findings].empty?
+                puts "\n  #{linter_name.to_s.upcase}:"
+                linter_result[:findings].each do |finding|
+                  display_finding(finding, linter_name)
+                end
+              elsif linter_result[:errors] && !linter_result[:errors].empty?
+                puts "\n  #{linter_name.to_s.upcase}:"
+                linter_result[:errors].each do |error|
+                  puts "    ❌ #{error}"
+                end
+              end
+            end
+          end
+        end
+
+        def display_finding(finding, linter_name)
+          case linter_name
+          when :standardrb
+            location = "#{finding[:file]}:#{finding[:line]}:#{finding[:column]}"
+            severity = finding[:severity] == "error" ? "❌" : "⚠️"
+            puts "    #{severity} #{location} - #{finding[:message]} (#{finding[:cop]})"
+          when :security
+            puts "    ⚠️  Security: #{finding}"
+          when :cassettes
+            puts "    ⚠️  #{finding[:path]} - #{finding[:size_formatted]} (threshold exceeded)"
+          when :task_metadata, :link_validation, :template_embedding
+            if finding.is_a?(Hash)
+              file = finding[:file] || "unknown"
+              message = finding[:message] || finding[:template] || finding[:link] || "issue"
+              puts "    ❌ #{file} - #{message}"
+            else
+              puts "    ❌ #{finding}"
+            end
+          else
+            puts "    • #{finding}"
           end
         end
       end

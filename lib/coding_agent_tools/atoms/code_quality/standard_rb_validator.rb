@@ -41,24 +41,38 @@ module CodingAgentTools
         end
 
         def build_command(paths)
-          cmd = ["standardrb"]
+          cmd = ["bundle", "exec", "standardrb"]
           
-          cmd << "--fix" if options[:fix]
+          if options[:fix]
+            # Use fix-unsafely to actually apply all available fixes
+            cmd << "--fix-unsafely"
+          end
           cmd << "--format" << options[:format]
           
           if options[:config_file] && File.exist?(options[:config_file])
             cmd << "--config" << options[:config_file]
           end
           
-          cmd.concat(Array(paths))
-          cmd.join(" ")
+          # Expand paths to absolute paths
+          expanded_paths = Array(paths).map do |path|
+            File.expand_path(path)
+          end
+          
+          cmd.concat(expanded_paths)
+          cmd
         end
 
         def execute_command(command)
-          stdout, stderr, status = Open3.capture3(command)
-          output = stdout.empty? ? stderr : stdout
+          # Find the dev-tools directory
+          current_file = File.expand_path(__FILE__)
+          dev_tools_dir = current_file.split("/dev-tools/").first + "/dev-tools"
           
-          [output, status.exitstatus]
+          Dir.chdir(dev_tools_dir) do
+            stdout, stderr, status = Open3.capture3(*command)
+            output = stdout.empty? ? stderr : stdout
+            
+            [output, status.exitstatus]
+          end
         end
 
         def parse_results(output, exit_code)
@@ -69,8 +83,9 @@ module CodingAgentTools
               data = JSON.parse(output)
               findings = extract_offenses(data)
             end
-          rescue JSON::ParserError
+          rescue JSON::ParserError => e
             # Fall back to text parsing if JSON fails
+            puts "StandardRB JSON parse error: #{e.message}" if ENV["DEBUG"]
             findings = parse_text_output(output)
           end
 
