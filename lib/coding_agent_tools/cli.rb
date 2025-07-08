@@ -126,6 +126,18 @@ module CodingAgentTools
         @handbook_commands_registered = true
       end
 
+      def self.register_reflection_commands
+        return if @reflection_commands_registered
+
+        require_relative "cli/commands/reflection/synthesize"
+
+        register "reflection", aliases: [] do |prefix|
+          prefix.register "synthesize", Commands::Reflection::Synthesize
+        end
+
+        @reflection_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -135,6 +147,7 @@ module CodingAgentTools
         register_code_review_prepare_commands
         register_nav_commands
         register_handbook_commands
+        register_reflection_commands
         super
       end
     end
