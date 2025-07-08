@@ -480,15 +480,21 @@ module CodingAgentTools
         def detect_current_repository
           current_dir = Dir.pwd
           
+          puts "DEBUG: Current dir: #{current_dir}" if debug
+          puts "DEBUG: Project root: #{@project_root}" if debug
+          repositories.each do |repo|
+            puts "DEBUG: Repo #{repo[:name]}: #{repo[:path]}" if debug
+          end
+          
           # Check if we're in a submodule first (more specific)
           repositories.each do |repo|
-            if repo[:path] && current_dir.start_with?(repo[:path])
+            if repo[:path] && File.expand_path(current_dir) == File.expand_path(repo[:path])
               return repo[:name]
             end
           end
           
           # Check if we're in the main repository
-          if current_dir.start_with?(@project_root)
+          if File.expand_path(current_dir) == File.expand_path(@project_root)
             return "main"
           end
           
@@ -498,34 +504,26 @@ module CodingAgentTools
 
         # Execution methods
         def execute_push_concurrent(command, options)
-          # For push, execute submodules first, then main
-          submodule_commands = {}
-          main_command = nil
+          # For concurrent push, use the MultiRepoCoordinator with concurrent option
+          # but ensure submodules are executed first, then main
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
           
-          repositories.each do |repo|
-            next unless repo[:exists] && repo[:is_git_repo]
-            
-            if repo[:name] == "main"
-              main_command = { "main" => [command] }
-            else
-              submodule_commands[repo[:name]] = [command]
-            end
-          end
-          
-          # Execute submodules concurrently
-          submodule_result = CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(submodule_commands, options)
+          # Execute submodules first
+          submodule_result = coordinator.execute_across_repositories(command, options.merge(submodules_only: true))
           
           # Then execute main repository
-          if main_command && submodule_result[:success]
-            main_result = execute_sequentially(main_command, options)
-            
-            # Merge results
-            submodule_result[:results].merge!(main_result[:results])
-            submodule_result[:success] = submodule_result[:success] && main_result[:success]
-            submodule_result[:errors].concat(main_result[:errors])
-          end
+          main_result = coordinator.execute_across_repositories(command, options.merge(main_only: true))
           
-          submodule_result
+          # Merge results
+          combined_results = submodule_result[:results].merge(main_result[:results])
+          combined_errors = submodule_result[:errors] + main_result[:errors]
+          
+          {
+            success: submodule_result[:success] && main_result[:success],
+            results: combined_results,
+            errors: combined_errors,
+            repositories_processed: (submodule_result[:repositories_processed] + main_result[:repositories_processed])
+          }
         end
 
         def execute_push_sequential(command, options)
