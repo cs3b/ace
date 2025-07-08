@@ -2,6 +2,8 @@
 
 require "open3"
 require "timeout"
+require "shellwords"
+require_relative "../project_root_detector"
 
 module CodingAgentTools
   module Atoms
@@ -42,10 +44,32 @@ module CodingAgentTools
 
         def build_command(command)
           if repository_path && repository_path != "."
-            "git -C #{Shellwords.escape(repository_path)} #{command}"
+            resolved_path = resolve_repository_path(repository_path)
+            "git -C #{Shellwords.escape(resolved_path)} #{command}"
           else
             "git #{command}"
           end
+        end
+
+        def resolve_repository_path(path)
+          # If path is already absolute, use it as-is
+          return path if File.absolute_path?(path)
+          
+          # If relative path exists locally (from current directory), use it
+          return path if File.exist?(path) && File.directory?(path)
+          
+          # Otherwise, resolve relative to project root
+          project_root = ProjectRootDetector.find_project_root
+          absolute_path = File.join(project_root, path)
+          
+          # Verify the resolved path exists
+          unless File.exist?(absolute_path) && File.directory?(absolute_path)
+            raise GitCommandError.new(
+              "Repository path not found: #{path} (tried local: #{File.expand_path(path)}, global: #{absolute_path})"
+            )
+          end
+          
+          absolute_path
         end
 
         def execute_with_capture(full_command)
