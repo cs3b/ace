@@ -7,7 +7,6 @@
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
-| `generate-review-prompt` | Code review prompt generator | `--context-lines`, `--detailed` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
 | `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
 | `git-diff` | Enhanced git diff | `--staged`, `--stat` |
@@ -120,25 +119,6 @@ task-manager recent
 ```
 </details>
 
-### `generate-review-prompt` – Code review prompt generator
-<details><summary>Details</summary>
-
-```bash
-generate-review-prompt [OPTIONS]
-```
-
-| Flag | Purpose | Default |
-|------|---------|---------|
-| `--context-lines` | Context lines around changes | `3` |
-| `--detailed` | Include detailed analysis | `false` |
-| `--arch-focus` | Architectural considerations | `false` |
-
-**Examples**
-```bash
-generate-review-prompt --context-lines 5
-generate-review-prompt --detailed --arch-focus
-```
-</details>
 
 ### `code-review` – Interactive code review tool
 <details><summary>Details</summary>
@@ -489,7 +469,7 @@ release-manager report --format detailed
 ## Tool Categories
 
 ### By Function
-- **Code Review**: `code-review`, `code-review-prepare`, `code-review-synthesize`, `generate-review-prompt`
+- **Code Review**: `code-review`, `code-review-prepare`, `code-review-synthesize`
 - **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
 - **LLM Integration**: `llm-query`
 - **Navigation & Documentation**: `handbook`, `nav-ls`, `nav-path`, `nav-tree`
