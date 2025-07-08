@@ -72,10 +72,12 @@ module CodingAgentTools
 
         require_relative "cli/commands/code/review"
         require_relative "cli/commands/code/review_synthesize"
+        require_relative "cli/commands/code/lint"
 
         register "code", aliases: [] do |prefix|
           prefix.register "review", Commands::Code::Review
           prefix.register "review-synthesize", Commands::Code::ReviewSynthesize
+          prefix.register "lint", Commands::Code::Lint
         end
 
         @code_commands_registered = true

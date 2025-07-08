@@ -47,7 +47,6 @@ module CodingAgentTools
         },
         "security" => {
           "enforce_sandbox" => true,
-          "allowed_patterns" => ["**/*.md", "**/*.rb", "**/*.yml", "**/*.yaml", "**/*.sh", "bin/*"],
           "forbidden_patterns" => ["**/.git/**", "**/node_modules/**", "**/coverage/**", "**/tmp/**", "**/*.log"]
         },
         "integration" => {

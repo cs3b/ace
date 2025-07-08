@@ -123,13 +123,13 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
         expect(result[:error]).to include("forbidden pattern")
       end
 
-      it "rejects paths that don't match allowed patterns" do
-        disallowed_path = File.join(temp_dir, "test.exe")
-        FileUtils.touch(disallowed_path)  # Create the file so it passes project root check
-        result = sandbox.validate_path(disallowed_path)
+      it "allows all files when no allowed patterns specified (permissive mode)" do
+        exe_path = File.join(temp_dir, "test.exe")
+        FileUtils.touch(exe_path)  # Create the file so it passes project root check
+        result = sandbox.validate_path(exe_path)
 
-        expect(result[:success]).to be false
-        expect(result[:error]).to include("does not match any allowed pattern")
+        expect(result[:success]).to be true
+        expect(result[:path]).to eq(File.realpath(exe_path))
       end
     end
   end

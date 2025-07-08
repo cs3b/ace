@@ -10,7 +10,7 @@ module CodingAgentTools
 
       def initialize(project_root = nil, allowed_patterns = nil, forbidden_patterns = nil)
         @project_root = resolve_project_root(project_root)
-        @allowed_patterns = allowed_patterns || default_allowed_patterns
+        @allowed_patterns = allowed_patterns || permissive_allowed_patterns
         @forbidden_patterns = forbidden_patterns || default_forbidden_patterns
       end
 
@@ -142,6 +142,10 @@ module CodingAgentTools
           "dev-handbook/**/*",
           ".coding-agent/**/*"
         ]
+      end
+
+      def permissive_allowed_patterns
+        ["**/*"]
       end
 
       def default_forbidden_patterns
