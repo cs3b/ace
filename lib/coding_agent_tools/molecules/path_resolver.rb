@@ -36,6 +36,8 @@ module CodingAgentTools
             generate_new_path(path_input, type)
           when :task
             resolve_task_path(path_input)
+          when :reflection_list
+            find_reflection_paths_in_current_release
           else
             failure("Unknown path type: #{type}")
           end
@@ -91,6 +93,42 @@ module CodingAgentTools
         
         # Multiple matches - return all for user selection
         success_with_options(fuzzy_matches)
+      end
+
+      def find_reflection_paths_in_current_release
+        # Find current release directory
+        current_release_path = find_current_release_path
+        return failure("Could not find current release directory") unless current_release_path
+
+        # Look for reflection directories in current release
+        reflections_pattern = File.join(current_release_path, "*/reflections")
+        reflection_dirs = Dir.glob(reflections_pattern).select { |path| Dir.exist?(path) }
+
+        if reflection_dirs.empty?
+          return success_with_list([])
+        end
+
+        # Find all .md files in reflection directories, excluding archived subdirectories
+        all_reflections = []
+        reflection_dirs.each do |reflections_dir|
+          # Find all .md files in the reflections directory
+          md_files = Dir.glob(File.join(reflections_dir, "**/*.md"))
+          
+          # Filter out files in archived subdirectories
+          non_archived = md_files.reject do |file|
+            relative_path = file.sub(reflections_dir + "/", "")
+            relative_path.start_with?("archived/")
+          end
+          
+          all_reflections.concat(non_archived)
+        end
+
+        # Sort by modification time (newest first) for consistent ordering
+        sorted_reflections = all_reflections.sort_by { |file| -File.mtime(file).to_i }
+
+        success_with_list(sorted_reflections)
+      rescue => e
+        failure("Error finding reflection paths: #{e.message}")
       end
 
       # Scoped pattern resolution (public method)
@@ -574,6 +612,22 @@ module CodingAgentTools
 
       def success_with_options(paths)
         { success: true, type: :multiple, paths: paths }
+      end
+
+      def success_with_list(paths)
+        { success: true, type: :list, paths: paths }
+      end
+
+      def find_current_release_path
+        # Look for current release in dev-taskflow/current
+        current_base = File.join(@sandbox.project_root, "dev-taskflow/current")
+        return nil unless Dir.exist?(current_base)
+
+        # Find the first directory in current (should be the current release)
+        release_dirs = Dir.glob(File.join(current_base, "*")).select { |path| Dir.exist?(path) }
+        
+        # Return the first one found, or nil if none
+        release_dirs.first
       end
 
     end
