@@ -144,3 +144,38 @@ aliases:
     type: "shell"
     args_processing: "pass_through"
     execution_context: "project_root"
+
+  gco:
+    description: "Git checkout across repositories"
+    executable: "git-checkout"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gsw:
+    description: "Git switch across repositories"
+    executable: "git-switch"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  gmv:
+    description: "Git move/rename with intelligent path grouping"
+    executable: "git-mv"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  grm:
+    description: "Git remove with intelligent path grouping"
+    executable: "git-rm"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"
+
+  grestore:
+    description: "Git restore with intelligent path grouping"
+    executable: "git-restore"
+    type: "shell"
+    args_processing: "pass_through"
+    execution_context: "project_root"

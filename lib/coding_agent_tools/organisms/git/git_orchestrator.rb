@@ -132,6 +132,82 @@ module CodingAgentTools
           coordinator.execute_across_repositories(fetch_command, options.merge(capture_output: true))
         end
 
+        # Checkout operations
+        def checkout(branch_or_paths, options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          checkout_command = build_checkout_command(branch_or_paths, options)
+          
+          if options[:concurrent]
+            coordinator.execute_across_repositories(checkout_command, options.merge(capture_output: true, concurrent: true))
+          else
+            coordinator.execute_across_repositories(checkout_command, options.merge(capture_output: true))
+          end
+        end
+
+        # Switch operations
+        def switch(branch, options = {})
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
+          switch_command = build_switch_command(branch, options)
+          
+          if options[:concurrent]
+            coordinator.execute_across_repositories(switch_command, options.merge(capture_output: true, concurrent: true))
+          else
+            coordinator.execute_across_repositories(switch_command, options.merge(capture_output: true))
+          end
+        end
+
+        # Move/rename operations with path intelligence
+        def mv(sources, destination, options = {})
+          return { success: false, error: "No sources provided" } if sources.nil? || sources.empty?
+          return { success: false, error: "No destination provided" } if destination.nil? || destination.empty?
+
+          dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
+          
+          # Group sources by repository
+          all_paths = sources + [destination]
+          dispatch_info = dispatcher.dispatch_paths(all_paths)
+          
+          commands_by_repo = build_mv_commands(dispatch_info, sources, destination, options)
+          
+          if options[:concurrent]
+            CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          else
+            execute_sequentially(commands_by_repo, options)
+          end
+        end
+
+        # Remove operations with path intelligence
+        def rm(paths, options = {})
+          return { success: false, error: "No paths provided" } if paths.nil? || paths.empty?
+
+          dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
+          dispatch_info = dispatcher.dispatch_paths(paths)
+          
+          commands_by_repo = build_rm_commands(dispatch_info, options)
+          
+          if options[:concurrent]
+            CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          else
+            execute_sequentially(commands_by_repo, options)
+          end
+        end
+
+        # Restore operations with path intelligence
+        def restore(pathspecs, options = {})
+          return { success: false, error: "No pathspecs provided" } if pathspecs.nil? || pathspecs.empty?
+
+          dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
+          dispatch_info = dispatcher.dispatch_paths(pathspecs)
+          
+          commands_by_repo = build_restore_commands(dispatch_info, options)
+          
+          if options[:concurrent]
+            CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          else
+            execute_sequentially(commands_by_repo, options)
+          end
+        end
+
         # Repository information
         def repositories
           @repositories
@@ -488,6 +564,141 @@ module CodingAgentTools
           cmd_parts << options[:remote] if options[:remote]
           
           cmd_parts.join(" ")
+        end
+
+        def build_checkout_command(branch_or_paths, options)
+          cmd_parts = ["checkout"]
+          cmd_parts << "--quiet" if options[:quiet]
+          cmd_parts << "--force" if options[:force]
+          cmd_parts << "--merge" if options[:merge]
+          cmd_parts << "--detach" if options[:detach]
+          cmd_parts << "--track" if options[:track]
+          cmd_parts << "--no-track" if options[:no_track]
+          
+          if options[:create_branch]
+            cmd_parts << "-b" << Shellwords.escape(options[:create_branch])
+          elsif options[:force_create_branch]
+            cmd_parts << "-B" << Shellwords.escape(options[:force_create_branch])
+          elsif options[:orphan]
+            cmd_parts << "--orphan" << Shellwords.escape(options[:orphan])
+          end
+          
+          # Add branch or paths
+          if branch_or_paths && !branch_or_paths.empty?
+            branch_or_paths.each { |item| cmd_parts << Shellwords.escape(item) }
+          end
+          
+          cmd_parts.join(" ")
+        end
+
+        def build_switch_command(branch, options)
+          cmd_parts = ["switch"]
+          cmd_parts << "--quiet" if options[:quiet]
+          cmd_parts << "--force" if options[:force]
+          cmd_parts << "--merge" if options[:merge]
+          cmd_parts << "--detach" if options[:detach]
+          cmd_parts << "--track" if options[:track]
+          cmd_parts << "--no-track" if options[:no_track]
+          cmd_parts << "--no-guess" if options[:no_guess]
+          
+          if options[:create]
+            cmd_parts << "-c" << Shellwords.escape(options[:create])
+          elsif options[:force_create]
+            cmd_parts << "-C" << Shellwords.escape(options[:force_create])
+          elsif options[:orphan]
+            cmd_parts << "--orphan" << Shellwords.escape(options[:orphan])
+          end
+          
+          # Add branch name
+          cmd_parts << Shellwords.escape(branch) if branch
+          
+          cmd_parts.join(" ")
+        end
+
+        # Build mv commands grouped by repository
+        def build_mv_commands(dispatch_info, sources, destination, options)
+          commands_by_repo = {}
+          
+          # For mv operations, we need to handle cross-repository moves differently
+          # For now, we'll only support moves within the same repository
+          dispatch_info.each do |repo_name, repo_info|
+            repo_sources = []
+            repo_destination = nil
+            
+            # Check which sources and destination belong to this repo
+            sources.each do |source|
+              repo_sources << source if repo_info[:paths].include?(source)
+            end
+            
+            repo_destination = destination if repo_info[:paths].include?(destination)
+            
+            # Only create command if we have sources and destination in same repo
+            if repo_sources.any? && repo_destination
+              mv_cmd_parts = ["mv"]
+              mv_cmd_parts << "--force" if options[:force]
+              mv_cmd_parts << "--dry-run" if options[:dry_run]
+              mv_cmd_parts << "--verbose" if options[:verbose]
+              
+              repo_sources.each { |src| mv_cmd_parts << Shellwords.escape(src) }
+              mv_cmd_parts << Shellwords.escape(repo_destination)
+              
+              commands_by_repo[repo_name] = [mv_cmd_parts.join(" ")]
+            end
+          end
+          
+          commands_by_repo
+        end
+
+        # Build rm commands grouped by repository
+        def build_rm_commands(dispatch_info, options)
+          commands_by_repo = {}
+          
+          dispatch_info.each do |repo_name, repo_info|
+            paths = repo_info[:paths]
+            next if paths.empty?
+            
+            rm_cmd_parts = ["rm"]
+            rm_cmd_parts << "--force" if options[:force]
+            rm_cmd_parts << "--dry-run" if options[:dry_run]
+            rm_cmd_parts << "--recursive" if options[:recursive]
+            rm_cmd_parts << "--cached" if options[:cached]
+            rm_cmd_parts << "--ignore-unmatch" if options[:ignore_unmatch]
+            rm_cmd_parts << "--quiet" if options[:quiet]
+            
+            paths.each { |path| rm_cmd_parts << Shellwords.escape(path) }
+            
+            commands_by_repo[repo_name] = [rm_cmd_parts.join(" ")]
+          end
+          
+          commands_by_repo
+        end
+
+        # Build restore commands grouped by repository
+        def build_restore_commands(dispatch_info, options)
+          commands_by_repo = {}
+          
+          dispatch_info.each do |repo_name, repo_info|
+            paths = repo_info[:paths]
+            next if paths.empty?
+            
+            restore_cmd_parts = ["restore"]
+            restore_cmd_parts << "--source=#{Shellwords.escape(options[:source])}" if options[:source]
+            restore_cmd_parts << "--staged" if options[:staged]
+            restore_cmd_parts << "--worktree" if options[:worktree]
+            restore_cmd_parts << "--merge" if options[:merge]
+            restore_cmd_parts << "--conflict=#{options[:conflict]}" if options[:conflict]
+            restore_cmd_parts << "--ours" if options[:ours]
+            restore_cmd_parts << "--theirs" if options[:theirs]
+            restore_cmd_parts << "--patch" if options[:patch]
+            restore_cmd_parts << "--quiet" if options[:quiet]
+            restore_cmd_parts << "--progress" if options[:progress]
+            
+            paths.each { |path| restore_cmd_parts << Shellwords.escape(path) }
+            
+            commands_by_repo[repo_name] = [restore_cmd_parts.join(" ")]
+          end
+          
+          commands_by_repo
         end
 
         # Repository detection
