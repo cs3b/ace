@@ -50,7 +50,9 @@ module CodingAgentTools
 
       def relative_to_project(path)
         validated_path = safe_path(path)
-        Pathname.new(validated_path).relative_path_from(Pathname.new(@project_root)).to_s
+        # Normalize project root to match the normalized validated_path
+        normalized_root = normalize_path(@project_root)
+        Pathname.new(validated_path).relative_path_from(Pathname.new(normalized_root)).to_s
       end
 
       def absolute_path(path)
@@ -64,10 +66,17 @@ module CodingAgentTools
       private
 
       def resolve_project_root(root)
-        if root
+        path = if root
           File.expand_path(root)
         else
           detect_project_root
+        end
+        
+        # Normalize the path to handle symlinks consistently
+        if File.exist?(path)
+          File.realpath(path)
+        else
+          path
         end
       end
 

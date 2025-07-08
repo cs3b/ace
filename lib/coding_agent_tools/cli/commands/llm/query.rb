@@ -88,6 +88,11 @@ module CodingAgentTools
             # Initialize file I/O handler
             @file_handler = Molecules::FileIoHandler.new
 
+            # Validate output path BEFORE making API calls (security-first approach)
+            if options[:output]
+              validate_output_path(options[:output], options[:force])
+            end
+
             # Process the prompt and system instruction
             prompt_text = process_content(prompt, "prompt")
             system_text = process_system_instruction(options[:system]) if options[:system]
@@ -266,6 +271,14 @@ module CodingAgentTools
               error_output("Error: #{error.message}")
               error_output("Use --debug flag for more information")
             end
+          end
+
+          def validate_output_path(file_path, force)
+            # Perform early path validation to prevent API calls with invalid output paths
+            @file_handler.validate_write_path(file_path, force: force)
+          rescue CodingAgentTools::Error => e
+            error_output("Error: #{e.message}")
+            exit 1
           end
 
           def error_output(message)

@@ -74,9 +74,12 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
       end
 
       it "asks for confirmation and may skip files" do
-        # Mock the confirmer to always return false (don't overwrite)
-        allow(CodingAgentTools::Molecules::FileOperationConfirmer)
-          .to receive(:confirm_overwrite).and_return(false)
+        # Mock the confirmer instance to return a denial result
+        confirmer_instance = instance_double(CodingAgentTools::Molecules::FileOperationConfirmer)
+        denial_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(false, "User declined", false)
+        
+        allow(CodingAgentTools::Molecules::FileOperationConfirmer).to receive(:new).and_return(confirmer_instance)
+        allow(confirmer_instance).to receive(:confirm_overwrite).and_return(denial_result)
 
         result = installer.install_all(force: false, verbose: false)
 
@@ -151,10 +154,17 @@ RSpec.describe CodingAgentTools::Organisms::BinstubInstaller do
       end
 
       it "asks for confirmation" do
-        allow(CodingAgentTools::Molecules::FileOperationConfirmer)
-          .to receive(:confirm_overwrite).and_return(false)
+        # Mock the confirmer instance to return a denial result
+        confirmer_instance = instance_double(CodingAgentTools::Molecules::FileOperationConfirmer)
+        denial_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(false, "User declined", false)
+        
+        allow(CodingAgentTools::Molecules::FileOperationConfirmer).to receive(:new).and_return(confirmer_instance)
+        allow(confirmer_instance).to receive(:confirm_overwrite).and_return(denial_result)
+        
+        # Create a new installer after mocking
+        new_installer = described_class.new(config_file_path, target_directory)
 
-        result = installer.install_specific("tn", force: false, verbose: false)
+        result = new_installer.install_specific("tn", force: false, verbose: false)
 
         expect(result).to be false
         expect(File.read(File.join(target_directory, "tn"))).to eq("existing content")

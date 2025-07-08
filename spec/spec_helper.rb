@@ -41,6 +41,8 @@ require_relative "support/process_helpers"
 require_relative "support/env_helpers"
 # ANSI color testing infrastructure
 require_relative "support/ansi_color_testing_helper"
+# Prevent interactive prompts in tests
+require_relative "support/file_operation_confirmer_helper"
 
 # Load shared examples for client behaviors
 require_relative "support/shared_examples/client_behavior"
@@ -58,6 +60,8 @@ RSpec.configure do |config|
   # Prevent environment variable leakage between examples
   config.around do |example|
     original_env = ENV.to_hash
+    # Ensure tests run in CI mode to prevent interactive prompts
+    ENV['CI'] = 'true' unless ENV.key?('CI')
     example.run
   ensure
     ENV.replace(original_env)

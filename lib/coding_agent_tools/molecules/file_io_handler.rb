@@ -66,6 +66,29 @@ module CodingAgentTools
         end
       end
 
+      # Validate output path and confirm overwrite (early validation)
+      # @param file_path [String] Target file path
+      # @param force [Boolean] Force overwrite without confirmation
+      # @return [String] The validated and sanitized file path
+      # @raise [Error] If validation fails or overwrite is denied
+      def validate_write_path(file_path, force: false)
+        # Validate path security
+        validation_result = @path_validator.validate_path(file_path, operation: :write)
+        if validation_result.invalid?
+          raise Error, "Path validation failed: #{validation_result.error_message}"
+        end
+
+        validated_path = validation_result.sanitized_path
+
+        # Check for overwrite confirmation if file exists
+        confirmation_result = @operation_confirmer.confirm_overwrite(validated_path, force: force)
+        unless confirmation_result.confirmed?
+          raise Error, "File overwrite denied: #{confirmation_result.reason}"
+        end
+
+        validated_path
+      end
+
       # Write content to file with format handling and security checks
       # @param content [String] Content to write
       # @param file_path [String] Output file path

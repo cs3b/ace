@@ -29,7 +29,9 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
   describe "#initialize" do
     it "uses provided project root" do
       sandbox = described_class.new(project_root)
-      expect(sandbox.project_root).to eq(project_root)
+      # Handle macOS symlink resolution (/var -> /private/var)
+      expected_root = File.exist?(project_root) ? File.realpath(project_root) : project_root
+      expect(sandbox.project_root).to eq(expected_root)
     end
 
     it "detects project root when not provided" do
@@ -182,7 +184,9 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     it "returns absolute path for relative input" do
       Dir.chdir(temp_dir) do
         result = sandbox.absolute_path("README.md")
-        expect(result).to eq(File.join(temp_dir, "README.md"))
+        # Handle macOS symlink resolution (/var -> /private/var)
+        expected_path = File.realpath(File.join(temp_dir, "README.md"))
+        expect(result).to eq(expected_path)
       end
     end
 
@@ -260,6 +264,9 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
 
       it "allows files in bin directory" do
         bin_path = File.join(temp_dir, "bin", "tool")
+        # Create the directory structure to ensure path resolution works
+        FileUtils.mkdir_p(File.dirname(bin_path))
+        FileUtils.touch(bin_path)
         expect(sandbox.within_sandbox?(bin_path)).to be true
       end
 

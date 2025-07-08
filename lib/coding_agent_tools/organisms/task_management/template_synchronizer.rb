@@ -73,6 +73,8 @@ module CodingAgentTools
           
           if @config.commit && result.success? && result.changes_made? && !@config.dry_run
             commit_changes(result.stats)
+            # Recreate result to include any commit errors
+            result = create_operation_result
           end
 
           log_operation_summary(result)
