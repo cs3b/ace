@@ -377,7 +377,21 @@ module CodingAgentTools
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
           escaped_message = Shellwords.escape(message)
           commit_command = "commit -m #{escaped_message}"
-          coordinator.execute_across_repositories(commit_command, options)
+          
+          # Execute submodules first, then main repository for proper dependency order
+          submodule_result = coordinator.execute_across_repositories(commit_command, options.merge(submodules_only: true))
+          main_result = coordinator.execute_across_repositories(commit_command, options.merge(main_only: true))
+          
+          # Merge results
+          combined_results = submodule_result[:results].merge(main_result[:results])
+          combined_errors = submodule_result[:errors] + main_result[:errors]
+          
+          {
+            success: submodule_result[:success] && main_result[:success],
+            results: combined_results,
+            errors: combined_errors,
+            repositories_processed: (submodule_result[:repositories_processed] + main_result[:repositories_processed])
+          }
         end
 
         def commit_with_llm_message(options)
@@ -416,7 +430,7 @@ module CodingAgentTools
           if options[:concurrent]
             CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
           else
-            execute_sequentially(commands_by_repo, options)
+            execute_sequentially_with_submodules_first(commands_by_repo, options)
           end
         end
 
@@ -528,23 +542,63 @@ module CodingAgentTools
 
         def execute_push_sequential(command, options)
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
-          coordinator.execute_across_repositories(command, options)
+          
+          # Execute submodules first, then main repository for proper dependency order
+          submodule_result = coordinator.execute_across_repositories(command, options.merge(submodules_only: true))
+          main_result = coordinator.execute_across_repositories(command, options.merge(main_only: true))
+          
+          # Merge results
+          combined_results = submodule_result[:results].merge(main_result[:results])
+          combined_errors = submodule_result[:errors] + main_result[:errors]
+          
+          {
+            success: submodule_result[:success] && main_result[:success],
+            results: combined_results,
+            errors: combined_errors,
+            repositories_processed: (submodule_result[:repositories_processed] + main_result[:repositories_processed])
+          }
         end
 
         def execute_pull_concurrent(command, options)
-          commands_by_repo = {}
+          coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
           
-          repositories.each do |repo|
-            next unless repo[:exists] && repo[:is_git_repo]
-            commands_by_repo[repo[:name]] = [command]
-          end
+          # Execute main repository first to get updated submodule refs
+          main_result = coordinator.execute_across_repositories(command, options.merge(main_only: true))
           
-          CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
+          # Then execute submodules to update to those refs
+          submodule_result = coordinator.execute_across_repositories(command, options.merge(submodules_only: true))
+          
+          # Merge results
+          combined_results = main_result[:results].merge(submodule_result[:results])
+          combined_errors = main_result[:errors] + submodule_result[:errors]
+          
+          {
+            success: main_result[:success] && submodule_result[:success],
+            results: combined_results,
+            errors: combined_errors,
+            repositories_processed: (main_result[:repositories_processed] + submodule_result[:repositories_processed])
+          }
         end
 
         def execute_pull_sequential(command, options)
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
-          coordinator.execute_across_repositories(command, options)
+          
+          # Execute main repository first to get updated submodule refs
+          main_result = coordinator.execute_across_repositories(command, options.merge(main_only: true))
+          
+          # Then execute submodules to update to those refs  
+          submodule_result = coordinator.execute_across_repositories(command, options.merge(submodules_only: true))
+          
+          # Merge results
+          combined_results = main_result[:results].merge(submodule_result[:results])
+          combined_errors = main_result[:errors] + submodule_result[:errors]
+          
+          {
+            success: main_result[:success] && submodule_result[:success],
+            results: combined_results,
+            errors: combined_errors,
+            repositories_processed: (main_result[:repositories_processed] + submodule_result[:repositories_processed])
+          }
         end
 
         def execute_sequentially(commands_by_repo, options)
@@ -552,6 +606,58 @@ module CodingAgentTools
           errors = []
           
           commands_by_repo.each do |repo_name, commands|
+            begin
+              repository = repositories.find { |r| r[:name] == repo_name }
+              repository_path = repo_name == "main" ? nil : repository[:path]
+              executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
+              
+              repo_results = []
+              commands.each do |command|
+                result = executor.execute(command, capture_output: options.fetch(:capture_output, true))
+                repo_results << result
+              end
+              
+              results[repo_name] = {
+                success: true,
+                commands: repo_results,
+                repository: repo_name
+              }
+            rescue => e
+              errors << {
+                repository: repo_name,
+                error: e,
+                message: e.message
+              }
+              results[repo_name] = { success: false, error: e.message }
+            end
+          end
+          
+          {
+            success: errors.empty?,
+            results: results,
+            errors: errors
+          }
+        end
+
+        def execute_sequentially_with_submodules_first(commands_by_repo, options)
+          results = {}
+          errors = []
+          
+          # Execute submodules first, then main repository
+          execution_order = []
+          
+          # Add submodules to execution order first
+          commands_by_repo.keys.each do |repo_name|
+            execution_order << repo_name unless repo_name == "main"
+          end
+          
+          # Add main repository last
+          execution_order << "main" if commands_by_repo.key?("main")
+          
+          execution_order.each do |repo_name|
+            commands = commands_by_repo[repo_name]
+            next unless commands
+            
             begin
               repository = repositories.find { |r| r[:name] == repo_name }
               repository_path = repo_name == "main" ? nil : repository[:path]
