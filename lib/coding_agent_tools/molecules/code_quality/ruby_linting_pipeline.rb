@@ -42,7 +42,6 @@ module CodingAgentTools
           if linters.dig("cassettes", "enabled")
             run_cassettes(linters["cassettes"], results)
           end
-
           results
         end
 
@@ -50,22 +49,24 @@ module CodingAgentTools
 
         def run_standardrb(paths, autofix, results)
           validator = Atoms::CodeQuality::StandardRbValidator.new
-          
+
           resolved_paths = paths.map { |p| path_resolver.resolve(p) }
-          
-          if autofix && config.dig("ruby", "linters", "standardrb", "autofix")
-            result = validator.autofix(resolved_paths)
+          autofix_enabled = config.dig("ruby", "linters", "standardrb", "autofix")
+
+          result = if autofix && autofix_enabled
+            validator.autofix(resolved_paths)
           else
-            result = validator.validate(resolved_paths)
+            validator.validate(resolved_paths)
           end
 
           results[:linters][:standardrb] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:standardrb] = {
             success: false,
-            error: e.message
+            error: e.message,
+            findings: []
           }
           results[:success] = false
         end
@@ -75,17 +76,18 @@ module CodingAgentTools
             full_scan: security_config["full_scan"] || false,
             git_history: security_config["git_history"] || false
           }
-          
+
           validator = Atoms::CodeQuality::SecurityValidator.new(options)
           result = validator.validate
 
           results[:linters][:security] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:security] = {
             success: false,
-            error: e.message
+            error: e.message,
+            findings: []
           }
           results[:success] = false
         end
@@ -94,17 +96,18 @@ module CodingAgentTools
           options = {
             threshold: cassettes_config["threshold"] || 51200
           }
-          
+
           validator = Atoms::CodeQuality::CassettesValidator.new(options)
           result = validator.validate
 
           results[:linters][:cassettes] = result
           # Cassettes validator only warns, doesn't fail
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:cassettes] = {
             success: false,
-            error: e.message
+            error: e.message,
+            findings: []
           }
         end
       end

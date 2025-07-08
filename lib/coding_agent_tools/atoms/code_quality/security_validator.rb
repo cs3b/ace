@@ -29,7 +29,8 @@ module CodingAgentTools
 
         def ensure_gitleaks_available!
           unless system("which gitleaks > /dev/null 2>&1")
-            raise "Gitleaks is not installed. Please install it first."
+            raise "Gitleaks is not installed. Please install it first.\n" \
+              "  Install with: brew install gitleaks (macOS) or see https://github.com/gitleaks/gitleaks#installing"
           end
         end
 
