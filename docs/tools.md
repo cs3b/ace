@@ -2,10 +2,7 @@
 
 ## Overview
 
-This document provides a comprehensive reference for all current development tools in the Coding Agent Tools project. The tools are organized into two main categories:
-
-- **Development Tools** - Project-specific tools accessed via `bin/` for development workflows
-- **Gem Executables** - User-facing tools available directly by name via fish integration
+This document provides a comprehensive reference for all gem executables in the Coding Agent Tools project. All tools are available directly by name via fish integration, encouraging usage from any directory level without path prefixes.
 
 ## Setup Requirements
 
@@ -17,197 +14,11 @@ This document provides a comprehensive reference for all current development too
 
 ### Environment Setup
 ```bash
-# Initial setup
-bin/setup
+# Initial setup (run from dev-tools/ directory)
+./bin/setup
 
-# Load Ruby console with gem loaded
-bin/console
-```
-
-## Development Tools (`bin/`)
-
-### Git Workflow Tools
-
-#### `bin/gc` - Git Commit with Standardized Format
-```bash
-# Commit changes with intention-based message
-bin/gc -i "fix user authentication bug"
-
-# Multi-repository commit across all 4 repositories
-bin/gc -i "update documentation"
-```
-
-#### `bin/gl` - Recent Git Log
-```bash
-# Show recent git commits
-bin/gl
-```
-
-#### `bin/gp` - Git Push
-```bash
-# Push to remote repository
-bin/gp
-```
-
-#### `bin/gpull` - Git Pull
-```bash
-# Pull from remote repository across all repositories
-bin/gpull
-```
-
-### Task Management Tools
-
-#### `bin/tn` - Find Next Task
-```bash
-# Get next unblocked task to work on
-bin/tn
-```
-
-#### `bin/tr` - List Recent Tasks
-```bash
-# Show recently modified tasks
-bin/tr
-```
-
-#### `bin/tal` - List All Tasks
-```bash
-# Display all tasks across all releases
-bin/tal
-```
-
-#### `bin/llm-models` - List Available Models (Development)
-```bash
-# List available models (development version)
-bin/llm-models
-```
-
-#### `bin/llm-query` - Query LLM Services (Development)
-```bash
-# Query LLM services (development version)
-bin/llm-query anthropic "test query"
-```
-
-#### `bin/tnid` - Generate Next Task ID
-```bash
-# Generate next available task ID
-bin/tnid
-```
-
-#### `bin/rc` - Get Current Release Context
-```bash
-# Display current release information
-bin/rc
-```
-
-### Quality & Testing Tools
-
-#### `bin/test` - Run Test Suite
-```bash
-# Run RSpec tests with coverage
-bin/test
-```
-
-#### `bin/lint` - Code Quality Checks
-```bash
-# Run StandardRB linter
-bin/lint
-```
-
-#### `bin/lint-cassettes` - VCR Cassette Size Check
-```bash
-# Check VCR cassette sizes (warnings only)
-bin/lint-cassettes
-```
-
-#### `bin/lint-security` - Security Linting
-```bash
-# Run security-focused linting checks
-bin/lint-security
-```
-
-#### `bin/build` - Build and Verify Gem
-```bash
-# Build gem and verify installation
-bin/build
-```
-
-### Development Utilities
-
-#### `bin/console` - Ruby Console
-```bash
-# Start Ruby console with gem loaded
-bin/console
-```
-
-#### `bin/tree` - Project Structure Display
-```bash
-# Display filtered project structure
-bin/tree
-```
-
-#### `bin/cr` - Code Review Prompt Generator
-```bash
-# Generate code review prompt from git diff
-bin/cr
-```
-
-#### `bin/cr-docs` - Documentation Review Generator
-```bash
-# Generate documentation review prompt
-bin/cr-docs
-```
-
-#### `bin/test-review` - Test Review Generator
-```bash
-# Generate test review prompt
-bin/test-review
-```
-
-#### `bin/llm-usage` - LLM Usage Quick Check
-```bash
-# Quick usage check for LLM services
-bin/llm-usage
-```
-
-#### `bin/markdown-sync-embedded-documents` - Markdown Document Synchronizer
-```bash
-# Synchronize embedded documents in markdown files
-bin/markdown-sync-embedded-documents
-```
-
-#### `bin/np` - New Project Generator
-```bash
-# Generate new project structure
-bin/np
-```
-
-#### `bin/nt` - New Task Generator
-```bash
-# Generate new task with structured metadata
-bin/nt
-```
-
-#### `bin/setup-env` - Environment Setup Script
-```bash
-# Setup development environment
-bin/setup-env
-
-# Fish shell specific setup
-bin/setup-env.fish
-```
-
-### Build & Deployment Tools
-
-#### `bin/run` - Execute Commands
-```bash
-# Execute commands in gem context
-bin/run
-```
-
-#### `bin/setup` - Initial Development Setup
-```bash
-# Install dependencies and setup development environment
-bin/setup
+# Load Ruby console with gem loaded (run from dev-tools/ directory)
+./bin/console
 ```
 
 ## Gem Executables (available via fish integration)
@@ -570,21 +381,18 @@ release-manager report --format detailed
 
 ### By Function
 
-- **Git Operations**: `gc`, `gl`, `gp`, `gpull`, `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
-- **Task Management**: `tn`, `tr`, `tal`, `tnid`, `rc`, `task-manager`, `nt`, `np`, `release-manager`
-- **Quality Assurance**: `test`, `lint`, `lint-cassettes`, `lint-security`, `build`
-- **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`, `llm-usage`
-- **Code Review**: `cr`, `cr-docs`, `test-review`, `generate-review-prompt`, `code-review`, `code-review-prepare`, `code-review-synthesize`
-- **Navigation & Documentation**: `nav-ls`, `nav-path`, `nav-tree`, `handbook`, `tree`
-- **Development**: `console`, `run`, `setup`, `setup-env`
-- **Documentation**: `markdown-sync-embedded-documents`
+- **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`
+- **Task Management**: `task-manager`, `release-manager`
+- **LLM Integration**: `llm-query`, `llm-models`, `llm-usage-report`
+- **Code Review**: `generate-review-prompt`, `code-review`, `code-review-prepare`, `code-review-synthesize`
+- **Navigation & Documentation**: `nav-ls`, `nav-path`, `nav-tree`, `handbook`
 - **Reflection & Analysis**: `reflection-synthesize`
 
 ### By Target Users
 
-- **AI Coding Agents**: `tn`, `tr`, `tal`, `task-manager`, `llm-query`, `llm-models`, `gc`, `nt`, `np`, `nav-path`, `release-manager`
-- **Human Developers**: `console`, `tree`, `cr`, `test`, `lint`, `build`, `handbook`, `code-review`, `reflection-synthesize`
-- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`, `git-*`, `nav-ls`, `nav-tree`, `markdown-sync-embedded-documents`
+- **AI Coding Agents**: `task-manager`, `llm-query`, `llm-models`, `nav-path`, `release-manager`
+- **Human Developers**: `handbook`, `code-review`, `reflection-synthesize`
+- **Both**: `llm-usage-report`, `coding_agent_tools`, `generate-review-prompt`, `git-*`, `nav-ls`, `nav-tree`
 
 ## Common Workflows
 
@@ -597,47 +405,47 @@ task-manager next --priority high
 # 2. Query LLM for guidance with cost tracking
 llm-query google "How to implement feature X?" --track-cost
 
-# 3. Run tests and quality checks
-bin/test && bin/lint
+# 3. Navigate to relevant files using intelligent path resolution
+nav-path task README
 
-# 4. Commit changes with intention-based message
-bin/gc -i "implement feature X"
+# 4. Generate code review after implementation
+generate-review-prompt --detailed
 ```
 
 ### For Human Developers
 
 ```bash
-# 1. Setup development environment
-bin/setup
+# 1. Access development handbook for guidance
+handbook --search "workflow"
 
-# 2. Run comprehensive quality checks
-bin/test && bin/lint && bin/lint-security
-
-# 3. Generate and review code analysis
+# 2. Generate and review code analysis
 generate-review-prompt --detailed
 
-# 4. Build and verify gem
-bin/build
+# 3. Use interactive code review for quality assurance
+code-review --interactive
+
+# 4. Generate reflection report for session analysis
+reflection-synthesize --session current
 ```
 
 ## Migration Status
 
-**Current State**: The project has successfully implemented fish shell integration for gem executables. All gem executables are available directly by name without path prefixes.
+**Current State**: The project encourages direct command usage via fish shell integration. All gem executables are available directly by name from any directory without path prefixes.
 
-**Tool Access Methods**: 
-- **Development tools**: Use `bin/` prefix for project-specific development workflows
-- **Gem executables**: Use tool name directly (fish integration provides automatic path resolution)
-- **Legacy references**: Old full path references still work but are not recommended
+**Tool Access Philosophy**: 
+- **Direct Usage**: All tools are available directly by name (e.g., `task-manager`, `llm-query`)
+- **No Binstubs**: Development binstubs are not documented to encourage direct command usage
+- **Fish Integration**: Automatic path resolution for seamless operation from any directory
 
 ## Notes
 
 - **Fish Integration**: All gem executables are available directly by name after setup
-- **Development Tools**: Project-specific `bin/` tools require the `bin/` prefix for clarity
+- **Direct Commands**: Use commands directly from any directory without path prefixes
 - **Security Framework**: Most tools integrate with the project's comprehensive security validation
 - **Performance**: LLM tools include intelligent caching and cost tracking
-- **Multi-Repository**: Git tools operate seamlessly across all 4 project repositories
+- **Git Enhancement**: Git command wrappers provide enhanced functionality over standard git commands
 - **Task Integration**: Task management tools work with documentation-based workflows in `dev-taskflow/`
 
 ---
 
-*This documentation covers the current state of tools as of the migration period. For the most up-to-date information, run individual tools with `--help` flag.*
+*This documentation covers gem executables only, encouraging direct command usage from any directory. For the most up-to-date information, run individual tools with `--help` flag.*
