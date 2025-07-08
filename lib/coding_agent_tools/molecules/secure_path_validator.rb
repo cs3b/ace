@@ -74,6 +74,12 @@ module CodingAgentTools
           end
         end
 
+        # Add project root to allowed paths if detectable
+        project_root = discover_project_root
+        if project_root && !@config[:allowed_base_paths].include?(project_root)
+          @config[:allowed_base_paths] << project_root
+        end
+
         @security_logger = security_logger || create_default_logger
       end
 
@@ -157,6 +163,19 @@ module CodingAgentTools
         end
 
         temp_dirs
+      end
+
+      # Discover project root using ProjectRootDetector
+      # @return [String, nil] Project root path or nil if not detectable
+      def discover_project_root
+        require_relative "../atoms/project_root_detector"
+        Atoms::ProjectRootDetector.find_project_root
+      rescue => e
+        # Log the error but don't fail initialization
+        @security_logger&.log_event(:project_root_detection_failed,
+          reason: e.message,
+          metadata: {fallback_to_current_dir: true})
+        nil
       end
 
       # Create default security logger
