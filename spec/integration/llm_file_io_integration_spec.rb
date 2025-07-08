@@ -8,6 +8,8 @@ require "yaml"
 require_relative "../support/env_helper"
 
 RSpec.describe "LLM File I/O Integration", type: :integration do
+  include CliHelpers
+  
   let(:temp_dir) { Dir.mktmpdir("llm_integration_test") }
   let(:prompt_file) { File.join(temp_dir, "test_prompt.txt") }
   let(:system_file) { File.join(temp_dir, "system_prompt.md") }
@@ -310,10 +312,10 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
 
     it "handles invalid format gracefully" do
       env = {"GOOGLE_API_KEY" => api_key}
-      stdout, stderr, status = execute_gem_executable("llm-query", ["google", "Test", "--format", "invalid"], env: env)
+      result = execute_cli_command("llm-query", ["google", "Test", "--format", "invalid"], env: env)
 
-      expect(status).not_to be_success, "Command should have failed"
-      combined_output = "#{stdout}#{stderr}"
+      expect(result).not_to be_success, "Command should have failed"
+      combined_output = "#{result.stdout}#{result.stderr}"
       expect(combined_output).to include("ERROR")
     end
   end
