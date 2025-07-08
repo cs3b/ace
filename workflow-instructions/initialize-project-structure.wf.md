@@ -54,7 +54,7 @@ AI-assisted development workflow in a new or existing project.
 4. **Setup v.0.0.0 Bootstrap Release Tracking**:
     - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using the bootstrap release template.
     - **Customize Template Tasks**: Replace template placeholders in copied task files:
-        - Replace `TEMPLATE-task.X` IDs with actual task IDs using `bin/tnid v.0.0.0` for each task.
+        - Use `nav-path task-new` to create actual tasks from templates with proper IDs
         - Replace `[PLACEHOLDER]` values in the release overview file with actual project information.
         - Update task dependencies to use the actual generated task IDs.
         - Remove template notes sections from all copied files.
@@ -75,7 +75,7 @@ AI-assisted development workflow in a new or existing project.
     - **Display v.0.0.0 Tasks**: List the created v.0.0.0 tasks and their current status, explaining what remains to be completed.
     - **PRD Completion Guidance**: Provide clear instructions for completing the PRD using the generated task, including the user verification step.
     - **Roadmap Creation Guidance**: Explain the roadmap creation process and how it integrates with the v.0.0.0 release completion.
-    - **Release Management Overview**: Briefly explain how to use `bin/tn` and `bin/tr` commands to track progress and manage the v.0.0.0 release.
+    - **Release Management Overview**: Briefly explain how to use `task-manager next` and `task-manager recent` commands to track progress and manage the v.0.0.0 release.
     - **Transition to v.0.1.0**: Explain that once v.0.0.0 is complete and archived, the project will be ready for v.0.1.0 foundation planning using the draft-release workflow.
 
 ## Prerequisites
@@ -1349,7 +1349,7 @@ Upon completion of v.0.0.0, the project will be ready for:
 
 <documents>
 <template path="dev-handbook/templates/release-v.0.0.0/01-setup-structure.task.template.md">---
-id: TEMPLATE-task.1 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.1 # TEMPLATE - Replace with actual task ID using nav-path
 status: pending
 priority: high
 estimate: 1h
@@ -1360,7 +1360,7 @@ dependencies: []
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `nav-path task-new`)
 2. Remove this template note section
 3. Customize content for specific project needs
 
@@ -1453,7 +1453,7 @@ Initialize the foundational documentation structure for the project using the do
 
 <documents>
 <template path="dev-handbook/templates/release-v.0.0.0/02-complete-documentation.task.template.md">---
-id: TEMPLATE-task.2 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.2 # TEMPLATE - Replace with actual task ID using nav-path
 status: pending
 priority: high
 estimate: 2h
@@ -1464,7 +1464,7 @@ dependencies: [TEMPLATE-task.1]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `nav-path task-new`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -1570,7 +1570,7 @@ Enhance and complete the core documentation files generated during project struc
 
 <documents>
 <template path="dev-handbook/templates/release-v.0.0.0/03-complete-prd.task.template.md">---
-id: TEMPLATE-task.3 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.3 # TEMPLATE - Replace with actual task ID using nav-path
 status: pending
 priority: high
 estimate: 3h
@@ -1581,7 +1581,7 @@ dependencies: [TEMPLATE-task.2]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `nav-path task-new`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -1710,7 +1710,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
 
 <documents>
 <template path="dev-handbook/templates/release-v.0.0.0/04-create-roadmap.task.template.md">---
-id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using nav-path
 status: pending
 priority: high
 estimate: 2h
@@ -1721,7 +1721,7 @@ dependencies: [TEMPLATE-task.3]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `nav-path task-new`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs

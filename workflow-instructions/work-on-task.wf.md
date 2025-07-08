@@ -19,7 +19,7 @@
 For experienced users, here's the condensed workflow:
 
 1. **Read linked documents** - Load project context and workflow instructions
-2. **Select task** - Use `bin/tn` to get next task or specify task path
+2. **Select task** - Use `task-manager next` to get next task or specify task path
 3. **Mark in-progress** - Update task status to `in-progress`
 4. **Execute plan** - Work through planning and execution steps autonomously
 5. **Validate completion** - Verify all subtasks and acceptance criteria are done
@@ -32,7 +32,7 @@ For experienced users, here's the condensed workflow:
 
      ```bash
      # Get next task to work on
-     bin/tn
+     task-manager next
      ```
 
    * Alternatively, manually select by listing available tasks:
@@ -42,7 +42,7 @@ For experienced users, here's the condensed workflow:
      ls -1 dev-taskflow/current/
 
      # List available tasks
-     ls -1 dev-taskflow/current/*/tasks/*.md
+     task-manager all
      ```
 
    * Review task metadata to select appropriate task:

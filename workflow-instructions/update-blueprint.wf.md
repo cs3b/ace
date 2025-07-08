@@ -232,7 +232,7 @@ This project follows a documentation-first approach with these primary directori
 To see the complete filtered directory structure, run:
 
 ```bash
-bin/tree
+nav-tree
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -305,7 +305,7 @@ bin/build
 
 ### Common Workflows
 
-- **New Feature**: Use `bin/tn` to find next task, follow task workflow
+- **New Feature**: Use `task-manager next` to find next task, follow task workflow
 - **Bug Fix**: Create task in backlog, prioritize, implement
 - **Documentation**: Update relevant files in `dev-taskflow/`
 

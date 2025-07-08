@@ -21,7 +21,7 @@ Review and refine a task definition, potentially proposing an implementation app
 1. **Identify and Load Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `bin/tn` to get the next task to review
+     - If no task specified: Run `task-manager next` to get the next task to review
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path
@@ -267,7 +267,7 @@ This workflow ensures tasks are thoroughly vetted before implementation, reducin
 
 <documents>
     <template path="dev-handbook/templates/release-tasks/task.template.md">---
-id: <run bin/tnid to generate ID>
+id: <generated automatically by nav-path>
 status: pending
 priority: <high/medium/low>
 estimate: <n>h

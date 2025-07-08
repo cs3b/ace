@@ -40,37 +40,33 @@ Maintain and update the comprehensive tools documentation (dev-tools/docs/tools.
 
 1. **Identify Tool Category and Purpose:**
 
-   **Tool Type Classification:**
-   - **Development tools**: Used for project development workflows
-     - Git workflow tools (gc, gl, gp, gpull)
-     - Task management tools (tn, tr, tal, tnid, rc)
-     - Quality & testing tools (test, lint, build)
-     - Development utilities (console, tree, cr*)
+   **Tool Type Classification (Focus: Gem Executables Only):**
    - **Gem executables**: Available globally after gem installation
      - LLM integration tools (llm-query, llm-models, llm-usage-report)
      - Main CLI interface (coding_agent_tools)
      - Code review & analysis tools (task-manager, generate-review-prompt)
+     - Git command wrappers (git-add, git-commit, git-diff, etc.)
+     - Navigation tools (nav-ls, nav-path, nav-tree)
+     - Release management (release-manager)
+     - Documentation access (handbook)
+     - Reflection tools (reflection-synthesize)
 
    **Purpose Analysis:**
    ```bash
    # Test tool functionality directly (fish integration makes exe/ tools available)
    tool-name --help
    
-   # For development tools, test from project root
-   bin/tool-name --help
-   
    # Check tool source for additional context
-   cat bin/tool-name
    cat dev-tools/exe/tool-name
    ```
 
 2. **Locate Correct Documentation Section:**
 
-   **Current dev-tools/docs/tools.md structure:**
+   **Current dev-tools/docs/tools.md structure (Focus: Gem Executables Section):**
    - Overview
    - Setup Requirements  
-   - Development Tools (bin/)
-   - Gem Executables (available via fish integration)
+   - Development Tools (bin/) - **SKIP**
+   - Gem Executables (available via fish integration) - **FOCUS HERE**
    - Tool Categories
    - Common Workflows
    - Migration Status
@@ -124,10 +120,10 @@ tool-name --other-useful-flag
    4. Include in workflow examples if applicable
    5. Update migration status if relevant
 
-   **Location Guidelines:**
-   - **Development tools**: Add to "Development Tools" section with `bin/` prefix for invocation
+   **Location Guidelines (Gem Executables Only):**
    - **Gem executables**: Add to "Gem Executables" section using tool name only (fish integration available)
    - Use appropriate subsection (Git Workflow, Task Management, LLM Integration, etc.)
+   - **Skip development tools**: Focus only on dev-tools/exe/ directory
 
 5. **Update Existing Tool Documentation:**
 
@@ -326,29 +322,17 @@ markdownlint dev-tools/docs/tools.md
 markdown-link-check dev-tools/docs/tools.md 2>/dev/null || echo "Link checker not available"
 ```
 
-**Test 2: Tool Availability Verification**
+**Test 2: Tool Availability Verification (Gem Executables Only)**
 ```bash
 # Check that documented gem executables are available (fish integration)
 grep -o '#### `[^`]*`' dev-tools/docs/tools.md | grep -v 'bin/' | while read line; do
   tool=$(echo $line | sed 's/#### `\([^`]*\)`.*/\1/')
   command -v "$tool" >/dev/null || echo "Tool not available: $tool"
 done
-
-# Check development tools exist
-grep -o '#### `bin/[^`]*`' dev-tools/docs/tools.md | while read line; do
-  tool=$(echo $line | sed 's/#### `\([^`]*\)`.*/\1/')
-  [ -f "$tool" ] || echo "Development tool missing: $tool"
-done
 ```
 
-**Test 3: Category Completeness**
+**Test 3: Category Completeness (Gem Executables Only)**
 ```bash
-# Ensure all bin/ tools are documented
-for tool in bin/*; do
-  basename_tool=$(basename "$tool")
-  grep -q "bin/$basename_tool" dev-tools/docs/tools.md || echo "Missing bin/ tool: $basename_tool"
-done
-
 # Ensure all exe/ tools are documented  
 for tool in dev-tools/exe/*; do
   basename_tool=$(basename "$tool")
@@ -365,13 +349,12 @@ if grep -q "dev-tools/exe/" dev-tools/docs/tools.md; then
 fi
 ```
 
-### Integration Points Verification
+### Integration Points Verification (Gem Executables Only)
 
-- [ ] All tools in bin/ are documented with `bin/` prefix
 - [ ] All tools in dev-tools/exe/ are documented using tool name only
-- [ ] Tool categories are complete and accurate
+- [ ] Tool categories are complete and accurate for gem executables
 - [ ] Workflow examples use correct tool naming conventions
-- [ ] Cross-references between tools are maintained
+- [ ] Cross-references between gem executables are maintained
 - [ ] No full paths to exe/ tools (fish integration handles this)
 
 ## Usage Example

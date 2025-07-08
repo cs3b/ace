@@ -12,7 +12,7 @@ user-provided release scope into actionable tasks.
 * Developer has gathered raw release scope notes (features, bug-fixes, refactoring ideas, etc.).
 * The current project version is known or can be discovered from the project's version file.
 * Access to the `dev-taskflow/` and `dev-handbook/` directories.
-* The `bin/tnid` command is available and functional for generating task IDs.
+* Higher-order navigation tools are available for task management.
 
 ## Project Context Loading
 
@@ -73,8 +73,8 @@ user-provided release scope into actionable tasks.
      b. Create a new task file using the task template:
 
      c. Key rules for task creation:
-        * Use `bin/tnid v.X.Y.Z` to generate the next sequential task ID
-        * Task filename format: `v.X.Y.Z+task.N-kebab-case-title.md`
+        * Use `nav-path task-new --title "Task Title" --priority high --estimate "4h"` to generate tasks automatically
+        * This handles ID generation, file naming, and proper directory placement
         * Planning steps use asterisk markers (`* [ ]`)
         * Execution steps use hyphen markers (`- [ ]`)
         * Always include a directory audit for context
@@ -191,32 +191,23 @@ user-provided release scope into actionable tasks.
 
 **Symptoms:**
 
-* `bin/tnid` command not found or fails
+* `nav-path task-new` command not found or fails
 * Duplicate task ID generation
 * Inconsistent numbering sequence
 
 **Recovery Steps:**
 
-1. Check if `bin/tnid` script exists and is executable: `ls -la bin/tnid`
-2. Try alternative task ID generation:
-
-   ```bash
-   # Find last task ID manually
-   find dev-taskflow/current -name "*.md" | grep -E "task\.[0-9]+" | sort -V | tail -1
-   
-   # Generate next ID manually
-   # If last was task.55, use task.56
-   ```
-
-3. Use manual numbering starting from last known ID
-4. Ensure task ID uniqueness across all releases
+1. Check if higher-order navigation tools are available
+2. Verify task-manager tools are properly configured
+3. Use nav-path with simpler parameters if complex ones fail
+4. Ensure task uniqueness is maintained by the system
 5. Ask user to verify task numbering approach
 
 **Prevention:**
 
-* Test `bin/tnid` functionality before starting release creation
+* Test `nav-path task-new` functionality before starting release creation
 * Verify project tooling is properly set up
-* Keep backup task numbering strategy ready
+* Understand available nav-path options and capabilities
 
 **Version Conflicts:**
 
@@ -559,7 +550,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 <!-- Additional context, decisions, or clarifications --></template>
     
     <template path="dev-handbook/templates/release-tasks/task.template.md">---
-id: <run bin/tnid to generate ID>
+id: <generated automatically by nav-path>
 status: pending
 priority: <high/medium/low>
 estimate: <n>h

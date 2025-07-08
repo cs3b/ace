@@ -68,7 +68,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
      ```
 
    - **Enhanced Directory Resolution:**
-     - Use `bin/rc` to get current release context automatically
+     - Use `nav-path reflection-new` to get current release context automatically
      - Create reflections directory if it doesn't exist
      - Follow current release structure for organization
 
