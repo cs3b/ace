@@ -4,6 +4,7 @@ require "spec_helper"
 
 RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   let(:path_validator) { instance_double(CodingAgentTools::Molecules::SecurePathValidator) }
+  let(:operation_confirmer) { instance_double(CodingAgentTools::Molecules::FileOperationConfirmer) }
   let(:synchronizer) { described_class.new(path_validator: path_validator) }
 
   let(:template_document) do
@@ -56,6 +57,8 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
     # Mock successful confirmation result
     confirmation_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(true, "Auto-confirmed", true)
     allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
+    # Mock the operation_confirmer method on the synchronizer
+    allow(synchronizer).to receive(:operation_confirmer).and_return(operation_confirmer)
   end
 
   describe "#synchronize_document", :security do
