@@ -229,6 +229,10 @@ module CodingAgentTools
         def create_path_validator
           CodingAgentTools::Molecules::SecurePathValidator.new
         end
+
+        def operation_confirmer
+          @operation_confirmer ||= CodingAgentTools::Molecules::FileOperationConfirmer.new
+        end
       end
     end
   end
