@@ -9,10 +9,7 @@ module CodingAgentTools
         class Lint < Dry::CLI::Command
           desc "Run code quality validation and linting"
 
-          argument :target, 
-                   desc: "What to lint: 'ruby', 'markdown', or 'all'",
-                   default: "all",
-                   values: %w[ruby markdown all]
+          argument :paths, desc: "Paths to lint", type: :array, required: false
 
           option :autofix,
                  desc: "Apply moderate-level automatic fixes",
@@ -42,7 +39,7 @@ module CodingAgentTools
                  type: :boolean,
                  default: false
 
-          def call(target: "all", **options)
+          def call(target: "all", paths: nil, **options)
             require_relative "../../../organisms/code_quality/multi_phase_quality_manager"
             
             manager = Organisms::CodeQuality::MultiPhaseQualityManager.new(
@@ -62,8 +59,10 @@ module CodingAgentTools
 
             result = manager.run(
               target: target,
+              paths: paths || ["."],
               autofix: options[:autofix],
-              review_diff: options[:review_diff]
+              review_diff: options[:review_diff],
+              show_details: true
             )
 
             exit(result[:success] ? 0 : 1)

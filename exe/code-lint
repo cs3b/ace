@@ -11,16 +11,89 @@ require "coding_agent_tools/version"
 # Only require what we need for code-lint
 require_relative "../lib/coding_agent_tools/cli/commands/code/lint"
 
-module CodingAgentTools
-  module Cli
-    module Commands
-      extend Dry::CLI::Registry
+module CodeLint
+  module Commands
+    extend Dry::CLI::Registry
+    
+    # Create command variations
+    class All < CodingAgentTools::Cli::Commands::Code::Lint
+      def call(paths: nil, **options)
+        super(target: "all", paths: paths, **options)
+      end
+    end
+    
+    class Ruby < CodingAgentTools::Cli::Commands::Code::Lint
+      desc "Run Ruby linters only"
       
-      # Register only the lint command
-      register "lint", Code::Lint
+      def call(paths: nil, **options)
+        super(target: "ruby", paths: paths, **options)
+      end
+    end
+    
+    class Markdown < CodingAgentTools::Cli::Commands::Code::Lint
+      desc "Run Markdown linters only"
+      
+      def call(paths: nil, **options)
+        super(target: "markdown", paths: paths, **options)
+      end
+    end
+    
+    # Register commands at root level
+    register "ruby", Ruby
+    register "markdown", Markdown
+    
+    # Default command (when no subcommand is given)
+    register "version", aliases: ["v", "-v", "--version"] do |cmd|
+      cmd.define_singleton_method(:call) do |*|
+        puts "code-lint #{CodingAgentTools::VERSION}"
+      end
     end
   end
 end
 
-# Run the CLI with the lint command
-Dry::CLI.new(CodingAgentTools::Cli::Commands).call
+# Run the CLI
+cli = Dry::CLI.new(CodeLint::Commands)
+
+# Handle default command or options without subcommand
+if ARGV.empty? || (ARGV.all? { |arg| arg.start_with?("-") })
+  if ARGV.include?("--help") || ARGV.include?("-h")
+  # Show help
+  puts "Commands:"
+  puts "  code-lint               # Run all linters (default)"
+  puts "  code-lint ruby          # Run Ruby linters only"
+  puts "  code-lint markdown      # Run Markdown linters only"
+  puts "  code-lint version       # Print version"
+  puts ""
+  puts "Options:"
+  puts "  --autofix, -a           # Apply moderate-level automatic fixes"
+  puts "  --config=VALUE, -c      # Path to custom configuration file"
+  puts "  --dry-run, -n           # Show what would be done without making changes"
+  puts "  --review-diff, -r       # Review all changes made during autofix"
+  puts "  --validate-config       # Validate configuration file and exit"
+  puts "  --help, -h              # Print this help"
+  else
+    # Run all linters with the provided options
+    all_cmd = CodeLint::Commands::All.new
+    options = {}
+    
+    # Parse options manually
+    ARGV.each do |arg|
+      case arg
+      when "--autofix", "-a"
+        options[:autofix] = true
+      when "--dry-run", "-n"  
+        options[:dry_run] = true
+      when "--review-diff", "-r"
+        options[:review_diff] = true
+      when "--validate-config"
+        options[:validate_config] = true
+      when /^--config=(.+)/, /^-c(.+)/
+        options[:config] = $1
+      end
+    end
+    
+    all_cmd.call(**options)
+  end
+else
+  cli.call
+end

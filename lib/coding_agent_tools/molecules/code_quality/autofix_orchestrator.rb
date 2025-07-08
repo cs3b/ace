@@ -52,20 +52,24 @@ module CodingAgentTools
           standardrb = ruby_results.dig(:linters, :standardrb)
           return unless standardrb
 
-          if standardrb[:fixed] && standardrb[:success]
+          if standardrb[:fixed]
+            # Count correctable issues that were likely fixed
             fixed_count = standardrb[:findings].count { |f| f[:correctable] }
-            summary[:total_fixed] += fixed_count
-            summary[:fixes_applied] << {
-              type: "ruby_standardrb",
-              count: fixed_count,
-              message: "Applied StandardRB formatting fixes"
-            }
-          elsif standardrb[:fixed] && !standardrb[:success]
-            summary[:total_failed] += 1
-            summary[:failures] << {
-              type: "ruby_standardrb",
-              error: "Some StandardRB fixes could not be applied"
-            }
+            
+            if fixed_count > 0
+              summary[:total_fixed] += fixed_count
+              summary[:fixes_applied] << {
+                type: "ruby_standardrb",
+                count: fixed_count,
+                message: "Applied StandardRB formatting fixes"
+              }
+            else
+              summary[:total_failed] += 1
+              summary[:failures] << {
+                type: "ruby_standardrb",
+                error: "No correctable issues found to fix"
+              }
+            end
           end
         end
 

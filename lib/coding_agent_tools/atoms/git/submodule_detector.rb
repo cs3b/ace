@@ -59,12 +59,12 @@ module CodingAgentTools
             # Parse line format: " commit_hash path (branch_info)"
             # Status characters: ' ' (initialized), '-' (not initialized), '+' (checked out)
             status_char = line[0]
-            parts = line[1..-1].strip.split
+            parts = line[1..].strip.split
             next if parts.length < 2
 
             commit_hash = parts[0]
             submodule_path = parts[1]
-            branch_info = parts[2..-1].join(" ") if parts.length > 2
+            branch_info = parts[2..].join(" ") if parts.length > 2
 
             submodules << build_submodule_info(
               submodule_path,
