@@ -1174,10 +1174,10 @@ EOF
 
 ### Non-Interactive Prompt Generation
 
-- Use `dev-tools/exe/generate-review-prompt` for batch processing
-- Generates fully hydrated prompts with embedded content
+- Use `code-review` command for batch processing
+- Generates complete review sessions with embedded content  
 - Supports all focus areas and target types
-- Output ready for direct LLM processing without agent context limits
+- Session output ready for direct LLM processing or further analysis
 
 ## Performance Considerations
 
