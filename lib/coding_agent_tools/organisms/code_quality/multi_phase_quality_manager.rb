@@ -31,23 +31,23 @@ module CodingAgentTools
 
         def run(target: "all", paths: ["."], autofix: false, review_diff: false, show_details: false)
           puts "🔍 Starting Code Quality Validation"
-          
+
           # Phase 1: Detection & Validation
           phase1_results = run_phase1(target, paths, autofix, show_details)
-          
+
           # Write detailed results to file if issues found
           if phase1_results[:ruby] || phase1_results[:markdown]
             write_detailed_report(phase1_results, target)
           end
-          
+
           return phase1_results unless autofix
-          
+
           # Phase 2: Moderate Autofix & Error Distribution
           phase2_results = run_phase2(phase1_results, target, paths, review_diff)
-          
+
           # Prepare for Phase 3 (Agent Integration Foundation)
           phase3_results = prepare_phase3(phase2_results)
-          
+
           # Combine all results
           combine_results(phase1_results, phase2_results, phase3_results)
         end
@@ -56,7 +56,7 @@ module CodingAgentTools
 
         def run_phase1(target, paths, autofix, show_details)
           puts "\n📋 Phase 1: Detection & Validation"
-          
+
           results = {
             phase: 1,
             timestamp: Time.now,
@@ -91,16 +91,16 @@ module CodingAgentTools
 
           results[:before_snapshot] = before_snapshot if before_snapshot
           display_phase1_summary(results)
-          
+
           # Don't show detailed results in console anymore
           # Detailed results are written to file instead
-          
+
           results
         end
 
         def run_phase2(phase1_results, target, paths, review_diff)
           puts "\n🔧 Phase 2: Moderate Autofix & Error Distribution" unless @dry_run
-          
+
           results = {
             phase: 2,
             timestamp: Time.now,
@@ -120,7 +120,7 @@ module CodingAgentTools
             puts "  ↻ Re-validating after fixes..." unless @dry_run
             revalidation = run_phase1(target, paths, false, false)
             results[:revalidation] = autofix_orchestrator.validate_fixes(
-              phase1_results, 
+              phase1_results,
               revalidation
             )
           end
@@ -131,10 +131,10 @@ module CodingAgentTools
               output_dir: @path_resolver.project_root,
               max_files: @config.dig("error_distribution", "max_files") || 4
             )
-            
+
             # Clean up old error files first
             error_generator.cleanup
-            
+
             # Generate new error files from latest results
             latest_results = results[:revalidation] ? revalidation : phase1_results
             results[:error_distribution] = error_generator.generate(latest_results)
@@ -144,17 +144,17 @@ module CodingAgentTools
           if review_diff && phase1_results[:before_snapshot]
             diff_analyzer = Molecules::CodeQuality::DiffReviewAnalyzer.new
             after_snapshot = diff_analyzer.create_snapshot
-            
+
             analysis = diff_analyzer.analyze_changes(
               before_snapshot: phase1_results[:before_snapshot],
               after_snapshot: after_snapshot
             )
-            
+
             results[:diff_review] = {
               analysis: analysis,
               review: diff_analyzer.format_review(analysis)
             }
-            
+
             # Write review to file
             review_path = File.join(@path_resolver.project_root, ".lint-diff-review.md")
             File.write(review_path, results[:diff_review][:review])
@@ -167,7 +167,7 @@ module CodingAgentTools
 
         def prepare_phase3(phase2_results)
           puts "\n🤖 Phase 3: Agent Integration Foundation" unless @dry_run
-          
+
           results = {
             phase: 3,
             timestamp: Time.now,
@@ -197,8 +197,8 @@ module CodingAgentTools
 
         def combine_results(phase1, phase2, phase3)
           {
-            success: phase1[:success] && 
-                    (!phase2 || phase2.dig(:revalidation, :success) != false),
+            success: phase1[:success] &&
+              (!phase2 || phase2.dig(:revalidation, :success) != false),
             phases: {
               phase1: phase1,
               phase2: phase2,
@@ -240,21 +240,21 @@ module CodingAgentTools
 
         def display_phase1_summary(results)
           puts "\n  Phase 1 Summary:"
-          
+
           total_issues = 0
           if results[:ruby]
             puts "  • Ruby linters: #{results[:ruby][:total_issues]} issues found"
             total_issues += results[:ruby][:total_issues]
           end
-          
+
           if results[:markdown]
             puts "  • Markdown linters: #{results[:markdown][:total_issues]} issues found"
             total_issues += results[:markdown][:total_issues]
           end
-          
+
           status = results[:success] ? "✅ PASSED" : "❌ FAILED"
           puts "  • Overall status: #{status}"
-          
+
           if total_issues > 0 && !@dry_run
             puts "\n  📄 Detailed report: .lint-report.md"
           end
@@ -262,12 +262,12 @@ module CodingAgentTools
 
         def display_phase2_summary(results)
           puts "\n  Phase 2 Summary:"
-          
+
           if results[:autofix_summary]
             puts "  • Fixes applied: #{results[:autofix_summary][:total_fixed]}"
             puts "  • Fix failures: #{results[:autofix_summary][:total_failed]}"
           end
-          
+
           if results[:error_distribution]
             puts "  • Error files generated: #{results[:error_distribution][:files_generated].size}"
           end
@@ -275,7 +275,7 @@ module CodingAgentTools
 
         def display_phase3_summary(results)
           puts "\n  Phase 3 Summary:"
-          
+
           if results[:agent_ready]
             puts "  • Agent coordination: READY"
             puts "  • Error files: #{results[:error_files].size}"
@@ -287,19 +287,19 @@ module CodingAgentTools
 
         def display_detailed_results(results)
           puts "\n📊 Detailed Results:"
-          
+
           # Display Ruby linting results
           if results[:ruby] && results[:ruby][:linters]
             results[:ruby][:linters].each do |linter_name, linter_result|
               next unless linter_result[:findings] && !linter_result[:findings].empty?
-              
+
               puts "\n  #{linter_name.to_s.upcase}:"
               linter_result[:findings].each do |finding|
                 display_finding(finding, linter_name)
               end
             end
           end
-          
+
           # Display Markdown linting results
           if results[:markdown] && results[:markdown][:linters]
             results[:markdown][:linters].each do |linter_name, linter_result|
@@ -323,7 +323,7 @@ module CodingAgentTools
           when :standardrb
             relative_file = make_path_relative(finding[:file])
             location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
-            severity = finding[:severity] == "error" ? "❌" : "⚠️"
+            severity = (finding[:severity] == "error") ? "❌" : "⚠️"
             puts "    #{severity} #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             puts "    ⚠️  Security: #{finding}"
@@ -333,7 +333,7 @@ module CodingAgentTools
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
               file = finding[:file] || "unknown"
-              relative_file = file != "unknown" ? make_path_relative(file) : file
+              relative_file = (file != "unknown") ? make_path_relative(file) : file
               message = finding[:message] || finding[:template] || finding[:link] || "issue"
               puts "    ❌ #{relative_file} - #{message}"
             else
@@ -346,45 +346,55 @@ module CodingAgentTools
 
         def write_detailed_report(results, target)
           report_path = File.join(@path_resolver.project_root, ".lint-report.md")
-          
+
           File.open(report_path, "w") do |f|
             f.puts "# Code Quality Report"
             f.puts "\n**Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
             f.puts "**Target**: #{target}"
             f.puts "\n## Summary"
-            
+
             total_issues = 0
             if results[:ruby]
               f.puts "\n### Ruby Linters"
               f.puts "- Total issues: #{results[:ruby][:total_issues]}"
               total_issues += results[:ruby][:total_issues]
             end
-            
+
             if results[:markdown]
               f.puts "\n### Markdown Linters"
               f.puts "- Total issues: #{results[:markdown][:total_issues]}"
               total_issues += results[:markdown][:total_issues]
             end
-            
+
             f.puts "\n**Total Issues Found**: #{total_issues}"
-            
+
             # Write detailed findings
             f.puts "\n## Detailed Findings"
-            
+
             # Ruby findings
             if results[:ruby] && results[:ruby][:linters]
               results[:ruby][:linters].each do |linter_name, linter_result|
-                next unless linter_result[:findings] && !linter_result[:findings].empty?
-                
-                f.puts "\n### #{linter_name.to_s.upcase}"
-                f.puts "\n```"
-                linter_result[:findings].each do |finding|
-                  f.puts format_finding_for_report(finding, linter_name)
+                # Show errors even if no findings
+                if linter_result[:error]
+                  f.puts "\n### #{linter_name.to_s.upcase} (ERROR)"
+                  f.puts "\n```"
+                  f.puts "❌ #{linter_result[:error]}"
+                  f.puts "```"
+                elsif linter_result[:findings] && !linter_result[:findings].empty?
+                  f.puts "\n### #{linter_name.to_s.upcase}"
+                  f.puts "\n```"
+                  linter_result[:findings].each do |finding|
+                    f.puts format_finding_for_report(finding, linter_name)
+                  end
+                  f.puts "```"
+                else
+                  # Show successful linters with no findings
+                  f.puts "\n### #{linter_name.to_s.upcase}"
+                  f.puts "\nNo issues found ✅"
                 end
-                f.puts "```"
               end
             end
-            
+
             # Markdown findings
             if results[:markdown] && results[:markdown][:linters]
               results[:markdown][:linters].each do |linter_name, linter_result|
@@ -405,7 +415,7 @@ module CodingAgentTools
                 end
               end
             end
-            
+
             f.puts "\n## Next Steps"
             f.puts "\n1. Review the issues listed above"
             f.puts "2. Run `code-lint --autofix` to apply automatic fixes"
@@ -420,7 +430,7 @@ module CodingAgentTools
             # Make path relative to project root
             relative_file = make_path_relative(finding[:file])
             location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
-            severity = finding[:severity] == "error" ? "ERROR" : "WARNING"
+            severity = (finding[:severity] == "error") ? "ERROR" : "WARNING"
             "#{severity}: #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             "Security Issue: #{finding}"
@@ -430,7 +440,7 @@ module CodingAgentTools
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
               file = finding[:file] || "unknown"
-              relative_file = file != "unknown" ? make_path_relative(file) : file
+              relative_file = (file != "unknown") ? make_path_relative(file) : file
               message = finding[:message] || finding[:template] || finding[:link] || "issue"
               "#{relative_file} - #{message}"
             else
@@ -443,7 +453,7 @@ module CodingAgentTools
 
         def make_path_relative(path)
           return path unless path && File.absolute_path?(path)
-          
+
           project_root = @path_resolver.project_root
           path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
         end
