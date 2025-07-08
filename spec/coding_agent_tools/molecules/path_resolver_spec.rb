@@ -225,7 +225,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
       real_resolver = described_class.new(config_loader, sandbox)
       
       # Mock the backtick execution to simulate command failure
-      allow(real_resolver).to receive(:`).with("nonexistent-command 2>/dev/null").and_return("")
+      allow(real_resolver).to receive(:`).with("release-manager current 2>/dev/null").and_return("")
       
       # Mock the $? global variable properly
       process_status = double("Process::Status")

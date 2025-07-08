@@ -190,7 +190,14 @@ module CodingAgentTools
             diff_preview = generate_diff_preview(document.content, target_content, document.path)
             SyncResult.new(:updated, nil, nil, diff_preview)
           else
-            # Update the embedded content (no confirmation needed for template sync)
+            # Use FileOperationConfirmer for confirmation if needed
+            # Always confirm overwrite for safety (the confirmer will check if file exists)
+            confirmation_result = operation_confirmer.confirm_overwrite(document.path)
+            unless confirmation_result.confirmed?
+              return SyncResult.new(:error, nil, "Operation cancelled: #{confirmation_result.reason}", nil)
+            end
+
+            # Update the embedded content
             updated_content = update_embedded_document(workflow_content, document, target_content)
             SyncResult.new(:updated, updated_content, nil, nil)
           end

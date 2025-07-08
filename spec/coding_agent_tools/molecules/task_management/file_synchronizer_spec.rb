@@ -49,10 +49,13 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   end
 
   before do
-    # Default to valid paths
+    # Default to valid paths and auto-confirmation
     allow(path_validator).to receive(:validate_path).and_return(
       double(invalid?: false, error_message: nil)
     )
+    # Mock successful confirmation result
+    confirmation_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(true, "Auto-confirmed", true)
+    allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
   end
 
   describe "#synchronize_document", :security do
@@ -79,13 +82,24 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
         expect(result.updated_content).to include("This is updated content.")
       end
 
-      it "updates content without confirmation for template sync" do
+      it "confirms operation when needed" do
+        confirmation_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(true, "User confirmed", false)
+        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(confirmation_result)
+
         result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
 
+        expect(operation_confirmer).to have_received(:confirm_overwrite).with(template_document.path)
         expect(result.success?).to be true
-        expect(result.updated?).to be true
-        expect(result.updated_content).to include("# Updated Content")
-        expect(result.updated_content).to include("This is updated content.")
+      end
+
+      it "handles operation cancellation" do
+        denial_result = CodingAgentTools::Molecules::FileOperationConfirmer::ConfirmationResult.new(false, "User declined", false)
+        allow(operation_confirmer).to receive(:confirm_overwrite).and_return(denial_result)
+
+        result = synchronizer.synchronize_document(workflow_content, template_document, "workflow.md")
+
+        expect(result.error?).to be true
+        expect(result.error_message).to include("Operation cancelled")
       end
     end
 

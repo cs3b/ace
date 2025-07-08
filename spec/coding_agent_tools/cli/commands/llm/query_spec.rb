@@ -255,6 +255,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "outputs to file when specified" do
+        allow(mock_file_handler).to receive(:validate_write_path).and_return("output.json")
         allow(mock_file_handler).to receive(:write_content)
         allow(mock_file_handler).to receive(:infer_format_from_path).and_return("json")
         expect($stdout).to receive(:puts).with("summary")
