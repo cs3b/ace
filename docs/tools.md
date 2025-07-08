@@ -30,17 +30,28 @@ This document provides a comprehensive reference for all gem executables in the 
 Query multiple LLM providers with unified syntax and cost tracking.
 
 ```bash
-# Query with cost tracking and provider selection
-llm-query anthropic "Explain ATOM architecture" --track-cost
+# Query with specific provider and model
+llm-query google:gemini-2.5-flash "What is Ruby programming language?"
 
-# Multi-provider usage with model specification
-llm-query google "What is Ruby?" --model gemini-pro
+# Query with provider using default model
+llm-query anthropic "Explain ATOM architecture"
+
+# Query with output to file (format inferred from extension)
+llm-query openai:gpt-4o "Code review" --output review.json
+
+# Query with system instruction and temperature
+llm-query gflash "Write a function" --system "You are a Ruby expert" --temperature 0.7
+
+# Use convenient aliases
+llm-query csonet "Explain AI" # claude-4-0-sonnet-latest
+llm-query o4mini "Quick help" # gpt-4o-mini
 ```
 
 **Key Features:**
-- Multi-provider support: Google, OpenAI, Anthropic, Local models
-- Real-time cost tracking across all providers
-- Response caching with performance optimization
+- Multi-provider support: Google, OpenAI, Anthropic, Mistral, LM Studio
+- Convenient aliases for commonly used models
+- File input/output with automatic format detection
+- Temperature control and system instructions
 
 #### `llm-models` - List Available Models
 
@@ -102,11 +113,17 @@ coding_agent_tools llm help
 Advanced task management for project workflows with dependency tracking.
 
 ```bash
-# Find next available task with priority consideration
-task-manager next --priority high
+# Find next actionable task to work on
+task-manager next
 
-# List tasks with status filtering
-task-manager list --status pending --current
+# List all tasks in current release with dependency order
+task-manager all
+
+# Find recently modified tasks
+task-manager recent
+
+# Generate new task ID for current release
+task-manager generate-id
 ```
 
 **Key Features:**
@@ -221,17 +238,26 @@ git-commit --auto-format
 
 #### `git-diff` - Enhanced Git Diff
 ```bash
-# Diff with context highlighting
-git-diff --context-highlight
+# Show differences across repositories
+git-diff
 
-# Diff with file-specific analysis
-git-diff --file-analysis
+# Show staged changes only
+git-diff --staged
+
+# Show only names of changed files
+git-diff --name-only
+
+# Show diffstat summary
+git-diff --stat
+
+# Process specific repository context
+git-diff --repository dev-tools
 ```
 
 **Key Features:**
-- Context-aware diff highlighting
-- File-specific analysis and categorization
-- Integration with review workflows
+- Multi-repository diff operations
+- Staged and unstaged change analysis
+- Repository-specific context support
 
 #### `git-fetch` - Enhanced Git Fetch
 ```bash
@@ -321,16 +347,25 @@ nav-ls --filter "*.rb"
 
 #### `nav-path` - Intelligent Path Navigation
 ```bash
-# Navigate with fuzzy matching
-nav-path task README
-
-# Navigate with path generation
+# Generate new task path with title
 nav-path task-new --title "Feature Name"
+
+# Resolve existing task by ID
+nav-path task 42
+
+# Autocorrect and resolve file path
+nav-path file README
+
+# Generate new documentation path
+nav-path docs-new --title "Documentation Title"
+
+# Generate new reflection path
+nav-path reflection-new --title "Session Reflection"
 ```
 
 **Key Features:**
-- Fuzzy matching for rapid navigation
-- Path generation with context awareness
+- Intelligent path generation for tasks, docs, and reflections
+- File path autocorrection and resolution
 - Integration with task management workflows
 
 #### `nav-tree` - Enhanced Project Tree
@@ -349,16 +384,13 @@ nav-tree --filter source
 
 #### `handbook` - Development Handbook Access
 ```bash
-# Access handbook with search
-handbook --search "workflow"
-
-# Access specific handbook section
-handbook --section "development"
+# Synchronize XML-embedded template content with template files
+handbook sync-templates
 ```
 
 **Key Features:**
-- Searchable development handbook access
-- Section-based navigation
+- Template synchronization with XML-embedded content
+- Development handbook management
 - Integration with development processes
 
 ### Release Management
@@ -400,32 +432,32 @@ release-manager report --format detailed
 
 ```bash
 # 1. Find next task using advanced task manager
-task-manager next --priority high
+task-manager next
 
-# 2. Query LLM for guidance with cost tracking
-llm-query google "How to implement feature X?" --track-cost
+# 2. Query LLM for guidance
+llm-query google "How to implement feature X?"
 
 # 3. Navigate to relevant files using intelligent path resolution
-nav-path task README
+nav-path file README
 
-# 4. Generate code review after implementation
-generate-review-prompt --detailed
+# 4. Generate new task when needed
+nav-path task-new --title "Implement feature X"
 ```
 
 ### For Human Developers
 
 ```bash
-# 1. Access development handbook for guidance
-handbook --search "workflow"
+# 1. Synchronize handbook templates
+handbook sync-templates
 
-# 2. Generate and review code analysis
-generate-review-prompt --detailed
+# 2. Show git differences across repositories
+git-diff --stat
 
-# 3. Use interactive code review for quality assurance
-code-review --interactive
+# 3. Use task management for organization
+task-manager recent
 
-# 4. Generate reflection report for session analysis
-reflection-synthesize --session current
+# 4. Query LLM with specific output format
+llm-query anthropic "Code review suggestions" --output review.md
 ```
 
 ## Migration Status
