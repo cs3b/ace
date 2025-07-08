@@ -55,7 +55,7 @@ module CodingAgentTools
             puts "[PathResolver] Project root detected via ProjectRootDetector: #{root}" if ENV["DEBUG"]
             return root
           end
-          
+
           # Try to load it explicitly for code_quality context
           begin
             require_relative "../project_root_detector"
@@ -65,7 +65,7 @@ module CodingAgentTools
           rescue LoadError, StandardError => e
             puts "[PathResolver] Could not load ProjectRootDetector: #{e.message}" if ENV["DEBUG"]
           end
-          
+
           # Fallback to manual detection
           markers = [".git", "Gemfile", ".coding-agent", "coding_agent_tools.gemspec"]
 
