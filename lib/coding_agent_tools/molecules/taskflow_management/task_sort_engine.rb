@@ -221,7 +221,7 @@ module CodingAgentTools
           # Try to get 'sort' attribute from frontmatter
           if task.respond_to?(:frontmatter) && task.frontmatter
             sort_value = task.frontmatter["sort"] || task.frontmatter[:sort]
-            return sort_value.to_i if sort_value && sort_value.to_s.match?(/^\d+$/)
+            return sort_value.to_i if sort_value&.to_s&.match?(/^\d+$/)
           end
 
           # Default to 0 if no sort metadata

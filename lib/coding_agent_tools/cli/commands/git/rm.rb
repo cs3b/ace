@@ -106,19 +106,17 @@ module CodingAgentTools
           def display_rm_success(result, options)
             return if options[:quiet]
 
-            if result[:results]
-              result[:results].each do |repo_name, repo_result|
-                next unless repo_result[:success]
+            result[:results]&.each do |repo_name, repo_result|
+              next unless repo_result[:success]
 
-                if repo_result[:commands]
-                  # Multiple commands (from concurrent execution)
-                  repo_result[:commands].each do |cmd_result|
-                    display_single_rm_result(repo_name, cmd_result, options)
-                  end
-                else
-                  # Single command result
-                  display_single_rm_result(repo_name, repo_result, options)
+              if repo_result[:commands]
+                # Multiple commands (from concurrent execution)
+                repo_result[:commands].each do |cmd_result|
+                  display_single_rm_result(repo_name, cmd_result, options)
                 end
+              else
+                # Single command result
+                display_single_rm_result(repo_name, repo_result, options)
               end
             end
 

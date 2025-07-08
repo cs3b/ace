@@ -28,7 +28,7 @@ module CodingAgentTools
           # Find all relevant files
           relevant_files.each do |file|
             next unless File.exist?(file)
-            
+
             snapshot[:files][file] = {
               content: File.read(file),
               mtime: File.mtime(file),
@@ -45,7 +45,7 @@ module CodingAgentTools
           review << ""
           review << "Generated at: #{Time.now}"
           review << ""
-          
+
           if analysis[:summary]
             review << "## Summary"
             review << "- Files modified: #{analysis[:summary][:files_modified]}"
@@ -57,7 +57,7 @@ module CodingAgentTools
           if analysis[:changes] && !analysis[:changes].empty?
             review << "## File Changes"
             review << ""
-            
+
             analysis[:changes].each do |file, changes|
               review << "### #{file}"
               review << ""
@@ -75,23 +75,23 @@ module CodingAgentTools
           # Get all Ruby and Markdown files
           ruby_files = Dir.glob("**/*.rb").reject { |f| f.start_with?("spec/", "vendor/") }
           md_files = Dir.glob("**/*.md").reject { |f| f.start_with?("vendor/") }
-          
+
           ruby_files + md_files
         end
 
         def analyze_git_changes
           # Check if we're in a git repository
           unless system("git rev-parse --git-dir > /dev/null 2>&1")
-            return { error: "Not in a git repository" }
+            return {error: "Not in a git repository"}
           end
 
           # Get the diff
           stdout, stderr, status = Open3.capture3("git diff --numstat")
-          
+
           if status.success?
             parse_git_diff(stdout)
           else
-            { error: "Failed to get git diff: #{stderr}" }
+            {error: "Failed to get git diff: #{stderr}"}
           end
         end
 
@@ -193,7 +193,7 @@ module CodingAgentTools
           begin
             before_file.write(before_content)
             before_file.flush
-            
+
             after_file.write(after_content)
             after_file.flush
 
@@ -213,7 +213,7 @@ module CodingAgentTools
         def parse_unified_diff(diff_output)
           lines_added = 0
           lines_removed = 0
-          
+
           diff_output.each_line do |line|
             if line.start_with?("+") && !line.start_with?("+++")
               lines_added += 1
@@ -231,23 +231,23 @@ module CodingAgentTools
 
         def format_file_changes(changes)
           lines = []
-          
-          if changes[:status]
-            lines << "**Status:** #{changes[:status]}"
+
+          lines << if changes[:status]
+            "**Status:** #{changes[:status]}"
           else
-            lines << "**Status:** modified"
+            "**Status:** modified"
           end
-          
+
           lines << "**Lines added:** #{changes[:lines_added]}"
           lines << "**Lines removed:** #{changes[:lines_removed]}"
-          
+
           if changes[:diff] && changes[:diff].size < 1000
             lines << ""
             lines << "```diff"
             lines << changes[:diff]
             lines << "```"
           end
-          
+
           lines.join("\n")
         end
       end

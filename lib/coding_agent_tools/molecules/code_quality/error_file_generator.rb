@@ -21,10 +21,10 @@ module CodingAgentTools
         def generate(linting_results)
           # Extract all errors from results
           all_errors = extract_errors(linting_results)
-          
+
           # Distribute errors
           distribution = error_distributor.distribute(all_errors)
-          
+
           # Generate error files
           generated_files = []
           distribution[:distributions].each do |dist|
@@ -55,7 +55,7 @@ module CodingAgentTools
           # Extract Ruby errors
           results.dig(:ruby, :linters)&.each do |linter, data|
             next unless data[:findings]
-            
+
             data[:findings].each do |finding|
               errors << format_error(linter, "ruby", finding)
             end
@@ -86,7 +86,7 @@ module CodingAgentTools
         def format_error(linter, language, finding)
           file_path = finding[:file] || finding[:path] || "unknown"
           relative_path = make_path_relative(file_path)
-          
+
           {
             file: relative_path,
             type: "#{language}_#{linter}",
@@ -103,17 +103,15 @@ module CodingAgentTools
             $1
           elsif error_string =~ /^(.+\.(?:rb|md)):/
             $1
-          else
-            nil
           end
         end
 
         def generate_error_file(distribution)
           file_path = File.join(output_dir, ".lint-errors-#{distribution[:file_number]}.md")
-          
+
           content = build_error_file_content(distribution)
           File.write(file_path, content)
-          
+
           file_path
         end
 
@@ -123,30 +121,30 @@ module CodingAgentTools
           content << ""
           content << "This file contains #{distribution[:error_count]} error(s) to be fixed."
           content << ""
-          
+
           # Group errors by file
           errors_by_file = distribution[:errors].group_by { |e| e[:file] }
-          
+
           errors_by_file.each do |file, errors|
             content << "## #{file}"
             content << ""
-            
+
             errors.each do |error|
               content << format_error_entry(error)
               content << ""
             end
           end
-          
+
           content.join("\n")
         end
 
         def format_error_entry(error)
           lines = []
-          
+
           location = error[:file]
           location += ":#{error[:line]}" if error[:line]
           location += ":#{error[:column]}" if error[:column]
-          
+
           lines << "### #{error[:type]}"
           lines << ""
           lines << "**Location:** `#{location}`"
@@ -156,13 +154,13 @@ module CodingAgentTools
           lines << "```"
           lines << error[:message]
           lines << "```"
-          
+
           lines.join("\n")
         end
 
         def make_path_relative(path)
           return path unless path && File.absolute_path?(path)
-          
+
           path.start_with?(@project_root) ? path.sub("#{@project_root}/", "") : path
         end
       end

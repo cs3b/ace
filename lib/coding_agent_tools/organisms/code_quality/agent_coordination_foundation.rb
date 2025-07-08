@@ -13,11 +13,11 @@ module CodingAgentTools
           @agent_registry = {}
           @error_assignments = {}
           @completion_status = {}
-          
+
           # Default no-op hooks
-          @on_error_file_ready = ->(file, agent_id) { }
-          @on_agent_complete = ->(agent_id, results) { }
-          @on_all_agents_complete = ->(final_results) { }
+          @on_error_file_ready = ->(file, agent_id) {}
+          @on_agent_complete = ->(agent_id, results) {}
+          @on_all_agents_complete = ->(final_results) {}
         end
 
         # Register an agent for coordination
@@ -32,27 +32,27 @@ module CodingAgentTools
 
         # Assign error files to agents
         def assign_error_files(error_files)
-          return { success: false, error: "No agents registered" } if @agent_registry.empty?
-          
+          return {success: false, error: "No agents registered"} if @agent_registry.empty?
+
           assignments = {}
           available_agents = @agent_registry.keys
-          
+
           error_files.each_with_index do |file, index|
             agent_id = available_agents[index % available_agents.size]
-            
+
             assignments[agent_id] ||= []
             assignments[agent_id] << file
-            
+
             # Update agent status
             @agent_registry[agent_id][:status] = :assigned
             @agent_registry[agent_id][:assigned_file] = file
-            
+
             # Trigger hook
             @on_error_file_ready.call(file, agent_id)
           end
-          
+
           @error_assignments = assignments
-          
+
           {
             success: true,
             assignments: assignments,
@@ -63,16 +63,16 @@ module CodingAgentTools
         # Mark agent work as complete
         def mark_agent_complete(agent_id, results)
           return unless @agent_registry[agent_id]
-          
+
           @agent_registry[agent_id][:status] = :complete
           @completion_status[agent_id] = {
             completed_at: Time.now,
             results: results
           }
-          
+
           # Trigger completion hook
           @on_agent_complete.call(agent_id, results)
-          
+
           # Check if all agents are complete
           check_all_complete
         end
@@ -125,7 +125,7 @@ module CodingAgentTools
 
         def all_agents_complete?
           return false if @agent_registry.empty?
-          
+
           @agent_registry.all? { |_id, agent| agent[:status] == :complete }
         end
 
@@ -148,10 +148,10 @@ module CodingAgentTools
 
         def calculate_total_duration
           return 0 if @completion_status.empty?
-          
+
           start_time = @completion_status.values.map { |c| c[:completed_at] }.min
           end_time = @completion_status.values.map { |c| c[:completed_at] }.max
-          
+
           end_time - start_time
         end
 
@@ -164,7 +164,7 @@ module CodingAgentTools
           # Rough estimate: 30 seconds per error file with 4 parallel agents
           total_errors = error_files.size
           parallel_factor = [total_errors, 4].min
-          
+
           (total_errors * 30.0 / parallel_factor).ceil
         end
 

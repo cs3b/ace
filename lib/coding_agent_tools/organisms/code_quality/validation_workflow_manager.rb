@@ -21,7 +21,7 @@ module CodingAgentTools
 
           # Run cross-validation checks
           run_cross_validations(linting_results, workflow)
-          
+
           # Check for autofix regressions
           if autofix_applied
             check_autofix_regressions(linting_results, workflow)
@@ -29,7 +29,7 @@ module CodingAgentTools
 
           # Generate recommendations
           generate_recommendations(linting_results, workflow)
-          
+
           workflow
         end
 
@@ -51,7 +51,7 @@ module CodingAgentTools
 
           # Validate file integrity
           validate_file_integrity(results, workflow)
-          
+
           # Check linter consistency
           check_linter_consistency(results, workflow)
         end
@@ -59,36 +59,36 @@ module CodingAgentTools
         def has_conflicting_fixes?(results)
           # Check if multiple linters want to modify the same lines
           modified_locations = {}
-          
+
           %i[ruby markdown].each do |lang|
             next unless results[lang]
-            
+
             results[lang][:linters].each do |_linter, data|
               next unless data[:findings]
-              
+
               data[:findings].each do |finding|
                 next unless finding[:correctable] || finding[:fixed]
-                
+
                 key = "#{finding[:file]}:#{finding[:line]}"
                 modified_locations[key] ||= []
                 modified_locations[key] << finding
               end
             end
           end
-          
+
           # Check for conflicts
           modified_locations.any? { |_key, findings| findings.size > 1 }
         end
 
         def validate_file_integrity(results, workflow)
           integrity_issues = []
-          
+
           # Check for files that might have been corrupted
           all_files = extract_all_files(results)
-          
+
           all_files.each do |file|
             next unless File.exist?(file)
-            
+
             # Basic integrity checks
             if File.size(file) == 0
               integrity_issues << "#{file} is empty"
@@ -96,7 +96,7 @@ module CodingAgentTools
               integrity_issues << "#{file} is not readable"
             end
           end
-          
+
           if integrity_issues.empty?
             workflow[:validations_passed] << {
               type: "file_integrity",
@@ -113,16 +113,16 @@ module CodingAgentTools
 
         def check_linter_consistency(results, workflow)
           inconsistencies = []
-          
+
           # Check if linters are reporting contradictory issues
           file_issues = {}
-          
+
           %i[ruby markdown].each do |lang|
             next unless results[lang]
-            
+
             results[lang][:linters].each do |linter, data|
               next unless data[:findings]
-              
+
               data[:findings].each do |finding|
                 file_issues[finding[:file]] ||= []
                 file_issues[finding[:file]] << {
@@ -132,14 +132,14 @@ module CodingAgentTools
               end
             end
           end
-          
+
           # Look for contradictions
           file_issues.each do |file, issues|
             if has_contradictory_issues?(issues)
               inconsistencies << file
             end
           end
-          
+
           if inconsistencies.empty?
             workflow[:validations_passed] << {
               type: "linter_consistency",
@@ -157,20 +157,20 @@ module CodingAgentTools
         def has_contradictory_issues?(issues)
           # Simple heuristic: check if different linters report opposite fixes
           return false if issues.size < 2
-          
+
           # Group by line number
           by_line = issues.group_by { |i| i[:issue][:line] }
-          
+
           by_line.any? do |_line, line_issues|
-            line_issues.size > 1 && 
-            line_issues.map { |i| i[:issue][:message] }.uniq.size > 1
+            line_issues.size > 1 &&
+              line_issues.map { |i| i[:issue][:message] }.uniq.size > 1
           end
         end
 
         def check_autofix_regressions(results, workflow)
           # Check if autofix introduced new issues
           new_issues_count = count_total_issues(results)
-          
+
           if new_issues_count > 0
             workflow[:validations_failed] << {
               type: "autofix_regression",
@@ -179,7 +179,7 @@ module CodingAgentTools
             }
           else
             workflow[:validations_passed] << {
-              type: "autofix_regression", 
+              type: "autofix_regression",
               message: "No regressions detected from autofix"
             }
           end
@@ -187,21 +187,21 @@ module CodingAgentTools
 
         def generate_recommendations(results, workflow)
           total_issues = count_total_issues(results)
-          
+
           if total_issues > 100
             workflow[:recommendations] << {
               priority: "high",
               message: "Consider fixing issues incrementally due to high count"
             }
           end
-          
+
           if has_security_issues?(results)
             workflow[:recommendations] << {
               priority: "critical",
               message: "Security issues detected - fix these first"
             }
           end
-          
+
           if has_broken_links?(results)
             workflow[:recommendations] << {
               priority: "medium",
@@ -212,29 +212,29 @@ module CodingAgentTools
 
         def extract_all_files(results)
           files = Set.new
-          
+
           %i[ruby markdown].each do |lang|
             next unless results[lang]
-            
+
             results[lang][:linters].each do |_linter, data|
               next unless data[:findings]
-              
+
               data[:findings].each do |finding|
                 files << finding[:file] if finding[:file]
               end
             end
           end
-          
+
           files.to_a
         end
 
         def count_total_issues(results)
           count = 0
-          
+
           %i[ruby markdown].each do |lang|
             count += results.dig(lang, :total_issues) || 0
           end
-          
+
           count
         end
 

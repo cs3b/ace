@@ -20,19 +20,19 @@ module CodingAgentTools
 
       def enabled_linters
         linters = []
-        
+
         if ruby[:enabled]
           ruby[:linters].each do |name, config|
             linters << "ruby_#{name}" if config[:enabled]
           end
         end
-        
+
         if markdown[:enabled]
           markdown[:linters].each do |name, config|
             linters << "markdown_#{name}" if config[:enabled]
           end
         end
-        
+
         linters
       end
 
@@ -42,9 +42,9 @@ module CodingAgentTools
         {
           enabled: true,
           linters: {
-            standardrb: { enabled: true, autofix: true },
-            security: { enabled: true },
-            cassettes: { enabled: true }
+            standardrb: {enabled: true, autofix: true},
+            security: {enabled: true},
+            cassettes: {enabled: true}
           }
         }
       end
@@ -53,10 +53,10 @@ module CodingAgentTools
         {
           enabled: true,
           linters: {
-            styleguide: { enabled: true, autofix: true },
-            link_validation: { enabled: true },
-            template_embedding: { enabled: true },
-            task_metadata: { enabled: true }
+            styleguide: {enabled: true, autofix: true},
+            link_validation: {enabled: true},
+            template_embedding: {enabled: true},
+            task_metadata: {enabled: true}
           }
         }
       end
