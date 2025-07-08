@@ -1,8 +1,11 @@
-# Update Tools Documentation Workflow (v2)
+# Update Tools Documentation Workflow (v3)
 
 > **Scope:** Updates `dev-tools/docs/tools.md` for **gem executables only**.
 > Ignore any `bin/*` binstubs – documentation should encourage using the commands
 > directly from any directory via fish integration.
+> 
+> **Excluded Tools:** Skip `coding_agent_tools`, `llm-models`, `llm-usage-report` 
+> from main documentation as they create noise for AI agents without adding value.
 
 ---
 
@@ -83,25 +86,29 @@ tool-name --flag value
 
 ## 5  Process Steps
 
-1. **Identify Tool Category & Purpose**
+1. **Check Tool Eligibility**
+   - Skip if tool is in exclusion list: `coding_agent_tools`, `llm-models`, `llm-usage-report`
+   - These tools create noise for AI agents without adding workflow value
+
+2. **Identify Tool Category & Purpose**
    - Test with `tool-name --help`, read source, determine function category.
 
-2. **Locate Correct Documentation Section**
+3. **Locate Correct Documentation Section**
    - `Gem Executables` is the section to modify.
    - Delete any stray `bin/*` references.
 
-3. **Create or Update Tool Entry**
+4. **Create or Update Tool Entry**
    - Use the *Mini‑template* above.
 
-4. **Add / Update Cheat‑sheets & Persona Sections**
+5. **Add / Update Cheat‑sheets & Persona Sections**
    - Main cheat‑sheet at top of file.
    - Persona‑specific cheat‑sheets (*Human Dev*, *AI Agent*, *Release Manager*, *Git Power‑User*).
 
-5. **Update Category & Workflow Sections**
+6. **Update Category & Workflow Sections**
    - Add tool name to function and persona lists.
    - Amend workflow snippets where the tool is relevant.
 
-6. **Run Validation & Quality Checks** (see §6)
+7. **Run Validation & Quality Checks** (see §6)
 
 ---
 
@@ -127,6 +134,7 @@ tool-name --flag value
 - [ ] Correct section & category
 - [ ] No `bin/*` references
 - [ ] No full paths
+- [ ] Excluded tools (`coding_agent_tools`, `llm-models`, `llm-usage-report`) are not documented
 
 ### 6.5  Technical Accuracy
 - [ ] Examples tested
@@ -141,8 +149,14 @@ tool-name --flag value
 # markdown style
 markdownlint dev-tools/docs/tools.md
 
-# undocumented executables
-for t in dev-tools/exe/*; do n=$(basename $t); grep -q "### \`$n\`" dev-tools/docs/tools.md || echo "⚠️  Missing: $n"; done
+# undocumented executables (excluding intentionally skipped tools)
+excluded_tools="coding_agent_tools llm-models llm-usage-report"
+for t in dev-tools/exe/*; do 
+  n=$(basename $t)
+  if [[ ! " $excluded_tools " =~ " $n " ]]; then
+    grep -q "### \`$n\`" dev-tools/docs/tools.md || echo "⚠️  Missing: $n"
+  fi
+done
 ```
 
 ---
