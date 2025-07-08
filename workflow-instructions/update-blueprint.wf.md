@@ -62,7 +62,7 @@ how to navigate the codebase.
 
    - Identify main source directories with enhanced navigation:
      ```bash
-     nav-ls --project-context --filter "src|app|lib"
+     nav-ls --long src/ app/ lib/
      ```
    
    - Note test directory location and submodules with context awareness

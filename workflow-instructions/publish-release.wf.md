@@ -15,6 +15,9 @@ Execute the final deployment and archival phase of project releases, transitioni
 ## Project Context Loading
 
 - Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 - Load current release status: `dev-taskflow/current/*/`
 - Check roadmap for release details: `dev-taskflow/roadmap.md`
 - Verify changelog exists: `CHANGELOG.md`

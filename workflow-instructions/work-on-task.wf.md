@@ -13,6 +13,7 @@
 * Load project objectives: `docs/what-do-we-build.md`
 * Load architecture overview: `docs/architecture.md`
 * Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 
 ## Quick Start
 
@@ -39,7 +40,7 @@ For experienced users, here's the condensed workflow:
 
      ```bash
      # Find current release directory with context
-     nav-ls --project-context dev-taskflow/current/
+     nav-ls --long dev-taskflow/current/
 
      # List available tasks with status filtering
      task-manager list --status pending --current

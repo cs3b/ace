@@ -15,6 +15,7 @@ Capture a compact summary of the current session (what was done, next steps, key
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 
 ## High-Level Execution Plan
 

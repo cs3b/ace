@@ -16,6 +16,7 @@ Create, update, and maintain development guide files following established stand
 * Load guide standards: `dev-handbook/.meta/gds/guides-definition.g.md`
 * Load markdown standards: `dev-handbook/.meta/gds/markdown-definition.g.md`
 * Load project structure: `docs/blueprint.md`
+* Load available tools: `docs/tools.md`
 * Load example guides: `dev-handbook/guides/project-management.g.md`
 * Load guide organization: `dev-handbook/guides/README.md`
 

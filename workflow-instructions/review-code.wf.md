@@ -56,6 +56,7 @@ code-review FOCUS TARGET [OPTIONS]
 - Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
 - Load project structure: `docs/blueprint.md`
 - Load project vision: `docs/what-do-we-build.md`
+- Load tools documentation: `docs/tools.md`
 - Load review templates: `dev-handbook/templates/review-*/system.prompt.md`
 - Load existing session patterns: `dev-taskflow/current/*/code_review/*/`
 

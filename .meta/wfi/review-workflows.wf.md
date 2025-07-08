@@ -18,6 +18,7 @@ Systematically review multiple workflow instruction files for compliance with st
 * Load example workflow: `dev-handbook/workflow-instructions/review-task.wf.md`
 * Load batch processing example: `dev-handbook/workflow-instructions/draft-release.wf.md`
 * Load project structure: `docs/blueprint.md`
+* Load available tools: `docs/tools.md`
 
 ## Process Steps
 

@@ -18,6 +18,7 @@ Systematically review multiple development guide files for compliance with stand
 * Load guide organization: `dev-handbook/guides/README.md`
 * Load example guide: `dev-handbook/guides/project-management.g.md`
 * Load project structure: `docs/blueprint.md`
+* Load available tools: `docs/tools.md`
 
 ## Process Steps
 

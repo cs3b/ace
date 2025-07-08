@@ -16,6 +16,7 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 - System prompt template: `dev-handbook/templates/review-synthesizer/system.prompt.md`
 - Session patterns: `dev-taskflow/current/*/code_review/*/`
 - Workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
+- Tools documentation: `docs/tools.md`
 
 ## Command Structure
 

@@ -21,6 +21,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 
 ## High-Level Execution Plan
 

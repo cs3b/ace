@@ -15,6 +15,7 @@ Systematically analyze and compact multiple reflection notes to extract actionab
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 - Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
 
 ## High-Level Execution Plan

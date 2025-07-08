@@ -15,6 +15,7 @@ Rebase all repositories (main repository and submodules) against their respectiv
 ## Project Context Loading
 
 - Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 - Load project objectives: `docs/what-do-we-build.md`
 - Check current branch status across repositories
 - Identify submodule structure from `.gitmodules`
@@ -42,7 +43,7 @@ Rebase all repositories (main repository and submodules) against their respectiv
    **Branch Status Check:**
    ```bash
    # Check main repository branch with project context
-   git-status --project-context
+   git-status --verbose
    
    # Check each submodule branch with multi-repo support
    git-status --all-repos
@@ -223,7 +224,7 @@ Rebase all repositories (main repository and submodules) against their respectiv
    **Branch Status Verification:**
    ```bash
    # Verify all repositories with enhanced status
-   git-status --all-repos --project-context
+   git-status --verbose
    ```
    
    **Repository Status Check:**

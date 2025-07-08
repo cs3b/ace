@@ -29,6 +29,7 @@ existing project‑context sections.
 - docs/what-do-we-build.md
 - docs/architecture.md
 - docs/blueprint.md
+- docs/tools.md
 
 ### Review current tools documentation
 - dev-tools/docs/tools.md

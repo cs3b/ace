@@ -15,6 +15,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 - Load project objectives: `docs/what-do-we-build.md`
 - Load architecture overview: `docs/architecture.md`
 - Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 
 ## High-Level Execution Plan
 
@@ -38,13 +39,13 @@ Guide the developer through creating a well-structured, atomic Git commit follow
 
    ```bash
    # View current status with project context
-   git-status --project-context
+   git-status --verbose
 
    # Review unstaged changes with enhanced highlighting
-   git-diff --context-highlight
+   git-diff --stat
 
    # Review specific file changes with analysis
-   git-diff --file-analysis path/to/file
+   git-diff path/to/file
    ```
 
    **Validation checklist:**
@@ -70,7 +71,7 @@ Guide the developer through creating a well-structured, atomic Git commit follow
    **Review staged changes:**
 
    ```bash
-   git-diff --staged --context-highlight
+   git-diff --staged
    ```
 
 3. **Write Conventional Commit Message:**

@@ -43,6 +43,10 @@ Load essential project documentation to understand the project's objectives, arc
      - Review key files and their purposes
      - Identify where different types of work are organized
 
+   - **Development Tools**: `docs/tools.md`
+     - Read the available development tools and utilities
+     - Use tools defined in this documentation for efficient workflows
+
 2. **Verify Documentation Completeness:**
    - Check that all three core documents exist
    - Note any missing sections or outdated information
@@ -85,7 +89,7 @@ This workflow is typically invoked:
 
 ```bash
 # Check if all context files exist with enhanced navigation
-nav-ls --project-context docs/
+nav-ls --long docs/
 
 # Access project documentation via handbook
 handbook --section "development"
