@@ -42,18 +42,13 @@ module CodingAgentTools
         end
 
         def build_system_message
-          base_message = "You are an assistant that generates concise and informative git commit messages. " \
-                        "Only output the commit message without any additional commentary."
+          template_path = find_system_prompt_template_path
 
-          # TODO: Load commit guidelines from a file
-          # For now, use a basic guideline
-          guidelines = "\n\nFollow these guidelines:\n" \
-                      "- Use present tense (e.g., 'add feature' not 'added feature')\n" \
-                      "- Keep first line under 50 characters\n" \
-                      "- Be descriptive but concise\n" \
-                      "- Focus on what the change does, not how it does it"
+          unless File.exist?(template_path)
+            raise CommitMessageGenerationError, "System prompt template not found at: #{template_path}"
+          end
 
-          base_message + guidelines
+          File.read(template_path)
         end
 
         def build_user_prompt(diff)
@@ -68,17 +63,19 @@ module CodingAgentTools
         end
 
         def generate_with_llm(system_message, user_prompt)
-          # Create temporary files for system message and user prompt
-          system_file = create_temp_file(system_message, "system", ".md")
+          # Use template file path directly for system message
+          system_template_path = find_system_prompt_template_path
+          
+          # Create temporary file only for user prompt
           prompt_file = create_temp_file(user_prompt, "prompt", ".md")
 
           begin
             # Use full path to llm-query executable for development
             llm_query_path = find_llm_query_executable
-            command = build_llm_query_command(llm_query_path, model, system_file.path, prompt_file.path)
+            command = build_llm_query_command(llm_query_path, model, system_template_path, prompt_file.path)
 
             if debug
-              puts "DEBUG: System file: #{system_file.path}"
+              puts "DEBUG: System template: #{system_template_path}"
               puts "DEBUG: Prompt file: #{prompt_file.path}"
               puts "DEBUG: Command: #{command}"
             end
@@ -90,13 +87,11 @@ module CodingAgentTools
             
             # Clean up temporary files with defensive error handling
             begin
-              system_file.close
               prompt_file.close
               
               # Small delay before unlinking to ensure file handles are fully released
               sleep(0.05)
               
-              system_file.unlink
               prompt_file.unlink
             rescue => cleanup_error
               # Log cleanup errors but don't fail the operation
@@ -179,6 +174,11 @@ module CodingAgentTools
           
           # If we can't find the project root, return current directory
           Dir.pwd
+        end
+
+        def find_system_prompt_template_path
+          project_root = find_project_root
+          File.join(project_root, "dev-handbook", ".meta", "tpl", "git-commit.system.prompt.md")
         end
 
         def clean_response(response)
