@@ -3,6 +3,8 @@
 require "open3"
 require "shellwords"
 require "tempfile"
+require_relative "../../atoms/project_root_detector"
+require_relative "../../error"
 
 module CodingAgentTools
   module Molecules
@@ -157,23 +159,10 @@ module CodingAgentTools
         end
 
         def find_project_root
-          # Find project root by looking for characteristic files
-          current_dir = Dir.pwd
-
-          loop do
-            if File.exist?(File.join(current_dir, "dev-tools")) &&
-                File.exist?(File.join(current_dir, "dev-taskflow")) &&
-                File.exist?(File.join(current_dir, "CLAUDE.md"))
-              return current_dir
-            end
-
-            parent = File.dirname(current_dir)
-            break if parent == current_dir # reached filesystem root
-            current_dir = parent
-          end
-
-          # If we can't find the project root, return current directory
-          Dir.pwd
+          CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+        rescue CodingAgentTools::Error => e
+          # If project root detection fails, raise a more specific error
+          raise CommitMessageGenerationError, "Failed to find project root: #{e.message}"
         end
 
         def find_system_prompt_template_path
