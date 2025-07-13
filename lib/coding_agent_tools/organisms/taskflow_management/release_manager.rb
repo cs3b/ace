@@ -164,6 +164,52 @@ module CodingAgentTools
           ManagerResult.new([], false, "Error listing all releases: #{e.message}")
         end
 
+        # Validate that release context detection is consistent
+        # This helps detect potential inconsistencies between tools early
+        # @return [ManagerResult] Result indicating validation status
+        def validate_release_context_consistency
+          # Get current release through our normal detection method
+          current_result = current
+          return current_result unless current_result.success?
+
+          current_release = current_result.data
+
+          # Validate that there's exactly one release in current directory
+          current_path = File.join(@base_path, "dev-taskflow/current")
+          if File.exist?(current_path) && File.directory?(current_path)
+            subdirs = Dir.entries(current_path).select do |entry|
+              next false if entry == "." || entry == ".."
+              File.directory?(File.join(current_path, entry))
+            end
+
+            case subdirs.size
+            when 0
+              return ManagerResult.new(nil, false, "No current release found - current directory is empty")
+            when 1
+              # This is the expected state
+              detected_name = subdirs.first
+              if detected_name != current_release.name
+                return ManagerResult.new(nil, false,
+                  "Inconsistency detected: Directory name '#{detected_name}' != detected release name '#{current_release.name}'")
+              end
+            else
+              # Multiple releases in current - this could cause inconsistencies
+              return ManagerResult.new(nil, false,
+                "Multiple releases in current directory: #{subdirs.join(", ")}. This may cause tool inconsistencies.")
+            end
+          end
+
+          validation_info = {
+            current_release: current_release.name,
+            path: current_release.path,
+            validation_status: "consistent"
+          }
+
+          ManagerResult.new(validation_info, true, "Release context validation passed")
+        rescue => e
+          ManagerResult.new(nil, false, "Error validating release context: #{e.message}")
+        end
+
         private
 
         # Enhance release info with additional metadata
