@@ -12,6 +12,7 @@ require "coding_agent_tools/cli/commands/release/current"
 require "coding_agent_tools/cli/commands/release/next"
 require "coding_agent_tools/cli/commands/release/all"
 require "coding_agent_tools/cli/commands/release/generate_id"
+require "coding_agent_tools/cli/commands/release/validate"
 require "dry/cli"
 
 module ReleaseManagerCli
@@ -23,6 +24,7 @@ module ReleaseManagerCli
     register "next", CodingAgentTools::Cli::Commands::Release::Next
     register "all", CodingAgentTools::Cli::Commands::Release::All
     register "create-release-dir", CodingAgentTools::Cli::Commands::Release::GenerateId
+    register "validate", CodingAgentTools::Cli::Commands::Release::Validate
 
     # Version command
     class Version < Dry::CLI::Command
