@@ -35,7 +35,10 @@ AI-assisted development workflow in a new or existing project.
       - Architecture:
       - Blueprint:
 
-3. **Setup Project `bin/` Scripts from Binstubs**:
+3. **Install and Customize Configuration Files**:
+    - Follow the `dev-handbook/.meta/wfi/install-dotfiles.wf.md` workflow instructions
+
+4. **Setup Project `bin/` Scripts from Binstubs**:
     - **Create Project `bin/` Directory**:
         - If it doesn't already exist, create a `bin/` directory at the project root: `mkdir bin`.
     - **Create Standard Binstubs**:
@@ -277,8 +280,8 @@ Initialize an AI-driven development environment by creating necessary documentat
 
 #### User Story 1
 
-**As a** [type of user]  
-**I want** [goal/desire]  
+**As a** [type of user]
+**I want** [goal/desire]
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
@@ -288,8 +291,8 @@ Initialize an AI-driven development environment by creating necessary documentat
 
 #### User Story 2
 
-**As a** [type of user]  
-**I want** [goal/desire]  
+**As a** [type of user]
+**I want** [goal/desire]
 **So that** [benefit/value]
 
 **Acceptance Criteria:**
@@ -302,7 +305,7 @@ Initialize an AI-driven development environment by creating necessary documentat
 ### Phase 1: Foundation (Estimated: X weeks)
 <!-- Core functionality and basic features -->
 
-### Phase 2: Enhancement (Estimated: X weeks)  
+### Phase 2: Enhancement (Estimated: X weeks)
 <!-- Additional features and improvements -->
 
 ### Phase 3: Polish (Estimated: X weeks)
@@ -1257,7 +1260,7 @@ This is the initial bootstrap release to establish the project foundation and co
 
 - **Type**: Bootstrap/Foundation
 - **Start Date**: YYYY-MM-DD
-- **Target Date**: YYYY-MM-DD  
+- **Target Date**: YYYY-MM-DD
 - **Status**: Planning
 
 ## Bootstrap Goals
