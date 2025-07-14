@@ -267,24 +267,62 @@ module CodingAgentTools
 
         begin
           Dir.chdir(@sandbox.project_root)
-          result = `#{command} 2>/dev/null`.strip
-
-          # Handle common command failures
-          if result.empty? || $?.exitstatus != 0
+          
+          # First, try the command with error capture for debugging
+          result_with_errors = `#{command} 2>&1`.strip
+          exit_status = $?.exitstatus
+          
+          # If successful, return the result
+          if exit_status == 0 && !result_with_errors.empty?
+            # For JSON commands, extract just the result (not error messages)
+            if command.include?("--format json")
+              result_with_errors.split("\n").last.strip
+            else
+              result_with_errors
+            end
+          else
+            # Command failed - use fallback detection methods
             case command
             when /release-manager current/
-              "v.0.3.0-migration"  # Fallback release name
+              # Use DirectoryNavigator as fallback to ensure consistency
+              # Log the failure for debugging
+              warn "Warning: release-manager command failed (exit: #{exit_status}): #{command}"
+              warn "Error output: #{result_with_errors}" unless result_with_errors.empty?
+              detect_current_release_fallback
             when /task-manager generate-id/
-              "v.0.3.0+task.#{rand(100)}"  # Better fallback ID format
+              # For task ID generation, we need to detect the version dynamically too
+              current_release = detect_current_release_fallback
+              match = current_release.match(/^(v\.\d+\.\d+\.\d+)/)
+              version = match ? match[1] : "v.0.1.0"
+              "#{version}+task.#{rand(100)}"
             else
               "unknown"
             end
-          else
-            result
           end
         ensure
           Dir.chdir(original_dir)
         end
+      end
+
+      # Fallback method to detect current release using DirectoryNavigator
+      # This ensures consistency with release-manager when command execution fails
+      def detect_current_release_fallback
+        require_relative "../atoms/taskflow_management/directory_navigator"
+        
+        result = CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator
+          .get_current_release_directory(base_path: @sandbox.project_root)
+        
+        if result && result[:path]
+          File.basename(result[:path])
+        else
+          # If DirectoryNavigator can't find anything, there's no current release
+          # This should cause an error rather than creating tasks in a non-existent release
+          raise "No current release directory found. Cannot determine where to create tasks."
+        end
+      rescue => e
+        # Re-raise with more context - we should never silently fail to detect the release
+        raise "Failed to detect current release: #{e.message}. " \
+              "Ensure dev-taskflow/current/ contains exactly one release directory."
       end
 
       def extract_task_number_from_context
