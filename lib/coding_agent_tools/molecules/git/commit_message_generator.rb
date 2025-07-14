@@ -113,13 +113,13 @@ module CodingAgentTools
           # Use the new llm-query command format with file paths: llm-query PROVIDER_MODEL prompt_file --system system_file
           cmd_parts = [executable]
           cmd_parts << model_name
-          cmd_parts << prompt_file_path
-          cmd_parts << "--system" << system_file_path
+          cmd_parts << Shellwords.escape(prompt_file_path)  # Only escape file paths that might contain spaces
+          cmd_parts << "--system" << Shellwords.escape(system_file_path)  # Only escape file paths that might contain spaces
 
           # Add debug flag if enabled
           cmd_parts << "--debug" if debug
 
-          cmd_parts.map { |part| Shellwords.escape(part) }.join(" ")
+          cmd_parts.join(" ")  # Join without additional escaping
         end
 
         def execute_llm_command(command, model_description)
