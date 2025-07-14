@@ -274,7 +274,7 @@ end
 
 - **README.md**: Main project overview and quick start
 - **docs/**: User-facing documentation
-- **docs-dev/**: Development and internal documentation
+- **dev-handbook/**: Development and internal documentation
 - **Code comments**: Complex logic and public APIs
 
 ## 🐛 Reporting Issues
@@ -326,7 +326,7 @@ Releases are managed by maintainers following semantic versioning:
 
 ## 📞 Getting Help
 
-- **Documentation**: Check [docs/](../docs/) and [docs-dev/guides/](../docs-dev/guides/)
+- **Documentation**: Check [docs/](../docs/) and [dev-handbook/guides/](../dev-handbook/guides/)
 - **Issues**: Search or create GitHub issues
 - **Discussions**: Use GitHub Discussions for questions
 
