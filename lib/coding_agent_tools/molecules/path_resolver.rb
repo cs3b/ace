@@ -268,7 +268,7 @@ module CodingAgentTools
         begin
           Dir.chdir(@sandbox.project_root)
           
-          # First, try the command with error capture for debugging
+          # Execute the command with error capture for debugging
           result_with_errors = `#{command} 2>&1`.strip
           exit_status = $?.exitstatus
           
