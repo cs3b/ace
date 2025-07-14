@@ -72,7 +72,11 @@ read whole file and follow @dev-handbook/workflow-instructions/load-project-cont
 <template workflow="commit.wf.md">
 # Goal
 
-1. Ensure you commit (using `git-commit`) all changes that you have modified / created / deleted in this session (if user not ask differently).
+Ensure all changes you have made in the current session, or what user point to are commit in git.
+
+# PLAN
+
+1. Ensure you commit (using `git-commit`) all changes that you have modified / created / deleted in this session (if user not ask differently). e.g.: git-commit item1/path/to item2/path/to item3/path/to ... --intention "write a intention of changes in the session" => `git-commit dev-tools/src/main.rb dev-tools/spec/test.rb dev-handbook/tpl/dotfiles/path.yml --intention "fix authentication bug"`
 
 2. Run `git-status` to check if everything you modified have beedn commited.
 
