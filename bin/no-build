@@ -1,6 +1,17 @@
 #!/bin/sh
 # Build script for Coding Agent Tools gem
-# Builds the gem file for distribution
+#
+# NAMING CONTEXT: This script is named "no-build" to reflect the project's
+# submodule-based distribution approach. While this script DOES build the gem,
+# the name signals that gem building is NOT the primary distribution method.
+#
+# PRIMARY DISTRIBUTION: This project distributes as coordinated Git submodules
+# providing a complete development environment (tools + tasks + documentation).
+#
+# SECONDARY DISTRIBUTION: Gem building serves validation and specific integration
+# scenarios, but submodule integration is the intended primary usage pattern.
+#
+# See docs/development/DISTRIBUTION.md for complete architectural explanation.
 
 set -e
 
