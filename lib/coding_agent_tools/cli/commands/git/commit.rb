@@ -158,9 +158,12 @@ module CodingAgentTools
           end
 
           def display_commit_errors(result, options)
+            has_errors = false
+
             if result[:error]
               # Single error (e.g., from orchestrator)
               error_output("Commit failed: #{result[:error]}")
+              has_errors = true
             end
 
             if result[:errors]
@@ -182,10 +185,11 @@ module CodingAgentTools
               unless options[:debug]
                 error_output("Use --debug flag for more information")
               end
+              has_errors = true
             end
 
-            # Show any partial successes
-            if result[:results]
+            # Show any partial successes (only once)
+            if result[:results] && has_errors
               successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
               if successful_repos.any?
                 successful_names = successful_repos.keys.join(", ")
