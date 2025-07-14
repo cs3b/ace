@@ -1,99 +1,13 @@
 #!/usr/bin/env ruby
-# frozen_string_literal: true
 
-# Add the lib directory to the load path
-$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "bundler/setup"
-require "dry/cli"
-require "coding_agent_tools/version"
+require "coding_agent_tools/molecules/executable_wrapper"
 
-# Only require what we need for code-lint
-require_relative "../lib/coding_agent_tools/cli/commands/code/lint"
-
-module CodeLint
-  module Commands
-    extend Dry::CLI::Registry
-
-    # Create command variations
-    class All < CodingAgentTools::Cli::Commands::Code::Lint
-      def call(paths: nil, **options)
-        super(target: "all", paths: paths, **options)
-      end
-    end
-
-    class Ruby < CodingAgentTools::Cli::Commands::Code::Lint
-      desc "Run Ruby linters only"
-
-      def call(paths: nil, **options)
-        super(target: "ruby", paths: paths, **options)
-      end
-    end
-
-    class Markdown < CodingAgentTools::Cli::Commands::Code::Lint
-      desc "Run Markdown linters only"
-
-      def call(paths: nil, **options)
-        super(target: "markdown", paths: paths, **options)
-      end
-    end
-
-    # Register commands at root level
-    register "ruby", Ruby
-    register "markdown", Markdown
-
-    # Default command (when no subcommand is given)
-    register "version", aliases: ["v", "-v", "--version"] do |cmd|
-      cmd.define_singleton_method(:call) do |*|
-        puts "code-lint #{CodingAgentTools::VERSION}"
-      end
-    end
-  end
-end
-
-# Run the CLI
-cli = Dry::CLI.new(CodeLint::Commands)
-
-# Handle default command or options without subcommand
-if ARGV.empty? || (ARGV.all? { |arg| arg.start_with?("-") })
-  if ARGV.include?("--help") || ARGV.include?("-h")
-    # Show help
-    puts "Commands:"
-    puts "  code-lint               # Run all linters (default)"
-    puts "  code-lint ruby          # Run Ruby linters only"
-    puts "  code-lint markdown      # Run Markdown linters only"
-    puts "  code-lint version       # Print version"
-    puts ""
-    puts "Options:"
-    puts "  --autofix, -a           # Apply moderate-level automatic fixes"
-    puts "  --config=VALUE, -c      # Path to custom configuration file"
-    puts "  --dry-run, -n           # Show what would be done without making changes"
-    puts "  --review-diff, -r       # Review all changes made during autofix"
-    puts "  --validate-config       # Validate configuration file and exit"
-    puts "  --help, -h              # Print this help"
-  else
-    # Run all linters with the provided options
-    all_cmd = CodeLint::Commands::All.new
-    options = {}
-
-    # Parse options manually
-    ARGV.each do |arg|
-      case arg
-      when "--autofix", "-a"
-        options[:autofix] = true
-      when "--dry-run", "-n"
-        options[:dry_run] = true
-      when "--review-diff", "-r"
-        options[:review_diff] = true
-      when "--validate-config"
-        options[:validate_config] = true
-      when /^--config=(.+)/, /^-c(.+)/
-        options[:config] = $1
-      end
-    end
-
-    all_cmd.call(**options)
-  end
-else
-  cli.call
-end
+CodingAgentTools::Molecules::ExecutableWrapper.new(
+  command_path: ["code", "lint"],
+  registration_method: :register_code_commands,
+  executable_name: "code-lint"
+).call
