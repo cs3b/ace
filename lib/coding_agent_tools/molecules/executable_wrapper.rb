@@ -202,15 +202,12 @@ module CodingAgentTools
 
       # Modifies stderr content
       def modify_stderr_content(content, command_string)
-        # Handle command references in quotes
-        content = content.gsub(/"[^"]*#{Regexp.escape(command_string.split.first)}[^"]*#{Regexp.escape(command_string.split.last)}"/, "\"#{executable_name}\"")
-
-        # Handle usage messages
-        if command_string.include?("query")
-          content.gsub(/Usage: "[^"]*#{Regexp.escape(command_string)}[^"]*PROMPT"/, "Usage: \"#{executable_name} PROMPT\"")
-        else
-          content.gsub(/Usage: "[^"]*#{Regexp.escape(command_string)}[^"]*"/, "Usage: \"#{executable_name}\"")
-        end
+        # Simple replacement of exact command string references
+        # Avoid complex regex patterns that might cause duplication
+        escaped_command = Regexp.escape(command_string)
+        
+        # Replace exact command path references with executable name
+        content.gsub(/#{escaped_command}/, executable_name)
       end
 
       # Restores original stdout and stderr
