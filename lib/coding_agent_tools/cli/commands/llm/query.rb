@@ -230,10 +230,8 @@ module CodingAgentTools
             formatted_content = handler.format(response)
             puts formatted_content
 
-            # Display usage and cost summary for text format
-            if format == "text" && response[:usage_metadata]
-              puts "\n" + generate_usage_summary(response[:usage_metadata])
-            end
+            # Note: Cost information is only included in json and markdown formats
+            # Text format to stdout shows only the AI response content for clean output
           end
 
           def generate_usage_summary(usage_metadata)
