@@ -67,6 +67,16 @@ module CodingAgentTools
         @binstub_commands_registered = true
       end
 
+      def self.register_dotfiles_commands
+        return if @dotfiles_commands_registered
+
+        require_relative "cli/commands/install_dotfiles"
+
+        register "install-dotfiles", Commands::InstallDotfiles
+
+        @dotfiles_commands_registered = true
+      end
+
       def self.register_code_commands
         return if @code_commands_registered
 
@@ -181,6 +191,7 @@ module CodingAgentTools
         register_llm_commands
         register_task_commands
         register_binstub_commands
+        register_dotfiles_commands
         register_code_commands
         register_code_review_prepare_commands
         register_nav_commands
