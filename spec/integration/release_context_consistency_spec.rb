@@ -127,4 +127,34 @@ RSpec.describe "Release Context Consistency", type: :integration do
       expect(validation_result).not_to be_success
     end
   end
+
+  describe "PathResolver fallback consistency" do
+    let(:project_sandbox) { CodingAgentTools::Molecules::ProjectSandbox.new(temp_dir) }
+    let(:config_loader) { CodingAgentTools::Molecules::TreeConfigLoader.new(temp_dir) }
+    let(:path_resolver) { CodingAgentTools::Molecules::PathResolver.new(config_loader, project_sandbox) }
+
+    before do
+      create_release_structure(["v.0.1.0-aurora"])
+    end
+
+    it "PathResolver fallback detects same release as ReleaseManager" do
+      # Test that when release-manager command fails, PathResolver fallback
+      # detects the same release as ReleaseManager would
+      current_result = release_manager.current
+      expect(current_result).to be_success
+
+      # Test the fallback method directly
+      fallback_release = path_resolver.send(:detect_current_release_fallback)
+      expect(fallback_release).to eq(current_result.data.name)
+    end
+
+    it "raises error when no current release exists instead of using hardcoded fallback" do
+      # Remove the release directory to simulate empty current
+      FileUtils.rm_rf(File.join(temp_dir, "dev-taskflow", "current", "v.0.1.0-aurora"))
+
+      expect {
+        path_resolver.send(:detect_current_release_fallback)
+      }.to raise_error(/No current release directory found/)
+    end
+  end
 end
