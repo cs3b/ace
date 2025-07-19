@@ -4,6 +4,29 @@
 
 Perform comprehensive code review on any target (git diffs, file patterns, or specific files) with configurable focus areas, automatic project context loading, and structured file-based output. This universal workflow creates organized session directories with input files, combined prompts, multiple LLM reports, and synthesized results.
 
+## ⚠️ CRITICAL: AI Agent Instructions ⚠️
+
+**FOR AI CODING AGENTS - READ THIS FIRST**
+
+DO NOT manually read individual source files during code review execution. This workflow MUST be executed using the `code-review` command-line tool.
+
+### What TO DO:
+1. **First: Analyze the user's request** to determine proper command arguments:
+   - FOCUS: `code`, `tests`, `docs`, or combinations like `"code tests"`
+   - TARGET: Based on user request - `"src/**/*"`, `HEAD~5..HEAD`, `staged`, specific files, etc.
+   - OPTIONS: `--context auto` (default), `--dry-run`, `--model`, etc.
+2. **Second: Execute the constructed command**: `code-review FOCUS TARGET [OPTIONS]`
+3. **Third: Let the tool handle all file reading and analysis**
+4. **Fourth: Review the generated reports in the session directory**
+
+### What NOT TO DO:
+- ❌ Use Read tool on individual source files
+- ❌ Use Glob tool to find files to read manually  
+- ❌ Load source code content into the session
+- ❌ Manually implement the review steps described below
+
+**The process steps below describe what the `code-review` tool does internally - they are NOT for manual execution by AI agents.**
+
 ## Prerequisites
 
 - Access to `dev-handbook/templates/review-*/*.md` prompt templates
@@ -13,6 +36,27 @@ Perform comprehensive code review on any target (git diffs, file patterns, or sp
 - Write access to `dev-taskflow/current/` directory structure
 - Multiple LLM provider access (Google Pro, Anthropic Opus)
 - Understanding of session directory structure and file naming conventions
+
+## Quick Start for AI Agents
+
+**Step 1: Construct command based on user request**
+
+Common patterns:
+```bash
+# Review entire src directory
+code-review code "src/**/*" --context auto
+
+# Review recent changes  
+code-review code HEAD~5..HEAD --context auto
+
+# Review staged changes
+code-review code staged --context auto
+
+# Combined code and test review
+code-review "code tests" "src/**/*" --context auto
+```
+
+**Step 2: Execute the constructed command** - this replaces all manual file reading and analysis.
 
 ## Command Structure
 
@@ -62,20 +106,26 @@ code-review FOCUS TARGET [OPTIONS]
 
 ## High-Level Execution Plan
 
-### Planning Steps
+### For AI Agents: Two-Step Process
+1. **Construct the appropriate command** based on user's request (see Quick Start section above)
+2. **Execute the constructed command** and analyze the results
+
+### Internal Tool Process (DO NOT EXECUTE MANUALLY)
+The following steps are performed automatically by the `code-review` tool:
 
 - [ ] Validate command parameters and options
 - [ ] Determine review scope and requirements
 - [ ] Check for existing sessions to resume
-
-### Execution Steps
-
 - [ ] Run `code-review` command with appropriate parameters
 - [ ] Monitor execution progress and handle any errors
 - [ ] Review generated reports and session artifacts
 - [ ] Optionally synthesize multiple reports if needed
 
-## Process Steps
+## Process Steps (Automated by code-review tool)
+
+> **⚠️ AUTOMATED PROCESS WARNING**  
+> The steps below are performed automatically by the `code-review` tool.  
+> AI agents should NOT execute these manually.
 
 ### 1. Session Directory Creation
 
@@ -327,6 +377,26 @@ Usage: --system dev-handbook/templates/synthesize-reviews/system.prompt.md
 Focus: Meta-review comparing multiple review outputs
 Output: Comparative analysis with scoring and recommendations
 ```
+
+## For AI Coding Agents
+
+### Recognition Patterns
+If you are an AI agent asked to review code, you should:
+
+1. **Recognize the request**: Code review tasks, source analysis, quality assessment
+2. **Analyze user request**: Determine appropriate FOCUS, TARGET, and OPTIONS
+3. **Construct command**: Build `code-review FOCUS TARGET [OPTIONS]` 
+4. **Execute the tool**: Run the constructed command
+5. **Analyze results**: Review the generated session reports
+6. **Never manually read**: Do not use Read, Glob, or similar tools on source files
+
+### Success Criteria for AI Agents
+- ✅ Analyzed user request to determine proper command arguments
+- ✅ Constructed appropriate `code-review` command
+- ✅ Executed the command successfully
+- ✅ Session directory created with reports
+- ✅ Analyzed generated reports
+- ❌ Never loaded source code into session context
 
 ## Usage Examples
 
