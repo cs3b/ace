@@ -43,8 +43,8 @@ DO NOT manually read individual source files during code review execution. This 
 
 Common patterns:
 ```bash
-# Review entire src directory
-code-review code "src/**/*" --context auto
+# Review entire src directory (with extended timeout for large codebases)
+code-review code "src/**/*" --context auto --timeout 600
 
 # Review recent changes  
 code-review code HEAD~5..HEAD --context auto
@@ -52,8 +52,11 @@ code-review code HEAD~5..HEAD --context auto
 # Review staged changes
 code-review code staged --context auto
 
-# Combined code and test review
-code-review "code tests" "src/**/*" --context auto
+# Combined code and test review (with extended timeout)
+code-review "code tests" "src/**/*" --context auto --timeout 600
+
+# Very large codebase review
+code-review code "src/**/*" --context auto --timeout 900
 ```
 
 **Step 2: Execute the constructed command** - this replaces all manual file reading and analysis.
@@ -94,6 +97,10 @@ code-review FOCUS TARGET [OPTIONS]
 - **--model=VALUE**: LLM model to use (e.g., `google:gemini-2.5-pro`)
 - **--output=VALUE**: Output file for review report
 - **--system-prompt=VALUE**: Custom system prompt file path (overrides focus-based selection)
+- **--timeout=VALUE**: LLM query timeout in seconds
+  - `600` (recommended) - For large codebases like entire `src/` directories
+  - `300` (default) - For moderate content
+  - `900` - For very large reviews or slow connections
 
 ## Project Context Loading
 
