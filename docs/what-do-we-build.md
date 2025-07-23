@@ -1,24 +1,51 @@
-# Coding Agent Tools Ruby Gem
+# Coding Agent Workflow Toolkit
 
 ## What We Build 🔍
 
-The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated command-line interface (CLI) tools designed to streamline development workflows for both human developers and autonomous AI coding agents. Its core purpose is to enable seamless interaction with local projects, Git repositories, and task backlogs by offering a predictable and standardized set of commands and a programmable API. By automating routine Dev Ops tasks like querying LLMs, generating commit messages, creating repositories, and navigating task queues, CAT frees up developers and agents to concentrate on higher-value design and coding activities.
+The **Coding Agent Workflow Toolkit** is a comprehensive meta-system that provides both **development handbook workflows** and **executable tools** to enable seamless AI-assisted software development. It combines structured workflow instructions for autonomous AI agents with a robust Ruby gem (Coding Agent Tools - CAT) that provides CLI tools for LLM integration, Git automation, and project management.
+
+The system bridges the gap between human developers and AI coding agents by offering:
+- **Standardized workflow instructions** that AI agents can execute independently
+- **Predictable CLI tools** for common development operations
+- **Documentation-driven task management** integrated with executable tooling
+- **Multi-provider LLM integration** with cost tracking and caching
+
+By providing both the "what to do" (workflows) and "how to do it" (tools), the toolkit enables developers and AI agents to collaborate effectively on higher-value design and coding activities.
 
 ## ✨ Key Features
 
-- **LLM Communication**: CLI commands (`llm-gemini-query`, `lms-studio-query`) for interacting with Google Gemini and local LM Studio models.
-- **Git Workflow Automation**: Tools for creating GitHub repositories (`github-repository-create`) and generating intelligent Git commit messages based on diffs and intentions (`git-commit-with-message`).
-- **Task Management Utilities**: Commands (`tn`, `tr`, `rc`) to help developers and agents identify the next actionable task, review recent tasks, and manage release directories, often integrating with documentation-based task backlogs.
-- **Standardized Interface**: Provides a consistent CLI and API surface for automation, reducing reliance on ad-hoc scripts.
-- **Offline Support**: Enables querying local language models via LM Studio.
+### Workflow Instructions & Documentation
+- **Self-Contained AI Workflows**: 19+ structured workflow instructions (.wf.md) that AI agents can execute independently
+- **Development Handbook**: Comprehensive guides, templates, and best practices organized by language and technology
+- **Documentation-Driven Task Management**: Structured task organization with backlog/, current/, done/ workflow
+- **Template Synchronization**: Embedded document templates with automatic synchronization
+
+### Executable Tools (Ruby Gem - CAT)
+- **Multi-Provider LLM Communication**: Unified interface supporting Google Gemini, OpenAI, Anthropic, Mistral, Together AI, and LM Studio
+- **Model Discovery and Management**: List and filter available models from different providers with caching support
+- **Cost Tracking & Analytics**: Comprehensive usage tracking with cost calculation using LiteLLM pricing database
+- **Enhanced Git Workflow Automation**: 25+ CLI tools including intelligent commit message generation, multi-repo operations, and GitHub integration
+- **Intelligent Navigation**: Smart project navigation with path resolution, task management, and directory listing
+- **Task Management Utilities**: Commands to identify next actionable tasks, review recent work, and manage release cycles
+- **Code Review Automation**: Interactive and batch code review tools with synthesis capabilities
+- **Standardized Interface**: Consistent CLI and API surface designed for both human and AI agent interaction
+- **Offline Support**: Full offline capability with local LM Studio integration and XDG-compliant caching
 
 ## Core Design Principles
 
-- **ATOM Architecture**: Structured around the Action, Transformation, Operation, and Model pattern for maintainability, testability, and clear separation of concerns.
-- **Test-Driven Development**: High emphasis on testing with a goal of 100% unit and integration test coverage using RSpec.
-- **Predictable CLI**: Designing commands with ergonomic flags suitable for both human and agent interaction.
-- **Modularity**: Components are designed with explicit boundaries and dependency injection.
-- **Ruby Best Practices**: Adhering to standard Ruby conventions and practices.
+### System-Level Principles
+- **Meta-Repository Architecture**: Multi-repository coordination using Git submodules for clear separation of concerns
+- **Workflow Self-Containment**: AI workflows must be completely independent and executable without external dependencies
+- **Documentation-Driven Development**: Workflows, tasks, and processes are documented first, then implemented
+- **AI-Native Design**: Built specifically with autonomous AI agent capabilities and limitations in mind
+
+### Implementation Principles (Ruby Gem)
+- **ATOM Architecture**: Structured around Atoms, Molecules, Organisms, and Ecosystems for maintainability, testability, and clear separation of concerns
+- **Test-Driven Development**: High emphasis on testing with comprehensive unit and integration test coverage using RSpec
+- **Predictable CLI**: Designing commands with ergonomic flags suitable for both human and agent interaction
+- **Modularity**: Components are designed with explicit boundaries and dependency injection
+- **Ruby Best Practices**: Adhering to standard Ruby conventions and practices
+- **Security-First**: Multi-layered security framework with path validation, sanitization, and secure logging
 
 ## Target Use Cases
 
@@ -83,16 +110,43 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 
 ## Project Boundaries
 
+### Distribution Architecture
+
+The Coding Agent Workflow Toolkit employs a **submodule-based distribution model** that reflects its nature as a comprehensive development environment rather than a single-purpose library:
+
+- **Primary Distribution**: Multi-repository coordination via Git submodules (handbook-meta as coordination repository)
+- **Component Repositories**: 
+  - `dev-handbook/` - Development resources, workflows, guides, and templates
+  - `dev-tools/` - Core Ruby gem with CLI tools and executables
+  - `dev-taskflow/` - Task management, project planning, and release coordination
+- **Secondary Distribution**: Traditional Ruby gem publication for library integration scenarios
+- **Target Environment**: Complete development environments with integrated toolchain, task management, and documentation
+
+This approach enables coordinated development across interconnected components while maintaining flexibility for library-style integration when needed.
+
 ### What We Build
 
-- A Ruby gem (`coding_agent_tools`) installable via standard Ruby package managers (RubyGems, Bundler).
-- A suite of CLI executables (`bin/`) for common Dev Ops and task management workflows.
-- An internal API used by the CLI, which can potentially be exposed for programmatic use.
-- Integrations with Google Gemini API and local LM Studio API.
-- Integrations with Git CLI and GitHub REST API (v3).
-- Tools to interact with documentation-based task backlogs (e.g., in `dev-taskflow`).
-- Comprehensive unit and integration tests.
-- Documentation (`docs/`, `dev-taskflow/`) detailing usage and architecture.
+#### Meta-System Components
+- A comprehensive **workflow instruction system** with 19+ self-contained AI workflows
+- **Development handbook** with guides, templates, and best practices
+- **Documentation-driven task management** with structured release cycles
+- **Multi-repository coordination tools** for managing the entire ecosystem
+
+#### Ruby Gem (CAT) Components
+- A Ruby gem (`coding_agent_tools`) installable via standard Ruby package managers (RubyGems, Bundler)
+- A suite of **25+ CLI executables** for development automation and LLM integration
+- Core **ATOM architecture components**:
+  - **Atoms**: `XDGDirectoryResolver`, `SecurityLogger`, `EnvReader`
+  - **Molecules**: `CacheManager`, `MetadataNormalizer`, `APICredentials`, `HTTPRequestBuilder`
+  - **Organisms**: `GoogleClient`, `LMStudioClient`, `OpenaiClient`, `AnthropicClient`, `PromptProcessor`
+  - **Ecosystems**: Complete workflow orchestration and system-level coordination
+- **Multi-provider LLM integrations**: Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
+- **Enhanced Git/GitHub integration** with intelligent automation
+- **XDG-compliant caching system** with automatic migration
+- **Comprehensive cost tracking** using LiteLLM pricing database
+- **Security framework** with path validation and sanitized logging
+- **Comprehensive unit and integration tests** with VCR cassette management
+- **Extensive documentation** including architecture guides, user documentation, and API references
 
 ### What We Don't Build (v1)
 
@@ -144,28 +198,61 @@ The **Coding Agent Tools (CAT)** project provides a Ruby gem and associated comm
 
 ### Key Dependencies
 
-- **Ruby ≥ 3.2**: The required runtime environment.
-- **Google Gemini API**: Required for online LLM interactions.
-- **LM Studio**: Required for local, offline LLM interactions.
-- **Git CLI**: Fundamental command-line tool interacted with by the gem.
-- **GitHub REST API (v3)**: Used for repository creation.
-- **`dev-tools/exe-old/*` scripts**: Utility scripts assumed to be present in the `dev-handbook` submodule for certain operations (like task utilities).
+#### Runtime Requirements
+- **Ruby ≥ 3.2**: The required runtime environment for the tools
+- **Node.js**: Required for markdownlint documentation quality control
+- **Git CLI**: Fundamental command-line tool for repository operations
+
+#### External Service Integrations
+- **LLM Providers**: 
+  - Google Gemini API (online)
+  - OpenAI API (online)
+  - Anthropic API (online)
+  - Mistral API (online)
+  - Together AI API (online)
+  - LM Studio (local/offline)
+- **GitHub REST API (v3)**: Used for repository creation and management
+- **LiteLLM Pricing Database**: For accurate cost tracking across all providers
+
+#### Development Dependencies
+- **Ruby Ecosystem**: Bundler, RSpec, StandardRB, Faraday, dry-cli, VCR, WebMock
+- **Documentation**: markdownlint-cli for quality control
+- **Security**: Gitleaks for secrets scanning
 
 ### Ecosystem Integration
 
-- **Git/GitHub**: Deep integration for repository management and commit workflows.
-- **Task Backlogs (Docs-based)**: Designed to work with tasks defined in documentation files (`dev-taskflow/`).
-- **CI/CD Pipelines**: Intended to be invoked as part of automated workflows.
-- **AI Coding Agents**: Primary users and integrators of the tools.
+- **Multi-Repository Development**: Seamless coordination across handbook, tools, and taskflow repositories
+- **AI Coding Agents**: Primary users and integrators designed for autonomous operation
+- **Human Developer Workflows**: Enhanced productivity tools for manual development tasks
+- **Git/GitHub**: Deep integration for repository management, commit workflows, and multi-repo operations
+- **Documentation-Driven Development**: Tight integration between workflows, tasks, and executable tools
+- **CI/CD Pipelines**: Designed to be invoked as part of automated workflows and deployment processes
+- **Development Environments**: Complete integration with XDG-compliant caching and configuration standards
 
 ## Submodules
 
-### dev-handbook
+This project uses 3 Git submodules plus the root repository (4 total repositories):
 
-- Path: `dev-handbook`
-- Repository: [Repository URL - assumed external]
-- Purpose: Contains development resources, guides, workflow instructions, tools, and templates used by the project and AI agents.
-- **Important**: Commits for this submodule must be made from within the submodule directory.
+### dev-handbook
+- **Path**: `dev-handbook/`
+- **Repository**: External repository for development resources
+- **Purpose**: Contains development resources, guides, workflow instructions, templates, and best practices used by both developers and AI agents
+- **Key Contents**: Self-contained AI workflows, development guides, project templates, editor integrations
+- **Important**: Commits for this submodule must be made from within the submodule directory
+
+### dev-tools
+- **Path**: `dev-tools/`
+- **Repository**: External repository for the Ruby gem
+- **Purpose**: Core Ruby gem with CLI tools, LLM integrations, and development automation
+- **Key Contents**: ATOM-structured Ruby code, 25+ CLI executables, comprehensive test suite, security framework
+- **Important**: Commits for this submodule must be made from within the submodule directory
+
+### dev-taskflow
+- **Path**: `dev-taskflow/`
+- **Repository**: External repository for task management
+- **Purpose**: Project-specific task management, release planning, and project coordination
+- **Key Contents**: Structured task organization (backlog/current/done), release planning, project decisions
+- **Important**: Commits for this submodule must be made from within the submodule directory
 
 ---
 
