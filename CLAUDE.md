@@ -31,23 +31,23 @@ bin/build
 
 ```bash
 # Get next task to work on
-bin/tn
+dev-tools/exe/task-manager next
 
 # List recent tasks
-bin/tr
+dev-tools/exe/task-manager recent
 
 # Get current release context
-bin/rc
+dev-tools/exe/release-manager current
 
 # View project tree structure
-bin/tree
+dev-tools/exe/nav-tree
 
 # Git shortcuts (operate on all 4 repositories: root + 3 submodules)
-bin/gs     # git status across all repos
-bin/gl     # git log across all repos
-bin/gc -i "intention"  # git commit with intention-based messages for each repo
-bin/gp     # git push across all repos
-bin/gpull  # git pull across all repos
+dev-tools/exe/git-status     # git status across all repos
+dev-tools/exe/git-log        # git log across all repos
+dev-tools/exe/git-commit --intention "intention"  # git commit with intention-based messages for each repo
+dev-tools/exe/git-push       # git push across all repos
+dev-tools/exe/git-pull       # git pull across all repos
 ```
 
 ### Template Synchronization

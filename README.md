@@ -169,12 +169,12 @@ different input sources for task creation in a single, comprehensive workflow.)
 
 **3. Review a Task**
 To thoroughly review an existing task definition (e.g., the next one suggested
-by a script like `bin/tn`) against project goals, architecture, and recent
+by a script like `dev-tools/exe/task-manager next`) against project goals, architecture, and recent
 changes, and to propose refinements:
 
 ```text
-You might use a helper script (e.g., `bin/tn` if available in your
-`dev-tools/exe-old/` or project `bin/`) via the terminal tool, or manually select
+You might use a helper script (e.g., `dev-tools/exe/task-manager next` if available in your
+`dev-tools/exe/` directory) via the terminal tool, or manually select
 a task from `dev-taskflow/current/{release_version}/tasks/`.
 
 2. Instruct the agent with the task's file path:
@@ -188,10 +188,10 @@ checking against project context and recent changes.)
 
 **4. Work on a Task**
 To implement a defined and reviewed task (e.g., the next one suggested by
-`bin/tn`), following its embedded step-by-step plan:
+`dev-tools/exe/task-manager next`), following its embedded step-by-step plan:
 
 ```text
-(Similar to reviewing a task, use `bin/tn` or manual selection).
+(Similar to reviewing a task, use `dev-tools/exe/task-manager next` or manual selection).
 
 2. Instruct the agent with the task's file path:
    Read and execute the workflow instruction
