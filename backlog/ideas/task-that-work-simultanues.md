@@ -13,3 +13,5 @@ commit changes
 - test designer
 
 - asking the big guys when in doubt
+
+- writing implementation and test files
