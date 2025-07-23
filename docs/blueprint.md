@@ -8,6 +8,7 @@ This document provides a concise overview of the project's structure and organiz
 
 - [What We Build](./what-do-we-build.md) - Project vision and goals
 - [Architecture](./architecture.md) - System design and implementation principles
+- [Tools Architecture](./architecture-tools.md) - Tools-specific technical design and patterns
 
 ## Project Organization
 
@@ -28,21 +29,35 @@ This is a **meta-repository** using Git submodules to organize different aspects
 
 - **dev-tools/** - Ruby gem with CLI tools for LLM integration (Git submodule)
   - **lib/** - Ruby gem source code, organized by the ATOM architecture pattern
+    - **coding_agent_tools/** - Main gem module
+      - **atoms/** - Basic utilities and low-level components
+      - **molecules/** - Composed operations and behavior-oriented helpers
+      - **organisms/** - Business logic and complex orchestration
+      - **ecosystems/** - Complete workflows and system-level coordination
+      - **models/** - Data structures and pure data carriers
+      - **cli/** - CLI command classes
+      - **middlewares/** - Cross-cutting concerns
   - **spec/** - RSpec test files (unit, integration, CLI)
-  - **exe/** - Executable CLI tools for LLM integration
+  - **exe/** - Executable CLI tools for LLM integration (25+ commands)
+  - **bin/** - Gem development tools and build scripts
+  - **docs/** - Tools-specific documentation (moved from root)
 
 - **docs/** - Core project documentation (permanent reference materials)
   - **decisions/** - Architecture Decision Records (ADRs)
   - **migrations/** - Documentation migration records
 
-- **bin/** - Project automation scripts and Git shortcuts
+- **bin/** - Meta-level automation scripts (documentation-specific tools)
+  - **analyze-doc-dependencies** - Analyzes documentation dependencies and generates DOT graphs
+  - **handbook-review-folder** - Reviews documentation folders for compliance
+  - **markdown-sync-embedded-documents** - Synchronizes embedded templates
 
 ## View Complete Directory Structure
 
 To see the complete filtered directory structure, run:
 
 ```bash
-bin/tree
+# Use dev-tools navigation for enhanced project tree
+dev-tools/exe/nav-tree --context full
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -53,6 +68,8 @@ This will show all project files while filtering out temporary files, session lo
 - [CLAUDE.md](../CLAUDE.md) - Project instructions for Claude Code
 - [Workflow Instructions](../dev-handbook/workflow-instructions/README.md) - Entry point for understanding available AI workflows
 - [Project Guides](../dev-handbook/guides/README.md) - Development standards and best practices
+- [Tools Reference](../dev-tools/docs/tools.md) - Comprehensive reference for all CLI tools and gem executables
+- [Development Guide](../dev-tools/docs/development/DEVELOPMENT.md) - Ruby gem development workflows
 - `package.json` - Node.js dependencies (for markdownlint)
 - `dev-tools/coding_agent_tools.gemspec` - Ruby gem definition and dependencies
 - `dev-tools/Gemfile` - Bundler dependency management for dev-tools submodule
@@ -61,12 +78,15 @@ This will show all project files while filtering out temporary files, session lo
 
 - **Primary Language**: Ruby (>= 3.2) for dev-tools submodule
 - **Documentation**: Markdown with markdownlint for quality control
-- **Architecture Pattern**: ATOM (Action, Transformation, Operation, Model) for dev-tools
+- **Architecture Pattern**: ATOM (Atoms, Molecules, Organisms, Ecosystems) for dev-tools
 - **Key Libraries/Tools**: 
-  - Ruby: Bundler, RSpec, Aruba, RuboCop (in dev-tools)
+  - Ruby: Bundler, RSpec, Aruba, StandardRB, Faraday, dry-cli, VCR (in dev-tools)
   - Node.js: markdownlint-cli for documentation quality
   - Git submodules for project organization
-- **Integrations**: Google Gemini API, LM Studio (local), Git CLI, GitHub REST API (via dev-tools)
+- **External Integrations**: 
+  - LLM Providers: Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
+  - Development Tools: Git CLI, GitHub REST API, XDG-compliant caching
+  - Cost Tracking: LiteLLM pricing database integration
 
 ## Read-Only Paths
 
@@ -113,30 +133,53 @@ AI agents should generally ignore the contents of the following paths during nor
 
 ## Entry Points
 
-### Development
+### Meta-Level Development
 
 ```bash
-# Run all tests (executes bin/lint for this project)
+# Run documentation linting (markdownlint + custom Ruby scripts)
+npm run lint  # or manual: markdownlint docs/**/*.md
+
+# Analyze documentation dependencies
+bin/analyze-doc-dependencies
+
+# Review documentation folder compliance
+bin/handbook-review-folder
+
+# Sync embedded templates
+bin/markdown-sync-embedded-documents
+```
+
+### Tools Development (dev-tools/)
+
+```bash
+# Work in dev-tools submodule
+cd dev-tools
+
+# Setup development environment
+bin/setup
+
+# Run tests
 bin/test
 
-# Run linting (markdownlint + custom Ruby scripts)
+# Run linting (StandardRB + security scanning)
 bin/lint
 
-# Build project (placeholder - this is a documentation project)
+# Build gem
 bin/build
 
-# Get project tree structure
-bin/tree
+# Start console
+bin/console
 ```
 
 ### Common Workflows
 
-- **Find Next Task**: Use `bin/tn` to identify the next unblocked task to work on
-- **Summarize Recent Work**: Use `bin/tr` to see recently completed or updated tasks
-- **Get Current Release**: Use `bin/rc` to get current release context
-- **Multi-repo Git Operations**: Use `bin/gs`, `bin/gl`, `bin/gc`, `bin/gp`, `bin/gpull` for operations across all 4 repositories
+- **Find Next Task**: Use `dev-tools/exe/task-manager next` to identify the next actionable task
+- **Summarize Recent Work**: Use `dev-tools/exe/task-manager recent` to see recently completed tasks
+- **Get Current Release**: Use `dev-tools/exe/release-manager current` to get current release context
+- **Multi-repo Git Operations**: Use `dev-tools/exe/git-status`, `git-commit`, etc. for enhanced git operations
 - **Template Synchronization**: Use `bin/markdown-sync-embedded-documents` to sync embedded templates
-- **Query LLM**: Use `dev-tools/exe/llm-query` to interact with language models
+- **Query LLM**: Use `dev-tools/exe/llm-query` to interact with multiple language model providers
+- **Navigation**: Use `dev-tools/exe/nav-path`, `nav-tree`, `nav-ls` for intelligent project navigation
 
 ### Git Submodules
 
