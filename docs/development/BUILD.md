@@ -7,7 +7,7 @@ This document explains the build processes and scripts used in the Coding Agent 
 ## Build Scripts Inventory
 
 ### Multi-Repository Scripts (`/bin/`)
-Located in the root of the tools-meta repository, these scripts coordinate operations across all submodules:
+Located in the root of the handbook-meta repository, these scripts coordinate operations across all submodules:
 
 - **`bin/git-*`**: Enhanced git operations across multiple repositories
 - **`bin/task-*`**: Task management and planning tools
@@ -118,8 +118,8 @@ gem install my_gem
 ### This Project's Workflow
 ```bash
 # Primary workflow (submodule-based)
-git clone --recursive git@github.com:cs3b/tools-meta.git
-cd tools-meta
+git clone --recursive git@github.com:cs3b/handbook-meta.git
+cd handbook-meta
 bin/task-manager next                    # Use coordinated tools
 
 # Secondary workflow (gem testing)
@@ -133,7 +133,7 @@ bin/no-build                            # Validate gem packaging
 The build scripts operate within a multi-repository context:
 
 ```
-tools-meta/
+handbook-meta/
 ├── dev-tools/bin/no-build             # Gem-specific build validation
 ├── dev-taskflow/                      # Task coordination (no build needed)
 ├── dev-handbook/                      # Documentation (no build needed)
