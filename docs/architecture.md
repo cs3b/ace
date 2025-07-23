@@ -1,276 +1,347 @@
-# Coding Agent Tools Ruby Gem - Architecture
+# Coding Agent Workflow Toolkit - System Architecture
 
 ## Overview
 
-This document outlines the architectural design and technical implementation details for the Coding Agent Tools (CAT) Ruby Gem. It provides a structured view of the system for developers and AI agents, explaining how the different components interact to provide automated development workflows.
+This document outlines the high-level system architecture of the Coding Agent Workflow Toolkit, a comprehensive meta-system that combines structured workflow instructions with executable development tools. It describes how the different repositories and components interact to enable seamless AI-assisted software development.
+
+For detailed technical implementation of the Ruby gem tools, see [Tools Architecture](./architecture-tools.md).
 
 ## Technology Stack
 
-### Core Technologies
+### Meta-System Technologies
 
-- **Primary Language**: Ruby
-- **Runtime/Framework**: MRI (C Ruby) version 3.2 or later
-- **Database**: N/A (Gem does not have a primary database; interacts with Git, files, and external APIs)
-- **Package Manager**: Bundler
+- **Coordination**: Git submodules for multi-repository management
+- **Documentation**: Markdown with markdownlint for quality control
+- **Task Management**: Documentation-driven with structured release cycles
+- **Template Management**: XML-based template embedding with synchronization
 
-### Development Tools
+### Executable Tools Technologies
 
-- **Build System**: Standard Ruby Gem build (`gemspec`)
-- **Testing Framework**: RSpec (for unit and integration tests), Aruba (for CLI tests)
-- **Linting/Formatting**: RuboCop (likely used for style enforcement)
-- **Type System**: Native Ruby (Sorbet not explicitly mentioned in PRD v1)
+- **Primary Language**: Ruby (>= 3.2) with ATOM architecture pattern
+- **CLI Framework**: dry-cli with comprehensive command structure
+- **HTTP Client**: Faraday with retry middleware and observability
+- **Testing**: RSpec with VCR for HTTP interaction recording
+- **Security**: Multi-layered security with path validation and sanitization
+- **Caching**: XDG-compliant cache management with automatic migration
 
-### Infrastructure & Deployment
+### External Integrations
 
-- **Containerization**: Optional (e.g., Docker for running LM Studio)
-- **Cloud Platform**: N/A (Gem runs locally or in CI environments)
-- **CI/CD**: GitHub Actions (used for automated testing and building)
-- **Monitoring**: Basic opt-in analytics via Snowplow collector (v1)
+- **LLM Providers**: Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
+- **Cost Tracking**: LiteLLM pricing database for accurate cost calculations
+- **Development Tools**: Git CLI, GitHub REST API, comprehensive repository management
 
 ## System Architecture
 
-### High-Level Components
+### Meta-Repository Structure
 
-The gem's architecture is designed for modularity and testability. The code within `lib/coding_agent_tools/` specifically follows an ATOM-based hierarchy (Atoms, Molecules, Organisms, Ecosystems) inspired by Atomic Design principles for composing functionality.
+The Coding Agent Workflow Toolkit uses a sophisticated multi-repository architecture coordinated through Git submodules:
 
 ```mermaid
 flowchart TD
-    subgraph Ruby Gem (CAT)
-        direction TB
-        CLI[Executables / bin/*]
-        ServiceObjects[🔧 Service Objects]
-        Adapters[🌐 Adapters]
-        Models[(Data Models)]
+    subgraph handbook-meta [handbook-meta - Coordination Hub]
+        Docs[📚 System Documentation]
+        MetaBin[🔧 Meta-Level Scripts]
+        Coordination[🎯 Multi-Repo Coordination]
     end
-    CLI --> ServiceObjects --> Adapters
-    Adapters -->|Gemini REST| GeminiAPI((Google Gemini))
-    Adapters -->|LM Studio| LMStudio((Local Model))\n(localhost:1234)
-    Adapters -->|Git CLI / GitHub API| GitHub((Git/GitHub))
-    ServiceObjects --> Models
-    Models -->|Reads from/Writes to| LocalFS[(Local File System)\n(e.g., dev-taskflow tasks)]
+    
+    subgraph dev-handbook [dev-handbook - Workflow Instructions]
+        Workflows[📋 AI Workflow Instructions]
+        Guides[📖 Development Guides]
+        Templates[📄 Project Templates]
+    end
+    
+    subgraph dev-tools [dev-tools - Executable Tools]
+        RubyGem[💎 Ruby Gem - CAT]
+        CLITools[⚙️ 25+ CLI Executables]
+        ATOM[🏗️ ATOM Architecture]
+    end
+    
+    subgraph dev-taskflow [dev-taskflow - Task Management]
+        Backlog[📋 Future Tasks]
+        Current[🏃 Active Release]
+        Done[✅ Completed Work]
+    end
+    
+    handbook-meta --> dev-handbook
+    handbook-meta --> dev-tools
+    handbook-meta --> dev-taskflow
+    
+    subgraph External [External Systems]
+        LLMProviders[🤖 LLM Providers]
+        GitHub[🐙 GitHub API]
+        FileSystem[💾 Local File System]
+    end
+    
+    dev-tools --> LLMProviders  
+    dev-tools --> GitHub
+    dev-tools --> FileSystem
+    Workflows --> CLITools
 ```
 
-### Component Descriptions
+### Repository Descriptions
 
-#### CLI (Action Layer)
+#### handbook-meta (Coordination Hub)
+- **Purpose**: Central coordination and system-level documentation
+- **Key Components**:
+  - System architecture and vision documentation
+  - Multi-repository coordination scripts
+  - Unified ADRs from all projects
+  - Meta-level automation (documentation analysis, template sync)
+- **Role**: Provides the unified view and coordination layer for the entire toolkit
 
-- **Purpose**: Provides the command-line interface for user and agent interaction.
-- **Technology**: Ruby, potentially using libraries like Thor or Dry-CLI.
-- **Key Responsibilities**: Parsing command-line arguments, initial input validation, invoking the appropriate Service Objects.
-- **Interfaces**: Communicates with Service Objects.
+#### dev-handbook (Workflow Instructions)
+- **Purpose**: Self-contained AI workflow instructions and development resources
+- **Key Components**:
+  - 19+ structured AI workflow instructions (.wf.md files)
+  - Development guides organized by language and technology
+  - Project templates and document templates
+  - Editor integrations and development best practices
+- **Architecture Principle**: Complete workflow self-containment (ADR-001)
 
-#### Service Objects (Transformation Layer)
+#### dev-tools (Executable Tools)
+- **Purpose**: Ruby gem providing CLI tools and development automation
+- **Key Components**:
+  - 25+ CLI executables for LLM integration, Git automation, navigation
+  - ATOM-structured Ruby codebase (Atoms, Molecules, Organisms, Ecosystems)
+  - Multi-provider LLM integration with cost tracking
+  - Security framework with path validation and sanitization
+- **Distribution**: Both gem publication and submodule integration
 
-- **Purpose**: Contains the core business logic and orchestrates operations.
-- **Technology**: Pure Ruby classes.
-- **Key Responsibilities**: Implementing specific workflows (e.g., generating a commit message, finding the next task), transforming data between models and adapters.
-- **Interfaces**: Interacts with Adapters and Models. Designed to be testable in isolation.
+#### dev-taskflow (Task Management)
+- **Purpose**: Documentation-driven task management and release planning
+- **Key Components**:
+  - Structured task organization (backlog/, current/, done/)
+  - Release planning and roadmap management
+  - Project-specific ADRs and decision tracking
+- **Workflow**: Supports continuous release cycles with clear task progression
 
-#### Adapters (Operation Layer)
+## Data Flow Architecture
 
-- **Purpose**: Provides interfaces to external systems or tools (LLMs, Git, file system).
-- **Technology**: Ruby classes wrapping external libraries or system calls.
-- **Key Responsibilities**: Handling communication protocols (HTTP, system commands), error handling for external interactions, translating external responses into internal data models.
-- **Interfaces**: Communicates with external APIs/tools and is used by Service Objects.
+### AI Agent Workflow Execution
 
-#### Models (Model Layer)
-
-- **Purpose**: Represents the data structures used within the gem.
-- **Technology**: Plain Old Ruby Objects (POROs) or simple data structures.
-- **Key Responsibilities**: Defining the structure of data related to Git objects, task items, API responses, etc.
-- **Interfaces**: Used by Service Objects and Adapters.
-
-### ATOM-Based Code Structure in `lib/coding_agent_tools/`
-
-The internal structure of the gem's library code (`lib/coding_agent_tools/`) adheres to an ATOM-based hierarchy, promoting reusability and clear separation of concerns:
-
-- **Atoms (`lib/coding_agent_tools/atoms/`)**: The smallest, indivisible units of behavior or functionality. They have no dependencies on other parts of this gem and are highly reusable (e.g., a utility function for string normalization, a basic file reader).
-- **Molecules (`lib/coding_agent_tools/molecules/`)**: Simple compositions of Atoms that form a meaningful, reusable operation (e.g., a configuration loader using file access and parsing atoms, a basic Git client using command execution atoms).
-- **Organisms (`lib/coding_agent_tools/organisms/`)**: More complex units that perform specific business-related functions or features of the gem. They orchestrate Molecules and Atoms to achieve a distinct goal (e.g., an LLM querier, a commit message suggester). These often correspond to Service Objects.
-- **Ecosystems (`lib/coding_agent_tools/ecosystems/`)**: Cohesive groupings of Organisms and other components that deliver a larger, bounded context or subsystem. The overall CLI application, orchestrated by `dry-cli`, can be considered the primary ecosystem.
-- **Models (`lib/coding_agent_tools/models/`)**: Plain Old Ruby Objects (POROs) or simple data structures used across various layers to represent entities and data (e.g., `Task`, `LLMResponse`).
-- **CLI Commands (`lib/coding_agent_tools/cli/` and `lib/coding_agent_tools/cli.rb`)**: These are the entry points for the command-line interface, built using `dry-cli`. Commands typically delegate their core logic to Organisms.
-
-## Data Flow
-
-Data typically flows from the CLI (user input) to a Service Object, which uses Adapters to interact with external systems (LLM, Git, file system). The Adapters return data, potentially mapped to internal Models, back to the Service Object for processing. The final result is returned through the Adapter layer back to the Service Object, and finally outputted via the CLI. For task utilities, data might be read from local files (`dev-taskflow/`) via an Adapter/Service Object and formatted for CLI output.
-
-### Request Processing Flow (Example: git-commit-with-message)
-
-1. **Input**: User/agent invokes `bin/git-commit-with-message` with arguments (`--intention`, `--files`, etc.).
-2. **Processing (CLI)**: The CLI executable parses arguments, calls the relevant Service Object.
-3. **Processing (Service Object)**: Service Object gathers necessary context (diff from Git via Adapter), prepares prompt for LLM.
-4. **External Interaction (Adapter)**: Service Object calls the LLM Adapter (e.g., `GeminiAdapter`) with the prompt.
-5. **External Service**: LLM API processes the prompt and returns a message.
-6. **Processing (Adapter)**: Adapter receives the LLM response, potentially validates/formats it, returns to Service Object.
-7. **Processing (Service Object)**: Service Object takes the generated message, stages files (via Git Adapter), and performs the Git commit (via Git Adapter).
-8. **Output**: CLI confirms the commit or reports errors.
-
-## Command-line Tools (bin/)
-
-The `bin/` directory contains executable scripts that serve as the primary interface for the gem. These are often thin wrappers (binstubs) that invoke the main gem logic.
-
-### Key Commands (as per PRD)
-
-- `bin/llm-gemini-query`: Query Google Gemini.
-- `bin/lms-studio-query`: Query local LM Studio.
-- `bin/github-repository-create`: Create a GitHub repository.
-- `bin/git-commit-with-message`: Generate and perform a Git commit.
-- `bin/tr`: List recent tasks.
-- `bin/tn`: Find the next actionable task.
-- `bin/rc`: Get current release path and version.
-- `bin/test`: Run the test suite.
-- `bin/lint`: Run code quality checks.
-- `bin/build`: Build the gem.
-- `bin/run`: (Context dependent, potentially runs gem commands or a sample usage).
-- `bin/tree`: Display project directory structure (likely wraps `dev-tools/exe-old/tree.sh`).
-
-These scripts are intended to be idempotent where possible and provide a consistent, predictable interface for automation.
-
-## File Organization
-
-```
-.
-├── bin/                   # Executable command-line scripts (binstubs/wrappers)
-├── dev-handbook/              # Submodule: Development resources, guides, templates, tools
-│   ├── guides/            # Best practices, patterns, templates
-│   ├── tools/             # Utility scripts (e.g., for task management, tree display)
-│   └── workflow-instructions/ # AI workflow definitions
-├── dev-taskflow/          # Project-specific documentation and management files
-│   ├── backlog/           # Task files for future releases
-│   ├── current/           # Task files for the current release
-│   ├── done/              # Completed task files
-│   ├── decisions/         # Architecture Decision Records (.keep file ensures directory exists)
-│   ├── architecture.md    # This document  
-│   ├── blueprint.md       # Project structure overview and AI guidelines
-│   └── what-do-we-build.md # Project vision and goals
-├── docs/                  # Core project documentation (permanent reference materials)
-│   ├── decisions/         # Architecture Decision Records (ADRs)
-│   ├── migrations/        # Documentation migration records
-│   ├── architecture.md    # System architecture documentation
-│   ├── blueprint.md       # Project structure and navigation guide
-│   └── what-do-we-build.md # Project vision and goals
-├── dev-tools/exe/                   # Gem executables (e.g., coding_agent_tools)
-├── lib/                   # Ruby gem source code
-│   ├── coding_agent_tools.rb # Main gem file, loads components
-│   └── coding_agent_tools/
-│       ├── atoms/         # Smallest, indivisible units (utilities, transformations)
-│       ├── cli/           # Dry-CLI command definitions and subcommands
-│       ├── ecosystems/    # Complete subsystems or major features
-│       ├── molecules/     # Simple compositions of atoms
-│       ├── models/        # Data structures (POROs)
-│       ├── organisms/     # Business logic handlers, orchestrating molecules/atoms
-│       ├── cli.rb         # Main Dry-CLI registry
-│       ├── error.rb       # Custom gem-specific error classes
-│       └── version.rb     # Gem version definition
-├── spec/                  # RSpec test files (unit, integration, CLI)
-├── .github/               # GitHub specific files (e.g. workflows)
-│   └── workflows/
-│       └── main.yml       # CI workflow
-├── .gitignore             # Specifies intentionally untracked files
-├── .rspec                 # RSpec configuration
-├── .standard.yml          # StandardRB configuration
-├── CHANGELOG.md           # Record of changes
-├── Gemfile                # Bundler dependency file
-├── LICENSE.txt            # Project license
-├── PRD.md                 # Product Requirements Document (primary source of truth)
-├── Rakefile               # Rake tasks
-├── README.md              # Project overview and quick start guide
-└── coding_agent_tools.gemspec # Gem specification file
+```mermaid
+sequenceDiagram
+    participant AI as AI Agent
+    participant Handbook as dev-handbook
+    participant Tools as dev-tools
+    participant Taskflow as dev-taskflow
+    participant External as External APIs
+    
+    AI->>Handbook: Load workflow instruction
+    Handbook->>AI: Self-contained workflow with embedded context
+    AI->>Tools: Execute CLI commands from workflow
+    Tools->>External: Make API calls (LLM, GitHub, etc.)
+    External->>Tools: Return results
+    Tools->>AI: Formatted output
+    AI->>Taskflow: Update task status/create new tasks
+    AI->>Handbook: Reference templates/guides as needed
 ```
 
-The primary Ruby source code resides in the `lib/coding_agent_tools/` directory, organized according to the ATOM pattern. Tests are located in the `spec/` directory.
+### Human Developer Workflow
 
-### Documentation Directory Structure
+```mermaid
+sequenceDiagram
+    participant Developer as Human Developer
+    participant Tools as dev-tools
+    participant Taskflow as dev-taskflow
+    participant Handbook as dev-handbook
+    participant External as External Systems
+    
+    Developer->>Taskflow: Check current tasks
+    Developer->>Tools: Use navigation/management commands
+    Tools->>External: Query LLMs, Git operations
+    External->>Tools: Return results
+    Tools->>Developer: Enhanced development information
+    Developer->>Handbook: Reference guides/templates
+    Developer->>Tools: Execute git/commit workflows
+    Tools->>Taskflow: Update project state
+```
 
-The project uses a clear distinction between permanent and temporal documentation:
+## Core Design Principles
 
-- **`docs/`** - Contains permanent project documentation that serves as the canonical reference across all releases:
-  - `docs/decisions/` - Architecture Decision Records (ADRs) that document permanent architectural choices
-  - Core project documentation (architecture.md, blueprint.md, what-do-we-build.md)
-  - Migration records and other permanent reference materials
+### System-Level Principles
 
-- **`dev-taskflow/`** - Contains project-specific, point-in-time documentation tied to specific releases:
-  - `dev-taskflow/current/*/decisions/` - Release-specific decisions and analysis
-  - Task management files organized by release cycle
-  - Temporal documentation that may become historical
+#### 1. Multi-Repository Coordination
+- **Git Submodules**: Clean separation of concerns across repositories
+- **Unified Documentation**: Central coordination through handbook-meta
+- **Independent Development**: Each repository can be developed independently
+- **Coordinated Releases**: Synchronized versioning across components
 
-**Important**: When referencing Architecture Decision Records (ADRs), always use `docs/decisions/` for permanent architectural decisions that apply across the entire project lifecycle. Use `dev-taskflow/current/*/decisions/` only for release-specific decisions that are tied to a particular development cycle.
+#### 2. Workflow Self-Containment (ADR-001)
+- **Independent Execution**: AI workflows must be completely self-contained
+- **Embedded Context**: All necessary templates, examples, and guidance embedded
+- **No Cross-Dependencies**: Workflows cannot depend on external context loading
+- **Autonomous Operation**: AI agents can execute workflows without human intervention
 
-## Development Patterns
+#### 3. Documentation-Driven Development
+- **Workflows First**: Document processes before implementing tools
+- **Task Transparency**: All work tracked through documentation
+- **Decision Recording**: ADRs document architectural and implementation decisions
+- **Template Synchronization**: Automated template management across documents
 
-- **ATOM-Based Hierarchy**: The core library implementation (`lib/coding_agent_tools/`) follows an Atoms, Molecules, Organisms, Ecosystems hierarchy to ensure modularity, reusability, testability, and maintainability.
-- **Test-Driven Development (TDD)**: A strong emphasis is placed on writing tests (`spec/`) before or alongside implementation code, aiming for high test coverage.
-- **Dependency Injection**: Components are designed to accept dependencies (like adapters) via initialization, facilitating easier testing and flexibility.
-- **CLI-First Design**: The architecture prioritizes a robust and predictable command-line interface as the primary interaction method.
+#### 4. AI-Native Design
+- **Autonomous Execution**: Built for AI agent capabilities and limitations
+- **Predictable Interfaces**: Consistent command structures for automation
+- **Context Efficiency**: Minimize context window usage through self-containment
+- **Error Handling**: Comprehensive error reporting for autonomous debugging
 
-## Security Considerations
+### Implementation Principles (Tools)
 
-- **API Key/Token Handling**: The gem avoids hardcoding secrets. API keys and tokens (e.g., `GEMINI_API_KEY`, `GITHUB_TOKEN`) are read from environment variables or standard configuration locations (`~/.gemini/config`, macOS keychain).
-- **No Plaintext Secrets in Logs**: Logging is designed to avoid exposing sensitive information.
-- **Input Validation**: Basic input validation is performed, particularly at the CLI/Action layer, to prevent command injection or other security vulnerabilities.
+#### 1. ATOM Architecture
+- **Atoms**: Indivisible utilities with no internal dependencies
+- **Molecules**: Behavior-oriented helpers composing atoms
+- **Organisms**: Business logic orchestrating molecules
+- **Ecosystems**: Complete workflow coordination
+- **Models**: Pure data carriers with no behavior
+
+#### 2. Security-First Development
+- **Multi-Layer Security**: Path validation, sanitization, secure logging
+- **Defense in Depth**: Multiple validation layers for file operations
+- **Privacy Protection**: Automatic sanitization of sensitive information
+- **Safe Defaults**: Secure-by-default configuration and behavior
+
+#### 3. Standards Compliance
+- **XDG Compliance**: Follow OS-level directory standards
+- **HTTP Best Practices**: Proper retry logic, timeouts, and error handling
+- **Ruby Conventions**: Adhere to community standards and best practices
+
+## Integration Patterns
+
+### AI Agent Integration
+
+The toolkit provides multiple integration points for AI agents:
+
+1. **Direct CLI Usage**: Execute tools directly via command line
+2. **Workflow Instructions**: Follow structured .wf.md workflow files
+3. **Template System**: Use embedded templates for consistent output
+4. **Task Management**: Integrate with documentation-driven task tracking
+
+### Human Developer Integration
+
+Human developers can integrate through:
+
+1. **Enhanced CLI Tools**: 25+ productivity-focused commands
+2. **Development Guides**: Language and technology-specific guidance
+3. **Template Library**: Reusable project and document templates
+4. **Multi-Repo Coordination**: Seamless work across all repositories
+
+### CI/CD Integration
+
+The toolkit supports automated workflows through:
+
+1. **Batch Processing**: CLI tools designed for non-interactive execution
+2. **Configuration Management**: Environment-based configuration
+3. **Security Integration**: Safe defaults for automated environments
+4. **Cost Tracking**: Comprehensive usage and cost monitoring
+
+## Security Architecture
+
+### System-Level Security
+
+- **Repository Isolation**: Clear boundaries between different concerns
+- **Access Control**: Appropriate file permissions and path restrictions
+- **Credential Management**: Secure handling of API keys and tokens
+- **Audit Trail**: Comprehensive logging of all operations
+
+### Implementation Security
+
+- **Path Validation**: Prevent directory traversal attacks
+- **Input Sanitization**: Clean all user inputs and file paths
+- **Secure Logging**: Automatic redaction of sensitive information
+- **Operation Confirmation**: Safe defaults with confirmation prompts
 
 ## Performance Considerations
 
-- **Startup Latency**: Target low startup latency (≤ 200 ms for CLI commands) for responsiveness, especially when invoked by agents.
-- **Caching**: Potential for implementing caching strategies (e.g., for LLM responses or frequently accessed data) to improve performance.
-- **Profiling**: Standard Ruby profiling tools can be used to identify performance bottlenecks.
+### System-Level Performance
+
+- **Submodule Efficiency**: Minimal overhead for multi-repository coordination
+- **Documentation Speed**: Fast template synchronization and analysis
+- **Task Management**: Efficient file-based task tracking
+
+### Implementation Performance
+
+- **Startup Speed**: ≤ 200ms CLI command initialization
+- **Caching Strategy**: XDG-compliant caching with intelligent invalidation
+- **HTTP Optimization**: Connection pooling, retry logic, and timeout management
+- **Memory Efficiency**: Minimal memory footprint with lazy loading
 
 ## Deployment Architecture
 
-The gem is deployed as a standard RubyGem.
+### Development Environment
 
-- **Installation**: Users install via `gem install coding_agent_tools` or by adding `gem 'coding_agent_tools'` to their `Gemfile` and running `bundle install`.
-- **Binstubs**: Bundler generates binstubs in the project's `bin/` directory (or globally if installed system-wide), providing convenient wrappers for executables.
-- **CI/CD**: GitHub Actions are used to build the gem, run tests, and potentially publish new versions.
+The toolkit is designed for complete development environment setup:
 
-## Extension Points
+1. **Submodule Installation**: `git submodule update --init --recursive`
+2. **Ruby Gem Setup**: Bundle installation for dev-tools
+3. **Documentation Setup**: Node.js dependencies for markdownlint
+4. **Integration Configuration**: Environment variables and API keys
 
-The ATOM architecture provides several extension points:
+### Production Deployment
 
-- **New Commands**: Add new executables in `bin/` and corresponding Action/Service Object logic in `lib/`.
-- **New Adapters**: Implement new Adapters in `lib/coding_agent_tools/operations/` to integrate with different external APIs, LLM providers, or tools. These can then be used by existing or new Service Objects.
-- **New Models**: Define new data structures in `lib/coding_agent_tools/models/` as needed for new features or data representations.
-- **Custom Scripts**: Users can create their own scripts in the project's `bin/` directory that utilize the gem's internal API or CLI commands.
+For production use, the toolkit supports:
 
-## Dependencies
+1. **Gem Installation**: Standard RubyGems installation
+2. **Containerization**: Docker support for consistent environments
+3. **CI/CD Integration**: GitHub Actions and other CI systems
+4. **Monitoring**: Comprehensive logging and usage tracking
 
-### Runtime Dependencies
+## Future Architecture Evolution
 
-- Ruby (>= 3.2)
-- Bundler
-- Specific gems for API interactions (e.g., HTTP clients, JSON parsers) and potentially Git interaction libraries.
+### Planned Enhancements
 
-### Development Dependencies
+#### Short-Term (v0.4.0 - v0.6.0)
+- **Unified Taskflow**: Merged task management across all repositories
+- **Enhanced Security**: Additional security validations and monitoring
+- **Provider Expansion**: Additional LLM providers and integrations
+- **Performance Optimization**: Caching improvements and startup speed
 
-- RSpec
-- Aruba
-- RuboCop / StandardRB
-- Potentially VCR for recording API interactions in tests.
-- `dev-tools/exe-old/*` scripts: Dependencies for certain `bin/` utilities that wrap scripts from the `dev-handbook` submodule.
+#### Medium-Term (v0.7.0 - v1.0.0)
+- **Ecosystem Layer**: Complete workflow orchestration in Ruby gem
+- **Plugin Architecture**: Third-party extensibility for providers and workflows
+- **Advanced Analytics**: Comprehensive usage analytics and cost optimization
+- **Multi-Language Support**: Gradual expansion beyond Ruby
+
+#### Long-Term (v1.0.0+)
+- **Distributed Architecture**: Support for team-based development workflows
+- **Cloud Integration**: Native cloud provider integrations
+- **AI Model Training**: Custom model training based on usage patterns
+- **Enterprise Features**: Advanced security, compliance, and governance
+
+### Scalability Considerations
+
+- **Horizontal Scaling**: Support for multiple concurrent operations
+- **Resource Management**: Intelligent resource allocation and limits
+- **Network Optimization**: Advanced caching and connection management
+- **Storage Efficiency**: Compressed caching and intelligent cleanup
 
 ## Decision Records
 
-Significant architectural decisions are documented as Architecture Decision Records (ADRs).
+All architectural decisions are documented as ADRs in the following locations:
 
-For detailed decision records, see [docs/decisions/](./decisions/).
+- **System-Level ADRs**: `docs/decisions/` (handbook-meta)
+- **Workflow ADRs**: Suffixed with `.wf.md`  
+- **Tools ADRs**: Suffixed with `.t.md`
 
-## Troubleshooting
+Key architectural decisions:
+- **ADR-001**: Workflow Self-Containment Principle
+- **ADR-002**: XML Template Embedding Architecture
+- **ADR-006**: CI-Aware VCR Configuration (.t.md)
+- **ADR-011**: ATOM Architecture House Rules (.t.md)
+- **ADR-014**: LLM Integration Architecture (.t.md)
 
-(This section is a placeholder and should be populated with common issues and their solutions as they are identified.)
+## Monitoring and Observability
 
-- **Issue**: Command not found after installation.
-  - **Symptoms**: Running `bin/tn` or other commands results in "command not found".
-  - **Solution**: Ensure Bundler binstubs are set up and your PATH includes the project's `bin/` directory. Run `bundle install` if using Bundler.
+### System Monitoring
+- **Multi-Repository Health**: Git submodule status and synchronization
+- **Documentation Quality**: Automated link checking and template validation
+- **Task Flow Tracking**: Release progress and completion metrics
 
-- **Issue**: LLM query fails.
-  - **Symptoms**: Commands like `bin/llm-gemini-query` report API errors or connection issues.
-  - **Solution**: Check environment variables (`GEMINI_API_KEY`), network connectivity, and the status of the LM Studio server if using the local model.
+### Implementation Monitoring
+- **CLI Usage**: Command execution frequency and success rates
+- **LLM Integration**: API call success rates, costs, and performance
+- **Security Events**: Comprehensive security event logging and analysis
+- **Performance Metrics**: Response times, cache hit rates, and resource usage
 
-## Future Considerations
+---
 
-- **Multi-language bindings**: Explore providing SDKs or libraries in languages other than Ruby (post v1).
-- **Streaming LLM responses**: Investigate if agents require streaming output from LLMs rather than waiting for a full reply.
-- **Encrypted local storage**: Consider if caching or storing sensitive data locally requires encryption.
-- **Rubocop plugin**: Assess the value of a Rubocop plugin to enforce ATOM directory boundaries and other architectural conventions.
-- **Advanced Task Management Integration**: Explore deeper integrations with external task management systems.
+*This document should be updated when significant structural changes are made to the system architecture. For tools-specific technical details, see [Tools Architecture](./architecture-tools.md).*
