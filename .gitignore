@@ -2,3 +2,5 @@ node_modules
 tmp
 doc-dependencies*
 .env
+node_modules
+.lint*.md
