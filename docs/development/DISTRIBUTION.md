@@ -22,10 +22,10 @@ The Coding Agent Tools project employs a **submodule-based distribution model** 
 
 ## Project Structure
 
-This project (`tools-meta`) serves as the **coordination repository** that orchestrates three specialized submodules:
+This project (`handbook-meta`) serves as the **coordination repository** that orchestrates three specialized submodules:
 
 ```
-tools-meta/                              # Main coordination repository
+handbook-meta/                           # Main coordination repository
 ├── dev-tools/                          # Ruby gem (coding_agent_tools)
 │   ├── lib/coding_agent_tools/         # Core gem implementation
 │   ├── exe/                            # User-facing CLI commands
@@ -71,8 +71,8 @@ tools-meta/                              # Main coordination repository
 
 ```bash
 # Clone the complete environment
-git clone --recursive git@github.com:cs3b/coding-agent-tools-meta.git
-cd coding-agent-tools-meta
+git clone --recursive git@github.com:cs3b/handbook-meta.git
+cd handbook-meta
 
 # Use multi-repository tools
 bin/git-status          # Status across all repositories
@@ -126,7 +126,7 @@ gem install --local     # Test installation
 
 | Use Case | Distribution Method | Installation |
 |----------|-------------------|--------------|
-| Complete dev environment | Submodule (tools-meta) | `git clone --recursive` |
+| Complete dev environment | Submodule (handbook-meta) | `git clone --recursive` |
 | Individual tool usage | Submodule (dev-tools) | `git submodule add` |
 | Library integration | Gem (when published) | `gem install` or Gemfile |
 | Testing/validation | Local gem build | `bin/no-build` |
