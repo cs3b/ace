@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/code/git_command_executor"
+require_relative "../../atoms/git/git_command_executor"
 require_relative "../../atoms/code/file_content_reader"
 
 module CodingAgentTools
@@ -10,7 +10,7 @@ module CodingAgentTools
       # This is a molecule - it composes atoms to extract git diff content
       class GitDiffExtractor
         def initialize
-          @git_executor = Atoms::Code::GitCommandExecutor.new
+          @git_executor = Atoms::Git::GitCommandExecutor.new
           @file_reader = Atoms::Code::FileContentReader.new
         end
 
@@ -18,23 +18,23 @@ module CodingAgentTools
         # @param target_spec [String] target specification (range, 'staged', etc.)
         # @return [Hash] {content: String, metadata: Hash, success: Boolean, error: String}
         def extract_diff(target_spec)
-          # Check if git is available
-          unless @git_executor.available?
+          # Execute diff command using the secure git executor
+          begin
+            diff_command = build_diff_command(target_spec)
+            result = @git_executor.execute(diff_command)
+          rescue => e
             return {
               content: nil,
               metadata: {},
               success: false,
-              error: "Git is not available"
+              error: "Git command failed: #{e.message}"
             }
           end
 
-          # Execute diff command
-          result = @git_executor.diff(target_spec)
-
           if result[:success]
-            metadata = build_diff_metadata(target_spec, result[:output])
+            metadata = build_diff_metadata(target_spec, result[:stdout])
             {
-              content: result[:output],
+              content: result[:stdout],
               metadata: metadata,
               success: true,
               error: nil
@@ -44,7 +44,7 @@ module CodingAgentTools
               content: nil,
               metadata: {},
               success: false,
-              error: result[:error]
+              error: result[:stderr] || "Unknown error"
             }
           end
         end
@@ -101,6 +101,30 @@ module CodingAgentTools
         end
 
         private
+
+        # Build git diff command based on target specification
+        # @param target_spec [String] target specification
+        # @return [String] git diff command
+        def build_diff_command(target_spec)
+          base_args = ["diff", "--no-color"]
+
+          case target_spec
+          when "staged"
+            base_args << "--staged"
+          when "unstaged"
+            # Default diff (unstaged changes)
+          when "working"
+            base_args << "HEAD"
+          when /\.\./
+            # Commit range
+            base_args << target_spec
+          else
+            # Assume it's a ref or file
+            base_args << target_spec
+          end
+
+          base_args.join(" ")
+        end
 
         # Build metadata for diff
         # @param target_spec [String] target specification
