@@ -133,7 +133,7 @@ module CodingAgentTools
 
         def resolve_project_relative_path(file_path, project_root)
           # If the path is already absolute, make it relative to project root
-          if File.absolute?(file_path)
+          if File.absolute_path?(file_path)
             begin
               return Pathname.new(file_path).relative_path_from(Pathname.new(project_root)).to_s
             rescue ArgumentError
