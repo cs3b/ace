@@ -205,7 +205,7 @@ module CodingAgentTools
         # Simple replacement of exact command string references
         # Avoid complex regex patterns that might cause duplication
         escaped_command = Regexp.escape(command_string)
-        
+
         # Replace command path references with executable name, preserving quotes and additional args
         # Match quotes around path + command + optional args and replace with quotes around executable name + args
         content.gsub(/"[^"]*#{escaped_command}([^"]*)"/, "\"#{executable_name}\\1\"")

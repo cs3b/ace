@@ -18,7 +18,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, content)
 
         result = reader.read(test_file)
-        
+
         expect(result[:success]).to be true
         expect(result[:content]).to eq(content)
         expect(result[:error]).to be_nil
@@ -29,7 +29,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, "")
 
         result = reader.read(test_file)
-        
+
         expect(result[:success]).to be true
         expect(result[:content]).to eq("")
         expect(result[:error]).to be_nil
@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, content)
 
         result = reader.read(test_file)
-        
+
         expect(result[:success]).to be true
         expect(result[:content]).to eq(content)
       end
@@ -50,9 +50,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
     context "with invalid file" do
       it "handles file not found" do
         nonexistent_file = File.join(temp_dir, "nonexistent.txt")
-        
+
         result = reader.read(nonexistent_file)
-        
+
         expect(result[:success]).to be false
         expect(result[:content]).to be_nil
         expect(result[:error]).to eq("File not found: #{nonexistent_file}")
@@ -61,9 +61,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       it "handles permission denied" do
         # Mock File.read to simulate permission denied
         allow(File).to receive(:read).and_raise(Errno::EACCES)
-        
+
         result = reader.read("/test/file.txt")
-        
+
         expect(result[:success]).to be false
         expect(result[:content]).to be_nil
         expect(result[:error]).to eq("Permission denied: /test/file.txt")
@@ -71,9 +71,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
 
       it "handles generic errors" do
         allow(File).to receive(:read).and_raise(StandardError, "Custom error")
-        
+
         result = reader.read("/test/file.txt")
-        
+
         expect(result[:success]).to be false
         expect(result[:content]).to be_nil
         expect(result[:error]).to eq("Error reading file: Custom error")
@@ -103,7 +103,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, content)
 
         result = reader.read_with_limit(test_file, 1000)
-        
+
         expect(result[:success]).to be true
         expect(result[:content]).to eq(content)
         expect(result[:error]).to be_nil
@@ -117,7 +117,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, content)
 
         result = reader.read_with_limit(test_file, 500)
-        
+
         expect(result[:success]).to be false
         expect(result[:content]).to be_nil
         expect(result[:error]).to eq("File too large: 1000 bytes (max: 500)")
@@ -128,9 +128,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       it "handles file size check errors" do
         # Mock File.size to simulate error
         allow(File).to receive(:size).and_raise(StandardError, "Size check failed")
-        
+
         result = reader.read_with_limit("/test/file.txt", 1000)
-        
+
         expect(result[:success]).to be false
         expect(result[:content]).to be_nil
         expect(result[:error]).to eq("Error checking file size: Size check failed")
@@ -148,20 +148,20 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
     it "returns true for readable files" do
       test_file = File.join(temp_dir, "readable.txt")
       File.write(test_file, "content")
-      
+
       expect(reader.readable?(test_file)).to be true
     end
 
     it "returns false for non-existent files" do
       nonexistent_file = File.join(temp_dir, "nonexistent.txt")
-      
+
       expect(reader.readable?(nonexistent_file)).to be false
     end
 
     it "returns false for directories" do
       test_dir = File.join(temp_dir, "test_dir")
       FileUtils.mkdir_p(test_dir)
-      
+
       expect(reader.readable?(test_dir)).to be false
     end
   end
@@ -174,7 +174,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
         File.write(test_file, content)
 
         result = reader.metadata(test_file)
-        
+
         expect(result[:exists]).to be true
         expect(result[:size]).to eq(content.bytesize)
         expect(result[:mtime]).to be_a(Time)
@@ -186,9 +186,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
     context "with non-existent file" do
       it "returns default metadata for non-existent file" do
         nonexistent_file = File.join(temp_dir, "nonexistent.txt")
-        
+
         result = reader.metadata(nonexistent_file)
-        
+
         expect(result[:exists]).to be false
         expect(result[:size]).to eq(0)
         expect(result[:mtime]).to be_nil
@@ -200,9 +200,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       it "handles metadata retrieval errors" do
         # Mock File.exist? to simulate error
         allow(File).to receive(:exist?).and_raise(StandardError, "Metadata error")
-        
+
         result = reader.metadata("/test/file.txt")
-        
+
         expect(result[:exists]).to be false
         expect(result[:size]).to eq(0)
         expect(result[:mtime]).to be_nil
@@ -236,7 +236,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       File.write(special_file, content)
 
       result = reader.read(special_file)
-      
+
       expect(result[:success]).to be true
       expect(result[:content]).to eq(content)
     end
@@ -248,7 +248,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       File.write(test_file, content, encoding: "UTF-8")
 
       result = reader.read(test_file)
-      
+
       expect(result[:success]).to be true
       expect(result[:content]).to eq(content)
     end
@@ -260,7 +260,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       File.binwrite(test_file, binary_data)
 
       result = reader.read(test_file)
-      
+
       expect(result[:success]).to be true
       expect(result[:content]).to eq(binary_data)
     end
@@ -271,7 +271,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       # Test that the reader handles traversal paths
       # (Note: actual security should be enforced at higher levels)
       result = reader.read("../../../etc/passwd")
-      
+
       # Should either fail safely or read the file if it exists and is accessible
       expect(result).to have_key(:success)
     end
@@ -280,13 +280,13 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       test_file = File.join(temp_dir, "original.txt")
       link_file = File.join(temp_dir, "symlink.txt")
       content = "Original content"
-      
+
       File.write(test_file, content)
-      
+
       # Only create symlink if the system supports it
       begin
         File.symlink(test_file, link_file)
-        
+
         result = reader.read(link_file)
         expect(result[:success]).to be true
         expect(result[:content]).to eq(content)

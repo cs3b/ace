@@ -35,8 +35,6 @@ module CodingAgentTools
         end
       end
 
-      private
-
       # Generates binstub that runs from project root directory
       def self.generate_project_root_binstub(description, target_command)
         <<~SHELL_SCRIPT
@@ -104,6 +102,8 @@ module CodingAgentTools
 
         binstubs
       end
+
+      private_class_method :generate_project_root_binstub, :generate_dev_tools_binstub
     end
   end
 end

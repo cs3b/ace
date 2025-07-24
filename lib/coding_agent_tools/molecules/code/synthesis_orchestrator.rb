@@ -334,15 +334,15 @@ module CodingAgentTools
           # Parse token usage from output
           output_text = stdout + stderr
 
-          if match = output_text.match(/Input:\s*(\d+)\s*tokens/)
+          if (match = output_text.match(/Input:\s*(\d+)\s*tokens/))
             metrics[:input_tokens] = match[1].to_i
           end
 
-          if match = output_text.match(/Output:\s*(\d+)\s*tokens/)
+          if (match = output_text.match(/Output:\s*(\d+)\s*tokens/))
             metrics[:output_tokens] = match[1].to_i
           end
 
-          if match = output_text.match(/Cost:\s*\$(\d+\.\d+)/)
+          if (match = output_text.match(/Cost:\s*\$(\d+\.\d+)/))
             metrics[:cost] = match[1].to_f
           end
 

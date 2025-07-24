@@ -7,7 +7,7 @@ require "fileutils"
 
 RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
   let(:analyzer) { described_class.new }
-  
+
   # Create a temporary directory structure for testing
   around do |example|
     Dir.mktmpdir do |tmpdir|
@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
       # Just verify the structure exists and has the expected keys
       expect(dependencies["docs/architecture.md"]).to have_key(:refs_to)
       expect(dependencies["docs/architecture.md"]).to have_key(:refs_from)
-      
+
       # Verify that at least one file has references
       has_references = dependencies.any? { |_, deps| deps[:refs_to].any? }
       expect(has_references).to be true
@@ -142,7 +142,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
       analyzer.analyze(export_dot: true, export_json: false)
 
       expect(File.exist?("doc-dependencies.dot")).to be true
-      
+
       dot_content = File.read("doc-dependencies.dot")
       expect(dot_content).to include("digraph DocumentDependencies")
     end
@@ -151,7 +151,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
       analyzer.analyze(export_dot: false, export_json: true)
 
       expect(File.exist?("doc-dependencies.json")).to be true
-      
+
       json_content = File.read("doc-dependencies.json")
       parsed = JSON.parse(json_content)
       expect(parsed).to be_a(Hash)

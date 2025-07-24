@@ -140,7 +140,7 @@ module TestFactories
     def self.dirty_repository
       {
         status: :dirty,
-        branch: "feature/new-feature", 
+        branch: "feature/new-feature",
         staged_files: ["lib/new_feature.rb"],
         modified_files: ["lib/existing_file.rb", "README.md"],
         untracked_files: ["temp_file.txt"],
@@ -254,12 +254,11 @@ module TestFactories
   # Factory for HTTP responses
   class HTTPResponseFactory
     def self.success_response(body, status = 200)
-      double("HTTPResponse", 
+      double("HTTPResponse",
         code: status.to_s,
         body: body.is_a?(String) ? body : JSON.generate(body),
         success?: status >= 200 && status < 300,
-        headers: {"content-type" => "application/json"}
-      )
+        headers: {"content-type" => "application/json"})
     end
 
     def self.error_response(message, status = 500)
@@ -267,8 +266,7 @@ module TestFactories
         code: status.to_s,
         body: JSON.generate({"error" => {"message" => message}}),
         success?: false,
-        headers: {"content-type" => "application/json"}
-      )
+        headers: {"content-type" => "application/json"})
     end
 
     def self.timeout_response

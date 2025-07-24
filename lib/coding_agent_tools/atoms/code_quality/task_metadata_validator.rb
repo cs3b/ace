@@ -83,7 +83,7 @@ module CodingAgentTools
         def parse_task_file_content(content, file_path, errors)
           parts = content.split(/^---\s*$/m, 3)
 
-          unless parts.length > 2 && (parts[0].nil? || parts[0].strip.empty?)
+          if parts.length <= 2 || (!parts[0].nil? && !parts[0].strip.empty?)
             errors << "#{file_path}: Malformed frontmatter"
             return [nil, nil]
           end

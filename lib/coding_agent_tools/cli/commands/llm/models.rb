@@ -386,7 +386,7 @@ module CodingAgentTools
 
           # Fallback models if API call fails
           def fallback_models(provider)
-            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config_path = File.expand_path("../../../../../../config/fallback_models.yaml", __FILE__)
             warn "Loading fallback models from: #{config_path}" if ENV["DEBUG_MODELS"]
             warn "File exists: #{File.exist?(config_path)}" if ENV["DEBUG_MODELS"]
             config = YAML.load_file(config_path)
@@ -536,7 +536,7 @@ module CodingAgentTools
               return
             end
 
-            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config_path = File.expand_path("../../../../../../config/fallback_models.yaml", __FILE__)
             config = YAML.load_file(config_path)
 
             case provider
@@ -619,7 +619,7 @@ module CodingAgentTools
           # Output models as JSON
           def output_json_models(models, **options)
             provider = options[:provider] || "google"
-            config_path = File.expand_path("../../../../config/fallback_models.yml", __FILE__)
+            config_path = File.expand_path("../../../../../../config/fallback_models.yaml", __FILE__)
             config = YAML.load_file(config_path)
 
             default_model = models.find(&:default?)

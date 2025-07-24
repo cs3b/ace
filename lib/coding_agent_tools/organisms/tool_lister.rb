@@ -54,7 +54,7 @@ module CodingAgentTools
         if categorized
           categorize_tools(filtered_tools)
         else
-          { tools: filtered_tools, total: filtered_tools.length }
+          {tools: filtered_tools, total: filtered_tools.length}
         end
       end
 
@@ -85,27 +85,27 @@ module CodingAgentTools
           File.join(Dir.pwd, "tools.yml"),
           File.join(Dir.pwd, "..", "tools.yml")
         ]
-        
+
         possible_paths.each do |path|
           return path if File.exist?(path)
         end
-        
+
         nil # No config file found
       end
 
       def load_blacklist_from_config
         return DEFAULT_BLACKLIST unless @config_path && File.exist?(@config_path)
-        
+
         begin
           config = CodingAgentTools::Atoms::YamlReader.read_file(@config_path)
           blacklist = config.dig("blacklist") || config.dig(:blacklist)
-          
+
           if blacklist.is_a?(Array)
             blacklist
           else
             DEFAULT_BLACKLIST
           end
-        rescue => e
+        rescue
           # If config loading fails, fall back to default
           DEFAULT_BLACKLIST
         end
@@ -114,24 +114,24 @@ module CodingAgentTools
       def find_exe_directory
         # Try to find exe directory relative to this file
         lib_dir = File.dirname(__FILE__)
-        
+
         # Navigate up from lib/coding_agent_tools/organisms to the gem root
         gem_root = File.expand_path("../../../..", lib_dir)
         exe_dir = File.join(gem_root, "exe")
-        
+
         return exe_dir if File.directory?(exe_dir)
-        
+
         # Fallback: look for exe directory in common locations
         possible_paths = [
           File.join(File.dirname(__FILE__), "../../../exe"),
           File.expand_path("exe", Dir.pwd),
           File.expand_path("../exe", Dir.pwd)
         ]
-        
+
         possible_paths.each do |path|
           return path if File.directory?(path)
         end
-        
+
         # Final fallback - use current directory exe
         File.join(Dir.pwd, "exe")
       end

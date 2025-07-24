@@ -30,7 +30,7 @@ module CodingAgentTools
           next false unless File.executable?(file_path)
 
           file_name = File.basename(file_path)
-          
+
           # Check against exclusion patterns
           exclude_patterns.none? do |exclude_pattern|
             if exclude_pattern.include?("*")
@@ -50,7 +50,7 @@ module CodingAgentTools
       # @return [Array<Hash>] Array of file info hashes
       def self.scan_with_info(directory, pattern: "*")
         files = scan_files(directory, pattern: pattern)
-        
+
         files.map do |file_path|
           stat = File.stat(file_path)
           {

@@ -44,7 +44,7 @@ module CodingAgentTools
             "preferred_extensions" => [".md", ".rb", ".yml", ".yaml", ".sh", ""],
             "important_directories" => [
               "bin",
-              "dev-tools/lib", 
+              "dev-tools/lib",
               "dev-tools/exe",
               "dev-taskflow/current",
               "dev-handbook/workflow-instructions"

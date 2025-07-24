@@ -67,8 +67,6 @@ module CodingAgentTools
           "implementation-order"
         end
 
-        private
-
         # Apply implementation-order sorting (ID-based with dependency constraints)
         def self.apply_implementation_order_sort(tasks, sorts)
           # Create task map
@@ -253,6 +251,8 @@ module CodingAgentTools
 
           levels
         end
+
+        private_class_method :apply_implementation_order_sort
       end
     end
   end

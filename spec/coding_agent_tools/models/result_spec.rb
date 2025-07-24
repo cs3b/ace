@@ -8,12 +8,12 @@ RSpec.describe CodingAgentTools::Models::Result do
       it "creates successful result" do
         result = described_class.new(
           success: true,
-          data: { message: "Operation completed" },
+          data: {message: "Operation completed"},
           error: nil
         )
-        
+
         expect(result.success?).to be true
-        expect(result.data).to eq({ message: "Operation completed" })
+        expect(result.data).to eq({message: "Operation completed"})
         expect(result.error).to be_nil
       end
 
@@ -23,7 +23,7 @@ RSpec.describe CodingAgentTools::Models::Result do
           data: nil,
           error: "Operation failed"
         )
-        
+
         expect(result.success?).to be false
         expect(result.data).to eq({})
         expect(result.error).to eq("Operation failed")
@@ -32,12 +32,12 @@ RSpec.describe CodingAgentTools::Models::Result do
       it "creates result with data hash" do
         result = described_class.new(
           success: true,
-          data: { count: 42, items: ["a", "b"] },
+          data: {count: 42, items: ["a", "b"]},
           error: nil
         )
-        
+
         expect(result.success?).to be true
-        expect(result.data).to eq({ count: 42, items: ["a", "b"] })
+        expect(result.data).to eq({count: 42, items: ["a", "b"]})
         expect(result.error).to be_nil
       end
     end
@@ -49,7 +49,7 @@ RSpec.describe CodingAgentTools::Models::Result do
           data: nil,
           error: nil
         )
-        
+
         expect(result.data).to eq({})
       end
     end
@@ -93,15 +93,15 @@ RSpec.describe CodingAgentTools::Models::Result do
     it "converts result to hash" do
       result = described_class.new(
         success: true,
-        data: { message: "Done" },
+        data: {message: "Done"},
         error: nil
       )
-      
+
       expected_hash = {
         success: true,
-        data: { message: "Done" }
+        data: {message: "Done"}
       }
-      
+
       expect(result.to_h).to eq(expected_hash)
     end
 
@@ -111,13 +111,13 @@ RSpec.describe CodingAgentTools::Models::Result do
         data: {},
         error: "Something went wrong"
       )
-      
+
       expected_hash = {
         success: false,
         data: {},
         error: "Something went wrong"
       }
-      
+
       expect(result.to_h).to eq(expected_hash)
     end
   end
@@ -126,13 +126,13 @@ RSpec.describe CodingAgentTools::Models::Result do
     it "can be serialized to JSON" do
       result = described_class.new(
         success: true,
-        data: { count: 5 },
+        data: {count: 5},
         error: nil
       )
-      
+
       json_result = result.to_json
       parsed = JSON.parse(json_result)
-      
+
       expect(parsed["success"]).to be true
       expect(parsed["data"]["count"]).to eq(5)
       expect(parsed.key?("error")).to be false
@@ -143,7 +143,7 @@ RSpec.describe CodingAgentTools::Models::Result do
     describe ".success" do
       it "creates successful result without data" do
         result = described_class.success
-        
+
         expect(result.success?).to be true
         expect(result.data).to eq({})
         expect(result.error).to be_nil
@@ -151,9 +151,9 @@ RSpec.describe CodingAgentTools::Models::Result do
 
       it "creates successful result with data" do
         result = described_class.success(message: "Done", count: 3)
-        
+
         expect(result.success?).to be true
-        expect(result.data).to eq({ message: "Done", count: 3 })
+        expect(result.data).to eq({message: "Done", count: 3})
         expect(result.error).to be_nil
       end
     end
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Models::Result do
     describe ".failure" do
       it "creates failed result with error message" do
         result = described_class.failure("Something went wrong")
-        
+
         expect(result.success?).to be false
         expect(result.data).to eq({})
         expect(result.error).to eq("Something went wrong")
@@ -173,17 +173,17 @@ RSpec.describe CodingAgentTools::Models::Result do
     it "allows accessing data keys as methods" do
       result = described_class.new(
         success: true,
-        data: { message: "Hello", count: 42 },
+        data: {message: "Hello", count: 42},
         error: nil
       )
-      
+
       expect(result.message).to eq("Hello")
       expect(result.count).to eq(42)
     end
 
     it "raises NoMethodError for non-existent keys" do
       result = described_class.new(success: true, data: {}, error: nil)
-      
+
       expect { result.nonexistent }.to raise_error(NoMethodError)
     end
   end
@@ -192,10 +192,10 @@ RSpec.describe CodingAgentTools::Models::Result do
     it "returns true for data keys" do
       result = described_class.new(
         success: true,
-        data: { message: "Hello" },
+        data: {message: "Hello"},
         error: nil
       )
-      
+
       expect(result.respond_to?(:message)).to be true
       expect(result.respond_to?(:nonexistent)).to be false
     end
@@ -203,18 +203,18 @@ RSpec.describe CodingAgentTools::Models::Result do
 
   describe "immutability" do
     it "prevents modification of result attributes" do
-      result = described_class.new(success: true, data: { count: 1 }, error: nil)
-      
+      result = described_class.new(success: true, data: {count: 1}, error: nil)
+
       expect(result.frozen?).to be true
     end
 
     it "allows safe access to nested data" do
       result = described_class.new(
         success: true,
-        data: { items: ["a", "b", "c"] },
+        data: {items: ["a", "b", "c"]},
         error: nil
       )
-      
+
       # Data itself is still mutable (this is expected behavior)
       expect { result.items << "d" }.not_to raise_error
       expect(result.items).to eq(["a", "b", "c", "d"])

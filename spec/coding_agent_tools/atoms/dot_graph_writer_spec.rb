@@ -21,9 +21,9 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
           refs_from: Set.new(["file1.md"])
         }
       }
-      
+
       content = writer.generate_dot_content(dependencies)
-      
+
       expect(content).to include("digraph DocumentDependencies")
       expect(content).to include("rankdir=LR")
       expect(content).to include('"file1.md"')
@@ -33,23 +33,23 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
 
     it "includes colored nodes based on file type" do
       dependencies = {
-        "test.wf.md" => { refs_to: Set.new([]), refs_from: Set.new([]) },
-        "guide.g.md" => { refs_to: Set.new([]), refs_from: Set.new([]) },
-        "tasks/task.md" => { refs_to: Set.new([]), refs_from: Set.new([]) },
-        "normal.md" => { refs_to: Set.new([]), refs_from: Set.new([]) }
+        "test.wf.md" => {refs_to: Set.new([]), refs_from: Set.new([])},
+        "guide.g.md" => {refs_to: Set.new([]), refs_from: Set.new([])},
+        "tasks/task.md" => {refs_to: Set.new([]), refs_from: Set.new([])},
+        "normal.md" => {refs_to: Set.new([]), refs_from: Set.new([])}
       }
-      
+
       content = writer.generate_dot_content(dependencies)
-      
+
       expect(content).to include("fillcolor=lightblue")   # .wf.md files
-      expect(content).to include("fillcolor=lightgreen")  # .g.md files  
+      expect(content).to include("fillcolor=lightgreen")  # .g.md files
       expect(content).to include("fillcolor=lightyellow") # tasks files
       expect(content).to include("fillcolor=lightgray")   # normal files
     end
 
     it "handles empty dependencies" do
       content = writer.generate_dot_content({})
-      
+
       expect(content).to include("digraph DocumentDependencies")
       expect(content).to include("rankdir=LR")
       expect(content).to include("node [shape=box]")
@@ -70,12 +70,12 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
           refs_from: Set.new(["docs/architecture.md"])
         }
       }
-      
+
       content = writer.generate_dot_content(dependencies)
-      
+
       expect(content).to include('"docs/architecture.md" -> "docs/blueprint.md"')
       expect(content).to include('"docs/architecture.md" -> "README.md"')
-      expect(content.scan(/->/).length).to eq(2)
+      expect(content.scan("->").length).to eq(2)
     end
   end
 
@@ -87,16 +87,16 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
           refs_from: Set.new([])
         }
       }
-      
+
       filename = writer.write_dot_file(dependencies)
-      
+
       expect(filename).to eq("doc-dependencies.dot")
       expect(File.exist?(filename)).to be true
-      
+
       content = File.read(filename)
       expect(content).to include("digraph DocumentDependencies")
       expect(content).to include('"file1.md" -> "file2.md"')
-      
+
       # Clean up
       File.delete(filename) if File.exist?(filename)
     end
@@ -109,12 +109,12 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
         }
       }
       custom_filename = File.join(temp_dir, "custom.dot")
-      
+
       result = writer.write_dot_file(dependencies, custom_filename)
-      
+
       expect(result).to eq(custom_filename)
       expect(File.exist?(custom_filename)).to be true
-      
+
       content = File.read(custom_filename)
       expect(content).to include('"test.md" -> "target.md"')
     end
@@ -160,13 +160,13 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
           refs_from: Set.new([])
         }
       }
-      
+
       filename = File.join(temp_dir, "complete.dot")
       writer.write_dot_file(dependencies, filename)
-      
+
       content = File.read(filename)
       instructions = writer.png_generation_instructions(filename)
-      
+
       expect(content).to include("digraph DocumentDependencies")
       expect(content).to include("fillcolor=lightblue")  # workflow file
       expect(content).to include("fillcolor=lightgray")  # docs file

@@ -43,7 +43,7 @@ module CodingAgentTools::Atoms
       case file
       when /\.wf\.md$/
         "lightblue"
-      when /\.g\.md$/  
+      when /\.g\.md$/
         "lightgreen"
       when /tasks.*\.md$/
         "lightyellow"

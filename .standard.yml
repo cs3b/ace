@@ -11,3 +11,13 @@ ignore:
   - "*.gemspec"
   - "dev-handbook/**/*"
   - "dev-taskflow/**/*"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "config/fallback_models.yaml"
+
+# Explicit RuboCop configuration to exclude YAML files
+AllCops:
+  Exclude:
+    - "**/*.yml"
+    - "**/*.yaml"
+    - "lib/coding_agent_tools/config/**/*.yml"

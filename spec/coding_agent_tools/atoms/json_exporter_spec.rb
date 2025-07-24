@@ -18,9 +18,9 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["file4.md"])
         }
       }
-      
+
       result = exporter.format_dependencies(dependencies)
-      
+
       expect(result["file1.md"]).to eq({
         references: ["file2.md", "file3.md"],
         referenced_by: ["file4.md"]
@@ -39,9 +39,9 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["charlie.md", "alpha.md"])
         }
       }
-      
+
       result = exporter.format_dependencies(dependencies)
-      
+
       expect(result["file1.md"][:references]).to eq(["alpha.md", "beta.md", "zebra.md"])
       expect(result["file1.md"][:referenced_by]).to eq(["alpha.md", "charlie.md"])
     end
@@ -55,15 +55,15 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["file3.md"])
         }
       }
-      
+
       filename = exporter.export_to_file(dependencies)
-      
+
       expect(filename).to eq("doc-dependencies.json")
       expect(File.exist?(filename)).to be true
-      
+
       content = JSON.parse(File.read(filename))
       expect(content["file1.md"]["references"]).to eq(["file2.md"])
-      
+
       # Clean up
       File.delete(filename) if File.exist?(filename)
     end
@@ -76,12 +76,12 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
         }
       }
       custom_filename = File.join(temp_dir, "custom.json")
-      
+
       result = exporter.export_to_file(dependencies, custom_filename)
-      
+
       expect(result).to eq(custom_filename)
       expect(File.exist?(custom_filename)).to be true
-      
+
       content = JSON.parse(File.read(custom_filename))
       expect(content["test.md"]["references"]).to eq(["target.md"])
       expect(content["test.md"]["referenced_by"]).to eq([])
@@ -95,9 +95,9 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
         }
       }
       custom_filename = File.join(temp_dir, "pretty.json")
-      
+
       exporter.export_to_file(dependencies, custom_filename)
-      
+
       content = File.read(custom_filename)
       expect(content).to include("\n")
       expect(content).to include("  ")
@@ -112,9 +112,9 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["file3.md"])
         }
       }
-      
+
       result = exporter.export_to_string(dependencies)
-      
+
       expect(result).to be_a(String)
       parsed = JSON.parse(result)
       expect(parsed["file1.md"]["references"]).to eq(["file2.md"])
@@ -128,9 +128,9 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new([])
         }
       }
-      
+
       result = exporter.export_to_string(dependencies)
-      
+
       expect(result).to include("\n")
       expect(result).to include("  ")
     end
@@ -144,13 +144,13 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["file3.md"])
         }
       }
-      
+
       result = exporter.export_compact(dependencies)
-      
+
       expect(result).to be_a(String)
       expect(result).not_to include("\n")
       expect(result).not_to include("  ")
-      
+
       parsed = JSON.parse(result)
       expect(parsed["file1.md"]["references"]).to eq(["file2.md"])
       expect(parsed["file1.md"]["referenced_by"]).to eq(["file3.md"])
@@ -169,16 +169,16 @@ RSpec.describe CodingAgentTools::Atoms::JsonExporter do
           refs_from: Set.new(["docs/architecture.md"])
         }
       }
-      
+
       formatted = exporter.format_dependencies(dependencies)
       json_string = exporter.export_to_string(dependencies)
       compact_string = exporter.export_compact(dependencies)
-      
+
       expect(formatted).to have_key("docs/architecture.md")
       expect(formatted).to have_key("README.md")
       expect(json_string).to include("architecture.md")
       expect(compact_string).to include("blueprint.md")
-      
+
       # Verify that compact is actually more compact
       expect(compact_string.length).to be < json_string.length
     end

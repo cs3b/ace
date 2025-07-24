@@ -102,8 +102,8 @@ module CodingAgentTools
               # Convert shell glob to regex
               regex_pattern = pattern.gsub("*", ".*")
               return category_name if tool_name.match?(/^#{regex_pattern}$/)
-            else
-              return category_name if tool_name == pattern
+            elsif tool_name == pattern
+              return category_name
             end
           end
         end

@@ -161,7 +161,7 @@ module MockHelpers
   module SystemCommandMocks
     def mock_system_command(command, success: true, output: "", exit_code: nil)
       exit_code ||= success ? 0 : 1
-      
+
       allow(Open3).to receive(:capture3).with(anything).and_return([output, "", exit_code])
       allow(system).to receive(:call).with(command).and_return(success)
     end
@@ -184,7 +184,7 @@ module MockHelpers
         original_env[key] = ENV[key]
         ENV[key] = value
       end
-      
+
       yield
     ensure
       original_env.each do |key, value|
@@ -210,14 +210,14 @@ module MockHelpers
 
     def with_temp_project_root(&block)
       temp_dir = Dir.mktmpdir
-      
+
       # Create .git directory to make it a valid project root
       FileUtils.mkdir_p(File.join(temp_dir, ".git"))
-      
+
       # Mock the project root detector to return our temp directory
-      original_method = CodingAgentTools::Atoms::ProjectRootDetector.method(:find_project_root)
+      CodingAgentTools::Atoms::ProjectRootDetector.method(:find_project_root)
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(temp_dir)
-      
+
       yield temp_dir
     ensure
       # Restore original method

@@ -30,17 +30,18 @@ module CodingAgentTools::Molecules
         if @reference_extractor.external_link?(link) && !@config_loader.include_external_links?(@config)
           next
         end
-        
-        # Check if we should skip anchor links  
+
+        # Check if we should skip anchor links
         if @reference_extractor.anchor_link?(link) && !@config_loader.include_anchor_links?(@config)
           next
         end
-        
+
         # Skip if it's neither external nor anchor but also not internal
         # (this handles edge cases)
-        next unless @reference_extractor.internal_link?(link) || 
-                   (@reference_extractor.external_link?(link) && @config_loader.include_external_links?(@config)) ||
-                   (@reference_extractor.anchor_link?(link) && @config_loader.include_anchor_links?(@config))
+        is_valid_link = @reference_extractor.internal_link?(link) ||
+          (@reference_extractor.external_link?(link) && @config_loader.include_external_links?(@config)) ||
+          (@reference_extractor.anchor_link?(link) && @config_loader.include_anchor_links?(@config))
+        next unless is_valid_link
 
         # Resolve the link relative to the source file
         resolved_path = @path_resolver.resolve_link(file_path, link)
@@ -61,30 +62,30 @@ module CodingAgentTools::Molecules
       skip_folders = @config_loader.get_skip_folders(@config)
 
       files = Set.new
-      
+
       file_patterns.each do |_type, pattern|
         Dir.glob(pattern).each do |file|
           next unless File.file?(file)
-          
+
           # Skip if file matches any exclude pattern
           next if exclude_patterns.any? { |exclude| File.fnmatch(exclude, file) }
-          
+
           # Skip if file is in any skip folder
           next if skip_folders.any? { |folder| file.start_with?("#{folder}/") }
-          
+
           files << file
         end
       end
-      
+
       files
     end
 
     # Parse references with context about link types
     def parse_with_context(file_path, all_files)
-      return { markdown_links: [], context_refs: [] } unless File.exist?(file_path)
+      return {markdown_links: [], context_refs: []} unless File.exist?(file_path)
 
       content = File.read(file_path)
-      result = { markdown_links: [], context_refs: [] }
+      result = {markdown_links: [], context_refs: []}
 
       # Process markdown links separately
       @reference_extractor.extract_markdown_links(content).each do |text, link|
@@ -92,15 +93,15 @@ module CodingAgentTools::Molecules
 
         resolved_path = @path_resolver.resolve_link(file_path, link)
         if all_files.include?(resolved_path)
-          result[:markdown_links] << { text: text, link: link, resolved: resolved_path }
+          result[:markdown_links] << {text: text, link: link, resolved: resolved_path}
         end
       end
 
-      # Process context references separately  
+      # Process context references separately
       @reference_extractor.extract_context_references(content).each do |ref|
         resolved_path = @path_resolver.resolve_link(file_path, ref)
         if all_files.include?(resolved_path)
-          result[:context_refs] << { original: ref, resolved: resolved_path }
+          result[:context_refs] << {original: ref, resolved: resolved_path}
         end
       end
 

@@ -58,7 +58,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
       it "handles permission denied error" do
         # Mock FileUtils to simulate permission denied
         allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::EACCES)
-        
+
         result = creator.create("/test/path")
         expect(result[:success]).to be false
         expect(result[:error]).to eq("Permission denied: /test/path")
@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
 
       it "handles parent not directory error" do
         allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ENOTDIR)
-        
+
         result = creator.create("/test/path")
         expect(result[:success]).to be false
         expect(result[:error]).to eq("Parent is not a directory: /test/path")
@@ -74,7 +74,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
 
       it "handles generic errors" do
         allow(FileUtils).to receive(:mkdir_p).and_raise(StandardError, "Custom error")
-        
+
         result = creator.create("/test/path")
         expect(result[:success]).to be false
         expect(result[:error]).to eq("Error creating directory: Custom error")
@@ -136,7 +136,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
     it "returns false for files (not directories)" do
       file_path = File.join(temp_dir, "test_file")
       File.write(file_path, "content")
-      
+
       expect(creator.exists?(file_path)).to be false
     end
   end
@@ -145,7 +145,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
     it "returns true for writable directories" do
       test_path = File.join(temp_dir, "writable")
       FileUtils.mkdir_p(test_path)
-      
+
       expect(creator.writable?(test_path)).to be true
     end
 
@@ -156,7 +156,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
     it "returns false for files" do
       file_path = File.join(temp_dir, "test_file")
       File.write(file_path, "content")
-      
+
       expect(creator.writable?(file_path)).to be false
     end
   end
@@ -171,7 +171,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
 
     it "creates temporary directory with default prefix" do
       @temp_result = creator.create_temp
-      
+
       expect(@temp_result[:success]).to be true
       expect(@temp_result[:path]).to be_a(String)
       expect(@temp_result[:error]).to be_nil
@@ -182,7 +182,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
 
     it "creates temporary directory with custom prefix" do
       @temp_result = creator.create_temp("custom")
-      
+
       expect(@temp_result[:success]).to be true
       expect(File.basename(@temp_result[:path])).to start_with("custom")
     end
@@ -190,9 +190,9 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
     it "creates temporary directory in specified parent" do
       custom_tmpdir = File.join(temp_dir, "custom_tmp")
       FileUtils.mkdir_p(custom_tmpdir)
-      
+
       @temp_result = creator.create_temp("test", custom_tmpdir)
-      
+
       expect(@temp_result[:success]).to be true
       expect(@temp_result[:path]).to start_with(custom_tmpdir)
     end
@@ -200,12 +200,12 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
     it "handles errors in temp directory creation" do
       # Create a separate instance to avoid affecting the let block
       test_creator = described_class.new
-      
+
       # Mock Dir.mktmpdir to simulate failure for this specific call
       allow(test_creator).to receive(:require).with("tmpdir")
       allow(Dir).to receive(:mktmpdir).and_call_original
       allow(Dir).to receive(:mktmpdir).with("review", nil).and_raise(StandardError, "Temp creation failed")
-      
+
       @temp_result = test_creator.create_temp
       expect(@temp_result[:success]).to be false
       expect(@temp_result[:path]).to be_nil
@@ -218,7 +218,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
       # This tests that the basic validation works, though more security
       # validation might be needed at higher levels
       result = creator.create("../../../etc/test")
-      # Should succeed as this tests basic functionality, 
+      # Should succeed as this tests basic functionality,
       # but real security should be handled at system level
       expect(result).to have_key(:success)
     end

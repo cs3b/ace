@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
     it "extracts markdown links from content" do
       content = "See [Architecture](docs/architecture.md) and [Blueprint](../blueprint.md)"
       links = extractor.extract_markdown_links(content)
-      
+
       expect(links).to eq([
         ["Architecture", "docs/architecture.md"],
         ["Blueprint", "../blueprint.md"]
@@ -26,14 +26,14 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
     it "extracts context loading references" do
       content = "Load project objectives: `docs/what-do-we-build.md`\nCheck something: `other.wf.md`"
       refs = extractor.extract_context_references(content)
-      
+
       expect(refs).to eq(["docs/what-do-we-build.md", "other.wf.md"])
     end
 
     it "handles various context patterns" do
       content = "Read: `file.md` and See: `guide.g.md`"
       refs = extractor.extract_context_references(content)
-      
+
       expect(refs).to include("file.md", "guide.g.md")
     end
   end
@@ -46,9 +46,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         External [link](https://example.com) should be filtered out.
         Anchor [link](#section) should be filtered out too.
       CONTENT
-      
+
       refs = extractor.extract_all_references(content)
-      
+
       # Only internal links should be included
       expect(refs).to include("guide.md", "config.md")
       expect(refs).not_to include("https://example.com", "#section")

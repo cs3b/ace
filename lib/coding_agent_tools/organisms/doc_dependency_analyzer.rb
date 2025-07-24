@@ -18,7 +18,7 @@ module CodingAgentTools::Organisms
       @stats_calculator = CodingAgentTools::Molecules::StatisticsCalculator.new
       @dot_writer = CodingAgentTools::Atoms::DotGraphWriter.new
       @json_exporter = CodingAgentTools::Atoms::JsonExporter.new
-      @dependencies = Hash.new { |h, k| h[k] = { refs_to: Set.new, refs_from: Set.new } }
+      @dependencies = Hash.new { |h, k| h[k] = {refs_to: Set.new, refs_from: Set.new} }
     end
 
     # Run complete dependency analysis
@@ -167,7 +167,7 @@ module CodingAgentTools::Organisms
       if results[:circular_dependencies].any?
         output << "## Circular Dependencies"
         results[:circular_dependencies].each do |cycle|
-          output << "- #{cycle.join(' → ')} → #{cycle.first}"
+          output << "- #{cycle.join(" → ")} → #{cycle.first}"
         end
         output << ""
       end
@@ -201,18 +201,18 @@ module CodingAgentTools::Organisms
     def serialize_results_for_json(results)
       # Convert all non-serializable objects to serializable format
       serialized = {}
-      
+
       results.each do |key, value|
-        case key
+        serialized[key] = case key
         when :timestamp
-          serialized[key] = value.iso8601
+          value.iso8601
         when :dependencies
-          serialized[key] = @json_exporter.format_dependencies(value)
+          @json_exporter.format_dependencies(value)
         else
-          serialized[key] = value
+          value
         end
       end
-      
+
       serialized
     end
   end
