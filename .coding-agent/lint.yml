@@ -65,6 +65,18 @@ docs_dependencies:
   include_external_links: false # Whether to analyze external links
   include_anchor_links: false # Whether to analyze anchor links
 
+# File pattern definitions for language detection
+file_patterns:
+  ruby:
+    - "*.rb"
+    - "*.gemspec" 
+    - "Gemfile"
+    - "Rakefile"
+    - "exe/*"
+  markdown:
+    - "*.md"
+    - "*.markdown"
+
 # Global settings
 global:
   parallel: true # Run linters in parallel where possible
