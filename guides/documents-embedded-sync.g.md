@@ -1,6 +1,6 @@
 # Documents Embedded Synchronization Guide
 
-This guide covers the operational aspects of the document synchronization system, focusing on the `bin/markdown-sync-embedded-documents` tool usage, maintenance procedures, and troubleshooting. The system supports embedding both templates and guides within workflow instructions using the universal `<documents>` container format.
+This guide covers the operational aspects of the document synchronization system, focusing on the `handbook sync-templates` tool usage, maintenance procedures, and troubleshooting. The system supports embedding both templates and guides within workflow instructions using the universal `<documents>` container format.
 
 ## Overview
 
@@ -8,7 +8,7 @@ The document synchronization system keeps embedded documents in workflow instruc
 
 ### Key Components
 
-- **Sync Script**: `bin/markdown-sync-embedded-documents` - CLI tool for synchronization
+- **Sync Script**: `handbook sync-templates` - CLI tool for synchronization
 - **Template Directory**: `dev-handbook/templates/` - Central template repository  
 - **Guide Directory**: `dev-handbook/guides/` - Reference documentation and best practices
 - **Workflow Instructions**: `dev-handbook/workflow-instructions/` - Files with embedded documents
@@ -22,19 +22,19 @@ The synchronization script provides several modes of operation:
 
 ```bash
 # Basic synchronization (default)
-bin/markdown-sync-embedded-documents
+handbook sync-templates
 
 # Preview changes without modifying files
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # Detailed output with verbose logging
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # Automatic commit after synchronization
-bin/markdown-sync-embedded-documents --commit
+handbook sync-templates --commit
 
 # Custom directory path
-bin/markdown-sync-embedded-documents --path dev-handbook/workflow-instructions
+handbook sync-templates --path dev-handbook/workflow-instructions
 ```
 
 ### Command Options
@@ -53,10 +53,10 @@ bin/markdown-sync-embedded-documents --path dev-handbook/workflow-instructions
 
 ```bash
 # 1. Preview changes first
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # 2. Apply changes with detailed output
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # 3. Review changes manually
 git diff
@@ -69,14 +69,14 @@ git add -A && git commit -m "chore: sync embedded documents"
 
 ```bash
 # Single command for automated synchronization
-bin/markdown-sync-embedded-documents --verbose --commit
+handbook sync-templates --verbose --commit
 ```
 
 **Troubleshooting Workflow:**
 
 ```bash
 # Check for issues without changes
-bin/markdown-sync-embedded-documents --dry-run --verbose
+handbook sync-templates --dry-run --verbose
 ```
 
 ## Quick Commands Reference
@@ -85,23 +85,23 @@ bin/markdown-sync-embedded-documents --dry-run --verbose
 
 ```bash
 # Preview what will change
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # Synchronize with detailed output  
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # Synchronize and auto-commit
-bin/markdown-sync-embedded-documents --verbose --commit
+handbook sync-templates --verbose --commit
 
 # Check script help
-bin/markdown-sync-embedded-documents --help
+handbook sync-templates --help
 ```
 
 ### Status Checks
 
 ```bash
 # Check if documents need synchronization
-bin/markdown-sync-embedded-documents --dry-run | grep -E "(Template|Guide|Summary)"
+handbook sync-templates --dry-run | grep -E "(Template|Guide|Summary)"
 
 # Verify all embedded templates exist
 grep -r 'path="dev-handbook/templates/' dev-handbook/workflow-instructions/ | cut -d'"' -f2 | while read path; do
@@ -125,10 +125,10 @@ echo "Total: $(grep -r -E "(<template|<guide) path=" dev-handbook/workflow-instr
 
 ```bash
 # 1. Check for document changes (morning routine)
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # 2. If changes needed, apply them
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # 3. Review and commit changes
 git diff
@@ -147,10 +147,10 @@ grep -r "path=\"dev-handbook/templates/your-template.template.md\"" dev-handbook
 grep -r "path=\"dev-handbook/guides/your-guide.g.md\"" dev-handbook/workflow-instructions/
 
 # 2. Preview synchronization
-bin/markdown-sync-embedded-documents --dry-run --verbose
+handbook sync-templates --dry-run --verbose
 
 # 3. Apply synchronization
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # 4. Commit both source and workflow changes
 git add dev-handbook/templates/ dev-handbook/guides/
@@ -162,7 +162,7 @@ git commit -m "feat: update document and sync embedded instances"
 
 ```bash
 # 1. Ensure all documents are synchronized
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 if [ $? -eq 0 ]; then echo "✅ All documents in sync"; else echo "❌ Documents need sync"; fi
 
 # 2. Verify document directory organization
@@ -187,7 +187,7 @@ find dev-handbook/workflow-instructions -name "*.wf.md" -exec grep -l "<guide pa
 done
 
 # 4. Final synchronization and commit
-bin/markdown-sync-embedded-documents --verbose --commit
+handbook sync-templates --verbose --commit
 ```
 
 ## Troubleshooting
@@ -218,7 +218,7 @@ done
 
 # Reset and re-sync if needed
 git checkout -- dev-handbook/workflow-instructions/
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 ```
 
 ### Common Issues
@@ -227,7 +227,7 @@ bin/markdown-sync-embedded-documents --verbose
 
 ```bash
 # Check for broken references
-bin/markdown-sync-embedded-documents --dry-run --verbose | grep "ERROR"
+handbook sync-templates --dry-run --verbose | grep "ERROR"
 
 # Fix by creating missing files or updating paths
 ```
@@ -246,7 +246,7 @@ grep -r "<documents>" dev-handbook/workflow-instructions/ | grep -v -E "(</docum
 
 ```bash
 # Run with verbose output to identify issues
-bin/markdown-sync-embedded-documents --dry-run --verbose
+handbook sync-templates --dry-run --verbose
 
 # Check file permissions
 ls -la dev-handbook/workflow-instructions/*.wf.md
@@ -273,7 +273,7 @@ echo '<documents>
 </documents>' >> workflow-file.wf.md
 
 # 4. Run initial sync
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 ```
 
 ### Adding New Guides
@@ -292,7 +292,7 @@ echo '<documents>
 </documents>' >> workflow-file.wf.md
 
 # 4. Run initial sync
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 ```
 
 ### Removing Documents
@@ -307,7 +307,7 @@ rm dev-handbook/templates/path/to/template.template.md
 rm dev-handbook/guides/path/to/guide.g.md
 
 # 3. Verify no broken references remain
-bin/markdown-sync-embedded-documents --dry-run --verbose
+handbook sync-templates --dry-run --verbose
 ```
 
 ### Moving Documents
@@ -322,7 +322,7 @@ grep -r "old/path.template.md" dev-handbook/workflow-instructions/ | cut -d: -f1
 done
 
 # 3. Sync to update content
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 ```
 
 ## Directory Organization
@@ -400,8 +400,8 @@ dev-handbook/guides/
 # .git/hooks/pre-commit
 
 echo "Checking document synchronization..."
-if ! bin/markdown-sync-embedded-documents --dry-run --verbose; then
-  echo "❌ Documents out of sync. Run: bin/markdown-sync-embedded-documents --verbose"
+if ! handbook sync-templates --dry-run --verbose; then
+  echo "❌ Documents out of sync. Run: handbook sync-templates --verbose"
   exit 1
 fi
 echo "✅ Documents synchronized"
@@ -421,7 +421,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Check document synchronization
         run: |
-          bin/markdown-sync-embedded-documents --dry-run --verbose
+          handbook sync-templates --dry-run --verbose
           if [ $? -ne 0 ]; then
             echo "Documents need synchronization"
             exit 1
@@ -434,13 +434,13 @@ jobs:
 
 ```bash
 # Process specific directories only
-bin/markdown-sync-embedded-documents --path dev-handbook/workflow-instructions/specific-dir/
+handbook sync-templates --path dev-handbook/workflow-instructions/specific-dir/
 
 # Use dry-run for quick checks
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # Parallelize for large repositories (advanced)
-find dev-handbook/workflow-instructions -name "*.wf.md" | xargs -P 4 -I {} bin/markdown-sync-embedded-documents --path {}
+find dev-handbook/workflow-instructions -name "*.wf.md" | xargs -P 4 -I {} handbook sync-templates --path {}
 ```
 
 ### Optimization Tips
@@ -457,4 +457,4 @@ find dev-handbook/workflow-instructions -name "*.wf.md" | xargs -P 4 -I {} bin/m
 - [Workflow Instructions Organization](dev-handbook/guides/workflow-instructions-organization.g.md) - Workflow structure
 - [Template Creation Guide](dev-handbook/guides/template-creation.g.md) - Creating new templates
 
-This guide provides comprehensive coverage of the `bin/markdown-sync-embedded-documents` tool and related operational procedures for maintaining document synchronization across the development handbook system.
+This guide provides comprehensive coverage of the `handbook sync-templates` tool and related operational procedures for maintaining document synchronization across the development handbook system.

@@ -210,7 +210,7 @@ Guides should be organized under `dev-handbook/guides/`:
 
 The universal `<documents>` format integrates with the automated synchronization system:
 
-- **Tool**: `bin/markdown-sync-embedded-documents`
+- **Tool**: `handbook sync-templates`
 - **Parsing**: XML structure enables reliable content extraction
 - **Updates**: Automated synchronization between source files and embedded content
 - **Validation**: Path verification and content consistency checks

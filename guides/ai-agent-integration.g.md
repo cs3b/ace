@@ -372,7 +372,7 @@ grep -r "search-pattern" .
 
 ```bash
 # Validate template synchronization
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # Check compliance
 bin/lint
@@ -582,7 +582,7 @@ bin/gl
 
 ```bash
 # XML template embedding
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # Conventional commit patterns
 bin/gc -i "feat: add new feature"
