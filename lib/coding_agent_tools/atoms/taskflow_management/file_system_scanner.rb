@@ -88,6 +88,54 @@ module CodingAgentTools
           true
         end
 
+        # Find files matching a pattern (glob or directory path)
+        # @param base_path [String] Directory to search from
+        # @param pattern [String] Pattern to match (can be a directory path or glob pattern)
+        # @param recursive [Boolean] Whether to search recursively (default: true)
+        # @param max_depth [Integer] Maximum recursion depth (default: 10)
+        # @param max_files [Integer] Maximum number of files to return (default: 1000)
+        # @return [Hash] {files: Array<String>, success: Boolean, error: String}
+        def self.find_files_with_pattern(base_path, pattern, recursive: true, max_depth: 10, max_files: 1000)
+          raise ArgumentError, "base_path cannot be nil or empty" if base_path.nil? || base_path.empty?
+          raise ArgumentError, "pattern cannot be nil or empty" if pattern.nil? || pattern.empty?
+
+          # Basic path validation
+          validate_path_safety(base_path)
+
+          # Convert base_path to absolute path
+          abs_base_path = File.expand_path(base_path)
+
+          # Ensure base directory exists
+          unless File.directory?(abs_base_path)
+            return {
+              files: [],
+              success: false,
+              error: "Base directory does not exist: #{abs_base_path}"
+            }
+          end
+
+          # Determine if pattern is a directory path or glob pattern
+          if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
+            # Handle as glob pattern
+            find_files_by_glob_pattern(abs_base_path, pattern, recursive, max_depth, max_files)
+          else
+            # Handle as directory path - expand to find all files within
+            find_files_in_directory_path(abs_base_path, pattern, recursive, max_depth, max_files)
+          end
+        rescue SecurityError => e
+          {
+            files: [],
+            success: false,
+            error: e.message
+          }
+        rescue => e
+          {
+            files: [],
+            success: false,
+            error: "Unexpected error: #{e.message}"
+          }
+        end
+
         # Get directory statistics
         # @param base_path [String] Directory to analyze
         # @param max_depth [Integer] Maximum depth to scan (default: 5)
@@ -204,6 +252,104 @@ module CodingAgentTools
           # @return [String] Relative path
           def make_relative_path(abs_path, base_path)
             Pathname.new(abs_path).relative_path_from(Pathname.new(base_path)).to_s
+          end
+
+          # Find files using glob pattern
+          # @param base_path [String] Base directory
+          # @param pattern [String] Glob pattern
+          # @param recursive [Boolean] Whether to search recursively
+          # @param max_depth [Integer] Maximum recursion depth
+          # @param max_files [Integer] Maximum files to return
+          # @return [Hash] {files: Array, success: Boolean, error: String}
+          def find_files_by_glob_pattern(base_path, pattern, recursive, max_depth, max_files)
+            # Convert pattern to absolute path if it's relative
+            full_pattern = if Pathname.new(pattern).absolute?
+              pattern
+            else
+              File.join(base_path, pattern)
+            end
+
+            # Use Ruby's Dir.glob for glob patterns
+            matching_files = Dir.glob(full_pattern).select do |path|
+              File.file?(path)
+            end.take(max_files)
+
+            # Filter by depth if recursive is false or max_depth is specified
+            if !recursive || max_depth < Float::INFINITY
+              matching_files = filter_by_depth(matching_files, base_path, recursive, max_depth)
+            end
+
+            {
+              files: matching_files.map { |f| make_relative_path(f, base_path) },
+              success: true,
+              error: nil
+            }
+          rescue => e
+            {
+              files: [],
+              success: false,
+              error: "Glob pattern error: #{e.message}"
+            }
+          end
+
+          # Find files in a directory path (treating pattern as directory)
+          # @param base_path [String] Base directory
+          # @param dir_pattern [String] Directory path pattern
+          # @param recursive [Boolean] Whether to search recursively
+          # @param max_depth [Integer] Maximum recursion depth
+          # @param max_files [Integer] Maximum files to return
+          # @return [Hash] {files: Array, success: Boolean, error: String}
+          def find_files_in_directory_path(base_path, dir_pattern, recursive, max_depth, max_files)
+            # Resolve the target directory path
+            target_path = if Pathname.new(dir_pattern).absolute?
+              dir_pattern
+            else
+              File.join(base_path, dir_pattern)
+            end
+
+            # Ensure target directory exists
+            unless File.directory?(target_path)
+              return {
+                files: [],
+                success: false,
+                error: "Directory does not exist: #{target_path}"
+              }
+            end
+
+            # Use existing scan_directory method to find all files
+            patterns = ["*"]  # Match all files
+            matching_files = scan_directory(target_path, patterns: patterns, recursive: recursive, max_depth: max_depth, max_files: max_files)
+
+            # Convert to absolute paths and then back to relative from base_path
+            abs_matching_files = matching_files.map { |relative_file| File.join(target_path, relative_file) }
+
+            {
+              files: abs_matching_files.map { |f| make_relative_path(f, base_path) },
+              success: true,
+              error: nil
+            }
+          rescue => e
+            {
+              files: [],
+              success: false,
+              error: "Directory scanning error: #{e.message}"
+            }
+          end
+
+          # Filter files by depth constraints
+          # @param files [Array<String>] File paths to filter
+          # @param base_path [String] Base path for depth calculation
+          # @param recursive [Boolean] Whether recursive search is enabled
+          # @param max_depth [Integer] Maximum depth allowed
+          # @return [Array<String>] Filtered file paths
+          def filter_by_depth(files, base_path, recursive, max_depth)
+            return [] unless recursive
+
+            files.select do |file|
+              relative_path = Pathname.new(file).relative_path_from(Pathname.new(base_path))
+              depth = relative_path.to_s.count("/")
+              depth <= max_depth
+            end
           end
 
           # Scan directory for statistics
