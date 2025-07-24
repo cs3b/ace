@@ -221,7 +221,7 @@ git-add [OPTIONS]
 **Examples**
 ```bash
 git-add --patch
-git-add --all --repository dev-tools
+git-add --all
 ```
 </details>
 
@@ -267,7 +267,7 @@ git-diff [OPTIONS]
 ```bash
 git-diff --staged
 git-diff --stat
-git-diff --repository dev-tools
+git-diff --staged
 ```
 </details>
 
@@ -289,7 +289,7 @@ git-fetch [OPTIONS]
 **Examples**
 ```bash
 git-fetch --all --prune
-git-fetch --tags --repository dev-tools
+git-fetch --tags
 ```
 </details>
 
@@ -333,7 +333,7 @@ git-pull [OPTIONS]
 **Examples**
 ```bash
 git-pull --rebase
-git-pull --ff-only --repository dev-tools
+git-pull --ff-only
 ```
 </details>
 
@@ -355,7 +355,7 @@ git-push [OPTIONS]
 **Examples**
 ```bash
 git-push --dry-run
-git-push --set-upstream --repository dev-tools
+git-push --set-upstream
 ```
 </details>
 
@@ -377,7 +377,7 @@ git-status [OPTIONS]
 **Examples**
 ```bash
 git-status --verbose
-git-status --short --repository dev-tools
+git-status --short
 ```
 </details>
 

@@ -6,49 +6,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is the **Coding Agent Workflow Toolkit (Meta)** repository - a meta-repository that provides documentation and guidance for setting up AI-assisted development workflow systems. It contains three Git submodules:
 
-- **dev-handbook/**: Standardized development guides, workflow instructions, and templates *(primary focus)*
-- **dev-taskflow/**: Project-specific documentation and task management structure *(primary focus)*
-- **dev-tools/**: Ruby gem with CLI tools for LLM integration and development automation *(used as-is)*
+- **dev-handbook/**: Standardized development guides, workflow instructions, and templates *(integrated development)*
+- **dev-taskflow/**: Unified task management structure for all components *(integrated development)*
+- **dev-tools/**: Ruby gem with CLI tools for LLM integration and development automation *(integrated development)*
 
-**Main work focus**: The primary development work happens in the **dev-handbook/** submodule (creating guides and workflows) with task management organized in **dev-taskflow/**. The **dev-tools/** submodule provides utilities and is generally not modified.
+**Main work focus**: The development work is now integrated across all three submodules as part of a unified meta-project. The **dev-taskflow/** provides centralized task management for coordinated development across **dev-handbook/** (guides and workflows) and **dev-tools/** (executable tools).
 
 ## Key Commands
 
-### Testing and Quality
+### Development Tools
 
-```bash
-# Run all tests (executes bin/lint for this project)
-bin/test
+The project includes 25+ CLI tools for development automation. Key tools include:
 
-# Run linting (markdownlint + custom Ruby scripts)
-bin/lint
+- **Task Management**: `task-manager next`, `task-manager recent`
+- **Release Management**: `release-manager current`
+- **Navigation**: `nav-tree`, `nav-path`, `nav-ls`
+- **Git Operations**: `git-status`, `git-commit`, `git-push`, `git-pull` (operate on all 4 repositories)
+- **LLM Integration**: `llm-query`, `llm-models`
 
-# Build project (placeholder - this is a documentation project)
-bin/build
-```
-
-### Development Scripts
-
-```bash
-# Get next task to work on
-dev-tools/exe/task-manager next
-
-# List recent tasks
-dev-tools/exe/task-manager recent
-
-# Get current release context
-dev-tools/exe/release-manager current
-
-# View project tree structure
-dev-tools/exe/nav-tree
-
-# Git shortcuts (operate on all 4 repositories: root + 3 submodules)
-dev-tools/exe/git-status     # git status across all repos
-dev-tools/exe/git-log        # git log across all repos
-dev-tools/exe/git-commit --intention "intention"  # git commit with intention-based messages for each repo
-dev-tools/exe/git-push       # git push across all repos
-dev-tools/exe/git-pull       # git pull across all repos
-```
+For complete tool documentation, see [Tools Reference](docs/tools.md).
 
 ### Template Synchronization
 
@@ -66,19 +42,9 @@ bin/markdown-sync-embedded-documents --verbose
 bin/markdown-sync-embedded-documents --verbose --commit
 ```
 
-### LLM Integration (via dev-tools submodule)
+### LLM Integration
 
-```bash
-# Query LLM providers
-dev-tools/exe/llm-query google:gemini-2.5-flash "prompt"
-dev-tools/exe/llm-query anthropic:claude-4-0-sonnet-latest "prompt"
-
-# List available models
-dev-tools/exe/llm-models google
-
-# Generate usage reports
-dev-tools/exe/llm-usage-report
-```
+Multiple LLM providers are supported through unified commands. See [Tools Reference](docs/tools.md) for complete usage documentation.
 
 ### Node.js Dependencies
 
@@ -132,7 +98,7 @@ This project uses 3 Git submodules plus the root repository (4 total repositorie
 
 - **Root repository**: Main meta-repository
 - **dev-handbook/**: Development guides and workflows
-- **dev-taskflow/**: Task management structure  
+- **dev-taskflow/**: Task management structure
 - **dev-tools/**: Ruby gem utilities
 
 **Multi-repo operations**: All git shortcuts (bin/gs, bin/gl, bin/gc, bin/gp, bin/gpull) operate across all 4 repositories automatically.
