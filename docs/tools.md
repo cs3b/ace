@@ -423,6 +423,26 @@ nav-path task-new --title "Feature Name"
 nav-path task 42
 nav-path file README
 ```
+
+**Configuration**: Skip patterns can be customized in `.coding-agent/path.yml`:
+
+```yaml
+security:
+  forbidden_patterns:
+    - "**/.git/**"              # Git internals (version control)
+    - "**/node_modules/**"      # NPM dependencies
+    - "**/coverage/**"          # Test coverage files
+    - "**/tmp/**"               # Temporary files
+    - "**/*.log"                # Log files
+    - "**/.DS_Store"            # macOS system files
+    - "**/Gemfile.lock"         # Ruby dependency lock files
+    - "**/package-lock.json"    # Node.js dependency lock files
+    - "**/.*"                   # All other dot files and directories
+    - ".*"                      # Top-level dot files
+```
+
+These patterns use glob syntax and prevent nav-path from accessing specified directories and files.
+
 </details>
 
 ### `nav-tree` – Enhanced project tree   {#nav-tree--enhanced-project-tree}

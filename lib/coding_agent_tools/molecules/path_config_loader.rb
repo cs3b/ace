@@ -47,7 +47,18 @@ module CodingAgentTools
         },
         "security" => {
           "enforce_sandbox" => true,
-          "forbidden_patterns" => ["**/.git/**", "**/node_modules/**", "**/coverage/**", "**/tmp/**", "**/*.log"]
+          "forbidden_patterns" => [
+            "**/.git/**",              # Git internals (version control)
+            "**/node_modules/**",      # NPM dependencies
+            "**/coverage/**",          # Test coverage files
+            "**/tmp/**",               # Temporary files
+            "**/*.log",                # Log files
+            "**/.DS_Store",            # macOS system files
+            "**/Gemfile.lock",         # Ruby dependency lock files
+            "**/package-lock.json",    # Node.js dependency lock files
+            "**/.*",                   # All other dot files and dot directories
+            ".*"                       # Top-level dot files
+          ]
         },
         "integration" => {
           "tools" => {

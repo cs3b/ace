@@ -150,14 +150,16 @@ module CodingAgentTools
 
       def default_forbidden_patterns
         [
-          "**/.git/**",
-          "**/node_modules/**",
-          "**/coverage/**",
-          "**/tmp/**",
-          "**/*.log",
-          "**/.DS_Store",
-          "**/Gemfile.lock",
-          "**/package-lock.json"
+          "**/.git/**",              # Git internals (version control)
+          "**/node_modules/**",      # NPM dependencies
+          "**/coverage/**",          # Test coverage files
+          "**/tmp/**",               # Temporary files
+          "**/*.log",                # Log files
+          "**/.DS_Store",            # macOS system files
+          "**/Gemfile.lock",         # Ruby dependency lock files
+          "**/package-lock.json",    # Node.js dependency lock files
+          "**/.*",                   # All other dot files and dot directories
+          ".*"                       # Top-level dot files
         ]
       end
 
