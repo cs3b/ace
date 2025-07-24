@@ -24,6 +24,8 @@
 | `release-manager` | Release management tool | `current`, `report` |
 | `task-manager` | Project task management | `next`, `all` |
 
+**💡 Pro Tip**: For file location, always use `nav-path file <filename>` instead of `find` or `ls` commands. It's intelligent, fast, and works with partial names (e.g., `nav-path file blueprint` finds `docs/blueprint.md`).
+
 ## Persona Cheat-sheets   {#persona-cheat-sheets}
 
 ### AI Agent   {#ai-agent}
@@ -419,10 +421,21 @@ nav-path [COMMAND] [OPTIONS]
 
 **Examples**
 ```bash
+# Task management
 nav-path task-new --title "Feature Name"
 nav-path task 42
-nav-path file README
+
+# File location (PREFERRED over find/ls commands)
+nav-path file README          # Finds README.md, README.txt, etc.
+nav-path file blueprint       # Finds docs/blueprint.md
+nav-path file tools           # Finds docs/tools.md, dev-tools/docs/tools.md
+nav-path file config          # Finds .coding-agent/path.yml, config files
+
+# Instead of: find . -name "*blueprint*" -type f
+# Use:        nav-path file blueprint
 ```
+
+**🎯 Recommended Usage**: Always use `nav-path file <filename>` instead of `find`, `ls`, or manual directory searching. It's faster, smarter, and respects project structure.
 
 **Configuration**: Skip patterns can be customized in `.coding-agent/path.yml`:
 
@@ -535,6 +548,11 @@ release-manager report --format detailed
     # Find next task and navigate
     task-manager next
     nav-path task 42
+    
+    # Locate files intelligently (instead of find/ls)
+    nav-path file config        # Find configuration files
+    nav-path file blueprint     # Find docs/blueprint.md
+    nav-path file README        # Find README files
     
     # Query AI for implementation guidance
     llm-query google "How to implement feature X?"
