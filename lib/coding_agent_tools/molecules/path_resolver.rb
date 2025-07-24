@@ -195,9 +195,9 @@ module CodingAgentTools
 
       def matches_forbidden_pattern_for_search?(relative_path)
         # Get forbidden patterns from config, with fallback to sandbox defaults
-        forbidden_patterns = @config.dig("security", "forbidden_patterns") || 
+        forbidden_patterns = @config.dig("security", "forbidden_patterns") ||
                              @sandbox.send(:default_forbidden_patterns)
-        
+
         forbidden_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
         end
@@ -277,11 +277,11 @@ module CodingAgentTools
 
         begin
           Dir.chdir(@sandbox.project_root)
-          
+
           # Execute the command with error capture for debugging
           result_with_errors = `#{command} 2>&1`.strip
           exit_status = $?.exitstatus
-          
+
           # If successful, return the result
           if exit_status == 0 && !result_with_errors.empty?
             # For JSON commands, extract just the result (not error messages)
@@ -296,8 +296,11 @@ module CodingAgentTools
             when /release-manager current/
               # Use DirectoryNavigator as fallback to ensure consistency
               # Log the failure for debugging
-              warn "Warning: release-manager command failed (exit: #{exit_status}): #{command}"
-              warn "Error output: #{result_with_errors}" unless result_with_errors.empty?
+              # Only show warnings outside of test environment
+              unless ENV["CI"] == "true" || defined?(RSpec)
+                warn "Warning: release-manager command failed (exit: #{exit_status}): #{command}"
+                warn "Error output: #{result_with_errors}" unless result_with_errors.empty?
+              end
               detect_current_release_fallback
             when /task-manager generate-id/
               # For task ID generation, we need to detect the version dynamically too
@@ -318,10 +321,10 @@ module CodingAgentTools
       # This ensures consistency with release-manager when command execution fails
       def detect_current_release_fallback
         require_relative "../atoms/taskflow_management/directory_navigator"
-        
+
         result = CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator
           .get_current_release_directory(base_path: @sandbox.project_root)
-        
+
         if result && result[:path]
           File.basename(result[:path])
         else
@@ -371,12 +374,12 @@ module CodingAgentTools
         Find.find(repo_path) do |path|
           # Check if this path should be skipped based on forbidden patterns
           relative_path = path.sub(@sandbox.project_root + "/", "")
-          
+
           # Skip forbidden directories during traversal (don't descend into them)
           if Dir.exist?(path) && matches_forbidden_pattern_for_search?(relative_path)
             Find.prune  # Don't descend into this directory
           end
-          
+
           # Skip if it's neither a file nor a directory we're interested in
           next unless File.file?(path) || (include_directories && Dir.exist?(path))
 

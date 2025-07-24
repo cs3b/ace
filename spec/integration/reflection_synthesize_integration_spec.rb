@@ -3,14 +3,26 @@
 require "spec_helper"
 require "tempfile"
 require "tmpdir"
+require "stringio"
 
 RSpec.describe "reflection-synthesize integration", type: :integration do
   describe "reflection-synthesize basic functionality" do
     it "can load without errors" do
       # Test that the tool can at least be loaded
-      expect {
-        load File.expand_path("../../exe/reflection-synthesize", __dir__)
-      }.not_to raise_error(LoadError)
+      # Suppress output during loading to prevent test leaks
+      # The executable will call the CLI which will exit, so we expect SystemExit
+      original_stdout = $stdout
+      original_stderr = $stderr
+      begin
+        $stdout = StringIO.new
+        $stderr = StringIO.new
+        expect {
+          load File.expand_path("../../exe/reflection-synthesize", __dir__)
+        }.to raise_error(SystemExit)
+      ensure
+        $stdout = original_stdout
+        $stderr = original_stderr
+      end
     end
   end
 
@@ -21,12 +33,12 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
     let(:test_reflection) do
       <<~MARKDOWN
         # Test Reflection
-        
+
         **Date**: 2024-01-15
-        
+
         ## What Went Well
         - Test completed successfully
-        
+
         ## Key Learnings
         - Integration tests are valuable
       MARKDOWN
