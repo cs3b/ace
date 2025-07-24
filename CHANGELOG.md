@@ -2,7 +2,99 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [Unreleased]
+
+### Added
+- Updated documentation to use direct command names instead of full executable paths
+- Integrated development approach across all three submodules with centralized task management
+- Removed duplication between CLAUDE.md and tools.md documentation
+
+### Changed
+- Project focus updated to reflect unified meta-project development approach
+- Documentation now references comprehensive tools.md for detailed command usage
+
+## [v0.3.0] - 2025-07-24
+
+### Added
+
+#### Ruby Gem - Coding Agent Tools (CAT)
+- **Complete 25+ CLI Tool Suite**: Comprehensive development automation toolkit
+  - **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`, `git-checkout`, `git-switch`, `git-mv`, `git-rm`, `git-restore` with multi-repository support
+  - **Task Management**: `task-manager next`, `task-manager recent`, `task-manager all`, `task-manager generate-id` with dependency resolution and filtering
+  - **Release Management**: `release-manager current`, `release-manager next`, `release-manager all` with validation and reporting
+  - **Navigation Tools**: `nav-ls`, `nav-path`, `nav-tree` with intelligent path autocorrection
+  - **LLM Integration**: `llm-query` unified interface supporting Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
+  - **Code Review**: `code-review`, `code-review-prepare`, `code-review-synthesize` with ATOM architecture
+  - **Documentation**: `handbook sync-templates` with XML template synchronization
+  - **Reflection Tools**: `reflection-synthesize` for session analysis and archival
+
+#### ATOM Architecture Implementation
+- **Atoms**: Core utilities (`XDGDirectoryResolver`, `SecurityLogger`, `EnvReader`, `FileSystemScanner`, `YamlFrontmatterParser`, `TaskIdParser`, `DirectoryNavigator`, `ShellCommandExecutor`)
+- **Molecules**: Behavior-oriented helpers (`CacheManager`, `MetadataNormalizer`, `APICredentials`, `HTTPRequestBuilder`, `TaskSortEngine`, `TaskFilterEngine`, `PathResolver`)
+- **Organisms**: Business logic orchestration (`GoogleClient`, `LMStudioClient`, `OpenaiClient`, `AnthropicClient`, `MistralClient`, `TogetherAiClient`, `TaskManager`, `ReleaseManager`, `PromptProcessor`)
+- **Ecosystems**: Complete workflow coordination with system-level integration
+- **Models**: Pure data carriers (`LlmModelInfo`, `ParseResult`, `ReviewSession`, `ReviewTarget`, `ReviewPrompt`)
+
+#### Multi-Provider LLM Integration
+- **Google Gemini**: Full API integration with model discovery and cost tracking
+- **OpenAI**: Complete GPT model support with token usage parsing
+- **Anthropic Claude**: Claude model integration with comprehensive metadata
+- **Mistral**: Mistral AI model support with unified interface
+- **Together AI**: Together AI integration with model listing
+- **LM Studio**: Local LLM support for offline development
+- **Unified Interface**: Single `llm-query` command with provider:model syntax
+- **Cost Tracking**: Comprehensive usage tracking with LiteLLM pricing database
+- **Dynamic Aliases**: Provider shortcuts (e.g., gflash, csonet) for rapid access
+
+#### Security Framework
+- **Multi-Layer Security**: Path validation, sanitization, and secure logging
+- **SecurePathValidator**: Directory traversal attack prevention
+- **FileOperationConfirmer**: Interactive overwrite confirmation system
+- **Secrets Scanning**: Gitleaks integration for local development security
+- **XDG Compliance**: Standard-compliant caching with automatic migration
+
+#### Development Infrastructure
+- **ExecutableWrapper**: Standardized CLI executable framework
+- **VCR Integration**: HTTP interaction recording for testing
+- **Aruba Testing**: CLI integration testing framework
+- **ProjectRootDetector**: Intelligent project root detection
+- **BinstubInstaller**: Automated shell integration system
+- **CI-Aware Configuration**: Robust testing in CI/CD environments
+
+#### Task Management System
+- **Dependency Resolution**: Topological sorting for task dependencies
+- **Filtering & Sorting**: Advanced task filtering by status, priority, implementation order
+- **Multi-Format Output**: JSON and text output formats for integration
+- **Path Resolution**: Intelligent task file location detection
+- **ID Generation**: Automated unique task ID generation with validation
+
+#### Template Synchronization
+- **XML Template Support**: `<documents>` and `<templates>` format support
+- **Embedded Document Sync**: Automatic synchronization of embedded templates
+- **Git Integration**: Automated commit functionality for template changes
+- **Dry-Run Support**: Preview mode for template synchronization
+
+### Changed
+- **Migration from Shell Scripts**: Converted 20+ shell scripts to robust Ruby CLI tools
+- **Unified Command Interface**: Consolidated multiple LLM provider commands into single `llm-query` interface
+- **Enhanced Git Workflow**: Multi-repository operations with intelligent commit message generation
+- **Improved Path Resolution**: Context-aware path handling for nested repository structures
+- **Standardized CLI Patterns**: Consistent command structure across all tools
+- **Enhanced Documentation**: Comprehensive tool reference with persona-based organization
+
+### Fixed
+- **Thread Synchronization**: Resolved concurrent git operation issues
+- **Path Detection**: Fixed git command path detection for nested directories
+- **URL Construction**: Corrected Gemini API URL construction for model info
+- **Template Synchronization**: Resolved template sync errors and improved logging
+- **Memory Management**: Fixed memory leaks in background processing
+- **Test Reliability**: Optimized test performance and eliminated CI fragility
+
+### Security
+- **Path Traversal Protection**: Comprehensive validation against directory traversal attacks
+- **Secure Credential Handling**: Environment-based API key management with validation
+- **Input Sanitization**: Multi-layer input validation and sanitization
+- **Secrets Detection**: Integrated Gitleaks for local secrets scanning
 
 ## [v0.4.0] - 2025-06-25
 
@@ -23,7 +115,36 @@ All notable changes to this project will be documented in this file.
   - Added cleanup step to remove completed releases from roadmap
   - Updated step numbering and error handling procedures
 
-## [v.0.3.0] - 2025-06-04
+## [v.0.2.0] - 2025-01-15
+
+### Added
+- **Initial LLM Integration**: Foundation for multi-provider LLM communication
+- **ATOM Architecture**: Established Atoms, Molecules, Organisms, Ecosystems pattern
+- **Ruby Gem Structure**: Core gem foundation with dry-cli framework
+- **Basic Git Tools**: Initial git command enhancements
+- **Testing Infrastructure**: RSpec, VCR, and Aruba testing setup
+- **CI/CD Pipeline**: GitHub Actions workflow with multi-Ruby testing
+
+### Changed
+- **Project Structure**: Migrated from shell scripts to Ruby gem architecture
+- **Development Workflow**: Established standardized development processes
+
+## [v.0.1.0] - 2024-12-01
+
+### Added
+- **Project Foundation**: Initial Ruby gem structure with ATOM architecture
+- **Build System**: Comprehensive build, test, and lint infrastructure
+- **Development Guides**: Git workflow and contribution guidelines
+- **Documentation Framework**: Architecture and blueprint documentation
+
+## [v.0.0.0] - 2024-11-01
+
+### Added
+- **Project Initialization**: Basic project structure and documentation
+- **Git Submodules**: Multi-repository coordination setup
+- **Initial Documentation**: PRD, roadmap, and architectural decisions
+
+## [v.0.3.0-workflows] - 2025-06-04
 
 ### v.0.3.0+tasks.24 - 2025-06-02 - Implement Roadmap Release Lifecycle Management
 
