@@ -48,6 +48,23 @@ error_distribution:
   max_files: 4              # Maximum error files to generate
   one_issue_per_file: true  # Distribute one issue per file for agents
 
+docs_dependencies:
+  enabled: true
+  file_patterns:
+    workflows: "dev-handbook/workflow-instructions/**/*.wf.md"
+    guides: "dev-handbook/guides/**/*.g.md"
+    tasks: "dev-taskflow/**/tasks/*.md"
+    docs: "docs/*.md"
+    taskflow_docs: "dev-taskflow/*.md"
+  exclude_patterns:
+    - "dev-taskflow/done/**/*"     # Skip completed tasks
+    - "dev-taskflow/sessions/**/*" # Skip session logs
+    - "**/.*"                      # Skip hidden files
+  skip_folders:
+    - "dev-taskflow"  # Skip entire dev-taskflow folder
+  include_external_links: false   # Whether to analyze external links
+  include_anchor_links: false     # Whether to analyze anchor links
+
 # Global settings
 global:
   parallel: true     # Run linters in parallel where possible

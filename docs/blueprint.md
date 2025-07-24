@@ -138,8 +138,8 @@ AI agents should generally ignore the contents of the following paths during nor
 # Run documentation linting (markdownlint + custom Ruby scripts)
 npm run lint  # or manual: markdownlint docs/**/*.md
 
-# Analyze documentation dependencies
-bin/analyze-doc-dependencies
+# Analyze documentation dependencies  
+code-lint docs-dependencies
 
 # See docs/tools.md for template synchronization tools
 ```
