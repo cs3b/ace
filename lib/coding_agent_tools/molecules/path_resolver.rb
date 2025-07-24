@@ -193,6 +193,16 @@ module CodingAgentTools
 
       private
 
+      def matches_forbidden_pattern_for_search?(relative_path)
+        # Get forbidden patterns from config, with fallback to sandbox defaults
+        forbidden_patterns = @config.dig("security", "forbidden_patterns") || 
+                             @sandbox.send(:default_forbidden_patterns)
+        
+        forbidden_patterns.any? do |pattern|
+          File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
+        end
+      end
+
       def resolve_file_path(path_input)
         # Try as absolute path first
         if Pathname.new(path_input).absolute?
@@ -359,6 +369,14 @@ module CodingAgentTools
 
         # Use Find to search for files and optionally directories
         Find.find(repo_path) do |path|
+          # Check if this path should be skipped based on forbidden patterns
+          relative_path = path.sub(@sandbox.project_root + "/", "")
+          
+          # Skip forbidden directories during traversal (don't descend into them)
+          if Dir.exist?(path) && matches_forbidden_pattern_for_search?(relative_path)
+            Find.prune  # Don't descend into this directory
+          end
+          
           # Skip if it's neither a file nor a directory we're interested in
           next unless File.file?(path) || (include_directories && Dir.exist?(path))
 
