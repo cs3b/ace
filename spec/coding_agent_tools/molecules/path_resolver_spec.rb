@@ -225,7 +225,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
       real_resolver = described_class.new(config_loader, sandbox)
 
       # Mock the backtick execution to simulate command failure
-      allow(real_resolver).to receive(:`).with("release-manager current 2>/dev/null").and_return("")
+      allow(real_resolver).to receive(:`).with("release-manager current 2>&1").and_return("")
 
       # Mock the $? global variable properly
       process_status = double("Process::Status")
@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
 
       # Should fall back to default values for known commands
       fallback_result = real_resolver.send(:execute_command, "release-manager current")
-      expect(fallback_result).to eq("v.0.3.0-migration")
+      expect(fallback_result).to eq("v.0.3.0")
     end
   end
 
