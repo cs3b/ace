@@ -4,6 +4,7 @@
 
 | Tool | Purpose | Key Flags |
 |----------
+| `coding-agent-tools all` | List all available tools | `--format`, `--category` |
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
@@ -77,6 +78,31 @@ tasks \| `next`, `all` \|
 {: .language-bash}
 
 ## Gem Executables   {#gem-executables}
+
+### `coding_agent_tools all` – List all available tools   {#coding_agent_tools_all--list-all-available-tools}
+
+<details><summary>Details</summary>
+
+```bash
+coding_agent_tools all [OPTIONS]
+```
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--format` | Output format (table, json, plain, names) | `table` |
+| `--category` | Show tools from specific category only | All categories |
+| `--no-descriptions` | Hide tool descriptions (faster output) | `false` |
+| `--no-categories` | Don't group tools by category | `false` |
+
+**Examples**
+```bash
+coding_agent_tools all
+coding_agent_tools all --format json
+coding_agent_tools all --category "Git Operations"
+coding_agent_tools all --format names
+coding_agent_tools all --no-descriptions
+```
+</details>
 
 ### `llm-query` – Unified LLM query interface   {#llm-query--unified-llm-query-interface}
 
