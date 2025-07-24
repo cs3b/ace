@@ -66,7 +66,7 @@ Link back to original requirement: Document the template sync script and process
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Template sync system is fully implemented and functional
-  > Command: bin/markdown-sync-embedded-documents --help
+  > Command: handbook sync-templates --help
 
 * [x] Identify key documentation areas and user scenarios
   > TEST: Pre-condition Check

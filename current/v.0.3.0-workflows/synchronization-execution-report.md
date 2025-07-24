@@ -12,7 +12,7 @@ Successfully executed the markdown-sync-embedded-documents script to synchronize
 
 ### Script Execution
 
-**Command**: `bin/markdown-sync-embedded-documents --verbose dev-handbook/workflow-instructions/*.wf.md`
+**Command**: `handbook sync-templates --verbose dev-handbook/workflow-instructions/*.wf.md`
 
 **Results**:
 

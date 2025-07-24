@@ -11,7 +11,7 @@ Design document for the `markdown-sync-embedded-documents` script that synchroni
 ```
 dev-tools/exe-old/markdown-sync-embedded-documents    # Main Ruby script implementation
 dev-tools/exe-old/_binstubs/markdown-sync-embedded-documents  # Binstub wrapper
-bin/markdown-sync-embedded-documents                 # Thin wrapper for project root
+handbook sync-templates                 # Thin wrapper for project root
 ```
 
 ## Command-Line Interface

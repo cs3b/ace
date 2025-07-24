@@ -64,7 +64,7 @@ Link back to original requirement: Execute template sync and commit changes (imp
   > TEST: Pre-condition Check
   > Type: Pre-condition Check
   > Assert: Script exists and runs without errors
-  > Command: bin/markdown-sync-embedded-documents --help
+  > Command: handbook sync-templates --help
 
 * [x] Confirm all workflow files use standardized template embedding format
   > TEST: Pre-condition Check
@@ -78,7 +78,7 @@ Link back to original requirement: Execute template sync and commit changes (imp
   > TEST: Action Validation
   > Type: Action Validation
   > Assert: Script executes successfully without errors
-  > Command: bin/markdown-sync-embedded-documents dev-handbook/workflow-instructions/*.wf.md
+  > Command: handbook sync-templates dev-handbook/workflow-instructions/*.wf.md
 
 * [x] Review script output and changes summary
   > TEST: Action Validation

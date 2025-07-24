@@ -159,7 +159,7 @@ Fix the critical template embedding error in `update-roadmap.wf.md` where it inc
   > TEST: Template Sync Verification
   > Type: Action Validation
   > Assert: Template sync can process update-roadmap workflow
-  > Command: bin/markdown-sync-embedded-documents --dry-run
+  > Command: handbook sync-templates --dry-run
 
 ## Acceptance Criteria
 
@@ -179,4 +179,4 @@ Fix the critical template embedding error in `update-roadmap.wf.md` where it inc
 * dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying incorrect template
 * dev-handbook/workflow-instructions/update-roadmap.wf.md - Target workflow file
 * dev-handbook/guides/roadmap-definition.g.md - Roadmap structure guidance
-* bin/markdown-sync-embedded-documents - Template synchronization tool
+* handbook sync-templates - Template synchronization tool

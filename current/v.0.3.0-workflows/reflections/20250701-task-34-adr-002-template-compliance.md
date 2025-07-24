@@ -22,7 +22,7 @@
 ## Key Learnings
 
 - ADR-002 XML template embedding architecture provides clear structure for template management
-- The template synchronization system (`bin/markdown-sync-embedded-documents`) is robust and provides excellent feedback
+- The template synchronization system (`handbook sync-templates`) is robust and provides excellent feedback
 - Breaking down template extraction into atomic commits helps track changes across submodules
 - The Task tool is effective for parallel commit operations across multiple repositories
 - XML template format with path attributes enables automated synchronization while maintaining self-contained workflows
@@ -68,7 +68,7 @@
 
 - **Related Task**: v.0.3.0+task.34 - Refactor Commit Workflow ADR Compliance with Template Extraction
 - **ADR Reference**: ADR-002 XML Template Embedding Architecture
-- **Verification Command**: `bin/markdown-sync-embedded-documents --dry-run`
+- **Verification Command**: `handbook sync-templates --dry-run`
 - **Commits**:
   - dev-handbook: feat(task-34): refactor commit workflow templates to comply with ADR-002
   - dev-taskflow: feat(task-34): complete commit workflow ADR-002 compliance refactoring

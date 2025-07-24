@@ -57,7 +57,7 @@ Transform the current template-only embedding system into a universal `<document
 
 #### Modify
 
-* bin/markdown-sync-embedded-documents (extend to support <documents> format)
+* handbook sync-templates (extend to support <documents> format)
 * dev-handbook/workflow-instructions/create-task.wf.md (update to new format)
 * dev-handbook/workflow-instructions/update-blueprint.wf.md (update to new format)
 * dev-handbook/workflow-instructions/update-roadmap.wf.md (update to new format)
@@ -109,7 +109,7 @@ Transform the current template-only embedding system into a universal `<document
   > TEST: Sync Script Enhancement
   > Type: Action Validation
   > Assert: Script handles both old and new formats correctly
-  > Command: bin/markdown-sync-embedded-documents --dry-run --verbose
+  > Command: handbook sync-templates --dry-run --verbose
 * [x] Step 5: Update create-task.wf.md to use new `<documents>` format (eliminate 3× task.template.md duplication)
 * [x] Step 6: Update update-blueprint.wf.md to use new format (eliminate 2× blueprint.template.md duplication)
 * [x] Step 7: Update remaining 12 workflow files to use new `<documents>` format
@@ -140,7 +140,7 @@ Transform the current template-only embedding system into a universal `<document
 ## References
 
 * Current template embedding analysis showing 3× task.template.md, 2× blueprint.template.md duplication
-* Existing sync script: bin/markdown-sync-embedded-documents
+* Existing sync script: handbook sync-templates
 * 14 workflow files using template embedding: dev-handbook/workflow-instructions/*.wf.md
 * Template directory structure: dev-handbook/templates/
 * Guide directory structure: dev-handbook/guides/

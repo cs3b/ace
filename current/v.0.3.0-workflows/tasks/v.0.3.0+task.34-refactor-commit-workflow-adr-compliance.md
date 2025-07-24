@@ -164,7 +164,7 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
   > TEST: Template Sync Compatibility
   > Type: Action Validation
   > Assert: Template sync system can process commit templates
-  > Command: bin/markdown-sync-embedded-documents --dry-run
+  > Command: handbook sync-templates --dry-run
 
 ## Acceptance Criteria
 
@@ -184,4 +184,4 @@ Fix the critical ADR-002 compliance violation in `commit.wf.md` by converting em
 * dev-taskflow/current/v.0.3.0-workflows/handbook_review/f203c0c6/dr-gpro.md - Code review identifying ADR-002 violation
 * docs/decisions/ADR-002.md - XML template embedding standard
 * dev-handbook/workflow-instructions/commit.wf.md - Target workflow file
-* bin/markdown-sync-embedded-documents - Template synchronization tool
+* handbook sync-templates - Template synchronization tool

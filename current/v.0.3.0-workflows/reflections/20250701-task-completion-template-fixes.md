@@ -55,7 +55,7 @@
 - Updated `dev-handbook/workflow-instructions/update-roadmap.wf.md` template reference from release-readme.template.md to roadmap.template.md
 - Removed irrelevant release template content from the workflow
 
-**Template Sync Verification**: Both workflows now pass `bin/markdown-sync-embedded-documents --dry-run` validation.
+**Template Sync Verification**: Both workflows now pass `handbook sync-templates --dry-run` validation.
 
 ## Additional Context
 

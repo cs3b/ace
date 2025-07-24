@@ -48,7 +48,7 @@ bin/gl -> dev-tools/exe-old/get-recent-git-log
 bin/tnid -> dev-tools/exe-old/get-next-task-id
 bin/rc -> dev-tools/exe-old/get-current-release-path.sh
 bin/tr -> dev-tools/exe-old/get-recent-tasks
-bin/markdown-sync-embedded-documents -> dev-tools/exe-old/markdown-sync-embedded-documents
+handbook sync-templates -> dev-tools/exe-old/markdown-sync-embedded-documents
 bin/tn -> dev-tools/exe-old/get-next-task
 ```
 
@@ -89,7 +89,7 @@ Add project management commands under `project` namespace:
 coding_agent_tools project tree [options]      # equivalent to bin/tree
 coding_agent_tools project lint                # equivalent to bin/lint  
 coding_agent_tools project git-log [options]   # equivalent to bin/gl
-coding_agent_tools project sync-templates      # equivalent to bin/markdown-sync-embedded-documents
+coding_agent_tools project sync-templates      # equivalent to handbook sync-templates
 ```
 
 #### 2. ATOM Integration Plan
@@ -191,7 +191,7 @@ This approach:
 
 1. **Template synchronization**
    - `project sync-templates` command
-   - Update bin/markdown-sync-embedded-documents
+   - Update handbook sync-templates
 
 2. **Documentation and quality tools**
    - Integrate markdown link checking
@@ -386,7 +386,7 @@ exec(File.expand_path('../dev-tools/exe/coding_agent_tools', __dir__), 'task', '
   - `project sync-templates` command
   - XML template parsing and synchronization
 - **Day 4-5**: Integration and testing
-  - Update bin/markdown-sync-embedded-documents
+  - Update handbook sync-templates
   - Comprehensive testing
 
 ### Phase 4: Documentation and Finalization (Week 7)
@@ -472,7 +472,7 @@ exec(File.expand_path('../dev-tools/exe/coding_agent_tools', __dir__), 'task', '
 | bin/tree | show-directory-tree | `coding_agent_tools project tree` | ✅ Planned |
 | bin/gl | get-recent-git-log | `coding_agent_tools project git-log` | ✅ Planned |
 | bin/lint | lint-md-links.rb + lint-task-metadata | `coding_agent_tools project lint` | ✅ Planned |
-| bin/markdown-sync-embedded-documents | markdown-sync-embedded-documents | `coding_agent_tools project sync-templates` | ✅ Planned |
+| handbook sync-templates | markdown-sync-embedded-documents | `coding_agent_tools project sync-templates` | ✅ Planned |
 | bin/cr-docs | generate-doc-review-prompt | `coding_agent_tools project review-prompt` | 📋 Future |
 
 ### Interface Compatibility Matrix
