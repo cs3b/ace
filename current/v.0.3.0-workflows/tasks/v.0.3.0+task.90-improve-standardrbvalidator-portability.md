@@ -24,14 +24,15 @@ _Result excerpt:_
 
 ## Objective
 
-Remove hardcoded context dependencies from StandardRbValidator to make it a truly independent, reusable atom. Currently, it uses `Dir.chdir` and hardcoded path logic (`File.join("dev-tools", file_path)`), making it non-reentrant, stateful, and less portable.
+Remove hardcoded context dependencies from StandardRbValidator to make it a truly independent, reusable atom. Currently, it uses `Dir.chdir` and hardcoded path logic (`File.join("dev-tools", file_path)`), making it non-reentrant, stateful, and less portable. The atom should use the existing ProjectRootDetector for reliable project root detection.
 
 ## Scope of Work
 
 - Remove Dir.chdir usage that changes global state
 - Pass working directory properly to Open3.capture3
 - Remove hardcoded "dev-tools" path manipulation
-- Make the atom accept project root as a parameter
+- Integrate ProjectRootDetector for reliable project root detection
+- Make the atom accept optional project root parameter with automatic detection fallback
 - Ensure the atom remains stateless and reentrant
 
 ### Deliverables
@@ -76,9 +77,14 @@ Remove hardcoded context dependencies from StandardRbValidator to make it a trul
   > Type: Action Validation
   > Assert: Open3.capture3 uses :chdir option instead of Dir.chdir
   > Command: cd dev-tools && grep -n ":chdir" lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb
-- [ ] Step 2: Add project_root parameter to methods
-  - Update method signatures to accept optional project_root
-  - Use project_root to construct proper paths
+- [ ] Step 2: Integrate ProjectRootDetector for automatic project root detection
+  - Add ProjectRootDetector dependency to StandardRbValidator
+  - Update method signatures to accept optional project_root parameter
+  - Use ProjectRootDetector when project_root is not provided
+  > TEST: ProjectRootDetector Integration
+  > Type: Integration Validation
+  > Assert: StandardRbValidator uses ProjectRootDetector when project_root not specified
+  > Command: cd dev-tools && grep -n "ProjectRootDetector" lib/coding_agent_tools/atoms/code_quality/standard_rb_validator.rb
 - [ ] Step 3: Remove hardcoded "dev-tools" path logic
   - Replace `File.join("dev-tools", file_path)` with proper path resolution
   - Make path resolution configurable based on project structure
@@ -104,7 +110,7 @@ Remove hardcoded context dependencies from StandardRbValidator to make it a trul
 - [ ] AC 1: No Dir.chdir is used in StandardRbValidator
 - [ ] AC 2: Working directory is passed via :chdir option to Open3
 - [ ] AC 3: No hardcoded "dev-tools" path manipulation exists
-- [ ] AC 4: The atom accepts project root as a configurable parameter
+- [ ] AC 4: The atom accepts optional project root parameter with ProjectRootDetector fallback
 - [ ] AC 5: The atom is stateless and re-entrant
 - [ ] AC 6: All tests pass with the refactored implementation
 - [ ] AC 7: Multiple concurrent validations can run without interference

@@ -108,15 +108,15 @@ _Result excerpt:_
 
 ## Objective
 
-Implement robust language-specific file filtering to ensure that even when glob patterns return mixed file types, Ruby linters only process Ruby files, Markdown linters only process Markdown files, etc. This prevents cross-language linting errors and improves performance by avoiding unnecessary processing.
+Implement robust language-specific file filtering to ensure that even when glob patterns return mixed file types, Ruby linters only process Ruby files, Markdown linters only process Markdown files, etc. This prevents cross-language linting errors and improves performance by avoiding unnecessary processing. File detection should be based on explicit patterns defined in .coding-agent/lint.yml rather than content analysis.
 
 ## Scope of Work
 
-- Create a file type detection system based on extensions and content
-- Implement filtering logic for each language runner
+- Create a file type detection system based on explicit file patterns from configuration
+- Implement filtering logic for each language runner using configured patterns
 - Ensure glob patterns are properly filtered before passing to linters
-- Handle edge cases like files without extensions or multi-purpose files
-- Add configuration options for custom file pattern matching
+- Handle special Ruby files without extensions (Gemfile, exe/* scripts) via configuration
+- Update .coding-agent/lint.yml to include explicit file pattern definitions
 
 ### Deliverables
 
@@ -152,18 +152,19 @@ Implement robust language-specific file filtering to ensure that even when glob 
   > Type: Understanding Check
   > Assert: Current file discovery methods and patterns are documented
   > Command: nav-path file ruby_linting_pipeline
-- [ ] Design file type detection logic for Ruby files (.rb, Gemfile, Rakefile, .gemspec, etc.)
-- [ ] Design file type detection logic for Markdown files (.md, .markdown, README without extension)
+- [ ] Design configuration-based file pattern matching for Ruby files (.rb, .gemspec, Gemfile, exe/*)
+- [ ] Design configuration-based file pattern matching for Markdown files (.md, .markdown)
 
 ### Execution Steps
 
-- [ ] Create FileTypeDetector class with methods for Ruby and Markdown detection
-- [ ] Implement extension-based detection (primary method)
-  > TEST: Extension Detection
+- [ ] Create FileTypeDetector class that uses configuration-based pattern matching
+- [ ] Implement pattern-based detection using .coding-agent/lint.yml file patterns
+  > TEST: Pattern Detection
   > Type: Feature Validation
-  > Assert: FileTypeDetector correctly identifies file types by extension
+  > Assert: FileTypeDetector correctly identifies file types using configured patterns
   > Command: ruby -r ./lib/coding_agent_tools -e "puts CodingAgentTools::Atoms::CodeQuality::FileTypeDetector.detect_type('test.rb')"
-- [ ] Add content-based detection for files without extensions (Gemfile, Rakefile)
+- [ ] Update .coding-agent/lint.yml to include explicit file patterns for Ruby (*.rb, *.gemspec, Gemfile, exe/*) and Markdown (*.md, *.markdown)
+- [ ] Update dev-handbook/.meta/tpl/dotfiles template with new file pattern configuration
 - [ ] Create LanguageFileFilter class that filters file lists by language
 - [ ] Integrate file filtering into RubyRunner to only process Ruby files
   > TEST: Ruby File Filtering
@@ -178,14 +179,14 @@ Implement robust language-specific file filtering to ensure that even when glob 
 
 - [ ] AC 1: Ruby runner ignores non-Ruby files even when they are in provided paths
 - [ ] AC 2: Markdown runner ignores non-Markdown files even when they are in provided paths
-- [ ] AC 3: File type detection works for common Ruby files (Gemfile, Rakefile, *.gemspec)
-- [ ] AC 4: File type detection works for Markdown files (*.md, *.markdown, README)
+- [ ] AC 3: File type detection works for configured Ruby file patterns (*.rb, *.gemspec, Gemfile, exe/*)
+- [ ] AC 4: File type detection works for configured Markdown file patterns (*.md, *.markdown)
 - [ ] AC 5: Custom file patterns can be configured via .coding-agent/lint.yml
 
 ## Out of Scope
 
 - ❌ Adding support for new file types beyond Ruby and Markdown
-- ❌ Content-based language detection for complex cases
+- ❌ Content-based language detection (using configuration-based patterns only)
 - ❌ Performance optimization for large file sets
 - ❌ Integration with external file type detection libraries
 
@@ -194,6 +195,7 @@ Implement robust language-specific file filtering to ensure that even when glob 
 ```
 Current Ruby patterns: StandardRB's built-in file discovery
 Current Markdown patterns: Dir.glob(File.join(path, "**", "*.md"))
-Configuration: .coding-agent/lint.yml for custom patterns
-Extension patterns: .rb, .gemspec, Gemfile, Rakefile for Ruby; .md, .markdown for Markdown
+Configuration: .coding-agent/lint.yml for explicit file patterns
+Ruby patterns: *.rb, *.gemspec, Gemfile, exe/* (no content-based detection)
+Markdown patterns: *.md, *.markdown (explicit patterns only)
 ```

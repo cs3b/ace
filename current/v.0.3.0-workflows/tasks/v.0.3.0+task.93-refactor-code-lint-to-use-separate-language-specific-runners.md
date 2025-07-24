@@ -3,7 +3,7 @@ id: v.0.3.0+task.93
 status: pending
 priority: high
 estimate: 6h
-dependencies: []
+dependencies: [v.0.3.0+task.90]
 ---
 
 # Refactor code-lint to Use Separate Language-Specific Runners
@@ -115,7 +115,7 @@ Refactor the code-lint command to use separate language-specific runners instead
 - Create separate runner classes for each supported language (Ruby, Markdown)
 - Modify code-lint command structure to support language-specific execution
 - Ensure configuration system works with new runner architecture
-- Maintain backward compatibility with existing `code-lint all` command
+- Update command interface (backward compatibility not required - we are the only users)
 - Add ability to run specific language linters independently
 
 ### Deliverables
@@ -160,6 +160,7 @@ Refactor the code-lint command to use separate language-specific runners instead
 
 - [ ] Create base LanguageRunner interface with common methods (validate, autofix, report)
 - [ ] Implement RubyRunner class that encapsulates Ruby linting pipeline (StandardRB, security, cassettes)
+  - Use improved StandardRbValidator from task 90
   > TEST: Ruby Runner Functionality
   > Type: Feature Validation
   > Assert: RubyRunner can execute StandardRB and security linters independently
@@ -173,12 +174,14 @@ Refactor the code-lint command to use separate language-specific runners instead
   > Command: code-lint --help | grep -E "ruby|markdown|all"
 - [ ] Update MultiPhaseQualityManager to orchestrate new runners instead of direct pipeline management
 - [ ] Add comprehensive tests for new runner architecture
+- [ ] Create configuration migration script to handle .coding-agent/lint.yml updates if needed
+- [ ] Update dev-handbook/.meta/tpl/dotfiles with new configuration template
 
 ## Acceptance Criteria
 
 - [ ] AC 1: code-lint ruby command runs only Ruby linters (StandardRB, security, cassettes)
 - [ ] AC 2: code-lint markdown command runs only Markdown linters (styleguide, links, templates, tasks)
-- [ ] AC 3: code-lint all command maintains existing behavior using new runner architecture
+- [ ] AC 3: code-lint all command works correctly using new runner architecture (API changes acceptable)
 - [ ] AC 4: Each runner properly uses language-specific configuration from .coding-agent/lint.yml
 - [ ] AC 5: Runners can be executed independently without cross-language interference
 
