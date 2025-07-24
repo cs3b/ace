@@ -7,14 +7,14 @@ ruby:
     standardrb:
       enabled: true
       autofix: true
-      # config_file: .standard.yml  # Optional: custom StandardRB config
+      config_file: dev-tools/.standard.yml # Optional: custom StandardRB config
     security:
       enabled: true
       full_scan: false
       git_history: false
     cassettes:
       enabled: true
-      threshold: 51200  # 50KB in bytes
+      threshold: 51200 # 50KB in bytes
 
 markdown:
   enabled: true
@@ -24,7 +24,7 @@ markdown:
       autofix: true
     link_validation:
       enabled: true
-      context: 3  # Lines of context for broken links
+      context: 3 # Lines of context for broken links
     template_embedding:
       enabled: true
       template_dirs:
@@ -45,8 +45,8 @@ markdown:
 
 error_distribution:
   enabled: true
-  max_files: 4              # Maximum error files to generate
-  one_issue_per_file: true  # Distribute one issue per file for agents
+  max_files: 4 # Maximum error files to generate
+  one_issue_per_file: true # Distribute one issue per file for agents
 
 docs_dependencies:
   enabled: true
@@ -57,16 +57,16 @@ docs_dependencies:
     docs: "docs/*.md"
     taskflow_docs: "dev-taskflow/*.md"
   exclude_patterns:
-    - "dev-taskflow/done/**/*"     # Skip completed tasks
+    - "dev-taskflow/done/**/*" # Skip completed tasks
     - "dev-taskflow/sessions/**/*" # Skip session logs
-    - "**/.*"                      # Skip hidden files
+    - "**/.*" # Skip hidden files
   skip_folders:
-    - "dev-taskflow"  # Skip entire dev-taskflow folder
-  include_external_links: false   # Whether to analyze external links
-  include_anchor_links: false     # Whether to analyze anchor links
+    - "dev-taskflow" # Skip entire dev-taskflow folder
+  include_external_links: false # Whether to analyze external links
+  include_anchor_links: false # Whether to analyze anchor links
 
 # Global settings
 global:
-  parallel: true     # Run linters in parallel where possible
-  verbose: false     # Verbose output
-  fail_fast: false   # Stop on first failure
+  parallel: true # Run linters in parallel where possible
+  verbose: false # Verbose output
+  fail_fast: false # Stop on first failure
