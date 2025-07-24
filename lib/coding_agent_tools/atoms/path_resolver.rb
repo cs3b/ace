@@ -19,8 +19,10 @@ module CodingAgentTools::Atoms
       # Remove anchors first
       clean_link = remove_anchor(link)
 
-      # Handle absolute paths from root
-      return clean_link if absolute_path?(clean_link)
+      # Handle absolute paths from root by removing leading slash
+      if absolute_path?(clean_link)
+        return clean_link.sub(/^\//, "")
+      end
 
       # Handle relative paths
       from_dir = File.dirname(from_file)
@@ -37,6 +39,7 @@ module CodingAgentTools::Atoms
 
     # Check if a file exists at the given path
     def file_exists?(path)
+      return false unless path
       File.exist?(path) && File.file?(path)
     end
 

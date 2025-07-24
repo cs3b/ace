@@ -29,13 +29,13 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
     # Create test files with references
     File.write("docs/architecture.md", <<~CONTENT)
       # Architecture
-      See [Blueprint](../blueprint.md) for overview.
-      Load config: `docs/config.md`
+      See [Blueprint](blueprint.md) for overview.
+      Load config: [Config](config.md)
     CONTENT
 
-    File.write("blueprint.md", <<~CONTENT)
+    File.write("docs/blueprint.md", <<~CONTENT)
       # Blueprint
-      References [Architecture](docs/architecture.md).
+      References [Architecture](architecture.md).
     CONTENT
 
     File.write("docs/config.md", "# Config\nNo references.")

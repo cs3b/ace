@@ -31,7 +31,7 @@ module CodingAgentTools::Atoms
 
     # Load configuration with fallback to defaults
     def load_config
-      return DEFAULT_CONFIG unless File.exist?(@config_path)
+      return DEFAULT_CONFIG unless @config_path && File.exist?(@config_path)
 
       begin
         yaml_config = YAML.load_file(@config_path)

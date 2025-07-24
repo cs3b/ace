@@ -79,7 +79,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
     end
 
     it "handles invalid category" do
-      output = capture_error_output { command.call(category: "Invalid Category") }
+      output = capture_output { command.call(category: "Invalid Category") }
       
       expect(output).to include("Error: Category 'Invalid Category' not found")
       expect(output).to include("Available categories:")

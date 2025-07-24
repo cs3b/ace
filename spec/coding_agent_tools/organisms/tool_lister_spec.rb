@@ -15,7 +15,7 @@ end
 
 RSpec.describe CodingAgentTools::Organisms::ToolLister do
   let(:temp_exe_dir) { Dir.mktmpdir("test_exe") }
-  let(:tool_lister) { described_class.new(temp_exe_dir) }
+  let(:tool_lister) { described_class.new(temp_exe_dir, config_path: "/non/existent/config.yml") }
 
   before do
     # Create test executables
