@@ -235,7 +235,7 @@ The cache directory is organized by type:
 ```bash
 # Keep cache in project directory for development
 export XDG_CACHE_HOME="$(pwd)/.cache"
-dev-tools/exe/llm-models google  # Creates .cache/coding-agent-tools/models/
+llm-models google  # Creates .cache/coding-agent-tools/models/
 ```
 
 **CI/CD Environment**:

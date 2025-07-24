@@ -19,7 +19,7 @@ This comprehensive guide covers the unified `llm-query` command for interacting 
 
 ## Introduction
 
-The `dev-tools/exe/llm-query` command provides a unified interface for querying multiple LLM providers using consistent syntax. Instead of learning separate commands for each provider, you can use one command with a simple `provider:model` syntax.
+The `llm-query` command provides a unified interface for querying multiple LLM providers using consistent syntax. Instead of learning separate commands for each provider, you can use one command with a simple `provider:model` syntax.
 
 **Key Benefits:**
 - **Unified Interface**: One command for all providers
@@ -232,7 +232,7 @@ When using `--output`, the tool includes built-in protection against accidental 
 **Interactive Environments** (terminals):
 - If the output file exists, you'll be prompted for confirmation:
   ```
-  File 'report.txt' already exists. Overwrite? [y/N]: 
+  File 'report.txt' already exists. Overwrite? [y/N]:
   ```
 - Type `y` or `yes` to confirm, or `n`/`no` (or press Enter) to cancel
 
@@ -375,19 +375,19 @@ llm-query lmstudio:local-model "No internet needed"
 
 ```bash
 # List models for each provider
-dev-tools/exe/llm-models google
-dev-tools/exe/llm-models anthropic
-dev-tools/exe/llm-models openai
-dev-tools/exe/llm-models mistral
-dev-tools/exe/llm-models together_ai
-dev-tools/exe/llm-models lmstudio
+llm-models google
+llm-models anthropic
+llm-models openai
+llm-models mistral
+llm-models together_ai
+llm-models lmstudio
 
 # Filter models
-dev-tools/exe/llm-models google --filter flash
-dev-tools/exe/llm-models openai --filter gpt-4
+llm-models google --filter flash
+llm-models openai --filter gpt-4
 
 # JSON output for scripting
-dev-tools/exe/llm-models anthropic --format json
+llm-models anthropic --format json
 ```
 
 ### Model Selection Strategy
