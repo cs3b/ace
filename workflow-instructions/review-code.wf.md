@@ -138,7 +138,7 @@ Build llm-query parameters based on code-review session files:
 
 - **SYSTEM PROMPT**: Use appropriate template from session or specify custom
 - **INPUT CONTENT**: Use session files as input content
-- **MODELS**: Determine which models to run (from configuration or user specification)
+- **MODELS**: Determine which models to run (defaults to gpro if not specified by user)
 - **TIMEOUT**: Set timeout to 600 seconds as specified
 - **OUTPUT**: Prepare output file paths for each model
 
@@ -148,7 +148,7 @@ Build llm-query parameters based on code-review session files:
 SYSTEM_PROMPT="${SESSION_DIR}/system.prompt.md"
 INPUT_CONTENT="${SESSION_DIR}/prompt.md"
 TIMEOUT=600
-MODELS=("google:gemini-2.5-pro" "anthropic:claude-3-opus")
+MODELS=("gpro")  # Default to single gpro model unless user specifies multiple
 ```
 
 **Validation:**
@@ -273,7 +273,7 @@ llm-query MODEL --system PROMPT_FILE --timeout 600 --output REPORT_FILE < INPUT_
 ```
 
 **Required Parameters:**
-- **MODEL**: LLM model identifier (`google:gemini-2.5-pro`, `anthropic:claude-3-opus`)
+- **MODEL**: LLM model identifier (defaults to `gpro`, user can specify multiple models)
 - `--system`: System prompt file path
 - `--timeout 600`: Timeout in seconds (as specified)
 - `--output`: Output report file path
