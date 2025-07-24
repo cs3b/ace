@@ -5,7 +5,7 @@ require "fileutils"
 
 module CodingAgentTools
   module Molecules
-    module TaskManagement
+    module TaskflowManagement
       # FileSynchronizer is a molecule that handles secure file synchronization
       # operations with validation, dry-run support, and diff preview capabilities.
       class FileSynchronizer

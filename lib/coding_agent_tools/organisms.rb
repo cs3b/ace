@@ -11,9 +11,11 @@ module CodingAgentTools
       autoload :PromptBuilder, "coding_agent_tools/organisms/code/prompt_builder"
     end
 
-    # Autoload task management organisms
-    module TaskManagement
-      autoload :TemplateSynchronizer, "coding_agent_tools/organisms/task_management/template_synchronizer"
+    # Autoload taskflow management organisms
+    module TaskflowManagement
+      autoload :TaskManager, "coding_agent_tools/organisms/taskflow_management/task_manager"
+      autoload :ReleaseManager, "coding_agent_tools/organisms/taskflow_management/release_manager"
+      autoload :TemplateSynchronizer, "coding_agent_tools/organisms/taskflow_management/template_synchronizer"
     end
   end
 end

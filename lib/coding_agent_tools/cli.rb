@@ -57,6 +57,26 @@ module CodingAgentTools
         @task_commands_registered = true
       end
 
+      def self.register_release_commands
+        return if @release_commands_registered
+
+        require_relative "cli/commands/release/current"
+        require_relative "cli/commands/release/next"
+        require_relative "cli/commands/release/all"
+        require_relative "cli/commands/release/generate_id"
+        require_relative "cli/commands/release/validate"
+
+        register "release", aliases: [] do |prefix|
+          prefix.register "current", Commands::Release::Current
+          prefix.register "next", Commands::Release::Next
+          prefix.register "all", Commands::Release::All
+          prefix.register "generate-id", Commands::Release::GenerateId
+          prefix.register "validate", Commands::Release::Validate
+        end
+
+        @release_commands_registered = true
+      end
+
       def self.register_binstub_commands
         return if @binstub_commands_registered
 
@@ -214,6 +234,7 @@ module CodingAgentTools
       def self.call(*args)
         register_llm_commands
         register_task_commands
+        register_release_commands
         register_binstub_commands
         register_dotfiles_commands
         register_code_commands

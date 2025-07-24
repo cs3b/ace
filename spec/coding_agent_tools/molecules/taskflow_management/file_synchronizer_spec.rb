@@ -2,13 +2,13 @@
 
 require "spec_helper"
 
-RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
+RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer do
   let(:path_validator) { instance_double(CodingAgentTools::Molecules::SecurePathValidator) }
   let(:operation_confirmer) { instance_double(CodingAgentTools::Molecules::FileOperationConfirmer) }
   let(:synchronizer) { described_class.new(path_validator: path_validator) }
 
   let(:template_document) do
-    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+    CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
       "dev-handbook/templates/test.template.md",
       "# Embedded Content\n\nThis is embedded content.",
       :template,
@@ -19,7 +19,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
   end
 
   let(:guide_document) do
-    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+    CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
       "dev-handbook/guides/test.g.md",
       "# Embedded Guide\n\nThis is embedded guide content.",
       :guide,
@@ -150,7 +150,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
 
     context "with invalid document paths" do
       let(:invalid_template) do
-        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+        CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
           "invalid/path/template.md",
           "content",
           :template,
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
       end
 
       let(:invalid_guide) do
-        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+        CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
           "dev-handbook/templates/guide.md",
           "content",
           :guide,
@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
 
     context "with legacy templates format" do
       let(:legacy_document) do
-        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+        CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
           "dev-handbook/templates/legacy.template.md",
           "Legacy content",
           :template,
@@ -263,7 +263,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::FileSynchronizer do
       end
 
       it "raises error for non-template types in legacy format" do
-        legacy_guide = CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+        legacy_guide = CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
           "dev-handbook/guides/test.g.md",
           "content",
           :guide,

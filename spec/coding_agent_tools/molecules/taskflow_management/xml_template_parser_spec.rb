@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser do
+RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser do
   let(:parser) { described_class.new }
 
   describe "#parse" do
@@ -194,7 +194,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser do
     it "allows registering custom format handlers" do
       custom_handler = double("CustomHandler")
       allow(custom_handler).to receive(:extract).and_return(
-        CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::FormatResult.new([], [], [])
+        CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::FormatResult.new([], [], [])
       )
 
       parser.register_format(:custom, custom_handler)

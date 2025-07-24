@@ -2,7 +2,7 @@
 
 module CodingAgentTools
   module Molecules
-    module TaskManagement
+    module TaskflowManagement
       # XmlTemplateParser is a molecule that parses XML-embedded template content
       # from markdown files, supporting multiple XML formats (templates, documents, guides)
       # with an extensible architecture for future format additions.
