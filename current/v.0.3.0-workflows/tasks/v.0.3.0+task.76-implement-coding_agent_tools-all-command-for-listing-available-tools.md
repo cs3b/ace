@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.76
-status: in-progress
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -39,36 +39,36 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
 
 ### Planning Steps
 
-- [ ] Research existing CLI command structure in CAT gem to understand patterns
+- [x] Research existing CLI command structure in CAT gem to understand patterns
   > TEST: Command Structure Analysis
   > Type: Pre-condition Check
   > Assert: Understanding of existing CLI patterns and ATOM architecture usage
   > Command: find dev-tools/lib/coding_agent_tools/cli -name "*.rb" | head -5
-- [ ] Design tool discovery mechanism (scan exe/ directory, read command metadata)
-- [ ] Define blacklist structure and default entries (internal/dev tools to exclude)
-- [ ] Plan output format (table, categories, descriptions, usage examples)
+- [x] Design tool discovery mechanism (scan exe/ directory, read command metadata)
+- [x] Define blacklist structure and default entries (internal/dev tools to exclude)
+- [x] Plan output format (table, categories, descriptions, usage examples)
 
 ### Execution Steps
 
-- [ ] Implement ToolLister organism following ATOM architecture
+- [x] Implement ToolLister organism following ATOM architecture
   - Scan dev-tools/exe/ directory for available executables
   - Read command descriptions from --help output or metadata
   - Apply blacklist filtering
   - Categorize tools (LLM, Git, Navigation, Task Management, etc.)
-- [ ] Implement All CLI command class
+- [x] Implement All CLI command class
   - Register with dry-cli framework
   - Handle output formatting options (table, json, plain text)
   - Integrate with ToolLister organism
-- [ ] Add comprehensive test coverage
+- [x] Add comprehensive test coverage
   - Unit tests for ToolLister organism
   - CLI integration tests for All command
   - Test blacklist functionality
-- [ ] Update documentation
+- [x] Update documentation
   - Modify SETUP.md Development Tools section (line ~290) to replace Blueprint reference with `coding_agent_tools all`
   - Remove reference to unimplemented `bin/help` command
   - Add command documentation to tools.md
   - Update any other references to manual tool discovery
-- [ ] Verify command integration and functionality
+- [x] Verify command integration and functionality
   > TEST: Command Integration
   > Type: Action Validation
   > Assert: `coding_agent_tools all` command works and shows expected tools
@@ -76,12 +76,12 @@ Implement a `coding_agent_tools all` command that provides a comprehensive list 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `coding_agent_tools all` command lists all available tools with descriptions
-- [ ] AC 2: Blacklist functionality excludes internal/development tools from output
-- [ ] AC 3: Tools are categorized appropriately (LLM, Git, Navigation, etc.)
-- [ ] AC 4: SETUP.md updated to use new command instead of manual references
-- [ ] AC 5: Command follows ATOM architecture patterns and has test coverage
-- [ ] AC 6: Output is well-formatted and user-friendly
+- [x] AC 1: `coding_agent_tools all` command lists all available tools with descriptions
+- [x] AC 2: Blacklist functionality excludes internal/development tools from output
+- [x] AC 3: Tools are categorized appropriately (LLM, Git, Navigation, etc.)
+- [x] AC 4: SETUP.md updated to use new command instead of manual references
+- [x] AC 5: Command follows ATOM architecture patterns and has test coverage
+- [x] AC 6: Output is well-formatted and user-friendly
 
 ## Technical Requirements
 
