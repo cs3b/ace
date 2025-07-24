@@ -1,5 +1,13 @@
+
 *-prompt.md
+prompt.md
 *.diff
+input.xml
+*.meta
 
 **/code_review/*/context.md
+**/code_review/*/*.txt
+**/code_review/*/*.yaml
 **/code_review/*/input.md
+**/code_review/*/readme.md
+**/code_review/*/*.log
