@@ -21,7 +21,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
     create_test_executable(temp_exe_dir, "git-status")
     create_test_executable(temp_exe_dir, "llm-query")
     create_test_executable(temp_exe_dir, "nav-ls")
-    
+
     # Mock ToolLister to use our test directory
     allow(CodingAgentTools::Organisms::ToolLister).to receive(:new)
       .and_return(CodingAgentTools::Organisms::ToolLister.new(temp_exe_dir))
@@ -34,7 +34,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
   describe "#call" do
     it "displays categorized tools by default" do
       output = capture_output { command.call }
-      
+
       expect(output).to include("Available Coding Agent Tools:")
       expect(output).to include("Git Operations:")
       expect(output).to include("LLM Integration:")
@@ -44,7 +44,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "displays tools in names format" do
       output = capture_output { command.call(format: "names") }
-      
+
       expect(output).to include("git-status")
       expect(output).to include("llm-query")
       expect(output).to include("nav-ls")
@@ -53,7 +53,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "displays tools in JSON format" do
       output = capture_output { command.call(format: "json") }
-      
+
       # Should be valid JSON
       parsed = JSON.parse(output)
       expect(parsed).to have_key("categories")
@@ -62,7 +62,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "displays tools in plain format" do
       output = capture_output { command.call(format: "plain") }
-      
+
       expect(output).to include("=== Git Operations ===")
       expect(output).to include("=== LLM Integration ===")
       expect(output).to include("git-status:")
@@ -71,7 +71,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "filters by category" do
       output = capture_output { command.call(category: "Git Operations") }
-      
+
       expect(output).to include("Git Operations:")
       expect(output).to include("git-status")
       expect(output).not_to include("LLM Integration:")
@@ -80,14 +80,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "handles invalid category" do
       output = capture_output { command.call(category: "Invalid Category") }
-      
+
       expect(output).to include("Error: Category 'Invalid Category' not found")
       expect(output).to include("Available categories:")
     end
 
     it "handles no descriptions option" do
       output = capture_output { command.call(no_descriptions: true) }
-      
+
       expect(output).to include("Available Coding Agent Tools:")
       expect(output).to include("git-status")
       # Should not include description separator " - "
@@ -97,7 +97,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
     it "handles no categories option" do
       output = capture_output { command.call(no_categories: true) }
-      
+
       expect(output).to include("Available Coding Agent Tools:")
       expect(output).to include("git-status")
       expect(output).not_to include("Git Operations:")

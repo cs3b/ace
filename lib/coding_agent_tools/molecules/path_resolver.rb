@@ -196,7 +196,7 @@ module CodingAgentTools
       def matches_forbidden_pattern_for_search?(relative_path)
         # Get forbidden patterns from config, with fallback to sandbox defaults
         forbidden_patterns = @config.dig("security", "forbidden_patterns") ||
-                             @sandbox.send(:default_forbidden_patterns)
+          @sandbox.send(:default_forbidden_patterns)
 
         forbidden_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
@@ -381,7 +381,8 @@ module CodingAgentTools
           end
 
           # Skip if it's neither a file nor a directory we're interested in
-          next unless File.file?(path) || (include_directories && Dir.exist?(path))
+          is_valid_path = File.file?(path) || (include_directories && Dir.exist?(path))
+          next unless is_valid_path
 
           # For directories, we don't need to check file extensions
           if Dir.exist?(path)

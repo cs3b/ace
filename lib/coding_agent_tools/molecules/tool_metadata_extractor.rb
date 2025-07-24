@@ -63,7 +63,7 @@ module CodingAgentTools
         parse_help_output(stdout, stderr, File.basename(tool_path))
       rescue Timeout::Error
         nil
-      rescue => e
+      rescue
         # Log error but don't fail - we'll try other methods
         nil
       end
@@ -76,7 +76,7 @@ module CodingAgentTools
 
         # Look for description patterns in help output
         description = find_description_in_lines(lines, tool_name)
-        
+
         # Clean up and format the description
         clean_description(description) if description
       end
@@ -84,9 +84,9 @@ module CodingAgentTools
       def find_description_in_lines(lines, tool_name)
         # Pattern 1: dry-cli style "desc" line
         lines.each do |line|
-          if line.match(/^desc\s*[:"]\s*(.+?)["']?$/i)
+          if line =~ /^desc\s*[:"]\s*(.+?)["']?$/i
             return $1
-          elsif line.match(/^description\s*[:"]\s*(.+?)["']?$/i)
+          elsif line =~ /^description\s*[:"]\s*(.+?)["']?$/i
             return $1
           end
         end
@@ -101,7 +101,7 @@ module CodingAgentTools
 
           next unless usage_found
           next if line.empty?
-          next if line.match(/^(options?|arguments?|examples?|commands?):/i)
+          next if /^(options?|arguments?|examples?|commands?):/i.match?(line)
           next if line.start_with?("-") # Skip option lines
 
           # This looks like a description line
@@ -113,7 +113,7 @@ module CodingAgentTools
           next if line.length < 10
           next if line.match?(/^[-\w]+:/) # Skip section headers
           next if line.start_with?("-") # Skip options
-          
+
           if line.match?(/^[A-Z][^:]*[a-z]/) && line.include?(" ")
             return line
           end
@@ -125,7 +125,7 @@ module CodingAgentTools
       def clean_description(description)
         # Remove quotes and clean up whitespace
         cleaned = description.gsub(/^["']|["']$/, "").strip
-        
+
         # Ensure it ends with a period if it doesn't already have punctuation
         unless cleaned.match?(/[.!?]$/)
           cleaned += "."
@@ -143,17 +143,17 @@ module CodingAgentTools
         when /^git-(.+)/
           "Enhanced git #{$1} with additional functionality."
         when /^llm-(.+)/
-          "LLM integration tool for #{$1.tr('-', ' ')}."
+          "LLM integration tool for #{$1.tr("-", " ")}."
         when /^nav-(.+)/
-          "Navigation tool for #{$1.tr('-', ' ')}."
+          "Navigation tool for #{$1.tr("-", " ")}."
         when /^task-(.+)/
-          "Task management tool for #{$1.tr('-', ' ')}."
+          "Task management tool for #{$1.tr("-", " ")}."
         when /^code-(.+)/
-          "Code #{$1.tr('-', ' ')} tool."
+          "Code #{$1.tr("-", " ")} tool."
         when /^release-(.+)/
-          "Release management tool for #{$1.tr('-', ' ')}."
+          "Release management tool for #{$1.tr("-", " ")}."
         when /^reflection-(.+)/
-          "Reflection and analysis tool for #{$1.tr('-', ' ')}."
+          "Reflection and analysis tool for #{$1.tr("-", " ")}."
         when "handbook"
           "Development handbook access and management tool."
         else

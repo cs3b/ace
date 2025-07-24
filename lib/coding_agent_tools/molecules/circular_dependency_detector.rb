@@ -18,7 +18,7 @@ module CodingAgentTools::Molecules
         if has_cycle?(file, dependencies, visited, path, recursion_stack)
           # Extract the cycle from the path
           cycle_start = path.rindex(path.last)
-          cycle = path[cycle_start..-1] if cycle_start
+          cycle = path[cycle_start..] if cycle_start
           circular << cycle.sort if cycle && cycle.length > 1
         end
       end

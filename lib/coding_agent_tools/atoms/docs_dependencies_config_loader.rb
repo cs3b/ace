@@ -36,13 +36,13 @@ module CodingAgentTools::Atoms
       begin
         yaml_config = YAML.load_file(@config_path)
         docs_config = yaml_config&.dig("docs_dependencies") || {}
-        
+
         # Merge with defaults, preserving structure
         merged_config = deep_merge(DEFAULT_CONFIG, symbolize_keys(docs_config))
-        
+
         # Validate configuration
         validate_config(merged_config)
-        
+
         merged_config
       rescue => e
         warn "Warning: Failed to load config from #{@config_path}: #{e.message}"
@@ -91,21 +91,21 @@ module CodingAgentTools::Atoms
 
     def deep_merge(base, override)
       result = base.dup
-      
+
       override.each do |key, value|
-        if value.is_a?(Hash) && result[key].is_a?(Hash)
-          result[key] = deep_merge(result[key], value)
+        result[key] = if value.is_a?(Hash) && result[key].is_a?(Hash)
+          deep_merge(result[key], value)
         else
-          result[key] = value
+          value
         end
       end
-      
+
       result
     end
 
     def symbolize_keys(hash)
       return hash unless hash.is_a?(Hash)
-      
+
       hash.each_with_object({}) do |(key, value), result|
         symbol_key = key.to_sym
         result[symbol_key] = value.is_a?(Hash) ? symbolize_keys(value) : value

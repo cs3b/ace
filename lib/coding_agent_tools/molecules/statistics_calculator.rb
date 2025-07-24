@@ -22,7 +22,7 @@ module CodingAgentTools::Molecules
         .select { |_, deps| deps[:refs_from].any? }
         .sort_by { |_, deps| -deps[:refs_from].size }
         .first(limit)
-        .map { |file, deps| { file: file, reference_count: deps[:refs_from].size } }
+        .map { |file, deps| {file: file, reference_count: deps[:refs_from].size} }
     end
 
     # Find files with most outgoing references
@@ -31,7 +31,7 @@ module CodingAgentTools::Molecules
         .select { |_, deps| deps[:refs_to].any? }
         .sort_by { |_, deps| -deps[:refs_to].size }
         .first(limit)
-        .map { |file, deps| { file: file, reference_count: deps[:refs_to].size } }
+        .map { |file, deps| {file: file, reference_count: deps[:refs_to].size} }
     end
 
     # Find orphaned files (no incoming or outgoing references)

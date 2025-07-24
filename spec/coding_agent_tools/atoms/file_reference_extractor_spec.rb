@@ -12,9 +12,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         See [architecture](docs/architecture.md) for details.
         Also check [README](../README.md).
       MARKDOWN
-      
+
       links = extractor.extract_markdown_links(content)
-      
+
       expect(links).to include(["architecture", "docs/architecture.md"])
       expect(links).to include(["README", "../README.md"])
     end
@@ -24,18 +24,18 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         ![Diagram](images/diagram.png)
         ![Icon](./icons/icon.svg)
       MARKDOWN
-      
+
       links = extractor.extract_markdown_links(content)
-      
+
       expect(links).to include(["Diagram", "images/diagram.png"])
       expect(links).to include(["Icon", "./icons/icon.svg"])
     end
 
     it "handles complex link text" do
       content = "[Link with spaces and symbols!](file.md)"
-      
+
       links = extractor.extract_markdown_links(content)
-      
+
       expect(links).to include(["Link with spaces and symbols!", "file.md"])
     end
 
@@ -52,9 +52,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         Check architecture overview: `docs/architecture.md`
         Read project structure: `docs/blueprint.md`
       TEXT
-      
+
       refs = extractor.extract_context_references(content)
-      
+
       expect(refs).to include("docs/what-we-build.md")
       expect(refs).to include("docs/architecture.md")
       expect(refs).to include("docs/blueprint.md")
@@ -66,9 +66,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         see workflow instructions: `guide.wf.md`
         Check guide: `reference.g.md`
       TEXT
-      
+
       refs = extractor.extract_context_references(content)
-      
+
       expect(refs).to include("docs/tools.md")
       expect(refs).to include("guide.wf.md")
       expect(refs).to include("reference.g.md")
@@ -76,9 +76,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
 
     it "ignores non-matching patterns" do
       content = "This is just regular text with `code blocks` but no file references."
-      
+
       refs = extractor.extract_context_references(content)
-      
+
       expect(refs).to be_empty
     end
   end
@@ -94,9 +94,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         [External link](https://example.com) should be ignored.
         [Anchor](#section) should be ignored.
       TEXT
-      
+
       references = extractor.extract_all_references(content)
-      
+
       expect(references).to include("docs/architecture.md")
       expect(references).to include("docs/what-we-build.md")
       expect(references).not_to include("https://example.com")
@@ -109,9 +109,9 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         [Link2](file.md)
         Load file: `file.md`
       TEXT
-      
+
       references = extractor.extract_all_references(content)
-      
+
       expect(references).to be_a(Set)
       expect(references.size).to eq(1)
       expect(references).to include("file.md")
@@ -170,14 +170,14 @@ RSpec.describe CodingAgentTools::Atoms::FileReferenceExtractor do
         - [Top](#top)
         - [Section](#section)
       TEXT
-      
+
       references = extractor.extract_all_references(content)
-      
+
       expect(references).to be_a(Set)
       expect(references.size).to eq(3)
-      
+
       # Check that it filters out external and anchor links
-      expect(references).not_to include("https://ruby-doc.org") 
+      expect(references).not_to include("https://ruby-doc.org")
       expect(references).not_to include("https://github.com")
       expect(references).not_to include("#top")
       expect(references).not_to include("#section")

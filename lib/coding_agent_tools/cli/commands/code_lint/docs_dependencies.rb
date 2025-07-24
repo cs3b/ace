@@ -12,41 +12,41 @@ module CodingAgentTools
         class DocsDependencies < Dry::CLI::Command
           desc "Analyze dependencies between documentation files"
 
-          option :format, 
-                 aliases: ["-f"], 
-                 default: "text",
-                 values: %w[text json],
-                 desc: "Output format (text, json)"
+          option :format,
+            aliases: ["-f"],
+            default: "text",
+            values: %w[text json],
+            desc: "Output format (text, json)"
 
           option :output,
-                 aliases: ["-o"],
-                 desc: "Output file path (default: stdout)"
+            aliases: ["-o"],
+            desc: "Output file path (default: stdout)"
 
           option :dot_file,
-                 aliases: ["-d"],
-                 default: "doc-dependencies.dot",
-                 desc: "DOT graph output file"
+            aliases: ["-d"],
+            default: "doc-dependencies.dot",
+            desc: "DOT graph output file"
 
           option :json_file,
-                 aliases: ["-j"],
-                 default: "doc-dependencies.json", 
-                 desc: "JSON export output file"
+            aliases: ["-j"],
+            default: "doc-dependencies.json",
+            desc: "JSON export output file"
 
           option :no_exports,
-                 aliases: ["--no-exports"],
-                 type: :boolean,
-                 default: false,
-                 desc: "Skip DOT and JSON file exports"
+            aliases: ["--no-exports"],
+            type: :boolean,
+            default: false,
+            desc: "Skip DOT and JSON file exports"
 
           option :stats_only,
-                 aliases: ["--stats-only"],
-                 type: :boolean,
-                 default: false,
-                 desc: "Show only summary statistics"
+            aliases: ["--stats-only"],
+            type: :boolean,
+            default: false,
+            desc: "Show only summary statistics"
 
           option :config,
-                 aliases: ["-c"],
-                 desc: "Path to configuration file"
+            aliases: ["-c"],
+            desc: "Path to configuration file"
 
           example [
             "                                      # Full analysis with exports",

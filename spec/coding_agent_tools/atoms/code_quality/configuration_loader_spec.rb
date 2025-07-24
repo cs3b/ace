@@ -8,7 +8,7 @@ require "yaml"
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
   let(:temp_dir) { Dir.mktmpdir }
   let(:config_path) { File.join(temp_dir, "lint.yml") }
-  
+
   after do
     FileUtils.rm_rf(temp_dir)
   end
@@ -40,7 +40,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
       before do
         # Mock the project root finding
         allow_any_instance_of(described_class).to receive(:find_project_root).and_return(temp_dir)
-        
+
         # Create .coding-agent directory with lint.yml
         coding_agent_dir = File.join(temp_dir, ".coding-agent")
         Dir.mkdir(coding_agent_dir)
@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
 
       it "returns default configuration" do
         config = subject.load
-        
+
         expect(config["ruby"]["enabled"]).to be true
         expect(config["ruby"]["linters"]["standardrb"]["enabled"]).to be true
         expect(config["markdown"]["enabled"]).to be true
@@ -99,16 +99,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
 
       it "merges custom config with defaults" do
         config = subject.load
-        
+
         # Should override defaults
         expect(config["ruby"]["enabled"]).to be false
         expect(config["ruby"]["linters"]["standardrb"]["enabled"]).to be false
         expect(config["ruby"]["linters"]["standardrb"]["autofix"]).to be false
-        
+
         # Should keep defaults for unspecified values
         expect(config["ruby"]["linters"]["security"]["enabled"]).to be true
         expect(config["markdown"]["enabled"]).to be true
-        
+
         # Should add custom sections
         expect(config["custom_section"]["enabled"]).to be true
       end
@@ -250,7 +250,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
 
   describe "#find_project_root" do
     let(:nested_dir) { File.join(temp_dir, "nested", "deeply", "nested") }
-    
+
     before do
       FileUtils.mkdir_p(nested_dir)
     end
@@ -411,11 +411,11 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
     context "with config file permission error" do
       before do
         File.write(config_path, YAML.dump({"ruby" => {"enabled" => true}}))
-        File.chmod(0000, config_path)
+        File.chmod(0o000, config_path)
       end
 
       after do
-        File.chmod(0644, config_path)
+        File.chmod(0o644, config_path)
       end
 
       it "handles permission errors gracefully" do

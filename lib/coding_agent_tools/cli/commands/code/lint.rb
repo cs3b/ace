@@ -42,7 +42,7 @@ module CodingAgentTools
           def call(target: "all", paths: nil, **options)
             # Delegate to the new CodeLint::All command to maintain backwards compatibility
             require_relative "../../code_lint/all"
-            
+
             command = Commands::CodeLint::All.new
             command.call(target: target, paths: paths, **options)
           end

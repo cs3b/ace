@@ -31,7 +31,7 @@ module CodingAgentTools
           # Find project root
           project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
           template_dir = find_template_directory(project_root)
-          
+
           unless template_dir
             error_output("Error: Could not find dotfiles templates.")
             error_output("Expected location: dev-handbook/.meta/tpl/dotfiles/")
@@ -39,7 +39,7 @@ module CodingAgentTools
           end
 
           target_dir = File.join(project_root, ".coding-agent")
-          
+
           if options[:debug]
             puts "Debug: Project root: #{project_root}"
             puts "Debug: Template directory: #{template_dir}"
@@ -58,7 +58,7 @@ module CodingAgentTools
 
           # Find all template files
           template_files = Dir.glob(File.join(template_dir, "*.yml"))
-          
+
           if template_files.empty?
             error_output("Error: No template files found in #{template_dir}")
             return 1
@@ -70,7 +70,7 @@ module CodingAgentTools
           template_files.each do |template_file|
             filename = File.basename(template_file)
             target_file = File.join(target_dir, filename)
-            
+
             if File.exist?(target_file) && !options[:force]
               if options[:dry_run]
                 puts "Would skip existing file: #{filename}"

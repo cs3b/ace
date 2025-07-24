@@ -35,10 +35,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
     before do
       # Mock gitleaks availability check
       allow(subject).to receive(:system).with("which gitleaks > /dev/null 2>&1").and_return(true)
-      
+
       # Mock command execution
       allow(Open3).to receive(:capture3).and_return([gitleaks_output, "", double(exitstatus: exit_code)])
-      
+
       # Mock config file existence
       allow(File).to receive(:exist?).with(".gitleaks.toml").and_return(false)
     end
@@ -50,7 +50,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
         it "returns success result" do
           result = subject.validate
-          
+
           expect(result[:success]).to be true
           expect(result[:findings]).to be_empty
           expect(result[:exit_code]).to eq(0)
@@ -211,7 +211,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "returns success result" do
         result = validator.send(:parse_results, output, exit_code)
-        
+
         expect(result[:success]).to be true
         expect(result[:findings]).to be_empty
         expect(result[:exit_code]).to eq(0)
@@ -232,7 +232,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "extracts all findings" do
         result = validator.send(:parse_results, output, exit_code)
-        
+
         expect(result[:success]).to be false
         expect(result[:findings]).to contain_exactly(
           "Potential API key in secrets.rb line 15",
@@ -249,7 +249,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "handles malformed output gracefully" do
         result = validator.send(:parse_results, output, exit_code)
-        
+
         expect(result[:success]).to be false
         expect(result[:findings]).to be_empty
         expect(result[:output]).to eq(output)
@@ -262,7 +262,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "handles empty output" do
         result = validator.send(:parse_results, output, exit_code)
-        
+
         expect(result[:success]).to be true
         expect(result[:findings]).to be_empty
         expect(result[:output]).to be_empty
@@ -296,7 +296,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "returns failure result with unexpected exit code" do
         result = subject.validate
-        
+
         expect(result[:success]).to be false
         expect(result[:exit_code]).to eq(2)
         expect(result[:output]).to include("Unexpected gitleaks error")
@@ -315,7 +315,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::SecurityValidator do
 
       it "handles large number of findings" do
         result = subject.validate
-        
+
         expect(result[:findings].length).to eq(1000)
         expect(result[:findings].first).to eq("Test finding 1")
         expect(result[:findings].last).to eq("Test finding 1000")

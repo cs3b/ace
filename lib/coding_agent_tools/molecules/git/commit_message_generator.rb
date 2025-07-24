@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-require "open3"
-require "shellwords"
-require "tempfile"
 require_relative "../../atoms/project_root_detector"
+require_relative "../client_factory"
+require_relative "../provider_model_parser"
 require_relative "../../error"
 
 module CodingAgentTools
@@ -65,97 +64,80 @@ module CodingAgentTools
         end
 
         def generate_with_llm(system_message, user_prompt)
-          # Use template file path directly for system message
-          system_template_path = find_system_prompt_template_path
+          # Ensure provider clients are available
+          ensure_providers_loaded
 
-          # Create temporary file only for user prompt
-          prompt_file = create_temp_file(user_prompt, "prompt", ".md")
+          # Parse the model string to get provider and model
+          parser = Molecules::ProviderModelParser.new
+          parse_result = parser.parse(model)
 
-          begin
-            # Use full path to llm-query executable for development
-            llm_query_path = find_llm_query_executable
-            command = build_llm_query_command(llm_query_path, model, system_template_path, prompt_file.path)
-
-            if debug
-              puts "DEBUG: System template: #{system_template_path}"
-              puts "DEBUG: Prompt file: #{prompt_file.path}"
-              puts "DEBUG: Command: #{command}"
-            end
-
-            execute_llm_command(command, "LLM")
-          ensure
-            # Allow any background threads from Open3.capture3 to finish before cleanup
-            sleep(0.1)
-
-            # Clean up temporary files with defensive error handling
-            begin
-              prompt_file.close
-
-              # Small delay before unlinking to ensure file handles are fully released
-              sleep(0.05)
-
-              prompt_file.unlink
-            rescue => cleanup_error
-              # Log cleanup errors but don't fail the operation
-              puts "Warning: Error during tempfile cleanup: #{cleanup_error.message}" if debug
-            end
+          unless parse_result.valid?
+            raise CommitMessageGenerationError, "Invalid model specification '#{model}': #{parse_result.error}"
           end
-        end
 
-        def create_temp_file(content, prefix, extension)
-          temp_file = Tempfile.new([prefix, extension])
-          temp_file.write(content)
-          temp_file.flush # Ensure content is written to disk
-          temp_file
-        end
+          # Build the LLM client
+          begin
+            client = Molecules::ClientFactory.build(parse_result.provider, model: parse_result.model)
+          rescue Molecules::ClientFactory::UnknownProviderError => e
+            raise CommitMessageGenerationError, "Failed to create client: #{e.message}"
+          end
 
-        def build_llm_query_command(executable, model_name, system_file_path, prompt_file_path)
-          # Use the new llm-query command format with file paths: llm-query PROVIDER_MODEL prompt_file --system system_file
-          cmd_parts = [executable]
-          cmd_parts << model_name
-          cmd_parts << Shellwords.escape(prompt_file_path)  # Only escape file paths that might contain spaces
-          cmd_parts << "--system" << Shellwords.escape(system_file_path)  # Only escape file paths that might contain spaces
+          # Prepare generation options
+          generation_options = {
+            system_instruction: system_message
+          }
 
-          # Add debug flag if enabled
-          cmd_parts << "--debug" if debug
+          if debug
+            puts "DEBUG: Using provider: #{parse_result.provider}"
+            puts "DEBUG: Using model: #{parse_result.model}"
+            puts "DEBUG: System message: #{system_message[0..100]}..."
+            puts "DEBUG: User prompt: #{user_prompt[0..100]}..."
+          end
 
-          cmd_parts.join(" ")  # Join without additional escaping
-        end
+          # Generate the response using direct Ruby call
+          begin
+            response = client.generate_text(user_prompt, **generation_options)
+            clean_response(response[:text])
+          rescue => e
+            error_message = "Failed to generate commit message using #{parse_result.provider}:#{parse_result.model}."
 
-        def execute_llm_command(command, model_description)
-          stdout_str, stderr_str, status = Open3.capture3(command)
-
-          unless status.success?
-            error_message = "Failed to generate commit message using #{model_description}."
-
-            if debug
-              error_message += "\nCommand: #{command}"
-              error_message += "\nError: #{stderr_str.strip}" unless stderr_str.strip.empty?
-            elsif stderr_str.include?("Error:")
-              # Find the actual error message after "Error:"
-              error_lines = stderr_str.split("\n").select { |line| line.include?("Error:") }
-              error_message += "\n#{error_lines.first}" unless error_lines.empty?
+            error_message += if debug
+              "\nError: #{e.class.name}: #{e.message}"
             else
-              error_message += "\nRun with --debug for more details."
+              "\nRun with --debug for more details."
             end
 
             raise CommitMessageGenerationError, error_message
           end
-
-          clean_response(stdout_str)
         end
 
-        def find_llm_query_executable
-          # Try to find llm-query in the local exe directory first (for development)
-          project_root = find_project_root
-          local_exe = File.join(project_root, "dev-tools", "exe", "llm-query")
+        def ensure_providers_loaded
+          # Manually load and register the most common providers
+          # This ensures they're available even if the inherited hook doesn't work properly
+          providers_to_load = %w[
+            google_client
+            anthropic_client
+            openai_client
+            mistral_client
+            togetherai_client
+            lmstudio_client
+          ]
 
-          if File.executable?(local_exe)
-            return local_exe
+          providers_to_load.each do |provider_file|
+            require_relative "../../organisms/#{provider_file}"
+
+            # Convert filename to class name and manually register if needed
+            class_name = provider_file.split("_").map(&:capitalize).join
+            client_class = CodingAgentTools::Organisms.const_get(class_name)
+
+            if client_class.respond_to?(:provider_name)
+              provider_key = client_class.provider_name
+              Molecules::ClientFactory.register(provider_key, client_class)
+            end
+          rescue LoadError, NameError => e
+            # Silently skip providers that can't be loaded
+            puts "Warning: Could not load provider #{provider_file}: #{e.message}" if debug
           end
-
-          # Fall back to system PATH
-          "llm-query"
         end
 
         def find_project_root

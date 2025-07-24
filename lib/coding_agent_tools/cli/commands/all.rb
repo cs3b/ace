@@ -62,7 +62,7 @@ module CodingAgentTools
             # Convert to single category format
             category_data = tool_data[:categories][category]
             tool_data = {
-              categories: { category => category_data },
+              categories: {category => category_data},
               total: category_data[:count]
             }
           end

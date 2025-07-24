@@ -63,25 +63,25 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-  
+
   # Include helper modules in all examples
   config.include MockHelpers
   config.include TestFactories
-  
+
   # Prevent environment variable leakage and working directory changes between examples
   config.around do |example|
     original_env = ENV.to_hash
     original_dir = Dir.pwd
-    
+
     # Ensure tests run in CI mode to prevent interactive prompts
     ENV["CI"] = "true" unless ENV.key?("CI")
-    
+
     # Set PROJECT_ROOT to prevent project root detection failures in tests
     # Point to the actual project root (handbook-meta) which contains the submodules
     unless ENV["PROJECT_ROOT"]
       ENV["PROJECT_ROOT"] = File.expand_path("../../..", __dir__)
     end
-    
+
     example.run
   ensure
     # Restore environment and working directory
@@ -91,20 +91,17 @@ RSpec.configure do |config|
 
   # Suppress directory navigator warnings during tests to keep output clean
   config.before(:suite) do
-    begin
-      require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
-      CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
-    rescue LoadError
-      # Directory navigator not available, continue without suppression
-    end
+    require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
+    CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
+  rescue LoadError
+    # Directory navigator not available, continue without suppression
   end
 
   config.after(:suite) do
     # Restore warning behavior after test suite completes
-    begin
-      CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
-    rescue NameError
-      # Directory navigator not available, no action needed
-    end
+
+    CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
+  rescue NameError
+    # Directory navigator not available, no action needed
   end
 end

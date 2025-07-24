@@ -25,7 +25,7 @@ RSpec.describe CodingAgentTools::Atoms::PathResolver do
     it "resolves relative links" do
       from_file = "docs/architecture.md"
       link = "../README.md"
-      
+
       resolved = resolver.resolve_link(from_file, link)
       expect(resolved).to eq("README.md")
     end
@@ -33,7 +33,7 @@ RSpec.describe CodingAgentTools::Atoms::PathResolver do
     it "handles absolute links" do
       from_file = "docs/architecture.md"
       link = "/docs/blueprint.md"
-      
+
       resolved = resolver.resolve_link(from_file, link)
       expect(resolved).to eq("docs/blueprint.md")
     end
@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Atoms::PathResolver do
     it "removes anchors during resolution" do
       from_file = "docs/architecture.md"
       link = "../README.md#section"
-      
+
       resolved = resolver.resolve_link(from_file, link)
       expect(resolved).to eq("README.md")
     end
@@ -59,13 +59,13 @@ RSpec.describe CodingAgentTools::Atoms::PathResolver do
     it "checks if file exists and is a file" do
       # Create a temporary file for testing
       require "tempfile"
-      
+
       temp_file = Tempfile.new("test")
       expect(resolver.file_exists?(temp_file.path)).to be true
-      
+
       temp_file.close!
       expect(resolver.file_exists?(temp_file.path)).to be false
-      
+
       expect(resolver.file_exists?("nonexistent.md")).to be false
     end
   end
