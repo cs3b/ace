@@ -41,8 +41,14 @@ module CodingAgentTools
             "fallback_enabled" => true
           },
           "file_preferences" => {
-            "preferred_extensions" => [".md", ".rb", ".yml", ".yaml"],
-            "important_directories" => ["bin"]
+            "preferred_extensions" => [".md", ".rb", ".yml", ".yaml", ".sh", ""],
+            "important_directories" => [
+              "bin",
+              "dev-tools/lib", 
+              "dev-tools/exe",
+              "dev-taskflow/current",
+              "dev-handbook/workflow-instructions"
+            ]
           }
         },
         "security" => {
