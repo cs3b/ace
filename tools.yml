@@ -1,0 +1,51 @@
+# Tools Configuration for Coding Agent Workflow Toolkit
+# This file configures the behavior of the coding_agent_tools all command
+
+# Blacklist: Tools to exclude from the listing
+# These tools will not appear in coding_agent_tools all output
+blacklist:
+  - "coding_agent_tools"     # Main wrapper command (default)
+  - "*-dev"                  # Development tools (default)
+  - "*-debug"                # Debug utilities (default)
+  - "test-*"                 # Test utilities (default)
+  - "code-review-prepare"    # Exclude code review preparation tool
+  - "llm-usage-report"       # Exclude LLM usage reporting tool
+
+# Optional: Tool categories configuration
+# You can customize how tools are categorized
+categories:
+  "LLM Integration":
+    description: "Tools for interacting with language models and AI providers"
+    patterns: ["llm-*"]
+    
+  "Git Operations":
+    description: "Enhanced git commands with multi-repo support"
+    patterns: ["git-*"]
+    
+  "Task Management":
+    description: "Project task management and navigation tools"
+    patterns: ["task-*", "release-*"]
+    
+  "Navigation":
+    description: "File system navigation and project exploration tools"
+    patterns: ["nav-*"]
+    
+  "Code Review":
+    description: "Code review and analysis tools"
+    patterns: ["code-review*"]
+    
+  "Code Quality":
+    description: "Code linting, formatting, and quality tools"
+    patterns: ["code-lint*"]
+    
+  "Documentation":
+    description: "Documentation management and handbook tools"
+    patterns: ["handbook*"]
+    
+  "Reflection & Analysis":
+    description: "Session reflection and analysis tools"
+    patterns: ["reflection-*"]
+    
+  "Development Tools":
+    description: "General development and automation tools"
+    patterns: []
