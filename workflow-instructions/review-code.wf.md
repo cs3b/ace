@@ -1,65 +1,50 @@
-# Universal Code Review Workflow Instruction
+# Code Review Workflow Instruction
 
 ## Goal
 
-Perform comprehensive code review on any target (git diffs, file patterns, or specific files) with configurable focus areas, automatic project context loading, and structured file-based output. This universal workflow creates organized session directories with input files, combined prompts, multiple LLM reports, and synthesized results.
+Perform comprehensive code review using `code-review` and `llm-query` tools with proper parameter preparation, multi-model execution, and conditional synthesis of results.
 
 ## ⚠️ CRITICAL: AI Agent Instructions ⚠️
 
 **FOR AI CODING AGENTS - READ THIS FIRST**
 
-DO NOT manually read individual source files during code review execution. This workflow MUST be executed using the `code-review` command-line tool.
+This workflow uses TWO main tools: `code-review` and `llm-query`. Follow the process steps exactly as described.
 
 ### What TO DO:
-1. **First: Analyze the user's request** to determine proper command arguments:
-   - FOCUS: `code`, `tests`, `docs`, or combinations like `"code tests"`
-   - TARGET: Based on user request - `"src/**/*"`, `HEAD~5..HEAD`, `staged`, specific files, etc.
-   - OPTIONS: `--context auto` (default), `--dry-run`, `--model`, etc.
-2. **Second: Execute the constructed command**: `code-review FOCUS TARGET [OPTIONS]`
-3. **Third: Let the tool handle all file reading and analysis**
-4. **Fourth: Review the generated reports in the session directory**
+1. **Analyze the user's request** to prepare parameters
+2. **Execute code-review** with proper parameters
+3. **Execute llm-query** for each configured model with `--timeout 600`
+4. **Run code-review-synthesize** if multiple reports exist
+5. **Validate final reports** are present
 
 ### What NOT TO DO:
 - ❌ Use Read tool on individual source files
-- ❌ Use Glob tool to find files to read manually
-- ❌ Load source code content into the session
-- ❌ Manually implement the review steps described below
-
-**The process steps below describe what the `code-review` tool does internally - they are NOT for manual execution by AI agents.**
+- ❌ Create tasks (user's responsibility after reviewing reports)
+- ❌ Skip parameter preparation steps
 
 ## Prerequisites
 
-- Access to `dev-handbook/templates/review-*/*.md` prompt templates
-- LLM query tools available (`llm-query`)
+- Access to `code-review` and `llm-query` tools
+- Multiple LLM provider access configured
+- Access to `code-review-synthesize` tool
+- Write access to session directories
 - Git CLI available for diff operations
-- Project documentation exists in `docs/` directory
-- Write access to `dev-taskflow/current/` directory structure
-- Multiple LLM provider access (Google Pro, Anthropic Opus)
-- Understanding of session directory structure and file naming conventions
 
-## Quick Start for AI Agents
+## Quick Start Examples
 
-**Step 1: Construct command based on user request**
-
-Common patterns:
 ```bash
-# Review entire src directory (with extended timeout for large codebases)
-code-review code "src/**/*" --context auto --timeout 600
-
 # Review recent changes
 code-review code HEAD~5..HEAD --context auto
 
-# Review staged changes
+# Review staged changes  
 code-review code staged --context auto
 
-# Combined code and test review (with extended timeout)
-code-review "code tests" "src/**/*" --context auto --timeout 600
+# Review specific files
+code-review code "src/**/*.rb" --context auto
 
-# Very large codebase review
-code-review code "src/**/*" --context auto --timeout 900
+# Combined review
+code-review "code tests" HEAD~3..HEAD --context auto
 ```
-
-**Step 2: Execute the constructed command** - this replaces all manual file reading and analysis.
 
 ## Command Structure
 
@@ -104,212 +89,178 @@ code-review FOCUS TARGET [OPTIONS]
 
 ## Project Context Loading
 
-- Load workflow standards: `dev-handbook/.meta/gds/workflow-instructions-definition.g.md`
 - Load project structure: `docs/blueprint.md`
-- Load project vision: `docs/what-do-we-build.md`
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
 - Load tools documentation: `docs/tools.md`
-- Load review templates: `dev-handbook/templates/review-*/system.prompt.md`
-- Load existing session patterns: `dev-taskflow/current/*/code_review/*/`
 
 ## High-Level Execution Plan
 
-### For AI Agents: Two-Step Process
-1. **Construct the appropriate command** based on user's request (see Quick Start section above)
-2. **Execute the constructed command** and analyze the results
+- [ ] Prepare parameters for code-review
+- [ ] Run code-review command
+- [ ] Ensure all files are available
+- [ ] Prepare parameters for llm-query with --timeout 600
+- [ ] Run llm-query for each configured model
+- [ ] Conditionally run code-review-synthesize if multiple reports
+- [ ] Ensure final code review report is present
 
-### Internal Tool Process (DO NOT EXECUTE MANUALLY)
-The following steps are performed automatically by the `code-review` tool:
+## Process Steps
 
-- [ ] Validate command parameters and options
-- [ ] Determine review scope and requirements
-- [ ] Check for existing sessions to resume
-- [ ] Run `code-review` command with appropriate parameters
-- [ ] Monitor execution progress and handle any errors
-- [ ] Review generated reports and session artifacts
-- [ ] Optionally synthesize multiple reports if needed
+### 1. **Prepare Parameters for code-review**
 
-## Process Steps (Automated by code-review tool)
+Extract and prepare parameters from user request:
 
-> **⚠️ AUTOMATED PROCESS WARNING**
-> The steps below are performed automatically by the `code-review` tool.
-> AI agents should NOT execute these manually.
+- **FOCUS**: Determine review focus (`code`, `tests`, `docs`, or combinations like `"code tests"`)
+- **TARGET**: Identify what to review (`HEAD~5..HEAD`, `staged`, `"src/**/*.rb"`, specific files)
+- **OPTIONS**: Set additional options (`--context auto`, `--dry-run`, `--model`, etc.)
+- **INHERITANCE**: Use any parameters already defined by user in earlier workflow steps
 
-### 1. Session Directory Creation
-
-Create structured session directory using the `code-review-prepare` command:
-
+**Parameter Examples:**
 ```bash
-# Create session directory with automatic naming and metadata
-code-review-prepare session-dir --focus "${focus}" --target "${target}" --base-path "dev-taskflow/current/v.0.3.0-workflows"
+# From user request: "Review recent changes to the authentication system"
+FOCUS="code"
+TARGET="HEAD~3..HEAD"
+OPTIONS="--context auto"
 
-# The command automatically:
-# - Generates timestamp-based session name
-# - Creates directory structure
-# - Writes session metadata
-# - Returns session directory path
-```
-
-**Command Output Example:**
-```
-Session directory created: dev-taskflow/current/v.0.3.0-workflows/code_review/code-HEAD~1..HEAD-20250107-143052
+# From user request: "Review all test files for the API"
+FOCUS="tests" 
+TARGET="spec/api/**/*.rb"
+OPTIONS="--context auto"
 ```
 
 **Validation:**
+- Parameters extracted correctly from user request
+- Focus area valid (`code`, `tests`, `docs`, or valid combination)
+- Target format valid (git range, file pattern, or keyword)
 
-- Session directory created successfully
-- Session metadata file contains all parameters
-- Directory structure follows established pattern
-- Session ID available for resuming with `--session`
+### 2. **Run code-review**
 
-### 2. Parameter Validation
-
-Validate the command parameters:
-
-- **focus**: Must be one of `code`, `tests`, `docs`, or combination
-- **target**: Must be valid git range, file pattern, or special keyword
-- **context**: Must be `auto`, `none`, or valid file path
-
-### 2. Project Context Loading
-
-Use the `code-review-prepare project-context` command to handle context loading:
+Execute the code-review command with prepared parameters:
 
 ```bash
-# Auto-load project context (default)
-code-review-prepare project-context --context auto
-
-# Skip context loading
-code-review-prepare project-context --context none
-
-# Load custom context file
-code-review-prepare project-context --context path/to/custom.md
-```
-
-The command automatically:
-- Loads appropriate files based on context mode
-- Formats content for LLM consumption
-- Saves to session directory as `project-context.md`
-- Handles missing files gracefully
-
-### 3. Target Content Resolution and File Creation
-
-Use the `code-review-prepare project-target` command to extract and format target content:
-
-```bash
-# Extract target content based on type
-code-review-prepare project-target --target "${target}"
-
-# The command automatically:
-# - Detects target type (git range, file pattern, or special keyword)
-# - Extracts appropriate content
-# - Formats as diff or XML based on content type
-# - Generates metadata file
-# - Saves to session directory
+code-review "${FOCUS}" "${TARGET}" ${OPTIONS}
 ```
 
 **Command Examples:**
-
 ```bash
-# Git range → creates input.diff
-code-review-prepare project-target --target "v.0.2.0..HEAD"
-
-# File pattern → creates input.xml
-code-review-prepare project-target --target "tests/**/*.rb"
-
-# Special keywords → creates input.diff
-code-review-prepare project-target --target "staged"
-code-review-prepare project-target --target "unstaged"
-code-review-prepare project-target --target "working"
+code-review code HEAD~5..HEAD --context auto
+code-review "code tests" staged --context auto
+code-review docs "docs/**/*.md" --context auto
 ```
 
 **Validation:**
+- Command executes successfully
+- Session directory created
+- No critical errors reported
 
-- Input file (input.diff or input.xml) created successfully
-- Input metadata file contains target information
-- Content properly formatted and readable
-- File size and type automatically tracked
+### 3. **Ensure All Files Are Available**
 
-### 4. Review Template Selection
+Verify that code-review generated all necessary files:
 
-The `code-review` command automatically selects appropriate templates based on focus:
+- Check session directory exists and is accessible
+- Verify input files are present (input.diff or input.xml)
+- Confirm project context loaded if requested
+- Validate session metadata files exist
 
-- **code**: Uses `dev-handbook/templates/review-code/system.prompt.md`
-- **tests**: Uses `dev-handbook/templates/review-test/system.prompt.md`
-- **docs**: Uses `dev-handbook/templates/review-docs/system.prompt.md`
-- **combined**: Uses multiple templates and synthesizes results
-
-Template selection is handled internally by the command based on the FOCUS parameter, but can be overridden using the `--system-prompt` option to specify a custom system prompt file.
-
-### 5. Combined Prompt Construction
-
-Use the `code-review-prepare prompt` command to build the complete review prompt:
-
-```bash
-# Build combined prompt with all components
-code-review-prepare prompt \
-  --focus "${focus}" \
-  --target "${target}" \
-  --context "${context:-auto}"
-
-# The command automatically:
-# - Combines project context (if loaded)
-# - Includes target content (diff or files)
-# - Adds focus-specific instructions
-# - Generates YAML frontmatter
-# - Saves as prompt.md in session directory
-```
-
-**Command Output:**
-- Creates `prompt.md` with structured review prompt
-- Includes all necessary context and content
-- Ready for LLM processing
+**Expected Files:**
+- Session directory: `dev-taskflow/current/*/code_review/*/`
+- Input content: `input.diff` or `input.xml`
+- Session metadata: `session.meta`
+- Project context: `project-context.md` (if using --context auto)
 
 **Validation:**
+- All expected files present and readable
+- File sizes indicate content was properly captured
+- No missing or empty critical files
 
-- prompt.md file created with all sections
-- System prompt template included correctly
-- Project context loaded based on parameter
-- Target content properly embedded
-- Focus-specific instructions added
+### 4. **Prepare Parameters for llm-query**
 
-### 6. Multi-Model LLM Execution
+Build llm-query parameters based on code-review session files:
 
-The `code-review` command handles all LLM execution automatically:
+- **SYSTEM PROMPT**: Use appropriate template from session or specify custom
+- **INPUT CONTENT**: Use session files as input content
+- **MODELS**: Determine which models to run (from configuration or user specification)
+- **TIMEOUT**: Set timeout to 600 seconds as specified
+- **OUTPUT**: Prepare output file paths for each model
 
+**Parameter Preparation:**
 ```bash
-# Execute complete code review
-code-review "${focus}" "${target}" \
-  --context "${context:-auto}" \
-  --model "google:gemini-2.5-pro" \
-  --output "${output_file}"
-
-# Or use default multi-model execution
-code-review "${focus}" "${target}"
-
-# Resume a previous session
-code-review "${focus}" "${target}" \
-  --session "review-20240106-143052"
-
-# Dry run to see what would be done
-code-review "${focus}" "${target}" --dry-run
+# Use session files and system prompt
+SYSTEM_PROMPT="${SESSION_DIR}/system.prompt.md"
+INPUT_CONTENT="${SESSION_DIR}/prompt.md"
+TIMEOUT=600
+MODELS=("google:gemini-2.5-pro" "anthropic:claude-3-opus")
 ```
 
-The command automatically:
-- Executes with configured LLM providers
-- Handles multi-model reviews when appropriate
-- Creates structured report files
-- Manages error handling and retries
-- Generates execution summary
+**Validation:**
+- System prompt file exists and is readable
+- Input content properly formatted
+- Model list contains valid model identifiers
+- Timeout set to 600 as required
+
+### 5. **Run llm-query for Each Model**
+
+Execute llm-query for each configured model with prepared parameters:
+
+```bash
+# For each model in the configuration
+for model in "${MODELS[@]}"; do
+    llm-query "${model}" \
+        --system "${SYSTEM_PROMPT}" \
+        --timeout 600 \
+        --output "${SESSION_DIR}/cr-report-${model//[:\/]/-}.md" \
+        < "${INPUT_CONTENT}"
+done
+```
+
+**Multi-Model Execution:**
+- Run queries sequentially or in parallel based on configuration
+- Handle individual model failures gracefully
+- Continue with successful models if some fail
+- Generate separate report file for each model
 
 **Validation:**
+- At least one model execution succeeds
+- Report files generated for successful models
+- Error handling documented for failed models
+- Individual reports contain structured review content
 
-- LLM execution completed successfully
-- Report files contain structured review content
-- Execution log captures any errors or issues
-- Summary file provides execution overview
+### 6. **Conditional: Run code-review-synthesize**
 
-### 7. Session Finalization and Index Creation
+If multiple reports exist, run synthesis to combine them:
 
-The `code-review` command automatically creates session documentation:
+**Condition Check:**
+```bash
+# Count number of generated reports
+REPORT_COUNT=$(find "${SESSION_DIR}" -name "cr-report-*.md" | wc -l)
+
+if [ "${REPORT_COUNT}" -gt 1 ]; then
+    # Multiple reports exist - run synthesis
+    code-review-synthesize \
+        --format report \
+        --include-recommendations \
+        --session-dir "${SESSION_DIR}"
+else
+    # Single report - no synthesis needed
+    echo "Single report generated - synthesis not required"
+fi
+```
+
+**Synthesis Execution:**
+- Combine multiple model reports into unified analysis
+- Include recommendations from synthesis
+- Generate comparative analysis
+- Create final synthesized report
+
+**Validation:**
+- Synthesis runs successfully if multiple reports exist
+- Final synthesized report generated
+- Individual reports preserved alongside synthesis
+- Clear indication of which reports were synthesized
+
+### 7. **Ensure Code Review Report is Present**
+
+Validate that final review report(s) are available:
 
 **Generated Files:**
 - `session.meta` - Session metadata and parameters
