@@ -39,7 +39,7 @@ module CodingAgentTools
       end
 
       # Check if the result represents a failed operation
-      # @return [Boolean] True if failed, false otherwise  
+      # @return [Boolean] True if failed, false otherwise
       def failure?
         !@success
       end
