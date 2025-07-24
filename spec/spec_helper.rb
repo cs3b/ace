@@ -45,6 +45,10 @@ require_relative "support/env_helpers"
 require_relative "support/ansi_color_testing_helper"
 # Prevent interactive prompts in tests
 require_relative "support/file_operation_confirmer_helper"
+# Mock helpers for consistent external dependency mocking
+require_relative "support/mock_helpers"
+# Test factories for creating complex test data structures
+require_relative "support/test_factories"
 
 # Load shared examples for client behaviors
 require_relative "support/shared_examples/client_behavior"
@@ -59,14 +63,30 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
-  # Prevent environment variable leakage between examples
+  
+  # Include helper modules in all examples
+  config.include MockHelpers
+  config.include TestFactories
+  
+  # Prevent environment variable leakage and working directory changes between examples
   config.around do |example|
     original_env = ENV.to_hash
+    original_dir = Dir.pwd
+    
     # Ensure tests run in CI mode to prevent interactive prompts
     ENV["CI"] = "true" unless ENV.key?("CI")
+    
+    # Set PROJECT_ROOT to prevent project root detection failures in tests
+    # Point to the actual project root (handbook-meta) which contains the submodules
+    unless ENV["PROJECT_ROOT"]
+      ENV["PROJECT_ROOT"] = File.expand_path("../../..", __dir__)
+    end
+    
     example.run
   ensure
+    # Restore environment and working directory
     ENV.replace(original_env)
+    Dir.chdir(original_dir) if Dir.pwd != original_dir
   end
 
   # Suppress directory navigator warnings during tests to keep output clean
