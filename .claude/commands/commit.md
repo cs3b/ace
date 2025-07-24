@@ -1,15 +1,32 @@
-Try the multi-repo commit command first:
+# Goal
 
-1. **Primary approach**: Run `bin/gc -i "intention-of-changes"` (e.g., `bin/gc -i "chore: taskflow / tools"`)
-2. **If bin/gc fails or doesn't exist**: Fall back to detailed investigation:
-   - Check if `bin/gc` exists: `ls -la bin/gc`
-   - Check for submodules: `git submodule status` or `ls -la .gitmodules`
-   - Check git status: `git status`
-   - Then read whole file and follow @dev-handbook/workflow-instructions/commit.wf.md
+Ensure all changes you have made in the current session, or what user point to are commit in git.
 
-Execute the appropriate commit strategy:
-- **If bin/gc works**: The command handles all repositories automatically
-- **If submodules exist**: Handle submodule commits first, then main repo
-- **If single repo**: Follow standard git commit workflow
+# PLAN
 
-The workflow handles all necessary commits - do not create additional commits afterward
+1. Ensure you commit (using `git-commit`) all changes that you have modified / created / deleted in this session (if user not ask differently). e.g.: git-commit item1/path/to item2/path/to item3/path/to ... --intention "write a intention of changes in the session" => `git-commit dev-tools/src/main.rb dev-tools/spec/test.rb dev-handbook/tpl/dotfiles/path.yml --intention "fix authentication bug"`
+
+2. Run `git-status` to check if everything you modified have beedn commited.
+
+# Supplementary Inforatiom about Git toolbox
+
+1. **Check current status**: Run `git-status` to see all changes across repositories
+2. **Commit with intention**:
+   - **Specific files**: `git-commit path/1/file path/2/file --intention "why we commit"`
+     - Use full paths from project root (works with submodules): `dev-tools/lib/main.rb dev-handbook/guide.md`
+     - Or local paths from current directory: `lib/main.rb spec/test.rb`
+   - **All changes**: `git-commit --intention "why we commit"`
+
+**Examples:**
+```bash
+# Commit specific files with intention (local paths)
+git-commit src/main.rb spec/test.rb --intention "fix authentication bug"
+
+# Commit files across submodules (full paths from project root)
+git-commit dev-tools/lib/main.rb dev-handbook/guides/setup.md --intention "update setup documentation"
+
+# Commit all changes
+git-commit --intention "update documentation"
+```
+
+The enhanced git-commit tool automatically generates appropriate commit messages based on changes and intention.
