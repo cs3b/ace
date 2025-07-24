@@ -93,6 +93,20 @@ module CodingAgentTools
         @code_commands_registered = true
       end
 
+      def self.register_code_lint_commands
+        return if @code_lint_commands_registered
+
+        require_relative "cli/commands/code_lint/all"
+        require_relative "cli/commands/code_lint/docs_dependencies"
+
+        register "code-lint", aliases: [] do |prefix|
+          prefix.register "all", Commands::CodeLint::All
+          prefix.register "docs-dependencies", Commands::CodeLint::DocsDependencies
+        end
+
+        @code_lint_commands_registered = true
+      end
+
       def self.register_code_review_prepare_commands
         return if @code_review_prepare_commands_registered
 

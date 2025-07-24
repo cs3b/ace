@@ -7,7 +7,7 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 require "coding_agent_tools/molecules/executable_wrapper"
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ["code", "lint"],
-  registration_method: :register_code_commands,
+  command_path: ["code-lint"],
+  registration_method: :register_code_lint_commands,
   executable_name: "code-lint"
 ).call

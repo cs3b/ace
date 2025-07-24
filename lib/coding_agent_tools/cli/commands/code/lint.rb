@@ -40,35 +40,11 @@ module CodingAgentTools
             default: false
 
           def call(target: "all", paths: nil, **options)
-            require_relative "../../../organisms/code_quality/multi_phase_quality_manager"
-
-            manager = Organisms::CodeQuality::MultiPhaseQualityManager.new(
-              config_path: options[:config],
-              dry_run: options[:dry_run]
-            )
-
-            if options[:validate_config]
-              if manager.validate_configuration
-                puts "Configuration is valid"
-                exit 0
-              else
-                puts "Configuration is invalid"
-                exit 1
-              end
-            end
-
-            result = manager.run(
-              target: target,
-              paths: paths || ["."],
-              autofix: options[:autofix],
-              review_diff: options[:review_diff],
-              show_details: true
-            )
-
-            exit(result[:success] ? 0 : 1)
-          rescue => e
-            warn "Error: #{e.message}"
-            exit 1
+            # Delegate to the new CodeLint::All command to maintain backwards compatibility
+            require_relative "../../code_lint/all"
+            
+            command = Commands::CodeLint::All.new
+            command.call(target: target, paths: paths, **options)
           end
         end
       end
