@@ -1,7 +1,7 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-01-05
-status: draft
+last_reviewed: 2025-07-24
+status: active
 ---
 
 ## 1. Project Vision
@@ -35,30 +35,29 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| v0.3.0  | "Migration"               | Q1 2025       | Comprehensive migration of exe-old tools to gem architecture.                            | Tool migration, ATOM implementation, shell logic extraction, documentation updates                    |
-| v.0.3.0 | "Workflows"               | Q1 2026       | Improve workflow independence and integration capabilities for coding agents like Claude Code, Windsurf, Zed | Workflow Independence, Agent Integration, Documentation Enhancement |
-| v0.3.0  | "Forge"                   | Q3 2025       | Git Workflow Automation theme features.                                                   | R-GIT-1, R-GIT-2, R-GIT-3, R-GIT-4, R-GIT-5, R-GIT-6, R-GIT-7, R-GIT-8, R-GIT-9, R-GIT-10            |
-| v0.4.0  | "Conductor"               | Q3 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
-| v0.5.0  | "Pathfinder"              | Q4 2025       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
-| v0.6.0  | "Scribe"                  | Q4 2025       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
-| v0.7.0  | "Spark"                   | Q4 2025       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
-| v1.0.0  | "Keystone"                | Q1 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
+| v.0.3.0 | "Workflows" (Current)     | Q3 2025       | Improve workflow independence and integration capabilities for coding agents like Claude Code, Windsurf, Zed | Workflow Independence, Agent Integration, Documentation Enhancement |
+| v0.4.0  | "Conductor"               | Q4 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
+| v0.5.0  | "Pathfinder"              | Q1 2026       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
+| v0.6.0  | "Scribe"                  | Q1 2026       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
+| v0.7.0  | "Spark"                   | Q2 2026       | AI-Assisted Task Definition theme features.                                               | R-TCI-1, R-TCI-2, R-TCI-3, R-TCI-4, R-TCI-5                                                        |
+| v1.0.0  | "Keystone"                | Q3 2026       | Stable v1: All P1 features from all themes hardened, documented, published to RubyGems. | All P1 Req IDs (R-LLM\*, R-GIT\*, R-TASK\*, R-CTX\*, R-MD\*, R-TCI\*) integrated & stable.        |
 
 _Note: Release planning should align with project folder structure in `dev-taskflow/backlog/`, `dev-taskflow/current/`, and `dev-taskflow/done/` as per the Roadmap Definition Guide._
 
 ## 5. Cross-Release Dependencies
 
-- **LLM-Powered Git Features (v0.3.0):** The `git-commit-with-message` feature (R-GIT-3, R-GIT-9) under the "Git Workflow Automation" theme relies on the core "LLM Integration" (R-LLM-1, R-LLM-3) being delivered in v0.2.0 "Synapse" before the v0.3.0 "Forge" release.
-- **Advanced LLM Features (v1.0.0):** Several P1 features in v1.0.0 "Keystone", such as LLM-based context summarization (R-CTX-4) and LLM-assisted task expansion (R-TCI-2), depend on the foundational "LLM Integration" capabilities delivered in v0.2.0 "Synapse".
-- **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of `dev-tools/exe/*` scripts, which serve as their primary data source.
+- **Advanced LLM Features (v1.0.0):** Several P1 features in v1.0.0 "Keystone", such as LLM-based context summarization (R-CTX-4) and LLM-assisted task expansion (R-TCI-2), depend on the foundational LLM Integration capabilities (completed in previous releases).
+- **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of tools infrastructure (now completed with CAT gem).
+- **Workflow Enhancement (v.0.3.0):** Current workflow independence initiatives build upon the completed Ruby gem infrastructure and tools migration.
 - **External Service Dependencies:**
-    - "LLM Integration" (R-LLM-1, R-LLM-3) requires access to Google Gemini API and a local LM Studio installation.
-    - "Git Workflow Automation" (R-GIT-1) for repository creation requires a configured GitHub App/token.
+    - LLM Integration requires access to Google Gemini API and a local LM Studio installation.
+    - Git Workflow Automation for repository creation requires a configured GitHub App/token.
 
 ## 6. Update History
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-07-24 | Updated roadmap to reflect current release status: removed completed releases (v0.3.0 Migration, v0.3.0 Forge), marked v.0.3.0 Workflows as current, adjusted timeline. Updated status to active. | AI Assistant   |
 | 2025-07-23 | Merged comprehensive roadmap from tools-meta including all themes, epics, and releases. Added workflow independence focus from handbook-meta. | AI Assistant   |
 | 2025-01-05 | Added v0.3.0-migration release to planned releases table.                      | AI Assistant   |
 | 2025-06-26 | Removed completed v0.2.0-synapse from planned releases.                        | AI Assistant   |
