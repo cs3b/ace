@@ -26,7 +26,7 @@ module CodingAgentTools
         end
 
         def report(results)
-          return unless results && results[:success] != nil
+          return unless results && !results[:success].nil?
 
           puts format_summary(results)
           format_detailed_findings(results) if results[:findings]&.any?
@@ -70,7 +70,7 @@ module CodingAgentTools
         end
 
         def should_show_linter_results?(linter_result)
-          (linter_result[:findings]&.any?) || (linter_result[:errors]&.any?)
+          linter_result[:findings]&.any? || linter_result[:errors]&.any?
         end
 
         def show_linter_output(linter_result, linter_name)

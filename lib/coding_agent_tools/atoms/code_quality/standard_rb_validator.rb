@@ -61,6 +61,9 @@ module CodingAgentTools
 
           if options[:config_file] && File.exist?(options[:config_file])
             cmd << "--config" << options[:config_file]
+            puts "  Using StandardRB config: #{options[:config_file]}" if ENV["DEBUG"]
+          else
+            puts "  Using StandardRB default config (no .standard.yml found)" if ENV["DEBUG"]
           end
 
           # Expand paths to absolute paths

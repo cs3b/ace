@@ -26,7 +26,7 @@ module CodingAgentTools
         end
 
         def report(results)
-          return unless results && results[:success] != nil
+          return unless results && !results[:success].nil?
 
           puts format_summary(results)
           format_detailed_findings(results) if results[:findings]&.any?
