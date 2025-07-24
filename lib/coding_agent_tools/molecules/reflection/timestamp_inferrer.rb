@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "date"
-require_relative "../../../models/result"
+require_relative "../../models/result"
 
 module CodingAgentTools
   module Molecules
