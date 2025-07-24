@@ -2,6 +2,7 @@
 
 require "open3"
 require "timeout"
+require "shellwords"
 
 module CodingAgentTools
   module Atoms
@@ -101,16 +102,6 @@ module CodingAgentTools
           true
         end
 
-        # Escape shell arguments for safe execution
-        # @param argument [String] Argument to escape
-        # @return [String] Escaped argument
-        def self.escape_argument(argument)
-          return '""' if argument.nil? || argument.empty?
-
-          # Simple escaping by wrapping in single quotes and escaping existing single quotes
-          escaped = argument.gsub("'", "'\"'\"'")
-          "'#{escaped}'"
-        end
 
         # Build command with escaped arguments
         # @param base_command [String] Base command (e.g., "ls", "git")
@@ -120,7 +111,7 @@ module CodingAgentTools
           raise ArgumentError, "base_command cannot be nil or empty" if base_command.nil? || base_command.empty?
           raise ArgumentError, "arguments must be an array" unless arguments.is_a?(Array)
 
-          escaped_args = arguments.map { |arg| escape_argument(arg.to_s) }
+          escaped_args = arguments.map { |arg| Shellwords.escape(arg.to_s) }
           ([base_command] + escaped_args).join(" ")
         end
 
