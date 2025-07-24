@@ -5,7 +5,16 @@
 {
   "terminal": {
     "env": {
-      "PATH": "/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe:$PATH"
-    }
+      "PATH": "/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe:$PATH",
+      "BASH_ENV": "/Users/michalczyz/Projects/CodingAgent/handbook-meta/.bash_env"
+    },
+    "shell": {
+      "program": "bash",
+      "args": [
+        "--rcfile",
+        "/Users/michalczyz/Projects/CodingAgent/handbook-meta/.bash_env"
+      ]
+    },
+    "working_directory": "."
   }
 }
