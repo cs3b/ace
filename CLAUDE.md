@@ -112,4 +112,4 @@ This project uses 3 Git submodules plus the root repository (4 total repositorie
 - **dev-tools/ submodule**: Used for utilities but generally not modified
 - AI workflow instructions are in **dev-handbook/workflow-instructions/**
 - Always run `bin/lint` before committing to ensure documentation quality
-- When working in dev-tools/ (rare), use the ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems)
+- When working in dev-tools/, use the ATOM architecture pattern (Atoms/Molecules/Organisms/Ecosystems)
