@@ -2,8 +2,7 @@
 
 require_relative "../../atoms/code_quality/configuration_loader"
 require_relative "../../atoms/code_quality/path_resolver"
-require_relative "../../molecules/code_quality/ruby_linting_pipeline"
-require_relative "../../molecules/code_quality/markdown_linting_pipeline"
+require_relative "language_runner_factory"
 require_relative "../../molecules/code_quality/autofix_orchestrator"
 require_relative "../../molecules/code_quality/error_file_generator"
 require_relative "../../molecules/code_quality/diff_review_analyzer"
@@ -71,21 +70,31 @@ module CodingAgentTools
 
           # Run Ruby linters
           if %w[ruby all].include?(target)
-            ruby_pipeline = Molecules::CodeQuality::RubyLintingPipeline.new(
+            ruby_runner = LanguageRunnerFactory.create_runner(
+              "ruby",
               config: @config,
               path_resolver: @path_resolver
             )
-            results[:ruby] = ruby_pipeline.run(paths: paths, autofix: autofix)
+            results[:ruby] = if autofix
+              ruby_runner.autofix(paths: paths)
+            else
+              ruby_runner.validate(paths: paths)
+            end
             results[:success] &&= results[:ruby][:success]
           end
 
           # Run Markdown linters
           if %w[markdown all].include?(target)
-            markdown_pipeline = Molecules::CodeQuality::MarkdownLintingPipeline.new(
+            markdown_runner = LanguageRunnerFactory.create_runner(
+              "markdown",
               config: @config,
               path_resolver: @path_resolver
             )
-            results[:markdown] = markdown_pipeline.run(paths: paths, autofix: autofix)
+            results[:markdown] = if autofix
+              markdown_runner.autofix(paths: paths)
+            else
+              markdown_runner.validate(paths: paths)
+            end
             results[:success] &&= results[:markdown][:success]
           end
 

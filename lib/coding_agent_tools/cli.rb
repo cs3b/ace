@@ -117,10 +117,14 @@ module CodingAgentTools
         return if @code_lint_commands_registered
 
         require_relative "cli/commands/code_lint/all"
+        require_relative "cli/commands/code_lint/ruby"
+        require_relative "cli/commands/code_lint/markdown"
         require_relative "cli/commands/code_lint/docs_dependencies"
 
         register "code-lint", aliases: [] do |prefix|
           prefix.register "all", Commands::CodeLint::All
+          prefix.register "ruby", Commands::CodeLint::Ruby
+          prefix.register "markdown", Commands::CodeLint::Markdown
           prefix.register "docs-dependencies", Commands::CodeLint::DocsDependencies
         end
 
