@@ -287,10 +287,17 @@ For offline LLM functionality:
 
 ## Development Tools
 
-The project includes various `bin/` scripts to automate development tasks, testing, and common workflows. For a comprehensive list and description of all available `bin/` and `dev-tools/exe/` commands, refer to the [Project Blueprint](docs/blueprint.md#entry-points).
+The project includes 25+ CLI tools for development automation, LLM integration, and workflow management. To see all available tools with descriptions:
 
-You can also run `bin/help` (once implemented) or `bin/<command> --help` for specific command usage.
+```bash
+# List all available tools with descriptions and categories
+coding_agent_tools all
+
+# Get help for specific commands
+<command> --help
 ```
+
+For detailed documentation, see [Tools Reference](docs/tools.md).
 
 ## IDE/Editor Setup
 

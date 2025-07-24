@@ -34,9 +34,8 @@ module CodingAgentTools
           # Check against exclusion patterns
           exclude_patterns.none? do |exclude_pattern|
             if exclude_pattern.include?("*")
-              # Convert shell glob to regex
-              regex_pattern = exclude_pattern.gsub("*", ".*")
-              file_name.match?(/^#{regex_pattern}$/)
+              # Use shell glob pattern matching, not regex
+              File.fnmatch(exclude_pattern, file_name)
             else
               file_name == exclude_pattern
             end

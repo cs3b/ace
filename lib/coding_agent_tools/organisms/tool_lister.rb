@@ -3,6 +3,7 @@
 require_relative "../atoms/directory_scanner"
 require_relative "../molecules/tool_metadata_extractor"
 require_relative "../molecules/tool_categorizer"
+require_relative "../atoms/yaml_reader"
 
 module CodingAgentTools
   module Organisms
@@ -24,9 +25,10 @@ module CodingAgentTools
 
       attr_reader :exe_directory, :blacklist
 
-      def initialize(exe_directory = nil, blacklist: DEFAULT_BLACKLIST)
-        @exe_directory = exe_directory || find_exe_directory
-        @blacklist = blacklist
+      def initialize(exe_directory = nil, blacklist: nil, config_path: nil)
+        @exe_directory = File.expand_path(exe_directory || find_exe_directory)
+        @config_path = config_path || find_config_path
+        @blacklist = blacklist || load_blacklist_from_config
       end
 
       # Lists all available tools with metadata
@@ -67,6 +69,47 @@ module CodingAgentTools
       end
 
       private
+
+      def find_config_path
+        # Look for tools.yml in XDG-compliant locations
+        possible_paths = [
+          # Project-specific .coding-agent directory (current working directory)
+          File.join(Dir.pwd, ".coding-agent", "tools.yml"),
+          # Project root .coding-agent directory (go up from dev-tools if we're in it)
+          File.join(Dir.pwd, "..", ".coding-agent", "tools.yml"),
+          # Explicit handbook-meta root .coding-agent directory
+          File.expand_path("../../../../.coding-agent/tools.yml", __FILE__),
+          # XDG_CONFIG_HOME or ~/.config fallback
+          File.join(ENV.fetch("XDG_CONFIG_HOME", File.join(Dir.home, ".config")), "coding-agent-tools", "tools.yml"),
+          # Legacy project root location (for backward compatibility)
+          File.join(Dir.pwd, "tools.yml"),
+          File.join(Dir.pwd, "..", "tools.yml")
+        ]
+        
+        possible_paths.each do |path|
+          return path if File.exist?(path)
+        end
+        
+        nil # No config file found
+      end
+
+      def load_blacklist_from_config
+        return DEFAULT_BLACKLIST unless @config_path && File.exist?(@config_path)
+        
+        begin
+          config = CodingAgentTools::Atoms::YamlReader.read_file(@config_path)
+          blacklist = config.dig("blacklist") || config.dig(:blacklist)
+          
+          if blacklist.is_a?(Array)
+            blacklist
+          else
+            DEFAULT_BLACKLIST
+          end
+        rescue => e
+          # If config loading fails, fall back to default
+          DEFAULT_BLACKLIST
+        end
+      end
 
       def find_exe_directory
         # Try to find exe directory relative to this file
