@@ -20,7 +20,7 @@ module CodingAgentTools
 
           filtered_paths = filter_markdown_files(paths)
           return skip_result if filtered_paths.empty?
-          
+
           @pipeline.run(paths: filtered_paths, autofix: false)
         end
 
@@ -29,7 +29,7 @@ module CodingAgentTools
 
           filtered_paths = filter_markdown_files(paths)
           return skip_result if filtered_paths.empty?
-          
+
           @pipeline.run(paths: filtered_paths, autofix: true)
         end
 
@@ -96,7 +96,7 @@ module CodingAgentTools
         def filter_markdown_files(paths)
           @file_filter.expand_paths_for_language(paths, :markdown)
         end
-        
+
         def format_finding(finding, linter_name)
           case linter_name.to_sym
           when :task_metadata, :link_validation, :template_embedding

@@ -102,7 +102,6 @@ module CodingAgentTools
           true
         end
 
-
         # Build command with escaped arguments
         # @param base_command [String] Base command (e.g., "ls", "git")
         # @param arguments [Array<String>] Arguments to append
