@@ -82,7 +82,7 @@ module CodingAgentTools
             end
           rescue Timeout::Error
             raise GitCommandError.new(
-              "Git command timed out after #{timeout_seconds} seconds: #{full_command}",
+              "Git command timed out after #{timeout_seconds} seconds: #{format_command_for_display(full_command)}",
               command: full_command,
               exit_status: 124, # Standard timeout exit code
               stderr_output: "Command timed out"
@@ -91,7 +91,7 @@ module CodingAgentTools
 
           unless status.success?
             raise GitCommandError.new(
-              "Git command failed: #{full_command}",
+              "Git command failed: #{format_command_for_display(full_command)}",
               command: full_command,
               exit_status: status.exitstatus,
               stderr_output: stderr_str.strip
@@ -112,7 +112,7 @@ module CodingAgentTools
           unless success
             exit_status = $?.exitstatus
             raise GitCommandError.new(
-              "Git command failed: #{full_command}",
+              "Git command failed: #{format_command_for_display(full_command)}",
               command: full_command,
               exit_status: exit_status
             )
@@ -122,6 +122,17 @@ module CodingAgentTools
             success: true,
             exit_status: 0
           }
+        end
+
+        # Format command for display by unescaping shell-escaped sequences
+        # to make error messages more readable
+        def format_command_for_display(command)
+          # Use a simple approach to make the command more readable:
+          # Replace common shell escapes with their original characters
+          command
+            .gsub(/\\(.)/m, '\1')  # Unescape any escaped character
+            .gsub(/\s+/, " ")      # Normalize whitespace
+            .strip
         end
       end
     end
