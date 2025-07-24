@@ -91,16 +91,20 @@ RSpec.configure do |config|
 
   # Suppress directory navigator warnings during tests to keep output clean
   config.before(:suite) do
-    require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
-    require_relative "../lib/coding_agent_tools/atoms/task_management/directory_navigator"
-    
-    CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
-    CodingAgentTools::Atoms::TaskManagement::DirectoryNavigator.suppress_warnings = true
+    begin
+      require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
+      CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
+    rescue LoadError
+      # Directory navigator not available, continue without suppression
+    end
   end
 
   config.after(:suite) do
     # Restore warning behavior after test suite completes
-    CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
-    CodingAgentTools::Atoms::TaskManagement::DirectoryNavigator.suppress_warnings = false
+    begin
+      CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
+    rescue NameError
+      # Directory navigator not available, no action needed
+    end
   end
 end

@@ -54,7 +54,7 @@ module CodingAgentTools
           private
 
           def create_sync_config(options)
-            CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer::SyncConfig.new(
+            CodingAgentTools::Organisms::TaskflowManagement::TemplateSynchronizer::SyncConfig.new(
               path: options[:path],
               dry_run: options[:dry_run],
               verbose: options[:verbose],
@@ -63,7 +63,7 @@ module CodingAgentTools
           end
 
           def create_synchronizer(config)
-            CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer.new(config: config)
+            CodingAgentTools::Organisms::TaskflowManagement::TemplateSynchronizer.new(config: config)
           end
 
           def handle_error(error, verbose)

@@ -2,15 +2,15 @@
 
 require "spec_helper"
 
-RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer do
-  let(:xml_parser) { instance_double(CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser) }
-  let(:file_synchronizer) { instance_double(CodingAgentTools::Molecules::TaskManagement::FileSynchronizer) }
+RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TemplateSynchronizer do
+  let(:xml_parser) { instance_double(CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser) }
+  let(:file_synchronizer) { instance_double(CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer) }
   let(:config) { described_class::SyncConfig.new(path: "spec/fixtures", dry_run: false, verbose: false) }
   let(:synchronizer) { described_class.new(xml_parser: xml_parser, file_synchronizer: file_synchronizer, config: config) }
 
   let(:mock_stats) do
     instance_double(
-      CodingAgentTools::Molecules::TaskManagement::FileSynchronizer::SyncStats,
+      CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer::SyncStats,
       files_processed: 1,
       documents_synchronized: 2,
       documents_up_to_date: 1,
@@ -19,7 +19,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
   end
 
   let(:sample_document) do
-    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParsedDocument.new(
+    CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParsedDocument.new(
       "dev-handbook/templates/test.template.md",
       "Sample content",
       :template,
@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
   end
 
   let(:parse_result) do
-    CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser::ParserResult.new(
+    CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser::ParserResult.new(
       [sample_document],
       [],
       []
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
   end
 
   let(:sync_result_updated) do
-    CodingAgentTools::Molecules::TaskManagement::FileSynchronizer::SyncResult.new(
+    CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer::SyncResult.new(
       :updated,
       "Updated content",
       nil,
@@ -47,7 +47,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
   end
 
   let(:sync_result_up_to_date) do
-    CodingAgentTools::Molecules::TaskManagement::FileSynchronizer::SyncResult.new(
+    CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer::SyncResult.new(
       :up_to_date,
       nil,
       nil,
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
 
     context "with synchronization errors" do
       let(:sync_result_error) do
-        CodingAgentTools::Molecules::TaskManagement::FileSynchronizer::SyncResult.new(
+        CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer::SyncResult.new(
           :error,
           nil,
           "Test error message",
@@ -176,7 +176,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskManagement::TemplateSynchronizer
     let(:dry_run_synchronizer) { described_class.new(xml_parser: xml_parser, file_synchronizer: file_synchronizer, config: dry_run_config) }
 
     let(:sync_result_with_diff) do
-      CodingAgentTools::Molecules::TaskManagement::FileSynchronizer::SyncResult.new(
+      CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer::SyncResult.new(
         :updated,
         nil,
         nil,

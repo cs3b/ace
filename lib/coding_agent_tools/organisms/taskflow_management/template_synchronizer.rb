@@ -5,7 +5,7 @@ require "pathname"
 
 module CodingAgentTools
   module Organisms
-    module TaskManagement
+    module TaskflowManagement
       # TemplateSynchronizer is an organism that orchestrates the complete
       # template synchronization workflow, coordinating XML parsing, file
       # synchronization, and optional git commit operations.
@@ -277,11 +277,11 @@ module CodingAgentTools
         end
 
         def create_xml_parser
-          CodingAgentTools::Molecules::TaskManagement::XmlTemplateParser.new
+          CodingAgentTools::Molecules::TaskflowManagement::XmlTemplateParser.new
         end
 
         def create_file_synchronizer(config)
-          CodingAgentTools::Molecules::TaskManagement::FileSynchronizer.new(
+          CodingAgentTools::Molecules::TaskflowManagement::FileSynchronizer.new(
             dry_run: config.dry_run
           )
         end
