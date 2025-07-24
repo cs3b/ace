@@ -22,7 +22,7 @@ module CodingAgentTools
           raise CodingAgentTools::Error, "YAML file not found: #{file_path}"
         end
 
-        YAML.load_file(file_path)
+        YAML.safe_load_file(file_path)
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax in #{file_path}: #{e.message}"
       rescue => e
