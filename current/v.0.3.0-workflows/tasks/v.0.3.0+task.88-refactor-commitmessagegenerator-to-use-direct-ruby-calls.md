@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.88
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -59,53 +59,53 @@ Replace the current implementation of CommitMessageGenerator that shells out to 
 
 ### Planning Steps
 
-- [ ] Review current CommitMessageGenerator implementation
+- [x] Review current CommitMessageGenerator implementation
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current shelling out implementation is understood
   > Command: cd dev-tools && grep -n "Open3\|llm-query" lib/coding_agent_tools/molecules/git/commit_message_generator.rb
-- [ ] Identify which LLM organisms/clients are available for direct use
-- [ ] Understand the prompt format and parameters being passed
+- [x] Identify which LLM organisms/clients are available for direct use
+- [x] Understand the prompt format and parameters being passed
 
 ### Execution Steps
 
-- [ ] Step 1: Identify the LLM client to use directly
+- [x] Step 1: Identify the LLM client to use directly
   - Look for GoogleClient, AnthropicClient, or a generic LLMQueryOrchestrator
   - Review how llm-query executable determines which provider to use
-- [ ] Step 2: Replace shell command construction with direct method calls
+- [x] Step 2: Replace shell command construction with direct method calls
   > TEST: Verify Direct Call Implementation
   > Type: Action Validation
   > Assert: No more Open3.capture3 or shelling out to llm-query
   > Command: cd dev-tools && ! grep -q "Open3\|llm-query" lib/coding_agent_tools/molecules/git/commit_message_generator.rb
-- [ ] Step 3: Remove temporary file handling
+- [x] Step 3: Remove temporary file handling
   - Replace Tempfile creation with direct string passing
   - Ensure prompt is passed directly to the LLM client
-- [ ] Step 4: Update error handling
+- [x] Step 4: Update error handling
   - Convert from shell command error handling to Ruby exception handling
   - Ensure same error messages are preserved
-- [ ] Step 5: Test commit message generation
+- [x] Step 5: Test commit message generation
   > TEST: Commit Message Generation Works
   > Type: Functional Test
   > Assert: Commit messages are generated successfully
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/git/commit_message_generator_spec.rb
-- [ ] Step 6: Integration test with git-commit command
+- [x] Step 6: Integration test with git-commit command
   > TEST: Git Commit Integration
   > Type: Integration Test
   > Assert: git-commit command still works with the refactored generator
   > Command: cd dev-tools && bundle exec exe/git-commit --dry-run --intention "test commit"
-- [ ] Step 7: Performance comparison
+- [x] Step 7: Performance comparison
   - Measure time before and after refactoring
   - Ensure performance improvement is achieved
 
 ## Acceptance Criteria
 
-- [ ] AC 1: CommitMessageGenerator no longer shells out to llm-query
-- [ ] AC 2: Direct Ruby calls are used to invoke LLM clients
-- [ ] AC 3: No temporary files are created for prompts
-- [ ] AC 4: All existing functionality is preserved
-- [ ] AC 5: Performance is improved (no process creation overhead)
-- [ ] AC 6: Error handling works correctly with Ruby exceptions
-- [ ] AC 7: All tests pass after refactoring
+- [x] AC 1: CommitMessageGenerator no longer shells out to llm-query
+- [x] AC 2: Direct Ruby calls are used to invoke LLM clients
+- [x] AC 3: No temporary files are created for prompts
+- [x] AC 4: All existing functionality is preserved
+- [x] AC 5: Performance is improved (no process creation overhead)
+- [x] AC 6: Error handling works correctly with Ruby exceptions
+- [x] AC 7: All tests pass after refactoring
 
 ## Out of Scope
 
