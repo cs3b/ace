@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.77
-status: in-progress
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -50,34 +50,43 @@ Enhance the `nav-path` tool to use configurable skip patterns from `.coding-agen
 
 ### Planning Steps
 
-- [ ] Analyze current hardcoded skip patterns in nav-path implementation
+- [x] Analyze current hardcoded skip patterns in nav-path implementation
   > TEST: Pattern Analysis Check
   > Type: Pre-condition Check
   > Assert: All current hardcoded patterns are identified
   > Command: grep -r "forbidden\|skip\|ignore" dev-tools/lib --include="*nav*"
-- [ ] Design configuration schema for skip patterns in path.yml
-- [ ] Plan backward compatibility approach for existing installations
+  > RESULT: Found that nav-path uses ProjectSandbox's forbidden_patterns which are hardcoded in project_sandbox.rb:151-162
+- [x] Design configuration schema for skip patterns in path.yml
+  > RESULT: Configuration already exists at security.forbidden_patterns - need to ensure consistency with hardcoded defaults
+- [x] Plan backward compatibility approach for existing installations
+  > RESULT: ProjectSandbox already handles missing config by using default_forbidden_patterns as fallback
 
 ### Execution Steps
 
-- [ ] Add skip_patterns configuration section to default .coding-agent/path.yml
-- [ ] Update nav-path implementation to read skip patterns from configuration
-- [ ] Include .git as default skip pattern in configuration
-- [ ] Test configuration loading and pattern matching functionality
+- [x] Add skip_patterns configuration section to default .coding-agent/path.yml
+  > RESULT: Enhanced existing security.forbidden_patterns with better documentation and consistent patterns
+- [x] Update nav-path implementation to read skip patterns from configuration
+  > RESULT: Implementation already reads via PathConfigLoader and passes to ProjectSandbox - updated defaults
+- [x] Include .git as default skip pattern in configuration
+  > RESULT: .git pattern is already first in both config and default patterns
+- [x] Test configuration loading and pattern matching functionality
   > TEST: Configuration Loading Validation
   > Type: Action Validation
   > Assert: Skip patterns are correctly loaded from path.yml and applied
   > Command: nav-path file .git 2>&1 | grep -q "forbidden pattern"
-- [ ] Update documentation to describe new configuration option
-- [ ] Ensure backward compatibility for installations without the config
+  > RESULT: ✅ Test passed - .git correctly blocked with "Path matches forbidden pattern"
+- [x] Update documentation to describe new configuration option
+  > RESULT: Added configuration section to nav-path documentation in dev-tools/docs/tools.md
+- [x] Ensure backward compatibility for installations without the config
+  > RESULT: ProjectSandbox already uses default_forbidden_patterns as fallback when config is missing
 
 ## Acceptance Criteria
 
-- [ ] AC 1: nav-path reads skip patterns from .coding-agent/path.yml configuration
-- [ ] AC 2: Default configuration includes .git folder as skip pattern
-- [ ] AC 3: Users can customize skip patterns by modifying path.yml
-- [ ] AC 4: Backward compatibility maintained for existing installations
-- [ ] AC 5: Documentation explains how to configure skip patterns
+- [x] AC 1: nav-path reads skip patterns from .coding-agent/path.yml configuration
+- [x] AC 2: Default configuration includes .git folder as skip pattern
+- [x] AC 3: Users can customize skip patterns by modifying path.yml
+- [x] AC 4: Backward compatibility maintained for existing installations
+- [x] AC 5: Documentation explains how to configure skip patterns
 
 ## Out of Scope
 
