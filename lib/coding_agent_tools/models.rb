@@ -2,6 +2,9 @@
 
 module CodingAgentTools
   module Models
+    # Autoload core models
+    autoload :Result, "coding_agent_tools/models/result"
+
     # Autoload code review models
     module Code
       autoload :ReviewSession, "coding_agent_tools/models/code/review_session"

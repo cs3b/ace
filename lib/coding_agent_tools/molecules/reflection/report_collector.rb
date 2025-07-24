@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../../models/result"
+require_relative "../../models/result"
 
 module CodingAgentTools
   module Molecules
