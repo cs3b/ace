@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.74
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -51,34 +51,34 @@ Replace the deprecated `bin/handbook-review-folder` script with the modern CAT g
 
 ### Planning Steps
 
-- [ ] Identify all references to `bin/handbook-review-folder` in the codebase
+- [x] Identify all references to `bin/handbook-review-folder` in the codebase
   > TEST: Complete Reference Scan
   > Type: Pre-condition Check
   > Assert: All references to the deprecated script are identified
   > Command: grep -r "handbook-review-folder" . --include="*.md" | wc -l
-- [ ] Understand the equivalent functionality in the CAT code-review command
-- [ ] Plan appropriate `code-review` command replacements with proper focus and folder options
+- [x] Understand the equivalent functionality in the CAT code-review command
+- [x] Plan appropriate `code-review` command replacements with proper focus and folder options
 
 ### Execution Steps
 
-- [ ] Find all files referencing `bin/handbook-review-folder`
-- [ ] Replace references with equivalent `code-review docs handbook/**/*.md` commands
-- [ ] Update command examples to use proper focus options (e.g., --focus docs, --focus handbook)
-- [ ] Update any workflow instructions that describe the handbook review process
-- [ ] Verify the new commands provide equivalent functionality
+- [x] Find all files referencing `bin/handbook-review-folder`
+- [x] Replace references with equivalent `code-review docs handbook/**/*.md` commands
+- [x] Update command examples to use proper focus options (e.g., --focus docs, --focus handbook)
+- [x] Update any workflow instructions that describe the handbook review process
+- [x] Verify the new commands provide equivalent functionality
   > TEST: Verify Command Functionality
   > Type: Action Validation
   > Assert: New code-review commands provide equivalent review capabilities
   > Command: code-review docs handbook/**/*.md --help
-- [ ] Remove the deprecated bin/handbook-review-folder script
-- [ ] Update blueprint.md or other architectural docs that reference the old script
+- [x] Remove the deprecated bin/handbook-review-folder script
+- [x] Update blueprint.md or other architectural docs that reference the old script
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All references to `bin/handbook-review-folder` are replaced with `code-review` commands
-- [ ] AC 2: New commands use appropriate focus and folder options for handbook reviews
-- [ ] AC 3: The deprecated bin script is removed
-- [ ] AC 4: Documentation accurately reflects the new review workflow
+- [x] AC 1: All references to `bin/handbook-review-folder` are replaced with `code-review` commands
+- [x] AC 2: New commands use appropriate focus and folder options for handbook reviews
+- [x] AC 3: The deprecated bin script is removed
+- [x] AC 4: Documentation accurately reflects the new review workflow
 
 ## Out of Scope
 
