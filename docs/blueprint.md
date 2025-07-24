@@ -175,7 +175,18 @@ bin/console
 
 **Note**: When working from the project root directory, all CAT gem tools are available directly by name (e.g., `task-manager`, `nav-tree`) without needing the full `dev-tools/exe/` path.
 
-**File Navigation**: Always use `nav-path file <filename>` instead of `find` commands to locate files. It supports partial names and is much more efficient (e.g., `nav-path file blueprint` finds `docs/blueprint.md`).
+**File Navigation**: Always use `nav-path file <filename>` instead of `find` or `ls` commands to locate files. It supports partial names and is much more efficient:
+
+```bash
+# ✅ Preferred - Smart and fast
+nav-path file blueprint    # Finds docs/blueprint.md
+nav-path file tools        # Finds docs/tools.md
+nav-path file config       # Finds .coding-agent/path.yml
+
+# ❌ Avoid - Slow and verbose  
+find . -name "*blueprint*" -type f
+ls -la docs/ | grep blueprint
+```
 
 - **Find Next Task**: Use `task-manager next` to identify the next actionable task
 - **Summarize Recent Work**: Use `task-manager recent` to see recently completed tasks

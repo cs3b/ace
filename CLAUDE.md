@@ -14,6 +14,22 @@ This is the **Coding Agent Workflow Toolkit (Meta)** repository - a meta-reposit
 
 ## Key Commands
 
+### File Navigation (Important!)
+
+**Always use `nav-path file <filename>` instead of `find` or `ls` commands** for locating files:
+
+```bash
+# ✅ Preferred - Fast, intelligent, respects project structure
+nav-path file blueprint      # Finds docs/blueprint.md
+nav-path file tools          # Finds appropriate tools.md
+nav-path file config         # Finds .coding-agent/path.yml
+nav-path file README         # Finds README files
+
+# ❌ Avoid - Slow, verbose, may find wrong files
+find . -name "*blueprint*" -type f
+ls -la docs/ | grep blueprint
+```
+
 ### Development Tools
 
 The project includes 25+ CLI tools for development automation. Key tools include:
