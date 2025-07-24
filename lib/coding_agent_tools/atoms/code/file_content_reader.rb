@@ -71,7 +71,7 @@ module CodingAgentTools
         # @param path [String] file path to check
         # @return [Boolean] true if file exists and is readable
         def readable?(path)
-          File.exist?(path) && File.readable?(path)
+          File.exist?(path) && File.readable?(path) && File.file?(path)
         end
 
         # Get file metadata
@@ -110,8 +110,8 @@ module CodingAgentTools
         # @raise [ArgumentError] if path is invalid
         def validate_path(path)
           raise ArgumentError, "Path cannot be nil" if path.nil?
-          raise ArgumentError, "Path cannot be empty" if path.empty?
           raise ArgumentError, "Path must be a string" unless path.is_a?(String)
+          raise ArgumentError, "Path cannot be empty" if path.empty?
         end
       end
     end
