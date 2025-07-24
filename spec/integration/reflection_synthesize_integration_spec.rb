@@ -14,7 +14,6 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
     end
   end
 
-
   describe "component integration" do
     let(:temp_dir) { Dir.mktmpdir("reflection_integration") }
     let(:reflection_path) { File.join(temp_dir, "test-reflection.md") }
@@ -44,20 +43,20 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
     it "loads reflection files through ReportCollector" do
       # This tests the actual component integration
       require "coding_agent_tools/molecules/reflection/report_collector"
-      
+
       collector = CodingAgentTools::Molecules::Reflection::ReportCollector.new
       result = collector.collect_reports([reflection_path])
-      
+
       expect(result).to be_success
       expect(result.reports).to include(reflection_path)
     end
 
     it "infers timestamps through TimestampInferrer" do
       require "coding_agent_tools/molecules/reflection/timestamp_inferrer"
-      
+
       inferrer = CodingAgentTools::Molecules::Reflection::TimestampInferrer.new
       result = inferrer.infer_timestamp_range([reflection_path])
-      
+
       expect(result).to be_success
       expect(result.from_date).to be_a(Date)
       expect(result.to_date).to be_a(Date)
@@ -65,7 +64,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
     it "can instantiate SynthesisOrchestrator" do
       require "coding_agent_tools/molecules/reflection/synthesis_orchestrator"
-      
+
       # Just verify it can be instantiated without errors
       expect {
         CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator.new
@@ -76,7 +75,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
   describe "Models::Result integration" do
     it "can create successful results" do
       require "coding_agent_tools/models/result"
-      
+
       result = CodingAgentTools::Models::Result.success(test: "data")
       expect(result).to be_success
       expect(result.valid?).to be true
@@ -85,7 +84,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
     it "can create failure results" do
       require "coding_agent_tools/models/result"
-      
+
       result = CodingAgentTools::Models::Result.failure("test error")
       expect(result).to be_failure
       expect(result.success?).to be false
@@ -94,14 +93,14 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
     it "supports method_missing for data access" do
       require "coding_agent_tools/models/result"
-      
+
       result = CodingAgentTools::Models::Result.success(
         reports: ["file1.md", "file2.md"],
-        metrics: { count: 2 }
+        metrics: {count: 2}
       )
-      
+
       expect(result.reports).to eq(["file1.md", "file2.md"])
-      expect(result.metrics).to eq({ count: 2 })
+      expect(result.metrics).to eq({count: 2})
     end
   end
 end
