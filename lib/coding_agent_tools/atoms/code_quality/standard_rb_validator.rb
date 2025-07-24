@@ -2,6 +2,8 @@
 
 require "open3"
 require "json"
+require "pathname"
+require_relative "../project_root_detector"
 
 module CodingAgentTools
   module Atoms
@@ -14,17 +16,19 @@ module CodingAgentTools
           @options = {
             fix: false,
             format: "json",
-            config_file: ".standard.yml"
+            config_file: ".standard.yml",
+            project_root: nil
           }.merge(options)
         end
 
         def validate(paths = ["."])
           ensure_standard_available!
 
+          project_root = detect_project_root
           command = build_command(paths)
-          output, status = execute_command(command)
+          output, status = execute_command(command, project_root)
 
-          parse_results(output, status)
+          parse_results(output, status, project_root)
         end
 
         def autofix(paths = ["."])
@@ -33,6 +37,12 @@ module CodingAgentTools
         end
 
         private
+
+        def detect_project_root
+          return options[:project_root] if options[:project_root]
+
+          ProjectRootDetector.find_project_root
+        end
 
         def ensure_standard_available!
           unless system("which standardrb > /dev/null 2>&1")
@@ -62,26 +72,24 @@ module CodingAgentTools
           cmd
         end
 
-        def execute_command(command)
-          # Find the dev-tools directory
-          current_file = File.expand_path(__FILE__)
-          dev_tools_dir = current_file.split("/dev-tools/").first + "/dev-tools"
+        def execute_command(command, project_root)
+          # Determine the working directory - prefer dev-tools subdirectory if it exists
+          working_dir = File.join(project_root, "dev-tools")
+          working_dir = project_root unless File.directory?(working_dir)
 
-          Dir.chdir(dev_tools_dir) do
-            stdout, stderr, status = Open3.capture3(*command)
-            output = stdout.empty? ? stderr : stdout
+          stdout, stderr, status = Open3.capture3(*command, chdir: working_dir)
+          output = stdout.empty? ? stderr : stdout
 
-            [output, status.exitstatus]
-          end
+          [output, status.exitstatus]
         end
 
-        def parse_results(output, exit_code)
+        def parse_results(output, exit_code, project_root)
           findings = []
 
           begin
             if options[:format] == "json" && !output.empty?
               data = JSON.parse(output)
-              findings = extract_offenses(data)
+              findings = extract_offenses(data, project_root)
             end
           rescue JSON::ParserError => e
             # Fall back to text parsing if JSON fails
@@ -98,15 +106,14 @@ module CodingAgentTools
           }
         end
 
-        def extract_offenses(data)
+        def extract_offenses(data, project_root)
           offenses = []
 
           data["files"]&.each do |file_data|
             file_path = file_data["path"]
 
-            # Adjust path to be relative to project root (not dev-tools)
-            # Since we're running from dev-tools, prepend "dev-tools/" to make it project-relative
-            adjusted_path = File.join("dev-tools", file_path)
+            # Convert to project-relative path
+            adjusted_path = resolve_project_relative_path(file_path, project_root)
 
             file_data["offenses"].each do |offense|
               offenses << {
@@ -122,6 +129,27 @@ module CodingAgentTools
           end
 
           offenses
+        end
+
+        def resolve_project_relative_path(file_path, project_root)
+          # If the path is already absolute, make it relative to project root
+          if File.absolute?(file_path)
+            begin
+              return Pathname.new(file_path).relative_path_from(Pathname.new(project_root)).to_s
+            rescue ArgumentError
+              # If we can't make it relative, return as-is
+              return file_path
+            end
+          end
+
+          # If we're running from a subdirectory (like dev-tools), adjust the path
+          working_dir = File.join(project_root, "dev-tools")
+          if File.directory?(working_dir)
+            return File.join("dev-tools", file_path)
+          end
+
+          # Default: return the path as-is
+          file_path
         end
 
         def parse_text_output(output)
