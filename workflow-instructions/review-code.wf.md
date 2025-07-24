@@ -136,23 +136,28 @@ Verify that code-review generated all necessary files:
 
 Build llm-query parameters based on code-review session files:
 
-- **SYSTEM PROMPT**: Use appropriate template from session or specify custom
+- **SYSTEM PROMPT**: Use appropriate template based on focus area
 - **INPUT CONTENT**: Use session files as input content
 - **MODELS**: Determine which models to run (defaults to gpro if not specified by user)
 - **TIMEOUT**: Set timeout to 600 seconds as specified
 - **OUTPUT**: Prepare output file paths for each model
 
+**Focus → System Prompt Mapping:**
+- `code` → `dev-handbook/templates/review-code/system.prompt.md`
+- `docs` → `dev-handbook/templates/review-docs/system.prompt.md`
+- `tests` → `dev-handbook/templates/review-test/system.prompt.md`
+
 **Parameter Preparation:**
 ```bash
-# Use session files and system prompt
-SYSTEM_PROMPT="${SESSION_DIR}/system.prompt.md"
+# Use template system prompt based on focus and session content
+SYSTEM_PROMPT="dev-handbook/templates/review-${FOCUS}/system.prompt.md"
 INPUT_CONTENT="${SESSION_DIR}/prompt.md"
 TIMEOUT=600
 MODELS=("gpro")  # Default to single gpro model unless user specifies multiple
 ```
 
 **Validation:**
-- System prompt file exists and is readable
+- Template system prompt exists for focus area
 - Input content properly formatted
 - Model list contains valid model identifiers
 - Timeout set to 600 as required
@@ -164,11 +169,10 @@ Execute llm-query for each configured model with prepared parameters:
 ```bash
 # For each model in the configuration
 for model in "${MODELS[@]}"; do
-    llm-query "${model}" \
+    llm-query "${model}" "${INPUT_CONTENT}" \
         --system "${SYSTEM_PROMPT}" \
         --timeout 600 \
-        --output "${SESSION_DIR}/cr-report-${model//[:\/]/-}.md" \
-        < "${INPUT_CONTENT}"
+        --output "${SESSION_DIR}/cr-report-${model//[:\/]/-}.md"
 done
 ```
 
