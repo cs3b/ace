@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.75
-status: pending
+status: done
 priority: medium
 estimate: 6h
 dependencies: []
@@ -61,39 +61,39 @@ Migrate the documentation dependency analysis functionality from `bin/analyze-do
 
 ### Planning Steps
 
-- [ ] Analyze existing bin/analyze-doc-dependencies script to understand all functionality
+- [x] Analyze existing bin/analyze-doc-dependencies script to understand all functionality
   > TEST: Functionality Analysis Complete
   > Type: Pre-condition Check
   > Assert: All features and capabilities of the original script are documented
   > Command: ruby bin/analyze-doc-dependencies --help 2>/dev/null || echo "Script analyzed"
-- [ ] Design ATOM architecture components (Atoms, Molecules, Organisms) for doc analysis
-- [ ] Plan integration with existing code-lint command structure
-- [ ] Design CLI interface to match or improve upon original functionality
+- [x] Design ATOM architecture components (Atoms, Molecules, Organisms) for doc analysis
+- [x] Plan integration with existing code-lint command structure
+- [x] Design CLI interface to match or improve upon original functionality
 
 ### Execution Steps
 
-- [ ] Create FileReferenceExtractor atom for finding markdown links and file references
-- [ ] Create DocLinkParser molecule for parsing and resolving relative/absolute links
-- [ ] Create DocDependencyAnalyzer organism for complete dependency analysis logic
-- [ ] Implement docs-dependencies CLI command as code-lint subcommand
-- [ ] Add DOT graph generation functionality (preserving .dot and .png output)
-- [ ] Add JSON export functionality for programmatic access
-- [ ] Implement circular dependency detection and orphaned file identification
-- [ ] Add comprehensive unit tests for all new components
+- [x] Create FileReferenceExtractor atom for finding markdown links and file references
+- [x] Create DocLinkParser molecule for parsing and resolving relative/absolute links
+- [x] Create DocDependencyAnalyzer organism for complete dependency analysis logic
+- [x] Implement docs-dependencies CLI command as code-lint subcommand
+- [x] Add DOT graph generation functionality (preserving .dot and .png output)
+- [x] Add JSON export functionality for programmatic access
+- [x] Implement circular dependency detection and orphaned file identification
+- [x] Add comprehensive unit tests for all new components
   > TEST: Verify Migration Completeness
   > Type: Action Validation
   > Assert: New CAT tool provides equivalent functionality to original script
   > Command: code-lint docs-dependencies && diff -u <(bin/analyze-doc-dependencies) <(code-lint docs-dependencies)
-- [ ] Update all documentation references to use new command
-- [ ] Remove deprecated bin/analyze-doc-dependencies script
+- [x] Update all documentation references to use new command
+- [x] Remove deprecated bin/analyze-doc-dependencies script
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `code-lint docs-dependencies` command provides all functionality of original script
-- [ ] AC 2: DOT graph and JSON output formats are preserved and equivalent
-- [ ] AC 3: All original features work: circular dependency detection, orphaned files, statistics
-- [ ] AC 4: New implementation follows ATOM architecture with comprehensive tests
-- [ ] AC 5: All documentation references are updated and deprecated script is removed
+- [x] AC 1: `code-lint docs-dependencies` command provides all functionality of original script
+- [x] AC 2: DOT graph and JSON output formats are preserved and equivalent
+- [x] AC 3: All original features work: circular dependency detection, orphaned files, statistics
+- [x] AC 4: New implementation follows ATOM architecture with comprehensive tests
+- [x] AC 5: All documentation references are updated and deprecated script is removed
 
 ## Out of Scope
 

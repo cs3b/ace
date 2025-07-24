@@ -39,7 +39,7 @@ Created `bin/check-workflow-compliance` tool that validates:
 
 ### 3. Document Dependency Analysis
 
-Created `bin/analyze-doc-dependencies` tool that:
+Created `code-lint docs-dependencies` tool (originally `bin/analyze-doc-dependencies`) that:
 
 - Maps all cross-references between documents
 - Identifies most referenced files
@@ -77,7 +77,7 @@ Created `bin/check-workflow-independence` tool that specifically checks:
    - Identifies missing sections and deprecated patterns
    - Outputs detailed compliance report
 
-2. **bin/analyze-doc-dependencies**
+2. **code-lint docs-dependencies** (formerly bin/analyze-doc-dependencies)
    - Maps document interconnections
    - Generates dependency graph (DOT format)
    - Outputs JSON for programmatic analysis
