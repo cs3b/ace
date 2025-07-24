@@ -8,7 +8,7 @@ Synthesize multiple code review reports into a unified, actionable improvement p
 
 - Multiple review reports in markdown format (cr-report-*.md files)
 - Review reports following standard section formats
-- Access to `code-review-synthesize` command (`dev-tools/exe/code-review-synthesize`)
+- Access to `code-review-synthesize` command (`code-review-synthesize`)
 - LLM API access for synthesis (Google, Anthropic, OpenAI, etc.)
 
 ## Project Context Loading

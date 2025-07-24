@@ -21,7 +21,7 @@ DO NOT manually read individual source files during code review execution. This 
 
 ### What NOT TO DO:
 - ❌ Use Read tool on individual source files
-- ❌ Use Glob tool to find files to read manually  
+- ❌ Use Glob tool to find files to read manually
 - ❌ Load source code content into the session
 - ❌ Manually implement the review steps described below
 
@@ -30,7 +30,7 @@ DO NOT manually read individual source files during code review execution. This 
 ## Prerequisites
 
 - Access to `dev-handbook/templates/review-*/*.md` prompt templates
-- LLM query tools available (`dev-tools/exe/llm-query`)
+- LLM query tools available (`llm-query`)
 - Git CLI available for diff operations
 - Project documentation exists in `docs/` directory
 - Write access to `dev-taskflow/current/` directory structure
@@ -46,7 +46,7 @@ Common patterns:
 # Review entire src directory (with extended timeout for large codebases)
 code-review code "src/**/*" --context auto --timeout 600
 
-# Review recent changes  
+# Review recent changes
 code-review code HEAD~5..HEAD --context auto
 
 # Review staged changes
@@ -130,8 +130,8 @@ The following steps are performed automatically by the `code-review` tool:
 
 ## Process Steps (Automated by code-review tool)
 
-> **⚠️ AUTOMATED PROCESS WARNING**  
-> The steps below are performed automatically by the `code-review` tool.  
+> **⚠️ AUTOMATED PROCESS WARNING**
+> The steps below are performed automatically by the `code-review` tool.
 > AI agents should NOT execute these manually.
 
 ### 1. Session Directory Creation
@@ -392,7 +392,7 @@ If you are an AI agent asked to review code, you should:
 
 1. **Recognize the request**: Code review tasks, source analysis, quality assessment
 2. **Analyze user request**: Determine appropriate FOCUS, TARGET, and OPTIONS
-3. **Construct command**: Build `code-review FOCUS TARGET [OPTIONS]` 
+3. **Construct command**: Build `code-review FOCUS TARGET [OPTIONS]`
 4. **Execute the tool**: Run the constructed command
 5. **Analyze results**: Review the generated session reports
 6. **Never manually read**: Do not use Read, Glob, or similar tools on source files
@@ -940,18 +940,18 @@ git diff -w v.0.2.0..HEAD
 handle_context_overflow() {
     local original_content="$1"
     local chunk_size=5000
-    
+
     echo "⚠️  Context overflow detected. Implementing chunking strategy..."
-    
+
     # Split content into manageable chunks
     echo "$original_content" | split -l $chunk_size - chunk-
-    
+
     # Process each chunk separately
     for chunk in chunk-*; do
         echo "Processing chunk: $chunk"
         process_review_chunk "$chunk"
     done
-    
+
     # Combine results
     combine_chunked_results
 }
@@ -1004,17 +1004,17 @@ done
 # Process multiple chunks in parallel
 process_chunks_parallel() {
     local chunks=("$@")
-    
+
     for chunk in "${chunks[@]}"; do
         {
             echo "Processing $chunk in background..."
             process_review_chunk "$chunk" > "result-$chunk.md"
         } &
     done
-    
+
     # Wait for all background jobs
     wait
-    
+
     echo "All chunks processed. Combining results..."
     combine_results
 }
@@ -1026,12 +1026,12 @@ process_chunks_parallel() {
 # Cache project context to avoid repeated loading
 cache_project_context() {
     local cache_file="$SESSION_DIR/project-context.cache"
-    
+
     if [[ ! -f "$cache_file" ]]; then
         echo "Building project context cache..."
         build_project_context > "$cache_file"
     fi
-    
+
     echo "Using cached project context: $cache_file"
 }
 ```
@@ -1044,7 +1044,7 @@ cache_project_context() {
 analyze_content_size() {
     local target="$1"
     local line_count word_count
-    
+
     case "$target" in
         *..*)
             # Git range
@@ -1057,9 +1057,9 @@ analyze_content_size() {
             word_count=$(find . -name "$target" -exec wc -w {} + | tail -1 | awk '{print $1}')
             ;;
     esac
-    
+
     echo "Content size: $line_count lines, $word_count words"
-    
+
     # Determine if chunking is needed
     if [[ $line_count -gt 10000 ]] || [[ $word_count -gt 50000 ]]; then
         echo "CHUNKING_REQUIRED"
@@ -1077,7 +1077,7 @@ analyze_content_size() {
 select_chunking_strategy() {
     local target="$1"
     local content_size="$2"
-    
+
     case "$target" in
         *..*)
             # Git ranges: use logical chunking by directory
@@ -1102,9 +1102,9 @@ process_with_chunking() {
     local target="$1"
     local focus="$2"
     local strategy="$3"
-    
+
     echo "🔄 Processing with chunking strategy: $strategy"
-    
+
     case "$strategy" in
         "LOGICAL_DIRECTORY")
             process_logical_chunks "$target" "$focus"
@@ -1116,7 +1116,7 @@ process_with_chunking() {
             process_size_chunks "$target" "$focus"
             ;;
     esac
-    
+
     # Combine and synthesize results
     synthesize_chunked_results
 }
@@ -1129,13 +1129,13 @@ process_with_chunking() {
 ```bash
 verify_chunk_completeness() {
     local original_files chunk_files
-    
+
     # Get list of files in original diff
     original_files=$(git diff --name-only "$target" | sort)
-    
+
     # Get list of files in all chunks
     chunk_files=$(cat chunk-*/files.list | sort | uniq)
-    
+
     # Compare coverage
     if diff <(echo "$original_files") <(echo "$chunk_files") > /dev/null; then
         echo "✅ All files covered in chunks"
@@ -1151,14 +1151,14 @@ verify_chunk_completeness() {
 ```bash
 check_cross_chunk_consistency() {
     local reports=("$@")
-    
+
     echo "Checking consistency across chunk reports..."
-    
+
     # Extract key findings from each report
     for report in "${reports[@]}"; do
         grep -E "^## (Critical|High|Medium)" "$report" > "${report}.findings"
     done
-    
+
     # Look for contradictory findings
     echo "Analyzing findings for consistency..."
     compare_findings *.findings
@@ -1175,7 +1175,7 @@ check_cross_chunk_consistency() {
 
 # Automatic chunking triggered
 # Strategy: Logical chunking by component
-# Chunks: 
+# Chunks:
 #   - Core logic changes (lib/coding_agent_tools/*.rb)
 #   - CLI changes (lib/coding_agent_tools/cli/*.rb)
 #   - Client changes (lib/coding_agent_tools/organisms/*client*.rb)
@@ -1223,7 +1223,7 @@ Track chunking performance for optimization:
 # Log chunking metrics
 log_chunking_metrics() {
     local session_dir="$1"
-    
+
     cat >> "$session_dir/chunking.metrics" <<EOF
 Chunking Session: $(date -Iseconds)
 Original Size: $(cat "$session_dir/original.size")
@@ -1238,7 +1238,7 @@ EOF
 
 ### Existing Tools
 
-- Leverages `dev-tools/exe/llm-query` for LLM communication
+- Leverages `llm-query` for LLM communication
 - Uses universal review templates in `dev-handbook/templates/review-*/`
 - Integrates with project context loading patterns
 - Compatible with existing Git workflow
@@ -1252,7 +1252,7 @@ EOF
 ### Non-Interactive Prompt Generation
 
 - Use `code-review` command for batch processing
-- Generates complete review sessions with embedded content  
+- Generates complete review sessions with embedded content
 - Supports all focus areas and target types
 - Session output ready for direct LLM processing or further analysis
 

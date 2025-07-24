@@ -47,7 +47,7 @@ Specifies the LLM provider and model to use.
 **Supported Providers:**
 
 - `google` - Google Gemini models
-- `anthropic` - Anthropic Claude models  
+- `anthropic` - Anthropic Claude models
 - `openai` - OpenAI GPT models
 - `mistral` - Mistral AI models
 - `togetherai` - Together AI models
@@ -69,8 +69,8 @@ The prompt text or file path to process.
 
 Specify system instructions/prompts separately from user prompts.
 
-**Format:** `--system VALUE`  
-**Type:** String  
+**Format:** `--system VALUE`
+**Type:** String
 **Input Types:**
 
 - **Direct text**: `--system "You are a helpful assistant"`
@@ -92,8 +92,8 @@ llm-query anthropic:claude-4-0-sonnet-latest "Review this code" \
 
 Direct output to a file with automatic format detection.
 
-**Format:** `--output FILEPATH` or `-o FILEPATH`  
-**Type:** String  
+**Format:** `--output FILEPATH` or `-o FILEPATH`
+**Type:** String
 **Benefits:**
 
 - Captures cost information and usage metrics
@@ -115,9 +115,9 @@ llm-query csonet "Data analysis" --output report.txt --format json
 
 Override output format (normally inferred from file extension).
 
-**Format:** `--format VALUE`  
-**Type:** String  
-**Values:** `text`, `json`, `markdown`  
+**Format:** `--format VALUE`
+**Type:** String
+**Values:** `text`, `json`, `markdown`
 **Default:** Inferred from file extension or `text`
 
 **Usage:**
@@ -134,15 +134,15 @@ llm-query google "Write tutorial" --format markdown
 
 Control randomness/creativity in responses.
 
-**Format:** `--temperature VALUE`  
-**Type:** Float  
-**Range:** 0.0 - 2.0  
+**Format:** `--temperature VALUE`
+**Type:** Float
+**Range:** 0.0 - 2.0
 **Default:** Provider-specific (typically 0.7)
 
 **Guidelines:**
 
 - `0.0-0.3` - Deterministic, factual responses
-- `0.4-0.7` - Balanced creativity and consistency  
+- `0.4-0.7` - Balanced creativity and consistency
 - `0.8-1.0` - Creative writing, brainstorming
 - `1.1-2.0` - Highly creative, experimental
 
@@ -160,14 +160,14 @@ llm-query google:gemini-2.5-pro "Write a story" --temperature 1.2
 
 Limit maximum output tokens.
 
-**Format:** `--max-tokens VALUE`  
-**Type:** Integer  
+**Format:** `--max-tokens VALUE`
+**Type:** Integer
 **Default:** Provider-specific
 
 **Provider Limits:**
 
 - Google Gemini: 8,192 tokens (default)
-- Anthropic Claude: 4,096 tokens (default)  
+- Anthropic Claude: 4,096 tokens (default)
 - OpenAI GPT: Model-dependent
 
 **Usage:**
@@ -184,9 +184,9 @@ llm-query copus "Write detailed analysis" --max-tokens 4096
 
 Set request timeout in seconds.
 
-**Format:** `--timeout VALUE`  
-**Type:** Integer  
-**Default:** Provider-specific  
+**Format:** `--timeout VALUE`
+**Type:** Integer
+**Default:** Provider-specific
 **Recommended:** 300-500 seconds for large content
 
 **Usage:**
@@ -205,8 +205,8 @@ llm-query gflash "Quick question" --timeout 30
 
 Enable verbose debug information.
 
-**Format:** `--debug` or `-d`  
-**Type:** Boolean  
+**Format:** `--debug` or `-d`
+**Type:** Boolean
 **Default:** `false`
 
 **Debug Information:**
@@ -230,8 +230,8 @@ llm-query csonet "Analysis" --output result.md --debug
 
 Force overwrite existing output files without confirmation.
 
-**Format:** `--force` or `-f`  
-**Type:** Boolean  
+**Format:** `--force` or `-f`
+**Type:** Boolean
 **Default:** `false`
 
 **Use Cases:**
@@ -256,8 +256,8 @@ llm-query gflash "New content" --output existing.md
 
 ### Google Gemini
 
-**Provider ID:** `google`  
-**API Key:** `GOOGLE_API_KEY` environment variable  
+**Provider ID:** `google`
+**API Key:** `GOOGLE_API_KEY` environment variable
 **Aliases:**
 
 - `gflash` → `google:gemini-2.5-flash`
@@ -289,8 +289,8 @@ llm-query gflash "Fast response needed"
 
 ### Anthropic Claude
 
-**Provider ID:** `anthropic`  
-**API Key:** `ANTHROPIC_API_KEY` environment variable  
+**Provider ID:** `anthropic`
+**API Key:** `ANTHROPIC_API_KEY` environment variable
 **Aliases:**
 
 - `csonet` → `anthropic:claude-4-0-sonnet-latest`
@@ -319,8 +319,8 @@ llm-query csonet "Complex reasoning task"
 
 ### OpenAI GPT
 
-**Provider ID:** `openai`  
-**API Key:** `OPENAI_API_KEY` environment variable  
+**Provider ID:** `openai`
+**API Key:** `OPENAI_API_KEY` environment variable
 **Aliases:**
 
 - `o4mini` → `openai:gpt-4o-mini`
@@ -339,8 +339,8 @@ llm-query csonet "Complex reasoning task"
 
 ### Other Providers
 
-**Mistral AI:** `mistral`  
-**Together AI:** `togetherai`  
+**Mistral AI:** `mistral`
+**Together AI:** `togetherai`
 **LM Studio:** `lmstudio` (local models)
 
 Each provider follows the same parameter patterns with provider-specific defaults.
@@ -616,13 +616,13 @@ The `llm-query` tool is used extensively in the review-code workflow:
 
 ```bash
 # Multi-Model LLM Execution (lines 331, 344)
-dev-tools/exe/llm-query google:gemini-2.5-pro \
+llm-query google:gemini-2.5-pro \
     "$(cat "${SESSION_DIR}/prompt.md")" \
     --system "${SYSTEM_PROMPT_PATH}" \
     --timeout 500 \
     --output "${SESSION_DIR}/cr-report-gpro.md"
 
-dev-tools/exe/llm-query anthropic:claude-3-opus-20240229 \
+llm-query anthropic:claude-3-opus-20240229 \
     "$(cat "${SESSION_DIR}/prompt.md")" \
     --system "${SYSTEM_PROMPT_PATH}" \
     --timeout 500 \
@@ -659,15 +659,13 @@ llm-query csonet "content" --system "${SYSTEM_PROMPT_PATH}"
 
 ## Related Documentation
 
-- **Tool Source:** `dev-tools/exe/llm-query`
-- **Implementation:** `dev-tools/lib/coding_agent_tools/cli/commands/llm/query.rb`
-- **Provider Clients:** `dev-tools/lib/coding_agent_tools/organisms/*_client.rb`
+- **Tool Source:** `llm-query`
+
 - **Usage Examples:** `dev-tools/README.md`
 
 ## Version Information
 
 This documentation covers the llm-query tool as of the current dev-tools implementation. For the latest features and updates, refer to the tool's help output:
-
 ```bash
-dev-tools/exe/llm-query --help
+llm-query --help
 ```
