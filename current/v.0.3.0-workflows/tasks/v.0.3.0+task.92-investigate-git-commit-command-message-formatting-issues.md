@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.92
-status: in-progress
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -145,36 +145,36 @@ Debug and fix the git-commit command error handling that displays improperly for
 
 ### Planning Steps
 
-- [ ] Examine the git-commit command implementation in dev-tools
+- [x] Examine the git-commit command implementation in dev-tools
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: git-commit command structure and error handling mechanisms are identified
   > Command: nav-path file git_commit
-- [ ] Research how shell commands are executed and error messages are formatted
-- [ ] Identify where the character escaping occurs in the error flow
+- [x] Research how shell commands are executed and error messages are formatted
+- [x] Identify where the character escaping occurs in the error flow
 
 ### Execution Steps
 
-- [ ] Locate the git-commit command source code in dev-tools
-- [ ] Reproduce the error condition that generates escaped characters
+- [x] Locate the git-commit command source code in dev-tools
+- [x] Reproduce the error condition that generates escaped characters
   > TEST: Error Reproduction
   > Type: Issue Validation
   > Assert: The escaped character error can be consistently reproduced
   > Command: git-commit --intention "test commit with special chars (parentheses)"
-- [ ] Trace the error handling flow from command execution to output
-- [ ] Fix the shell escaping issue in error message formatting
+- [x] Trace the error handling flow from command execution to output
+- [x] Fix the shell escaping issue in error message formatting
   > TEST: Error Message Fix
   > Type: Fix Validation
   > Assert: Error messages display properly formatted without escaped characters
   > Command: git-commit --intention "test after fix (parentheses)" --dry-run
-- [ ] Verify the fix doesn't break normal commit functionality
-- [ ] Add test cases for proper error message formatting
+- [x] Verify the fix doesn't break normal commit functionality
+- [x] Add test cases for proper error message formatting
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Error messages from git-commit display without shell character escaping
-- [ ] AC 2: Normal commit functionality remains unaffected
-- [ ] AC 3: Error handling preserves all necessary debugging information
+- [x] AC 1: Error messages from git-commit display without shell character escaping
+- [x] AC 2: Normal commit functionality remains unaffected
+- [x] AC 3: Error handling preserves all necessary debugging information
 
 ## Out of Scope
 
@@ -188,3 +188,20 @@ Debug and fix the git-commit command error handling that displays improperly for
 Error example:
 Error: [main] Error: Git command failed: git commit -m refactor\(git\):\ use\ direct\ Ruby\ calls\ for\ commit\ message\ generation'
 ```
+
+## Summary
+
+**Issue Identified**: The git-commit command's error messages displayed shell-escaped characters making them difficult to read.
+
+**Root Cause**: In `GitCommandExecutor`, error messages displayed the raw command string that contained shell-escaped sequences from `Shellwords.escape()`.
+
+**Solution Implemented**: 
+1. Added a `format_command_for_display` method to `GitCommandExecutor` that unescapes shell sequences
+2. Updated error message formatting in both `execute_with_capture` and `execute_without_capture` methods
+3. Added comprehensive test cases to verify the fix works correctly
+
+**Files Modified**:
+- `dev-tools/lib/coding_agent_tools/atoms/git/git_command_executor.rb` - Added error message formatting
+- `dev-tools/spec/unit/coding_agent_tools/atoms/git/git_command_executor_spec.rb` - Added test cases
+
+**Result**: Error messages now display readable commands like `git commit -m refactor(git): use direct Ruby calls` instead of escaped versions like `git commit -m refactor\(git\):\ use\ direct\ Ruby\ calls\`.
