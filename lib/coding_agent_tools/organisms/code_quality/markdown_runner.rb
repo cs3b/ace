@@ -2,6 +2,7 @@
 
 require_relative "language_runner"
 require_relative "../../molecules/code_quality/markdown_linting_pipeline"
+require_relative "../../atoms/code_quality/language_file_filter"
 
 module CodingAgentTools
   module Organisms
@@ -11,18 +12,25 @@ module CodingAgentTools
         def initialize(config:, path_resolver:)
           super(config: config, path_resolver: path_resolver, language: :markdown)
           @pipeline = create_pipeline
+          @file_filter = Atoms::CodeQuality::LanguageFileFilter.new(config: config)
         end
 
         def validate(paths: ["."], **options)
           return skip_result unless language_enabled?
 
-          @pipeline.run(paths: paths, autofix: false)
+          filtered_paths = filter_markdown_files(paths)
+          return skip_result if filtered_paths.empty?
+          
+          @pipeline.run(paths: filtered_paths, autofix: false)
         end
 
         def autofix(paths: ["."], **options)
           return skip_result unless language_enabled?
 
-          @pipeline.run(paths: paths, autofix: true)
+          filtered_paths = filter_markdown_files(paths)
+          return skip_result if filtered_paths.empty?
+          
+          @pipeline.run(paths: filtered_paths, autofix: true)
         end
 
         def report(results)
@@ -85,6 +93,10 @@ module CodingAgentTools
           end
         end
 
+        def filter_markdown_files(paths)
+          @file_filter.expand_paths_for_language(paths, :markdown)
+        end
+        
         def format_finding(finding, linter_name)
           case linter_name.to_sym
           when :task_metadata, :link_validation, :template_embedding
