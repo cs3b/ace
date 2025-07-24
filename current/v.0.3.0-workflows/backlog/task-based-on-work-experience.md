@@ -62,7 +62,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 
 #### Strategy A: LLM-Query Integration for Labor-Intensive Workflows
 
-**Leverage existing `dev-tools/exe/llm-query` infrastructure for workflow optimization**
+**Leverage existing `llm-query` infrastructure for workflow optimization**
 
 - **Target workflows**: "load project context" and similar file-reading intensive operations
 - **Model selection**: Use cheapest/fastest models (gflash, haiku) for simple file concatenation and reading tasks
@@ -70,7 +70,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 - **Cost optimization**: Reduce token costs by 60-80% for context loading operations
 - **Integration points**: Workflow instructions that currently read multiple documentation files
 
-#### Strategy B: LLM-Agent Command Infrastructure  
+#### Strategy B: LLM-Agent Command Infrastructure
 
 **Create `llm-agent` command similar to `llm-query` but for coding agent orchestration**
 
@@ -116,7 +116,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 
 **Priority 2 (Enhanced Efficiency):**
 
-2. **Implement LLM-Query Workflow Integration** (Strategy A): Enhance `bin/context` to optionally delegate file reading to cheap models via `dev-tools/exe/llm-query`. Target 60-80% cost reduction for large context operations.
+2. **Implement LLM-Query Workflow Integration** (Strategy A): Enhance `bin/context` to optionally delegate file reading to cheap models via `llm-query`. Target 60-80% cost reduction for large context operations.
 
 3. **Add Context Caching to bin/context**: Extend simple command with file modification time checking and cached results. Achieve 90% cache hit rate for repeated operations.
 
@@ -201,7 +201,7 @@ Replace current multi-step patterns like:
 ```bash
 # Before (multiple tool calls)
 Read docs/what-do-we-build.md
-Read docs/architecture.md  
+Read docs/architecture.md
 Read docs/blueprint.md
 Bash bin/tn
 
@@ -249,7 +249,7 @@ llm-agent local:hermes "analyze logs" --context=files --tools=read
 
 # Options
 --context=<session|minimal|files|none>    # Context level
---tools=<all|edit,read|read>              # Tool permissions  
+--tools=<all|edit,read|read>              # Tool permissions
 --directory=<path>                        # Working directory
 --cost-limit=<tokens>                     # Token budget limit
 --model-fallback=<model>                  # Backup model if primary fails
@@ -263,7 +263,7 @@ project-context load-architecture         # Load arch docs
 project-context load-blueprint            # Load project structure
 project-context load-tasks               # Load current tasks
 
-# File operations  
+# File operations
 project-context find-file <pattern>       # Find files by pattern
 project-context concat-docs <type>        # Combine documentation
 project-context prepare-context <workflow> # Workflow-specific context
@@ -277,7 +277,7 @@ project-context cache-status             # Show cache statistics
 
 **Dev-Tools Integration:**
 
-- Extend `dev-tools/exe/llm-query` with agent orchestration capabilities
+- Extend `llm-query` with agent orchestration capabilities
 - Reuse existing provider configurations (Google, LM Studio, etc.)
 - Leverage current authentication and API key management
 - Build on existing cost tracking and usage reporting

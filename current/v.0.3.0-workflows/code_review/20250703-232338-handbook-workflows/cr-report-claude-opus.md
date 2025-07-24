@@ -110,7 +110,7 @@ Templates are embedded within workflow files rather than referenced from central
 **🔴 Critical Cross-Reference Issues:**
 
 1. Workflows reference `dev-handbook/templates/` paths that may not exist
-2. Multiple references to `dev-tools/exe/llm-query` without documentation
+2. Multiple references to `llm-query` without documentation
 3. References to `bin/tnid`, `bin/rc`, `bin/gc` commands without specification
 4. Inconsistent template path references between workflows
 
@@ -135,7 +135,7 @@ Templates are embedded within workflow files rather than referenced from central
    - Establish template organization strategy
 
 3. **Document External Tool Dependencies**
-   - Document `dev-tools/exe/llm-query` usage
+   - Document `llm-query` usage
    - Specify all `bin/` command requirements
    - Create installation/setup guide
 

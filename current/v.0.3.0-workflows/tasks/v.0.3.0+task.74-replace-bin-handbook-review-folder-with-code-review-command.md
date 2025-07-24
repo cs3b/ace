@@ -13,7 +13,7 @@ dependencies: []
 _Command run:_
 
 ```bash
-ls -la bin/handbook-review-folder && dev-tools/exe/code-review --help | head -10
+ls -la bin/handbook-review-folder && code-review --help | head -10
 ```
 
 _Result excerpt:_
@@ -53,7 +53,7 @@ Replace the deprecated `bin/handbook-review-folder` script with the modern CAT g
 
 - [ ] Identify all references to `bin/handbook-review-folder` in the codebase
   > TEST: Complete Reference Scan
-  > Type: Pre-condition Check  
+  > Type: Pre-condition Check
   > Assert: All references to the deprecated script are identified
   > Command: grep -r "handbook-review-folder" . --include="*.md" | wc -l
 - [ ] Understand the equivalent functionality in the CAT code-review command
@@ -76,7 +76,7 @@ Replace the deprecated `bin/handbook-review-folder` script with the modern CAT g
 ## Acceptance Criteria
 
 - [ ] AC 1: All references to `bin/handbook-review-folder` are replaced with `code-review` commands
-- [ ] AC 2: New commands use appropriate focus and folder options for handbook reviews  
+- [ ] AC 2: New commands use appropriate focus and folder options for handbook reviews
 - [ ] AC 3: The deprecated bin script is removed
 - [ ] AC 4: Documentation accurately reflects the new review workflow
 

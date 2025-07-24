@@ -38,7 +38,7 @@ A complete suite of 20 development workflows was introduced, formalizing an end-
 ### 5. Dependencies & Tool Changes
 
 * **Core Scripts:** A suite of `bin/` scripts (`tn`, `tr`, `test`, `lint`, `build`, etc.) are now central to the development process.
-* **LLM & Dev Tools:** The workflows formalize the use of `dev-tools/exe/llm-query` and `git`.
+* **LLM & Dev Tools:** The workflows formalize the use of `llm-query` and `git`.
 * ⚠️ **Inconsistency:** The `Project Blueprint` references `bin/git-commit-with-message`, but `commit.wf.md` details using the standard `git commit` command. This must be reconciled.
 
 ### 6. Internal Guide Refactoring

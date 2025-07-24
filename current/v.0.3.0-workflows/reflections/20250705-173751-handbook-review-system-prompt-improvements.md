@@ -114,14 +114,14 @@
 ```bash
 # WRONG: Including system prompt in combined prompt and missing direct output
 cat system-prompt.md >> combined-prompt.md
-dev-tools/exe/llm-query gpro "$(cat combined-prompt.md)" > gpro-review.md
+llm-query gpro "$(cat combined-prompt.md)" > gpro-review.md
 ```
 
 **Corrected Implementation:**
 
 ```bash
 # CORRECT: Using --system flag and --output for proper separation and cost tracking
-dev-tools/exe/llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "$(cat content-prompt.md)"
+llm-query gpro --system system-prompt.md --timeout 500 --output gpro-review.md "$(cat content-prompt.md)"
 ```
 
 **Benefits of --output flag:**
