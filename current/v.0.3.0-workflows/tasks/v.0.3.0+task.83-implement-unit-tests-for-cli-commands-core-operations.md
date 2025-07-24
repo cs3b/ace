@@ -1,6 +1,6 @@
 ---
 id: task.83
-status: pending
+status: done
 priority: medium
 estimate: 7h
 dependencies: [task.79, task.80, task.81, task.82]

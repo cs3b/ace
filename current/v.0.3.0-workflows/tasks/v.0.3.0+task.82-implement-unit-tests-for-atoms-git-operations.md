@@ -1,6 +1,6 @@
 ---
 id: task.82
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [task.79, task.80]
