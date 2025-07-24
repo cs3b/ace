@@ -16,6 +16,7 @@ CodingAgentTools::Cli::Commands.register_task_commands
 CodingAgentTools::Cli::Commands.register_binstub_commands
 CodingAgentTools::Cli::Commands.register_dotfiles_commands
 CodingAgentTools::Cli::Commands.register_handbook_commands
+CodingAgentTools::Cli::Commands.register_all_commands
 
 begin
   Dry::CLI.new(CodingAgentTools::Cli::Commands).call

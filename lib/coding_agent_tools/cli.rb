@@ -200,6 +200,16 @@ module CodingAgentTools
         @git_commands_registered = true
       end
 
+      def self.register_all_commands
+        return if @all_commands_registered
+
+        require_relative "cli/commands/all"
+
+        register "all", Commands::All
+
+        @all_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -207,11 +217,13 @@ module CodingAgentTools
         register_binstub_commands
         register_dotfiles_commands
         register_code_commands
+        register_code_lint_commands
         register_code_review_prepare_commands
         register_nav_commands
         register_handbook_commands
         register_reflection_commands
         register_git_commands
+        register_all_commands
         super
       end
     end
