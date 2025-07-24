@@ -1,5 +1,11 @@
 # Tools Configuration for Coding Agent Workflow Toolkit
 # This file configures the behavior of the coding_agent_tools all command
+# 
+# XDG Configuration Standards Compliance:
+# This file should be placed in one of the following locations:
+# 1. Project-specific: <project_root>/.coding-agent/tools.yml (recommended)
+# 2. User-specific: $XDG_CONFIG_HOME/coding-agent-tools/tools.yml
+# 3. Default user: ~/.config/coding-agent-tools/tools.yml
 
 # Blacklist: Tools to exclude from the listing
 # These tools will not appear in coding_agent_tools all output
