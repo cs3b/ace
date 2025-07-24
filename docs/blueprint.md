@@ -48,7 +48,7 @@ This is a **meta-repository** using Git submodules to organize different aspects
 
 - **bin/** - Meta-level automation scripts (documentation-specific tools)
   - **analyze-doc-dependencies** - Analyzes documentation dependencies and generates DOT graphs
-  - **handbook-review-folder** - Reviews documentation folders for compliance
+  - **code-review** - Interactive code review tool with focus areas and folder support
   - **markdown-sync-embedded-documents** - Synchronizes embedded templates
 
 ## View Complete Directory Structure
@@ -142,8 +142,8 @@ npm run lint  # or manual: markdownlint docs/**/*.md
 # Analyze documentation dependencies
 bin/analyze-doc-dependencies
 
-# Review documentation folder compliance
-bin/handbook-review-folder
+# Review documentation with focus areas
+code-review docs 'dev-handbook/**/*.md'
 
 # Sync embedded templates
 handbook sync-templates
