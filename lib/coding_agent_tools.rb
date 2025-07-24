@@ -2,7 +2,8 @@
 
 require "zeitwerk"
 
-loader = Zeitwerk::Loader.for_gem
+loader = Zeitwerk::Loader.new
+loader.push_dir(__dir__)
 loader.inflector.inflect(
   "json_formatter" => "JSONFormatter",
   "http_client" => "HTTPClient",
