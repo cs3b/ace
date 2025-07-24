@@ -56,8 +56,8 @@ This is a **meta-repository** using Git submodules to organize different aspects
 To see the complete filtered directory structure, run:
 
 ```bash
-# Use dev-tools navigation for enhanced project tree
-dev-tools/exe/nav-tree --context full
+# Use dev-tools navigation for enhanced project tree (from project root)
+nav-tree
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -173,13 +173,17 @@ bin/console
 
 ### Common Workflows
 
-- **Find Next Task**: Use `dev-tools/exe/task-manager next` to identify the next actionable task
-- **Summarize Recent Work**: Use `dev-tools/exe/task-manager recent` to see recently completed tasks
-- **Get Current Release**: Use `dev-tools/exe/release-manager current` to get current release context
-- **Multi-repo Git Operations**: Use `dev-tools/exe/git-status`, `git-commit`, etc. for enhanced git operations
+**Note**: When working from the project root directory, all CAT gem tools are available directly by name (e.g., `task-manager`, `nav-tree`) without needing the full `dev-tools/exe/` path.
+
+**File Navigation**: Always use `nav-path file <filename>` instead of `find` commands to locate files. It supports partial names and is much more efficient (e.g., `nav-path file blueprint` finds `docs/blueprint.md`).
+
+- **Find Next Task**: Use `task-manager next` to identify the next actionable task
+- **Summarize Recent Work**: Use `task-manager recent` to see recently completed tasks
+- **Get Current Release**: Use `release-manager current` to get current release context
+- **Multi-repo Git Operations**: Use `git-status`, `git-commit`, etc. for enhanced git operations
 - **Template Synchronization**: Use `handbook sync-templates` to sync embedded templates
-- **Query LLM**: Use `dev-tools/exe/llm-query` to interact with multiple language model providers
-- **Navigation**: Use `dev-tools/exe/nav-path`, `nav-tree`, `nav-ls` for intelligent project navigation
+- **Query LLM**: Use `llm-query` to interact with multiple language model providers
+- **Navigation**: Use `nav-path`, `nav-tree`, `nav-ls` for intelligent project navigation
 
 ### Git Submodules
 

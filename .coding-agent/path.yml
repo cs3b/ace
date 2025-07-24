@@ -12,7 +12,7 @@ project:
 repositories:
   # Scan order for path resolution across all 4 repositories
   scan_order:
-    - name: "tools-meta"
+    - name: "handbook-meta"
       path: "."
       priority: 1
       description: "Main coordination and scripts"
@@ -20,14 +20,14 @@ repositories:
       path: "dev-tools"
       priority: 2
       description: "Primary development focus (CAT Ruby Gem)"
-    - name: "dev-taskflow"
-      path: "dev-taskflow"
-      priority: 3
-      description: "Task management and project planning"
     - name: "dev-handbook"
       path: "dev-handbook"
-      priority: 4
+      priority: 3
       description: "Development resources and guides"
+    - name: "dev-taskflow"
+      path: "dev-taskflow"
+      priority: 4
+      description: "Task management and project planning"
 
 # Path generation patterns
 path_patterns:
@@ -122,52 +122,52 @@ scoped_autocorrect:
   # Scope mappings define where to search for each scope
   scope_mappings:
     # Architecture layers (ATOM pattern)
-    "atoms": 
+    "atoms":
       - "dev-tools/lib/coding_agent_tools/atoms"
       - "dev-tools/spec/coding_agent_tools/atoms"
-    "molecules": 
+    "molecules":
       - "dev-tools/lib/coding_agent_tools/molecules"
       - "dev-tools/spec/coding_agent_tools/molecules"
-    "organisms": 
+    "organisms":
       - "dev-tools/lib/coding_agent_tools/organisms"
       - "dev-tools/spec/coding_agent_tools/organisms"
-    
+
     # Directory scopes
-    "lib": 
+    "lib":
       - "dev-tools/lib"
       - "*/lib"
-    "spec": 
+    "spec":
       - "dev-tools/spec"
       - "*/spec"
-    "exe": 
+    "exe":
       - "dev-tools/exe"
       - "*/exe"
       - "bin"
     "bin":
       - "bin"
       - "dev-tools/exe"
-    
+
     # Repository scopes
     "tools": ["dev-tools"]
     "taskflow": ["dev-taskflow"]
     "handbook": ["dev-handbook"]
     "meta": ["."]
-    
+
     # File type scopes
     "rb": ["**/*.rb"]
     "md": ["**/*.md"]
     "yml": ["**/*.yml", "**/*.yaml"]
     "yaml": ["**/*.yml", "**/*.yaml"]
     "sh": ["**/*.sh"]
-    
+
     # Functional scopes
-    "cli": 
+    "cli":
       - "dev-tools/lib/coding_agent_tools/cli"
       - "dev-tools/spec/coding_agent_tools/cli"
     "models":
       - "dev-tools/lib/coding_agent_tools/models"
       - "dev-tools/spec/coding_agent_tools/models"
-    "config": 
+    "config":
       - ".coding-agent"
       - "dev-tools/config"
     "tasks":
@@ -192,7 +192,7 @@ scoped_autocorrect:
     "mols": "molecules"
     "organism": "organisms"
     "orgs": "organisms"
-    
+
     # Directory typos
     "liib": "lib"
     "libb": "lib"
@@ -201,7 +201,7 @@ scoped_autocorrect:
     "specc": "spec"
     "binn": "bin"
     "bins": "bin"
-    
+
     # Repository typos
     "tool": "tools"
     "dev-tool": "tools"
@@ -211,13 +211,13 @@ scoped_autocorrect:
     "hanbook": "handbook"
     "hand-book": "handbook"
     "dev-handbook": "handbook"
-    
+
     # File type typos
     "ruby": "rb"
     "markdown": "md"
     "shell": "sh"
     "bash": "sh"
-    
+
     # Functional typos
     "command": "cli"
     "commands": "cli"
