@@ -146,7 +146,7 @@ bin/analyze-doc-dependencies
 bin/handbook-review-folder
 
 # Sync embedded templates
-bin/markdown-sync-embedded-documents
+handbook sync-templates
 ```
 
 ### Tools Development (dev-tools/)
@@ -177,7 +177,7 @@ bin/console
 - **Summarize Recent Work**: Use `dev-tools/exe/task-manager recent` to see recently completed tasks
 - **Get Current Release**: Use `dev-tools/exe/release-manager current` to get current release context
 - **Multi-repo Git Operations**: Use `dev-tools/exe/git-status`, `git-commit`, etc. for enhanced git operations
-- **Template Synchronization**: Use `bin/markdown-sync-embedded-documents` to sync embedded templates
+- **Template Synchronization**: Use `handbook sync-templates` to sync embedded templates
 - **Query LLM**: Use `dev-tools/exe/llm-query` to interact with multiple language model providers
 - **Navigation**: Use `dev-tools/exe/nav-path`, `nav-tree`, `nav-ls` for intelligent project navigation
 

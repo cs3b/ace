@@ -30,16 +30,16 @@ For complete tool documentation, see [Tools Reference](docs/tools.md).
 
 ```bash
 # Synchronize embedded templates in workflow instructions
-bin/markdown-sync-embedded-documents
+handbook sync-templates
 
 # Preview changes without applying them
-bin/markdown-sync-embedded-documents --dry-run
+handbook sync-templates --dry-run
 
 # Detailed output with verbose logging
-bin/markdown-sync-embedded-documents --verbose
+handbook sync-templates --verbose
 
 # Synchronize and automatically commit changes
-bin/markdown-sync-embedded-documents --verbose --commit
+handbook sync-templates --verbose --commit
 ```
 
 ### LLM Integration
