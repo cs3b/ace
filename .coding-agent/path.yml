@@ -6,7 +6,7 @@ project:
   # Project root directory (relative to this config file)
   root: ".."
   # Project name for path generation
-  name: "tools-meta"
+  name: "handbook-meta"
 
 # Repository scanning configuration
 repositories:
@@ -92,14 +92,19 @@ security:
   # Project root sandboxing - all paths must be within project root
   enforce_sandbox: true
   # Simple approach: block dangerous/noisy areas, allow everything else
+  # Skip patterns configuration - controls which directories and files nav-path will skip
+  # These patterns use glob syntax and are applied relative to project root
   forbidden_patterns:
-    - "**/.git/**" # Git internals
+    - "**/.git/**" # Git internals (version control)
     - "**/node_modules/**" # NPM dependencies
     - "**/coverage/**" # Test coverage files
     - "**/tmp/**" # Temporary files
     - "**/*.log" # Log files
-    - "**/.*" # All dot files and dot directories
-    - ".*" # Top-level dot files
+    - "**/.DS_Store" # macOS system files
+    - "**/Gemfile.lock" # Ruby dependency lock files
+    - "**/package-lock.json" # Node.js dependency lock files
+    - "**/.*" # All other dot files and dot directories (except those explicitly needed)
+    - ".*" # Top-level dot files (except .coding-agent)
   # No allowed_patterns - everything within project root is allowed except forbidden
 
 # Custom autocorrect mappings for common path errors
