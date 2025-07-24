@@ -79,11 +79,34 @@ module CodingAgentTools
           end
           # Note: With --repo-only flag, commit only already staged changes
 
-          if options[:message]
+          # Perform the initial commit
+          commit_result = if options[:message]
             commit_with_message(options[:message], options)
           else
             commit_with_llm_message(options)
           end
+
+          # If we had specific files and commits were successful, check for submodule reference updates
+          if files.any? && commit_result[:success] && !options[:repo_only]
+            puts "DEBUG: Checking for submodule reference updates after file-specific commits" if options[:debug]
+            # Stage any submodule reference updates that may have been created
+            final_add_result = add_all(options.merge(main_only: true))
+            if final_add_result[:success]
+              # Commit any submodule reference updates
+              final_commit_result = if options[:message]
+                commit_with_message(options[:message], options.merge(main_only: true))
+              else
+                commit_with_llm_message(options.merge(main_only: true))
+              end
+              # Merge the results if additional commits were made
+              if final_commit_result[:success] && final_commit_result[:results]&.any?
+                commit_result[:results] = (commit_result[:results] || {}).merge(final_commit_result[:results])
+                commit_result[:repositories_processed] = ((commit_result[:repositories_processed] || []) + (final_commit_result[:repositories_processed] || [])).uniq
+              end
+            end
+          end
+
+          commit_result
         end
 
         # Push operations
