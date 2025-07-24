@@ -48,7 +48,6 @@ This is a **meta-repository** using Git submodules to organize different aspects
 
 - **bin/** - Meta-level automation scripts (documentation-specific tools)
   - **analyze-doc-dependencies** - Analyzes documentation dependencies and generates DOT graphs
-  - **code-review** - Interactive code review tool with focus areas and folder support
   - **markdown-sync-embedded-documents** - Synchronizes embedded templates
 
 ## View Complete Directory Structure
@@ -57,7 +56,7 @@ To see the complete filtered directory structure, run:
 
 ```bash
 # Use dev-tools navigation for enhanced project tree (from project root)
-nav-tree
+# See docs/tools.md for complete reference of available tools
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -142,11 +141,7 @@ npm run lint  # or manual: markdownlint docs/**/*.md
 # Analyze documentation dependencies
 bin/analyze-doc-dependencies
 
-# Review documentation with focus areas
-code-review docs 'dev-handbook/**/*.md'
-
-# Sync embedded templates
-handbook sync-templates
+# See docs/tools.md for template synchronization tools
 ```
 
 ### Tools Development (dev-tools/)
@@ -173,28 +168,7 @@ bin/console
 
 ### Common Workflows
 
-**Note**: When working from the project root directory, all CAT gem tools are available directly by name (e.g., `task-manager`, `nav-tree`) without needing the full `dev-tools/exe/` path.
-
-**File Navigation**: Always use `nav-path file <filename>` instead of `find` or `ls` commands to locate files. It supports partial names and is much more efficient:
-
-```bash
-# ✅ Preferred - Smart and fast
-nav-path file blueprint    # Finds docs/blueprint.md
-nav-path file tools        # Finds docs/tools.md
-nav-path file config       # Finds .coding-agent/path.yml
-
-# ❌ Avoid - Slow and verbose  
-find . -name "*blueprint*" -type f
-ls -la docs/ | grep blueprint
-```
-
-- **Find Next Task**: Use `task-manager next` to identify the next actionable task
-- **Summarize Recent Work**: Use `task-manager recent` to see recently completed tasks
-- **Get Current Release**: Use `release-manager current` to get current release context
-- **Multi-repo Git Operations**: Use `git-status`, `git-commit`, etc. for enhanced git operations
-- **Template Synchronization**: Use `handbook sync-templates` to sync embedded templates
-- **Query LLM**: Use `llm-query` to interact with multiple language model providers
-- **Navigation**: Use `nav-path`, `nav-tree`, `nav-ls` for intelligent project navigation
+**Note**: This project includes 25+ CLI tools available from the dev-tools submodule. See [Tools Reference](../dev-tools/docs/tools.md) for complete documentation of all available commands and their usage.
 
 ### Git Submodules
 
