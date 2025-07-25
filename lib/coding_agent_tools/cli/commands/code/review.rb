@@ -132,7 +132,7 @@ module CodingAgentTools
           def dry_run_review(review_manager, focus, target, options)
             info_output("🔍 Dry run - Analyzing review configuration:")
 
-            prep_result = review_manager.prepare_review(focus, target, options[:context], options[:system_prompt])
+            prep_result = review_manager.prepare_review(focus, target, options[:context] || "auto", options[:system_prompt])
 
             info_output("\nTarget Analysis:")
             info_output("  Type: #{prep_result[:target_info][:type]}")
@@ -198,7 +198,7 @@ module CodingAgentTools
           end
 
           def error_output(message)
-            warn message
+            $stderr.write("#{message}\n")
           end
 
           def info_output(message)

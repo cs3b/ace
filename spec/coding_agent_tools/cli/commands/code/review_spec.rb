@@ -216,6 +216,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
       before do
         allow(mock_review_manager).to receive(:prepare_review).and_return(prep_result)
+        allow(mock_review_manager).to receive(:create_review_session)
       end
 
       it "executes dry run without creating session" do
@@ -252,7 +253,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       end
 
       it "shows custom system prompt" do
-        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true, system_prompt: "/custom.md")
+        custom_prompt_file = File.join(temp_dir, "custom.md")
+        File.write(custom_prompt_file, "Custom prompt content")
+        
+        command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true, system_prompt: custom_prompt_file)
 
         expect($stdout).to have_received(:puts).with("\nSystem Prompt: review/code-review.md (custom)")
       end
@@ -375,7 +379,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.desc).to eq("Execute code review on specified target with configurable focus")
+      expect(described_class.description).to eq("Execute code review on specified target with configurable focus")
     end
 
     it "defines required arguments" do

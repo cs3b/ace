@@ -1,242 +1,500 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "coding_agent_tools/atoms/git/status_color_formatter"
 
 RSpec.describe CodingAgentTools::Atoms::Git::StatusColorFormatter do
   let(:formatter) { described_class.new }
+  let(:repo_name) { "test-repo" }
 
-  describe "#format_repository_status" do
-    context "with git status output" do
-      it "formats repository with changes" do
-        status_output = <<~OUTPUT
-          M lib/example.rb
-          M docs/readme.md
-        OUTPUT
-
-        result = formatter.format_repository_status("test-repo", status_output)
-
-        expect(result).to include("test-repo")
-        expect(result).to include("lib/example.rb")
-        expect(result).to include("docs/readme.md")
-      end
-
-      it "formats clean repository" do
-        status_output = ""
-
-        result = formatter.format_repository_status("clean-repo", status_output)
-
-        expect(result).to include("clean-repo")
-        expect(result).to include("clean")
-      end
-
-      it "formats repository with untracked files" do
-        status_output = <<~OUTPUT
-          ?? untracked_file.rb
-          ?? docs/new.md
-        OUTPUT
-
-        result = formatter.format_repository_status("repo-with-untracked", status_output)
-
-        expect(result).to include("repo-with-untracked")
-        expect(result).to include("untracked_file.rb")
-        expect(result).to include("docs/new.md")
-      end
-
-      it "formats repository with staged files" do
-        status_output = <<~OUTPUT
-          A  new_file.rb
-          M  modified_file.rb
-        OUTPUT
-
-        result = formatter.format_repository_status("staged-repo", status_output)
-
-        expect(result).to include("staged-repo")
-        expect(result).to include("new_file.rb")
-        expect(result).to include("modified_file.rb")
-      end
-
-      it "formats repository with deleted files" do
-        status_output = <<~OUTPUT
-          D deleted_file.rb
-        OUTPUT
-
-        result = formatter.format_repository_status("deletion-repo", status_output)
-
-        expect(result).to include("deletion-repo")
-        expect(result).to include("deleted_file.rb")
-      end
-
-      it "formats repository with renamed files" do
-        status_output = <<~OUTPUT
-          R  old_name.rb -> new_name.rb
-        OUTPUT
-
-        result = formatter.format_repository_status("rename-repo", status_output)
-
-        expect(result).to include("rename-repo")
-        expect(result).to include("old_name.rb")
-        expect(result).to include("new_name.rb")
-      end
+  describe "COLORS constant" do
+    it "defines all necessary color codes" do
+      expect(described_class::COLORS).to include(
+        :reset, :red, :green, :yellow, :blue, :bold,
+        :staged_new, :staged_modified, :staged_deleted,
+        :modified, :deleted, :untracked, :branch, :header, :meta
+      )
     end
 
-    context "with complex status combinations" do
-      it "handles mixed file states" do
-        status_output = <<~OUTPUT
-          A  new_file.rb
-           M modified_file.rb
-           D deleted_file.rb
-          ?? untracked_file.rb
-        OUTPUT
-
-        result = formatter.format_repository_status("complex-repo", status_output)
-
-        expect(result).to include("complex-repo")
-        expect(result).to include("new_file.rb")
-        expect(result).to include("modified_file.rb")
-        expect(result).to include("deleted_file.rb")
-        expect(result).to include("untracked_file.rb")
-      end
-
-      it "handles staged and unstaged changes" do
-        status_output = <<~OUTPUT
-          MM both_changed.rb
-          AM added_then_modified.rb
-        OUTPUT
-
-        result = formatter.format_repository_status("mixed-changes", status_output)
-
-        expect(result).to include("mixed-changes")
-        expect(result).to include("both_changed.rb")
-        expect(result).to include("added_then_modified.rb")
-      end
-    end
-
-    context "with special filenames" do
-      it "handles files with spaces" do
-        status_output = <<~OUTPUT
-          M "file with spaces.rb"
-        OUTPUT
-
-        result = formatter.format_repository_status("spaces-repo", status_output)
-
-        expect(result).to include("spaces-repo")
-        expect(result).to include("file with spaces.rb")
-      end
-
-      it "handles files with special characters" do
-        status_output = <<~OUTPUT
-          M "file-with-dashes_and_underscores.rb"
-        OUTPUT
-
-        result = formatter.format_repository_status("special-repo", status_output)
-
-        expect(result).to include("special-repo")
-        expect(result).to include("file-with-dashes_and_underscores.rb")
-      end
-    end
-
-    context "with empty or invalid input" do
-      it "handles empty status output" do
-        result = formatter.format_repository_status("empty-repo", "")
-
-        expect(result).to include("empty-repo")
-        expect(result).to include("Clean")
-      end
-
-      it "handles nil input" do
-        expect { formatter.format_repository_status("nil-repo", nil) }.to raise_error(NoMethodError)
-      end
-
-      it "handles clean repository status" do
-        status_output = "On branch main\nnothing to commit, working tree clean"
-
-        result = formatter.format_repository_status("truly-clean", status_output)
-
-        expect(result).to include("truly-clean")
-      end
-    end
-
-    context "with performance considerations" do
-      it "handles large status outputs efficiently" do
-        # Create a large status output
-        large_status = (1..100).map { |i| "   M file#{i}.rb" }.join("\n")
-
-        start_time = Time.now
-        result = formatter.format_repository_status("large-repo", large_status)
-        end_time = Time.now
-
-        expect(result).to include("large-repo")
-        expect(end_time - start_time).to be < 1.0  # Should complete quickly
+    it "uses valid ANSI escape codes" do
+      described_class::COLORS.each do |name, code|
+        expect(code).to match(/\A\033\[\d+m\z/), "#{name} should be a valid ANSI escape code"
       end
     end
   end
 
   describe ".format_repository_status" do
-    it "works as a class method" do
-      status_output = "   M test_file.rb"
+    context "with clean repository" do
+      let(:clean_status) { "" }
 
-      result = described_class.format_repository_status("class-method-repo", status_output)
+      it "returns clean repository message with color" do
+        result = described_class.format_repository_status(repo_name, clean_status)
+        
+        expect(result).to include("[#{repo_name}]")
+        expect(result).to include("Clean working directory")
+        expect(result).to include("\033[32m") # Green color
+      end
 
-      expect(result).to include("class-method-repo")
-      expect(result).to include("test_file.rb")
+      it "respects no_color option" do
+        result = described_class.format_repository_status(repo_name, clean_status, no_color: true)
+
+        expect(result).to include("[#{repo_name}]")
+        expect(result).to include("Clean working directory")
+        expect(result).not_to include("\033[")
+      end
     end
 
-    it "accepts options" do
-      status_output = "   M test_file.rb"
+    context "with repository changes" do
+      let(:status_with_changes) do
+        <<~STATUS
+          On branch main
+          Changes to be committed:
+            modified:   file1.rb
+            new file:   file2.rb
+          
+          Changes not staged for commit:
+            modified:   file3.rb
+            deleted:    file4.rb
+        STATUS
+      end
 
-      result = described_class.format_repository_status("options-repo", status_output, no_color: true)
+      it "formats repository with changes" do
+        result = described_class.format_repository_status(repo_name, status_with_changes)
 
-      expect(result).to include("options-repo")
-      expect(result).to include("test_file.rb")
+        expect(result).to include("Status:")
+        expect(result).to include("On branch")
+        expect(result).to include("Changes to be committed")
+        expect(result).to include("modified:")
+        expect(result).to include("new file:")
+      end
+
+      it "adds indentation to status lines" do
+        result = described_class.format_repository_status(repo_name, status_with_changes)
+        lines = result.split("\n")
+
+        # Check that status lines are indented
+        status_lines = lines[1..-1] # Skip the header line
+        status_lines.each do |line|
+          expect(line).to start_with("  ")
+        end
+      end
     end
-  end
 
-  describe "#should_use_color?" do
-    it "returns true by default" do
-      expect(formatter.should_use_color?).to be true
-    end
+    context "with untracked files" do
+      let(:status_with_untracked) do
+        <<~STATUS
+          On branch main
+          Untracked files:
+            new_file.rb
+            another_file.txt
+        STATUS
+      end
 
-    it "returns false when no_color option is set" do
-      no_color_formatter = described_class.new(no_color: true)
-      expect(no_color_formatter.should_use_color?).to be false
-    end
+      it "formats untracked files with appropriate color" do
+        result = described_class.format_repository_status(repo_name, status_with_untracked)
 
-    it "returns true when force_color option is set" do
-      force_color_formatter = described_class.new(force_color: true)
-      expect(force_color_formatter.should_use_color?).to be true
+        expect(result).to include("Untracked files:")
+        expect(result).to include("new_file.rb")
+        expect(result).to include("\033[33m") # Yellow color for header
+      end
     end
   end
 
   describe ".should_use_color?" do
-    it "works as a class method" do
-      expect(described_class.should_use_color?).to be true
-    end
-
-    it "accepts options" do
+    it "respects options parameter" do
       expect(described_class.should_use_color?(no_color: true)).to be false
+      expect(described_class.should_use_color?(force_color: true)).to be true
     end
   end
 
-  describe "color handling" do
-    context "with colors enabled" do
-      let(:color_formatter) { described_class.new(no_color: false) }
+  describe "#initialize" do
+    context "with default options" do
+      it "enables colors by default" do
+        formatter = described_class.new
 
-      it "includes ANSI color codes in output" do
-        status_output = "   M colored_file.rb"
-        result = color_formatter.format_repository_status("color-repo", status_output)
-
-        expect(result).to match(/\e\[\d+m/)  # Contains ANSI color codes
+        expect(formatter.should_use_color?).to be true
       end
     end
 
-    context "with colors disabled" do
-      let(:no_color_formatter) { described_class.new(no_color: true) }
+    context "with no_color option" do
+      it "disables colors when no_color is true" do
+        formatter = described_class.new(no_color: true)
 
-      it "excludes ANSI color codes from output" do
-        status_output = "   M plain_file.rb"
-        result = no_color_formatter.format_repository_status("plain-repo", status_output)
+        expect(formatter.should_use_color?).to be false
+      end
+    end
 
-        expect(result).not_to match(/\e\[\d+m/)  # No ANSI color codes
+    context "with force_color option" do
+      it "enables colors when force_color is true" do
+        formatter = described_class.new(force_color: true)
+
+        expect(formatter.should_use_color?).to be true
+      end
+    end
+
+    context "with environment variables" do
+      before do
+        allow(ENV).to receive(:[]).and_call_original
+      end
+
+      it "respects NO_COLOR environment variable" do
+        allow(ENV).to receive(:[]).with("NO_COLOR").and_return("1")
+        formatter = described_class.new
+
+        expect(formatter.should_use_color?).to be false
+      end
+
+      it "respects FORCE_COLOR environment variable" do
+        allow(ENV).to receive(:[]).with("FORCE_COLOR").and_return("1")
+        allow(ENV).to receive(:[]).with("NO_COLOR").and_return(nil)
+        formatter = described_class.new
+
+        expect(formatter.should_use_color?).to be true
+      end
+
+      it "prioritizes NO_COLOR over FORCE_COLOR" do
+        allow(ENV).to receive(:[]).with("NO_COLOR").and_return("1")
+        allow(ENV).to receive(:[]).with("FORCE_COLOR").and_return("1")
+        formatter = described_class.new
+
+        expect(formatter.should_use_color?).to be false
+      end
+    end
+  end
+
+  describe "#format_repository_status" do
+    let(:formatter_with_color) { described_class.new(force_color: true) }
+    let(:formatter_no_color) { described_class.new(no_color: true) }
+
+    context "with different status types" do
+      it "determines clean status correctly" do
+        result = formatter_with_color.format_repository_status(repo_name, "")
+
+        expect(result).to include("Clean working directory")
+        expect(result).to include("\033[32m") # Green
+      end
+
+      it "determines changes status correctly" do
+        status = "modified:   file.rb"
+        result = formatter_with_color.format_repository_status(repo_name, status)
+
+        expect(result).to include("Status:")
+        expect(result).to include("\033[31m") # Red for changes
+      end
+
+      it "determines untracked status correctly" do
+        status = "Untracked files:\n  file.rb"
+        result = formatter_with_color.format_repository_status(repo_name, status)
+
+        expect(result).to include("\033[33m") # Yellow for untracked
+      end
+    end
+  end
+
+  describe "private methods" do
+    let(:formatter_with_color) { described_class.new(force_color: true) }
+    let(:formatter_no_color) { described_class.new(no_color: true) }
+
+    describe "#determine_color_usage" do
+      it "returns false when no_color option is set" do
+        options = { no_color: true }
+        result = formatter_with_color.send(:determine_color_usage, options)
+
+        expect(result).to be false
+      end
+
+      it "returns true when force_color option is set" do
+        options = { force_color: true }
+        result = formatter_no_color.send(:determine_color_usage, options)
+
+        expect(result).to be true
+      end
+
+      it "returns true by default" do
+        options = {}
+        result = formatter_with_color.send(:determine_color_usage, options)
+
+        expect(result).to be true
+      end
+    end
+
+    describe "#determine_status_type" do
+      it "recognizes clean status" do
+        result = formatter_with_color.send(:determine_status_type, "")
+
+        expect(result).to eq(:clean)
+      end
+
+      it "recognizes conflict status" do
+        status = "both modified: file.rb"
+        result = formatter_with_color.send(:determine_status_type, status)
+
+        expect(result).to eq(:conflict)
+      end
+
+      it "recognizes changes status" do
+        status = "modified: file.rb"
+        result = formatter_with_color.send(:determine_status_type, status)
+
+        expect(result).to eq(:changes)
+      end
+
+      it "recognizes untracked status" do
+        status = "Untracked files:\n  file.rb"
+        result = formatter_with_color.send(:determine_status_type, status)
+
+        expect(result).to eq(:untracked)
+      end
+
+      it "defaults to changes for non-empty unknown status" do
+        status = "some unknown status output"
+        result = formatter_with_color.send(:determine_status_type, status)
+
+        expect(result).to eq(:changes)
+      end
+    end
+
+    describe "#color_for_status" do
+      it "maps status types to correct colors" do
+        expect(formatter_with_color.send(:color_for_status, :clean)).to eq(:green)
+        expect(formatter_with_color.send(:color_for_status, :changes)).to eq(:red)
+        expect(formatter_with_color.send(:color_for_status, :conflict)).to eq(:red)
+        expect(formatter_with_color.send(:color_for_status, :untracked)).to eq(:yellow)
+        expect(formatter_with_color.send(:color_for_status, :unknown)).to eq(:blue)
+        expect(formatter_with_color.send(:color_for_status, :invalid)).to eq(:reset)
+      end
+    end
+
+    describe "#format_clean_repository" do
+      it "formats clean repository with color" do
+        result = formatter_with_color.send(:format_clean_repository, repo_name, :green)
+
+        expect(result).to include("[#{repo_name}]")
+        expect(result).to include("Clean working directory")
+        expect(result).to include("\033[32m") # Green
+        expect(result).to include("\033[0m")  # Reset
+      end
+
+      it "formats clean repository without color" do
+        result = formatter_no_color.send(:format_clean_repository, repo_name, :green)
+
+        expect(result).to include("[#{repo_name}]")
+        expect(result).to include("Clean working directory")
+        expect(result).not_to include("\033[")
+      end
+    end
+
+    describe "#format_repository_with_changes" do
+      let(:status_output) { "modified:   file.rb\nnew file:   another.rb" }
+
+      it "formats repository with changes and color" do
+        result = formatter_with_color.send(:format_repository_with_changes, repo_name, status_output, :red)
+
+        expect(result).to include("Status:")
+        expect(result).to include("modified:")
+        expect(result).to include("new file:")
+        expect(result).to include("\033[31m") # Red
+      end
+
+      it "formats repository with changes without color" do
+        result = formatter_no_color.send(:format_repository_with_changes, repo_name, status_output, :red)
+
+        expect(result).to include("Status:")
+        expect(result).not_to include("\033[")
+      end
+
+      it "indents all status lines" do
+        result = formatter_with_color.send(:format_repository_with_changes, repo_name, status_output, :red)
+        lines = result.split("\n")
+
+        status_lines = lines[1..-1] # Skip header
+        status_lines.each do |line|
+          expect(line).to start_with("  ")
+        end
+      end
+    end
+
+    describe "#colorize_status_line" do
+      it "colorizes branch information" do
+        line = "On branch main"
+        result = formatter_with_color.send(:colorize_status_line, line)
+
+        expect(result).to include("On branch")
+        expect(result).to include("\033[32m") # Green for branch name
+      end
+
+      it "colorizes branch status with quotes" do
+        line = "Your branch is ahead of 'origin/main' by 1 commit."
+        result = formatter_with_color.send(:colorize_status_line, line)
+
+        expect(result).to include("'origin/main'")
+        expect(result).to include("\033[32m") # Green for quoted parts
+      end
+
+      it "colorizes section headers" do
+        headers = [
+          "Changes to be committed:",
+          "Changes not staged for commit:",
+          "Untracked files:"
+        ]
+
+        headers.each do |header|
+          result = formatter_with_color.send(:colorize_status_line, header)
+          expect(result).to include("\033[1m") # Bold
+        end
+      end
+
+      it "colorizes file status lines with tabs" do
+        status_lines = [
+          "\tnew file:   file.rb",
+          "\tmodified:   file.rb",
+          "\tdeleted:    file.rb",
+          "\trenamed:    old.rb -> new.rb",
+          "\tcopied:     file.rb -> copy.rb"
+        ]
+
+        status_lines.each do |line|
+          result = formatter_with_color.send(:colorize_status_line, line)
+          expect(result).to include("\033[") # Some color code
+        end
+      end
+
+      it "colorizes meta information" do
+        meta_lines = [
+          "\t(use \"git add <file>...\" to update what will be committed)",
+          "nothing to commit, working tree clean",
+          "no changes added to commit (use \"git add\" and/or \"git commit -a\")"
+        ]
+
+        meta_lines.each do |line|
+          result = formatter_with_color.send(:colorize_status_line, line)
+          expect(result).to include("\033[2m") # Dim
+        end
+      end
+
+      it "colorizes untracked files" do
+        line = "\tuntracked_file.rb"
+        result = formatter_with_color.send(:colorize_status_line, line)
+
+        expect(result).to include("\033[31m") # Red for untracked
+      end
+
+      it "returns line as-is for unrecognized patterns" do
+        line = "Some unrecognized status line"
+        result = formatter_with_color.send(:colorize_status_line, line)
+
+        expect(result).to eq(line)
+      end
+    end
+
+    describe "#colorize" do
+      it "adds color codes when color is enabled" do
+        result = formatter_with_color.send(:colorize, "text", :red)
+
+        expect(result).to eq("\033[31mtext\033[0m")
+      end
+
+      it "returns text as-is when color is disabled" do
+        result = formatter_no_color.send(:colorize, "text", :red)
+
+        expect(result).to eq("text")
+      end
+
+      it "returns text as-is when color code doesn't exist" do
+        result = formatter_with_color.send(:colorize, "text", :nonexistent)
+
+        expect(result).to eq("text")
+      end
+    end
+  end
+
+  describe "integration tests" do
+    context "with real git status output" do
+      let(:realistic_status) do
+        <<~STATUS
+          On branch feature/test
+          Your branch is ahead of 'origin/main' by 2 commits.
+            (use "git push" to publish your local commits)
+
+          Changes to be committed:
+            (use "git restore --staged <file>..." to unstage)
+          	modified:   lib/file1.rb
+          	new file:   lib/file2.rb
+          	deleted:    old_file.rb
+
+          Changes not staged for commit:
+            (use "git add <file>..." to update what will be committed)
+            (use "git restore <file>..." to discard changes in working directory)
+          	modified:   lib/file3.rb
+
+          Untracked files:
+            (use "git add <file>..." to include in what will be committed)
+          	temp_file.rb
+          	another_temp.txt
+        STATUS
+      end
+
+      it "formats complex status output correctly" do
+        result = described_class.format_repository_status(repo_name, realistic_status)
+
+        expect(result).to include("Status:")
+        expect(result).to include("feature/test")
+        expect(result).to include("Changes to be committed:")
+        expect(result).to include("Changes not staged for commit:")
+        expect(result).to include("Untracked files:")
+        expect(result).to include("modified:")
+        expect(result).to include("new file:")
+        expect(result).to include("deleted:")
+      end
+
+      it "properly indents all lines" do
+        result = described_class.format_repository_status(repo_name, realistic_status)
+        lines = result.split("\n")
+
+        # First line is the header
+        expect(lines.first).to include("Status:")
+
+        # All other lines should be indented
+        lines[1..-1].each do |line|
+          expect(line).to start_with("  ")
+        end
+      end
+
+      it "applies appropriate colors throughout" do
+        result = described_class.format_repository_status(repo_name, realistic_status)
+
+        # Should contain various color codes
+        expect(result).to include("\033[31m") # Red
+        expect(result).to include("\033[32m") # Green
+        expect(result).to include("\033[1m")  # Bold
+        expect(result).to include("\033[2m")  # Dim
+        expect(result).to include("\033[0m")  # Reset
+      end
+    end
+
+    context "with edge cases" do
+      it "handles empty lines gracefully" do
+        status_with_empty_lines = "modified:   file.rb\n\n\ndeleted:    another.rb"
+        result = described_class.format_repository_status(repo_name, status_with_empty_lines)
+
+        expect(result).to include("modified:")
+        expect(result).to include("deleted:")
+      end
+
+      it "handles very long file names" do
+        long_filename = "a" * 200
+        status = "modified:   #{long_filename}.rb"
+        result = described_class.format_repository_status(repo_name, status)
+
+        expect(result).to include(long_filename)
+      end
+
+      it "handles special characters in filenames" do
+        special_filename = "file with spaces & symbols!@#$%.rb"
+        status = "modified:   #{special_filename}"
+        result = described_class.format_repository_status(repo_name, status)
+
+        expect(result).to include(special_filename)
       end
     end
   end
