@@ -55,6 +55,14 @@ path_patterns:
       timestamp: "datetime:%Y%m%d-%H%M%S"
       slug: "user_input"
 
+  # Code review session path generation  
+  code_review_new:
+    template: "{release_path}/code_review/{timestamp}-{slug}"
+    variables:
+      release_path: "release-manager current --format json | jq -r '.data.path'" # Command to get current release path
+      timestamp: "datetime:%Y%m%d-%H%M%S" # YYYYMMDD-HHMMSS format  
+      slug: "user_input" # Derived from session name (focus-target format)
+
 # Path resolution settings
 resolution:
   # Fuzzy matching settings
