@@ -53,28 +53,22 @@ module CodingAgentTools
 
             # Collect and validate reports
             info_output("🔍 Collecting and validating review reports...")
-            report_collector = Molecules::Code::ReportCollector.new
+            report_collector = CodingAgentTools::Molecules::Code::ReportCollector.new
             collection_result = report_collector.collect_reports(reports)
 
-            unless collection_result.valid?
-              error_output("Error: #{collection_result.error}")
+            unless collection_result[:success]
+              error_output("Error: #{collection_result[:error]}")
               return 1
             end
-            info_output("✅ Found #{collection_result.reports.length} valid review reports")
-
-            # Infer session directory from first report
-            info_output("📁 Inferring session directory from report paths...")
-            session_inferrer = Molecules::Code::SessionPathInferrer.new
-            inference_result = session_inferrer.infer_session_path(collection_result.reports.first)
-
-            if inference_result.has_session?
-              info_output("✅ Session directory detected: #{File.basename(inference_result.session_directory)}")
-            else
-              info_output("📂 No session directory detected, using current directory")
-            end
+            info_output("✅ Found #{collection_result[:reports].length} valid review reports")
 
             # Determine output file path
-            output_path = determine_output_path(options[:output], inference_result)
+            output_path = if options[:output]
+              options[:output]
+            else
+              session_inferrer = CodingAgentTools::Molecules::Code::SessionPathInferrer.new
+              session_inferrer.infer_output_path(reports)
+            end
             info_output("📄 Output will be saved to: #{File.basename(output_path)}")
 
             # Handle dry run
@@ -84,29 +78,28 @@ module CodingAgentTools
 
             # Execute synthesis
             info_output("🧠 Starting synthesis with model: #{options[:model]}")
-            synthesis_orchestrator = Molecules::Code::SynthesisOrchestrator.new
+            synthesis_orchestrator = CodingAgentTools::Molecules::Code::SynthesisOrchestrator.new
 
-            synthesis_result = synthesis_orchestrator.synthesize_reports(
-              reports: collection_result.reports,
-              session_info: inference_result,
+            synthesis_result = synthesis_orchestrator.synthesize(
+              reports: collection_result[:reports],
               model: options[:model],
-              output_path: output_path,
+              output_file: output_path,
               format: options[:format],
-              system_prompt_path: options[:system_prompt],
+              system_prompt: options[:system_prompt],
               force: options[:force],
-              debug: options[:debug]
+              debug: options[:debug],
+              dry_run: options[:dry_run]
             )
 
-            if synthesis_result.success?
+            if synthesis_result[:success]
               success_output("✅ Synthesis completed successfully")
-              success_output("📄 Report saved to: #{synthesis_result.output_path}")
-
-              # Show synthesis metrics
-              show_synthesis_metrics(synthesis_result)
+              if synthesis_result[:output_file]
+                success_output("📄 Report saved to: #{synthesis_result[:output_file]}")
+              end
 
               0
             else
-              error_output("❌ Synthesis failed: #{synthesis_result.error}")
+              error_output("❌ Synthesis failed: #{synthesis_result[:error]}")
               1
             end
           rescue => e
@@ -188,7 +181,7 @@ module CodingAgentTools
           end
 
           def error_output(message)
-            warn message
+            $stderr.write("#{message}\n")
           end
 
           def info_output(message)
