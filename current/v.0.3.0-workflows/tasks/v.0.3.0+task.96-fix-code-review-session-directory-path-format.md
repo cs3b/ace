@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.96
-status: pending
+status: done
 priority: high
 estimate: 5h
 dependencies: []
@@ -157,26 +157,26 @@ Fix the code-review session directory path format to put timestamps at the begin
 
 ### Planning Steps
 
-- [ ] Analyze current session directory creation flow from code-review command to SessionNameBuilder
+- [x] Analyze current session directory creation flow from code-review command to SessionNameBuilder
   > TEST: Current Flow Understanding
   > Type: Pre-condition Check
   > Assert: Session creation components and their interactions are documented
   > Command: find dev-tools/lib -name "*session*" -type f | head -10
-- [ ] Design new directory name format: {timestamp}-{focus}-{target} instead of {focus}-{target}-{timestamp}
-- [ ] Plan nav-path integration approach using Ruby classes directly for SessionManager
+- [x] Design new directory name format: {timestamp}-{focus}-{target} instead of {focus}-{target}-{timestamp}
+- [x] Plan nav-path integration approach using Ruby classes directly for SessionManager
 
 ### Execution Steps
 
 **1. Add nav-path configuration and command support:**
 
-- [ ] Add code_review_new path pattern to .coding-agent/path.yml configuration
+- [x] Add code_review_new path pattern to .coding-agent/path.yml configuration
   > TEST: Configuration Added
   > Type: Integration Validation
   > Assert: Configuration follows existing pattern structure for path generation
   > Command: grep -A 10 "code_review_new" .coding-agent/path.yml
-- [ ] Create nav-path code-review-new subcommand in dev-tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb
-- [ ] Update PathResolver.resolve_path to handle code_review_new path type
-- [ ] Update nav-path command registration to include code-review-new command
+- [x] Create nav-path code-review-new subcommand in dev-tools/lib/coding_agent_tools/cli/commands/nav/code_review_new.rb
+- [x] Update PathResolver.resolve_path to handle code_review_new path type
+- [x] Update nav-path command registration to include code-review-new command
   > TEST: Nav-Path Command Available
   > Type: Integration Validation
   > Assert: nav-path code-review-new command is accessible and generates proper paths
@@ -184,12 +184,12 @@ Fix the code-review session directory path format to put timestamps at the begin
 
 **2. Update SessionNameBuilder for timestamp-first format:**
 
-- [ ] Update SessionNameBuilder.build method to use timestamp-first format: {timestamp}-{focus}-{target}
+- [x] Update SessionNameBuilder.build method to use timestamp-first format: {timestamp}-{focus}-{target}
   > TEST: Name Format Change
   > Type: Unit Validation
   > Assert: SessionNameBuilder generates names with timestamp first
   > Command: cd dev-tools && ruby -r ./lib/coding_agent_tools -e "puts CodingAgentTools::Atoms::Code::SessionNameBuilder.new.build('docs', 'handbook', '20250705-173751')"
-- [ ] Update all SessionNameBuilder specs to expect new timestamp-first format
+- [x] Update all SessionNameBuilder specs to expect new timestamp-first format
   > TEST: Spec Updates Complete
   > Type: Unit Validation
   > Assert: All tests pass with new naming format
@@ -197,22 +197,22 @@ Fix the code-review session directory path format to put timestamps at the begin
 
 **3. Integrate SessionManager with nav-path Ruby classes:**
 
-- [ ] Modify SessionManager.create_session to use PathResolver directly for directory path generation
+- [x] Modify SessionManager.create_session to use PathResolver directly for directory path generation
   > TEST: Nav-Path Integration
   > Type: Integration Validation
   > Assert: SessionManager uses nav-path for session directory creation with proper format
   > Command: cd dev-tools && ruby -r ./lib/coding_agent_tools -e "require 'pry'; binding.pry" # Test session creation flow
-- [ ] Test new format with various focus and target combinations to ensure sanitization works correctly
+- [x] Test new format with various focus and target combinations to ensure sanitization works correctly
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Code-review session directories use format {timestamp}-{focus}-{target} for chronological sorting
-- [ ] AC 2: nav-path code-review-new command generates correct session directory paths and is available via CLI
-- [ ] AC 3: SessionManager uses PathResolver (nav-path Ruby classes) for consistent path generation across the project
-- [ ] AC 4: All SessionNameBuilder tests pass with updated expectations for timestamp-first format
-- [ ] AC 5: New format maintains all existing functionality (session creation, file organization, metadata)
-- [ ] AC 6: Path generation follows same pattern structure as task-new and reflection-new in .coding-agent/path.yml
-- [ ] AC 7: Integration testing confirms complete flow from code-review command to directory creation works correctly
+- [x] AC 1: Code-review session directories use format {timestamp}-{focus}-{target} for chronological sorting
+- [x] AC 2: nav-path code-review-new command generates correct session directory paths and is available via CLI
+- [x] AC 3: SessionManager uses PathResolver (nav-path Ruby classes) for consistent path generation across the project
+- [x] AC 4: All SessionNameBuilder tests pass with updated expectations for timestamp-first format
+- [x] AC 5: New format maintains all existing functionality (session creation, file organization, metadata)
+- [x] AC 6: Path generation follows same pattern structure as task-new and reflection-new in .coding-agent/path.yml
+- [x] AC 7: Integration testing confirms complete flow from code-review command to directory creation works correctly
 
 ## Design Decisions (Resolved)
 
