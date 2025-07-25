@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.106
-status: in-progress
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -72,38 +72,38 @@ The root cause is in `PathDispatcher.build_command_context()` which treats main 
 
 ### Planning Steps
 
-- [ ] Examine current `PathDispatcher.build_command_context()` implementation to understand special-case logic
+- [x] Examine current `PathDispatcher.build_command_context()` implementation to understand special-case logic
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current main repo vs submodule command differences are documented
   > Command: cd dev-tools && grep -A 10 -B 5 "repository\[:name\].*main" lib/coding_agent_tools/molecules/git/path_dispatcher.rb
-- [ ] Identify all locations that may be affected by changing main repo command format
-- [ ] Research any potential side effects of always using `-C` flag for main repository
+- [x] Identify all locations that may be affected by changing main repo command format
+- [x] Research any potential side effects of always using `-C` flag for main repository
 
 ### Execution Steps
 
-- [ ] Modify `build_command_context()` to use unified command construction for all repositories
+- [x] Modify `build_command_context()` to use unified command construction for all repositories
   > TEST: Command Context Unification
   > Type: Unit Validation
   > Assert: All repositories now use git -C <full_path> format consistently
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/git/path_dispatcher_spec.rb -f documentation
-- [ ] Update existing tests that expect old main repository command format
-- [ ] Add comprehensive test cases for command execution from different working directories
-- [ ] Test the original failing git-commit command that triggered this issue
+- [x] Update existing tests that expect old main repository command format
+- [x] Add comprehensive test cases for command execution from different working directories
+- [x] Test the original failing git-commit command that triggered this issue
   > TEST: Original Issue Resolution
   > Type: Integration Validation
   > Assert: Mixed repository file commits work without false errors
   > Command: git-commit dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.106-fix-git-commit-main-repository-command-context-issue.md dev-tools/lib/coding_agent_tools/molecules/git/path_dispatcher.rb --intention "test unified command context"
-- [ ] Verify all git-commit workflows continue to work from various execution contexts
+- [x] Verify all git-commit workflows continue to work from various execution contexts
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All repositories (main, dev-tools, dev-taskflow, dev-handbook) use consistent `git -C <full_path>` command format
-- [ ] AC 2: git-commit commands work reliably regardless of current working directory
-- [ ] AC 3: No more false "Partial success" error messages when commits actually succeed
-- [ ] AC 4: The original failing command that triggered this investigation now works without errors
-- [ ] AC 5: All existing git-commit functionality remains unaffected (backward compatibility)
-- [ ] AC 6: Test coverage verifies consistent behavior across all repository types and execution contexts
+- [x] AC 1: All repositories (main, dev-tools, dev-taskflow, dev-handbook) use consistent `git -C <full_path>` command format
+- [x] AC 2: git-commit commands work reliably regardless of current working directory
+- [x] AC 3: No more false "Partial success" error messages when commits actually succeed
+- [x] AC 4: The original failing command that triggered this investigation now works without errors
+- [x] AC 5: All existing git-commit functionality remains unaffected (backward compatibility)
+- [x] AC 6: Test coverage verifies consistent behavior across all repository types and execution contexts
 
 ## Out of Scope
 
