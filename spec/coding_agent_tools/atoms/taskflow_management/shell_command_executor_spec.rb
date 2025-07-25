@@ -506,7 +506,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
 
     it "works with file operations" do
       test_file = File.join(test_dir, "test.txt")
-      
+
       # Create file
       result = described_class.execute("echo 'test content' > test.txt", working_directory: test_dir)
       expect(result.success?).to be true
@@ -555,7 +555,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
     it "properly cleans up resources on timeout" do
       # This test ensures that timeouts don't leave zombie processes
       5.times do
-        result = described_class.execute("sleep 10", timeout: 1)
+        result = described_class.execute("sleep 2", timeout: 1)
         expect(result.success?).to be false
       end
 
