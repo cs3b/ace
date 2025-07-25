@@ -34,7 +34,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
             "path" => "lib/test.rb",
             "offenses" => [
               {
-                "location" => { "line" => 10, "column" => 5 },
+                "location" => {"line" => 10, "column" => 5},
                 "severity" => "convention",
                 "message" => "Layout/IndentationWidth: Use 2 spaces for indentation.",
                 "cop_name" => "Layout/IndentationWidth",
@@ -49,7 +49,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
     before do
       # Mock system call to check if standardrb is available
       allow(validator).to receive(:system).with("which standardrb > /dev/null 2>&1").and_return(true)
-      
+
       # Mock project root detection
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(temp_dir)
     end
@@ -73,7 +73,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
 
       expect(result[:success]).to be false
       expect(result[:findings].size).to eq(1)
-      
+
       finding = result[:findings].first
       expect(finding[:file]).to eq("lib/test.rb")
       expect(finding[:line]).to eq(10)
@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
 
     it "falls back to text parsing when JSON parsing fails" do
       text_output = "lib/test.rb:10:5: C: Layout/IndentationWidth: Use 2 spaces for indentation."
-      
+
       # Mock Open3 to return malformed JSON in stdout, causing fallback to text parsing
       allow(Open3).to receive(:capture3).and_return([text_output, "", double(exitstatus: 1)])
 
@@ -94,7 +94,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
 
       expect(result[:success]).to be false
       expect(result[:findings].size).to eq(1)
-      
+
       finding = result[:findings].first
       expect(finding[:file]).to eq("lib/test.rb")
       expect(finding[:line]).to eq(10)
@@ -112,7 +112,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
     it "uses custom project root when provided" do
       custom_root = "/custom/project/root"
       validator = described_class.new(project_root: custom_root)
-      
+
       allow(validator).to receive(:system).and_return(true)
       allow(Open3).to receive(:capture3).and_return(['{"files":[]}', "", double(exitstatus: 0)])
 
@@ -127,7 +127,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
     it "prefers dev-tools subdirectory as working directory" do
       dev_tools_dir = File.join(temp_dir, "dev-tools")
       Dir.mkdir(dev_tools_dir)
-      
+
       allow(validator).to receive(:system).and_return(true)
       allow(Open3).to receive(:capture3).and_return(['{"files":[]}', "", double(exitstatus: 0)])
 
@@ -148,7 +148,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
 
     it "sets fix option to true" do
       validator.autofix(["lib/test.rb"])
-      
+
       expect(validator.options[:fix]).to be true
     end
 
@@ -187,7 +187,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
     it "includes config file when it exists" do
       config_file = File.join(temp_dir, ".standard.yml")
       File.write(config_file, "# StandardRB config")
-      
+
       validator = described_class.new(config_file: config_file)
       allow(validator).to receive(:system).and_return(true)
       allow(Open3).to receive(:capture3).and_return(['{"files":[]}', "", double(exitstatus: 0)])
@@ -221,7 +221,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
             "path" => "/absolute/path/to/file.rb",
             "offenses" => [
               {
-                "location" => { "line" => 1, "column" => 1 },
+                "location" => {"line" => 1, "column" => 1},
                 "severity" => "warning",
                 "message" => "Test message",
                 "cop_name" => "TestCop",
@@ -247,7 +247,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
             "path" => mock_file_path,
             "offenses" => [
               {
-                "location" => { "line" => 1, "column" => 1 },
+                "location" => {"line" => 1, "column" => 1},
                 "severity" => "warning",
                 "message" => "Test message",
                 "cop_name" => "TestCop",
@@ -274,7 +274,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::StandardRbValidator do
             "path" => outside_path,
             "offenses" => [
               {
-                "location" => { "line" => 1, "column" => 1 },
+                "location" => {"line" => 1, "column" => 1},
                 "severity" => "warning",
                 "message" => "Test message",
                 "cop_name" => "TestCop",
