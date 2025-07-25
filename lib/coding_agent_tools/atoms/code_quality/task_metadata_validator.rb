@@ -70,7 +70,14 @@ module CodingAgentTools
         end
 
         def validate_task_file(file_path, errors, findings)
-          content = File.read(file_path)
+          begin
+            content = File.read(file_path)
+          rescue IOError, SystemCallError => e
+            relative_path = make_path_relative(file_path)
+            errors << "#{relative_path}: Unable to read file - #{e.message}"
+            return
+          end
+          
           relative_path = make_path_relative(file_path)
           frontmatter, body = parse_task_file_content(content, relative_path, errors)
 
