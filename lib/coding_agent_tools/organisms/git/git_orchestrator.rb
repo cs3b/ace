@@ -509,7 +509,7 @@ module CodingAgentTools
         end
 
         def get_staged_diff(repository)
-          repository_path = (repository[:name] == "main") ? nil : repository[:path]
+          repository_path = repository[:full_path]
           executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
 
           begin
@@ -816,7 +816,7 @@ module CodingAgentTools
 
           commands_by_repo.each do |repo_name, commands|
             repository = repositories.find { |r| r[:name] == repo_name }
-            repository_path = (repo_name == "main") ? nil : repository[:path]
+            repository_path = repository[:full_path]
             executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
 
             repo_results = []
@@ -867,7 +867,7 @@ module CodingAgentTools
 
             begin
               repository = repositories.find { |r| r[:name] == repo_name }
-              repository_path = (repo_name == "main") ? nil : repository[:path]
+              repository_path = repository[:full_path]
               executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
 
               repo_results = []
