@@ -464,6 +464,432 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     end
   end
 
+  describe "comprehensive edge cases and error handling" do
+    let(:validator) { described_class.new(template_dirs: [templates_dir]) }
+
+    before do
+      FileUtils.mkdir_p(templates_dir)
+    end
+
+    context "with malformed markdown files" do
+      it "handles files with encoding issues" do
+        # This test demonstrates that encoding issues will raise ArgumentError
+        file_path = File.join(temp_dir, "encoding.md")
+        File.write(file_path, "{{#include template.md}}\n\xFF\xFE Invalid UTF-8")
+
+        expect { validator.validate([temp_dir]) }.to raise_error(ArgumentError, /invalid byte sequence/)
+      end
+
+      it "handles very large markdown files" do
+        large_content = "# Large File\n\n" + ("Content line\n" * 10000) + "{{#include missing.md}}\n"
+        create_markdown_file("large.md", large_content)
+
+        start_time = Time.now
+        result = validator.validate([temp_dir])
+        end_time = Time.now
+
+        expect(result[:success]).to be false
+        expect(result[:findings].size).to eq(1)
+        expect(end_time - start_time).to be < 2.0 # Should handle large files efficiently
+      end
+
+      it "handles empty markdown files" do
+        create_markdown_file("empty.md", "")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be true
+        expect(result[:findings]).to be_empty
+      end
+
+      it "handles files with only whitespace" do
+        create_markdown_file("whitespace.md", "   \n\t\n   \n")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be true
+        expect(result[:findings]).to be_empty
+      end
+    end
+
+    context "with special file paths and names" do
+      it "handles files with Unicode names" do
+        unicode_file = "файл.md"
+        create_markdown_file(unicode_file, "{{#include missing.md}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:file]).to end_with(unicode_file)
+      end
+
+      it "handles files with special characters in names" do
+        special_file = "file@#$%^&*()_+.md"
+        create_markdown_file(special_file, "{{#include missing.md}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:file]).to end_with(special_file)
+      end
+
+      it "handles files with spaces in names" do
+        spaced_file = "file with spaces.md"
+        create_markdown_file(spaced_file, "{{#include missing.md}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:file]).to end_with(spaced_file)
+      end
+
+      it "handles very long file paths" do
+        deep_dir = File.join(temp_dir, *Array.new(10) { "very_long_directory_name" })
+        FileUtils.mkdir_p(deep_dir)
+        long_file = File.join(deep_dir, "deep_file.md")
+        File.write(long_file, "{{#include missing.md}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:file]).to eq(long_file)
+      end
+    end
+
+    context "with template path edge cases" do
+      it "handles templates with Unicode paths" do
+        unicode_template = "шаблон.md"
+        create_markdown_file("unicode_template.md", "{{#include #{unicode_template}}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:template]).to eq(unicode_template)
+      end
+
+      it "handles templates with spaces in paths" do
+        spaced_template = "template with spaces.md"
+        create_markdown_file("spaced_template.md", "{{#include #{spaced_template}}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:template]).to eq(spaced_template)
+      end
+
+      it "handles very long template paths" do
+        long_template = ("very_long_path_segment/" * 20) + "template.md"
+        create_markdown_file("long_template.md", "{{#include #{long_template}}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:template]).to eq(long_template)
+      end
+
+      it "handles templates with special characters" do
+        special_template = "template@#$%^&*()_+.md"
+        create_markdown_file("special_template.md", "{{#include #{special_template}}}")
+
+        result = validator.validate([temp_dir])
+        expect(result[:success]).to be false
+        expect(result[:findings].first[:template]).to eq(special_template)
+      end
+
+      it "handles empty template paths" do
+        create_markdown_file("empty_template.md", "{{#include }}")
+
+        result = validator.validate([temp_dir])
+        # Empty template path with just spaces doesn't match the pattern
+        expect(result[:success]).to be true
+        expect(result[:findings]).to be_empty
+      end
+    end
+
+    context "with complex code block scenarios" do
+      it "handles nested backtick code blocks" do
+        create_markdown_file("nested_backticks.md", <<~CONTENT
+          # Nested Backticks
+          
+          {{#include before.md}}
+          
+          ```
+          This is code with {{#include should_be_ignored.md}}
+          ```
+          
+          {{#include after.md}}
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        templates = result[:findings].map { |f| f[:template] }
+        expect(templates).to include("before.md", "after.md")
+        expect(templates).not_to include("should_be_ignored.md")
+      end
+
+      it "handles mixed backtick and tilde code blocks" do
+        create_markdown_file("mixed_blocks.md", <<~CONTENT
+          # Mixed Code Blocks
+          
+          {{#include before.md}}
+          
+          ```
+          Code block with {{#include ignored1.md}}
+          ```
+          
+          Content between blocks
+          
+          ~~~
+          Another code block with {{#include ignored2.md}}
+          ~~~
+          
+          {{#include after.md}}
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        templates = result[:findings].map { |f| f[:template] }
+        expect(templates).to include("before.md", "after.md")
+        expect(templates).not_to include("ignored1.md", "ignored2.md")
+      end
+
+      it "handles unclosed code blocks at end of file" do
+        create_markdown_file("unclosed_block.md", <<~CONTENT
+          # Unclosed Code Block
+          
+          {{#include before.md}}
+          
+          ```
+          This code block is never closed
+          {{#include should_be_ignored.md}}
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        templates = result[:findings].map { |f| f[:template] }
+        expect(templates).to include("before.md")
+        expect(templates).not_to include("should_be_ignored.md")
+      end
+
+      it "handles multiple templates on the same line" do
+        create_markdown_file("same_line.md", "{{#include first.md}} and {{#include second.md}} on same line")
+
+        result = validator.validate([temp_dir])
+        expect(result[:findings].size).to eq(2)
+        templates = result[:findings].map { |f| f[:template] }
+        expect(templates).to include("first.md", "second.md")
+      end
+    end
+
+    context "with template pattern variations" do
+      it "handles patterns with extra whitespace" do
+        create_markdown_file("whitespace_patterns.md", <<~CONTENT
+          {{#include    extra_spaces.md   }}
+          <!--   #include   extra_spaces2.md   -->
+          {%   include   "extra_spaces3.md"   %}
+          [[include:  extra_spaces4.md  ]]
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        expect(result[:findings].size).to eq(4)
+        templates = result[:findings].map { |f| f[:template] }
+        # The patterns capture whitespace as part of the template name
+        expect(templates).to include("extra_spaces.md   ", "extra_spaces2.md", "extra_spaces3.md", "  extra_spaces4.md  ")
+      end
+
+      it "handles case variations in patterns" do
+        create_markdown_file("case_patterns.md", <<~CONTENT
+          {{#INCLUDE case1.md}}
+          {{#Include case2.md}}
+          <!-- #INCLUDE case3.md -->
+          <!-- #Include case4.md -->
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        # Current implementation is case-sensitive, so these shouldn't match
+        expect(result[:success]).to be true
+        expect(result[:findings]).to be_empty
+      end
+
+      it "handles malformed template patterns" do
+        create_markdown_file("malformed.md", <<~CONTENT
+          {{#include missing_brace.md}
+          {#include missing_hash.md}}
+          {{include missing_hash.md}}
+          <!-- include missing_hash.md -->
+          {% include missing_quotes.md %}
+          [[include missing_colon.md]]
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        # Only well-formed patterns should be detected
+        expect(result[:success]).to be true
+        expect(result[:findings]).to be_empty
+      end
+    end
+
+    context "with performance stress testing" do
+      it "handles many template references efficiently" do
+        many_templates = (1..100).map { |i| "{{#include template#{i}.md}}" }.join("\n")
+        create_markdown_file("many_templates.md", many_templates)
+
+        start_time = Time.now
+        result = validator.validate([temp_dir])
+        end_time = Time.now
+
+        expect(result[:findings].size).to eq(100)
+        expect(end_time - start_time).to be < 1.0
+      end
+
+      it "handles many markdown files efficiently" do
+        100.times do |i|
+          create_markdown_file("file#{i}.md", "{{#include missing#{i}.md}}")
+        end
+
+        start_time = Time.now
+        result = validator.validate([temp_dir])
+        end_time = Time.now
+
+        expect(result[:findings].size).to eq(100)
+        expect(end_time - start_time).to be < 2.0
+      end
+
+      it "handles deep directory structures efficiently" do
+        deep_path = temp_dir
+        20.times do |i|
+          deep_path = File.join(deep_path, "level#{i}")
+          FileUtils.mkdir_p(deep_path)
+          File.write(File.join(deep_path, "deep#{i}.md"), "{{#include missing#{i}.md}}")
+        end
+
+        start_time = Time.now
+        result = validator.validate([temp_dir])
+        end_time = Time.now
+
+        expect(result[:findings].size).to eq(20)
+        expect(end_time - start_time).to be < 1.0
+      end
+    end
+
+    context "with concurrent access simulation" do
+      it "maintains consistency during concurrent validation" do
+        # Create test files
+        5.times do |i|
+          create_markdown_file("concurrent#{i}.md", "{{#include missing#{i}.md}}")
+        end
+
+        threads = []
+        results = Queue.new
+
+        10.times do
+          threads << Thread.new do
+            local_validator = described_class.new(template_dirs: [templates_dir])
+            results << local_validator.validate([temp_dir])
+          end
+        end
+
+        threads.each(&:join)
+
+        # All results should be consistent
+        first_result = results.pop
+        while !results.empty?
+          next_result = results.pop
+          expect(next_result[:success]).to eq(first_result[:success])
+          expect(next_result[:findings].size).to eq(first_result[:findings].size)
+        end
+      end
+    end
+  end
+
+  describe "algorithm correctness verification" do
+    let(:validator) { described_class.new(template_dirs: [templates_dir]) }
+
+    before do
+      FileUtils.mkdir_p(templates_dir)
+    end
+
+    context "line number accuracy" do
+      it "reports correct line numbers for multiple templates" do
+        content = <<~CONTENT
+          # Line 1
+          
+          Line 3 content
+          {{#include missing1.md}}
+          Line 5 content
+          
+          Line 7 content
+          {{#include missing2.md}}
+          Line 9 content
+        CONTENT
+
+        create_markdown_file("line_numbers.md", content)
+
+        result = validator.validate([temp_dir])
+        expect(result[:findings].size).to eq(2)
+
+        # Sort findings by line number for predictable testing
+        findings = result[:findings].sort_by { |f| f[:line] }
+        expect(findings[0][:line]).to eq(4)
+        expect(findings[0][:template]).to eq("missing1.md")
+        expect(findings[1][:line]).to eq(8)
+        expect(findings[1][:template]).to eq("missing2.md")
+      end
+
+      it "handles templates at beginning and end of file" do
+        content = <<~CONTENT
+          {{#include first.md}}
+          Middle content
+          {{#include last.md}}
+        CONTENT
+
+        create_markdown_file("boundaries.md", content)
+
+        result = validator.validate([temp_dir])
+        findings = result[:findings].sort_by { |f| f[:line] }
+        expect(findings[0][:line]).to eq(1)
+        expect(findings[1][:line]).to eq(3)
+      end
+    end
+
+    context "pattern matching precision" do
+      it "distinguishes between similar patterns" do
+        create_markdown_file("similar_patterns.md", <<~CONTENT
+          {{#include real.md}}
+          {{#includes fake.md}}
+          {{include also_fake.md}}
+          <!-- #include real2.md -->
+          <!-- include fake2.md -->
+          {% include "real3.md" %}
+          {% includes "fake3.md" %}
+          [[include:real4.md]]
+          [[includes:fake4.md]]
+        CONTENT
+        )
+
+        result = validator.validate([temp_dir])
+        templates = result[:findings].map { |f| f[:template] }
+        expect(templates).to include("real.md", "real2.md", "real3.md", "real4.md")
+        expect(templates).not_to include("fake.md", "also_fake.md", "fake2.md", "fake3.md", "fake4.md")
+      end
+    end
+
+    context "error message formatting" do
+      it "formats error messages consistently" do
+        create_markdown_file("error_format.md", "{{#include missing.md}}")
+
+        result = validator.validate([temp_dir])
+        error = result[:errors].first
+
+        expect(error).to match(/error_format\.md:\d+: Missing template 'missing\.md'/)
+        expect(error).to include(File.join(temp_dir, "error_format.md"))
+      end
+
+      it "preserves original template paths in error messages" do
+        complex_path = "complex/path/with spaces/template.md"
+        create_markdown_file("complex_error.md", "{{#include #{complex_path}}}")
+
+        result = validator.validate([temp_dir])
+        error = result[:errors].first
+
+        expect(error).to include(complex_path)
+      end
+    end
+  end
+
   private
 
   def create_markdown_file(filename, content)
