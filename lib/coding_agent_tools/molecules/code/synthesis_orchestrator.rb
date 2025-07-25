@@ -95,6 +95,46 @@ module CodingAgentTools
           )
         end
 
+        # Synthesize method that matches test expectations
+        # Returns a hash instead of SynthesisResult object for compatibility
+        # @param options [Hash] Synthesis options
+        # @return [Hash] Result hash with :success, :output_file, :error keys
+        def synthesize(**options)
+          if options[:dry_run]
+            return {
+              success: true,
+              dry_run: true,
+              reports_found: options[:reports]&.length || 0,
+              output_file: options[:output_file],
+              model: options[:model]
+            }
+          end
+
+          # For regular synthesis, use the main method but return hash format
+          result = synthesize_reports(
+            reports: options[:reports] || [],
+            session_info: nil, # Not used in test interface
+            model: options[:model] || "google:gemini-2.5-pro",
+            output_path: options[:output_file] || "cr-report.md",
+            format: options[:format] || "markdown",
+            system_prompt_path: options[:system_prompt],
+            force: options[:force] || false,
+            debug: options[:debug] || false
+          )
+
+          # Convert SynthesisResult to hash format expected by tests
+          {
+            success: result.success?,
+            output_file: result.output_path,
+            error: result.error
+          }
+        rescue => e
+          {
+            success: false,
+            error: e.message
+          }
+        end
+
         private
 
         # Build comprehensive synthesis prompt

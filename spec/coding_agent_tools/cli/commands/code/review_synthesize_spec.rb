@@ -137,6 +137,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
 
     context "with insufficient reports" do
       it "rejects single report" do
+        allow(mock_report_collector).to receive(:collect_reports).and_return({
+          success: true,
+          reports: [{path: report1, content: "Content 1"}]
+        })
         result = command.call(reports: [report1])
 
         expect(result).to eq(1)
@@ -144,6 +148,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       end
 
       it "rejects empty report list" do
+        allow(mock_report_collector).to receive(:collect_reports).and_return({
+          success: true,
+          reports: []
+        })
         result = command.call(reports: [])
 
         expect(result).to eq(1)
@@ -353,7 +361,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
 
         expect(result).to eq(1)
         # Debug mode might show stack trace or additional information
-        expect($stderr).to have_received(:write).with(match(/error/i))
+        expect($stderr).to have_received(:write).with(match(/error/i)).at_least(:once)
       end
     end
 
@@ -386,7 +394,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.desc).to eq("Synthesize multiple code review reports into unified analysis")
+      expect(described_class.description).to eq("Synthesize multiple code review reports into unified analysis")
     end
 
     it "requires reports argument" do
@@ -413,15 +421,22 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
 
   describe "integration with dependencies" do
     it "creates required component instances" do
-      expect(CodingAgentTools::Molecules::Code::ReportCollector).to receive(:new)
-      expect(CodingAgentTools::Molecules::Code::SessionPathInferrer).to receive(:new)
-      expect(CodingAgentTools::Molecules::Code::SynthesisOrchestrator).to receive(:new)
+      mock_collector = instance_double("CodingAgentTools::Molecules::Code::ReportCollector")
+      mock_inferrer = instance_double("CodingAgentTools::Molecules::Code::SessionPathInferrer")
+      mock_orchestrator = instance_double("CodingAgentTools::Molecules::Code::SynthesisOrchestrator")
 
-      begin
-        command.call(reports: [report1, report2])
-      rescue
-        nil
-      end
+      allow(mock_collector).to receive(:collect_reports).and_return({
+        success: true,
+        reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
+      })
+      allow(mock_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
+      allow(mock_orchestrator).to receive(:synthesize).and_return({success: true})
+
+      expect(CodingAgentTools::Molecules::Code::ReportCollector).to receive(:new).and_return(mock_collector)
+      expect(CodingAgentTools::Molecules::Code::SessionPathInferrer).to receive(:new).and_return(mock_inferrer)
+      expect(CodingAgentTools::Molecules::Code::SynthesisOrchestrator).to receive(:new).and_return(mock_orchestrator)
+
+      command.call(reports: [report1, report2])
     end
 
     it "coordinates components correctly" do
@@ -455,6 +470,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     end
 
     it "returns 1 for insufficient reports" do
+      allow(mock_report_collector).to receive(:collect_reports).and_return({
+        success: true,
+        reports: [{path: report1, content: "Content 1"}]
+      })
       result = command.call(reports: [report1])
       expect(result).to eq(1)
     end

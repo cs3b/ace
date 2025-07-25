@@ -45,9 +45,9 @@ module CodingAgentTools
           ]
 
           def call(reports:, **options)
-            # Validate minimum reports
-            if reports.length < 2
-              error_output("Error: At least 2 report files are required for synthesis")
+            # Validate system prompt file if provided
+            if options[:system_prompt] && !File.exist?(options[:system_prompt])
+              error_output("Error: System prompt file not found: #{options[:system_prompt]}")
               return 1
             end
 
@@ -58,6 +58,12 @@ module CodingAgentTools
 
             unless collection_result[:success]
               error_output("Error: #{collection_result[:error]}")
+              return 1
+            end
+
+            # Validate minimum reports after collection (in case of glob expansion)
+            if collection_result[:reports].length < 2
+              error_output("Error: At least 2 report files are required for synthesis")
               return 1
             end
             info_output("✅ Found #{collection_result[:reports].length} valid review reports")
@@ -71,35 +77,34 @@ module CodingAgentTools
             end
             info_output("📄 Output will be saved to: #{File.basename(output_path)}")
 
-            # Handle dry run
-            if options[:dry_run]
-              return show_dry_run_info(collection_result, inference_result, output_path, options)
-            end
-
-            # Execute synthesis
-            info_output("🧠 Starting synthesis with model: #{options[:model]}")
+            # Execute synthesis (including dry run)
             synthesis_orchestrator = CodingAgentTools::Molecules::Code::SynthesisOrchestrator.new
 
             synthesis_result = synthesis_orchestrator.synthesize(
               reports: collection_result[:reports],
-              model: options[:model],
+              model: options[:model] || "google:gemini-2.5-pro",
               output_file: output_path,
-              format: options[:format],
+              format: options[:format] || "markdown",
               system_prompt: options[:system_prompt],
-              force: options[:force],
-              debug: options[:debug],
-              dry_run: options[:dry_run]
+              force: options[:force] || false,
+              debug: options[:debug] || false,
+              dry_run: options[:dry_run] || false
             )
 
             if synthesis_result[:success]
-              success_output("✅ Synthesis completed successfully")
-              if synthesis_result[:output_file]
-                success_output("📄 Report saved to: #{synthesis_result[:output_file]}")
+              if options[:dry_run]
+                # Handle dry run output
+                info_output("🔍 Dry run completed")
+              else
+                success_output("✅ Synthesis completed successfully") 
+                if synthesis_result[:output_file]
+                  success_output("📄 Report saved to: #{synthesis_result[:output_file]}")
+                end
               end
 
               0
             else
-              error_output("❌ Synthesis failed: #{synthesis_result[:error]}")
+              error_output("Error: #{synthesis_result[:error]}")
               1
             end
           rescue => e
