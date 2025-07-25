@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
   before do
     allow(CodingAgentTools::Organisms::Code::ReviewManager).to receive(:new).and_return(mock_review_manager)
     allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return("/project/root")
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -28,12 +28,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       let(:session_result) do
         {
           success: true,
-          session: double("session", 
+          session: double("session",
             session_name: "review-20240101-120000",
             session_id: "20240101-120000",
             directory_path: "/sessions/review-20240101-120000",
-            focus: "code"
-          ),
+            focus: "code"),
           target: double("target", type: "git_range", file_count: 10, line_count: 500),
           context: double("context", mode: "auto", document_count: 3)
         }
@@ -162,13 +161,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       end
 
       it "validates system prompt file is readable" do
-        File.chmod(0000, system_prompt_file)
+        File.chmod(0o000, system_prompt_file)
         result = command.call(focus: "code", target: "HEAD~1..HEAD", system_prompt: system_prompt_file)
 
         expect(result).to eq(1)
         expect($stderr).to have_received(:write).with("Error: Custom system prompt file not readable: #{system_prompt_file}\n")
       ensure
-        File.chmod(0644, system_prompt_file) if File.exist?(system_prompt_file)
+        File.chmod(0o644, system_prompt_file) if File.exist?(system_prompt_file)
       end
 
       it "accepts valid system prompt file" do
@@ -202,12 +201,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
     context "with dry run" do
       let(:prep_result) do
         {
-          target_info: { type: "git_range", format: "commit_range" },
-          context_info: { 
-            available: true, 
+          target_info: {type: "git_range", format: "commit_range"},
+          context_info: {
+            available: true,
             found: [
-              { type: "README", path: "README.md" },
-              { type: "Architecture", path: "docs/architecture.md" }
+              {type: "README", path: "README.md"},
+              {type: "Architecture", path: "docs/architecture.md"}
             ]
           },
           system_prompt: "review/code-review.md",
@@ -263,12 +262,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       let(:session_result) do
         {
           success: true,
-          session: double("session", 
+          session: double("session",
             session_name: "review-20240101-120000",
             session_id: "20240101-120000",
             directory_path: "/sessions/review-20240101-120000",
-            focus: "code"
-          ),
+            focus: "code"),
           target: double("target", type: "git_range", file_count: 10, line_count: 500),
           context: double("context", mode: "auto", document_count: 3)
         }
@@ -276,7 +274,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
       before do
         allow(mock_review_manager).to receive(:create_review_session).and_return(session_result)
-        allow(mock_review_manager).to receive(:execute_review).and_return({ success: true })
+        allow(mock_review_manager).to receive(:execute_review).and_return({success: true})
       end
 
       it "executes review with specified model" do
@@ -300,7 +298,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       end
 
       it "handles execution failure" do
-        allow(mock_review_manager).to receive(:execute_review).and_return({ success: false, error: "Model failed" })
+        allow(mock_review_manager).to receive(:execute_review).and_return({success: false, error: "Model failed"})
 
         command.call(focus: "code", target: "HEAD~1..HEAD", model: "test")
 
@@ -338,7 +336,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
 
       it "shows backtrace in debug mode" do
         ENV["DEBUG"] = "true"
-        
+
         result = command.call(focus: "code", target: "HEAD~1..HEAD")
 
         expect(result).to eq(1)

@@ -98,27 +98,27 @@ module CodingAgentTools
 
         def convert_to_gfm(doc, original_content)
           kramdown_output = doc.to_kramdown
-          
+
           # Convert Kramdown task list format back to GFM format
           kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" \/>(.+)$/m, '- [ ] \1')
           kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" checked="checked" \/>(.+)$/m, '- [x] \1')
-          
+
           # Remove task-list class marker
-          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, '')
-          
+          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, "")
+
           # Convert indented code blocks back to fenced code blocks
           kramdown_output = kramdown_output.gsub(/^    (.+?)$\n^\{: \.language-(\w+)\}$/m) do |match|
             language = $2
-            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, '') }
+            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, "") }
             "```#{language}\n#{code_lines.join("\n")}\n```"
           end
-          
+
           # Clean up remaining language markers
-          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, '')
-          
+          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, "")
+
           # Clean up header ID attributes if auto_ids was disabled
-          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, '')
-          
+          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, "")
+
           kramdown_output.strip
         end
       end

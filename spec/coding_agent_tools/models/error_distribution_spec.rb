@@ -6,10 +6,10 @@ require "coding_agent_tools/models/error_distribution"
 RSpec.describe CodingAgentTools::Models::ErrorDistribution do
   let(:sample_errors) do
     [
-      { file: "app/models/user.rb", line: 10, message: "Style/StringLiterals" },
-      { file: "app/models/user.rb", line: 15, message: "Layout/TrailingWhitespace" },
-      { file: "app/controllers/users_controller.rb", line: 5, message: "Style/HashSyntax" },
-      { file: "spec/models/user_spec.rb", line: 20, message: "RSpec/ExampleLength" }
+      {file: "app/models/user.rb", line: 10, message: "Style/StringLiterals"},
+      {file: "app/models/user.rb", line: 15, message: "Layout/TrailingWhitespace"},
+      {file: "app/controllers/users_controller.rb", line: 5, message: "Style/HashSyntax"},
+      {file: "spec/models/user_spec.rb", line: 20, message: "RSpec/ExampleLength"}
     ]
   end
 
@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
   end
 
   describe "#add_error" do
-    let(:new_error) { { file: "lib/helper.rb", line: 8, message: "Style/Documentation" } }
+    let(:new_error) { {file: "lib/helper.rb", line: 8, message: "Style/Documentation"} }
 
     it "adds a new error to the errors array" do
       distribution = described_class.new(errors: sample_errors.dup)
@@ -119,7 +119,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
       distribution = described_class.new(errors: sample_errors.dup)
       initial_files_covered = distribution.files_covered
 
-      existing_file_error = { file: "app/models/user.rb", line: 25, message: "New error" }
+      existing_file_error = {file: "app/models/user.rb", line: 25, message: "New error"}
       distribution.add_error(existing_file_error)
 
       expect(distribution.files_covered).to eq(initial_files_covered)
@@ -144,7 +144,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
       expect(distribution.error_count).to eq(distribution.errors.size)
 
       # Add another error and check consistency
-      new_error = { file: "new_file.rb", line: 1, message: "Test error" }
+      new_error = {file: "new_file.rb", line: 1, message: "Test error"}
       distribution.add_error(new_error)
 
       expect(distribution.error_count).to eq(distribution.errors.size)
@@ -157,7 +157,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
       expect(distribution.files_covered).to eq(unique_files.size)
 
       # Add error from existing file
-      existing_file_error = { file: sample_errors.first[:file], line: 99, message: "Another error" }
+      existing_file_error = {file: sample_errors.first[:file], line: 99, message: "Another error"}
       distribution.add_error(existing_file_error)
 
       unique_files_after = distribution.errors.map { |e| e[:file] }.uniq
@@ -168,9 +168,9 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
   describe "error structure handling" do
     it "handles errors with different structures" do
       varied_errors = [
-        { file: "file1.rb", line: 10, message: "Error 1" },
-        { file: "file2.rb", line: 20, message: "Error 2", severity: "warning" },
-        { file: "file3.rb", line: 30, message: "Error 3", rule: "Style/Something", linter: "rubocop" }
+        {file: "file1.rb", line: 10, message: "Error 1"},
+        {file: "file2.rb", line: 20, message: "Error 2", severity: "warning"},
+        {file: "file3.rb", line: 30, message: "Error 3", rule: "Style/Something", linter: "rubocop"}
       ]
 
       distribution = described_class.new(errors: varied_errors)
@@ -182,9 +182,9 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
 
     it "handles errors with missing file information" do
       errors_missing_files = [
-        { line: 10, message: "Error without file" },
-        { file: nil, line: 20, message: "Error with nil file" },
-        { file: "valid_file.rb", line: 30, message: "Valid error" }
+        {line: 10, message: "Error without file"},
+        {file: nil, line: 20, message: "Error with nil file"},
+        {file: "valid_file.rb", line: 30, message: "Valid error"}
       ]
 
       distribution = described_class.new(errors: errors_missing_files)
@@ -199,7 +199,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
   describe "edge cases", :edge_cases do
     it "handles very large error arrays" do
       large_errors = Array.new(10000) do |i|
-        { file: "file#{i % 100}.rb", line: i, message: "Error #{i}" }
+        {file: "file#{i % 100}.rb", line: i, message: "Error #{i}"}
       end
 
       distribution = described_class.new(errors: large_errors)
@@ -210,9 +210,9 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
 
     it "handles errors with empty or whitespace-only file names" do
       edge_case_errors = [
-        { file: "", line: 1, message: "Empty file name" },
-        { file: "   ", line: 2, message: "Whitespace file name" },
-        { file: "valid.rb", line: 3, message: "Valid error" }
+        {file: "", line: 1, message: "Empty file name"},
+        {file: "   ", line: 2, message: "Whitespace file name"},
+        {file: "valid.rb", line: 3, message: "Valid error"}
       ]
 
       distribution = described_class.new(errors: edge_case_errors)
@@ -223,10 +223,10 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
 
     it "handles errors with special characters in file paths" do
       special_errors = [
-        { file: "path/with spaces/file.rb", line: 1, message: "Space in path" },
-        { file: "path/with-dashes/file.rb", line: 2, message: "Dashes in path" },
-        { file: "path/with_underscores/file.rb", line: 3, message: "Underscores in path" },
-        { file: "émojis🚀/ñéẅ_file.rb", line: 4, message: "Unicode in path" }
+        {file: "path/with spaces/file.rb", line: 1, message: "Space in path"},
+        {file: "path/with-dashes/file.rb", line: 2, message: "Dashes in path"},
+        {file: "path/with_underscores/file.rb", line: 3, message: "Underscores in path"},
+        {file: "émojis🚀/ñéẅ_file.rb", line: 4, message: "Unicode in path"}
       ]
 
       distribution = described_class.new(errors: special_errors)
@@ -237,7 +237,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
 
     it "handles errors with very long messages" do
       long_message = "A" * 10000
-      long_message_error = { file: "file.rb", line: 1, message: long_message }
+      long_message_error = {file: "file.rb", line: 1, message: long_message}
 
       distribution = described_class.new(errors: [long_message_error])
 
@@ -247,9 +247,9 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
 
     it "handles zero and negative line numbers" do
       edge_line_errors = [
-        { file: "file1.rb", line: 0, message: "Zero line number" },
-        { file: "file2.rb", line: -1, message: "Negative line number" },
-        { file: "file3.rb", line: nil, message: "Nil line number" }
+        {file: "file1.rb", line: 0, message: "Zero line number"},
+        {file: "file2.rb", line: -1, message: "Negative line number"},
+        {file: "file3.rb", line: nil, message: "Nil line number"}
       ]
 
       distribution = described_class.new(errors: edge_line_errors)
@@ -273,7 +273,7 @@ RSpec.describe CodingAgentTools::Models::ErrorDistribution do
         metadata: {
           severity: "high",
           tags: ["performance", "security"],
-          context: { method: "process_data", class: "DataProcessor" }
+          context: {method: "process_data", class: "DataProcessor"}
         },
         timestamp: Time.now
       }

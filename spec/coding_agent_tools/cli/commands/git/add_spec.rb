@@ -40,7 +40,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Add do
       end
 
       it "returns 0 for successful execution" do
-        exit_code = capture_stdout { command.call(files: files) }
+        capture_stdout { command.call(files: files) }
         expect(mock_orchestrator).to have_received(:add)
       end
 

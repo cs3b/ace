@@ -6,10 +6,13 @@ require "tmpdir"
 RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
   let(:command) { described_class.new }
   let(:temp_dir) { Dir.mktmpdir }
-  let(:mock_path_resolver) { instance_double("CodingAgentTools::Molecules::PathResolver") }
+  let(:mock_path_resolver) { double("CodingAgentTools::Molecules::PathResolver") }
 
   before do
     allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mock_path_resolver)
+    # Stub the methods to allow spying
+    allow(mock_path_resolver).to receive(:resolve_scoped_pattern)
+    allow(mock_path_resolver).to receive(:find_matching_paths)
   end
 
   after do
@@ -99,6 +102,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
       let(:nonexistent_path) { "nonexistent_dir" }
 
       before do
+        # Allow Dir.exist? to be called with any argument and use real behavior by default
+        allow(Dir).to receive(:exist?).and_call_original
+        # Then stub the specific nonexistent path
         allow(Dir).to receive(:exist?).with(nonexistent_path).and_return(false)
       end
 
@@ -113,13 +119,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
             type: :scoped_single,
             autocorrect_message: "Resolved 'dev:tools' to dev-tools scope"
           })
+          # Allow Dir.exist? to be called with any argument and use real behavior by default
+          allow(Dir).to receive(:exist?).and_call_original
+          # Then stub specific paths we care about
           allow(Dir).to receive(:exist?).with(resolved_path).and_return(true)
+          allow(Dir).to receive(:exist?).with(scoped_path).and_return(false)
           allow(command).to receive(:`).with("ls '#{resolved_path}'").and_return("file1.rb\nfile2.rb\n")
           allow($?).to receive(:exitstatus).and_return(0)
         end
 
         it "resolves scoped patterns" do
-          output = capture_stdout { command.call(path: scoped_path) }
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Resolved 'dev:tools' to dev-tools scope")
           expect(output).to include("Best match: '#{resolved_path}'")
@@ -132,14 +142,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
             success: true,
             path: resolved_path,
             type: :scoped_multiple,
-            alternatives: ["/project/dev-tools", "/other/dev-tools"]
+            alternatives: [resolved_path, "/other/dev-tools"]
           })
-          allow(mock_path_resolver).to receive(:format_alternative_matches).with([resolved_path, "/other/dev-tools"]).and_return("Alternative matches:\n  /other/dev-tools")
+          allow(mock_path_resolver).to receive(:format_alternative_matches).and_return("Alternative matches:\n  /other/dev-tools")
 
-          output = capture_stdout { command.call(path: scoped_path) }
+          # Make sure both alternatives exist as directories
+          allow(Dir).to receive(:exist?).with("/other/dev-tools").and_return(true)
+
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Alternative matches:")
-          expect(mock_path_resolver).to have_received(:format_alternative_matches)
+          expect(mock_path_resolver).to have_received(:format_alternative_matches).with([resolved_path, "/other/dev-tools"])
         end
       end
 
@@ -167,7 +180,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
           end
 
           it "autocorrects to single matching directory" do
-            output = capture_stdout { command.call(path: nonexistent_path) }
+            output = capture_stdout { command.call(path: nonexistent_path, autocorrect: true) }
 
             expect(output).to include("Autocorrected: '#{nonexistent_path}' → '/project/some/directory'")
             expect(output).to include("content.txt")
@@ -190,7 +203,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
           end
 
           it "uses prioritized best match and shows alternatives" do
-            output = capture_stdout { command.call(path: nonexistent_path) }
+            output = capture_stdout { command.call(path: nonexistent_path, autocorrect: true) }
 
             expect(output).to include("Autocorrected: '#{nonexistent_path}' → '/project/some/directory'")
             expect(output).to include("content.txt")
@@ -219,7 +232,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
         end
 
         it "falls back to parent directory of found file" do
-          output = capture_stdout { command.call(path: nonexistent_path) }
+          output = capture_stdout { command.call(path: nonexistent_path, autocorrect: true) }
 
           expect(output).to include("Autocorrected: '#{nonexistent_path}' → '/project/some' (parent directory of found file)")
           expect(output).to include("file.rb")
@@ -252,7 +265,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
           end
 
           it "prioritizes parent directories and shows alternatives" do
-            output = capture_stdout { command.call(path: nonexistent_path) }
+            output = capture_stdout { command.call(path: nonexistent_path, autocorrect: true) }
 
             expect(output).to include("Autocorrected: '#{nonexistent_path}' → '/project/some' (parent directory of found file)")
             expect(output).to include("file1.rb")
@@ -266,6 +279,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
       let(:nonexistent_path) { "nonexistent_dir" }
 
       before do
+        # Allow Dir.exist? to be called with any argument and use real behavior by default
+        allow(Dir).to receive(:exist?).and_call_original
+        # Then stub the specific nonexistent path
         allow(Dir).to receive(:exist?).with(nonexistent_path).and_return(false)
       end
 
@@ -297,13 +313,16 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
       let(:error_result) { {success: false, error: "No matching paths found"} }
 
       before do
+        # Allow Dir.exist? to be called with any argument and use real behavior by default
+        allow(Dir).to receive(:exist?).and_call_original
+        # Then stub the specific nonexistent path
         allow(Dir).to receive(:exist?).with("nonexistent").and_return(false)
         allow(mock_path_resolver).to receive(:find_matching_paths).and_return([])
         allow(mock_path_resolver).to receive(:resolve_path).and_return(error_result)
       end
 
       it "displays resolution errors" do
-        output = capture_stdout { command.call(path: "nonexistent") }
+        output = capture_stdout { command.call(path: "nonexistent", autocorrect: true) }
 
         expect(output).to include("Error: No matching paths found")
       end
@@ -311,6 +330,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
 
     context "with exceptions" do
       before do
+        # Allow Dir.exist? to be called with any argument and use real behavior by default
+        allow(Dir).to receive(:exist?).and_call_original
+        # Then stub the specific error path
         allow(Dir).to receive(:exist?).with("error_path").and_return(true)
         allow(command).to receive(:`).and_raise(StandardError, "Command execution failed")
       end

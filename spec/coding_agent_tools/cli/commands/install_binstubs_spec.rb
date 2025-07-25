@@ -141,7 +141,6 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
 
       before do
         allow(File).to receive(:exist?).and_call_original
-        allow(File).to receive(:exist?).with(anything).and_return(true)
 
         # Mock the config source directory path
         allow(File).to receive(:expand_path).and_call_original
@@ -152,6 +151,16 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
         File.write(File.join(config_source_dir, "setup.sh"), "#!/bin/bash\n# Setup script")
         File.write(File.join(config_source_dir, "setup.fish"), "#!/usr/bin/fish\n# Fish setup")
         File.write(File.join(config_source_dir, "setup-env"), "#!/bin/bash\n# Env setup")
+
+        # Make source files appear to exist
+        allow(File).to receive(:exist?).with(File.join(config_source_dir, "setup.sh")).and_return(true)
+        allow(File).to receive(:exist?).with(File.join(config_source_dir, "setup.fish")).and_return(true)
+        allow(File).to receive(:exist?).with(File.join(config_source_dir, "setup-env")).and_return(true)
+
+        # Make target files appear to NOT exist (so they get created)
+        allow(File).to receive(:exist?).with(File.join(target_setup_dir, "setup.sh")).and_return(false)
+        allow(File).to receive(:exist?).with(File.join(target_setup_dir, "setup.fish")).and_return(false)
+        allow(File).to receive(:exist?).with(File.join(target_setup_dir, "setup-env")).and_return(false)
 
         allow(File).to receive(:directory?).and_call_original
         allow(File).to receive(:directory?).with(config_source_dir).and_return(true)

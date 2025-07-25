@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
     # Mock the atoms dependencies
     allow(CodingAgentTools::Atoms::Code::FileContentReader).to receive(:new).and_return(file_reader_mock)
     allow(CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner).to receive(:find_files_with_pattern).and_return(file_scanner_mock)
-    
+
     # Set up the instance variable mock
     extractor.instance_variable_set(:@file_reader, file_reader_mock)
     extractor.instance_variable_set(:@file_scanner, file_scanner_mock)
@@ -67,7 +67,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
         allow(File).to receive(:exist?).with(pattern).and_return(false)
         allow(Dir).to receive(:glob).with(pattern).and_return(matching_files)
         allow(File).to receive(:file?).and_return(true)
-        
+
         matching_files.each do |file|
           allow(file_reader_mock).to receive(:read).with(file).and_return(
             success: true,
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
         allow(file_scanner_mock).to receive(:find_files_with_pattern).with(".", pattern).and_return(
           files: matching_files
         )
-        
+
         matching_files.each do |file|
           allow(file_reader_mock).to receive(:read).with(file).and_return(
             success: true,
@@ -157,16 +157,16 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
       expect(result[:success]).to be true
       expect(result[:xml_file]).to eq(xml_file)
       expect(result[:meta_file]).to eq(meta_file)
-      
+
       expect(File).to have_received(:write).with(xml_file, anything)
       expect(File).to have_received(:write).with(meta_file, anything)
     end
 
     it "includes line count for single file in metadata" do
       meta_content = "target: #{pattern}\ntype: single_file\nfiles: 1\nsize: 2 lines\n"
-      
-      result = extractor.extract_and_save(pattern, session_dir)
-      
+
+      extractor.extract_and_save(pattern, session_dir)
+
       expect(File).to have_received(:write).with(
         File.join(session_dir, "input.meta"),
         meta_content
@@ -208,9 +208,9 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
 
       it "skips files that fail to read" do
         allow(file_reader_mock).to receive(:read).with(files.first).and_return(success: false)
-        
+
         xml_content = extractor.send(:build_xml_content, files)
-        
+
         expect(xml_content).to include("Content 2")
         expect(xml_content).not_to include("Content 1")
       end
@@ -223,7 +223,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
           allow(File).to receive(:file?).and_return(true)
 
           result = extractor.send(:find_matching_files, "*.rb")
-          
+
           expect(result).to eq(["/test.rb"])
           expect(Dir).to have_received(:glob).with("*.rb")
         end
@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
           allow(file_scanner_mock).to receive(:find_files_with_pattern).and_return(files: ["/found.rb"])
 
           result = extractor.send(:find_matching_files, "ruby_files")
-          
+
           expect(result).to eq(["/found.rb"])
           expect(file_scanner_mock).to have_received(:find_files_with_pattern)
         end

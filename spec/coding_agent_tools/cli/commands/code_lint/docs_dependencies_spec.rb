@@ -32,7 +32,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with default options" do
       it "creates analyzer with default config" do
         allow(command).to receive(:puts)
-        
+
         command.call
 
         expect(CodingAgentTools::Organisms::DocDependencyAnalyzer)
@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "runs full analysis with default format" do
         allow(command).to receive(:puts)
-        
+
         command.call
 
         expect(mock_analyzer).to have_received(:analyze).with(
@@ -53,7 +53,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "outputs analysis result to stdout" do
         allow(command).to receive(:puts)
-        
+
         command.call
 
         expect(command).to have_received(:puts).with(analysis_result)
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "displays export file information" do
         allow(command).to receive(:puts)
-        
+
         command.call
 
         expect(command).to have_received(:puts).with("\nVisualization files:")
@@ -76,7 +76,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "creates analyzer with custom config path" do
         allow(command).to receive(:puts)
-        
+
         command.call(config: custom_config)
 
         expect(CodingAgentTools::Organisms::DocDependencyAnalyzer)
@@ -87,7 +87,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with JSON format" do
       it "requests JSON output format" do
         allow(command).to receive(:puts)
-        
+
         command.call(format: "json")
 
         expect(mock_analyzer).to have_received(:analyze).with(
@@ -103,7 +103,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "writes result to specified file" do
         allow(command).to receive(:puts)
-        
+
         command.call(output: output_file)
 
         expect(File).to have_received(:write).with(output_file, analysis_result)
@@ -114,7 +114,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with no_exports option" do
       it "disables file exports" do
         allow(command).to receive(:puts)
-        
+
         command.call(no_exports: true)
 
         expect(mock_analyzer).to have_received(:analyze).with(
@@ -126,7 +126,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "does not show export file information" do
         allow(command).to receive(:puts)
-        
+
         command.call(no_exports: true)
 
         expect(command).not_to have_received(:puts).with("\nVisualization files:")
@@ -144,7 +144,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "runs analysis without exports" do
         allow(command).to receive(:puts)
-        
+
         command.call(stats_only: true)
 
         expect(mock_analyzer).to have_received(:analyze_dependencies_only)
@@ -153,7 +153,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "outputs comprehensive statistics" do
         allow(command).to receive(:puts)
-        
+
         command.call(stats_only: true)
 
         expect(command).to have_received(:puts).with("## Documentation Dependency Statistics")
@@ -171,7 +171,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with custom export files" do
       it "uses custom DOT file name" do
         allow(command).to receive(:puts)
-        
+
         command.call(dot_file: "custom.dot")
 
         expect(command).to have_received(:puts).with("- DOT graph: custom.dot")
@@ -180,7 +180,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
 
       it "uses custom JSON file name" do
         allow(command).to receive(:puts)
-        
+
         command.call(json_file: "custom.json")
 
         expect(command).to have_received(:puts).with("- JSON data: custom.json")
@@ -197,7 +197,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
       it "handles the exception gracefully" do
         allow(command).to receive(:warn)
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(command).to have_received(:warn).with("Error during analysis: #{error_message}")
@@ -215,7 +215,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
         it "includes backtrace in error output" do
           allow(command).to receive(:warn)
           allow(command).to receive(:exit)
-          
+
           command.call
 
           expect(command).to have_received(:warn).with("Error during analysis: #{error_message}")
@@ -228,7 +228,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with stats_only and no_exports combined" do
       it "runs stats only mode without affecting exports logic" do
         allow(command).to receive(:puts)
-        
+
         command.call(stats_only: true, no_exports: true)
 
         expect(mock_analyzer).to have_received(:analyze_dependencies_only)
@@ -239,7 +239,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
     context "with output file and stats_only" do
       it "does not write to output file in stats only mode" do
         allow(command).to receive(:puts)
-        
+
         command.call(stats_only: true, output: "output.txt")
 
         expect(File).not_to have_received(:write)

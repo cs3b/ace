@@ -7,8 +7,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
   let(:mock_config_loader) { instance_double("CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader") }
   let(:mock_path_resolver) { instance_double("CodingAgentTools::Atoms::CodeQuality::PathResolver") }
   let(:mock_runner) { instance_double("MarkdownRunner") }
-  let(:mock_config) { { markdown: { enabled: true } } }
-  let(:successful_result) { { success: true, errors: [] } }
+  let(:mock_config) { {markdown: {enabled: true}} }
+  let(:successful_result) { {success: true, errors: []} }
 
   before do
     allow(CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader).to receive(:new)
@@ -17,7 +17,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
       .and_return(mock_path_resolver)
     allow(CodingAgentTools::Organisms::CodeQuality::LanguageRunnerFactory).to receive(:create_runner)
       .and_return(mock_runner)
-    
+
     allow(mock_config_loader).to receive(:load).and_return(mock_config)
     allow(mock_runner).to receive(:validate).and_return(successful_result)
     allow(mock_runner).to receive(:autofix).and_return(successful_result)
@@ -28,7 +28,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
     context "with default options" do
       it "loads configuration with default path" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader)
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "creates path resolver" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(CodingAgentTools::Atoms::CodeQuality::PathResolver)
@@ -47,7 +47,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "creates markdown runner with config and path resolver" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(CodingAgentTools::Organisms::CodeQuality::LanguageRunnerFactory)
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "runs validation with default paths" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(mock_runner).to have_received(:validate).with(paths: ["."])
@@ -68,7 +68,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "reports results" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(mock_runner).to have_received(:report).with(successful_result)
@@ -76,7 +76,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "exits with success code when validation succeeds" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(command).to have_received(:exit).with(0)
@@ -88,7 +88,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "runs validation with custom paths" do
         allow(command).to receive(:exit)
-        
+
         command.call(paths: custom_paths)
 
         expect(mock_runner).to have_received(:validate).with(paths: custom_paths)
@@ -100,7 +100,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "loads configuration from custom path" do
         allow(command).to receive(:exit)
-        
+
         command.call(config: config_path)
 
         expect(CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader)
@@ -111,7 +111,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
     context "with autofix option" do
       it "runs autofix instead of validation" do
         allow(command).to receive(:exit)
-        
+
         command.call(autofix: true)
 
         expect(mock_runner).to have_received(:autofix).with(paths: ["."])
@@ -121,7 +121,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
       it "runs autofix with custom paths" do
         allow(command).to receive(:exit)
         custom_paths = ["docs/"]
-        
+
         command.call(autofix: true, paths: custom_paths)
 
         expect(mock_runner).to have_received(:autofix).with(paths: custom_paths)
@@ -131,7 +131,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
     context "with dry_run option" do
       it "runs validation instead of autofix even when autofix is true" do
         allow(command).to receive(:exit)
-        
+
         command.call(autofix: true, dry_run: true)
 
         expect(mock_runner).to have_received(:validate).with(paths: ["."])
@@ -140,7 +140,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
     end
 
     context "when validation fails" do
-      let(:failed_result) { { success: false, errors: ["Markdown error"] } }
+      let(:failed_result) { {success: false, errors: ["Markdown error"]} }
 
       before do
         allow(mock_runner).to receive(:validate).and_return(failed_result)
@@ -148,7 +148,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "exits with error code" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(command).to have_received(:exit).with(1)
@@ -156,7 +156,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "still reports the failed result" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(mock_runner).to have_received(:report).with(failed_result)
@@ -164,7 +164,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
     end
 
     context "when autofix fails" do
-      let(:failed_result) { { success: false, errors: ["Autofix failed"] } }
+      let(:failed_result) { {success: false, errors: ["Autofix failed"]} }
 
       before do
         allow(mock_runner).to receive(:autofix).and_return(failed_result)
@@ -172,7 +172,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "exits with error code" do
         allow(command).to receive(:exit)
-        
+
         command.call(autofix: true)
 
         expect(command).to have_received(:exit).with(1)
@@ -186,7 +186,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "does not report results" do
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(mock_runner).not_to have_received(:report)
@@ -195,7 +195,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
       it "handles nil result and exits with error" do
         allow(command).to receive(:warn)
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(command).to have_received(:warn).with(/Error:.*undefined method.*\[\].*nil/)
@@ -213,7 +213,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
       it "handles the exception and exits with error" do
         allow(command).to receive(:warn)
         allow(command).to receive(:exit)
-        
+
         command.call
 
         expect(command).to have_received(:warn).with("Error: #{error_message}")
@@ -227,7 +227,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "processes all options correctly for validation" do
         allow(command).to receive(:exit)
-        
+
         command.call(
           paths: custom_paths,
           config: config_path,
@@ -242,7 +242,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
 
       it "processes all options correctly for autofix" do
         allow(command).to receive(:exit)
-        
+
         command.call(
           paths: custom_paths,
           config: config_path,
@@ -265,7 +265,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
         it "handles configuration errors" do
           allow(command).to receive(:warn)
           allow(command).to receive(:exit)
-          
+
           command.call
 
           expect(command).to have_received(:warn).with("Error: Config error")
@@ -282,7 +282,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Markdown do
         it "handles runner creation errors" do
           allow(command).to receive(:warn)
           allow(command).to receive(:exit)
-          
+
           command.call
 
           expect(command).to have_received(:warn).with("Error: Runner creation failed")

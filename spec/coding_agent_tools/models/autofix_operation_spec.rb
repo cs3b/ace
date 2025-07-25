@@ -46,7 +46,7 @@ RSpec.describe CodingAgentTools::Models::AutofixOperation do
     end
 
     it "accepts nil values for optional fields" do
-      minimal_attributes = { file: "test.rb" }
+      minimal_attributes = {file: "test.rb"}
       operation = described_class.new(minimal_attributes)
 
       expect(operation.file).to eq("test.rb")

@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewPrompt do
       focus_areas: ["Code quality, architecture, security, performance"],
       system_prompt_path: "/path/to/system_prompt.md",
       combined_content: "System prompt content\n\nUser content here",
-      metadata: { generated_at: Time.now.iso8601 }
+      metadata: {generated_at: Time.now.iso8601}
     }
   end
 

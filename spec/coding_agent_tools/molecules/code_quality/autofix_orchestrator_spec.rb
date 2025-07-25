@@ -25,9 +25,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
               standardrb: {
                 fixed: true,
                 findings: [
-                  { file: "lib/test.rb", line: 10, message: "Extra whitespace", correctable: true },
-                  { file: "lib/test.rb", line: 15, message: "Prefer single quotes", correctable: true },
-                  { file: "lib/helper.rb", line: 5, message: "Undefined variable", correctable: false }
+                  {file: "lib/test.rb", line: 10, message: "Extra whitespace", correctable: true},
+                  {file: "lib/test.rb", line: 15, message: "Prefer single quotes", correctable: true},
+                  {file: "lib/helper.rb", line: 5, message: "Undefined variable", correctable: false}
                 ]
               }
             }
@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
         expect(result[:total_fixed]).to eq(2)
         expect(result[:total_failed]).to eq(0)
         expect(result[:fixes_applied].length).to eq(1)
-        
+
         fix = result[:fixes_applied].first
         expect(fix[:type]).to eq("ruby_standardrb")
         expect(fix[:count]).to eq(2)
@@ -55,7 +55,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
               standardrb: {
                 fixed: true,
                 findings: [
-                  { file: "lib/test.rb", line: 5, message: "Undefined variable", correctable: false }
+                  {file: "lib/test.rb", line: 5, message: "Undefined variable", correctable: false}
                 ]
               }
             }
@@ -78,9 +78,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               styleguide: {
                 findings: [
-                  { file: "README.md", message: "Fixed formatting", fixed: true },
-                  { file: "docs/guide.md", message: "Fixed list item", fixed: true },
-                  { file: "CHANGELOG.md", message: "Issue not fixed", fixed: false }
+                  {file: "README.md", message: "Fixed formatting", fixed: true},
+                  {file: "docs/guide.md", message: "Fixed list item", fixed: true},
+                  {file: "CHANGELOG.md", message: "Issue not fixed", fixed: false}
                 ]
               }
             }
@@ -94,7 +94,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
         expect(result[:total_fixed]).to eq(2)
         expect(result[:total_failed]).to eq(0)
         expect(result[:fixes_applied].length).to eq(1)
-        
+
         fix = result[:fixes_applied].first
         expect(fix[:type]).to eq("markdown_formatting")
         expect(fix[:count]).to eq(2)
@@ -110,7 +110,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
               standardrb: {
                 fixed: true,
                 findings: [
-                  { file: "lib/test.rb", line: 10, message: "Extra whitespace", correctable: true }
+                  {file: "lib/test.rb", line: 10, message: "Extra whitespace", correctable: true}
                 ]
               }
             }
@@ -119,7 +119,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               styleguide: {
                 findings: [
-                  { file: "README.md", message: "Fixed formatting", fixed: true }
+                  {file: "README.md", message: "Fixed formatting", fixed: true}
                 ]
               }
             }
@@ -132,7 +132,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
 
         expect(result[:total_fixed]).to eq(2)
         expect(result[:fixes_applied].length).to eq(2)
-        
+
         types = result[:fixes_applied].map { |fix| fix[:type] }
         expect(types).to include("ruby_standardrb", "markdown_formatting")
       end
@@ -159,8 +159,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
           linters: {
             standardrb: {
               findings: [
-                { file: "lib/test.rb", line: 10, message: "Extra whitespace" },
-                { file: "lib/test.rb", line: 15, message: "Undefined variable" }
+                {file: "lib/test.rb", line: 10, message: "Extra whitespace"},
+                {file: "lib/test.rb", line: 15, message: "Undefined variable"}
               ]
             }
           }
@@ -175,7 +175,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               standardrb: {
                 findings: [
-                  { file: "lib/test.rb", line: 15, message: "Undefined variable" }
+                  {file: "lib/test.rb", line: 15, message: "Undefined variable"}
                 ]
               }
             }
@@ -200,9 +200,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               standardrb: {
                 findings: [
-                  { file: "lib/test.rb", line: 10, message: "Extra whitespace" },
-                  { file: "lib/test.rb", line: 15, message: "Undefined variable" },
-                  { file: "lib/test.rb", line: 20, message: "New syntax error" }
+                  {file: "lib/test.rb", line: 10, message: "Extra whitespace"},
+                  {file: "lib/test.rb", line: 15, message: "Undefined variable"},
+                  {file: "lib/test.rb", line: 20, message: "New syntax error"}
                 ]
               }
             }
@@ -242,7 +242,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               standardrb: {
                 findings: [
-                  { file: "lib/test.rb", line: 10, message: "Ruby issue" }
+                  {file: "lib/test.rb", line: 10, message: "Ruby issue"}
                 ]
               }
             }
@@ -251,7 +251,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
             linters: {
               styleguide: {
                 findings: [
-                  { file: "README.md", message: "Markdown issue" }
+                  {file: "README.md", message: "Markdown issue"}
                 ],
                 errors: ["Parse error in file.md"]
               }
@@ -264,11 +264,11 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
         issues = orchestrator.send(:extract_all_issues, mixed_results)
 
         expect(issues.length).to be >= 2
-        
+
         ruby_issue = issues.find { |i| i[:type] == "ruby_standardrb" }
         expect(ruby_issue[:file]).to eq("lib/test.rb")
         expect(ruby_issue[:line]).to eq(10)
-        
+
         markdown_issue = issues.find { |i| i[:type] == "markdown_styleguide" && i[:file] == "README.md" }
         expect(markdown_issue[:message]).to eq("Markdown issue")
       end
@@ -307,7 +307,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::AutofixOrchestrator do
           line: 10,
           message: "Extra whitespace"
         }
-        
+
         match = orchestrator.send(:find_matching_issue, different_issue, issue_list)
         expect(match).to be_nil
       end

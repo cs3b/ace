@@ -11,7 +11,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ProjectContextLoader do
     # Mock the atoms dependencies
     allow(CodingAgentTools::Atoms::Code::FileContentReader).to receive(:new).and_return(file_reader_mock)
     allow(CodingAgentTools::Atoms::YamlReader).to receive(:new).and_return(yaml_reader_mock)
-    
+
     # Set up the instance variable mocks
     loader.instance_variable_set(:@file_reader, file_reader_mock)
     loader.instance_variable_set(:@yaml_reader, yaml_reader_mock)
@@ -54,7 +54,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ProjectContextLoader do
 
         blueprint_doc = context.documents.find { |doc| doc[:type] == "blueprint" }
         expect(blueprint_doc[:content]).to include("Project Blueprint")
-        
+
         vision_doc = context.documents.find { |doc| doc[:type] == "vision" }
         expect(vision_doc[:content]).to include("Project vision content")
       end
@@ -159,7 +159,6 @@ RSpec.describe CodingAgentTools::Molecules::Code::ProjectContextLoader do
     end
   end
 
-
   describe "private methods" do
     describe "#load_auto_context" do
       before do
@@ -199,6 +198,5 @@ RSpec.describe CodingAgentTools::Molecules::Code::ProjectContextLoader do
         expect(context.documents.first[:content]).to eq("Custom content")
       end
     end
-
   end
 end

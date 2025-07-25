@@ -8,7 +8,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
   let(:mock_config_loader) { double("TreeConfigLoader") }
   let(:mock_path_resolver) { double("PathResolver") }
   let(:temp_dir) { Dir.mktmpdir }
-  
+
   let(:default_config) do
     {
       "default_depth" => 3,
@@ -42,7 +42,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
     allow(mock_config_loader).to receive(:load).and_return(default_config)
     allow(Dir).to receive(:exist?).and_call_original
     # Mock global status
-    
+
     # Default stubs for path resolver methods
     allow(mock_path_resolver).to receive(:resolve_scoped_pattern).and_return(success: false, error: "Not found")
     allow(mock_path_resolver).to receive(:find_matching_paths).and_return([])
@@ -50,6 +50,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
     allow(mock_path_resolver).to receive(:find_directories_by_name).and_return(success: false, error: "Not found")
     allow(mock_path_resolver).to receive(:prioritize_matches).and_return(best: "default", alternatives: [])
     allow(mock_path_resolver).to receive(:format_alternative_matches).and_return("")
+
+    # Mock $? to return a successful exit status for all tests
+    allow($?).to receive(:exitstatus).and_return(0)
   end
 
   after do
@@ -168,7 +171,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{resolved_path}'"
           allow(command).to receive(:`).with(expected_command).and_return("scoped directory output")
 
-          output = capture_stdout { command.call(path: scoped_path) }
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Scope resolved: 'scope:pattern' → 'resolved/directory'")
           expect(output).to include("Best match: '#{resolved_path}'")
@@ -193,7 +196,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{resolved_dir}'"
           allow(command).to receive(:`).with(expected_command).and_return("parent directory output")
 
-          output = capture_stdout { command.call(path: scoped_path) }
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Scope resolved: 'scope:pattern' → 'resolved/directory/file.txt'")
           expect(output).to include("Best match: '#{resolved_dir}' (parent directory of found file)")
@@ -223,7 +226,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{resolved_path}'"
           allow(command).to receive(:`).with(expected_command).and_return("tree output")
 
-          output = capture_stdout { command.call(path: scoped_path) }
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Alternative matches:")
           expect(output).to include("alternative1")
@@ -237,7 +240,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           allow(mock_path_resolver).to receive(:resolve_scoped_pattern).with(scoped_path)
             .and_return(success: false, error: "Scoped pattern not found")
 
-          output = capture_stdout { command.call(path: scoped_path) }
+          output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
 
           expect(output).to include("Error: Scoped pattern not found")
         end
@@ -259,7 +262,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{matched_dir}'"
           allow(command).to receive(:`).with(expected_command).and_return("matched directory output")
 
-          output = capture_stdout { command.call(path: search_path) }
+          output = capture_stdout { command.call(path: search_path, autocorrect: true) }
 
           expect(output).to include("Autocorrected: 'search_dir' → '#{matched_dir}'")
           expect(output).to include("matched directory output")
@@ -273,12 +276,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
             best: "dir1",
             alternatives: ["dir2", "dir3"]
           }
-          
+
           # Mock find_directories_by_name for autocorrection path
           allow(mock_path_resolver).to receive(:find_directories_by_name)
             .with(search_path, autocorrect: true)
             .and_return(success: true, path: "dir1", alternatives: ["dir2", "dir3"])
-          
+
           allow(Dir).to receive(:exist?).with(search_path).and_return(false)
           allow(mock_path_resolver).to receive(:find_matching_paths)
             .with(search_path, include_directories: true, max_results: 5)
@@ -368,7 +371,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
             .and_return([])
           allow(mock_path_resolver).to receive(:resolve_path).with(search_path, type: :file)
             .and_return(success: true, type: :multiple, paths: file_paths)
-          
+
           file_paths.each_with_index do |file_path, index|
             dir_path = dir_paths[index]
             is_dir = Dir.exist?(file_path)

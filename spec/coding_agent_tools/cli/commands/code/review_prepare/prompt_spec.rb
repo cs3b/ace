@@ -21,7 +21,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
     allow(command).to receive(:detect_target_from_session).and_return(mock_target)
     allow(command).to receive(:detect_context_from_session).and_return(mock_context)
     allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(mock_prompt)
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -46,7 +46,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "saves to default location in session directory" do
         expected_path = File.join(session_dir, "prompt.md")
-        
+
         command.call(session_dir: session_dir, focus: "code")
 
         expect(File).to have_received(:write).with(expected_path, "Combined prompt content")
@@ -55,7 +55,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "saves to custom output file when specified" do
         custom_output = File.join(temp_dir, "custom-prompt.md")
-        
+
         command.call(session_dir: session_dir, focus: "code", output: custom_output)
 
         expect(File).to have_received(:write).with(custom_output, "Combined prompt content")
@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "handles different focus types" do
         focus_types = ["code", "tests", "docs", "code tests", "code tests docs"]
-        
+
         focus_types.each do |focus|
           result = command.call(session_dir: session_dir, focus: focus)
 
@@ -75,7 +75,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "displays success information" do
         default_path = File.join(session_dir, "prompt.md")
-        
+
         command.call(session_dir: session_dir, focus: "code")
 
         expect($stdout).to have_received(:puts).with("✅ Prompt saved to: #{default_path}")
@@ -83,11 +83,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "shows prompt statistics" do
         # Assuming the implementation shows statistics
-        mock_prompt_with_stats = double("prompt", 
+        mock_prompt_with_stats = double("prompt",
           combined_content: "Combined prompt content",
           total_length: 1500,
-          section_count: 4
-        )
+          section_count: 4)
         allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(mock_prompt_with_stats)
         allow(mock_prompt_with_stats).to receive(:total_length).and_return(1500)
         allow(mock_prompt_with_stats).to receive(:section_count).and_return(4)
@@ -167,7 +166,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
     context "with missing session directory" do
       it "attempts to process nonexistent directory" do
         nonexistent_dir = "/nonexistent/session"
-        
+
         result = command.call(session_dir: nonexistent_dir, focus: "code")
 
         expect(command).to have_received(:load_session_from_dir).with(nonexistent_dir, "code")
@@ -179,7 +178,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
     context "with different output paths" do
       it "handles absolute output paths" do
         absolute_output = File.join(temp_dir, "absolute", "prompt.md")
-        
+
         command.call(session_dir: session_dir, focus: "code", output: absolute_output)
 
         expect(File).to have_received(:write).with(absolute_output, "Combined prompt content")
@@ -187,7 +186,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "handles relative output paths" do
         relative_output = "relative/prompt.md"
-        
+
         command.call(session_dir: session_dir, focus: "code", output: relative_output)
 
         expect(File).to have_received(:write).with(relative_output, "Combined prompt content")
@@ -195,7 +194,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
       it "handles output paths with special characters" do
         special_output = File.join(temp_dir, "prompt with spaces & symbols!.md")
-        
+
         command.call(session_dir: session_dir, focus: "code", output: special_output)
 
         expect(File).to have_received(:write).with(special_output, "Combined prompt content")
@@ -285,7 +284,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
     it "creates prompt builder instance" do
       expect(CodingAgentTools::Organisms::Code::PromptBuilder).to receive(:new)
 
-      command.call(session_dir: session_dir, focus: "code") rescue nil
+      begin
+        command.call(session_dir: session_dir, focus: "code")
+      rescue
+        nil
+      end
     end
 
     it "follows expected workflow" do

@@ -7,7 +7,7 @@ require "fileutils"
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::CassettesValidator do
   let(:temp_dir) { Dir.mktmpdir }
   let(:cassettes_dir) { File.join(temp_dir, "spec", "cassettes") }
-  
+
   after do
     FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
   end

@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       target_spec: "HEAD~1..HEAD",
       resolved_paths: nil,
       content_type: "diff",
-      size_info: { lines: 42, words: 156, files: 3 }
+      size_info: {lines: 42, words: 156, files: 3}
     }
   end
 
@@ -20,7 +20,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       target_spec: "src/**/*.rb",
       resolved_paths: ["src/model.rb", "src/controller.rb"],
       content_type: "xml",
-      size_info: { lines: 200, words: 800, files: 2 }
+      size_info: {lines: 200, words: 800, files: 2}
     }
   end
 
@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       target_spec: "lib/important.rb",
       resolved_paths: ["lib/important.rb"],
       content_type: "xml",
-      size_info: { lines: 50, words: 200, files: 1 }
+      size_info: {lines: 50, words: 200, files: 1}
     }
   end
 
@@ -42,7 +42,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       expect(target.target_spec).to eq("HEAD~1..HEAD")
       expect(target.resolved_paths).to be_nil
       expect(target.content_type).to eq("diff")
-      expect(target.size_info).to eq({ lines: 42, words: 156, files: 3 })
+      expect(target.size_info).to eq({lines: 42, words: 156, files: 3})
     end
 
     it "creates a new review target with file_pattern type" do
@@ -52,7 +52,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       expect(target.target_spec).to eq("src/**/*.rb")
       expect(target.resolved_paths).to eq(["src/model.rb", "src/controller.rb"])
       expect(target.content_type).to eq("xml")
-      expect(target.size_info).to eq({ lines: 200, words: 800, files: 2 })
+      expect(target.size_info).to eq({lines: 200, words: 800, files: 2})
     end
 
     it "creates a new review target with single_file type" do
@@ -62,7 +62,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
       expect(target.target_spec).to eq("lib/important.rb")
       expect(target.resolved_paths).to eq(["lib/important.rb"])
       expect(target.content_type).to eq("xml")
-      expect(target.size_info).to eq({ lines: 50, words: 200, files: 1 })
+      expect(target.size_info).to eq({lines: 50, words: 200, files: 1})
     end
   end
 
@@ -174,14 +174,14 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "returns 0 when size_info has no files key" do
-      target = described_class.new(git_diff_attributes.merge(size_info: { lines: 42, words: 156 }))
+      target = described_class.new(git_diff_attributes.merge(size_info: {lines: 42, words: 156}))
       expect(target.file_count).to eq(0)
     end
 
     it "prioritizes resolved_paths over size_info for file_based targets" do
       target = described_class.new(file_pattern_attributes.merge(
         resolved_paths: ["file1.rb", "file2.rb", "file3.rb"],
-        size_info: { files: 10 }
+        size_info: {files: 10}
       ))
       expect(target.file_count).to eq(3)
     end
@@ -199,7 +199,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "returns 0 when size_info has no lines key" do
-      target = described_class.new(git_diff_attributes.merge(size_info: { words: 156, files: 3 }))
+      target = described_class.new(git_diff_attributes.merge(size_info: {words: 156, files: 3}))
       expect(target.line_count).to eq(0)
     end
   end
@@ -216,7 +216,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "returns 0 when size_info has no words key" do
-      target = described_class.new(git_diff_attributes.merge(size_info: { lines: 42, files: 3 }))
+      target = described_class.new(git_diff_attributes.merge(size_info: {lines: 42, files: 3}))
       expect(target.word_count).to eq(0)
     end
   end
@@ -310,7 +310,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "handles very large size_info values" do
-      large_size_info = { lines: 1_000_000, words: 10_000_000, files: 50_000 }
+      large_size_info = {lines: 1_000_000, words: 10_000_000, files: 50_000}
       target = described_class.new(git_diff_attributes.merge(size_info: large_size_info))
       expect(target.line_count).to eq(1_000_000)
       expect(target.word_count).to eq(10_000_000)
@@ -318,7 +318,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "handles zero values in size_info" do
-      zero_size_info = { lines: 0, words: 0, files: 0 }
+      zero_size_info = {lines: 0, words: 0, files: 0}
       target = described_class.new(git_diff_attributes.merge(size_info: zero_size_info))
       expect(target.line_count).to eq(0)
       expect(target.word_count).to eq(0)
@@ -326,7 +326,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewTarget do
     end
 
     it "handles malformed size_info with extra keys" do
-      malformed_size_info = { lines: 42, words: 156, files: 3, extra_key: "ignored", another: 123 }
+      malformed_size_info = {lines: 42, words: 156, files: 3, extra_key: "ignored", another: 123}
       target = described_class.new(git_diff_attributes.merge(size_info: malformed_size_info))
       expect(target.line_count).to eq(42)
       expect(target.word_count).to eq(156)
