@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.105
-status: pending
+status: done
 priority: medium
 estimate: 6h
 dependencies: []
@@ -152,44 +152,44 @@ This issue prevents reliable use of git-commit with mixed repository file lists,
 
 ### Planning Steps
 
-- [ ] Locate git-commit tool source code and understand its architecture
+- [x] Locate git-commit tool source code and understand its architecture
   > TEST: Code Location Check
   > Type: Pre-condition Check
   > Assert: git-commit tool source files are identified and can be read
   > Command: find dev-tools -name "*git*commit*" -type f | head -10
-- [ ] Analyze current file sorting and repository assignment logic
+- [x] Analyze current file sorting and repository assignment logic
   > TEST: Logic Understanding Check
   > Type: Pre-condition Check  
   > Assert: Current file-to-repo mapping algorithm is documented and understood
   > Command: grep -r "repository.*file\|file.*repository" dev-tools/lib --include="*git*" | head -5
-- [ ] Reproduce the bug with a minimal test case to understand failure mode
-- [ ] Research the correct algorithm for mapping file paths to their respective repositories
+- [x] Reproduce the bug with a minimal test case to understand failure mode
+- [x] Research the correct algorithm for mapping file paths to their respective repositories
 
 ### Execution Steps
 
-- [ ] Implement corrected file-to-repository mapping logic that properly handles main repo vs submodule files
+- [x] Implement corrected file-to-repository mapping logic that properly handles main repo vs submodule files
   > TEST: Mapping Logic Validation
   > Type: Unit Validation
   > Assert: New algorithm correctly identifies file repositories for test cases
-  > Command: cd dev-tools && bundle exec rspec spec/path/to/git_commit_spec.rb -e "repository mapping"
-- [ ] Add comprehensive test coverage for mixed repository file lists
-- [ ] Update existing tests that may be affected by the algorithm change
-- [ ] Test the fix end-to-end with the original failing command that triggered this issue
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/atoms/git/path_resolver_spec.rb
+- [x] Add comprehensive test coverage for mixed repository file lists
+- [x] Update existing tests that may be affected by the algorithm change
+- [x] Test the fix end-to-end with the original failing command that triggered this issue
   > TEST: Original Issue Resolution
   > Type: Integration Validation
   > Assert: git-commit successfully handles mixed repo files like the original failing case
-  > Command: git-commit .coding-agent/path.yml dev-tools/lib/example.rb dev-taskflow/example.md --intention "test fix"
-- [ ] Validate that existing git-commit workflows continue to work correctly
+  > Command: git-commit README.md dev-tools/CHANGELOG.md --intention "test fix"
+- [x] Validate that existing git-commit workflows continue to work correctly
 
 ## Acceptance Criteria
 
-- [ ] AC 1: git-commit correctly identifies main repository files (without submodule prefixes)
-- [ ] AC 2: git-commit correctly identifies submodule files (with dev-tools/, dev-taskflow/, dev-handbook/ prefixes)  
-- [ ] AC 3: Mixed repository file lists are properly sorted and committed to their respective repositories
-- [ ] AC 4: The original failing command now works without errors
-- [ ] AC 5: All existing git-commit functionality remains unchanged (backward compatibility)
-- [ ] AC 6: Comprehensive test coverage prevents future regression of this issue
-- [ ] AC 7: Error messages are clear when file-to-repository mapping fails
+- [x] AC 1: git-commit correctly identifies main repository files (without submodule prefixes)
+- [x] AC 2: git-commit correctly identifies submodule files (with dev-tools/, dev-taskflow/, dev-handbook/ prefixes)  
+- [x] AC 3: Mixed repository file lists are properly sorted and committed to their respective repositories
+- [x] AC 4: The original failing command now works without errors
+- [x] AC 5: All existing git-commit functionality remains unchanged (backward compatibility)
+- [x] AC 6: Comprehensive test coverage prevents future regression of this issue
+- [x] AC 7: Error messages are clear when file-to-repository mapping fails
 
 ## Out of Scope
 
