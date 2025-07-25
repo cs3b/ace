@@ -99,18 +99,23 @@ module CodingAgentTools
         end
 
         def resolve_relative_path_intelligently(path)
-          # Use realpath to resolve symlinks consistently
-          current_dir = File.realpath(Dir.pwd)
-          project_root_normalized = File.realpath(@project_root)
+          # Use expand_path initially to avoid premature symlink resolution
+          # We'll resolve symlinks only when needed for path comparisons
+          current_dir = Dir.pwd
+          project_root_base = @project_root
+          
+          # Normalize for comparison purposes (resolve symlinks for accurate containment checks)
+          current_dir_normalized = File.realpath(current_dir)
+          project_root_normalized = File.realpath(project_root_base)
 
           # Try resolving from current directory first
           current_resolved = File.expand_path(path, current_dir)
 
           # Try resolving from project root as fallback
-          project_resolved = File.expand_path(path, project_root_normalized)
+          project_resolved = File.expand_path(path, project_root_base)
 
           # If current directory is the project root, use current resolution
-          if current_dir == project_root_normalized
+          if current_dir_normalized == project_root_normalized
             return current_resolved
           end
 
@@ -118,10 +123,14 @@ module CodingAgentTools
           # Check if the file would make more sense from project root
 
           # Check if paths are within project (using normalized paths with symlinks resolved)
-          current_in_project = current_resolved.start_with?(project_root_normalized + File::SEPARATOR) ||
-            current_resolved == project_root_normalized
-          project_in_project = project_resolved.start_with?(project_root_normalized + File::SEPARATOR) ||
-            project_resolved == project_root_normalized
+          # We need to normalize the resolved paths for accurate containment checks
+          current_resolved_normalized = File.exist?(current_resolved) ? File.realpath(current_resolved) : File.expand_path(current_resolved)  
+          project_resolved_normalized = File.exist?(project_resolved) ? File.realpath(project_resolved) : File.expand_path(project_resolved)
+          
+          current_in_project = current_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
+            current_resolved_normalized == project_root_normalized
+          project_in_project = project_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
+            project_resolved_normalized == project_root_normalized
 
           # If both are in project, check which one actually exists or makes more sense
           if current_in_project && project_in_project
@@ -193,20 +202,23 @@ module CodingAgentTools
         end
 
         def path_within_repository?(absolute_path, repo_path)
-          # Normalize paths for comparison and resolve symlinks
+          # Normalize paths for comparison and resolve symlinks consistently
+          # Always use the same normalization approach for both paths to avoid 
+          # symlink resolution inconsistencies
           begin
-            normalized_path = File.realpath(absolute_path) if File.exist?(absolute_path)
-            normalized_path ||= File.expand_path(absolute_path)
+            # Try to resolve symlinks for both paths if they exist
+            if File.exist?(absolute_path) && File.exist?(repo_path)
+              normalized_path = File.realpath(absolute_path)
+              normalized_repo_path = File.realpath(repo_path)
+            else
+              # If either path doesn't exist, use expand_path for both
+              # to ensure consistent path format comparison
+              normalized_path = File.expand_path(absolute_path)
+              normalized_repo_path = File.expand_path(repo_path)
+            end
           rescue
-            # If realpath fails (file doesn't exist), fall back to expand_path
+            # If any realpath fails, fall back to expand_path for both
             normalized_path = File.expand_path(absolute_path)
-          end
-
-          begin
-            normalized_repo_path = File.realpath(repo_path) if File.exist?(repo_path)
-            normalized_repo_path ||= File.expand_path(repo_path)
-          rescue
-            # If realpath fails, fall back to expand_path
             normalized_repo_path = File.expand_path(repo_path)
           end
 
