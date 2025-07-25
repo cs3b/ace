@@ -32,7 +32,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
     # Stub the dependencies
     allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(main_repo_path)
     allow(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).and_return(mock_repositories)
-    
+
     # Create test directories
     FileUtils.mkdir_p(submodule_path)
   end
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
         result = dispatcher.dispatch_paths([main_file])
 
         expect(result).to have_key("main")
-        
+
         main_dispatch = result["main"]
         expect(main_dispatch[:command_context][:git_command_prefix]).to eq("git -C #{main_repo_path.shellescape}")
         expect(main_dispatch[:command_context][:prefix]).to eq("-C #{main_repo_path.shellescape}")
@@ -84,7 +84,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
         result = dispatcher.dispatch_paths([submodule_file])
 
         expect(result).to have_key("submodule")
-        
+
         submodule_dispatch = result["submodule"]
         expect(submodule_dispatch[:command_context][:git_command_prefix]).to eq("git -C #{submodule_path.shellescape}")
         expect(submodule_dispatch[:command_context][:prefix]).to eq("-C #{submodule_path.shellescape}")
@@ -143,11 +143,11 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
         result = dispatcher.dispatch_paths([spaced_file])
 
         main_dispatch = result["main"]
-        
+
         # Path should be properly escaped
         expect(main_dispatch[:command_context][:git_command_prefix]).to include(main_repo_path.shellescape)
         expect(main_dispatch[:command_context][:prefix]).to include(main_repo_path.shellescape)
-        
+
         # Should not contain unescaped spaces
         expect(main_dispatch[:command_context][:git_command_prefix]).not_to match(/git -C [^'"].*\s.*[^'"]/)
       end
@@ -178,7 +178,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
     context "for submodule repository" do
       let(:submodule_repository) do
         {
-          name: "submodule", 
+          name: "submodule",
           path: submodule_path,
           full_path: submodule_path
         }
@@ -249,7 +249,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
         Dir.chdir(main_repo_path)
         result_from_root = dispatcher.dispatch_paths([main_file])
 
-        # Test from submodule directory  
+        # Test from submodule directory
         Dir.chdir(submodule_path)
         result_from_submodule = dispatcher.dispatch_paths([main_file])
 
@@ -260,7 +260,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
         # All results should be identical
         expect(result_from_root["main"][:command_context]).to eq(result_from_submodule["main"][:command_context])
         expect(result_from_root["main"][:command_context]).to eq(result_from_tmp["main"][:command_context])
-        
+
         # All should use absolute paths with -C
         result_from_root["main"][:command_context][:git_command_prefix].tap do |prefix|
           expect(prefix).to start_with("git -C")
