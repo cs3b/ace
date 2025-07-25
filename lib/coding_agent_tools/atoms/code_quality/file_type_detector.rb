@@ -60,7 +60,7 @@ module CodingAgentTools
           patterns = DEFAULT_PATTERNS.dup
 
           # Override with configuration if provided
-          if @config && @config.dig(:file_patterns)
+          if @config&.dig(:file_patterns)
             @config[:file_patterns].each do |language, lang_patterns|
               patterns[language.to_sym] = lang_patterns if lang_patterns.is_a?(Array)
             end
@@ -73,7 +73,7 @@ module CodingAgentTools
           case pattern
           when /^\*\./
             # Extension pattern like "*.rb"
-            extension = pattern[2..-1]
+            extension = pattern[2..]
             file_name.end_with?(".#{extension}")
           when /\/\*$/
             # Directory pattern like "exe/*"
