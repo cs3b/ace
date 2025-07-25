@@ -410,7 +410,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       # Test that only valid format values are accepted
       # This might be enforced by Dry::CLI validation
       %w[text json markdown].each do |valid_format|
-        expect { command.call(reports: [report1, report2], format: valid_format) }.not_to raise_error(ArgumentError)
+        expect { command.call(reports: [report1, report2], format: valid_format) }.not_to raise_error
       end
     end
 

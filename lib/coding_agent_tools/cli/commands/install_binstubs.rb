@@ -37,9 +37,9 @@ module CodingAgentTools
           config_path = options[:config] || default_config_path
 
           unless File.exist?(config_path)
-            puts "Error: Configuration file not found: #{config_path}"
-            puts "Use --config to specify a different configuration file."
-            exit 1
+            error_output("Error: Configuration file not found: #{config_path}")
+            error_output("Use --config to specify a different configuration file.")
+            return 1
           end
 
           installer = CodingAgentTools::Organisms::BinstubInstaller.new(
@@ -60,12 +60,12 @@ module CodingAgentTools
             suggest_path_setup(target_directory, options) unless options[:alias]
           end
         rescue CodingAgentTools::Error => e
-          puts "Error: #{e.message}"
-          exit 1
+          error_output("Error: #{e.message}")
+          return 1
         rescue => e
-          puts "Unexpected error: #{e.message}"
-          puts e.backtrace if options[:verbose]
-          exit 1
+          error_output("Unexpected error: #{e.message}")
+          error_output(e.backtrace.join("\n")) if options[:verbose]
+          return 1
         end
 
         private
@@ -109,9 +109,9 @@ module CodingAgentTools
           end
 
           if results[:errors].any?
-            puts "Errors occurred:"
-            results[:errors].each { |error| puts "  ✗ #{error[:alias]}: #{error[:error]}" }
-            exit 1
+            error_output("Errors occurred:")
+            results[:errors].each { |error| error_output("  ✗ #{error[:alias]}: #{error[:error]}") }
+            return 1
           end
 
           total = results[:installed].size + results[:skipped].size
@@ -126,8 +126,8 @@ module CodingAgentTools
           target_setup_dir = File.join(target_directory, "bin-setup-env")
 
           unless File.directory?(config_source_dir)
-            puts "Error: PATH setup templates not found at #{config_source_dir}"
-            exit 1
+            error_output("Error: PATH setup templates not found at #{config_source_dir}")
+            return 1
           end
 
           # Create target directory
@@ -174,6 +174,16 @@ module CodingAgentTools
           puts ""
           puts "💡 Tip: To add tools to your PATH, run:"
           puts "   coding_agent_tools install-binstubs --setup-path"
+        end
+
+        private
+
+        def error_output(message)
+          warn message
+        end
+
+        def info_output(message)
+          puts message
         end
       end
     end

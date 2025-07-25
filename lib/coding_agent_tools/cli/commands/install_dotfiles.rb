@@ -41,18 +41,18 @@ module CodingAgentTools
           target_dir = File.join(project_root, ".coding-agent")
 
           if options[:debug]
-            puts "Debug: Project root: #{project_root}"
-            puts "Debug: Template directory: #{template_dir}"
-            puts "Debug: Target directory: #{target_dir}"
+            debug_output("Debug: Project root: #{project_root}")
+            debug_output("Debug: Template directory: #{template_dir}")
+            debug_output("Debug: Target directory: #{target_dir}")
           end
 
           # Create target directory if it doesn't exist
           unless Dir.exist?(target_dir)
             if options[:dry_run]
-              puts "Would create directory: #{target_dir}"
+              info_output("Would create directory: #{target_dir}")
             else
               FileUtils.mkdir_p(target_dir)
-              puts "Created directory: #{target_dir}"
+              info_output("Created directory: #{target_dir}")
             end
           end
 
@@ -73,36 +73,36 @@ module CodingAgentTools
 
             if File.exist?(target_file) && !options[:force]
               if options[:dry_run]
-                puts "Would skip existing file: #{filename}"
+                info_output("Would skip existing file: #{filename}")
               else
-                puts "Skipping existing file: #{filename} (use --force to overwrite)"
+                info_output("Skipping existing file: #{filename} (use --force to overwrite)")
               end
               skipped_count += 1
               next
             end
 
             if options[:dry_run]
-              puts "Would copy: #{filename}"
+              info_output("Would copy: #{filename}")
             else
               FileUtils.cp(template_file, target_file)
-              puts "Copied: #{filename}"
+              info_output("Copied: #{filename}")
             end
             copied_count += 1
           end
 
           # Summary
-          puts ""
+          info_output("")
           if options[:dry_run]
-            puts "Dry run complete:"
-            puts "  Would copy: #{copied_count} files"
-            puts "  Would skip: #{skipped_count} files"
+            info_output("Dry run complete:")
+            info_output("  Would copy: #{copied_count} files")
+            info_output("  Would skip: #{skipped_count} files")
           else
-            puts "Installation complete:"
-            puts "  Copied: #{copied_count} files"
-            puts "  Skipped: #{skipped_count} files"
-            puts ""
-            puts "Configuration files are now available in .coding-agent/"
-            puts "You can customize them for your project's specific needs."
+            info_output("Installation complete:")
+            info_output("  Copied: #{copied_count} files")
+            info_output("  Skipped: #{skipped_count} files")
+            info_output("")
+            info_output("Configuration files are now available in .coding-agent/")
+            info_output("You can customize them for your project's specific needs.")
           end
 
           0
@@ -137,6 +137,14 @@ module CodingAgentTools
 
         def error_output(message)
           warn message
+        end
+
+        def debug_output(message)
+          $stdout.puts message
+        end
+
+        def info_output(message)
+          $stdout.puts message
         end
       end
     end

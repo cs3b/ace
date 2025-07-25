@@ -128,7 +128,7 @@ RSpec.shared_examples "a chat completion client" do
         rescue
           nil
         end
-      }.not_to raise_error(ArgumentError)
+      }.not_to raise_error
     end
   end
 end

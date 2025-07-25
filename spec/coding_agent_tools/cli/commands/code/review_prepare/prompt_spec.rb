@@ -274,7 +274,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
     it "has output option as optional" do
       # Should not raise error when output is not provided
-      expect { command.call(session_dir: session_dir, focus: "code") }.not_to raise_error(ArgumentError)
+      expect { command.call(session_dir: session_dir, focus: "code") }.not_to raise_error
     end
 
     it "has usage examples defined" do
