@@ -51,7 +51,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
           project_root,
           {}
         )
-        expect(mock_orchestrator).to have_received(:status).with({})
+        expect(mock_orchestrator).to have_received(:status).with(
+          hash_including(untracked_files: nil)
+        )
       end
     end
 
@@ -106,8 +108,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
             short: true,
             verbose: true,
             untracked_files: "all",
-            no_color: true,
-            force_color: false
+            no_color: true
           )
         )
       end
@@ -260,7 +261,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
 
       capture_stdout { command.call }
 
-      expect(mock_orchestrator).to have_received(:status).with({})
+      expect(mock_orchestrator).to have_received(:status).with(
+        hash_including(untracked_files: nil)
+      )
     end
 
     it "filters out false boolean options" do
@@ -268,7 +271,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
 
       capture_stdout { command.call(main_only: false, verbose: false) }
 
-      expect(mock_orchestrator).to have_received(:status).with({})
+      expect(mock_orchestrator).to have_received(:status).with(
+        hash_including(untracked_files: nil)
+      )
     end
 
     it "includes true boolean options" do
