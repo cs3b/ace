@@ -31,6 +31,10 @@ module CodingAgentTools
             ]
 
             def call(**options)
+              # Check for required options (Dry::CLI doesn't validate for direct method calls)
+              raise ArgumentError, "session_dir is required" unless options[:session_dir]
+              raise ArgumentError, "focus is required" unless options[:focus]
+
               prompt_builder = CodingAgentTools::Organisms::Code::PromptBuilder.new
 
               begin
@@ -44,19 +48,16 @@ module CodingAgentTools
                 # Build prompt
                 prompt = prompt_builder.build_review_prompt(session, target, context)
 
-                # Save to custom output if specified
-                if options[:output]
-                  File.write(options[:output], prompt.combined_content)
-                  puts "✅ Prompt saved to: #{options[:output]}"
-                else
-                  puts "✅ Prompt saved to: #{File.join(options[:session_dir], "prompt.md")}"
-                end
+                # Save to custom output if specified, otherwise default location
+                output_path = options[:output] || File.join(options[:session_dir], "prompt.md")
+                File.write(output_path, prompt.combined_content)
+                puts "✅ Prompt saved to: #{output_path}"
 
                 puts "📊 Prompt size: #{prompt.word_count} words"
                 puts "🎯 Focus areas: #{prompt.focus_areas.size}"
                 0
               rescue => e
-                warn "Error: #{e.message}"
+                $stderr.write "Error: #{e.message}\n"
                 1
               end
             end

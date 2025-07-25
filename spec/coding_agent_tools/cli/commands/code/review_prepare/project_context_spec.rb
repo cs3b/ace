@@ -16,6 +16,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     allow(CodingAgentTools::Organisms::Code::ContextLoader).to receive(:new).and_return(mock_context_loader)
     allow(CodingAgentTools::Models::Code::ReviewSession).to receive(:new).and_return(double("session"))
 
+    # Add default method stubs that work for most tests (individual tests can override these)
+    allow(mock_context_loader).to receive(:load_context).and_return(mock_context)
+    allow(mock_context_loader).to receive(:save_context).and_return({success: true})
+    allow(mock_context_loader).to receive(:get_context_summary).and_return("Test context summary")
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -229,12 +234,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.desc).to eq("Extract and save project context")
+      expect(described_class.description).to eq("Extract and save project context")
     end
 
     it "requires session_dir option" do
       # This tests the required option configuration
-      expect { command.call }.to raise_error(ArgumentError)
+      # Commands should handle missing required options gracefully and return error code
+      result = command.call
+      expect(result).to eq(1)
+      expect($stderr).to have_received(:write).with("Error: session_dir is required\n")
     end
 
     it "has default mode option" do

@@ -25,6 +25,10 @@ module CodingAgentTools
             ]
 
             def call(**options)
+              # Check for required options (Dry::CLI doesn't validate for direct method calls)
+              raise ArgumentError, "target is required" unless options[:target]
+              raise ArgumentError, "session_dir is required" unless options[:session_dir]
+
               content_extractor = CodingAgentTools::Organisms::Code::ContentExtractor.new
 
               begin
@@ -39,11 +43,11 @@ module CodingAgentTools
                   puts "📊 Files: #{target.file_count}, Lines: #{target.line_count}"
                   0
                 else
-                  warn "Error: #{target.size_info[:error]}"
+                  $stderr.write "Error: #{target.size_info[:error]}\n"
                   1
                 end
               rescue => e
-                warn "Error: #{e.message}"
+                $stderr.write "Error: #{e.message}\n"
                 1
               end
             end
