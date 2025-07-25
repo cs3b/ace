@@ -324,7 +324,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
             expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{resolved_dir}'"
             allow(command).to receive(:`).with(expected_command).and_return("directory tree output")
 
-            output = capture_stdout { command.call(path: search_path) }
+            output = capture_stdout { command.call(path: search_path, autocorrect: true) }
 
             expect(output).to include("Autocorrected: 'search_file' → '#{resolved_dir}'")
             expect(output).to include("directory tree output")
@@ -347,7 +347,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
             expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{resolved_dir}'"
             allow(command).to receive(:`).with(expected_command).and_return("parent directory output")
 
-            output = capture_stdout { command.call(path: search_path) }
+            output = capture_stdout { command.call(path: search_path, autocorrect: true) }
 
             expect(output).to include("Autocorrected: 'search_file' → '#{resolved_dir}' (parent directory of found file)")
             expect(output).to include("parent directory output")
@@ -406,7 +406,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
           allow(mock_path_resolver).to receive(:resolve_path).with(search_path, type: :file)
             .and_return(success: false, error: "No files found matching pattern")
 
-          output = capture_stdout { command.call(path: search_path) }
+          output = capture_stdout { command.call(path: search_path, autocorrect: true) }
 
           expect(output).to include("Error: No files found matching pattern")
         end
