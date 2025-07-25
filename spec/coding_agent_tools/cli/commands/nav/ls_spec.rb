@@ -148,11 +148,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
 
         before do
           allow(mock_path_resolver).to receive(:find_matching_paths).with(
-            nonexistent_path, 
-            include_directories: true, 
+            nonexistent_path,
+            include_directories: true,
             max_results: 5
           ).and_return(matching_dirs)
-          
+
           matching_dirs.each do |dir|
             allow(Dir).to receive(:exist?).with(dir).and_return(true)
           end
@@ -294,7 +294,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
     end
 
     context "with resolution errors" do
-      let(:error_result) { { success: false, error: "No matching paths found" } }
+      let(:error_result) { {success: false, error: "No matching paths found"} }
 
       before do
         allow(Dir).to receive(:exist?).with("nonexistent").and_return(false)
@@ -331,17 +331,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
       end
 
       it "adds long format flag" do
-        result = command.send(:build_ls_command, "/some/path", { long: true })
+        result = command.send(:build_ls_command, "/some/path", {long: true})
         expect(result).to eq("ls -l '/some/path'")
       end
 
       it "adds all files flag" do
-        result = command.send(:build_ls_command, "/some/path", { all: true })
+        result = command.send(:build_ls_command, "/some/path", {all: true})
         expect(result).to eq("ls -a '/some/path'")
       end
 
       it "combines multiple flags" do
-        result = command.send(:build_ls_command, "/some/path", { long: true, all: true })
+        result = command.send(:build_ls_command, "/some/path", {long: true, all: true})
         expect(result).to eq("ls -la '/some/path'")
       end
 

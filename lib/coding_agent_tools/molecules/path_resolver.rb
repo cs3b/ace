@@ -32,7 +32,7 @@ module CodingAgentTools
           case type
           when :file
             resolve_file_path(path_input)
-          when :task_new, :docs_new, :reflection_new
+          when :task_new, :docs_new, :reflection_new, :code_review_new
             generate_new_path(path_input, type)
           when :task
             resolve_task_path(path_input)

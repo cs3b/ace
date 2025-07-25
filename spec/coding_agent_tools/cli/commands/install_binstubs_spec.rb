@@ -45,7 +45,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
 
       it "uses current directory when no target_dir provided" do
         allow(Dir).to receive(:pwd).and_return("/current/dir")
-        
+
         expect { command.call }.to output(/Successfully installed binstubs/).to_stdout
 
         expect(CodingAgentTools::Organisms::BinstubInstaller).to have_received(:new).with(
@@ -142,20 +142,20 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
       before do
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(anything).and_return(true)
-        
+
         # Mock the config source directory path
         allow(File).to receive(:expand_path).and_call_original
         allow(File).to receive(:expand_path).with("../../../../config/bin-setup-env", anything).and_return(config_source_dir)
-        
+
         # Create source setup files
         FileUtils.mkdir_p(config_source_dir)
         File.write(File.join(config_source_dir, "setup.sh"), "#!/bin/bash\n# Setup script")
         File.write(File.join(config_source_dir, "setup.fish"), "#!/usr/bin/fish\n# Fish setup")
         File.write(File.join(config_source_dir, "setup-env"), "#!/bin/bash\n# Env setup")
-        
+
         allow(File).to receive(:directory?).and_call_original
         allow(File).to receive(:directory?).with(config_source_dir).and_return(true)
-        
+
         allow(FileUtils).to receive(:mkdir_p)
         allow(FileUtils).to receive(:cp)
         allow(FileUtils).to receive(:chmod)
@@ -182,7 +182,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
         allow(mock_installer).to receive(:install_all).and_return({
           installed: [],
           skipped: [],
-          errors: [{ alias: "broken-tool", error: "Installation failed" }]
+          errors: [{alias: "broken-tool", error: "Installation failed"}]
         })
       end
 
@@ -191,11 +191,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
       end
 
       it "displays error details" do
-        begin
-          capture_stdout { command.call(target_dir: temp_dir) }
-        rescue SystemExit
-          # Expected
-        end
+        capture_stdout { command.call(target_dir: temp_dir) }
+      rescue SystemExit
+        # Expected
       end
     end
 
@@ -229,11 +227,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallBinstubs do
       end
 
       it "shows backtrace in verbose mode" do
-        begin
-          capture_stdout { command.call(target_dir: temp_dir, verbose: true) }
-        rescue SystemExit
-          # Expected
-        end
+        capture_stdout { command.call(target_dir: temp_dir, verbose: true) }
+      rescue SystemExit
+        # Expected
       end
     end
   end

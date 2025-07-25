@@ -9,7 +9,7 @@ module CodingAgentTools
         class Path < Dry::CLI::Command
           desc "Intelligent path resolution and generation"
 
-          argument :type, desc: "Path operation type: task-new, task, docs-new, reflection-new, reflection-list, file"
+          argument :type, desc: "Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, file"
           argument :input, desc: "Input for path resolution (title for new paths, ID/pattern for existing paths)"
 
           option :title, desc: "Title for new path generation (alternative to input argument)"
@@ -41,13 +41,15 @@ module CodingAgentTools
               :reflection_new
             when "reflection-list", "reflection_list"
               :reflection_list
+            when "code-review-new", "code_review_new"
+              :code_review_new
             when "task"
               :task
             when "file"
               :file
             else
               puts "Error: Unknown path type '#{type}'"
-              puts "Valid types: task-new, task, docs-new, reflection-new, reflection-list, file"
+              puts "Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, file"
               return
             end
 

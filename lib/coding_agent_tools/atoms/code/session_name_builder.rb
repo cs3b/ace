@@ -13,7 +13,7 @@ module CodingAgentTools
         # @return [String] formatted session name
         def build(focus, target, timestamp)
           sanitized_target = sanitize_target(target)
-          "#{focus}-#{sanitized_target}-#{timestamp}"
+          "#{timestamp}-#{focus}-#{sanitized_target}"
         end
 
         # Build session name without timestamp

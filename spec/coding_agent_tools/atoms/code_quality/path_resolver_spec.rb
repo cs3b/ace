@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       it "handles path with spaces" do
         spaced_file = "file with spaces.txt"
         File.write(File.join(temp_dir, spaced_file), "content")
-        
+
         result = resolver.resolve(spaced_file)
         expect(result).to eq(File.join(temp_dir, spaced_file))
       end
@@ -93,7 +93,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       it "handles paths with special characters" do
         special_file = "file-with_special.chars.txt"
         File.write(File.join(temp_dir, special_file), "content")
-        
+
         result = resolver.resolve(special_file)
         expect(result).to eq(File.join(temp_dir, special_file))
       end
@@ -122,7 +122,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "returns absolute path when relative path cannot be created" do
       # Path outside project root
       other_temp = Dir.mktmpdir
-      
+
       begin
         result = resolver.relative_to_root(other_temp)
         # The implementation may return a relative path or absolute path
@@ -152,7 +152,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "returns false for paths outside project root" do
       other_temp = Dir.mktmpdir
-      
+
       begin
         expect(resolver.in_project?(other_temp)).to be false
       ensure
@@ -168,7 +168,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
   describe "project root detection" do
     let(:test_project_dir) { Dir.mktmpdir }
-    
+
     after do
       FileUtils.rm_rf(test_project_dir) if Dir.exist?(test_project_dir)
     end
@@ -176,11 +176,11 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "detects project root with .git directory" do
       git_dir = File.join(test_project_dir, ".git")
       Dir.mkdir(git_dir)
-      
+
       # Change to subdirectory
       subdir = File.join(test_project_dir, "subdir")
       Dir.mkdir(subdir)
-      
+
       Dir.chdir(subdir) do
         resolver = described_class.new
         expect(File.realpath(resolver.project_root)).to eq(File.realpath(test_project_dir))
@@ -189,10 +189,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "detects project root with Gemfile" do
       File.write(File.join(test_project_dir, "Gemfile"), "")
-      
+
       subdir = File.join(test_project_dir, "subdir")
       Dir.mkdir(subdir)
-      
+
       Dir.chdir(subdir) do
         resolver = described_class.new
         expect(File.realpath(resolver.project_root)).to eq(File.realpath(test_project_dir))
@@ -202,10 +202,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "detects project root with .coding-agent directory" do
       coding_agent_dir = File.join(test_project_dir, ".coding-agent")
       Dir.mkdir(coding_agent_dir)
-      
+
       subdir = File.join(test_project_dir, "subdir")
       Dir.mkdir(subdir)
-      
+
       Dir.chdir(subdir) do
         # Mock the ProjectRootDetector to avoid complex root detection
         allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(test_project_dir)
@@ -216,7 +216,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "falls back to current directory when no markers found" do
       empty_dir = Dir.mktmpdir
-      
+
       begin
         Dir.chdir(empty_dir) do
           # Mock the detector to return current directory when no markers found

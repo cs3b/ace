@@ -263,7 +263,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
         "v.0.3.0+task.01",
         "v.1.0.0+task.01"
       ]
-      
+
       result = described_class.sort_task_ids(task_ids)
       expect(result).to eq([
         "v.0.2.0+task.10",
@@ -280,7 +280,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
         "v.0.3.0+task.25",
         "v.0.3.0+task.01"
       ]
-      
+
       result = described_class.sort_task_ids(task_ids)
       expect(result).to eq([
         "v.0.3.0+task.01",
@@ -296,7 +296,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
         "invalid-task-id",
         "v.0.2.0+task.01"
       ]
-      
+
       result = described_class.sort_task_ids(task_ids)
       # Should not raise error, uses string comparison as fallback
       expect(result).to be_an(Array)
@@ -442,7 +442,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
     it "handles very large sequential numbers" do
       large_task_id = "v.0.3.0+task.999999"
       expect(described_class.valid?(large_task_id)).to be true
-      
+
       result = described_class.parse(large_task_id)
       expect(result[:sequential_number]).to eq(999999)
     end
@@ -450,7 +450,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
     it "handles very large version numbers" do
       large_version_task_id = "v.999.888.777+task.01"
       expect(described_class.valid?(large_version_task_id)).to be true
-      
+
       result = described_class.parse(large_version_task_id)
       expect(result[:version]).to eq("v.999.888.777")
     end
@@ -458,7 +458,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser do
     it "handles minimum valid sequential number" do
       min_task_id = "v.0.3.0+task.1"
       expect(described_class.valid?(min_task_id)).to be true
-      
+
       result = described_class.parse(min_task_id)
       expect(result[:sequential_number]).to eq(1)
     end

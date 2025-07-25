@@ -8,27 +8,27 @@ RSpec.describe CodingAgentTools::Atoms::Code::SessionNameBuilder do
   describe "#build", :build do
     it "builds session name with valid components" do
       result = builder.build("code", "src/main.rb", "20240724-143022")
-      expect(result).to eq("code-src-main.rb-20240724-143022")
+      expect(result).to eq("20240724-143022-code-src-main.rb")
     end
 
     it "handles slashes in target by converting to hyphens" do
       result = builder.build("review", "src/components/header.js", "20240724-143022")
-      expect(result).to eq("review-src-components-header.js-20240724-143022")
+      expect(result).to eq("20240724-143022-review-src-components-header.js")
     end
 
     it "handles multiple slashes in target" do
       result = builder.build("docs", "deep/nested/folder/file.md", "20240724-143022")
-      expect(result).to eq("docs-deep-nested-folder-file.md-20240724-143022")
+      expect(result).to eq("20240724-143022-docs-deep-nested-folder-file.md")
     end
 
     it "handles spaces in target by converting to underscores" do
       result = builder.build("test", "my file name.txt", "20240724-143022")
-      expect(result).to eq("test-my_file_name.txt-20240724-143022")
+      expect(result).to eq("20240724-143022-test-my_file_name.txt")
     end
 
     it "handles empty target" do
       result = builder.build("focus", "", "20240724-143022")
-      expect(result).to eq("focus--20240724-143022")
+      expect(result).to eq("20240724-143022-focus-")
     end
 
     it "handles nil target gracefully" do
@@ -37,12 +37,12 @@ RSpec.describe CodingAgentTools::Atoms::Code::SessionNameBuilder do
 
     it "builds with git revision range" do
       result = builder.build("code", "HEAD~1..HEAD", "20240724-143022")
-      expect(result).to eq("code-HEAD1..HEAD-20240724-143022")
+      expect(result).to eq("20240724-143022-code-HEAD1..HEAD")
     end
 
     it "handles special characters in focus" do
       result = builder.build("code-review", "src/main.rb", "20240724-143022")
-      expect(result).to eq("code-review-src-main.rb-20240724-143022")
+      expect(result).to eq("20240724-143022-code-review-src-main.rb")
     end
   end
 
@@ -152,12 +152,12 @@ RSpec.describe CodingAgentTools::Atoms::Code::SessionNameBuilder do
 
     it "handles empty focus" do
       result = builder.build("", "file.rb", "20240724-143022")
-      expect(result).to eq("-file.rb-20240724-143022")
+      expect(result).to eq("20240724-143022--file.rb")
     end
 
     it "handles empty timestamp" do
       result = builder.build("code", "file.rb", "")
-      expect(result).to eq("code-file.rb-")
+      expect(result).to eq("-code-file.rb")
     end
 
     it "handles all empty parameters" do

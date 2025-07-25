@@ -19,8 +19,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
           success: true,
           formatted_output: "[main-repo] Clean working directory\n[dev-tools] Status:\n  M lib/file.rb",
           results: {
-            "main-repo" => { success: true, stdout: "" },
-            "dev-tools" => { success: true, stdout: " M lib/file.rb\n" }
+            "main-repo" => {success: true, stdout: ""},
+            "dev-tools" => {success: true, stdout: " M lib/file.rb\n"}
           }
         }
       end
@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
       end
 
       it "executes status and displays formatted output" do
-        output = capture_stdout { result = command.call }
+        output = capture_stdout { command.call }
 
         expect(output).to include("[main-repo] Clean working directory")
         expect(output).to include("[dev-tools] Status:")
@@ -39,7 +39,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
       end
 
       it "returns 0 for successful execution" do
-        result = capture_stdout { command.call }
+        capture_stdout { command.call }
         # The method doesn't explicitly return, but we can test it doesn't raise
         expect(mock_orchestrator).to have_received(:status)
       end
@@ -126,8 +126,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
         {
           success: true,
           results: {
-            "main-repo" => { success: true, stdout: " M file1.rb\n A file2.rb\n" },
-            "dev-tools" => { success: true, stdout: "?? new_file.rb\n" }
+            "main-repo" => {success: true, stdout: " M file1.rb\n A file2.rb\n"},
+            "dev-tools" => {success: true, stdout: "?? new_file.rb\n"}
           }
         }
       end
@@ -146,7 +146,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
 
       it "skips empty lines in porcelain format" do
         porcelain_result[:results]["main-repo"][:stdout] = " M file1.rb\n\n A file2.rb\n"
-        
+
         output = capture_stdout { command.call(porcelain: true) }
 
         expect(output).not_to include("main-repo:\n")
@@ -160,8 +160,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
         {
           success: true,
           results: {
-            "main-repo" => { success: true, stdout: "" },
-            "dev-tools" => { success: true, stdout: " M lib/file.rb\n?? new_file.rb\n" }
+            "main-repo" => {success: true, stdout: ""},
+            "dev-tools" => {success: true, stdout: " M lib/file.rb\n?? new_file.rb\n"}
           }
         }
       end
@@ -197,8 +197,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
         {
           success: false,
           errors: [
-            { repository: "main-repo", message: "Not a git repository" },
-            { repository: "dev-tools", message: "Permission denied", error: StandardError.new("Access denied") }
+            {repository: "main-repo", message: "Not a git repository"},
+            {repository: "dev-tools", message: "Permission denied", error: StandardError.new("Access denied")}
           ]
         }
       end
@@ -256,7 +256,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
 
   describe "option building" do
     it "builds minimal options for default call" do
-      allow(mock_orchestrator).to receive(:status).and_return({ success: true, results: {} })
+      allow(mock_orchestrator).to receive(:status).and_return({success: true, results: {}})
 
       capture_stdout { command.call }
 
@@ -264,7 +264,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
     end
 
     it "filters out false boolean options" do
-      allow(mock_orchestrator).to receive(:status).and_return({ success: true, results: {} })
+      allow(mock_orchestrator).to receive(:status).and_return({success: true, results: {}})
 
       capture_stdout { command.call(main_only: false, verbose: false) }
 
@@ -272,7 +272,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Status do
     end
 
     it "includes true boolean options" do
-      allow(mock_orchestrator).to receive(:status).and_return({ success: true, results: {} })
+      allow(mock_orchestrator).to receive(:status).and_return({success: true, results: {}})
 
       capture_stdout { command.call(main_only: true, verbose: true) }
 

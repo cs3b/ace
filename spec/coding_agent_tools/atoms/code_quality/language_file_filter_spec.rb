@@ -18,7 +18,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
     end
 
     it "creates filter with custom configuration" do
-      config = { file_patterns: { ruby: ["*.rb"] } }
+      config = {file_patterns: {ruby: ["*.rb"]}}
       filter = described_class.new(config: config)
       expect(filter).to be_a(described_class)
     end
@@ -119,7 +119,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "expands directory to find Ruby files" do
         paths = [File.join(temp_dir, "lib")]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "lib", "main.rb"),
           File.join(temp_dir, "lib", "helper.rb")
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           File.join(temp_dir, "spec")
         ]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "lib", "main.rb"),
           File.join(temp_dir, "lib", "helper.rb"),
@@ -145,7 +145,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "finds files recursively in nested directories" do
         paths = [temp_dir]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "nested", "deep", "file.rb")
         )
@@ -154,7 +154,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "finds special Ruby files like Gemfile and Rakefile" do
         paths = [temp_dir]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "Gemfile"),
           File.join(temp_dir, "Rakefile")
@@ -164,7 +164,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "finds files in exe directory" do
         paths = [temp_dir]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "exe", "console")
         )
@@ -178,7 +178,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           File.join(temp_dir, "README.md")
         ]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to contain_exactly(
           File.join(temp_dir, "lib", "main.rb")
         )
@@ -190,7 +190,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           File.join(temp_dir, "config.json")
         ]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to be_empty
       end
     end
@@ -203,7 +203,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           File.join(temp_dir, "README.md")
         ]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         expect(result).to include(
           File.join(temp_dir, "lib", "main.rb"),
           File.join(temp_dir, "lib", "helper.rb"),
@@ -236,7 +236,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           File.join(temp_dir, "lib", "main.rb") # This file is also in the lib directory
         ]
         result = filter.expand_paths_for_language(paths, :ruby)
-        
+
         main_rb_count = result.count { |f| f.end_with?("main.rb") }
         expect(main_rb_count).to eq(1)
       end
@@ -276,10 +276,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
 
     it "uses custom patterns for filtering" do
       file_paths = ["app.rb", "tasks.rake", "script.js", "component.jsx", "README.md"]
-      
+
       ruby_files = custom_filter.filter_by_language(file_paths, :ruby)
       expect(ruby_files).to contain_exactly("app.rb", "tasks.rake")
-      
+
       js_files = custom_filter.filter_by_language(file_paths, :javascript)
       expect(js_files).to contain_exactly("script.js", "component.jsx")
     end
@@ -293,7 +293,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       paths = [temp_dir]
       ruby_files = custom_filter.expand_paths_for_language(paths, :ruby)
       js_files = custom_filter.expand_paths_for_language(paths, :javascript)
-      
+
       expect(ruby_files).to include(File.join(temp_dir, "tasks", "deploy.rake"))
       expect(js_files).to include(File.join(temp_dir, "app.js"))
     end

@@ -4,6 +4,7 @@ require_relative "../../atoms/code/directory_creator"
 require_relative "../../atoms/code/session_timestamp_generator"
 require_relative "../../atoms/code/session_name_builder"
 require_relative "../../models/code/review_session"
+require_relative "../path_resolver"
 
 module CodingAgentTools
   module Molecules
@@ -15,19 +16,31 @@ module CodingAgentTools
           @directory_creator = Atoms::Code::DirectoryCreator.new
           @timestamp_generator = Atoms::Code::SessionTimestampGenerator.new
           @name_builder = Atoms::Code::SessionNameBuilder.new
+          @path_resolver = PathResolver.new
         end
 
         # Build a complete session directory
         # @param focus [String] review focus
         # @param target [String] review target
-        # @param base_path [String] base path for sessions
+        # @param base_path [String] base path for sessions (optional, nav-path will determine path)
         # @return [Models::Code::ReviewSession] created session
-        def build_session_directory(focus, target, base_path)
+        def build_session_directory(focus, target, base_path = nil)
           timestamp = @timestamp_generator.generate
           iso_timestamp = @timestamp_generator.generate_iso8601
-          session_name = @name_builder.build(focus, target, timestamp)
+
+          # Generate session name for nav-path (focus-target format for slug)
+          sanitized_target = @name_builder.send(:sanitize_target, target)
+          session_slug = "#{focus}-#{sanitized_target}"
+
+          # Use nav-path to generate the directory path
+          path_result = @path_resolver.resolve_path(session_slug, type: :code_review_new)
+          raise "Failed to generate session path: #{path_result[:error]}" unless path_result[:success]
+
+          directory_path = path_result[:path]
+
+          # Extract session name from generated path for consistency
+          session_name = File.basename(directory_path)
           session_id = "review-#{timestamp}"
-          directory_path = File.join(base_path, session_name)
 
           # Create the directory
           result = @directory_creator.create(directory_path)
@@ -58,9 +71,9 @@ module CodingAgentTools
         # @param focus [String] review focus
         # @param target [String] review target
         # @param context_mode [String] context mode
-        # @param base_path [String] base path for sessions
+        # @param base_path [String] base path for sessions (optional, nav-path will determine path)
         # @return [Models::Code::ReviewSession] created session
-        def build_full_session(focus, target, context_mode, base_path)
+        def build_full_session(focus, target, context_mode, base_path = nil)
           session = build_session_directory(focus, target, base_path)
           session.context_mode = context_mode
 

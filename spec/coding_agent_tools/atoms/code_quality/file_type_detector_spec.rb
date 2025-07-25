@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::FileTypeDetector do
       it "uses configured patterns instead of defaults" do
         # Should not detect .gemspec since it's not in config
         expect(detector_with_config.detect_type("my_gem.gemspec")).to be_nil
-        
+
         # Should detect .rake since it's in config
         expect(detector_with_config.detect_type("tasks.rake")).to eq(:ruby)
       end
@@ -180,10 +180,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::FileTypeDetector do
         }
       }
       detector = described_class.new(config: invalid_config)
-      
+
       # Should keep default ruby patterns since invalid was ignored
       expect(detector.patterns_for(:ruby)).to include("*.rb", "*.gemspec")
-      
+
       # Should include valid javascript patterns
       expect(detector.patterns_for(:javascript)).to eq(["*.js"])
     end
