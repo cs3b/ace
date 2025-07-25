@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
   let(:mock_session) { double("session") }
   let(:mock_target) { double("target") }
   let(:mock_context) { double("context") }
-  let(:mock_prompt) { double("prompt", combined_content: "Combined prompt content") }
+  let(:mock_prompt) { double("prompt", combined_content: "Combined prompt content", word_count: 150, focus_areas: ["code", "tests"]) }
   let(:temp_dir) { Dir.mktmpdir }
   let(:session_dir) { File.join(temp_dir, "session") }
 
@@ -86,7 +86,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
         mock_prompt_with_stats = double("prompt",
           combined_content: "Combined prompt content",
           total_length: 1500,
-          section_count: 4)
+          section_count: 4,
+          word_count: 300,
+          focus_areas: ["code", "tests"])
         allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(mock_prompt_with_stats)
         allow(mock_prompt_with_stats).to receive(:total_length).and_return(1500)
         allow(mock_prompt_with_stats).to receive(:section_count).and_return(4)
@@ -203,7 +205,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
     context "with empty or nil prompt content" do
       it "handles empty prompt content" do
-        empty_prompt = double("prompt", combined_content: "")
+        empty_prompt = double("prompt", combined_content: "", word_count: 0, focus_areas: [])
         allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(empty_prompt)
 
         result = command.call(session_dir: session_dir, focus: "code")
@@ -213,7 +215,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
       end
 
       it "handles nil prompt content" do
-        nil_prompt = double("prompt", combined_content: nil)
+        nil_prompt = double("prompt", combined_content: nil, word_count: 0, focus_areas: [])
         allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(nil_prompt)
 
         result = command.call(session_dir: session_dir, focus: "code")
@@ -246,7 +248,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
     context "with large prompt content" do
       it "handles large prompt content" do
         large_content = "x" * 100_000  # 100KB content
-        large_prompt = double("prompt", combined_content: large_content)
+        large_prompt = double("prompt", combined_content: large_content, word_count: 20000, focus_areas: ["code"])
         allow(mock_prompt_builder).to receive(:build_review_prompt).and_return(large_prompt)
 
         result = command.call(session_dir: session_dir, focus: "code")
@@ -259,7 +261,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::Prompt do
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.desc).to eq("Build combined review prompt")
+      expect(described_class.description).to eq("Build combined review prompt")
     end
 
     it "requires session_dir option" do

@@ -27,6 +27,10 @@ module CodingAgentTools
             ]
 
             def call(**options)
+              # Check for required options (Dry::CLI doesn't validate for direct method calls)
+              raise ArgumentError, "focus is required" unless options[:focus]
+              raise ArgumentError, "target is required" unless options[:target]
+
               session_manager = CodingAgentTools::Organisms::Code::SessionManager.new
 
               begin
@@ -41,7 +45,7 @@ module CodingAgentTools
                 puts "📁 Session ID: #{session.session_id}"
                 0
               rescue => e
-                warn "Error: #{e.message}"
+                $stderr.write "Error: #{e.message}\n"
                 1
               end
             end

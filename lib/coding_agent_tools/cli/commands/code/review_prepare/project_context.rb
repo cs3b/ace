@@ -30,6 +30,12 @@ module CodingAgentTools
               context_loader = CodingAgentTools::Organisms::Code::ContextLoader.new
 
               begin
+                # Check for required options (Dry::CLI doesn't validate for direct method calls)
+                raise ArgumentError, "session_dir is required" unless options[:session_dir]
+                
+                # Apply default values that Dry::CLI doesn't apply for direct method calls
+                mode = options[:mode] || "auto"
+                
                 # Create minimal session for context loading
                 session = CodingAgentTools::Models::Code::ReviewSession.new(
                   session_id: "temp",
@@ -38,10 +44,10 @@ module CodingAgentTools
                   directory_path: options[:session_dir],
                   focus: "unknown",
                   target: "unknown",
-                  context_mode: options[:mode]
+                  context_mode: mode
                 )
 
-                context = context_loader.load_context(options[:mode], session)
+                context = context_loader.load_context(mode, session)
                 result = context_loader.save_context(context, options[:session_dir])
 
                 if result[:success]
@@ -50,11 +56,11 @@ module CodingAgentTools
                   puts context_loader.get_context_summary(context)
                   0
                 else
-                  warn "Error: #{result[:error]}"
+                  $stderr.write("Error: #{result[:error]}\n")
                   1
                 end
               rescue => e
-                warn "Error: #{e.message}"
+                $stderr.write("Error: #{e.message}\n")
                 1
               end
             end

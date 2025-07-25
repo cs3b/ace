@@ -317,7 +317,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
 
   describe "command configuration" do
     it "has correct description" do
-      expect(described_class.desc).to eq("Create session directory structure")
+      expect(described_class.description).to eq("Create session directory structure")
     end
 
     it "requires focus option" do
