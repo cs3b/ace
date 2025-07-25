@@ -15,16 +15,18 @@ module CodingAgentTools
           @options = {
             input: "GFM",           # GitHub Flavored Markdown
             hard_wrap: false,
-            auto_ids: true,
+            auto_ids: false,        # Disable auto IDs to preserve original format
             entity_output: :as_char,
             toc_levels: "1..6",
-            smart_quotes: ["rsquo", "rsquo", "rdquo", "rdquo"]
+            smart_quotes: ["rsquo", "rsquo", "rdquo", "rdquo"],
+            gfm_quirks: [:paragraph_end],  # Preserve GFM paragraph handling
+            syntax_highlighter: nil        # Disable syntax highlighting to preserve code blocks
           }.merge(options)
         end
 
         def format(content)
           doc = parse_markdown(content)
-          formatted = doc.to_kramdown
+          formatted = convert_to_gfm(doc, content)
 
           {
             success: true,
@@ -47,12 +49,27 @@ module CodingAgentTools
             }
           end
 
-          content = File.read(file_path)
+          begin
+            content = File.read(file_path)
+          rescue IOError, SystemCallError => e
+            return {
+              success: false,
+              error: e.message
+            }
+          end
+
           result = format(content)
 
           if result[:success] && result[:changed] && !@options[:dry_run]
-            File.write(file_path, result[:formatted])
-            result[:file_updated] = true
+            begin
+              File.write(file_path, result[:formatted])
+              result[:file_updated] = true
+            rescue IOError, SystemCallError => e
+              return {
+                success: false,
+                error: e.message
+              }
+            end
           end
 
           result
@@ -77,6 +94,32 @@ module CodingAgentTools
 
         def parse_markdown(content)
           Kramdown::Document.new(content, @options)
+        end
+
+        def convert_to_gfm(doc, original_content)
+          kramdown_output = doc.to_kramdown
+          
+          # Convert Kramdown task list format back to GFM format
+          kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" \/>(.+)$/m, '- [ ] \1')
+          kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" checked="checked" \/>(.+)$/m, '- [x] \1')
+          
+          # Remove task-list class marker
+          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, '')
+          
+          # Convert indented code blocks back to fenced code blocks
+          kramdown_output = kramdown_output.gsub(/^    (.+?)$\n^\{: \.language-(\w+)\}$/m) do |match|
+            language = $2
+            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, '') }
+            "```#{language}\n#{code_lines.join("\n")}\n```"
+          end
+          
+          # Clean up remaining language markers
+          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, '')
+          
+          # Clean up header ID attributes if auto_ids was disabled
+          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, '')
+          
+          kramdown_output.strip
         end
       end
     end
