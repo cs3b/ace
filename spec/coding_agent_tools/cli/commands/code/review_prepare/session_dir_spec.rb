@@ -330,7 +330,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
 
     it "has base_path as optional" do
       # Should not raise error when base_path is not provided
-      expect { command.call(focus: "code", target: "HEAD~1..HEAD") }.not_to raise_error(ArgumentError)
+      expect { command.call(focus: "code", target: "HEAD~1..HEAD") }.not_to raise_error
     end
 
     it "has usage examples defined" do

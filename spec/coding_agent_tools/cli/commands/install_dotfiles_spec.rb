@@ -77,9 +77,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       end
 
       it "returns 0 on success" do
-        capture_stdout { command.call }
+        result = nil
+        capture_stdout { result = command.call }
 
-        expect(command.call).to eq(0)
+        expect(result).to eq(0)
       end
     end
 
@@ -187,7 +188,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
         expect(error_output).to include("Error: Could not find dotfiles templates.")
         expect(error_output).to include("Expected location: dev-handbook/.meta/tpl/dotfiles/")
-        expect(command.call).to eq(1)
+        
+        result = nil
+        capture_stderr { result = command.call }
+        expect(result).to eq(1)
       end
     end
 
@@ -200,7 +204,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
         error_output = capture_stderr { command.call }
 
         expect(error_output).to include("Error: Could not find dotfiles templates.")
-        expect(command.call).to eq(1)
+        
+        result = nil
+        capture_stderr { result = command.call }
+        expect(result).to eq(1)
       end
     end
 
@@ -215,7 +222,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
           expect(error_output).to include("Error: Permission denied")
           expect(error_output).to include("Use --debug flag for more information")
-          expect(command.call).to eq(1)
+          
+          result = nil
+          capture_stderr { result = command.call }
+          expect(result).to eq(1)
         end
       end
 
@@ -225,7 +235,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
           expect(error_output).to include("Error: StandardError: Permission denied")
           expect(error_output).to include("Backtrace:")
-          expect(command.call).to eq(1)
+          
+          result = nil
+          capture_stderr { result = command.call }
+          expect(result).to eq(1)
         end
       end
     end
@@ -266,7 +279,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
     context "edge cases" do
       it "handles empty options hash" do
-        result = command.call
+        result = nil
+        capture_stdout { result = command.call }
 
         expect(result).to eq(0)
       end
@@ -284,7 +298,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
         allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
           .and_return(nil)
 
-        result = command.call
+        result = nil
+        capture_stderr { result = command.call }
         expect(result).to eq(1)
       end
     end

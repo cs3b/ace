@@ -68,6 +68,9 @@ RSpec.configure do |config|
   config.include MockHelpers
   config.include TestFactories
 
+  # Mark slow tests as pending unless explicitly requested
+  config.filter_run_excluding :slow unless ENV['RUN_SLOW_TESTS'] == 'true'
+
   # Prevent environment variable leakage and working directory changes between examples
   config.around do |example|
     original_env = ENV.to_hash

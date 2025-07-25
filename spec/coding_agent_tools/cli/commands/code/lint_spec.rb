@@ -217,7 +217,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Lint do
   describe "delegation pattern" do
     it "correctly requires the delegated command file" do
       # This test ensures the require statement works
-      expect { command.call }.not_to raise_error(LoadError)
+      expect { command.call }.not_to raise_error
     end
 
     it "creates new instance of CodeLint::All for each call" do
