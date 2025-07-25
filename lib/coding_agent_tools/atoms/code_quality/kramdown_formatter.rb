@@ -15,7 +15,7 @@ module CodingAgentTools
           @options = {
             input: "GFM",           # GitHub Flavored Markdown
             hard_wrap: false,
-            auto_ids: false,        # Disable auto IDs to preserve original format
+            auto_ids: true,         # Enable auto IDs by default
             entity_output: :as_char,
             toc_levels: "1..6",
             smart_quotes: ["rsquo", "rsquo", "rdquo", "rdquo"],
