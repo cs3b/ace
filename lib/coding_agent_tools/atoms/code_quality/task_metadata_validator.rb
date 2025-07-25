@@ -77,7 +77,7 @@ module CodingAgentTools
             errors << "#{relative_path}: Unable to read file - #{e.message}"
             return
           end
-          
+
           relative_path = make_path_relative(file_path)
           frontmatter, body = parse_task_file_content(content, relative_path, errors)
 

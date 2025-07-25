@@ -15,7 +15,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     FileUtils.mkdir_p(session_dir)
     allow(CodingAgentTools::Organisms::Code::ContextLoader).to receive(:new).and_return(mock_context_loader)
     allow(CodingAgentTools::Models::Code::ReviewSession).to receive(:new).and_return(double("session"))
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -29,7 +29,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     context "with successful context loading" do
       before do
         allow(mock_context_loader).to receive(:load_context).and_return(mock_context)
-        allow(mock_context_loader).to receive(:save_context).and_return({ success: true })
+        allow(mock_context_loader).to receive(:save_context).and_return({success: true})
         allow(mock_context_loader).to receive(:get_context_summary).and_return("Context summary")
       end
 
@@ -159,9 +159,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     context "with different context types" do
       let(:context_types) do
         [
-          { mode: "auto", doc_count: 5, summary: "Auto-detected context" },
-          { mode: "none", doc_count: 0, summary: "No context loaded" },
-          { mode: "custom", doc_count: 2, summary: "Custom context files" }
+          {mode: "auto", doc_count: 5, summary: "Auto-detected context"},
+          {mode: "none", doc_count: 0, summary: "No context loaded"},
+          {mode: "custom", doc_count: 2, summary: "Custom context files"}
         ]
       end
 
@@ -169,7 +169,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
         context_types.each do |ctx|
           mock_ctx = double("context", mode: ctx[:mode], document_count: ctx[:doc_count])
           allow(mock_context_loader).to receive(:load_context).and_return(mock_ctx)
-          allow(mock_context_loader).to receive(:save_context).and_return({ success: true })
+          allow(mock_context_loader).to receive(:save_context).and_return({success: true})
           allow(mock_context_loader).to receive(:get_context_summary).and_return(ctx[:summary])
 
           result = command.call(session_dir: session_dir, mode: ctx[:mode])
@@ -213,7 +213,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
 
       it "handles relative paths" do
         relative_path = "./relative/session"
-        
+
         expect(CodingAgentTools::Models::Code::ReviewSession).to receive(:new).with(
           hash_including(
             session_name: "session",
@@ -240,7 +240,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     it "has default mode option" do
       # Test that mode defaults to 'auto' when not specified
       allow(mock_context_loader).to receive(:load_context).and_return(mock_context)
-      allow(mock_context_loader).to receive(:save_context).and_return({ success: true })
+      allow(mock_context_loader).to receive(:save_context).and_return({success: true})
       allow(mock_context_loader).to receive(:get_context_summary).and_return("summary")
 
       command.call(session_dir: session_dir)
@@ -257,13 +257,21 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
     it "creates context loader instance" do
       expect(CodingAgentTools::Organisms::Code::ContextLoader).to receive(:new)
 
-      command.call(session_dir: session_dir) rescue nil
+      begin
+        command.call(session_dir: session_dir)
+      rescue
+        nil
+      end
     end
 
     it "creates minimal review session" do
       expect(CodingAgentTools::Models::Code::ReviewSession).to receive(:new)
 
-      command.call(session_dir: session_dir) rescue nil
+      begin
+        command.call(session_dir: session_dir)
+      rescue
+        nil
+      end
     end
 
     it "follows expected workflow" do
@@ -273,7 +281,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectCont
       expect(mock_context_loader).to receive(:get_context_summary).ordered
 
       allow(mock_context_loader).to receive(:load_context).and_return(mock_context)
-      allow(mock_context_loader).to receive(:save_context).and_return({ success: true })
+      allow(mock_context_loader).to receive(:save_context).and_return({success: true})
       allow(mock_context_loader).to receive(:get_context_summary).and_return("summary")
 
       command.call(session_dir: session_dir)

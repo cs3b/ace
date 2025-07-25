@@ -7,7 +7,7 @@ require "fileutils"
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator do
   let(:temp_dir) { Dir.mktmpdir }
   let(:templates_dir) { File.join(temp_dir, "templates") }
-  
+
   after do
     FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
   end
@@ -17,7 +17,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       validator = described_class.new
       expect(validator.template_dirs).to include(
         "dev-handbook/.meta/tpl",
-        "templates", 
+        "templates",
         "_includes"
       )
     end
@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         # Create template files
         File.write(File.join(templates_dir, "header.md"), "# Template Header")
         File.write(File.join(templates_dir, "footer.md"), "Template footer content")
-        
+
         create_markdown_file("with_templates.md", <<~CONTENT
           # Document with Templates
           
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       before do
         # Create only one template
         File.write(File.join(templates_dir, "header.md"), "# Template Header")
-        
+
         create_markdown_file("missing_templates.md", <<~CONTENT
           # Document with Missing Templates
           
@@ -112,7 +112,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(2)
         expect(result[:errors].size).to eq(2)
-        
+
         missing_templates = result[:findings].map { |f| f[:template] }
         expect(missing_templates).to include("missing.md", "another_missing.md")
         expect(missing_templates).not_to include("header.md")
@@ -140,7 +140,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       before do
         # Create template file
         File.write(File.join(templates_dir, "shared.md"), "Shared content")
-        
+
         create_markdown_file("patterns.md", <<~CONTENT
           # Different Template Patterns
           
@@ -170,7 +170,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(4)
-        
+
         missing_templates = result[:findings].map { |f| f[:template] }
         expect(missing_templates).to include("missing1.md", "missing2.md", "missing3.md", "missing4.md")
       end
@@ -217,7 +217,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(2)
-        
+
         missing_templates = result[:findings].map { |f| f[:template] }
         expect(missing_templates).to include("should_be_found.md", "after_code.md")
         expect(missing_templates).not_to include("in_code_block.md", "also_in_code.md")
@@ -257,7 +257,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       before do
         FileUtils.mkdir_p(File.join(templates_dir, "subdir"))
         File.write(File.join(templates_dir, "subdir", "nested.md"), "Nested template")
-        
+
         create_markdown_file("nested_templates.md", <<~CONTENT
           # Nested Templates
           
@@ -278,10 +278,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
     context "with absolute template paths" do
       let(:absolute_template) { File.join(temp_dir, "absolute.md") }
-      
+
       before do
         File.write(absolute_template, "Absolute template")
-        
+
         create_markdown_file("absolute_paths.md", <<~CONTENT
           # Absolute Template Paths
           
@@ -306,7 +306,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         File.write(File.join(templates_dir, "no_extension"), "Template without extension")
         # Create template with .md extension
         File.write(File.join(templates_dir, "with_extension.md"), "Template with extension")
-        
+
         create_markdown_file("extensions.md", <<~CONTENT
           # Template Extensions
           
@@ -328,12 +328,12 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     context "with multiple template directories" do
       let(:second_templates_dir) { File.join(temp_dir, "other_templates") }
       let(:validator) { described_class.new(template_dirs: [templates_dir, second_templates_dir]) }
-      
+
       before do
         FileUtils.mkdir_p(second_templates_dir)
         File.write(File.join(templates_dir, "first.md"), "First template")
         File.write(File.join(second_templates_dir, "second.md"), "Second template")
-        
+
         create_markdown_file("multi_dirs.md", <<~CONTENT
           # Multiple Template Directories
           
@@ -355,7 +355,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
     context "with file paths as input" do
       let(:specific_file) { File.join(temp_dir, "specific.md") }
-      
+
       before do
         create_markdown_file("specific.md", "{{#include missing.md}}")
       end
@@ -379,7 +379,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(2)
-        
+
         templates = result[:findings].map { |f| f[:template] }
         expect(templates).to include("missing1.md", "missing2.md")
       end
@@ -388,7 +388,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     context "with mixed file and directory paths" do
       let(:specific_file) { File.join(temp_dir, "specific.md") }
       let(:subdir) { File.join(temp_dir, "subdir") }
-      
+
       before do
         FileUtils.mkdir_p(subdir)
         create_markdown_file("specific.md", "{{#include missing1.md}}")
@@ -400,7 +400,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(2)
-        
+
         templates = result[:findings].map { |f| f[:template] }
         expect(templates).to include("missing1.md", "missing2.md")
       end
@@ -434,7 +434,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
   describe "template pattern constants" do
     it "defines expected template patterns" do
       patterns = described_class::TEMPLATE_PATTERNS
-      
+
       expect(patterns.size).to eq(4)
       expect(patterns).to all(be_a(Regexp))
     end

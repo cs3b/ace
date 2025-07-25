@@ -186,7 +186,8 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
 
               expect(result[:repository]).to eq("dev-tools")
               expect(result[:relative_path]).to eq("README.md")
-              expect(result[:absolute_path]).to eq(File.join(dev_tools_path, "README.md"))
+              # Compare real paths to handle symlink differences
+              expect(File.realpath(result[:absolute_path])).to eq(File.realpath(File.join(dev_tools_path, "README.md")))
               expect(result[:exists]).to be true
             end
           end
@@ -283,9 +284,9 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
   describe "#resolve_paths" do
     it "resolves multiple paths correctly" do
       paths = [".coding-agent/path.yml", "dev-tools/lib/example.rb"]
-      
+
       results = resolver.resolve_paths(paths)
-      
+
       expect(results.length).to eq(2)
       expect(results[0][:repository]).to eq("main")
       expect(results[1][:repository]).to eq("dev-tools")
@@ -311,14 +312,14 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
     it "finds repository by path containment" do
       path = File.join(dev_tools_path, "lib", "example.rb")
       repo = resolver.send(:find_repository_for_path, path)
-      
+
       expect(repo[:name]).to eq("dev-tools")
     end
 
     it "defaults to main repository for unmatched paths" do
       path = "/some/external/path.rb"
       repo = resolver.send(:find_repository_for_path, path)
-      
+
       expect(repo[:name]).to eq("main")
     end
 
@@ -326,7 +327,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
       # Test that nested repositories are handled correctly
       nested_path = File.join(dev_tools_path, "nested", "file.rb")
       FileUtils.mkdir_p(File.dirname(nested_path))
-      
+
       repo = resolver.send(:find_repository_for_path, nested_path)
       expect(repo[:name]).to eq("dev-tools")
     end
@@ -336,7 +337,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
     it "handles files that exist in project root but not locally when working from submodule" do
       Dir.chdir(dev_tools_path) do
         result = resolver.resolve_path(".coding-agent/path.yml")
-        
+
         expect(result[:repository]).to eq("main")
         expect(result[:exists]).to be true
       end
@@ -345,7 +346,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
     it "handles files that exist locally but not in project root when working from submodule" do
       Dir.chdir(dev_tools_path) do
         result = resolver.resolve_path("lib/example.rb")
-        
+
         expect(result[:repository]).to eq("dev-tools")
         expect(result[:exists]).to be true
       end
@@ -354,10 +355,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
     it "chooses existing file over non-existing when both paths are valid" do
       # Create a file that exists in project root but not locally
       File.write(File.join(temp_dir, "project-file.txt"), "content")
-      
+
       Dir.chdir(dev_tools_path) do
         result = resolver.resolve_path("project-file.txt")
-        
+
         expect(result[:repository]).to eq("main")
         expect(result[:exists]).to be true
       end

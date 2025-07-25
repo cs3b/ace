@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
   before do
     FileUtils.mkdir_p(session_dir)
     allow(CodingAgentTools::Organisms::Code::ContentExtractor).to receive(:new).and_return(mock_content_extractor)
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -31,8 +31,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
           content_type: "diff",
           file_count: 5,
           line_count: 150,
-          size_info: { error: nil }
-        )
+          size_info: {error: nil})
       end
 
       before do
@@ -58,9 +57,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
 
       it "handles different target types" do
         targets = [
-          { type: "file_pattern", content_type: "files", file_count: 10, line_count: 500 },
-          { type: "staged", content_type: "diff", file_count: 3, line_count: 75 },
-          { type: "working", content_type: "diff", file_count: 8, line_count: 200 }
+          {type: "file_pattern", content_type: "files", file_count: 10, line_count: 500},
+          {type: "staged", content_type: "diff", file_count: 3, line_count: 75},
+          {type: "working", content_type: "diff", file_count: 8, line_count: 200}
         ]
 
         targets.each do |target_info|
@@ -69,9 +68,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
             content_type: target_info[:content_type],
             file_count: target_info[:file_count],
             line_count: target_info[:line_count],
-            size_info: { error: nil }
-          )
-          
+            size_info: {error: nil})
+
           allow(mock_content_extractor).to receive(:extract_and_save).and_return(target)
 
           result = command.call(target: "test", session_dir: session_dir)
@@ -89,8 +87,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
           content_type: "none",
           file_count: 0,
           line_count: 0,
-          size_info: { error: nil }
-        )
+          size_info: {error: nil})
         allow(mock_content_extractor).to receive(:extract_and_save).and_return(empty_target)
 
         result = command.call(target: "empty", session_dir: session_dir)
@@ -107,8 +104,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
           content_type: "test",
           file_count: 1,
           line_count: 10,
-          size_info: { error: nil }
-        )
+          size_info: {error: nil})
       end
 
       before do
@@ -165,8 +161,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
           content_type: "none",
           file_count: 0,
           line_count: 0,
-          size_info: { error: "Target not found" }
-        )
+          size_info: {error: "Target not found"})
       end
 
       before do
@@ -193,8 +188,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
             content_type: "none",
             file_count: 0,
             line_count: 0,
-            size_info: { error: error_msg }
-          )
+            size_info: {error: error_msg})
           allow(mock_content_extractor).to receive(:extract_and_save).and_return(error_target)
 
           result = command.call(target: "invalid", session_dir: session_dir)
@@ -239,7 +233,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
       it "passes missing directory to content extractor" do
         # The content extractor should handle missing directories
         nonexistent_dir = "/nonexistent/session"
-        
+
         result = command.call(target: "HEAD~1..HEAD", session_dir: nonexistent_dir)
 
         expect(mock_content_extractor).to have_received(:extract_and_save).with(
@@ -257,8 +251,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
           content_type: "files",
           file_count: 1000,
           line_count: 50000,
-          size_info: { error: nil }
-        )
+          size_info: {error: nil})
       end
 
       before do
@@ -276,9 +269,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
     context "with edge case targets" do
       let(:edge_case_targets) do
         [
-          { file_count: nil, line_count: nil },
-          { file_count: -1, line_count: -1 },
-          { file_count: 0, line_count: nil }
+          {file_count: nil, line_count: nil},
+          {file_count: -1, line_count: -1},
+          {file_count: 0, line_count: nil}
         ]
       end
 
@@ -289,8 +282,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
             content_type: "test",
             file_count: counts[:file_count],
             line_count: counts[:line_count],
-            size_info: { error: nil }
-          )
+            size_info: {error: nil})
           allow(mock_content_extractor).to receive(:extract_and_save).and_return(target)
 
           result = command.call(target: "test", session_dir: session_dir)
@@ -305,10 +297,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
       it "handles session directories with special characters" do
         special_session_dir = File.join(temp_dir, "session with spaces & symbols!")
         FileUtils.mkdir_p(special_session_dir)
-        
+
         successful_target = double("target",
-          type: "test", content_type: "test", file_count: 1, line_count: 10, size_info: { error: nil }
-        )
+          type: "test", content_type: "test", file_count: 1, line_count: 10, size_info: {error: nil})
         allow(mock_content_extractor).to receive(:extract_and_save).and_return(successful_target)
 
         result = command.call(target: "test", session_dir: special_session_dir)
@@ -327,8 +318,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
         ]
 
         successful_target = double("target",
-          type: "test", content_type: "test", file_count: 1, line_count: 10, size_info: { error: nil }
-        )
+          type: "test", content_type: "test", file_count: 1, line_count: 10, size_info: {error: nil})
         allow(mock_content_extractor).to receive(:extract_and_save).and_return(successful_target)
 
         special_targets.each do |target_spec|
@@ -365,7 +355,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
     it "creates content extractor instance" do
       expect(CodingAgentTools::Organisms::Code::ContentExtractor).to receive(:new)
 
-      command.call(target: "test", session_dir: session_dir) rescue nil
+      begin
+        command.call(target: "test", session_dir: session_dir)
+      rescue
+        nil
+      end
     end
 
     it "delegates to content extractor properly" do
@@ -374,15 +368,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
 
       expect(mock_content_extractor).to receive(:extract_and_save).with(target_spec, session_path)
 
-      command.call(target: target_spec, session_dir: session_path) rescue nil
+      begin
+        command.call(target: target_spec, session_dir: session_path)
+      rescue
+        nil
+      end
     end
   end
 
   describe "return codes" do
     it "returns 0 for successful extraction" do
       successful_target = double("target",
-        type: "success", content_type: "test", file_count: 1, line_count: 10, size_info: { error: nil }
-      )
+        type: "success", content_type: "test", file_count: 1, line_count: 10, size_info: {error: nil})
       allow(mock_content_extractor).to receive(:extract_and_save).and_return(successful_target)
 
       result = command.call(target: "test", session_dir: session_dir)
@@ -391,9 +388,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
 
     it "returns 1 for error targets" do
       error_target = double("target",
-        type: "error", content_type: "none", file_count: 0, line_count: 0, 
-        size_info: { error: "Test error" }
-      )
+        type: "error", content_type: "none", file_count: 0, line_count: 0,
+        size_info: {error: "Test error"})
       allow(mock_content_extractor).to receive(:extract_and_save).and_return(error_target)
 
       result = command.call(target: "test", session_dir: session_dir)

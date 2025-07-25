@@ -11,7 +11,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
     # Mock the atoms dependencies
     allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).and_return(git_executor_mock)
     allow(CodingAgentTools::Atoms::Code::FileContentReader).to receive(:new).and_return(file_reader_mock)
-    
+
     # Set up the instance variable mocks
     extractor.instance_variable_set(:@git_executor, git_executor_mock)
     extractor.instance_variable_set(:@file_reader, file_reader_mock)
@@ -177,7 +177,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
       expect(result[:success]).to be true
       expect(result[:diff_file]).to eq(diff_file)
       expect(result[:meta_file]).to eq(meta_file)
-      
+
       expect(File).to have_received(:write).with(diff_file, diff_content)
       expect(File).to have_received(:write).with(meta_file, anything)
     end

@@ -14,7 +14,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
   before do
     allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
       .and_return(project_root)
-    
+
     # Create template directory and files for testing
     FileUtils.mkdir_p(template_dir)
     create_template_file("lint.yml", "# Lint configuration")
@@ -51,15 +51,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
     context "with default options" do
       it "creates target directory if it doesn't exist" do
         expect(Dir.exist?(target_dir)).to be(false)
-        
+
         capture_stdout { command.call }
-        
+
         expect(Dir.exist?(target_dir)).to be(true)
       end
 
       it "copies template files to target directory" do
         output = capture_stdout { command.call }
-        
+
         expect(File.exist?(File.join(target_dir, "lint.yml"))).to be(true)
         expect(File.exist?(File.join(target_dir, "config.yml"))).to be(true)
         expect(output).to include("Created directory: #{target_dir}")
@@ -69,7 +69,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       it "shows summary of copied files" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("Installation complete:")
         expect(output).to include("Copied: 2 files")
         expect(output).to include("Skipped: 0 files")
@@ -77,8 +77,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       end
 
       it "returns 0 on success" do
-        result = capture_stdout { command.call }
-        
+        capture_stdout { command.call }
+
         expect(command.call).to eq(0)
       end
     end
@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
     context "with dry_run option" do
       it "shows what would be done without actually copying" do
         output = capture_stdout { command.call(dry_run: true) }
-        
+
         expect(output).to include("Would create directory: #{target_dir}")
         expect(output).to include("Would copy: lint.yml")
         expect(output).to include("Would copy: config.yml")
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       it "shows dry run summary" do
         output = capture_stdout { command.call(dry_run: true) }
-        
+
         expect(output).to include("Dry run complete:")
         expect(output).to include("Would copy: 2 files")
         expect(output).to include("Would skip: 0 files")
@@ -105,7 +105,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
     context "with debug option" do
       it "shows debug information" do
         output = capture_stdout { command.call(debug: true) }
-        
+
         expect(output).to include("Debug: Project root: #{project_root}")
         expect(output).to include("Debug: Template directory: #{template_dir}")
         expect(output).to include("Debug: Target directory: #{target_dir}")
@@ -119,7 +119,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       it "does not try to create the directory again" do
         output = capture_stdout { command.call }
-        
+
         expect(output).not_to include("Created directory: #{target_dir}")
         expect(output).to include("Copied: lint.yml")
       end
@@ -134,7 +134,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "without force option" do
         it "skips existing files" do
           output = capture_stdout { command.call }
-          
+
           expect(output).to include("Skipping existing file: lint.yml (use --force to overwrite)")
           expect(output).to include("Copied: config.yml")
           expect(output).to include("Copied: 1 files")
@@ -143,7 +143,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
         it "preserves existing file content" do
           capture_stdout { command.call }
-          
+
           existing_content = File.read(File.join(target_dir, "lint.yml"))
           expect(existing_content).to eq("# Existing content")
         end
@@ -152,7 +152,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "with force option" do
         it "overwrites existing files" do
           output = capture_stdout { command.call(force: true) }
-          
+
           expect(output).to include("Copied: lint.yml")
           expect(output).to include("Copied: config.yml")
           expect(output).to include("Copied: 2 files")
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
         it "replaces existing file content" do
           capture_stdout { command.call(force: true) }
-          
+
           new_content = File.read(File.join(target_dir, "lint.yml"))
           expect(new_content).to eq("# Lint configuration")
         end
@@ -170,7 +170,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "with dry_run and existing files" do
         it "shows what would be skipped" do
           output = capture_stdout { command.call(dry_run: true) }
-          
+
           expect(output).to include("Would skip existing file: lint.yml")
           expect(output).to include("Would copy: config.yml")
         end
@@ -183,8 +183,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       end
 
       it "returns error and exits with code 1" do
-        error_output = capture_stderr { result = command.call }
-        
+        error_output = capture_stderr { command.call }
+
         expect(error_output).to include("Error: Could not find dotfiles templates.")
         expect(error_output).to include("Expected location: dev-handbook/.meta/tpl/dotfiles/")
         expect(command.call).to eq(1)
@@ -197,8 +197,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       end
 
       it "returns error about no template files" do
-        error_output = capture_stderr { result = command.call }
-        
+        error_output = capture_stderr { command.call }
+
         expect(error_output).to include("Error: Could not find dotfiles templates.")
         expect(command.call).to eq(1)
       end
@@ -211,8 +211,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "without debug option" do
         it "handles the exception and shows basic error" do
-          error_output = capture_stderr { result = command.call }
-          
+          error_output = capture_stderr { command.call }
+
           expect(error_output).to include("Error: Permission denied")
           expect(error_output).to include("Use --debug flag for more information")
           expect(command.call).to eq(1)
@@ -221,8 +221,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "with debug option" do
         it "shows detailed error information including backtrace" do
-          error_output = capture_stderr { result = command.call(debug: true) }
-          
+          error_output = capture_stderr { command.call(debug: true) }
+
           expect(error_output).to include("Error: StandardError: Permission denied")
           expect(error_output).to include("Backtrace:")
           expect(command.call).to eq(1)
@@ -241,7 +241,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       it "finds template directory in alternative location" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("Copied: alt.yml")
         expect(File.exist?(File.join(target_dir, "alt.yml"))).to be(true)
       end
@@ -258,7 +258,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       it "finds template directory in fallback location" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("Copied: fallback.yml")
         expect(File.exist?(File.join(target_dir, "fallback.yml"))).to be(true)
       end
@@ -267,7 +267,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
     context "edge cases" do
       it "handles empty options hash" do
         result = command.call
-        
+
         expect(result).to eq(0)
       end
 
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
         output = capture_stdout do
           command.call(force: true, dry_run: false, debug: true)
         end
-        
+
         expect(output).to include("Debug: Project root:")
         expect(File.exist?(File.join(target_dir, "lint.yml"))).to be(true)
       end
@@ -283,7 +283,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       it "handles nil project root gracefully" do
         allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
           .and_return(nil)
-        
+
         result = command.call
         expect(result).to eq(1)
       end
@@ -295,7 +295,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "with multiple candidate paths" do
         let(:first_candidate) { File.join(project_root, "dev-handbook", ".meta", "tpl", "dotfiles") }
         let(:second_candidate) { File.join(project_root, ".meta", "tpl", "dotfiles") }
-        
+
         before do
           FileUtils.mkdir_p(first_candidate)
           FileUtils.mkdir_p(second_candidate)
@@ -305,7 +305,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
         it "returns the first valid directory with template files" do
           result = command.send(:find_template_directory, project_root)
-          
+
           expect(result).to eq(first_candidate)
         end
       end
@@ -318,9 +318,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
         it "returns nil if directory exists but has no yml files" do
           # Remove all yml files from the template directory
           Dir.glob(File.join(template_dir, "*.yml")).each { |f| File.delete(f) }
-          
+
           result = command.send(:find_template_directory, project_root)
-          
+
           expect(result).to be_nil
         end
       end
@@ -337,7 +337,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "with debug enabled" do
         it "outputs detailed error information" do
           command.send(:handle_error, error, true)
-          
+
           expect(command).to have_received(:warn).with("Error: StandardError: Test error")
           expect(command).to have_received(:warn).with("\nBacktrace:")
           expect(command).to have_received(:warn).with("  line1")
@@ -349,7 +349,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
       context "with debug disabled" do
         it "outputs basic error information" do
           command.send(:handle_error, error, false)
-          
+
           expect(command).to have_received(:warn).with("Error: Test error")
           expect(command).to have_received(:warn).with("Use --debug flag for more information")
         end
@@ -359,9 +359,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
     describe "#error_output" do
       it "delegates to warn" do
         allow(command).to receive(:warn)
-        
+
         command.send(:error_output, "Test message")
-        
+
         expect(command).to have_received(:warn).with("Test message")
       end
     end

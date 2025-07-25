@@ -156,8 +156,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Path do
       it "shows autocorrect message when provided" do
         allow(mock_path_resolver).to receive(:resolve_path).with("READM", type: :file)
           .and_return(
-            success: true, 
-            type: :single, 
+            success: true,
+            type: :single,
             path: "README.md",
             autocorrect_message: "Autocorrected: 'READM' → 'README.md'"
           )
@@ -176,7 +176,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Path do
           best: "file1.md",
           alternatives: ["file2.md", "file3.md"]
         }
-        
+
         allow(mock_path_resolver).to receive(:resolve_path).with("file", type: :file)
           .and_return(success: true, type: :multiple, paths: paths)
         allow(mock_path_resolver).to receive(:prioritize_matches).with(paths)
@@ -200,7 +200,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Path do
           best: "only_file.md",
           alternatives: []
         }
-        
+
         allow(mock_path_resolver).to receive(:resolve_path).with("only", type: :file)
           .and_return(success: true, type: :multiple, paths: paths)
         allow(mock_path_resolver).to receive(:prioritize_matches).with(paths)
@@ -346,17 +346,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Path do
           if expected_type == :reflection_list
             allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release)
               .and_return(success: true, type: :list, paths: ["test.md"])
-            
+
             output = capture_stdout { command.call(type: input_type) }
-            
+
             expect(output.strip).to eq("test.md")
             expect(mock_path_resolver).to have_received(:find_reflection_paths_in_current_release)
           else
             allow(mock_path_resolver).to receive(:resolve_path).with("test", type: expected_type)
               .and_return(success: true, type: :single, path: "test.md")
-            
+
             output = capture_stdout { command.call(type: input_type, input: "test") }
-            
+
             expect(output.strip).to eq("test.md")
             expect(mock_path_resolver).to have_received(:resolve_path).with("test", type: expected_type)
           end
@@ -376,17 +376,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Path do
           if expected_type == :reflection_list
             allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release)
               .and_return(success: true, type: :list, paths: ["test.md"])
-            
+
             output = capture_stdout { command.call(type: input_type) }
-            
+
             expect(output.strip).to eq("test.md")
             expect(mock_path_resolver).to have_received(:find_reflection_paths_in_current_release)
           else
             allow(mock_path_resolver).to receive(:resolve_path).with("test", type: expected_type)
               .and_return(success: true, type: :single, path: "test.md")
-            
+
             output = capture_stdout { command.call(type: input_type, input: "test") }
-            
+
             expect(output.strip).to eq("test.md")
             expect(mock_path_resolver).to have_received(:resolve_path).with("test", type: expected_type)
           end

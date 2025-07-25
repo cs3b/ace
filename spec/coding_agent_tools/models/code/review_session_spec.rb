@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewSession do
       focus: "code",
       target: "HEAD~1..HEAD",
       context_mode: "auto",
-      metadata: { created_by: "user", version: "1.0" }
+      metadata: {created_by: "user", version: "1.0"}
     }
   end
 
@@ -28,7 +28,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewSession do
       expect(session.focus).to eq("code")
       expect(session.target).to eq("HEAD~1..HEAD")
       expect(session.context_mode).to eq("auto")
-      expect(session.metadata).to eq({ created_by: "user", version: "1.0" })
+      expect(session.metadata).to eq({created_by: "user", version: "1.0"})
     end
 
     it "accepts minimal required attributes" do
@@ -257,7 +257,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewSession do
 
     it "handles complex metadata structures" do
       complex_metadata = {
-        nested: { key: "value", array: [1, 2, 3] },
+        nested: {key: "value", array: [1, 2, 3]},
         symbols: :symbol_value,
         numbers: 42,
         boolean: true

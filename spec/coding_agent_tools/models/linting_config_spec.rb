@@ -8,9 +8,9 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     {
       enabled: true,
       linters: {
-        standardrb: { enabled: true, autofix: false },
-        security: { enabled: false },
-        cassettes: { enabled: true }
+        standardrb: {enabled: true, autofix: false},
+        security: {enabled: false},
+        cassettes: {enabled: true}
       }
     }
   end
@@ -19,10 +19,10 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     {
       enabled: false,
       linters: {
-        styleguide: { enabled: false, autofix: false },
-        link_validation: { enabled: true },
-        template_embedding: { enabled: false },
-        task_metadata: { enabled: true }
+        styleguide: {enabled: false, autofix: false},
+        link_validation: {enabled: true},
+        template_embedding: {enabled: false},
+        task_metadata: {enabled: true}
       }
     }
   end
@@ -36,7 +36,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
   end
 
   let(:custom_global_settings) do
-    { timeout: 30, verbose: true }
+    {timeout: 30, verbose: true}
   end
 
   describe "#initialize" do
@@ -182,7 +182,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     end
 
     it "returns only enabled ruby linters when markdown is disabled" do
-      config = described_class.new(markdown: { enabled: false, linters: {} })
+      config = described_class.new(markdown: {enabled: false, linters: {}})
       enabled = config.enabled_linters
 
       expect(enabled).to include("ruby_standardrb")
@@ -192,7 +192,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     end
 
     it "returns only enabled markdown linters when ruby is disabled" do
-      config = described_class.new(ruby: { enabled: false, linters: {} })
+      config = described_class.new(ruby: {enabled: false, linters: {}})
       enabled = config.enabled_linters
 
       expect(enabled).to include("markdown_styleguide")
@@ -204,8 +204,8 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
     it "returns empty array when all linting is disabled" do
       config = described_class.new(
-        ruby: { enabled: false, linters: {} },
-        markdown: { enabled: false, linters: {} }
+        ruby: {enabled: false, linters: {}},
+        markdown: {enabled: false, linters: {}}
       )
       enabled = config.enabled_linters
 
@@ -216,9 +216,9 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       custom_ruby = {
         enabled: true,
         linters: {
-          standardrb: { enabled: false, autofix: true },
-          security: { enabled: true },
-          cassettes: { enabled: false }
+          standardrb: {enabled: false, autofix: true},
+          security: {enabled: true},
+          cassettes: {enabled: false}
         }
       }
 
@@ -233,8 +233,8 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
   describe "configuration validation" do
     it "handles missing linters hash gracefully" do
-      config = described_class.new(ruby: { enabled: true })
-      
+      config = described_class.new(ruby: {enabled: true})
+
       # Should fail when linters hash is missing
       expect { config.enabled_linters }.to raise_error(NoMethodError)
     end
@@ -243,8 +243,8 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       ruby_config = {
         enabled: true,
         linters: {
-          standardrb: { enabled: nil, autofix: true },
-          security: { enabled: true }
+          standardrb: {enabled: nil, autofix: true},
+          security: {enabled: true}
         }
       }
 
@@ -261,7 +261,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       partial_ruby_config = {
         enabled: true,
         linters: {
-          standardrb: { enabled: false, autofix: false }
+          standardrb: {enabled: false, autofix: false}
           # Missing security and cassettes - defaults are NOT merged
         }
       }
@@ -302,7 +302,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
     it "handles very large global_settings" do
       large_settings = {}
-      1000.times { |i| large_settings["setting_#{i}".to_sym] = "value_#{i}" }
+      1000.times { |i| large_settings[:"setting_#{i}"] = "value_#{i}" }
 
       config = described_class.new(global_settings: large_settings)
 
@@ -322,8 +322,8 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
               level: "strict",
               ignore_patterns: ["*.tmp", "*.log"],
               custom_rules: {
-                rule1: { severity: "error", pattern: /test/ },
-                rule2: { severity: "warning", threshold: 10 }
+                rule1: {severity: "error", pattern: /test/},
+                rule2: {severity: "warning", threshold: 10}
               }
             }
           }
@@ -340,15 +340,15 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       unicode_config = {
         enabled: true,
         linters: {
-          "émojis🚀".to_sym => { enabled: true, description: "Linter with émojis 🚀" },
-          "ñéẅ_linter".to_sym => { enabled: false, path: "/path/with/ñéẅ/chars" }
+          :émojis🚀 => {enabled: true, description: "Linter with émojis 🚀"},
+          :ñéẅ_linter => {enabled: false, path: "/path/with/ñéẅ/chars"}
         }
       }
 
       config = described_class.new(ruby: unicode_config)
 
-      expect(config.ruby[:linters][:"émojis🚀"][:description]).to include("🚀")
-      expect(config.ruby[:linters][:"ñéẅ_linter"][:path]).to include("ñéẅ")
+      expect(config.ruby[:linters][:émojis🚀][:description]).to include("🚀")
+      expect(config.ruby[:linters][:ñéẅ_linter][:path]).to include("ñéẅ")
     end
 
     it "handles zero and negative numeric values" do

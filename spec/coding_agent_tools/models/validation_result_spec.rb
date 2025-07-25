@@ -6,28 +6,28 @@ require "coding_agent_tools/models/validation_result"
 RSpec.describe CodingAgentTools::Models::ValidationResult do
   let(:sample_findings) do
     [
-      { type: "style", message: "Use single quotes", correctable: true },
-      { type: "layout", message: "Extra whitespace", correctable: true },
-      { type: "naming", message: "Use snake_case", correctable: false }
+      {type: "style", message: "Use single quotes", correctable: true},
+      {type: "layout", message: "Extra whitespace", correctable: true},
+      {type: "naming", message: "Use snake_case", correctable: false}
     ]
   end
 
   let(:sample_errors) do
     [
-      { type: "syntax", message: "Unexpected token" },
-      { type: "reference", message: "Undefined variable" }
+      {type: "syntax", message: "Unexpected token"},
+      {type: "reference", message: "Undefined variable"}
     ]
   end
 
   let(:sample_warnings) do
     [
-      { type: "deprecated", message: "Method deprecated" },
-      { type: "performance", message: "Inefficient algorithm" }
+      {type: "deprecated", message: "Method deprecated"},
+      {type: "performance", message: "Inefficient algorithm"}
     ]
   end
 
   let(:sample_metadata) do
-    { linter_version: "1.0.0", run_time: "2024-01-06T14:30:52Z" }
+    {linter_version: "1.0.0", run_time: "2024-01-06T14:30:52Z"}
   end
 
   let(:valid_attributes) do
@@ -142,10 +142,10 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "is consistent with issue_count" do
       test_cases = [
-        { findings: [], errors: [] },
-        { findings: sample_findings, errors: [] },
-        { findings: [], errors: sample_errors },
-        { findings: sample_findings, errors: sample_errors }
+        {findings: [], errors: []},
+        {findings: sample_findings, errors: []},
+        {findings: [], errors: sample_errors},
+        {findings: sample_findings, errors: sample_errors}
       ]
 
       test_cases.each do |test_case|
@@ -164,8 +164,8 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "returns 0 when no correctable findings" do
       non_correctable_findings = [
-        { type: "error", message: "Cannot fix", correctable: false },
-        { type: "warning", message: "Manual fix required", correctable: false }
+        {type: "error", message: "Cannot fix", correctable: false},
+        {type: "warning", message: "Manual fix required", correctable: false}
       ]
       result = described_class.new(findings: non_correctable_findings)
       expect(result.correctable_count).to eq(0)
@@ -178,8 +178,8 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "handles findings without correctable field" do
       findings_without_correctable = [
-        { type: "style", message: "Some issue" },
-        { type: "layout", message: "Another issue", correctable: true }
+        {type: "style", message: "Some issue"},
+        {type: "layout", message: "Another issue", correctable: true}
       ]
       result = described_class.new(findings: findings_without_correctable)
       expect(result.correctable_count).to eq(1)
@@ -261,8 +261,8 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
     it "preserves complex metadata structures" do
       complex_metadata = {
         version: "1.2.3",
-        config: { strict: true, ignore: ["*.tmp"] },
-        stats: { files_processed: 42, time_taken: 1.5 }
+        config: {strict: true, ignore: ["*.tmp"]},
+        stats: {files_processed: 42, time_taken: 1.5}
       }
 
       result = described_class.new(metadata: complex_metadata)
@@ -278,7 +278,7 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
   describe "edge cases", :edge_cases do
     it "handles very large arrays of findings" do
       large_findings = Array.new(10000) do |i|
-        { type: "issue#{i}", message: "Message #{i}", correctable: i.even? }
+        {type: "issue#{i}", message: "Message #{i}", correctable: i.even?}
       end
 
       result = described_class.new(findings: large_findings)
@@ -294,8 +294,8 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
           type: "complex",
           message: "Complex issue",
           correctable: true,
-          location: { file: "test.rb", line: 42, column: 10 },
-          metadata: { severity: "high", tags: ["performance"] }
+          location: {file: "test.rb", line: 42, column: 10},
+          metadata: {severity: "high", tags: ["performance"]}
         }
       ]
 
@@ -307,8 +307,8 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "handles unicode characters in messages" do
       unicode_findings = [
-        { type: "style", message: "Use émojis 🚀 correctly", correctable: true },
-        { type: "naming", message: "Variable ñame should be snake_case", correctable: false }
+        {type: "style", message: "Use émojis 🚀 correctly", correctable: true},
+        {type: "naming", message: "Variable ñame should be snake_case", correctable: false}
       ]
 
       result = described_class.new(findings: unicode_findings)
@@ -337,9 +337,9 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "handles mixed data types in arrays" do
       mixed_findings = [
-        { type: "string", message: "String message", correctable: true },
-        { type: :symbol, message: "Symbol type", correctable: false },
-        { "type" => "string_key", "message" => "String keys", "correctable" => true }
+        {type: "string", message: "String message", correctable: true},
+        {type: :symbol, message: "Symbol type", correctable: false},
+        {"type" => "string_key", "message" => "String keys", "correctable" => true}
       ]
 
       result = described_class.new(findings: mixed_findings)
@@ -351,9 +351,9 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "handles nil values in findings arrays" do
       findings_with_nil = [
-        { type: "valid", message: "Valid finding", correctable: true },
+        {type: "valid", message: "Valid finding", correctable: true},
         nil,
-        { type: "another", message: "Another finding", correctable: false }
+        {type: "another", message: "Another finding", correctable: false}
       ]
 
       result = described_class.new(findings: findings_with_nil)
@@ -366,10 +366,10 @@ RSpec.describe CodingAgentTools::Models::ValidationResult do
 
     it "handles boolean-like values for correctable field" do
       boolean_findings = [
-        { type: "truthy", message: "Truthy correctable", correctable: 1 },
-        { type: "falsy", message: "Falsy correctable", correctable: 0 },
-        { type: "nil", message: "Nil correctable", correctable: nil },
-        { type: "string", message: "String correctable", correctable: "yes" }
+        {type: "truthy", message: "Truthy correctable", correctable: 1},
+        {type: "falsy", message: "Falsy correctable", correctable: 0},
+        {type: "nil", message: "Nil correctable", correctable: nil},
+        {type: "string", message: "String correctable", correctable: "yes"}
       ]
 
       result = described_class.new(findings: boolean_findings)

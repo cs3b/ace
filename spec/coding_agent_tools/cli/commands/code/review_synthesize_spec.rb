@@ -21,7 +21,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     allow(CodingAgentTools::Molecules::Code::ReportCollector).to receive(:new).and_return(mock_report_collector)
     allow(CodingAgentTools::Molecules::Code::SessionPathInferrer).to receive(:new).and_return(mock_session_path_inferrer)
     allow(CodingAgentTools::Molecules::Code::SynthesisOrchestrator).to receive(:new).and_return(mock_synthesis_orchestrator)
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -45,8 +45,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
           reports: [
-            { path: report1, content: "Content 1" },
-            { path: report2, content: "Content 2" }
+            {path: report1, content: "Content 1"},
+            {path: report2, content: "Content 2"}
           ]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
@@ -171,7 +171,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       before do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
-          reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+          reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
         allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({
@@ -202,7 +202,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       before do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
-          reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+          reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
         allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return(dry_run_result)
@@ -237,7 +237,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       before do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
-          reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+          reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
         allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return(synthesis_result)
@@ -256,7 +256,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     context "with file validation" do
       it "validates system prompt file exists" do
         nonexistent_prompt = "/nonexistent/prompt.md"
-        
+
         result = command.call(reports: [report1, report2], system_prompt: nonexistent_prompt)
 
         expect(result).to eq(1)
@@ -265,7 +265,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
 
       it "validates report files exist" do
         nonexistent_report = "/nonexistent/report.md"
-        
+
         # This depends on how report_collector handles missing files
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: false,
@@ -290,10 +290,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
           reports: [
-            { path: report1, content: "Content 1" },
-            { path: report2, content: "Content 2" },
-            { path: report3, content: "Content 3" },
-            { path: report4, content: "Content 4" }
+            {path: report1, content: "Content 1"},
+            {path: report2, content: "Content 2"},
+            {path: report3, content: "Content 3"},
+            {path: report4, content: "Content 4"}
           ]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
@@ -315,7 +315,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       before do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
-          reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+          reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
         allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({
@@ -364,8 +364,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
         allow(mock_report_collector).to receive(:collect_reports).and_return({
           success: true,
           reports: [
-            { path: report1, content: "Content 1" },
-            { path: report2, content: "Content 2" }
+            {path: report1, content: "Content 1"},
+            {path: report2, content: "Content 2"}
           ]
         })
         allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
@@ -417,16 +417,20 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       expect(CodingAgentTools::Molecules::Code::SessionPathInferrer).to receive(:new)
       expect(CodingAgentTools::Molecules::Code::SynthesisOrchestrator).to receive(:new)
 
-      command.call(reports: [report1, report2]) rescue nil
+      begin
+        command.call(reports: [report1, report2])
+      rescue
+        nil
+      end
     end
 
     it "coordinates components correctly" do
       allow(mock_report_collector).to receive(:collect_reports).and_return({
         success: true,
-        reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+        reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
       })
       allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
-      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({ success: true })
+      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({success: true})
 
       # Verify the workflow coordination
       expect(mock_report_collector).to receive(:collect_reports).ordered
@@ -441,10 +445,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     it "returns 0 for successful synthesis" do
       allow(mock_report_collector).to receive(:collect_reports).and_return({
         success: true,
-        reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+        reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
       })
       allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/path.md")
-      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({ success: true })
+      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({success: true})
 
       result = command.call(reports: [report1, report2])
       expect(result).to eq(0)
@@ -456,7 +460,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     end
 
     it "returns 1 for collection errors" do
-      allow(mock_report_collector).to receive(:collect_reports).and_return({ success: false, error: "Error" })
+      allow(mock_report_collector).to receive(:collect_reports).and_return({success: false, error: "Error"})
       result = command.call(reports: [report1, report2])
       expect(result).to eq(1)
     end
@@ -464,10 +468,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     it "returns 1 for synthesis errors" do
       allow(mock_report_collector).to receive(:collect_reports).and_return({
         success: true,
-        reports: [{ path: report1, content: "Content 1" }, { path: report2, content: "Content 2" }]
+        reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
       })
       allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/path.md")
-      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({ success: false, error: "Error" })
+      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({success: false, error: "Error"})
 
       result = command.call(reports: [report1, report2])
       expect(result).to eq(1)

@@ -6,7 +6,7 @@ require "fileutils"
 
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
   let(:temp_dir) { Dir.mktmpdir }
-  
+
   after do
     FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
   end
@@ -26,18 +26,18 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
     end
 
     it "merges custom options with defaults" do
-      custom_options = { hard_wrap: true, auto_ids: false }
+      custom_options = {hard_wrap: true, auto_ids: false}
       formatter = described_class.new(custom_options)
-      
+
       expect(formatter.options[:hard_wrap]).to be true
       expect(formatter.options[:auto_ids]).to be false
       expect(formatter.options[:input]).to eq("GFM")  # Still has default
     end
 
     it "allows complete option override" do
-      custom_options = { input: "markdown", toc_levels: "1..3" }
+      custom_options = {input: "markdown", toc_levels: "1..3"}
       formatter = described_class.new(custom_options)
-      
+
       expect(formatter.options[:input]).to eq("markdown")
       expect(formatter.options[:toc_levels]).to eq("1..3")
     end
@@ -206,7 +206,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
       it "updates file when content changes and not dry run" do
         original_content = "# Title\n\n\n\nContent with extra spaces."
         File.write(test_file, original_content)
-        
+
         result = formatter.format_file(test_file)
 
         expect(result[:success]).to be true
@@ -220,7 +220,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
         formatter_dry = described_class.new(dry_run: true)
         original_content = "# Title\n\n\n\nContent."
         File.write(test_file, original_content)
-        
+
         result = formatter_dry.format_file(test_file)
 
         expect(result[:success]).to be true
@@ -231,7 +231,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
       it "does not update file when content unchanged" do
         well_formatted_content = "# Title\n\nContent."
         File.write(test_file, well_formatted_content)
-        
+
         result = formatter.format_file(test_file)
 
         expect(result[:success]).to be true
@@ -274,7 +274,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
         # This test might be challenging since the error occurs during write
         # The method might still return success: true for the formatting part
         result = formatter.format_file(test_file)
-        
+
         # The behavior depends on implementation - it might catch write errors
         # or let them bubble up. Either is acceptable.
         expect(result).to have_key(:success)

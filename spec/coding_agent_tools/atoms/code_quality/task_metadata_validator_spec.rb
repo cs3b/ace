@@ -6,7 +6,7 @@ require "fileutils"
 
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
   let(:temp_dir) { Dir.mktmpdir }
-  
+
   after do
     FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
   end
@@ -65,7 +65,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       before do
         create_task_file("specific.md", {
           "id" => "v.0.1.0+task.1",
-          "status" => "pending", 
+          "status" => "pending",
           "priority" => "high"
         }, "# Specific Task")
       end
@@ -348,7 +348,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       context "with valid estimates" do
         %w[1h 2.5h 3d 1w 5sp 10pt 2wk 1mo].each do |estimate|
           it "accepts valid estimate: #{estimate}" do
-            create_task_file("estimate_#{estimate.gsub('.', '_')}.md", {
+            create_task_file("estimate_#{estimate.tr(".", "_")}.md", {
               "id" => "v.0.1.0+task.1",
               "status" => "pending",
               "priority" => "high",
@@ -497,7 +497,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
           "status" => "pending",
           "priority" => "high"
         }, "# Task")
-        
+
         allow(File).to receive(:read).with(anything).and_call_original
         allow(File).to receive(:read).with(File.join(temp_dir, "read_error.md")).and_raise(IOError, "Read failed")
       end
@@ -539,7 +539,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
   private
 
   def create_task_file(filename, frontmatter, body)
-    content = "---\n#{frontmatter.to_yaml.sub(/^---\n/, '')}---\n\n#{body}"
+    content = "---\n#{frontmatter.to_yaml.sub(/^---\n/, "")}---\n\n#{body}"
     File.write(File.join(temp_dir, filename), content)
   end
 end

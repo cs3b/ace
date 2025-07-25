@@ -8,14 +8,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
   let(:mock_session) do
     double("session",
       directory_path: "/sessions/review-20240101-120000",
-      session_id: "20240101-120000"
-    )
+      session_id: "20240101-120000")
   end
 
   before do
     allow(CodingAgentTools::Organisms::Code::SessionManager).to receive(:new).and_return(mock_session_manager)
     allow(mock_session_manager).to receive(:create_session).and_return(mock_session)
-    
+
     # Capture output
     allow($stdout).to receive(:puts)
     allow($stderr).to receive(:write)
@@ -56,7 +55,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
 
       it "handles different focus types" do
         focus_types = ["code", "tests", "docs", "code tests", "code tests docs"]
-        
+
         focus_types.each do |focus|
           result = command.call(focus: focus, target: "HEAD~1..HEAD")
 
@@ -76,7 +75,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
           "working",
           "v1.0.0..v2.0.0"
         ]
-        
+
         target_types.each do |target|
           result = command.call(focus: "code", target: target)
 
@@ -304,8 +303,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::SessionDir 
       it "handles session manager returning different session objects" do
         different_session = double("session",
           directory_path: "/different/session/path",
-          session_id: "different-id"
-        )
+          session_id: "different-id")
         allow(mock_session_manager).to receive(:create_session).and_return(different_session)
 
         result = command.call(focus: "code", target: "HEAD~1..HEAD")

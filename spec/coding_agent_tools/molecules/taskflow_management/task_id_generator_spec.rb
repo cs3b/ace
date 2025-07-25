@@ -6,7 +6,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskIdGenerator 
   describe "GenerationResult" do
     it "creates successful result" do
       result = described_class::GenerationResult.new("v.1.0.0+task.1", "v.1.0.0", 1, true, nil)
-      
+
       expect(result.success?).to be true
       expect(result.task_id).to eq("v.1.0.0+task.1")
       expect(result.version).to eq("v.1.0.0")
@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskIdGenerator 
 
     it "creates failure result" do
       result = described_class::GenerationResult.new(nil, nil, nil, false, "Version not found")
-      
+
       expect(result.success?).to be false
       expect(result.task_id).to be_nil
       expect(result.error_message).to eq("Version not found")
@@ -31,11 +31,11 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskIdGenerator 
       # Mock version extraction
       allow(described_class).to receive(:extract_version_from_directory)
         .with(release_path).and_return(version)
-      
+
       # Mock finding max task number
       allow(described_class).to receive(:find_max_task_number)
         .with(release_path, version).and_return(5)
-      
+
       # Mock task ID parser
       allow(CodingAgentTools::Atoms::TaskflowManagement::TaskIdParser)
         .to receive(:generate_next_id).with(version, current_max: 5)
@@ -99,5 +99,4 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskIdGenerator 
       end
     end
   end
-
 end

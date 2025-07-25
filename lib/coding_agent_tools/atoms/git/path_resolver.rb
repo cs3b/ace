@@ -53,7 +53,7 @@ module CodingAgentTools
 
         def group_paths_by_repository(paths)
           return {} if paths.nil? || paths.empty?
-          
+
           resolved_paths = resolve_paths(paths)
           grouped = {}
 
@@ -102,60 +102,58 @@ module CodingAgentTools
           # Use realpath to resolve symlinks consistently
           current_dir = File.realpath(Dir.pwd)
           project_root_normalized = File.realpath(@project_root)
-          
+
           # Try resolving from current directory first
           current_resolved = File.expand_path(path, current_dir)
-          
+
           # Try resolving from project root as fallback
           project_resolved = File.expand_path(path, project_root_normalized)
-          
+
           # If current directory is the project root, use current resolution
           if current_dir == project_root_normalized
             return current_resolved
           end
-          
+
           # If we're in a submodule directory, we need to be more intelligent
           # Check if the file would make more sense from project root
-          
+
           # Check if paths are within project (using normalized paths with symlinks resolved)
-          current_in_project = current_resolved.start_with?(project_root_normalized + File::SEPARATOR) || 
-                              current_resolved == project_root_normalized
-          project_in_project = project_resolved.start_with?(project_root_normalized + File::SEPARATOR) || 
-                              project_resolved == project_root_normalized
-          
+          current_in_project = current_resolved.start_with?(project_root_normalized + File::SEPARATOR) ||
+            current_resolved == project_root_normalized
+          project_in_project = project_resolved.start_with?(project_root_normalized + File::SEPARATOR) ||
+            project_resolved == project_root_normalized
+
           # If both are in project, check which one actually exists or makes more sense
           if current_in_project && project_in_project
             # Both paths are within the project root
             # Prioritize existing files first
             if File.exist?(current_resolved) && !File.exist?(project_resolved)
-              return current_resolved
+              current_resolved
             elsif File.exist?(project_resolved) && !File.exist?(current_resolved)
-              return project_resolved
+              project_resolved
             elsif File.exist?(current_resolved) && File.exist?(project_resolved)
               # Both files exist - use heuristics to decide
               if path.start_with?(".")
                 # Dot-prefixed paths likely belong to main repository
-                return project_resolved
+                project_resolved
               else
                 # Regular files in submodule directory - prefer local
-                return current_resolved
+                current_resolved
               end
-            else
+            elsif path.start_with?(".")
               # Neither exists, but we need to make a decision based on path characteristics
-              if path.start_with?(".")
-                # Dot-prefixed paths likely belong to main repo
-                return project_resolved
-              else
-                # Regular paths in submodule directory should prefer local
-                return current_resolved
-              end
+              # Dot-prefixed paths likely belong to main repo
+              project_resolved
+            else
+              # Regular paths in submodule directory should prefer local
+              current_resolved
             end
           elsif project_in_project && !current_in_project
             # Only project root resolution is within project, use it
-            return project_resolved
+            project_resolved
           else
             # Fall back to current directory resolution
-            return current_resolved
+            current_resolved
           end
         end
 
@@ -218,8 +216,23 @@ module CodingAgentTools
         end
 
         def calculate_relative_path(absolute_path, repository_info)
-          repo_path = Pathname.new(repository_info[:full_path])
-          file_path = Pathname.new(absolute_path)
+          # Ensure we're working with real paths to handle symlinks consistently
+          begin
+            repo_real_path = File.exist?(repository_info[:full_path]) ?
+              File.realpath(repository_info[:full_path]) :
+              File.expand_path(repository_info[:full_path])
+
+            file_real_path = File.exist?(absolute_path) ?
+              File.realpath(absolute_path) :
+              File.expand_path(absolute_path)
+          rescue
+            # Fallback if realpath fails
+            repo_real_path = File.expand_path(repository_info[:full_path])
+            file_real_path = File.expand_path(absolute_path)
+          end
+
+          repo_path = Pathname.new(repo_real_path)
+          file_path = Pathname.new(file_real_path)
 
           begin
             relative_path = file_path.relative_path_from(repo_path)

@@ -6,9 +6,9 @@ require "coding_agent_tools/models/code/review_context"
 RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
   let(:sample_documents) do
     [
-      { type: "blueprint", path: "docs/blueprint.md", content: "Blueprint content" },
-      { type: "vision", path: "docs/vision.md", content: "Vision content" },
-      { type: "architecture", path: "docs/architecture.md", content: "Architecture content" }
+      {type: "blueprint", path: "docs/blueprint.md", content: "Blueprint content"},
+      {type: "vision", path: "docs/vision.md", content: "Vision content"},
+      {type: "architecture", path: "docs/architecture.md", content: "Architecture content"}
     ]
   end
 
@@ -128,8 +128,8 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "handles documents with nil content" do
       docs_with_nil = [
-        { type: "blueprint", path: "docs/blueprint.md", content: nil },
-        { type: "vision", path: "docs/vision.md", content: "Vision content" }
+        {type: "blueprint", path: "docs/blueprint.md", content: nil},
+        {type: "vision", path: "docs/vision.md", content: "Vision content"}
       ]
       context = described_class.new(mode: "auto", documents: docs_with_nil)
       expect(context.total_size).to eq("Vision content".size)
@@ -163,9 +163,9 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "returns unique types only" do
       duplicate_docs = [
-        { type: "blueprint", path: "docs/blueprint1.md", content: "Content 1" },
-        { type: "blueprint", path: "docs/blueprint2.md", content: "Content 2" },
-        { type: "vision", path: "docs/vision.md", content: "Vision content" }
+        {type: "blueprint", path: "docs/blueprint1.md", content: "Content 1"},
+        {type: "blueprint", path: "docs/blueprint2.md", content: "Content 2"},
+        {type: "vision", path: "docs/vision.md", content: "Vision content"}
       ]
       context = described_class.new(mode: "auto", documents: duplicate_docs)
       expect(context.document_types).to eq(["blueprint", "vision"])
@@ -196,7 +196,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "returns false when document types don't match defaults" do
       custom_docs = [
-        { type: "custom", path: "docs/custom.md", content: "Custom content" }
+        {type: "custom", path: "docs/custom.md", content: "Custom content"}
       ]
       context = described_class.new(mode: "auto", documents: custom_docs)
       expect(context.using_auto_defaults?).to be(false)
@@ -204,7 +204,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "returns false when missing some default types" do
       partial_docs = [
-        { type: "blueprint", path: "docs/blueprint.md", content: "Blueprint content" }
+        {type: "blueprint", path: "docs/blueprint.md", content: "Blueprint content"}
       ]
       context = described_class.new(mode: "auto", documents: partial_docs)
       expect(context.using_auto_defaults?).to be(false)
@@ -214,7 +214,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
   describe "edge cases", :edge_cases do
     it "handles empty document content" do
       empty_docs = [
-        { type: "blueprint", path: "docs/blueprint.md", content: "" }
+        {type: "blueprint", path: "docs/blueprint.md", content: ""}
       ]
       context = described_class.new(mode: "auto", documents: empty_docs)
       expect(context.total_size).to eq(0)
@@ -223,7 +223,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "handles very large document sets" do
       large_docs = Array.new(1000) do |i|
-        { type: "doc#{i}", path: "docs/doc#{i}.md", content: "Content #{i}" }
+        {type: "doc#{i}", path: "docs/doc#{i}.md", content: "Content #{i}"}
       end
       context = described_class.new(mode: "custom", documents: large_docs)
       expect(context.document_count).to eq(1000)
@@ -232,7 +232,7 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "handles documents with special characters in content" do
       special_docs = [
-        { type: "unicode", path: "docs/unicode.md", content: "Content with émojis 🚀 and ñéẅlíñés\n\t" }
+        {type: "unicode", path: "docs/unicode.md", content: "Content with émojis 🚀 and ñéẅlíñés\n\t"}
       ]
       context = described_class.new(mode: "custom", documents: special_docs)
       expect(context.total_size).to be > 0
@@ -241,9 +241,9 @@ RSpec.describe CodingAgentTools::Models::Code::ReviewContext do
 
     it "handles documents with malformed structure" do
       malformed_docs = [
-        { type: "good", path: "docs/good.md", content: "Good content" },
-        { path: "docs/no_type.md", content: "No type" }, # Missing type
-        { type: "no_content", path: "docs/no_content.md" } # Missing content
+        {type: "good", path: "docs/good.md", content: "Good content"},
+        {path: "docs/no_type.md", content: "No type"}, # Missing type
+        {type: "no_content", path: "docs/no_content.md"} # Missing content
       ]
       context = described_class.new(mode: "custom", documents: malformed_docs)
       expect(context.document_count).to eq(3)
