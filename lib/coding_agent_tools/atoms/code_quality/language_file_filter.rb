@@ -59,7 +59,7 @@ module CodingAgentTools
             case pattern
             when /^\*\./
               # Extension pattern like "*.rb"
-              extension = pattern[2..-1]
+              extension = pattern[2..]
               found_files.concat(Dir.glob(File.join(directory, "**", "*.#{extension}")))
             when /\/\*$/
               # Directory pattern like "exe/*"
