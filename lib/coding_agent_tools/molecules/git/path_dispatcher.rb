@@ -74,19 +74,12 @@ module CodingAgentTools
         end
 
         def build_command_context(repository)
-          if repository[:name] == "main"
-            {
-              prefix: "",
-              git_command_prefix: "git",
-              description: "main repository"
-            }
-          else
-            {
-              prefix: "-C #{Shellwords.escape(repository[:path])}",
-              git_command_prefix: "git -C #{Shellwords.escape(repository[:path])}",
-              description: "#{repository[:name]} repository"
-            }
-          end
+          escaped_path = Shellwords.escape(repository[:full_path])
+          {
+            prefix: "-C #{escaped_path}",
+            git_command_prefix: "git -C #{escaped_path}",
+            description: "#{repository[:name]} repository"
+          }
         end
       end
     end
