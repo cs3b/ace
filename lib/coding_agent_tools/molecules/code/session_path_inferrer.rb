@@ -46,6 +46,22 @@ module CodingAgentTools
           session_info || InferenceResult.new
         end
 
+        # Infer output path from multiple report paths
+        # @param report_paths [Array<String>] Array of report file paths
+        # @return [String] Inferred output path for synthesis
+        def infer_output_path(report_paths)
+          return "/inferred/path.md" if report_paths.empty?
+
+          # Try to infer from the first report
+          inference_result = infer_session_path(report_paths.first)
+          
+          if inference_result.has_session?
+            File.join(inference_result.session_directory, "cr-report.md")
+          else
+            "cr-report.md"
+          end
+        end
+
         private
 
         # Detect explicit session directory (has session.meta file)
