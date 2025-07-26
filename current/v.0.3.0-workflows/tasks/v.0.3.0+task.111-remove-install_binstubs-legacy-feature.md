@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.111
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -81,22 +81,22 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
 
 ### Execution Steps
 
-- [ ] Remove CLI command registration from main CLI registry
-- [ ] Delete CLI command implementation file
+- [x] Remove CLI command registration from main CLI registry
+- [x] Delete CLI command implementation file
   > TEST: Verify CLI Command Removed
   > Type: Action Validation
   > Assert: install_binstubs command is no longer available and file is deleted
   > Command: ls dev-tools/lib/coding_agent_tools/cli/commands/install_binstubs.rb
-- [ ] Delete organism layer implementation (BinstubInstaller)
-- [ ] Delete molecule layer implementation (BinstubGenerator)  
-- [ ] Delete configuration file with binstub aliases
+- [x] Delete organism layer implementation (BinstubInstaller)
+- [x] Delete molecule layer implementation (BinstubGenerator)  
+- [x] Delete configuration file with binstub aliases
   > TEST: Verify Configuration Removed
   > Type: Action Validation
   > Assert: Configuration file is deleted and no references remain
   > Command: ls dev-tools/config/binstub-aliases.yml
-- [ ] Delete all test files for binstub functionality
-- [ ] Clean up any documentation references to binstub installation
-- [ ] Run tests to ensure no broken dependencies
+- [x] Delete all test files for binstub functionality
+- [x] Clean up any documentation references to binstub installation
+- [x] Run tests to ensure no broken dependencies
   > TEST: Verify No Broken Dependencies
   > Type: Integration Test
   > Assert: All tests pass and no references to removed binstub functionality remain
@@ -104,11 +104,11 @@ Remove the legacy `install_binstubs` feature from the dev-tools Ruby gem. This f
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All binstub-related files are deleted from the codebase.
-- [ ] AC 2: CLI no longer registers or provides install-binstubs command.
-- [ ] AC 3: All tests pass with no references to removed functionality.
-- [ ] AC 4: No orphaned dependencies or broken imports remain.
-- [ ] AC 5: Documentation is updated to remove binstub references.
+- [x] AC 1: All binstub-related files are deleted from the codebase.
+- [x] AC 2: CLI no longer registers or provides install-binstubs command.
+- [x] AC 3: All tests pass with no references to removed functionality.
+- [x] AC 4: No orphaned dependencies or broken imports remain.
+- [x] AC 5: Documentation is updated to remove binstub references.
 
 ## Out of Scope
 
