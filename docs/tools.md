@@ -8,6 +8,7 @@
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
+| `create-path` | Create files/directories with templates | `--force`, `--priority`, `--content` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
 | `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
 | `git-diff` | Enhanced git diff | `--staged`, `--stat` |
@@ -102,6 +103,46 @@ coding_agent_tools all --category "Git Operations"
 coding_agent_tools all --format names
 coding_agent_tools all --no-descriptions
 ```
+</details>
+
+### `create-path` – Create files and directories with metadata and templates   {#create-path--create-files-and-directories-with-metadata-and-templates}
+
+<details><summary>Details</summary>
+
+```bash
+create-path TYPE TARGET [OPTIONS]
+```
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--title` | Title for new path generation | Target argument |
+| `--force`, `-f` | Force overwrite existing files | `false` |
+| `--content` | Direct content for file creation | None |
+| `--template` | Custom template path | Auto-detected |
+| `--priority` | Priority level (high, medium, low) | `medium` |
+| `--estimate` | Time estimate (e.g., '4h', '2d') | None |
+| `--dependencies` | Comma-separated dependencies | None |
+| `--status` | Initial status (pending, in-progress, done, blocked) | `pending` |
+
+**Types:**
+- `task-new` - Create task using PathResolver and templates
+- `file` - Create file with direct content
+- `directory` - Create directory with recursive support
+- `docs-new` - Create documentation file
+- `template` - Create file using custom template
+
+**Examples**
+```bash
+create-path task-new "implement-feature-x" --priority high --estimate 4h
+create-path file README.md --content "# My Project"
+create-path directory src/components
+create-path docs-new "api-documentation" --title "API Documentation"
+create-path template my-doc.md --template custom.template.md --title "Custom Doc"
+```
+
+**Configuration:**
+Uses `.coding-agent/create-path.yml` for template mappings and variable definitions.
+Delegates path resolution to PathResolver for consistent nav-path integration.
 </details>
 
 ### `llm-query` – Unified LLM query interface   {#llm-query--unified-llm-query-interface}

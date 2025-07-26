@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+
+# Create Path - File and directory creation with metadata and templates
+# Delegates path generation to PathResolver and uses templates for content
+
+# Set up load paths for development if necessary
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools"
+require "coding_agent_tools/cli/create_path_command"
+
+# Simple direct execution - bypass Dry::CLI complexity for a dedicated executable
+begin
+  if ARGV.empty? || ARGV.include?("--help") || ARGV.include?("-h")
+    puts "Create Path - File and directory creation with metadata and templates"
+    puts ""
+    puts "Usage:"
+    puts "  create-path TYPE TARGET [OPTIONS]"
+    puts "  create-path TYPE --title 'Title' [OPTIONS]"
+    puts ""
+    puts "Types:"
+    puts "  task-new       Create new task using PathResolver and templates"
+    puts "  file          Create file with direct content"
+    puts "  directory     Create directory (with recursive support)"
+    puts "  docs-new      Create new documentation"
+    puts "  template      Create file using custom template"
+    puts ""
+    puts "Options:"
+    puts "  --title TITLE        Title for new path generation"
+    puts "  --force, -f          Force overwrite existing files"
+    puts "  --content CONTENT    Direct content for file creation"
+    puts "  --template PATH      Custom template path (for template type)"
+    puts ""
+    puts "Metadata Options (for template-based creation):"
+    puts "  --priority LEVEL     Priority level (high, medium, low)"
+    puts "  --estimate TIME      Time estimate (e.g., '4h', '2d')"
+    puts "  --dependencies IDS   Comma-separated list of dependencies"
+    puts "  --status STATUS      Initial status (pending, in-progress, done, blocked)"
+    puts ""
+    puts "Examples:"
+    puts "  create-path task-new \"implement-feature-x\" --priority high --estimate 4h"
+    puts "  create-path file README.md --content \"# My Project\""
+    puts "  create-path directory src/components"
+    puts "  create-path docs-new \"api-documentation\" --title \"API Documentation\""
+    puts "  create-path template my-doc.md --template custom.template.md --title \"Custom\""
+    exit 0
+  end
+
+  if ARGV.include?("--version") || ARGV.include?("-v")
+    require "coding_agent_tools/version"
+    puts "Create Path #{CodingAgentTools::VERSION}"
+    exit 0
+  end
+
+  # Parse arguments manually for this simple case
+  type = ARGV[0]
+  target = ARGV[1] unless ARGV[1]&.start_with?("--")
+
+  # Parse options
+  options = {}
+  i = 1
+  while i < ARGV.length
+    arg = ARGV[i]
+    case arg
+    when "--title"
+      options[:title] = ARGV[i + 1]
+      i += 2
+    when "--force", "-f"
+      options[:force] = true
+      i += 1
+    when "--content"
+      options[:content] = ARGV[i + 1]
+      i += 2
+    when "--template"
+      options[:template] = ARGV[i + 1]
+      i += 2
+    when "--priority"
+      options[:priority] = ARGV[i + 1]
+      i += 2
+    when "--estimate"
+      options[:estimate] = ARGV[i + 1]
+      i += 2
+    when "--dependencies"
+      options[:dependencies] = ARGV[i + 1]
+      i += 2
+    when "--status"
+      options[:status] = ARGV[i + 1]
+      i += 2
+    else
+      i += 1
+    end
+  end
+
+  # Execute the create path command
+  command = CodingAgentTools::Cli::CreatePathCommand.new
+  exit_code = command.call(type: type, target: target, **options)
+  exit exit_code
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end
