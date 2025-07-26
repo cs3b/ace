@@ -215,6 +215,16 @@ module CodingAgentTools
         @git_commands_registered = true
       end
 
+      def self.register_create_path_commands
+        return if @create_path_commands_registered
+
+        require_relative "cli/create_path_command"
+
+        register "create-path", CreatePathCommand
+
+        @create_path_commands_registered = true
+      end
+
       def self.register_all_commands
         return if @all_commands_registered
 
@@ -238,6 +248,7 @@ module CodingAgentTools
         register_handbook_commands
         register_reflection_commands
         register_git_commands
+        register_create_path_commands
         register_all_commands
         super
       end
