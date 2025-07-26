@@ -56,6 +56,11 @@ module CodingAgentTools
         return if defined?(Bundler)
         return unless bundler_environment?
 
+        # Explicitly set the Gemfile path to ensure we use the gem's Gemfile
+        # regardless of the current working directory
+        gem_gemfile_path = File.expand_path("../../../../Gemfile", __FILE__)
+        ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+
         begin
           require "bundler/setup"
         rescue LoadError

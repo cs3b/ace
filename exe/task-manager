@@ -3,6 +3,16 @@
 # Task Manager - Direct interface to task management functionality
 # This provides a focused entry point for task operations
 
+# Ensure we use the correct Gemfile regardless of current directory
+gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
+ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+
+begin
+  require "bundler/setup"
+rescue LoadError
+  # Continue without bundler if not available
+end
+
 # Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
 lib_path = File.expand_path("../../lib", __FILE__)
