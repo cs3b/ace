@@ -286,7 +286,11 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
     end
 
     context "edge cases" do
-      it "handles nil start_path by using $PROGRAM_NAME" do
+      let(:temp_dir) { Dir.mktmpdir }
+
+      after { FileUtils.rm_rf(temp_dir) }
+
+      it "handles nil start_path by using Dir.pwd" do
         result = detector.find_project_root(nil)
         expect(result).to be_a(String)
         expect(File.directory?(result)).to be true
@@ -297,6 +301,56 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         result = detector.find_project_root(Dir.pwd)
         expect(result).to be_a(String)
         expect(File.directory?(result)).to be true
+      end
+
+      it "handles deeply nested directory structures within cache limits" do
+        # Create a deeply nested structure
+        deeply_nested = File.join(temp_dir, *Array.new(15, "level"))
+        FileUtils.mkdir_p(deeply_nested)
+        
+        # Add .git at the root
+        git_dir = File.join(temp_dir, ".git")
+        FileUtils.mkdir_p(git_dir)
+        
+        result = detector.find_project_root(deeply_nested)
+        expect(result).to eq(temp_dir)
+      end
+
+      it "validates special directory detection with multiple dev directories" do
+        # Create a structure with multiple dev directories
+        dev_tools = File.join(temp_dir, "dev-tools", "lib", "deep")
+        dev_handbook = File.join(temp_dir, "dev-handbook", "guides")
+        FileUtils.mkdir_p(dev_tools)
+        FileUtils.mkdir_p(dev_handbook)
+        
+        # Add .git marker at root
+        git_dir = File.join(temp_dir, ".git")
+        FileUtils.mkdir_p(git_dir)
+        
+        result = detector.find_project_root(dev_tools)
+        expect(result).to eq(temp_dir)
+      end
+
+      it "handles .ruby-version tertiary marker detection" do
+        ruby_version_file = File.join(temp_dir, ".ruby-version")
+        FileUtils.touch(ruby_version_file)
+        
+        subdir = File.join(temp_dir, "nested", "path")
+        FileUtils.mkdir_p(subdir)
+        
+        result = detector.find_project_root(subdir)
+        expect(result).to eq(temp_dir)
+      end
+
+      it "handles .tools-meta tertiary marker detection" do
+        tools_meta_file = File.join(temp_dir, ".tools-meta")
+        FileUtils.touch(tools_meta_file)
+        
+        subdir = File.join(temp_dir, "src", "lib")
+        FileUtils.mkdir_p(subdir)
+        
+        result = detector.find_project_root(subdir)
+        expect(result).to eq(temp_dir)
       end
     end
   end
