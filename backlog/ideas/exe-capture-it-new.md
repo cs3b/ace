@@ -14,3 +14,6 @@ capture-it idea --clipboard (read from clipboard, also file(s))
 
 
 => convert to solid idea with questions that are important for the finilizing spec
+
+
+| as side task we should allow reuse the using of clibboard as it might be useful can read from clipboard, also images and write (prepare prompt for chatgpt o3 research)

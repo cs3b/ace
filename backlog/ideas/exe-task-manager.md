@@ -24,3 +24,20 @@ two flags:
   --add-at-the-end (finds the highest number still pending and count from this number with sort: ) - this is the default behavoirs
 
 It should have impact on how we sort tasks by default (the sort attribute have priority in the status (still in-progress will be before pending even if the number is lower)
+
+4. allow to read dates (not only date time from yaml) (update: was date not date time)
+
+task-manager next --limit 5
+Warning: Failed to parse task file /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-taskflow/current/v.0.3.0-workflows/tasks/v.0.3.0+task.100-create-unit-tests-for-cli-command-classes.md: Tried to load unspecified class: Date
+No actionable tasks found
+
+---
+id: v.0.3.0+task.100
+status: in-progress
+priority: medium
+estimate: 20h
+dependencies: []
+completion: 85%
+updated: 2025-07-25
+remaining_work: 5_git_commands
+---
