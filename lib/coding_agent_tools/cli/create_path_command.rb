@@ -328,7 +328,7 @@ module CodingAgentTools
 
       def load_create_path_config
         config_path = File.join(
-          @path_resolver.instance_variable_get(:@sandbox).project_root,
+          @path_resolver.project_root,
           ".coding-agent",
           "create-path.yml"
         )
