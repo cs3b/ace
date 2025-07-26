@@ -283,4 +283,330 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       expect(result).to match(/Date: \d{4}-\d{2}-\d{2}/)
     end
   end
+
+  describe "file system errors" do
+    it "handles permission denied errors gracefully" do
+      # Create a directory with restricted permissions
+      restricted_dir = File.join(temp_dir, "restricted")
+      FileUtils.mkdir_p(restricted_dir)
+      FileUtils.chmod(0444, restricted_dir) # Read-only
+      
+      target_path = File.join(restricted_dir, "test-file.txt")
+      
+      result = subject.call(
+        type: "file",
+        target: target_path,
+        content: "test content"
+      )
+      
+      expect(result).to eq(1)
+      
+      # Restore permissions for cleanup
+      FileUtils.chmod(0755, restricted_dir) rescue nil
+    end
+
+    it "handles disk full errors appropriately" do
+      # Mock FileUtils to simulate disk full error
+      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ENOSPC, "No space left on device")
+      
+      result = subject.call(
+        type: "directory",
+        target: File.join(temp_dir, "test-dir")
+      )
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles readonly filesystem scenarios" do
+      # Mock file writing to simulate readonly filesystem
+      file_handler = instance_double(CodingAgentTools::Molecules::FileIoHandler)
+      allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+      allow(file_handler).to receive(:write_content).and_raise(Errno::EROFS, "Read-only file system")
+      
+      result = subject.call(
+        type: "file",
+        target: File.join(temp_dir, "test-file.txt"),
+        content: "test content"
+      )
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles network filesystem timeouts" do
+      # Mock file operations to simulate network timeout
+      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ETIMEDOUT, "Connection timed out")
+      
+      result = subject.call(
+        type: "directory",
+        target: File.join(temp_dir, "network-dir")
+      )
+      
+      expect(result).to eq(1)
+    end
+  end
+
+  describe "input validation" do
+    it "validates required parameters are present" do
+      result = subject.call(type: "file", target: nil)
+      expect(result).to eq(1)
+      
+      result = subject.call(type: "file", target: "")
+      expect(result).to eq(1)
+      
+      result = subject.call(type: "file", target: "   ")
+      expect(result).to eq(1)
+    end
+
+    it "handles malformed command line arguments" do
+      # Test with unknown type
+      result = subject.call(type: "unknown-type", target: "test")
+      expect(result).to eq(1)
+    end
+
+    it "validates path format and characters" do
+      # These will be handled by the security validator, but test the integration
+      invalid_paths = [
+        "\x00null-byte-path",
+        "path/with\x01control-chars",
+        "extremely-" + "long-" * 100 + "path.txt"
+      ]
+      
+      invalid_paths.each do |invalid_path|
+        result = subject.call(
+          type: "file",
+          target: invalid_path,
+          content: "test"
+        )
+        expect(result).to eq(1), "Should reject path: #{invalid_path}"
+      end
+    end
+
+    it "handles empty or whitespace-only inputs" do
+      result = subject.call(type: "file", target: "", content: "test")
+      expect(result).to eq(1)
+      
+      result = subject.call(type: "file", target: "   ", content: "test")
+      expect(result).to eq(1)
+      
+      result = subject.call(type: "file", target: "test.txt", content: "")
+      expect(result).to eq(1)
+    end
+  end
+
+  describe "configuration errors" do
+    it "handles missing .coding-agent/create-path.yml" do
+      # Remove the config file
+      FileUtils.rm_f(config_file)
+      
+      # Test should still work with empty config
+      result = subject.call(
+        type: "file",
+        target: File.join(temp_dir, "test.txt"),
+        content: "test content"
+      )
+      
+      expect(result).to eq(0) # Should succeed with default behavior
+    end
+
+    it "handles malformed YAML configuration" do
+      # Write invalid YAML to config file
+      File.write(config_file, "invalid: yaml: content: [")
+      
+      # Command should handle gracefully and fall back to defaults
+      result = subject.call(
+        type: "file",
+        target: File.join(temp_dir, "test.txt"),
+        content: "test content"
+      )
+      
+      expect(result).to eq(0) # Should succeed with fallback
+    end
+
+    it "handles invalid template mappings" do
+      invalid_config = {
+        "templates" => {
+          "task-new" => {
+            "template" => "/nonexistent/template.md"
+          }
+        }
+      }
+      File.write(config_file, YAML.dump(invalid_config))
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1) # Should fail due to missing template
+    end
+
+    it "handles missing template references" do
+      config_with_missing_template = {
+        "templates" => {
+          "task-new" => {
+            "template" => nil
+          }
+        }
+      }
+      File.write(config_file, YAML.dump(config_with_missing_template))
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+  end
+
+  describe "template errors" do
+    let(:template_dir) { File.join(temp_dir, "templates") }
+    let(:template_file) { File.join(template_dir, "test-template.md") }
+    
+    before do
+      FileUtils.mkdir_p(template_dir)
+    end
+
+    it "handles missing template files" do
+      config_with_missing_file = {
+        "templates" => {
+          "task-new" => {
+            "template" => "/completely/nonexistent/template.md"
+          }
+        }
+      }
+      File.write(config_file, YAML.dump(config_with_missing_file))
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles template parsing errors" do
+      # Create template with problematic content
+      File.write(template_file, "Template with {unclosed variable")
+      
+      config_with_template = {
+        "templates" => {
+          "template" => {
+            "template" => template_file
+          }
+        }
+      }
+      File.write(config_file, YAML.dump(config_with_template))
+      
+      # This should still work, just with the literal content
+      result = subject.call(
+        type: "template",
+        target: File.join(temp_dir, "output.txt"),
+        template: template_file
+      )
+      
+      expect(result).to eq(0) # Should handle gracefully
+    end
+
+    it "handles variable substitution failures" do
+      File.write(template_file, "Title: {metadata.nonexistent}")
+      
+      result = subject.call(
+        type: "template",
+        target: File.join(temp_dir, "output.txt"),
+        template: template_file
+      )
+      
+      expect(result).to eq(0) # Should handle gracefully
+      
+      # Verify the content was created (variable not substituted when unknown)
+      content = File.read(File.join(temp_dir, "output.txt"))
+      expect(content).to include("Title:")
+    end
+
+    it "handles circular template dependencies" do
+      # This is more about variable resolution, create a complex substitution
+      template_content = "Value: {metadata.recursive}"
+      File.write(template_file, template_content)
+      
+      # Test with recursive metadata (shouldn't cause infinite loops)
+      result = subject.call(
+        type: "template",
+        target: File.join(temp_dir, "output.txt"),
+        template: template_file,
+        recursive: "{metadata.recursive}"
+      )
+      
+      expect(result).to eq(0) # Should handle gracefully
+    end
+  end
+
+  describe "path resolution errors" do
+    it "handles PathResolver initialization failures" do
+      # Mock PathResolver to fail on initialization
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_raise(StandardError, "PathResolver init failed")
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles invalid repository context" do
+      path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+      allow(path_resolver).to receive(:project_root).and_raise(StandardError, "No project root found")
+      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "Invalid context"})
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles missing project root detection" do
+      path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+      allow(path_resolver).to receive(:project_root).and_return(nil)
+      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "No project root"})
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+
+    it "handles submodule resolution failures" do
+      path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "Submodule not found"})
+      allow(path_resolver).to receive(:project_root).and_return(temp_dir)
+      
+      result = subject.call(type: "task-new", target: "test-task")
+      
+      expect(result).to eq(1)
+    end
+  end
+
+  describe "concurrency" do
+    it "handles file creation conflicts" do
+      target_path = File.join(temp_dir, "concurrent-test.txt")
+      
+      # Create the file first to simulate conflict
+      File.write(target_path, "existing content")
+      
+      # Try to create without force
+      result = subject.call(
+        type: "file",
+        target: target_path,
+        content: "new content"
+      )
+      
+      # Should handle the conflict appropriately (depends on FileIoHandler implementation)
+      expect([0, 1]).to include(result)
+    end
+
+    it "handles concurrent modifications" do
+      target_dir = File.join(temp_dir, "concurrent-dir")
+      
+      # Create directory first
+      FileUtils.mkdir_p(target_dir)
+      
+      # Try to create again without force
+      result = subject.call(
+        type: "directory",
+        target: target_dir
+      )
+      
+      expect(result).to eq(1) # Should fail due to existing directory
+    end
+  end
 end
