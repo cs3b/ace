@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.112
-status: in-progress
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -112,18 +112,18 @@ Create a new `create-path` command that allows users to create files and directo
 - [x] Register command in main CLI module
 - [x] Add comprehensive unit tests including security scenarios
 - [x] Update gemspec with new executable
-- [ ] Update tools documentation with command usage and examples
+- [x] Update tools documentation with command usage and examples
 
 ## Acceptance Criteria
 
-- [ ] AC 1: create-path delegates to PathResolver Ruby class for all path generation
-- [ ] AC 2: Templates are loaded from `.coding-agent/create-path.yml` configuration
-- [ ] AC 3: Files created in exact location where nav-path would resolve them
-- [ ] AC 4: Overwrite fails by default, requires --force flag
-- [ ] AC 5: Non-flag parameters are treated as metadata for template variables
-- [ ] AC 6: Command follows existing CLI patterns and conventions
-- [ ] AC 7: Comprehensive test coverage (≥95%) for new functionality including security tests
-- [ ] AC 8: Documentation updated with usage examples and configuration
+- [x] AC 1: create-path delegates to PathResolver Ruby class for all path generation
+- [x] AC 2: Templates are loaded from `.coding-agent/create-path.yml` configuration
+- [x] AC 3: Files created in exact location where nav-path would resolve them
+- [x] AC 4: Overwrite fails by default, requires --force flag
+- [x] AC 5: Non-flag parameters are treated as metadata for template variables
+- [x] AC 6: Command follows existing CLI patterns and conventions
+- [x] AC 7: Comprehensive test coverage (≥95%) for new functionality including security tests
+- [x] AC 8: Documentation updated with usage examples and configuration
 
 ## Out of Scope
 
