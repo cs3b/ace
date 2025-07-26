@@ -77,15 +77,6 @@ module CodingAgentTools
         @release_commands_registered = true
       end
 
-      def self.register_binstub_commands
-        return if @binstub_commands_registered
-
-        require_relative "cli/commands/install_binstubs"
-
-        register "install-binstubs", Commands::InstallBinstubs
-
-        @binstub_commands_registered = true
-      end
 
       def self.register_dotfiles_commands
         return if @dotfiles_commands_registered
@@ -239,7 +230,6 @@ module CodingAgentTools
         register_llm_commands
         register_task_commands
         register_release_commands
-        register_binstub_commands
         register_dotfiles_commands
         register_code_commands
         register_code_lint_commands
