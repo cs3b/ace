@@ -21,6 +21,11 @@ module CodingAgentTools
         )
       end
 
+      # Public accessor for project root to maintain proper encapsulation
+      def project_root
+        @sandbox.project_root
+      end
+
       def resolve_path(path_input, type: :file)
         return failure("Path input cannot be nil") if path_input.nil?
         return failure("Path input cannot be empty") if path_input.to_s.strip.empty?

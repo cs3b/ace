@@ -31,14 +31,54 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     
     File.write(config_file, YAML.dump(config))
     
-    # Mock the project root detection
+    # Mock the project root detection using proper public interface
     allow_any_instance_of(CodingAgentTools::Molecules::PathResolver)
-      .to receive_message_chain(:instance_variable_get, :project_root)
+      .to receive(:project_root)
       .and_return(temp_dir)
   end
 
   after do
     FileUtils.rm_rf(temp_dir)
+  end
+
+  describe "encapsulation compliance" do
+    it "uses public interface instead of accessing private instance variables" do
+      # Create a PathResolver instance to test encapsulation
+      path_resolver = CodingAgentTools::Molecules::PathResolver.new
+      
+      # Verify that PathResolver provides a public project_root method
+      expect(path_resolver).to respond_to(:project_root)
+      
+      # Mock PathResolver to verify correct method call
+      mocked_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+      allow(mocked_resolver).to receive(:project_root).and_return(temp_dir)
+      allow(mocked_resolver).to receive(:resolve_path).and_return({success: false, error: "test"})
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mocked_resolver)
+      
+      # Mock other dependencies to avoid errors
+      file_handler = instance_double(CodingAgentTools::Molecules::FileIoHandler)
+      security_validator = instance_double(CodingAgentTools::Molecules::SecurePathValidator)
+      allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+      allow(CodingAgentTools::Molecules::SecurePathValidator).to receive(:new).and_return(security_validator)
+      
+      # Test that load_create_path_config calls the public method
+      expect(mocked_resolver).to receive(:project_root).at_least(:once)
+      
+      # Call the command to trigger load_create_path_config
+      command = described_class.new
+      command.call(type: "task-new", target: "test")
+    end
+
+    it "does not use instance_variable_get to access PathResolver internals" do
+      # Verify that the source code does not contain the encapsulation violation
+      source_file = File.read(File.join(__dir__, "../../lib/coding_agent_tools/cli/create_path_command.rb"))
+      
+      # Should not contain the old encapsulation violation pattern
+      expect(source_file).not_to include("instance_variable_get(:@sandbox)")
+      
+      # Should use the proper public method instead
+      expect(source_file).to include("@path_resolver.project_root")
+    end
   end
 
   describe "security validation" do
@@ -157,7 +197,7 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
           .with("test-task", type: :task_new)
           .and_return({success: true, path: expected_path})
         
-        allow(path_resolver).to receive_message_chain(:instance_variable_get, :project_root)
+        allow(path_resolver).to receive(:project_root)
           .and_return(temp_dir)
 
         # Mock file reading for template
