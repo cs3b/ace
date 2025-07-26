@@ -71,6 +71,75 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(File.read(safe_path)).to eq("safe content")
       end
     end
+
+    context "command injection protection" do
+      it "prevents command injection in template variable commands" do
+        command = described_class.new
+        
+        # Mock config that has a malicious command
+        malicious_source = "date; rm -rf /"
+        
+        # Test that execute_command safely handles malicious input
+        result = command.send(:execute_command, malicious_source)
+        
+        # Should return "unknown" instead of executing malicious command
+        expect(result).to eq("unknown")
+      end
+
+      it "safely handles shell metacharacters in commands" do
+        command = described_class.new
+        
+        # Test various shell metacharacters
+        dangerous_commands = [
+          "echo test; rm -rf /",
+          "echo test && rm -rf /",
+          "echo test | rm -rf /",
+          "echo test$(rm -rf /)",
+          "echo test`rm -rf /`",
+          "echo test > /etc/passwd"
+        ]
+        
+        dangerous_commands.each do |dangerous_cmd|
+          result = command.send(:execute_command, dangerous_cmd)
+          # All should return "unknown" instead of executing
+          expect(result).to eq("unknown"), "Failed for command: #{dangerous_cmd}"
+        end
+      end
+
+      it "handles invalid commands gracefully" do
+        command = described_class.new
+        
+        # Test non-existent commands
+        result = command.send(:execute_command, "nonexistent_command_12345")
+        expect(result).to eq("unknown")
+      end
+
+      it "allows safe commands to execute properly" do
+        command = described_class.new
+        
+        # Test a safe command that should work
+        result = command.send(:execute_command, "echo safe_test")
+        expect(result).to eq("safe_test")
+      end
+
+      it "prevents command injection via file paths in template variables" do
+        command = described_class.new
+        
+        # Mock the config loader
+        allow(command).to receive(:load_create_path_config).and_return({})
+        
+        # Test template with malicious command in metadata
+        template_content = "Value: {variable}"
+        metadata = {"title" => "test"}
+        template_variables = {"variable" => "echo test; rm -rf /"}
+        
+        result = command.send(:apply_variable_substitution, template_content, "test", {}, template_variables)
+        
+        # Should contain "unknown" instead of executing the command
+        expect(result).to include("unknown")
+        expect(result).not_to include("rm -rf")
+      end
+    end
   end
 
   describe "path resolution" do

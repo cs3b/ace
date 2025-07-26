@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require "open3"
+require "shellwords"
 
 module CodingAgentTools
   module Cli
@@ -272,9 +274,37 @@ module CodingAgentTools
       end
 
       def execute_command(command)
-        # Execute command safely and return output
-        result = `#{command} 2>&1`.strip
-        $?.exitstatus == 0 ? result : "unknown"
+        # Execute command safely and return output using Open3
+        # Security check: reject commands with shell metacharacters
+        if command.match?(/[;&|`$<>(){}\\]/)
+          return "unknown"
+        end
+        
+        # Parse command into executable and arguments
+        command_parts = Shellwords.split(command)
+        return "unknown" if command_parts.empty?
+        
+        executable = command_parts.first
+        args = command_parts[1..]
+        
+        # Whitelist only safe commands (extend as needed)
+        safe_commands = %w[date echo pwd whoami hostname uname git]
+        unless safe_commands.include?(executable)
+          return "unknown"
+        end
+        
+        begin
+          stdout, stderr, status = Open3.capture3(executable, *args)
+          if status.success?
+            stdout.strip
+          else
+            # Log the error for debugging but return unknown for security
+            "unknown"
+          end
+        rescue => e
+          # Command execution failed, return default
+          "unknown"
+        end
       end
 
       def apply_built_in_variables(content)
