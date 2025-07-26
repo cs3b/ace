@@ -77,7 +77,6 @@ module CodingAgentTools
         @release_commands_registered = true
       end
 
-
       def self.register_dotfiles_commands
         return if @dotfiles_commands_registered
 
@@ -146,10 +145,12 @@ module CodingAgentTools
         require_relative "cli/commands/nav"
         require_relative "cli/commands/nav/path"
         require_relative "cli/commands/nav/tree"
+        require_relative "cli/commands/nav/ls"
 
         register "nav", aliases: [] do |prefix|
           prefix.register "path", Commands::Nav::Path
           prefix.register "tree", Commands::Nav::Tree
+          prefix.register "ls", Commands::Nav::Ls
         end
 
         @nav_commands_registered = true
