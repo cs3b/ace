@@ -1,1 +1,0 @@
-sometimes i want to overwrite the priorities for my task (sort them manually) - i don't need to add this metadata to all tasks, but all tasks pending / in-progress if they have sort tag, it should be used to

@@ -1,3 +1,14 @@
+1. we have to install dotfiles in the project as part of initialization
+   maybe coding_agent_tools install (could be run multiple times but ensure we have everything that we need)
+
+   - dotfiles
+   - install claude commands
+   - create taskflow structure
+   - ... (everything that is always the same should be done by tool)
+   - ensure the tools are linked in docs (so the initiliaze already have the tools to use them)
+
+2. there is no more bin/tn tools ...
+
 2. What was a struggle (required few attempts, or needed fixing):
 
 * **`bin/tnid` Script Logic:** This was the most significant struggle.

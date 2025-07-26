@@ -5,3 +5,6 @@ e.g.:
 
 - when there is no release as required for next task, it should show list of available release folders
 - we should also provide more context, then less, about paths and so on
+
+
+it should run tool --help agains the original command end suggest how it should work
