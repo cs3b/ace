@@ -9,15 +9,14 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
   let(:temp_dir) { Dir.mktmpdir }
 
   before do
-    # Create a temporary git repository for testing
-    Dir.chdir(temp_dir) do
-      system("git init", out: File::NULL, err: File::NULL)
-      system("git config user.name 'Test User'", out: File::NULL, err: File::NULL)
-      system("git config user.email 'test@example.com'", out: File::NULL, err: File::NULL)
-      File.write("test.txt", "Initial content")
-      system("git add test.txt", out: File::NULL, err: File::NULL)
-      system("git commit -m 'Initial commit'", out: File::NULL, err: File::NULL)
-    end
+    # Skip actual git operations to focus on unit testing
+    allow(Open3).to receive(:capture3).and_return(["", "", double(success?: true, exitstatus: 0)])
+    allow(system).to receive(:system).and_return(true)
+    allow(Timeout).to receive(:timeout).and_yield
+    allow(File).to receive(:exist?).and_return(true)
+    allow(File).to receive(:directory?).and_return(true)
+    allow(File).to receive(:absolute_path?).and_return(false)
+    allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(temp_dir)
   end
 
   after do
