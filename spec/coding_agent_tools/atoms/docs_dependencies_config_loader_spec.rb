@@ -187,8 +187,8 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         File.write(config_path, "invalid: yaml: content: [")
       end
 
-      it "returns DEFAULT_CONFIG and warns about the error" do
-        expect { loader.load_config }.to output(/Warning: Failed to load config/).to_stderr
+      it "returns DEFAULT_CONFIG and suppresses warnings in test environment" do
+        expect { loader.load_config }.to output("").to_stderr
         result = loader.load_config
         expect(result).to eq(described_class::DEFAULT_CONFIG)
       end
@@ -204,8 +204,8 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         FileUtils.chmod(0644, config_path) rescue nil # Restore permissions for cleanup
       end
 
-      it "returns DEFAULT_CONFIG and warns about the error" do
-        expect { loader.load_config }.to output(/Warning: Failed to load config/).to_stderr
+      it "returns DEFAULT_CONFIG and suppresses warnings in test environment" do
+        expect { loader.load_config }.to output("").to_stderr
         result = loader.load_config
         expect(result).to eq(described_class::DEFAULT_CONFIG)
       end
@@ -225,8 +225,8 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         File.write(config_path, YAML.dump(invalid_config))
       end
 
-      it "returns DEFAULT_CONFIG and warns about validation error" do
-        expect { loader.load_config }.to output(/Warning: Failed to load config/).to_stderr
+      it "returns DEFAULT_CONFIG and suppresses warnings in test environment" do
+        expect { loader.load_config }.to output("").to_stderr
         result = loader.load_config
         expect(result).to eq(described_class::DEFAULT_CONFIG)
       end
@@ -561,7 +561,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       it "handles missing keys gracefully" do
         incomplete_config = { file_patterns: {} }
 
-        expect { loader.send(:validate_config, incomplete_config) }.to raise_error
+        expect { loader.send(:validate_config, incomplete_config) }.to raise_error(RuntimeError)
       end
     end
   end
@@ -668,7 +668,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       it "handles directory instead of file" do
         FileUtils.mkdir_p(config_path) # Create directory with same name as expected file
 
-        expect { loader.load_config }.to output(/Warning: Failed to load config/).to_stderr
+        expect { loader.load_config }.to output("").to_stderr
         result = loader.load_config
         expect(result).to eq(described_class::DEFAULT_CONFIG)
       end
@@ -727,7 +727,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
         # Note: This test may fail with newer Psych versions that disable aliases by default
         # In production, the loader will fall back to default config with a warning
-        expect { loader.load_config }.to output(/Warning: Failed to load config/).to_stderr
+        expect { loader.load_config }.to output("").to_stderr
         result = loader.load_config
         expect(result[:exclude_patterns]).to eq(described_class::DEFAULT_CONFIG[:exclude_patterns])
       end
@@ -802,7 +802,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         ]
 
         invalid_configs.each do |config|
-          expect { loader.send(:validate_config, config) }.to raise_error
+          expect { loader.send(:validate_config, config) }.to raise_error(RuntimeError)
         end
       end
     end

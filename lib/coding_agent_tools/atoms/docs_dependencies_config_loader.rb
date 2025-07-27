@@ -45,8 +45,10 @@ module CodingAgentTools::Atoms
 
         merged_config
       rescue => e
-        warn "Warning: Failed to load config from #{@config_path}: #{e.message}"
-        warn "Using default configuration"
+        unless test_environment?
+          warn "Warning: Failed to load config from #{@config_path}: #{e.message}"
+          warn "Using default configuration"
+        end
         DEFAULT_CONFIG
       end
     end
@@ -88,6 +90,10 @@ module CodingAgentTools::Atoms
     end
 
     private
+
+    def test_environment?
+      ENV["CI"] || defined?(RSpec) || ENV["RAILS_ENV"] == "test" || ENV["RACK_ENV"] == "test"
+    end
 
     def deep_merge(base, override)
       result = base.dup

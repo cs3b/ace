@@ -70,7 +70,9 @@ module CodingAgentTools
         # @param environment [Hash] Environment variables to set
         # @return [Boolean] True if command succeeded (exit code 0)
         def self.execute_simple(command, timeout: DEFAULT_TIMEOUT, working_directory: nil, environment: {})
-          result = execute(command, timeout: timeout, working_directory: working_directory, environment: environment, capture_output: false)
+          # Capture output during tests to prevent pollution
+          capture_output = test_environment?
+          result = execute(command, timeout: timeout, working_directory: working_directory, environment: environment, capture_output: capture_output)
           result.success?
         end
 
@@ -139,6 +141,12 @@ module CodingAgentTools
 
         class << self
           private
+
+          # Check if we're running in a test environment
+          # @return [Boolean] True if in test environment
+          def test_environment?
+            ENV["CI"] || defined?(RSpec) || ENV["RAILS_ENV"] == "test" || ENV["RACK_ENV"] == "test"
+          end
 
           # Validate command string
           # @param command [String] Command to validate

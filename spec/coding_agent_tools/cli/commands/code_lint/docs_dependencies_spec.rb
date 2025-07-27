@@ -115,7 +115,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
       it "disables file exports" do
         allow(command).to receive(:puts)
 
-        command.call(no_exports: true)
+        # Capture stderr to prevent any error message leakage
+        capture_stderr { command.call(no_exports: true) }
 
         expect(mock_analyzer).to have_received(:analyze).with(
           output_format: :text,
@@ -127,7 +128,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
       it "does not show export file information" do
         allow(command).to receive(:puts)
 
-        command.call(no_exports: true)
+        # Capture stderr to prevent any error message leakage
+        capture_stderr { command.call(no_exports: true) }
 
         expect(command).not_to have_received(:puts).with("\nVisualization files:")
       end
@@ -245,5 +247,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::DocsDependencies do
         expect(File).not_to have_received(:write)
       end
     end
+  end
+
+  def capture_stderr
+    old_stderr = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = old_stderr
   end
 end
