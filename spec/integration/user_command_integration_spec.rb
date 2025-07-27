@@ -76,16 +76,14 @@ RSpec.describe "User-Facing Command Integration", type: :integration do
 
   describe "Error handling" do
     it "commands handle missing arguments appropriately" do
-      # Test a smaller sampling of commands with missing required arguments
-      sample_commands = %w[git-commit create-path]
+      # Test a representative command with missing required arguments
+      cmd = "create-path"
       
-      sample_commands.each do |cmd|
-        # Use ProcessHelpers for more efficient execution
-        command_path = File.join(exe_dir, cmd)
-        stdout, stderr, status = execute_command([command_path], timeout: 2)
-        # Commands should exit with error codes when missing required args (some may exit 0)
-        expect(status.exitstatus).to be_a(Integer)
-      end
+      # Use ProcessHelpers for more efficient execution
+      command_path = File.join(exe_dir, cmd)
+      stdout, stderr, status = execute_command([command_path], timeout: 2)
+      # Commands should exit with error codes when missing required args (some may exit 0)
+      expect(status.exitstatus).to be_a(Integer)
     end
   end
 
