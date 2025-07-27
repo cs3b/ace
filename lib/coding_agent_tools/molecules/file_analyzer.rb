@@ -31,7 +31,8 @@ module CodingAgentTools
           total_lines: coverage_info[:total_lines],
           covered_lines: coverage_info[:covered_lines],
           coverage_percentage: coverage_info[:coverage_percentage],
-          methods: methods
+          methods: methods,
+          uncovered_details: file_coverage_data[:uncovered_details]
         )
       end
 

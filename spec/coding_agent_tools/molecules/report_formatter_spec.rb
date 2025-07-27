@@ -7,6 +7,30 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
   subject { described_class.new }
 
   let(:sample_coverage_results) do
+    method_needing_tests = instance_double(CodingAgentTools::Models::MethodCoverage,
+      name: "low_coverage_method",
+      start_line: 5,
+      end_line: 10,
+      coverage_percentage: 0.0,
+      uncovered_lines: [6, 7, 8],
+      uncovered_lines_compact: "6..8",
+      needs_tests?: true
+    )
+    allow(method_needing_tests).to receive(:to_h).with(format: :compact).and_return({
+      name: "low_coverage_method",
+      start_line: 5,
+      end_line: 10,
+      coverage_percentage: 0.0,
+      uncovered_lines: "6..8"
+    })
+    allow(method_needing_tests).to receive(:to_h).with(format: :verbose).and_return({
+      name: "low_coverage_method",
+      start_line: 5,
+      end_line: 10,
+      coverage_percentage: 0.0,
+      uncovered_lines: [6, 7, 8]
+    })
+
     low_coverage_file = instance_double(CodingAgentTools::Models::CoverageResult,
       file_path: "/test/lib/low_coverage.rb",
       relative_path: "lib/low_coverage.rb",
@@ -14,16 +38,23 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       covered_lines: 10,
       coverage_percentage: 50.0,
       uncovered_lines_count: 10,
-      methods: [],
-      to_h: {
-        file_path: "/test/lib/low_coverage.rb",
-        relative_path: "lib/low_coverage.rb",
-        coverage_percentage: 50.0,
-        total_lines: 20,
-        covered_lines: 10
-      }
+      methods: [method_needing_tests]
     )
     allow(low_coverage_file).to receive(:under_threshold?).with(80.0).and_return(true)
+    allow(low_coverage_file).to receive(:to_h).with(format: :compact).and_return({
+      file_path: "/test/lib/low_coverage.rb",
+      relative_path: "lib/low_coverage.rb",
+      coverage_percentage: 50.0,
+      total_lines: 20,
+      covered_lines: 10
+    })
+    allow(low_coverage_file).to receive(:to_h).with(format: :verbose).and_return({
+      file_path: "/test/lib/low_coverage.rb",
+      relative_path: "lib/low_coverage.rb",
+      coverage_percentage: 50.0,
+      total_lines: 20,
+      covered_lines: 10
+    })
     
     high_coverage_file = instance_double(CodingAgentTools::Models::CoverageResult,
       file_path: "/test/lib/high_coverage.rb", 
@@ -32,16 +63,23 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       covered_lines: 14,
       coverage_percentage: 93.3,
       uncovered_lines_count: 1,
-      methods: [],
-      to_h: {
-        file_path: "/test/lib/high_coverage.rb",
-        relative_path: "lib/high_coverage.rb",
-        coverage_percentage: 93.3,
-        total_lines: 15,
-        covered_lines: 14
-      }
+      methods: []
     )
     allow(high_coverage_file).to receive(:under_threshold?).with(80.0).and_return(false)
+    allow(high_coverage_file).to receive(:to_h).with(format: :compact).and_return({
+      file_path: "/test/lib/high_coverage.rb",
+      relative_path: "lib/high_coverage.rb",
+      coverage_percentage: 93.3,
+      total_lines: 15,
+      covered_lines: 14
+    })
+    allow(high_coverage_file).to receive(:to_h).with(format: :verbose).and_return({
+      file_path: "/test/lib/high_coverage.rb",
+      relative_path: "lib/high_coverage.rb",
+      coverage_percentage: 93.3,
+      total_lines: 15,
+      covered_lines: 14
+    })
     
     [low_coverage_file, high_coverage_file]
   end
@@ -53,25 +91,40 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       total_files: 2,
       threshold: 80.0,
       overall_coverage_percentage: 68.6,
-      analysis_timestamp: Time.new(2025, 1, 15, 10, 30, 0),
-      to_h: {
-        summary: {
-          total_files: 2,
-          total_methods: 0,
-          under_covered_files_count: 1,
-          under_covered_methods_count: 0,
-          overall_coverage_percentage: 68.6,
-          threshold: 80.0,
-          analysis_timestamp: "2025-01-15T10:30:00Z"
-        },
-        under_covered_files: [sample_coverage_results.first.to_h],
-        under_covered_methods: []
-      }
+      analysis_timestamp: Time.new(2025, 1, 15, 10, 30, 0)
     )
     
+    allow(analysis_result).to receive(:to_h).with(format: :compact).and_return({
+      summary: {
+        total_files: 2,
+        total_methods: 0,
+        under_covered_files_count: 1,
+        under_covered_methods_count: 0,
+        overall_coverage_percentage: 68.6,
+        threshold: 80.0,
+        analysis_timestamp: "2025-01-15T10:30:00Z"
+      },
+      under_covered_files: [sample_coverage_results.first.to_h(format: :compact)],
+      under_covered_methods: []
+    })
+    
+    allow(analysis_result).to receive(:to_h).with(format: :verbose).and_return({
+      summary: {
+        total_files: 2,
+        total_methods: 0,
+        under_covered_files_count: 1,
+        under_covered_methods_count: 0,
+        overall_coverage_percentage: 68.6,
+        threshold: 80.0,
+        analysis_timestamp: "2025-01-15T10:30:00Z"
+      },
+      under_covered_files: [sample_coverage_results.first.to_h(format: :verbose)],
+      under_covered_methods: []
+    })
+    
     # Mock private methods
-    allow(analysis_result).to receive(:total_executable_lines).and_return(35)
-    allow(analysis_result).to receive(:total_covered_lines).and_return(24)
+    allow(analysis_result).to receive(:send).with(:total_executable_lines).and_return(35)
+    allow(analysis_result).to receive(:send).with(:total_covered_lines).and_return(24)
     
     analysis_result
   end
@@ -84,8 +137,10 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       expect(report).to include("Overall Coverage: 68.6%")
       expect(report).to include("Threshold: 80.0%")
       expect(report).to include("Files Under Threshold: 1 of 2")
+      expect(report).to include("Public Methods Needing Tests:")
       expect(report).to include("lib/low_coverage.rb")
-      expect(report).to include("50.0%")
+      expect(report).to include("low_coverage_method")
+      expect(report).to include("6..8")
     end
 
     it "includes summary statistics" do
@@ -96,13 +151,14 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       expect(report).to include("Overall Coverage: 68.6%")
     end
 
-    it "lists under-covered files with details" do
+    it "lists public methods needing tests with details" do
       report = subject.format_text_report(sample_analysis_result)
 
-      expect(report).to include("Under-Covered Files:")
+      expect(report).to include("Public Methods Needing Tests:")
       expect(report).to include("lib/low_coverage.rb")
-      expect(report).to include("20 lines")
-      expect(report).to include("10 uncovered")
+      expect(report).to include("low_coverage_method")
+      expect(report).to include("Coverage: 0.0%")
+      expect(report).to include("Uncovered lines: 6..8")
     end
 
     context "with detailed analysis" do
@@ -150,9 +206,14 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       end
     end
 
-    context "when no under-covered files found" do
+    context "when no public methods need tests" do
       let(:good_analysis_result) do
+        good_file = instance_double(CodingAgentTools::Models::CoverageResult,
+          methods: []
+        )
+        
         result = instance_double(CodingAgentTools::Models::CoverageAnalysisResult,
+          files: [good_file],
           under_covered_files: [],
           total_files: 1,
           threshold: 80.0,
@@ -160,8 +221,8 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
         )
         
         # Mock private methods
-        allow(result).to receive(:total_executable_lines).and_return(100)
-        allow(result).to receive(:total_covered_lines).and_return(95)
+        allow(result).to receive(:send).with(:total_executable_lines).and_return(100)
+        allow(result).to receive(:send).with(:total_covered_lines).and_return(95)
         
         result
       end
@@ -169,7 +230,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       it "shows positive message" do
         report = subject.format_text_report(good_analysis_result)
 
-        expect(report).to include("All files meet the coverage threshold!")
+        expect(report).to include("All public methods have test coverage!")
         expect(report).to include("Overall Coverage: 95.0%")
       end
     end

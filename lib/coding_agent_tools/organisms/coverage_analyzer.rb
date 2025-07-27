@@ -67,17 +67,19 @@ module CodingAgentTools
 
       # Generates analysis report in specified format
       # @param analysis_result [Models::CoverageAnalysisResult] Analysis results
-      # @param format [Symbol] Output format (:text, :json, :csv)
+      # @param format [Symbol, String] Output format (:text, :json, :csv or "text", "json", "csv")
       # @param options [Hash] Report options
+      # @option options [Symbol] :report_format Output format (:compact or :verbose)
       # @return [String] Formatted report
       def generate_report(analysis_result, format = :text, options = {})
-        @report_formatter.validate_format(format)
+        validated_format = @report_formatter.validate_format(format)
+        report_format = options[:report_format] || :compact
         
-        case format
+        case validated_format
         when :text
-          @report_formatter.format_text_report(analysis_result)
+          @report_formatter.format_text_report(analysis_result, format: report_format)
         when :json
-          @report_formatter.format_json_report(analysis_result)
+          @report_formatter.format_json_report(analysis_result, format: report_format)
         when :csv
           @report_formatter.format_csv_report(analysis_result)
         end
@@ -87,10 +89,11 @@ module CodingAgentTools
       # @param analysis_result [Models::CoverageAnalysisResult] Analysis results
       # @param output_path [String] Output file path
       # @param format [Symbol] Output format (auto-detected from extension if nil)
+      # @param options [Hash] Report options
       # @return [String] Path to saved file
-      def save_report(analysis_result, output_path, format = nil)
+      def save_report(analysis_result, output_path, format = nil, options = {})
         format ||= @report_formatter.detect_output_format(output_path)
-        report_content = generate_report(analysis_result, format)
+        report_content = generate_report(analysis_result, format, options)
         
         @report_formatter.save_report(report_content, output_path)
         output_path
@@ -146,7 +149,7 @@ module CodingAgentTools
       def validate_options(options)
         validated = {
           threshold: @threshold_validator.validate_threshold(options[:threshold] || 85.0),
-          include_patterns: options[:include_patterns] || ["**/lib/**"],
+          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
           exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           detailed_analysis: options[:detailed_analysis] || false,
           sort_by: options[:sort_by] || 'coverage'

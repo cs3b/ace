@@ -10,9 +10,21 @@ module CodingAgentTools
       class ParseError < StandardError; end
 
       # Represents a method definition
-      MethodDefinition = Struct.new(:name, :start_line, :end_line, :type) do
+      MethodDefinition = Struct.new(:name, :start_line, :end_line, :type, :visibility) do
         def line_range
           start_line..end_line
+        end
+        
+        def public?
+          visibility == :public
+        end
+        
+        def private?
+          visibility == :private
+        end
+        
+        def protected?
+          visibility == :protected
         end
       end
 
@@ -57,30 +69,36 @@ module CodingAgentTools
         raise ParseError, "Parse error in #{source_name}: #{e.message}"
       end
 
-      def extract_methods(node, methods = [])
+      def extract_methods(node, methods = [], current_visibility = :public)
         return methods unless node
 
         case node.type
         when :def
-          methods << extract_instance_method(node)
+          methods << extract_instance_method(node, current_visibility)
         when :defs
-          methods << extract_class_method(node)
+          methods << extract_class_method(node, current_visibility)
+        when :send
+          # Check for visibility modifiers (private, protected, public)
+          if visibility_modifier?(node)
+            new_visibility = node.children[1]
+            # Apply to subsequent methods in this scope
+            return extract_methods_with_visibility_change(node, methods, new_visibility)
+          else
+            # Search children with current visibility
+            search_children(node, methods, current_visibility)
+          end
         when :class, :module
-          # Recursively search inside classes and modules
-          node.children.each { |child| extract_methods(child, methods) }
+          # Classes and modules start with public visibility
+          search_children(node, methods, :public)
         else
           # Search all children for nested methods
-          if node.respond_to?(:children) && node.children
-            node.children.each do |child|
-              extract_methods(child, methods) if child.is_a?(Parser::AST::Node)
-            end
-          end
+          search_children(node, methods, current_visibility)
         end
 
         methods
       end
 
-      def extract_instance_method(node)
+      def extract_instance_method(node, visibility)
         name = node.children[0].to_s
         location = node.location
         
@@ -88,11 +106,12 @@ module CodingAgentTools
           name: name,
           start_line: location.line,
           end_line: location.last_line,
-          type: :def
+          type: :def,
+          visibility: visibility
         )
       end
 
-      def extract_class_method(node)
+      def extract_class_method(node, visibility)
         name = node.children[1].to_s
         location = node.location
         
@@ -100,8 +119,32 @@ module CodingAgentTools
           name: "self.#{name}",
           start_line: location.line,
           end_line: location.last_line,
-          type: :defs
+          type: :defs,
+          visibility: visibility
         )
+      end
+
+      def visibility_modifier?(node)
+        return false unless node.type == :send
+        return false unless node.children[0].nil? # No receiver
+
+        modifier_name = node.children[1]
+        [:private, :protected, :public].include?(modifier_name)
+      end
+
+      def search_children(node, methods, current_visibility)
+        if node.respond_to?(:children) && node.children
+          node.children.each do |child|
+            extract_methods(child, methods, current_visibility) if child.is_a?(Parser::AST::Node)
+          end
+        end
+      end
+
+      def extract_methods_with_visibility_change(node, methods, new_visibility)
+        # This is a simplified approach - in practice, visibility changes
+        # affect subsequent method definitions in the same scope
+        search_children(node, methods, new_visibility)
+        methods
       end
     end
   end

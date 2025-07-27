@@ -20,8 +20,9 @@ module CodingAgentTools
 
       # Formats a text report from analysis results
       # @param analysis_result [Models::CoverageAnalysisResult] Analysis results
+      # @param format [Symbol] Output format (:compact or :verbose)
       # @return [String] Text formatted report
-      def format_text_report(analysis_result)
+      def format_text_report(analysis_result, format: :compact)
         lines = []
         lines << "Coverage Analysis Report"
         lines << "=" * 50
@@ -37,17 +38,36 @@ module CodingAgentTools
         # Note: frameworks info will be added when extended in organisms
         lines << ""
 
-        # Under-covered files section
-        under_covered_files = analysis_result.under_covered_files
-        if under_covered_files.any?
-          lines << "Under-Covered Files:"
-          lines << "-" * 40
+        # Public methods needing tests section
+        public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
+        
+        if public_methods_needing_tests.any?
+          lines << "Public Methods Needing Tests:"
+          lines << "-" * 50
           
-          under_covered_files.each do |file|
-            lines << "#{file.relative_path}: #{format_coverage_percentage(file.coverage_percentage)} (#{format_file_size(file.total_lines)}, #{file.uncovered_lines_count} uncovered)"
+          public_methods_needing_tests.each do |file_path, methods|
+            relative_path = file_path.gsub(%r{^.*/lib/}, "lib/")
+            lines << "#{relative_path}:"
+            
+            methods.each do |method|
+              lines << "  • #{method.name} (lines #{method.start_line}-#{method.end_line})"
+              lines << "    Coverage: #{format_coverage_percentage(method.coverage_percentage)}"
+              
+              if method.uncovered_lines.any?
+                uncovered_display = format == :verbose ? method.uncovered_lines.join(', ') : method.uncovered_lines_compact
+                lines << "    Uncovered lines: #{uncovered_display}"
+                lines << "    → Write tests to cover these specific lines"
+              end
+              lines << ""
+            end
           end
+          
+          lines << "📝 Testing Priority:"
+          lines << "• Focus on public methods with 0% coverage first"
+          lines << "• Test uncovered lines within each method"
+          lines << "• Private/protected methods are not shown (typically tested indirectly)"
         else
-          lines << "All files meet the coverage threshold!"
+          lines << "All public methods have test coverage!"
         end
 
         lines.join("\n")
@@ -94,9 +114,15 @@ module CodingAgentTools
 
       # Formats JSON report from analysis results
       # @param analysis_result [Models::CoverageAnalysisResult] Analysis results
+      # @param format [Symbol] Output format (:compact or :verbose)
       # @return [String] JSON formatted report
-      def format_json_report(analysis_result)
-        report_data = analysis_result.to_h
+      def format_json_report(analysis_result, format: :compact)
+        report_data = analysis_result.to_h(format: format)
+        
+        # Add public methods needing tests
+        public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
+        report_data[:public_methods_needing_tests] = format_public_methods_for_json(public_methods_needing_tests, format: format)
+        
         report_data[:metadata] = {
           generated_at: Time.now.iso8601,
           analysis_timestamp: analysis_result.analysis_timestamp.iso8601
@@ -182,12 +208,17 @@ module CodingAgentTools
       end
 
       # Validates output format
-      # @param format [Symbol] Format to validate
+      # @param format [Symbol, String] Format to validate (accepts both symbols and strings)
       # @raise [InvalidFormatError] If format is not supported
       def validate_format(format)
-        unless SUPPORTED_FORMATS.include?(format)
+        # Convert string to symbol for consistency
+        format_symbol = format.is_a?(String) ? format.to_sym : format
+        
+        unless SUPPORTED_FORMATS.include?(format_symbol)
           raise InvalidFormatError, "Unsupported format: #{format}. Supported formats: #{SUPPORTED_FORMATS.join(', ')}"
         end
+        
+        format_symbol
       end
 
       # Formats report data for create-path integration
@@ -205,7 +236,7 @@ module CodingAgentTools
             threshold: analysis_result.threshold
           },
           details: {
-            under_covered_files: under_covered_files.map(&:to_h)
+            under_covered_files: under_covered_files.map { |file| file.to_h(format: :verbose) }
           },
           recommendations: generate_recommendations(analysis_result)
         }
@@ -226,6 +257,45 @@ module CodingAgentTools
         else
           "#{line_count} lines"
         end
+      end
+
+      def format_uncovered_ranges(ranges)
+        return "" if ranges.empty?
+        
+        formatted_ranges = ranges.map do |range|
+          if range[:start_line] == range[:end_line]
+            range[:start_line].to_s
+          else
+            "#{range[:start_line]}-#{range[:end_line]}"
+          end
+        end
+        
+        formatted_ranges.join(", ")
+      end
+
+      def extract_public_methods_needing_tests(analysis_result)
+        public_methods_by_file = {}
+        
+        analysis_result.files.each do |file|
+          public_methods = file.methods.select(&:needs_tests?)
+          
+          if public_methods.any?
+            public_methods_by_file[file.file_path] = public_methods.sort_by(&:coverage_percentage)
+          end
+        end
+        
+        public_methods_by_file
+      end
+
+      def format_public_methods_for_json(public_methods_by_file, format: :compact)
+        formatted = {}
+        
+        public_methods_by_file.each do |file_path, methods|
+          relative_path = file_path.gsub(%r{^.*/lib/}, "lib/")
+          formatted[relative_path] = methods.map { |method| method.to_h(format: format) }
+        end
+        
+        formatted
       end
 
       def number_with_delimiter(number)

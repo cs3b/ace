@@ -106,15 +106,49 @@ module CodingAgentTools
             method_def.end_line
           )
 
+          # Extract uncovered lines within this method's range
+          method_lines = extract_method_lines(lines_data, method_def.start_line, method_def.end_line)
+          uncovered_lines = extract_uncovered_lines_in_method(method_lines, method_def.start_line)
+
           Models::MethodCoverage.new(
             name: method_def.name,
             start_line: method_def.start_line,
             end_line: method_def.end_line,
             total_lines: coverage_data[:total_lines],
             covered_lines: coverage_data[:covered_lines],
-            coverage_percentage: coverage_data[:coverage_percentage]
+            coverage_percentage: coverage_data[:coverage_percentage],
+            visibility: method_def.visibility,
+            uncovered_lines: uncovered_lines
           )
         end
+      end
+
+      def extract_method_lines(lines_data, start_line, end_line)
+        return [] if lines_data.nil? || lines_data.empty?
+        
+        # Convert to 0-based indexing
+        range_start = [start_line - 1, 0].max
+        range_end = [end_line - 1, lines_data.length - 1].min
+        
+        return [] if range_start >= lines_data.length
+        
+        lines_data[range_start..range_end] || []
+      end
+
+      def extract_uncovered_lines_in_method(method_lines, method_start_line)
+        uncovered_lines = []
+        
+        method_lines.each_with_index do |coverage, index|
+          # Calculate actual line number in file
+          actual_line_number = method_start_line + index
+          
+          # Uncovered line: executable (not nil) but with 0 coverage
+          if coverage == 0
+            uncovered_lines << actual_line_number
+          end
+        end
+        
+        uncovered_lines
       end
     end
   end

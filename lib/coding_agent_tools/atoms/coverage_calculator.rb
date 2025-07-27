@@ -72,6 +72,54 @@ module CodingAgentTools
         calculate_file_coverage(combined_lines)
       end
 
+      # Extracts uncovered line numbers and ranges from SimpleCov line array
+      # @param lines [Array] SimpleCov lines array (null, 0, or positive integers)
+      # @return [Hash] uncovered line details: { uncovered_lines, uncovered_ranges, total_uncovered }
+      def extract_uncovered_lines(lines)
+        return { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 } if lines.nil? || lines.empty?
+
+        uncovered_lines = []
+        
+        lines.each_with_index do |coverage, index|
+          # Line numbers are 1-based, array indices are 0-based
+          line_number = index + 1
+          
+          # Uncovered line: executable (not nil) but with 0 coverage
+          if coverage == 0
+            uncovered_lines << line_number
+          end
+        end
+
+        {
+          uncovered_lines: uncovered_lines,
+          uncovered_ranges: group_into_ranges(uncovered_lines),
+          total_uncovered: uncovered_lines.length
+        }
+      end
+
+      # Extracts detailed line-by-line coverage information
+      # @param lines [Array] SimpleCov lines array
+      # @return [Array<Hash>] detailed line information
+      def extract_detailed_line_info(lines)
+        return [] if lines.nil? || lines.empty?
+
+        line_details = []
+        
+        lines.each_with_index do |coverage, index|
+          line_number = index + 1
+          
+          next if coverage.nil? # Skip non-executable lines
+          
+          line_details << {
+            line_number: line_number,
+            coverage_count: coverage,
+            status: coverage > 0 ? :covered : :uncovered
+          }
+        end
+
+        line_details
+      end
+
       private
 
       def zero_coverage
@@ -94,6 +142,30 @@ module CodingAgentTools
         return 0.0 if total.zero?
         
         ((covered.to_f / total) * 100).round(2)
+      end
+
+      def group_into_ranges(line_numbers)
+        return [] if line_numbers.empty?
+
+        ranges = []
+        current_start = line_numbers.first
+        current_end = line_numbers.first
+
+        line_numbers[1..-1].each do |line_num|
+          if line_num == current_end + 1
+            # Consecutive line, extend the current range
+            current_end = line_num
+          else
+            # Gap found, save current range and start a new one
+            ranges << { start_line: current_start, end_line: current_end }
+            current_start = line_num
+            current_end = line_num
+          end
+        end
+
+        # Add the final range
+        ranges << { start_line: current_start, end_line: current_end }
+        ranges
       end
     end
   end

@@ -59,18 +59,137 @@ RSpec.describe CodingAgentTools::Models::MethodCoverage do
   end
 
   describe "#to_h" do
-    it "returns hash representation" do
-      expected_hash = {
-        name: name,
-        start_line: start_line,
-        end_line: end_line,
-        total_lines: total_lines,
-        covered_lines: covered_lines,
-        coverage_percentage: coverage_percentage,
-        uncovered_lines_count: 2
-      }
+    context "with compact format (default)" do
+      it "returns hash representation with compact uncovered lines" do
+        expected_hash = {
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 2,
+          visibility: :public,
+          uncovered_lines: "",
+          needs_tests: true
+        }
 
-      expect(subject.to_h).to eq(expected_hash)
+        expect(subject.to_h).to eq(expected_hash)
+      end
+
+      it "returns compact format when explicitly requested" do
+        expected_hash = {
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 2,
+          visibility: :public,
+          uncovered_lines: "",
+          needs_tests: true
+        }
+
+        expect(subject.to_h(format: :compact)).to eq(expected_hash)
+      end
+    end
+
+    context "with verbose format" do
+      it "returns hash representation with full uncovered lines array" do
+        expected_hash = {
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 2,
+          visibility: :public,
+          uncovered_lines: [],
+          needs_tests: true
+        }
+
+        expect(subject.to_h(format: :verbose)).to eq(expected_hash)
+      end
+    end
+
+    context "with uncovered lines data" do
+      subject do
+        described_class.new(
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines: [11, 12, 13, 22, 23, 25, 26, 27, 28]
+        )
+      end
+
+      it "formats uncovered lines compactly" do
+        result = subject.to_h(format: :compact)
+        expect(result[:uncovered_lines]).to eq("11..13,22,23,25..28")
+      end
+
+      it "keeps uncovered lines verbose when requested" do
+        result = subject.to_h(format: :verbose)
+        expect(result[:uncovered_lines]).to eq([11, 12, 13, 22, 23, 25, 26, 27, 28])
+      end
+    end
+  end
+
+  describe "#uncovered_lines_compact" do
+    context "with uncovered lines" do
+      subject do
+        described_class.new(
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines: [11, 12, 13, 22, 23, 25, 26, 27, 28]
+        )
+      end
+
+      it "returns compact range format" do
+        expect(subject.uncovered_lines_compact).to eq("11..13,22,23,25..28")
+      end
+
+      it "caches the result" do
+        expect(subject.uncovered_lines_compact).to be(subject.uncovered_lines_compact)
+      end
+    end
+
+    context "with no uncovered lines" do
+      it "returns empty string" do
+        expect(subject.uncovered_lines_compact).to eq("")
+      end
+    end
+  end
+
+  describe "#uncovered_lines_verbose" do
+    it "returns the original uncovered lines array" do
+      expect(subject.uncovered_lines_verbose).to eq([])
+    end
+
+    context "with uncovered lines" do
+      subject do
+        described_class.new(
+          name: name,
+          start_line: start_line,
+          end_line: end_line,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines: [11, 12, 13, 22, 23]
+        )
+      end
+
+      it "returns the original uncovered lines array" do
+        expect(subject.uncovered_lines_verbose).to eq([11, 12, 13, 22, 23])
+      end
     end
   end
 end
