@@ -10,7 +10,7 @@ This guide documents the migration from primitive command sequences to higher-or
 
 The migration follows this hierarchy:
 
-1. **Highest Priority**: Complete workflow operations (`nav-path task-new`, `code-review`)
+1. **Highest Priority**: Complete workflow operations (`create-path task-new`, `code-review`)
 2. **High Priority**: Domain-specific operations (`task-manager`, `release-manager`)
 3. **Medium Priority**: Individual gem executables (`llm-query`, `git-commit`)
 4. **Lowest Priority**: Primitive building blocks (avoid where higher-order alternatives exist)
@@ -57,7 +57,7 @@ task_id=$(bin/tnid $version)              # Generate ID
 #### New Higher-Order Approach
 ```bash
 # Single command for complete task creation
-nav-path task-new --title "Implement OAuth" --priority high --estimate "8h"
+create-path task-new --title "Implement OAuth" --priority high --estimate "8h"
 # Automatically handles:
 # - Release context detection
 # - ID generation with proper sequencing
@@ -96,7 +96,7 @@ FILENAME="$(date +%Y%m%d-%H%M%S)-compact-log.md"
 #### New Higher-Order Approach
 ```bash
 # Complete session setup
-nav-path reflection-new --title "oauth-implementation-review"
+create-path file --title "oauth-implementation-review"
 # Automatically handles:
 # - Release detection
 # - Directory creation
@@ -123,7 +123,7 @@ The following documentation has been updated to use higher-order tools:
 
 #### Task Creation Workflow
 - **Before**: Manual `bin/rc` + `bin/tnid` + path construction
-- **After**: Single `nav-path task-new` command
+- **After**: Single `create-path task-new` command
 - **Benefit**: Atomic operation, no manual coordination needed
 
 #### File Navigation Workflow
@@ -133,7 +133,7 @@ The following documentation has been updated to use higher-order tools:
 
 #### Session Management Workflow
 - **Before**: Manual directory creation and filename generation
-- **After**: `nav-path reflection-new` with automatic setup
+- **After**: `create-path file` with automatic setup
 - **Benefit**: Consistent naming, automatic organization
 
 ## AI Agent Guidelines
@@ -173,9 +173,9 @@ Higher-order tools provide better error handling:
 
 ### For Workflow Instructions
 
-- [ ] Replace `bin/rc` + `bin/tnid` with `nav-path task-new`
+- [ ] Replace `bin/rc` + `bin/tnid` with `create-path task-new`
 - [ ] Replace manual file searching with `nav-path file`
-- [ ] Replace manual session setup with `nav-path reflection-new`
+- [ ] Replace manual session setup with `create-path file`
 - [ ] Update task management commands to use `task-manager`
 - [ ] Add validation steps for new tools
 
@@ -196,7 +196,7 @@ The following commands are deprecated in favor of higher-order alternatives:
 - `bin/tn` → `task-manager next`
 - `bin/tr` → `task-manager recent`
 - `bin/tal` → `task-manager all`
-- `bin/tnid` → Used internally by `nav-path task-new`
+- `bin/tnid` → Used internally by `create-path task-new`
 - `bin/rc` → Used internally by `nav-path` commands
 
 ### Transition Period
