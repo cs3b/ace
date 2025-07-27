@@ -26,6 +26,9 @@ module CodingAgentTools
           option :filter, type: :array,
             desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
 
+          option :verbose, type: :boolean, default: false, aliases: ["v"],
+            desc: "Show detailed task information (old format)"
+
           example [
             "",
             "--limit 3",
@@ -78,11 +81,11 @@ module CodingAgentTools
             limited_tasks = final_result.sorted_tasks.take(limit)
 
             if limit == 1
-              display_task_info(limited_tasks.first)
+              display_task_info(limited_tasks.first, nil, nil, options[:verbose])
             else
               limited_tasks.each_with_index do |task, index|
-                puts "" if index > 0  # Add blank line between tasks
-                display_task_info(task, index + 1, limited_tasks.size)
+                puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
+                display_task_info(task, index + 1, limited_tasks.size, options[:verbose])
               end
             end
             0
@@ -101,19 +104,39 @@ module CodingAgentTools
             limit_int
           end
 
-          def display_task_info(task, index = nil, total = nil)
-            if index && total
-              puts "Task #{index}/#{total}:"
-            end
+          def display_task_info(task, index = nil, total = nil, verbose = false)
+            if verbose
+              # Original verbose format
+              if index && total
+                puts "Task #{index}/#{total}:"
+              end
 
-            puts "  ID:    #{task.id}"
-            puts "  Title: #{task.title || extract_title_from_content(task)}"
-            puts "  Path:  #{task.path}"
-            puts "  Status: #{task.status}"
+              puts "  ID:    #{task.id}"
+              puts "  Title: #{task.title || extract_title_from_content(task)}"
+              puts "  Path:  #{task.path}"
+              puts "  Status: #{task.status}"
 
-            if task.dependencies && !task.dependencies.empty?
-              deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-              puts "  Dependencies: #{deps}"
+              if task.dependencies && !task.dependencies.empty?
+                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
+                puts "  Dependencies: #{deps}"
+              end
+            else
+              # New compact format
+              title = task.title || extract_title_from_content(task)
+              status = task.status.upcase
+              
+              # Main line: ID * STATUS * Title
+              puts "#{task.id} * #{status} * #{title}"
+              
+              # Path on next line, indented
+              relative_path = task.path.sub(/^#{Regexp.escape(CodingAgentTools::Atoms::ProjectRootDetector.find_project_root)}\//, '')
+              puts "  #{relative_path}"
+              
+              # Dependencies on following line if present
+              if task.dependencies && !task.dependencies.empty?
+                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
+                puts "  Dependencies: #{deps}"
+              end
             end
           end
 

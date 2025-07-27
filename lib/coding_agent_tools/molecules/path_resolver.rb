@@ -312,7 +312,7 @@ module CodingAgentTools
               current_release = detect_current_release_fallback
               match = current_release.match(/^(v\.\d+\.\d+\.\d+)/)
               version = match ? match[1] : "v.0.1.0"
-              "#{version}+task.#{rand(100)}"
+              "#{version}+task.#{rand(1000).to_s.rjust(3, "0")}"
             else
               "unknown"
             end
@@ -346,7 +346,7 @@ module CodingAgentTools
       def extract_task_number_from_context
         # Try to extract task number from current working context
         # This could be enhanced to look at current git branch, directory, etc.
-        rand(100).to_s  # Simple fallback
+        rand(1000).to_s.rjust(3, "0")  # Simple fallback with 3-digit padding
       end
 
       def slugify(text)

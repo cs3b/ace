@@ -22,7 +22,7 @@ module CodingAgentTools
           raise CodingAgentTools::Error, "YAML file not found: #{file_path}"
         end
 
-        YAML.safe_load_file(file_path)
+        YAML.safe_load_file(file_path, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax in #{file_path}: #{e.message}"
       rescue => e
@@ -35,7 +35,7 @@ module CodingAgentTools
       # @return [Hash] Parsed YAML content as Hash
       # @raise [CodingAgentTools::Error] If YAML is invalid
       def self.parse_content(yaml_content)
-        YAML.safe_load(yaml_content)
+        YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax: #{e.message}"
       rescue => e

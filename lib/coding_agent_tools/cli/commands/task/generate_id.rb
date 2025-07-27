@@ -131,12 +131,12 @@ module CodingAgentTools
 
           def generate_task_ids(version, start_number, count)
             if count == 1
-              puts "#{version}+task.#{start_number.to_s.rjust(2, "0")}"
+              puts "#{version}+task.#{start_number.to_s.rjust(3, "0")}"
             else
               puts "Generated #{count} task IDs:"
               count.times do |i|
                 task_number = start_number + i
-                puts "  #{version}+task.#{task_number.to_s.rjust(2, "0")}"
+                puts "  #{version}+task.#{task_number.to_s.rjust(3, "0")}"
               end
             end
           end
