@@ -54,28 +54,34 @@ module CodingAgentTools
       end
 
       def to_h(format: :compact)
-        base_hash = {
-          name: name,
-          start_line: start_line,
-          end_line: end_line,
-          total_lines: total_lines,
-          covered_lines: covered_lines,
-          coverage_percentage: coverage_percentage,
-          uncovered_lines_count: uncovered_lines_count,
-          visibility: visibility,
-          needs_tests: needs_tests?
-        }
-
         case format
         when :compact
-          base_hash[:uncovered_lines] = uncovered_lines_compact
+          # Truly minimal format - only method name and uncovered lines
+          {
+            name: name,
+            uncovered_lines: uncovered_lines_compact
+          }
         when :verbose
-          base_hash[:uncovered_lines] = uncovered_lines_verbose
+          # Full detailed format
+          {
+            name: name,
+            start_line: start_line,
+            end_line: end_line,
+            total_lines: total_lines,
+            covered_lines: covered_lines,
+            coverage_percentage: coverage_percentage,
+            uncovered_lines_count: uncovered_lines_count,
+            visibility: visibility,
+            needs_tests: needs_tests?,
+            uncovered_lines: uncovered_lines_verbose
+          }
         else
-          base_hash[:uncovered_lines] = uncovered_lines_compact
+          # Default to compact
+          {
+            name: name,
+            uncovered_lines: uncovered_lines_compact
+          }
         end
-
-        base_hash
       end
 
       private

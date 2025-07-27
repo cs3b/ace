@@ -119,16 +119,25 @@ module CodingAgentTools
       def format_json_report(analysis_result, format: :compact)
         report_data = analysis_result.to_h(format: format)
         
-        # Add public methods needing tests
-        public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
-        report_data[:public_methods_needing_tests] = format_public_methods_for_json(public_methods_needing_tests, format: format)
-        
-        report_data[:metadata] = {
-          generated_at: Time.now.iso8601,
-          analysis_timestamp: analysis_result.analysis_timestamp.iso8601
-        }
-        
-        JSON.pretty_generate(report_data)
+        case format
+        when :compact
+          # Compact format returns an array, use it directly
+          JSON.pretty_generate(report_data)
+        when :verbose
+          # Verbose format returns a hash, add metadata
+          public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
+          report_data[:public_methods_needing_tests] = format_public_methods_for_json(public_methods_needing_tests, format: format)
+          
+          report_data[:metadata] = {
+            generated_at: Time.now.iso8601,
+            analysis_timestamp: analysis_result.analysis_timestamp.iso8601
+          }
+          
+          JSON.pretty_generate(report_data)
+        else
+          # Default to compact
+          JSON.pretty_generate(report_data)
+        end
       end
 
       # Formats CSV report from analysis results

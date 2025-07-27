@@ -34,6 +34,10 @@ module CodingAgentTools
         return zero_coverage if lines.nil? || lines.empty?
         return zero_coverage if end_line < start_line
 
+        # Ensure start_line and end_line are integers
+        start_line = start_line.to_i
+        end_line = end_line.to_i
+
         # Convert to 0-based indexing and extract range
         # SimpleCov uses 1-based indexing with null at index 0
         range_start = [start_line - 1, 0].max
@@ -41,8 +45,14 @@ module CodingAgentTools
         
         return zero_coverage if range_start >= lines.length
 
-        range_lines = lines[range_start..range_end] || []
-        calculate_file_coverage(range_lines)
+        # Safely extract the range
+        begin
+          range_lines = lines[range_start..range_end] || []
+          calculate_file_coverage(range_lines)
+        rescue TypeError => e
+          warn "Warning: Error calculating range coverage for range #{range_start}..#{range_end}: #{e.message}"
+          zero_coverage
+        end
       end
 
       # Calculates combined coverage from multiple line arrays (e.g., multiple test frameworks)
