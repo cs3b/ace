@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.125
-status: pending
+status: in-progress
 priority: high
 estimate: 6h
 dependencies: []
@@ -65,13 +65,16 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
 
 ### Planning Steps
 
-- [ ] Comprehensive search for all `nav-path task-new` references within multi-repo scope (docs/, dev-handbook/, dev-tools/)
+- [x] Comprehensive search for all `nav-path task-new` references within multi-repo scope (docs/, dev-handbook/, dev-tools/)
   > TEST: Reference Search Complete
   > Type: Pre-condition Check
   > Assert: All instances of nav-path creation operations are identified within scope
   > Command: grep -r "nav-path.*task-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
-- [ ] Identify command equivalencies between nav-path and create-path
-- [ ] Verify create-path functionality covers all nav-path creation use cases
+  > Result: Found 22 instances across the multi-repo scope
+- [x] Identify command equivalencies between nav-path and create-path
+  > Result: nav-path task-new -> create-path task-new (1:1 equivalency, same arguments and options)
+- [x] Verify create-path functionality covers all nav-path creation use cases
+  > Result: create-path task-new supports all nav-path task-new arguments (--title, --priority, --estimate) and adds file creation functionality
 - [ ] Plan systematic replacement strategy with direct replacement (no deprecation warnings)
 
 ### Execution Steps
