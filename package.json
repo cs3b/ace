@@ -1,7 +1,0 @@
-{
-  "name": "coding-agent-workflow-toolkit-meta",
-  "version": "0.4.0",
-  "devDependencies": {
-    "markdownlint-cli": "^0.45.0"
-  }
-}
