@@ -3,6 +3,7 @@
 require "dry/cli"
 require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/unified_task_formatter"
 
 module CodingAgentTools
   module Cli
@@ -17,6 +18,9 @@ module CodingAgentTools
 
           option :limit, type: :integer, default: 10,
             desc: "Maximum number of tasks to return (default: 10)"
+
+          option :verbose, type: :boolean, default: false,
+            desc: "Show detailed task information"
 
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
@@ -95,58 +99,15 @@ module CodingAgentTools
             puts "=" * 50
 
             limited_tasks.each_with_index do |task, index|
-              puts "" if index > 0  # Add blank line between tasks
-              display_task_info(task)
+              puts "" if index > 0 && options[:verbose]  # Add blank line between tasks in verbose mode
+              Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
+                task, 
+                verbose: options[:verbose],
+                show_time: true
+              )
             end
           end
 
-          def display_task_info(task)
-            puts "  ID:    #{task.id}"
-            puts "  Title: #{task.title || extract_title_from_content(task)}"
-            puts "  Path:  #{task.path}"
-            puts "  Status: #{task.status}"
-
-            if task.respond_to?(:mtime)
-              puts "  Modified: #{format_time(task.mtime)}"
-            end
-
-            if task.dependencies && !task.dependencies.empty?
-              deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-              puts "  Dependencies: #{deps}"
-            end
-          end
-
-          def extract_title_from_content(task)
-            # Try to extract title from content if not available in metadata
-            return "Unknown" unless task.respond_to?(:content) && task.content
-
-            # Look for first heading
-            lines = task.content.split("\n")
-            heading_line = lines.find { |line| line.start_with?("# ") }
-            if heading_line
-              heading_line.sub(/^# /, "").strip
-            else
-              "Unknown"
-            end
-          end
-
-          def format_time(time)
-            now = Time.now
-            diff = now - time
-
-            case diff
-            when 0..60
-              "#{diff.to_i} seconds ago"
-            when 60..3600
-              "#{(diff / 60).to_i} minutes ago"
-            when 3600..86400
-              "#{(diff / 3600).to_i} hours ago"
-            when 86400..604800
-              "#{(diff / 86400).to_i} days ago"
-            else
-              time.strftime("%Y-%m-%d %H:%M")
-            end
-          end
 
           def handle_error(error, debug_enabled)
             if debug_enabled

@@ -5,6 +5,7 @@ require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
 require_relative "../../../molecules/taskflow_management/task_sort_engine"
 require_relative "../../../molecules/taskflow_management/task_filter_engine"
+require_relative "../../../molecules/taskflow_management/unified_task_formatter"
 
 module CodingAgentTools
   module Cli
@@ -81,11 +82,21 @@ module CodingAgentTools
             limited_tasks = final_result.sorted_tasks.take(limit)
 
             if limit == 1
-              display_task_info(limited_tasks.first, nil, nil, options[:verbose])
+              Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
+                limited_tasks.first, 
+                verbose: options[:verbose],
+                show_time: true
+              )
             else
               limited_tasks.each_with_index do |task, index|
                 puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
-                display_task_info(task, index + 1, limited_tasks.size, options[:verbose])
+                Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
+                  task, 
+                  verbose: options[:verbose],
+                  task_number: index + 1,
+                  total_tasks: limited_tasks.size,
+                  show_time: true
+                )
               end
             end
             0
@@ -104,55 +115,6 @@ module CodingAgentTools
             limit_int
           end
 
-          def display_task_info(task, index = nil, total = nil, verbose = false)
-            if verbose
-              # Original verbose format
-              if index && total
-                puts "Task #{index}/#{total}:"
-              end
-
-              puts "  ID:    #{task.id}"
-              puts "  Title: #{task.title || extract_title_from_content(task)}"
-              puts "  Path:  #{task.path}"
-              puts "  Status: #{task.status}"
-
-              if task.dependencies && !task.dependencies.empty?
-                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-                puts "  Dependencies: #{deps}"
-              end
-            else
-              # New compact format
-              title = task.title || extract_title_from_content(task)
-              status = task.status.upcase
-              
-              # Main line: ID * STATUS * Title
-              puts "#{task.id} * #{status} * #{title}"
-              
-              # Path on next line, indented
-              relative_path = task.path.sub(/^#{Regexp.escape(CodingAgentTools::Atoms::ProjectRootDetector.find_project_root)}\//, '')
-              puts "  #{relative_path}"
-              
-              # Dependencies on following line if present
-              if task.dependencies && !task.dependencies.empty?
-                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-                puts "  Dependencies: #{deps}"
-              end
-            end
-          end
-
-          def extract_title_from_content(task)
-            # Try to extract title from content if not available in metadata
-            return "Unknown" unless task.respond_to?(:content) && task.content
-
-            # Look for first heading
-            lines = task.content.split("\n")
-            heading_line = lines.find { |line| line.start_with?("# ") }
-            if heading_line
-              heading_line.sub(/^# /, "").strip
-            else
-              "Unknown"
-            end
-          end
 
           def handle_error(error, debug_enabled)
             if debug_enabled
