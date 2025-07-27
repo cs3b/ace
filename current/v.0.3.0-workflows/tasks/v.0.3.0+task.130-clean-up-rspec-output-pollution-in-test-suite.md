@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.130
-status: pending
+status: done
 priority: medium
 estimate: 6h
 dependencies: []
@@ -71,71 +71,71 @@ Eliminate noise and pollution in RSpec test output to improve test readability, 
   > Type: Pre-condition Check
   > Assert: All 5 categories of pollution are documented with file locations
   > Command: rspec --dry-run | grep -E "(WARNING|Warning|Error:|Debug:|Created)"
-- [ ] Research RSpec best practices for output suppression
-- [ ] Plan logger integration strategy for proper output routing
+- [x] Research RSpec best practices for output suppression
+- [x] Plan logger integration strategy for proper output routing
 
 ### Execution Steps
 
 #### Category 1: Fix RSpec `raise_error` Warnings (5 instances)
 
-- [ ] Fix `log_color_formatter_spec.rb:322` - specify `raise_error(NoMethodError)`
+- [x] Fix `log_color_formatter_spec.rb:322` - specify `raise_error(NoMethodError)`
   > TEST: Verify RSpec Warning Removed
   > Type: Action Validation  
   > Assert: No "Using the `raise_error` matcher without providing a specific error" warning for this file
   > Command: rspec spec/coding_agent_tools/atoms/git/log_color_formatter_spec.rb:322 2>&1 | grep -v "WARNING.*raise_error"
 
-- [ ] Fix `docs_dependencies_config_loader_spec.rb:805` - specify `raise_error(RuntimeError)` for validation errors
+- [x] Fix `docs_dependencies_config_loader_spec.rb:805` - specify `raise_error(RuntimeError)` for validation errors
   > TEST: Verify Validation Error Specifications
   > Type: Action Validation
   > Assert: All `raise_error` calls specify expected exception types
   > Command: rspec spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb:805 2>&1 | grep -v "WARNING.*raise_error"
 
-- [ ] Fix `docs_dependencies_config_loader_spec.rb:564` - specify `raise_error(RuntimeError)` for array validation
-- [ ] Review all 82 files with `raise_error` usage for similar issues
-- [ ] Update any remaining generic `raise_error` calls to specify exception types
+- [x] Fix `docs_dependencies_config_loader_spec.rb:564` - specify `raise_error(RuntimeError)` for array validation
+- [x] Review all 82 files with `raise_error` usage for similar issues
+- [x] Update any remaining generic `raise_error` calls to specify exception types
 
 #### Category 2: Suppress Configuration Loading Warnings (6 instances)
 
-- [ ] Modify `docs_dependencies_config_loader.rb` lines 48-49 to detect test environment
+- [x] Modify `docs_dependencies_config_loader.rb` lines 48-49 to detect test environment
   > TEST: Verify Warning Suppression in Tests
   > Type: Action Validation
   > Assert: No "Warning: Failed to load config" messages appear during test runs
   > Command: rspec spec/coding_agent_tools/atoms/docs_dependencies_config_loader_spec.rb 2>&1 | grep -v "Warning.*Failed to load config"
 
-- [ ] Replace `warn` calls with conditional logger or test-aware output
-- [ ] Ensure warnings still appear in production/development environments
+- [x] Replace `warn` calls with conditional logger or test-aware output
+- [x] Ensure warnings still appear in production/development environments
 
 #### Category 3: Gate Debug Output (2 instances)
 
-- [ ] Add test environment check to `install_dotfiles.rb` debug output
+- [x] Add test environment check to `install_dotfiles.rb` debug output
   > TEST: Verify Debug Output Gating
   > Type: Action Validation
   > Assert: No "Debug: Project root:" messages during test runs
   > Command: rspec spec/coding_agent_tools/cli/commands/install_dotfiles_spec.rb 2>&1 | grep -v "Debug:"
 
-- [ ] Wrap debug statements in environment-aware conditionals
-- [ ] Ensure debug output is available when explicitly requested
+- [x] Wrap debug statements in environment-aware conditionals
+- [x] Ensure debug output is available when explicitly requested
 
 #### Category 4: Improve Test Output Capture (2 instances)
 
-- [ ] Update `install_dotfiles_spec.rb` to properly capture "Created directory:" output
+- [x] Update `install_dotfiles_spec.rb` to properly capture "Created directory:" output
   > TEST: Verify Output Capture
   > Type: Action Validation
   > Assert: No "Created directory:" messages leak to test output
   > Command: rspec spec/coding_agent_tools/cli/commands/install_dotfiles_spec.rb 2>&1 | grep -v "Created directory"
 
-- [ ] Review other command tests for similar output leakage
-- [ ] Implement consistent output capture patterns
+- [x] Review other command tests for similar output leakage
+- [x] Implement consistent output capture patterns
 
 #### Category 5: Route Error Messages Properly (2 instances)
 
-- [ ] Review error message routing in test files
-- [ ] Ensure error messages use stderr instead of stdout where appropriate
-- [ ] Update error handling to use proper logging framework
+- [x] Review error message routing in test files
+- [x] Ensure error messages use stderr instead of stdout where appropriate
+- [x] Update error handling to use proper logging framework
 
 #### Final Validation
 
-- [ ] Run full test suite and verify clean output
+- [x] Run full test suite and verify clean output
   > TEST: Complete Output Cleanup Verification
   > Type: Integration Test
   > Assert: RSpec output contains no pollution warnings or unwanted messages
@@ -143,11 +143,11 @@ Eliminate noise and pollution in RSpec test output to improve test readability, 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: RSpec runs produce clean output with no warnings or pollution
-- [ ] AC 2: All existing tests continue to pass with same behavior
-- [ ] AC 3: Debug output only appears when explicitly enabled via environment variables
-- [ ] AC 4: Configuration warnings are suppressed in test environment but preserved in production
-- [ ] AC 5: Error messages are properly routed to stderr instead of stdout where appropriate
+- [x] AC 1: RSpec runs produce clean output with no warnings or pollution
+- [x] AC 2: All existing tests continue to pass with same behavior
+- [x] AC 3: Debug output only appears when explicitly enabled via environment variables
+- [x] AC 4: Configuration warnings are suppressed in test environment but preserved in production
+- [x] AC 5: Error messages are properly routed to stderr instead of stdout where appropriate
 
 ## Out of Scope
 
