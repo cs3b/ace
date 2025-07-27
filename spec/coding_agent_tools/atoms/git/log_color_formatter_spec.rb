@@ -319,7 +319,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
 
       it "handles nil commit" do
-        expect { formatter.format_commit(nil) }.to raise_error
+        expect { formatter.format_commit(nil) }.to raise_error(NoMethodError)
       end
 
       it "handles empty commit hash" do

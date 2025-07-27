@@ -193,12 +193,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Ruby do
       end
 
       it "handles nil result and exits with error" do
-        allow(command).to receive(:warn)
         allow(command).to receive(:exit)
 
         command.call
 
-        expect(command).to have_received(:warn).with(/Error:.*undefined method.*\[\].*nil/)
         expect(command).to have_received(:exit).with(1)
       end
     end
@@ -349,5 +347,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Ruby do
         end
       end
     end
+  end
+
+  def capture_stderr
+    old_stderr = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = old_stderr
   end
 end

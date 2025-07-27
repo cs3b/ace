@@ -218,7 +218,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "without debug option" do
         it "handles the exception and shows basic error" do
-          error_output = capture_stderr { command.call }
+          stdout_output = nil
+          error_output = nil
+          
+          # Capture both stdout and stderr to prevent output leakage
+          stdout_output = capture_stdout do
+            error_output = capture_stderr { command.call }
+          end
 
           expect(error_output).to include("Error: Permission denied")
           expect(error_output).to include("Use --debug flag for more information")
@@ -231,10 +237,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "with debug option" do
         it "shows detailed error information including backtrace" do
-          error_output = capture_stderr { command.call(debug: true) }
+          stdout_output = nil
+          error_output = nil
+          
+          # Capture both stdout (for debug output) and stderr (for error messages)
+          stdout_output = capture_stdout do
+            error_output = capture_stderr { command.call(debug: true) }
+          end
 
           expect(error_output).to include("Error: StandardError: Permission denied")
           expect(error_output).to include("Backtrace:")
+          expect(stdout_output).to include("Debug: Project root:")
           
           result = nil
           capture_stderr { result = command.call }
