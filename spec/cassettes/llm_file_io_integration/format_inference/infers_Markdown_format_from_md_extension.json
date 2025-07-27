@@ -10,7 +10,7 @@
         },
         "headers": {
           "User-Agent": [
-            "Faraday v2.13.1"
+            "Faraday v2.13.4"
           ],
           "Accept": [
             "application/json"
@@ -38,7 +38,7 @@
             "X-Origin"
           ],
           "Date": [
-            "Tue, 24 Jun 2025 17:39:08 GMT"
+            "Sun, 27 Jul 2025 13:22:42 GMT"
           ],
           "Server": [
             "scaffolding on HTTPServer2"
@@ -53,7 +53,7 @@
             "nosniff"
           ],
           "Server-Timing": [
-            "gfet4t7; dur=490"
+            "gfet4t7; dur=1049"
           ],
           "Alt-Svc": [
             "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
@@ -64,10 +64,10 @@
         },
         "body": {
           "encoding": "ASCII-8BIT",
-          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready. This is a test. How can I help you?  What would you like me to do?\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.21773031779697963\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 28,\n    \"totalTokenCount\": 29,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 28\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"vOJaaNblFo6AsbQProilsQ4\"\n}\n"
+          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"Okay, I'm ready. Test complete. Let me know what you'd like me to do next!\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.33332089583079022\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 24,\n    \"totalTokenCount\": 25,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 24\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"IiiGaMT2DrKLqsMPrdqi8QY\"\n}\n"
         }
       },
-      "recorded_at": "Tue, 24 Jun 2025 17:39:08 GMT"
+      "recorded_at": "Sun, 27 Jul 2025 13:22:42 GMT"
     }
   ],
   "recorded_with": "VCR 6.3.1"
