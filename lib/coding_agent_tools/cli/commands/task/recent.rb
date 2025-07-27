@@ -40,7 +40,14 @@ module CodingAgentTools
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
 
-            since_seconds = parse_time_period(options[:last])
+            # If --limit is specified without --last, ignore time filtering
+            # User wants most recent X tasks regardless of age
+            if options[:limit] && !options[:last]
+              since_seconds = nil  # No time filter
+            else
+              since_seconds = parse_time_period(options[:last])
+            end
+            
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)

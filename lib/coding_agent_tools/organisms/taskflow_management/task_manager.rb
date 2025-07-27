@@ -81,12 +81,12 @@ module CodingAgentTools
         end
 
         # Find recent tasks with time-based filtering
-        # @param since_seconds [Integer] Time window in seconds (default: 1 day)
+        # @param since_seconds [Integer, nil] Time window in seconds (default: 1 day, nil = no time filter)
         # @param statuses [Array<String>] Statuses to filter by (default: ['done', 'in-progress'])
         # @param release_path [String, nil] Optional specific release path
         # @return [RecentTasksResult] Result with recent tasks
         def find_recent_tasks(since_seconds: 86400, statuses: %w[done in-progress], release_path: nil)
-          since_time = Time.now - since_seconds
+          since_time = since_seconds ? Time.now - since_seconds : nil
           all_tasks = []
 
           if release_path
@@ -103,9 +103,9 @@ module CodingAgentTools
 
             # Filter by modification time and status
             tasks_result[:tasks].each do |task_data|
-              # Check modification time
+              # Check modification time (skip if no time filter)
               mtime = File.mtime(task_data.path)
-              next if mtime < since_time
+              next if since_time && mtime < since_time
               next unless statuses.include?(task_data.status)
 
               # Add modification time for sorting
@@ -127,9 +127,9 @@ module CodingAgentTools
               task_files = Dir.glob(File.join(base_dir, "**/tasks/*.md"))
 
               task_files.each do |file_path|
-                # Check modification time
+                # Check modification time (skip if no time filter)
                 mtime = File.mtime(file_path)
-                next if mtime < since_time
+                next if since_time && mtime < since_time
 
                 # Load and filter task
                 task_data = @file_loader.load_task_file(file_path)

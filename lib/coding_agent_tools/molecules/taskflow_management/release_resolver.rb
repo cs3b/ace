@@ -26,14 +26,17 @@ module CodingAgentTools
           # Try different resolution strategies in order
           strategies = [
             :resolve_by_path,
-            :resolve_by_fullname,
             :resolve_by_version,
+            :resolve_by_fullname,
             :resolve_by_codename
           ]
 
           strategies.each do |strategy|
             result = send(strategy, identifier, base_path)
+            # Return successful results immediately
             return result if result.success?
+            # Also return informative errors that should not be masked by subsequent strategies
+            return result if result.error_message&.include?("Multiple releases found")
           end
 
           ResolutionResult.new(nil, false, "Release '#{identifier}' not found using any supported format")
@@ -90,28 +93,14 @@ module CodingAgentTools
         def self.resolve_by_version(identifier, base_path)
           return ResolutionResult.new(nil, false, "Not a version") unless identifier.match?(/^v\.\d+\.\d+\.\d+$/)
 
-          search_paths = [
-            File.join(base_path, "dev-taskflow/current"),
-            File.join(base_path, "dev-taskflow/backlog"), 
-            File.join(base_path, "dev-taskflow/done")
-          ]
-
-          search_paths.each do |search_path|
-            next unless File.exist?(search_path) && File.directory?(search_path)
-
-            Dir.glob(File.join(search_path, "#{identifier}-*")).each do |release_path|
-              next unless File.directory?(release_path)
-              return resolve_directory_path(release_path)
-            end
-          end
-
-          ResolutionResult.new(nil, false, "Version not found")
+          matches = find_all_matching_releases(identifier, base_path, :version)
+          handle_multiple_matches(matches, identifier)
         end
 
-        # Resolve by codename (e.g., "workflows")
-        def self.resolve_by_codename(identifier, base_path)
-          return ResolutionResult.new(nil, false, "Not a codename") if identifier.include?(".") || identifier.include?("/")
-
+        # Find all releases matching the identifier across dev-taskflow directories
+        def self.find_all_matching_releases(identifier, base_path, match_type)
+          matches = []
+          
           search_paths = [
             File.join(base_path, "dev-taskflow/current"),
             File.join(base_path, "dev-taskflow/backlog"),
@@ -121,13 +110,65 @@ module CodingAgentTools
           search_paths.each do |search_path|
             next unless File.exist?(search_path) && File.directory?(search_path)
 
-            Dir.glob(File.join(search_path, "*-#{identifier}")).each do |release_path|
+            Dir.glob(File.join(search_path, "*")).each do |release_path|
               next unless File.directory?(release_path)
-              return resolve_directory_path(release_path)
+              
+              release_name = File.basename(release_path)
+              
+              case match_type
+              when :version
+                # Match if release name starts with the version
+                if release_name.start_with?(identifier)
+                  matches << release_path
+                end
+              when :codename
+                # Match if release name ends with the codename
+                if release_name.end_with?("-#{identifier}")
+                  matches << release_path
+                end
+              end
             end
           end
 
-          ResolutionResult.new(nil, false, "Codename not found")
+          matches
+        end
+
+        # Handle multiple matching releases by displaying options and requiring full name
+        def self.handle_multiple_matches(matches, identifier)
+          case matches.length
+          when 0
+            ResolutionResult.new(nil, false, "No releases found matching '#{identifier}'")
+          when 1
+            resolve_directory_path(matches.first)
+          else
+            # Multiple matches found - show options and require full name
+            error_message = "Multiple releases found matching '#{identifier}'. Please specify the full release name:\n"
+            matches.each do |match|
+              release_name = File.basename(match)
+              release_type = case match
+                            when /\/current\//
+                              "current"
+                            when /\/backlog\//
+                              "backlog" 
+                            when /\/done\//
+                              "done"
+                            else
+                              "unknown"
+                            end
+              error_message += "  - #{release_name} (#{release_type})\n"
+            end
+            error_message += "\nExample: task-manager recent --release #{File.basename(matches.first)}"
+            
+            ResolutionResult.new(nil, false, error_message)
+          end
+        end
+
+        # Resolve by codename (e.g., "workflows")
+        def self.resolve_by_codename(identifier, base_path)
+          return ResolutionResult.new(nil, false, "Not a codename") if identifier.include?(".") || identifier.include?("/")
+
+          matches = find_all_matching_releases(identifier, base_path, :codename)
+          handle_multiple_matches(matches, identifier)
         end
 
         # Resolve a specific directory path to release info
