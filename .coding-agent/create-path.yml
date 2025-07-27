@@ -5,7 +5,7 @@
 templates:
   # Task creation
   task-new:
-    template: "dev-handbook/templates/release-tasks/task.template.md"
+    template: "../dev-handbook/templates/release-tasks/task.template.md"
     variables:
       # Metadata variables that can be passed as command arguments
       id: "task-manager generate-id"           # Auto-generated task ID
