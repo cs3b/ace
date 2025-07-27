@@ -1,12 +1,12 @@
 ---
-id: <run bin/tnid to generate ID>
-status: pending
-priority: <high/medium/low>
-estimate: <n>h
-dependencies: [<ticket-ids>]
+id: {id}
+status: {status}
+priority: {priority}
+estimate: {estimate}
+dependencies: {dependencies}
 ---
 
-# <Verb + Object>
+# {title}
 
 ## 0. Directory Audit ✅
 
