@@ -3,6 +3,7 @@
 require "dry/cli"
 require "open3"
 require "shellwords"
+require "fileutils"
 
 module CodingAgentTools
   module Cli
@@ -10,7 +11,7 @@ module CodingAgentTools
     class CreatePathCommand < Dry::CLI::Command
       desc "Create files and directories with content from templates and metadata"
 
-      argument :type, desc: "Type of creation (task-new, file, directory, docs-new, template)"
+      argument :type, desc: "Type of creation (task-new, file, directory, docs-new, template) or delegation format (file:docs-new, file:reflection-new, directory:code-review-new)"
 
       option :title, desc: "Title for new path generation", required: true
       option :force, type: :boolean, default: false, aliases: ["f"],
@@ -31,7 +32,10 @@ module CodingAgentTools
         'file --title "README.md" --content "# My Project"',
         'directory --title "src/components"',
         'docs-new --title "API Documentation"',
-        'template --title "my-doc.md" --template custom-template.md'
+        'template --title "my-doc.md" --template custom-template.md',
+        'file:docs-new --title "API Guide"',
+        'file:reflection-new --title "oauth-implementation-review"',
+        'directory:code-review-new --title "authentication-session"'
       ]
 
       def call(type:, **options)
@@ -69,6 +73,11 @@ module CodingAgentTools
       private
 
       def process_creation(type, target, options)
+        # Handle delegation format (file:type, directory:type)
+        if type.include?(":")
+          return process_delegation_type(type, target, options)
+        end
+
         case type
         when "task-new"
           create_with_nav_path_and_template(:task_new, target, options)
@@ -82,6 +91,31 @@ module CodingAgentTools
           create_with_custom_template(target, options)
         else
           {success: false, error: "Unknown creation type '#{type}'"}
+        end
+      end
+
+      def process_delegation_type(type, target, options)
+        creation_type, nav_type = type.split(":", 2)
+        
+        case creation_type
+        when "file"
+          case nav_type
+          when "docs-new"
+            create_with_nav_path_and_template(:docs_new, target, options)
+          when "reflection-new"
+            create_with_nav_path_and_template(:reflection_new, target, options)
+          else
+            {success: false, error: "Unknown delegation nav-type '#{nav_type}' for file creation"}
+          end
+        when "directory"
+          case nav_type
+          when "code-review-new"
+            create_with_nav_path_and_template(:code_review_new, target, options)
+          else
+            {success: false, error: "Unknown delegation nav-type '#{nav_type}' for directory creation"}
+          end
+        else
+          {success: false, error: "Unknown delegation creation-type '#{creation_type}'. Supported: file, directory"}
         end
       end
 
@@ -99,7 +133,9 @@ module CodingAgentTools
         template_config = get_template_config(nav_type.to_s.gsub("_", "-"))
         
         unless template_config
-          return {success: false, error: "No template configuration found for #{nav_type}"}
+          # Create empty file with notice when template not found
+          puts "Notice: Template not found for #{nav_type} - creating empty file"
+          return create_empty_file_with_notice(target_path, nav_type, title, options)
         end
 
         # Generate content from template
@@ -203,7 +239,10 @@ module CodingAgentTools
         template_path = template_config["template"]
         
         unless template_path && File.exist?(template_path)
-          raise "Template file not found: #{template_path}"
+          # Return contextual content when template file doesn't exist
+          puts "Notice: Template file not found: #{template_path} - creating empty file"
+          # Need to extract nav_type and title from the calling context
+          return generate_contextual_content_from_template_context(template_config, title)
         end
 
         # Read template content
@@ -328,6 +367,60 @@ module CodingAgentTools
           .squeeze("-")
           .strip
           .gsub(/^-|-$/, "")
+      end
+
+      def create_empty_file_with_notice(target_path, nav_type, title, options)
+        # Ensure target directory exists
+        target_dir = File.dirname(target_path)
+        begin
+          FileUtils.mkdir_p(target_dir) unless File.exist?(target_dir)
+        rescue => e
+          return {success: false, error: "Failed to create directory: #{e.message}"}
+        end
+
+        # Create contextual title based on nav_type and user title
+        contextual_content = generate_contextual_content(nav_type, title)
+        
+        begin
+          @file_handler.write_content(contextual_content, target_path, force: options[:force])
+          {
+            success: true, 
+            message: "Empty file created (template not found for #{nav_type})", 
+            path: target_path
+          }
+        rescue CodingAgentTools::Error => e
+          {success: false, error: e.message}
+        rescue => e
+          {success: false, error: "Failed to create file: #{e.message}"}
+        end
+      end
+
+      def generate_contextual_content(nav_type, title)
+        case nav_type.to_s
+        when "reflection_new"
+          "# Reflection - #{title}\n\n"
+        when "docs_new" 
+          "# Documentation - #{title}\n\n"
+        when "code_review_new"
+          "# Code Review - #{title}\n\n"
+        else
+          "# #{title.capitalize}\n\n"
+        end
+      end
+
+      def generate_contextual_content_from_template_context(template_config, title)
+        # Extract type from template path to determine context
+        template_path = template_config["template"] || ""
+        
+        if template_path.include?("docs")
+          "# Documentation - #{title}\n\n"
+        elsif template_path.include?("reflection")
+          "# Reflection - #{title}\n\n"
+        elsif template_path.include?("code-review") || template_path.include?("review")
+          "# Code Review - #{title}\n\n"
+        else
+          "# #{title.capitalize}\n\n"
+        end
       end
 
       def load_create_path_config
