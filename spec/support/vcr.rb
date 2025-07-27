@@ -50,13 +50,27 @@ VCR.configure do |config|
       "Authorization"     # OpenAI, Mistral, Together AI
     ]
 
+    # List of headers that frequently vary between environments and should be ignored
+    environment_headers = [
+      "User-Agent",       # Different Faraday versions or Ruby environments
+      "Accept-Encoding",  # Different compression support
+      "Accept-Language",  # System locale differences
+      "X-Request-Id",     # Request-specific headers
+      "X-Forwarded-For",  # Network routing headers
+      "Connection",       # Connection management headers
+      "Cache-Control",    # Cache headers
+      "Pragma"            # Legacy cache headers
+    ]
+
     normalize_headers = lambda do |headers|
       # Convert headers to hash with lowercase keys for consistent comparison
       normalized = {}
       headers.each do |key, values|
-        # Skip API key headers
-        next if api_key_headers.any? { |api_header| key.downcase == api_header.downcase }
-        normalized[key.downcase] = values
+        key_lower = key.downcase
+        # Skip API key headers and environment-specific headers
+        next if api_key_headers.any? { |api_header| key_lower == api_header.downcase }
+        next if environment_headers.any? { |env_header| key_lower == env_header.downcase }
+        normalized[key_lower] = values
       end
       normalized
     end
