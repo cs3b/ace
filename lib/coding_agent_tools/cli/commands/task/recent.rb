@@ -13,8 +13,8 @@ module CodingAgentTools
         class Recent < Dry::CLI::Command
           desc "Find recently modified tasks"
 
-          option :last, type: :string, default: "1.day",
-            desc: "Time period to search (e.g., '2.days', '1.week', '3.hours')"
+          option :last, type: :string,
+            desc: "Time period to search (e.g., '2.days', '1.week', '3.hours'). Default: 1.day when no --limit specified"
 
           option :limit, type: :integer, default: 10,
             desc: "Maximum number of tasks to return (default: 10)"
@@ -40,12 +40,16 @@ module CodingAgentTools
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
 
-            # If --limit is specified and --last is default, ignore time filtering
-            # User wants most recent X tasks regardless of age
-            if options[:limit] && options[:last] == "1.day"
-              since_seconds = nil  # No time filter
-            else
+            # Determine time filtering behavior:
+            # - If --last is specified: use that time filter
+            # - If --last not specified and --limit specified: no time filter (get most recent X)
+            # - If neither specified: default to 1 day filter
+            if options[:last]
               since_seconds = parse_time_period(options[:last])
+            elsif options[:limit]
+              since_seconds = nil  # No time filter when only --limit specified
+            else
+              since_seconds = parse_time_period("1.day")  # Default behavior
             end
             
             # Use ProjectRootDetector for reliable path resolution
