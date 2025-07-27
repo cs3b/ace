@@ -57,7 +57,7 @@ This workflow installs the standard configuration files and then customizes them
    
    # Verify commands work with new configuration
    release-manager current
-   nav-path task-new "test-configuration"
+   create-path task-new "test-configuration"
    ```
 
 5. **Project-Specific Adjustments:**

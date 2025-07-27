@@ -72,7 +72,7 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
    * Once approved, create task files using the task template:
 
 6. **Determine Storage Location and Create Tasks**
-   * **IMPORTANT**: Create tasks sequentially, one at a time. Wait for each task file to be created before proceeding to the next task to ensure proper ID sequencing and prevent duplicate IDs.
+   * **NOTE**: Tasks can now be created efficiently in sequence. The `create-path task-new` command creates files immediately, ensuring proper ID sequencing without duplicate ID issues.
    
    * For each approved task (create one task, then wait for completion before creating the next):
      * Use `create-path task-new --title "Task Title" --priority high --estimate "4h"` to:
@@ -81,9 +81,9 @@ Transform unstructured notes, feedback, or requirements into well-structured, ac
        * Create target directory structure if needed
        * Create the task file with proper naming convention
        * Return the full path for the created task file
-     * **Wait for task file creation confirmation** before proceeding to next task
+     * File is created immediately with proper ID sequencing
      * This replaces the manual process of using `bin/rc` and `bin/tnid` separately
-     * **Never run multiple `create-path task-new` commands in parallel** as this will cause duplicate IDs
+     * Multiple tasks can be created in sequence efficiently
 
 8. **Ensure Task Creation Completion**
    * Verify all planned tasks have been created:

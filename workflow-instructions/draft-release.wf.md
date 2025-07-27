@@ -74,7 +74,7 @@ user-provided release scope into actionable tasks.
      b. Create a new task file using the task template:
 
      c. Key rules for task creation:
-        * Use `nav-path task-new --title "Task Title" --priority high --estimate "4h"` to generate tasks automatically
+        * Use `create-path task-new --title "Task Title" --priority high --estimate "4h"` to generate tasks automatically
         * This handles ID generation, file naming, and proper directory placement
         * Planning steps use asterisk markers (`* [ ]`)
         * Execution steps use hyphen markers (`- [ ]`)
@@ -192,7 +192,7 @@ user-provided release scope into actionable tasks.
 
 **Symptoms:**
 
-* `nav-path task-new` command not found or fails
+* `create-path task-new` command not found or fails
 * Duplicate task ID generation
 * Inconsistent numbering sequence
 
@@ -206,7 +206,7 @@ user-provided release scope into actionable tasks.
 
 **Prevention:**
 
-* Test `nav-path task-new` functionality before starting release creation
+* Test `create-path task-new` functionality before starting release creation
 * Verify project tooling is properly set up
 * Understand available nav-path options and capabilities
 
