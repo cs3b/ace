@@ -93,9 +93,8 @@ module CodingAgentTools
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
                 task, 
                 verbose: options[:verbose],
-                position: index + 1,
                 show_time: true,
-                show_path: !options[:verbose]  # Show path only in compact mode
+                show_path: !options[:verbose]  # Show path in compact mode
               )
             end
             display_footer(result, options) if options[:show_cycles] || result.has_cycles?
