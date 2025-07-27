@@ -1,9 +1,10 @@
 ---
 id: v.0.3.0+task.124
-status: pending
+status: done
 priority: medium
 estimate: 1h
-dependencies: []
+dependencies: ["v.0.3.0+task.118"]
+sort: 126
 ---
 
 # Test ID generation fix
@@ -24,68 +25,70 @@ _Result excerpt:_
 
 ## Objective
 
-Why are we doing this?
+Verify that the task ID generation fix implemented in Task 118 is working correctly, ensuring all new task IDs use 3-digit zero-padding format.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Test task ID generation with various scenarios
+- Verify the 3-digit padding is consistent
+- Ensure backward compatibility with existing tasks
+- Validate file naming conventions match ID format
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- N/A (test task only)
 
 #### Modify
 
-- path/to/other.ext
+- N/A (test task only)
 
 #### Delete
 
-- path/to/obsolete.ext
+- N/A
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Test basic ID generation
+2. Test multiple ID generation
+3. Test edge cases
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+N/A - This is a test task
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [x] Test single ID generation produces 3-digit format
+  > TEST: Single ID Generation
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: Generated ID uses 3-digit padding (e.g., task.127)
+  > Command: task-manager generate-id | grep -E "task\.[0-9]{3}$"
+- [x] Test multiple ID generation maintains consistent format
+  > TEST: Multiple ID Generation
+  > Type: Action Validation
+  > Assert: All generated IDs use 3-digit padding
+  > Command: task-manager generate-id --limit 3 | grep -c "task\.[0-9]{3}$" | grep "3"
+- [x] Test nav-path task creation uses correct format
+  > TEST: Nav-path Task Creation
+  > Type: Action Validation
+  > Assert: File path includes 3-digit padded task ID
+  > Command: nav-path task-new --title "Test Task" | grep -E "task\.[0-9]{3}-"
+- [x] Verify existing tasks with 2-digit IDs still work
+  > TEST: Backward Compatibility
+  > Type: Action Validation
+  > Assert: Existing tasks are still recognized
+  > Command: task-manager all | grep -E "task\.01\s|task\.03\s|task\.07\s" | wc -l | grep -E "[3-9]"
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
-
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [x] AC 1: New task IDs are generated with 3-digit zero-padding
+- [x] AC 2: Multiple ID generation maintains consistent formatting
+- [x] AC 3: File naming matches the 3-digit ID format
+- [x] AC 4: Existing 2-digit task IDs continue to work
 
 ## Out of Scope
 

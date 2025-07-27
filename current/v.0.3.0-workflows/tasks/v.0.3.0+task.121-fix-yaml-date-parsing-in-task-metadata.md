@@ -1,9 +1,10 @@
 ---
 id: v.0.3.0+task.121
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: []
+sort: 125
 ---
 
 # Fix YAML date parsing in task metadata
@@ -69,31 +70,31 @@ Resolve the "Tried to load unspecified class: Date" error that occurs when task-
 
 ### Planning Steps
 
-- [ ] Reproduce the "Tried to load unspecified class: Date" error with specific task file
+- [x] Reproduce the "Tried to load unspecified class: Date" error with specific task file
   > TEST: Error Reproduction
   > Type: Pre-condition Check
   > Assert: Error occurs when parsing task file with date field
   > Command: task-manager next --limit 5 2>&1 | grep "Tried to load unspecified class"
-- [ ] Analyze YAML loading configuration and identify missing Date class support
-- [ ] Review Ruby YAML security settings that might be blocking Date class loading
+- [x] Analyze YAML loading configuration and identify missing Date class support
+- [x] Review Ruby YAML security settings that might be blocking Date class loading
 
 ### Execution Steps
 
-- [ ] Update YAML loader configuration to safely permit Date class loading
-- [ ] Add explicit require for Date class if needed in YAML processing modules
+- [x] Update YAML loader configuration to safely permit Date class loading
+- [x] Add explicit require for Date class if needed in YAML processing modules
   > TEST: Verify Date Parsing Fix
   > Type: Action Validation
   > Assert: Task files with date fields parse successfully without errors
   > Command: task-manager next --limit 5 | grep -E "task\.[0-9]+"
-- [ ] Add error handling and validation for malformed date values in task metadata
-- [ ] Test with the specific failing task file (v.0.3.0+task.100) that contains `updated: 2025-07-25`
+- [x] Add error handling and validation for malformed date values in task metadata
+- [x] Test with the specific failing task file (v.0.3.0+task.100) that contains `updated: 2025-07-25`
 
 ## Acceptance Criteria
 
-- [ ] AC 1: task-manager commands execute without "Tried to load unspecified class: Date" errors
-- [ ] AC 2: Task files with date fields (updated, created, etc.) parse correctly
-- [ ] AC 3: Date values in YAML frontmatter are accessible as proper Date objects
-- [ ] AC 4: Existing task files continue to work without modification
+- [x] AC 1: task-manager commands execute without "Tried to load unspecified class: Date" errors
+- [x] AC 2: Task files with date fields (updated, created, etc.) parse correctly
+- [x] AC 3: Date values in YAML frontmatter are accessible as proper Date objects
+- [x] AC 4: Existing task files continue to work without modification
 
 ## Out of Scope
 

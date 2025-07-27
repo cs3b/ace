@@ -1,9 +1,10 @@
 ---
 id: v.0.3.0+task.120
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
+sort: 124
 ---
 
 # Add task reschedule command with sorting options
@@ -73,35 +74,35 @@ Implement a new `task-manager reschedule` command that allows reordering tasks w
 
 ### Planning Steps
 
-- [ ] Analyze current task management CLI structure and command patterns
+- [x] Analyze current task management CLI structure and command patterns
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Current CLI structure and task management methods are identified
   > Command: grep -r "class.*CLI\|def.*command" dev-tools/lib/coding_agent_tools/cli/
-- [ ] Study existing task sorting and prioritization logic
-- [ ] Design reschedule command interface and flag behavior specifications
-- [ ] Plan sort attribute schema and metadata updates
+- [x] Study existing task sorting and prioritization logic
+- [x] Design reschedule command interface and flag behavior specifications
+- [x] Plan sort attribute schema and metadata updates
 
 ### Execution Steps
 
-- [ ] Implement task-manager reschedule command with basic functionality
-- [ ] Add --add-next flag that moves specified tasks before other pending tasks
+- [x] Implement task-manager reschedule command with basic functionality
+- [x] Add --add-next flag that moves specified tasks before other pending tasks
   > TEST: Verify --add-next functionality
   > Type: Action Validation
   > Assert: Tasks moved with --add-next appear before existing pending tasks in sort order
   > Command: task-manager reschedule task.001 task.002 --add-next && task-manager next --limit 5 | head -3
-- [ ] Add --add-at-the-end flag that finds highest pending number and sequences from there
-- [ ] Implement sort attribute updates in task metadata during reschedule operations
-- [ ] Update default task sorting to prioritize sort attribute over status-based ordering
-- [ ] Add validation and error handling for invalid task IDs or paths
+- [x] Add --add-at-the-end flag that finds highest pending number and sequences from there
+- [x] Implement sort attribute updates in task metadata during reschedule operations
+- [x] Update default task sorting to prioritize sort attribute over status-based ordering
+- [x] Add validation and error handling for invalid task IDs or paths
 
 ## Acceptance Criteria
 
-- [ ] AC 1: task-manager reschedule command accepts list of task IDs or file paths
-- [ ] AC 2: --add-next flag correctly repositions tasks before existing pending tasks
-- [ ] AC 3: --add-at-the-end flag (default) sequences tasks after highest pending number  
-- [ ] AC 4: Task sorting respects sort attribute priority while maintaining status precedence (in-progress before pending)
-- [ ] AC 5: Reschedule operations update task metadata with appropriate sort values
+- [x] AC 1: task-manager reschedule command accepts list of task IDs or file paths
+- [x] AC 2: --add-next flag correctly repositions tasks before existing pending tasks
+- [x] AC 3: --add-at-the-end flag (default) sequences tasks after highest pending number  
+- [x] AC 4: Task sorting respects sort attribute priority while maintaining status precedence (in-progress before pending)
+- [x] AC 5: Reschedule operations update task metadata with appropriate sort values
 
 ## Out of Scope
 
