@@ -292,7 +292,7 @@ module CodingAgentTools
         args = command_parts[1..]
         
         # Whitelist only safe commands (extend as needed)
-        safe_commands = %w[date echo pwd whoami hostname uname git]
+        safe_commands = %w[date echo pwd whoami hostname uname git task-manager]
         unless safe_commands.include?(executable)
           return "unknown"
         end
