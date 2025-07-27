@@ -3,6 +3,7 @@ require 'tempfile'
 require 'fileutils'
 
 RSpec.describe "User-Facing Command Integration", type: :integration do
+  include ProcessHelpers
   let(:project_root) { File.expand_path('../../', __dir__) }
   let(:exe_dir) { File.join(project_root, 'exe') }
   
@@ -79,9 +80,11 @@ RSpec.describe "User-Facing Command Integration", type: :integration do
       sample_commands = %w[git-commit create-path]
       
       sample_commands.each do |cmd|
-        result = system("cd #{project_root} && timeout 2s exe/#{cmd} >/dev/null 2>&1")
+        # Use ProcessHelpers for more efficient execution
+        command_path = File.join(exe_dir, cmd)
+        stdout, stderr, status = execute_command([command_path], timeout: 2)
         # Commands should exit with error codes when missing required args (some may exit 0)
-        expect($?.exitstatus).to be_a(Integer)
+        expect(status.exitstatus).to be_a(Integer)
       end
     end
   end
