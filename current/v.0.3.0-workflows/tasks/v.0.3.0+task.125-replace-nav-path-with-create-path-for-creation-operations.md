@@ -24,32 +24,40 @@ _Result excerpt:_
 
 ## Objective
 
-Why are we doing this?
+Replace all references to `nav-path task-new` with `create-path task-new` across documentation and workflow instructions. The `nav-path task-new` command only returns file paths without creating files, causing confusion for users who expect file creation. The `create-path task-new` command was implemented in task v.0.3.0+task.112 to provide the expected file creation functionality with templates and metadata support.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Find all documentation references to `nav-path task-new` and related creation operations within current multi-repo (docs/, dev-handbook/, dev-tools/)
+- Replace with appropriate `create-path` equivalents using direct replacement (no deprecation warnings needed)
+- Update workflow instructions to use `create-path task-new` instead of `nav-path task-new`
+- Update tools documentation to reflect the change
+- Ensure examples and cheat sheets are updated
+- Verify no functionality is lost in the transition
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- None - this is a documentation update task
 
 #### Modify
 
-- path/to/other.ext
+- dev-handbook/workflow-instructions/create-task.wf.md
+- docs/tools.md  
+- dev-tools/docs/tools.md
+- Any other files containing `nav-path task-new` references within docs/, dev-handbook/, dev-tools/
 
 #### Delete
 
-- path/to/obsolete.ext
+- None - preserving all existing functionality
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Audit all references to `nav-path task-new` and creation operations within multi-repo scope
+2. Map `nav-path` creation commands to `create-path` equivalents
+3. Update documentation systematically with direct replacement
+4. Verify functionality equivalence
 
 ## Implementation Plan
 
@@ -57,42 +65,50 @@ Why are we doing this?
 
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
+- [ ] Comprehensive search for all `nav-path task-new` references within multi-repo scope (docs/, dev-handbook/, dev-tools/)
+  > TEST: Reference Search Complete
   > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Assert: All instances of nav-path creation operations are identified within scope
+  > Command: grep -r "nav-path.*task-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+- [ ] Identify command equivalencies between nav-path and create-path
+- [ ] Verify create-path functionality covers all nav-path creation use cases
+- [ ] Plan systematic replacement strategy with direct replacement (no deprecation warnings)
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [ ] Update dev-handbook/workflow-instructions/create-task.wf.md to use create-path task-new
+  > TEST: Workflow Updated
+  > Type: Content Validation
+  > Assert: All nav-path task-new references replaced with create-path task-new
+  > Command: grep -c "create-path task-new" dev-handbook/workflow-instructions/create-task.wf.md
+- [ ] Update docs/tools.md main cheat sheet and examples
+- [ ] Update dev-tools/docs/tools.md and related tool documentation
+- [ ] Update any workflow instructions that reference nav-path for creation operations
+- [ ] Search and replace nav-path creation examples in all markdown files within scope
+  > TEST: No Remaining References
+  > Type: Completeness Check  
+  > Assert: No nav-path task-new references remain in multi-repo documentation
+  > Command: grep -r "nav-path.*task-new" docs/ dev-handbook/ dev-tools/ --include="*.md" | wc -l
+- [ ] Verify create-path examples work as expected
+- [ ] Update any migration guides or help documentation within scope
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
-
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [ ] AC 1: All documentation references to `nav-path task-new` within multi-repo scope (docs/, dev-handbook/, dev-tools/) are replaced with `create-path task-new`
+- [ ] AC 2: All workflow instructions use `create-path` for file creation operations
+- [ ] AC 3: Tools documentation accurately reflects create-path capabilities and usage
+- [ ] AC 4: Examples in documentation work correctly with create-path command
+- [ ] AC 5: No functionality is lost in the transition from nav-path to create-path
+- [ ] AC 6: Search results show zero remaining `nav-path task-new` references in multi-repo docs
+- [ ] AC 7: No external documentation outside multi-repo is affected (out of scope)
 
 ## Out of Scope
 
 - ❌ Modifying the actual nav-path or create-path command implementations
-- ❌ Removing nav-path command (still needed for path resolution without creation)
+- ❌ Removing nav-path command (still needed as underlying implementation for create-path)
+- ❌ Adding deprecation warnings (nav-path remains as lower-level implementation)
+- ❌ Updating external documentation outside current multi-repo (docs/, dev-handbook/, dev-tools/)
 - ❌ Changing any Ruby code or command interfaces
-- ❌ Updating content outside of documentation and workflow instructions
 - ❌ Modifying historical task files or completed work
 
 ## References
