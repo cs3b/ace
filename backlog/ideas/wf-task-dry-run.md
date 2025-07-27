@@ -12,3 +12,6 @@ task-create should capture very well idea / intention in context of project cont
 
 
 task-review should focus on how to do it with the art of software egnineering (also take )
+
+
+1. the have end goal in mind -> it can be defined in ux folder in the / subfolder for the feature / use cases per file
