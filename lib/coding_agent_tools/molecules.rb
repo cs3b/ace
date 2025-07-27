@@ -4,6 +4,12 @@ require_relative "molecules/executable_wrapper"
 
 module CodingAgentTools
   module Molecules
+    # Autoload coverage analysis molecules
+    autoload :CoverageDataProcessor, "coding_agent_tools/molecules/coverage_data_processor"
+    autoload :MethodCoverageMapper, "coding_agent_tools/molecules/method_coverage_mapper"
+    autoload :FileAnalyzer, "coding_agent_tools/molecules/file_analyzer"
+    autoload :ReportFormatter, "coding_agent_tools/molecules/report_formatter"
+
     # Autoload code review molecules
     module Code
       autoload :SessionDirectoryBuilder, "coding_agent_tools/molecules/code/session_directory_builder"

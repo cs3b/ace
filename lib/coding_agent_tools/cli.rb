@@ -226,6 +226,18 @@ module CodingAgentTools
         @create_path_commands_registered = true
       end
 
+      def self.register_coverage_commands
+        return if @coverage_commands_registered
+
+        require_relative "cli/commands/coverage/analyze"
+
+        register "coverage", aliases: [] do |prefix|
+          prefix.register "analyze", Commands::Coverage::Analyze
+        end
+
+        @coverage_commands_registered = true
+      end
+
       def self.register_all_commands
         return if @all_commands_registered
 
@@ -250,6 +262,7 @@ module CodingAgentTools
         register_reflection_commands
         register_git_commands
         register_create_path_commands
+        register_coverage_commands
         register_all_commands
         super
       end
