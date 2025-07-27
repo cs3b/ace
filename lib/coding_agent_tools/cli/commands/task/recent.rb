@@ -40,9 +40,9 @@ module CodingAgentTools
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
 
-            # If --limit is specified without --last, ignore time filtering
+            # If --limit is specified and --last is default, ignore time filtering
             # User wants most recent X tasks regardless of age
-            if options[:limit] && !options[:last]
+            if options[:limit] && options[:last] == "1.day"
               since_seconds = nil  # No time filter
             else
               since_seconds = parse_time_period(options[:last])
