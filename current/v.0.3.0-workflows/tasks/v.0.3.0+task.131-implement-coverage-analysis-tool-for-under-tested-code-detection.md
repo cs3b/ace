@@ -1,8 +1,8 @@
 ---
 id: v.0.3.0+task.131
-status: pending
+status: in-progress
 priority: medium
-estimate: 12h
+estimate: 16h
 dependencies: []
 ---
 
@@ -95,65 +95,78 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
 
 ### Planning Steps
 
-- [ ] Analyze SimpleCov .resultset.json format structure in detail
+- [x] Analyze SimpleCov .resultset.json format structure in detail
   > TEST: Understanding Check  
   > Type: Pre-condition Check
   > Assert: JSON structure and line coverage mapping format understood
-  > Command: bin/test --check-coverage-format-analysis
-- [ ] Research Ruby AST parsing options for method extraction (Parser gem, Ripper)
-- [ ] Design data structures for coverage analysis results
+  > **COMPLETED**: Analysis shows nested structure with test framework keys, coverage arrays with null/integer values, empty branches objects, and unix timestamps
+- [x] Research Ruby AST parsing options for method extraction (Parser gem, Ripper)
+  > **COMPLETED**: Parser gem (v3.3.9.0) is available in project and suitable for AST parsing
+- [x] Design data structures for coverage analysis results
+  > **COMPLETED**: See `docs/131-coverage-analysis-data-structures.md` for complete design
 - [ ] Plan CLI interface and output format specifications
+- [ ] Create realistic test fixtures with sample coverage data instead of aspirational commands
+- [ ] Verify Parser gem dependency is properly listed in gemspec
 
 ### Execution Steps
 
-- [ ] **Phase 1: Implement Atoms**
-  - [ ] Create `CoverageFileReader` with JSON parsing and validation
-  - [ ] Create `RubyMethodParser` using Parser gem to extract method definitions
-  - [ ] Create `CoverageCalculator` for percentage calculations
-  - [ ] Create `ThresholdValidator` for input validation
+- [ ] **Phase 1: Setup and Models**
+  - [ ] Create Model classes: `CoverageResult`, `MethodCoverage`, `CoverageAnalysisResult` 
+  - [ ] Create `spec/fixtures/coverage_samples/` directory with realistic test data
+  - [ ] Verify Parser gem dependency in Gemfile (already confirmed available)
+  > TEST: Basic Infrastructure
+  > Type: Unit Tests  
+  > Assert: Model classes instantiate correctly and have expected interfaces
+  > Command: cd dev-tools && bundle exec rspec spec/models/coverage*_spec.rb
+
+- [ ] **Phase 2: Implement Core Atoms**
+  - [ ] Create `CoverageFileReader` with JSON parsing, validation, and error handling for malformed files
+  - [ ] Create `RubyMethodParser` using Parser gem to extract method definitions with line ranges
+  - [ ] Create `CoverageCalculator` for percentage calculations handling null values correctly
+  - [ ] Create `ThresholdValidator` for input validation (0-100 range)
   > TEST: Atoms Functionality
   > Type: Unit Tests
-  > Assert: All atoms pass individual unit tests
-  > Command: bin/test spec/atoms/coverage_*_spec.rb
+  > Assert: Each atom handles valid inputs correctly and fails gracefully on invalid inputs
+  > Command: cd dev-tools && bundle exec rspec spec/atoms/coverage_*_spec.rb
 
-- [ ] **Phase 2: Implement Molecules**
-  - [ ] Create `CoverageDataProcessor` to transform raw SimpleCov data
-  - [ ] Create `MethodCoverageMapper` to map coverage lines to methods
-  - [ ] Create `FileAnalyzer` for individual file coverage analysis
-  - [ ] Create `ReportFormatter` supporting text, JSON, CSV formats
+- [ ] **Phase 3: Implement Data Processing Molecules**
+  - [ ] Create `CoverageDataProcessor` to transform SimpleCov JSON into internal format, handling multiple test frameworks
+  - [ ] Create `MethodCoverageMapper` to map coverage line arrays to method line ranges
+  - [ ] Create `FileAnalyzer` for individual file coverage analysis with file filtering options
+  - [ ] Create `ReportFormatter` supporting text, JSON, CSV formats with proper escaping
   > TEST: Molecules Integration
   > Type: Integration Tests
-  > Assert: Molecules correctly combine atoms and produce expected outputs
-  > Command: bin/test spec/molecules/coverage_*_spec.rb
+  > Assert: Molecules correctly process real SimpleCov data and produce expected internal formats
+  > Command: cd dev-tools && bundle exec rspec spec/molecules/coverage_*_spec.rb
 
-- [ ] **Phase 3: Implement Organisms**  
-  - [ ] Create `CoverageAnalyzer` for main analysis orchestration
-  - [ ] Create `UndercoveredItemsExtractor` for threshold-based filtering
-  - [ ] Create `CoverageReportGenerator` for comprehensive reporting
+- [ ] **Phase 4: Implement Business Logic Organisms**  
+  - [ ] Create `CoverageAnalyzer` for main analysis orchestration with performance optimization
+  - [ ] Create `UndercoveredItemsExtractor` for threshold-based filtering with configurable criteria
+  - [ ] Create `CoverageReportGenerator` for comprehensive reporting with summary statistics
   > TEST: Business Logic Validation
   > Type: Integration Tests  
-  > Assert: Complex analysis workflows produce accurate results
-  > Command: bin/test spec/organisms/coverage_*_spec.rb
+  > Assert: Complex analysis workflows produce accurate results matching expected coverage calculations
+  > Command: cd dev-tools && bundle exec rspec spec/organisms/coverage_*_spec.rb
 
-- [ ] **Phase 4: Implement Ecosystem & CLI**
-  - [ ] Create `CoverageAnalysisWorkflow` ecosystem
-  - [ ] Create `CoverageAnalyzeCommand` CLI interface
-  - [ ] Create `coverage-analyze` executable
-  - [ ] Add command registration and help documentation
-  > TEST: End-to-End Functionality
-  > Type: CLI Integration Tests
-  > Assert: Complete CLI workflow works with real coverage data
-  > Command: bin/test spec/cli/coverage_analyze_command_spec.rb
+- [ ] **Phase 5: Implement Ecosystem & CLI Interface**
+  - [ ] Create `CoverageAnalysisWorkflow` ecosystem coordinating all components
+  - [ ] Create `CoverageAnalyzeCommand` CLI interface with comprehensive options and help
+  - [ ] Create `coverage-analyze` executable following existing patterns
+  - [ ] Add command registration to CLI module and update requires
+  > TEST: End-to-End CLI Functionality
+  > Type: CLI Integration Tests with Aruba
+  > Assert: Complete CLI workflow processes real coverage data and outputs expected formats
+  > Command: cd dev-tools && bundle exec rspec spec/cli/coverage_analyze_command_spec.rb
 
-- [ ] **Phase 5: Testing & Validation**
-  - [ ] Create comprehensive test fixtures with sample coverage data
-  - [ ] Add edge case testing (empty files, 100% coverage, 0% coverage)
-  - [ ] Validate against real project coverage data
-  - [ ] Performance testing with large coverage reports
+- [ ] **Phase 6: Comprehensive Testing & Performance Validation**
+  - [ ] Test with edge cases: empty files, 100%/0% coverage, malformed JSON, missing files
+  - [ ] Validate performance with large coverage files (>1MB) and many files (>200)
+  - [ ] Test integration with actual dev-tools coverage data
+  - [ ] Verify all output formats with complex scenarios
   > TEST: Production Readiness
   > Type: Integration & Performance Tests
-  > Assert: Tool handles real-world coverage data efficiently and accurately
-  > Command: bin/test && coverage-analyze --coverage-path dev-tools/coverage
+  > Assert: Tool handles real-world coverage data efficiently (<10s for 200+ files) and accurately
+  > Command: cd dev-tools && bundle exec rspec && time exe/coverage-analyze --coverage-path coverage
 
 ## Acceptance Criteria
 
@@ -169,6 +182,32 @@ Create a CLI tool `coverage-analyze` that parses SimpleCov coverage reports (.re
 
 ## Technical Implementation Details
 
+### SimpleCov Format Analysis (Completed)
+
+Based on examination of `dev-tools/coverage/.resultset.json`:
+
+**Structure:**
+```json
+{
+  "TestFrameworkName": {
+    "coverage": {
+      "/absolute/path/file.rb": {
+        "lines": [null, 1, 0, 5, null, ...],
+        "branches": {}
+      }
+    },
+    "timestamp": 1753633829
+  }
+}
+```
+
+**Key Insights:**
+- Multiple test frameworks can be present ("RSpec", "Unknown Test Framework")
+- Line values: `null` (not executable), `0` (uncovered), `N` (executed N times)
+- Branch coverage currently empty but structure exists for future support
+- 418+ files tracked with execution counts ranging from 0 to 800+
+- Unix timestamps track when coverage was collected
+
 ### CLI Interface
 ```bash
 coverage-analyze [OPTIONS]
@@ -180,8 +219,24 @@ Options:
   --files-only           Show only file-level analysis  
   --output FILE          Save output to file
   --coverage-path PATH   Path to coverage directory (default: ./coverage)
+  --include PATTERN      Include files matching pattern (default: lib/**)
+  --exclude PATTERN      Exclude files matching pattern (default: spec/**)
   --help                 Show help message
 ```
+
+### Enhanced Error Handling
+
+**File Processing Errors:**
+- Malformed JSON: Graceful failure with specific error message
+- Missing files: Skip with warning, continue processing other files
+- Unparseable Ruby files: Log warning, exclude from method analysis
+- Permission denied: Clear error message with suggested fixes
+
+**Performance Optimizations:**
+- Stream large JSON files instead of loading entirely into memory
+- Parallel processing for multiple files using Ruby thread pools
+- Intelligent caching of parsed AST for method extraction
+- Progress indicators for large coverage analysis runs
 
 ### Data Structures
 
