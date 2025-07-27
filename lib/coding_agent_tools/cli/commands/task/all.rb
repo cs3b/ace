@@ -5,6 +5,7 @@ require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
 require_relative "../../../molecules/taskflow_management/task_sort_engine"
 require_relative "../../../molecules/taskflow_management/task_filter_engine"
+require_relative "../../../molecules/taskflow_management/unified_task_formatter"
 
 module CodingAgentTools
   module Cli
@@ -87,7 +88,16 @@ module CodingAgentTools
             end
 
             display_header(result, options)
-            display_tasks(result.sorted_tasks, options[:verbose])
+            result.sorted_tasks.each_with_index do |task, index|
+              puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
+              Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
+                task, 
+                verbose: options[:verbose],
+                position: index + 1,
+                show_time: true,
+                show_path: !options[:verbose]  # Show path only in compact mode
+              )
+            end
             display_footer(result, options) if options[:show_cycles] || result.has_cycles?
           end
 
@@ -112,57 +122,6 @@ module CodingAgentTools
             end
           end
 
-          def display_tasks(tasks, verbose = false)
-            tasks.each_with_index do |task, index|
-              puts "" if index > 0 && verbose  # Add blank line between tasks only in verbose mode
-              display_task_info(task, index + 1, verbose)
-            end
-          end
-
-          def display_task_info(task, position, verbose = false)
-            status_color = status_color_for(task.status)
-            status_display = colorize(task.status.upcase, status_color)
-
-            if verbose
-              # Original verbose format
-              puts "#{position.to_s.rjust(3)}. #{task.id}"
-              puts "     Title: #{task.title || extract_title_from_content(task)}"
-              puts "     Status: #{status_display}"
-              puts "     Path: #{task.path}"
-
-              if task.dependencies && !task.dependencies.empty?
-                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-                puts "     Dependencies: #{deps}"
-              end
-
-              if task.respond_to?(:estimate) && task.estimate
-                puts "     Estimate: #{task.estimate}"
-              end
-
-              if task.respond_to?(:priority) && task.priority
-                priority_color = priority_color_for(task.priority)
-                priority_display = colorize(task.priority.upcase, priority_color)
-                puts "     Priority: #{priority_display}"
-              end
-            else
-              # New compact format
-              title = task.title || extract_title_from_content(task)
-              
-              # Main line: position. ID * STATUS * Title
-              puts "#{position.to_s.rjust(3)}. #{task.id} * #{status_display} * #{title}"
-              
-              # Path on next line, indented
-              project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-              relative_path = task.path.sub(/^#{Regexp.escape(project_root)}\//, '')
-              puts "     #{relative_path}"
-              
-              # Dependencies on following line if present
-              if task.dependencies && !task.dependencies.empty?
-                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-                puts "     Dependencies: #{deps}"
-              end
-            end
-          end
 
           def display_footer(result, options)
             if result.has_cycles?
@@ -174,19 +133,6 @@ module CodingAgentTools
             end
           end
 
-          def extract_title_from_content(task)
-            # Try to extract title from content if not available in metadata
-            return "Unknown" unless task.respond_to?(:content) && task.content
-
-            # Look for first heading
-            lines = task.content.split("\n")
-            heading_line = lines.find { |line| line.start_with?("# ") }
-            if heading_line
-              heading_line.sub(/^# /, "").strip
-            else
-              "Unknown"
-            end
-          end
 
           def status_color_for(status)
             case status&.downcase

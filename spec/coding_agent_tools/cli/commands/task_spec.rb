@@ -85,13 +85,19 @@ RSpec.describe "Task CLI Commands" do
           allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
         end
 
-        it "displays task information for single task" do
+        it "displays task information for single task in compact format" do
           command.call(limit: 1)
 
           output_content = output.string
-          expect(output_content).to include("ID:    v.0.3.0+task.01")
+          expect(output_content).to include("v.0.3.0+task.01 * PENDING * Test Task")
+        end
+
+        it "displays task information for single task in verbose format" do
+          command.call(limit: 1, verbose: true)
+
+          output_content = output.string
           expect(output_content).to include("Title: Test Task")
-          expect(output_content).to include("Path:  /path/to/task.md")
+          expect(output_content).to include("Path: /path/to/task.md")
           expect(output_content).to include("Status: pending")
         end
       end
@@ -231,7 +237,7 @@ RSpec.describe "Task CLI Commands" do
           command.send(:generate_task_ids, "v.0.3.0", 5, 1)
 
           output_content = output.string
-          expect(output_content).to include("v.0.3.0+task.05")
+          expect(output_content).to include("v.0.3.0+task.005")
         end
 
         it "generates multiple IDs correctly" do
@@ -239,9 +245,9 @@ RSpec.describe "Task CLI Commands" do
 
           output_content = output.string
           expect(output_content).to include("Generated 3 task IDs:")
-          expect(output_content).to include("v.0.3.0+task.05")
-          expect(output_content).to include("v.0.3.0+task.06")
-          expect(output_content).to include("v.0.3.0+task.07")
+          expect(output_content).to include("v.0.3.0+task.005")
+          expect(output_content).to include("v.0.3.0+task.006")
+          expect(output_content).to include("v.0.3.0+task.007")
         end
       end
 
