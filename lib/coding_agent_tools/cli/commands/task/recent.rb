@@ -103,7 +103,8 @@ module CodingAgentTools
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
                 task, 
                 verbose: options[:verbose],
-                show_time: true
+                show_time: true,
+                show_path: !options[:verbose]  # Show path in compact mode
               )
             end
           end

@@ -39,15 +39,8 @@ module CodingAgentTools
             task.define_singleton_method(:mtime) { mtime }
           end
           
-          # Build main line components
+          # Build main line components - Core format: ID * STATUS * [TIME_AGO *] Title
           line_parts = []
-          
-          # Add position if requested
-          if options[:position]
-            line_parts << "#{options[:position].to_s.rjust(3)}."
-          end
-          
-          # Core format: ID * STATUS * [TIME_AGO *] Title
           line_parts << task.id
           line_parts << status
           
@@ -61,11 +54,11 @@ module CodingAgentTools
           # Output main line
           puts line_parts.join(" * ")
           
-          # Add path on next line if verbose positioning is used (for 'all' command compatibility)
-          if options[:position] && options[:show_path]
+          # Add path on next line if requested
+          if options[:show_path]
             project_root = detect_project_root
             relative_path = task.path.sub(/^#{Regexp.escape(project_root)}\//, '')
-            puts "     #{relative_path}"
+            puts "  #{relative_path}"
           end
         end
 
@@ -76,10 +69,11 @@ module CodingAgentTools
             task.define_singleton_method(:mtime) { mtime }
           end
 
-          if options[:position]
-            puts "#{options[:position].to_s.rjust(3)}. #{task.id}"
-          elsif options[:task_number] && options[:total_tasks]
+          # Show task header if needed
+          if options[:task_number] && options[:total_tasks]
             puts "Task #{options[:task_number]}/#{options[:total_tasks]}:"
+          elsif options[:show_id]
+            puts task.id
           end
 
           title = task.title || extract_title_from_content(task)
