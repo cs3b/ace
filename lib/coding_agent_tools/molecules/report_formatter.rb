@@ -30,7 +30,7 @@ module CodingAgentTools
         
         # Summary section
         lines << "Overall Coverage: #{format_coverage_percentage(analysis_result.overall_coverage_percentage)}"
-        lines << "Threshold: #{format_coverage_percentage(analysis_result.threshold)}"
+        lines.concat(format_threshold_information(analysis_result))
         lines << "Files Under Threshold: #{analysis_result.under_covered_files.length} of #{analysis_result.total_files}"
         lines << ""
         lines << "Total Lines: #{analysis_result.send(:total_executable_lines)}"
@@ -132,6 +132,11 @@ module CodingAgentTools
             generated_at: Time.now.iso8601,
             analysis_timestamp: analysis_result.analysis_timestamp.iso8601
           }
+          
+          # Add adaptive threshold information if available
+          if analysis_result.respond_to?(:adaptive_threshold_used?) && analysis_result.adaptive_threshold_used?
+            report_data[:adaptive_threshold] = analysis_result.adaptive_threshold_result
+          end
           
           JSON.pretty_generate(report_data)
         else
@@ -255,6 +260,31 @@ module CodingAgentTools
 
       def format_coverage_percentage(percentage)
         "#{percentage.round(1)}%"
+      end
+
+      def format_threshold_information(analysis_result)
+        lines = []
+        
+        if analysis_result.respond_to?(:adaptive_threshold_used?) && analysis_result.adaptive_threshold_used?
+          # Adaptive threshold was used
+          lines << "Threshold: #{format_coverage_percentage(analysis_result.threshold)} (adaptive)"
+          
+          if analysis_result.respond_to?(:adaptive_threshold_result)
+            adaptive_result = analysis_result.adaptive_threshold_result
+            lines << "Adaptive Selection: #{adaptive_result[:reasoning]}"
+            
+            # Add brief summary of threshold testing if available
+            if adaptive_result[:threshold_testing_results] && adaptive_result[:threshold_testing_results].length > 1
+              actionable_count = adaptive_result[:threshold_testing_results].count { |r| r[:actionable] }
+              lines << "Thresholds Tested: #{adaptive_result[:threshold_testing_results].length} (#{actionable_count} actionable)"
+            end
+          end
+        else
+          # Manual threshold was used
+          lines << "Threshold: #{format_coverage_percentage(analysis_result.threshold)}"
+        end
+        
+        lines
       end
 
       def format_file_size(line_count)

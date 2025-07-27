@@ -23,13 +23,14 @@ module CodingAgentTools
       # @param input_file [String] Path to SimpleCov .resultset.json file
       # @param options [Hash] Workflow options
       # @option options [Float] :threshold Coverage threshold percentage (default: 85.0)
+      # @option options [Boolean] :adaptive_threshold Use adaptive threshold detection (overrides :threshold when true)
       # @option options [String] :output_dir Output directory for reports (default: "./coverage_analysis")
       # @option options [Array<Symbol>] :formats Output formats (default: [:text, :json])
       # @option options [Boolean] :create_path_integration Enable create-path workflow integration (default: false)
       # @option options [Boolean] :detailed_analysis Include method-level analysis (default: false)
       # @option options [Array<String>] :include_patterns File patterns to include (default: ["**/lib/**"])
       # @option options [Array<String>] :exclude_patterns File patterns to exclude (default: ["**/spec/**", "**/test/**"])
-      # @return [Hash] Workflow execution results
+      # @return [Hash] Workflow execution results with adaptive threshold information when enabled
       def execute_full_analysis(input_file, options = {})
         workflow_options = validate_and_prepare_options(options)
         execution_start = Time.now
@@ -51,11 +52,12 @@ module CodingAgentTools
             include_method_details: workflow_options[:detailed_analysis]
           )
 
-          # Step 5: Generate reports in requested formats
+          # Step 5: Generate reports in requested formats using the analysis result
           generated_reports = @report_generator.generate_multi_format_reports(
             input_file,
             workflow_options[:output_dir],
-            workflow_options
+            workflow_options,
+            analysis_result: analysis_result
           )
 
           # Step 6: Create-path integration if requested
@@ -202,6 +204,7 @@ module CodingAgentTools
       def validate_and_prepare_options(options)
         {
           threshold: @threshold_validator.validate_threshold(options[:threshold] || 85.0),
+          adaptive_threshold: options[:adaptive_threshold] || false,
           output_dir: options[:output_dir] || "./coverage_analysis",
           formats: options[:formats] || [:text, :json],
           create_path_integration: options[:create_path_integration] || false,
