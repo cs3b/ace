@@ -29,7 +29,7 @@ module CodingAgentTools
       # @param options [Hash] Processing options
       # @return [Hash] Processed coverage data
       def process_coverage_data(raw_data, options = {})
-        include_patterns = normalize_patterns(options[:include_patterns] || ["**/lib/**"])
+        include_patterns = normalize_patterns(options[:include_patterns] || ["**/lib/**/*.rb"])
         exclude_patterns = normalize_patterns(options[:exclude_patterns] || ["**/spec/**", "**/test/**"])
 
         # Extract all file paths across frameworks
@@ -42,10 +42,16 @@ module CodingAgentTools
           coverage_arrays = extract_coverage_arrays_for_file(raw_data, file_path)
           
           unless coverage_arrays.empty?
+            combined_lines = combine_lines_data(coverage_arrays)
             combined_coverage = @calculator.calculate_combined_coverage(coverage_arrays)
+            uncovered_details = @calculator.extract_uncovered_lines(combined_lines)
+            line_details = @calculator.extract_detailed_line_info(combined_lines)
+            
             file_coverage_data[file_path] = {
               coverage_data: combined_coverage,
-              lines_data: combine_lines_data(coverage_arrays),
+              uncovered_details: uncovered_details,
+              line_details: line_details,
+              lines_data: combined_lines,
               frameworks: extract_frameworks_for_file(raw_data, file_path)
             }
           end

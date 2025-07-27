@@ -206,7 +206,7 @@ module CodingAgentTools
           formats: options[:formats] || [:text, :json],
           create_path_integration: options[:create_path_integration] || false,
           detailed_analysis: options[:detailed_analysis] || false,
-          include_patterns: options[:include_patterns] || ["**/lib/**"],
+          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
           exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           max_files: options[:max_files] || 20,
           base_name: options[:base_name] || "coverage_analysis",

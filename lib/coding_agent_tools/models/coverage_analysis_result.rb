@@ -46,11 +46,11 @@ module CodingAgentTools
         }
       end
 
-      def to_h
+      def to_h(format: :compact)
         {
           summary: summary_stats,
-          under_covered_files: under_covered_files.map(&:to_h),
-          under_covered_methods: under_covered_methods.map(&:to_h)
+          under_covered_files: under_covered_files.map { |file| file.to_h(format: format) },
+          under_covered_methods: under_covered_methods.map { |method| method.to_h(format: format) }
         }
       end
 

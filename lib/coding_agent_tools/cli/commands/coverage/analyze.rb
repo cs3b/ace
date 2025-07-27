@@ -16,7 +16,7 @@ module CodingAgentTools
           option :threshold, type: :float, default: 85.0, desc: "Coverage threshold percentage (0-100)"
           option :output_dir, type: :string, default: "./coverage_analysis", desc: "Output directory for reports"
           option :format, type: :string, default: "text,json", desc: "Output formats (comma-separated: text,json,csv)"
-          option :include_patterns, type: :string, default: "**/lib/**", desc: "File patterns to include (comma-separated)"
+          option :include_patterns, type: :string, default: "**/lib/**/*.rb", desc: "File patterns to include (comma-separated)"
           option :exclude_patterns, type: :string, default: "**/spec/**,**/test/**", desc: "File patterns to exclude (comma-separated)"
           option :detailed, type: :boolean, default: false, desc: "Include method-level analysis"
           option :quick, type: :boolean, default: false, desc: "Quick analysis mode (faster, less detailed)"
@@ -25,6 +25,8 @@ module CodingAgentTools
           option :max_files, type: :integer, default: 20, desc: "Maximum number of files to analyze in detail"
           option :comprehensive, type: :boolean, default: false, desc: "Generate comprehensive report with all sections"
           option :recommend, type: :boolean, default: false, desc: "Only analyze file and provide recommendations (no full analysis)"
+          option :compact, type: :boolean, default: true, desc: "Use compact range format for uncovered lines (default)"
+          option :verbose, type: :boolean, default: false, desc: "Use verbose format with full uncovered line arrays"
 
           example [
             "coverage.resultset.json                                    # Basic analysis with default settings",
@@ -32,7 +34,9 @@ module CodingAgentTools
             "coverage.resultset.json --quick --output_dir ./reports     # Quick analysis to custom directory",
             "coverage.resultset.json --focus \"**/models/**,**/services/**\" # Focus on specific directories",
             "coverage.resultset.json --detailed --comprehensive        # Full detailed analysis with all sections",
-            "coverage.resultset.json --recommend                       # Just get recommendations without full analysis"
+            "coverage.resultset.json --recommend                       # Just get recommendations without full analysis",
+            "coverage.resultset.json --verbose                         # Use verbose format with full line arrays",
+            "coverage.resultset.json --compact                         # Use compact range format (default)"
           ]
 
           def call(input_file:, **options)
@@ -66,6 +70,13 @@ module CodingAgentTools
           private
 
           def prepare_workflow_options(options)
+            # Determine report format (verbose takes precedence over compact if both are specified)
+            report_format = if options[:verbose]
+                             :verbose
+                           else
+                             :compact
+                           end
+
             {
               threshold: options[:threshold],
               output_dir: options[:output_dir],
@@ -75,7 +86,8 @@ module CodingAgentTools
               detailed_analysis: options[:detailed],
               create_path_integration: options[:create_path],
               max_files: options[:max_files],
-              include_comprehensive: options[:comprehensive]
+              include_comprehensive: options[:comprehensive],
+              report_format: report_format
             }
           end
 

@@ -141,7 +141,7 @@ module CodingAgentTools
                      end
           
           output_path = File.join(output_directory, "#{base_name}#{extension}")
-          report_path = @analyzer.save_report(analysis_result, output_path, format)
+          report_path = @analyzer.save_report(analysis_result, output_path, format, validated_options)
           generated_files[format] = report_path
         end
         
@@ -201,11 +201,12 @@ module CodingAgentTools
           sections: options[:sections] || [:summary, :files, :recommendations],
           include_method_analysis: options[:include_method_analysis] || false,
           max_files: options[:max_files] || 20,
-          include_patterns: options[:include_patterns] || ["**/lib/**"],
+          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
           exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           formats: options[:formats] || [:text, :json],
           base_name: options[:base_name] || "coverage_report",
-          include_comprehensive: options[:include_comprehensive] || false
+          include_comprehensive: options[:include_comprehensive] || false,
+          report_format: options[:report_format] || :compact
         }
       end
 

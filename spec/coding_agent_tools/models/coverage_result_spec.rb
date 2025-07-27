@@ -69,22 +69,150 @@ RSpec.describe CodingAgentTools::Models::CoverageResult do
 
   describe "#to_h" do
     let(:method_coverage) do
-      instance_double(CodingAgentTools::Models::MethodCoverage, to_h: {name: "test_method"})
+      instance_double(CodingAgentTools::Models::MethodCoverage)
     end
     let(:methods) { [method_coverage] }
 
-    it "returns hash representation" do
-      expected_hash = {
-        file_path: file_path,
-        relative_path: subject.relative_path,
-        total_lines: total_lines,
-        covered_lines: covered_lines,
-        coverage_percentage: coverage_percentage,
-        uncovered_lines_count: 5,
-        methods: [{name: "test_method"}]
-      }
+    before do
+      allow(method_coverage).to receive(:to_h).with(format: :compact).and_return({name: "test_method", uncovered_lines: "11..13"})
+      allow(method_coverage).to receive(:to_h).with(format: :verbose).and_return({name: "test_method", uncovered_lines: [11, 12, 13]})
+    end
 
-      expect(subject.to_h).to eq(expected_hash)
+    context "with compact format (default)" do
+      it "returns hash representation with compact format" do
+        expected_hash = {
+          file_path: file_path,
+          relative_path: subject.relative_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 5,
+          uncovered_lines: "",
+          uncovered_ranges: [],
+          methods: [{name: "test_method", uncovered_lines: "11..13"}]
+        }
+
+        expect(subject.to_h).to eq(expected_hash)
+      end
+
+      it "returns compact format when explicitly requested" do
+        expected_hash = {
+          file_path: file_path,
+          relative_path: subject.relative_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 5,
+          uncovered_lines: "",
+          uncovered_ranges: [],
+          methods: [{name: "test_method", uncovered_lines: "11..13"}]
+        }
+
+        expect(subject.to_h(format: :compact)).to eq(expected_hash)
+      end
+    end
+
+    context "with verbose format" do
+      it "returns hash representation with verbose format" do
+        expected_hash = {
+          file_path: file_path,
+          relative_path: subject.relative_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_lines_count: 5,
+          uncovered_lines: [],
+          uncovered_ranges: [],
+          methods: [{name: "test_method", uncovered_lines: [11, 12, 13]}]
+        }
+
+        expect(subject.to_h(format: :verbose)).to eq(expected_hash)
+      end
+    end
+
+    context "with uncovered lines data" do
+      subject do
+        described_class.new(
+          file_path: file_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          methods: methods,
+          uncovered_details: {
+            uncovered_lines: [11, 12, 13, 22, 23, 25, 26, 27, 28],
+            uncovered_ranges: [],
+            total_uncovered: 9
+          }
+        )
+      end
+
+      it "formats uncovered lines compactly" do
+        result = subject.to_h(format: :compact)
+        expect(result[:uncovered_lines]).to eq("11..13,22,23,25..28")
+      end
+
+      it "keeps uncovered lines verbose when requested" do
+        result = subject.to_h(format: :verbose)
+        expect(result[:uncovered_lines]).to eq([11, 12, 13, 22, 23, 25, 26, 27, 28])
+      end
+    end
+  end
+
+  describe "#uncovered_lines_compact" do
+    context "with uncovered lines" do
+      subject do
+        described_class.new(
+          file_path: file_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_details: {
+            uncovered_lines: [11, 12, 13, 22, 23, 25, 26, 27, 28],
+            uncovered_ranges: [],
+            total_uncovered: 9
+          }
+        )
+      end
+
+      it "returns compact range format" do
+        expect(subject.uncovered_lines_compact).to eq("11..13,22,23,25..28")
+      end
+
+      it "caches the result" do
+        expect(subject.uncovered_lines_compact).to be(subject.uncovered_lines_compact)
+      end
+    end
+
+    context "with no uncovered lines" do
+      it "returns empty string" do
+        expect(subject.uncovered_lines_compact).to eq("")
+      end
+    end
+  end
+
+  describe "#uncovered_lines_verbose" do
+    it "returns the original uncovered lines array" do
+      expect(subject.uncovered_lines_verbose).to eq([])
+    end
+
+    context "with uncovered lines" do
+      subject do
+        described_class.new(
+          file_path: file_path,
+          total_lines: total_lines,
+          covered_lines: covered_lines,
+          coverage_percentage: coverage_percentage,
+          uncovered_details: {
+            uncovered_lines: [11, 12, 13, 22, 23],
+            uncovered_ranges: [],
+            total_uncovered: 5
+          }
+        )
+      end
+
+      it "returns the original uncovered lines array" do
+        expect(subject.uncovered_lines_verbose).to eq([11, 12, 13, 22, 23])
+      end
     end
   end
 end
