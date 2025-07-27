@@ -47,7 +47,8 @@ module CodingAgentTools
 
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,
-              statuses: %w[done in-progress pending blocked]
+              statuses: %w[done in-progress pending blocked],
+              release_path: options[:release]
             )
 
             handle_result(result, options.merge(limit: limit))

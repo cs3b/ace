@@ -83,37 +83,64 @@ module CodingAgentTools
         # Find recent tasks with time-based filtering
         # @param since_seconds [Integer] Time window in seconds (default: 1 day)
         # @param statuses [Array<String>] Statuses to filter by (default: ['done', 'in-progress'])
+        # @param release_path [String, nil] Optional specific release path
         # @return [RecentTasksResult] Result with recent tasks
-        def find_recent_tasks(since_seconds: 86400, statuses: %w[done in-progress])
+        def find_recent_tasks(since_seconds: 86400, statuses: %w[done in-progress], release_path: nil)
           since_time = Time.now - since_seconds
           all_tasks = []
 
-          # Search in both current and done directories
-          search_paths = [
-            File.join(@base_path, "dev-taskflow/current"),
-            File.join(@base_path, "dev-taskflow/done")
-          ]
+          if release_path
+            # Search in specific release
+            release_info = resolve_release_path(release_path)
+            unless release_info[:success]
+              return RecentTasksResult.new([], false, release_info[:error])
+            end
 
-          search_paths.each do |base_dir|
-            next unless File.exist?(base_dir) && File.directory?(base_dir)
+            tasks_result = load_tasks_from_release(release_info[:info])
+            unless tasks_result[:success]
+              return RecentTasksResult.new([], false, tasks_result[:error])
+            end
 
-            # Find all task files recursively
-            task_files = Dir.glob(File.join(base_dir, "**/tasks/*.md"))
-
-            task_files.each do |file_path|
+            # Filter by modification time and status
+            tasks_result[:tasks].each do |task_data|
               # Check modification time
-              mtime = File.mtime(file_path)
+              mtime = File.mtime(task_data.path)
               next if mtime < since_time
-
-              # Load and filter task
-              task_data = @file_loader.load_task_file(file_path)
-              next unless task_data
               next unless statuses.include?(task_data.status)
 
               # Add modification time for sorting
               task_with_mtime = task_data.dup
               task_with_mtime.define_singleton_method(:mtime) { mtime }
               all_tasks << task_with_mtime
+            end
+          else
+            # Search in both current and done directories (original behavior)
+            search_paths = [
+              File.join(@base_path, "dev-taskflow/current"),
+              File.join(@base_path, "dev-taskflow/done")
+            ]
+
+            search_paths.each do |base_dir|
+              next unless File.exist?(base_dir) && File.directory?(base_dir)
+
+              # Find all task files recursively
+              task_files = Dir.glob(File.join(base_dir, "**/tasks/*.md"))
+
+              task_files.each do |file_path|
+                # Check modification time
+                mtime = File.mtime(file_path)
+                next if mtime < since_time
+
+                # Load and filter task
+                task_data = @file_loader.load_task_file(file_path)
+                next unless task_data
+                next unless statuses.include?(task_data.status)
+
+                # Add modification time for sorting
+                task_with_mtime = task_data.dup
+                task_with_mtime.define_singleton_method(:mtime) { mtime }
+                all_tasks << task_with_mtime
+              end
             end
           end
 
