@@ -12,7 +12,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
   let(:mock_mistral_client) { instance_double(CodingAgentTools::Organisms::MistralClient) }
   let(:mock_together_ai_client) { instance_double(CodingAgentTools::Organisms::TogetheraiClient) }
   let(:mock_lmstudio_client) { instance_double(CodingAgentTools::Organisms::LmstudioClient) }
-  let(:mock_format_handler) { instance_double("FormatHandler") }
+  let(:mock_format_handler) { instance_double(CodingAgentTools::Molecules::FormatHandlers::Text) }
   let(:mock_response) { {text: "Mock response", metadata: {}} }
   let(:mock_normalized_response) { {text: "Mock response", metadata: {provider: "google", model: "gemini-2.0-flash-lite"}} }
 

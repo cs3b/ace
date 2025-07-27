@@ -173,7 +173,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
 
     context "with parsing errors" do
       before do
-        allow_any_instance_of(Kramdown::Document).to receive(:to_kramdown).and_raise(StandardError, "Parse error")
+        allow(Kramdown::Document).to receive(:new).and_raise(StandardError, "Parse error")
       end
 
       it "returns error result on parsing failure" do
