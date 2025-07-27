@@ -1,84 +1,21 @@
-# Code Quality Configuration
-# This file overrides default linting settings
-
-ruby:
-  enabled: true
-  linters:
-    standardrb:
-      enabled: true
-      autofix: true
-      config_file: dev-tools/.standard.yml # Optional: custom StandardRB config
-    security:
-      enabled: true
-      full_scan: false
-      git_history: false
-    cassettes:
-      enabled: true
-      threshold: 51200 # 50KB in bytes
-
 markdown:
   enabled: true
   linters:
+    task_metadata:
+      enabled: true
+    link_validation:
+      enabled: true
+    template_embedding:
+      enabled: true
     styleguide:
       enabled: true
       autofix: true
-    link_validation:
-      enabled: true
-      context: 3 # Lines of context for broken links
-    template_embedding:
-      enabled: true
-      template_dirs:
-        - dev-handbook/.meta/tpl
-        - templates
-        - _includes
-    task_metadata:
-      enabled: true
-      task_dirs:
-        - dev-taskflow/current
-        - dev-taskflow/backlog
-  # Order in which markdown linters run
+      # Configuration for KramdownFormatter (if supported)
+      line_width: 160
+      hard_wrap: false
+      auto_ids: true
   order:
     - task_metadata
     - link_validation
     - template_embedding
     - styleguide
-
-error_distribution:
-  enabled: true
-  max_files: 4 # Maximum error files to generate
-  one_issue_per_file: true # Distribute one issue per file for agents
-
-docs_dependencies:
-  enabled: true
-  file_patterns:
-    workflows: "dev-handbook/workflow-instructions/**/*.wf.md"
-    guides: "dev-handbook/guides/**/*.g.md"
-    tasks: "dev-taskflow/**/tasks/*.md"
-    docs: "docs/*.md"
-    taskflow_docs: "dev-taskflow/*.md"
-  exclude_patterns:
-    - "dev-taskflow/done/**/*" # Skip completed tasks
-    - "dev-taskflow/sessions/**/*" # Skip session logs
-    - "**/.*" # Skip hidden files
-  skip_folders:
-    - "dev-taskflow" # Skip entire dev-taskflow folder
-  include_external_links: false # Whether to analyze external links
-  include_anchor_links: false # Whether to analyze anchor links
-
-# File pattern definitions for language detection
-file_patterns:
-  ruby:
-    - "*.rb"
-    - "*.gemspec" 
-    - "Gemfile"
-    - "Rakefile"
-    - "exe/*"
-  markdown:
-    - "*.md"
-    - "*.markdown"
-
-# Global settings
-global:
-  parallel: true # Run linters in parallel where possible
-  verbose: false # Verbose output
-  fail_fast: false # Stop on first failure
