@@ -175,7 +175,7 @@ Higher-order tools provide better error handling:
 
 - [ ] Replace `bin/rc` + `bin/tnid` with `create-path task-new`
 - [ ] Replace manual file searching with `nav-path file`
-- [ ] Replace manual session setup with `create-path file:reflection-new`
+- [ ] Replace manual session setup with `create-path file`
 - [ ] Update task management commands to use `task-manager`
 - [ ] Add validation steps for new tools
 
