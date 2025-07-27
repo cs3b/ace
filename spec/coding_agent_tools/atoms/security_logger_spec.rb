@@ -4,6 +4,15 @@ require "spec_helper"
 require "stringio"
 
 RSpec.describe CodingAgentTools::Atoms::SecurityLogger do
+  # Temporarily disable output suppression for these tests since we need to test logging output
+  around(:each) do |example|
+    original_suppress = described_class.suppress_output?
+    described_class.suppress_output = false
+    example.run
+  ensure
+    described_class.suppress_output = original_suppress
+  end
+
   let(:log_output) { StringIO.new }
   let(:test_logger) { Logger.new(log_output) }
   let(:security_logger) { described_class.new(logger: test_logger) }

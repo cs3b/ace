@@ -4,10 +4,26 @@ This document explains how to run and record tests for the coding-agent-tools pr
 
 ## Test Structure
 
-- `spec/unit/` - Unit tests for individual components
+The test structure follows a clean 1:1 mapping with the lib structure for maintainability and clarity:
+
+- `spec/coding_agent_tools/` - Unit tests mirroring the lib directory structure
+  - `spec/coding_agent_tools/atoms/` - Basic utility tests
+  - `spec/coding_agent_tools/molecules/` - Composed behavior tests  
+  - `spec/coding_agent_tools/organisms/` - Business logic tests
+  - `spec/coding_agent_tools/ecosystems/` - Complete workflow tests
+  - `spec/coding_agent_tools/models/` - Data structure tests
+  - `spec/coding_agent_tools/cli/` - CLI command tests
+  - `spec/coding_agent_tools/middlewares/` - Cross-cutting concern tests
 - `spec/integration/` - Integration tests that test the full command-line tools
 - `spec/support/` - Shared test helpers and configuration
 - `spec/cassettes/` - VCR cassettes (recorded HTTP interactions)
+
+### Key Principles
+
+- **1:1 Mapping**: Each lib file has a corresponding spec file in the same relative location
+- **No Duplicates**: All duplicate test files have been eliminated
+- **Centralized Structure**: All unit tests are under `spec/coding_agent_tools/` following lib structure
+- **Clear Separation**: Integration tests remain separate in `spec/integration/`
 
 ### LMS Integration Tests
 

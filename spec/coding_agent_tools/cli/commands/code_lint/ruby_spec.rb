@@ -6,7 +6,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::CodeLint::Ruby do
   let(:command) { described_class.new }
   let(:mock_config_loader) { instance_double("CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader") }
   let(:mock_path_resolver) { instance_double("CodingAgentTools::Atoms::CodeQuality::PathResolver") }
-  let(:mock_runner) { instance_double("RubyRunner") }
+  let(:mock_runner) { instance_double(CodingAgentTools::Organisms::CodeQuality::RubyRunner) }
   let(:mock_config) { {ruby: {enabled: true}} }
   let(:successful_result) { {success: true, errors: []} }
 

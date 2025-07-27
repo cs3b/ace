@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "yaml"
-require_relative "../../lib/coding_agent_tools/cli/create_path_command"
+require "coding_agent_tools/cli/create_path_command"
 
 RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
   include_context "uses temp dir"
@@ -68,7 +68,7 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
 
     it "does not use instance_variable_get to access PathResolver internals" do
       # Verify that the source code does not contain the encapsulation violation
-      source_file = File.read(File.join(__dir__, "../../lib/coding_agent_tools/cli/create_path_command.rb"))
+      source_file = File.read(File.join(__dir__, "../../../../lib/coding_agent_tools/cli/create_path_command.rb"))
       
       # Should not contain the old encapsulation violation pattern
       expect(source_file).not_to include("instance_variable_get(:@sandbox)")
