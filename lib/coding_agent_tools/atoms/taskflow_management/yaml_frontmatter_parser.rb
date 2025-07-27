@@ -221,7 +221,8 @@ module CodingAgentTools
             begin
               parsed = if safe_mode
                 # Use safe_load to prevent code execution
-                YAML.safe_load(yaml_content, permitted_classes: [], aliases: false)
+                # Allow Date, Time, and DateTime for task metadata
+                YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime], aliases: false)
               else
                 # Use regular load (less secure but more permissive)
                 YAML.load(yaml_content)
@@ -244,7 +245,12 @@ module CodingAgentTools
                 yaml_error: e
               )
             rescue ArgumentError => e
-              raise ParseError.new("YAML parsing error: #{e.message}", yaml_error: e)
+              # Check if it's a date parsing error
+              if e.message.include?("invalid date") || e.message.include?("Date")
+                raise ParseError.new("Invalid date format in YAML: #{e.message}. Use ISO format (YYYY-MM-DD) for dates.", yaml_error: e)
+              else
+                raise ParseError.new("YAML parsing error: #{e.message}", yaml_error: e)
+              end
             end
           end
 

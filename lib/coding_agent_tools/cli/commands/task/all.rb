@@ -26,6 +26,9 @@ module CodingAgentTools
           option :filter, type: :array,
             desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
 
+          option :verbose, type: :boolean, default: false, aliases: ["v"],
+            desc: "Show detailed task information (old format)"
+
           example [
             "",
             "--debug",
@@ -84,7 +87,7 @@ module CodingAgentTools
             end
 
             display_header(result, options)
-            display_tasks(result.sorted_tasks)
+            display_tasks(result.sorted_tasks, options[:verbose])
             display_footer(result, options) if options[:show_cycles] || result.has_cycles?
           end
 
@@ -109,35 +112,55 @@ module CodingAgentTools
             end
           end
 
-          def display_tasks(tasks)
+          def display_tasks(tasks, verbose = false)
             tasks.each_with_index do |task, index|
-              puts "" if index > 0  # Add blank line between tasks
-              display_task_info(task, index + 1)
+              puts "" if index > 0 && verbose  # Add blank line between tasks only in verbose mode
+              display_task_info(task, index + 1, verbose)
             end
           end
 
-          def display_task_info(task, position)
+          def display_task_info(task, position, verbose = false)
             status_color = status_color_for(task.status)
             status_display = colorize(task.status.upcase, status_color)
 
-            puts "#{position.to_s.rjust(3)}. #{task.id}"
-            puts "     Title: #{task.title || extract_title_from_content(task)}"
-            puts "     Status: #{status_display}"
-            puts "     Path: #{task.path}"
+            if verbose
+              # Original verbose format
+              puts "#{position.to_s.rjust(3)}. #{task.id}"
+              puts "     Title: #{task.title || extract_title_from_content(task)}"
+              puts "     Status: #{status_display}"
+              puts "     Path: #{task.path}"
 
-            if task.dependencies && !task.dependencies.empty?
-              deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
-              puts "     Dependencies: #{deps}"
-            end
+              if task.dependencies && !task.dependencies.empty?
+                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
+                puts "     Dependencies: #{deps}"
+              end
 
-            if task.respond_to?(:estimate) && task.estimate
-              puts "     Estimate: #{task.estimate}"
-            end
+              if task.respond_to?(:estimate) && task.estimate
+                puts "     Estimate: #{task.estimate}"
+              end
 
-            if task.respond_to?(:priority) && task.priority
-              priority_color = priority_color_for(task.priority)
-              priority_display = colorize(task.priority.upcase, priority_color)
-              puts "     Priority: #{priority_display}"
+              if task.respond_to?(:priority) && task.priority
+                priority_color = priority_color_for(task.priority)
+                priority_display = colorize(task.priority.upcase, priority_color)
+                puts "     Priority: #{priority_display}"
+              end
+            else
+              # New compact format
+              title = task.title || extract_title_from_content(task)
+              
+              # Main line: position. ID * STATUS * Title
+              puts "#{position.to_s.rjust(3)}. #{task.id} * #{status_display} * #{title}"
+              
+              # Path on next line, indented
+              project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+              relative_path = task.path.sub(/^#{Regexp.escape(project_root)}\//, '')
+              puts "     #{relative_path}"
+              
+              # Dependencies on following line if present
+              if task.dependencies && !task.dependencies.empty?
+                deps = task.dependencies.is_a?(Array) ? task.dependencies.join(", ") : task.dependencies
+                puts "     Dependencies: #{deps}"
+              end
             end
           end
 
