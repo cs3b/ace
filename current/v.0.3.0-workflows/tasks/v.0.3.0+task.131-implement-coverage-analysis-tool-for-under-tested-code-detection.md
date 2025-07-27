@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.131
-status: in-progress
+status: completed
 priority: medium
 estimate: 16h
 dependencies: []
@@ -217,12 +217,17 @@ Options:
   --format FORMAT        Output format: text|json|csv (default: text)
   --methods-only         Show only method-level analysis
   --files-only           Show only file-level analysis  
-  --output FILE          Save output to file
+  --output-title TITLE   Create new document with title using create-path
   --coverage-path PATH   Path to coverage directory (default: ./coverage)
   --include PATTERN      Include files matching pattern (default: lib/**)
   --exclude PATTERN      Exclude files matching pattern (default: spec/**)
   --help                 Show help message
 ```
+
+**File Filtering (User Requirements):**
+- **Default**: Analyze only `lib/` files (exclude spec files by default)
+- **Override**: Allow custom patterns via --include/--exclude flags
+- **Focus**: Prioritize files with coverage below threshold for faster processing
 
 ### Enhanced Error Handling
 
@@ -232,11 +237,18 @@ Options:
 - Unparseable Ruby files: Log warning, exclude from method analysis
 - Permission denied: Clear error message with suggested fixes
 
-**Performance Optimizations:**
-- Stream large JSON files instead of loading entirely into memory
-- Parallel processing for multiple files using Ruby thread pools
-- Intelligent caching of parsed AST for method extraction
-- Progress indicators for large coverage analysis runs
+**Performance Optimizations (User Requirements):**
+- **Large file handling**: Optimize for JSON files with 70k+ lines using streaming JSON parser
+- **Fast filtering**: Quickly identify files below threshold before detailed analysis
+- **Line-by-line focus**: Efficiently identify uncovered lines for targeted testing priorities
+- **Memory efficiency**: Process files incrementally to avoid memory issues
+- **Priority processing**: Handle under-covered files first for faster feedback
+
+**Implementation Scope (User Requirements):**
+- **Branch coverage**: Defer to future version - focus on uncovered lines (empty coverage)
+- **Output handling**: Use create-path integration instead of direct file overwriting
+- **Testing scope**: Target current SimpleCov version only
+- **File focus**: Default to lib/ files with override capability
 
 ### Data Structures
 
