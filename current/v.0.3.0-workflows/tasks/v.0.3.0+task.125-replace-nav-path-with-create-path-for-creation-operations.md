@@ -75,7 +75,8 @@ Replace all references to `nav-path task-new` with `create-path task-new` across
   > Result: nav-path task-new -> create-path task-new (1:1 equivalency, same arguments and options)
 - [x] Verify create-path functionality covers all nav-path creation use cases
   > Result: create-path task-new supports all nav-path task-new arguments (--title, --priority, --estimate) and adds file creation functionality
-- [ ] Plan systematic replacement strategy with direct replacement (no deprecation warnings)
+- [x] Plan systematic replacement strategy with direct replacement (no deprecation warnings)
+  > Strategy: 1) Start with workflow instructions 2) Update tools documentation 3) Update cheat sheets and examples 4) Verify completeness
 
 ### Execution Steps
 
