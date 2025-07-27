@@ -95,6 +95,10 @@ module ProcessHelpers
       "RACK_ENV" => ENV["RACK_ENV"] || "test",
       "RUBYOPT" => "-rbundler/setup -r#{Shellwords.escape(vcr_setup_path)}",
       "VCR_CASSETTE_NAME" => cassette_name,
+      # Pass through VCR-related environment variables
+      "CI" => ENV["CI"],
+      "VCR_RECORD" => ENV["VCR_RECORD"],
+      "TEST_DEBUG" => ENV["TEST_DEBUG"],
       # Ensure proper encoding for Unicode handling in CI
       "LANG" => ENV["LANG"] || "en_US.UTF-8",
       "LC_ALL" => ENV["LC_ALL"] || "en_US.UTF-8",

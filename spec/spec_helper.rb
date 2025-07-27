@@ -77,7 +77,8 @@ RSpec.configure do |config|
     original_dir = Dir.pwd
 
     # Ensure tests run in CI mode to prevent interactive prompts
-    ENV["CI"] = "true" unless ENV.key?("CI")
+    # But allow VCR recording when explicitly requested via VCR_RECORD
+    ENV["CI"] = "true" unless ENV.key?("CI") || ENV["VCR_RECORD"]
 
     # Set PROJECT_ROOT to prevent project root detection failures in tests
     # Point to the actual project root (handbook-meta) which contains the submodules

@@ -409,6 +409,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
     it "validates format option values" do
       # Test that only valid format values are accepted
       # This might be enforced by Dry::CLI validation
+      
+      # Set up mocks for the format validation test
+      allow(mock_report_collector).to receive(:collect_reports).and_return({
+        success: true,
+        reports: [{path: report1, content: "Content 1"}, {path: report2, content: "Content 2"}]
+      })
+      allow(mock_session_path_inferrer).to receive(:infer_output_path).and_return("/inferred/path.md")
+      allow(mock_synthesis_orchestrator).to receive(:synthesize).and_return({
+        success: true,
+        output_file: "/path/to/synthesis.md"
+      })
+      
       %w[text json markdown].each do |valid_format|
         expect { command.call(reports: [report1, report2], format: valid_format) }.not_to raise_error
       end
