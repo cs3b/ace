@@ -96,7 +96,7 @@ FILENAME="$(date +%Y%m%d-%H%M%S)-compact-log.md"
 #### New Higher-Order Approach
 ```bash
 # Complete session setup
-create-path file --title "oauth-implementation-review"
+create-path file:reflection-new --title "oauth-implementation-review"
 # Automatically handles:
 # - Release detection
 # - Directory creation
@@ -133,7 +133,7 @@ The following documentation has been updated to use higher-order tools:
 
 #### Session Management Workflow
 - **Before**: Manual directory creation and filename generation
-- **After**: `create-path file` with automatic setup
+- **After**: `create-path file:reflection-new` with automatic setup
 - **Benefit**: Consistent naming, automatic organization
 
 ## AI Agent Guidelines
@@ -175,7 +175,7 @@ Higher-order tools provide better error handling:
 
 - [ ] Replace `bin/rc` + `bin/tnid` with `create-path task-new`
 - [ ] Replace manual file searching with `nav-path file`
-- [ ] Replace manual session setup with `create-path file`
+- [ ] Replace manual session setup with `create-path file:reflection-new`
 - [ ] Update task management commands to use `task-manager`
 - [ ] Add validation steps for new tools
 
