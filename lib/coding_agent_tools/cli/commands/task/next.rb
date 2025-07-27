@@ -30,6 +30,9 @@ module CodingAgentTools
           option :verbose, type: :boolean, default: false, aliases: ["v"],
             desc: "Show detailed task information (old format)"
 
+          option :release, type: :string,
+            desc: "Release to work with (version, codename, fullname, or path). Defaults to current release."
+
           example [
             "",
             "--limit 3",
@@ -48,7 +51,7 @@ module CodingAgentTools
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             # Get all tasks first
-            tasks_result = task_manager.get_all_tasks
+            tasks_result = task_manager.get_all_tasks(release_path: options[:release])
             unless tasks_result.success?
               error_output("Error: #{tasks_result.message}")
               return 1

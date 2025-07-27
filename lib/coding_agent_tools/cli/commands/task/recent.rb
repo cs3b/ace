@@ -25,6 +25,9 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
 
+          option :release, type: :string,
+            desc: "Release to work with (version, codename, fullname, or path). Note: Recent command searches across all releases by default."
+
           example [
             "",
             "--last 2.days",
