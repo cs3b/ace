@@ -2,6 +2,11 @@
 
 module CodingAgentTools
   module Organisms
+    # Autoload coverage analysis organisms
+    autoload :CoverageAnalyzer, "coding_agent_tools/organisms/coverage_analyzer"
+    autoload :UndercoveredItemsExtractor, "coding_agent_tools/organisms/undercovered_items_extractor"
+    autoload :CoverageReportGenerator, "coding_agent_tools/organisms/coverage_report_generator"
+
     # Autoload code review organisms
     module Code
       autoload :ReviewManager, "coding_agent_tools/organisms/code/review_manager"
