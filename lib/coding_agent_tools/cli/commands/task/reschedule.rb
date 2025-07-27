@@ -24,6 +24,9 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
 
+          option :release, type: :string,
+            desc: "Release to work with (version, codename, fullname, or path). Defaults to current release."
+
           example [
             "v.0.3.0+task.001 v.0.3.0+task.002",
             "118 119 120 --add-next",
@@ -43,7 +46,7 @@ module CodingAgentTools
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             # Get all tasks to understand current state
-            tasks_result = task_manager.get_all_tasks
+            tasks_result = task_manager.get_all_tasks(release_path: options[:release])
             unless tasks_result.success?
               error_output("Error: #{tasks_result.message}")
               return 1

@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/release_resolver"
 
 module CodingAgentTools
   module Cli
@@ -19,6 +20,9 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
 
+          option :release, type: :string,
+            desc: "Release to work with (version, codename, fullname, or path). Defaults to current release."
+
           example [
             "",
             "v.0.3.0",
@@ -31,10 +35,10 @@ module CodingAgentTools
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 1
 
-            release_version = version || detect_current_version
+            release_version = version || detect_version_from_release(options[:release])
 
             unless release_version
-              error_output("Error: Could not determine release version. Please provide version argument.")
+              error_output("Error: Could not determine release version. Please provide version argument or --release option.")
               return 1
             end
 
@@ -54,6 +58,27 @@ module CodingAgentTools
               raise ArgumentError, "Limit must be a positive integer, got: #{limit}"
             end
             limit_int
+          end
+
+          def detect_version_from_release(release_identifier)
+            if release_identifier
+              # Use release resolver to find the specified release
+              project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+              result = CodingAgentTools::Molecules::TaskflowManagement::ReleaseResolver.resolve_release(
+                release_identifier, 
+                base_path: project_root
+              )
+              
+              if result.success?
+                result.release_info.version
+              else
+                error_output("Error resolving release '#{release_identifier}': #{result.error_message}")
+                nil
+              end
+            else
+              # Fall back to current version detection
+              detect_current_version
+            end
           end
 
           def detect_current_version

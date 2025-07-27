@@ -3,6 +3,7 @@
 require_relative "../../molecules/taskflow_management/task_file_loader"
 require_relative "../../molecules/taskflow_management/task_dependency_checker"
 require_relative "../../molecules/taskflow_management/release_path_resolver"
+require_relative "../../molecules/taskflow_management/release_resolver"
 require_relative "../../atoms/taskflow_management/directory_navigator"
 require "set"
 
@@ -169,16 +170,12 @@ module CodingAgentTools
 
         # Resolve release path using molecules
         def resolve_release_path(release_path)
-          if release_path
-            # TODO: Implement specific path resolution
-            {success: true, info: {path: release_path}, error: nil}
+          result = Molecules::TaskflowManagement::ReleaseResolver.resolve_release(release_path, base_path: @base_path)
+          
+          if result.success?
+            {success: true, info: result.release_info, error: nil}
           else
-            result = @release_resolver.get_current_release(base_path: @base_path)
-            if result.success?
-              {success: true, info: result.release_info, error: nil}
-            else
-              {success: false, info: nil, error: result.error_message}
-            end
+            {success: false, info: nil, error: result.error_message}
           end
         end
 
