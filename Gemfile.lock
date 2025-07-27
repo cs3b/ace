@@ -126,6 +126,8 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.4)
+    rspec-temp_dir (1.1.1)
+      rspec (>= 3.0)
     rubocop (1.75.8)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -208,6 +210,7 @@ DEPENDENCIES
   pry
   rake (~> 13.0)
   rspec (~> 3.0)
+  rspec-temp_dir (~> 1.0)
   simplecov (~> 0.22)
   simplecov-html (~> 0.12)
   standard (~> 1.3)

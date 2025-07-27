@@ -24,6 +24,7 @@ SimpleCov.start do
 end
 
 require "coding_agent_tools"
+require "rspec/temp_dir"
 
 # Load environment helper first (sets up API keys, etc.)
 require_relative "support/env_helper"
@@ -60,8 +61,29 @@ RSpec.configure do |config|
   # Disable RSpec exposing methods globally on `Module` and `main`
   config.disable_monkey_patching!
 
+  # Configure rspec-temp_dir for isolated temporary directories
+  # (Uses shared contexts instead of include)
+
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  # Configure mocks for better test safety
+  config.mock_with :rspec do |mocks|
+    mocks.verify_partial_doubles = true  # Verify that mocked methods exist
+    mocks.verify_doubled_constant_names = true  # Verify that doubled constants exist
+  end
+
+  # Silence application output during tests
+  config.before(:example) do |example|
+    # Allow verbose output for specific tests or when debugging
+    next if example.metadata[:verbose] || ENV['VERBOSE'] == 'true' || ENV['DEBUG'] == 'true'
+    
+    # Suppress all command output by default
+    allow($stdout).to receive(:puts)
+    allow($stdout).to receive(:print)
+    allow($stderr).to receive(:puts)
+    allow($stderr).to receive(:print)
   end
 
   # Include helper modules in all examples
@@ -71,10 +93,17 @@ RSpec.configure do |config|
   # Mark slow tests as pending unless explicitly requested
   config.filter_run_excluding :slow unless ENV['RUN_SLOW_TESTS'] == 'true'
 
-  # Prevent environment variable leakage and working directory changes between examples
+  # Additional RSpec best practices configuration
+  config.order = :random  # Run specs in random order to surface order dependencies
+  config.warnings = false  # Suppress Ruby warnings during tests
+  config.profile_examples = 5 if ENV['PROFILE'] == 'true'  # Show slowest examples when profiling
+
+  # Prevent environment variable leakage, output pollution, and working directory changes between examples
   config.around do |example|
     original_env = ENV.to_hash
     original_dir = Dir.pwd
+    original_stdout = $stdout
+    original_stderr = $stderr
 
     # Ensure tests run in CI mode to prevent interactive prompts
     # But allow VCR recording when explicitly requested via VCR_RECORD
@@ -86,26 +115,43 @@ RSpec.configure do |config|
       ENV["PROJECT_ROOT"] = File.expand_path("../../..", __dir__)
     end
 
+    # Capture stdout/stderr to prevent test output pollution
+    # unless running with DEBUG=true or specific verbose flags
+    unless ENV['DEBUG'] == 'true' || ENV['VERBOSE'] == 'true' || example.metadata[:verbose]
+      require 'stringio'
+      $stdout = StringIO.new
+      $stderr = StringIO.new
+    end
+
     example.run
   ensure
+    # Restore streams
+    $stdout = original_stdout
+    $stderr = original_stderr
+    
     # Restore environment and working directory
     ENV.replace(original_env)
     Dir.chdir(original_dir) if Dir.pwd != original_dir
   end
 
-  # Suppress directory navigator warnings during tests to keep output clean
+  # Suppress application warnings and logging during tests to keep output clean
   config.before(:suite) do
+    # Suppress directory navigator warnings
     require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
     CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
+    
+    # Suppress security logger output during tests
+    require_relative "../lib/coding_agent_tools/atoms/security_logger"
+    CodingAgentTools::Atoms::SecurityLogger.suppress_output = true
   rescue LoadError
-    # Directory navigator not available, continue without suppression
+    # Components not available, continue without suppression
   end
 
   config.after(:suite) do
     # Restore warning behavior after test suite completes
-
     CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
+    CodingAgentTools::Atoms::SecurityLogger.suppress_output = false
   rescue NameError
-    # Directory navigator not available, no action needed
+    # Components not available, no action needed
   end
 end

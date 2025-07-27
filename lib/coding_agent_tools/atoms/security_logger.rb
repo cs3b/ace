@@ -20,7 +20,19 @@ module CodingAgentTools
         overwrite_confirmed: "OVERWRITE_CONFIRMED"
       }.freeze
 
+      @@suppress_output = false
+
       attr_reader :logger
+
+      # Suppress all security logger output (for testing)
+      def self.suppress_output=(value)
+        @@suppress_output = value
+      end
+
+      # Check if output is suppressed
+      def self.suppress_output?
+        @@suppress_output
+      end
 
       # Initialize security logger
       # @param logger [Logger, nil] Logger instance (defaults to STDERR logger)
@@ -35,6 +47,8 @@ module CodingAgentTools
       # @option details [String] :reason Reason for the security event
       # @option details [Hash] :metadata Additional metadata
       def log_event(event_type, details = {})
+        return if self.class.suppress_output?
+        
         event_name = EVENTS[event_type] || event_type.to_s.upcase
         sanitized = sanitize_details(details)
 
@@ -54,6 +68,8 @@ module CodingAgentTools
       # @param error [Exception] The error to log
       # @param context [Hash] Additional context (will be sanitized)
       def log_error(error, context = {})
+        return if self.class.suppress_output?
+        
         sanitized_context = sanitize_details(context)
         message = "[SECURITY_ERROR] #{error.class}: #{sanitize_message(error.message)}"
         message += " | Context: #{format_details(sanitized_context)}" unless sanitized_context.empty?
