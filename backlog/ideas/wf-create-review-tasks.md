@@ -15,3 +15,9 @@ task-review should focus on how to do it with the art of software egnineering (a
 
 
 1. the have end goal in mind -> it can be defined in ux folder in the / subfolder for the feature / use cases per file
+
+2. do reasearch about this use cases, and improve them
+
+3. draft the task with intention / important context of the project and the architecture
+
+4. define full cycle testing ( end to end - so the agent now that its done)
