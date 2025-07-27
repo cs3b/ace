@@ -139,7 +139,7 @@ module CodingAgentTools
         end
 
         # Generate content from template
-        content = generate_content_from_template(template_config, title, options)
+        content = generate_content_from_template(template_config, title, options, nav_type)
         
         # Create the file
         create_file_with_content(target_path, content, options)
@@ -235,14 +235,18 @@ module CodingAgentTools
         @config_loader.dig("templates", type)
       end
 
-      def generate_content_from_template(template_config, title, options)
+      def generate_content_from_template(template_config, title, options, nav_type = nil)
         template_path = template_config["template"]
         
         unless template_path && File.exist?(template_path)
           # Return contextual content when template file doesn't exist
           puts "Notice: Template file not found: #{template_path} - creating empty file"
-          # Need to extract nav_type and title from the calling context
-          return generate_contextual_content_from_template_context(template_config, title)
+          # Use nav_type if provided, otherwise fall back to template path analysis
+          if nav_type
+            return generate_contextual_content(nav_type, title)
+          else
+            return generate_contextual_content_from_template_context(template_config, title)
+          end
         end
 
         # Read template content
@@ -410,7 +414,7 @@ module CodingAgentTools
 
       def generate_contextual_content_from_template_context(template_config, title)
         # Extract type from template path to determine context
-        template_path = template_config["template"] || ""
+        template_path = template_config&.dig("template") || ""
         
         if template_path.include?("docs")
           "# Documentation - #{title}\n\n"

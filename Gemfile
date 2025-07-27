@@ -27,4 +27,5 @@ group :development, :test do
   gem "webmock", "~> 3.0"
   gem "vcr", "~> 6.0"
   gem "aruba", "~> 2.0"
+  gem "rspec-temp_dir", "~> 1.0"
 end

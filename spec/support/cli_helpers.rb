@@ -57,6 +57,8 @@ module CliHelpers
         execute_llm_query_command(args)
       when "task-manager"
         execute_task_manager_command(args)
+      when "create-path"
+        execute_create_path_command(args)
       else
         # Fallback to subprocess for unknown commands
         warn "Unknown command '#{command_name}', falling back to subprocess"
@@ -177,6 +179,77 @@ module CliHelpers
       exit_code || 0
     rescue => e
       warn "Error: #{e.message}"
+      1
+    end
+  end
+
+  # Execute create-path command directly
+  def execute_create_path_command(args)
+    require_relative "../../lib/coding_agent_tools/cli/create_path_command"
+
+    if args.include?("--help") || args.include?("-h")
+      # Simulate help output
+      $stdout.puts <<~HELP
+        Create files and directories from templates with path resolution
+
+        USAGE
+          create-path TYPE --title 'Title' [OPTIONS]
+
+        ARGUMENTS
+          TYPE                            # REQUIRED Creation type: file, directory, template, file:docs-new, file:reflection-new, directory:code-review-new
+
+        OPTIONS
+          --title=VALUE                   # Title for the path/file to create
+          --content=VALUE                 # Content for the file (required for 'file' type)
+          --template=VALUE                # Template file path for content generation
+          --priority=VALUE                # Priority level
+          --status=VALUE                  # Status value
+          --[no-]debug, -d                # Enable debug output for verbose error information
+          --[no-]force, -f                # Force creation (overwrite existing files)
+
+        EXAMPLES
+          create-path file --title 'my-file.txt' --content 'Hello world'
+          create-path directory --title 'new-folder'
+          create-path file:docs-new --title 'API Documentation'
+          create-path file:reflection-new --title 'oauth-implementation-review'
+          create-path directory:code-review-new --title 'authentication-session'
+      HELP
+      return 0
+    end
+
+    # Parse arguments
+    if args.empty?
+      puts "Error: TYPE argument is required"
+      puts "Usage: create-path TYPE --title 'Title' [OPTIONS]"
+      return 1
+    end
+
+    type = args[0]
+    remaining_args = args[1..]
+
+    # Parse options
+    options = parse_create_path_options(remaining_args)
+
+    # Validate title requirement
+    unless options[:title]
+      puts "Error: Title required for path creation"
+      puts "Usage: create-path TYPE --title 'Title' [OPTIONS]"
+      return 1
+    end
+
+    begin
+      # Create command instance
+      command = CodingAgentTools::Cli::CreatePathCommand.new
+
+      # Call the command
+      result = command.call(
+        type: type,
+        **options
+      )
+
+      result || 0
+    rescue => e
+      puts "Error: #{e.message}"
       1
     end
   end
@@ -360,5 +433,85 @@ module CliHelpers
     end
 
     options
+  end
+
+  # Parse options for create-path command
+  def parse_create_path_options(args)
+    options = {}
+    i = 0
+
+    while i < args.length
+      arg = args[i]
+
+      case arg
+      when "--title"
+        options[:title] = args[i + 1]
+        i += 2
+      when /^--title=(.+)$/
+        options[:title] = $1
+        i += 1
+      when "--content"
+        options[:content] = args[i + 1]
+        i += 2
+      when /^--content=(.+)$/
+        options[:content] = $1
+        i += 1
+      when "--template"
+        options[:template] = args[i + 1]
+        i += 2
+      when /^--template=(.+)$/
+        options[:template] = $1
+        i += 1
+      when "--priority"
+        options[:priority] = args[i + 1]
+        i += 2
+      when /^--priority=(.+)$/
+        options[:priority] = $1
+        i += 1
+      when "--status"
+        options[:status] = args[i + 1]
+        i += 2
+      when /^--status=(.+)$/
+        options[:status] = $1
+        i += 1
+      when "--debug", "-d"
+        options[:debug] = true
+        i += 1
+      when "--no-debug"
+        options[:debug] = false
+        i += 1
+      when "--force", "-f"
+        options[:force] = true
+        i += 1
+      when "--no-force"
+        options[:force] = false
+        i += 1
+      else
+        i += 1
+      end
+    end
+
+    options
+  end
+
+  # Fallback to subprocess execution for unknown commands
+  def execute_gem_executable(command_name, args, env: {})
+    require_relative "process_helpers"
+    include ProcessHelpers
+
+    # Try to execute the command using process helpers
+    result = execute_command([command_name] + args, env: env)
+    
+    CliResult.new(
+      stdout: result.stdout || "",
+      stderr: result.stderr || "",
+      exit_code: result.exit_code || 1
+    )
+  rescue => e
+    CliResult.new(
+      stdout: "",
+      stderr: "Error executing command: #{e.message}",
+      exit_code: 1
+    )
   end
 end
