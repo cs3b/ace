@@ -20,7 +20,7 @@
 | `handbook` | Development handbook access | `sync-templates` |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
-| `nav-path` | Intelligent path navigation | `task-new`, `file` |
+| `nav-path` | Intelligent path navigation | `task`, `file` |
 | `nav-tree` | Enhanced project tree | `--context`, `--depth` |
 | `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
 | `release-manager` | Release management tool | `current`, `report` |
@@ -33,8 +33,9 @@
 ### AI Agent   {#ai-agent}
 
 \| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
+`create-path` \| Create files with templates \| `task-new`, `--priority`, `--estimate` \| \|
 `llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
-\| Navigate project paths \| `task-new`, `file` \| \| `release-manager`
+\| Navigate project paths \| `task`, `file` \| \| `release-manager`
 \| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
 tasks \| `next`, `all` \|
 
@@ -489,7 +490,7 @@ nav-path [COMMAND] [OPTIONS]
 **Examples**
 ```bash
 # Task management
-nav-path task-new --title "Feature Name"
+create-path task-new --title "Feature Name"
 nav-path task 42
 
 # File location (PREFERRED over find/ls commands)
@@ -625,7 +626,7 @@ release-manager report --format detailed
     llm-query google "How to implement feature X?"
     
     # Generate new task when needed
-    nav-path task-new --title "Implement feature X"
+    create-path task-new --title "Implement feature X"
 {: .language-bash}
 
 ### Human Developer Workflow   {#human-developer-workflow}
