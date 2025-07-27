@@ -89,8 +89,17 @@ Why are we doing this?
 
 ## Out of Scope
 
-- ❌ …
+- ❌ Modifying the actual nav-path or create-path command implementations
+- ❌ Removing nav-path command (still needed for path resolution without creation)
+- ❌ Changing any Ruby code or command interfaces
+- ❌ Updating content outside of documentation and workflow instructions
+- ❌ Modifying historical task files or completed work
 
 ## References
 
-```
+- Task v.0.3.0+task.112: Add create-path command for file/directory creation with metadata
+- nav-path command: /dev-tools/exe/nav-path (path resolution without file creation)
+- create-path command: /dev-tools/exe/create-path (path resolution with file creation)
+- Configuration: /.coding-agent/create-path.yml (template mappings)
+- Main workflow affected: dev-handbook/workflow-instructions/create-task.wf.md
+- Tools documentation: docs/tools.md and dev-tools/docs/tools.md
