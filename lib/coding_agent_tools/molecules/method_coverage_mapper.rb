@@ -126,13 +126,23 @@ module CodingAgentTools
       def extract_method_lines(lines_data, start_line, end_line)
         return [] if lines_data.nil? || lines_data.empty?
         
+        # Ensure start_line and end_line are integers
+        start_line = start_line.to_i
+        end_line = end_line.to_i
+        
         # Convert to 0-based indexing
         range_start = [start_line - 1, 0].max
         range_end = [end_line - 1, lines_data.length - 1].min
         
         return [] if range_start >= lines_data.length
         
-        lines_data[range_start..range_end] || []
+        # Safely extract the range
+        begin
+          lines_data[range_start..range_end] || []
+        rescue TypeError => e
+          warn "Warning: Error extracting method lines for range #{range_start}..#{range_end}: #{e.message}"
+          []
+        end
       end
 
       def extract_uncovered_lines_in_method(method_lines, method_start_line)

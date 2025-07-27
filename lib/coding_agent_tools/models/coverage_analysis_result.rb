@@ -47,11 +47,22 @@ module CodingAgentTools
       end
 
       def to_h(format: :compact)
-        {
-          summary: summary_stats,
-          under_covered_files: under_covered_files.map { |file| file.to_h(format: format) },
-          under_covered_methods: under_covered_methods.map { |method| method.to_h(format: format) }
-        }
+        case format
+        when :compact
+          # Only include files under threshold with methods needing tests - truly minimal
+          under_covered_files.map { |file| file.to_h(format: :compact) }.compact
+        when :verbose
+          # Full detailed analysis
+          {
+            summary: summary_stats,
+            files: files.map { |file| file.to_h(format: :verbose) },
+            under_covered_files: under_covered_files.map { |file| file.to_h(format: :verbose) },
+            under_covered_methods: under_covered_methods.map { |method| method.to_h(format: :verbose) }
+          }
+        else
+          # Default to compact
+          under_covered_files.map { |file| file.to_h(format: :compact) }
+        end
       end
 
       private

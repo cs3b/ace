@@ -9,17 +9,37 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
   let(:method1) do
     instance_double(
       CodingAgentTools::Models::MethodCoverage,
-      under_threshold?: true,
-      to_h: {name: "method1"}
-    )
+      under_threshold?: true
+    ).tap do |method|
+      allow(method).to receive(:to_h) do |format: :compact|
+        case format
+        when :compact
+          {name: "method1"}
+        when :verbose
+          {name: "method1", coverage_percentage: 50.0}
+        else
+          {name: "method1"}
+        end
+      end
+    end
   end
 
   let(:method2) do
     instance_double(
       CodingAgentTools::Models::MethodCoverage,
-      under_threshold?: false,
-      to_h: {name: "method2"}
-    )
+      under_threshold?: false
+    ).tap do |method|
+      allow(method).to receive(:to_h) do |format: :compact|
+        case format
+        when :compact
+          {name: "method2"}
+        when :verbose
+          {name: "method2", coverage_percentage: 90.0}
+        else
+          {name: "method2"}
+        end
+      end
+    end
   end
 
   let(:file1) do
@@ -28,9 +48,19 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
       under_threshold?: true,
       methods: [method1, method2],
       total_lines: 100,
-      covered_lines: 70,
-      to_h: {file_path: "lib/file1.rb"}
-    )
+      covered_lines: 70
+    ).tap do |file|
+      allow(file).to receive(:to_h) do |format: :compact|
+        case format
+        when :compact
+          nil  # Returns nil for compact format if no methods need tests
+        when :verbose
+          {file_path: "lib/file1.rb"}
+        else
+          {file_path: "lib/file1.rb"}
+        end
+      end
+    end
   end
 
   let(:file2) do
@@ -39,9 +69,19 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
       under_threshold?: false,
       methods: [],
       total_lines: 50,
-      covered_lines: 45,
-      to_h: {file_path: "lib/file2.rb"}
-    )
+      covered_lines: 45
+    ).tap do |file|
+      allow(file).to receive(:to_h) do |format: :compact|
+        case format
+        when :compact
+          nil  # Returns nil for compact format if no methods need tests
+        when :verbose
+          {file_path: "lib/file2.rb"}
+        else
+          {file_path: "lib/file2.rb"}
+        end
+      end
+    end
   end
 
   let(:files) { [file1, file2] }
@@ -137,14 +177,25 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
   end
 
   describe "#to_h" do
-    it "returns hash representation" do
-      expected_hash = {
-        summary: subject.summary_stats,
-        under_covered_files: [{file_path: "lib/file1.rb"}],
-        under_covered_methods: [{name: "method1"}]
-      }
+    context "with compact format (default)" do
+      it "returns array of under-covered files only" do
+        # Since compact format returns only under-covered files that have methods needing tests
+        # and our mock files return nil from to_h(format: :compact), expect empty array
+        expect(subject.to_h).to eq([])
+      end
+    end
 
-      expect(subject.to_h).to eq(expected_hash)
+    context "with verbose format" do
+      it "returns full hash representation" do
+        expected_hash = {
+          summary: subject.summary_stats,
+          files: subject.files.map { |f| f.to_h(format: :verbose) },
+          under_covered_files: subject.under_covered_files.map { |f| f.to_h(format: :verbose) },
+          under_covered_methods: subject.under_covered_methods.map { |m| m.to_h(format: :verbose) }
+        }
+
+        expect(subject.to_h(format: :verbose)).to eq(expected_hash)
+      end
     end
   end
 end

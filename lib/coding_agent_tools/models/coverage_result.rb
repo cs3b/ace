@@ -44,29 +44,38 @@ module CodingAgentTools
       end
 
       def to_h(format: :compact)
-        base_hash = {
-          file_path: file_path,
-          relative_path: relative_path,
-          total_lines: total_lines,
-          covered_lines: covered_lines,
-          coverage_percentage: coverage_percentage,
-          uncovered_lines_count: uncovered_lines_count,
-          uncovered_ranges: uncovered_ranges
-        }
-
         case format
         when :compact
-          base_hash[:uncovered_lines] = uncovered_lines_compact
-          base_hash[:methods] = methods.map { |method| method.to_h(format: :compact) }
+          # Truly minimal format - only essential data with methods that need tests
+          methods_needing_tests = methods.select(&:needs_tests?)
+          return nil if methods_needing_tests.empty?
+          
+          {
+            relative_path: relative_path,
+            coverage_percentage: coverage_percentage,
+            methods: methods_needing_tests.map { |method| method.to_h(format: :compact) }
+          }
         when :verbose
-          base_hash[:uncovered_lines] = uncovered_lines_verbose
-          base_hash[:methods] = methods.map { |method| method.to_h(format: :verbose) }
+          # Full detailed format
+          {
+            file_path: file_path,
+            relative_path: relative_path,
+            total_lines: total_lines,
+            covered_lines: covered_lines,
+            coverage_percentage: coverage_percentage,
+            uncovered_lines_count: uncovered_lines_count,
+            uncovered_ranges: uncovered_ranges,
+            uncovered_lines: uncovered_lines_verbose,
+            methods: methods.map { |method| method.to_h(format: :verbose) }
+          }
         else
-          base_hash[:uncovered_lines] = uncovered_lines_compact
-          base_hash[:methods] = methods.map { |method| method.to_h(format: :compact) }
+          # Default to compact
+          {
+            relative_path: relative_path,
+            coverage_percentage: coverage_percentage,
+            methods: methods.map { |method| method.to_h(format: :compact) }
+          }
         end
-
-        base_hash
       end
 
       private

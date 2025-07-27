@@ -63,15 +63,7 @@ RSpec.describe CodingAgentTools::Models::MethodCoverage do
       it "returns hash representation with compact uncovered lines" do
         expected_hash = {
           name: name,
-          start_line: start_line,
-          end_line: end_line,
-          total_lines: total_lines,
-          covered_lines: covered_lines,
-          coverage_percentage: coverage_percentage,
-          uncovered_lines_count: 2,
-          visibility: :public,
-          uncovered_lines: "",
-          needs_tests: true
+          uncovered_lines: ""
         }
 
         expect(subject.to_h).to eq(expected_hash)
@@ -80,15 +72,7 @@ RSpec.describe CodingAgentTools::Models::MethodCoverage do
       it "returns compact format when explicitly requested" do
         expected_hash = {
           name: name,
-          start_line: start_line,
-          end_line: end_line,
-          total_lines: total_lines,
-          covered_lines: covered_lines,
-          coverage_percentage: coverage_percentage,
-          uncovered_lines_count: 2,
-          visibility: :public,
-          uncovered_lines: "",
-          needs_tests: true
+          uncovered_lines: ""
         }
 
         expect(subject.to_h(format: :compact)).to eq(expected_hash)

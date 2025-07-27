@@ -104,8 +104,8 @@ module CodingAgentTools
         
         MethodDefinition.new(
           name: name,
-          start_line: location.line,
-          end_line: location.last_line,
+          start_line: location.line.to_i,
+          end_line: location.last_line.to_i,
           type: :def,
           visibility: visibility
         )
@@ -117,8 +117,8 @@ module CodingAgentTools
         
         MethodDefinition.new(
           name: "self.#{name}",
-          start_line: location.line,
-          end_line: location.last_line,
+          start_line: location.line.to_i,
+          end_line: location.last_line.to_i,
           type: :defs,
           visibility: visibility
         )
