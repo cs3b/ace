@@ -37,17 +37,20 @@ module CodingAgentTools
           ]
 
           def call(**options)
+            # Check if user explicitly provided --limit (not just default)
+            explicit_limit = ARGV.any? { |arg| arg.start_with?('--limit') }
+            
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
 
             # Determine time filtering behavior:
             # - If --last is specified: use that time filter
-            # - If --last not specified and --limit specified: no time filter (get most recent X)
+            # - If --last not specified and --limit explicitly specified: no time filter (get most recent X)
             # - If neither specified: default to 1 day filter
             if options[:last]
               since_seconds = parse_time_period(options[:last])
-            elsif options[:limit]
-              since_seconds = nil  # No time filter when only --limit specified
+            elsif explicit_limit
+              since_seconds = nil  # No time filter when --limit explicitly specified
             else
               since_seconds = parse_time_period("1.day")  # Default behavior
             end
