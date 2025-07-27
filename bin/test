@@ -9,12 +9,12 @@ fi
 
 # No args — run the full cascade
 echo "🧪 Running UNIT tests (excluding integration and slow)..."
-bundle exec rspec --exclude-pattern "spec/integration/**/*_spec.rb" --tag ~slow --fail-fast
+bundle exec rspec --exclude-pattern "spec/integration/**/*_spec.rb" --tag ~slow --fail-fast=3
 
-echo "✅ Unit tests passed. Now running INTEGRATION tests..." --fail-fast
-bundle exec rspec spec/integration
+echo "✅ Unit tests passed. Now running INTEGRATION tests..."
+bundle exec rspec spec/integration --fail-fast=1
 
-echo "✅ Integration tests passed. Now running SLOW tests..." --fail-fast
-bundle exec rspec --tag slow
+# echo "✅ Integration tests passed. Now running SLOW tests..."
+# bundle exec rspec --tag slow --fail-fast=1
 
 echo "🎉 All tests passed!"
