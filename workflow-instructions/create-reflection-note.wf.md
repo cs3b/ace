@@ -59,7 +59,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
      ```bash
      # Get current release information and path automatically
-     create-path file --title '<reflection-title>'
+     create-path file:reflection-new --title '<reflection-title>'
 
      # This tool will:
      # 1. Determine current release context automatically
