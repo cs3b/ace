@@ -11,9 +11,8 @@ module CodingAgentTools
       desc "Create files and directories with content from templates and metadata"
 
       argument :type, desc: "Type of creation (task-new, file, directory, docs-new, template)"
-      argument :target, desc: "Target identifier (title for new items, path for files/directories)"
 
-      option :title, desc: "Title for new path generation (alternative to target argument)"
+      option :title, desc: "Title for new path generation", required: true
       option :force, type: :boolean, default: false, aliases: ["f"],
         desc: "Force overwrite existing files without confirmation"
       option :content, type: :string, desc: "Direct content for file creation"
@@ -28,27 +27,26 @@ module CodingAgentTools
         desc: "Initial status"
 
       example [
-        'task-new "implement-feature-x" --priority high --estimate 4h',
-        'file README.md --content "# My Project"',
-        'directory src/components',
-        'docs-new "api-documentation" --title "API Documentation"',
-        'template my-doc.md --template custom-template.md --title "Custom Doc"'
+        'task-new --title "implement-feature-x" --priority high --estimate 4h',
+        'file --title "README.md" --content "# My Project"',
+        'directory --title "src/components"',
+        'docs-new --title "API Documentation"',
+        'template --title "my-doc.md" --template custom-template.md'
       ]
 
-      def call(type:, target:, **options)
+      def call(type:, **options)
         # Initialize components
         @path_resolver = Molecules::PathResolver.new
         @file_handler = Molecules::FileIoHandler.new
         @security_validator = Molecules::SecurePathValidator.new
         @config_loader = load_create_path_config
 
-        # Get target from title option if not provided as argument
-        actual_target = target || options[:title]
+        # Get target from title option (now required)
+        actual_target = options[:title]
 
         if actual_target.nil? || actual_target.strip.empty?
-          puts "Error: Target required for path creation"
-          puts "Usage: create-path TYPE TARGET [OPTIONS]"
-          puts "       create-path TYPE --title 'Title'"
+          puts "Error: Title required for path creation"
+          puts "Usage: create-path TYPE --title 'Title' [OPTIONS]"
           return 1
         end
 
@@ -111,7 +109,9 @@ module CodingAgentTools
         create_file_with_content(target_path, content, options)
       end
 
-      def create_file(target, options)
+      def create_file(title, options)
+        # Use title as the file path
+        target = title
         # Validate path
         validation_result = @security_validator.validate_path(target, operation: :write)
         unless validation_result.valid?
@@ -130,7 +130,9 @@ module CodingAgentTools
         create_file_with_content(validated_path, content, options)
       end
 
-      def create_directory(target, options)
+      def create_directory(title, options)
+        # Use title as the directory path
+        target = title
         # Validate path
         validation_result = @security_validator.validate_path(target, operation: :write)
         unless validation_result.valid?
@@ -153,13 +155,15 @@ module CodingAgentTools
         end
       end
 
-      def create_with_custom_template(target, options)
+      def create_with_custom_template(title, options)
         template_path = options[:template]
         
         unless template_path
           return {success: false, error: "Template path required (use --template)"}
         end
 
+        # Use title as the target path
+        target = title
         # Validate target path
         validation_result = @security_validator.validate_path(target, operation: :write)
         unless validation_result.valid?
@@ -176,7 +180,7 @@ module CodingAgentTools
         end
 
         # Apply variable substitution
-        content = apply_variable_substitution(template_content, target, options)
+        content = apply_variable_substitution(template_content, title, options)
 
         create_file_with_content(validated_path, content, options)
       end
