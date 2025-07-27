@@ -9,11 +9,11 @@ module CodingAgentTools
         # CLI command for coverage analysis operations
         # Provides comprehensive coverage analysis with multiple output formats
         class Analyze < Dry::CLI::Command
-          desc "Analyze SimpleCov coverage data and generate reports"
+          desc "Analyze SimpleCov coverage data and generate reports with adaptive threshold detection"
 
           argument :input_file, required: true, desc: "Path to SimpleCov .resultset.json file"
 
-          option :threshold, type: :float, default: 85.0, desc: "Coverage threshold percentage (0-100)"
+          option :threshold, type: :string, default: "auto", desc: "Coverage threshold: percentage (0-100) or 'auto' for adaptive detection"
           option :output_dir, type: :string, default: "./coverage_analysis", desc: "Output directory for reports"
           option :format, type: :string, default: "text,json", desc: "Output formats (comma-separated: text,json,csv)"
           option :include_patterns, type: :string, default: "**/lib/**/*.rb", desc: "File patterns to include (comma-separated)"
@@ -29,8 +29,9 @@ module CodingAgentTools
           option :verbose, type: :boolean, default: false, desc: "Use verbose format with full uncovered line arrays"
 
           example [
-            "coverage.resultset.json                                    # Basic analysis with default settings",
-            "coverage.resultset.json --threshold 90 --format text,csv  # Custom threshold and formats",
+            "coverage.resultset.json                                    # Basic analysis with adaptive threshold (default)",
+            "coverage.resultset.json --threshold 90                    # Use fixed 90% threshold",
+            "coverage.resultset.json --threshold auto                  # Explicitly use adaptive threshold detection",
             "coverage.resultset.json --quick --output_dir ./reports     # Quick analysis to custom directory",
             "coverage.resultset.json --focus \"**/models/**,**/services/**\" # Focus on specific directories",
             "coverage.resultset.json --detailed --comprehensive        # Full detailed analysis with all sections",
@@ -77,8 +78,12 @@ module CodingAgentTools
                              :compact
                            end
 
+            # Parse threshold option
+            threshold_value, adaptive_mode = parse_threshold_option(options[:threshold])
+
             {
-              threshold: options[:threshold],
+              threshold: threshold_value,
+              adaptive_threshold: adaptive_mode,
               output_dir: options[:output_dir],
               formats: parse_comma_separated(options[:format]),
               include_patterns: parse_comma_separated(options[:include_patterns]),
@@ -94,6 +99,22 @@ module CodingAgentTools
           def parse_comma_separated(value)
             return [] if value.nil? || value.empty?
             value.split(',').map(&:strip).reject(&:empty?)
+          end
+
+          def parse_threshold_option(threshold_value)
+            case threshold_value&.to_s&.downcase
+            when 'auto', ''
+              # Use adaptive threshold detection with default fallback
+              [85.0, true]
+            else
+              # Parse as numeric threshold
+              begin
+                numeric_threshold = Float(threshold_value)
+                [numeric_threshold, false]
+              rescue ArgumentError
+                raise ArgumentError, "Invalid threshold value: '#{threshold_value}'. Use a number (0-100) or 'auto'"
+              end
+            end
           end
 
           def handle_recommend_mode(workflow, input_file)

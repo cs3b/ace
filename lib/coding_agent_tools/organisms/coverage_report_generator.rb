@@ -118,7 +118,7 @@ module CodingAgentTools
       # @option options [Array<Symbol>] :formats Formats to generate (default: [:text, :json])
       # @option options [String] :base_name Base filename (default: "coverage_report")
       # @return [Hash] Paths to generated report files
-      def generate_multi_format_reports(file_path, output_directory, options = {})
+      def generate_multi_format_reports(file_path, output_directory, options = {}, analysis_result: nil)
         validated_options = validate_report_options(options)
         formats = validated_options[:formats] || [:text, :json]
         base_name = validated_options[:base_name] || "coverage_report"
@@ -126,8 +126,8 @@ module CodingAgentTools
         # Ensure output directory exists
         FileUtils.mkdir_p(output_directory)
         
-        # Perform analysis once
-        analysis_result = @analyzer.analyze_coverage(file_path, validated_options)
+        # Use provided analysis result or perform analysis
+        analysis_result = analysis_result || @analyzer.analyze_coverage(file_path, validated_options)
         
         # Generate each format
         generated_files = {}

@@ -9,32 +9,37 @@ module CodingAgentTools
         data_processor: nil,
         file_analyzer: nil,
         report_formatter: nil,
-        threshold_validator: nil
+        threshold_validator: nil,
+        adaptive_threshold_calculator: nil
       )
         @data_processor = data_processor || Molecules::CoverageDataProcessor.new
         @file_analyzer = file_analyzer || Molecules::FileAnalyzer.new
         @report_formatter = report_formatter || Molecules::ReportFormatter.new
         @threshold_validator = threshold_validator || Atoms::ThresholdValidator.new
+        @adaptive_threshold_calculator = adaptive_threshold_calculator || Atoms::AdaptiveThresholdCalculator.new
       end
 
       # Performs complete coverage analysis from SimpleCov file
       # @param file_path [String] Path to SimpleCov .resultset.json file
       # @param options [Hash] Analysis options
       # @option options [Float] :threshold Coverage threshold percentage (default: 85.0)
+      # @option options [Boolean] :adaptive_threshold Use adaptive threshold detection (overrides :threshold when true)
       # @option options [Array<String>] :include_patterns File patterns to include (default: ["**/lib/**"])
       # @option options [Array<String>] :exclude_patterns File patterns to exclude (default: ["**/spec/**", "**/test/**"])
       # @option options [Boolean] :detailed_analysis Include method-level analysis (default: false)
       # @option options [String] :sort_by Sorting criteria ('coverage', 'uncovered_lines', 'file_name') (default: 'coverage')
-      # @return [Models::CoverageAnalysisResult] Complete analysis results
+      # @return [Models::CoverageAnalysisResult] Complete analysis results with adaptive threshold information
       def analyze_coverage(file_path, options = {})
         # Validate and set defaults
         validated_options = validate_options(options)
-        threshold = validated_options[:threshold]
         
-        # Process SimpleCov data
+        # Process SimpleCov data first to get coverage information
         processed_data = @data_processor.process_file(file_path, validated_options)
         
-        # Analyze files
+        # Determine final threshold (adaptive takes precedence)
+        threshold, adaptive_result = determine_final_threshold(processed_data, validated_options)
+        
+        # Analyze files with determined threshold
         file_results = @file_analyzer.analyze_files(
           processed_data,
           threshold: threshold,
@@ -42,12 +47,23 @@ module CodingAgentTools
           detailed_analysis: validated_options[:detailed_analysis]
         )
         
-        # Create analysis result
-        Models::CoverageAnalysisResult.new(
+        # Create analysis result with adaptive threshold information
+        analysis_result = Models::CoverageAnalysisResult.new(
           files: file_results,
           threshold: threshold,
           analysis_timestamp: Time.now
         )
+        
+        # Add adaptive threshold metadata if used
+        if adaptive_result
+          analysis_result.instance_variable_set(:@adaptive_threshold_result, adaptive_result)
+          analysis_result.define_singleton_method(:adaptive_threshold_result) { @adaptive_threshold_result }
+          analysis_result.define_singleton_method(:adaptive_threshold_used?) { true }
+        else
+          analysis_result.define_singleton_method(:adaptive_threshold_used?) { false }
+        end
+        
+        analysis_result
       end
 
       # Analyzes a single file in detail with method-level breakdown
@@ -149,6 +165,7 @@ module CodingAgentTools
       def validate_options(options)
         validated = {
           threshold: @threshold_validator.validate_threshold(options[:threshold] || 85.0),
+          adaptive_threshold: options[:adaptive_threshold] || false,
           include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
           exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           detailed_analysis: options[:detailed_analysis] || false,
@@ -162,6 +179,73 @@ module CodingAgentTools
         end
         
         validated
+      end
+
+      def determine_final_threshold(processed_data, validated_options)
+        if validated_options[:adaptive_threshold]
+          # Extract coverage data for adaptive calculation
+          coverage_data = extract_coverage_data(processed_data)
+          
+          # Calculate optimal threshold
+          adaptive_result = @adaptive_threshold_calculator.calculate_optimal_threshold(coverage_data)
+          
+          # Return adaptive threshold and the full result
+          [adaptive_result[:optimal_threshold], adaptive_result]
+        else
+          # Use provided threshold, no adaptive result
+          [validated_options[:threshold], nil]
+        end
+      end
+
+      def extract_coverage_data(processed_data)
+        # Extract coverage percentages from processed data
+        # This assumes processed_data has a structure that includes file coverage information
+        case processed_data
+        when Hash
+          if processed_data[:files]
+            processed_data[:files].map do |file|
+              { coverage_percentage: file[:coverage_percentage] || 0.0 }
+            end
+          elsif processed_data.key?("RSpec") || processed_data.key?("Unit Tests") || processed_data.key?("Unknown Test Framework")
+            # Handle SimpleCov data structure (newer format with "lines" key)
+            all_files = []
+            processed_data.each do |key, test_data|
+              next unless test_data.is_a?(Hash) && test_data["coverage"]
+              
+              test_data["coverage"].each do |file_path, file_coverage_data|
+                next if file_coverage_data.nil?
+                
+                # Handle both old format (direct array) and new format (hash with "lines" key)
+                line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data["lines"]
+                             file_coverage_data["lines"]
+                           elsif file_coverage_data.is_a?(Array)
+                             file_coverage_data
+                           else
+                             next
+                           end
+                
+                next if line_data.nil? || !line_data.is_a?(Array)
+                
+                total_lines = line_data.compact.length
+                next if total_lines == 0
+                
+                covered_lines = line_data.count { |cov| cov && cov > 0 }
+                coverage_percentage = (covered_lines.to_f / total_lines * 100)
+                
+                all_files << { coverage_percentage: coverage_percentage }
+              end
+            end
+            all_files
+          else
+            []
+          end
+        when Array
+          processed_data.map do |file|
+            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+          end
+        else
+          []
+        end
       end
 
       def calculate_median_coverage(files)
