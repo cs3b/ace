@@ -494,24 +494,13 @@ module CliHelpers
     options
   end
 
-  # Fallback to subprocess execution for unknown commands
+  # Execute gem executable and return [stdout, stderr, status] format
+  # This method is used in integration tests that expect the ProcessHelpers format
   def execute_gem_executable(command_name, args, env: {})
     require_relative "process_helpers"
     include ProcessHelpers
 
-    # Try to execute the command using process helpers
-    result = execute_command([command_name] + args, env: env)
-    
-    CliResult.new(
-      stdout: result.stdout || "",
-      stderr: result.stderr || "",
-      exit_code: result.exit_code || 1
-    )
-  rescue => e
-    CliResult.new(
-      stdout: "",
-      stderr: "Error executing command: #{e.message}",
-      exit_code: 1
-    )
+    # Execute the command using process helpers and return the same format
+    execute_command([command_name] + args, env: env)
   end
 end
