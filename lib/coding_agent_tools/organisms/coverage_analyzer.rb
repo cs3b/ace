@@ -10,13 +10,15 @@ module CodingAgentTools
         file_analyzer: nil,
         report_formatter: nil,
         threshold_validator: nil,
-        adaptive_threshold_calculator: nil
+        adaptive_threshold_calculator: nil,
+        calculator: nil
       )
         @data_processor = data_processor || Molecules::CoverageDataProcessor.new
         @file_analyzer = file_analyzer || Molecules::FileAnalyzer.new
         @report_formatter = report_formatter || Molecules::ReportFormatter.new
         @threshold_validator = threshold_validator || Atoms::ThresholdValidator.new
         @adaptive_threshold_calculator = adaptive_threshold_calculator || Atoms::AdaptiveThresholdCalculator.new
+        @calculator = calculator || Atoms::CoverageCalculator.new
       end
 
       # Performs complete coverage analysis from SimpleCov file
@@ -226,12 +228,11 @@ module CodingAgentTools
                 
                 next if line_data.nil? || !line_data.is_a?(Array)
                 
-                # Use same calculation logic as CoverageCalculator atom
-                executable_lines = line_data.count { |line| !line.nil? }
-                next if executable_lines == 0
+                # Use CoverageCalculator atom for consistent calculation
+                coverage_result = @calculator.calculate_file_coverage(line_data)
+                next if coverage_result[:total_lines] == 0
                 
-                covered_lines = line_data.count { |line| line.is_a?(Integer) && line > 0 }
-                coverage_percentage = (covered_lines.to_f / executable_lines * 100).round(2)
+                coverage_percentage = coverage_result[:coverage_percentage]
                 
                 all_files << { coverage_percentage: coverage_percentage }
               end
