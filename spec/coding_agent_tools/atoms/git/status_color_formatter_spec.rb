@@ -496,6 +496,103 @@ RSpec.describe CodingAgentTools::Atoms::Git::StatusColorFormatter do
 
         expect(result).to include(special_filename)
       end
+
+      it "handles merge conflict status" do
+        conflict_status = "both modified: conflicted_file.rb"
+        result = described_class.format_repository_status(repo_name, conflict_status)
+
+        expect(result).to include("both modified:")
+        expect(result).to include("\033[31m") # Red for conflict
+      end
+
+      it "handles renamed files" do
+        renamed_status = "\trenamed:    old_name.rb -> new_name.rb"
+        formatter = described_class.new(force_color: true)
+        result = formatter.send(:colorize_status_line, renamed_status)
+
+        expect(result).to include("renamed:")
+        expect(result).to include("\033[32m") # Green for staged
+      end
+
+      it "handles status with merge conflict indicators" do
+        merge_status = "merge conflict in file.rb"
+        formatter = described_class.new
+        result = formatter.send(:determine_status_type, merge_status)
+
+        expect(result).to eq(:conflict)
+      end
+
+      it "handles status with all change types" do
+        complex_status = <<~STATUS
+          Changes not staged for commit:
+            modified:   file1.rb
+          Changes to be committed:
+            new file:   file2.rb
+            renamed:    old.rb -> new.rb
+            deleted:    removed.rb
+        STATUS
+        formatter = described_class.new
+        result = formatter.send(:determine_status_type, complex_status)
+
+        expect(result).to eq(:changes)
+      end
+
+      it "handles whitespace-only status output" do
+        whitespace_status = "   \n\t\n   "
+        result = described_class.format_repository_status(repo_name, whitespace_status)
+
+        expect(result).to include("Clean working directory")
+      end
+
+      it "handles copied files status line" do
+        copied_line = "\tcopied:     original.rb -> copy.rb"
+        formatter = described_class.new(force_color: true)
+        result = formatter.send(:colorize_status_line, copied_line)
+
+        expect(result).to include("copied:")
+        expect(result).to include("\033[32m") # Green for staged new
+      end
+
+      it "handles 'nothing to commit' message" do
+        nothing_line = "nothing to commit, working tree clean"
+        formatter = described_class.new(force_color: true)
+        result = formatter.send(:colorize_status_line, nothing_line)
+
+        expect(result).to include("\033[2m") # Dim meta text
+      end
+
+      it "handles 'no changes added' message" do
+        no_changes_line = "no changes added to commit"
+        formatter = described_class.new(force_color: true)
+        result = formatter.send(:colorize_status_line, no_changes_line)
+
+        expect(result).to include("\033[2m") # Dim meta text
+      end
+
+      it "correctly identifies file lines without prefixes as untracked" do
+        # Lines that are indented but don't have status prefixes should be untracked files
+        untracked_line = "    untracked_file.txt"
+        formatter = described_class.new(force_color: true)
+        result = formatter.send(:colorize_status_line, untracked_line)
+
+        expect(result).to include("\033[31m") # Red for untracked
+        expect(result).to include("untracked_file.txt")
+      end
+
+      it "handles status lines with unusual indentation" do
+        status_lines = [
+          " modified:   file.rb",        # Single space
+          "  modified:   file.rb",       # Double space
+          "\t\tmodified:   file.rb",     # Double tab
+          "   \tmodified:   file.rb"     # Mixed spaces and tabs
+        ]
+
+        formatter = described_class.new(force_color: true)
+        status_lines.each do |line|
+          result = formatter.send(:colorize_status_line, line)
+          expect(result).to include("modified:")
+        end
+      end
     end
   end
 end
