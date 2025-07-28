@@ -10,7 +10,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ConfigurationLoader do
   let(:config_path) { File.join(temp_dir, "lint.yml") }
 
   after do
-    FileUtils.rm_rf(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do

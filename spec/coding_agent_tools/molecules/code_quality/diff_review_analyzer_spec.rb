@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
   end
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#analyze_changes" do

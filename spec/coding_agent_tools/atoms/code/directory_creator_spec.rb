@@ -8,7 +8,7 @@ RSpec.describe CodingAgentTools::Atoms::Code::DirectoryCreator do
   let(:creator) { described_class.new }
   let(:temp_dir) { Dir.mktmpdir }
 
-  after { FileUtils.rm_rf(temp_dir) }
+  after { safe_directory_cleanup(temp_dir) }
 
   describe "#create" do
     context "with valid path" do

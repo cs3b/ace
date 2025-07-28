@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::PathDispatcher do
   end
 
   after do
-    FileUtils.rm_rf(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#dispatch_paths" do

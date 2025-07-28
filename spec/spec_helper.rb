@@ -54,6 +54,28 @@ require_relative "support/test_factories"
 # Load shared examples for client behaviors
 require_relative "support/shared_examples/client_behavior"
 
+# Helper method for safe directory cleanup to prevent getcwd errors
+def safe_directory_cleanup(temp_dir)
+  return unless temp_dir && File.exist?(temp_dir)
+  
+  # Ensure we're not inside the directory we're about to delete
+  original_dir = Dir.pwd
+  if original_dir.start_with?(File.realpath(temp_dir))
+    # Move to a safe directory (parent of temp dir or project root)
+    safe_dir = File.dirname(temp_dir)
+    safe_dir = ENV['PROJECT_ROOT'] || Dir.home if !Dir.exist?(safe_dir)
+    Dir.chdir(safe_dir) if Dir.exist?(safe_dir)
+  end
+  
+  # Remove the directory
+  FileUtils.remove_entry(temp_dir)
+rescue Errno::ENOENT, Errno::ENOTDIR
+  # Directory already removed or doesn't exist
+rescue => e
+  # Log but don't fail on cleanup errors
+  warn "Warning: Failed to cleanup directory #{temp_dir}: #{e.message}" unless ENV['CI']
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
@@ -128,7 +150,17 @@ RSpec.configure do |config|
 
     # Restore environment and working directory
     ENV.replace(original_env)
-    Dir.chdir(original_dir) if Dir.pwd != original_dir
+    
+    # Safely restore working directory - only if original directory still exists
+    # and we're not already in it
+    if Dir.pwd != original_dir && Dir.exist?(original_dir)
+      begin
+        Dir.chdir(original_dir)
+      rescue Errno::ENOENT
+        # Original directory no longer exists, stay where we are
+        # This can happen when tests delete directories
+      end
+    end
   end
 
   # Suppress application warnings and logging during tests to keep output clean
@@ -145,6 +177,14 @@ RSpec.configure do |config|
   end
 
   config.after(:suite) do
+    # Ensure we're in a safe directory before final cleanup
+    begin
+      safe_dir = ENV['PROJECT_ROOT'] || File.expand_path("../../..", __dir__)
+      Dir.chdir(safe_dir) if Dir.exist?(safe_dir) && Dir.pwd != safe_dir
+    rescue => e
+      # Ignore errors during final directory cleanup
+    end
+
     # Restore warning behavior after test suite completes
     CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = false
     CodingAgentTools::Atoms::SecurityLogger.suppress_output = false

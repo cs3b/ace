@@ -9,7 +9,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
   let(:scanner) { described_class.new(temp_dir) }
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe ".discover_repositories" do
@@ -169,7 +169,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
       let(:non_git_scanner) { described_class.new(non_git_dir) }
 
       after do
-        FileUtils.rm_rf(non_git_dir) if Dir.exist?(non_git_dir)
+        safe_directory_cleanup(non_git_dir)
       end
 
       it "returns main repository with is_git_repo false" do
@@ -324,7 +324,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
       let(:unicode_scanner) { described_class.new(unicode_dir) }
 
       after do
-        FileUtils.rm_rf(unicode_dir) if Dir.exist?(unicode_dir)
+        safe_directory_cleanup(unicode_dir)
       end
 
       it "handles Unicode characters in project root" do

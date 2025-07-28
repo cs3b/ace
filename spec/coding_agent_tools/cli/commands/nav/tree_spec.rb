@@ -56,7 +56,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
   end
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#call" do

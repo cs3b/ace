@@ -8,7 +8,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::KramdownFormatter do
   let(:temp_dir) { Dir.mktmpdir }
 
   after do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do

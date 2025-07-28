@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::PathResolver do
   end
 
   after do
-    FileUtils.remove_entry(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#resolve_path" do

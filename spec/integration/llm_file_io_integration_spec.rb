@@ -24,7 +24,7 @@ RSpec.describe "LLM File I/O Integration", type: :integration do
   end
 
   after do
-    FileUtils.remove_entry(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir) if Dir.exist?(temp_dir)
   end
 
   # Use VCR for predictable API responses

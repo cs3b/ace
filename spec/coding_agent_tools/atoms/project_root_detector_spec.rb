@@ -27,7 +27,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
     context "with PROJECT_ROOT environment variable" do
       let(:temp_dir) { Dir.mktmpdir }
 
-      after { FileUtils.rm_rf(temp_dir) }
+      after { safe_directory_cleanup(temp_dir) }
 
       it "uses PROJECT_ROOT as highest priority when valid" do
         # Create a valid project root
@@ -137,7 +137,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
     context "with enhanced error messages" do
       let(:temp_dir) { Dir.mktmpdir }
 
-      after { FileUtils.rm_rf(temp_dir) }
+      after { safe_directory_cleanup(temp_dir) }
 
       it "suggests setting PROJECT_ROOT when detection fails" do
         subdir = File.join(temp_dir, "no", "markers", "here")
@@ -222,7 +222,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
     context "with temporary directory structure" do
       let(:temp_dir) { Dir.mktmpdir }
 
-      after { FileUtils.rm_rf(temp_dir) }
+      after { safe_directory_cleanup(temp_dir) }
 
       it "finds root with .git marker" do
         git_dir = File.join(temp_dir, ".git")
@@ -288,7 +288,7 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
     context "edge cases" do
       let(:temp_dir) { Dir.mktmpdir }
 
-      after { FileUtils.rm_rf(temp_dir) }
+      after { safe_directory_cleanup(temp_dir) }
 
       it "handles nil start_path by using Dir.pwd" do
         result = detector.find_project_root(nil)
