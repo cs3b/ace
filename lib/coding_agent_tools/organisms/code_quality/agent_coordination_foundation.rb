@@ -140,7 +140,7 @@ module CodingAgentTools
           {
             total_agents: @agent_registry.size,
             successful_agents: @completion_status.size,
-            total_fixes: @completion_status.values.sum { |c| c[:results][:fixes_applied] || 0 },
+            total_fixes: @completion_status.values.sum { |c| c[:results]&.dig(:fixes_applied) || 0 },
             duration: calculate_total_duration,
             agent_results: @completion_status
           }
@@ -163,6 +163,8 @@ module CodingAgentTools
         def estimate_processing_time(error_files)
           # Rough estimate: 30 seconds per error file with 4 parallel agents
           total_errors = error_files.size
+          return 0 if total_errors == 0
+          
           parallel_factor = [total_errors, 4].min
 
           (total_errors * 30.0 / parallel_factor).ceil
@@ -170,6 +172,8 @@ module CodingAgentTools
 
         def determine_strategy(error_files)
           case error_files.size
+          when 0
+            :sequential
           when 1
             :sequential
           when 2..4
