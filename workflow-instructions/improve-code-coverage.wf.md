@@ -28,6 +28,10 @@ Systematically analyze code coverage reports and create targeted test tasks to i
      ```bash
      cd dev-tools && bin/test spec/
      ```
+   * Delete old coverage analysis report:
+     ```bash
+     rm coverage_analysis/coverage_analysis.json
+     ```
    * Generate comprehensive coverage analysis report:
      ```bash
      coverage-analyze coverage/.resultset.json
