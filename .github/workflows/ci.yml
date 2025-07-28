@@ -35,6 +35,9 @@ jobs:
       - name: Setup the dependencies
         run: bin/setup
 
+      - name: Add executables to PATH
+        run: echo "${{ github.workspace }}/exe" >> $GITHUB_PATH
+
       - name: Run tests
         run: bin/test spec/
 
