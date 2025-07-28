@@ -539,4 +539,148 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       end
     end
   end
+
+  # Additional focused tests for key uncovered methods
+  describe "additional method coverage" do
+    describe "#valid_provider?" do
+      it "returns true for valid providers" do
+        %w[google lmstudio openai anthropic mistral together_ai].each do |provider|
+          expect(command.send(:valid_provider?, provider)).to be true
+        end
+      end
+
+      it "returns false for invalid providers" do
+        %w[invalid unknown fake].each do |provider|
+          expect(command.send(:valid_provider?, provider)).to be false
+        end
+      end
+
+      it "is case sensitive" do
+        expect(command.send(:valid_provider?, "GOOGLE")).to be false
+        expect(command.send(:valid_provider?, "Google")).to be false
+      end
+    end
+
+    describe "cache management" do
+      let(:cache_manager) { instance_double(CodingAgentTools::Molecules::CacheManager) }
+
+      before do
+        allow(command).to receive(:cache_manager).and_return(cache_manager)
+      end
+
+      describe "#cache_exists?" do
+        it "checks if cache exists for provider" do
+          allow(cache_manager).to receive(:cache_exists?).with("google_models.yml").and_return(true)
+          
+          result = command.send(:cache_exists?, "google")
+          expect(result).to be true
+        end
+
+        it "returns false when cache doesn't exist" do
+          allow(cache_manager).to receive(:cache_exists?).with("lmstudio_models.yml").and_return(false)
+          
+          result = command.send(:cache_exists?, "lmstudio")
+          expect(result).to be false
+        end
+      end
+
+      describe "#cache_models" do
+        it "caches models for provider" do
+          models = [CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test")]
+          expect(cache_manager).to receive(:write_cache).with("google_models.yml", hash_including("provider" => "google"))
+          
+          command.send(:cache_models, "google", models)
+        end
+      end
+
+      describe "#load_models_from_cache" do
+        it "loads models from cache" do
+          cache_data = {
+            "models" => [
+              {
+                "id" => "cached",
+                "name" => "Cached",
+                "description" => "Cached model",
+                "default" => false
+              }
+            ]
+          }
+          allow(cache_manager).to receive(:read_cache).with("google_models.yml").and_return(cache_data)
+          
+          result = command.send(:load_models_from_cache, "google")
+          expect(result).to be_an(Array)
+          expect(result.first.id).to eq("cached")
+        end
+      end
+    end
+
+    describe "model name formatting methods" do
+      describe "#format_openai_model_name" do
+        it "formats known OpenAI models correctly" do
+          expect(command.send(:format_openai_model_name, "gpt-4o")).to eq("GPT-4 Omni")
+          expect(command.send(:format_openai_model_name, "gpt-4-turbo")).to eq("GPT-4 Turbo")
+          expect(command.send(:format_openai_model_name, "gpt-4")).to eq("GPT-4")
+          expect(command.send(:format_openai_model_name, "gpt-3.5-turbo")).to eq("GPT-3.5 Turbo")
+          expect(command.send(:format_openai_model_name, "o1-preview")).to eq("O1 Preview")
+          expect(command.send(:format_openai_model_name, "o1-mini")).to eq("O1 Mini")
+        end
+
+        it "formats unknown models generically" do
+          expect(command.send(:format_openai_model_name, "unknown-model")).to eq("Unknown Model")
+        end
+      end
+
+      describe "#format_anthropic_model_name" do
+        it "formats known Anthropic models correctly" do
+          expect(command.send(:format_anthropic_model_name, "claude-3-5-sonnet")).to eq("Claude 3.5 Sonnet")
+          expect(command.send(:format_anthropic_model_name, "claude-3-5-haiku")).to eq("Claude 3.5 Haiku")
+          expect(command.send(:format_anthropic_model_name, "claude-3-opus")).to eq("Claude 3 Opus")
+          expect(command.send(:format_anthropic_model_name, "claude-3-sonnet")).to eq("Claude 3 Sonnet")
+          expect(command.send(:format_anthropic_model_name, "claude-3-haiku")).to eq("Claude 3 Haiku")
+        end
+
+        it "formats unknown models generically" do
+          expect(command.send(:format_anthropic_model_name, "claude-unknown")).to eq("Claude Unknown")
+        end
+      end
+
+      describe "#format_mistral_model_name" do
+        it "formats known Mistral models correctly" do
+          expect(command.send(:format_mistral_model_name, "mistral-large")).to eq("Mistral Large")
+          expect(command.send(:format_mistral_model_name, "mistral-medium")).to eq("Mistral Medium")
+          expect(command.send(:format_mistral_model_name, "mistral-small")).to eq("Mistral Small")
+          expect(command.send(:format_mistral_model_name, "mistral-tiny")).to eq("Mistral Tiny")
+          expect(command.send(:format_mistral_model_name, "mistral-8x7b")).to eq("Mistral 8x7B")
+          expect(command.send(:format_mistral_model_name, "mistral-8x22b")).to eq("Mistral 8x22B")
+        end
+
+        it "formats unknown models generically" do
+          expect(command.send(:format_mistral_model_name, "mistral-unknown")).to eq("Mistral Unknown")
+        end
+      end
+    end
+
+    describe "edge cases and error conditions" do
+      it "handles filter with nil model attributes" do
+        models_with_nils = [
+          CodingAgentTools::Models::LlmModelInfo.new(id: nil, name: "Test", description: nil),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "valid", name: nil, description: "Valid model")
+        ]
+        
+        result = command.send(:filter_models, models_with_nils, "valid")
+        expect(result.length).to eq(1)
+        expect(result.first.id).to eq("valid")
+      end
+
+      it "handles refresh cache flag" do
+        models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fresh", name: "Fresh")]
+        allow(command).to receive(:fetch_models_from_api).and_return(models)
+        allow(command).to receive(:cache_models)
+        
+        result = command.send(:get_available_models, "google", true)
+        expect(result).to eq(models)
+        expect(command).to have_received(:cache_models).with("google", models)
+      end
+    end
+  end
 end
