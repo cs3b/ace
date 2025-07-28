@@ -78,7 +78,7 @@ RSpec.configure do |config|
   config.before(:example) do |example|
     # Allow verbose output for specific tests or when debugging
     next if example.metadata[:verbose] || ENV['VERBOSE'] == 'true' || ENV['DEBUG'] == 'true'
-    
+
     # Suppress all command output by default
     allow($stdout).to receive(:puts)
     allow($stdout).to receive(:print)
@@ -89,9 +89,6 @@ RSpec.configure do |config|
   # Include helper modules in all examples
   config.include MockHelpers
   config.include TestFactories
-
-  # Mark slow tests as pending unless explicitly requested
-  config.filter_run_excluding :slow unless ENV['RUN_SLOW_TESTS'] == 'true'
 
   # Additional RSpec best practices configuration
   config.order = :random  # Run specs in random order to surface order dependencies
@@ -128,7 +125,7 @@ RSpec.configure do |config|
     # Restore streams
     $stdout = original_stdout
     $stderr = original_stderr
-    
+
     # Restore environment and working directory
     ENV.replace(original_env)
     Dir.chdir(original_dir) if Dir.pwd != original_dir
@@ -139,7 +136,7 @@ RSpec.configure do |config|
     # Suppress directory navigator warnings
     require_relative "../lib/coding_agent_tools/atoms/taskflow_management/directory_navigator"
     CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator.suppress_warnings = true
-    
+
     # Suppress security logger output during tests
     require_relative "../lib/coding_agent_tools/atoms/security_logger"
     CodingAgentTools::Atoms::SecurityLogger.suppress_output = true
