@@ -1112,8 +1112,6 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       end
     end
   end
-
-  # Test execution methods
   describe "execution coordination" do
     describe "#detect_current_repository" do
       it "detects main repository when in project root" do
