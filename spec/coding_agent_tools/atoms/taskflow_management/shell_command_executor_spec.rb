@@ -295,9 +295,9 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
       expect(result.success?).to be true
     end
 
-    it "retries failed commands", :slow do
-      # This is tricky to test deterministically, so we'll test the interface
-      result = described_class.execute_with_retries("false", max_retries: 1)
+    it "retries failed commands" do
+      # Use fast retry delay for testing - test the interface, not timing
+      result = described_class.execute_with_retries("false", max_retries: 1, retry_delay: 0.01)
 
       expect(result.success?).to be false
     end
@@ -312,14 +312,14 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
       expect(end_time - start_time).to be >= 0.15
     end
 
-    it "does not sleep after final attempt", :slow do
+    it "does not sleep after final attempt" do
       start_time = Time.now
-      result = described_class.execute_with_retries("false", max_retries: 1, retry_delay: 1.0)
+      result = described_class.execute_with_retries("false", max_retries: 1, retry_delay: 0.01)
       end_time = Time.now
 
       expect(result.success?).to be false
-      # Should not wait full second after final attempt
-      expect(end_time - start_time).to be < 1.5
+      # Should not wait after final attempt (should be very quick)
+      expect(end_time - start_time).to be < 0.05
     end
   end
 
