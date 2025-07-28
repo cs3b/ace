@@ -226,11 +226,12 @@ module CodingAgentTools
                 
                 next if line_data.nil? || !line_data.is_a?(Array)
                 
-                total_lines = line_data.compact.length
-                next if total_lines == 0
+                # Use same calculation logic as CoverageCalculator atom
+                executable_lines = line_data.count { |line| !line.nil? }
+                next if executable_lines == 0
                 
-                covered_lines = line_data.count { |cov| cov && cov > 0 }
-                coverage_percentage = (covered_lines.to_f / total_lines * 100)
+                covered_lines = line_data.count { |line| line.is_a?(Integer) && line > 0 }
+                coverage_percentage = (covered_lines.to_f / executable_lines * 100).round(2)
                 
                 all_files << { coverage_percentage: coverage_percentage }
               end

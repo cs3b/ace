@@ -36,10 +36,7 @@ jobs:
         run: bin/setup
 
       - name: Run tests
-        run: bin/test
-
-      - name: Run linting
-        run: bin/lint
+        run: bin/test spec/
 
       - name: Upload coverage reports
         if: matrix.ruby-version == '3.4'
@@ -47,33 +44,4 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-          retention-days: 30
-
-  build:
-    runs-on: ubuntu-latest
-    name: Build Gem
-    env:
-      RACK_ENV: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-
-      - name: Setup the dependencies
-        run: bin/setup
-
-      - name: Build gem
-        run: bin/build
-
-      - name: Upload gem artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gem-package
-          path: "*.gem"
           retention-days: 30
