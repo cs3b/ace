@@ -12,6 +12,12 @@ dependencies: []
 
 Implement comprehensive test coverage for the ErrorReporter module focusing on error formatting, debug output, and logger integration. Address uncovered line ranges 13-22 identified in coverage analysis for this critical error handling component.
 
+## Prerequisites
+
+* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
+* Familiarity with Ruby/RSpec testing patterns and VCR cassette management
+
 ## Scope of Work
 
 - Add missing test scenarios for uncovered methods in error_reporter.rb (0% coverage)

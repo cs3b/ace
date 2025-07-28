@@ -12,6 +12,12 @@ dependencies: []
 
 Implement comprehensive test coverage for the CoverageAnalysisWorkflow ecosystem focusing on complete workflow orchestration, adaptive threshold detection, and error recovery patterns. Address uncovered line ranges 8-375 identified in coverage analysis.
 
+## Prerequisites
+
+* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
+* Familiarity with Ruby/RSpec testing patterns and VCR cassette management
+
 ## Scope of Work
 
 - Add missing test scenarios for uncovered methods in coverage_analysis_workflow.rb (0% coverage)
