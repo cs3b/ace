@@ -10,6 +10,7 @@ module CodingAgentTools
       DEFAULT_MAX_THRESHOLD = 90.0
       DEFAULT_INCREMENT = 10.0
       MINIMUM_ACTIONABLE_FILES = 1
+      PREFERRED_MINIMUM_FILES = 6
       MAXIMUM_ACTIONABLE_FILES = 15
 
       def initialize(
@@ -83,7 +84,8 @@ module CodingAgentTools
           results << {
             threshold: current_threshold,
             files_under_threshold: files_under_threshold,
-            actionable: actionable_file_count?(files_under_threshold)
+            actionable: actionable_file_count?(files_under_threshold),
+            preferred: preferred_file_count?(files_under_threshold)
           }
           
           current_threshold += @increment
@@ -103,8 +105,20 @@ module CodingAgentTools
         count >= MINIMUM_ACTIONABLE_FILES && count <= MAXIMUM_ACTIONABLE_FILES
       end
 
+      def preferred_file_count?(count)
+        count >= PREFERRED_MINIMUM_FILES && count <= MAXIMUM_ACTIONABLE_FILES
+      end
+
       def find_optimal_threshold(threshold_results)
-        # First priority: Find threshold with actionable file count
+        # First priority: Find threshold with preferred file count (6-15 files)
+        preferred_results = threshold_results.select { |result| result[:preferred] }
+        
+        if preferred_results.any?
+          # Choose the highest threshold that still produces preferred results
+          return preferred_results.max_by { |result| result[:threshold] }
+        end
+
+        # Second priority: Find threshold with actionable file count (1-15 files)
         actionable_results = threshold_results.select { |result| result[:actionable] }
         
         if actionable_results.any?
@@ -112,7 +126,7 @@ module CodingAgentTools
           return actionable_results.max_by { |result| result[:threshold] }
         end
 
-        # Second priority: Find threshold closest to actionable range
+        # Third priority: Find threshold closest to actionable range
         best_result = threshold_results.min_by do |result|
           files_count = result[:files_under_threshold]
           if files_count < MINIMUM_ACTIONABLE_FILES
@@ -139,7 +153,8 @@ module CodingAgentTools
             {
               threshold: result[:threshold],
               files_under_threshold: result[:files_under_threshold],
-              actionable: result[:actionable]
+              actionable: result[:actionable],
+              preferred: result[:preferred]
             }
           end,
           calculation_metadata: {
@@ -154,10 +169,15 @@ module CodingAgentTools
       def generate_reasoning(optimal_result, files_count, total_files)
         threshold = optimal_result[:threshold]
         
-        if optimal_result[:actionable]
+        if optimal_result[:preferred]
+          "Threshold #{threshold}% selected: produces #{files_count} files in preferred range " \
+          "(#{PREFERRED_MINIMUM_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). This provides an optimal " \
+          "balance of meaningful work without overwhelming the developer."
+        elsif optimal_result[:actionable]
           "Threshold #{threshold}% selected: produces #{files_count} actionable files " \
-          "(within ideal range of #{MINIMUM_ACTIONABLE_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). " \
-          "This provides a focused list of files needing attention without overwhelming the developer."
+          "(within fallback range of #{MINIMUM_ACTIONABLE_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). " \
+          "While below the preferred minimum of #{PREFERRED_MINIMUM_FILES} files, this still " \
+          "provides focused work that won't overwhelm."
         elsif files_count == 0
           "Threshold #{threshold}% selected: no files need attention at this level. " \
           "Consider this excellent coverage! You might want to increase your standards."
