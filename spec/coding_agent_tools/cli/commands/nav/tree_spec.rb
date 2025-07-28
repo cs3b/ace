@@ -515,6 +515,192 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Tree do
 
         expect(output).to include("escaped output")
       end
+
+      it "handles paths with special characters" do
+        special_path = "path/with'quotes\"and$special"
+        allow(Dir).to receive(:exist?).with(special_path).and_return(true)
+        expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{special_path}'"
+        allow(command).to receive(:`).with(expected_command).and_return("special path output")
+
+        output = capture_stdout { command.call(path: special_path) }
+
+        expect(output).to include("special path output")
+      end
+    end
+
+    context "exclude patterns handling" do
+      context "with complex exclude patterns" do
+        let(:complex_excludes_config) do
+          {
+            "default_depth" => 3,
+            "contexts" => {
+              "default" => {
+                "max_depth" => 3,
+                "excludes" => ["*.log", "build/", "temp_*"]
+              }
+            },
+            "global_excludes" => ["__pycache__", "*.pyc"],
+            "repositories" => {
+              "specific_excludes" => {
+                "python_repo" => ["venv", ".pytest_cache"],
+                "js_repo" => ["node_modules", "dist"]
+              }
+            }
+          }
+        end
+
+        it "combines all exclude patterns correctly" do
+          allow(mock_config_loader).to receive(:load).and_return(complex_excludes_config)
+          allow(Dir).to receive(:exist?).with(temp_dir).and_return(true)
+          expected_command = "tree -L 3 -I '__pycache__' -I '*.pyc' -I '*.log' -I 'build/' -I 'temp_*' -I 'venv' -I '.pytest_cache' -I 'node_modules' -I 'dist' '#{temp_dir}'"
+          allow(command).to receive(:`).with(expected_command).and_return("complex excludes output")
+
+          output = capture_stdout { command.call(path: temp_dir) }
+
+          expect(output).to include("complex excludes output")
+        end
+      end
+
+      context "with duplicate excludes" do
+        let(:duplicate_excludes_config) do
+          {
+            "default_depth" => 3,
+            "contexts" => {
+              "default" => {
+                "max_depth" => 3,
+                "excludes" => ["node_modules", ".git", "tmp"]
+              }
+            },
+            "global_excludes" => ["node_modules", "tmp"],
+            "repositories" => {
+              "specific_excludes" => {
+                "repo1" => ["node_modules", "dist"]
+              }
+            }
+          }
+        end
+
+        it "deduplicates exclude patterns" do
+          allow(mock_config_loader).to receive(:load).and_return(duplicate_excludes_config)
+          allow(Dir).to receive(:exist?).with(temp_dir).and_return(true)
+          # Should only include each pattern once
+          expected_command = "tree -L 3 -I 'node_modules' -I 'tmp' -I '.git' -I 'dist' '#{temp_dir}'"
+          allow(command).to receive(:`).with(expected_command).and_return("deduplicated output")
+
+          output = capture_stdout { command.call(path: temp_dir) }
+
+          expect(output).to include("deduplicated output")
+        end
+      end
+    end
+
+    context "error handling for system dependencies" do
+      it "handles tree command not found" do
+        allow(Dir).to receive(:exist?).with(temp_dir).and_return(true)
+        expected_command = "tree -L 3 -I '.DS_Store' -I '*.tmp' -I 'node_modules' -I '.git' -I 'vendor' -I 'dist' '#{temp_dir}'"
+        allow(command).to receive(:`).with(expected_command).and_raise(Errno::ENOENT, "tree")
+
+        output = capture_stdout { command.call(path: temp_dir) }
+
+        expect(output).to include("Error: No such file or directory - tree")
+      end
+    end
+
+    context "PathResolver exception handling" do
+      it "handles exceptions from resolve_scoped_pattern" do
+        scoped_path = "scope:pattern"
+        allow(Dir).to receive(:exist?).with(scoped_path).and_return(false)
+        allow(mock_path_resolver).to receive(:resolve_scoped_pattern)
+          .with(scoped_path)
+          .and_raise(StandardError, "PathResolver error")
+
+        output = capture_stdout { command.call(path: scoped_path, autocorrect: true) }
+
+        expect(output).to include("Error: PathResolver error")
+      end
+
+      it "handles exceptions from find_matching_paths" do
+        search_path = "search_path"
+        allow(Dir).to receive(:exist?).with(search_path).and_return(false)
+        allow(mock_path_resolver).to receive(:find_matching_paths)
+          .with(search_path, include_directories: true, max_results: 5)
+          .and_raise(StandardError, "Search error")
+
+        output = capture_stdout { command.call(path: search_path, autocorrect: true) }
+
+        expect(output).to include("Error: Search error")
+      end
+
+      it "handles exceptions from prioritize_matches" do
+        search_path = "search_dir"
+        matched_dirs = ["dir1", "dir2"]
+        allow(Dir).to receive(:exist?).with(search_path).and_return(false)
+        allow(mock_path_resolver).to receive(:find_matching_paths)
+          .with(search_path, include_directories: true, max_results: 5)
+          .and_return(matched_dirs)
+        matched_dirs.each { |dir| allow(Dir).to receive(:exist?).with(dir).and_return(true) }
+        allow(mock_path_resolver).to receive(:prioritize_matches)
+          .with(matched_dirs)
+          .and_raise(StandardError, "Prioritization error")
+
+        output = capture_stdout { command.call(path: search_path, autocorrect: true) }
+
+        expect(output).to include("Error: Prioritization error")
+      end
+    end
+
+    context "configuration edge cases" do
+      context "with nil configuration values" do
+        let(:nil_config) do
+          {
+            "default_depth" => nil,
+            "contexts" => {
+              "default" => {
+                "max_depth" => nil,
+                "excludes" => nil
+              }
+            },
+            "global_excludes" => nil,
+            "repositories" => nil
+          }
+        end
+
+        it "handles nil values gracefully" do
+          allow(mock_config_loader).to receive(:load).and_return(nil_config)
+          # Should use default depth of 3 when all are nil
+          expected_command = "tree -L 3 '.'"
+          allow(command).to receive(:`).with(expected_command).and_return("nil config output")
+
+          output = capture_stdout { command.call }
+
+          expect(output).to include("nil config output")
+        end
+      end
+
+      context "with empty configuration" do
+        let(:empty_config) { {} }
+
+        it "handles empty configuration gracefully" do
+          allow(mock_config_loader).to receive(:load).and_return(empty_config)
+          # Should use hardcoded default depth of 3
+          expected_command = "tree -L 3 '.'"
+          allow(command).to receive(:`).with(expected_command).and_return("empty config output")
+
+          output = capture_stdout { command.call }
+
+          expect(output).to include("empty config output")
+        end
+      end
+
+      context "when config loader raises an error" do
+        it "shows error and continues with defaults" do
+          allow(mock_config_loader).to receive(:load).and_raise(StandardError, "Config file corrupted")
+
+          output = capture_stdout { command.call }
+
+          expect(output).to include("Error: Config file corrupted")
+        end
+      end
     end
   end
 
