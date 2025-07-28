@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.172
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,89 +8,70 @@ dependencies: []
 
 # Improve test coverage for FilePatternExtractor molecule - pattern matching
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+Create comprehensive test coverage for the FilePatternExtractor molecule to ensure reliable file pattern matching and content extraction functionality. This molecule coordinates file system scanning and content reading atoms to extract file contents matching various patterns.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Enhance existing RSpec test suite for FilePatternExtractor
+- Add missing test coverage for edge cases and error scenarios
+- Test all pattern types (glob patterns, scanner patterns, single files)
+- Validate XML generation and metadata creation
+- Test comprehensive error handling
 
 ### Deliverables
 
-#### Create
-
-- path/to/file.ext
-
 #### Modify
 
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
+- spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+* [x] Analyze current FilePatternExtractor molecule implementation
+* [x] Review existing test coverage and identify gaps
+* [x] Plan additional test scenarios for comprehensive coverage
+  - Directory pattern handling and edge cases
+  - Mixed glob patterns (?, [, wildcards)
+  - Error scenarios for file scanner failures
+  - XML validation and formatting edge cases
+  - Metadata generation for different file types
+  - File system permission and access errors
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [x] Analyze existing test file and current coverage
+- [x] Add comprehensive tests for directory pattern handling
+  > TEST: RSpec Test Execution
+  > Type: Test Validation
+  > Assert: All directory pattern tests pass
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/code/file_pattern_extractor_spec.rb -v
+- [x] Add tests for mixed glob patterns (?, [, wildcards)
+- [x] Add tests for file scanner error scenarios
+- [x] Add tests for XML generation edge cases
+- [x] Add tests for metadata generation variations
+- [x] Add comprehensive error handling tests
+- [x] Run full test suite to ensure no regressions
+  > TEST: Full Test Suite
+  > Type: Regression Check
+  > Assert: All existing tests continue to pass
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/code/ --fail-fast
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] FilePatternExtractor implementation is analyzed and understood
+- [x] Existing test file reviewed and coverage gaps identified
+- [x] Additional test cases created following project RSpec conventions
+- [x] All pattern matching scenarios have comprehensive test coverage
+- [x] File system scanner and content reader dependencies are properly mocked
+- [x] Error conditions and edge cases are tested
+- [x] All tests pass and integrate with existing test suite
+- [x] Test coverage demonstrates reliable pattern extraction functionality
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
-
-## References
-
-```
+- ❌ Modifying the FilePatternExtractor implementation itself
+- ❌ Testing the individual atoms (they have their own tests)
+- ❌ Integration tests with real file system operations
