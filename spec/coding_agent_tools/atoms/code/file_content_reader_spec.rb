@@ -241,6 +241,19 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       expect(result[:content]).to eq(content)
     end
 
+    it "handles path validation edge cases" do
+      # Test path with only whitespace (should be treated as valid but may not exist)
+      result = reader.read("   ")
+      expect(result[:success]).to be false
+      expect(result[:error]).to include("File not found")
+
+      # Test very long path (may trigger different error than "File not found")
+      long_path = "a" * 500 + ".txt"
+      result = reader.read(long_path)
+      expect(result[:success]).to be false
+      expect(result[:error]).to include("Error reading file:")
+    end
+
     it "handles different file encodings" do
       test_file = File.join(temp_dir, "encoding_test.txt")
       # Write content with explicit UTF-8 encoding
@@ -293,6 +306,235 @@ RSpec.describe CodingAgentTools::Atoms::Code::FileContentReader do
       rescue NotImplementedError
         # Skip test on systems that don't support symlinks
         skip "Symbolic links not supported on this system"
+      end
+    end
+  end
+
+  describe "comprehensive coverage for all uncovered lines" do
+    describe "#read method coverage" do
+      it "covers successful read path with content return" do
+        test_file = File.join(temp_dir, "coverage_test.txt")
+        content = "Test content for coverage"
+        File.write(test_file, content)
+
+        result = reader.read(test_file)
+
+        # Covers lines 16-21 (successful read)
+        expect(result[:content]).to eq(content)
+        expect(result[:success]).to be true
+        expect(result[:error]).to be_nil
+      end
+
+      it "covers file not found error path" do
+        nonexistent_file = File.join(temp_dir, "does_not_exist.txt")
+
+        result = reader.read(nonexistent_file)
+
+        # Covers lines 22-27 (Errno::ENOENT)
+        expect(result[:content]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("File not found: #{nonexistent_file}")
+      end
+
+      it "covers permission denied error path" do
+        test_file = File.join(temp_dir, "permission_test.txt")
+        File.write(test_file, "content")
+
+        # Mock to trigger permission denied
+        allow(File).to receive(:read).with(test_file).and_raise(Errno::EACCES)
+
+        result = reader.read(test_file)
+
+        # Covers lines 28-33 (Errno::EACCES)
+        expect(result[:content]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("Permission denied: #{test_file}")
+      end
+
+      it "covers generic error handling path" do
+        test_file = File.join(temp_dir, "error_test.txt")
+
+        # Mock to trigger generic error
+        allow(File).to receive(:read).with(test_file).and_raise(IOError, "Generic IO error")
+
+        result = reader.read(test_file)
+
+        # Covers lines 34-40 (generic error)
+        expect(result[:content]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("Error reading file: Generic IO error")
+      end
+    end
+
+    describe "#read_with_limit method coverage" do
+      it "covers size check and successful read within limit" do
+        test_file = File.join(temp_dir, "size_test.txt")
+        content = "Small content"
+        File.write(test_file, content)
+
+        result = reader.read_with_limit(test_file, 1000)
+
+        # Covers lines 50-60 (size check and successful read)
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq(content)
+        expect(result[:error]).to be_nil
+      end
+
+      it "covers file too large error path" do
+        test_file = File.join(temp_dir, "large_test.txt")
+        content = "a" * 100
+        File.write(test_file, content)
+
+        result = reader.read_with_limit(test_file, 50)
+
+        # Covers lines 52-58 (file too large)
+        expect(result[:content]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("File too large: 100 bytes (max: 50)")
+      end
+
+      it "covers size check error handling" do
+        test_file = File.join(temp_dir, "size_error_test.txt")
+
+        # Mock File.size to trigger error
+        allow(File).to receive(:size).with(test_file).and_raise(Errno::ENOENT, "No such file")
+
+        result = reader.read_with_limit(test_file, 1000)
+
+        # Covers lines 61-67 (size check error)
+        expect(result[:content]).to be_nil
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Error checking file size:")
+      end
+    end
+
+    describe "#readable? method coverage" do
+      it "covers readable file detection" do
+        test_file = File.join(temp_dir, "readable_test.txt")
+        File.write(test_file, "content")
+
+        # Covers line 74 (exist? && readable? && file?)
+        result = reader.readable?(test_file)
+        expect(result).to be true
+      end
+
+      it "covers non-readable scenarios" do
+        nonexistent = File.join(temp_dir, "nonexistent.txt")
+
+        # Covers line 74 (false case)
+        result = reader.readable?(nonexistent)
+        expect(result).to be false
+      end
+
+      it "covers directory check in readable?" do
+        test_dir = File.join(temp_dir, "test_directory")
+        FileUtils.mkdir_p(test_dir)
+
+        # Covers line 74 (directory case - File.file? returns false)
+        result = reader.readable?(test_dir)
+        expect(result).to be false
+      end
+    end
+
+    describe "#metadata method coverage" do
+      it "covers successful metadata retrieval for existing file" do
+        test_file = File.join(temp_dir, "metadata_test.txt")
+        content = "Test metadata content"
+        File.write(test_file, content)
+
+        result = reader.metadata(test_file)
+
+        # Covers lines 81-87 (successful metadata)
+        expect(result[:exists]).to be true
+        expect(result[:size]).to eq(content.bytesize)
+        expect(result[:mtime]).to be_a(Time)
+        expect(result[:readable]).to be true
+        expect(result).not_to have_key(:error)
+      end
+
+      it "covers metadata for nonexistent file" do
+        nonexistent_file = File.join(temp_dir, "nonexistent_metadata.txt")
+
+        result = reader.metadata(nonexistent_file)
+
+        # Covers lines 89-95 (nonexistent file)
+        expect(result[:exists]).to be false
+        expect(result[:size]).to eq(0)
+        expect(result[:mtime]).to be_nil
+        expect(result[:readable]).to be false
+        expect(result).not_to have_key(:error)
+      end
+
+      it "covers metadata error handling" do
+        test_file = File.join(temp_dir, "metadata_error_test.txt")
+
+        # Mock File.exist? to trigger error
+        allow(File).to receive(:exist?).with(test_file).and_raise(SystemCallError, "System error")
+
+        result = reader.metadata(test_file)
+
+        # Covers lines 96-104 (error handling)
+        expect(result[:exists]).to be false
+        expect(result[:size]).to eq(0)
+        expect(result[:mtime]).to be_nil
+        expect(result[:readable]).to be false
+        expect(result[:error]).to include("System error")
+      end
+    end
+
+    describe "validate_path method coverage" do
+      it "covers path validation logic" do
+        # These tests trigger validate_path but the method is private
+        # Coverage is achieved through public method calls
+
+        # Covers line 112 (nil check)
+        expect { reader.read(nil) }.to raise_error(ArgumentError, "Path cannot be nil")
+
+        # Covers line 113 (string check)
+        expect { reader.read(123) }.to raise_error(ArgumentError, "Path must be a string")
+
+        # Covers line 114 (empty check)
+        expect { reader.read("") }.to raise_error(ArgumentError, "Path cannot be empty")
+      end
+
+      it "covers validate_path for read_with_limit" do
+        # Ensure validate_path is called for read_with_limit as well
+        expect { reader.read_with_limit(nil, 1000) }.to raise_error(ArgumentError, "Path cannot be nil")
+        expect { reader.read_with_limit("", 1000) }.to raise_error(ArgumentError, "Path cannot be empty")
+        expect { reader.read_with_limit(123, 1000) }.to raise_error(ArgumentError, "Path must be a string")
+      end
+    end
+
+    describe "additional edge cases for complete coverage" do
+      it "handles various file system edge cases" do
+        # Test zero-byte file
+        zero_file = File.join(temp_dir, "zero_byte.txt")
+        File.write(zero_file, "")
+
+        result = reader.read(zero_file)
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq("")
+
+        # Test with size limit
+        result = reader.read_with_limit(zero_file, 100)
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq("")
+      end
+
+      it "ensures file size exactly at limit boundary" do
+        test_file = File.join(temp_dir, "boundary_test.txt")
+        content = "a" * 100
+        File.write(test_file, content)
+
+        # Test file size exactly at limit
+        result = reader.read_with_limit(test_file, 100)
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq(content)
+
+        # Test file size just over limit
+        result = reader.read_with_limit(test_file, 99)
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("File too large")
       end
     end
   end
