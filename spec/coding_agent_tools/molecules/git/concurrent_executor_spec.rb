@@ -130,7 +130,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         result = executor.execute_concurrently(commands_by_repo)
 
         expect(result[:success]).to be false
-        expect(result[:errors]).to have(1).item
+        expect(result[:errors].size).to eq(1)
         expect(result[:errors].first[:repository]).to eq("main")
         expect(result[:errors].first[:error]).to be error
         expect(result[:results]["main"]).to eq({success: false, error: "Command failed"})
@@ -161,10 +161,10 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
       let(:options) { {timeout: 0.1} }
 
       it "handles timeout gracefully" do
-        allow(executor).to receive(:execute_repository_commands) do
-          sleep(0.2) # Simulate long-running command
-          {success: true}
-        end
+        # Mock a future that will timeout
+        mock_future = instance_double(Concurrent::Future)
+        allow(Concurrent::Future).to receive(:execute).and_return(mock_future)
+        allow(mock_future).to receive(:value).with(0.1).and_raise(Concurrent::TimeoutError)
 
         result = executor.send(:execute_submodules_concurrently, submodule_commands)
 
@@ -178,17 +178,20 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
     context "when a repository execution raises an error" do
       it "captures the error" do
         error = StandardError.new("Repository error")
-        allow(executor).to receive(:execute_repository_commands)
-          .with("repo1", ["status"])
-          .and_raise(error)
         
-        allow(executor).to receive(:execute_repository_commands)
-          .with("repo2", ["log"])
-          .and_return({success: true, repository: "repo2"})
+        # Mock futures that will raise an error
+        error_future = instance_double(Concurrent::Future)
+        success_future = instance_double(Concurrent::Future)
+        
+        allow(Concurrent::Future).to receive(:execute)
+          .and_return(error_future, success_future)
+        
+        allow(error_future).to receive(:value).with(30).and_raise(error)
+        allow(success_future).to receive(:value).with(30).and_return({success: true, repository: "repo2"})
 
         result = executor.send(:execute_submodules_concurrently, submodule_commands)
 
-        expect(result[:errors]).to have(1).item
+        expect(result[:errors].size).to eq(1)
         expect(result[:errors].first[:repository]).to eq("repo1")
         expect(result[:errors].first[:error]).to be error
         expect(result[:results]["repo1"][:success]).to be false
@@ -242,7 +245,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         expect(result[:repository]).to eq(repo_name)
         expect(result[:total_commands]).to eq(2)
         expect(result[:successful_commands]).to eq(2)
-        expect(result[:commands]).to have(2).items
+        expect(result[:commands].size).to eq(2)
         
         expect(result[:commands][0][:command]).to eq("status")
         expect(result[:commands][0][:success]).to be true
@@ -275,7 +278,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         expect(result[:success]).to be false
         expect(result[:total_commands]).to eq(3)
         expect(result[:successful_commands]).to eq(1)
-        expect(result[:commands]).to have(2).items # Should stop after the failed command
+        expect(result[:commands].size).to eq(2) # Should stop after the failed command
         
         expect(result[:commands][0][:success]).to be true
         expect(result[:commands][1][:success]).to be false
