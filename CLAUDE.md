@@ -124,6 +124,22 @@ This project uses 3 Git submodules plus the root repository (4 total repositorie
 **Intention-based commits**: Use `bin/gc -i "your intention"` to commit changes across multiple repos with contextually appropriate messages for each repository
 based on the same intention.
 
+## Git Operations Policy
+
+**ALWAYS use the project's enhanced git-* commands instead of standard git commands:**
+
+✅ **Use these enhanced commands:**
+- `git-status` (not `git status`) - Multi-repo status with enhanced output
+- `git-commit` (not `git commit`) - Smart commit with intention-based messages  
+- `git-push` (not `git push`) - Enhanced push across all repositories
+- `git-pull` (not `git pull`) - Enhanced pull with multi-repo support
+- `git-add`, `git-diff`, `git-fetch`, `git-log` - All with enhanced functionality
+
+❌ **Avoid standard git commands:**
+- `git status`, `git commit`, `git push`, `git pull` - Use enhanced versions instead
+
+**Why:** The git-* commands operate across all 4 repositories automatically and provide enhanced functionality that standard git commands lack. See [Tools Reference](docs/tools.md) for complete documentation.
+
 ## Important Notes
 
 * This is primarily a **documentation project** - the main build step is a placeholder
