@@ -94,6 +94,7 @@ module CodingAgentTools
         # @param target [String] target specification
         # @return [Boolean] true if target is git-based
         def git_diff_target?(target)
+          return false if target.nil? || target.empty?
           return true if %w[staged unstaged working].include?(target)
           return true if target.include?("..")
           return true if /^[a-f0-9]{7,40}$/.match?(target)  # Git SHA
