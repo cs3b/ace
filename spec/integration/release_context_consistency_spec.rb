@@ -9,7 +9,7 @@ RSpec.describe "Release Context Consistency", type: :integration do
   let(:release_manager) { CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir) }
 
   after do
-    FileUtils.rm_rf(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   def create_release_structure(releases_in_current)

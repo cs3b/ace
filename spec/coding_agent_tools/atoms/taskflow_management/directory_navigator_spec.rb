@@ -14,7 +14,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
 
   after do
     described_class.suppress_warnings = false
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "constants" do

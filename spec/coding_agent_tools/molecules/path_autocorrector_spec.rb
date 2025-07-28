@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Molecules::PathAutocorrector do
   end
 
   after do
-    FileUtils.remove_entry(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do

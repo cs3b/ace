@@ -222,7 +222,7 @@ module MockHelpers
     ensure
       # Restore original method
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_call_original
-      FileUtils.rm_rf(temp_dir) if temp_dir && File.exist?(temp_dir)
+      safe_directory_cleanup(temp_dir) if temp_dir
     end
 
     def with_working_directory(directory)

@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
   end
 
   after do
-    FileUtils.rm_rf(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do

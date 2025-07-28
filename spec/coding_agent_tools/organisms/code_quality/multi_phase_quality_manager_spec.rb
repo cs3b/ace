@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::MultiPhaseQualityManage
   end
 
   after do
-    FileUtils.rm_rf(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do

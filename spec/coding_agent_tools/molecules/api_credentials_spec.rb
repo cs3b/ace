@@ -76,7 +76,7 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       end
 
       after do
-        FileUtils.rm_rf(temp_dir)
+        safe_directory_cleanup(temp_dir)
       end
 
       it "loads environment variables from specified .env file" do
@@ -342,7 +342,7 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       let(:temp_dir) { Dir.mktmpdir }
 
       after do
-        FileUtils.rm_rf(temp_dir)
+        safe_directory_cleanup(temp_dir)
       end
 
       it "finds .env file in current directory" do
@@ -400,7 +400,7 @@ RSpec.describe CodingAgentTools::Molecules::APICredentials do
       end
 
       after do
-        FileUtils.rm_rf(temp_dir)
+        safe_directory_cleanup(temp_dir)
       end
 
       it "follows correct precedence: config > env > file" do

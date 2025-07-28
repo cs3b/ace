@@ -32,7 +32,7 @@ RSpec.describe CodingAgentTools::Molecules::FileIoHandler do
   let(:handler) { described_class.new(path_validator: test_path_validator, security_logger: test_security_logger) }
 
   after do
-    FileUtils.remove_entry(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir) if Dir.exist?(temp_dir)
   end
 
   describe "#file_path?" do

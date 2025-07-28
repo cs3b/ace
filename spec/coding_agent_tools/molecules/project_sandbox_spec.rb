@@ -23,7 +23,7 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
   end
 
   after do
-    FileUtils.remove_entry(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "#initialize" do
@@ -35,9 +35,14 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     end
 
     it "detects project root when not provided" do
-      Dir.chdir(temp_dir) do
+      # Use block form to ensure directory is restored even if test fails
+      original_dir = Dir.pwd
+      begin
+        Dir.chdir(temp_dir)
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
+      ensure
+        Dir.chdir(original_dir) if Dir.exist?(original_dir)
       end
     end
 
@@ -66,9 +71,13 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       end
 
       it "accepts relative paths" do
-        Dir.chdir(temp_dir) do
+        original_dir = Dir.pwd
+        begin
+          Dir.chdir(temp_dir)
           result = sandbox.validate_path("README.md")
           expect(result[:success]).to be true
+        ensure
+          Dir.chdir(original_dir) if Dir.exist?(original_dir)
         end
       end
 
@@ -182,11 +191,15 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
     let(:sandbox) { described_class.new(project_root) }
 
     it "returns absolute path for relative input" do
-      Dir.chdir(temp_dir) do
+      original_dir = Dir.pwd
+      begin
+        Dir.chdir(temp_dir)
         result = sandbox.absolute_path("README.md")
         # Handle macOS symlink resolution (/var -> /private/var)
         expected_path = File.realpath(File.join(temp_dir, "README.md"))
         expect(result).to eq(expected_path)
+      ensure
+        Dir.chdir(original_dir) if Dir.exist?(original_dir)
       end
     end
 
@@ -312,9 +325,13 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       nested_dir = File.join(temp_dir, "nested", "deep")
       FileUtils.mkdir_p(nested_dir)
 
-      Dir.chdir(nested_dir) do
+      original_dir = Dir.pwd
+      begin
+        Dir.chdir(nested_dir)
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
+      ensure
+        Dir.chdir(original_dir) if Dir.exist?(original_dir)
       end
     end
 
@@ -323,9 +340,13 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       nested_dir = File.join(temp_dir, "nested")
       FileUtils.mkdir_p(nested_dir)
 
-      Dir.chdir(nested_dir) do
+      original_dir = Dir.pwd
+      begin
+        Dir.chdir(nested_dir)
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
+      ensure
+        Dir.chdir(original_dir) if Dir.exist?(original_dir)
       end
     end
 
@@ -335,9 +356,13 @@ RSpec.describe CodingAgentTools::Molecules::ProjectSandbox do
       FileUtils.mkdir_p(nested_dir)
       FileUtils.touch(claude_file)
 
-      Dir.chdir(nested_dir) do
+      original_dir = Dir.pwd
+      begin
+        Dir.chdir(nested_dir)
         sandbox = described_class.new
         expect(File.realpath(sandbox.project_root)).to eq(File.realpath(temp_dir))
+      ensure
+        Dir.chdir(original_dir) if Dir.exist?(original_dir)
       end
     end
   end

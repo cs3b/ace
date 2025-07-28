@@ -49,7 +49,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
     end
 
     after do
-      FileUtils.rm_rf(temp_dir)
+      safe_directory_cleanup(temp_dir)
     end
 
     it "loads reflection files through ReportCollector" do

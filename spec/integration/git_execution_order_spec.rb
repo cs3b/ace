@@ -44,7 +44,7 @@ RSpec.describe "Git Command Execution Order Integration" do
   end
 
   after(:each) do
-    FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+    safe_directory_cleanup(temp_dir)
   end
 
   describe "Push operations execution order" do

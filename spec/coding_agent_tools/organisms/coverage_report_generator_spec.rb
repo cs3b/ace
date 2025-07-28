@@ -266,7 +266,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     let(:temp_dir) { Dir.mktmpdir }
 
     after do
-      FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+      safe_directory_cleanup(temp_dir)
     end
 
     before do
@@ -608,7 +608,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
       let(:real_generator) { described_class.new }
 
       after do
-        FileUtils.rm_rf(temp_dir) if Dir.exist?(temp_dir)
+        safe_directory_cleanup(temp_dir)
       end
 
       it "creates output directories as needed" do

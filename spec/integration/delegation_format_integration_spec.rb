@@ -90,7 +90,14 @@ RSpec.describe "Delegation Format Integration", verbose: false do
   end
 
   after do
-    Dir.chdir(@original_dir) if @original_dir
+    if @original_dir && Dir.exist?(@original_dir) && Dir.pwd != @original_dir
+      begin
+        Dir.chdir(@original_dir)
+      rescue Errno::ENOENT
+        # Original directory no longer exists, move to safe directory
+        Dir.chdir(ENV['PROJECT_ROOT'] || Dir.home)
+      end
+    end
   end
 
   describe "file:reflection-new delegation" do
@@ -315,7 +322,8 @@ RSpec.describe "Delegation Format Integration", verbose: false do
   describe "template context fallback" do
     it "creates appropriate content based on delegation type" do
       # Remove all templates to test pure fallback
-      FileUtils.rm_rf(File.join(temp_dir, "templates"))
+      templates_dir = File.join(temp_dir, "templates")
+      FileUtils.rm_rf(templates_dir) if File.exist?(templates_dir)
       
       # Test each delegation type
       delegation_tests = [
