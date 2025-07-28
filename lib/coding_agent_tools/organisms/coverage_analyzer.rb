@@ -249,6 +249,8 @@ module CodingAgentTools
       end
 
       def calculate_median_coverage(files)
+        return nil if files.empty?
+        
         sorted_percentages = files.map(&:coverage_percentage).sort
         count = sorted_percentages.length
         
