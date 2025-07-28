@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../molecules/path_resolver"
+require_relative "../../../molecules/path_resolver"
 
 module CodingAgentTools
   module CLI
@@ -9,7 +9,7 @@ module CodingAgentTools
         # CLI command for generating new code review session paths
         class CodeReviewNew
           def initialize(path_resolver = nil)
-            @path_resolver = path_resolver || Molecules::PathResolver.new
+            @path_resolver = path_resolver || CodingAgentTools::Molecules::PathResolver.new
           end
 
           def call(session_name: nil, **options)
