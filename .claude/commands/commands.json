@@ -32,5 +32,13 @@
   "/save-session-context": {},
   "/update-blueprint": {},
   "/update-roadmap": {},
-  "/work-on-task": {}
+  "/work-on-task": {},
+  "/fix-linting-issue-from": {},
+  "/handbook-review": {},
+  "/improve-code-coverage": {},
+  "/rebase-against": {},
+  "/review-code": {},
+  "/review-synthesizer": {},
+  "/synthesize-reflection-notes": {},
+  "/synthesize-reviews": {}
 }
