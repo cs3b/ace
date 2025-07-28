@@ -615,6 +615,427 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
     end
   end
 
+  # Test command building methods (private methods accessed through public interface)
+  describe "command building" do
+    describe "#build_log_command" do
+      it "builds basic log command" do
+        result = orchestrator.log({})
+        # The build_log_command is called internally, verify through public interface
+        expect(result).to be_a(Hash)
+      end
+
+      it "builds log command with oneline option" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        # Expect the command to include oneline formatting
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("log")
+          expect(command).to include("pretty=format")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.log({oneline: true})
+      end
+
+      it "builds log command with graph option" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--graph")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.log({graph: true})
+      end
+
+      it "builds log command with date filters" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--since")
+          expect(command).to include("--until")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.log({since: "2023-01-01", until: "2023-12-31"})
+      end
+
+      it "builds log command with author and grep filters" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--author")
+          expect(command).to include("--grep")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.log({author: "john@example.com", grep: "fix"})
+      end
+
+      it "builds log command with max_count limit" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("-n 10")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.log({max_count: 10})
+      end
+    end
+
+    describe "#build_push_command" do
+      it "builds basic push command" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        allow(orchestrator).to receive(:execute_push_sequential).and_return({success: true})
+        
+        orchestrator.push({})
+      end
+
+      it "builds push command with force option" do
+        allow(orchestrator).to receive(:execute_push_sequential) do |command, options|
+          expect(command).to include("--force")
+          {success: true}
+        end
+        
+        orchestrator.push({force: true})
+      end
+
+      it "builds push command with all options" do
+        allow(orchestrator).to receive(:execute_push_sequential) do |command, options|
+          expect(command).to include("--force")
+          expect(command).to include("--dry-run")
+          expect(command).to include("--set-upstream")
+          expect(command).to include("--tags")
+          expect(command).to include("origin")
+          expect(command).to include("main")
+          {success: true}
+        end
+        
+        orchestrator.push({force: true, dry_run: true, set_upstream: true, tags: true, remote: "origin", branch: "main"})
+      end
+    end
+
+    describe "#build_pull_command" do
+      it "builds basic pull command" do
+        allow(orchestrator).to receive(:execute_pull_sequential).and_return({success: true})
+        orchestrator.pull({})
+      end
+
+      it "builds pull command with rebase option" do
+        allow(orchestrator).to receive(:execute_pull_sequential) do |command, options|
+          expect(command).to include("--rebase")
+          {success: true}
+        end
+        
+        orchestrator.pull({rebase: true})
+      end
+
+      it "builds pull command with all options" do
+        allow(orchestrator).to receive(:execute_pull_sequential) do |command, options|
+          expect(command).to include("--rebase")
+          expect(command).to include("--ff-only")
+          expect(command).to include("--no-commit")
+          expect(command).to include("--strategy=ours")
+          expect(command).to include("origin")
+          expect(command).to include("main")
+          {success: true}
+        end
+        
+        orchestrator.pull({rebase: true, ff_only: true, no_commit: true, strategy: "ours", remote: "origin", branch: "main"})
+      end
+    end
+
+    describe "#build_diff_command" do
+      it "builds basic diff command" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to eq("diff")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.diff({})
+      end
+
+      it "builds diff command with options" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--staged")
+          expect(command).to include("--name-only")
+          expect(command).to include("--stat")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.diff({staged: true, name_only: true, stat: true})
+      end
+    end
+
+    describe "#build_fetch_command" do
+      it "builds basic fetch command" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to eq("fetch")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.fetch({})
+      end
+
+      it "builds fetch command with options" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--all")
+          expect(command).to include("--prune")
+          expect(command).to include("--tags")
+          expect(command).to include("origin")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.fetch({all: true, prune: true, tags: true, remote: "origin"})
+      end
+    end
+
+    describe "#build_checkout_command" do
+      it "builds basic checkout command" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("checkout")
+          expect(command).to include("main")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.checkout(["main"], {})
+      end
+
+      it "builds checkout command with branch creation" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("-b")
+          expect(command).to include("feature")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.checkout(["main"], {create_branch: "feature"})
+      end
+
+      it "builds checkout command with force and options" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--quiet")
+          expect(command).to include("--force")
+          expect(command).to include("--merge")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.checkout(["main"], {quiet: true, force: true, merge: true})
+      end
+    end
+
+    describe "#build_switch_command" do
+      it "builds basic switch command" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("switch")
+          expect(command).to include("feature")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.switch("feature", {})
+      end
+
+      it "builds switch command with creation" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("-c")
+          expect(command).to include("new-feature")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.switch("main", {create: "new-feature"})
+      end
+
+      it "builds switch command with all options" do
+        mock_coordinator = instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator)
+        allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+        
+        expect(mock_coordinator).to receive(:execute_across_repositories) do |command, options|
+          expect(command).to include("--quiet")
+          expect(command).to include("--force")
+          expect(command).to include("--no-guess")
+          {success: true, results: {}}
+        end
+        
+        orchestrator.switch("feature", {quiet: true, force: true, no_guess: true})
+      end
+    end
+  end
+
+  # Test formatting methods
+  describe "output formatting" do
+    describe "#format_status_output" do
+      it "formats status output with color formatter" do
+        result = {
+          results: {
+            "main" => {success: true, stdout: "M  file1.txt\nA  file2.txt"},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        
+        formatted = orchestrator.send(:format_status_output, result, {})
+        expect(formatted).to have_key(:formatted_output)
+        expect(formatted[:formatted_output]).to be_a(String)
+      end
+
+      it "skips empty output unless verbose" do
+        result = {
+          results: {
+            "main" => {success: true, stdout: ""},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        
+        formatted = orchestrator.send(:format_status_output, result, {})
+        expect(formatted[:formatted_output]).not_to include("main")
+      end
+
+      it "includes empty output when verbose" do
+        result = {
+          results: {
+            "main" => {success: true, stdout: ""},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        
+        formatted = orchestrator.send(:format_status_output, result, {verbose: true})
+        expect(formatted).to have_key(:formatted_output)
+      end
+    end
+
+    describe "#format_log_output" do
+      it "formats unified log by default" do
+        result = {
+          results: {
+            "main" => {success: true, stdout: "abc123 Initial commit (2023-01-01 10:00:00 +0000)"},
+            "submodule1" => {success: true, stdout: "def456 Sub commit (2023-01-02 11:00:00 +0000)"}
+          }
+        }
+        
+        formatted = orchestrator.send(:format_log_output, result, {})
+        expect(formatted).to have_key(:formatted_output)
+      end
+
+      it "formats separated log when requested" do
+        result = {
+          results: {
+            "main" => {success: true, stdout: "abc123 Initial commit"},
+            "submodule1" => {success: true, stdout: "def456 Sub commit"}
+          }
+        }
+        
+        formatted = orchestrator.send(:format_log_output, result, {separated: true})
+        expect(formatted).to have_key(:formatted_output)
+        expect(formatted[:formatted_output]).to include("[main] Recent commits:")
+        expect(formatted[:formatted_output]).to include("[submodule1] Recent commits:")
+      end
+    end
+
+    describe "#parse_commits_from_output" do
+      it "parses oneline format commits" do
+        output = "abc123 Initial commit (2023-01-01 10:00:00 +0000)\ndef456 Second commit (2023-01-02 11:00:00 +0000)"
+        commits = orchestrator.send(:parse_commits_from_output, output, "main")
+        
+        expect(commits).to have(2).items
+        expect(commits.first[:repo]).to eq("main")
+        expect(commits.first[:type]).to eq(:oneline)
+        expect(commits.first[:display_line]).to include("abc123")
+      end
+
+      it "parses timestamp-based format commits" do
+        output = "TIMESTAMP:2023-01-01 10:00:00 +0000\ncommit abc123\nAuthor: John Doe\nInitial commit"
+        commits = orchestrator.send(:parse_commits_from_output, output, "main")
+        
+        expect(commits).to have(1).item
+        expect(commits.first[:repo]).to eq("main")
+        expect(commits.first[:type]).to eq(:multiline)
+      end
+
+      it "handles empty output" do
+        commits = orchestrator.send(:parse_commits_from_output, "", "main")
+        expect(commits).to be_empty
+      end
+
+      it "skips unparseable commits" do
+        output = "invalid line\nabc123 Valid commit (2023-01-01 10:00:00 +0000)"
+        commits = orchestrator.send(:parse_commits_from_output, output, "main")
+        
+        expect(commits).to have(1).item
+        expect(commits.first[:display_line]).to include("abc123")
+      end
+    end
+  end
+
+  # Test add command building
+  describe "#build_add_commands" do
+    it "builds basic add commands" do
+      dispatch_info = {
+        "main" => {paths: ["file1.txt", "file2.txt"]},
+        "submodule1" => {paths: ["file3.txt"]}
+      }
+      
+      commands = orchestrator.send(:build_add_commands, dispatch_info, {})
+      
+      expect(commands["main"]).to eq(["add file1.txt file2.txt"])
+      expect(commands["submodule1"]).to eq(["add file3.txt"])
+    end
+
+    it "builds add commands with options" do
+      dispatch_info = {"main" => {paths: ["file1.txt"]}}
+      
+      commands = orchestrator.send(:build_add_commands, dispatch_info, {all: true, update: true, force: true, patch: true})
+      
+      expect(commands["main"].first).to include("--all")
+      expect(commands["main"].first).to include("--update")
+      expect(commands["main"].first).to include("--force")
+      expect(commands["main"].first).to include("--patch")
+    end
+
+    it "skips repositories with no paths" do
+      dispatch_info = {
+        "main" => {paths: ["file1.txt"]},
+        "empty_repo" => {paths: []}
+      }
+      
+      commands = orchestrator.send(:build_add_commands, dispatch_info, {})
+      
+      expect(commands).to have_key("main")
+      expect(commands).not_to have_key("empty_repo")
+    end
+  end
+
   # Test integration scenarios
   describe "integration scenarios" do
     context "cross-component interaction" do
