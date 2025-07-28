@@ -152,6 +152,100 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
         expect(result[:error]).to include("Git command failed: Git not found")
       end
     end
+
+    context "when extracting unstaged changes", :new_edge_cases do
+      let(:target_spec) { "unstaged" }
+      let(:diff_output) do
+        <<~DIFF
+          diff --git a/modified.rb b/modified.rb
+          index 5678abc..defg123 100644
+          --- a/modified.rb
+          +++ b/modified.rb
+          @@ -1,2 +1,3 @@
+           def method
+          +  # new comment
+             puts "unstaged change"
+        DIFF
+      end
+
+      before do
+        allow(git_executor_mock).to receive(:execute).with("diff --no-color").and_return(
+          success: true,
+          stdout: diff_output,
+          stderr: ""
+        )
+      end
+
+      it "extracts unstaged changes correctly" do
+        result = extractor.extract_diff(target_spec)
+
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq(diff_output)
+        expect(result[:metadata][:target]).to eq("unstaged")
+        expect(result[:metadata][:files_changed]).to eq(1)
+        expect(result[:metadata][:additions]).to eq(1)
+      end
+    end
+
+    context "when target is malformed SHA", :new_edge_cases do
+      let(:target_spec) { "invalid123" }
+
+      before do
+        allow(git_executor_mock).to receive(:execute).and_return(
+          success: false,
+          stdout: "",
+          stderr: "fatal: bad revision 'invalid123'"
+        )
+      end
+
+      it "handles malformed SHA gracefully" do
+        result = extractor.extract_diff(target_spec)
+
+        expect(result[:success]).to be false
+        expect(result[:content]).to be_nil
+        expect(result[:error]).to include("bad revision")
+      end
+    end
+
+    context "when target is very short SHA", :new_edge_cases do
+      let(:target_spec) { "abc" }
+
+      before do
+        allow(git_executor_mock).to receive(:execute).and_return(
+          success: false,
+          stdout: "",
+          stderr: "fatal: ambiguous argument 'abc': unknown revision"
+        )
+      end
+
+      it "handles ambiguous short SHA" do
+        result = extractor.extract_diff(target_spec)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("ambiguous argument")
+      end
+    end
+
+    context "when target contains special characters", :new_edge_cases do
+      let(:target_spec) { "HEAD~1..HEAD@{upstream}" }
+      let(:diff_output) { "diff --git a/special.rb b/special.rb\n+special content" }
+
+      before do
+        allow(git_executor_mock).to receive(:execute).with("diff --no-color HEAD~1..HEAD@{upstream}").and_return(
+          success: true,
+          stdout: diff_output,
+          stderr: ""
+        )
+      end
+
+      it "handles special git revision syntax" do
+        result = extractor.extract_diff(target_spec)
+
+        expect(result[:success]).to be true
+        expect(result[:content]).to eq(diff_output)
+        expect(result[:metadata][:target]).to eq("HEAD~1..HEAD@{upstream}")
+      end
+    end
   end
 
   describe "#extract_and_save" do
@@ -268,6 +362,11 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
         expect(result).to be true
       end
 
+      it "identifies unstaged changes", :new_edge_cases do
+        result = extractor.git_diff_target?("unstaged")
+        expect(result).to be true
+      end
+
       it "identifies commit ranges" do
         result = extractor.git_diff_target?("HEAD~2..HEAD")
         expect(result).to be true
@@ -278,8 +377,33 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
         expect(result).to be true
       end
 
+      it "identifies short SHA (7 characters)", :new_edge_cases do
+        result = extractor.git_diff_target?("a1b2c3d")
+        expect(result).to be true
+      end
+
+      it "identifies full SHA (40 characters)", :new_edge_cases do
+        result = extractor.git_diff_target?("a1b2c3d4e5f6789012345678901234567890abcd")
+        expect(result).to be true
+      end
+
+      it "rejects too short SHA (less than 7 characters)", :new_edge_cases do
+        result = extractor.git_diff_target?("abc123")
+        expect(result).to be false
+      end
+
       it "rejects non-git targets" do
         result = extractor.git_diff_target?("invalid-target")
+        expect(result).to be false
+      end
+
+      it "rejects empty string", :new_edge_cases do
+        result = extractor.git_diff_target?("")
+        expect(result).to be false
+      end
+
+      it "rejects nil input", :new_edge_cases do
+        result = extractor.git_diff_target?(nil)
         expect(result).to be false
       end
     end
