@@ -26,7 +26,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 1. **Generate Coverage Analysis Report**
    * Ensure tests have been run to generate coverage data:
      ```bash
-     cd dev-tools && bin/test
+     cd dev-tools && bin/test spec/
      ```
    * Generate comprehensive coverage analysis report:
      ```bash
