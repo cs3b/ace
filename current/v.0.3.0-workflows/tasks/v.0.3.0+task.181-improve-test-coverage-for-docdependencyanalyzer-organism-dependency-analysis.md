@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.181
-status: pending
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
@@ -8,89 +8,55 @@ dependencies: []
 
 # Improve test coverage for DocDependencyAnalyzer organism - dependency analysis
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+Improve test coverage for the DocDependencyAnalyzer organism class from ~55% to comprehensive coverage by adding tests for edge cases, error handling, private methods, and complex scenarios.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Enhance existing test coverage for DocDependencyAnalyzer organism
+- Add tests for edge cases and error handling scenarios
+- Test complex dependency scenarios (circular dependencies, large graphs)
+- Test private methods and internal workflow steps
+- Ensure high test coverage for all functionality
 
 ### Deliverables
 
-#### Create
-
-- path/to/file.ext
-
 #### Modify
 
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
+- dev-tools/spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+* [x] Analyze current DocDependencyAnalyzer implementation and test coverage
+* [x] Identify gaps in test coverage and missing scenarios
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [ ] Add tests for edge cases and error handling
+  > TEST: Verify enhanced test coverage
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: New edge case tests work correctly
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
+- [ ] Add tests for complex dependency scenarios
+- [ ] Add tests for different output formats and serialization
+- [ ] Add tests for initialization with custom config
+- [ ] Run complete test suite to ensure all tests pass
+  > TEST: Verify comprehensive test coverage
+  > Type: Action Validation
+  > Assert: All tests pass and coverage is significantly improved
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/doc_dependency_analyzer_spec.rb
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [ ] Enhanced test coverage with edge cases and error handling
+- [ ] Tests cover complex dependency scenarios and private methods
+- [ ] All tests pass when run
+- [ ] Coverage significantly improved from baseline ~55%
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
-
-## References
-
-```
+- ❌ Modifying the DocDependencyAnalyzer implementation itself
+- ❌ Adding integration tests with real file system (existing tests already do this)
