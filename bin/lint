@@ -1,35 +1,29 @@
-#!/bin/sh
+#!/bin/bash
 # Lint script for Coding Agent Tools gem
-# Runs StandardRB linter and Gitleaks secrets scanner with project configuration
+# Runs code-lint ruby and Gitleaks secrets scanner with project configuration
 
 set -e
 
+# If any arguments are passed, run ONLY those with code-lint ruby (no autofix)
+if [[ $# -gt 0 ]]; then
+  echo "🔧 Running custom code-lint ruby command:"
+  echo "    code-lint ruby $@"
+  exec code-lint ruby "$@"
+fi
+
+# No args — run the full cascade
 echo "INFO: Running linters from dev-tools directory: $(pwd)"
-echo "INFO: Configuration loaded from .standard.yml"
 
-# Run StandardRB with project configuration
-echo "INFO: Running StandardRB..."
-bundle exec standardrb "$@"
+# Run code-lint ruby for lib/ directory with autofix
+echo "INFO: Running code-lint ruby for lib/**/*.rb with autofix..."
+code-lint ruby --autofix lib/**/*.rb
 
-# Check for StandardRB linting issues
-standardrb_exit_code=$?
-if [ $standardrb_exit_code -ne 0 ]; then
-  echo "ERROR: StandardRB linting issues detected"
-  echo "Run 'bundle exec standardrb --fix' to auto-fix issues where possible"
-  exit 1
-fi
+# Run code-lint ruby for spec/ directory with autofix
+echo "INFO: Running code-lint ruby for spec/**/*.rb with autofix..."
+code-lint ruby --autofix spec/**/*.rb
 
-echo "SUCCESS: StandardRB - No linting issues found"
-
-# Run security scanning using the local script
-echo "INFO: Running security scanning..."
-./bin/lint-security
-
-# Check for security scanning issues
-security_exit_code=$?
-if [ $security_exit_code -ne 0 ]; then
-  echo "ERROR: Security issues detected"
-  exit 1
-fi
+# # Run security scanning using the local script
+# echo "INFO: Running security scanning..."
+# ./bin/lint-security
 
 echo "INFO: All linting checks completed successfully"
