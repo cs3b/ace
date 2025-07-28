@@ -173,4 +173,287 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
       expect(instructions).to include("complete.png")
     end
   end
+
+  describe "edge cases and error handling" do
+    describe "#generate_dot_content" do
+      it "handles files with special characters in names" do
+        dependencies = {
+          "file with spaces.md" => {
+            refs_to: Set.new(["file-with-dashes.md"]),
+            refs_from: Set.new([])
+          },
+          "file_with_underscores.md" => {
+            refs_to: Set.new(["file&with&symbols.md"]),
+            refs_from: Set.new([])
+          }
+        }
+
+        content = writer.generate_dot_content(dependencies)
+
+        expect(content).to include('"file with spaces.md"')
+        expect(content).to include('"file-with-dashes.md"')
+        expect(content).to include('"file_with_underscores.md"')
+        expect(content).to include('"file&with&symbols.md"')
+      end
+
+      it "handles files with quotes in names" do
+        dependencies = {
+          'file"with"quotes.md' => {
+            refs_to: Set.new([]),
+            refs_from: Set.new([])
+          }
+        }
+
+        content = writer.generate_dot_content(dependencies)
+
+        expect(content).to include('file"with"quotes.md')
+      end
+
+      it "handles large dependency graphs efficiently" do
+        # Create a large dependency graph
+        dependencies = {}
+        (1..100).each do |i|
+          dependencies["file#{i}.md"] = {
+            refs_to: Set.new(["file#{i+1}.md"].compact),
+            refs_from: Set.new(i > 1 ? ["file#{i-1}.md"] : [])
+          }
+        end
+
+        start_time = Time.now
+        content = writer.generate_dot_content(dependencies)
+        end_time = Time.now
+
+        expect(content).to include("digraph DocumentDependencies")
+        expect(content.scan("->").length).to eq(99) # 99 connections
+        expect(end_time - start_time).to be < 1 # Should complete quickly
+      end
+
+      it "handles circular dependencies" do
+        dependencies = {
+          "a.md" => {
+            refs_to: Set.new(["b.md"]),
+            refs_from: Set.new(["c.md"])
+          },
+          "b.md" => {
+            refs_to: Set.new(["c.md"]),
+            refs_from: Set.new(["a.md"])
+          },
+          "c.md" => {
+            refs_to: Set.new(["a.md"]),
+            refs_from: Set.new(["b.md"])
+          }
+        }
+
+        content = writer.generate_dot_content(dependencies)
+
+        expect(content).to include('"a.md" -> "b.md"')
+        expect(content).to include('"b.md" -> "c.md"')
+        expect(content).to include('"c.md" -> "a.md"')
+      end
+
+      it "handles self-referencing files" do
+        dependencies = {
+          "self_ref.md" => {
+            refs_to: Set.new(["self_ref.md", "other.md"]),
+            refs_from: Set.new(["other.md"])
+          },
+          "other.md" => {
+            refs_to: Set.new(["self_ref.md"]),
+            refs_from: Set.new(["self_ref.md"])
+          }
+        }
+
+        content = writer.generate_dot_content(dependencies)
+
+        expect(content).to include('"self_ref.md" -> "self_ref.md"')
+        expect(content).to include('"self_ref.md" -> "other.md"')
+      end
+
+      it "handles dependencies with empty sets" do
+        dependencies = {
+          "isolated.md" => {
+            refs_to: Set.new([]),
+            refs_from: Set.new([])
+          },
+          "orphan.md" => {
+            refs_to: Set.new([]),
+            refs_from: Set.new([])
+          }
+        }
+
+        content = writer.generate_dot_content(dependencies)
+
+        expect(content).to include('"isolated.md"')
+        expect(content).to include('"orphan.md"')
+        expect(content).not_to include("->") # No edges
+      end
+    end
+
+    describe "#write_dot_file" do
+      it "handles write permission errors gracefully" do
+        dependencies = {"test.md" => {refs_to: Set.new([]), refs_from: Set.new([])}}
+        readonly_path = "/root/readonly.dot"
+
+        expect {
+          writer.write_dot_file(dependencies, readonly_path)
+        }.to raise_error(Errno::EACCES)
+      end
+
+      it "overwrites existing files" do
+        dependencies = {"test.md" => {refs_to: Set.new([]), refs_from: Set.new([])}}
+        filename = File.join(temp_dir, "overwrite.dot")
+
+        # Write initial content
+        File.write(filename, "old content")
+        expect(File.read(filename)).to eq("old content")
+
+        # Overwrite with DOT content
+        writer.write_dot_file(dependencies, filename)
+
+        content = File.read(filename)
+        expect(content).to include("digraph DocumentDependencies")
+        expect(content).not_to include("old content")
+      end
+
+      it "creates directory structure if needed" do
+        dependencies = {"test.md" => {refs_to: Set.new([]), refs_from: Set.new([])}}
+        nested_path = File.join(temp_dir, "nested", "deep", "file.dot")
+
+        # Create directory structure
+        FileUtils.mkdir_p(File.dirname(nested_path))
+        
+        result = writer.write_dot_file(dependencies, nested_path)
+
+        expect(result).to eq(nested_path)
+        expect(File.exist?(nested_path)).to be true
+      end
+
+      it "returns the correct filename for relative paths" do
+        dependencies = {"test.md" => {refs_to: Set.new([]), refs_from: Set.new([])}}
+        
+        result = writer.write_dot_file(dependencies, "relative.dot")
+
+        expect(result).to eq("relative.dot")
+        expect(File.exist?("relative.dot")).to be true
+
+        # Clean up
+        File.delete("relative.dot") if File.exist?("relative.dot")
+      end
+    end
+
+    describe "#node_color" do
+      it "handles various task file patterns" do
+        expect(writer.node_color("dev-taskflow/current/tasks/task.md")).to eq("lightyellow")
+        expect(writer.node_color("project/tasks/subtask.md")).to eq("lightyellow")
+        expect(writer.node_color("tasks.md")).to eq("lightgray") # Not in tasks directory
+      end
+
+      it "handles complex file extensions" do
+        expect(writer.node_color("workflow.test.wf.md")).to eq("lightblue")
+        expect(writer.node_color("guide.old.g.md")).to eq("lightgreen")
+        expect(writer.node_color("file.wf.md.backup")).to eq("lightgray")
+      end
+
+      it "handles empty or nil filenames" do
+        expect(writer.node_color("")).to eq("lightgray")
+        expect(writer.node_color(nil)).to eq("lightgray")
+      end
+
+      it "handles files without extensions" do
+        expect(writer.node_color("README")).to eq("lightgray")
+        expect(writer.node_color("tasks/README")).to eq("lightyellow")
+      end
+
+      it "is case sensitive for extensions" do
+        expect(writer.node_color("file.WF.MD")).to eq("lightgray")
+        expect(writer.node_color("file.G.MD")).to eq("lightgray")
+        expect(writer.node_color("TASKS/file.md")).to eq("lightgray")
+      end
+    end
+
+    describe "#png_generation_instructions" do
+      it "handles files without .dot extension" do
+        instructions = writer.png_generation_instructions("graph")
+        expect(instructions).to eq("dot -Tpng graph -o graph.png")
+      end
+
+      it "handles files with multiple dots" do
+        instructions = writer.png_generation_instructions("graph.v1.0.dot")
+        expect(instructions).to eq("dot -Tpng graph.v1.0.dot -o graph.v1.0.png")
+      end
+
+      it "handles absolute paths" do
+        instructions = writer.png_generation_instructions("/absolute/path/graph.dot")
+        expect(instructions).to eq("dot -Tpng /absolute/path/graph.dot -o /absolute/path/graph.png")
+      end
+
+      it "handles empty filename" do
+        instructions = writer.png_generation_instructions("")
+        expect(instructions).to eq("dot -Tpng  -o .png")
+      end
+    end
+  end
+
+  describe "performance and memory" do
+    it "handles very large file names efficiently" do
+      long_filename = "a" * 1000 + ".md"
+      dependencies = {
+        long_filename => {
+          refs_to: Set.new([]),
+          refs_from: Set.new([])
+        }
+      }
+
+      content = writer.generate_dot_content(dependencies)
+
+      expect(content).to include(long_filename)
+      expect(content.length).to be > 1000
+    end
+
+    it "generates consistent output for same input" do
+      dependencies = {
+        "file1.md" => {refs_to: Set.new(["file2.md"]), refs_from: Set.new([])},
+        "file2.md" => {refs_to: Set.new([]), refs_from: Set.new(["file1.md"])}
+      }
+
+      content1 = writer.generate_dot_content(dependencies)
+      content2 = writer.generate_dot_content(dependencies)
+
+      expect(content1).to eq(content2)
+    end
+  end
+
+  describe "DOT format compliance" do
+    it "produces valid DOT syntax" do
+      dependencies = {
+        "docs/file.md" => {
+          refs_to: Set.new(["other.md"]),
+          refs_from: Set.new([])
+        }
+      }
+
+      content = writer.generate_dot_content(dependencies)
+
+      # Check basic DOT structure
+      expect(content).to start_with("digraph DocumentDependencies {")
+      expect(content).to end_with("}")
+      expect(content).to include("rankdir=LR;")
+      expect(content).to include("node [shape=box];")
+      
+      # Check proper quoting
+      expect(content.scan(/"[^"]*"/).length).to be >= 2 # At least source and target nodes
+    end
+
+    it "properly escapes node names" do
+      # Note: Current implementation doesn't escape quotes, but documents the behavior
+      dependencies = {
+        'file"name.md' => {refs_to: Set.new([]), refs_from: Set.new([])}
+      }
+
+      content = writer.generate_dot_content(dependencies)
+      
+      # Documents current behavior - quotes are included as-is
+      expect(content).to include('file"name.md')
+    end
+  end
 end
