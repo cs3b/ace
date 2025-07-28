@@ -2317,6 +2317,320 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
         expect { described_class.new(project_root) }.to raise_error(StandardError, "Scanner failed")
       end
+
+      it "initializes with debug option enabled" do
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
+        allow(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).and_return([])
+
+        orchestrator = described_class.new(project_root, debug: true)
+        expect(orchestrator.instance_variable_get(:@debug)).to be true
+      end
+
+      it "initializes with debug option disabled by default" do
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
+        allow(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).and_return([])
+
+        orchestrator = described_class.new(project_root)
+        expect(orchestrator.instance_variable_get(:@debug)).to be false
+      end
+
+      it "stores discovered repositories" do
+        repos = [{name: "main", path: ".", exists: true}]
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
+        allow(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).and_return(repos)
+
+        orchestrator = described_class.new(project_root)
+        expect(orchestrator.instance_variable_get(:@repositories)).to eq(repos)
+      end
+    end
+
+    context "additional error handling coverage" do
+      let(:mock_coordinator) { instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator) }
+      let(:mock_dispatcher) { instance_double(CodingAgentTools::Molecules::Git::PathDispatcher) }
+
+      describe "add method error scenarios" do
+        it "returns error when paths is nil" do
+          result = orchestrator.add(nil, {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No paths provided")
+        end
+
+        it "returns error when paths is empty array" do
+          result = orchestrator.add([], {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No paths provided")
+        end
+
+        it "handles concurrent execution option" do
+          allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: ["file.txt"]}})
+          allow(orchestrator).to receive(:build_add_commands).and_return({"main" => ["add file.txt"]})
+          expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).and_return({success: true})
+
+          result = orchestrator.add(["file.txt"], {concurrent: true})
+          expect(result[:success]).to be true
+        end
+
+        it "handles sequential execution when concurrent is false" do
+          allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: ["file.txt"]}})
+          allow(orchestrator).to receive(:build_add_commands).and_return({"main" => ["add file.txt"]})
+          expect(orchestrator).to receive(:execute_sequentially).and_return({success: true})
+
+          result = orchestrator.add(["file.txt"], {concurrent: false})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "mv method error scenarios" do
+        it "returns error when sources is nil" do
+          result = orchestrator.mv(nil, "dest", {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No sources provided")
+        end
+
+        it "returns error when sources is empty array" do
+          result = orchestrator.mv([], "dest", {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No sources provided")
+        end
+
+        it "returns error when destination is nil" do
+          result = orchestrator.mv(["src"], nil, {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No destination provided")
+        end
+
+        it "returns error when destination is empty string" do
+          result = orchestrator.mv(["src"], "", {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No destination provided")
+        end
+
+        it "handles concurrent execution" do
+          allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: ["src", "dest"]}})
+          allow(orchestrator).to receive(:build_mv_commands).and_return({"main" => ["mv src dest"]})
+          expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).and_return({success: true})
+
+          result = orchestrator.mv(["src"], "dest", {concurrent: true})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "rm method error scenarios" do
+        it "returns error when paths is nil" do
+          result = orchestrator.rm(nil, {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No paths provided")
+        end
+
+        it "returns error when paths is empty array" do
+          result = orchestrator.rm([], {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No paths provided")
+        end
+
+        it "handles concurrent execution" do
+          allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: ["file.txt"]}})
+          allow(orchestrator).to receive(:build_rm_commands).and_return({"main" => ["rm file.txt"]})
+          expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).and_return({success: true})
+
+          result = orchestrator.rm(["file.txt"], {concurrent: true})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "restore method error scenarios" do
+        it "returns error when pathspecs is nil" do
+          result = orchestrator.restore(nil, {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No pathspecs provided")
+        end
+
+        it "returns error when pathspecs is empty array" do
+          result = orchestrator.restore([], {})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("No pathspecs provided")
+        end
+
+        it "handles concurrent execution" do
+          allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: ["file.txt"]}})
+          allow(orchestrator).to receive(:build_restore_commands).and_return({"main" => ["restore file.txt"]})
+          expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).and_return({success: true})
+
+          result = orchestrator.restore(["file.txt"], {concurrent: true})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "commit method debug and options handling" do
+        let(:mock_generator) { instance_double(CodingAgentTools::Molecules::Git::CommitMessageGenerator) }
+
+        it "handles debug output when debug option is true" do
+          allow(orchestrator).to receive(:add).and_return({success: true})
+          allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
+          
+          expect { orchestrator.commit({debug: true, message: "test"}) }.to output(/DEBUG: commit options/).to_stdout
+        end
+
+        it "handles files option for staging specific files" do
+          expect(orchestrator).to receive(:add).with(["file1.txt", "file2.txt"], anything).and_return({success: true})
+          allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
+
+          result = orchestrator.commit({files: ["file1.txt", "file2.txt"], message: "test"})
+          expect(result[:success]).to be true
+        end
+
+        it "handles add failure during commit" do
+          expect(orchestrator).to receive(:add).and_return({success: false, error: "Add failed"})
+
+          result = orchestrator.commit({files: ["file.txt"], message: "test"})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("Add failed")
+        end
+
+        it "handles repo_only option to skip add_all" do
+          allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
+
+          result = orchestrator.commit({repo_only: true, message: "test"})
+          expect(result[:success]).to be true
+        end
+
+        it "handles debug output for repo_only option" do
+          allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
+          
+          expect { orchestrator.commit({repo_only: true, debug: true, message: "test"}) }.to output(/DEBUG: Skipping add_all/).to_stdout
+        end
+
+        it "calls add_all when repo_only is false" do
+          expect(orchestrator).to receive(:add_all).and_return({success: true})
+          allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
+
+          result = orchestrator.commit({repo_only: false, message: "test"})
+          expect(result[:success]).to be true
+        end
+
+        it "handles add_all failure" do
+          expect(orchestrator).to receive(:add_all).and_return({success: false, error: "Add all failed"})
+
+          result = orchestrator.commit({message: "test"})
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("Add all failed")
+        end
+
+        it "uses commit_with_llm_message when no message provided" do
+          allow(orchestrator).to receive(:add_all).and_return({success: true})
+          expect(orchestrator).to receive(:commit_with_llm_message).and_return({success: true})
+
+          result = orchestrator.commit({})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "push method debug and options handling" do
+        let(:mock_coordinator) { instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator) }
+
+        it "handles debug output when debug option is true" do
+          allow(orchestrator).to receive(:build_push_command).and_return("push")
+          allow(orchestrator).to receive(:detect_current_repository).and_return("main")
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(mock_coordinator).to receive(:execute_across_repositories).and_return({success: true})
+
+          expect { orchestrator.push({debug: true, repo_only: true}) }.to output(/DEBUG: Push options/).to_stdout
+        end
+
+        it "handles repo_only option with debug output" do
+          allow(orchestrator).to receive(:build_push_command).and_return("push")
+          allow(orchestrator).to receive(:detect_current_repository).and_return("main")
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(mock_coordinator).to receive(:execute_across_repositories).and_return({success: true})
+
+          expect { orchestrator.push({debug: true, repo_only: true}) }.to output(/DEBUG: Current repository detected/).to_stdout
+        end
+
+        it "handles concurrent push when concurrent option is true" do
+          allow(orchestrator).to receive(:build_push_command).and_return("push")
+          expect(orchestrator).to receive(:execute_push_concurrent).and_return({success: true})
+
+          result = orchestrator.push({concurrent: true})
+          expect(result[:success]).to be true
+        end
+
+        it "handles sequential push when concurrent option is false" do
+          allow(orchestrator).to receive(:build_push_command).and_return("push")
+          expect(orchestrator).to receive(:execute_push_sequential).and_return({success: true})
+
+          result = orchestrator.push({concurrent: false})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "pull method concurrent and sequential handling" do
+        it "handles concurrent pull when concurrent option is true" do
+          allow(orchestrator).to receive(:build_pull_command).and_return("pull")
+          expect(orchestrator).to receive(:execute_pull_concurrent).and_return({success: true})
+
+          result = orchestrator.pull({concurrent: true})
+          expect(result[:success]).to be true
+        end
+
+        it "handles sequential pull when concurrent option is false" do
+          allow(orchestrator).to receive(:build_pull_command).and_return("pull")
+          expect(orchestrator).to receive(:execute_pull_sequential).and_return({success: true})
+
+          result = orchestrator.pull({concurrent: false})
+          expect(result[:success]).to be true
+        end
+      end
+
+      describe "checkout and switch concurrent handling" do
+        let(:mock_coordinator) { instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator) }
+
+        it "handles concurrent checkout" do
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(orchestrator).to receive(:build_checkout_command).and_return("checkout main")
+          expect(mock_coordinator).to receive(:execute_across_repositories).with("checkout main", {capture_output: true, concurrent: true})
+
+          orchestrator.checkout(["main"], {concurrent: true})
+        end
+
+        it "handles sequential checkout" do
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(orchestrator).to receive(:build_checkout_command).and_return("checkout main")
+          expect(mock_coordinator).to receive(:execute_across_repositories).with("checkout main", {capture_output: true, concurrent: false})
+
+          orchestrator.checkout(["main"], {concurrent: false})
+        end
+
+        it "handles concurrent switch" do
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(orchestrator).to receive(:build_switch_command).and_return("switch main")
+          expect(mock_coordinator).to receive(:execute_across_repositories).with("switch main", {capture_output: true, concurrent: true})
+
+          orchestrator.switch("main", {concurrent: true})
+        end
+
+        it "handles sequential switch" do
+          allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+          allow(orchestrator).to receive(:build_switch_command).and_return("switch main")
+          expect(mock_coordinator).to receive(:execute_across_repositories).with("switch main", {capture_output: true, concurrent: false})
+
+          orchestrator.switch("main", {concurrent: false})
+        end
+      end
+
+      describe "detect_current_repository debug output coverage" do
+        it "outputs debug information when debug is enabled" do
+          orchestrator_with_debug = described_class.new(project_root, debug: true)
+          repos = [{name: "main", path: project_root, full_path: project_root}]
+          allow(orchestrator_with_debug).to receive(:repositories).and_return(repos)
+
+          expect { orchestrator_with_debug.send(:detect_current_repository) }.to output(/DEBUG: Current dir/).to_stdout
+        end
+      end
     end
   end
 end
