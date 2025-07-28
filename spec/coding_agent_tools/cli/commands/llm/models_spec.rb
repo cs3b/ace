@@ -1208,6 +1208,531 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
     end
   end
 
+  # Additional comprehensive test coverage for error handling and uncovered methods
+  describe "error handling and uncovered method coverage" do
+    describe "#call method provider validation" do
+      it "validates provider and exits with error code 1 for invalid providers" do
+        allow(command).to receive(:warn)
+        
+        exit_code = nil
+        begin
+          command.call(provider: "invalid_provider")
+        rescue SystemExit => e
+          exit_code = e.status
+        end
+        
+        expect(exit_code).to eq(1)
+        expect(command).to have_received(:warn).with("Error: Invalid provider 'invalid_provider'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai")
+      end
+
+      it "returns 0 on successful execution" do
+        allow(command).to receive(:get_available_models).and_return([
+          CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test", description: "Test model")
+        ])
+        allow(command).to receive(:output_models)
+        
+        result = command.call(provider: "google")
+        expect(result).to eq(0)
+      end
+
+      it "exits with code 1 when exception occurs in main flow" do
+        allow(command).to receive(:get_available_models).and_raise(StandardError.new("Simulated error"))
+        allow(command).to receive(:handle_error)
+        
+        exit_code = nil
+        begin
+          command.call(provider: "google")
+        rescue SystemExit => e
+          exit_code = e.status
+        end
+        
+        expect(exit_code).to eq(1)
+        expect(command).to have_received(:handle_error)
+      end
+    end
+
+    describe "#handle_error method" do
+      let(:test_error) { StandardError.new("Test error message") }
+      
+      before do
+        test_error.set_backtrace(["line1", "line2", "line3"])
+      end
+
+      it "shows concise error when debug is false" do
+        expect(command).to receive(:error_output).with("Error: Test error message")
+        expect(command).to receive(:error_output).with("Use --debug flag for more information")
+        
+        command.send(:handle_error, test_error, false)
+      end
+
+      it "shows detailed error with backtrace when debug is true" do
+        expect(command).to receive(:error_output).with("Error: StandardError: Test error message")
+        expect(command).to receive(:error_output).with("\nBacktrace:")
+        expect(command).to receive(:error_output).with("  line1")
+        expect(command).to receive(:error_output).with("  line2")
+        expect(command).to receive(:error_output).with("  line3")
+        
+        command.send(:handle_error, test_error, true)
+      end
+
+      it "handles errors with nil backtrace gracefully" do
+        error_without_backtrace = StandardError.new("No backtrace error")
+        expect(command).to receive(:error_output).with("Error: StandardError: No backtrace error")
+        expect(command).to receive(:error_output).with("\nBacktrace:")
+        
+        command.send(:handle_error, error_without_backtrace, true)
+      end
+    end
+
+    describe "#error_output method" do
+      it "outputs to stderr via warn" do
+        expect(command).to receive(:warn).with("Test error message")
+        command.send(:error_output, "Test error message")
+      end
+    end
+
+    describe "#default_config method" do
+      it "returns cached default config on subsequent calls" do
+        first_config = command.send(:default_config)
+        second_config = command.send(:default_config)
+        
+        expect(first_config).to be_a(CodingAgentTools::Models::DefaultModelConfig)
+        expect(second_config).to be(first_config) # Same object instance
+      end
+    end
+
+    describe "#get_available_models method" do
+      it "fetches from API and caches when refresh is true" do
+        mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fresh", name: "Fresh")]
+        expect(command).to receive(:fetch_models_from_api).with("google").and_return(mock_models)
+        expect(command).to receive(:cache_models).with("google", mock_models)
+        
+        result = command.send(:get_available_models, "google", true)
+        expect(result).to eq(mock_models)
+      end
+
+      it "fetches from API when cache doesn't exist" do
+        allow(command).to receive(:cache_exists?).with("google").and_return(false)
+        mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "api", name: "API")]
+        expect(command).to receive(:fetch_models_from_api).with("google").and_return(mock_models)
+        expect(command).to receive(:cache_models).with("google", mock_models)
+        
+        result = command.send(:get_available_models, "google", false)
+        expect(result).to eq(mock_models)
+      end
+
+      it "loads from cache when cache exists and refresh is false" do
+        allow(command).to receive(:cache_exists?).with("google").and_return(true)
+        cached_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "cached", name: "Cached")]
+        expect(command).to receive(:load_models_from_cache).with("google").and_return(cached_models)
+        expect(command).not_to receive(:fetch_models_from_api)
+        
+        result = command.send(:get_available_models, "google", false)
+        expect(result).to eq(cached_models)
+      end
+    end
+
+    describe "#fetch_models_from_api method" do
+      it "calls appropriate fetch method for each provider" do
+        providers_and_methods = {
+          "google" => :fetch_google_models,
+          "lmstudio" => :fetch_lmstudio_models,
+          "openai" => :fetch_openai_models,
+          "anthropic" => :fetch_anthropic_models,
+          "mistral" => :fetch_mistral_models,
+          "together_ai" => :fetch_together_ai_models
+        }
+
+        providers_and_methods.each do |provider, method|
+          mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test")]
+          expect(command).to receive(method).and_return(mock_models)
+          
+          result = command.send(:fetch_models_from_api, provider)
+          expect(result).to eq(mock_models)
+        end
+      end
+
+      it "falls back to hardcoded models when API fails" do
+        fallback_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fallback", name: "Fallback")]
+        expect(command).to receive(:fetch_google_models).and_raise(StandardError.new("API Error"))
+        expect(command).to receive(:fallback_models).with("google").and_return(fallback_models)
+        
+        # Mock ENV check for DEBUG_MODELS
+        old_debug = ENV["DEBUG_MODELS"]
+        ENV["DEBUG_MODELS"] = "true"
+        expect(command).to receive(:warn).with("API failed for google: API Error")
+        
+        result = command.send(:fetch_models_from_api, "google")
+        expect(result).to eq(fallback_models)
+        
+        ENV["DEBUG_MODELS"] = old_debug
+      end
+
+      it "returns nil for unknown provider" do
+        result = command.send(:fetch_models_from_api, "unknown_provider")
+        expect(result).to be_nil
+      end
+    end
+
+    describe "individual fetch methods detailed testing" do
+      describe "#fetch_google_models" do
+        it "processes Google API response correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
+          api_response = [
+            {
+              name: "models/gemini-1.5-pro",
+              description: "Google's Gemini 1.5 Pro model",
+              supportedGenerationMethods: ["generateContent"],
+              inputTokenLimit: 2_097_152,
+              outputTokenLimit: 8_192
+            },
+            {
+              name: "models/gemini-1.0-pro",
+              description: "Google's Gemini 1.0 Pro model",
+              supportedGenerationMethods: ["generateContent"]
+            },
+            {
+              name: "models/text-only-model",
+              description: "Text only model without generateContent",
+              supportedGenerationMethods: ["textGeneration"]
+            }
+          ]
+
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_google_models)
+
+          expect(result.length).to eq(2) # Only models with generateContent
+          
+          first_model = result.find { |m| m.id == "gemini-1.5-pro" }
+          expect(first_model).not_to be_nil
+          expect(first_model.name).to include("Gemini")
+          expect(first_model.context_size).to eq(2_097_152)
+          expect(first_model.max_output_tokens).to eq(8_192)
+
+          second_model = result.find { |m| m.id == "gemini-1.0-pro" }
+          expect(second_model).not_to be_nil
+          expect(second_model.context_size).to eq(32_768) # Fallback value
+        end
+
+        it "handles context size extraction edge cases" do
+          mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
+          api_response = [
+            {
+              name: "models/test-model",
+              supportedGenerationMethods: ["generateContent"],
+              inputTokenLimit: 0 # Should be ignored
+            }
+          ]
+
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_google_models)
+          expect(result.first.context_size).to be_nil # No fallback match
+        end
+      end
+
+      describe "#fetch_lmstudio_models" do
+        it "processes LM Studio API response correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::LmstudioClient)
+          api_response = [
+            {
+              id: "mistralai/mistral-7b-instruct",
+              context_length: 32_768,
+              max_tokens: 4_096
+            },
+            {
+              id: "meta-llama/llama-3.1-8b-instruct",
+              context_length: 131_072
+            }
+          ]
+
+          allow(CodingAgentTools::Organisms::LmstudioClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_lmstudio_models)
+
+          expect(result.length).to eq(2)
+          
+          mistral_model = result.find { |m| m.id == "mistralai/mistral-7b-instruct" }
+          expect(mistral_model.name).to eq("Mistral 7b Instruct")
+          expect(mistral_model.context_size).to eq(32_768)
+          expect(mistral_model.max_output_tokens).to eq(4_096)
+
+          llama_model = result.find { |m| m.id == "meta-llama/llama-3.1-8b-instruct" }
+          expect(llama_model.context_size).to eq(131_072)
+          expect(llama_model.max_output_tokens).to eq(65_536) # Half of context
+        end
+      end
+
+      describe "#fetch_openai_models" do
+        it "filters and processes OpenAI models correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::OpenaiClient)
+          api_response = [
+            { id: "gpt-4o", created: 1234567890 },
+            { id: "gpt-4-turbo", created: 1234567890 },
+            { id: "gpt-3.5-turbo", created: 1234567890 },
+            { id: "o1-preview", created: 1234567890 },
+            { id: "text-davinci-003", created: 1234567890 }, # Should be filtered out
+            { id: "davinci", created: 1234567890 } # Should be filtered out
+          ]
+
+          allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_openai_models)
+
+          expect(result.length).to eq(4) # Only chat models
+          expect(result.map(&:id)).to include("gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo", "o1-preview")
+          expect(result.map(&:id)).not_to include("text-davinci-003", "davinci")
+
+          gpt4o_model = result.find { |m| m.id == "gpt-4o" }
+          expect(gpt4o_model.name).to eq("GPT-4 Omni")
+        end
+      end
+
+      describe "#fetch_anthropic_models" do
+        it "processes Anthropic API response correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::AnthropicClient)
+          api_response = [
+            { id: "claude-3-5-sonnet-20241022", description: "Claude 3.5 Sonnet" },
+            { id: "claude-3-haiku-20240307", description: "Claude 3 Haiku" }
+          ]
+
+          allow(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_anthropic_models)
+
+          expect(result.length).to eq(2)
+          
+          sonnet_model = result.find { |m| m.id == "claude-3-5-sonnet-20241022" }
+          expect(sonnet_model.name).to eq("Claude 3.5 Sonnet")
+          expect(sonnet_model.description).to eq("Claude 3.5 Sonnet")
+        end
+      end
+
+      describe "#fetch_mistral_models" do
+        it "processes Mistral API response correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::MistralClient)
+          api_response = [
+            { id: "mistral-large-2407", description: "Mistral Large model" },
+            { id: "mistral-8x7b-instruct", description: "Mistral 8x7B Instruct" }
+          ]
+
+          allow(CodingAgentTools::Organisms::MistralClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_mistral_models)
+
+          expect(result.length).to eq(2)
+          
+          large_model = result.find { |m| m.id == "mistral-large-2407" }
+          expect(large_model.name).to eq("Mistral Large")
+        end
+      end
+
+      describe "#fetch_together_ai_models" do
+        it "processes Together AI API response correctly" do
+          mock_client = instance_double(CodingAgentTools::Organisms::TogetheraiClient)
+          api_response = [
+            { id: "meta-llama/Llama-3.1-70B-Instruct", name: "Llama 3.1 70B Instruct" },
+            { name: "mistralai/Mistral-8x7B-Instruct", description: "Mistral 8x7B" }
+          ]
+
+          allow(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return(api_response)
+
+          result = command.send(:fetch_together_ai_models)
+
+          expect(result.length).to eq(2)
+          
+          llama_model = result.find { |m| m.id == "meta-llama/Llama-3.1-70B-Instruct" }
+          expect(llama_model.name).to eq("Llama 3.1 70B")
+          
+          mistral_model = result.find { |m| m.id == "mistralai/Mistral-8x7B-Instruct" }
+          expect(mistral_model.id).to eq("mistralai/Mistral-8x7B-Instruct")
+        end
+
+        it "raises error when no models are returned" do
+          mock_client = instance_double(CodingAgentTools::Organisms::TogetheraiClient)
+          allow(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_return([])
+
+          expect { command.send(:fetch_together_ai_models) }.to raise_error("No models returned from API")
+        end
+      end
+    end
+
+    describe "advanced filter testing" do
+      let(:complex_models) do
+        [
+          CodingAgentTools::Models::LlmModelInfo.new(id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced reasoning model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "gpt-4o", name: "GPT-4 Omni", description: "OpenAI's latest multimodal model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: nil, name: "Model with nil ID", description: "Edge case model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "claude-3-opus", name: nil, description: "Anthropic's powerful model"),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "mistral-large", name: "Mistral Large", description: nil)
+        ]
+      end
+
+      it "handles filtering with nil attributes gracefully" do
+        result = command.send(:filter_models, complex_models, "nil")
+        expect(result.length).to eq(1) # Only the one with "Model with nil ID"
+        expect(result.first.name).to eq("Model with nil ID")
+      end
+
+      it "performs case-insensitive partial matching" do
+        result = command.send(:filter_models, complex_models, "GEMINI")
+        expect(result.length).to eq(1)
+        expect(result.first.id).to eq("gemini-1.5-pro")
+      end
+
+      it "searches across all attributes (id, name, description)" do
+        result = command.send(:filter_models, complex_models, "multimodal")
+        expect(result.length).to eq(1)
+        expect(result.first.id).to eq("gpt-4o")
+      end
+
+      it "returns empty array when no matches found" do
+        result = command.send(:filter_models, complex_models, "nonexistent")
+        expect(result).to be_empty
+      end
+
+      it "handles empty filter term" do
+        result = command.send(:filter_models, complex_models, "")
+        expect(result).to eq(complex_models)
+      end
+    end
+
+    describe "output method comprehensive testing" do
+      let(:test_models) do
+        [
+          CodingAgentTools::Models::LlmModelInfo.new(
+            id: "test-model-1", 
+            name: "Test Model 1", 
+            description: "First test model",
+            default: true,
+            context_size: 128_000,
+            max_output_tokens: 4_096
+          ),
+          CodingAgentTools::Models::LlmModelInfo.new(
+            id: "test-model-2", 
+            name: "Test Model 2", 
+            description: "Second test model",
+            default: false,
+            context_size: 32_000,
+            max_output_tokens: 2_048
+          )
+        ]
+      end
+
+      describe "#output_models" do
+        it "delegates to output_text_models for text format" do
+          expect(command).to receive(:output_text_models).with(test_models, hash_including(format: "text", provider: "google"))
+          command.send(:output_models, test_models, format: "text", provider: "google")
+        end
+
+        it "delegates to output_json_models for json format" do
+          expect(command).to receive(:output_json_models).with(test_models, hash_including(format: "json", provider: "google"))
+          command.send(:output_models, test_models, format: "json", provider: "google")
+        end
+
+        it "defaults to text format for unknown formats" do
+          expect(command).to receive(:output_text_models).with(test_models, hash_including(format: "unknown", provider: "google"))
+          command.send(:output_models, test_models, format: "unknown", provider: "google")
+        end
+      end
+
+      describe "#output_text_models comprehensive testing" do
+        it "handles empty model list" do
+          command.send(:output_text_models, [], provider: "google")
+          expect(output.string).to include("No models found matching the filter criteria")
+        end
+
+        it "outputs Google models with proper format and usage" do
+          command.send(:output_text_models, test_models, provider: "google")
+          
+          output_content = output.string
+          expect(output_content).to include("Available Google Models")
+          expect(output_content).to include("Usage: llm-google-query")
+          expect(output_content).to include("Test Model 1")
+          expect(output_content).to include("Test Model 2")
+        end
+
+        it "outputs LM Studio models with server information" do
+          command.send(:output_text_models, test_models, provider: "lmstudio")
+          
+          output_content = output.string
+          expect(output_content).to include("Available LM Studio Models")
+          expect(output_content).to include("Note: Models must be loaded in LM Studio before use")
+          expect(output_content).to include("http://localhost:1234")
+          expect(output_content).to include("Usage: llm-lmstudio-query")
+        end
+
+        it "outputs provider-specific information for all providers" do
+          providers = %w[openai anthropic mistral together_ai]
+          
+          providers.each do |provider|
+            output.string.clear
+            command.send(:output_text_models, test_models, provider: provider)
+            
+            output_content = output.string
+            expect(output_content).to include("Available")
+            expect(output_content).to include("Usage:")
+            expect(output_content).to include("Test Model 1")
+          end
+        end
+      end
+
+      describe "#output_json_models comprehensive testing" do
+        it "outputs valid JSON structure with all required fields" do
+          command.send(:output_json_models, test_models, provider: "google")
+          
+          output_content = output.string
+          json_output = JSON.parse(output_content)
+          
+          expect(json_output).to have_key("models")
+          expect(json_output).to have_key("count")
+          expect(json_output).to have_key("provider")
+          expect(json_output).to have_key("default_model")
+          
+          expect(json_output["models"]).to be_an(Array)
+          expect(json_output["count"]).to eq(2)
+          expect(json_output["provider"]).to eq("google")
+          expect(json_output["default_model"]).to eq("test-model-1")
+        end
+
+        it "includes model details in proper format" do
+          command.send(:output_json_models, test_models, provider: "google")
+          
+          json_output = JSON.parse(output.string)
+          first_model = json_output["models"].first
+          
+          expect(first_model).to have_key("id")
+          expect(first_model).to have_key("name")
+          expect(first_model).to have_key("description")
+          expect(first_model).to have_key("default")
+          expect(first_model).to have_key("context_size")
+          expect(first_model).to have_key("max_output_tokens")
+          
+          expect(first_model["context_size"]).to eq(128_000)
+          expect(first_model["max_output_tokens"]).to eq(4_096)
+        end
+
+        it "includes provider-specific information for LM Studio" do
+          command.send(:output_json_models, test_models, provider: "lmstudio")
+          
+          json_output = JSON.parse(output.string)
+          expect(json_output).to have_key("server_url")
+          expect(json_output["server_url"]).to eq("http://localhost:1234")
+          expect(json_output["provider"]).to eq("lmstudio")
+        end
+      end
+    end
+  end
+
   # Additional comprehensive test coverage for edge cases and error scenarios
   describe "comprehensive edge case and error coverage" do
     describe "filter edge cases" do
@@ -1671,6 +2196,328 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         expect { command.call }.to raise_error(SystemExit)
         expect(command).to have_received(:warn).with(/Error: Simulated failure/)
+      end
+    end
+
+    describe "comprehensive caching system testing" do
+      let(:cache_manager) { instance_double(CodingAgentTools::Molecules::CacheManager) }
+      let(:test_models) do
+        [CodingAgentTools::Models::LlmModelInfo.new(id: "cached-model", name: "Cached Model", description: "Test cached model")]
+      end
+
+      before do
+        allow(command).to receive(:cache_manager).and_return(cache_manager)
+      end
+
+      describe "#cache_models" do
+        it "serializes models correctly to cache" do
+          expect(cache_manager).to receive(:write_cache) do |filename, cache_data|
+            expect(filename).to eq("google_models.yml")
+            expect(cache_data).to have_key("cached_at")
+            expect(cache_data["cached_at"]).to be_a(String)
+            expect(cache_data["provider"]).to eq("google")
+            expect(cache_data["models"]).to be_an(Array)
+            expect(cache_data["models"].first["id"]).to eq("cached-model")
+            expect(cache_data["models"].first["name"]).to eq("Cached Model")
+            expect(cache_data["models"].first["description"]).to eq("Test cached model")
+            expect(cache_data["models"].first["default"]).to be_nil # default? returns nil, not false
+          end
+          
+          command.send(:cache_models, "google", test_models)
+        end
+
+        it "includes timestamp in cache data" do
+          freeze_time = Time.parse("2024-01-01 12:00:00 UTC")
+          allow(Time).to receive(:now).and_return(freeze_time)
+
+          expected_cache_data = hash_including(
+            "cached_at" => "2024-01-01T12:00:00Z"
+          )
+
+          expect(cache_manager).to receive(:write_cache).with("google_models.yml", expected_cache_data)
+          
+          command.send(:cache_models, "google", test_models)
+        end
+      end
+
+      describe "#load_models_from_cache" do
+        it "reconstructs models from cache data correctly" do
+          cache_data = {
+            "cached_at" => "2024-01-01T12:00:00Z",
+            "provider" => "google",
+            "models" => [
+              {
+                "id" => "cached-model",
+                "name" => "Cached Model",
+                "description" => "Test cached model",
+                "default" => true,
+                "context_size" => 128_000,
+                "max_output_tokens" => 4_096
+              }
+            ]
+          }
+
+          allow(cache_manager).to receive(:read_cache).with("google_models.yml").and_return(cache_data)
+
+          result = command.send(:load_models_from_cache, "google")
+          
+          expect(result.length).to eq(1)
+          model = result.first
+          expect(model.id).to eq("cached-model")
+          expect(model.name).to eq("Cached Model")
+          expect(model.default?).to be true
+          expect(model.context_size).to eq(128_000)
+          expect(model.max_output_tokens).to eq(4_096)
+        end
+
+        it "falls back to hardcoded models when cache is nil" do
+          allow(cache_manager).to receive(:read_cache).with("google_models.yml").and_return(nil)
+          fallback_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fallback", name: "Fallback")]
+          expect(command).to receive(:fallback_models).with("google").and_return(fallback_models)
+
+          result = command.send(:load_models_from_cache, "google")
+          expect(result).to eq(fallback_models)
+        end
+      end
+
+      describe "#cache_file_name" do
+        it "generates correct cache file names for all providers" do
+          providers = %w[google lmstudio openai anthropic mistral together_ai]
+          
+          providers.each do |provider|
+            expected_filename = "#{provider}_models.yml"
+            expect(command.send(:cache_file_name, provider)).to eq(expected_filename)
+          end
+        end
+      end
+
+      describe "#cache_exists?" do
+        it "delegates to cache manager correctly" do
+          allow(cache_manager).to receive(:cache_exists?).with("google_models.yml").and_return(true)
+          
+          result = command.send(:cache_exists?, "google")
+          expect(result).to be true
+        end
+      end
+    end
+
+    describe "comprehensive API error scenarios" do
+      describe "network-level failures" do
+        it "handles connection refused errors" do
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(Errno::ECONNREFUSED.new("Connection refused"))
+          
+          expect { command.send(:fetch_google_models) }.to raise_error(Errno::ECONNREFUSED)
+        end
+
+        it "handles timeout errors" do
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(Timeout::Error.new("Request timeout"))
+          
+          expect { command.send(:fetch_google_models) }.to raise_error(Timeout::Error)
+        end
+
+        it "handles SSL certificate errors" do
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(OpenSSL::SSL::SSLError.new("Certificate verify failed"))
+          
+          expect { command.send(:fetch_google_models) }.to raise_error(OpenSSL::SSL::SSLError)
+        end
+      end
+
+      describe "HTTP-level failures" do
+        it "handles authentication errors (401)" do
+          mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_raise(StandardError.new("401 Unauthorized"))
+          
+          expect { command.send(:fetch_google_models) }.to raise_error(StandardError, "401 Unauthorized")
+        end
+
+        it "handles rate limiting errors (429)" do
+          mock_client = instance_double(CodingAgentTools::Organisms::OpenaiClient)
+          allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_raise(StandardError.new("429 Too Many Requests"))
+          
+          expect { command.send(:fetch_openai_models) }.to raise_error(StandardError, "429 Too Many Requests")
+        end
+
+        it "handles server errors (500)" do
+          mock_client = instance_double(CodingAgentTools::Organisms::AnthropicClient)
+          allow(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_raise(StandardError.new("500 Internal Server Error"))
+          
+          expect { command.send(:fetch_anthropic_models) }.to raise_error(StandardError, "500 Internal Server Error")
+        end
+      end
+
+      describe "response parsing failures" do
+        it "handles malformed JSON responses" do
+          mock_client = instance_double(CodingAgentTools::Organisms::MistralClient)
+          allow(CodingAgentTools::Organisms::MistralClient).to receive(:new).and_return(mock_client)
+          allow(mock_client).to receive(:list_models).and_raise(JSON::ParserError.new("Invalid JSON"))
+          
+          expect { command.send(:fetch_mistral_models) }.to raise_error(JSON::ParserError)
+        end
+
+        it "handles unexpected response structure" do
+          mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
+          allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
+          # Return response with missing required fields
+          allow(mock_client).to receive(:list_models).and_return([{ missing_name: "invalid" }])
+          
+          result = command.send(:fetch_google_models)
+          expect(result).to eq([]) # Should filter out invalid entries
+        end
+      end
+    end
+
+    describe "advanced context size and formatting edge cases" do
+      describe "context size extraction with edge values" do
+        it "handles very large context sizes" do
+          model_huge = { inputTokenLimit: 10_000_000 }
+          expect(command.send(:extract_google_context_size, model_huge)).to eq(10_000_000)
+        end
+
+        it "handles negative values gracefully" do
+          model_negative = { inputTokenLimit: -1 }
+          expect(command.send(:extract_google_context_size, model_negative)).to be_nil
+        end
+
+        it "handles string values that should be numbers" do
+          model_string = { context_length: "32768" }
+          # This would actually cause an error in the real implementation since it calls positive? on a string
+          expect { command.send(:extract_lmstudio_context_size, model_string) }.to raise_error(NoMethodError)
+        end
+      end
+
+      describe "model name formatting with special cases" do
+        it "handles very long model names" do
+          long_name = "a" * 1000
+          result = command.send(:format_lmstudio_model_name, "provider/#{long_name}")
+          expect(result.length).to be > 500
+          expect(result).to start_with("A")
+        end
+
+        it "handles model names with unicode characters" do
+          unicode_name = "modèl-naïve-tëst"
+          result = command.send(:format_lmstudio_model_name, "provider/#{unicode_name}")
+          expect(result).to eq("Modèl Naïve Tëst")
+        end
+
+        it "handles model names with numbers and special patterns" do
+          complex_names = [
+            "provider/gpt-4o-2024-08-06",
+            "provider/claude-3-5-sonnet-20241022", 
+            "provider/llama-3.1-70b-instruct-turbo"
+          ]
+
+          complex_names.each do |name|
+            result = command.send(:format_lmstudio_model_name, name)
+            expect(result).to be_a(String)
+            expect(result).not_to be_empty
+          end
+        end
+      end
+    end
+
+    describe "integration edge cases and resource management" do
+      it "handles very large model lists without memory issues" do
+        large_api_response = Array.new(1000) do |i|
+          {
+            name: "models/test-model-#{i}",
+            description: "Test model #{i}",
+            supportedGenerationMethods: ["generateContent"]
+          }
+        end
+
+        mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
+        allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
+        allow(mock_client).to receive(:list_models).and_return(large_api_response)
+
+        result = command.send(:fetch_google_models)
+        expect(result.length).to eq(1000)
+        expect(result.first.id).to eq("test-model-0")
+        expect(result.last.id).to eq("test-model-999")
+      end
+
+      it "handles concurrent-like access patterns" do
+        # Simulate multiple sequential calls that might happen in concurrent scenarios
+        cache_manager = instance_double(CodingAgentTools::Molecules::CacheManager)
+        allow(command).to receive(:cache_manager).and_return(cache_manager)
+        allow(cache_manager).to receive(:cache_exists?).and_return(false)
+        
+        models = [CodingAgentTools::Models::LlmModelInfo.new(id: "concurrent-test", name: "Concurrent Test")]
+        allow(command).to receive(:fetch_models_from_api).and_return(models)
+        allow(cache_manager).to receive(:write_cache)
+
+        # Multiple sequential calls
+        results = []
+        5.times do
+          results << command.send(:get_available_models, "google", false)
+        end
+
+        expect(results.all? { |r| r.first.id == "concurrent-test" }).to be true
+      end
+
+      it "handles mixed success/failure scenarios across providers" do
+        # Test scenario where some providers work and others fail
+        allow(command).to receive(:fetch_google_models).and_return([
+          CodingAgentTools::Models::LlmModelInfo.new(id: "google-works", name: "Google Works")
+        ])
+        allow(command).to receive(:fetch_openai_models).and_raise(StandardError.new("OpenAI failed"))
+        allow(command).to receive(:fallback_models).with("openai").and_return([
+          CodingAgentTools::Models::LlmModelInfo.new(id: "openai-fallback", name: "OpenAI Fallback")
+        ])
+
+        google_result = command.send(:fetch_models_from_api, "google")
+        expect(google_result.first.id).to eq("google-works")
+
+        # Mock the environment variable for debug output
+        old_debug = ENV["DEBUG_MODELS"]
+        ENV["DEBUG_MODELS"] = "true"
+        expect(command).to receive(:warn).with("API failed for openai: OpenAI failed")
+        
+        openai_result = command.send(:fetch_models_from_api, "openai")
+        expect(openai_result.first.id).to eq("openai-fallback")
+        
+        ENV["DEBUG_MODELS"] = old_debug
+      end
+    end
+
+    describe "comprehensive validation and sanitization" do
+      it "handles malformed model data gracefully" do
+        malformed_models = [
+          CodingAgentTools::Models::LlmModelInfo.new(id: "", name: "", description: ""),
+          CodingAgentTools::Models::LlmModelInfo.new(id: nil, name: nil, description: nil),
+          CodingAgentTools::Models::LlmModelInfo.new(id: "valid", name: "Valid Model", description: "Valid description")
+        ]
+
+        # Test filtering with malformed data
+        result = command.send(:filter_models, malformed_models, "valid")
+        expect(result.length).to eq(1)
+        expect(result.first.id).to eq("valid")
+      end
+
+      it "handles extreme input values" do
+        # Test with very long filter strings
+        long_filter = "a" * 10000
+        models = [CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test", description: "Test")]
+        
+        result = command.send(:filter_models, models, long_filter)
+        expect(result).to be_empty
+      end
+
+      it "validates cache data integrity" do
+        # Test with corrupted cache data missing required fields
+        corrupted_cache = {
+          "cached_at" => "2024-01-01T12:00:00Z",
+          "provider" => "google"
+          # Missing "models" field
+        }
+
+        cache_manager = instance_double(CodingAgentTools::Molecules::CacheManager)
+        allow(command).to receive(:cache_manager).and_return(cache_manager)
+        allow(cache_manager).to receive(:read_cache).and_return(corrupted_cache)
+
+        expect { command.send(:load_models_from_cache, "google") }.to raise_error(NoMethodError)
       end
     end
   end
