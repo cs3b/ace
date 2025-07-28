@@ -205,6 +205,12 @@ dependencies: []
 
 Implement comprehensive test coverage for [ComponentName] focusing on [FocusArea] including edge cases, error conditions, and integration scenarios. Address uncovered line ranges [LineRanges] identified in coverage analysis.
 
+## Prerequisites
+
+* Read the dev-tools technical architecture guide: `dev-tools/docs/architecture-tools.md`
+* Understanding of ATOM architecture pattern (Atoms, Molecules, Organisms, Ecosystems)
+* Familiarity with Ruby/RSpec testing patterns and VCR cassette management
+
 ## Scope of Work
 
 - Add missing test scenarios for uncovered methods
