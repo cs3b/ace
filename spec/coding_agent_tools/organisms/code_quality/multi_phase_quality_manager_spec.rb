@@ -788,4 +788,365 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::MultiPhaseQualityManage
       expect { manager.send(:build_final_summary, large_results, nil, nil) }.not_to raise_error
     end
   end
+
+  # Additional coverage for uncovered methods and edge cases
+  describe "display_detailed_results coverage" do
+    let(:detailed_results) do
+      {
+        ruby: {
+          linters: {
+            standardrb: {
+              findings: [
+                { file: "/test/file.rb", line: 10, column: 5, message: "Test", cop: "Style/Test", severity: "error" }
+              ]
+            },
+            security: {
+              findings: ["Security finding"]
+            },
+            cassettes: {
+              findings: [{ path: "/test/cassette.yml", size_formatted: "5MB" }]
+            }
+          }
+        },
+        markdown: {
+          linters: {
+            task_metadata: {
+              findings: [{ file: "/test/task.md", message: "Invalid metadata" }]
+            },
+            link_validation: {
+              findings: [{ file: "/test/doc.md", link: "http://broken.link" }]
+            },
+            template_embedding: {
+              findings: [{ file: "/test/template.md", template: "missing_template" }]
+            },
+            markdownlint: {
+              errors: ["Markdown error 1", "Markdown error 2"]
+            }
+          }
+        }
+      }
+    end
+
+    before do
+      allow(manager).to receive(:puts) # Suppress output
+      allow(manager).to receive(:display_finding)
+    end
+
+    it "displays detailed results for all linters" do
+      manager.send(:display_detailed_results, detailed_results)
+      
+      # Verify that display_finding was called for each finding
+      expect(manager).to have_received(:display_finding).at_least(6).times
+    end
+
+    it "handles empty findings gracefully" do
+      empty_results = {
+        ruby: { linters: { standardrb: { findings: [] } } },
+        markdown: { linters: { markdownlint: { findings: [] } } }
+      }
+      
+      expect { manager.send(:display_detailed_results, empty_results) }.not_to raise_error
+    end
+
+    it "handles missing linters section" do
+      minimal_results = { ruby: {}, markdown: {} }
+      
+      expect { manager.send(:display_detailed_results, minimal_results) }.not_to raise_error
+    end
+  end
+
+  describe "display_finding comprehensive coverage" do
+    before do
+      allow(manager).to receive(:puts) # Suppress output
+      allow(manager).to receive(:make_path_relative) { |path| "relative_#{path}" }
+    end
+
+    it "formats standardrb findings with error severity" do
+      finding = {
+        file: "/test/file.rb",
+        line: 10,
+        column: 5,
+        message: "Test error",
+        cop: "Style/Test",
+        severity: "error"
+      }
+      
+      expect(manager).to receive(:puts).with("    ❌ relative_/test/file.rb:10:5 - Test error (Style/Test)")
+      manager.send(:display_finding, finding, :standardrb)
+    end
+
+    it "formats standardrb findings with warning severity" do
+      finding = {
+        file: "/test/file.rb",
+        line: 10,
+        column: 5,
+        message: "Test warning",
+        cop: "Style/Test",
+        severity: "warning"
+      }
+      
+      expect(manager).to receive(:puts).with("    ⚠️ relative_/test/file.rb:10:5 - Test warning (Style/Test)")
+      manager.send(:display_finding, finding, :standardrb)
+    end
+
+    it "formats security findings" do
+      finding = "SQL injection vulnerability"
+      
+      expect(manager).to receive(:puts).with("    ⚠️  Security: SQL injection vulnerability")
+      manager.send(:display_finding, finding, :security)
+    end
+
+    it "formats cassette findings" do
+      finding = { path: "/test/large.yml", size_formatted: "10MB" }
+      
+      expect(manager).to receive(:puts).with("    ⚠️  relative_/test/large.yml - 10MB (threshold exceeded)")
+      manager.send(:display_finding, finding, :cassettes)
+    end
+
+    it "formats task_metadata findings with hash structure" do
+      finding = { file: "/test/task.md", message: "Invalid metadata format" }
+      
+      expect(manager).to receive(:puts).with("    ❌ relative_/test/task.md - Invalid metadata format")
+      manager.send(:display_finding, finding, :task_metadata)
+    end
+
+    it "formats task_metadata findings with unknown file" do
+      finding = { message: "Global metadata issue" }
+      
+      expect(manager).to receive(:puts).with("    ❌ unknown - Global metadata issue")
+      manager.send(:display_finding, finding, :task_metadata)
+    end
+
+    it "formats link_validation findings" do
+      finding = { file: "/test/doc.md", link: "http://broken.link" }
+      
+      expect(manager).to receive(:puts).with("    ❌ relative_/test/doc.md - http://broken.link")
+      manager.send(:display_finding, finding, :link_validation)
+    end
+
+    it "formats template_embedding findings" do
+      finding = { file: "/test/template.md", template: "missing_template" }
+      
+      expect(manager).to receive(:puts).with("    ❌ relative_/test/template.md - missing_template")
+      manager.send(:display_finding, finding, :template_embedding)
+    end
+
+    it "formats task_metadata string findings" do
+      finding = "String-based task metadata error"
+      
+      expect(manager).to receive(:puts).with("    ❌ String-based task metadata error")
+      manager.send(:display_finding, finding, :task_metadata)
+    end
+
+    it "formats unknown linter findings" do
+      finding = "Unknown linter finding"
+      
+      expect(manager).to receive(:puts).with("    • Unknown linter finding")
+      manager.send(:display_finding, finding, :unknown_linter)
+    end
+  end
+
+  describe "advanced edge cases" do
+    before do
+      allow(manager).to receive(:puts) # Suppress output
+    end
+
+    it "handles run with no issues found" do
+      mock_clean_results = {
+        phase: 1,
+        timestamp: Time.now,
+        ruby: { total_issues: 0, success: true },
+        markdown: { total_issues: 0, success: true },
+        success: true
+      }
+
+      allow(manager).to receive(:run_phase1).and_return(mock_clean_results)
+      allow(manager).to receive(:write_detailed_report)
+
+      result = manager.run
+      expect(result).to eq(mock_clean_results)
+      # write_detailed_report is called if ruby or markdown results exist, regardless of issue count
+      expect(manager).to have_received(:write_detailed_report).with(mock_clean_results, "all")
+    end
+
+    it "handles run with partial target" do
+      mock_ruby_results = {
+        phase: 1,
+        timestamp: Time.now,
+        ruby: { total_issues: 5, success: false },
+        markdown: nil,
+        success: false
+      }
+
+      allow(manager).to receive(:run_phase1).and_return(mock_ruby_results)
+      allow(manager).to receive(:write_detailed_report)
+
+      result = manager.run(target: "ruby")
+      expect(result[:ruby]).not_to be_nil
+      expect(result[:markdown]).to be_nil
+    end
+
+    it "handles dry_run mode throughout phases" do
+      dry_manager = described_class.new(dry_run: true)
+      allow(dry_manager).to receive(:puts)
+      
+      mock_results = {
+        phase: 1,
+        ruby: { total_issues: 5, success: false },
+        success: false
+      }
+
+      allow(dry_manager).to receive(:run_phase1).and_return(mock_results)
+      
+      # Should complete without calling certain operations in dry run
+      expect { dry_manager.run(autofix: true) }.not_to raise_error
+      expect(dry_manager.dry_run).to be true
+    end
+  end
+
+  describe "format_finding_for_report edge cases" do
+    it "handles standardrb findings with warning severity" do
+      finding = {
+        file: "/project/path/file.rb",
+        line: 15,
+        column: 8,
+        message: "Warning message",
+        cop: "Style/Warning",
+        severity: "warning"
+      }
+      
+      result = manager.send(:format_finding_for_report, finding, :standardrb)
+      expect(result).to include("WARNING:")
+      expect(result).to include("15:8")
+      expect(result).to include("Warning message")
+    end
+
+    it "handles cassette findings formatting" do
+      finding = { path: "/project/spec/cassettes/large.yml", size_formatted: "15MB" }
+      
+      result = manager.send(:format_finding_for_report, finding, :cassettes)
+      expect(result).to include("Cassette Issue:")
+      expect(result).to include("15MB")
+      expect(result).to include("threshold exceeded")
+    end
+
+    it "handles link_validation findings with complex structure" do
+      finding = { file: "/path/doc.md", link: "https://complex.example.com/path?param=value" }
+      
+      result = manager.send(:format_finding_for_report, finding, :link_validation)
+      expect(result).to include("https://complex.example.com/path?param=value")
+    end
+
+    it "handles template_embedding findings" do
+      finding = { file: "/path/template.md", template: "complex_template_name" }
+      
+      result = manager.send(:format_finding_for_report, finding, :template_embedding)
+      expect(result).to include("complex_template_name")
+    end
+
+    it "handles hash findings with missing fields gracefully" do
+      finding = {}
+      
+      result = manager.send(:format_finding_for_report, finding, :task_metadata)
+      expect(result).to include("unknown - issue")
+    end
+  end
+
+  describe "write_detailed_report comprehensive scenarios" do
+    let(:complex_results) do
+      {
+        ruby: {
+          total_issues: 3,
+          linters: {
+            standardrb: {
+              findings: [
+                { file: "/test/file1.rb", line: 5, message: "Issue 1", cop: "Style/One" },
+                { file: "/test/file2.rb", line: 10, message: "Issue 2", cop: "Style/Two" }
+              ]
+            },
+            security: { error: "Security scanner failed" },
+            cassettes: { findings: [] }
+          }
+        },
+        markdown: {
+          total_issues: 1,
+          linters: {
+            markdownlint: { 
+              errors: ["Config error", "Parse error"]
+            },
+            task_metadata: { findings: [] }
+          }
+        }
+      }
+    end
+
+    before do
+      allow(manager).to receive(:make_path_relative) { |path| path.gsub("/test/", "") }
+      allow(manager).to receive(:format_finding_for_report) { |finding, linter| "formatted: #{finding}" }
+    end
+
+    it "writes report with mixed successful and error linters" do
+      manager.send(:write_detailed_report, complex_results, "all")
+      
+      report_path = File.join(temp_dir, ".lint-report.md")
+      content = File.read(report_path)
+      
+      expect(content).to include("# Code Quality Report")
+      expect(content).to include("**Total Issues Found**: 4")
+      expect(content).to include("SECURITY (ERROR)")
+      expect(content).to include("Security scanner failed")
+      expect(content).to include("CASSETTES")
+      expect(content).to include("No issues found ✅")
+      expect(content).to include("MARKDOWNLINT ERRORS")
+      expect(content).to include("Config error")
+      expect(content).to include("Parse error")
+    end
+
+    it "includes timestamp and target in report" do
+      freeze_time = Time.new(2024, 1, 15, 10, 30, 0)
+      allow(Time).to receive(:now).and_return(freeze_time)
+      
+      manager.send(:write_detailed_report, complex_results, "ruby")
+      
+      report_path = File.join(temp_dir, ".lint-report.md")
+      content = File.read(report_path)
+      
+      expect(content).to include("**Generated**: 2024-01-15 10:30:00")
+      expect(content).to include("**Target**: ruby")
+    end
+
+    it "includes next steps section" do
+      manager.send(:write_detailed_report, complex_results, "all")
+      
+      report_path = File.join(temp_dir, ".lint-report.md")
+      content = File.read(report_path)
+      
+      expect(content).to include("## Next Steps")
+      expect(content).to include("code-lint --autofix")
+      expect(content).to include("Re-run `code-lint` to verify")
+    end
+  end
+
+  describe "make_path_relative boundary conditions" do
+    before do
+      allow(manager.path_resolver).to receive(:project_root).and_return("/project/root")
+    end
+
+    it "handles empty string paths" do
+      result = manager.send(:make_path_relative, "")
+      expect(result).to eq("")
+    end
+
+    it "handles relative paths that look absolute" do
+      fake_absolute = "project/root/src/file.rb"
+      result = manager.send(:make_path_relative, fake_absolute)
+      expect(result).to eq("project/root/src/file.rb")
+    end
+
+    it "handles paths with trailing slashes" do
+      absolute_path = "/project/root/src/"
+      result = manager.send(:make_path_relative, absolute_path)
+      expect(result).to eq("src/")
+    end
+  end
 end
