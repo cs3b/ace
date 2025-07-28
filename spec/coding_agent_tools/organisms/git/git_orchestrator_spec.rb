@@ -29,6 +29,12 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         expect(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).with(custom_root)
         described_class.new(custom_root)
       end
+
+      it "stores the provided project_root" do
+        custom_root = "/custom/path"
+        orchestrator = described_class.new(custom_root)
+        expect(orchestrator.instance_variable_get(:@project_root)).to eq(custom_root)
+      end
     end
 
     context "without project_root parameter" do
@@ -37,12 +43,16 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         expect(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).with(project_root)
         described_class.new
       end
+
+      it "stores the detected project_root" do
+        orchestrator = described_class.new
+        expect(orchestrator.instance_variable_get(:@project_root)).to eq(project_root)
+      end
     end
 
     context "with debug option" do
       it "sets debug mode" do
         orchestrator = described_class.new(project_root, debug: true)
-        # Access private attribute through instance_variable_get for testing
         expect(orchestrator.instance_variable_get(:@debug)).to be true
       end
     end
@@ -52,6 +62,29 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         orchestrator = described_class.new(project_root)
         expect(orchestrator.instance_variable_get(:@debug)).to be false
       end
+    end
+
+    context "with empty repository scanner results" do
+      it "handles empty repository list gracefully" do
+        allow(CodingAgentTools::Atoms::Git::RepositoryScanner).to receive(:discover_repositories).and_return([])
+        expect { described_class.new(project_root) }.not_to raise_error
+        orchestrator = described_class.new(project_root)
+        expect(orchestrator.repositories).to eq([])
+      end
+    end
+
+    context "with nil project_root" do
+      it "uses detected project root when nil is passed" do
+        expect(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
+        orchestrator = described_class.new(nil)
+        expect(orchestrator.instance_variable_get(:@project_root)).to eq(project_root)
+      end
+    end
+
+    it "discovers and stores repositories" do
+      orchestrator = described_class.new(project_root)
+      expect(orchestrator.repositories).to be_an(Array)
+      expect(orchestrator.repositories.size).to eq(2)
     end
   end
 
@@ -66,10 +99,13 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         }
       }
     end
+    let(:mock_color_formatter) { instance_double(CodingAgentTools::Atoms::Git::StatusColorFormatter) }
 
     before do
       allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
       allow(mock_coordinator).to receive(:execute_across_repositories).and_return(mock_result)
+      allow(CodingAgentTools::Atoms::Git::StatusColorFormatter).to receive(:new).and_return(mock_color_formatter)
+      allow(mock_color_formatter).to receive(:format_repository_status).and_return("[main] M  file1.txt\nA  file2.txt")
     end
 
     it "creates a MultiRepoCoordinator with project_root" do
@@ -83,9 +119,75 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
     end
 
     it "formats the status output" do
-      allow(orchestrator).to receive(:format_status_output).and_return(mock_result.merge(formatted_output: "formatted"))
       result = orchestrator.status
       expect(result).to have_key(:formatted_output)
+      expect(result[:formatted_output]).to be_a(String)
+    end
+
+    it "creates color formatter with options" do
+      options = {color: true}
+      expect(CodingAgentTools::Atoms::Git::StatusColorFormatter).to receive(:new).with(options)
+      orchestrator.status(options)
+    end
+
+    it "formats repository status for each successful result" do
+      expect(mock_color_formatter).to receive(:format_repository_status).with("main", "M  file1.txt\nA  file2.txt")
+      expect(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt")
+      orchestrator.status
+    end
+
+    context "with verbose option" do
+      it "includes empty output when verbose is true" do
+        verbose_result = {
+          success: true,
+          results: {
+            "main" => {success: true, stdout: ""},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        allow(mock_coordinator).to receive(:execute_across_repositories).and_return(verbose_result)
+        allow(mock_color_formatter).to receive(:format_repository_status).with("main", "").and_return("[main] clean")
+        allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
+        
+        result = orchestrator.status({verbose: true})
+        expect(result[:formatted_output]).to include("[main] clean")
+      end
+    end
+
+    context "without verbose option" do
+      it "skips empty output when verbose is false" do
+        empty_result = {
+          success: true,
+          results: {
+            "main" => {success: true, stdout: ""},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        allow(mock_coordinator).to receive(:execute_across_repositories).and_return(empty_result)
+        allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
+        
+        result = orchestrator.status
+        expect(result[:formatted_output]).not_to include("[main]")
+        expect(result[:formatted_output]).to include("[submodule1]")
+      end
+    end
+
+    context "when repository operations fail" do
+      it "skips failed repositories in formatting" do
+        failed_result = {
+          success: false,
+          results: {
+            "main" => {success: false, stderr: "Not a git repository"},
+            "submodule1" => {success: true, stdout: "?? newfile.txt"}
+          }
+        }
+        allow(mock_coordinator).to receive(:execute_across_repositories).and_return(failed_result)
+        allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
+        
+        result = orchestrator.status
+        expect(result[:formatted_output]).not_to include("[main]")
+        expect(result[:formatted_output]).to include("[submodule1]")
+      end
     end
 
     context "with options" do
@@ -112,24 +214,47 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
     before do
       allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
       allow(mock_coordinator).to receive(:execute_across_repositories).and_return(mock_result)
-      allow(orchestrator).to receive(:build_log_command).and_return("log --oneline")
-      allow(orchestrator).to receive(:format_log_output).and_return(mock_result)
+    end
+
+    it "creates a MultiRepoCoordinator with project_root" do
+      expect(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).with(project_root)
+      orchestrator.log
     end
 
     it "builds log command with options" do
       options = {oneline: true, max_count: 5}
-      expect(orchestrator).to receive(:build_log_command).with(options)
-      orchestrator.log(options)
+      # Test the actual build_log_command method
+      result = orchestrator.send(:build_log_command, options)
+      expect(result).to include("log")
+      expect(result).to include("oneline")
+      expect(result).to include("-n 5")
     end
 
     it "executes log command across repositories" do
-      expect(mock_coordinator).to receive(:execute_across_repositories).with("log --oneline", {capture_output: true})
+      # Allow the actual build_log_command to be called
+      expected_command = orchestrator.send(:build_log_command, {})
+      expect(mock_coordinator).to receive(:execute_across_repositories).with(expected_command, {capture_output: true})
       orchestrator.log
     end
 
     it "formats the log output" do
-      expect(orchestrator).to receive(:format_log_output).with(mock_result, {})
-      orchestrator.log
+      result = orchestrator.log
+      expect(result).to have_key(:formatted_output)
+    end
+
+    context "with separated output format" do
+      it "returns separated format when requested" do
+        options = {separated: true}
+        result = orchestrator.log(options)
+        expect(result).to have_key(:formatted_output)
+      end
+    end
+
+    context "with unified output format (default)" do
+      it "returns unified format by default" do
+        result = orchestrator.log
+        expect(result).to have_key(:formatted_output)
+      end
     end
   end
 
@@ -181,6 +306,37 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "builds add commands from dispatch info" do
         expect(orchestrator).to receive(:build_add_commands).with(mock_dispatch_info, {})
         orchestrator.add(paths)
+      end
+
+        it "builds add commands from dispatch info" do
+        # Test the actual build_add_commands method
+        commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {})
+        expect(commands).to have_key("main")
+        expect(commands["main"]).to include("add")
+        expect(commands["main"].first).to include("file1.txt")
+        expect(commands["main"].first).to include("file2.txt")
+      end
+
+      context "with add options" do
+        it "includes --all flag when specified" do
+          commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {all: true})
+          expect(commands["main"].first).to include("--all")
+        end
+
+        it "includes --update flag when specified" do
+          commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {update: true})
+          expect(commands["main"].first).to include("--update")
+        end
+
+        it "includes --force flag when specified" do
+          commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {force: true})
+          expect(commands["main"].first).to include("--force")
+        end
+
+        it "includes --patch flag when specified" do
+          commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {patch: true})
+          expect(commands["main"].first).to include("--patch")
+        end
       end
 
       context "with concurrent option" do
@@ -270,6 +426,28 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         orchestrator.commit({})
       end
     end
+
+    context "debug output" do
+      it "prints debug information when debug is enabled" do
+        debug_orchestrator = described_class.new(project_root, debug: true)
+        allow(debug_orchestrator).to receive(:add_all).and_return({success: true})
+        allow(debug_orchestrator).to receive(:commit_with_message).and_return({success: true})
+        expect { debug_orchestrator.commit({message: "test", debug: true}) }.to output(/DEBUG: commit options/).to_stdout
+      end
+
+      it "prints add_all debug info when repo_only is false" do
+        debug_orchestrator = described_class.new(project_root, debug: true)
+        allow(debug_orchestrator).to receive(:add_all).and_return({success: true})
+        allow(debug_orchestrator).to receive(:commit_with_message).and_return({success: true})
+        expect { debug_orchestrator.commit({message: "test", debug: true, repo_only: false}) }.to output(/DEBUG: Running add_all/).to_stdout
+      end
+
+      it "prints skip add_all debug info when repo_only is true" do
+        debug_orchestrator = described_class.new(project_root, debug: true)
+        allow(debug_orchestrator).to receive(:commit_with_message).and_return({success: true})
+        expect { debug_orchestrator.commit({message: "test", debug: true, repo_only: true}) }.to output(/DEBUG: Skipping add_all/).to_stdout
+      end
+    end
   end
 
   describe "#push" do
@@ -309,6 +487,23 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "executes push sequentially" do
         expect(orchestrator).to receive(:execute_push_sequential).with("push", {})
         orchestrator.push({})
+      end
+    end
+
+    context "debug output" do
+      it "prints debug information when debug is enabled" do
+        debug_orchestrator = described_class.new(project_root, debug: true)
+        allow(debug_orchestrator).to receive(:build_push_command).and_return("push")
+        allow(debug_orchestrator).to receive(:execute_push_sequential).and_return({success: true})
+        expect { debug_orchestrator.push({debug: true}) }.to output(/DEBUG: Push options/).to_stdout
+      end
+
+      it "prints current repository info when repo_only is true" do
+        debug_orchestrator = described_class.new(project_root, debug: true)
+        allow(debug_orchestrator).to receive(:build_push_command).and_return("push")
+        allow(debug_orchestrator).to receive(:detect_current_repository).and_return("main")
+        allow(mock_coordinator).to receive(:execute_across_repositories).and_return({success: true})
+        expect { debug_orchestrator.push({repo_only: true, debug: true}) }.to output(/DEBUG: Current repository detected as: main/).to_stdout
       end
     end
   end
@@ -593,6 +788,12 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       expect(orchestrator).to respond_to(:repositories)
       expect(orchestrator.repositories).to be_an(Array)
     end
+
+    it "returns the repositories discovered during initialization" do
+      expect(orchestrator.repositories.size).to eq(2)
+      expect(orchestrator.repositories.first[:name]).to eq("main")
+      expect(orchestrator.repositories.last[:name]).to eq("submodule1")
+    end
   end
 
   # Test error conditions and edge cases
@@ -611,6 +812,240 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles invalid project_root gracefully" do
         invalid_path = "/nonexistent/path"
         expect { described_class.new(invalid_path) }.not_to raise_error
+      end
+    end
+  end
+
+  # Test private helper methods
+  describe "private helper methods" do
+    describe ".detect_current_repository" do
+      let(:debug_orchestrator) { described_class.new(project_root, debug: true) }
+
+      before do
+        allow(debug_orchestrator).to receive(:repositories).and_return([
+          {name: "main", path: project_root, full_path: project_root},
+          {name: "submodule1", path: "submodule1", full_path: File.join(project_root, "submodule1")}
+        ])
+      end
+
+      it "detects current repository when in submodule directory" do
+        allow(Dir).to receive(:pwd).and_return(File.join(project_root, "submodule1"))
+        result = debug_orchestrator.send(:detect_current_repository)
+        expect(result).to eq("submodule1")
+      end
+
+      it "detects main repository when in project root" do
+        allow(Dir).to receive(:pwd).and_return(project_root)
+        result = debug_orchestrator.send(:detect_current_repository)
+        expect(result).to eq("main")
+      end
+
+      it "defaults to main when not in any known directory" do
+        allow(Dir).to receive(:pwd).and_return("/unknown/path")
+        result = debug_orchestrator.send(:detect_current_repository)
+        expect(result).to eq("main")
+      end
+
+      it "prints debug information when debug is enabled" do
+        allow(Dir).to receive(:pwd).and_return(project_root)
+        expect { debug_orchestrator.send(:detect_current_repository) }.to output(/DEBUG: Current dir/).to_stdout
+      end
+    end
+
+    describe ".build_push_command" do
+      it "builds basic push command" do
+        result = orchestrator.send(:build_push_command, {})
+        expect(result).to eq("push")
+      end
+
+      it "includes force flag when specified" do
+        result = orchestrator.send(:build_push_command, {force: true})
+        expect(result).to eq("push --force")
+      end
+
+      it "includes dry-run flag when specified" do
+        result = orchestrator.send(:build_push_command, {dry_run: true})
+        expect(result).to eq("push --dry-run")
+      end
+
+      it "includes set-upstream flag when specified" do
+        result = orchestrator.send(:build_push_command, {set_upstream: true})
+        expect(result).to eq("push --set-upstream")
+      end
+
+      it "includes tags flag when specified" do
+        result = orchestrator.send(:build_push_command, {tags: true})
+        expect(result).to eq("push --tags")
+      end
+
+      it "includes remote and branch when specified" do
+        result = orchestrator.send(:build_push_command, {remote: "origin", branch: "main"})
+        expect(result).to eq("push origin main")
+      end
+
+      it "combines multiple options" do
+        result = orchestrator.send(:build_push_command, {force: true, tags: true, remote: "origin"})
+        expect(result).to eq("push --force --tags origin")
+      end
+    end
+
+    describe ".build_pull_command" do
+      it "builds basic pull command" do
+        result = orchestrator.send(:build_pull_command, {})
+        expect(result).to eq("pull")
+      end
+
+      it "includes rebase flag when specified" do
+        result = orchestrator.send(:build_pull_command, {rebase: true})
+        expect(result).to eq("pull --rebase")
+      end
+
+      it "includes ff-only flag when specified" do
+        result = orchestrator.send(:build_pull_command, {ff_only: true})
+        expect(result).to eq("pull --ff-only")
+      end
+
+      it "includes no-commit flag when specified" do
+        result = orchestrator.send(:build_pull_command, {no_commit: true})
+        expect(result).to eq("pull --no-commit")
+      end
+
+      it "includes strategy when specified" do
+        result = orchestrator.send(:build_pull_command, {strategy: "recursive"})
+        expect(result).to eq("pull --strategy=recursive")
+      end
+
+      it "includes remote and branch when specified" do
+        result = orchestrator.send(:build_pull_command, {remote: "origin", branch: "main"})
+        expect(result).to eq("pull origin main")
+      end
+    end
+
+    describe ".build_diff_command" do
+      it "builds basic diff command" do
+        result = orchestrator.send(:build_diff_command, {})
+        expect(result).to eq("diff")
+      end
+
+      it "includes staged flag when specified" do
+        result = orchestrator.send(:build_diff_command, {staged: true})
+        expect(result).to eq("diff --staged")
+      end
+
+      it "includes name-only flag when specified" do
+        result = orchestrator.send(:build_diff_command, {name_only: true})
+        expect(result).to eq("diff --name-only")
+      end
+
+      it "includes stat flag when specified" do
+        result = orchestrator.send(:build_diff_command, {stat: true})
+        expect(result).to eq("diff --stat")
+      end
+    end
+
+    describe ".build_fetch_command" do
+      it "builds basic fetch command" do
+        result = orchestrator.send(:build_fetch_command, {})
+        expect(result).to eq("fetch")
+      end
+
+      it "includes all flag when specified" do
+        result = orchestrator.send(:build_fetch_command, {all: true})
+        expect(result).to eq("fetch --all")
+      end
+
+      it "includes prune flag when specified" do
+        result = orchestrator.send(:build_fetch_command, {prune: true})
+        expect(result).to eq("fetch --prune")
+      end
+
+      it "includes tags flag when specified" do
+        result = orchestrator.send(:build_fetch_command, {tags: true})
+        expect(result).to eq("fetch --tags")
+      end
+
+      it "includes remote when specified" do
+        result = orchestrator.send(:build_fetch_command, {remote: "origin"})
+        expect(result).to eq("fetch origin")
+      end
+    end
+  end
+
+  # Test concurrent execution methods
+  describe "concurrent execution" do
+    let(:mock_coordinator) { instance_double(CodingAgentTools::Molecules::Git::MultiRepoCoordinator) }
+    let(:submodule_result) { {success: true, results: {"submodule1" => {success: true}}, errors: [], repositories_processed: ["submodule1"]} }
+    let(:main_result) { {success: true, results: {"main" => {success: true}}, errors: [], repositories_processed: ["main"]} }
+
+    before do
+      allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
+    end
+
+    describe ".execute_push_concurrent" do
+      it "executes submodules first, then main repository" do
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("push", {submodules_only: true})
+          .and_return(submodule_result)
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("push", {main_only: true})
+          .and_return(main_result)
+
+        result = orchestrator.send(:execute_push_concurrent, "push", {})
+        expect(result[:success]).to be true
+        expect(result[:results]).to include("main", "submodule1")
+        expect(result[:repositories_processed]).to contain_exactly("submodule1", "main")
+      end
+
+      it "combines errors from both phases" do
+        error_result = {success: false, results: {}, errors: [{error: "push failed"}], repositories_processed: []}
+        allow(mock_coordinator).to receive(:execute_across_repositories).and_return(error_result)
+
+        result = orchestrator.send(:execute_push_concurrent, "push", {})
+        expect(result[:success]).to be false
+        expect(result[:errors].size).to eq(2)
+      end
+    end
+
+    describe ".execute_push_sequential" do
+      it "executes submodules first, then main repository" do
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("push", {submodules_only: true})
+          .and_return(submodule_result)
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("push", {main_only: true})
+          .and_return(main_result)
+
+        result = orchestrator.send(:execute_push_sequential, "push", {})
+        expect(result[:success]).to be true
+      end
+    end
+
+    describe ".execute_pull_concurrent" do
+      it "executes main repository first, then submodules" do
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("pull", {main_only: true})
+          .and_return(main_result)
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("pull", {submodules_only: true})
+          .and_return(submodule_result)
+
+        result = orchestrator.send(:execute_pull_concurrent, "pull", {})
+        expect(result[:success]).to be true
+        expect(result[:results]).to include("main", "submodule1")
+      end
+    end
+
+    describe ".execute_pull_sequential" do
+      it "executes main repository first, then submodules" do
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("pull", {main_only: true})
+          .and_return(main_result)
+        expect(mock_coordinator).to receive(:execute_across_repositories)
+          .with("pull", {submodules_only: true})
+          .and_return(submodule_result)
+
+        result = orchestrator.send(:execute_pull_sequential, "pull", {})
+        expect(result[:success]).to be true
       end
     end
   end
@@ -648,6 +1083,180 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         allow(orchestrator).to receive(:execute_sequentially).and_return({success: true})
 
         orchestrator.add(["file.txt"])
+      end
+    end
+  end
+
+  # Test LLM commit integration and format methods
+  describe "LLM commit operations" do
+    let(:mock_generator) { instance_double(CodingAgentTools::Molecules::Git::CommitMessageGenerator) }
+    let(:mock_executor) { instance_double(CodingAgentTools::Atoms::Git::GitCommandExecutor) }
+    let(:diff_output) { "diff --git a/file.txt b/file.txt\\nindex 123..456\\n+new content" }
+
+    before do
+      allow(CodingAgentTools::Molecules::Git::CommitMessageGenerator).to receive(:new).and_return(mock_generator)
+      allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).and_return(mock_executor)
+      allow(mock_generator).to receive(:generate_message).and_return("feat: add new feature")
+      allow(mock_executor).to receive(:execute).with("diff --staged").and_return({stdout: diff_output})
+    end
+
+    describe ".commit_with_llm_message" do
+      it "generates commit messages for repositories with staged changes" do
+        allow(orchestrator).to receive(:repositories).and_return([
+          {name: "main", exists: true, is_git_repo: true, full_path: "/path/to/main"}
+        ])
+        allow(orchestrator).to receive(:get_staged_diff).and_return(diff_output)
+        allow(orchestrator).to receive(:execute_sequentially_with_submodules_first).and_return({success: true})
+
+        expect(mock_generator).to receive(:generate_message).with(diff_output)
+        orchestrator.send(:commit_with_llm_message, {})
+      end
+
+      it "skips repositories with no staged changes" do
+        allow(orchestrator).to receive(:repositories).and_return([
+          {name: "main", exists: true, is_git_repo: true, full_path: "/path/to/main"}
+        ])
+        allow(orchestrator).to receive(:get_staged_diff).and_return("")
+
+        result = orchestrator.send(:commit_with_llm_message, {})
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq("No staged changes to commit")
+      end
+
+      it "handles commit message generation errors" do
+        allow(orchestrator).to receive(:repositories).and_return([
+          {name: "main", exists: true, is_git_repo: true, full_path: "/path/to/main"}
+        ])
+        allow(orchestrator).to receive(:get_staged_diff).and_return(diff_output)
+        allow(mock_generator).to receive(:generate_message).and_raise(
+          CodingAgentTools::Molecules::Git::CommitMessageGenerationError.new("API failed")
+        )
+
+        result = orchestrator.send(:commit_with_llm_message, {})
+        expect(result[:success]).to be false
+        expect(result[:error]).to include("Failed to generate commit message")
+      end
+    end
+
+    describe ".get_staged_diff" do
+      it "retrieves staged diff for a repository" do
+        repository = {full_path: "/path/to/repo"}
+        expect(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new)
+          .with(repository_path: "/path/to/repo")
+          .and_return(mock_executor)
+        expect(mock_executor).to receive(:execute).with("diff --staged").and_return({stdout: diff_output})
+
+        result = orchestrator.send(:get_staged_diff, repository)
+        expect(result).to eq(diff_output)
+      end
+
+      it "returns empty string on git command error" do
+        repository = {full_path: "/path/to/repo"}
+        allow(mock_executor).to receive(:execute).and_raise(CodingAgentTools::Atoms::Git::GitCommandError)
+
+        result = orchestrator.send(:get_staged_diff, repository)
+        expect(result).to eq("")
+      end
+    end
+
+    describe ".build_log_command formatting" do
+      it "builds basic log command" do
+        result = orchestrator.send(:build_log_command, {})
+        expect(result).to include("log")
+        expect(result).to include("--date=iso")
+      end
+
+      it "builds oneline log command" do
+        result = orchestrator.send(:build_log_command, {oneline: true})
+        expect(result).to include("log")
+        expect(result).to include("--pretty=format:")
+        expect(result).to include("%h %s (%ci)")
+      end
+
+      it "includes graph option" do
+        result = orchestrator.send(:build_log_command, {graph: true})
+        expect(result).to include("--graph")
+      end
+
+      it "includes author filter" do
+        result = orchestrator.send(:build_log_command, {author: "john@example.com"})
+        expect(result).to include("--author=#{Shellwords.escape('john@example.com')}")
+      end
+
+      it "includes max count" do
+        result = orchestrator.send(:build_log_command, {max_count: 10})
+        expect(result).to include("-n 10")
+      end
+    end
+
+    describe ".parse_commit_line" do
+      it "parses oneline commit format correctly" do
+        line = "abc123 Initial commit (2023-01-01 10:00:00 +0000)"
+        result = orchestrator.send(:parse_commit_line, line, "main")
+        
+        expect(result).not_to be_nil
+        expect(result[:repo]).to eq("main")
+        expect(result[:display_line]).to eq("abc123 Initial commit")
+        expect(result[:type]).to eq(:oneline)
+        expect(result[:timestamp]).to be_a(Time)
+      end
+
+      it "handles malformed lines gracefully" do
+        line = "invalid commit line"
+        result = orchestrator.send(:parse_commit_line, line, "main")
+        expect(result).to be_nil
+      end
+
+      it "handles unparseable timestamps" do
+        line = "abc123 Initial commit (invalid-timestamp)"
+        result = orchestrator.send(:parse_commit_line, line, "main")
+        expect(result).to be_nil
+      end
+    end
+  end
+
+  # Test additional uncovered scenarios and edge cases
+  describe "edge cases and error scenarios" do
+    context "when commands fail in execute_sequentially" do
+      let(:mock_executor) { instance_double(CodingAgentTools::Atoms::Git::GitCommandExecutor) }
+
+      before do
+        allow(orchestrator).to receive(:repositories).and_return([
+          {name: "test_repo", full_path: "/path/to/repo"}
+        ])
+        allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).and_return(mock_executor)
+      end
+
+      it "handles command execution errors gracefully" do
+        commands_by_repo = {"test_repo" => ["add file.txt"]}
+        allow(mock_executor).to receive(:execute).and_raise(StandardError.new("Command failed"))
+
+        result = orchestrator.send(:execute_sequentially, commands_by_repo, {})
+        expect(result[:success]).to be false
+        expect(result[:errors].size).to eq(1)
+        expect(result[:errors].first[:message]).to eq("Command failed")
+      end
+    end
+
+    context "format_unified_log edge cases" do
+      it "handles empty repository results" do
+        empty_result = {success: true, results: {}}
+        result = orchestrator.send(:format_unified_log, empty_result, {})
+        expect(result[:formatted_output]).to eq("")
+      end
+
+      it "handles failed repository results" do
+        failed_result = {
+          success: false,
+          results: {
+            "main" => {success: false, stderr: "Not a git repository"},
+            "submodule1" => {success: true, stdout: "abc123 commit"}
+          }
+        }
+        # Should skip failed repositories
+        allow(orchestrator).to receive(:parse_commits_from_output).and_return([])
+        result = orchestrator.send(:format_unified_log, failed_result, {})
+        expect(result).to have_key(:formatted_output)
       end
     end
   end

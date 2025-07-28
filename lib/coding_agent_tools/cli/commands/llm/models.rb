@@ -87,7 +87,7 @@ module CodingAgentTools
             if debug_enabled
               error_output("Error: #{error.class.name}: #{error.message}")
               error_output("\nBacktrace:")
-              error.backtrace.each { |line| error_output("  #{line}") }
+              error.backtrace&.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
               error_output("Use --debug flag for more information")
