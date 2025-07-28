@@ -534,6 +534,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
     describe "file system errors" do
       before do
         allow(analyzer).to receive(:relevant_files).and_return(["test.rb"])
+        allow(File).to receive(:exist?).and_return(false)
         allow(File).to receive(:exist?).with("test.rb").and_return(true)
       end
 
