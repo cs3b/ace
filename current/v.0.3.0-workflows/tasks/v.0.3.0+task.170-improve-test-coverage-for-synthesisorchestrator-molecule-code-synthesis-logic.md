@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.170
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,89 +8,69 @@ dependencies: []
 
 # Improve test coverage for SynthesisOrchestrator molecule - code synthesis logic
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+Create comprehensive test coverage for the Code::SynthesisOrchestrator molecule to ensure reliable LLM-based code review synthesis functionality. This molecule is critical for orchestrating the synthesis of multiple code review reports into unified analysis documents using LLM integration.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Create comprehensive RSpec test suite for Code::SynthesisOrchestrator
+- Test all public methods including synthesize_reports and synthesize
+- Mock external dependencies (LLM calls, file system operations)
+- Validate error handling and edge cases
+- Test prompt building and output sequencing logic
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
+- spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+* [x] Analyze current Code::SynthesisOrchestrator molecule implementation
+* [x] Review existing molecule test patterns in the codebase
+* [x] Plan test scenarios for comprehensive coverage
+  - Successful synthesis with multiple reports
+  - Dry run mode functionality
+  - Error handling (missing files, LLM failures)
+  - Output file sequencing and force options
+  - System prompt loading and fallbacks
+  - Metrics extraction and result formatting
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [x] Create synthesis_orchestrator_spec.rb file with proper structure
+- [x] Implement tests for synthesize_reports method with various scenarios
+  > TEST: RSpec Test Execution
+  > Type: Test Validation
+  > Assert: All synthesize_reports tests pass
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/code/synthesis_orchestrator_spec.rb -v
+- [x] Implement tests for synthesize method (compatibility interface)
+- [x] Test prompt building logic with mocked file operations
+- [x] Test LLM integration with mocked Open3 calls
+- [x] Test output sequencing and file handling
+- [x] Add comprehensive error handling tests
+- [x] Run full test suite to ensure no regressions
+  > TEST: Full Test Suite
+  > Type: Regression Check
+  > Assert: All existing tests continue to pass
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/code/ --fail-fast
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] Code::SynthesisOrchestrator implementation is analyzed and understood
+- [x] Test file created following project RSpec conventions
+- [x] All public methods have comprehensive test coverage
+- [x] External dependencies are properly mocked (Open3, File operations)
+- [x] Error conditions and edge cases are tested
+- [x] All tests pass and integrate with existing test suite
+- [x] Test coverage demonstrates reliable synthesis orchestration
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
-
-## References
-
-```
+- ❌ Modifying the SynthesisOrchestrator implementation itself
+- ❌ Testing actual LLM API calls (use mocks only)
+- ❌ Integration tests with real file system operations
