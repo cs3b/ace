@@ -25,8 +25,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       directory_path: session_dir,
       focus: "code",
       target: "HEAD~1..HEAD",
-      context_mode_with_default: "auto"
-    )
+      context_mode_with_default: "auto")
   end
 
   let(:mock_target) do
@@ -35,23 +34,20 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       content_type: "diff",
       file_count: 3,
       line_count: 150,
-      size_info: { files: 3, lines: 150 }
-    )
+      size_info: {files: 3, lines: 150})
   end
 
   let(:mock_context) do
     double("ReviewContext",
       mode: "auto",
-      document_count: 2
-    )
+      document_count: 2)
   end
 
   let(:mock_prompt) do
     double("ReviewPrompt",
       word_count: 500,
       focus_areas: ["code"],
-      system_prompt_path: "review/code-review.md"
-    )
+      system_prompt_path: "review/code-review.md")
   end
 
   before do
@@ -144,7 +140,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
 
       it "writes session summary" do
         expected_summary = include("# Code Review Session Summary")
-        
+
         review_manager.create_review_session(focus, target, context, base_path, system_prompt_override)
 
         expect(File).to have_received(:write).with(
@@ -161,7 +157,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
           target_spec: "HEAD~1..HEAD",
           resolved_paths: [],
           content_type: "none",
-          size_info: { error: "Git command failed" }
+          size_info: {error: "Git command failed"}
         )
       end
 
@@ -229,8 +225,8 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
   describe "#finalize_session" do
     let(:reports) do
       [
-        { name: "review-1", file: "review-1.md", model: "google:gemini-2.5-pro", status: "completed" },
-        { name: "review-2", file: "review-2.md", model: "anthropic:claude-3-5-sonnet", status: "completed" }
+        {name: "review-1", file: "review-1.md", model: "google:gemini-2.5-pro", status: "completed"},
+        {name: "review-2", file: "review-2.md", model: "anthropic:claude-3-5-sonnet", status: "completed"}
       ]
     end
 
@@ -251,8 +247,8 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       end
 
       it "updates session index with reports" do
-        expected_content = include("## Review Reports")
-        expected_content = include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
+        include("## Review Reports")
+        include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
         expected_content = include("- [`review-2`](./review-2.md) - anthropic:claude-3-5-sonnet")
 
         review_manager.finalize_session(mock_session, reports)
@@ -264,10 +260,10 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       end
 
       it "writes execution summary" do
-        expected_summary = include("Session: review-20240101-120000")
-        expected_summary = include("Target: HEAD~1..HEAD")
-        expected_summary = include("Focus: code")
-        expected_summary = include("- google:gemini-2.5-pro: completed")
+        include("Session: review-20240101-120000")
+        include("Target: HEAD~1..HEAD")
+        include("Focus: code")
+        include("- google:gemini-2.5-pro: completed")
         expected_summary = include("- anthropic:claude-3-5-sonnet: completed")
 
         review_manager.finalize_session(mock_session, reports)
@@ -315,9 +311,9 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       end
 
       it "replaces existing reports section" do
-        expected_content = include("## Review Reports")
-        expected_content = include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
-        expected_content = include("## Other Section")
+        include("## Review Reports")
+        include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
+        include("## Other Section")
         expected_content = include("Other content.")
 
         review_manager.finalize_session(mock_session, reports)
@@ -336,13 +332,13 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
     let(:context) { "auto" }
     let(:system_prompt_override) { "/custom/prompt.md" }
 
-    let(:target_info) { { type: "git_diff", format: "diff" } }
+    let(:target_info) { {type: "git_diff", format: "diff"} }
     let(:context_info) do
       {
         available: true,
         found: [
-          { type: "README", path: "README.md" },
-          { type: "Architecture", path: "docs/architecture.md" }
+          {type: "README", path: "README.md"},
+          {type: "Architecture", path: "docs/architecture.md"}
         ]
       }
     end
@@ -354,7 +350,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
       mock_diff_extractor = instance_double(CodingAgentTools::Molecules::Code::GitDiffExtractor)
       allow(mock_content_extractor).to receive(:instance_variable_get).with(:@diff_extractor).and_return(mock_diff_extractor)
       allow(mock_diff_extractor).to receive(:git_diff_target?).with(target).and_return(true)
-      
+
       allow(mock_context_loader).to receive(:check_availability).and_return(context_info)
       allow(mock_prompt_builder).to receive(:select_system_prompt).and_return(system_prompt)
       allow(CodingAgentTools::Models::Code::ReviewPrompt).to receive(:get_focus_descriptions).with("code").and_return(["code review"])
@@ -390,7 +386,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
 
       result = review_manager.prepare_review(focus, target, context, system_prompt_override)
 
-      expect(result[:target_info]).to eq({ type: "git_diff", format: "diff" })
+      expect(result[:target_info]).to eq({type: "git_diff", format: "diff"})
     end
   end
 
@@ -465,15 +461,15 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
         review_manager.send(:write_session_summary, mock_session, mock_target, mock_context, mock_prompt)
 
         expected_path = File.join(session_dir, "session-summary.md")
-        expected_content = include("# Code Review Session Summary")
-        expected_content = include("**ID**: 20240101-120000")
-        expected_content = include("**Name**: review-20240101-120000")
-        expected_content = include("**Focus**: code")
-        expected_content = include("**Target**: HEAD~1..HEAD")
-        expected_content = include("**Type**: git_diff")
-        expected_content = include("**Files**: 3")
-        expected_content = include("**Lines**: 150")
-        expected_content = include("**Size**: 500 words")
+        include("# Code Review Session Summary")
+        include("**ID**: 20240101-120000")
+        include("**Name**: review-20240101-120000")
+        include("**Focus**: code")
+        include("**Target**: HEAD~1..HEAD")
+        include("**Type**: git_diff")
+        include("**Files**: 3")
+        include("**Lines**: 150")
+        include("**Size**: 500 words")
         expected_content = include("Context summary text")
 
         expect(File).to have_received(:write).with(expected_path, expected_content)
@@ -483,8 +479,8 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
     describe "#update_session_index" do
       let(:reports) do
         [
-          { name: "review-1", file: "review-1.md", model: "google:gemini-2.5-pro" },
-          { name: "review-2", file: "review-2.md", model: "anthropic:claude-3-5-sonnet" }
+          {name: "review-1", file: "review-1.md", model: "google:gemini-2.5-pro"},
+          {name: "review-2", file: "review-2.md", model: "anthropic:claude-3-5-sonnet"}
         ]
       end
 
@@ -498,8 +494,8 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
         review_manager.send(:update_session_index, mock_session, reports)
 
         expected_path = File.join(session_dir, "README.md")
-        expected_content = include("## Review Reports")
-        expected_content = include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
+        include("## Review Reports")
+        include("- [`review-1`](./review-1.md) - google:gemini-2.5-pro")
         expected_content = include("- [`review-2`](./review-2.md) - anthropic:claude-3-5-sonnet")
 
         expect(File).to have_received(:write).with(expected_path, expected_content)
@@ -509,8 +505,8 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
     describe "#write_execution_summary" do
       let(:reports) do
         [
-          { model: "google:gemini-2.5-pro", status: "completed" },
-          { model: "anthropic:claude-3-5-sonnet", status: "failed" }
+          {model: "google:gemini-2.5-pro", status: "completed"},
+          {model: "anthropic:claude-3-5-sonnet", status: "failed"}
         ]
       end
 
@@ -524,13 +520,13 @@ RSpec.describe CodingAgentTools::Organisms::Code::ReviewManager do
         review_manager.send(:write_execution_summary, mock_session, reports)
 
         expected_path = File.join(session_dir, "execution.summary")
-        expected_content = include("Session: review-20240101-120000")
-        expected_content = include("Target: HEAD~1..HEAD")
-        expected_content = include("Focus: code")
-        expected_content = include("- google:gemini-2.5-pro: completed")
-        expected_content = include("- anthropic:claude-3-5-sonnet: failed")
-        expected_content = include("session.meta")
-        expected_content = include("input.xml")
+        include("Session: review-20240101-120000")
+        include("Target: HEAD~1..HEAD")
+        include("Focus: code")
+        include("- google:gemini-2.5-pro: completed")
+        include("- anthropic:claude-3-5-sonnet: failed")
+        include("session.meta")
+        include("input.xml")
         expected_content = include("prompt.md")
 
         expect(File).to have_received(:write).with(expected_path, expected_content)

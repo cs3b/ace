@@ -27,17 +27,17 @@ module CodingAgentTools
       # @return [Hash] Comprehensive report data
       def generate_comprehensive_report(file_path, options = {})
         validated_options = validate_report_options(options)
-        
+
         # Perform analysis
         analysis_result = @analyzer.analyze_coverage(file_path, validated_options)
-        
+
         # Extract under-covered items
         undercovered_items = @extractor.extract_undercovered_items(
           analysis_result,
           max_files: validated_options[:max_files],
           include_method_details: validated_options[:include_method_analysis]
         )
-        
+
         # Build comprehensive report
         report = {
           metadata: {
@@ -74,20 +74,20 @@ module CodingAgentTools
       # @return [Hash] Create-path compatible report structure
       def generate_for_create_path(file_path, output_path, options = {})
         validated_options = validate_report_options(options)
-        
+
         # Perform analysis
         analysis_result = @analyzer.analyze_coverage(file_path, validated_options)
-        
+
         # Determine if action is required
         action_required = analysis_result.under_covered_files.any?
-        
+
         # Extract critical items for action
         critical_items = if action_required
           @extractor.find_high_impact_files(analysis_result, limit: 5)
         else
           []
         end
-        
+
         # Generate create-path compatible structure
         {
           action_required: action_required,
@@ -122,29 +122,29 @@ module CodingAgentTools
         validated_options = validate_report_options(options)
         formats = validated_options[:formats] || [:text, :json]
         base_name = validated_options[:base_name] || "coverage_report"
-        
+
         # Ensure output directory exists
         FileUtils.mkdir_p(output_directory)
-        
+
         # Use provided analysis result or perform analysis
-        analysis_result = analysis_result || @analyzer.analyze_coverage(file_path, validated_options)
-        
+        analysis_result ||= @analyzer.analyze_coverage(file_path, validated_options)
+
         # Generate each format
         generated_files = {}
-        
+
         formats.each do |format|
           extension = case format
-                     when :text then '.txt'
-                     when :json then '.json'
-                     when :csv then '.csv'
-                     else ".#{format}"
-                     end
-          
+          when :text then ".txt"
+          when :json then ".json"
+          when :csv then ".csv"
+          else ".#{format}"
+          end
+
           output_path = File.join(output_directory, "#{base_name}#{extension}")
           report_path = @analyzer.save_report(analysis_result, output_path, format, validated_options)
           generated_files[format] = report_path
         end
-        
+
         # Generate comprehensive report if requested
         if validated_options[:include_comprehensive]
           comprehensive_path = File.join(output_directory, "#{base_name}_comprehensive.json")
@@ -152,7 +152,7 @@ module CodingAgentTools
           File.write(comprehensive_path, JSON.pretty_generate(comprehensive_report))
           generated_files[:comprehensive] = comprehensive_path
         end
-        
+
         generated_files
       end
 
@@ -163,13 +163,13 @@ module CodingAgentTools
       # @return [Hash] Focused report data
       def generate_focused_report(file_path, focus_patterns, options = {})
         validated_options = validate_report_options(options)
-        
+
         # Add focus patterns to include patterns
         validated_options[:include_patterns] = focus_patterns
-        
+
         # Perform focused analysis
         analysis_result = @analyzer.analyze_coverage(file_path, validated_options)
-        
+
         {
           focus_area: {
             patterns: focus_patterns,
@@ -240,7 +240,7 @@ module CodingAgentTools
 
       def generate_priorities_section(analysis_result)
         high_impact_files = @extractor.find_high_impact_files(analysis_result, limit: 10)
-        
+
         {
           high_impact_files: high_impact_files,
           quick_wins: @extractor.generate_testing_recommendations(analysis_result, :quick_wins),
@@ -251,7 +251,7 @@ module CodingAgentTools
       def determine_coverage_status(analysis_result)
         overall = analysis_result.overall_coverage_percentage
         threshold = analysis_result.threshold
-        
+
         if overall >= threshold
           "excellent"
         elsif overall >= threshold - 10
@@ -266,15 +266,15 @@ module CodingAgentTools
       def generate_actionable_recommendations(analysis_result)
         recommendations = []
         under_covered = analysis_result.under_covered_files
-        
+
         if under_covered.any?
           worst_file = under_covered.min_by(&:coverage_percentage)
           recommendations << "Start with #{worst_file.relative_path} (#{worst_file.coverage_percentage}% coverage)"
-          
+
           if under_covered.length > 1
             recommendations << "Focus on #{under_covered.length} files below #{analysis_result.threshold}% threshold"
           end
-          
+
           large_gaps = under_covered.select { |f| f.coverage_percentage < 50.0 }
           if large_gaps.any?
             recommendations << "#{large_gaps.length} file(s) have significant coverage gaps requiring immediate attention"
@@ -282,41 +282,41 @@ module CodingAgentTools
         else
           recommendations << "All files meet coverage threshold - consider raising the threshold for even better coverage"
         end
-        
+
         recommendations
       end
 
       def generate_next_steps(analysis_result, critical_items)
         steps = []
-        
+
         if critical_items.any?
           steps << "Review high-impact files identified in critical_items section"
           steps << "Prioritize testing based on impact_score values"
           steps << "Start with files marked as 'low' or 'medium' effort"
         end
-        
+
         if analysis_result.under_covered_files.any?
           steps << "Run coverage analysis regularly during development"
           steps << "Set up CI/CD checks to maintain coverage threshold"
         end
-        
+
         steps
       end
 
       def suggest_output_paths(base_path, analysis_result)
         base_dir = File.dirname(base_path)
         base_name = File.basename(base_path, File.extname(base_path))
-        
+
         suggestions = {
           detailed_report: File.join(base_dir, "#{base_name}_detailed.json"),
           summary_report: File.join(base_dir, "#{base_name}_summary.txt"),
           csv_export: File.join(base_dir, "#{base_name}_data.csv")
         }
-        
+
         if analysis_result.under_covered_files.any?
           suggestions[:action_plan] = File.join(base_dir, "#{base_name}_action_plan.md")
         end
-        
+
         suggestions
       end
     end

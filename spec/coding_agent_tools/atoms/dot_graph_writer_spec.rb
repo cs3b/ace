@@ -213,10 +213,10 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
         # Create a large dependency graph
         dependencies = {}
         (1..100).each do |i|
-          next_file = i < 100 ? "file#{i+1}.md" : nil
+          next_file = (i < 100) ? "file#{i + 1}.md" : nil
           dependencies["file#{i}.md"] = {
             refs_to: Set.new([next_file].compact),
-            refs_from: Set.new(i > 1 ? ["file#{i-1}.md"] : [])
+            refs_from: Set.new((i > 1) ? ["file#{i - 1}.md"] : [])
           }
         end
 
@@ -322,7 +322,7 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
 
         # Create directory structure
         FileUtils.mkdir_p(File.dirname(nested_path))
-        
+
         result = writer.write_dot_file(dependencies, nested_path)
 
         expect(result).to eq(nested_path)
@@ -331,7 +331,7 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
 
       it "returns the correct filename for relative paths" do
         dependencies = {"test.md" => {refs_to: Set.new([]), refs_from: Set.new([])}}
-        
+
         result = writer.write_dot_file(dependencies, "relative.dot")
 
         expect(result).to eq("relative.dot")
@@ -440,7 +440,7 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
       expect(content).to end_with("}")
       expect(content).to include("rankdir=LR;")
       expect(content).to include("node [shape=box];")
-      
+
       # Check proper quoting
       expect(content.scan(/"[^"]*"/).length).to be >= 2 # At least source and target nodes
     end
@@ -452,7 +452,7 @@ RSpec.describe CodingAgentTools::Atoms::DotGraphWriter do
       }
 
       content = writer.generate_dot_content(dependencies)
-      
+
       # Documents current behavior - quotes are included as-is
       expect(content).to include('file"name.md')
     end

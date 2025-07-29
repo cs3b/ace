@@ -25,7 +25,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
   describe "LogEntry struct" do
     let(:log_entry) do
       described_class::LogEntry.new(
-        "test-repo", 1672531200, "abc123def", "John Doe", 
+        "test-repo", 1672531200, "abc123def", "John Doe",
         "Initial commit\n\nAdded basic functionality", "1672531200"
       )
     end
@@ -151,7 +151,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
 
     it "returns LogResult with parsed entries" do
       result = described_class.get_multi_repo_log(repositories, since_time: since_time)
-      
+
       expect(result).to be_a(described_class::LogResult)
       expect(result.entries.length).to eq(2)
       expect(result.success?).to be true
@@ -160,7 +160,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
 
     it "sorts entries by timestamp descending" do
       result = described_class.get_multi_repo_log(repositories, since_time: since_time)
-      
+
       timestamps = result.entries.map(&:timestamp)
       expect(timestamps).to eq(timestamps.sort.reverse)
     end
@@ -168,9 +168,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
     it "handles repository errors gracefully" do
       allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
         .to receive(:execute).and_return(failed_command_result)
-      
+
       result = described_class.get_multi_repo_log(repositories, since_time: since_time)
-      
+
       expect(result.entries).to be_empty
       expect(result.errors).not_to be_empty
       expect(result.errors.first).to include("Error getting log for test-repo")
@@ -181,16 +181,16 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
         {path: "/success", label: "success-repo"},
         {path: "/failure", label: "failure-repo"}
       ]
-      
+
       allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
         .to receive(:execute).with(anything, working_directory: "/success", timeout: 30)
         .and_return(successful_command_result)
       allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
         .to receive(:execute).with(anything, working_directory: "/failure", timeout: 30)
         .and_return(failed_command_result)
-      
+
       result = described_class.get_multi_repo_log(repos, since_time: since_time)
-      
+
       expect(result.entries.length).to eq(2)
       expect(result.errors.length).to eq(1)
     end
@@ -204,7 +204,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
           timeout: 30
         )
         .and_return(successful_command_result)
-      
+
       described_class.get_multi_repo_log(repositories, since_time: since_time)
     end
 
@@ -217,7 +217,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
           timeout: 30
         )
         .and_return(successful_command_result)
-      
+
       described_class.get_multi_repo_log(repositories, since_time: since_time, include_merges: true)
     end
 
@@ -230,14 +230,14 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
           timeout: 30
         )
         .and_return(successful_command_result)
-      
+
       described_class.get_multi_repo_log(repositories, since_time: since_time, max_commits: 50)
     end
 
     it "handles Time objects for since_time" do
       time_obj = Time.at(1672531200)
       expected_time_str = time_obj.strftime("%Y-%m-%dT%H:%M:%S")
-      
+
       expect(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
         .to receive(:execute)
         .with(
@@ -246,7 +246,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
           timeout: 30
         )
         .and_return(successful_command_result)
-      
+
       described_class.get_multi_repo_log(repositories, since_time: time_obj)
     end
 
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
     context "compact format" do
       it "formats entries in compact format with repository names" do
         output = described_class.format_log_output(log_result, format: :compact)
-        
+
         expect(output).to include("[repo1]")
         expect(output).to include("abc123")  # short_sha method with default 7 chars for "abc123" returns "abc123"
         expect(output).to include("John Doe")
@@ -285,7 +285,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
 
       it "formats entries without repository names when show_repository is false" do
         output = described_class.format_log_output(log_result, format: :compact, show_repository: false)
-        
+
         expect(output).not_to include("[repo1]")
         expect(output).to include("abc123")  # short_sha method with default 7 chars for "abc123" returns "abc123"
         expect(output).to include("John Doe")
@@ -295,7 +295,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
     context "detailed format" do
       it "formats entries in detailed format with full message" do
         output = described_class.format_log_output(log_result, format: :detailed)
-        
+
         expect(output).to include("[repo1]")
         expect(output).to include("abc123")  # Full SHA in detailed
         expect(output).to include("John Doe")
@@ -308,7 +308,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
     context "oneline format" do
       it "formats entries in oneline format" do
         output = described_class.format_log_output(log_result, format: :oneline)
-        
+
         expect(output).to include("[repo1] abc123 Initial commit")  # short_sha for "abc123" returns "abc123"
         expect(output).to include("[repo2] def456 Fix bug")
       end
@@ -327,10 +327,10 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
         empty_result = CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor::CommandResult.new(
           true, "", "", 0, 0.1
         )
-        
+
         allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
           .to receive(:execute).and_return(empty_result)
-        
+
         result = described_class.get_multi_repo_log([repo_config], since_time: since_time)
         expect(result.entries).to be_empty
       end
@@ -340,24 +340,24 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
         malformed_result = CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor::CommandResult.new(
           true, malformed_output, "", 0, 0.1
         )
-        
+
         allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
           .to receive(:execute).and_return(malformed_result)
-        
+
         result = described_class.get_multi_repo_log([repo_config], since_time: since_time)
         expect(result.entries).to be_empty
       end
 
       it "handles git output with special characters" do
-        # Note: Due to split("|", 3), the author field gets "User Name|message" 
+        # Note: Due to split("|", 3), the author field gets "User Name|message"
         special_output = "1672531200|abc123|User Name with special chars: äöü & <script>\nSecond line<<END>>"
         special_result = CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor::CommandResult.new(
           true, special_output, "", 0, 0.1
         )
-        
+
         allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
           .to receive(:execute).and_return(special_result)
-        
+
         result = described_class.get_multi_repo_log([repo_config], since_time: since_time)
         expect(result.entries.length).to eq(1)
         # The author field contains everything after the second |
@@ -369,10 +369,10 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::GitLogFormatter 
     describe "repository label handling" do
       it "uses basename when label is not provided" do
         repo_without_label = {path: "/path/to/my-project"}
-        
+
         allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
           .to receive(:execute).and_return(successful_command_result)
-        
+
         result = described_class.get_multi_repo_log([repo_without_label], since_time: since_time)
         expect(result.entries.first.repository).to eq("my-project")
       end

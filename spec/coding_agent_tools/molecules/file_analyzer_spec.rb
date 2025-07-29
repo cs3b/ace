@@ -6,7 +6,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
   subject { described_class.new }
 
   let(:file_path) { "/test/lib/example.rb" }
-  
+
   let(:file_coverage_data) do
     {
       coverage_data: {
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       # Mock the method mapper to return sample methods
       allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
         .to receive(:map_file_coverage).and_return(sample_methods)
-      
+
       # Mock file existence
       allow(File).to receive(:exist?).with(file_path).and_return(true)
       allow(File).to receive(:readable?).with(file_path).and_return(true)
@@ -74,12 +74,12 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       {
         file_coverage: {
           "/test/lib/low_coverage.rb" => {
-            coverage_data: { total_lines: 20, covered_lines: 10, coverage_percentage: 50.0 },
+            coverage_data: {total_lines: 20, covered_lines: 10, coverage_percentage: 50.0},
             lines_data: Array.new(20, 1),
             frameworks: ["RSpec"]
           },
           "/test/lib/high_coverage.rb" => {
-            coverage_data: { total_lines: 15, covered_lines: 14, coverage_percentage: 93.3 },
+            coverage_data: {total_lines: 15, covered_lines: 14, coverage_percentage: 93.3},
             lines_data: Array.new(15, 1),
             frameworks: ["RSpec"]
           }
@@ -98,14 +98,14 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       results = subject.analyze_files(processed_data, threshold: 80.0)
 
       expect(results.length).to eq(2)
-      
+
       # Under-covered files should come first
       expect(results.first.coverage_percentage).to eq(50.0)  # low_coverage.rb
       expect(results.last.coverage_percentage).to eq(93.3)   # high_coverage.rb
     end
 
     it "sorts files by specified criteria" do
-      results = subject.analyze_files(processed_data, sort_by: 'coverage')
+      results = subject.analyze_files(processed_data, sort_by: "coverage")
 
       expect(results.first.coverage_percentage).to eq(50.0)  # lowest first
       expect(results.last.coverage_percentage).to eq(93.3)
@@ -162,7 +162,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       it "provides fallback message for method analysis" do
         result = subject.detailed_file_analysis(file_path, file_coverage_data)
 
-        expect(result[:method_analysis]).to eq({ message: "No methods found or file could not be parsed" })
+        expect(result[:method_analysis]).to eq({message: "No methods found or file could not be parsed"})
       end
     end
   end
@@ -173,8 +173,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
         under_threshold?: true,
         coverage_percentage: 60.0,
         uncovered_lines_count: 15,
-        methods: sample_methods
-      )
+        methods: sample_methods)
     end
 
     before do
@@ -234,27 +233,27 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       end
 
       it "sorts by coverage percentage" do
-        sorted = subject.send(:sort_file_results, file_results, 'coverage')
+        sorted = subject.send(:sort_file_results, file_results, "coverage")
         expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
       end
 
       it "sorts by uncovered lines count" do
-        sorted = subject.send(:sort_file_results, file_results, 'uncovered_lines')
+        sorted = subject.send(:sort_file_results, file_results, "uncovered_lines")
         expect(sorted.first.uncovered_lines_count).to eq(10)  # most uncovered first
       end
 
       it "sorts by file name" do
-        sorted = subject.send(:sort_file_results, file_results, 'file_name')
+        sorted = subject.send(:sort_file_results, file_results, "file_name")
         expect(sorted.first.relative_path).to eq("a.rb")  # alphabetical
       end
 
       it "sorts by priority score" do
-        sorted = subject.send(:sort_file_results, file_results, 'priority')
+        sorted = subject.send(:sort_file_results, file_results, "priority")
         expect(sorted.first.uncovered_lines_count).to eq(10)  # highest priority first
       end
 
       it "defaults to coverage sorting for unknown sort criteria" do
-        sorted = subject.send(:sort_file_results, file_results, 'unknown')
+        sorted = subject.send(:sort_file_results, file_results, "unknown")
         expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
       end
     end

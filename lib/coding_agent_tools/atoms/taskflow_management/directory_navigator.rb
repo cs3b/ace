@@ -64,7 +64,7 @@ module CodingAgentTools
             next false if entry == "." || entry == ".."
             next false unless File.directory?(File.join(current_path, entry))
             # Only include directories that match the version pattern
-            extract_version_from_directory_name(entry) != nil
+            !extract_version_from_directory_name(entry).nil?
           end
 
           case subdirs.size

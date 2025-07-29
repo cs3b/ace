@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
     context "when report_paths is nil" do
       it "returns error result" do
         result = collector.collect_reports(nil)
-        
+
         expect(result).to be_invalid
         expect(result.error).to eq("No report paths provided")
         expect(result.reports).to be_empty
@@ -26,7 +26,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
     context "when report_paths is empty" do
       it "returns error result" do
         result = collector.collect_reports([])
-        
+
         expect(result).to be_invalid
         expect(result.error).to eq("No report paths provided")
         expect(result.reports).to be_empty
@@ -174,16 +174,16 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       let(:valid_file) { File.join(temp_dir, "valid-report.md") }
       let(:unreadable_file) { File.join(temp_dir, "unreadable.md") }
       let(:directory_path) { File.join(temp_dir, "directory") }
-      
+
       before do
         File.write(valid_file, "# Valid report content")
         File.write(unreadable_file, "# Unreadable content")
         Dir.mkdir(directory_path)
-        File.chmod(0000, unreadable_file)
+        File.chmod(0o000, unreadable_file)
       end
 
       after do
-        File.chmod(0644, unreadable_file) if File.exist?(unreadable_file)
+        File.chmod(0o644, unreadable_file) if File.exist?(unreadable_file)
       end
 
       it "returns success for valid files" do
@@ -207,7 +207,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       it "returns error for oversized files" do
         large_file = File.join(temp_dir, "large.md")
         File.write(large_file, "Content") # Create the file first
-        
+
         # Stub File.size to simulate a large file
         allow(File).to receive(:size).with(large_file).and_return(60 * 1024 * 1024) # 60MB
 
@@ -335,7 +335,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
           # Create file and make it unreadable after creation
           File.write(test_file, "Content")
           allow(File).to receive(:read).with(test_file, 2048, encoding: "UTF-8").and_raise(StandardError)
-          
+
           expect(collector.send(:review_report_file?, test_file)).to be false
         end
       end
@@ -344,10 +344,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
         it "skips content inspection for files larger than 1MB" do
           large_file = File.join(temp_dir, "large-regular.md")
           File.write(large_file, "# Regular doc")
-          
+
           # Stub File.size to simulate a large file
           allow(File).to receive(:size).with(large_file).and_return(2 * 1024 * 1024) # 2MB
-          
+
           # Should return false since filename doesn't match patterns and file is too large for content check
           expect(collector.send(:review_report_file?, large_file)).to be false
         end
@@ -413,7 +413,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       it "handles recursive glob patterns" do
         recursive_pattern = File.join(temp_dir, "**", "cr-report-*.md")
         result = collector.collect_reports([recursive_pattern])
-        
+
         expect(result).to be_valid
         expect(result.reports).to contain_exactly(review1, review2)
       end
@@ -421,7 +421,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       it "handles character class patterns" do
         char_class_pattern = File.join(temp_dir, "subdir", "cr-report-[12].md")
         result = collector.collect_reports([char_class_pattern])
-        
+
         expect(result).to be_valid
         expect(result.reports).to contain_exactly(review1, review2)
       end
@@ -429,7 +429,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       it "handles question mark wildcards" do
         question_pattern = File.join(temp_dir, "subdir", "cr-report-?.md")
         result = collector.collect_reports([question_pattern])
-        
+
         expect(result).to be_valid
         expect(result.reports).to contain_exactly(review1, review2)
       end
@@ -448,7 +448,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
 
       it "handles mixed file types with only valid review files being processed" do
         result = collector.collect_reports([valid_review, invalid_extension])
-        
+
         expect(result).to be_invalid
         expect(result.error).to include("At least 2 review reports are required")
       end
@@ -457,9 +457,9 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
         # Test with a directory that matches glob pattern (e.g., ends with .md in filename)
         directory_with_md = File.join(temp_dir, "fake-report.md")
         Dir.mkdir(directory_with_md)
-        
+
         result = collector.collect_reports([directory_with_md])
-        
+
         expect(result).to be_invalid
         expect(result.error).to include("Path is not a file")
       end
@@ -467,7 +467,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
       it "handles mixed valid and invalid paths gracefully" do
         non_existent = File.join(temp_dir, "missing.md")
         result = collector.collect_reports([valid_review, non_existent])
-        
+
         expect(result).to be_invalid
         expect(result.error).to include("File not found")
       end
@@ -482,7 +482,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::ReportCollector do
 
       it "removes duplicates when same file specified multiple times" do
         result = collector.collect_reports([review_file, review_file, review_file])
-        
+
         expect(result).to be_invalid # Should fail because only 1 unique file (need 2 minimum)
         expect(result.error).to include("At least 2 review reports are required")
       end

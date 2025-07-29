@@ -313,7 +313,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
 
     context "with missing or malformed commit data" do
       it "handles commit without display_line" do
-        commit = { type: :oneline }
+        commit = {type: :oneline}
 
         expect { formatter.format_commit(commit) }.not_to raise_error
       end
@@ -539,7 +539,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
 
         # All results should be identical
         first_result = results.pop
-        while !results.empty?
+        until results.empty?
           expect(results.pop).to eq(first_result)
         end
       end
@@ -586,7 +586,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         }
 
         result = formatter.format_commit(commit)
-        
+
         # Should have opening color code, text, and reset code for each colored element
         expect(result.scan(/\033\[33m/).length).to eq(1) # One yellow (hash)
         expect(result.scan(/\033\[37m/).length).to eq(1) # One white (message)
@@ -606,7 +606,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         }
 
         result = formatter.format_commit(commit)
-        
+
         # Check for specific color applications
         expect(result).to include("\033[1mcommit\033[0m")      # Bold "commit"
         expect(result).to include("\033[33mabc123\033[0m")     # Yellow hash
@@ -628,9 +628,9 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         ]
 
         test_cases.each do |display_line|
-          commit = { type: :oneline, display_line: display_line }
+          commit = {type: :oneline, display_line: display_line}
           result = formatter.format_commit(commit)
-          
+
           # Should always contain yellow color for hash part
           expect(result).to include("\033[33m")
         end
@@ -644,9 +644,9 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         ]
 
         patterns_to_test.each do |line, label, value|
-          commit = { type: :multiline, display_line: line }
+          commit = {type: :multiline, display_line: line}
           result = formatter.format_commit(commit)
-          
+
           expect(result).to include(label) if label
           expect(result).to include(value) if value
         end
@@ -656,13 +656,13 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
     context "output format consistency" do
       it "maintains consistent formatting across similar commits" do
         commits = [
-          { type: :oneline, display_line: "abc123 First commit" },
-          { type: :oneline, display_line: "def456 Second commit" },
-          { type: :oneline, display_line: "789abc Third commit" }
+          {type: :oneline, display_line: "abc123 First commit"},
+          {type: :oneline, display_line: "def456 Second commit"},
+          {type: :oneline, display_line: "789abc Third commit"}
         ]
 
         results = commits.map { |commit| formatter.format_commit(commit) }
-        
+
         # All should have same structure: yellow hash, space, white message
         results.each do |result|
           expect(result).to match(/\033\[33m\w+\033\[0m \033\[37m.+\033\[0m/)

@@ -338,7 +338,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Switch do
 
       it "shows detailed error with debug flag" do
         allow_any_instance_of(StandardError).to receive(:backtrace).and_return(["line1", "line2"])
-        
+
         output = capture_stderr { command.call(branch: branch, debug: true) }
 
         expect(output).to include("Error: StandardError: Unexpected error")
@@ -423,15 +423,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Switch do
   def capture_output
     old_stdout = $stdout
     old_stderr = $stderr
-    
+
     stdout_capture = StringIO.new
     stderr_capture = StringIO.new
-    
+
     $stdout = stdout_capture
     $stderr = stderr_capture
-    
+
     yield
-    
+
     stdout_capture.string + stderr_capture.string
   ensure
     $stdout = old_stdout

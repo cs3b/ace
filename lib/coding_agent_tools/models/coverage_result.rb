@@ -12,7 +12,7 @@ module CodingAgentTools
         @covered_lines = covered_lines
         @coverage_percentage = coverage_percentage
         @methods = methods
-        @uncovered_details = uncovered_details || { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 }
+        @uncovered_details = uncovered_details || {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0}
       end
 
       def under_threshold?(threshold)
@@ -49,7 +49,7 @@ module CodingAgentTools
           # Truly minimal format - only essential data with methods that need tests
           methods_needing_tests = methods.select(&:needs_tests?)
           return nil if methods_needing_tests.empty?
-          
+
           {
             relative_path: relative_path,
             coverage_percentage: coverage_percentage,

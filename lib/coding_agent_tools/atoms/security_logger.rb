@@ -48,7 +48,7 @@ module CodingAgentTools
       # @option details [Hash] :metadata Additional metadata
       def log_event(event_type, details = {})
         return if self.class.suppress_output?
-        
+
         event_name = EVENTS[event_type] || event_type.to_s.upcase
         sanitized = sanitize_details(details)
 
@@ -69,7 +69,7 @@ module CodingAgentTools
       # @param context [Hash] Additional context (will be sanitized)
       def log_error(error, context = {})
         return if self.class.suppress_output?
-        
+
         sanitized_context = sanitize_details(context)
         message = "[SECURITY_ERROR] #{error.class}: #{sanitize_message(error.message)}"
         message += " | Context: #{format_details(sanitized_context)}" unless sanitized_context.empty?

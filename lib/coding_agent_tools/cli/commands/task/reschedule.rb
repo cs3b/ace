@@ -98,7 +98,7 @@ module CodingAgentTools
             return task if task
 
             # ID without version prefix
-            if identifier =~ /^\d+$/
+            if /^\d+$/.match?(identifier)
               task = all_tasks.find { |t| t.id =~ /\+task\.#{identifier}$/ }
               return task if task
             end
@@ -114,13 +114,13 @@ module CodingAgentTools
           def reschedule_add_next(tasks_to_reschedule, all_tasks, task_manager)
             # Find the lowest sort value among pending tasks
             pending_tasks = all_tasks.select { |t| t.status == "pending" }
-            
+
             # Get current sort values
             min_sort = pending_tasks.map { |t| get_task_sort_value(t) }.compact.min || 1000
-            
+
             # Assign new sort values starting from (min_sort - tasks_to_reschedule.length)
             new_sort_base = min_sort - tasks_to_reschedule.length
-            
+
             tasks_to_reschedule.each_with_index do |task, index|
               new_sort_value = new_sort_base + index
               update_task_sort(task, new_sort_value, task_manager)
@@ -131,13 +131,13 @@ module CodingAgentTools
           def reschedule_add_at_end(tasks_to_reschedule, all_tasks, task_manager)
             # Find the highest sort value among all tasks
             max_sort = all_tasks.map { |t| get_task_sort_value(t) }.compact.max || 0
-            
+
             # Also consider task sequential numbers for tasks without sort values
             max_sequential = all_tasks.map { |t| parse_task_sequential_number(t.id) }.compact.max || 0
-            
+
             # Use the higher of the two as the base
             new_sort_base = [max_sort, max_sequential].max + 1
-            
+
             tasks_to_reschedule.each_with_index do |task, index|
               new_sort_value = new_sort_base + index
               update_task_sort(task, new_sort_value, task_manager)
@@ -162,21 +162,21 @@ module CodingAgentTools
           def update_task_sort(task, sort_value, task_manager)
             # Read the task file
             content = File.read(task.path)
-            
+
             # Parse frontmatter
             if content =~ /\A---\n(.*?)\n---\n(.*)/m
               frontmatter = $1
               body = $2
-              
+
               # Check if sort already exists in frontmatter
-              if frontmatter =~ /^sort:\s*\d+$/
+              new_frontmatter = if /^sort:\s*\d+$/.match?(frontmatter)
                 # Update existing sort value
-                new_frontmatter = frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
+                frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
               else
                 # Add sort value to frontmatter
-                new_frontmatter = frontmatter + "\nsort: #{sort_value}"
+                frontmatter + "\nsort: #{sort_value}"
               end
-              
+
               # Write updated content
               new_content = "---\n#{new_frontmatter}\n---\n#{body}"
               File.write(task.path, new_content)

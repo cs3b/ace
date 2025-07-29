@@ -19,7 +19,7 @@ module CodingAgentTools
 
         numeric_threshold = convert_to_numeric(threshold)
         validate_range(numeric_threshold)
-        
+
         numeric_threshold.to_f
       end
 
@@ -29,7 +29,7 @@ module CodingAgentTools
       # @raise [ValidationError] If pattern is invalid
       def validate_file_pattern(pattern)
         return pattern if pattern.nil?
-        
+
         unless pattern.is_a?(String)
           raise ValidationError, "File pattern must be a string, got #{pattern.class}"
         end
@@ -50,15 +50,15 @@ module CodingAgentTools
       # @raise [ValidationError] If format is invalid
       def validate_format(format)
         valid_formats = %w[text json csv]
-        
+
         unless format.is_a?(String)
           raise ValidationError, "Format must be a string, got #{format.class}"
         end
 
         normalized_format = format.strip.downcase
-        
+
         unless valid_formats.include?(normalized_format)
-          raise ValidationError, "Format must be one of: #{valid_formats.join(', ')}, got '#{format}'"
+          raise ValidationError, "Format must be one of: #{valid_formats.join(", ")}, got '#{format}'"
         end
 
         normalized_format
@@ -70,7 +70,7 @@ module CodingAgentTools
       # @raise [ValidationError] If mode is invalid
       def validate_analysis_mode(mode)
         return "both" if mode.nil?
-        
+
         unless mode.is_a?(String)
           raise ValidationError, "Analysis mode must be a string, got #{mode.class}"
         end
@@ -80,9 +80,9 @@ module CodingAgentTools
         valid_modes = %w[files methods both]
 
         normalized_mode = mode.strip.downcase
-        
+
         unless valid_modes.include?(normalized_mode)
-          raise ValidationError, "Analysis mode must be one of: #{valid_modes.join(', ')}, got '#{mode}'"
+          raise ValidationError, "Analysis mode must be one of: #{valid_modes.join(", ")}, got '#{mode}'"
         end
 
         normalized_mode

@@ -8,7 +8,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
   let(:mock_task_manager) { instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager") }
   let(:mock_tasks_result) { double("AllTasksResult") }
   let(:mock_sort_result) { double("SortResult") }
-  let(:mock_filter_result) { { tasks: [], errors: [] } }
+  let(:mock_filter_result) { {tasks: [], errors: []} }
 
   before do
     allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
@@ -17,21 +17,19 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
   describe "#call" do
     context "with successful task retrieval" do
-      let(:mock_task1) { 
-        double("Task", 
-          id: "v.0.3.0+task.001", 
-          status: "pending", 
+      let(:mock_task1) {
+        double("Task",
+          id: "v.0.3.0+task.001",
+          status: "pending",
           priority: "high",
-          title: "First task"
-        ) 
+          title: "First task")
       }
-      let(:mock_task2) { 
-        double("Task", 
-          id: "v.0.3.0+task.002", 
-          status: "done", 
+      let(:mock_task2) {
+        double("Task",
+          id: "v.0.3.0+task.002",
+          status: "done",
           priority: "medium",
-          title: "Second task"
-        ) 
+          title: "Second task")
       }
       let(:mock_tasks) { [mock_task1, mock_task2] }
 
@@ -39,12 +37,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
         allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
-        
+
         # Mock sort engine
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ result: mock_sort_result, errors: [] })
+          .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
         # Mock sort result
         allow(mock_sort_result).to receive(:sorted_tasks).and_return(mock_tasks)
@@ -52,7 +50,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(mock_sort_result).to receive(:has_cycles?).and_return(false)
         allow(mock_sort_result).to receive(:sorted_count).and_return(2)
         allow(mock_sort_result).to receive(:total_count).and_return(2)
-        allow(mock_sort_result).to receive(:sort_metadata).and_return({ sort_type: "implementation-order" })
+        allow(mock_sort_result).to receive(:sort_metadata).and_return({sort_type: "implementation-order"})
 
         # Mock formatter
         allow(CodingAgentTools::Molecules::TaskflowManagement::UnifiedTaskFormatter)
@@ -144,10 +142,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
     end
 
     context "with filtering" do
-      let(:mock_tasks) { [
-        double("Task", id: "v.0.3.0+task.001", status: "pending", priority: "high"),
-        double("Task", id: "v.0.3.0+task.002", status: "done", priority: "medium")
-      ] }
+      let(:mock_tasks) {
+        [
+          double("Task", id: "v.0.3.0+task.001", status: "pending", priority: "high"),
+          double("Task", id: "v.0.3.0+task.002", status: "done", priority: "medium")
+        ]
+      }
       let(:filtered_tasks) { [mock_tasks.first] }
 
       before do
@@ -157,14 +157,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
         # Mock filter engine
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine)
-          .to receive(:apply_filter_strings).and_return({ tasks: filtered_tasks, errors: [] })
+          .to receive(:apply_filter_strings).and_return({tasks: filtered_tasks, errors: []})
 
         # Mock sort engine with filtered tasks
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).with(filtered_tasks, "implementation-order")
-          .and_return({ result: mock_sort_result, errors: [] })
+          .and_return({result: mock_sort_result, errors: []})
 
         allow(mock_sort_result).to receive(:sorted_tasks).and_return(filtered_tasks)
         allow(mock_sort_result).to receive(:fully_sorted?).and_return(true)
@@ -188,9 +188,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
       it "handles filter errors" do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine)
-          .to receive(:apply_filter_strings).and_return({ 
-            tasks: [], 
-            errors: ["Invalid filter: priority:invalid"] 
+          .to receive(:apply_filter_strings).and_return({
+            tasks: [],
+            errors: ["Invalid filter: priority:invalid"]
           })
         allow(command).to receive(:error_output)
 
@@ -210,9 +210,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ 
-            result: nil, 
-            errors: ["Invalid sort criteria: invalid:sort"] 
+          .to receive(:apply_sort_string).and_return({
+            result: nil,
+            errors: ["Invalid sort criteria: invalid:sort"]
           })
         allow(command).to receive(:error_output)
       end
@@ -226,10 +226,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
     end
 
     context "with dependency cycles" do
-      let(:mock_tasks) { [
-        double("Task", id: "v.0.3.0+task.001"),
-        double("Task", id: "v.0.3.0+task.002")
-      ] }
+      let(:mock_tasks) {
+        [
+          double("Task", id: "v.0.3.0+task.001"),
+          double("Task", id: "v.0.3.0+task.002")
+        ]
+      }
 
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
@@ -239,7 +241,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ result: mock_sort_result, errors: [] })
+          .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
         # Mock sort result with cycles
         allow(mock_sort_result).to receive(:sorted_tasks).and_return(mock_tasks)
@@ -286,7 +288,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ result: mock_sort_result, errors: [] })
+          .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
         allow(mock_sort_result).to receive(:sorted_tasks).and_return([])
         allow(command).to receive(:puts)
@@ -419,7 +421,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(result).to receive(:sorted_tasks).and_return([double, double])
         allow(result).to receive(:fully_sorted?).and_return(true)
-        allow(result).to receive(:sort_metadata).and_return({ sort_type: "priority" })
+        allow(result).to receive(:sort_metadata).and_return({sort_type: "priority"})
       end
 
       it "displays basic header information" do
@@ -574,7 +576,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ result: mock_sort_result, errors: [] })
+          .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
         allow(mock_sort_result).to receive(:sorted_tasks).and_return(mock_tasks)
         allow(mock_sort_result).to receive(:fully_sorted?).and_return(true)
@@ -601,10 +603,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
       it "handles sort and filter options together" do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine)
-          .to receive(:apply_filter_strings).and_return({ tasks: mock_tasks, errors: [] })
+          .to receive(:apply_filter_strings).and_return({tasks: mock_tasks, errors: []})
 
         result = command.call(
-          sort: "priority:desc", 
+          sort: "priority:desc",
           filter: ["status:pending"]
         )
 
@@ -627,7 +629,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:default_all_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:apply_sort_string).and_return({ result: mock_sort_result, errors: [] })
+          .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
         allow(mock_sort_result).to receive(:sorted_tasks).and_return(mock_tasks)
         allow(mock_sort_result).to receive(:fully_sorted?).and_return(true)

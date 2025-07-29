@@ -108,7 +108,7 @@ RSpec.describe "Release CLI Commands" do
       it "handles ReleaseManager failures in text format" do
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
+
         error_result = double("result", success?: false, error_message: "Release manager error")
         allow(release_manager).to receive(:current).and_return(error_result)
 
@@ -119,7 +119,7 @@ RSpec.describe "Release CLI Commands" do
       it "returns proper JSON error format when release manager fails" do
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
+
         error_result = double("result", success?: false, error_message: "Release manager error")
         allow(release_manager).to receive(:current).and_return(error_result)
 
@@ -136,22 +136,21 @@ RSpec.describe "Release CLI Commands" do
       before do
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks")
         File.write("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
-        
+
         # Mock the release object to return specific timestamps
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
-        release_data = double("release", 
-          name: "v.0.3.0-test", 
-          version: "v.0.3.0", 
-          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test", 
+
+        release_data = double("release",
+          name: "v.0.3.0-test",
+          version: "v.0.3.0",
+          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test",
           type: :current,
-          status: "active", 
+          status: "active",
           task_count: 1,
           created_at: test_time,
-          modified_at: test_time
-        )
-        
+          modified_at: test_time)
+
         success_result = double("result", success?: true, data: release_data)
         allow(release_manager).to receive(:current).and_return(success_result)
       end
@@ -174,21 +173,20 @@ RSpec.describe "Release CLI Commands" do
       before do
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks")
         File.write("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
-        
+
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
-        release_data = double("release", 
-          name: "v.0.3.0-test", 
-          version: "v.0.3.0", 
-          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test", 
+
+        release_data = double("release",
+          name: "v.0.3.0-test",
+          version: "v.0.3.0",
+          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test",
           type: :current,
-          status: "active", 
+          status: "active",
           task_count: 1,
           created_at: nil,
-          modified_at: nil
-        )
-        
+          modified_at: nil)
+
         success_result = double("result", success?: true, data: release_data)
         allow(release_manager).to receive(:current).and_return(success_result)
       end
@@ -240,7 +238,7 @@ RSpec.describe "Release CLI Commands" do
       it "includes timestamps when available" do
         # Touch a file to ensure creation time is set
         FileUtils.touch("#{base_path}/dev-taskflow/backlog/v.0.4.0-future")
-        
+
         output = capture_output { command.call }
         expect(output).to match(/Created:\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)
         expect(output).to match(/Modified:\s+\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)
@@ -258,7 +256,7 @@ RSpec.describe "Release CLI Commands" do
 
       it "includes ISO8601 timestamps in JSON output" do
         FileUtils.touch("#{base_path}/dev-taskflow/backlog/v.0.4.0-future")
-        
+
         output = capture_output { command.call(format: "json") }
         parsed = JSON.parse(output)
         expect(parsed["data"]["created_at"]).to match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
@@ -297,7 +295,7 @@ RSpec.describe "Release CLI Commands" do
         # Mock ReleaseManager to return an error result
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
+
         error_result = double("result", success?: false, error_message: "Release manager error")
         allow(release_manager).to receive(:next).and_return(error_result)
 
@@ -308,7 +306,7 @@ RSpec.describe "Release CLI Commands" do
       it "returns proper JSON error format when release manager fails" do
         release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
         allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
-        
+
         error_result = double("result", success?: false, error_message: "Release manager error")
         allow(release_manager).to receive(:next).and_return(error_result)
 
@@ -362,7 +360,6 @@ RSpec.describe "Release CLI Commands" do
         expect { command.call(format: "json") }.not_to raise_error
       end
     end
-
   end
 
   describe CodingAgentTools::Cli::Commands::Release::GenerateId do

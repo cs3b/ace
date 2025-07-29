@@ -561,11 +561,11 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
           stdout: "test diff content",
           stderr: ""
         )
-        
+
         # Let diff file write succeed, but meta file write fail
         diff_file_path = File.join(session_dir, "input.diff")
         meta_file_path = File.join(session_dir, "input.meta")
-        
+
         allow(File).to receive(:write).with(diff_file_path, anything)
         allow(File).to receive(:write).with(meta_file_path, anything).and_raise(StandardError.new("Meta write failed"))
 
@@ -618,7 +618,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::GitDiffExtractor do
 
         expected_diff_file = File.join(special_session_dir, "input.diff")
         expected_meta_file = File.join(special_session_dir, "input.meta")
-        
+
         expect(result[:success]).to be true
         expect(result[:diff_file]).to eq(expected_diff_file)
         expect(result[:meta_file]).to eq(expected_meta_file)

@@ -22,8 +22,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             path: "/path/to/current/v.0.3.0-workflows",
             validation_status: "consistent"
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       before do
@@ -32,7 +31,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "displays success message in text format" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("Release Context Validation: PASSED")
         expect(output).to include("Current Release: v.0.3.0-workflows")
         expect(output).to include("Path: /path/to/current/v.0.3.0-workflows")
@@ -46,7 +45,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "creates ReleaseManager with correct project root" do
         capture_stdout { command.call }
-        
+
         expect(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to have_received(:new).with(base_path: project_root)
       end
     end
@@ -55,8 +54,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       let(:failed_result) do
         double("Result",
           success?: false,
-          error_message: "Release context inconsistency detected"
-        )
+          error_message: "Release context inconsistency detected")
       end
 
       before do
@@ -66,7 +64,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "displays failure message and recommendations" do
         output = capture_stdout { command.call }
-        
+
         expect(command).to have_received(:error_output).with("Validation FAILED: Release context inconsistency detected")
         expect(output).to include("This indicates that release-manager and nav-path may report different")
         expect(output).to include("Recommended actions:")
@@ -89,8 +87,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             path: "/path/to/current/v.0.3.0-workflows",
             validation_status: "consistent"
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       before do
@@ -99,7 +96,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "displays success result in JSON format" do
         output = capture_stdout { command.call(format: "json") }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["success"]).to be(true)
         expect(json_output["validation_status"]).to eq("passed")
@@ -114,8 +111,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       let(:failed_result) do
         double("Result",
           success?: false,
-          error_message: "Multiple current releases found"
-        )
+          error_message: "Multiple current releases found")
       end
 
       before do
@@ -124,7 +120,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "displays failure result in JSON format" do
         output = capture_stdout { command.call(format: "json") }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["success"]).to be(false)
         expect(json_output["validation_status"]).to eq("failed")
@@ -145,14 +141,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "handles exceptions and returns error code" do
         result = command.call
-        
+
         expect(result).to eq(1)
         expect(command).to have_received(:handle_error).with(error, nil)
       end
 
       it "passes debug flag to error handler" do
         command.call(debug: true)
-        
+
         expect(command).to have_received(:handle_error).with(error, true)
       end
     end
@@ -193,13 +189,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             current_release: "v.0.3.0-test",
             path: "/path/to/release",
             validation_status: "valid"
-          }
-        )
+          })
       end
 
       it "formats successful result correctly" do
         output = capture_stdout { command.send(:handle_text_result, success_result) }
-        
+
         expect(output).to include("Release Context Validation: PASSED")
         expect(output).to include("=" * 40)
         expect(output).to include("Current Release: v.0.3.0-test")
@@ -213,8 +208,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       let(:failed_result) do
         double("Result",
           success?: false,
-          error_message: "Validation failed due to inconsistency"
-        )
+          error_message: "Validation failed due to inconsistency")
       end
 
       before do
@@ -223,7 +217,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "formats failed result with recommendations" do
         output = capture_stdout { command.send(:handle_text_result, failed_result) }
-        
+
         expect(command).to have_received(:error_output).with("Validation FAILED: Validation failed due to inconsistency")
         expect(output).to include("This indicates that release-manager and nav-path may report different")
         expect(output).to include("current releases, which could cause task creation inconsistencies.")
@@ -238,8 +232,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       let(:result_with_nil_data) do
         double("Result",
           success?: true,
-          data: {}
-        )
+          data: {})
       end
 
       it "handles empty data gracefully" do
@@ -258,13 +251,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             current_release: "v.0.3.0-test",
             validation_status: "consistent"
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       it "generates correct JSON for successful validation" do
         output = capture_stdout { command.send(:handle_json_result, success_result) }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["success"]).to be(true)
         expect(json_output["validation_status"]).to eq("passed")
@@ -279,13 +271,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
         double("Result",
           success?: true,
           data: {},
-          error_message: "Custom success message"
-        )
+          error_message: "Custom success message")
       end
 
       it "uses custom message when provided" do
         output = capture_stdout { command.send(:handle_json_result, success_result) }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["message"]).to eq("Custom success message")
       end
@@ -295,13 +286,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       let(:failed_result) do
         double("Result",
           success?: false,
-          error_message: "Multiple releases detected"
-        )
+          error_message: "Multiple releases detected")
       end
 
       it "generates correct JSON for failed validation" do
         output = capture_stdout { command.send(:handle_json_result, failed_result) }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["success"]).to be(false)
         expect(json_output["validation_status"]).to eq("failed")
@@ -326,13 +316,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
               }
             }
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       it "handles large data sets without issues" do
         output = capture_stdout { command.send(:handle_json_result, large_data_result) }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["success"]).to be(true)
         expect(json_output["data"]["large_array"]).to be_an(Array)
@@ -348,8 +337,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
           data: {
             circular: nil  # We'll make this circular
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       before do
@@ -382,7 +370,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
     context "with debug disabled" do
       it "outputs simple error message" do
         command.send(:handle_error, error, false)
-        
+
         expect(command).to have_received(:error_output).with("Error: Test error message")
         expect(command).to have_received(:error_output).with("Use --debug flag for more information")
       end
@@ -391,7 +379,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
     context "with debug enabled" do
       it "outputs detailed error information with full backtrace" do
         command.send(:handle_error, error, true)
-        
+
         expect(command).to have_received(:error_output).with("Error: StandardError: Test error message")
         expect(command).to have_received(:error_output).with("\nBacktrace:")
         expect(command).to have_received(:error_output).with("  /path/to/file1.rb:10:in `method1'")
@@ -403,7 +391,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
     context "with nil backtrace" do
       it "handles missing backtrace gracefully" do
         allow(error).to receive(:backtrace).and_return(nil)
-        
+
         # This will actually raise an error in the real implementation, so let's test that
         expect {
           command.send(:handle_error, error, true)
@@ -414,9 +402,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
     context "with empty backtrace" do
       it "handles empty backtrace array" do
         allow(error).to receive(:backtrace).and_return([])
-        
+
         command.send(:handle_error, error, true)
-        
+
         expect(command).to have_received(:error_output).with("Error: StandardError: Test error message")
         expect(command).to have_received(:error_output).with("\nBacktrace:")
       end
@@ -426,18 +414,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
       it "handles RuntimeError correctly" do
         runtime_error = RuntimeError.new("Runtime issue")
         allow(runtime_error).to receive(:backtrace).and_return(["/path:1"])
-        
+
         command.send(:handle_error, runtime_error, true)
-        
+
         expect(command).to have_received(:error_output).with("Error: RuntimeError: Runtime issue")
       end
 
       it "handles custom error classes" do
         custom_error = Class.new(StandardError).new("Custom error")
         allow(custom_error).to receive(:backtrace).and_return(["/path:1"])
-        
+
         command.send(:handle_error, custom_error, true)
-        
+
         expect(command).to have_received(:error_output).with(/Custom error/)
       end
     end
@@ -469,7 +457,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
         threads = Array.new(5) do
           Thread.new { capture_stdout { command.call } }
         end
-        
+
         results = threads.map(&:value)
         expect(results).to all(include("Release Context Validation: PASSED"))
       end
@@ -484,8 +472,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             path: "/very/long/path/" + "directory/" * 100,
             validation_status: "status_" + "y" * 500
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       before do
@@ -494,7 +481,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "handles very long string values without truncation" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("v.0.3.0-" + "x" * 1000)
         expect(output).to include("/very/long/path/" + "directory/" * 100)
         expect(output).to include("status_" + "y" * 500)
@@ -510,8 +497,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
             path: "/path/with/émojis/🚀",
             validation_status: "válid"
           },
-          error_message: nil
-        )
+          error_message: nil)
       end
 
       before do
@@ -520,7 +506,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "handles unicode characters correctly in text output" do
         output = capture_stdout { command.call }
-        
+
         expect(output).to include("v.0.3.0-测试")
         expect(output).to include("/path/with/émojis/🚀")
         expect(output).to include("válid")
@@ -528,7 +514,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Release::Validate do
 
       it "handles unicode characters correctly in JSON output" do
         output = capture_stdout { command.call(format: "json") }
-        
+
         json_output = JSON.parse(output)
         expect(json_output["data"]["current_release"]).to eq("v.0.3.0-测试")
         expect(json_output["data"]["path"]).to eq("/path/with/émojis/🚀")

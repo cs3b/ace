@@ -28,9 +28,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       "ruby" => {
         "enabled" => true,
         "linters" => {
-          "standardrb" => { "enabled" => true, "autofix" => false },
-          "security" => { "enabled" => true, "full_scan" => false, "git_history" => false },
-          "cassettes" => { "enabled" => true, "threshold" => 51200 }
+          "standardrb" => {"enabled" => true, "autofix" => false},
+          "security" => {"enabled" => true, "full_scan" => false, "git_history" => false},
+          "cassettes" => {"enabled" => true, "threshold" => 51200}
         }
       }
     }
@@ -48,7 +48,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
   describe "#run" do
     context "when ruby linting is disabled" do
       let(:disabled_config) do
-        { "ruby" => { "enabled" => false } }
+        {"ruby" => {"enabled" => false}}
       end
       let(:disabled_pipeline) { described_class.new(config: disabled_config, path_resolver: mock_path_resolver) }
 
@@ -120,17 +120,17 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       it "counts total issues from all linters" do
         allow(mock_standard_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Style violation" }]
+          findings: [{message: "Style violation"}]
         })
 
         allow(mock_security_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Secret detected" }, { message: "Another secret" }]
+          findings: [{message: "Secret detected"}, {message: "Another secret"}]
         })
 
         allow(mock_cassettes_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Large cassette" }]
+          findings: [{message: "Large cassette"}]
         })
 
         result = pipeline.run
@@ -145,9 +145,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true },
-              "security" => { "enabled" => false },
-              "cassettes" => { "enabled" => true }
+              "standardrb" => {"enabled" => true},
+              "security" => {"enabled" => false},
+              "cassettes" => {"enabled" => true}
             }
           }
         }
@@ -159,8 +159,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
         allow(CodingAgentTools::Atoms::CodeQuality::StandardRbValidator).to receive(:new).and_return(mock_standard_validator)
         allow(CodingAgentTools::Atoms::CodeQuality::CassettesValidator).to receive(:new).and_return(mock_cassettes_validator)
 
-        allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
-        allow(mock_cassettes_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
+        allow(mock_cassettes_validator).to receive(:validate).and_return({success: true, findings: []})
       end
 
       it "only runs enabled linters" do
@@ -178,7 +178,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true, "autofix" => true }
+              "standardrb" => {"enabled" => true, "autofix" => true}
             }
           }
         }
@@ -191,8 +191,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       end
 
       it "calls autofix when enabled and autofix flag is true" do
-        allow(mock_standard_validator).to receive(:autofix).and_return({ success: true, findings: [] })
-        allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_standard_validator).to receive(:autofix).and_return({success: true, findings: []})
+        allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
 
         autofix_pipeline.run(autofix: true)
 
@@ -200,8 +200,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       end
 
       it "calls validate when autofix is enabled but autofix flag is false" do
-        allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
-        allow(mock_standard_validator).to receive(:autofix).and_return({ success: true, findings: [] })
+        allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
+        allow(mock_standard_validator).to receive(:autofix).and_return({success: true, findings: []})
 
         autofix_pipeline.run(autofix: false)
 
@@ -217,7 +217,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true, "autofix" => true }
+              "standardrb" => {"enabled" => true, "autofix" => true}
             }
           }
         }
@@ -228,7 +228,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true, "autofix" => false }
+              "standardrb" => {"enabled" => true, "autofix" => false}
             }
           }
         }
@@ -244,17 +244,17 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_standardrb, ["."], false, results)
 
-        expect(results[:linters][:standardrb]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:standardrb]).to eq({success: true, findings: []})
         expect(results[:success]).to be true
         expect(results[:total_issues]).to eq(0)
       end
 
       it "runs StandardRB autofix when enabled" do
         autofix_pipeline = described_class.new(config: autofix_enabled_config, path_resolver: mock_path_resolver)
-        
+
         allow(mock_standard_validator).to receive(:autofix).and_return({
           success: true,
           findings: []
@@ -264,35 +264,35 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         autofix_pipeline.send(:run_standardrb, ["."], true, results)
 
         expect(mock_standard_validator).to have_received(:autofix)
-        expect(results[:linters][:standardrb]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:standardrb]).to eq({success: true, findings: []})
       end
 
       it "uses validate when autofix is disabled in config" do
         autofix_disabled_pipeline = described_class.new(config: autofix_disabled_config, path_resolver: mock_path_resolver)
-        
+
         allow(mock_standard_validator).to receive(:validate).and_return({
           success: true,
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         autofix_disabled_pipeline.send(:run_standardrb, ["."], true, results)
 
         expect(mock_standard_validator).to have_received(:validate)
-        expect(results[:linters][:standardrb]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:standardrb]).to eq({success: true, findings: []})
       end
 
       it "handles validation errors" do
         allow(mock_standard_validator).to receive(:validate).and_return({
           success: false,
-          findings: [{ message: "Style violation" }]
+          findings: [{message: "Style violation"}]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_standardrb, ["."], false, results)
 
         expect(results[:linters][:standardrb][:success]).to be false
@@ -303,7 +303,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       it "handles validator exceptions" do
         allow(mock_standard_validator).to receive(:validate).and_raise(StandardError.new("StandardRB crashed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_standardrb, ["."], false, results)
 
         expect(results[:linters][:standardrb][:success]).to be false
@@ -320,7 +320,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_standardrb, paths, false, results)
 
         expect(mock_standard_validator).to have_received(:validate).with(expected_resolved_paths)
@@ -347,26 +347,26 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        security_config = { "full_scan" => false, "git_history" => false }
+        results = {success: true, linters: {}, total_issues: 0}
+        security_config = {"full_scan" => false, "git_history" => false}
         pipeline.send(:run_security, ["."], security_config, results)
 
-        expect(results[:linters][:security]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:security]).to eq({success: true, findings: []})
         expect(results[:success]).to be true
         expect(results[:total_issues]).to eq(0)
       end
 
       it "passes security configuration options" do
-        custom_security_config = { "full_scan" => true, "git_history" => true }
-        custom_options = { full_scan: true, git_history: true }
+        custom_security_config = {"full_scan" => true, "git_history" => true}
+        custom_options = {full_scan: true, git_history: true}
 
         expect(CodingAgentTools::Atoms::CodeQuality::SecurityValidator).to receive(:new)
           .with(custom_options)
           .and_return(mock_security_validator)
 
-        allow(mock_security_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_security_validator).to receive(:validate).and_return({success: true, findings: []})
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_security, ["."], custom_security_config, results)
       end
 
@@ -374,13 +374,13 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
         allow(mock_security_validator).to receive(:validate).and_return({
           success: true,
           findings: [
-            { message: "Secret 1" },
-            { message: "Secret 2" }
+            {message: "Secret 1"},
+            {message: "Secret 2"}
           ]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        security_config = { "full_scan" => false, "git_history" => false }
+        results = {success: true, linters: {}, total_issues: 0}
+        security_config = {"full_scan" => false, "git_history" => false}
         pipeline.send(:run_security, ["."], security_config, results)
 
         expect(results[:total_issues]).to eq(2)
@@ -389,8 +389,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       it "handles validator exceptions" do
         allow(mock_security_validator).to receive(:validate).and_raise(StandardError.new("Security scan failed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        security_config = { "full_scan" => false, "git_history" => false }
+        results = {success: true, linters: {}, total_issues: 0}
+        security_config = {"full_scan" => false, "git_history" => false}
         pipeline.send(:run_security, ["."], security_config, results)
 
         expect(results[:linters][:security][:success]).to be false
@@ -418,52 +418,52 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        cassettes_config = { "threshold" => 51200 }
+        results = {success: true, linters: {}, total_issues: 0}
+        cassettes_config = {"threshold" => 51200}
         pipeline.send(:run_cassettes, cassettes_config, results)
 
-        expect(results[:linters][:cassettes]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:cassettes]).to eq({success: true, findings: []})
         expect(results[:success]).to be true  # Cassettes doesn't affect overall success
         expect(results[:total_issues]).to eq(0)
       end
 
       it "uses default threshold when not specified" do
-        default_options = { threshold: 51200 }
+        default_options = {threshold: 51200}
 
         expect(CodingAgentTools::Atoms::CodeQuality::CassettesValidator).to receive(:new)
           .with(default_options)
           .and_return(mock_cassettes_validator)
 
-        allow(mock_cassettes_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_cassettes_validator).to receive(:validate).and_return({success: true, findings: []})
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         cassettes_config = {}
         pipeline.send(:run_cassettes, cassettes_config, results)
       end
 
       it "uses custom threshold when specified" do
         custom_threshold = 102400
-        custom_options = { threshold: custom_threshold }
+        custom_options = {threshold: custom_threshold}
 
         expect(CodingAgentTools::Atoms::CodeQuality::CassettesValidator).to receive(:new)
           .with(custom_options)
           .and_return(mock_cassettes_validator)
 
-        allow(mock_cassettes_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_cassettes_validator).to receive(:validate).and_return({success: true, findings: []})
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        cassettes_config = { "threshold" => custom_threshold }
+        results = {success: true, linters: {}, total_issues: 0}
+        cassettes_config = {"threshold" => custom_threshold}
         pipeline.send(:run_cassettes, cassettes_config, results)
       end
 
       it "counts findings as issues but doesn't affect overall success" do
         allow(mock_cassettes_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Large cassette found" }]
+          findings: [{message: "Large cassette found"}]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        cassettes_config = { "threshold" => 51200 }
+        results = {success: true, linters: {}, total_issues: 0}
+        cassettes_config = {"threshold" => 51200}
         pipeline.send(:run_cassettes, cassettes_config, results)
 
         expect(results[:total_issues]).to eq(1)
@@ -473,8 +473,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
       it "handles validator exceptions" do
         allow(mock_cassettes_validator).to receive(:validate).and_raise(StandardError.new("Cassettes validation failed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
-        cassettes_config = { "threshold" => 51200 }
+        results = {success: true, linters: {}, total_issues: 0}
+        cassettes_config = {"threshold" => 51200}
         pipeline.send(:run_cassettes, cassettes_config, results)
 
         expect(results[:linters][:cassettes][:success]).to be false
@@ -491,9 +491,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
         allow(CodingAgentTools::Atoms::CodeQuality::SecurityValidator).to receive(:new).and_return(mock_security_validator)
 
         # StandardRB succeeds
-        allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
         # Security fails
-        allow(mock_security_validator).to receive(:validate).and_return({ success: false, findings: [] })
+        allow(mock_security_validator).to receive(:validate).and_return({success: false, findings: []})
       end
 
       it "continues running other linters when one fails" do
@@ -534,7 +534,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
           "ruby" => {
             "enabled" => true,
             "linters" => {
-              "standardrb" => { "enabled" => true }
+              "standardrb" => {"enabled" => true}
               # Only standardrb specified, others should use defaults
             }
           }
@@ -545,7 +545,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
 
       before do
         allow(CodingAgentTools::Atoms::CodeQuality::StandardRbValidator).to receive(:new).and_return(mock_standard_validator)
-        allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
       end
 
       it "only runs explicitly enabled linters" do
@@ -561,7 +561,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::RubyLintingPipeline do
   describe "result structure" do
     before do
       allow(CodingAgentTools::Atoms::CodeQuality::StandardRbValidator).to receive(:new).and_return(mock_standard_validator)
-      allow(mock_standard_validator).to receive(:validate).and_return({ success: true, findings: [] })
+      allow(mock_standard_validator).to receive(:validate).and_return({success: true, findings: []})
     end
 
     it "returns expected result structure" do

@@ -54,7 +54,7 @@ module CodingAgentTools
 
           # Try to infer from the first report
           inference_result = infer_session_path(report_paths.first)
-          
+
           if inference_result.has_session?
             File.join(inference_result.session_directory, "cr-report.md")
           else

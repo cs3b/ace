@@ -29,23 +29,20 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
   # Sample analysis result for mocking
   let(:sample_analysis_result) do
     # Create mock file objects with proper names
-    low_coverage_file = double("CoverageFile", 
-      relative_path: "lib/low_coverage.rb", 
-      coverage_percentage: 45.0
-    )
-    another_low_file = double("CoverageFile", 
-      relative_path: "lib/another_low.rb", 
-      coverage_percentage: 60.0
-    )
+    low_coverage_file = double("CoverageFile",
+      relative_path: "lib/low_coverage.rb",
+      coverage_percentage: 45.0)
+    another_low_file = double("CoverageFile",
+      relative_path: "lib/another_low.rb",
+      coverage_percentage: 60.0)
     example_file = double("CoverageFile",
-      relative_path: "lib/example.rb", 
+      relative_path: "lib/example.rb",
       coverage_percentage: 90.0,
       total_lines: 100,
       covered_lines: 90,
       uncovered_lines_count: 10,
       methods: [],
-      under_threshold?: false
-    )
+      under_threshold?: false)
 
     double(
       "AnalysisResult",
@@ -57,30 +54,29 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
       total_methods: 50,
       under_covered_methods: [],
       files: [example_file],
-      to_h: { status: "analyzed" }
+      to_h: {status: "analyzed"}
     )
   end
 
   let(:sample_undercovered_items) do
     {
       files: [
-        { file_path: "lib/low_coverage.rb", coverage: 45.0 }
+        {file_path: "lib/low_coverage.rb", coverage: 45.0}
       ],
-      urgency_breakdown: { high: 1, medium: 0, low: 0 },
+      urgency_breakdown: {high: 1, medium: 0, low: 0},
       recommendations: ["Focus on lib/low_coverage.rb first"]
     }
   end
 
   let(:sample_high_impact_files) do
-    critical_file = double("CoverageFile", 
-      relative_path: "lib/critical.rb", 
-      coverage_percentage: 30.0
-    )
+    critical_file = double("CoverageFile",
+      relative_path: "lib/critical.rb",
+      coverage_percentage: 30.0)
     [
       {
         file: critical_file,
         impact_score: 95,
-        effort_estimate: { effort_level: "medium" }
+        effort_estimate: {effort_level: "medium"}
       }
     ]
   end
@@ -114,7 +110,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     before do
       allow(mock_analyzer).to receive(:analyze_coverage).and_return(sample_analysis_result)
       allow(mock_extractor).to receive(:extract_undercovered_items).and_return(sample_undercovered_items)
-      allow(mock_analyzer).to receive(:generate_statistics).and_return({ total_methods: 50 })
+      allow(mock_analyzer).to receive(:generate_statistics).and_return({total_methods: 50})
       allow(mock_analyzer).to receive(:prioritize_critical_files).and_return([])
       allow(mock_extractor).to receive(:generate_testing_recommendations).and_return([])
     end
@@ -132,7 +128,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     end
 
     it "includes only requested sections" do
-      options = { sections: [:summary, :statistics] }
+      options = {sections: [:summary, :statistics]}
       allow(mock_analyzer).to receive(:analyze_coverage).with(sample_file_path, default_options.merge(options)).and_return(sample_analysis_result)
 
       result = generator_with_mocks.generate_comprehensive_report(sample_file_path, options)
@@ -168,7 +164,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     end
 
     it "includes priorities section when requested" do
-      options = { sections: [:priorities] }
+      options = {sections: [:priorities]}
       allow(mock_extractor).to receive(:find_high_impact_files).and_return(sample_high_impact_files)
       allow(mock_extractor).to receive(:generate_testing_recommendations).and_return([])
       allow(mock_analyzer).to receive(:analyze_coverage).with(sample_file_path, default_options.merge(options)).and_return(sample_analysis_result)
@@ -181,16 +177,15 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     context "when analysis result has no timestamp" do
       let(:result_without_timestamp) do
-        double("AnalysisResult", 
+        double("AnalysisResult",
           analysis_timestamp: nil,
-          threshold: 85.0
-        )
+          threshold: 85.0)
       end
 
       it "handles missing timestamp gracefully" do
         allow(mock_analyzer).to receive(:analyze_coverage).and_return(result_without_timestamp)
         allow(mock_extractor).to receive(:extract_undercovered_items).and_return(sample_undercovered_items)
-        
+
         expect { generator_with_mocks.generate_comprehensive_report(sample_file_path) }.to raise_error(NoMethodError)
       end
     end
@@ -275,8 +270,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     end
 
     it "generates reports in multiple formats" do
-      options = { formats: [:text, :json] }
-      
+      options = {formats: [:text, :json]}
+
       result = generator_with_mocks.generate_multi_format_reports(sample_file_path, temp_dir, options)
 
       expect(result).to have_key(:text)
@@ -286,19 +281,19 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     it "creates output directory if it doesn't exist" do
       non_existent_dir = File.join(temp_dir, "reports", "nested")
-      
+
       expect(Dir.exist?(non_existent_dir)).to be false
-      
+
       generator_with_mocks.generate_multi_format_reports(sample_file_path, non_existent_dir)
-      
+
       expect(Dir.exist?(non_existent_dir)).to be true
     end
 
     it "uses custom base name" do
-      options = { base_name: "custom_report" }
-      
+      options = {base_name: "custom_report"}
+
       generator_with_mocks.generate_multi_format_reports(sample_file_path, temp_dir, options)
-      
+
       expect(mock_analyzer).to have_received(:save_report).with(
         sample_analysis_result,
         File.join(temp_dir, "custom_report.txt"),
@@ -308,26 +303,26 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     end
 
     it "generates comprehensive report when requested" do
-      options = { include_comprehensive: true }
+      options = {include_comprehensive: true}
       allow(mock_extractor).to receive(:extract_undercovered_items).and_return(sample_undercovered_items)
       allow(mock_extractor).to receive(:generate_testing_recommendations).and_return([])
       allow(mock_analyzer).to receive(:prioritize_critical_files).and_return([])
-      
+
       result = generator_with_mocks.generate_multi_format_reports(sample_file_path, temp_dir, options)
-      
+
       expect(result).to have_key(:comprehensive)
       comprehensive_path = result[:comprehensive]
       expect(File.exist?(comprehensive_path)).to be true
-      
+
       content = JSON.parse(File.read(comprehensive_path))
       expect(content).to have_key("metadata")
     end
 
     it "handles CSV format" do
-      options = { formats: [:csv] }
-      
+      options = {formats: [:csv]}
+
       result = generator_with_mocks.generate_multi_format_reports(sample_file_path, temp_dir, options)
-      
+
       expect(result).to have_key(:csv)
       expect(mock_analyzer).to have_received(:save_report).with(
         sample_analysis_result,
@@ -338,11 +333,11 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     end
 
     it "uses provided analysis result" do
-      options = { formats: [:text] }
+      options = {formats: [:text]}
       provided_analysis = sample_analysis_result
-      
+
       generator_with_mocks.generate_multi_format_reports(sample_file_path, temp_dir, options, analysis_result: provided_analysis)
-      
+
       expect(mock_analyzer).not_to have_received(:analyze_coverage)
       expect(mock_analyzer).to have_received(:save_report).with(provided_analysis, anything, anything, anything)
     end
@@ -357,9 +352,9 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     it "generates focused report for specific patterns" do
       expected_options = hash_including(include_patterns: focus_patterns)
-      
+
       result = generator_with_mocks.generate_focused_report(sample_file_path, focus_patterns)
-      
+
       expect(mock_analyzer).to have_received(:analyze_coverage).with(sample_file_path, expected_options)
       expect(result).to have_key(:focus_area)
       expect(result).to have_key(:analysis)
@@ -368,7 +363,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     it "includes focus area information" do
       result = generator_with_mocks.generate_focused_report(sample_file_path, focus_patterns)
-      
+
       focus_area = result[:focus_area]
       expect(focus_area[:patterns]).to eq(focus_patterns)
       expect(focus_area[:files_found]).to eq(1) # Based on sample_analysis_result.files.length
@@ -377,7 +372,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     it "provides detailed breakdown for each file" do
       result = generator_with_mocks.generate_focused_report(sample_file_path, focus_patterns)
-      
+
       breakdown = result[:detailed_breakdown].first
       expect(breakdown).to have_key(:file_path)
       expect(breakdown).to have_key(:coverage_percentage)
@@ -388,7 +383,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
     it "includes lines breakdown with correct structure" do
       result = generator_with_mocks.generate_focused_report(sample_file_path, focus_patterns)
-      
+
       lines_breakdown = result[:detailed_breakdown].first[:lines_breakdown]
       expect(lines_breakdown).to have_key(:total)
       expect(lines_breakdown).to have_key(:covered)
@@ -400,7 +395,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     describe "#validate_report_options" do
       it "provides default values for missing options" do
         result = generator.send(:validate_report_options, {})
-        
+
         expect(result[:threshold]).to eq(85.0)
         expect(result[:sections]).to eq([:summary, :files, :recommendations])
         expect(result[:include_method_analysis]).to be false
@@ -420,9 +415,9 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
           base_name: "custom",
           include_comprehensive: true
         }
-        
+
         result = generator.send(:validate_report_options, custom_options)
-        
+
         expect(result[:threshold]).to eq(90.0)
         expect(result[:sections]).to eq([:summary])
         expect(result[:include_method_analysis]).to be true
@@ -436,7 +431,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     describe "#generate_actionable_recommendations" do
       it "provides recommendations when under-covered files exist" do
         recommendations = generator.send(:generate_actionable_recommendations, sample_analysis_result)
-        
+
         expect(recommendations).to be_an(Array)
         expect(recommendations).not_to be_empty
         expect(recommendations.first).to include("lib/low_coverage.rb")
@@ -448,25 +443,24 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
           under_covered_files: [],
           threshold: 85.0
         )
-        
+
         recommendations = generator.send(:generate_actionable_recommendations, good_analysis_result)
-        
+
         expect(recommendations.first).to include("consider raising the threshold")
       end
 
       it "identifies files with significant coverage gaps" do
-        low_coverage_file = double("CoverageFile", 
+        low_coverage_file = double("CoverageFile",
           coverage_percentage: 30.0,
-          relative_path: "lib/low_coverage_file.rb"
-        )
+          relative_path: "lib/low_coverage_file.rb")
         analysis_with_gaps = double(
           "AnalysisResult",
           under_covered_files: [low_coverage_file],
           threshold: 85.0
         )
-        
+
         recommendations = generator.send(:generate_actionable_recommendations, analysis_with_gaps)
-        
+
         expect(recommendations.any? { |r| r.include?("significant coverage gaps") }).to be true
       end
     end
@@ -500,7 +494,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     describe "#suggest_output_paths" do
       it "suggests multiple output formats" do
         suggestions = generator.send(:suggest_output_paths, "/tmp/report.json", sample_analysis_result)
-        
+
         expect(suggestions).to have_key(:detailed_report)
         expect(suggestions).to have_key(:summary_report)
         expect(suggestions).to have_key(:csv_export)
@@ -508,14 +502,14 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
       it "includes action plan when under-covered files exist" do
         suggestions = generator.send(:suggest_output_paths, "/tmp/report.json", sample_analysis_result)
-        
+
         expect(suggestions).to have_key(:action_plan)
       end
 
       it "excludes action plan when no under-covered files exist" do
         good_analysis = double("AnalysisResult", under_covered_files: [])
         suggestions = generator.send(:suggest_output_paths, "/tmp/report.json", good_analysis)
-        
+
         expect(suggestions).not_to have_key(:action_plan)
       end
     end
@@ -535,7 +529,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
           total_methods: 0,
           under_covered_methods: [],
           files: [],
-          to_h: { status: "empty" }
+          to_h: {status: "empty"}
         )
       end
 
@@ -543,7 +537,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
         allow(mock_analyzer).to receive(:analyze_coverage).and_return(empty_analysis_result)
         allow(mock_extractor).to receive(:extract_undercovered_items).and_return({
           files: [],
-          urgency_breakdown: { high: 0, medium: 0, low: 0 },
+          urgency_breakdown: {high: 0, medium: 0, low: 0},
           recommendations: []
         })
         allow(mock_extractor).to receive(:generate_testing_recommendations).and_return([])
@@ -552,14 +546,14 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
       it "handles empty analysis results gracefully" do
         result = generator_with_mocks.generate_comprehensive_report(sample_file_path)
-        
+
         expect(result[:summary][:files_analyzed]).to eq(0)
         expect(result[:summary][:overall_coverage]).to eq(0.0)
       end
 
       it "generates empty create-path report appropriately" do
         result = generator_with_mocks.generate_for_create_path(sample_file_path, sample_output_path)
-        
+
         expect(result[:action_required]).to be false
         expect(result[:critical_items]).to be_empty
       end
@@ -568,7 +562,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     context "with invalid file paths" do
       it "propagates file system errors" do
         allow(mock_analyzer).to receive(:analyze_coverage).and_raise(Errno::ENOENT, "File not found")
-        
+
         expect {
           generator_with_mocks.generate_comprehensive_report("/non/existent/file.json")
         }.to raise_error(Errno::ENOENT)
@@ -578,7 +572,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
     context "with permission issues" do
       it "handles permission errors for output directory" do
         allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::EACCES, "Permission denied")
-        
+
         expect {
           generator_with_mocks.generate_multi_format_reports(sample_file_path, "/root/reports")
         }.to raise_error(Errno::EACCES)
@@ -593,7 +587,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
       it "handles missing required fields" do
         allow(mock_analyzer).to receive(:analyze_coverage).and_return(malformed_analysis)
         allow(mock_extractor).to receive(:extract_undercovered_items).and_raise(NoMethodError, "undefined method for nil")
-        
+
         expect {
           generator_with_mocks.generate_comprehensive_report(sample_file_path)
         }.to raise_error(NoMethodError)
@@ -613,12 +607,12 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
 
       it "creates output directories as needed" do
         nested_dir = File.join(temp_dir, "reports", "coverage")
-        
+
         # This will fail with real components, but tests the directory creation logic
         expect {
           real_generator.generate_multi_format_reports(sample_file_path, nested_dir)
         }.to raise_error(StandardError) # Expected since we don't have real analysis data
-        
+
         expect(Dir.exist?(nested_dir)).to be true
       end
     end
@@ -630,10 +624,10 @@ RSpec.describe CodingAgentTools::Organisms::CoverageReportGenerator do
       end
 
       it "handles custom file extensions" do
-        options = { formats: [:xml, :yaml] }
-        
+        options = {formats: [:xml, :yaml]}
+
         result = generator_with_mocks.generate_multi_format_reports(sample_file_path, sample_output_dir, options)
-        
+
         expect(result).to have_key(:xml)
         expect(result).to have_key(:yaml)
       end

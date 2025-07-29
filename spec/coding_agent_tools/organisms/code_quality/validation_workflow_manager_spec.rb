@@ -6,7 +6,7 @@ require "fileutils"
 require "coding_agent_tools/organisms/code_quality/validation_workflow_manager"
 
 RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManager do
-  let(:config) { { validation_threshold: 100 } }
+  let(:config) { {validation_threshold: 100} }
   let(:manager) { described_class.new(config: config) }
   let(:temp_dir) { Dir.mktmpdir("validation_workflow_test") }
   let(:test_file_path) { File.join(temp_dir, "test_file.rb") }
@@ -105,7 +105,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "includes regression check in workflow" do
         result = manager.orchestrate_validation(linting_results, autofix_applied: true)
-        
+
         # Should have regression validation result
         regression_validations = result[:validations_passed] + result[:validations_failed]
         regression_found = regression_validations.any? { |v| v[:type] == "autofix_regression" }
@@ -233,7 +233,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
   end
 
   describe "#validate_file_integrity" do
-    let(:workflow) { { validations_passed: [], validations_failed: [] } }
+    let(:workflow) { {validations_passed: [], validations_failed: []} }
 
     context "with readable files" do
       let(:results_with_files) do
@@ -242,7 +242,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 1, message: "Issue" }
+                  {file: test_file_path, line: 1, message: "Issue"}
                 ]
               }
             }
@@ -256,7 +256,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "passes integrity check for readable files" do
         manager.send(:validate_file_integrity, results_with_files, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(type: "file_integrity", message: "All files passed integrity checks")
         )
@@ -271,7 +271,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 1, message: "Issue" }
+                  {file: test_file_path, line: 1, message: "Issue"}
                 ]
               }
             }
@@ -285,7 +285,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "detects empty files as integrity issues" do
         manager.send(:validate_file_integrity, results_with_empty_file, workflow)
-        
+
         expect(workflow[:validations_failed]).to include(
           hash_including(
             type: "file_integrity",
@@ -304,7 +304,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: non_existent_file, line: 1, message: "Issue" }
+                  {file: non_existent_file, line: 1, message: "Issue"}
                 ]
               }
             }
@@ -314,7 +314,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "skips non-existent files gracefully" do
         manager.send(:validate_file_integrity, results_with_missing_file, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(type: "file_integrity", message: "All files passed integrity checks")
         )
@@ -328,7 +328,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 1, message: "Issue" }
+                  {file: test_file_path, line: 1, message: "Issue"}
                 ]
               }
             }
@@ -338,16 +338,16 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       before do
         File.write(test_file_path, "content")
-        File.chmod(0000, test_file_path) # Make unreadable
+        File.chmod(0o000, test_file_path) # Make unreadable
       end
 
       after do
-        File.chmod(0644, test_file_path) # Restore permissions for cleanup
+        File.chmod(0o644, test_file_path) # Restore permissions for cleanup
       end
 
       it "detects unreadable files as integrity issues" do
         manager.send(:validate_file_integrity, results_with_unreadable_file, workflow)
-        
+
         expect(workflow[:validations_failed]).to include(
           hash_including(
             type: "file_integrity",
@@ -360,7 +360,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
   end
 
   describe "#check_linter_consistency" do
-    let(:workflow) { { validations_passed: [], validations_failed: [] } }
+    let(:workflow) { {validations_passed: [], validations_failed: []} }
 
     context "with consistent linter results" do
       let(:consistent_results) do
@@ -369,12 +369,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 10, message: "Style issue" }
+                  {file: test_file_path, line: 10, message: "Style issue"}
                 ]
               },
               standardrb: {
                 findings: [
-                  { file: test_file_path, line: 20, message: "Different issue" }
+                  {file: test_file_path, line: 20, message: "Different issue"}
                 ]
               }
             }
@@ -384,7 +384,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "passes consistency check" do
         manager.send(:check_linter_consistency, consistent_results, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(type: "linter_consistency", message: "Linters are consistent")
         )
@@ -398,12 +398,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 10, message: "Add space" }
+                  {file: test_file_path, line: 10, message: "Add space"}
                 ]
               },
               standardrb: {
                 findings: [
-                  { file: test_file_path, line: 10, message: "Remove space" }
+                  {file: test_file_path, line: 10, message: "Remove space"}
                 ]
               }
             }
@@ -417,7 +417,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "detects inconsistencies" do
         manager.send(:check_linter_consistency, contradictory_results, workflow)
-        
+
         expect(workflow[:validations_failed]).to include(
           hash_including(
             type: "linter_consistency",
@@ -433,7 +433,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "handles empty results gracefully" do
         manager.send(:check_linter_consistency, empty_results, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(type: "linter_consistency", message: "Linters are consistent")
         )
@@ -445,8 +445,8 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
     context "with different messages on same line" do
       let(:contradictory_issues) do
         [
-          { linter: :rubocop, issue: { line: 10, message: "Add space" } },
-          { linter: :standardrb, issue: { line: 10, message: "Remove space" } }
+          {linter: :rubocop, issue: {line: 10, message: "Add space"}},
+          {linter: :standardrb, issue: {line: 10, message: "Remove space"}}
         ]
       end
 
@@ -458,8 +458,8 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
     context "with same messages on same line" do
       let(:same_issues) do
         [
-          { linter: :rubocop, issue: { line: 10, message: "Style issue" } },
-          { linter: :standardrb, issue: { line: 10, message: "Style issue" } }
+          {linter: :rubocop, issue: {line: 10, message: "Style issue"}},
+          {linter: :standardrb, issue: {line: 10, message: "Style issue"}}
         ]
       end
 
@@ -470,7 +470,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     context "with single issue" do
       let(:single_issue) do
-        [{ linter: :rubocop, issue: { line: 10, message: "Style issue" } }]
+        [{linter: :rubocop, issue: {line: 10, message: "Style issue"}}]
       end
 
       it "does not detect contradictions" do
@@ -488,16 +488,16 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
   end
 
   describe "#check_autofix_regressions" do
-    let(:workflow) { { validations_passed: [], validations_failed: [] } }
+    let(:workflow) { {validations_passed: [], validations_failed: []} }
 
     context "with no new issues after autofix" do
       let(:results_no_issues) do
-        { ruby: { total_issues: 0 }, markdown: { total_issues: 0 } }
+        {ruby: {total_issues: 0}, markdown: {total_issues: 0}}
       end
 
       it "passes regression check" do
         manager.send(:check_autofix_regressions, results_no_issues, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(
             type: "autofix_regression",
@@ -509,12 +509,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     context "with new issues after autofix" do
       let(:results_with_issues) do
-        { ruby: { total_issues: 5 }, markdown: { total_issues: 3 } }
+        {ruby: {total_issues: 5}, markdown: {total_issues: 3}}
       end
 
       it "detects regressions" do
         manager.send(:check_autofix_regressions, results_with_issues, workflow)
-        
+
         expect(workflow[:validations_failed]).to include(
           hash_including(
             type: "autofix_regression",
@@ -527,12 +527,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     context "with missing total_issues" do
       let(:results_missing_totals) do
-        { ruby: {}, markdown: {} }
+        {ruby: {}, markdown: {}}
       end
 
       it "handles missing totals gracefully" do
         manager.send(:check_autofix_regressions, results_missing_totals, workflow)
-        
+
         expect(workflow[:validations_passed]).to include(
           hash_including(
             type: "autofix_regression",
@@ -544,16 +544,16 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
   end
 
   describe "#generate_recommendations" do
-    let(:workflow) { { recommendations: [] } }
+    let(:workflow) { {recommendations: []} }
 
     context "with high issue count" do
       let(:high_issue_results) do
-        { ruby: { total_issues: 150 }, markdown: { total_issues: 50 } }
+        {ruby: {total_issues: 150}, markdown: {total_issues: 50}}
       end
 
       it "recommends incremental fixing" do
         manager.send(:generate_recommendations, high_issue_results, workflow)
-        
+
         expect(workflow[:recommendations]).to include(
           hash_including(
             priority: "high",
@@ -571,7 +571,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               security: {
                 findings: [
-                  { file: test_file_path, message: "SQL injection vulnerability" }
+                  {file: test_file_path, message: "SQL injection vulnerability"}
                 ]
               }
             }
@@ -581,7 +581,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "recommends fixing security issues first" do
         manager.send(:generate_recommendations, security_results, workflow)
-        
+
         expect(workflow[:recommendations]).to include(
           hash_including(
             priority: "critical",
@@ -599,7 +599,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               link_validation: {
                 findings: [
-                  { file: "#{temp_dir}/test.md", message: "Broken link" }
+                  {file: "#{temp_dir}/test.md", message: "Broken link"}
                 ]
               }
             }
@@ -609,7 +609,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "recommends fixing broken links" do
         manager.send(:generate_recommendations, broken_link_results, workflow)
-        
+
         expect(workflow[:recommendations]).to include(
           hash_including(
             priority: "medium",
@@ -621,24 +621,24 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     context "with low issue count and no special issues" do
       let(:low_issue_results) do
-        { ruby: { total_issues: 5 }, markdown: { total_issues: 2 } }
+        {ruby: {total_issues: 5}, markdown: {total_issues: 2}}
       end
 
       it "generates no recommendations" do
         manager.send(:generate_recommendations, low_issue_results, workflow)
-        
+
         expect(workflow[:recommendations]).to be_empty
       end
     end
 
     context "with exactly 100 issues" do
       let(:boundary_results) do
-        { ruby: { total_issues: 100 }, markdown: { total_issues: 0 } }
+        {ruby: {total_issues: 100}, markdown: {total_issues: 0}}
       end
 
       it "does not recommend incremental fixing at boundary" do
         manager.send(:generate_recommendations, boundary_results, workflow)
-        
+
         incremental_rec = workflow[:recommendations].find do |rec|
           rec[:message].include?("incremental")
         end
@@ -648,12 +648,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     context "with 101 issues" do
       let(:over_boundary_results) do
-        { ruby: { total_issues: 101 }, markdown: { total_issues: 0 } }
+        {ruby: {total_issues: 101}, markdown: {total_issues: 0}}
       end
 
       it "recommends incremental fixing just over boundary" do
         manager.send(:generate_recommendations, over_boundary_results, workflow)
-        
+
         expect(workflow[:recommendations]).to include(
           hash_including(
             priority: "high",
@@ -671,13 +671,13 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
           linters: {
             rubocop: {
               findings: [
-                { file: test_file_path, line: 1, message: "Issue 1" },
-                { file: test_file_path, line: 2, message: "Issue 2" }
+                {file: test_file_path, line: 1, message: "Issue 1"},
+                {file: test_file_path, line: 2, message: "Issue 2"}
               ]
             },
             standardrb: {
               findings: [
-                { file: "#{temp_dir}/other.rb", line: 1, message: "Issue 3" }
+                {file: "#{temp_dir}/other.rb", line: 1, message: "Issue 3"}
               ]
             }
           }
@@ -686,7 +686,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
           linters: {
             markdownlint: {
               findings: [
-                { file: "#{temp_dir}/test.md", line: 1, message: "Issue 4" }
+                {file: "#{temp_dir}/test.md", line: 1, message: "Issue 4"}
               ]
             }
           }
@@ -696,7 +696,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
     it "extracts unique files from all linter results" do
       files = manager.send(:extract_all_files, results_with_files)
-      
+
       expect(files).to contain_exactly(
         test_file_path,
         "#{temp_dir}/other.rb",
@@ -711,8 +711,8 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { file: test_file_path, line: 1, message: "Issue 1" },
-                  { file: test_file_path, line: 2, message: "Issue 2" }
+                  {file: test_file_path, line: 1, message: "Issue 1"},
+                  {file: test_file_path, line: 2, message: "Issue 2"}
                 ]
               }
             }
@@ -722,7 +722,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "returns unique files only" do
         files = manager.send(:extract_all_files, results_with_duplicates)
-        
+
         expect(files).to eq([test_file_path])
         expect(files.size).to eq(1)
       end
@@ -735,7 +735,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               rubocop: {
                 findings: [
-                  { line: 1, message: "Issue without file" }
+                  {line: 1, message: "Issue without file"}
                 ]
               }
             }
@@ -745,7 +745,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "handles missing file keys gracefully" do
         files = manager.send(:extract_all_files, results_missing_files)
-        
+
         expect(files).to be_empty
       end
     end
@@ -755,7 +755,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "handles empty results gracefully" do
         files = manager.send(:extract_all_files, empty_results)
-        
+
         expect(files).to be_empty
       end
     end
@@ -763,35 +763,35 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
   describe "#count_total_issues" do
     let(:results_with_totals) do
-      { ruby: { total_issues: 25 }, markdown: { total_issues: 15 } }
+      {ruby: {total_issues: 25}, markdown: {total_issues: 15}}
     end
 
     it "sums total issues across all languages" do
       count = manager.send(:count_total_issues, results_with_totals)
-      
+
       expect(count).to eq(40)
     end
 
     context "with missing total_issues" do
       let(:results_missing_totals) do
-        { ruby: {}, markdown: {} }
+        {ruby: {}, markdown: {}}
       end
 
       it "handles missing totals gracefully" do
         count = manager.send(:count_total_issues, results_missing_totals)
-        
+
         expect(count).to eq(0)
       end
     end
 
     context "with partial missing totals" do
       let(:results_partial_totals) do
-        { ruby: { total_issues: 10 }, markdown: {} }
+        {ruby: {total_issues: 10}, markdown: {}}
       end
 
       it "handles partial missing totals" do
         count = manager.send(:count_total_issues, results_partial_totals)
-        
+
         expect(count).to eq(10)
       end
     end
@@ -801,7 +801,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       it "handles missing language sections" do
         count = manager.send(:count_total_issues, results_missing_sections)
-        
+
         expect(count).to eq(0)
       end
     end
@@ -815,7 +815,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               security: {
                 findings: [
-                  { file: test_file_path, message: "SQL injection" }
+                  {file: test_file_path, message: "SQL injection"}
                 ]
               }
             }
@@ -833,7 +833,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
         {
           ruby: {
             linters: {
-              security: { findings: [] }
+              security: {findings: []}
             }
           }
         }
@@ -849,7 +849,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
         {
           ruby: {
             linters: {
-              rubocop: { findings: [] }
+              rubocop: {findings: []}
             }
           }
         }
@@ -861,7 +861,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
     end
 
     context "with missing ruby section" do
-      let(:results_no_ruby) { { markdown: {} } }
+      let(:results_no_ruby) { {markdown: {}} }
 
       it "returns false when ruby section missing" do
         expect(manager.send(:has_security_issues?, results_no_ruby)).to be_falsy
@@ -877,7 +877,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
             linters: {
               link_validation: {
                 findings: [
-                  { file: "#{temp_dir}/test.md", message: "Broken link to example.com" }
+                  {file: "#{temp_dir}/test.md", message: "Broken link to example.com"}
                 ]
               }
             }
@@ -895,7 +895,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
         {
           markdown: {
             linters: {
-              link_validation: { findings: [] }
+              link_validation: {findings: []}
             }
           }
         }
@@ -911,7 +911,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
         {
           markdown: {
             linters: {
-              markdownlint: { findings: [] }
+              markdownlint: {findings: []}
             }
           }
         }
@@ -923,7 +923,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
     end
 
     context "with missing markdown section" do
-      let(:results_no_markdown) { { ruby: {} } }
+      let(:results_no_markdown) { {ruby: {}} }
 
       it "returns false when markdown section missing" do
         expect(manager.send(:has_broken_links?, results_no_markdown)).to be_falsy
@@ -993,12 +993,12 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::ValidationWorkflowManag
 
       # Should have file integrity validation
       integrity_validations = (result[:validations_passed] + result[:validations_failed])
-                               .select { |v| v[:type] == "file_integrity" }
+        .select { |v| v[:type] == "file_integrity" }
       expect(integrity_validations).not_to be_empty
 
       # Should have autofix regression check (since autofix_applied: true)
       regression_validations = (result[:validations_passed] + result[:validations_failed])
-                                .select { |v| v[:type] == "autofix_regression" }
+        .select { |v| v[:type] == "autofix_regression" }
       expect(regression_validations).not_to be_empty
 
       # Should have recommendations due to high issue count, security issues, and broken links

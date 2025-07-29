@@ -61,7 +61,6 @@ module CodingAgentTools
               else
                 handle_full_analysis(workflow, input_file, workflow_options)
               end
-
             rescue => error
               handle_error(error, input_file)
               exit(1)
@@ -73,10 +72,10 @@ module CodingAgentTools
           def prepare_workflow_options(options)
             # Determine report format (verbose takes precedence over compact if both are specified)
             report_format = if options[:verbose]
-                             :verbose
-                           else
-                             :compact
-                           end
+              :verbose
+            else
+              :compact
+            end
 
             # Parse threshold option
             threshold_value, adaptive_mode = parse_threshold_option(options[:threshold])
@@ -98,15 +97,15 @@ module CodingAgentTools
 
           def parse_comma_separated(value)
             return [] if value.nil? || value.empty?
-            value.split(',').map(&:strip).reject(&:empty?)
+            value.split(",").map(&:strip).reject(&:empty?)
           end
 
           def parse_threshold_option(threshold_value)
             # Handle nil or empty values
             return [85.0, true] if threshold_value.nil?
-            
+
             case threshold_value.to_s.downcase
-            when 'auto', ''
+            when "auto", ""
               # Use adaptive threshold detection with default fallback
               [85.0, true]
             else
@@ -142,7 +141,7 @@ module CodingAgentTools
 
           def handle_focused_analysis(workflow, input_file, focus_patterns, options)
             patterns = parse_comma_separated(focus_patterns)
-            puts "🎯 Executing focused analysis on: #{patterns.join(', ')}"
+            puts "🎯 Executing focused analysis on: #{patterns.join(", ")}"
             puts
 
             result = workflow.execute_focused_analysis(input_file, patterns, options)
@@ -167,7 +166,7 @@ module CodingAgentTools
           def display_validation_results(validation)
             puts "📋 File Validation Results:"
             puts "  Status: ✅ Valid SimpleCov file"
-            puts "  Frameworks: #{validation[:frameworks_detected].join(', ')}"
+            puts "  Frameworks: #{validation[:frameworks_detected].join(", ")}"
             puts "  Total files: #{validation[:total_files]}"
             puts "  Library files: #{validation[:lib_files]}"
             puts "  Test files: #{validation[:test_files]}"
@@ -179,15 +178,15 @@ module CodingAgentTools
             puts "  Suggested threshold: #{recommendations[:suggested_threshold]}%"
             puts "  Recommended approach: #{recommendations[:recommended_focus]}"
             puts "  Estimated time: #{recommendations[:estimated_analysis_time]}"
-            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(', ')}"
+            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(", ")}"
             puts
           end
 
           def display_workflow_suggestions(suggestions)
             puts "⚙️  Workflow Suggestions:"
-            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? '✅' : '❌'}"
-            puts "  Enable create-path: #{suggestions[:enable_create_path] ? '✅' : '❌'}"
-            
+            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? "✅" : "❌"}"
+            puts "  Enable create-path: #{suggestions[:enable_create_path] ? "✅" : "❌"}"
+
             if suggestions[:focus_patterns]
               puts "  Suggested focus patterns:"
               suggestions[:focus_patterns].each { |pattern| puts "    - #{pattern}" }
@@ -221,7 +220,7 @@ module CodingAgentTools
             summary = result[:summary]
 
             puts "🎯 Focused Analysis Results:"
-            puts "  Focus patterns: #{focus_area.join(', ')}"
+            puts "  Focus patterns: #{focus_area.join(", ")}"
             puts "  Files found: #{summary[:files_found]}"
             puts "  Files under threshold: #{summary[:files_under_threshold]}"
             puts
@@ -273,7 +272,7 @@ module CodingAgentTools
               create_path = result[:create_path_results]
               puts "🔗 Create-Path Integration:"
               puts "  Output file: #{create_path[:output_file]}"
-              puts "  Action required: #{create_path[:action_required] ? '✅' : '❌'}"
+              puts "  Action required: #{create_path[:action_required] ? "✅" : "❌"}"
               puts "  Critical items: #{create_path[:critical_items_count]}"
               puts
             end
@@ -282,31 +281,31 @@ module CodingAgentTools
           end
 
           def display_workflow_error(error)
-            $stderr.puts "❌ Analysis failed:"
-            $stderr.puts "  Error: #{error[:type]} - #{error[:message]}"
+            warn "❌ Analysis failed:"
+            warn "  Error: #{error[:type]} - #{error[:message]}"
             $stderr.puts
 
             if error[:suggestions]
-              $stderr.puts "💡 Suggestions:"
-              error[:suggestions].each { |suggestion| $stderr.puts "  • #{suggestion}" }
+              warn "💡 Suggestions:"
+              error[:suggestions].each { |suggestion| warn "  • #{suggestion}" }
             end
           end
 
           def handle_error(error, input_file)
-            $stderr.puts "❌ Error analyzing coverage:"
-            $stderr.puts "  File: #{input_file}"
-            $stderr.puts "  Error: #{error.class.name} - #{error.message}"
+            warn "❌ Error analyzing coverage:"
+            warn "  File: #{input_file}"
+            warn "  Error: #{error.class.name} - #{error.message}"
             $stderr.puts
 
             case error
             when Errno::ENOENT
-              $stderr.puts "💡 The input file was not found. Please check the file path."
+              warn "💡 The input file was not found. Please check the file path."
             when JSON::ParserError
-              $stderr.puts "💡 The input file is not valid JSON. Please ensure it's a proper SimpleCov file."
+              warn "💡 The input file is not valid JSON. Please ensure it's a proper SimpleCov file."
             when ArgumentError
-              $stderr.puts "💡 Please check your command-line arguments and try again."
+              warn "💡 Please check your command-line arguments and try again."
             else
-              $stderr.puts "💡 Please check file permissions and paths, then try again."
+              warn "💡 Please check file permissions and paths, then try again."
             end
           end
 

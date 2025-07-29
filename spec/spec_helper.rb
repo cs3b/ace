@@ -56,23 +56,23 @@ require_relative "support/shared_examples/client_behavior"
 # Helper method for safe directory cleanup to prevent getcwd errors
 def safe_directory_cleanup(temp_dir)
   return unless temp_dir && File.exist?(temp_dir)
-  
+
   # Ensure we're not inside the directory we're about to delete
   original_dir = Dir.pwd
   if original_dir.start_with?(File.realpath(temp_dir))
     # Move to a safe directory (parent of temp dir or project root)
     safe_dir = File.dirname(temp_dir)
-    safe_dir = ENV['PROJECT_ROOT'] || Dir.home if !Dir.exist?(safe_dir)
+    safe_dir = ENV["PROJECT_ROOT"] || Dir.home if !Dir.exist?(safe_dir)
     Dir.chdir(safe_dir) if Dir.exist?(safe_dir)
   end
-  
+
   # Remove the directory
   FileUtils.remove_entry(temp_dir)
 rescue Errno::ENOENT, Errno::ENOTDIR
   # Directory already removed or doesn't exist
 rescue => e
   # Log but don't fail on cleanup errors
-  warn "Warning: Failed to cleanup directory #{temp_dir}: #{e.message}" unless ENV['CI']
+  warn "Warning: Failed to cleanup directory #{temp_dir}: #{e.message}" unless ENV["CI"]
 end
 
 RSpec.configure do |config|
@@ -98,7 +98,7 @@ RSpec.configure do |config|
   # Silence application output during tests
   config.before(:example) do |example|
     # Allow verbose output for specific tests or when debugging
-    next if example.metadata[:verbose] || ENV['VERBOSE'] == 'true' || ENV['DEBUG'] == 'true'
+    next if example.metadata[:verbose] || ENV["VERBOSE"] == "true" || ENV["DEBUG"] == "true"
 
     # Suppress all command output by default
     allow($stdout).to receive(:puts)
@@ -114,7 +114,7 @@ RSpec.configure do |config|
   # Additional RSpec best practices configuration
   config.order = :random  # Run specs in random order to surface order dependencies
   config.warnings = false  # Suppress Ruby warnings during tests
-  config.profile_examples = 5 if ENV['PROFILE'] == 'true'  # Show slowest examples when profiling
+  config.profile_examples = 5 if ENV["PROFILE"] == "true"  # Show slowest examples when profiling
 
   # Prevent environment variable leakage, output pollution, and working directory changes between examples
   config.around do |example|
@@ -135,8 +135,8 @@ RSpec.configure do |config|
 
     # Capture stdout/stderr to prevent test output pollution
     # unless running with DEBUG=true or specific verbose flags
-    unless ENV['DEBUG'] == 'true' || ENV['VERBOSE'] == 'true' || example.metadata[:verbose]
-      require 'stringio'
+    unless ENV["DEBUG"] == "true" || ENV["VERBOSE"] == "true" || example.metadata[:verbose]
+      require "stringio"
       $stdout = StringIO.new
       $stderr = StringIO.new
     end
@@ -149,7 +149,7 @@ RSpec.configure do |config|
 
     # Restore environment and working directory
     ENV.replace(original_env)
-    
+
     # Safely restore working directory - only if original directory still exists
     # and we're not already in it
     if Dir.pwd != original_dir && Dir.exist?(original_dir)
@@ -178,9 +178,9 @@ RSpec.configure do |config|
   config.after(:suite) do
     # Ensure we're in a safe directory before final cleanup
     begin
-      safe_dir = ENV['PROJECT_ROOT'] || File.expand_path("../../..", __dir__)
+      safe_dir = ENV["PROJECT_ROOT"] || File.expand_path("../../..", __dir__)
       Dir.chdir(safe_dir) if Dir.exist?(safe_dir) && Dir.pwd != safe_dir
-    rescue => e
+    rescue
       # Ignore errors during final directory cleanup
     end
 

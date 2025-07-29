@@ -117,13 +117,11 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
 
       it "captures stderr output in GitCommandError" do
         Dir.chdir(temp_dir) do
-          begin
-            executor.execute("invalid-command")
-          rescue CodingAgentTools::Atoms::Git::GitCommandError => e
-            expect(e.stderr_output).to include("invalid-command")
-            expect(e.exit_status).not_to eq(0)
-            expect(e.command).to include("git invalid-command")
-          end
+          executor.execute("invalid-command")
+        rescue CodingAgentTools::Atoms::Git::GitCommandError => e
+          expect(e.stderr_output).to include("invalid-command")
+          expect(e.exit_status).not_to eq(0)
+          expect(e.command).to include("git invalid-command")
         end
       end
     end
@@ -177,7 +175,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
 
       it "raises error for non-existent repository path" do
         invalid_executor = described_class.new(repository_path: "/non/existent/path")
-        
+
         expect { invalid_executor.execute("status") }.to raise_error(
           CodingAgentTools::Atoms::Git::GitCommandError,
           /Repository path not found/
@@ -385,7 +383,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
       it "handles failed system commands" do
         # Mock system to return false (failure)
         allow(executor).to receive(:system).and_return(false)
-        
+
         # Mock $? to simulate exit status
         process_status = double(exitstatus: 1)
         allow($?).to receive(:exitstatus).and_return(1)
@@ -441,7 +439,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
       it "handles commands when PATH is modified" do
         # Temporarily modify PATH to test PATH resolution
         ENV["PATH"] = "/usr/bin:/bin"
-        
+
         Dir.chdir(temp_dir) do
           result = executor.execute("--version")
           expect(result[:success]).to be true
@@ -490,29 +488,37 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
         # Create a read-only directory (if possible on current platform)
         readonly_dir = File.join(temp_dir, "readonly")
         FileUtils.mkdir_p(readonly_dir)
-        
+
         begin
           skip "Cannot create readonly directory" unless File.exist?(readonly_dir)
-          FileUtils.chmod(0444, readonly_dir)
+          FileUtils.chmod(0o444, readonly_dir)
           readonly_executor = described_class.new(repository_path: readonly_dir)
-          
+
           expect { readonly_executor.execute("status") }.to raise_error(
             CodingAgentTools::Atoms::Git::GitCommandError
           )
         ensure
-          FileUtils.chmod(0755, readonly_dir) rescue nil
-          FileUtils.rm_rf(readonly_dir) rescue nil
+          begin
+            FileUtils.chmod(0o755, readonly_dir)
+          rescue
+            nil
+          end
+          begin
+            FileUtils.rm_rf(readonly_dir)
+          rescue
+            nil
+          end
         end
       end
 
       it "handles symbolic links in repository path" do
         if File.respond_to?(:symlink) # Check if platform supports symlinks
           symlink_path = File.join(File.dirname(temp_dir), "repo_symlink")
-          
+
           begin
             File.symlink(temp_dir, symlink_path)
             symlink_executor = described_class.new(repository_path: symlink_path)
-            
+
             result = symlink_executor.execute("status --porcelain")
             expect(result[:success]).to be true
           rescue NotImplementedError
@@ -531,7 +537,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
       it "properly constructs git commands with repository path" do
         executor_with_path = described_class.new(repository_path: temp_dir)
         command = executor_with_path.send(:build_command, "log --oneline")
-        
+
         expect(command).to start_with("git -C")
         expect(command).to include(temp_dir)
         expect(command).to end_with("log --oneline")
@@ -546,7 +552,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
 
         special_executor = described_class.new(repository_path: special_chars_dir)
         command = special_executor.send(:build_command, "status")
-        
+
         # Should be properly escaped
         expect(command).to include("\\$")
         expect(command).to include("\\&")
@@ -589,7 +595,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
         # Create both local and project-root-relative directories
         local_dir = "local_test"
         FileUtils.mkdir_p(File.join(temp_dir, local_dir))
-        
+
         project_root_dir = File.join(File.dirname(temp_dir), local_dir)
         FileUtils.mkdir_p(project_root_dir)
 
@@ -609,13 +615,13 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
   describe "performance considerations" do
     it "executes multiple commands efficiently" do
       start_time = Time.now
-      
+
       10.times do
         Dir.chdir(temp_dir) do
           executor.execute("status --porcelain")
         end
       end
-      
+
       end_time = Time.now
       expect(end_time - start_time).to be < 5.0 # Should be reasonably fast
     end
@@ -623,11 +629,11 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
     it "handles large output efficiently" do
       # Create a commit with a large message
       large_message = "Large commit message: " + ("test " * 1000)
-      
+
       Dir.chdir(temp_dir) do
         executor.execute("commit --allow-empty -m '#{large_message}'")
         result = executor.execute("log -1 --pretty=format:%B")
-        
+
         expect(result[:stdout]).to include("Large commit message")
         expect(result[:stdout].length).to be > 5000
       end

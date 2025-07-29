@@ -50,34 +50,34 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       detector_class = double("ProjectRootDetector")
       allow(detector_class).to receive(:find_project_root).and_return("/debug/root")
       stub_const("CodingAgentTools::Atoms::ProjectRootDetector", detector_class)
-      
+
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("DEBUG").and_return("1")
-      
+
       expect { described_class.new }.to output(/Project root detected via ProjectRootDetector/).to_stdout
     end
 
     it "handles require fallback gracefully" do
       # Hide the constant
       hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-      
+
       # Mock manual detection fallback
       allow(Pathname).to receive(:pwd).and_return(Pathname.new(temp_dir))
       File.write(File.join(temp_dir, ".git"), "gitdir: /path/to/git")
-      
+
       resolver = described_class.new
       expect(resolver.project_root).to eq(temp_dir)
     end
 
     it "handles LoadError during require gracefully" do
       hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-      
+
       # Mock require to fail and manual detection
       allow_any_instance_of(described_class).to receive(:require_relative).and_raise(LoadError, "cannot load file")
       allow(Pathname).to receive(:pwd).and_return(Pathname.new(temp_dir))
       allow(Dir).to receive(:pwd).and_return(temp_dir)
       File.write(File.join(temp_dir, "Gemfile"), "# gemfile")
-      
+
       resolver = described_class.new
       expect(resolver.project_root).to eq(temp_dir)
     end
@@ -204,7 +204,6 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
           result = resolver.resolve("link_to_src/file.rb")
           expect(File.exist?(result)).to be true
-
         rescue NotImplementedError
           skip "Symlinks not supported on this platform"
         end
@@ -255,7 +254,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       # Create a path that might cause ArgumentError in relative_path_from
       external_path = "/completely/different/root/file.txt"
       result = resolver.relative_to_root(external_path)
-      
+
       # Should return absolute path or a relative path - depends on implementation
       expect(result).to be_a(String)
     end
@@ -263,14 +262,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles parent directory references" do
       parent_path = File.join(temp_dir, "..", File.basename(temp_dir), "src", "file.rb")
       result = resolver.relative_to_root(parent_path)
-      
+
       expect(result).to include("src/file.rb")
     end
 
     it "handles current directory references" do
       current_ref_path = File.join(temp_dir, ".", "src", "file.rb")
       result = resolver.relative_to_root(current_ref_path)
-      
+
       expect(result).to eq("src/file.rb")
     end
 
@@ -280,10 +279,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       begin
         link_path = File.join(temp_dir, "link_to_nested")
         File.symlink(File.join(temp_dir, "nested"), link_path)
-        
+
         linked_file_path = File.join(link_path, "deep", "file.txt")
         result = resolver.relative_to_root(linked_file_path)
-        
+
         expect(result).to be_a(String)
       rescue NotImplementedError
         skip "Symlinks not supported on this platform"
@@ -293,7 +292,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles Unicode paths correctly" do
       unicode_path = File.join(temp_dir, "пуъть", "файл.txt")
       result = resolver.relative_to_root(unicode_path)
-      
+
       expect(result).to eq("пуъть/файл.txt")
     end
   end
@@ -326,7 +325,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "prevents path traversal attacks" do
       traversal_path = File.join(temp_dir, "..", "..", "etc", "passwd")
       result = resolver.in_project?(traversal_path)
-      
+
       # Should be false unless the traversal actually ends up in project
       expect(result).to be false
     end
@@ -343,16 +342,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
         # Create symlink within project
         link_path = File.join(temp_dir, "link_to_src")
         File.symlink(File.join(temp_dir, "src"), link_path)
-        
+
         expect(resolver.in_project?(link_path)).to be true
-        
+
         # Create symlink outside project
         external_dir = Dir.mktmpdir("external_test")
         external_link = File.join(temp_dir, "external_link")
         File.symlink(external_dir, external_link)
-        
+
         expect(resolver.in_project?(external_link)).to be true # The link itself is in project
-        
+
         FileUtils.rm_rf(external_dir)
       rescue NotImplementedError
         skip "Symlinks not supported on this platform"
@@ -360,7 +359,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     end
 
     it "handles very deeply nested paths" do
-      deep_path = File.join(temp_dir, *Array.new(20) { "level" })
+      deep_path = File.join(temp_dir, Array.new(20) { "level" })
       expect(resolver.in_project?(deep_path)).to be true
     end
 
@@ -468,7 +467,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       # Create deep nested structure
       deep_path = File.join(test_project_dir, "level1", "level2", "level3")
       FileUtils.mkdir_p(deep_path)
-      
+
       # Put marker at top level
       File.write(File.join(test_project_dir, ".git"), "gitdir: /path/to/git")
 
@@ -489,7 +488,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
           # Hide ProjectRootDetector to force manual detection
           hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
           allow_any_instance_of(described_class).to receive(:require_relative).and_raise(LoadError)
-          
+
           resolver = described_class.new
           # Should fall back to current directory (handle symlink resolution)
           expect(File.realpath(resolver.project_root)).to eq(File.realpath(deep_empty_path))
@@ -501,7 +500,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "handles require with exception other than LoadError" do
       hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-      
+
       # Mock require to fail with StandardError
       allow_any_instance_of(described_class).to receive(:require_relative).and_raise(StandardError, "some other error")
       allow(Pathname).to receive(:pwd).and_return(Pathname.new(temp_dir))
@@ -514,28 +513,28 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "outputs debug messages for require fallback when DEBUG is set" do
       hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-      
+
       allow_any_instance_of(described_class).to receive(:require_relative).and_return(true)
       detector_class = double("ProjectRootDetector")
       allow(detector_class).to receive(:find_project_root).and_return("/required/root")
       stub_const("CodingAgentTools::Atoms::ProjectRootDetector", detector_class)
-      
+
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("DEBUG").and_return("1")
-      
+
       expect { described_class.new }.to output(/Project root detected via ProjectRootDetector/).to_stdout
     end
 
     it "outputs debug messages for failed require when DEBUG is set" do
       hide_const("CodingAgentTools::Atoms::ProjectRootDetector") if defined?(CodingAgentTools::Atoms::ProjectRootDetector)
-      
+
       allow_any_instance_of(described_class).to receive(:require_relative).and_raise(LoadError, "test error")
       allow(Pathname).to receive(:pwd).and_return(Pathname.new(temp_dir))
       allow(Dir).to receive(:pwd).and_return(temp_dir)
-      
+
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("DEBUG").and_return("1")
-      
+
       expect { described_class.new }.to output(/Could not load ProjectRootDetector/).to_stdout
     end
   end
@@ -543,7 +542,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
   describe "integration scenarios" do
     before do
       # Set up a realistic project structure (avoiding conflicts with existing setup)
-      %w[lib bin].each { |dir| 
+      %w[lib bin].each { |dir|
         FileUtils.mkdir_p(File.join(temp_dir, dir)) unless Dir.exist?(File.join(temp_dir, dir))
       }
       File.write(File.join(temp_dir, "Gemfile"), "") unless File.exist?(File.join(temp_dir, "Gemfile"))
@@ -571,15 +570,15 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles complex path resolution workflows" do
       # Start with relative path
       relative_path = "spec/main_spec.rb"
-      
+
       # Resolve to absolute
       absolute_path = resolver.resolve(relative_path)
       expect(File.exist?(absolute_path)).to be true
-      
+
       # Convert back to relative
       back_to_relative = resolver.relative_to_root(absolute_path)
       expect(back_to_relative).to eq(relative_path)
-      
+
       # Confirm project membership
       expect(resolver.in_project?(absolute_path)).to be true
     end
@@ -587,7 +586,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles mixed path separators correctly" do
       mixed_separator_path = "lib\\main.rb"
       result = resolver.resolve(mixed_separator_path)
-      
+
       # Should resolve correctly regardless of separator style
       expect(result).to be_a(String)
     end
@@ -597,9 +596,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles non-existent project root gracefully" do
       nonexistent_root = "/this/path/does/not/exist"
       resolver_bad = described_class.new(project_root: nonexistent_root)
-      
+
       expect(resolver_bad.project_root).to eq(nonexistent_root)
-      
+
       # Should still function, just won't find files
       result = resolver_bad.resolve("some/file.rb")
       expect(result).to eq("some/file.rb")
@@ -612,18 +611,17 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "handles circular symbolic links" do
       skip "Symlink testing not supported" unless File.respond_to?(:symlink)
-      
+
       begin
         link1 = File.join(temp_dir, "link1")
         link2 = File.join(temp_dir, "link2")
-        
+
         File.symlink(link2, link1)
         File.symlink(link1, link2)
-        
+
         # Should not infinite loop
         result = resolver.resolve("link1")
         expect(result).to be_a(String)
-        
       rescue NotImplementedError
         skip "Symlinks not supported on this platform"
       rescue SystemCallError
@@ -637,10 +635,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       begin
         long_path = File.join(temp_dir, *long_path_segments)
         FileUtils.mkdir_p(long_path)
-        
+
         resolver_long = described_class.new(project_root: long_path)
         expect(resolver_long.project_root).to eq(long_path)
-        
       rescue SystemCallError
         skip "System cannot handle very long paths"
       end
@@ -648,16 +645,15 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
 
     it "handles Unicode project root paths" do
       unicode_dir = Dir.mktmpdir("тест_проект")
-      
+
       begin
         resolver_unicode = described_class.new(project_root: unicode_dir)
         expect(resolver_unicode.project_root).to eq(unicode_dir)
-        
+
         # Test resolution within Unicode directory
         File.write(File.join(unicode_dir, "файл.rb"), "content")
         result = resolver_unicode.resolve("файл.rb")
         expect(result).to eq(File.join(unicode_dir, "файл.rb"))
-        
       ensure
         FileUtils.rm_rf(unicode_dir)
       end
@@ -666,19 +662,19 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles concurrent access scenarios" do
       threads = []
       results = Queue.new
-      
+
       10.times do |i|
         threads << Thread.new do
           test_resolver = described_class.new(project_root: temp_dir)
           results << test_resolver.resolve("src/file.rb")
         end
       end
-      
+
       threads.each(&:join)
-      
+
       # All threads should get the same result
       first_result = results.pop
-      while !results.empty?
+      until results.empty?
         expect(results.pop).to eq(first_result)
       end
     end
@@ -687,13 +683,13 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       # Create and resolve a file
       test_file = File.join(temp_dir, "changing_file.rb")
       File.write(test_file, "initial content")
-      
+
       result1 = resolver.resolve("changing_file.rb")
       expect(result1).to eq(test_file)
-      
+
       # Delete the file
       File.delete(test_file)
-      
+
       # Resolution should fall back gracefully
       result2 = resolver.resolve("changing_file.rb")
       expect(result2).to eq("changing_file.rb")
@@ -702,10 +698,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "handles filesystem case sensitivity correctly" do
       # Create file with specific case
       File.write(File.join(temp_dir, "CamelCase.rb"), "content")
-      
+
       # Test resolution with different case
       result = resolver.resolve("camelcase.rb")
-      
+
       # Result depends on filesystem case sensitivity
       expect(result).to be_a(String)
     end
@@ -713,18 +709,18 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
     it "maintains thread safety during initialization" do
       threads = []
       resolvers = Queue.new
-      
+
       10.times do
         threads << Thread.new do
           resolvers << described_class.new(project_root: temp_dir)
         end
       end
-      
+
       threads.each(&:join)
-      
+
       # All resolvers should have the same project root
       first_resolver = resolvers.pop
-      while !resolvers.empty?
+      until resolvers.empty?
         expect(resolvers.pop.project_root).to eq(first_resolver.project_root)
       end
     end
@@ -733,14 +729,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
   describe "performance characteristics" do
     it "handles large numbers of resolution requests efficiently" do
       start_time = Time.now
-      
+
       1000.times do |i|
         resolver.resolve("test_file_#{i}.rb")
       end
-      
+
       end_time = Time.now
       duration = end_time - start_time
-      
+
       # Should complete 1000 resolutions in reasonable time
       expect(duration).to be < 5.0
     end
@@ -751,14 +747,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::PathResolver do
       deep_path = File.join(temp_dir, *deep_parts)
       FileUtils.mkdir_p(deep_path)
       File.write(File.join(deep_path, "deep_file.rb"), "deep content")
-      
+
       start_time = Time.now
-      
+
       result = resolver.resolve(File.join(*deep_parts, "deep_file.rb"))
-      
+
       end_time = Time.now
       duration = end_time - start_time
-      
+
       expect(result).to eq(File.join(deep_path, "deep_file.rb"))
       expect(duration).to be < 1.0
     end

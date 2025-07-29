@@ -154,7 +154,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
     context "with empty docs_dependencies section" do
       let(:empty_config) do
-        { "docs_dependencies" => {} }
+        {"docs_dependencies" => {}}
       end
 
       before do
@@ -169,7 +169,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
     context "with missing docs_dependencies section" do
       let(:no_docs_config) do
-        { "other_config" => { "value" => "test" } }
+        {"other_config" => {"value" => "test"}}
       end
 
       before do
@@ -196,12 +196,15 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
     context "with file read permission error" do
       before do
-        File.write(config_path, YAML.dump({ "docs_dependencies" => {} }))
-        FileUtils.chmod(0000, config_path) # Remove all permissions
+        File.write(config_path, YAML.dump({"docs_dependencies" => {}}))
+        FileUtils.chmod(0o000, config_path) # Remove all permissions
       end
 
       after do
-        FileUtils.chmod(0644, config_path) rescue nil # Restore permissions for cleanup
+        FileUtils.chmod(0o644, config_path)
+      rescue
+        nil
+        # Restore permissions for cleanup
       end
 
       it "returns DEFAULT_CONFIG and suppresses warnings in test environment" do
@@ -235,25 +238,25 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#get_file_patterns" do
     it "returns file patterns from provided config" do
-      config = { file_patterns: { custom: "test/**/*.md" } }
+      config = {file_patterns: {custom: "test/**/*.md"}}
       result = loader.get_file_patterns(config)
-      expect(result).to eq({ custom: "test/**/*.md" })
+      expect(result).to eq({custom: "test/**/*.md"})
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ file_patterns: { loaded: "loaded/**/*.md" } })
+      allow(loader).to receive(:load_config).and_return({file_patterns: {loaded: "loaded/**/*.md"}})
       result = loader.get_file_patterns
-      expect(result).to eq({ loaded: "loaded/**/*.md" })
+      expect(result).to eq({loaded: "loaded/**/*.md"})
     end
 
     it "returns default patterns when config has no file_patterns" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.get_file_patterns(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:file_patterns])
     end
 
     it "returns default patterns when file_patterns is nil" do
-      config = { file_patterns: nil }
+      config = {file_patterns: nil}
       result = loader.get_file_patterns(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:file_patterns])
     end
@@ -261,25 +264,25 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#get_exclude_patterns" do
     it "returns exclude patterns from provided config" do
-      config = { exclude_patterns: ["custom/**/*"] }
+      config = {exclude_patterns: ["custom/**/*"]}
       result = loader.get_exclude_patterns(config)
       expect(result).to eq(["custom/**/*"])
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ exclude_patterns: ["loaded/**/*"] })
+      allow(loader).to receive(:load_config).and_return({exclude_patterns: ["loaded/**/*"]})
       result = loader.get_exclude_patterns
       expect(result).to eq(["loaded/**/*"])
     end
 
     it "returns default patterns when config has no exclude_patterns" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.get_exclude_patterns(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:exclude_patterns])
     end
 
     it "returns default patterns when exclude_patterns is nil" do
-      config = { exclude_patterns: nil }
+      config = {exclude_patterns: nil}
       result = loader.get_exclude_patterns(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:exclude_patterns])
     end
@@ -287,25 +290,25 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#get_skip_folders" do
     it "returns skip folders from provided config" do
-      config = { skip_folders: ["folder1", "folder2"] }
+      config = {skip_folders: ["folder1", "folder2"]}
       result = loader.get_skip_folders(config)
       expect(result).to eq(["folder1", "folder2"])
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ skip_folders: ["loaded_folder"] })
+      allow(loader).to receive(:load_config).and_return({skip_folders: ["loaded_folder"]})
       result = loader.get_skip_folders
       expect(result).to eq(["loaded_folder"])
     end
 
     it "returns default folders when config has no skip_folders" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.get_skip_folders(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:skip_folders])
     end
 
     it "returns default folders when skip_folders is nil" do
-      config = { skip_folders: nil }
+      config = {skip_folders: nil}
       result = loader.get_skip_folders(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:skip_folders])
     end
@@ -313,31 +316,31 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#include_external_links?" do
     it "returns true when external links are enabled in config" do
-      config = { include_external_links: true }
+      config = {include_external_links: true}
       result = loader.include_external_links?(config)
       expect(result).to be true
     end
 
     it "returns false when external links are disabled in config" do
-      config = { include_external_links: false }
+      config = {include_external_links: false}
       result = loader.include_external_links?(config)
       expect(result).to be false
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ include_external_links: true })
+      allow(loader).to receive(:load_config).and_return({include_external_links: true})
       result = loader.include_external_links?
       expect(result).to be true
     end
 
     it "returns default value when config has no include_external_links" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.include_external_links?(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:include_external_links])
     end
 
     it "returns default value when include_external_links is nil" do
-      config = { include_external_links: nil }
+      config = {include_external_links: nil}
       result = loader.include_external_links?(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:include_external_links])
     end
@@ -345,31 +348,31 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#include_anchor_links?" do
     it "returns true when anchor links are enabled in config" do
-      config = { include_anchor_links: true }
+      config = {include_anchor_links: true}
       result = loader.include_anchor_links?(config)
       expect(result).to be true
     end
 
     it "returns false when anchor links are disabled in config" do
-      config = { include_anchor_links: false }
+      config = {include_anchor_links: false}
       result = loader.include_anchor_links?(config)
       expect(result).to be false
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ include_anchor_links: true })
+      allow(loader).to receive(:load_config).and_return({include_anchor_links: true})
       result = loader.include_anchor_links?
       expect(result).to be true
     end
 
     it "returns default value when config has no include_anchor_links" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.include_anchor_links?(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:include_anchor_links])
     end
 
     it "returns default value when include_anchor_links is nil" do
-      config = { include_anchor_links: nil }
+      config = {include_anchor_links: nil}
       result = loader.include_anchor_links?(config)
       expect(result).to eq(described_class::DEFAULT_CONFIG[:include_anchor_links])
     end
@@ -377,31 +380,31 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "#enabled?" do
     it "returns true when enabled is true in config" do
-      config = { enabled: true }
+      config = {enabled: true}
       result = loader.enabled?(config)
       expect(result).to be true
     end
 
     it "returns false when enabled is false in config" do
-      config = { enabled: false }
+      config = {enabled: false}
       result = loader.enabled?(config)
       expect(result).to be false
     end
 
     it "returns true when enabled is nil (defaults to true)" do
-      config = { enabled: nil }
+      config = {enabled: nil}
       result = loader.enabled?(config)
       expect(result).to be true
     end
 
     it "loads config when no config provided" do
-      allow(loader).to receive(:load_config).and_return({ enabled: false })
+      allow(loader).to receive(:load_config).and_return({enabled: false})
       result = loader.enabled?
       expect(result).to be false
     end
 
     it "returns true when config has no enabled key (default behavior)" do
-      config = { other_key: "value" }
+      config = {other_key: "value"}
       result = loader.enabled?(config)
       expect(result).to be true
     end
@@ -409,7 +412,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
     it "treats only explicit false as disabled" do
       test_cases = [true, nil, "false", 0, "", []]
       test_cases.each do |value|
-        config = { enabled: value }
+        config = {enabled: value}
         result = loader.enabled?(config)
         expect(result).to be true
       end
@@ -447,8 +450,8 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       end
 
       it "handles non-hash values correctly" do
-        base = { key: "base_value", nested: { inner: "base_inner" } }
-        override = { key: "override_value", nested: "override_non_hash" }
+        base = {key: "base_value", nested: {inner: "base_inner"}}
+        override = {key: "override_value", nested: "override_non_hash"}
 
         result = loader.send(:deep_merge, base, override)
 
@@ -457,8 +460,8 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       end
 
       it "does not modify original base hash" do
-        base = { nested: { key: "original" } }
-        override = { nested: { key: "modified" } }
+        base = {nested: {key: "original"}}
+        override = {nested: {key: "modified"}}
 
         original_base = base.dup
         result = loader.send(:deep_merge, base, override)
@@ -470,12 +473,12 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
     describe "#symbolize_keys" do
       it "converts string keys to symbols" do
-        hash = { "string_key" => "value", "nested" => { "inner_key" => "inner_value" } }
+        hash = {"string_key" => "value", "nested" => {"inner_key" => "inner_value"}}
         result = loader.send(:symbolize_keys, hash)
 
         expect(result).to eq({
           string_key: "value",
-          nested: { inner_key: "inner_value" }
+          nested: {inner_key: "inner_value"}
         })
       end
 
@@ -487,7 +490,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       end
 
       it "preserves symbol keys" do
-        hash = { :already_symbol => "value", "string_key" => "value2" }
+        hash = {:already_symbol => "value", "string_key" => "value2"}
         result = loader.send(:symbolize_keys, hash)
 
         expect(result).to eq({
@@ -500,7 +503,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         hash = {
           "level1" => {
             "level2" => {
-              "level3" => { "deep_key" => "deep_value" }
+              "level3" => {"deep_key" => "deep_value"}
             }
           }
         }
@@ -510,7 +513,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
         expect(result).to eq({
           level1: {
             level2: {
-              level3: { deep_key: "deep_value" }
+              level3: {deep_key: "deep_value"}
             }
           }
         })
@@ -520,7 +523,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
     describe "#validate_config" do
       it "accepts valid configuration" do
         valid_config = {
-          file_patterns: { pattern: "**/*.md" },
+          file_patterns: {pattern: "**/*.md"},
           exclude_patterns: ["exclude/**/*"],
           skip_folders: ["folder1"]
         }
@@ -559,7 +562,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       end
 
       it "handles missing keys gracefully" do
-        incomplete_config = { file_patterns: {} }
+        incomplete_config = {file_patterns: {}}
 
         expect { loader.send(:validate_config, incomplete_config) }.to raise_error(RuntimeError)
       end
@@ -635,7 +638,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       let(:large_config) do
         patterns = {}
         excludes = []
-        
+
         100.times do |i|
           patterns["pattern_#{i}"] = "path_#{i}/**/*.md"
           excludes << "exclude_#{i}/**/*"
@@ -739,7 +742,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
       it "properly merges nested configurations without losing data" do
         base_config = described_class::DEFAULT_CONFIG
         override_config = {
-          file_patterns: { custom: "custom/**/*.md" },
+          file_patterns: {custom: "custom/**/*.md"},
           enabled: false
         }
 
@@ -771,7 +774,7 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
             skip_folders: []
           },
           {
-            file_patterns: { test: "**/*.md" },
+            file_patterns: {test: "**/*.md"},
             exclude_patterns: ["exclude/**/*"],
             skip_folders: ["skip"]
           }
@@ -831,14 +834,14 @@ RSpec.describe CodingAgentTools::Atoms::DocsDependenciesConfigLoader do
 
   describe "performance considerations" do
     it "loads configuration efficiently for repeated calls" do
-      File.write(config_path, YAML.dump({ "docs_dependencies" => { "enabled" => true } }))
+      File.write(config_path, YAML.dump({"docs_dependencies" => {"enabled" => true}}))
 
       start_time = Time.now
-      
+
       100.times do
         loader.load_config
       end
-      
+
       end_time = Time.now
       expect(end_time - start_time).to be < 1.0 # Should be reasonably fast
     end

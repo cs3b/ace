@@ -17,9 +17,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with no tasks specified" do
       it "returns error and usage message" do
         allow(command).to receive(:error_output)
-        
+
         result = command.call(tasks: [])
-        
+
         expect(result).to eq(1)
         expect(command).to have_received(:error_output).with("Error: No tasks specified for rescheduling")
         expect(command).to have_received(:error_output).with("Usage: task-manager reschedule TASK_ID [TASK_ID...] [OPTIONS]")
@@ -31,9 +31,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
         failed_result = instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager::AllTasksResult", success?: false, message: "Failed to load tasks")
         allow(mock_task_manager).to receive(:get_all_tasks).and_return(failed_result)
         allow(command).to receive(:error_output)
-        
+
         result = command.call(tasks: ["task.001"])
-        
+
         expect(result).to eq(1)
         expect(command).to have_received(:error_output).with("Error: Failed to load tasks")
       end
@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     context "with no valid tasks found" do
       let(:mock_tasks) { [] }
-      
+
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
@@ -51,7 +51,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "returns error when no tasks can be resolved" do
         result = command.call(tasks: ["invalid.001"])
-        
+
         expect(result).to eq(1)
         expect(command).to have_received(:error_output).with("Error: No valid tasks found from provided identifiers")
       end
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       let(:mock_task1) { double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
       let(:mock_task2) { double("Task", id: "v.0.3.0+task.002", path: "/path/task2.md") }
       let(:mock_tasks) { [mock_task1, mock_task2] }
-      
+
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
@@ -71,7 +71,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "calls reschedule_add_next when add_next option is true" do
         result = command.call(tasks: ["v.0.3.0+task.001"], add_next: true)
-        
+
         expect(result).to eq(0)
         expect(command).to have_received(:reschedule_add_next)
       end
@@ -80,7 +80,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with successful task resolution and default behavior" do
       let(:mock_task1) { double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
       let(:mock_tasks) { [mock_task1] }
-      
+
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
@@ -90,7 +90,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "calls reschedule_add_at_end by default" do
         result = command.call(tasks: ["v.0.3.0+task.001"])
-        
+
         expect(result).to eq(0)
         expect(command).to have_received(:reschedule_add_at_end)
       end
@@ -104,7 +104,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "handles exceptions and returns error code" do
         result = command.call(tasks: ["task.001"])
-        
+
         expect(result).to eq(1)
         expect(command).to have_received(:handle_error)
       end
@@ -123,15 +123,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     it "resolves existing tasks" do
       allow(command).to receive(:find_task).with("v.0.3.0+task.001", all_tasks).and_return(mock_task1)
-      
+
       result = command.send(:resolve_tasks, ["v.0.3.0+task.001"], all_tasks)
-      
+
       expect(result).to eq([mock_task1])
     end
 
     it "warns about missing tasks and continues" do
       result = command.send(:resolve_tasks, ["invalid.001"], all_tasks)
-      
+
       expect(result).to eq([])
       expect(command).to have_received(:error_output).with("Warning: Could not find task matching 'invalid.001'")
     end
@@ -139,9 +139,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     it "resolves multiple tasks correctly" do
       allow(command).to receive(:find_task).with("v.0.3.0+task.001", all_tasks).and_return(mock_task1)
       allow(command).to receive(:find_task).with("v.0.3.0+task.002", all_tasks).and_return(mock_task2)
-      
+
       result = command.send(:resolve_tasks, ["v.0.3.0+task.001", "v.0.3.0+task.002"], all_tasks)
-      
+
       expect(result).to eq([mock_task1, mock_task2])
     end
   end
@@ -203,7 +203,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     it "schedules tasks before existing pending tasks" do
       command.send(:reschedule_add_next, tasks_to_reschedule, all_tasks, mock_task_manager)
-      
+
       expect(command).to have_received(:update_task_sort).with(mock_task1, 98, mock_task_manager)
       expect(command).to have_received(:update_task_sort).with(mock_task2, 99, mock_task_manager)
     end
@@ -211,16 +211,16 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     it "handles empty pending tasks list" do
       allow(pending_task).to receive(:status).and_return("done")
       allow(command).to receive(:get_task_sort_value).and_return(nil)
-      
+
       command.send(:reschedule_add_next, tasks_to_reschedule, all_tasks, mock_task_manager)
-      
+
       expect(command).to have_received(:update_task_sort).with(mock_task1, 998, mock_task_manager)
       expect(command).to have_received(:update_task_sort).with(mock_task2, 999, mock_task_manager)
     end
 
     it "outputs rescheduling messages" do
       command.send(:reschedule_add_next, tasks_to_reschedule, all_tasks, mock_task_manager)
-      
+
       expect(command).to have_received(:puts).with("  Rescheduled v.0.3.0+task.003 with sort value 98")
       expect(command).to have_received(:puts).with("  Rescheduled v.0.3.0+task.004 with sort value 99")
     end
@@ -242,7 +242,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     it "schedules tasks after highest sort value" do
       command.send(:reschedule_add_at_end, tasks_to_reschedule, all_tasks, mock_task_manager)
-      
+
       expect(command).to have_received(:update_task_sort).with(mock_task1, 51, mock_task_manager)
       expect(command).to have_received(:update_task_sort).with(mock_task2, 52, mock_task_manager)
     end
@@ -250,9 +250,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     it "uses sequential number when sort value is lower" do
       allow(command).to receive(:get_task_sort_value).and_return(1)
       allow(command).to receive(:parse_task_sequential_number).and_return(100)
-      
+
       command.send(:reschedule_add_at_end, tasks_to_reschedule, all_tasks, mock_task_manager)
-      
+
       expect(command).to have_received(:update_task_sort).with(mock_task1, 101, mock_task_manager)
       expect(command).to have_received(:update_task_sort).with(mock_task2, 102, mock_task_manager)
     end
@@ -260,9 +260,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     it "handles empty task list" do
       allow(command).to receive(:get_task_sort_value).and_return(nil)
       allow(command).to receive(:parse_task_sequential_number).and_return(nil)
-      
+
       command.send(:reschedule_add_at_end, tasks_to_reschedule, [], mock_task_manager)
-      
+
       expect(command).to have_received(:update_task_sort).with(mock_task1, 1, mock_task_manager)
       expect(command).to have_received(:update_task_sort).with(mock_task2, 2, mock_task_manager)
     end
@@ -366,9 +366,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "updates existing sort value" do
         expected_content = "---\nid: v.0.3.0+task.001\nsort: 100\nstatus: pending\n---#{body_content}"
-        
+
         command.send(:update_task_sort, task, 100, mock_task_manager)
-        
+
         expect(File).to have_received(:write).with("/path/to/task.md", expected_content)
       end
     end
@@ -376,9 +376,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "without existing sort value" do
       it "adds sort value to frontmatter" do
         expected_content = "---\nid: v.0.3.0+task.001\nstatus: pending\npriority: high\nsort: 100\n---#{body_content}"
-        
+
         command.send(:update_task_sort, task, 100, mock_task_manager)
-        
+
         expect(File).to have_received(:write).with("/path/to/task.md", expected_content)
       end
     end
@@ -388,7 +388,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "outputs warning for unparseable frontmatter" do
         command.send(:update_task_sort, task, 100, mock_task_manager)
-        
+
         expect(command).to have_received(:error_output).with("Warning: Could not parse frontmatter for v.0.3.0+task.001")
         expect(File).not_to have_received(:write)
       end
@@ -397,7 +397,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with file I/O errors" do
       it "handles file read errors gracefully" do
         allow(File).to receive(:read).and_raise(Errno::ENOENT, "File not found")
-        
+
         expect {
           command.send(:update_task_sort, task, 100, mock_task_manager)
         }.to raise_error(Errno::ENOENT)
@@ -405,7 +405,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "handles file write errors gracefully" do
         allow(File).to receive(:write).and_raise(Errno::EACCES, "Permission denied")
-        
+
         expect {
           command.send(:update_task_sort, task, 100, mock_task_manager)
         }.to raise_error(Errno::EACCES)
@@ -427,7 +427,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with debug disabled" do
       it "outputs simple error message" do
         command.send(:handle_error, error, false)
-        
+
         expect(command).to have_received(:error_output).with("Error: Test error message")
         expect(command).to have_received(:error_output).with("Use --debug flag for more information")
       end
@@ -436,7 +436,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with debug enabled" do
       it "outputs detailed error information with backtrace" do
         command.send(:handle_error, error, true)
-        
+
         expect(command).to have_received(:error_output).with("Error: StandardError: Test error message")
         expect(command).to have_received(:error_output).with("\nBacktrace:")
         expect(command).to have_received(:error_output).with("  /path/to/file1.rb:10:in `method1'")
@@ -447,9 +447,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with nil backtrace" do
       it "handles missing backtrace gracefully" do
         allow(error).to receive(:backtrace).and_return(nil)
-        
+
         command.send(:handle_error, error, true)
-        
+
         expect(command).to have_received(:error_output).with("Error: StandardError: Test error message")
         expect(command).to have_received(:error_output).with("\nBacktrace:")
       end
@@ -496,7 +496,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
       it "prioritizes add_next over add_at_the_end" do
         command.call(tasks: ["v.0.3.0+task.001"], add_next: true, add_at_the_end: true)
-        
+
         expect(command).to have_received(:reschedule_add_next)
         expect(command).not_to have_received(:reschedule_add_at_end)
       end
@@ -509,7 +509,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       it "handles concurrent modification gracefully" do
         allow(File).to receive(:read).and_return(file_content)
         allow(File).to receive(:write).and_raise(Errno::EBUSY, "Resource busy")
-        
+
         expect {
           command.send(:update_task_sort, task, 100, mock_task_manager)
         }.to raise_error(Errno::EBUSY)

@@ -5,7 +5,7 @@ require "spec_helper"
 RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
   let(:threshold) { 80.0 }
   let(:analysis_timestamp) { Time.new(2025, 1, 27, 12, 0, 0) }
-  
+
   let(:method1) do
     instance_double(
       CodingAgentTools::Models::MethodCoverage,
@@ -115,7 +115,7 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
     it "memoizes the result" do
       expect(files.first).to receive(:under_threshold?).once.and_return(true)
       expect(files.last).to receive(:under_threshold?).once.and_return(false)
-      
+
       2.times { subject.under_covered_files }
     end
   end
@@ -128,7 +128,7 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
     it "memoizes the result" do
       expect(method1).to receive(:under_threshold?).once.and_return(true)
       expect(method2).to receive(:under_threshold?).once.and_return(false)
-      
+
       2.times { subject.under_covered_methods }
     end
   end

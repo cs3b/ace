@@ -281,7 +281,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       expect {
         described_class.new(ruby: "invalid_string")
       }.not_to raise_error
-      
+
       config = described_class.new(ruby: "invalid_string")
       expect(config.ruby).to eq("invalid_string")
     end
@@ -290,7 +290,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       expect {
         described_class.new(markdown: 123)
       }.not_to raise_error
-      
+
       config = described_class.new(markdown: 123)
       expect(config.markdown).to eq(123)
     end
@@ -299,20 +299,20 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       expect {
         described_class.new(error_distribution: [1, 2, 3])
       }.not_to raise_error
-      
+
       config = described_class.new(error_distribution: [1, 2, 3])
       expect(config.error_distribution).to eq([1, 2, 3])
     end
 
     it "handles invalid enabled_linters calls with malformed ruby config" do
       config = described_class.new(ruby: "invalid")
-      
+
       expect { config.enabled_linters }.to raise_error(TypeError)
     end
 
     it "handles invalid enabled_linters calls with malformed markdown config" do
       config = described_class.new(markdown: 123)
-      
+
       expect { config.enabled_linters }.to raise_error(TypeError)
     end
 
@@ -327,7 +327,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
       }
 
       config = described_class.new(ruby: malformed_ruby)
-      
+
       expect { config.enabled_linters }.to raise_error
     end
 
@@ -436,7 +436,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
       # Modifying one section shouldn't affect others
       config.ruby[:enabled] = true
-      
+
       expect(config.markdown[:enabled]).to be(true)
       expect(config.error_distribution[:enabled]).to be(false)
     end
@@ -525,7 +525,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
     it "provides introspection into enabled linters by type" do
       enabled = config.enabled_linters
-      
+
       ruby_linters = enabled.select { |linter| linter.start_with?("ruby_") }
       markdown_linters = enabled.select { |linter| linter.start_with?("markdown_") }
 
@@ -544,7 +544,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
 
     it "allows inspection of linter-specific configurations" do
       standardrb_config = config.ruby[:linters][:standardrb]
-      
+
       expect(standardrb_config).to have_key(:enabled)
       expect(standardrb_config[:enabled]).to be(true)
     end
@@ -552,7 +552,7 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     it "supports configuration debugging through enabled_linters method" do
       # When debugging configuration issues, enabled_linters should provide clear output
       enabled = config.enabled_linters
-      
+
       expect(enabled).to be_an(Array)
       expect(enabled.all? { |linter| linter.is_a?(String) }).to be(true)
       expect(enabled.all? { |linter| linter.include?("_") }).to be(true)  # All should have type prefix

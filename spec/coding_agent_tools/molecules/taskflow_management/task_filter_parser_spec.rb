@@ -193,7 +193,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
     context "with valid filter strings" do
       it "parses simple attribute:value format" do
         result = described_class.parse_filter("status:pending")
-        
+
         expect(result).to be_a(described_class::FilterCriteria)
         expect(result.attribute).to eq("status")
         expect(result.value).to eq("pending")
@@ -203,7 +203,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "parses negated filter with exclamation mark" do
         result = described_class.parse_filter("priority:!low")
-        
+
         expect(result).to be_a(described_class::FilterCriteria)
         expect(result.attribute).to eq("priority")
         expect(result.value).to eq("low")
@@ -213,7 +213,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "parses OR values with pipes" do
         result = described_class.parse_filter("status:pending|in-progress")
-        
+
         expect(result.attribute).to eq("status")
         expect(result.value).to eq("pending|in-progress")
         expect(result.negated).to be false
@@ -221,7 +221,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "handles whitespace around attribute and value" do
         result = described_class.parse_filter("  status  :  pending  ")
-        
+
         expect(result.attribute).to eq("status")
         expect(result.value).to eq("pending")
         expect(result.negated).to be false
@@ -229,7 +229,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "handles whitespace around negated value" do
         result = described_class.parse_filter("status: ! done ")
-        
+
         expect(result.attribute).to eq("status")
         expect(result.value).to eq("done")
         expect(result.negated).to be true
@@ -237,7 +237,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "handles values with multiple colons" do
         result = described_class.parse_filter("url:https://example.com:8080")
-        
+
         expect(result.attribute).to eq("url")
         expect(result.value).to eq("https://example.com:8080")
         expect(result.negated).to be false
@@ -245,7 +245,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
 
       it "handles complex attribute names" do
         result = described_class.parse_filter("custom_attr_123:value")
-        
+
         expect(result.attribute).to eq("custom_attr_123")
         expect(result.value).to eq("value")
         expect(result.negated).to be false
@@ -299,21 +299,21 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
     context "edge cases" do
       it "handles single character attribute and value" do
         result = described_class.parse_filter("a:b")
-        
+
         expect(result.attribute).to eq("a")
         expect(result.value).to eq("b")
       end
 
       it "handles special characters in values" do
         result = described_class.parse_filter("pattern:@#$%^&*()")
-        
+
         expect(result.attribute).to eq("pattern")
         expect(result.value).to eq("@#$%^&*()")
       end
 
       it "handles unicode characters" do
         result = described_class.parse_filter("title:测试任务")
-        
+
         expect(result.attribute).to eq("title")
         expect(result.value).to eq("测试任务")
       end
@@ -325,7 +325,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "parses multiple valid filters" do
         filters = ["status:pending", "priority:high", "dependencies:!empty"]
         result = described_class.parse_filters(filters)
-        
+
         expect(result.size).to eq(3)
         expect(result.first.attribute).to eq("status")
         expect(result[1].attribute).to eq("priority")
@@ -341,7 +341,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "skips invalid filters but keeps valid ones" do
         filters = ["status:pending", "invalid_filter", "priority:high", "", nil]
         result = described_class.parse_filters(filters)
-        
+
         expect(result.size).to eq(2)
         expect(result.first.attribute).to eq("status")
         expect(result[1].attribute).to eq("priority")
@@ -350,14 +350,14 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "handles array with all invalid filters" do
         filters = ["invalid", "", nil, 123]
         result = described_class.parse_filters(filters)
-        
+
         expect(result).to eq([])
       end
 
       it "handles mixed valid and invalid filter types" do
         filters = ["status:pending", 123, "priority:high", {}, "title:test"]
         result = described_class.parse_filters(filters)
-        
+
         expect(result.size).to eq(3)
         expect(result.map(&:attribute)).to eq(["status", "priority", "title"])
       end
@@ -379,7 +379,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "handles large number of filters efficiently" do
         filters = 100.times.map { |i| "attr#{i}:value#{i}" }
         result = described_class.parse_filters(filters)
-        
+
         expect(result.size).to eq(100)
         expect(result.first.attribute).to eq("attr0")
         expect(result.last.attribute).to eq("attr99")
@@ -430,7 +430,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "validates known task attributes" do
         known_attrs = %w[id status dependencies title priority estimate sort]
         filters = known_attrs.map { |attr| described_class::FilterCriteria.new(attr, "value", false, "#{attr}:value") }
-        
+
         errors = described_class.validate_filters(filters)
         expect(errors).to eq([])
       end
@@ -443,7 +443,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
           described_class::FilterCriteria.new("invalid-attr", "value", false, "invalid-attr:value"),
           described_class::FilterCriteria.new("", "value", false, ":value")
         ]
-        
+
         errors = described_class.validate_filters(invalid_filters)
         expect(errors.size).to eq(3)
         expect(errors).to all(start_with("Invalid filter attribute:"))
@@ -454,7 +454,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
           described_class::FilterCriteria.new("123invalid", "value", false, "123invalid:value"),
           described_class::FilterCriteria.new("special@char", "value", false, "special@char:value")
         ]
-        
+
         errors = described_class.validate_filters(invalid_filters)
         expect(errors).to include("Invalid filter attribute: 123invalid")
         expect(errors).to include("Invalid filter attribute: special@char")
@@ -494,7 +494,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
         test_cases.each do |attr_name, should_be_valid|
           filter = described_class::FilterCriteria.new(attr_name, "value", false, "#{attr_name}:value")
           errors = described_class.validate_filters([filter])
-          
+
           if should_be_valid
             expect(errors).to be_empty, "Expected '#{attr_name}' to be valid but got errors: #{errors}"
           else
@@ -577,10 +577,10 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskFilterParser
       it "handles large numbers of filters efficiently" do
         # Create 100 valid filters
         filter_strings = 100.times.map { |i| "field#{i}:value#{i}" }
-        
+
         filters = described_class.parse_filters(filter_strings)
         expect(filters.size).to eq(100)
-        
+
         errors = described_class.validate_filters(filters)
         expect(errors).to be_empty
       end

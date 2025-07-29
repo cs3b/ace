@@ -32,10 +32,10 @@ module CodingAgentTools
               begin
                 # Check for required options (Dry::CLI doesn't validate for direct method calls)
                 raise ArgumentError, "session_dir is required" unless options[:session_dir]
-                
+
                 # Apply default values that Dry::CLI doesn't apply for direct method calls
                 mode = options[:mode] || "auto"
-                
+
                 # Create minimal session for context loading
                 session = CodingAgentTools::Models::Code::ReviewSession.new(
                   session_id: "temp",

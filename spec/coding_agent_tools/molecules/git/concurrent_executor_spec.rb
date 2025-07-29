@@ -107,7 +107,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
             results: {"repo1" => {success: true}},
             errors: []
           })
-        
+
         allow(executor).to receive(:execute_main_repository)
           .with(["status"])
           .and_return({success: true, repository: "main"})
@@ -146,7 +146,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
       allow(executor).to receive(:execute_repository_commands)
         .with("repo1", ["status"])
         .and_return({success: true, repository: "repo1"})
-      
+
       allow(executor).to receive(:execute_repository_commands)
         .with("repo2", ["log"])
         .and_return({success: true, repository: "repo2"})
@@ -178,14 +178,14 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
     context "when a repository execution raises an error" do
       it "captures the error" do
         error = StandardError.new("Repository error")
-        
+
         # Mock futures that will raise an error
         error_future = instance_double(Concurrent::Future)
         success_future = instance_double(Concurrent::Future)
-        
+
         allow(Concurrent::Future).to receive(:execute)
           .and_return(error_future, success_future)
-        
+
         allow(error_future).to receive(:value).with(30).and_raise(error)
         allow(success_future).to receive(:value).with(30).and_return({success: true, repository: "repo2"})
 
@@ -204,7 +204,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
     it "delegates to execute_repository_commands with 'main'" do
       commands = ["status", "log"]
       expected_result = {success: true, repository: "main"}
-      
+
       expect(executor).to receive(:execute_repository_commands)
         .with("main", commands)
         .and_return(expected_result)
@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         allow(mock_git_executor).to receive(:execute)
           .with("status", capture_output: true)
           .and_return({stdout: "Clean working directory", stderr: ""})
-        
+
         allow(mock_git_executor).to receive(:execute)
           .with("log --oneline", capture_output: true)
           .and_return({stdout: "abc123 Initial commit", stderr: ""})
@@ -246,11 +246,11 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         expect(result[:total_commands]).to eq(2)
         expect(result[:successful_commands]).to eq(2)
         expect(result[:commands].size).to eq(2)
-        
+
         expect(result[:commands][0][:command]).to eq("status")
         expect(result[:commands][0][:success]).to be true
         expect(result[:commands][0][:output]).to eq("Clean working directory")
-        
+
         expect(result[:commands][1][:command]).to eq("log --oneline")
         expect(result[:commands][1][:success]).to be true
         expect(result[:commands][1][:output]).to eq("abc123 Initial commit")
@@ -262,13 +262,13 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         allow(mock_git_executor).to receive(:execute)
           .with("status", capture_output: true)
           .and_return({stdout: "Clean working directory", stderr: ""})
-        
+
         error = CodingAgentTools::Atoms::Git::GitCommandError.new(
           "Command failed",
           command: "invalid-command",
           stderr_output: "fatal: not a git repository"
         )
-        
+
         allow(mock_git_executor).to receive(:execute)
           .with("invalid-command", capture_output: true)
           .and_raise(error)
@@ -279,7 +279,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
         expect(result[:total_commands]).to eq(3)
         expect(result[:successful_commands]).to eq(1)
         expect(result[:commands].size).to eq(2) # Should stop after the failed command
-        
+
         expect(result[:commands][0][:success]).to be true
         expect(result[:commands][1][:success]).to be false
         expect(result[:commands][1][:error]).to eq("Command failed")
@@ -327,7 +327,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
     it "creates and properly shuts down thread pool" do
       mock_pool = instance_double(Concurrent::FixedThreadPool)
       mock_future = instance_double(Concurrent::Future)
-      
+
       expect(Concurrent::FixedThreadPool).to receive(:new).with(2).and_return(mock_pool)
       expect(Concurrent::Future).to receive(:execute).twice.and_return(mock_future)
       expect(mock_future).to receive(:value).twice.and_return({success: true})
@@ -340,7 +340,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::ConcurrentExecutor do
     it "kills thread pool if shutdown takes too long" do
       mock_pool = instance_double(Concurrent::FixedThreadPool)
       mock_future = instance_double(Concurrent::Future)
-      
+
       expect(Concurrent::FixedThreadPool).to receive(:new).with(2).and_return(mock_pool)
       expect(Concurrent::Future).to receive(:execute).twice.and_return(mock_future)
       expect(mock_future).to receive(:value).twice.and_return({success: true})

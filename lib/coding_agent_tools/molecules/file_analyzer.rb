@@ -45,7 +45,7 @@ module CodingAgentTools
       # @return [Array<Models::CoverageResult>] Analyzed files
       def analyze_files(processed_data, options = {})
         threshold = options[:threshold] || 85.0
-        sort_by = options[:sort_by] || 'coverage'
+        sort_by = options[:sort_by] || "coverage"
         methods_only = options[:methods_only] || false
 
         file_results = processed_data[:file_coverage].map do |file_path, file_data|
@@ -74,14 +74,14 @@ module CodingAgentTools
       # @return [Hash] Detailed analysis report
       def detailed_file_analysis(file_path, file_coverage_data, options = {})
         threshold = options[:threshold] || 85.0
-        
+
         file_result = analyze_file(file_path, file_coverage_data)
-        
+
         # Analyze methods if available
         method_analysis = if file_result.methods.any?
           analyze_file_methods(file_result.methods, threshold)
         else
-          { message: "No methods found or file could not be parsed" }
+          {message: "No methods found or file could not be parsed"}
         end
 
         # Analyze line-by-line coverage for uncovered areas
@@ -109,7 +109,7 @@ module CodingAgentTools
       # @return [Integer] Priority score (higher = more urgent)
       def calculate_priority_score(file_result, threshold)
         score = 0
-        
+
         # Base score on how far below threshold
         if file_result.under_threshold?(threshold)
           gap = threshold - file_result.coverage_percentage
@@ -158,12 +158,12 @@ module CodingAgentTools
 
         lines_data.each_with_index do |coverage, index|
           line_number = index + 1  # Convert to 1-based line numbers
-          
+
           if coverage == 0  # Uncovered executable line
             if current_range
               current_range[:end_line] = line_number
             else
-              current_range = { start_line: line_number, end_line: line_number }
+              current_range = {start_line: line_number, end_line: line_number}
             end
           elsif current_range
             # End of uncovered range
@@ -180,13 +180,13 @@ module CodingAgentTools
 
       def sort_file_results(file_results, sort_by)
         case sort_by.to_s.downcase
-        when 'coverage'
+        when "coverage"
           file_results.sort_by(&:coverage_percentage)
-        when 'uncovered_lines'
+        when "uncovered_lines"
           file_results.sort_by { |result| -result.uncovered_lines_count }
-        when 'file_name'
+        when "file_name"
           file_results.sort_by(&:relative_path)
-        when 'priority'
+        when "priority"
           file_results.sort_by { |result| -calculate_priority_score(result, 85.0) }
         else
           file_results.sort_by(&:coverage_percentage)

@@ -82,8 +82,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Coverage::Analyze do
           files_under_threshold: 3,
           total_files: 25,
           critical_files: [
-            { path: "lib/important.rb", coverage: 45.2, uncovered_lines: 12 },
-            { path: "lib/core.rb", coverage: 52.1, uncovered_lines: 8 }
+            {path: "lib/important.rb", coverage: 45.2, uncovered_lines: 12},
+            {path: "lib/core.rb", coverage: 52.1, uncovered_lines: 8}
           ],
           recommendations: [
             "Focus on improving coverage in critical files",
@@ -417,7 +417,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Coverage::Analyze do
     end
 
     it "handles verbose format precedence over compact" do
-      options = { compact: true, verbose: true, threshold: "auto" }
+      options = {compact: true, verbose: true, threshold: "auto"}
 
       result = command.send(:prepare_workflow_options, options)
 
@@ -425,7 +425,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Coverage::Analyze do
     end
 
     it "uses compact format when verbose is false" do
-      options = { compact: true, verbose: false, threshold: "auto" }
+      options = {compact: true, verbose: false, threshold: "auto"}
 
       result = command.send(:prepare_workflow_options, options)
 
@@ -433,7 +433,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Coverage::Analyze do
     end
 
     it "parses numeric threshold correctly" do
-      options = { threshold: "92.5" }
+      options = {threshold: "92.5"}
 
       result = command.send(:prepare_workflow_options, options)
 

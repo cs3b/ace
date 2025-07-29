@@ -58,7 +58,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewPrepare::ProjectTarg
       it "handles different target types" do
         # Test one representative target type to avoid mock accumulation issues
         target_info = {type: "file_pattern", content_type: "files", file_count: 10, line_count: 500}
-        
+
         target = double("target",
           type: target_info[:type],
           content_type: target_info[:content_type],

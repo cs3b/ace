@@ -13,8 +13,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
       session_directory: "/path/to/session",
       session_type: "code_review",
       session_id: "123",
-      metadata: { "project" => "test-app" }
-    )
+      metadata: {"project" => "test-app"})
   end
 
   let(:mock_session_info_no_session) do
@@ -41,21 +40,21 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
         allow(File).to receive(:read).with(described_class::DEFAULT_SYSTEM_PROMPT, encoding: "UTF-8").and_return(system_prompt_content)
         allow(File).to receive(:exist?).with(described_class::DEFAULT_SYSTEM_PROMPT).and_return(true)
         allow(File).to receive(:exist?).with("/output/synthesis.md").and_return(false)
-        
+
         # Mock file operations for temporary files
         allow(File).to receive(:exist?).and_return(false) # Default for any other files
         allow(File).to receive(:unlink).and_return(true)
-        
+
         # Mock tempfile creation
         allow(Tempfile).to receive(:new).and_return(mock_tempfile)
-        
+
         # Mock Open3 for successful LLM call
         allow(Open3).to receive(:capture3).and_return([
           "Synthesis completed successfully\nInput: 500 tokens\nOutput: 200 tokens\nCost: $0.05",
           "",
           double("status", success?: true)
         ])
-        
+
         # Mock llm-query executable finding
         allow(File).to receive(:executable?).and_return(false)
         allow(orchestrator).to receive(:`).with("which llm-query 2>/dev/null").and_return("/usr/local/bin/llm-query")
@@ -150,7 +149,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
         allow(File).to receive(:read).with(custom_prompt_path, encoding: "UTF-8").and_return(custom_prompt_content)
         allow(File).to receive(:exist?).with(custom_prompt_path).and_return(true)
         allow(File).to receive(:exist?).with("/output/synthesis.md").and_return(false)
-        
+
         mock_successful_llm_call
       end
 
@@ -172,7 +171,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
         allow(File).to receive(:read).with(sample_reports[0], encoding: "UTF-8").and_return(report1_content)
         allow(File).to receive(:read).with(sample_reports[1], encoding: "UTF-8").and_return(report2_content)
         allow(File).to receive(:exist?).with(described_class::DEFAULT_SYSTEM_PROMPT).and_return(false)
-        
+
         mock_successful_llm_call
       end
 
@@ -232,7 +231,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
         allow(File).to receive(:read).with(sample_reports[1], encoding: "UTF-8").and_return(report2_content)
         allow(File).to receive(:exist?).with(described_class::DEFAULT_SYSTEM_PROMPT).and_return(false)
         allow(File).to receive(:exist?).with("/output/synthesis.md").and_return(false)
-        
+
         mock_tempfile_operations
       end
 
@@ -275,7 +274,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
       before do
         allow(File).to receive(:exist?).with(described_class::DEFAULT_SYSTEM_PROMPT).and_return(false)
         allow(File).to receive(:exist?).with("/output/synthesis.md").and_return(false)
-        
+
         mock_tempfile_operations
         mock_successful_llm_call
       end
@@ -302,7 +301,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
         allow(File).to receive(:read).with(sample_reports[1], encoding: "UTF-8").and_return(report2_content)
         allow(File).to receive(:exist?).with(described_class::DEFAULT_SYSTEM_PROMPT).and_return(false)
         allow(File).to receive(:exist?).with("/output/synthesis.md").and_return(false)
-        
+
         mock_tempfile_operations
         mock_successful_llm_call
       end
@@ -402,13 +401,13 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
       it "creates result with provided values" do
         result = described_class::SynthesisResult.new(
           output_path: "/test.md",
-          metrics: { cost: 0.02 },
+          metrics: {cost: 0.02},
           error: "Test error",
           success: true
         )
 
         expect(result.output_path).to eq("/test.md")
-        expect(result.metrics).to eq({ cost: 0.02 })
+        expect(result.metrics).to eq({cost: 0.02})
         expect(result.error).to eq("Test error")
         expect(result.success?).to be true
         expect(result.failure?).to be false
@@ -494,7 +493,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
       it "returns relative path when executable exists" do
         # The implementation calculates relative path from synthesis_orchestrator.rb to exe/llm-query
         relative_path = "/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/exe/llm-query"
-        
+
         allow(File).to receive(:executable?).with(anything).and_return(false)
         allow(File).to receive(:executable?).with(relative_path).and_return(true)
 
@@ -528,7 +527,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
     allow(mock_tempfile).to receive(:close)
     allow(mock_tempfile).to receive(:path).and_return("/tmp/synthesis-prompt123.md")
     allow(Tempfile).to receive(:new).and_return(mock_tempfile)
-    
+
     # Allow any unlink operation
     allow(File).to receive(:unlink).and_return(true)
     # Allow any exist? check for temporary files
@@ -537,10 +536,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
 
   def mock_successful_llm_call
     mock_tempfile_operations
-    
+
     allow(File).to receive(:executable?).and_return(false)
     allow(orchestrator).to receive(:`).with("which llm-query 2>/dev/null").and_return("/usr/local/bin/llm-query")
-    
+
     allow(Open3).to receive(:capture3).and_return([
       "Success\nInput: 400 tokens\nOutput: 150 tokens\nCost: $0.03",
       "",
@@ -551,10 +550,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::SynthesisOrchestrator do
   def mock_successful_synthesis_reports
     result = described_class::SynthesisResult.new(
       output_path: "/output/synthesis.md",
-      metrics: { cost: 0.02 },
+      metrics: {cost: 0.02},
       success: true
     )
-    
+
     allow(orchestrator).to receive(:synthesize_reports).and_return(result)
   end
 end

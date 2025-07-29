@@ -137,9 +137,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           CodingAgentTools::Models::LlmModelInfo.new(id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite", description: "Fast model")
         ]
         allow(command).to receive(:get_available_models).and_return(fallback_models)
-        
+
         command.call(filter: "gemini")
-        
+
         output_content = output.string
         expect(output_content).to match(/ID: gemini-[\w\.-]+/)
       end
@@ -192,7 +192,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           CodingAgentTools::Models::LlmModelInfo.new(id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite", description: "Fast model")
         ]
         allow(command).to receive(:get_available_models).and_return(fallback_models)
-        
+
         command.call(filter: "GEMINI")
 
         output_content = output.string
@@ -234,14 +234,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         # Mock models with context size to ensure consistent test results
         models_with_context_size = [
           CodingAgentTools::Models::LlmModelInfo.new(
-            id: "gemini-2.0-flash-lite", 
-            name: "Gemini 2.0 Flash Lite", 
+            id: "gemini-2.0-flash-lite",
+            name: "Gemini 2.0 Flash Lite",
             description: "Fast model",
             context_size: 1_048_576
           )
         ]
         allow(command).to receive(:get_available_models).and_return(models_with_context_size)
-        
+
         command.call(format: "json")
 
         output_content = output.string
@@ -263,7 +263,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           CodingAgentTools::Models::LlmModelInfo.new(id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Advanced model")
         ]
         allow(command).to receive(:get_available_models).and_return(gemini_models)
-        
+
         command.call(format: "json", filter: "gemini-1.5")
 
         output_content = output.string
@@ -1213,14 +1213,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
     describe "#call method provider validation" do
       it "validates provider and exits with error code 1 for invalid providers" do
         allow(command).to receive(:warn)
-        
+
         exit_code = nil
         begin
           command.call(provider: "invalid_provider")
         rescue SystemExit => e
           exit_code = e.status
         end
-        
+
         expect(exit_code).to eq(1)
         expect(command).to have_received(:warn).with("Error: Invalid provider 'invalid_provider'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai")
       end
@@ -1230,7 +1230,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test", description: "Test model")
         ])
         allow(command).to receive(:output_models)
-        
+
         result = command.call(provider: "google")
         expect(result).to eq(0)
       end
@@ -1238,14 +1238,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       it "exits with code 1 when exception occurs in main flow" do
         allow(command).to receive(:get_available_models).and_raise(StandardError.new("Simulated error"))
         allow(command).to receive(:handle_error)
-        
+
         exit_code = nil
         begin
           command.call(provider: "google")
         rescue SystemExit => e
           exit_code = e.status
         end
-        
+
         expect(exit_code).to eq(1)
         expect(command).to have_received(:handle_error)
       end
@@ -1253,7 +1253,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
     describe "#handle_error method" do
       let(:test_error) { StandardError.new("Test error message") }
-      
+
       before do
         test_error.set_backtrace(["line1", "line2", "line3"])
       end
@@ -1261,7 +1261,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       it "shows concise error when debug is false" do
         expect(command).to receive(:error_output).with("Error: Test error message")
         expect(command).to receive(:error_output).with("Use --debug flag for more information")
-        
+
         command.send(:handle_error, test_error, false)
       end
 
@@ -1271,7 +1271,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         expect(command).to receive(:error_output).with("  line1")
         expect(command).to receive(:error_output).with("  line2")
         expect(command).to receive(:error_output).with("  line3")
-        
+
         command.send(:handle_error, test_error, true)
       end
 
@@ -1279,7 +1279,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         error_without_backtrace = StandardError.new("No backtrace error")
         expect(command).to receive(:error_output).with("Error: StandardError: No backtrace error")
         expect(command).to receive(:error_output).with("\nBacktrace:")
-        
+
         command.send(:handle_error, error_without_backtrace, true)
       end
     end
@@ -1295,7 +1295,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       it "returns cached default config on subsequent calls" do
         first_config = command.send(:default_config)
         second_config = command.send(:default_config)
-        
+
         expect(first_config).to be_a(CodingAgentTools::Models::DefaultModelConfig)
         expect(second_config).to be(first_config) # Same object instance
       end
@@ -1306,7 +1306,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fresh", name: "Fresh")]
         expect(command).to receive(:fetch_models_from_api).with("google").and_return(mock_models)
         expect(command).to receive(:cache_models).with("google", mock_models)
-        
+
         result = command.send(:get_available_models, "google", true)
         expect(result).to eq(mock_models)
       end
@@ -1316,7 +1316,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "api", name: "API")]
         expect(command).to receive(:fetch_models_from_api).with("google").and_return(mock_models)
         expect(command).to receive(:cache_models).with("google", mock_models)
-        
+
         result = command.send(:get_available_models, "google", false)
         expect(result).to eq(mock_models)
       end
@@ -1326,7 +1326,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         cached_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "cached", name: "Cached")]
         expect(command).to receive(:load_models_from_cache).with("google").and_return(cached_models)
         expect(command).not_to receive(:fetch_models_from_api)
-        
+
         result = command.send(:get_available_models, "google", false)
         expect(result).to eq(cached_models)
       end
@@ -1346,7 +1346,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         providers_and_methods.each do |provider, method|
           mock_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test")]
           expect(command).to receive(method).and_return(mock_models)
-          
+
           result = command.send(:fetch_models_from_api, provider)
           expect(result).to eq(mock_models)
         end
@@ -1356,15 +1356,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         fallback_models = [CodingAgentTools::Models::LlmModelInfo.new(id: "fallback", name: "Fallback")]
         expect(command).to receive(:fetch_google_models).and_raise(StandardError.new("API Error"))
         expect(command).to receive(:fallback_models).with("google").and_return(fallback_models)
-        
+
         # Mock ENV check for DEBUG_MODELS
         old_debug = ENV["DEBUG_MODELS"]
         ENV["DEBUG_MODELS"] = "true"
         expect(command).to receive(:warn).with("API failed for google: API Error")
-        
+
         result = command.send(:fetch_models_from_api, "google")
         expect(result).to eq(fallback_models)
-        
+
         ENV["DEBUG_MODELS"] = old_debug
       end
 
@@ -1404,7 +1404,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           result = command.send(:fetch_google_models)
 
           expect(result.length).to eq(2) # Only models with generateContent
-          
+
           first_model = result.find { |m| m.id == "gemini-1.5-pro" }
           expect(first_model).not_to be_nil
           expect(first_model.name).to include("Gemini")
@@ -1455,7 +1455,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           result = command.send(:fetch_lmstudio_models)
 
           expect(result.length).to eq(2)
-          
+
           mistral_model = result.find { |m| m.id == "mistralai/mistral-7b-instruct" }
           expect(mistral_model.name).to eq("Mistral 7b Instruct")
           expect(mistral_model.context_size).to eq(32_768)
@@ -1471,12 +1471,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "filters and processes OpenAI models correctly" do
           mock_client = instance_double(CodingAgentTools::Organisms::OpenaiClient)
           api_response = [
-            { id: "gpt-4o", created: 1234567890 },
-            { id: "gpt-4-turbo", created: 1234567890 },
-            { id: "gpt-3.5-turbo", created: 1234567890 },
-            { id: "o1-preview", created: 1234567890 },
-            { id: "text-davinci-003", created: 1234567890 }, # Should be filtered out
-            { id: "davinci", created: 1234567890 } # Should be filtered out
+            {id: "gpt-4o", created: 1234567890},
+            {id: "gpt-4-turbo", created: 1234567890},
+            {id: "gpt-3.5-turbo", created: 1234567890},
+            {id: "o1-preview", created: 1234567890},
+            {id: "text-davinci-003", created: 1234567890}, # Should be filtered out
+            {id: "davinci", created: 1234567890} # Should be filtered out
           ]
 
           allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_client)
@@ -1497,8 +1497,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "processes Anthropic API response correctly" do
           mock_client = instance_double(CodingAgentTools::Organisms::AnthropicClient)
           api_response = [
-            { id: "claude-3-5-sonnet-20241022", description: "Claude 3.5 Sonnet" },
-            { id: "claude-3-haiku-20240307", description: "Claude 3 Haiku" }
+            {id: "claude-3-5-sonnet-20241022", description: "Claude 3.5 Sonnet"},
+            {id: "claude-3-haiku-20240307", description: "Claude 3 Haiku"}
           ]
 
           allow(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).and_return(mock_client)
@@ -1507,7 +1507,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           result = command.send(:fetch_anthropic_models)
 
           expect(result.length).to eq(2)
-          
+
           sonnet_model = result.find { |m| m.id == "claude-3-5-sonnet-20241022" }
           expect(sonnet_model.name).to eq("Claude 3.5 Sonnet")
           expect(sonnet_model.description).to eq("Claude 3.5 Sonnet")
@@ -1518,8 +1518,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "processes Mistral API response correctly" do
           mock_client = instance_double(CodingAgentTools::Organisms::MistralClient)
           api_response = [
-            { id: "mistral-large-2407", description: "Mistral Large model" },
-            { id: "mistral-8x7b-instruct", description: "Mistral 8x7B Instruct" }
+            {id: "mistral-large-2407", description: "Mistral Large model"},
+            {id: "mistral-8x7b-instruct", description: "Mistral 8x7B Instruct"}
           ]
 
           allow(CodingAgentTools::Organisms::MistralClient).to receive(:new).and_return(mock_client)
@@ -1528,7 +1528,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           result = command.send(:fetch_mistral_models)
 
           expect(result.length).to eq(2)
-          
+
           large_model = result.find { |m| m.id == "mistral-large-2407" }
           expect(large_model.name).to eq("Mistral Large")
         end
@@ -1538,8 +1538,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "processes Together AI API response correctly" do
           mock_client = instance_double(CodingAgentTools::Organisms::TogetheraiClient)
           api_response = [
-            { id: "meta-llama/Llama-3.1-70B-Instruct", name: "Llama 3.1 70B Instruct" },
-            { name: "mistralai/Mistral-8x7B-Instruct", description: "Mistral 8x7B" }
+            {id: "meta-llama/Llama-3.1-70B-Instruct", name: "Llama 3.1 70B Instruct"},
+            {name: "mistralai/Mistral-8x7B-Instruct", description: "Mistral 8x7B"}
           ]
 
           allow(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).and_return(mock_client)
@@ -1548,10 +1548,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           result = command.send(:fetch_together_ai_models)
 
           expect(result.length).to eq(2)
-          
+
           llama_model = result.find { |m| m.id == "meta-llama/Llama-3.1-70B-Instruct" }
           expect(llama_model.name).to eq("Llama 3.1 70B")
-          
+
           mistral_model = result.find { |m| m.id == "mistralai/Mistral-8x7B-Instruct" }
           expect(mistral_model.id).to eq("mistralai/Mistral-8x7B-Instruct")
         end
@@ -1610,16 +1610,16 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       let(:test_models) do
         [
           CodingAgentTools::Models::LlmModelInfo.new(
-            id: "test-model-1", 
-            name: "Test Model 1", 
+            id: "test-model-1",
+            name: "Test Model 1",
             description: "First test model",
             default: true,
             context_size: 128_000,
             max_output_tokens: 4_096
           ),
           CodingAgentTools::Models::LlmModelInfo.new(
-            id: "test-model-2", 
-            name: "Test Model 2", 
+            id: "test-model-2",
+            name: "Test Model 2",
             description: "Second test model",
             default: false,
             context_size: 32_000,
@@ -1653,7 +1653,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         it "outputs Google models with proper format and usage" do
           command.send(:output_text_models, test_models, provider: "google")
-          
+
           output_content = output.string
           expect(output_content).to include("Available Google Models")
           expect(output_content).to include("Usage: llm-google-query")
@@ -1663,7 +1663,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         it "outputs LM Studio models with server information" do
           command.send(:output_text_models, test_models, provider: "lmstudio")
-          
+
           output_content = output.string
           expect(output_content).to include("Available LM Studio Models")
           expect(output_content).to include("Note: Models must be loaded in LM Studio before use")
@@ -1673,11 +1673,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         it "outputs provider-specific information for all providers" do
           providers = %w[openai anthropic mistral together_ai]
-          
+
           providers.each do |provider|
             output.string.clear
             command.send(:output_text_models, test_models, provider: provider)
-            
+
             output_content = output.string
             expect(output_content).to include("Available")
             expect(output_content).to include("Usage:")
@@ -1689,15 +1689,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       describe "#output_json_models comprehensive testing" do
         it "outputs valid JSON structure with all required fields" do
           command.send(:output_json_models, test_models, provider: "google")
-          
+
           output_content = output.string
           json_output = JSON.parse(output_content)
-          
+
           expect(json_output).to have_key("models")
           expect(json_output).to have_key("count")
           expect(json_output).to have_key("provider")
           expect(json_output).to have_key("default_model")
-          
+
           expect(json_output["models"]).to be_an(Array)
           expect(json_output["count"]).to eq(2)
           expect(json_output["provider"]).to eq("google")
@@ -1706,24 +1706,24 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
         it "includes model details in proper format" do
           command.send(:output_json_models, test_models, provider: "google")
-          
+
           json_output = JSON.parse(output.string)
           first_model = json_output["models"].first
-          
+
           expect(first_model).to have_key("id")
           expect(first_model).to have_key("name")
           expect(first_model).to have_key("description")
           expect(first_model).to have_key("default")
           expect(first_model).to have_key("context_size")
           expect(first_model).to have_key("max_output_tokens")
-          
+
           expect(first_model["context_size"]).to eq(128_000)
           expect(first_model["max_output_tokens"]).to eq(4_096)
         end
 
         it "includes provider-specific information for LM Studio" do
           command.send(:output_json_models, test_models, provider: "lmstudio")
-          
+
           json_output = JSON.parse(output.string)
           expect(json_output).to have_key("server_url")
           expect(json_output["server_url"]).to eq("http://localhost:1234")
@@ -1885,7 +1885,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_return([
-            { name: "models/gemini-test" }  # Missing supportedGenerationMethods
+            {name: "models/gemini-test"}  # Missing supportedGenerationMethods
           ])
 
           result = command.send(:fetch_google_models)
@@ -1913,9 +1913,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::OpenaiClient)
           allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_return([
-            { id: "gpt-4", created: 1234567890 },
-            { id: "text-davinci-003", created: 1234567890 },  # Should be excluded
-            { id: "o1-preview", created: 1234567890 }
+            {id: "gpt-4", created: 1234567890},
+            {id: "text-davinci-003", created: 1234567890},  # Should be excluded
+            {id: "o1-preview", created: 1234567890}
           ])
 
           result = command.send(:fetch_openai_models)
@@ -1936,7 +1936,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::LmstudioClient)
           allow(CodingAgentTools::Organisms::LmstudioClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_return([
-            { id: "model-without-context" }  # Missing context_length
+            {id: "model-without-context"}  # Missing context_length
           ])
 
           result = command.send(:fetch_lmstudio_models)
@@ -1958,8 +1958,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::TogetheraiClient)
           allow(CodingAgentTools::Organisms::TogetheraiClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_return([
-            { id: "model-with-id", description: "Model with ID field" },
-            { name: "model-with-name", description: "Model with name field" }
+            {id: "model-with-id", description: "Model with ID field"},
+            {name: "model-with-name", description: "Model with name field"}
           ])
 
           result = command.send(:fetch_together_ai_models)
@@ -2002,7 +2002,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
           output_content = output.string
           json_output = JSON.parse(output_content)
-          
+
           expect(json_output["models"]).to be_an(Array)
           expect(json_output["models"].first["name"]).to be_nil
           expect(json_output["models"].first["description"]).to be_nil
@@ -2011,8 +2011,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "handles large model lists in JSON output" do
           large_model_list = Array.new(100) do |i|
             CodingAgentTools::Models::LlmModelInfo.new(
-              id: "model-#{i}", 
-              name: "Model #{i}", 
+              id: "model-#{i}",
+              name: "Model #{i}",
               description: "Description #{i}",
               default: i == 0
             )
@@ -2022,7 +2022,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
           output_content = output.string
           json_output = JSON.parse(output_content)
-          
+
           expect(json_output["count"]).to eq(100)
           expect(json_output["models"].length).to eq(100)
         end
@@ -2040,8 +2040,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           long_description = "A" * 1000
           models_with_long_desc = [
             CodingAgentTools::Models::LlmModelInfo.new(
-              id: "long-desc-model", 
-              name: "Long Description Model", 
+              id: "long-desc-model",
+              name: "Long Description Model",
               description: long_description
             )
           ]
@@ -2054,15 +2054,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
     describe "context size extraction edge cases" do
       describe "Google context size extraction" do
         it "handles models with zero or negative token limits" do
-          model_zero = { inputTokenLimit: 0 }
+          model_zero = {inputTokenLimit: 0}
           expect(command.send(:extract_google_context_size, model_zero)).to be_nil
 
-          model_negative = { inputTokenLimit: -1 }
+          model_negative = {inputTokenLimit: -1}
           expect(command.send(:extract_google_context_size, model_negative)).to be_nil
         end
 
         it "handles models with invalid name patterns" do
-          model_invalid = { name: "invalid-model-name" }
+          model_invalid = {name: "invalid-model-name"}
           expect(command.send(:extract_google_context_size, model_invalid)).to be_nil
         end
 
@@ -2074,15 +2074,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
 
       describe "LM Studio context size extraction" do
         it "handles models with invalid context size values" do
-          model_zero = { context_length: 0 }
+          model_zero = {context_length: 0}
           expect(command.send(:extract_lmstudio_context_size, model_zero)).to be_nil
 
-          model_negative = { context_length: -1 }
+          model_negative = {context_length: -1}
           expect(command.send(:extract_lmstudio_context_size, model_negative)).to be_nil
         end
 
         it "handles models with unrecognized naming patterns" do
-          model_unknown = { id: "unknown/random-model-name" }
+          model_unknown = {id: "unknown/random-model-name"}
           expect(command.send(:extract_lmstudio_context_size, model_unknown)).to be_nil
         end
 
@@ -2125,10 +2125,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "handles complex model naming patterns" do
           # Test nested path structures
           expect(command.send(:format_together_ai_model_name, "org/suborg/model-name")).to eq("Model Name")
-          
+
           # Test models that don't match any known pattern
           expect(command.send(:format_together_ai_model_name, "unknown-provider/weird-model")).to eq("Weird Model")
-          
+
           # Test edge case for Qwen models
           expect(command.send(:format_together_ai_model_name, "qwen/qwen2-7b-instruct")).to eq("Qwen2 7b Instruct")
         end
@@ -2222,7 +2222,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
             expect(cache_data["models"].first["description"]).to eq("Test cached model")
             expect(cache_data["models"].first["default"]).to be_nil # default? returns nil, not false
           end
-          
+
           command.send(:cache_models, "google", test_models)
         end
 
@@ -2235,7 +2235,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           )
 
           expect(cache_manager).to receive(:write_cache).with("google_models.yml", expected_cache_data)
-          
+
           command.send(:cache_models, "google", test_models)
         end
       end
@@ -2260,7 +2260,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           allow(cache_manager).to receive(:read_cache).with("google_models.yml").and_return(cache_data)
 
           result = command.send(:load_models_from_cache, "google")
-          
+
           expect(result.length).to eq(1)
           model = result.first
           expect(model.id).to eq("cached-model")
@@ -2283,7 +2283,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       describe "#cache_file_name" do
         it "generates correct cache file names for all providers" do
           providers = %w[google lmstudio openai anthropic mistral together_ai]
-          
+
           providers.each do |provider|
             expected_filename = "#{provider}_models.yml"
             expect(command.send(:cache_file_name, provider)).to eq(expected_filename)
@@ -2294,7 +2294,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       describe "#cache_exists?" do
         it "delegates to cache manager correctly" do
           allow(cache_manager).to receive(:cache_exists?).with("google_models.yml").and_return(true)
-          
+
           result = command.send(:cache_exists?, "google")
           expect(result).to be true
         end
@@ -2305,19 +2305,19 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
       describe "network-level failures" do
         it "handles connection refused errors" do
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(Errno::ECONNREFUSED.new("Connection refused"))
-          
+
           expect { command.send(:fetch_google_models) }.to raise_error(Errno::ECONNREFUSED)
         end
 
         it "handles timeout errors" do
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(Timeout::Error.new("Request timeout"))
-          
+
           expect { command.send(:fetch_google_models) }.to raise_error(Timeout::Error)
         end
 
         it "handles SSL certificate errors" do
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_raise(OpenSSL::SSL::SSLError.new("Certificate verify failed"))
-          
+
           expect { command.send(:fetch_google_models) }.to raise_error(OpenSSL::SSL::SSLError)
         end
       end
@@ -2327,7 +2327,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_raise(StandardError.new("401 Unauthorized"))
-          
+
           expect { command.send(:fetch_google_models) }.to raise_error(StandardError, "401 Unauthorized")
         end
 
@@ -2335,7 +2335,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::OpenaiClient)
           allow(CodingAgentTools::Organisms::OpenaiClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_raise(StandardError.new("429 Too Many Requests"))
-          
+
           expect { command.send(:fetch_openai_models) }.to raise_error(StandardError, "429 Too Many Requests")
         end
 
@@ -2343,7 +2343,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::AnthropicClient)
           allow(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_raise(StandardError.new("500 Internal Server Error"))
-          
+
           expect { command.send(:fetch_anthropic_models) }.to raise_error(StandardError, "500 Internal Server Error")
         end
       end
@@ -2353,7 +2353,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::MistralClient)
           allow(CodingAgentTools::Organisms::MistralClient).to receive(:new).and_return(mock_client)
           allow(mock_client).to receive(:list_models).and_raise(JSON::ParserError.new("Invalid JSON"))
-          
+
           expect { command.send(:fetch_mistral_models) }.to raise_error(JSON::ParserError)
         end
 
@@ -2361,8 +2361,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
           mock_client = instance_double(CodingAgentTools::Organisms::GoogleClient)
           allow(CodingAgentTools::Organisms::GoogleClient).to receive(:new).and_return(mock_client)
           # Return response with missing required fields
-          allow(mock_client).to receive(:list_models).and_return([{ missing_name: "invalid" }])
-          
+          allow(mock_client).to receive(:list_models).and_return([{missing_name: "invalid"}])
+
           result = command.send(:fetch_google_models)
           expect(result).to eq([]) # Should filter out invalid entries
         end
@@ -2372,17 +2372,17 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
     describe "advanced context size and formatting edge cases" do
       describe "context size extraction with edge values" do
         it "handles very large context sizes" do
-          model_huge = { inputTokenLimit: 10_000_000 }
+          model_huge = {inputTokenLimit: 10_000_000}
           expect(command.send(:extract_google_context_size, model_huge)).to eq(10_000_000)
         end
 
         it "handles negative values gracefully" do
-          model_negative = { inputTokenLimit: -1 }
+          model_negative = {inputTokenLimit: -1}
           expect(command.send(:extract_google_context_size, model_negative)).to be_nil
         end
 
         it "handles string values that should be numbers" do
-          model_string = { context_length: "32768" }
+          model_string = {context_length: "32768"}
           # This would actually cause an error in the real implementation since it calls positive? on a string
           expect { command.send(:extract_lmstudio_context_size, model_string) }.to raise_error(NoMethodError)
         end
@@ -2405,7 +2405,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         it "handles model names with numbers and special patterns" do
           complex_names = [
             "provider/gpt-4o-2024-08-06",
-            "provider/claude-3-5-sonnet-20241022", 
+            "provider/claude-3-5-sonnet-20241022",
             "provider/llama-3.1-70b-instruct-turbo"
           ]
 
@@ -2443,7 +2443,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         cache_manager = instance_double(CodingAgentTools::Molecules::CacheManager)
         allow(command).to receive(:cache_manager).and_return(cache_manager)
         allow(cache_manager).to receive(:cache_exists?).and_return(false)
-        
+
         models = [CodingAgentTools::Models::LlmModelInfo.new(id: "concurrent-test", name: "Concurrent Test")]
         allow(command).to receive(:fetch_models_from_api).and_return(models)
         allow(cache_manager).to receive(:write_cache)
@@ -2474,10 +2474,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         old_debug = ENV["DEBUG_MODELS"]
         ENV["DEBUG_MODELS"] = "true"
         expect(command).to receive(:warn).with("API failed for openai: OpenAI failed")
-        
+
         openai_result = command.send(:fetch_models_from_api, "openai")
         expect(openai_result.first.id).to eq("openai-fallback")
-        
+
         ENV["DEBUG_MODELS"] = old_debug
       end
     end
@@ -2500,7 +2500,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Models do
         # Test with very long filter strings
         long_filter = "a" * 10000
         models = [CodingAgentTools::Models::LlmModelInfo.new(id: "test", name: "Test", description: "Test")]
-        
+
         result = command.send(:filter_models, models, long_filter)
         expect(result).to be_empty
       end

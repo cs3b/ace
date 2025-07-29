@@ -188,7 +188,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
         expect(error_output).to include("Error: Could not find dotfiles templates.")
         expect(error_output).to include("Expected location: dev-handbook/.meta/tpl/dotfiles/")
-        
+
         result = nil
         capture_stderr { result = command.call }
         expect(result).to eq(1)
@@ -204,7 +204,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
         error_output = capture_stderr { command.call }
 
         expect(error_output).to include("Error: Could not find dotfiles templates.")
-        
+
         result = nil
         capture_stderr { result = command.call }
         expect(result).to eq(1)
@@ -218,17 +218,16 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "without debug option" do
         it "handles the exception and shows basic error" do
-          stdout_output = nil
           error_output = nil
-          
+
           # Capture both stdout and stderr to prevent output leakage
-          stdout_output = capture_stdout do
+          capture_stdout do
             error_output = capture_stderr { command.call }
           end
 
           expect(error_output).to include("Error: Permission denied")
           expect(error_output).to include("Use --debug flag for more information")
-          
+
           result = nil
           capture_stderr { result = command.call }
           expect(result).to eq(1)
@@ -237,9 +236,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
 
       context "with debug option" do
         it "shows detailed error information including backtrace" do
-          stdout_output = nil
           error_output = nil
-          
+
           # Capture both stdout (for debug output) and stderr (for error messages)
           stdout_output = capture_stdout do
             error_output = capture_stderr { command.call(debug: true) }
@@ -248,7 +246,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::InstallDotfiles do
           expect(error_output).to include("Error: StandardError: Permission denied")
           expect(error_output).to include("Backtrace:")
           expect(stdout_output).to include("Debug: Project root:")
-          
+
           result = nil
           capture_stderr { result = command.call }
           expect(result).to eq(1)

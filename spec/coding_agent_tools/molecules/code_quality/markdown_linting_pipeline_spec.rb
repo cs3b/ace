@@ -34,10 +34,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       "markdown" => {
         "enabled" => true,
         "linters" => {
-          "task_metadata" => { "enabled" => true },
-          "link_validation" => { "enabled" => true },
-          "template_embedding" => { "enabled" => true },
-          "styleguide" => { "enabled" => true }
+          "task_metadata" => {"enabled" => true},
+          "link_validation" => {"enabled" => true},
+          "template_embedding" => {"enabled" => true},
+          "styleguide" => {"enabled" => true}
         },
         "order" => ["task_metadata", "link_validation", "template_embedding", "styleguide"]
       }
@@ -56,7 +56,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
   describe "#run" do
     context "when markdown linting is disabled" do
       let(:disabled_config) do
-        { "markdown" => { "enabled" => false } }
+        {"markdown" => {"enabled" => false}}
       end
       let(:disabled_pipeline) { described_class.new(config: disabled_config, path_resolver: mock_path_resolver) }
 
@@ -109,7 +109,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         # Mock file system operations for styleguide
         allow(File).to receive(:directory?).and_return(false)
         allow(Dir).to receive(:glob).and_return([])
-        allow(mock_kramdown_formatter).to receive(:format_file).and_return({ changed: false })
+        allow(mock_kramdown_formatter).to receive(:format_file).and_return({changed: false})
       end
 
       it "runs all enabled linters in specified order" do
@@ -129,7 +129,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
 
         # Since we're calling run with paths, it will resolve each path
         expect(mock_task_validator).to receive(:validate).with(expected_resolved_paths)
-        expect(mock_link_validator).to receive(:validate).with(expected_resolved_paths)  
+        expect(mock_link_validator).to receive(:validate).with(expected_resolved_paths)
         expect(mock_template_validator).to receive(:validate).with(expected_resolved_paths)
 
         pipeline.run(paths: paths)
@@ -138,12 +138,12 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "counts total issues from all linters" do
         allow(mock_task_validator).to receive(:validate).and_return({
           success: true,
-          errors: [{ message: "Invalid metadata" }]
+          errors: [{message: "Invalid metadata"}]
         })
 
         allow(mock_link_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Broken link" }, { message: "Another broken link" }]
+          findings: [{message: "Broken link"}, {message: "Another broken link"}]
         })
 
         allow(mock_template_validator).to receive(:validate).and_return({
@@ -163,10 +163,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           "markdown" => {
             "enabled" => true,
             "linters" => {
-              "task_metadata" => { "enabled" => true },
-              "link_validation" => { "enabled" => false },
-              "template_embedding" => { "enabled" => true },
-              "styleguide" => { "enabled" => false }
+              "task_metadata" => {"enabled" => true},
+              "link_validation" => {"enabled" => false},
+              "template_embedding" => {"enabled" => true},
+              "styleguide" => {"enabled" => false}
             }
           }
         }
@@ -178,8 +178,8 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         allow(CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator).to receive(:new).and_return(mock_task_validator)
         allow(CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator).to receive(:new).and_return(mock_template_validator)
 
-        allow(mock_task_validator).to receive(:validate).and_return({ success: true, errors: [] })
-        allow(mock_template_validator).to receive(:validate).and_return({ success: true, findings: [] })
+        allow(mock_task_validator).to receive(:validate).and_return({success: true, errors: []})
+        allow(mock_template_validator).to receive(:validate).and_return({success: true, findings: []})
       end
 
       it "only runs enabled linters" do
@@ -207,7 +207,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         allow(CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator).to receive(:new).and_return(mock_task_validator)
         allow(CodingAgentTools::Atoms::CodeQuality::KramdownFormatter).to receive(:new).and_return(mock_kramdown_formatter)
 
-        allow(mock_task_validator).to receive(:validate).and_return({ success: true, errors: [] })
+        allow(mock_task_validator).to receive(:validate).and_return({success: true, errors: []})
         allow(File).to receive(:directory?).and_return(false)
         allow(Dir).to receive(:glob).and_return([])
       end
@@ -236,10 +236,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           errors: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_task_metadata, ["."], results)
 
-        expect(results[:linters][:task_metadata]).to eq({ success: true, errors: [] })
+        expect(results[:linters][:task_metadata]).to eq({success: true, errors: []})
         expect(results[:success]).to be true
         expect(results[:total_issues]).to eq(0)
       end
@@ -247,10 +247,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "handles validation errors" do
         allow(mock_task_validator).to receive(:validate).and_return({
           success: false,
-          errors: [{ message: "Invalid task metadata" }]
+          errors: [{message: "Invalid task metadata"}]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_task_metadata, ["."], results)
 
         expect(results[:linters][:task_metadata][:success]).to be false
@@ -261,7 +261,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "handles validator exceptions" do
         allow(mock_task_validator).to receive(:validate).and_raise(StandardError.new("Validator crashed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_task_metadata, ["."], results)
 
         expect(results[:linters][:task_metadata][:success]).to be false
@@ -283,10 +283,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_link_validation, ["."], results)
 
-        expect(results[:linters][:link_validation]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:link_validation]).to eq({success: true, findings: []})
         expect(results[:success]).to be true
         expect(results[:total_issues]).to eq(0)
       end
@@ -295,12 +295,12 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         allow(mock_link_validator).to receive(:validate).and_return({
           success: true,
           findings: [
-            { message: "Broken link 1" },
-            { message: "Broken link 2" }
+            {message: "Broken link 1"},
+            {message: "Broken link 2"}
           ]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_link_validation, ["."], results)
 
         expect(results[:total_issues]).to eq(2)
@@ -309,7 +309,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "handles validator exceptions" do
         allow(mock_link_validator).to receive(:validate).and_raise(StandardError.new("Link validation failed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_link_validation, ["."], results)
 
         expect(results[:linters][:link_validation][:success]).to be false
@@ -330,10 +330,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           findings: []
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_template_embedding, ["."], results)
 
-        expect(results[:linters][:template_embedding]).to eq({ success: true, findings: [] })
+        expect(results[:linters][:template_embedding]).to eq({success: true, findings: []})
         expect(results[:success]).to be true
         expect(results[:total_issues]).to eq(0)
       end
@@ -341,10 +341,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "counts findings as issues" do
         allow(mock_template_validator).to receive(:validate).and_return({
           success: true,
-          findings: [{ message: "Template issue" }]
+          findings: [{message: "Template issue"}]
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_template_embedding, ["."], results)
 
         expect(results[:total_issues]).to eq(1)
@@ -353,7 +353,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       it "handles validator exceptions" do
         allow(mock_template_validator).to receive(:validate).and_raise(StandardError.new("Template validation failed"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         pipeline.send(:run_template_embedding, ["."], results)
 
         expect(results[:linters][:template_embedding][:success]).to be false
@@ -392,9 +392,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
             "/project/root/docs/guide.md"
           ])
 
-          allow(mock_kramdown_formatter).to receive(:format_file).and_return({ changed: false })
+          allow(mock_kramdown_formatter).to receive(:format_file).and_return({changed: false})
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["."], false, results)
 
           expect(mock_kramdown_formatter).to have_received(:format_file).with("/project/root/README.md")
@@ -405,9 +405,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
       context "with file paths" do
         it "processes markdown files directly" do
           allow(File).to receive(:directory?).with("/project/root/README.md").and_return(false)
-          allow(mock_kramdown_formatter).to receive(:format_file).with("/project/root/README.md").and_return({ changed: false })
+          allow(mock_kramdown_formatter).to receive(:format_file).with("/project/root/README.md").and_return({changed: false})
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["README.md"], false, results)
 
           expect(mock_kramdown_formatter).to have_received(:format_file).with("/project/root/README.md")
@@ -415,9 +415,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
 
         it "ignores non-markdown files" do
           allow(File).to receive(:directory?).with("/project/root/script.rb").and_return(false)
-          allow(mock_kramdown_formatter).to receive(:format_file).and_return({ changed: false })
+          allow(mock_kramdown_formatter).to receive(:format_file).and_return({changed: false})
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["script.rb"], false, results)
 
           expect(mock_kramdown_formatter).not_to have_received(:format_file)
@@ -433,7 +433,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
             file_updated: false
           })
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["README.md"], false, results)
 
           expect(results[:linters][:styleguide][:findings]).to contain_exactly({
@@ -453,7 +453,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
             file_updated: true
           })
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["README.md"], true, results)
 
           expect(results[:linters][:styleguide][:findings]).to contain_exactly({
@@ -478,9 +478,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
             .and_return(mock_kramdown_formatter)
 
           allow(File).to receive(:directory?).and_return(false)
-          allow(mock_kramdown_formatter).to receive(:format_file).and_return({ changed: false })
+          allow(mock_kramdown_formatter).to receive(:format_file).and_return({changed: false})
 
-          results = { success: true, linters: {}, total_issues: 0 }
+          results = {success: true, linters: {}, total_issues: 0}
           configured_pipeline.send(:run_styleguide, ["README.md"], false, results)
         end
       end
@@ -492,7 +492,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           file_updated: false
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         configured_pipeline.send(:run_styleguide, ["README.md"], false, results)
 
         finding = results[:linters][:styleguide][:findings].first
@@ -508,7 +508,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           file_updated: false
         })
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         configured_pipeline.send(:run_styleguide, ["/outside/file.md"], false, results)
 
         finding = results[:linters][:styleguide][:findings].first
@@ -519,7 +519,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         allow(File).to receive(:directory?).with("/project/root/README.md").and_return(false)
         allow(mock_kramdown_formatter).to receive(:format_file).with("/project/root/README.md").and_raise(StandardError.new("Formatter error"))
 
-        results = { success: true, linters: {}, total_issues: 0 }
+        results = {success: true, linters: {}, total_issues: 0}
         configured_pipeline.send(:run_styleguide, ["README.md"], false, results)
 
         expect(results[:linters][:styleguide][:success]).to be false
@@ -536,9 +536,9 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
         allow(CodingAgentTools::Atoms::CodeQuality::MarkdownLinkValidator).to receive(:new).and_return(mock_link_validator)
 
         # Task metadata succeeds
-        allow(mock_task_validator).to receive(:validate).and_return({ success: true, errors: [] })
+        allow(mock_task_validator).to receive(:validate).and_return({success: true, errors: []})
         # Link validation fails
-        allow(mock_link_validator).to receive(:validate).and_return({ success: false, findings: [] })
+        allow(mock_link_validator).to receive(:validate).and_return({success: false, findings: []})
       end
 
       it "continues running other linters when one fails" do
@@ -579,7 +579,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           "markdown" => {
             "enabled" => true,
             "linters" => {
-              "task_metadata" => { "enabled" => true }
+              "task_metadata" => {"enabled" => true}
             },
             "order" => []
           }
@@ -603,7 +603,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
           "markdown" => {
             "enabled" => true,
             "linters" => {
-              "task_metadata" => { "enabled" => true }
+              "task_metadata" => {"enabled" => true}
             }
             # No order specified - should default to linters.keys
           }
@@ -614,7 +614,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::MarkdownLintingPipeline
 
       it "uses linter keys as default order when order is not specified" do
         allow(CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator).to receive(:new).and_return(mock_task_validator)
-        allow(mock_task_validator).to receive(:validate).and_return({ success: true, errors: [] })
+        allow(mock_task_validator).to receive(:validate).and_return({success: true, errors: []})
 
         result = no_order_pipeline.run
 

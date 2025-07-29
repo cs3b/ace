@@ -63,8 +63,6 @@ module CodingAgentTools
           # Step 6: Create-path integration if requested
           create_path_results = if workflow_options[:create_path_integration]
             generate_create_path_output(input_file, analysis_result, workflow_options)
-          else
-            nil
           end
 
           # Step 7: Generate workflow summary
@@ -96,7 +94,6 @@ module CodingAgentTools
             create_path_results: create_path_results,
             execution_summary: execution_summary
           }
-
         rescue => error
           handle_workflow_error(error, input_file, workflow_options)
         end
@@ -172,9 +169,9 @@ module CodingAgentTools
         # Extract basic information
         frameworks = file_reader.extract_frameworks(raw_data)
         file_paths = file_reader.extract_file_paths(raw_data)
-        
+
         # Analyze file patterns
-        lib_files = file_paths.select { |path| path.include?('/lib/') }
+        lib_files = file_paths.select { |path| path.include?("/lib/") }
         test_files = file_paths.select { |path| path.match?(%r{/(spec|test)/}) }
 
         {
@@ -187,14 +184,14 @@ module CodingAgentTools
           },
           analysis_recommendations: {
             suggested_threshold: suggest_threshold_based_on_size(lib_files.length),
-            recommended_focus: lib_files.length > 50 ? "focused_analysis" : "full_analysis",
+            recommended_focus: (lib_files.length > 50) ? "focused_analysis" : "full_analysis",
             estimated_analysis_time: estimate_analysis_time(lib_files.length),
             suggested_output_formats: [:text, :json]
           },
           workflow_suggestions: {
             include_method_analysis: lib_files.length <= 20,
             enable_create_path: true,
-            focus_patterns: lib_files.length > 50 ? suggest_focus_patterns(lib_files) : nil
+            focus_patterns: (lib_files.length > 50) ? suggest_focus_patterns(lib_files) : nil
           }
         }
       end
@@ -226,7 +223,7 @@ module CodingAgentTools
           raise ArgumentError, "Input file is not readable: #{input_file}"
         end
 
-        unless input_file.end_with?('.json')
+        unless input_file.end_with?(".json")
           raise ArgumentError, "Input file must be a JSON file: #{input_file}"
         end
       end
@@ -239,7 +236,7 @@ module CodingAgentTools
 
       def generate_create_path_output(input_file, analysis_result, options)
         create_path_output = File.join(options[:output_dir], "create_path_integration.json")
-        
+
         create_path_data = @report_generator.generate_for_create_path(
           input_file,
           create_path_output,
@@ -247,7 +244,7 @@ module CodingAgentTools
         )
 
         File.write(create_path_output, JSON.pretty_generate(create_path_data))
-        
+
         {
           output_file: create_path_output,
           action_required: create_path_data[:action_required],
@@ -281,7 +278,7 @@ module CodingAgentTools
         else
           worst_file = under_covered.min_by(&:coverage_percentage)
           recommendations << "Start with #{worst_file.relative_path} (#{worst_file.coverage_percentage}% coverage)"
-          
+
           if under_covered.length > 3
             recommendations << "#{under_covered.length} files need attention - consider focusing on the worst cases first"
           end
@@ -299,7 +296,7 @@ module CodingAgentTools
         return {} if detailed_breakdown.empty?
 
         coverages = detailed_breakdown.map { |item| item[:coverage_percentage] }
-        
+
         {
           min_coverage: coverages.min,
           max_coverage: coverages.max,
@@ -338,9 +335,9 @@ module CodingAgentTools
 
       def suggest_focus_patterns(lib_files)
         # Suggest focusing on most common directories
-        directories = lib_files.map { |path| File.dirname(path).split('/lib/').last&.split('/')&.first }.compact
+        directories = lib_files.map { |path| File.dirname(path).split("/lib/").last&.split("/")&.first }.compact
         common_dirs = directories.tally.sort_by { |_, count| -count }.first(3).map(&:first)
-        
+
         common_dirs.map { |dir| "**/lib/#{dir}/**" }
       end
 
@@ -361,16 +358,16 @@ module CodingAgentTools
         case error
         when Atoms::CoverageFileReader::InvalidFileError
           ["Ensure the input file is a valid SimpleCov .resultset.json file",
-           "Check that SimpleCov generated the file correctly",
-           "Verify file permissions and accessibility"]
+            "Check that SimpleCov generated the file correctly",
+            "Verify file permissions and accessibility"]
         when ArgumentError
           ["Check command-line arguments and file paths",
-           "Ensure threshold values are between 0 and 100",
-           "Verify output directory permissions"]
+            "Ensure threshold values are between 0 and 100",
+            "Verify output directory permissions"]
         else
           ["Check file permissions and paths",
-           "Ensure sufficient disk space for output files",
-           "Try with simpler options to isolate the issue"]
+            "Ensure sufficient disk space for output files",
+            "Try with simpler options to isolate the issue"]
         end
       end
     end

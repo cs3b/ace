@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
     context "when no reflection paths provided" do
       it "returns failure with no paths" do
         result = collector.collect_reports([])
-        
+
         expect(result).to be_failure
         expect(result.error).to include("No valid reflection files found")
       end
@@ -103,11 +103,11 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
         it "combines results from both" do
           direct_path = reflection1
           glob_pattern = File.join(temp_dir, "*reflection2*.md")
-          
+
           # Rename reflection2 to match glob
           reflection2_renamed = File.join(temp_dir, "test-reflection2.md")
           File.rename(reflection2, reflection2_renamed)
-          
+
           result = collector.collect_reports([direct_path, glob_pattern])
 
           expect(result).to be_success
@@ -117,7 +117,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
         it "removes duplicates" do
           glob_pattern = File.join(temp_dir, "*reflection*.md")
           direct_path = reflection1
-          
+
           result = collector.collect_reports([glob_pattern, direct_path])
 
           expect(result).to be_success
@@ -176,11 +176,11 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## What Went Well
           Something good
         CONTENT
-        File.chmod(0000, unreadable_file)
+        File.chmod(0o000, unreadable_file)
       end
 
       after do
-        File.chmod(0644, unreadable_file) # Restore permissions for cleanup
+        File.chmod(0o644, unreadable_file) # Restore permissions for cleanup
       end
 
       it "skips unreadable files" do
@@ -502,27 +502,27 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "expands glob patterns correctly" do
         pattern = File.join(temp_dir, "reflection-*.md")
         result = collector.send(:expand_glob_patterns, [pattern, direct_file])
-        
+
         expect(result).to contain_exactly(pattern_file1, pattern_file2, direct_file)
       end
 
       it "handles non-glob patterns as-is" do
         result = collector.send(:expand_glob_patterns, [direct_file])
-        
+
         expect(result).to eq([direct_file])
       end
 
       it "removes duplicates from expanded patterns" do
         pattern = File.join(temp_dir, "reflection-001.md")
         result = collector.send(:expand_glob_patterns, [pattern, pattern_file1])
-        
+
         expect(result).to eq([pattern_file1])
       end
 
       it "handles empty glob results" do
         empty_pattern = File.join(temp_dir, "nonexistent-*.md")
         result = collector.send(:expand_glob_patterns, [empty_pattern])
-        
+
         expect(result).to eq([])
       end
     end
@@ -532,7 +532,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
     context "with complex glob patterns" do
       let(:nested_dir) { File.join(temp_dir, "nested") }
       let(:nested_reflection) { File.join(nested_dir, "deep-reflection.md") }
-      
+
       before do
         Dir.mkdir(nested_dir)
         File.write(nested_reflection, <<~CONTENT)
@@ -548,7 +548,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "handles recursive glob patterns" do
         recursive_pattern = File.join(temp_dir, "**", "*reflection*.md")
         result = collector.collect_reports([recursive_pattern])
-        
+
         expect(result).to be_success
         expect(result.data[:reports]).to include(nested_reflection)
       end
@@ -556,7 +556,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
 
     context "with file encoding and special characters" do
       let(:unicode_file) { File.join(temp_dir, "unicode-reflection.md") }
-      
+
       before do
         # Create file with unicode characters
         File.write(unicode_file, <<~CONTENT, encoding: "utf-8")
@@ -571,7 +571,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
 
       it "handles unicode content correctly" do
         result = collector.collect_reports([unicode_file])
-        
+
         expect(result).to be_success
         expect(result.data[:reports]).to include(unicode_file)
       end
@@ -586,7 +586,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## What Went Well
           Exactly two markers here
         CONTENT
-        
+
         result = collector.collect_reports([borderline_file])
         expect(result).to be_success
       end
@@ -597,7 +597,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## What Went Well
           Only one marker
         CONTENT
-        
+
         result = collector.collect_reports([borderline_file])
         expect(result).to be_failure
       end
@@ -616,7 +616,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## Action Items
           Next steps
         CONTENT
-        
+
         result = collector.collect_reports([borderline_file])
         expect(result).to be_success
       end
@@ -630,7 +630,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## What Went Well
           Content here
         CONTENT
-        
+
         result = collector.collect_reports([weird_extension])
         expect(result).to be_success
       end
@@ -639,7 +639,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
         if File.respond_to?(:symlink) # Skip on systems without symlink support
           broken_link = File.join(temp_dir, "broken-link.md")
           non_existent = File.join(temp_dir, "does-not-exist.md")
-          
+
           begin
             File.symlink(non_existent, broken_link)
             result = collector.collect_reports([broken_link])
@@ -669,7 +669,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           Real reflection content here
           **Date**: Today
         CONTENT
-        
+
         # Should still detect the real patterns outside code blocks
         result = collector.collect_reports([edge_case_file])
         expect(result).to be_success
@@ -683,7 +683,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## What Could Be improved (lowercase 'i')
           More content
         CONTENT
-        
+
         # Should still detect case-insensitive patterns
         result = collector.collect_reports([edge_case_file])
         expect(result).to be_success
@@ -698,7 +698,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           ## Action Items
           Regular content
         CONTENT
-        
+
         result = collector.collect_reports([edge_case_file])
         expect(result).to be_success
       end
@@ -708,10 +708,10 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "propagates file read errors" do
         error_file = File.join(temp_dir, "error.md")
         File.write(error_file, "Content")
-        
+
         # Mock file read to raise an error
         allow(File).to receive(:read).with(error_file, encoding: "utf-8").and_raise(StandardError, "Read error")
-        
+
         # The current implementation doesn't handle read errors, so it should raise
         expect { collector.collect_reports([error_file]) }.to raise_error(StandardError, "Read error")
       end
@@ -793,14 +793,14 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "accumulates multiple different error types in a single call" do
         unreadable_file = File.join(temp_dir, "unreadable.md")
         empty_file = File.join(temp_dir, "empty.md")
-        
+
         # Create unreadable file
         File.write(unreadable_file, <<~CONTENT)
           # Reflection
           ## What Went Well
           Good content
         CONTENT
-        File.chmod(0000, unreadable_file)
+        File.chmod(0o000, unreadable_file)
 
         # Create empty file
         File.write(empty_file, "")
@@ -814,7 +814,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
           expect(error_msg).to include("Invalid reflection file")
           expect(error_msg).to include("File not found")
         ensure
-          File.chmod(0644, unreadable_file) # Restore permissions for cleanup
+          File.chmod(0o644, unreadable_file) # Restore permissions for cleanup
         end
       end
 
@@ -822,7 +822,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
         # Test that sorting works correctly with mixed valid/invalid scenarios
         reflection_a = File.join(temp_dir, "a-reflection.md")
         reflection_z = File.join(temp_dir, "z-reflection.md")
-        
+
         File.write(reflection_a, <<~CONTENT)
           # Reflection A
           **Date**: Today
@@ -851,11 +851,11 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "exercises all code paths in collect_reports method" do
         # This test specifically targets the exact flow through collect_reports
         # to ensure all lines 15-38 are covered
-        
+
         # Setup files that will exercise different code paths
         valid_file1 = File.join(temp_dir, "reflection1.md")
         valid_file2 = File.join(temp_dir, "reflection2.md")
-        
+
         File.write(valid_file1, <<~CONTENT)
           # Daily Reflection
           **Date**: 2025-01-01
@@ -876,7 +876,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
 
         # Test successful path with multiple valid files
         result = collector.collect_reports([valid_file1, valid_file2])
-        
+
         expect(result).to be_success
         expect(result.data[:reports]).to contain_exactly(valid_file1, valid_file2)
         expect(result.data[:reports]).to eq(result.data[:reports].sort)
@@ -885,15 +885,15 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
       it "exercises error accumulation and result failure paths" do
         # This specifically tests the error accumulation logic in lines 19-29
         # and the failure result creation in lines 31-34
-        
+
         invalid_file = File.join(temp_dir, "not-reflection.md")
         missing_file1 = File.join(temp_dir, "missing1.md")
         missing_file2 = File.join(temp_dir, "missing2.md")
-        
+
         File.write(invalid_file, "# Regular Doc\nNot a reflection at all.")
-        
+
         result = collector.collect_reports([invalid_file, missing_file1, missing_file2])
-        
+
         expect(result).to be_failure
         expect(result.error).to include("Invalid reflection file: #{invalid_file}")
         expect(result.error).to include("File not found: #{missing_file1}")

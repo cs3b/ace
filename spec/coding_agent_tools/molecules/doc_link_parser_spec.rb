@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:internal_link?).and_return(true)
           allow(mock_config_loader).to receive(:include_external_links?).and_return(false)
           allow(mock_config_loader).to receive(:include_anchor_links?).and_return(false)
-          
+
           # Stub all possible resolve_link calls
           allow(mock_path_resolver).to receive(:resolve_link).and_return("resolved")
           allow(mock_path_resolver).to receive(:resolve_link).with(file_path, "docs/target.md").and_return("docs/target.md")
@@ -102,7 +102,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:internal_link?).and_return(false)
           allow(mock_config_loader).to receive(:include_external_links?).and_return(true)
           allow(mock_config_loader).to receive(:include_anchor_links?).and_return(false)
-          
+
           allow(mock_path_resolver).to receive(:resolve_link).with(file_path, "external.com").and_return("external.com")
         end
 
@@ -137,7 +137,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:internal_link?).and_return(false)
           allow(mock_config_loader).to receive(:include_external_links?).and_return(false)
           allow(mock_config_loader).to receive(:include_anchor_links?).and_return(true)
-          
+
           allow(mock_path_resolver).to receive(:resolve_link).with(file_path, "#anchor").and_return("#anchor")
         end
 
@@ -165,7 +165,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
       before do
         allow(Dir).to receive(:glob).with("**/*.md").and_return(["docs/test.md", "exclude_this.md", "tmp/hidden.md"])
         allow(Dir).to receive(:glob).with("**/*.wf.md").and_return(["workflows/test.wf.md", "node_modules/test.wf.md"])
-        
+
         allow(File).to receive(:file?).and_return(true)
         allow(File).to receive(:fnmatch).with("**/exclude_*.md", "exclude_this.md").and_return(true)
         allow(File).to receive(:fnmatch).with("**/exclude_*.md", "docs/test.md").and_return(false)
@@ -176,7 +176,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
 
       it "collects files matching patterns while respecting exclusions and skip folders" do
         result = parser.collect_documentation_files
-        
+
         expect(result).to include("docs/test.md")
         expect(result).to include("workflows/test.wf.md")
         expect(result).not_to include("exclude_this.md")  # Excluded by pattern
@@ -200,7 +200,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
       before do
         allow(Dir).to receive(:glob).with("**/*.md").and_return(["docs/", "docs/test.md"])
         allow(Dir).to receive(:glob).with("**/*.wf.md").and_return([])
-        
+
         allow(File).to receive(:file?).with("docs/").and_return(false)
         allow(File).to receive(:file?).with("docs/test.md").and_return(true)
         allow(File).to receive(:fnmatch).and_return(false)
@@ -238,21 +238,21 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:extract_markdown_links)
             .with(file_content)
             .and_return([["link text", "target.md"], ["external", "https://example.com"]])
-          
+
           allow(mock_reference_extractor).to receive(:internal_link?)
             .with("target.md").and_return(true)
           allow(mock_reference_extractor).to receive(:internal_link?)
             .with("https://example.com").and_return(false)
-          
+
           allow(mock_path_resolver).to receive(:resolve_link)
             .with(file_path, "target.md").and_return("target.md")
-          
+
           allow(mock_reference_extractor).to receive(:extract_context_references).and_return([])
         end
 
         it "processes markdown links and returns resolved internal links" do
           result = parser.parse_with_context(file_path, all_files)
-          
+
           expect(result[:markdown_links].size).to eq(1)
           expect(result[:markdown_links].first).to eq({
             text: "link text",
@@ -268,7 +268,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:extract_context_references)
             .with(file_content)
             .and_return(["context.md", "nonexistent.md"])
-          
+
           allow(mock_path_resolver).to receive(:resolve_link)
             .with(file_path, "context.md").and_return("context.md")
           allow(mock_path_resolver).to receive(:resolve_link)
@@ -277,7 +277,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
 
         it "processes context references and returns resolved existing files" do
           result = parser.parse_with_context(file_path, all_files)
-          
+
           expect(result[:context_refs].size).to eq(1)
           expect(result[:context_refs].first).to eq({
             original: "context.md",
@@ -291,13 +291,13 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
           allow(mock_reference_extractor).to receive(:extract_markdown_links)
             .with(file_content)
             .and_return([["link", "target.md"]])
-          
+
           allow(mock_reference_extractor).to receive(:extract_context_references)
             .with(file_content)
             .and_return(["context.md"])
-          
+
           allow(mock_reference_extractor).to receive(:internal_link?).and_return(true)
-          
+
           allow(mock_path_resolver).to receive(:resolve_link)
             .with(file_path, "target.md").and_return("target.md")
           allow(mock_path_resolver).to receive(:resolve_link)
@@ -306,7 +306,7 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
 
         it "processes both types of references" do
           result = parser.parse_with_context(file_path, all_files)
-          
+
           expect(result[:markdown_links].size).to eq(1)
           expect(result[:context_refs].size).to eq(1)
         end
@@ -332,9 +332,9 @@ RSpec.describe CodingAgentTools::Molecules::DocLinkParser do
 
       it "can parse real file content" do
         File.write(test_file, "# Test\n\nSee [docs](../README.md) for more info.")
-        
+
         result = parser.parse_file_references(test_file, Set.new([File.expand_path("../README.md", test_file)]))
-        
+
         # The result should be influenced by actual path resolution
         expect(result).to be_an(Array)
       end

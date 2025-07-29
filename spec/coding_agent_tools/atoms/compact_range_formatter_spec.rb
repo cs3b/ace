@@ -229,7 +229,7 @@ RSpec.describe CodingAgentTools::Atoms::CompactRangeFormatter do
       it "calculates compression for simple case" do
         original = [11, 12, 13, 22, 23, 25, 26, 27, 28]
         result = formatter.calculate_compression_metrics(original)
-        
+
         expect(result[:original_size]).to be > 0
         expect(result[:compact_size]).to be > 0
         expect(result[:compression_ratio]).to be < 100.0  # Should be compressed
@@ -240,7 +240,7 @@ RSpec.describe CodingAgentTools::Atoms::CompactRangeFormatter do
       it "provides detailed metrics" do
         original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         result = formatter.calculate_compression_metrics(original)
-        
+
         expect(result).to have_key(:original_size)
         expect(result).to have_key(:compact_size)
         expect(result).to have_key(:compression_ratio)

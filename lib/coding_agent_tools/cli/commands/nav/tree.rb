@@ -15,46 +15,44 @@ module CodingAgentTools
           option :autocorrect, type: :boolean, default: true, desc: "Enable path autocorrection suggestions"
 
           def call(path: nil, **options)
-            begin
-              # Initialize components
-              config_loader = CodingAgentTools::Molecules::TreeConfigLoader.new
-              config = config_loader.load
-              @path_resolver = CodingAgentTools::Molecules::PathResolver.new
-              @alternatives = []
+            # Initialize components
+            config_loader = CodingAgentTools::Molecules::TreeConfigLoader.new
+            config = config_loader.load
+            @path_resolver = CodingAgentTools::Molecules::PathResolver.new
+            @alternatives = []
 
-              # Resolve target directory
-              target_dir = resolve_target_directory(path, options[:autocorrect])
-              return unless target_dir
+            # Resolve target directory
+            target_dir = resolve_target_directory(path, options[:autocorrect])
+            return unless target_dir
 
-              # Determine context
-              context = options[:context] || "default"
-              context_config = config.dig("contexts", context) || config.dig("contexts", "default") || {}
+            # Determine context
+            context = options[:context] || "default"
+            context_config = config.dig("contexts", context) || config.dig("contexts", "default") || {}
 
-              # Determine depth
-              depth = options[:depth] || context_config["max_depth"] || config["default_depth"] || 3
+            # Determine depth
+            depth = options[:depth] || context_config["max_depth"] || config["default_depth"] || 3
 
-              # Build tree command
-              excludes = build_exclude_patterns(config, context_config)
-              tree_command = build_tree_command(target_dir, depth, excludes)
+            # Build tree command
+            excludes = build_exclude_patterns(config, context_config)
+            tree_command = build_tree_command(target_dir, depth, excludes)
 
-              # Execute tree command
-              output = `#{tree_command}`
-              exit_status = $?.exitstatus
+            # Execute tree command
+            output = `#{tree_command}`
+            exit_status = $?.exitstatus
 
-              if exit_status == 0
-                puts output
+            if exit_status == 0
+              puts output
 
-                # Show alternatives if any exist
-                unless @alternatives.empty?
-                  puts @path_resolver.format_alternative_matches(@alternatives)
-                end
-              else
-                puts "Error executing tree command: #{tree_command}"
-                puts "Output: #{output}" unless output.strip.empty?
+              # Show alternatives if any exist
+              unless @alternatives.empty?
+                puts @path_resolver.format_alternative_matches(@alternatives)
               end
-            rescue => e
-              puts "Error: #{e.message}"
+            else
+              puts "Error executing tree command: #{tree_command}"
+              puts "Output: #{output}" unless output.strip.empty?
             end
+          rescue => e
+            puts "Error: #{e.message}"
           end
 
           private

@@ -148,7 +148,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         allow(mock_coordinator).to receive(:execute_across_repositories).and_return(verbose_result)
         allow(mock_color_formatter).to receive(:format_repository_status).with("main", "").and_return("[main] clean")
         allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
-        
+
         result = orchestrator.status({verbose: true})
         expect(result[:formatted_output]).to include("[main] clean")
       end
@@ -165,7 +165,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         }
         allow(mock_coordinator).to receive(:execute_across_repositories).and_return(empty_result)
         allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
-        
+
         result = orchestrator.status
         expect(result[:formatted_output]).not_to include("[main]")
         expect(result[:formatted_output]).to include("[submodule1]")
@@ -183,7 +183,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         }
         allow(mock_coordinator).to receive(:execute_across_repositories).and_return(failed_result)
         allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? newfile.txt").and_return("[submodule1] ?? newfile.txt")
-        
+
         result = orchestrator.status
         expect(result[:formatted_output]).not_to include("[main]")
         expect(result[:formatted_output]).to include("[submodule1]")
@@ -308,7 +308,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         orchestrator.add(paths)
       end
 
-        it "builds add commands from dispatch info" do
+      it "builds add commands from dispatch info" do
         # Test the actual build_add_commands method
         commands = orchestrator.send(:build_add_commands, mock_dispatch_info, {})
         expect(commands).to have_key("main")
@@ -775,7 +775,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       context "with execution failures" do
         before do
           allow(orchestrator).to receive(:execute_sequentially).and_return({
-            success: false, 
+            success: false,
             error: "Remove operation failed",
             errors: [{repository: "main", message: "fatal: pathspec did not match any files"}]
           })
@@ -796,7 +796,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
       before do
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return(edge_case_dispatch_info)
-        allow(orchestrator).to receive(:build_rm_commands).and_return({"main" => ["rm #{edge_case_paths.join(' ')}"]})
+        allow(orchestrator).to receive(:build_rm_commands).and_return({"main" => ["rm #{edge_case_paths.join(" ")}"]})
       end
 
       it "handles paths with special characters" do
@@ -1184,7 +1184,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         # Verify that the organism uses molecules (PathDispatcher, MultiRepoCoordinator)
         # and doesn't directly call atoms
         expect(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).with(project_root)
-        
+
         mock_dispatcher = instance_double(CodingAgentTools::Molecules::Git::PathDispatcher)
         allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return({"main" => {paths: []}})
@@ -1217,7 +1217,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
             "failed_repo" => {success: false, stderr: "Not a git repository"}
           }
         }
-        
+
         allow(mock_coordinator).to receive(:execute_across_repositories).and_return(complex_result)
         allow(mock_color_formatter).to receive(:format_repository_status).with("main", "M  main_file.txt\nA  new_main.txt").and_return("[main] M  main_file.txt\nA  new_main.txt")
         allow(mock_color_formatter).to receive(:format_repository_status).with("submodule1", "?? untracked_sub.txt\nM  sub_file.txt").and_return("[submodule1] ?? untracked_sub.txt\nM  sub_file.txt")
@@ -1267,7 +1267,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "passes color options to StatusColorFormatter" do
         color_options = {color: true, theme: "dark"}
         allow(mock_coordinator).to receive(:execute_across_repositories).and_return({success: true, results: {}})
-        
+
         expect(CodingAgentTools::Atoms::Git::StatusColorFormatter).to receive(:new).with(color_options)
         orchestrator.status(color_options)
       end
@@ -1299,10 +1299,10 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         result = orchestrator.send(:build_log_command, complex_options)
         expect(result).to include("log")
         expect(result).to include("--graph")
-        expect(result).to include("--since=#{Shellwords.escape('2023-01-01')}")
-        expect(result).to include("--until=#{Shellwords.escape('2023-12-31')}")
-        expect(result).to include("--author=#{Shellwords.escape('developer@example.com')}")
-        expect(result).to include("--grep=#{Shellwords.escape('fix:')}")
+        expect(result).to include("--since=#{Shellwords.escape("2023-01-01")}")
+        expect(result).to include("--until=#{Shellwords.escape("2023-12-31")}")
+        expect(result).to include("--author=#{Shellwords.escape("developer@example.com")}")
+        expect(result).to include("--grep=#{Shellwords.escape("fix:")}")
         expect(result).to include("-n 50")
         expect(result).to include("--date=iso")
       end
@@ -1429,7 +1429,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         allow(mock_color_formatter).to receive(:format_commit).and_return("formatted commit")
 
         result = orchestrator.send(:format_commits_with_padding, sample_commits, {})
-        
+
         # Should pad to accommodate "submodule1-with-long-name" (25 chars) + brackets (2 chars) = 27 chars
         expect(result).to include("[main]")
         expect(result).to include("[submodule1-with-long-name]")
@@ -1447,9 +1447,9 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles multiline commits with proper indentation" do
         multiline_commits = [
           {
-            repo: "main", 
-            timestamp: Time.parse("2023-01-01"), 
-            display_line: "commit abc123\nAuthor: John Doe\n\n    Fix multiline issue", 
+            repo: "main",
+            timestamp: Time.parse("2023-01-01"),
+            display_line: "commit abc123\nAuthor: John Doe\n\n    Fix multiline issue",
             type: :multiline
           }
         ]
@@ -1624,7 +1624,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
       it "includes author filter" do
         result = orchestrator.send(:build_log_command, {author: "john@example.com"})
-        expect(result).to include("--author=#{Shellwords.escape('john@example.com')}")
+        expect(result).to include("--author=#{Shellwords.escape("john@example.com")}")
       end
 
       it "includes max count" do
@@ -1637,7 +1637,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "parses oneline commit format correctly" do
         line = "abc123 Initial commit (2023-01-01 10:00:00 +0000)"
         result = orchestrator.send(:parse_commit_line, line, "main")
-        
+
         expect(result).not_to be_nil
         expect(result[:repo]).to eq("main")
         expect(result[:display_line]).to eq("abc123 Initial commit")
@@ -1678,7 +1678,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "builds add commands with all flags" do
         options = {all: true, update: true, force: true, patch: true}
         result = orchestrator.send(:build_add_commands, sample_dispatch_info, options)
-        
+
         expect(result["main"].first).to include("add")
         expect(result["main"].first).to include("--all")
         expect(result["main"].first).to include("--update")
@@ -1692,7 +1692,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         special_dispatch_info = {
           "main" => {paths: ["file with spaces.txt", "file'with'quotes.txt", "file\"with\"double-quotes.txt"]}
         }
-        
+
         result = orchestrator.send(:build_add_commands, special_dispatch_info, {})
         command = result["main"].first
         expect(command).to include(Shellwords.escape("file with spaces.txt"))
@@ -1705,7 +1705,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
           "main" => {paths: ["file1.txt"]},
           "submodule1" => {paths: []}
         }
-        
+
         result = orchestrator.send(:build_add_commands, empty_paths_info, {})
         expect(result).to have_key("main")
         expect(result).not_to have_key("submodule1")
@@ -1723,7 +1723,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         options = {force: true, dry_run: true, verbose: true}
 
         result = orchestrator.send(:build_mv_commands, mv_dispatch_info, sources, destination, options)
-        
+
         expect(result["main"].first).to include("mv")
         expect(result["main"].first).to include("--force")
         expect(result["main"].first).to include("--dry-run")
@@ -1763,7 +1763,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "builds rm commands with all flags" do
         options = {force: true, dry_run: true, recursive: true, cached: true, ignore_unmatch: true, quiet: true}
         result = orchestrator.send(:build_rm_commands, sample_dispatch_info, options)
-        
+
         main_command = result["main"].first
         expect(main_command).to include("rm")
         expect(main_command).to include("--force")
@@ -1803,9 +1803,9 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
         result = orchestrator.send(:build_restore_commands, sample_dispatch_info, options)
         main_command = result["main"].first
-        
+
         expect(main_command).to include("restore")
-        expect(main_command).to include("--source=#{Shellwords.escape('HEAD~1')}")
+        expect(main_command).to include("--source=#{Shellwords.escape("HEAD~1")}")
         expect(main_command).to include("--staged")
         expect(main_command).to include("--worktree")
         expect(main_command).to include("--merge")
@@ -1820,8 +1820,8 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles special characters in source option" do
         options = {source: "feature/branch-with-special-chars"}
         result = orchestrator.send(:build_restore_commands, sample_dispatch_info, options)
-        
-        expect(result["main"].first).to include("--source=#{Shellwords.escape('feature/branch-with-special-chars')}")
+
+        expect(result["main"].first).to include("--source=#{Shellwords.escape("feature/branch-with-special-chars")}")
       end
     end
 
@@ -1851,7 +1851,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles force create branch option" do
         options = {force_create_branch: "feature-branch"}
         result = orchestrator.send(:build_checkout_command, [], options)
-        
+
         expect(result).to include("-B")
         expect(result).to include(Shellwords.escape("feature-branch"))
       end
@@ -1859,7 +1859,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles orphan branch option" do
         options = {orphan: "orphan-branch"}
         result = orchestrator.send(:build_checkout_command, [], options)
-        
+
         expect(result).to include("--orphan")
         expect(result).to include(Shellwords.escape("orphan-branch"))
       end
@@ -1867,14 +1867,14 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles no-track option" do
         options = {no_track: true}
         result = orchestrator.send(:build_checkout_command, ["branch"], options)
-        
+
         expect(result).to include("--no-track")
       end
 
       it "handles multiple paths correctly" do
         paths = ["file1.txt", "path with spaces/file2.txt", "file'with'quotes.txt"]
         result = orchestrator.send(:build_checkout_command, paths, {})
-        
+
         paths.each do |path|
           expect(result).to include(Shellwords.escape(path))
         end
@@ -1921,7 +1921,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles force create option" do
         options = {force_create: "force-branch"}
         result = orchestrator.send(:build_switch_command, "base", options)
-        
+
         expect(result).to include("-C")
         expect(result).to include(Shellwords.escape("force-branch"))
       end
@@ -1929,7 +1929,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "handles orphan branch creation" do
         options = {orphan: "orphan-branch"}
         result = orchestrator.send(:build_switch_command, nil, options)
-        
+
         expect(result).to include("--orphan")
         expect(result).to include(Shellwords.escape("orphan-branch"))
       end
@@ -1942,7 +1942,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "escapes special characters in branch names" do
         branch_name = "feature/branch-with-special-chars"
         result = orchestrator.send(:build_switch_command, branch_name, {})
-        
+
         expect(result).to include(Shellwords.escape(branch_name))
       end
     end
@@ -2046,7 +2046,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
       it "executes add --all across all repositories" do
         options = {verbose: true, debug: true}
         expect(mock_coordinator).to receive(:execute_across_repositories).with("add --all", options).and_return({success: true})
-        
+
         result = orchestrator.send(:add_all, options)
         expect(result[:success]).to be true
       end
@@ -2135,12 +2135,12 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
           "repo2" => ["add file3.txt"]
         }
         command_results = [{success: true, stdout: "added file"}, {success: true, stdout: "added file"}]
-        
+
         expect(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new)
           .with(repository_path: "/path/to/repo1").and_return(mock_executor)
         expect(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new)
           .with(repository_path: "/path/to/repo2").and_return(mock_executor)
-        
+
         expect(mock_executor).to receive(:execute).with("add file1.txt", {capture_output: true}).and_return(command_results[0])
         expect(mock_executor).to receive(:execute).with("add file2.txt", {capture_output: true}).and_return(command_results[1])
         expect(mock_executor).to receive(:execute).with("add file3.txt", {capture_output: true}).and_return(command_results[0])
@@ -2169,10 +2169,10 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
           "repo1" => ["failing command"],
           "repo2" => ["successful command"]
         }
-        
+
         allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).with(repository_path: "/path/to/repo1").and_return(mock_executor)
         allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).with(repository_path: "/path/to/repo2").and_return(mock_executor)
-        
+
         expect(mock_executor).to receive(:execute).with("failing command", {capture_output: true}).and_raise(StandardError.new("Failed"))
         expect(mock_executor).to receive(:execute).with("successful command", {capture_output: true}).and_return({success: true})
 
@@ -2262,7 +2262,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
         allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).with(repository_path: "/path/to/submodule1").and_return(mock_executor)
         allow(CodingAgentTools::Atoms::Git::GitCommandExecutor).to receive(:new).with(repository_path: "/path/to/main").and_return(mock_executor)
-        
+
         expect(mock_executor).to receive(:execute).with("failing sub command", {capture_output: true}).and_raise(StandardError.new("Submodule failed"))
         expect(mock_executor).to receive(:execute).with("main command", {capture_output: true}).and_return({success: true})
 
@@ -2399,7 +2399,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         allow(orchestrator).to receive(:repositories).and_return(repos)
         allow(orchestrator).to receive(:get_staged_diff).and_return("diff content")
         allow(mock_generator).to receive(:generate_message).and_return("test message")
-        
+
         expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).and_return({success: true})
 
         result = orchestrator.send(:commit_with_llm_message, {concurrent: true})
@@ -2597,7 +2597,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         it "handles debug output when debug option is true" do
           allow(orchestrator).to receive(:add).and_return({success: true})
           allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
-          
+
           expect { orchestrator.commit({debug: true, message: "test"}) }.to output(/DEBUG: commit options/).to_stdout
         end
 
@@ -2626,7 +2626,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
         it "handles debug output for repo_only option" do
           allow(orchestrator).to receive(:commit_with_message).and_return({success: true})
-          
+
           expect { orchestrator.commit({repo_only: true, debug: true, message: "test"}) }.to output(/DEBUG: Skipping add_all/).to_stdout
         end
 

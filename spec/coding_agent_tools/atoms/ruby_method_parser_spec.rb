@@ -35,7 +35,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
   describe "#parse_content" do
     it "extracts instance methods" do
       methods = subject.parse_content(sample_ruby_code)
-      
+
       instance_method = methods.find { |m| m.name == "instance_method" }
       expect(instance_method).not_to be_nil
       expect(instance_method.type).to eq(:def)
@@ -45,7 +45,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
 
     it "extracts class methods" do
       methods = subject.parse_content(sample_ruby_code)
-      
+
       class_method = methods.find { |m| m.name == "self.class_method" }
       expect(class_method).not_to be_nil
       expect(class_method.type).to eq(:defs)
@@ -55,7 +55,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
 
     it "extracts private methods" do
       methods = subject.parse_content(sample_ruby_code)
-      
+
       private_method = methods.find { |m| m.name == "private_method" }
       expect(private_method).not_to be_nil
       expect(private_method.type).to eq(:def)
@@ -63,7 +63,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
 
     it "extracts methods from modules" do
       methods = subject.parse_content(sample_ruby_code)
-      
+
       module_method = methods.find { |m| m.name == "module_method" }
       expect(module_method).not_to be_nil
       expect(module_method.type).to eq(:def)
@@ -91,7 +91,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
 
       it "extracts methods from nested classes" do
         methods = subject.parse_content(nested_ruby_code)
-        
+
         method_names = methods.map(&:name)
         expect(method_names).to contain_exactly("outer_method", "inner_method")
       end
@@ -128,7 +128,7 @@ RSpec.describe CodingAgentTools::Atoms::RubyMethodParser do
     it "successfully parses valid Ruby file" do
       methods = subject.parse_file(temp_file.path)
       expect(methods.length).to eq(4)
-      
+
       method_names = methods.map(&:name)
       expect(method_names).to include("instance_method", "self.class_method")
     end

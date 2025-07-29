@@ -141,24 +141,24 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
       end
     end
 
-    # Edge case tests for empty/missing tools 
+    # Edge case tests for empty/missing tools
     context "edge cases with tool data" do
       it "handles empty tools list gracefully by mocking list_all_tools" do
-        empty_result = { categories: {}, total: 0 }
+        empty_result = {categories: {}, total: 0}
         tool_lister = instance_double(CodingAgentTools::Organisms::ToolLister)
         allow(CodingAgentTools::Organisms::ToolLister).to receive(:new).and_return(tool_lister)
         allow(tool_lister).to receive(:list_all_tools).and_return(empty_result)
-        
+
         output = capture_output { command.call }
         expect(output).to include("Total: 0 tools available")
       end
 
       it "handles empty results in JSON format" do
-        empty_result = { categories: {}, total: 0 }
+        empty_result = {categories: {}, total: 0}
         tool_lister = instance_double(CodingAgentTools::Organisms::ToolLister)
         allow(CodingAgentTools::Organisms::ToolLister).to receive(:new).and_return(tool_lister)
         allow(tool_lister).to receive(:list_all_tools).and_return(empty_result)
-        
+
         output = capture_output { command.call(format: "json") }
         parsed = JSON.parse(output)
         expect(parsed["total"]).to eq(0)
@@ -168,7 +168,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
         tool_lister = instance_double(CodingAgentTools::Organisms::ToolLister)
         allow(CodingAgentTools::Organisms::ToolLister).to receive(:new).and_return(tool_lister)
         allow(tool_lister).to receive(:list_tool_names).and_return([])
-        
+
         output = capture_output { command.call(format: "names") }
         expect(output.strip).to be_empty
       end
@@ -178,7 +178,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
     context "complex category filtering" do
       it "displays correct total when filtering single category" do
         output = capture_output { command.call(category: "Git Operations") }
-        
+
         # Extract total from output and verify it's less than overall total
         total_line = output.lines.find { |line| line.include?("Total:") }
         expect(total_line).to match(/Total: \d+ tool/)
@@ -186,7 +186,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
       it "handles category filtering with no_descriptions" do
         output = capture_output { command.call(category: "Git Operations", no_descriptions: true) }
-        
+
         expect(output).to include("Git Operations:")
         expect(output).to include("git-status")
         lines_with_descriptions = output.lines.select { |line| line.include?(" - ") }
@@ -214,21 +214,21 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
             "Test Category" => {
               description: "Test tools",
               tools: [
-                { name: "tool-with-dashes", description: "Tool with dashes" },
-                { name: "tool_with_underscores", description: "Tool with underscores" }
+                {name: "tool-with-dashes", description: "Tool with dashes"},
+                {name: "tool_with_underscores", description: "Tool with underscores"}
               ],
               count: 2
             }
           },
           total: 2
         }
-        
+
         tool_lister = instance_double(CodingAgentTools::Organisms::ToolLister)
         allow(CodingAgentTools::Organisms::ToolLister).to receive(:new).and_return(tool_lister)
         allow(tool_lister).to receive(:list_all_tools).and_return(special_result)
 
         output = capture_output { command.call(format: "json") }
-        
+
         # Should parse without errors
         expect { JSON.parse(output) }.not_to raise_error
         parsed = JSON.parse(output)
@@ -241,14 +241,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
             "Test Category" => {
               description: "Test tools",
               tools: [
-                { name: "very-long-tool-name-that-might-affect-formatting", description: "Very long tool name" }
+                {name: "very-long-tool-name-that-might-affect-formatting", description: "Very long tool name"}
               ],
               count: 1
             }
           },
           total: 1
         }
-        
+
         tool_lister = instance_double(CodingAgentTools::Organisms::ToolLister)
         allow(CodingAgentTools::Organisms::ToolLister).to receive(:new).and_return(tool_lister)
         allow(tool_lister).to receive(:list_all_tools).and_return(long_result)
@@ -259,7 +259,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
       it "maintains consistent output structure across all formats" do
         formats = %w[table json plain]
-        
+
         formats.each do |format|
           output = capture_output { command.call(format: format) }
           expect(output).not_to be_empty
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
         table_output = capture_output { command.call(format: "table") }
         json_output = capture_output { command.call(format: "json") }
         names_output = capture_output { command.call(format: "names") }
-        
+
         expect(table_output).to include("Available Coding Agent Tools:")
         expect(JSON.parse(json_output)).to have_key("categories")
         expect(names_output.lines.first.strip).to match(/\A[a-z-]+\z/)
@@ -283,14 +283,14 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
 
       it "handles combining multiple options correctly" do
         # Test combinations of options
-        output = capture_output { 
+        output = capture_output {
           command.call(
-            format: "plain", 
-            no_descriptions: true, 
+            format: "plain",
+            no_descriptions: true,
             no_categories: false
-          ) 
+          )
         }
-        
+
         expect(output).to include("=== Git Operations ===")
         expect(output).not_to include(" - ") # no descriptions
       end
@@ -299,7 +299,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
         # Call multiple times and verify consistent results
         output1 = capture_output { command.call(format: "names") }
         output2 = capture_output { command.call(format: "names") }
-        
+
         expect(output1).to eq(output2)
       end
     end
@@ -310,7 +310,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
         start_time = Time.now
         command.call
         end_time = Time.now
-        
+
         execution_time = end_time - start_time
         expect(execution_time).to be < 1.0 # Should complete in under 1 second
       end
@@ -320,7 +320,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::All do
         start_time = Time.now
         command.call(format: "names")
         end_time = Time.now
-        
+
         execution_time = end_time - start_time
         expect(execution_time).to be < 0.5 # Should be very fast
       end

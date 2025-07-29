@@ -18,8 +18,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       valid?: true,
       from_date: Date.new(2024, 1, 15),
       to_date: Date.new(2024, 1, 20),
-      days_covered: 5
-    )
+      days_covered: 5)
   end
 
   before do
@@ -49,8 +48,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
           reports: [
             double("Report", path: reflection1, content: "Content 1"),
             double("Report", path: reflection2, content: "Content 2")
-          ]
-        )
+          ])
       end
 
       let(:synthesis_result) do
@@ -62,8 +60,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
             execution_time: 5.2,
             output_tokens: 1200,
             cost: 0.0035
-          }
-        )
+          })
       end
 
       before do
@@ -185,8 +182,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
           reports: [
             double("Report", path: reflection1),
             double("Report", path: reflection2)
-          ]
-        )
+          ])
       end
 
       let(:synthesis_result) do
@@ -321,8 +317,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
           reports: [
             double("Report", path: reflection1),
             double("Report", path: reflection2)
-          ]
-        )
+          ])
       end
 
       before do
@@ -365,8 +360,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
           reports: [
             double("Report", path: reflection1),
             double("Report", path: reflection2)
-          ]
-        )
+          ])
       end
 
       let(:synthesis_result) do
@@ -387,7 +381,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       it "archives reflection notes after successful synthesis" do
         # Mock the actual archiving method to return success
         allow(command).to receive(:archive_reflection_notes).and_return({success: true, count: 2, archive_dir: "/archive/dir"})
-        
+
         result = command.call(reflection_notes: [reflection1, reflection2], archived: true)
 
         expect(result).to eq(0)
@@ -470,8 +464,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       double("TimestampResult",
         valid?: true,
         from_date: Date.new(2024, 1, 15),
-        to_date: Date.new(2024, 1, 20)
-      )
+        to_date: Date.new(2024, 1, 20))
     end
 
     let(:invalid_timestamp_result) do

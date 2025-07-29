@@ -11,7 +11,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers LLM commands only once" do
       expect(described_class).to receive(:register).with("llm", aliases: []).once
-      
+
       described_class.register_llm_commands
       described_class.register_llm_commands # Second call should not register again
     end
@@ -20,10 +20,10 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       expect(described_class).to receive(:require_relative).with("cli/commands/llm/models")
       expect(described_class).to receive(:require_relative).with("cli/commands/llm/query")
       expect(described_class).to receive(:require_relative).with("cli/commands/llm/usage_report")
-      
+
       # Mock the register call to prevent loading actual command classes
       allow(described_class).to receive(:register)
-      
+
       described_class.register_llm_commands
     end
 
@@ -40,7 +40,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers task commands only once" do
       expect(described_class).to receive(:register).with("task", aliases: []).once
-      
+
       described_class.register_task_commands
       described_class.register_task_commands
     end
@@ -50,7 +50,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       expect(described_class).to receive(:require_relative).with("cli/commands/task/recent")
       expect(described_class).to receive(:require_relative).with("cli/commands/task/all")
       expect(described_class).to receive(:require_relative).with("cli/commands/task/generate_id")
-      
+
       described_class.register_task_commands
     end
   end
@@ -62,7 +62,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers release commands only once" do
       expect(described_class).to receive(:register).with("release", aliases: []).once
-      
+
       described_class.register_release_commands
       described_class.register_release_commands
     end
@@ -73,7 +73,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       expect(described_class).to receive(:require_relative).with("cli/commands/release/all")
       expect(described_class).to receive(:require_relative).with("cli/commands/release/generate_id")
       expect(described_class).to receive(:require_relative).with("cli/commands/release/validate")
-      
+
       described_class.register_release_commands
     end
   end
@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers dotfiles commands only once" do
       expect(described_class).to receive(:register).with("install-dotfiles", anything).once
-      
+
       described_class.register_dotfiles_commands
       described_class.register_dotfiles_commands
     end
@@ -98,7 +98,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers code commands only once" do
       expect(described_class).to receive(:register).with("code", aliases: []).once
-      
+
       described_class.register_code_commands
       described_class.register_code_commands
     end
@@ -111,7 +111,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers code-lint commands only once" do
       expect(described_class).to receive(:register).with("code-lint", aliases: []).once
-      
+
       described_class.register_code_lint_commands
       described_class.register_code_lint_commands
     end
@@ -124,7 +124,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers code-review-prepare commands only once" do
       expect(described_class).to receive(:register).with("code-review-prepare", aliases: []).once
-      
+
       described_class.register_code_review_prepare_commands
       described_class.register_code_review_prepare_commands
     end
@@ -137,7 +137,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers nav commands only once" do
       expect(described_class).to receive(:register).with("nav", aliases: []).once
-      
+
       described_class.register_nav_commands
       described_class.register_nav_commands
     end
@@ -150,7 +150,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers handbook commands only once" do
       expect(described_class).to receive(:register).with("handbook", aliases: []).once
-      
+
       described_class.register_handbook_commands
       described_class.register_handbook_commands
     end
@@ -163,7 +163,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers reflection commands only once" do
       expect(described_class).to receive(:register).with("reflection", aliases: []).once
-      
+
       described_class.register_reflection_commands
       described_class.register_reflection_commands
     end
@@ -176,18 +176,18 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers git commands only once" do
       expect(described_class).to receive(:register).with("git", aliases: []).once
-      
+
       described_class.register_git_commands
       described_class.register_git_commands
     end
 
     it "requires all git command files" do
       git_commands = %w[status commit add push pull log diff fetch checkout switch mv rm restore]
-      
+
       git_commands.each do |cmd|
         expect(described_class).to receive(:require_relative).with("cli/commands/git/#{cmd}")
       end
-      
+
       described_class.register_git_commands
     end
   end
@@ -199,7 +199,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers create-path command only once" do
       expect(described_class).to receive(:register).with("create-path", anything).once
-      
+
       described_class.register_create_path_commands
       described_class.register_create_path_commands
     end
@@ -212,7 +212,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers coverage commands only once" do
       expect(described_class).to receive(:register).with("coverage", aliases: []).once
-      
+
       described_class.register_coverage_commands
       described_class.register_coverage_commands
     end
@@ -225,12 +225,11 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "registers all command only once" do
       expect(described_class).to receive(:register).with("all", anything).once
-      
+
       described_class.register_all_commands
       described_class.register_all_commands
     end
   end
-
 
   describe "Version command" do
     let(:version_command) { described_class::Version.new }
@@ -256,14 +255,14 @@ RSpec.describe CodingAgentTools::Cli::Commands do
     it "sets registration flags to prevent duplicate registrations" do
       # Reset a flag
       described_class.instance_variable_set(:@llm_commands_registered, nil)
-      
+
       # First registration should set the flag
       described_class.register_llm_commands
       expect(described_class.instance_variable_get(:@llm_commands_registered)).to be true
-      
+
       # Stub register to ensure it's not called again
       expect(described_class).not_to receive(:register)
-      
+
       # Second call should not register again
       described_class.register_llm_commands
     end
@@ -276,7 +275,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
 
     it "propagates require errors" do
       allow(described_class).to receive(:require_relative).and_raise(LoadError, "Cannot load file")
-      
+
       expect { described_class.register_llm_commands }.to raise_error(LoadError, "Cannot load file")
     end
   end

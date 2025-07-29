@@ -51,7 +51,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
       it "handles file system permission errors" do
         # Create a current release directory
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
-        
+
         # Mock the release resolver class method to throw an error
         allow(CodingAgentTools::Molecules::TaskflowManagement::ReleasePathResolver)
           .to receive(:get_current_release).and_raise(Errno::EACCES, "Permission denied")
@@ -330,6 +330,189 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
     end
   end
 
+  describe "#resolve_path" do
+    context "when current release exists" do
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks")
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/reflections")
+      end
+
+      it "resolves reflections path" do
+        result = manager.resolve_path("reflections")
+
+        expect(result).to be_a(String)
+        expect(result).to end_with("v.0.3.0-migration/reflections")
+        expect(File.absolute_path?(result)).to be true
+      end
+
+      it "resolves nested paths like reflections/synthesis" do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/reflections/synthesis")
+
+        result = manager.resolve_path("reflections/synthesis")
+
+        expect(result).to be_a(String)
+        expect(result).to end_with("v.0.3.0-migration/reflections/synthesis")
+        expect(File.absolute_path?(result)).to be true
+      end
+
+      it "resolves tasks path" do
+        result = manager.resolve_path("tasks")
+
+        expect(result).to be_a(String)
+        expect(result).to end_with("v.0.3.0-migration/tasks")
+        expect(File.absolute_path?(result)).to be true
+      end
+
+      it "resolves arbitrary subpaths" do
+        result = manager.resolve_path("documents/reviews")
+
+        expect(result).to be_a(String)
+        expect(result).to end_with("v.0.3.0-migration/documents/reviews")
+        expect(File.absolute_path?(result)).to be true
+      end
+    end
+
+    context "directory creation behavior" do
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks")
+      end
+
+      it "creates directory when create_if_missing is true" do
+        target_path = manager.resolve_path("new-directory", create_if_missing: true)
+
+        expect(File.exist?(target_path)).to be true
+        expect(File.directory?(target_path)).to be true
+      end
+
+      it "does not create directory when create_if_missing is false" do
+        target_path = manager.resolve_path("non-existent-directory", create_if_missing: false)
+
+        expect(File.exist?(target_path)).to be false
+      end
+
+      it "creates nested directories when create_if_missing is true" do
+        target_path = manager.resolve_path("deeply/nested/directory", create_if_missing: true)
+
+        expect(File.exist?(target_path)).to be true
+        expect(File.directory?(target_path)).to be true
+      end
+
+      it "does not fail when directory already exists" do
+        existing_path = "#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks"
+        FileUtils.mkdir_p(existing_path)
+
+        expect { manager.resolve_path("tasks", create_if_missing: true) }.not_to raise_error
+
+        result = manager.resolve_path("tasks", create_if_missing: true)
+        expect(File.exist?(result)).to be true
+        expect(File.directory?(result)).to be true
+      end
+    end
+
+    context "error scenarios" do
+      it "returns error when no current release exists" do
+        # Ensure no current release exists
+        FileUtils.rm_rf("#{base_path}/dev-taskflow/current")
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current")
+
+        expect { manager.resolve_path("reflections") }.to raise_error(StandardError, /Cannot resolve path/)
+      end
+
+      it "handles ArgumentError for nil subpath" do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
+
+        expect { manager.resolve_path(nil) }.to raise_error(ArgumentError, /subpath cannot be nil or empty/)
+      end
+
+      it "handles ArgumentError for empty subpath" do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
+
+        expect { manager.resolve_path("") }.to raise_error(ArgumentError, /subpath cannot be nil or empty/)
+      end
+
+      it "handles file system permission errors during directory creation" do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
+
+        # Mock directory navigator to simulate permission error
+        allow(manager.instance_variable_get(:@directory_navigator))
+          .to receive(:ensure_directory_exists).and_raise(Errno::EACCES, "Permission denied")
+
+        expect { manager.resolve_path("restricted-dir", create_if_missing: true) }
+          .to raise_error(Errno::EACCES, /Permission denied/)
+      end
+    end
+
+    context "path validation and security" do
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
+      end
+
+      it "prevents path traversal attempts" do
+        # Mock directory navigator to fail safety validation
+        allow(manager.instance_variable_get(:@directory_navigator))
+          .to receive(:safe_directory_path?).and_return(false)
+
+        expect { manager.resolve_path("../../../etc/passwd") }
+          .to raise_error(SecurityError, /Resolved path failed safety validation/)
+      end
+
+      it "validates subpath format through directory navigator" do
+        # Mock directory navigator to validate the path properly
+        navigator = manager.instance_variable_get(:@directory_navigator)
+        allow(navigator).to receive(:safe_directory_path?).and_return(true)
+
+        result = manager.resolve_path("valid/subpath")
+
+        expect(navigator).to have_received(:safe_directory_path?).with(String)
+        expect(result).to be_a(String)
+      end
+
+      it "passes absolute paths through safety validation" do
+        navigator = manager.instance_variable_get(:@directory_navigator)
+        allow(navigator).to receive(:safe_directory_path?).and_return(true)
+
+        result = manager.resolve_path("documents")
+
+        # Verify that the path passed to safety validation is absolute
+        expect(navigator).to have_received(:safe_directory_path?) do |path_arg|
+          expect(File.absolute_path?(path_arg)).to be true
+        end
+
+        expect(File.absolute_path?(result)).to be true
+      end
+    end
+
+    context "integration with current method" do
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks")
+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-migration/tasks/task1.md", "# Task 1")
+      end
+
+      it "uses current release path from current() method" do
+        # Ensure the current method works correctly
+        current_result = manager.current
+        expect(current_result.success?).to be true
+
+        # Now test that resolve_path uses the same base path
+        resolved_path = manager.resolve_path("tasks")
+        expected_base = current_result.data.path
+
+        expect(resolved_path).to start_with(expected_base)
+        expect(resolved_path).to end_with("tasks")
+      end
+
+      it "propagates current method errors appropriately" do
+        # Mock current method to fail
+        allow(manager).to receive(:current).and_return(
+          manager.class::ManagerResult.new(nil, false, "Current detection failed")
+        )
+
+        expect { manager.resolve_path("tasks") }
+          .to raise_error(StandardError, /Cannot resolve path: Current detection failed/)
+      end
+    end
+  end
+
   describe "version parsing and sorting" do
     before do
       FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.1.0-foundation")
@@ -351,7 +534,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         # Clear existing releases for clean edge case testing
         FileUtils.rm_rf("#{base_path}/dev-taskflow")
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done")
-        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current") 
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current")
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/backlog")
       end
 
@@ -454,7 +637,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         expect(result.data[:version]).to eq("v.0.4.0")
         expect(result.data[:codename]).to eq("automation")
         expect(result.data[:path]).to include("v.0.4.0-automation")
-        
+
         # Verify directory structure was created
         expect(File.exist?(result.data[:path])).to be true
         expect(File.exist?(File.join(result.data[:path], "tasks"))).to be true
@@ -468,7 +651,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         expect(result.data[:version]).to eq("v.0.4.0")
         expect(result.data[:codename]).to eq("workflows")
         expect(result.data[:path]).to include("v.0.4.0-workflows")
-        
+
         # Verify directory structure was created
         expect(File.exist?(result.data[:path])).to be true
         expect(File.exist?(File.join(result.data[:path], "tasks"))).to be true
@@ -493,8 +676,8 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         expect(result.success?).to be true
         expect(result.data[:codename]).to eq("existing")
         expect(result.data[:version]).to match(/^v\.\d+\.\d+\.\d+$/)
-        
-        # Verify the directory exists 
+
+        # Verify the directory exists
         expect(File.exist?(result.data[:path])).to be true
         expect(File.exist?(File.join(result.data[:path], "tasks"))).to be true
         expect(File.exist?(File.join(result.data[:path], "README.md"))).to be true
@@ -558,7 +741,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
       it "generates unique timestamp-based codename when conflicts exist" do
         # Mock LLM failure to trigger fallback
         allow_any_instance_of(described_class).to receive(:`).with(/bundle exec llm-query/).and_return("")
-        
+
         # Mock Time.now to control timestamp generation
         allow(Time).to receive(:now).and_return(Time.new(2025, 1, 28, 13, 0, 0))
 
@@ -670,21 +853,21 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         # than what's actually in the directory, but that's a complex scenario
         # that's unlikely in practice
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
-        
+
         # Mock the current method to return a different name
         allow(manager).to receive(:current).and_return(
           described_class::ManagerResult.new(
             described_class::ReleaseInfo.new(
               "#{base_path}/dev-taskflow/current/v.0.3.0-different",
               "v.0.3.0",
-              "v.0.3.0-different", 
+              "v.0.3.0-different",
               :current,
               "active",
               0,
               Time.now,
               Time.now
-            ), 
-            true, 
+            ),
+            true,
             nil
           )
         )
@@ -715,7 +898,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
 
       it "handles file system errors gracefully" do
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-migration")
-        
+
         # Mock Dir.entries to raise an error
         allow(Dir).to receive(:entries).and_raise(Errno::EACCES, "Permission denied")
 

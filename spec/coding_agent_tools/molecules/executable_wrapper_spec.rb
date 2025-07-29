@@ -265,7 +265,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
         end
 
         it "requires bundler/setup" do
-          allow(ENV).to receive(:[]=)  
+          allow(ENV).to receive(:[]=)
           expect_any_instance_of(Kernel).to receive(:require).with("bundler/setup")
           wrapper.send(:setup_bundler)
         end
@@ -293,7 +293,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
         lib_path = "/path/to/lib"
         allow(File).to receive(:expand_path).with("../../../../lib", anything).and_return(lib_path)
         allow($LOAD_PATH).to receive(:include?).with(lib_path).and_return(false)
-        
+
         expect($LOAD_PATH).to receive(:unshift).with(lib_path)
         wrapper.send(:setup_load_path)
       end
@@ -302,7 +302,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
         lib_path = "/path/to/lib"
         allow(File).to receive(:expand_path).with("../../../../lib", anything).and_return(lib_path)
         allow($LOAD_PATH).to receive(:include?).with(lib_path).and_return(true)
-        
+
         expect($LOAD_PATH).not_to receive(:unshift)
         wrapper.send(:setup_load_path)
       end
@@ -355,7 +355,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
       before do
         wrapper.instance_variable_set(:@captured_stdout, StringIO.new)
         wrapper.instance_variable_set(:@captured_stderr, StringIO.new)
-        
+
         # Mock Dry::CLI and its instantiation
         allow(Dry::CLI).to receive(:new).with(commands_class).and_return(cli_instance)
         stub_const("CodingAgentTools::Cli::Commands", commands_class)
@@ -423,14 +423,14 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
     end
 
     describe "#process_output_and_exit" do
-      let(:content) { { stdout: "output", stderr: "error" } }
+      let(:content) { {stdout: "output", stderr: "error"} }
 
       before do
         wrapper.instance_variable_set(:@original_stdout, StringIO.new)
         wrapper.instance_variable_set(:@original_stderr, StringIO.new)
         wrapper.instance_variable_set(:@captured_stdout, StringIO.new("output"))
         wrapper.instance_variable_set(:@captured_stderr, StringIO.new("error"))
-        
+
         allow(wrapper).to receive(:modify_output_messages).and_return(content)
         allow(wrapper).to receive(:exit)
       end
@@ -461,7 +461,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
       it "restores original stdout and stderr" do
         original_stdout = StringIO.new
         original_stderr = StringIO.new
-        
+
         wrapper.instance_variable_set(:@original_stdout, original_stdout)
         wrapper.instance_variable_set(:@original_stderr, original_stderr)
 
@@ -480,7 +480,7 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
     end
 
     describe "#print_modified_output" do
-      let(:content) { { stdout: "output content", stderr: "error content" } }
+      let(:content) { {stdout: "output content", stderr: "error content"} }
       let(:original_stdout) { StringIO.new }
       let(:original_stderr) { StringIO.new }
 
@@ -501,9 +501,9 @@ RSpec.describe CodingAgentTools::Molecules::ExecutableWrapper do
       end
 
       it "does not print empty content" do
-        empty_content = { stdout: "", stderr: "" }
+        empty_content = {stdout: "", stderr: ""}
         allow(wrapper).to receive(:modify_output_messages).and_return(empty_content)
-        
+
         wrapper.send(:print_modified_output, empty_content)
         expect(original_stdout.string).to be_empty
         expect(original_stderr.string).to be_empty

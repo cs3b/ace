@@ -26,7 +26,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
       focus: "code",
       target: "HEAD~1..HEAD",
       context_mode: "auto",
-      metadata: { created_at: Time.parse("2024-01-01T12:00:00Z") }
+      metadata: {created_at: Time.parse("2024-01-01T12:00:00Z")}
     )
   end
 
@@ -57,7 +57,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
     it "initializes all required dependencies" do
       # Create a new instance to trigger the initialization
       described_class.new
-      
+
       expect(CodingAgentTools::Molecules::Code::SessionDirectoryBuilder).to have_received(:new)
       expect(CodingAgentTools::Molecules::FileIoHandler).to have_received(:new)
       expect(CodingAgentTools::Atoms::Code::FileContentReader).to have_received(:new)
@@ -77,7 +77,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
         expect(result).to eq(sample_session)
         expect(mock_session_builder).to have_received(:build_full_session).with(
           "code",
-          "HEAD~1..HEAD", 
+          "HEAD~1..HEAD",
           "auto",
           base_path
         )
@@ -85,7 +85,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
 
       it "creates additional session files" do
         expect(session_manager).to receive(:create_session_files).with(sample_session)
-        
+
         session_manager.create_session(session_params)
       end
     end
@@ -119,7 +119,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
     end
 
     context "when optional parameters have defaults" do
-      let(:minimal_params) { { focus: "code", target: "HEAD~1..HEAD" } }
+      let(:minimal_params) { {focus: "code", target: "HEAD~1..HEAD"} }
 
       before do
         allow(mock_session_builder).to receive(:build_full_session).and_return(sample_session)
@@ -140,13 +140,13 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
 
       it "uses default base_path when not provided" do
         expect(session_manager).to receive(:default_base_path).and_return("/default/path")
-        
+
         session_manager.create_session(minimal_params)
 
         expect(mock_session_builder).to have_received(:build_full_session).with(
           "code",
           "HEAD~1..HEAD",
-          "auto", 
+          "auto",
           "/default/path"
         )
       end
@@ -268,7 +268,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
 
       it "uses default base path" do
         expect(session_manager).to receive(:default_base_path)
-        
+
         session_manager.load_session(session_id)
       end
     end
@@ -306,7 +306,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
     before do
       # Create session directories and metadata
       [session1_dir, session2_dir, session3_dir].each { |dir| FileUtils.mkdir_p(dir) }
-      
+
       File.write(File.join(session1_dir, "session.meta"), metadata1)
       File.write(File.join(session2_dir, "session.meta"), metadata2)
       File.write(File.join(session3_dir, "session.meta"), metadata3)
@@ -377,7 +377,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
 
       it "uses default base path" do
         expect(session_manager).to receive(:default_base_path)
-        
+
         session_manager.list_sessions
       end
     end
@@ -407,7 +407,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
       # Create session directories
       FileUtils.mkdir_p(old_session_dir)
       FileUtils.mkdir_p(recent_session_dir)
-      
+
       # Create metadata files
       File.write(File.join(old_session_dir, "session.meta"), old_metadata)
       File.write(File.join(recent_session_dir, "session.meta"), recent_metadata)
@@ -463,7 +463,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
 
       it "uses default base path" do
         expect(session_manager).to receive(:default_base_path)
-        
+
         session_manager.cleanup_old_sessions(7)
       end
     end
@@ -656,19 +656,19 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
       before do
         # Mock session builder to return a realistic session
         allow(mock_session_builder).to receive(:build_full_session) do |f, t, c, bp|
-          session_dir = File.join(bp, "#{f.gsub(' ', '-')}-#{t.gsub('~', 'tilde').gsub('..', '-to-')}-20240101-120000")
+          session_dir = File.join(bp, "#{f.tr(" ", "-")}-#{t.gsub("~", "tilde").gsub("..", "-to-")}-20240101-120000")
           # Create the directory since create_session_files expects it to exist
           FileUtils.mkdir_p(session_dir)
-          
+
           CodingAgentTools::Models::Code::ReviewSession.new(
             session_id: "review-20240101-120000",
-            session_name: "#{f.gsub(' ', '-')}-#{t.gsub('~', 'tilde').gsub('..', '-to-')}-20240101-120000",
+            session_name: "#{f.tr(" ", "-")}-#{t.gsub("~", "tilde").gsub("..", "-to-")}-20240101-120000",
             timestamp: "2024-01-01T12:00:00Z",
             directory_path: session_dir,
             focus: f,
             target: t,
             context_mode: c,
-            metadata: { created_at: Time.now }
+            metadata: {created_at: Time.now}
           )
         end
       end
@@ -703,7 +703,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
         # Load session should work
         # Need to mock the find_session_directory method to return the correct path
         allow(session_manager).to receive(:find_session_directory).with(session.session_id, base_path).and_return(session.directory_path)
-        
+
         loaded_session = session_manager.load_session(session.session_id, base_path)
         expect(loaded_session).not_to be_nil
         expect(loaded_session.focus).to eq(focus)
@@ -724,7 +724,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::SessionManager do
         # Create a session directory but make it unreadable
         session_dir = File.join(base_path, "unreadable-session-20240101-120000")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create metadata file
         metadata_path = File.join(session_dir, "session.meta")
         File.write(metadata_path, "timestamp: 2024-01-01T12:00:00Z\nfocus: code\ntarget: HEAD")

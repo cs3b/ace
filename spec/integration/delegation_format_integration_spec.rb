@@ -13,7 +13,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
 
   before do
     FileUtils.mkdir_p(config_dir)
-    
+
     # Create basic config for testing
     config = {
       "templates" => {
@@ -34,18 +34,18 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         }
       }
     }
-    
+
     File.write(config_file, YAML.dump(config))
-    
+
     # Create template directory
     template_dir = File.join(temp_dir, "templates")
     FileUtils.mkdir_p(template_dir)
-    
+
     # Create some templates
     File.write(File.join(template_dir, "docs.md"), "# Documentation: {metadata.title}\n\nContent here...")
     File.write(File.join(template_dir, "reflection.md"), "# Reflection: {metadata.title}\n\nReflection content...")
     File.write(File.join(template_dir, "code-review.md"), "# Code Review: {metadata.title}\n\nReview content...")
-    
+
     # Mock PathResolver behavior by creating path.yml
     path_config = {
       "repositories" => {
@@ -74,16 +74,16 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         }
       }
     }
-    
+
     File.write(File.join(config_dir, "path.yml"), YAML.dump(path_config))
-    
+
     # Initialize git repository in temp directory for PathResolver
     Dir.chdir(temp_dir) do
       system("git init --quiet")
       system("git config user.email 'test@example.com'")
       system("git config user.name 'Test User'")
     end
-    
+
     # Change to temp directory for testing
     @original_dir = Dir.pwd
     Dir.chdir(temp_dir)
@@ -95,7 +95,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         Dir.chdir(@original_dir)
       rescue Errno::ENOENT
         # Original directory no longer exists, move to safe directory
-        Dir.chdir(ENV['PROJECT_ROOT'] || Dir.home)
+        Dir.chdir(ENV["PROJECT_ROOT"] || Dir.home)
       end
     end
   end
@@ -106,7 +106,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:reflection-new", "--title", "oauth-implementation-review"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
       expect(result.stdout).to include("oauth-implementation-review")
@@ -115,20 +115,20 @@ RSpec.describe "Delegation Format Integration", verbose: false do
     it "creates file with contextual header when template missing" do
       # Remove template file to test fallback
       FileUtils.rm_f(File.join(temp_dir, "templates", "reflection.md"))
-      
+
       result = execute_cli_command(
         "create-path",
         ["file:reflection-new", "--title", "api-review"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Template file not found")
       expect(result.stdout).to include("Created:")
-      
+
       # Find the created file and check content
       created_files = Dir.glob("**/*api-review*")
       expect(created_files).not_to be_empty
-      
+
       content = File.read(created_files.first)
       expect(content).to include("# Reflection - api-review")
     end
@@ -141,12 +141,12 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         }
       }
       File.write(config_file, YAML.dump(config))
-      
+
       result = execute_cli_command(
         "create-path",
         ["file:reflection-new", "--title", "security-review"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Template not found for reflection_new")
     end
@@ -158,7 +158,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["directory:code-review-new", "--title", "authentication-session"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
       expect(result.stdout).to include("authentication-session")
@@ -169,9 +169,9 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["directory:code-review-new", "--title", "oauth-flow-review"]
       )
-      
+
       expect(result).to be_success
-      
+
       # Verify directory was created (path depends on PathResolver)
       created_dirs = Dir.glob("**/oauth-flow-review*", File::FNM_PATHNAME)
       expect(created_dirs).not_to be_empty
@@ -184,13 +184,13 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:docs-new", "--title", "API-Documentation", "--priority", "high"]
       )
-      
+
       expect(result).to be_success
-      
+
       # Find created file and verify template processing
       created_files = Dir.glob("**/*API-Documentation*")
       expect(created_files).not_to be_empty
-      
+
       content = File.read(created_files.first)
       expect(content).to include("# Documentation: API-Documentation")
       expect(content).to include("Content here...")
@@ -201,7 +201,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:docs-new", "--title", "API & Auth (v2)"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
     end
@@ -213,7 +213,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["invalid:format", "--title", "test"]
       )
-      
+
       expect(result).not_to be_success
       expect(result.stdout).to include("Error:")
       expect(result.stdout).to include("Unknown delegation creation-type")
@@ -227,12 +227,12 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         }
       }
       File.write(File.join(config_dir, "path.yml"), YAML.dump(invalid_config))
-      
+
       result = execute_cli_command(
         "create-path",
         ["file:docs-new", "--title", "test"]
       )
-      
+
       # Should handle the error gracefully
       expect([0, 1]).to include(result.exitstatus)
     end
@@ -242,7 +242,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:docs-new"]
       )
-      
+
       expect(result).not_to be_success
       expect(result.stdout).to include("Error:")
       expect(result.stdout).to include("Title required")
@@ -254,7 +254,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
       # Run multiple delegation commands concurrently
       threads = []
       results = []
-      
+
       5.times do |i|
         threads << Thread.new do
           result = execute_cli_command(
@@ -264,9 +264,9 @@ RSpec.describe "Delegation Format Integration", verbose: false do
           results << result
         end
       end
-      
+
       threads.each(&:join)
-      
+
       # All should succeed or fail gracefully
       results.each do |result|
         expect([0, 1]).to include(result.exitstatus)
@@ -275,12 +275,12 @@ RSpec.describe "Delegation Format Integration", verbose: false do
 
     it "handles very long titles" do
       long_title = "very-" + "long-" * 50 + "title"
-      
+
       result = execute_cli_command(
         "create-path",
         ["file:docs-new", "--title", long_title]
       )
-      
+
       # Should handle gracefully (success or controlled failure)
       expect([0, 1]).to include(result.exitstatus)
     end
@@ -289,8 +289,8 @@ RSpec.describe "Delegation Format Integration", verbose: false do
       # Create a read-only directory to test permission handling
       restricted_dir = File.join(temp_dir, "restricted")
       FileUtils.mkdir_p(restricted_dir)
-      FileUtils.chmod(0444, restricted_dir)
-      
+      FileUtils.chmod(0o444, restricted_dir)
+
       # Update path config to point to restricted directory
       path_config = {
         "repositories" => {
@@ -305,17 +305,21 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         }
       }
       File.write(File.join(config_dir, "path.yml"), YAML.dump(path_config))
-      
+
       result = execute_cli_command(
         "create-path",
         ["file:docs-new", "--title", "permission-test"]
       )
-      
+
       # Should fail gracefully with appropriate error
       expect(result.exitstatus).to eq(1)
-      
+
       # Restore permissions for cleanup
-      FileUtils.chmod(0755, restricted_dir) rescue nil
+      begin
+        FileUtils.chmod(0o755, restricted_dir)
+      rescue
+        nil
+      end
     end
   end
 
@@ -324,26 +328,26 @@ RSpec.describe "Delegation Format Integration", verbose: false do
       # Remove all templates to test pure fallback
       templates_dir = File.join(temp_dir, "templates")
       FileUtils.rm_rf(templates_dir) if File.exist?(templates_dir)
-      
+
       # Test each delegation type
       delegation_tests = [
         {type: "file:docs-new", title: "api-guide", expected: "# Documentation - api-guide"},
         {type: "file:reflection-new", title: "oauth-analysis", expected: "# Reflection - oauth-analysis"},
         {type: "directory:code-review-new", title: "auth-review", expected: "# Code Review - auth-review"}
       ]
-      
+
       delegation_tests.each do |test_case|
         result = execute_cli_command(
           "create-path",
           [test_case[:type], "--title", test_case[:title]]
         )
-        
+
         expect(result).to be_success
-        
+
         # Find created file/directory and verify content
         created_items = Dir.glob("**/*#{test_case[:title]}*")
         expect(created_items).not_to be_empty
-        
+
         # Check content if it's a file
         created_items.each do |item|
           if File.file?(item)
@@ -361,7 +365,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:reflection-new", "--title", "oauth-implementation-review"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
       expect(result.stdout).to include("oauth-implementation-review")
@@ -372,7 +376,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["directory:code-review-new", "--title", "authentication-session"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
       expect(result.stdout).to include("authentication-session")
@@ -383,7 +387,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:unknown-type", "--title", "test"]
       )
-      
+
       expect(result).not_to be_success
       expect(result.stdout).to include("Error:")
       expect(result.stdout).to include("Unknown delegation nav-type")
@@ -394,7 +398,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file-docs-new", "--title", "test"]
       )
-      
+
       expect(result).not_to be_success
       expect(result.stdout).to include("Error:")
       expect(result.stdout).to include("Unknown creation type")
@@ -405,7 +409,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:docs-new"]
       )
-      
+
       expect(result).not_to be_success
       expect(result.stdout).to include("Error:")
       expect(result.stdout).to include("Title required")
@@ -416,7 +420,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["file:docs-new", "--title", "API-Guide", "--priority", "high"]
       )
-      
+
       expect(result).to be_success
       expect(result.stdout).to include("Created:")
     end
@@ -426,7 +430,7 @@ RSpec.describe "Delegation Format Integration", verbose: false do
         "create-path",
         ["--help"]
       )
-      
+
       expect(result.stdout).to include("file:docs-new")
       expect(result.stdout).to include("file:reflection-new")
       expect(result.stdout).to include("directory:code-review-new")
@@ -464,12 +468,12 @@ RSpec.describe "Delegation Format Integration", verbose: false do
     it "tests concurrent delegation operations" do
       threads = []
       results = []
-      
+
       # Run 5 concurrent delegation operations
       5.times do |i|
         threads << Thread.new do
           # Add unique timestamp to avoid file conflicts
-          unique_id = "#{i}-#{Time.now.to_f.to_s.gsub('.', '')}"
+          unique_id = "#{i}-#{Time.now.to_f.to_s.delete(".")}"
           result = execute_cli_command(
             "create-path",
             ["file:docs-new", "--title", "concurrent-delegation-#{unique_id}"]
@@ -477,9 +481,9 @@ RSpec.describe "Delegation Format Integration", verbose: false do
           results << result
         end
       end
-      
+
       threads.each(&:join)
-      
+
       # All should succeed or fail gracefully
       results.each do |result|
         # Accept either success or controlled failure for concurrent operations
@@ -490,14 +494,14 @@ RSpec.describe "Delegation Format Integration", verbose: false do
     it "handles delegation with large titles efficiently" do
       # Test with moderately long title (realistic use case)
       long_title = "implementation-guide-for-oauth-2-authentication-with-pkce-extension"
-      
+
       start_time = Time.now
       result = execute_cli_command(
         "create-path",
         ["file:docs-new", "--title", long_title]
       )
       execution_time = Time.now - start_time
-      
+
       expect(result).to be_success
       # Should complete within reasonable time (5 seconds is very generous)
       expect(execution_time).to be < 5.0
@@ -506,12 +510,12 @@ RSpec.describe "Delegation Format Integration", verbose: false do
     it "maintains consistent performance across delegation types" do
       delegation_types = [
         "file:docs-new",
-        "file:reflection-new", 
+        "file:reflection-new",
         "directory:code-review-new"
       ]
-      
+
       execution_times = []
-      
+
       delegation_types.each_with_index do |type, i|
         start_time = Time.now
         result = execute_cli_command(
@@ -519,11 +523,11 @@ RSpec.describe "Delegation Format Integration", verbose: false do
           [type, "--title", "performance-test-#{i}"]
         )
         execution_time = Time.now - start_time
-        
+
         expect(result).to be_success
         execution_times << execution_time
       end
-      
+
       # All delegation types should have similar performance
       # (within 500ms of each other for this simple operation)
       max_time = execution_times.max

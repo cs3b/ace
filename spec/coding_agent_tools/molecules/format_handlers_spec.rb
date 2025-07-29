@@ -186,13 +186,13 @@ RSpec.describe CodingAgentTools::Molecules::FormatHandlers do
       end
 
       it "returns nil for cost data without total" do
-        cost_data = { input: 0.001, output: 0.002 }
+        cost_data = {input: 0.001, output: 0.002}
         result = base_handler.send(:build_cost_summary, cost_data)
         expect(result).to be_nil
       end
 
       it "returns basic cost for total only" do
-        cost_data = { total: 0.001234 }
+        cost_data = {total: 0.001234}
         result = base_handler.send(:build_cost_summary, cost_data)
         expect(result).to eq("Cost: $0.001234")
       end

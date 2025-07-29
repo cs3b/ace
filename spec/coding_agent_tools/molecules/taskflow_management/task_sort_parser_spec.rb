@@ -192,7 +192,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
         it "returns nil for symbol keys in frontmatter when accessed as string" do
           # The implementation only tries string keys, not symbol conversion
           task_with_only_symbol = task_data_class.new(
-            frontmatter: { :symbol_only => "symbol_value" }
+            frontmatter: {symbol_only: "symbol_value"}
           )
           symbol_sort_criteria = described_class::SortCriteria.new("symbol_only", :asc, "symbol_only:asc")
           expect(symbol_sort_criteria.get_sort_value(task_with_only_symbol)).to be_nil
@@ -215,7 +215,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
     context "with valid sort strings" do
       it "parses attribute only (defaults to ascending)" do
         result = described_class.parse_sort("priority")
-        
+
         expect(result).to be_a(described_class::SortCriteria)
         expect(result.attribute).to eq("priority")
         expect(result.direction).to eq(:asc)
@@ -224,7 +224,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "parses attribute with ascending direction" do
         result = described_class.parse_sort("priority:asc")
-        
+
         expect(result.attribute).to eq("priority")
         expect(result.direction).to eq(:asc)
         expect(result.raw_sort).to eq("priority:asc")
@@ -232,7 +232,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "parses attribute with descending direction" do
         result = described_class.parse_sort("status:desc")
-        
+
         expect(result.attribute).to eq("status")
         expect(result.direction).to eq(:desc)
         expect(result.raw_sort).to eq("status:desc")
@@ -240,34 +240,34 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "parses attribute with ascending spelled out" do
         result = described_class.parse_sort("id:ascending")
-        
+
         expect(result.attribute).to eq("id")
         expect(result.direction).to eq(:asc)
       end
 
       it "parses attribute with descending spelled out" do
         result = described_class.parse_sort("id:descending")
-        
+
         expect(result.attribute).to eq("id")
         expect(result.direction).to eq(:desc)
       end
 
       it "handles case insensitive direction" do
         result = described_class.parse_sort("priority:DESC")
-        
+
         expect(result.direction).to eq(:desc)
       end
 
       it "handles extra whitespace" do
         result = described_class.parse_sort("  priority : asc  ")
-        
+
         expect(result.attribute).to eq("priority")
         expect(result.direction).to eq(:asc)
       end
 
       it "handles implementation-order special case" do
         result = described_class.parse_sort("implementation-order")
-        
+
         expect(result.attribute).to eq("implementation-order")
         expect(result.direction).to eq(:asc)
         expect(result.implementation_order?).to be true
@@ -275,7 +275,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "handles implementation-order with whitespace" do
         result = described_class.parse_sort("  implementation-order  ")
-        
+
         expect(result.attribute).to eq("implementation-order")
         expect(result.direction).to eq(:asc)
       end
@@ -319,7 +319,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
     context "with valid sort strings" do
       it "parses single sort criteria" do
         result = described_class.parse_sorts("priority:desc")
-        
+
         expect(result.size).to eq(1)
         expect(result.first.attribute).to eq("priority")
         expect(result.first.direction).to eq(:desc)
@@ -327,7 +327,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "parses multiple sort criteria" do
         result = described_class.parse_sorts("priority:desc,status:asc")
-        
+
         expect(result.size).to eq(2)
         expect(result[0].attribute).to eq("priority")
         expect(result[0].direction).to eq(:desc)
@@ -337,7 +337,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "parses mixed valid and invalid criteria (skips invalid)" do
         result = described_class.parse_sorts("priority:desc,invalid:baddir,status:asc")
-        
+
         expect(result.size).to eq(2)
         expect(result[0].attribute).to eq("priority")
         expect(result[1].attribute).to eq("status")
@@ -345,7 +345,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "handles whitespace around commas" do
         result = described_class.parse_sorts("priority:desc , status:asc , id")
-        
+
         expect(result.size).to eq(3)
         expect(result[0].attribute).to eq("priority")
         expect(result[1].attribute).to eq("status")
@@ -354,7 +354,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
 
       it "handles implementation-order in multiple sorts" do
         result = described_class.parse_sorts("implementation-order,priority:desc")
-        
+
         expect(result.size).to eq(2)
         expect(result[0].implementation_order?).to be true
         expect(result[1].attribute).to eq("priority")
@@ -382,7 +382,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
       it "skips invalid parts between commas" do
         # When parse_sort returns nil for invalid parts, they get filtered out by the compact logic
         result = described_class.parse_sorts("priority:desc,invalid:baddir,status:asc")
-        
+
         expect(result.size).to eq(2)
         expect(result[0].attribute).to eq("priority")
         expect(result[1].attribute).to eq("status")
@@ -427,7 +427,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
           described_class::SortCriteria.new("custom_attr", :asc, "custom_attr:asc"),
           described_class::SortCriteria.new("another_valid_attr", :desc, "another_valid_attr:desc")
         ]
-        
+
         errors = described_class.validate_sorts(custom_sorts)
         expect(errors).to be_empty
       end
@@ -435,7 +435,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
       it "validates all known task attributes" do
         known_attrs = %w[id status dependencies title priority estimate sort implementation-order]
         sorts = known_attrs.map { |attr| described_class::SortCriteria.new(attr, :asc, "#{attr}:asc") }
-        
+
         errors = described_class.validate_sorts(sorts)
         expect(errors).to be_empty
       end
@@ -447,7 +447,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
           described_class::SortCriteria.new("invalid-attr-with-hyphens", :asc, "invalid-attr-with-hyphens:asc"),
           described_class::SortCriteria.new("123invalid", :desc, "123invalid:desc")
         ]
-        
+
         errors = described_class.validate_sorts(invalid_sorts)
         expect(errors).to include("Invalid sort attribute: invalid-attr-with-hyphens")
         expect(errors).to include("Invalid sort attribute: 123invalid")
@@ -466,7 +466,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
           described_class::SortCriteria.new("attr with spaces", :asc, "attr with spaces:asc"),
           described_class::SortCriteria.new("attr.with.dots", :asc, "attr.with.dots:asc")
         ]
-        
+
         errors = described_class.validate_sorts(pattern_invalid_sorts)
         expect(errors.size).to eq(3)
         expect(errors).to all(start_with("Invalid sort attribute:"))
@@ -503,10 +503,10 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
         sort_string = "priority:desc,status:asc,implementation-order"
         parsed_sorts = described_class.parse_sorts(sort_string)
         validation_errors = described_class.validate_sorts(parsed_sorts)
-        
+
         expect(parsed_sorts.size).to eq(3)
         expect(validation_errors).to be_empty
-        
+
         expect(parsed_sorts[0].attribute).to eq("priority")
         expect(parsed_sorts[0].direction).to eq(:desc)
         expect(parsed_sorts[1].attribute).to eq("status")
@@ -518,7 +518,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
         sort_string = "priority:desc,invalid_attr:bad_dir,status:asc"
         parsed_sorts = described_class.parse_sorts(sort_string)
         validation_errors = described_class.validate_sorts(parsed_sorts)
-        
+
         expect(parsed_sorts.size).to eq(2)  # invalid_attr:bad_dir gets filtered out during parsing
         expect(validation_errors).to be_empty  # remaining sorts are valid
       end
@@ -527,20 +527,20 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortParser d
     context "SortCriteria with real task data" do
       it "extracts correct sort values from various task types" do
         tasks = [basic_task, task_with_frontmatter, task_without_id_pattern]
-        
+
         id_sort = described_class::SortCriteria.new("id", :asc, "id:asc")
         status_sort = described_class::SortCriteria.new("status", :asc, "status:asc")
         priority_sort = described_class::SortCriteria.new("priority", :asc, "priority:asc")
-        
+
         # Test ID sorting values
         expect(id_sort.get_sort_value(tasks[0])).to eq(1)  # v.1.0+task.001
         expect(id_sort.get_sort_value(tasks[1])).to eq(2)  # v.1.0+task.002
         expect(id_sort.get_sort_value(tasks[2])).to eq(Float::INFINITY)  # invalid pattern
-        
+
         # Test status sorting values
         expect(status_sort.get_sort_value(tasks[0])).to eq(1)  # pending
         expect(status_sort.get_sort_value(tasks[1])).to eq(0)  # in-progress
-        
+
         # Test priority sorting values
         expect(priority_sort.get_sort_value(tasks[0])).to eq(0)  # high
         expect(priority_sort.get_sort_value(tasks[1])).to eq(1)  # medium

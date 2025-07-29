@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
   let(:mock_report_generator) { instance_double(CodingAgentTools::Organisms::CoverageReportGenerator) }
   let(:mock_path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
   let(:mock_threshold_validator) { instance_double(CodingAgentTools::Atoms::ThresholdValidator) }
-  
+
   let(:custom_workflow) do
     described_class.new(
       analyzer: mock_analyzer,
@@ -59,8 +59,8 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
   let(:mock_undercovered_items) do
     {
       urgency_breakdown: {
-        critical: { count: 1 },
-        high: { count: 2 }
+        critical: {count: 1},
+        high: {count: 2}
       },
       recommendations: ["Fix file1.rb", "Improve file2.rb"]
     }
@@ -68,8 +68,8 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
   let(:mock_generated_reports) do
     [
-      { format: :text, path: "#{temp_output_dir}/report.txt" },
-      { format: :json, path: "#{temp_output_dir}/report.json" }
+      {format: :text, path: "#{temp_output_dir}/report.txt"},
+      {format: :json, path: "#{temp_output_dir}/report.json"}
     ]
   end
 
@@ -131,7 +131,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
       it "creates output directory if it doesn't exist" do
         nonexistent_dir = File.join(temp_output_dir, "new_subdir")
-        options = { output_dir: nonexistent_dir }
+        options = {output_dir: nonexistent_dir}
 
         custom_workflow.execute_full_analysis(temp_input_file, options)
 
@@ -139,7 +139,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
       end
 
       it "handles adaptive threshold option" do
-        options = { adaptive_threshold: true }
+        options = {adaptive_threshold: true}
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
 
         result = custom_workflow.execute_full_analysis(temp_input_file, options)
@@ -148,7 +148,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
       end
 
       it "handles create_path_integration option" do
-        options = { create_path_integration: true }
+        options = {create_path_integration: true}
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
         allow(mock_report_generator).to receive(:generate_for_create_path).and_return({
           action_required: true,
@@ -167,7 +167,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
       end
 
       it "handles detailed analysis option" do
-        options = { detailed_analysis: true }
+        options = {detailed_analysis: true}
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
 
         custom_workflow.execute_full_analysis(temp_input_file, options)
@@ -200,19 +200,19 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
         expect(result[:success]).to be false
         expect(result[:error][:message]).to include("must be a JSON file")
-        
+
         File.unlink(text_file.path)
       end
 
       it "raises error for unreadable file" do
-        File.chmod(0000, temp_input_file)
-        
+        File.chmod(0o000, temp_input_file)
+
         result = custom_workflow.execute_full_analysis(temp_input_file)
 
         expect(result[:success]).to be false
         expect(result[:error][:message]).to include("not readable")
-        
-        File.chmod(0644, temp_input_file) # Restore permissions for cleanup
+
+        File.chmod(0o644, temp_input_file) # Restore permissions for cleanup
       end
     end
 
@@ -235,7 +235,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
     context "when output directory creation fails" do
       it "handles directory creation errors" do
         invalid_dir = "/invalid/path/that/cannot/be/created"
-        options = { output_dir: invalid_dir }
+        options = {output_dir: invalid_dir}
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
 
         result = custom_workflow.execute_full_analysis(temp_input_file, options)
@@ -307,9 +307,9 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
           files_under_threshold: 3
         },
         detailed_breakdown: [
-          { coverage_percentage: 75.0 },
-          { coverage_percentage: 85.0 },
-          { coverage_percentage: 90.0 }
+          {coverage_percentage: 75.0},
+          {coverage_percentage: 85.0},
+          {coverage_percentage: 90.0}
         ]
       }
     end
@@ -398,15 +398,15 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
     it "recommends focused analysis for large projects" do
       large_lib_files = (1..60).map { |i| "/project/lib/file#{i}.rb" }
-      all_files = large_lib_files + mock_file_paths.select { |p| !p.include?('/lib/') }
-      
+      all_files = large_lib_files + mock_file_paths.select { |p| !p.include?("/lib/") }
+
       allow(mock_file_reader).to receive(:extract_file_paths).and_return(all_files)
 
       result = workflow.analyze_and_recommend(temp_input_file)
 
       recommendations = result[:analysis_recommendations]
       expect(recommendations[:recommended_focus]).to eq("focused_analysis")
-      
+
       suggestions = result[:workflow_suggestions]
       expect(suggestions[:focus_patterns]).not_to be_nil
     end
@@ -457,7 +457,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
           formats: [:json],
           detailed_analysis: true
         }
-        
+
         allow(mock_threshold_validator).to receive(:validate_threshold).with(90.0).and_return(90.0)
 
         result = custom_workflow.send(:validate_and_prepare_options, options)
@@ -515,7 +515,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
       context "with no under-covered files" do
         it "suggests raising the threshold" do
           recommendations = workflow.send(:generate_quick_recommendations, mock_analysis_result)
-          
+
           expect(recommendations.first).to include("All files meet the coverage threshold!")
         end
       end
@@ -524,14 +524,13 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
         let(:worst_file) do
           double("CoverageFile",
             relative_path: "lib/worst.rb",
-            coverage_percentage: 45.0
-          )
+            coverage_percentage: 45.0)
         end
         let(:mock_under_covered_files) { [worst_file] }
 
         it "recommends starting with the worst file" do
           recommendations = workflow.send(:generate_quick_recommendations, mock_analysis_result)
-          
+
           expect(recommendations).to include("Start with lib/worst.rb (45.0% coverage)")
         end
 
@@ -545,7 +544,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
           it "suggests focusing on worst cases first" do
             recommendations = workflow.send(:generate_quick_recommendations, mock_analysis_result)
-            
+
             expect(recommendations).to include("5 files need attention - consider focusing on the worst cases first")
           end
         end
@@ -554,14 +553,13 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
           let(:critical_file) do
             double("CoverageFile",
               relative_path: "lib/critical.rb",
-              coverage_percentage: 15.0
-            )
+              coverage_percentage: 15.0)
           end
           let(:mock_under_covered_files) { [critical_file] }
 
           it "warns about critical coverage gaps" do
             recommendations = workflow.send(:generate_quick_recommendations, mock_analysis_result)
-            
+
             expect(recommendations).to include("1 file(s) have critical coverage gaps (<25%)")
           end
         end
@@ -592,7 +590,7 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
 
     describe "#handle_workflow_error" do
       let(:test_error) { StandardError.new("Test error") }
-      let(:test_options) { { threshold: 85.0, sensitive_data: "secret" } }
+      let(:test_options) { {threshold: 85.0, sensitive_data: "secret"} }
 
       it "creates error response with sanitized options" do
         result = workflow.send(:handle_workflow_error, test_error, temp_input_file, test_options)
@@ -692,20 +690,20 @@ RSpec.describe CodingAgentTools::Ecosystems::CoverageAnalysisWorkflow do
       it "handles unreadable output directory" do
         protected_dir = File.join(temp_output_dir, "protected")
         Dir.mkdir(protected_dir)
-        File.chmod(0000, protected_dir)
+        File.chmod(0o000, protected_dir)
 
-        options = { output_dir: File.join(protected_dir, "subdir") }
+        options = {output_dir: File.join(protected_dir, "subdir")}
         result = workflow.execute_full_analysis(temp_input_file, options)
 
         expect(result[:success]).to be false
-        
-        File.chmod(0755, protected_dir) # Restore for cleanup
+
+        File.chmod(0o755, protected_dir) # Restore for cleanup
       end
     end
 
     context "with very large file counts" do
       it "handles max_files limit correctly" do
-        large_options = { max_files: 5 }
+        large_options = {max_files: 5}
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
         allow(mock_analyzer).to receive(:analyze_coverage).and_return(mock_analysis_result)
         allow(mock_extractor).to receive(:extract_undercovered_items).and_return(mock_undercovered_items)

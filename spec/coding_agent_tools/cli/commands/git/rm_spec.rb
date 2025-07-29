@@ -319,7 +319,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Rm do
 
       it "shows detailed error with debug flag" do
         allow_any_instance_of(StandardError).to receive(:backtrace).and_return(["line1", "line2"])
-        
+
         output = capture_stderr { command.call(files: files, debug: true) }
 
         expect(output).to include("Error: StandardError: Unexpected error")
@@ -376,7 +376,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Rm do
         quiet: true,
         concurrent: true
       }
-      
+
       result = command.send(:build_rm_options, files, comprehensive_options)
 
       expect(result).to include(
@@ -488,9 +488,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Rm do
     context "with empty file arrays" do
       it "still passes empty array to orchestrator" do
         allow(mock_orchestrator).to receive(:rm).and_return({success: true, results: {}, repositories_processed: []})
-        
+
         capture_stdout { command.call(files: []) }
-        
+
         expect(mock_orchestrator).to have_received(:rm).with([], hash_including(capture_output: true))
       end
     end
@@ -519,15 +519,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Rm do
   def capture_output
     old_stdout = $stdout
     old_stderr = $stderr
-    
+
     stdout_capture = StringIO.new
     stderr_capture = StringIO.new
-    
+
     $stdout = stdout_capture
     $stderr = stderr_capture
-    
+
     yield
-    
+
     stdout_capture.string + stderr_capture.string
   ensure
     $stdout = old_stdout

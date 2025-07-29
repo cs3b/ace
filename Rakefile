@@ -38,25 +38,25 @@ end
 namespace :coverage do
   desc "Merge parallel coverage reports"
   task :merge do
-    require 'simplecov'
-    
+    require "simplecov"
+
     # Find all parallel coverage result files
     coverage_files = Dir["coverage/.resultset*.json"]
-    
+
     if coverage_files.empty?
       puts "No parallel coverage files found to merge"
       next
     end
-    
+
     puts "Merging #{coverage_files.size} coverage report(s)..."
     coverage_files.each { |file| puts "  - #{file}" }
-    
+
     # Use SimpleCov.collate to merge all coverage reports
     SimpleCov.collate coverage_files do
       formatter SimpleCov::Formatter::MultiFormatter.new([
         SimpleCov::Formatter::HTMLFormatter
       ])
-      
+
       # Apply same filters as in spec_helper
       add_filter "/spec/"
       add_filter "/vendor/"
@@ -64,10 +64,10 @@ namespace :coverage do
       add_group "Library", "lib"
       track_files "lib/**/*.rb"
     end
-    
+
     puts "✓ Merged coverage report generated in coverage/index.html"
   end
-  
+
   desc "Clean coverage reports"
   task :clean do
     sh "rm -rf coverage/"

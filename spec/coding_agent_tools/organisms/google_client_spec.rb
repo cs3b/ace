@@ -559,7 +559,7 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
     describe "#extract_error_content" do
       it "extracts details message when available" do
         error_obj = {
-          details: { message: "Detailed error message" },
+          details: {message: "Detailed error message"},
           message: "General error message",
           raw_message: "Raw error message"
         }
@@ -733,9 +733,9 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
         expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
           .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
 
-        result = client.generate_text("test prompt", 
-                           system_instruction: system_instruction,
-                           generation_config: generation_config)
+        result = client.generate_text("test prompt",
+          system_instruction: system_instruction,
+          generation_config: generation_config)
         expect(result[:text]).to eq("Configuration test response")
       end
     end

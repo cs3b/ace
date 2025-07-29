@@ -112,7 +112,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
 
     context "with environment variables" do
       it "sets environment variables" do
-        result = described_class.execute("echo $TEST_VAR", environment: { "TEST_VAR" => "test_value" })
+        result = described_class.execute("echo $TEST_VAR", environment: {"TEST_VAR" => "test_value"})
 
         expect(result.success?).to be true
         expect(result.stdout.strip).to eq("test_value")
@@ -120,7 +120,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
 
       it "combines with existing environment" do
         original_path = ENV["PATH"]
-        result = described_class.execute("echo $PATH", environment: { "TEST_VAR" => "value" })
+        result = described_class.execute("echo $PATH", environment: {"TEST_VAR" => "value"})
 
         expect(result.success?).to be true
         expect(result.stdout.strip).to include(original_path)
@@ -162,8 +162,8 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
 
       it "validates environment parameter" do
         expect { described_class.execute("echo test", environment: "not_hash") }.to raise_error(ArgumentError, /environment must be a hash/)
-        expect { described_class.execute("echo test", environment: { 123 => "value" }) }.to raise_error(ArgumentError, /environment key must be a string/)
-        expect { described_class.execute("echo test", environment: { "key" => 123 }) }.to raise_error(ArgumentError, /environment value must be a string/)
+        expect { described_class.execute("echo test", environment: {123 => "value"}) }.to raise_error(ArgumentError, /environment key must be a string/)
+        expect { described_class.execute("echo test", environment: {"key" => 123}) }.to raise_error(ArgumentError, /environment value must be a string/)
       end
     end
 
@@ -374,21 +374,21 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
     describe ".validate_environment" do
       it "raises ArgumentError for invalid environment" do
         expect { described_class.send(:validate_environment, "not_hash") }.to raise_error(ArgumentError, /environment must be a hash/)
-        expect { described_class.send(:validate_environment, { 123 => "value" }) }.to raise_error(ArgumentError, /environment key must be a string/)
-        expect { described_class.send(:validate_environment, { "key" => 123 }) }.to raise_error(ArgumentError, /environment value must be a string/)
-        expect { described_class.send(:validate_environment, { "" => "value" }) }.to raise_error(ArgumentError, /environment key cannot be empty/)
+        expect { described_class.send(:validate_environment, {123 => "value"}) }.to raise_error(ArgumentError, /environment key must be a string/)
+        expect { described_class.send(:validate_environment, {"key" => 123}) }.to raise_error(ArgumentError, /environment value must be a string/)
+        expect { described_class.send(:validate_environment, {"" => "value"}) }.to raise_error(ArgumentError, /environment key cannot be empty/)
       end
 
       it "raises SecurityError for unsafe environment values" do
-        expect { described_class.send(:validate_environment, { "key=bad" => "value" }) }.to raise_error(SecurityError, /environment key contains invalid characters/)
-        expect { described_class.send(:validate_environment, { "key" => "value\0null" }) }.to raise_error(SecurityError, /environment value contains null bytes/)
-        expect { described_class.send(:validate_environment, { "key\x01" => "value" }) }.to raise_error(SecurityError, /environment key contains invalid characters/)
+        expect { described_class.send(:validate_environment, {"key=bad" => "value"}) }.to raise_error(SecurityError, /environment key contains invalid characters/)
+        expect { described_class.send(:validate_environment, {"key" => "value\0null"}) }.to raise_error(SecurityError, /environment value contains null bytes/)
+        expect { described_class.send(:validate_environment, {"key\x01" => "value"}) }.to raise_error(SecurityError, /environment key contains invalid characters/)
       end
 
       it "passes validation for safe environment" do
         expect { described_class.send(:validate_environment, {}) }.not_to raise_error
-        expect { described_class.send(:validate_environment, { "KEY" => "value" }) }.not_to raise_error
-        expect { described_class.send(:validate_environment, { "PATH" => "/usr/bin" }) }.not_to raise_error
+        expect { described_class.send(:validate_environment, {"KEY" => "value"}) }.not_to raise_error
+        expect { described_class.send(:validate_environment, {"PATH" => "/usr/bin"}) }.not_to raise_error
       end
     end
 
@@ -481,7 +481,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
       result = described_class.execute(
         "echo $TEST_MESSAGE > output.txt && cat output.txt",
         working_directory: test_dir,
-        environment: { "TEST_MESSAGE" => "hello from env" }
+        environment: {"TEST_MESSAGE" => "hello from env"}
       )
 
       expect(result.success?).to be true

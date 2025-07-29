@@ -87,7 +87,7 @@ module CodingAgentTools
             # Show header
             if limit == 1
               puts "Next Task:"
-            else  
+            else
               puts "Next Tasks (#{limited_tasks.size} shown):"
             end
             puts "=" * 50
@@ -95,10 +95,10 @@ module CodingAgentTools
             limited_tasks.each_with_index do |task, index|
               puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
-                task, 
+                task,
                 verbose: options[:verbose],
-                task_number: (limit > 1 ? index + 1 : nil),
-                total_tasks: (limit > 1 ? limited_tasks.size : nil),
+                task_number: ((limit > 1) ? index + 1 : nil),
+                total_tasks: ((limit > 1) ? limited_tasks.size : nil),
                 show_time: true,
                 show_path: !options[:verbose]  # Show path in compact mode
               )
@@ -118,7 +118,6 @@ module CodingAgentTools
             end
             limit_int
           end
-
 
           def handle_error(error, debug_enabled)
             if debug_enabled

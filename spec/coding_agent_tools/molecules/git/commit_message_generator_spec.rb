@@ -86,7 +86,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::CommitMessageGenerator do
     end
 
     it "passes options to the new instance" do
-      options = { intention: "add user feature", debug: true, model: "google:gemini-pro" }
+      options = {intention: "add user feature", debug: true, model: "google:gemini-pro"}
 
       expect(described_class)
         .to receive(:new)
@@ -334,7 +334,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::CommitMessageGenerator do
         expect(mock_client).to receive(:generate_text).with(
           user_prompt,
           system_instruction: system_message
-        ).and_return({ text: "commit message" })
+        ).and_return({text: "commit message"})
 
         generator.send(:generate_with_llm, system_message, user_prompt)
       end
@@ -452,7 +452,7 @@ RSpec.describe CodingAgentTools::Molecules::Git::CommitMessageGenerator do
     it "registers providers with ClientFactory" do
       # Mock the provider classes
       mock_google_client = double("MockGoogleClient")
-      
+
       # Allow first provider to succeed
       allow(generator).to receive(:require_relative).with("../../organisms/google_client").and_return(true)
       allow(CodingAgentTools::Organisms).to receive(:const_get).with("GoogleClient").and_return(mock_google_client)
