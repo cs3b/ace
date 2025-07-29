@@ -1,9 +1,10 @@
 ---
 id: v.0.3.0+task.223
-status: pending
+status: completed
 priority: high
 estimate: 3h
 dependencies: []
+completed_at: 2025-07-29T06:59:00Z
 ---
 
 # Refactor coverage calculation to eliminate duplicate logic and fix percentage discrepancy

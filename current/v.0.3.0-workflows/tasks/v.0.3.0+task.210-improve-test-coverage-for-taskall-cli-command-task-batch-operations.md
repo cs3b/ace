@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.210
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,89 +8,79 @@ dependencies: []
 
 # Improve test coverage for TaskAll CLI command - task batch operations
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+The `task-manager all` CLI command (`CodingAgentTools::Cli::Commands::Task::All`) currently lacks comprehensive test coverage. This command is responsible for listing all tasks with batch operations including filtering, sorting, dependency cycle detection, and various output formatting options. Adding proper test coverage will ensure the reliability of this critical task management feature.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Create comprehensive unit tests for the `Task::All` CLI command
+- Cover all CLI options and flags including filtering, sorting, verbose output, debugging, and cycle detection
+- Test error handling, edge cases, and integration with underlying organisms
+- Ensure test coverage follows existing patterns from similar CLI commands
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb`
 
 #### Modify
 
-- path/to/other.ext
+- N/A (new test file creation only)
 
 #### Delete
 
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
+- N/A
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
+* [x] Analyze existing Task::All command implementation and identify all features requiring test coverage
+  > TEST: Feature Analysis Complete
   > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Assert: All command options, methods, and code paths are identified for testing
+  > Command: Manual review - verify comprehensive feature list created
+* [x] Review existing test patterns from task/reschedule_spec.rb to follow consistent testing approach
+* [x] Plan test scenarios covering success cases, error cases, and edge cases for all command options
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [x] Create spec file structure with basic setup following existing patterns from reschedule_spec.rb
+  > TEST: Spec File Created
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: Spec file exists with proper RSpec structure and basic test setup
+  > Command: ls -la spec/coding_agent_tools/cli/commands/task/all_spec.rb
+- [x] Implement tests for basic command execution without options (happy path)
+- [x] Add tests for all CLI options: --debug, --show-cycles, --sort, --filter, --verbose, --release
+- [x] Implement tests for error handling scenarios (task manager failures, invalid filters/sorts)
+- [x] Add tests for edge cases (empty task lists, malformed tasks, exception handling)
+- [x] Test output formatting and colorization functionality
+- [x] Test integration with underlying organisms (TaskManager, TaskSortEngine, TaskFilterEngine, UnifiedTaskFormatter)
+- [x] Run tests to verify all scenarios pass and achieve comprehensive coverage
+  > TEST: Test Suite Passes
+  > Type: Action Validation
+  > Assert: All tests pass and provide comprehensive coverage of the Task::All command
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/task/all_spec.rb -v
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] AC 1: Complete spec file created at dev-tools/spec/coding_agent_tools/cli/commands/task/all_spec.rb with comprehensive test coverage
+- [x] AC 2: All CLI options and flags are tested including --debug, --show-cycles, --sort, --filter, --verbose, --release
+- [x] AC 3: Error handling, edge cases, and integration scenarios are properly tested
+- [x] AC 4: Test suite passes completely and follows established patterns from existing CLI command tests
+- [x] AC 5: Code coverage for Task::All command is significantly improved through comprehensive unit testing
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
+- ❌ Integration tests with real file system (unit tests with mocking only)
+- ❌ Performance testing or benchmarking
+- ❌ Modifying the Task::All command implementation itself
+- ❌ Testing underlying organisms separately (focus on CLI command integration)
 
 ## References
 
-```
+- Existing implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/all.rb`
+- Test pattern reference: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb`
+- CLI framework: dry-cli gem documentation
