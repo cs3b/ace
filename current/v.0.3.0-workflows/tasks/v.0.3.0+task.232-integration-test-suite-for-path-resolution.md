@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.232
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: [v.0.3.0+task.229, v.0.3.0+task.230, v.0.3.0+task.231]

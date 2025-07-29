@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.231
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.3.0+task.227, v.0.3.0+task.228]
@@ -61,14 +61,14 @@ Update the reflection-synthesize test suite to cover the new output path behavio
 
 ### Planning Steps
 
-* [ ] Analyze current test structure and coverage
-* [ ] Identify tests that need updates
-* [ ] Plan new test scenarios
-* [ ] Design mock strategy for ReleaseManager
+* [x] Analyze current test structure and coverage
+* [x] Identify tests that need updates
+* [x] Plan new test scenarios
+* [x] Design mock strategy for ReleaseManager
 
 ### Execution Steps
 
-- [ ] Update output path determination tests
+- [x] Update output path determination tests
   ```ruby
   describe "#determine_output_path" do
     it "uses release reflections/synthesis directory by default"
@@ -76,13 +76,13 @@ Update the reflection-synthesize test suite to cover the new output path behavio
     it "creates synthesis directory if missing"
   end
   ```
-- [ ] Update archive default behavior tests
+- [x] Update archive default behavior tests
   ```ruby
   it "archives by default when --archived not specified"
   it "respects --no-archived flag"
   it "shows archived as true in dry run output"
   ```
-- [ ] Add ReleaseManager integration tests
+- [x] Add ReleaseManager integration tests
   ```ruby
   describe "ReleaseManager integration" do
     it "uses ReleaseManager for path resolution"
@@ -90,17 +90,17 @@ Update the reflection-synthesize test suite to cover the new output path behavio
     it "auto-discovers using ReleaseManager"
   end
   ```
-- [ ] Update existing tests that assume old defaults
-- [ ] Ensure mocks properly simulate new behavior
+- [x] Update existing tests that assume old defaults
+- [x] Ensure mocks properly simulate new behavior
 
 ## Acceptance Criteria
 
-- [ ] Tests reflect new output path in release/reflections/synthesis/
-- [ ] Tests validate archived defaults to true
-- [ ] ReleaseManager integration is properly tested
-- [ ] Backward compatibility is verified
-- [ ] All existing tests still pass with updates
-- [ ] New behavior is comprehensively covered
+- [x] Tests reflect new output path in release/reflections/synthesis/
+- [x] Tests validate archived defaults to true
+- [x] ReleaseManager integration is properly tested
+- [x] Backward compatibility is verified
+- [x] All existing tests still pass with updates
+- [x] New behavior is comprehensively covered
 
 ## Out of Scope
 
