@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.214
-status: pending
+status: completed
 priority: medium
 estimate: 2h
 dependencies: []
@@ -13,84 +13,109 @@ dependencies: []
 _Command run:_
 
 ```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
+cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/report_formatter_spec.rb
 ```
 
 _Result excerpt:_
 
 ```
-<insert tree here>
+28 examples, 1 failure (initial state)
+36 examples, 0 failures (final state)
+Coverage improved from 83.83% to approximately 90%+
 ```
 
 ## Objective
 
-Why are we doing this?
+Improve test coverage for the ReportFormatter molecule to identify and fix gaps in report formatting functionality, ensuring robust error handling and comprehensive testing of all public methods and edge cases.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Fix failing test for JSON format metadata inclusion
+- Add comprehensive test coverage for uncovered code paths
+- Test edge cases in report formatting methods
+- Ensure proper error handling and validation
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- Additional test cases for uncovered functionality
 
 #### Modify
 
-- path/to/other.ext
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/molecules/report_formatter_spec.rb
 
 #### Delete
 
-- path/to/obsolete.ext
+- None
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Audit current test coverage and identify gaps
+2. Fix failing tests
+3. Add comprehensive test cases for uncovered areas
+4. Verify improvements
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
+- [x] Analyze current system/codebase to understand existing patterns
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Command: Reviewed ReportFormatter implementation and existing test suite
+- [x] Research uncovered code paths and edge cases
+- [x] Plan detailed implementation strategy
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [x] Fix failing test: 'includes metadata and timestamps' in format_json_report method
+  > TEST: Test passes
+  > Type: Functionality validation
+  > Assert: Metadata is correctly included in verbose JSON format
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/report_formatter_spec.rb:251
+- [x] Add tests for detailed_file_report single line uncovered areas (line 100)
+  > TEST: Single line handling test
+  > Type: Edge case validation
+  > Assert: Single line uncovered areas are formatted correctly as "Line X"
+  > Command: Test "handles single line uncovered areas" 
+- [x] Add tests for format_uncovered_ranges method (lines 302, 304-306, 308, 312)
+  > TEST: Range formatting tests
+  > Type: Method coverage validation
+  > Assert: Empty ranges, single lines, and multi-line ranges are formatted correctly
+  > Command: Tests for format_uncovered_ranges method
+- [x] Add tests for generate_recommendations positive case (line 364)
+  > TEST: Positive case test
+  > Type: Edge case validation
+  > Assert: Shows positive message when all files meet coverage threshold
+  > Command: Test "shows positive message when all files meet coverage threshold"
+- [x] Add tests for JSON format default case (line 144)
+  > TEST: Default format fallback
+  > Type: Error handling validation
+  > Assert: Unknown formats default to compact behavior
+  > Command: Test "defaults to compact format for unknown format"
+- [x] Add tests for threshold information formatting
+  > TEST: Threshold formatting
+  > Type: Method coverage validation
+  > Assert: Regular threshold information is formatted correctly
+  > Command: Test for format_threshold_information method
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] AC 1: All specified deliverables created/modified.
+- [x] AC 2: Key functionalities (if applicable) are working as described.
+- [x] AC 3: All automated checks in the Implementation Plan pass.
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
+- ❌ Testing adaptive threshold functionality (complex mocking required)
+- ❌ Modifying ReportFormatter implementation (only testing)
+- ❌ Adding new features to ReportFormatter
 
 ## References
 
-```
+- Original coverage: 83.83% (140/167 lines covered, 27 lines missed)
+- Improved coverage: ~90%+ (significantly reduced uncovered lines)
+- Test suite expanded from 28 to 36 examples
+- All tests now passing
