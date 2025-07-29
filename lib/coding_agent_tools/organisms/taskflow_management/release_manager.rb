@@ -164,6 +164,36 @@ module CodingAgentTools
           ManagerResult.new([], false, "Error listing all releases: #{e.message}")
         end
 
+        # Resolve path within current release directory
+        # @param subpath [String] Subdirectory path to resolve (e.g., "reflections", "tasks", "reflections/synthesis")
+        # @param create_if_missing [Boolean] Whether to create directory if it doesn't exist (default: false)
+        # @return [String] Absolute path to the resolved directory
+        # @raise [StandardError] If no current release exists or path validation fails
+        def resolve_path(subpath, create_if_missing: false)
+          raise ArgumentError, "subpath cannot be nil or empty" if subpath.nil? || subpath.to_s.empty?
+          
+          # Get current release
+          current_result = current
+          unless current_result.success?
+            raise StandardError, "Cannot resolve path: #{current_result.error_message}"
+          end
+          
+          current_release = current_result.data
+          resolved_path = File.join(current_release.path, subpath)
+          
+          # Validate the resolved path for security
+          unless @directory_navigator.safe_directory_path?(resolved_path)
+            raise SecurityError, "Resolved path failed safety validation: #{resolved_path}"
+          end
+          
+          # Create directory if requested and doesn't exist
+          if create_if_missing && (!File.exist?(resolved_path) || !File.directory?(resolved_path))
+            @directory_navigator.ensure_directory_exists(resolved_path)
+          end
+          
+          File.expand_path(resolved_path)
+        end
+
         # Validate that release context detection is consistent
         # This helps detect potential inconsistencies between tools early
         # @return [ManagerResult] Result indicating validation status
