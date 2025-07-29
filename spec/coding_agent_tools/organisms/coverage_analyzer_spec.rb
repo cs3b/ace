@@ -231,9 +231,12 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       it "extracts coverage data for adaptive calculation" do
         analyzer_with_mocks.analyze_coverage(file_path, adaptive_options)
         
-        # The coverage data should be extracted and passed to the adaptive calculator
-        # Note: extract_coverage_data returns empty array for our sample format
-        expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with([])
+        # The coverage data should be extracted from processed data and passed to the adaptive calculator
+        expected_coverage_data = [
+          { coverage_percentage: 80.0 },
+          { coverage_percentage: 40.0 }
+        ]
+        expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with(expected_coverage_data)
       end
     end
 
@@ -290,8 +293,12 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       it "extracts coverage data for adaptive calculation" do
         analyzer_with_mocks.send(:determine_final_threshold, sample_processed_data, validated_options_adaptive)
         
-        # Note: extract_coverage_data returns empty array for our sample format
-        expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with([])
+        # The coverage data should be extracted from processed data and passed to the adaptive calculator
+        expected_coverage_data = [
+          { coverage_percentage: 80.0 },
+          { coverage_percentage: 40.0 }
+        ]
+        expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with(expected_coverage_data)
       end
     end
   end
