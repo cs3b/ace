@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.221
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,89 +8,100 @@ dependencies: []
 
 # Improve test coverage for GitRm CLI command - git remove operations
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+Enhance test coverage for the GitRm CLI command and related git remove operations to ensure comprehensive testing of all functionality including edge cases, error handling, and integration with the GitOrchestrator. The current test suite has 19 examples but may lack coverage in deeper orchestration methods and integration scenarios.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Analyze current test coverage for GitRm CLI command functionality
+- Identify gaps in GitOrchestrator.rm method testing  
+- Add comprehensive tests for build_rm_commands method
+- Implement integration tests for multi-repository rm operations
+- Ensure proper error handling and edge case coverage
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- Additional test cases in existing spec files for better coverage
+- Integration test scenarios for complex git rm operations
 
 #### Modify
 
-- path/to/other.ext
+- dev-tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb (enhance existing tests)
+- dev-tools/spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb (add rm method tests)
 
 #### Delete
 
-- path/to/obsolete.ext
+- N/A (no files to delete)
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Analysis - Analyze current test coverage and identify gaps
+2. Orchestrator Testing - Add tests for GitOrchestrator rm method and build_rm_commands
+3. Integration Testing - Add multi-repository and edge case tests
+4. Validation - Verify coverage improvements and test quality
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+* [x] Analyze current test coverage for git rm functionality
+  > TEST: Coverage Analysis
+  > Type: Pre-condition Check  
+  > Assert: Current test suite provides baseline coverage of 19 examples
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/git/rm_spec.rb
+* [ ] Identify specific gaps in GitOrchestrator rm method and build_rm_commands testing
+* [ ] Research integration test patterns used by other git commands in the project
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [ ] Add comprehensive tests for GitOrchestrator.rm method focusing on path dispatching and command building
+  > TEST: GitOrchestrator RM Method Coverage
+  > Type: Unit Test Validation
+  > Assert: GitOrchestrator rm method is thoroughly tested with various scenarios
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb -k "rm"
+- [ ] Add tests for build_rm_commands method covering all option combinations and edge cases
+  > TEST: build_rm_commands Method Coverage
+  > Type: Unit Test Validation
+  > Assert: build_rm_commands method handles all flags and path scenarios correctly
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/git/git_orchestrator_spec.rb -k "build_rm_commands"
+- [ ] Implement integration tests for multi-repository rm operations with concurrent and sequential execution
+  > TEST: Multi-Repository Integration
+  > Type: Integration Test Validation
+  > Assert: Git rm operations work correctly across multiple repositories
+  > Command: bundle exec rspec spec/integration/ -k "git.*rm"
+- [ ] Add edge case tests for error scenarios, invalid paths, and permission issues
+  > TEST: Edge Case Coverage
+  > Type: Error Handling Validation
+  > Assert: All error scenarios are properly handled and tested
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/git/rm_spec.rb -k "error"
+- [ ] Run full test suite to ensure no regressions and measure coverage improvement
+  > TEST: Full Test Suite Regression Check
+  > Type: Regression Validation
+  > Assert: All existing tests pass and coverage has improved
+  > Command: bundle exec rspec && echo "Coverage improved for git rm functionality"
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] AC 1: Current test coverage baseline established (19 examples in rm_spec.rb)
+- [ ] AC 2: GitOrchestrator rm method has comprehensive unit test coverage
+- [ ] AC 3: build_rm_commands method is fully tested with all option combinations
+- [ ] AC 4: Integration tests cover multi-repository scenarios and concurrent execution
+- [ ] AC 5: Edge cases and error scenarios are properly tested
+- [ ] AC 6: All new tests pass and no existing functionality is broken
+- [ ] AC 7: Overall test coverage for git rm functionality shows measurable improvement
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
+- ❌ Modifying the actual GitRm CLI command implementation (focus is on testing only)
+- ❌ Adding new features to git rm functionality 
+- ❌ Performance optimization of git rm operations
+- ❌ UI/UX improvements for git rm command output
 
 ## References
 
-```
+- Current GitRm CLI implementation: `dev-tools/lib/coding_agent_tools/cli/commands/git/rm.rb`
+- GitOrchestrator rm method: `dev-tools/lib/coding_agent_tools/organisms/git/git_orchestrator.rb:180`
+- Existing test suite: `dev-tools/spec/coding_agent_tools/cli/commands/git/rm_spec.rb`
