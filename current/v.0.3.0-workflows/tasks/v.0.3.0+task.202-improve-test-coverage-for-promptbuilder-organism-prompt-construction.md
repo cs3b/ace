@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.202
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -10,46 +10,39 @@ dependencies: []
 
 ## 0. Directory Audit ✅
 
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
+_Current test coverage for PromptBuilder organism analyzed. While line coverage shows 100%, there are areas where more comprehensive testing would improve reliability and maintainability._
 
 ## Objective
 
-Why are we doing this?
+Improve test coverage for the PromptBuilder organism by adding comprehensive tests for edge cases, error scenarios, integration patterns, and behavioral validation. While the current tests cover the happy path well, additional testing is needed for robustness.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Enhance error handling test coverage for file system edge cases
+- Add integration tests for complex prompt construction scenarios
+- Improve test coverage for edge cases in temporary session creation
+- Add comprehensive validation tests for prompt statistics and metadata
+- Test boundary conditions and malformed input handling
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- Additional test cases for edge scenarios in prompt_builder_spec.rb
 
 #### Modify
 
-- path/to/other.ext
+- dev-tools/spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb
 
 #### Delete
 
-- path/to/obsolete.ext
+- None
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Analyze existing test coverage and identify gaps
+2. Implement additional test cases for edge scenarios
+3. Validate improved coverage and robustness
 
 ## Implementation Plan
 
@@ -57,39 +50,66 @@ Why are we doing this?
 
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
+*Analysis and planning activities to identify test coverage gaps and improvement opportunities._
 
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
+* [x] Analyze current PromptBuilder test coverage patterns
+  > TEST: Coverage Analysis
   > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Assert: Current test coverage is 100% but lacks edge case coverage
+  > Command: bundle exec coverage-analyze coverage/.resultset.json --focus "**/prompt_builder.rb"
+* [x] Identify specific edge cases and error scenarios not covered
+* [x] Research integration testing patterns for prompt construction workflows
+* [x] Plan test cases for boundary conditions and malformed inputs
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
+*Concrete implementation actions to improve PromptBuilder test coverage._
 
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [x] Add edge case tests for load_target_content method with invalid file types
+  > TEST: Invalid Content Type Handling
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: Tests properly handle unknown and edge case content types
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb -t content_type_edge_cases
+- [x] Implement comprehensive error handling tests for file system failures
+  > TEST: File System Error Coverage
+  > Type: Action Validation
+  > Assert: All file system error scenarios are properly tested
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb -t file_system_errors
+- [x] Add integration tests for complex prompt construction scenarios
+  > TEST: Integration Test Coverage
+  > Type: Action Validation
+  > Assert: Complex prompt construction workflows are thoroughly tested
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb -t integration_scenarios
+- [x] Implement boundary condition tests for temporary session creation
+  > TEST: Boundary Condition Coverage
+  > Type: Action Validation
+  > Assert: Edge cases in session creation are properly handled
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb -t boundary_conditions
+- [x] Add comprehensive validation tests for prompt statistics edge cases
+  > TEST: Statistics Validation Coverage
+  > Type: Action Validation
+  > Assert: All edge cases in prompt statistics are tested
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/code/prompt_builder_spec.rb -t statistics_edge_cases
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+*Conditions that signify the PromptBuilder test coverage improvement is complete._
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [x] AC 1: All edge case test scenarios for content type handling are implemented and passing
+- [x] AC 2: Comprehensive error handling tests for file system failures are added and validated
+- [x] AC 3: Integration tests for complex prompt construction workflows are implemented
+- [x] AC 4: Boundary condition tests for temporary session creation are thoroughly covered
+- [x] AC 5: Prompt statistics validation tests cover all edge cases and error conditions
+- [x] AC 6: All new tests pass consistently without flakiness
+- [x] AC 7: Test coverage improvements maintain 100% line coverage while adding behavioral validation
 
 ## Out of Scope
 
-- ❌ …
+- ❌ Modifying the PromptBuilder implementation itself (only testing improvements)
+- ❌ Testing dependencies (PromptCombiner, FileContentReader) - they have their own test suites
+- ❌ Performance testing or load testing scenarios
+- ❌ UI/UX testing for CLI output formatting
+- ❌ Integration with external LLM providers (handled by other organisms)
 
 ## References
 
