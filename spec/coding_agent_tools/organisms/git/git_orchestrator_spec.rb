@@ -785,7 +785,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
           result = orchestrator.rm(paths)
           expect(result[:success]).to be false
           expect(result[:error]).to eq("Remove operation failed")
-          expect(result[:errors]).to be_present
+          expect(result[:errors]).not_to be_empty
         end
       end
     end
@@ -823,6 +823,7 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
     end
 
     context "integration with PathDispatcher" do
+      let(:paths) { ["file1.txt", "file2.txt"] }
       let(:real_dispatcher) { CodingAgentTools::Molecules::Git::PathDispatcher.new(project_root) }
 
       before do
