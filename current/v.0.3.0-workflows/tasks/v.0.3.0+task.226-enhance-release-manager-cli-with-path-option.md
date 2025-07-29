@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.226
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.3.0+task.225]
@@ -65,31 +65,31 @@ Add a `--path` option to the `release-manager current` command that uses the new
 
 ### Planning Steps
 
-* [ ] Review current release current command implementation
-* [ ] Study dry-cli option handling patterns
-* [ ] Design output format for path results
-* [ ] Plan integration with ReleaseManager.resolve_path
+* [x] Review current release current command implementation
+* [x] Study dry-cli option handling patterns
+* [x] Design output format for path results
+* [x] Plan integration with ReleaseManager.resolve_path
 
 ### Execution Steps
 
-- [ ] Add --path option to command definition
+- [x] Add --path option to command definition
   ```ruby
   option :path, type: :string, desc: "Resolve path within current release"
   ```
-- [ ] Modify call method to handle --path option
-- [ ] When --path provided, call release_manager.resolve_path
-- [ ] Format output appropriately (text shows just path, JSON includes metadata)
-- [ ] Update command examples to show --path usage
-- [ ] Handle errors when path resolution fails
+- [x] Modify call method to handle --path option
+- [x] When --path provided, call release_manager.resolve_path
+- [x] Format output appropriately (text shows just path, JSON includes metadata)
+- [x] Update command examples to show --path usage
+- [x] Handle errors when path resolution fails
 
 ## Acceptance Criteria
 
-- [ ] `release-manager current --path reflections` returns full path
-- [ ] `release-manager current --path reflections/synthesis` works correctly
-- [ ] JSON format includes path in structured output
-- [ ] Errors are handled gracefully (no current release, invalid path)
-- [ ] Command help shows --path option with examples
-- [ ] Works with all common subdirectories
+- [x] `release-manager current --path reflections` returns full path
+- [x] `release-manager current --path reflections/synthesis` works correctly
+- [x] JSON format includes path in structured output
+- [x] Errors are handled gracefully (no current release, invalid path)
+- [x] Command help shows --path option with examples
+- [x] Works with all common subdirectories
 
 ## Out of Scope
 
