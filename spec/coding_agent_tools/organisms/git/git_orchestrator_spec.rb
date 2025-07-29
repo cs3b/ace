@@ -708,6 +708,17 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
         orchestrator.rm(paths)
       end
 
+      it "executes sequentially by default" do
+        expect(orchestrator).to receive(:execute_sequentially).with({"main" => ["rm file1.txt file2.txt"]}, {})
+        orchestrator.rm(paths)
+      end
+
+      it "passes through rm-specific options" do
+        options = {force: true, cached: true, recursive: true}
+        expect(orchestrator).to receive(:build_rm_commands).with(mock_dispatch_info, options)
+        orchestrator.rm(paths, options)
+      end
+
       context "with concurrent option" do
         it "executes concurrently" do
           commands_by_repo = {"main" => ["rm file1.txt"]}
@@ -715,6 +726,119 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
           expect(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently).with(commands_by_repo, {concurrent: true})
           orchestrator.rm(paths, {concurrent: true})
         end
+      end
+
+      context "with multiple repositories" do
+        let(:multi_repo_dispatch_info) do
+          {
+            "main" => {paths: ["main_file.txt"]},
+            "submodule1" => {paths: ["sub_file.txt"]},
+            "submodule2" => {paths: ["another_file.txt"]}
+          }
+        end
+
+        before do
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_return(multi_repo_dispatch_info)
+          allow(orchestrator).to receive(:build_rm_commands).and_return({
+            "main" => ["rm main_file.txt"],
+            "submodule1" => ["rm sub_file.txt"],
+            "submodule2" => ["rm another_file.txt"]
+          })
+        end
+
+        it "handles multi-repository path dispatching" do
+          expect(orchestrator).to receive(:build_rm_commands).with(multi_repo_dispatch_info, {})
+          orchestrator.rm(paths)
+        end
+
+        it "executes commands across all repositories" do
+          expected_commands = {
+            "main" => ["rm main_file.txt"],
+            "submodule1" => ["rm sub_file.txt"],
+            "submodule2" => ["rm another_file.txt"]
+          }
+          expect(orchestrator).to receive(:execute_sequentially).with(expected_commands, {})
+          orchestrator.rm(paths)
+        end
+      end
+
+      context "with path dispatcher errors" do
+        before do
+          allow(mock_dispatcher).to receive(:dispatch_paths).and_raise(StandardError.new("Path dispatch failed"))
+        end
+
+        it "propagates path dispatcher errors" do
+          expect { orchestrator.rm(paths) }.to raise_error(StandardError, "Path dispatch failed")
+        end
+      end
+
+      context "with execution failures" do
+        before do
+          allow(orchestrator).to receive(:execute_sequentially).and_return({
+            success: false, 
+            error: "Remove operation failed",
+            errors: [{repository: "main", message: "fatal: pathspec did not match any files"}]
+          })
+        end
+
+        it "returns failure result from executor" do
+          result = orchestrator.rm(paths)
+          expect(result[:success]).to be false
+          expect(result[:error]).to eq("Remove operation failed")
+          expect(result[:errors]).to be_present
+        end
+      end
+    end
+
+    context "with edge case paths" do
+      let(:edge_case_paths) { ["spaces in name.txt", "special@chars#file.txt", "unicode文件.txt"] }
+      let(:edge_case_dispatch_info) { {"main" => {paths: edge_case_paths}} }
+
+      before do
+        allow(mock_dispatcher).to receive(:dispatch_paths).and_return(edge_case_dispatch_info)
+        allow(orchestrator).to receive(:build_rm_commands).and_return({"main" => ["rm #{edge_case_paths.join(' ')}"]})
+      end
+
+      it "handles paths with special characters" do
+        expect(mock_dispatcher).to receive(:dispatch_paths).with(edge_case_paths)
+        expect(orchestrator).to receive(:build_rm_commands).with(edge_case_dispatch_info, {})
+        orchestrator.rm(edge_case_paths)
+      end
+    end
+
+    context "with directory paths" do
+      let(:directory_paths) { ["old_directory/", "nested/deep/folder/"] }
+      let(:dir_dispatch_info) { {"main" => {paths: directory_paths}} }
+
+      before do
+        allow(mock_dispatcher).to receive(:dispatch_paths).and_return(dir_dispatch_info)
+        allow(orchestrator).to receive(:build_rm_commands).and_return({"main" => ["rm -r old_directory/ nested/deep/folder/"]})
+      end
+
+      it "handles directory removal paths" do
+        options = {recursive: true}
+        expect(orchestrator).to receive(:build_rm_commands).with(dir_dispatch_info, options)
+        orchestrator.rm(directory_paths, options)
+      end
+    end
+
+    context "integration with PathDispatcher" do
+      let(:real_dispatcher) { CodingAgentTools::Molecules::Git::PathDispatcher.new(project_root) }
+
+      before do
+        allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_call_original
+        allow(real_dispatcher).to receive(:dispatch_paths).and_return(mock_dispatch_info)
+        allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(real_dispatcher)
+      end
+
+      it "creates PathDispatcher with correct project_root" do
+        expect(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).with(project_root)
+        orchestrator.rm(paths)
+      end
+
+      it "calls dispatch_paths on the dispatcher instance" do
+        expect(real_dispatcher).to receive(:dispatch_paths).with(paths)
+        orchestrator.rm(paths)
       end
     end
   end
