@@ -5,9 +5,6 @@ require "simplecov"
 require "simplecov-html"
 
 SimpleCov.start do
-  # Support for parallel test execution
-  command_name "RSpec:#{Process.pid}#{ENV['TEST_ENV_NUMBER']}"
-  
   add_filter "/spec/"
   add_filter "/vendor/"
   add_filter "/.bundle/"
