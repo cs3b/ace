@@ -8,6 +8,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
   let(:temp_dir) { Dir.mktmpdir }
   let(:config_loader) { instance_double(CodingAgentTools::Molecules::PathConfigLoader) }
   let(:sandbox) { instance_double(CodingAgentTools::Molecules::ProjectSandbox) }
+  let(:release_manager) { instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager) }
   let(:config) do
     {
       "repositories" => {
@@ -728,6 +729,181 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
         result = resolver.send(:resolve_file_path, "some/path")
         expect(result[:success]).to be false
         expect(result[:error]).to include("Path resolution failed")
+      end
+    end
+  end
+
+  describe "release-relative path resolution", :release_relative do
+    let(:resolver) { described_class.new(config_loader, sandbox, release_manager) }
+
+    describe "#is_release_relative?" do
+      it "returns true for release-relative patterns" do
+        expect(resolver.is_release_relative?("release:reflections")).to be true
+        expect(resolver.is_release_relative?("release:tasks")).to be true
+        expect(resolver.is_release_relative?("release:reflections/synthesis.md")).to be true
+      end
+
+      it "returns false for non-release-relative patterns" do
+        expect(resolver.is_release_relative?("tools:test")).to be false
+        expect(resolver.is_release_relative?("handbook:guide")).to be false
+        expect(resolver.is_release_relative?("regular/path")).to be false
+        expect(resolver.is_release_relative?("")).to be false
+        expect(resolver.is_release_relative?(nil)).to be false
+      end
+
+      it "handles edge cases" do
+        expect(resolver.is_release_relative?("releasetest")).to be false
+        expect(resolver.is_release_relative?(":release")).to be false
+        expect(resolver.is_release_relative?("test:release:path")).to be false
+      end
+    end
+
+    describe "#resolve_release_relative" do
+      context "with valid release-relative patterns" do
+        it "resolves simple subpaths" do
+          expected_path = "/project/dev-taskflow/current/v.0.3.0/reflections"
+          allow(release_manager).to receive(:resolve_path).with("reflections").and_return(expected_path)
+
+          result = resolver.resolve_release_relative("release:reflections")
+          expect(result[:success]).to be true
+          expect(result[:path]).to eq(expected_path)
+        end
+
+        it "resolves nested subpaths" do
+          expected_path = "/project/dev-taskflow/current/v.0.3.0/reflections/synthesis.md"
+          allow(release_manager).to receive(:resolve_path).with("reflections/synthesis.md").and_return(expected_path)
+
+          result = resolver.resolve_release_relative("release:reflections/synthesis.md")
+          expect(result[:success]).to be true
+          expect(result[:path]).to eq(expected_path)
+        end
+
+        it "resolves tasks directory" do
+          expected_path = "/project/dev-taskflow/current/v.0.3.0/tasks"
+          allow(release_manager).to receive(:resolve_path).with("tasks").and_return(expected_path)
+
+          result = resolver.resolve_release_relative("release:tasks")
+          expect(result[:success]).to be true
+          expect(result[:path]).to eq(expected_path)
+        end
+      end
+
+      context "with invalid patterns" do
+        it "returns failure for non-release-relative patterns" do
+          result = resolver.resolve_release_relative("tools:test")
+          expect(result[:success]).to be false
+          expect(result[:error]).to include("Invalid release-relative path format")
+        end
+
+        it "returns failure for empty subpaths" do
+          result = resolver.resolve_release_relative("release:")
+          expect(result[:success]).to be false
+          expect(result[:error]).to include("Empty subpath in release-relative pattern")
+        end
+
+        it "returns failure for whitespace-only subpaths" do
+          result = resolver.resolve_release_relative("release:   ")
+          expect(result[:success]).to be false
+          expect(result[:error]).to include("Empty subpath in release-relative pattern")
+        end
+      end
+
+      context "when ReleaseManager raises errors" do
+        it "handles StandardError from ReleaseManager" do
+          allow(release_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
+
+          result = resolver.resolve_release_relative("release:reflections")
+          expect(result[:success]).to be false
+          expect(result[:error]).to include("Release-relative path resolution failed: No current release")
+        end
+
+        it "handles SecurityError from ReleaseManager" do
+          allow(release_manager).to receive(:resolve_path).and_raise(SecurityError, "Path validation failed")
+
+          result = resolver.resolve_release_relative("release:../../../etc/passwd")
+          expect(result[:success]).to be false
+          expect(result[:error]).to include("Release-relative path resolution failed: Path validation failed")
+        end
+      end
+    end
+
+    describe "integration with resolve_path" do
+      context "when using release-relative patterns in resolve_path" do
+        it "routes to release-relative resolution" do
+          expected_path = "/project/dev-taskflow/current/v.0.3.0/reflections"
+          allow(release_manager).to receive(:resolve_path).with("reflections").and_return(expected_path)
+
+          result = resolver.resolve_path("release:reflections", type: :file)
+          expect(result[:success]).to be true
+          expect(result[:path]).to eq(expected_path)
+        end
+
+        it "does not interfere with other scoped patterns" do
+          # Setup scoped pattern config
+          scoped_config = {
+            "scoped_autocorrect" => {
+              "scope_autocorrect" => {"t" => "tools"},
+              "scope_mappings" => {"tools" => ["dev-tools/lib"]}
+            }
+          }
+          full_config = config.merge(scoped_config)
+          allow(config_loader).to receive(:load).and_return(full_config)
+
+          # Mock scoped pattern resolution
+          allow(resolver).to receive(:find_matching_paths).and_return(["/path/to/file.rb"])
+
+          result = resolver.resolve_path("tools:test", type: :file)
+          expect(result[:success]).to be true
+        end
+
+        it "prioritizes release-relative over other scoped patterns" do
+          # Even if we have a "release" scope mapping, "release:" should be treated as release-relative
+          expected_path = "/project/dev-taskflow/current/v.0.3.0/tasks"
+          allow(release_manager).to receive(:resolve_path).with("tasks").and_return(expected_path)
+
+          result = resolver.resolve_path("release:tasks", type: :file)
+          expect(result[:success]).to be true
+          expect(result[:path]).to eq(expected_path)
+        end
+      end
+
+      context "when not using file type" do
+        it "does not attempt release-relative resolution for non-file types" do
+          # Should not call release manager for non-file types
+          expect(release_manager).not_to receive(:resolve_path)
+
+          result = resolver.resolve_path("release:reflections", type: :task_new)
+          # This will fall through to generate_new_path logic
+          # The exact result depends on the config, but the important thing is release_manager wasn't called
+          expect(result).to have_key(:success)
+        end
+      end
+    end
+
+    describe "backward compatibility" do
+      it "maintains existing functionality when not using release patterns" do
+        path = File.join(temp_dir, "README.md")
+        allow(sandbox).to receive(:validate_path).with(path).and_return({success: true, path: path})
+
+        result = resolver.resolve_path(path, type: :file)
+        expect(result[:success]).to be true
+        expect(result[:path]).to eq(path)
+      end
+
+      it "maintains existing scoped pattern functionality" do
+        scoped_config = {
+          "scoped_autocorrect" => {
+            "scope_autocorrect" => {},
+            "scope_mappings" => {"tools" => ["dev-tools/lib"]}
+          }
+        }
+        full_config = config.merge(scoped_config)
+        allow(config_loader).to receive(:load).and_return(full_config)
+        
+        allow(resolver).to receive(:find_matching_paths).and_return(["/path/to/file.rb"])
+
+        result = resolver.resolve_path("tools:test", type: :file)
+        expect(result[:success]).to be true
       end
     end
   end
