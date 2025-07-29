@@ -276,6 +276,399 @@ RSpec.describe CodingAgentTools::Models::LintingConfig do
     end
   end
 
+  describe "configuration validation", :config_validation do
+    it "handles invalid data types for ruby configuration" do
+      expect {
+        described_class.new(ruby: "invalid_string")
+      }.not_to raise_error
+      
+      config = described_class.new(ruby: "invalid_string")
+      expect(config.ruby).to eq("invalid_string")
+    end
+
+    it "handles invalid data types for markdown configuration" do
+      expect {
+        described_class.new(markdown: 123)
+      }.not_to raise_error
+      
+      config = described_class.new(markdown: 123)
+      expect(config.markdown).to eq(123)
+    end
+
+    it "handles invalid data types for error_distribution configuration" do
+      expect {
+        described_class.new(error_distribution: [1, 2, 3])
+      }.not_to raise_error
+      
+      config = described_class.new(error_distribution: [1, 2, 3])
+      expect(config.error_distribution).to eq([1, 2, 3])
+    end
+
+    it "handles invalid enabled_linters calls with malformed ruby config" do
+      config = described_class.new(ruby: "invalid")
+      
+      expect { config.enabled_linters }.to raise_error(TypeError)
+    end
+
+    it "handles invalid enabled_linters calls with malformed markdown config" do
+      config = described_class.new(markdown: 123)
+      
+      expect { config.enabled_linters }.to raise_error(TypeError)
+    end
+
+    it "handles malformed linter configurations gracefully" do
+      malformed_ruby = {
+        enabled: true,
+        linters: {
+          standardrb: "invalid_config",
+          security: 123,
+          cassettes: nil
+        }
+      }
+
+      config = described_class.new(ruby: malformed_ruby)
+      
+      expect { config.enabled_linters }.to raise_error
+    end
+
+    it "handles missing required fields in linter configurations" do
+      incomplete_ruby = {
+        enabled: true,
+        linters: {
+          standardrb: {},  # Missing enabled field
+          security: {enabled: true}
+        }
+      }
+
+      config = described_class.new(ruby: incomplete_ruby)
+      enabled = config.enabled_linters
+
+      expect(enabled).not_to include("ruby_standardrb")
+      expect(enabled).to include("ruby_security")
+    end
+
+    it "handles deeply nested invalid configuration structures" do
+      deeply_nested_invalid = {
+        enabled: true,
+        linters: {
+          custom: {
+            enabled: true,
+            options: {
+              level1: {
+                level2: {
+                  level3: "invalid_circular_ref"
+                }
+              }
+            }
+          }
+        }
+      }
+
+      config = described_class.new(ruby: deeply_nested_invalid)
+      enabled = config.enabled_linters
+
+      expect(enabled).to include("ruby_custom")
+    end
+  end
+
+  describe "configuration merging", :config_merging do
+    it "properly merges partial ruby configurations with defaults" do
+      partial_ruby = {
+        enabled: true,
+        linters: {
+          standardrb: {enabled: false}
+          # Note: security and cassettes are missing, should not be merged from defaults
+        }
+      }
+
+      config = described_class.new(ruby: partial_ruby)
+
+      expect(config.ruby[:enabled]).to be(true)
+      expect(config.ruby[:linters][:standardrb][:enabled]).to be(false)
+      expect(config.ruby[:linters]).not_to have_key(:security)
+      expect(config.ruby[:linters]).not_to have_key(:cassettes)
+    end
+
+    it "preserves complete override of ruby configuration" do
+      complete_override = {
+        enabled: false,
+        custom_field: "value",
+        linters: {
+          custom_linter: {enabled: true, custom_option: "test"}
+        }
+      }
+
+      config = described_class.new(ruby: complete_override)
+
+      expect(config.ruby[:enabled]).to be(false)
+      expect(config.ruby[:custom_field]).to eq("value")
+      expect(config.ruby[:linters][:custom_linter][:enabled]).to be(true)
+      expect(config.ruby[:linters][:custom_linter][:custom_option]).to eq("test")
+    end
+
+    it "handles mixed override and inheritance patterns" do
+      mixed_config = {
+        enabled: true,
+        linters: {
+          standardrb: {enabled: false, autofix: false, custom_rule: "strict"},
+          new_linter: {enabled: true, type: "experimental"}
+        }
+      }
+
+      config = described_class.new(
+        ruby: mixed_config,
+        markdown: {enabled: false, custom_field: "disabled"},
+        global_settings: {timeout: 60, retries: 3}
+      )
+
+      expect(config.ruby[:linters][:standardrb][:custom_rule]).to eq("strict")
+      expect(config.ruby[:linters][:new_linter][:type]).to eq("experimental")
+      expect(config.markdown[:custom_field]).to eq("disabled")
+      expect(config.global_settings[:timeout]).to eq(60)
+    end
+
+    it "maintains separate configuration section independence" do
+      config = described_class.new(
+        ruby: {enabled: false, linters: {}},
+        markdown: {enabled: true, linters: {custom: {enabled: true}}},
+        error_distribution: {enabled: false, max_files: 10}
+      )
+
+      # Modifying one section shouldn't affect others
+      config.ruby[:enabled] = true
+      
+      expect(config.markdown[:enabled]).to be(true)
+      expect(config.error_distribution[:enabled]).to be(false)
+    end
+  end
+
+  describe "configuration serialization", :serialization do
+    it "can be serialized to and from JSON" do
+      original_config = described_class.new(
+        ruby: {enabled: true, linters: {standardrb: {enabled: false}}},
+        markdown: {enabled: true, linters: {styleguide: {enabled: true}}},
+        error_distribution: {enabled: true, max_files: 8},
+        global_settings: {timeout: 45, verbose: false}
+      )
+
+      # Convert to hash (for JSON serialization)
+      serialized = original_config.to_h
+
+      # Recreate from hash
+      deserialized_config = described_class.new(
+        ruby: serialized[:ruby],
+        markdown: serialized[:markdown],
+        error_distribution: serialized[:error_distribution],
+        global_settings: serialized[:global_settings]
+      )
+
+      expect(deserialized_config.ruby).to eq(original_config.ruby)
+      expect(deserialized_config.markdown).to eq(original_config.markdown)
+      expect(deserialized_config.error_distribution).to eq(original_config.error_distribution)
+      expect(deserialized_config.global_settings).to eq(original_config.global_settings)
+    end
+
+    it "handles serialization of complex nested structures" do
+      complex_config = described_class.new(
+        ruby: {
+          enabled: true,
+          linters: {
+            custom: {
+              enabled: true,
+              options: {
+                rules: {rule1: {severity: "error"}, rule2: {severity: "warning"}},
+                patterns: ["*.rb", "*.rake"]
+              }
+            }
+          }
+        }
+      )
+
+      serialized = complex_config.to_h
+      deserialized = described_class.new(ruby: serialized[:ruby])
+
+      expect(deserialized.ruby[:linters][:custom][:options][:rules][:rule1][:severity]).to eq("error")
+      expect(deserialized.ruby[:linters][:custom][:options][:patterns]).to include("*.rb")
+    end
+
+    it "preserves data types during serialization roundtrip" do
+      config_with_types = described_class.new(
+        ruby: {enabled: true, version: 3.1, patterns: ["*.rb"]},
+        error_distribution: {enabled: false, max_files: 0, threshold: 0.95},
+        global_settings: {debug: true, max_workers: 4, timeout: nil}
+      )
+
+      serialized = config_with_types.to_h
+      deserialized = described_class.new(
+        ruby: serialized[:ruby],
+        error_distribution: serialized[:error_distribution],
+        global_settings: serialized[:global_settings]
+      )
+
+      expect(deserialized.ruby[:version]).to be_a(Float)
+      expect(deserialized.ruby[:patterns]).to be_a(Array)
+      expect(deserialized.error_distribution[:max_files]).to be_a(Integer)
+      expect(deserialized.error_distribution[:threshold]).to be_a(Float)
+      expect(deserialized.global_settings[:debug]).to be_a(TrueClass)
+      expect(deserialized.global_settings[:timeout]).to be_nil
+    end
+  end
+
+  describe "configuration introspection", :introspection do
+    let(:config) do
+      described_class.new(
+        ruby: {enabled: true, linters: {standardrb: {enabled: true}, security: {enabled: false}}},
+        markdown: {enabled: false, linters: {styleguide: {enabled: true}}},
+        error_distribution: {enabled: true, max_files: 6}
+      )
+    end
+
+    it "provides introspection into enabled linters by type" do
+      enabled = config.enabled_linters
+      
+      ruby_linters = enabled.select { |linter| linter.start_with?("ruby_") }
+      markdown_linters = enabled.select { |linter| linter.start_with?("markdown_") }
+
+      expect(ruby_linters).to include("ruby_standardrb")
+      expect(ruby_linters).not_to include("ruby_security")
+      expect(markdown_linters).to be_empty  # markdown is disabled
+    end
+
+    it "provides configuration summary information" do
+      # Test that we can introspect the configuration structure
+      expect(config.ruby).to have_key(:enabled)
+      expect(config.ruby).to have_key(:linters)
+      expect(config.markdown).to have_key(:enabled)
+      expect(config.error_distribution).to have_key(:max_files)
+    end
+
+    it "allows inspection of linter-specific configurations" do
+      standardrb_config = config.ruby[:linters][:standardrb]
+      
+      expect(standardrb_config).to have_key(:enabled)
+      expect(standardrb_config[:enabled]).to be(true)
+    end
+
+    it "supports configuration debugging through enabled_linters method" do
+      # When debugging configuration issues, enabled_linters should provide clear output
+      enabled = config.enabled_linters
+      
+      expect(enabled).to be_an(Array)
+      expect(enabled.all? { |linter| linter.is_a?(String) }).to be(true)
+      expect(enabled.all? { |linter| linter.include?("_") }).to be(true)  # All should have type prefix
+    end
+  end
+
+  describe "configuration state management", :state_management do
+    it "allows modification of configuration after initialization" do
+      config = described_class.new
+
+      # Structs are mutable, so we can modify them
+      config.ruby[:enabled] = false
+      config.global_settings[:new_setting] = "value"
+
+      expect(config.ruby[:enabled]).to be(false)
+      expect(config.global_settings[:new_setting]).to eq("value")
+    end
+
+    it "maintains separate state for different configuration instances" do
+      config1 = described_class.new(ruby: {enabled: true})
+      config2 = described_class.new(ruby: {enabled: false})
+
+      config1.ruby[:custom_field] = "config1_value"
+      config2.ruby[:custom_field] = "config2_value"
+
+      expect(config1.ruby[:custom_field]).to eq("config1_value")
+      expect(config2.ruby[:custom_field]).to eq("config2_value")
+      expect(config1.ruby[:enabled]).to be(true)
+      expect(config2.ruby[:enabled]).to be(false)
+    end
+
+    it "handles nested configuration state modifications" do
+      config = described_class.new
+
+      # Add new linter configuration
+      config.ruby[:linters][:new_linter] = {enabled: true, autofix: false}
+
+      enabled = config.enabled_linters
+      expect(enabled).to include("ruby_new_linter")
+    end
+
+    it "preserves default values when partial state is modified" do
+      config = described_class.new
+
+      # Modify only one part of the configuration
+      config.error_distribution[:max_files] = 10
+
+      # Other defaults should remain intact
+      expect(config.error_distribution[:enabled]).to be(true)
+      expect(config.error_distribution[:one_issue_per_file]).to be(true)
+      expect(config.ruby[:enabled]).to be(true)
+    end
+  end
+
+  describe "configuration integration", :integration do
+    it "correctly integrates ruby and markdown linter enablement" do
+      config = described_class.new(
+        ruby: {enabled: true, linters: {standardrb: {enabled: true}}},
+        markdown: {enabled: true, linters: {styleguide: {enabled: true}}}
+      )
+
+      enabled = config.enabled_linters
+
+      expect(enabled).to include("ruby_standardrb")
+      expect(enabled).to include("markdown_styleguide")
+    end
+
+    it "respects global enablement flags across all sections" do
+      config = described_class.new(
+        ruby: {enabled: false, linters: {standardrb: {enabled: true}}},
+        markdown: {enabled: false, linters: {styleguide: {enabled: true}}}
+      )
+
+      enabled = config.enabled_linters
+
+      expect(enabled).not_to include("ruby_standardrb")
+      expect(enabled).not_to include("markdown_styleguide")
+    end
+
+    it "maintains consistency between error_distribution and linter settings" do
+      config = described_class.new(
+        error_distribution: {enabled: true, max_files: 2, one_issue_per_file: true}
+      )
+
+      # Error distribution settings should be accessible regardless of linter configuration
+      expect(config.error_distribution[:max_files]).to eq(2)
+      expect(config.error_distribution[:one_issue_per_file]).to be(true)
+
+      # And linters should still work normally
+      enabled = config.enabled_linters
+      expect(enabled.length).to be > 0
+    end
+
+    it "handles complex interactions between all configuration sections" do
+      config = described_class.new(
+        ruby: {enabled: true, linters: {standardrb: {enabled: true, autofix: false}}},
+        markdown: {enabled: true, linters: {styleguide: {enabled: false}, link_validation: {enabled: true}}},
+        error_distribution: {enabled: true, max_files: 1},
+        global_settings: {parallel: false, timeout: 120}
+      )
+
+      enabled = config.enabled_linters
+
+      # Should include enabled ruby linters
+      expect(enabled).to include("ruby_standardrb")
+      # Should not include disabled markdown linters
+      expect(enabled).not_to include("markdown_styleguide")
+      # Should include explicitly enabled markdown linters
+      expect(enabled).to include("markdown_link_validation")
+
+      # Global settings should be independent
+      expect(config.global_settings[:timeout]).to eq(120)
+      expect(config.error_distribution[:max_files]).to eq(1)
+    end
+  end
+
   describe "edge cases", :edge_cases do
     it "handles completely empty configuration" do
       config = described_class.new({})

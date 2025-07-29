@@ -452,6 +452,269 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
 
         expect(collector.send(:has_reflection_markers?, content)).to be false
       end
+
+      it "detects various reflection patterns case-insensitively" do
+        content = <<~CONTENT
+          # Team reflection
+          ## what went well
+          Great progress
+          ## What Could be improved
+          Better communication
+        CONTENT
+
+        expect(collector.send(:has_reflection_markers?, content)).to be true
+      end
+
+      it "handles action items pattern" do
+        content = <<~CONTENT
+          # Review
+          ## Action Items
+          - Follow up tasks
+          **Context**: Sprint review
+        CONTENT
+
+        expect(collector.send(:has_reflection_markers?, content)).to be true
+      end
+
+      it "detects key learnings pattern" do
+        content = <<~CONTENT
+          # Session Review
+          ## Key Learnings
+          New insights gained
+          **Date**: 2025-01-01
+        CONTENT
+
+        expect(collector.send(:has_reflection_markers?, content)).to be true
+      end
+    end
+
+    describe "#expand_glob_patterns" do
+      let(:pattern_file1) { File.join(temp_dir, "reflection-001.md") }
+      let(:pattern_file2) { File.join(temp_dir, "reflection-002.md") }
+      let(:direct_file) { File.join(temp_dir, "direct.md") }
+
+      before do
+        File.write(pattern_file1, "# Reflection\n## What Went Well\nGood")
+        File.write(pattern_file2, "# Reflection\n## Key Learnings\nLearned")
+        File.write(direct_file, "# Direct\n## What Went Well\nContent")
+      end
+
+      it "expands glob patterns correctly" do
+        pattern = File.join(temp_dir, "reflection-*.md")
+        result = collector.send(:expand_glob_patterns, [pattern, direct_file])
+        
+        expect(result).to contain_exactly(pattern_file1, pattern_file2, direct_file)
+      end
+
+      it "handles non-glob patterns as-is" do
+        result = collector.send(:expand_glob_patterns, [direct_file])
+        
+        expect(result).to eq([direct_file])
+      end
+
+      it "removes duplicates from expanded patterns" do
+        pattern = File.join(temp_dir, "reflection-001.md")
+        result = collector.send(:expand_glob_patterns, [pattern, pattern_file1])
+        
+        expect(result).to eq([pattern_file1])
+      end
+
+      it "handles empty glob results" do
+        empty_pattern = File.join(temp_dir, "nonexistent-*.md")
+        result = collector.send(:expand_glob_patterns, [empty_pattern])
+        
+        expect(result).to eq([])
+      end
+    end
+  end
+
+  describe "edge cases and advanced scenarios" do
+    context "with complex glob patterns" do
+      let(:nested_dir) { File.join(temp_dir, "nested") }
+      let(:nested_reflection) { File.join(nested_dir, "deep-reflection.md") }
+      
+      before do
+        Dir.mkdir(nested_dir)
+        File.write(nested_reflection, <<~CONTENT)
+          # Project Reflection
+          **Context**: Deep nested reflection
+          ## What Went Well
+          Found good patterns
+          ## What Could Be Improved
+          Better organization
+        CONTENT
+      end
+
+      it "handles recursive glob patterns" do
+        recursive_pattern = File.join(temp_dir, "**", "*reflection*.md")
+        result = collector.collect_reports([recursive_pattern])
+        
+        expect(result).to be_success
+        expect(result.data[:reports]).to include(nested_reflection)
+      end
+    end
+
+    context "with file encoding and special characters" do
+      let(:unicode_file) { File.join(temp_dir, "unicode-reflection.md") }
+      
+      before do
+        # Create file with unicode characters
+        File.write(unicode_file, <<~CONTENT, encoding: "utf-8")
+          # Daily Reflection 📝
+          **Date**: 2025-01-01
+          ## What Went Well ✅
+          Unicode content with émojis and àccents
+          ## What Could Be Improved 🔧
+          Better handling of special characters
+        CONTENT
+      end
+
+      it "handles unicode content correctly" do
+        result = collector.collect_reports([unicode_file])
+        
+        expect(result).to be_success
+        expect(result.data[:reports]).to include(unicode_file)
+      end
+    end
+
+    context "with borderline reflection marker counts" do
+      let(:borderline_file) { File.join(temp_dir, "borderline.md") }
+
+      it "accepts files with exactly 2 markers" do
+        File.write(borderline_file, <<~CONTENT)
+          # Sprint Reflection
+          ## What Went Well
+          Exactly two markers here
+        CONTENT
+        
+        result = collector.collect_reports([borderline_file])
+        expect(result).to be_success
+      end
+
+      it "rejects files with only 1 marker" do
+        File.write(borderline_file, <<~CONTENT)
+          # Some Document
+          ## What Went Well
+          Only one marker
+        CONTENT
+        
+        result = collector.collect_reports([borderline_file])
+        expect(result).to be_failure
+      end
+
+      it "accepts files with many markers" do
+        File.write(borderline_file, <<~CONTENT)
+          # Comprehensive Reflection
+          **Date**: Today
+          **Context**: Full review
+          ## What Went Well
+          Multiple items
+          ## What Could Be Improved
+          Several areas
+          ## Key Learnings
+          Many insights
+          ## Action Items
+          Next steps
+        CONTENT
+        
+        result = collector.collect_reports([borderline_file])
+        expect(result).to be_success
+      end
+    end
+
+    context "with file system edge cases" do
+      it "handles files with unusual extensions correctly" do
+        weird_extension = File.join(temp_dir, "reflection.MD") # Uppercase
+        File.write(weird_extension, <<~CONTENT)
+          # Reflection
+          ## What Went Well
+          Content here
+        CONTENT
+        
+        result = collector.collect_reports([weird_extension])
+        expect(result).to be_success
+      end
+
+      it "rejects symlinks to non-existent files" do
+        if File.respond_to?(:symlink) # Skip on systems without symlink support
+          broken_link = File.join(temp_dir, "broken-link.md")
+          non_existent = File.join(temp_dir, "does-not-exist.md")
+          
+          begin
+            File.symlink(non_existent, broken_link)
+            result = collector.collect_reports([broken_link])
+            expect(result).to be_failure
+          rescue NotImplementedError
+            skip "Symlinks not supported on this system"
+          end
+        else
+          skip "Symlinks not available"
+        end
+      end
+    end
+
+    context "with content validation edge cases" do
+      let(:edge_case_file) { File.join(temp_dir, "edge.md") }
+
+      it "handles files with reflection patterns in code blocks" do
+        File.write(edge_case_file, <<~CONTENT)
+          # Documentation
+          
+          ```markdown
+          ## What Went Well
+          This is in a code block
+          ```
+          
+          ## What Could Be Improved
+          Real reflection content here
+          **Date**: Today
+        CONTENT
+        
+        # Should still detect the real patterns outside code blocks
+        result = collector.collect_reports([edge_case_file])
+        expect(result).to be_success
+      end
+
+      it "handles files with malformed reflection patterns" do
+        File.write(edge_case_file, <<~CONTENT)
+          # Review
+          ##What Went Well (no space after ##)
+          Content
+          ## What Could Be improved (lowercase 'i')
+          More content
+        CONTENT
+        
+        # Should still detect case-insensitive patterns
+        result = collector.collect_reports([edge_case_file])
+        expect(result).to be_success
+      end
+
+      it "handles very long lines in reflection files" do
+        long_line = "A" * 5000  # Very long line
+        File.write(edge_case_file, <<~CONTENT)
+          # Reflection
+          ## What Went Well
+          #{long_line}
+          ## Action Items
+          Regular content
+        CONTENT
+        
+        result = collector.collect_reports([edge_case_file])
+        expect(result).to be_success
+      end
+    end
+
+    context "with error handling scenarios" do
+      it "propagates file read errors" do
+        error_file = File.join(temp_dir, "error.md")
+        File.write(error_file, "Content")
+        
+        # Mock file read to raise an error
+        allow(File).to receive(:read).with(error_file, encoding: "utf-8").and_raise(StandardError, "Read error")
+        
+        # The current implementation doesn't handle read errors, so it should raise
+        expect { collector.collect_reports([error_file]) }.to raise_error(StandardError, "Read error")
+      end
     end
   end
 end
