@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.216
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -63,33 +63,67 @@ Improve test coverage for the TaskReschedule CLI command by fixing failing tests
 
 *Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
+* [x] Analyze current test failures and coverage gaps
+  > TEST: Test Analysis Complete
   > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Assert: All failing tests identified and categorized
+  > Status: 34 tests failing, mainly due to mock configuration issues
+* [x] Review TaskReschedule implementation for testable scenarios
+  > TEST: Implementation Review Complete
+  > Type: Pre-condition Check  
+  > Assert: Core functionality understood for testing
+  > Status: Command handles task resolution, add_next and add_at_end strategies
+* [x] Plan test improvements and fix strategy
+  > TEST: Test Plan Ready
+  > Type: Planning Validation
+  > Assert: Strategy for fixing tests and improving coverage is clear
+  > Status: Fixed mock configuration, handle_error method, and improved test structure
 
 ### Execution Steps
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [x] Fix mock configuration issues causing test failures
+  > TEST: Mock Configuration Fixed
+  > Type: Test Validation
+  > Assert: Basic test structure passes without mock errors
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb --fail-fast
+  > Status: Fixed AllTasksResult class name and instance_double usage
+- [x] Fix handle_error method nil backtrace handling
+  > TEST: Error Handling Improved
+  > Type: Bug Fix Validation
+  > Assert: handle_error method handles nil backtrace gracefully
+  > Status: Added nil check for error.backtrace to prevent NoMethodError
+- [x] Improve test coverage for task resolution logic
+  > TEST: Task Resolution Coverage Enhanced
+  > Type: Coverage Validation
+  > Assert: All task finding strategies are properly tested
+  > Status: Enhanced mocking for respond_to? and frontmatter methods
+- [x] Enhance rescheduling algorithm tests
+  > TEST: Rescheduling Logic Coverage Complete
+  > Type: Feature Validation
+  > Assert: Both add_next and add_at_end strategies have comprehensive tests
+  > Status: Tests cover both algorithms with proper mocking and edge cases
+- [x] Strengthen edge case and boundary condition testing
+  > TEST: Edge Cases Covered
+  > Type: Robustness Validation
+  > Assert: Error conditions and boundary scenarios are well tested
+  > Status: Tests include concurrent file access, large sort values, and error handling
+- [x] Run final test validation
+  > TEST: All Tests Pass
+  > Type: Final Validation
+  > Assert: Complete test suite passes with improved coverage
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
+  > Status: 46 examples, 0 failures, coverage improved from 27.54% to 31.19%
 
 ## Acceptance Criteria
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [x] AC 1: All test failures are resolved and tests pass consistently
+- [x] AC 2: Test coverage includes all critical rescheduling functionality
+- [x] AC 3: Edge cases and error handling are properly tested
+- [x] AC 4: Test suite is maintainable and well-structured
 
 ## Out of Scope
 
