@@ -478,65 +478,94 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       double("TimestampResult", valid?: false)
     end
 
+    let(:mock_release_manager) do
+      double("ReleaseManager").tap do |manager|
+        allow(manager).to receive(:resolve_path)
+          .with("reflections/synthesis", create_if_missing: true)
+          .and_return("/current/release/reflections/synthesis")
+      end
+    end
+
     it "returns explicit output when provided" do
-      output_path = command.send(:determine_output_path, "/custom/output.md", valid_timestamp_result)
+      output_path = command.send(:determine_output_path, "/custom/output.md", valid_timestamp_result, mock_release_manager)
       expect(output_path).to eq("/custom/output.md")
     end
 
     it "generates timestamp-based filename when valid timestamps available" do
-      output_path = command.send(:determine_output_path, nil, valid_timestamp_result)
-      expect(output_path).to eq("20240115-20240120-reflection-synthesis.md")
+      output_path = command.send(:determine_output_path, nil, valid_timestamp_result, mock_release_manager)
+      expect(output_path).to eq("/current/release/reflections/synthesis/20240115-20240120-reflection-synthesis.md")
     end
 
     it "generates current date-based filename when timestamps invalid" do
       allow(Time).to receive(:now).and_return(Time.new(2024, 2, 1))
-      output_path = command.send(:determine_output_path, nil, invalid_timestamp_result)
-      expect(output_path).to eq("20240201-reflection-synthesis.md")
+      output_path = command.send(:determine_output_path, nil, invalid_timestamp_result, mock_release_manager)
+      expect(output_path).to eq("/current/release/reflections/synthesis/20240201-reflection-synthesis.md")
+    end
+
+    it "falls back to current directory when ReleaseManager fails" do
+      failing_release_manager = double("ReleaseManager")
+      allow(failing_release_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
+      allow($stderr).to receive(:write)
+
+      output_path = command.send(:determine_output_path, nil, valid_timestamp_result, failing_release_manager)
+      expect(output_path).to eq("20240115-20240120-reflection-synthesis.md")
+      expect($stderr).to have_received(:write).with(match(/warning.*could not resolve release path/i))
     end
   end
 
   describe "#auto_discover_reflection_notes" do
-    before do
-      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mock_path_resolver)
+    let(:mock_release_manager_discovery) do
+      double("ReleaseManager").tap do |manager|
+        allow(manager).to receive(:resolve_path)
+          .with("reflections")
+          .and_return("/current/release/reflections")
+      end
     end
 
-    it "returns discovered paths on success" do
+    before do
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mock_path_resolver)
+      allow(Dir).to receive(:glob).and_return([reflection1.to_s, reflection2.to_s])
+    end
+
+    it "returns discovered paths using ReleaseManager" do
+      result = command.send(:auto_discover_reflection_notes, mock_release_manager_discovery)
+      expect(result).to include(reflection1.to_s, reflection2.to_s)
+    end
+
+    it "falls back to legacy PathResolver when ReleaseManager fails" do
+      failing_manager = double("ReleaseManager")
+      allow(failing_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
       allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
         success: true,
         paths: [reflection1, reflection2]
       })
 
-      result = command.send(:auto_discover_reflection_notes)
+      result = command.send(:auto_discover_reflection_notes, failing_manager)
       expect(result).to eq([reflection1, reflection2])
+      expect($stderr).to have_received(:write).with(match(/warning.*could not auto-discover.*using releasemanager/i))
     end
 
-    it "returns empty array on failure" do
+    it "returns empty array when both ReleaseManager and fallback fail" do
+      failing_manager = double("ReleaseManager")
+      allow(failing_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
       allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
         success: false,
         error: "Directory not found"
       })
 
-      result = command.send(:auto_discover_reflection_notes)
+      result = command.send(:auto_discover_reflection_notes, failing_manager)
       expect(result).to eq([])
       expect($stderr).to have_received(:write).with(match(/warning.*could not auto-discover.*directory not found/i))
     end
 
-    it "returns empty array on exception" do
+    it "handles exception in fallback PathResolver" do
+      failing_manager = double("ReleaseManager")
+      allow(failing_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
       allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_raise(StandardError, "Network error")
 
-      result = command.send(:auto_discover_reflection_notes)
+      result = command.send(:auto_discover_reflection_notes, failing_manager)
       expect(result).to eq([])
       expect($stderr).to have_received(:write).with(match(/warning.*auto-discovery failed.*network error/i))
-    end
-
-    it "handles nil paths in successful result" do
-      allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
-        success: true,
-        paths: nil
-      })
-
-      result = command.send(:auto_discover_reflection_notes)
-      expect(result).to eq([])
     end
   end
 

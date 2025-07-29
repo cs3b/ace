@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ostruct"
+require "fileutils"
 require_relative "../../models/result"
 require_relative "../../organisms/prompt_processor"
 
@@ -43,6 +44,10 @@ module CodingAgentTools
 
           # Save output
           begin
+            # Ensure output directory exists
+            output_dir = File.dirname(output_path)
+            FileUtils.mkdir_p(output_dir) unless File.directory?(output_dir)
+
             File.write(output_path, query_result.response)
           rescue => e
             return Models::Result.failure("Could not write output file: #{e.message}")
