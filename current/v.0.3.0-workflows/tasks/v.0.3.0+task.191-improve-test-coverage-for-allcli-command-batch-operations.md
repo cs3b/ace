@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.191
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,89 +8,74 @@ dependencies: []
 
 # Improve test coverage for AllCLI command - batch operations
 
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
 ## Objective
 
-Why are we doing this?
+Improve test coverage for the "All" CLI command (`coding_agent_tools/cli/commands/all.rb`) with a focus on batch operations - functions that process multiple tools simultaneously such as filtering, categorization, different output formats, and error handling scenarios.
+
+The current test coverage exists but has gaps in edge cases, error scenarios, and complex batch operations that need to be addressed to ensure reliability.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Analyze current test coverage gaps in the All CLI command
+- Add missing test cases for batch operations scenarios  
+- Enhance error handling test coverage
+- Test edge cases with different tool configurations
+- Ensure comprehensive coverage of all output formats and filtering options
 
 ### Deliverables
 
-#### Create
-
-- path/to/file.ext
-
 #### Modify
 
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/all_spec.rb` - Enhanced test coverage
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
 ### Planning Steps
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
+* [x] Analyze current test coverage in all_spec.rb and identify gaps
+  > TEST: Coverage Analysis Check
   > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+  > Assert: Current test gaps are identified and documented
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
+* [x] Review ToolLister organism tests to understand batch operation patterns
+* [x] Research edge cases and error scenarios that need testing
+* [x] Plan test cases for comprehensive batch operations coverage
 
 ### Execution Steps
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [x] Add comprehensive error handling test cases (ToolLister failures, invalid options)
+- [x] Add edge case tests for empty tool directories and missing executables
+- [x] Add tests for blacklist filtering with various patterns  
+- [x] Add tests for complex category filtering scenarios
+- [x] Add tests for output format edge cases (malformed JSON, empty results)
+- [x] Add tests for performance with large numbers of tools
+- [x] Add integration tests that verify end-to-end batch processing workflows
+- [x] Run enhanced test suite and verify all tests pass
+  > TEST: Comprehensive Test Suite Validation
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: All new and existing tests pass with improved coverage
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/all_spec.rb --format documentation
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+- [x] All identified test coverage gaps are addressed with new test cases
+- [x] Error handling scenarios are comprehensively tested
+- [x] Edge cases for batch operations are covered (empty results, invalid inputs, etc.)
+- [x] All output formats (table, json, plain, names) are thoroughly tested
+- [x] Category filtering and tool blacklisting scenarios are fully tested
+- [x] Integration tests verify end-to-end batch processing functionality
+- [x] All tests pass without failures
+- [x] Test coverage for the All command reaches comprehensive levels
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+## Out of Scope
 
-## Out of Scope
-
-- ❌ …
+- ❌ Modifying the actual All command implementation (only testing)
+- ❌ Adding new features to the All command
+- ❌ Testing other CLI commands (focus only on All command)
+- ❌ Performance optimizations (testing only)
 
 ## References
 
-```
+- Current implementation: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/all.rb`
+- Current tests: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/all_spec.rb`
+- ToolLister organism: `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/organisms/tool_lister.rb`
