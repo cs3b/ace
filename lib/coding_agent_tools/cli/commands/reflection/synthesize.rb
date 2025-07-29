@@ -5,6 +5,7 @@ require "fileutils"
 require_relative "../../../molecules/reflection/report_collector"
 require_relative "../../../molecules/reflection/synthesis_orchestrator"
 require_relative "../../../molecules/reflection/timestamp_inferrer"
+require_relative "../../../organisms/taskflow_management/release_manager"
 
 module CodingAgentTools
   module Cli
@@ -51,10 +52,13 @@ module CodingAgentTools
           ]
 
           def call(reflection_notes: [], **options)
+            # Initialize ReleaseManager for path resolution
+            release_manager = Organisms::TaskflowManagement::ReleaseManager.new
+
             # Auto-discover reflection notes if none provided
             if reflection_notes.nil? || reflection_notes.empty?
               info_output("🔍 Auto-discovering reflection notes in current release...")
-              reflection_notes = auto_discover_reflection_notes
+              reflection_notes = auto_discover_reflection_notes(release_manager)
 
               if reflection_notes.empty?
                 error_output("No reflection notes found in current release.")
@@ -95,7 +99,7 @@ module CodingAgentTools
             end
 
             # Determine output file path
-            output_path = determine_output_path(options[:output], timestamp_result)
+            output_path = determine_output_path(options[:output], timestamp_result, release_manager)
             info_output("📄 Output will be saved to: #{File.basename(output_path)}")
 
             # Determine system prompt path
@@ -152,11 +156,11 @@ module CodingAgentTools
 
           private
 
-          def determine_output_path(explicit_output, timestamp_result)
+          def determine_output_path(explicit_output, timestamp_result, release_manager)
             return explicit_output if explicit_output
 
             # Generate timestamp-based filename
-            if timestamp_result.valid?
+            output_filename = if timestamp_result.valid?
               from_date = timestamp_result.from_date.strftime("%Y%m%d")
               to_date = timestamp_result.to_date.strftime("%Y%m%d")
               "#{from_date}-#{to_date}-reflection-synthesis.md"
@@ -164,6 +168,17 @@ module CodingAgentTools
               # Fallback to current date
               current_date = Time.now.strftime("%Y%m%d")
               "#{current_date}-reflection-synthesis.md"
+            end
+
+            # Use ReleaseManager to resolve the synthesis directory path
+            begin
+              synthesis_dir = release_manager.resolve_path("reflections/synthesis", create_if_missing: true)
+              File.join(synthesis_dir, output_filename)
+            rescue => e
+              error_output("Warning: Could not resolve release path for synthesis directory: #{e.message}")
+              error_output("This usually means no current release is active.")
+              error_output("Falling back to current working directory")
+              output_filename
             end
           end
 
@@ -205,20 +220,44 @@ module CodingAgentTools
             0
           end
 
-          def auto_discover_reflection_notes
-            # Use nav-path to find reflection notes in current release
-            path_resolver = CodingAgentTools::Molecules::PathResolver.new
-            result = path_resolver.find_reflection_paths_in_current_release
+          def auto_discover_reflection_notes(release_manager)
+            # Use ReleaseManager to find the reflections directory
+            reflections_dir = release_manager.resolve_path("reflections")
 
-            if result[:success]
-              result[:paths] || []
-            else
-              error_output("Warning: Could not auto-discover reflections: #{result[:error]}")
+            # Look for reflection note files (markdown files matching typical reflection patterns)
+            reflection_patterns = [
+              File.join(reflections_dir, "*.md"),
+              File.join(reflections_dir, "reflection-*.md"),
+              File.join(reflections_dir, "*-reflection.md")
+            ]
+
+            reflection_files = []
+            reflection_patterns.each do |pattern|
+              reflection_files.concat(Dir.glob(pattern))
+            end
+
+            # Remove duplicates and filter out synthesis files
+            reflection_files.uniq.reject { |file| File.basename(file).include?("synthesis") }
+          rescue => e
+            error_output("Warning: Could not auto-discover reflections using ReleaseManager: #{e.message}")
+            error_output("This usually means no current release is active.")
+            error_output("Falling back to legacy path resolver...")
+
+            # Fallback to legacy method
+            begin
+              path_resolver = CodingAgentTools::Molecules::PathResolver.new
+              result = path_resolver.find_reflection_paths_in_current_release
+
+              if result[:success]
+                result[:paths] || []
+              else
+                error_output("Warning: Could not auto-discover reflections: #{result[:error]}")
+                []
+              end
+            rescue => fallback_error
+              error_output("Warning: Auto-discovery failed: #{fallback_error.message}")
               []
             end
-          rescue => e
-            error_output("Warning: Auto-discovery failed: #{e.message}")
-            []
           end
 
           def archive_reflection_notes(reflection_paths)
