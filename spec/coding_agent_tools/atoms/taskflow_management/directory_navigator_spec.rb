@@ -100,7 +100,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
           result = described_class.find_release_directory("v.0.3.0", base_path: temp_dir)
           expect(result).not_to be_nil
           expect(result[:version]).to eq("v.0.3.0")
-          expect(File.basename(result[:path])).to be_in(["v.0.3.0-first", "v.0.3.0-second"])
+          expect(["v.0.3.0-first", "v.0.3.0-second"]).to include(File.basename(result[:path]))
         }.not_to output.to_stderr # Warnings suppressed in tests
       end
     end
