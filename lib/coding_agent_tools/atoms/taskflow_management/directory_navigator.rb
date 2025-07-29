@@ -24,8 +24,7 @@ module CodingAgentTools
         # @param base_path [String] Base path for relative paths (default: current directory)
         # @return [Hash, nil] Hash with :path and :version keys, or nil if not found
         def self.find_release_directory(version, search_paths: nil, base_path: ".")
-          raise ArgumentError, "version must be a string" unless version.is_a?(String)
-          raise ArgumentError, "version cannot be nil or empty" if version.nil? || version.empty?
+          raise ArgumentError, "version cannot be nil or empty" if version.nil? || version.to_s.empty?
 
           search_paths ||= [
             File.join(base_path, DEFAULT_CURRENT_PATH),
@@ -63,7 +62,9 @@ module CodingAgentTools
 
           subdirs = Dir.entries(current_path).select do |entry|
             next false if entry == "." || entry == ".."
-            File.directory?(File.join(current_path, entry))
+            next false unless File.directory?(File.join(current_path, entry))
+            # Only include directories that match the version pattern
+            extract_version_from_directory_name(entry) != nil
           end
 
           case subdirs.size

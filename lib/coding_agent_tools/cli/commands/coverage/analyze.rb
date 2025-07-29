@@ -102,7 +102,10 @@ module CodingAgentTools
           end
 
           def parse_threshold_option(threshold_value)
-            case threshold_value&.to_s&.downcase
+            # Handle nil or empty values
+            return [85.0, true] if threshold_value.nil?
+            
+            case threshold_value.to_s.downcase
             when 'auto', ''
               # Use adaptive threshold detection with default fallback
               [85.0, true]
@@ -111,7 +114,7 @@ module CodingAgentTools
               begin
                 numeric_threshold = Float(threshold_value)
                 [numeric_threshold, false]
-              rescue ArgumentError
+              rescue ArgumentError, TypeError
                 raise ArgumentError, "Invalid threshold value: '#{threshold_value}'. Use a number (0-100) or 'auto'"
               end
             end
@@ -279,31 +282,31 @@ module CodingAgentTools
           end
 
           def display_workflow_error(error)
-            puts "❌ Analysis failed:"
-            puts "  Error: #{error[:type]} - #{error[:message]}"
-            puts
+            $stderr.puts "❌ Analysis failed:"
+            $stderr.puts "  Error: #{error[:type]} - #{error[:message]}"
+            $stderr.puts
 
             if error[:suggestions]
-              puts "💡 Suggestions:"
-              error[:suggestions].each { |suggestion| puts "  • #{suggestion}" }
+              $stderr.puts "💡 Suggestions:"
+              error[:suggestions].each { |suggestion| $stderr.puts "  • #{suggestion}" }
             end
           end
 
           def handle_error(error, input_file)
-            puts "❌ Error analyzing coverage:"
-            puts "  File: #{input_file}"
-            puts "  Error: #{error.class.name} - #{error.message}"
-            puts
+            $stderr.puts "❌ Error analyzing coverage:"
+            $stderr.puts "  File: #{input_file}"
+            $stderr.puts "  Error: #{error.class.name} - #{error.message}"
+            $stderr.puts
 
             case error
             when Errno::ENOENT
-              puts "💡 The input file was not found. Please check the file path."
+              $stderr.puts "💡 The input file was not found. Please check the file path."
             when JSON::ParserError
-              puts "💡 The input file is not valid JSON. Please ensure it's a proper SimpleCov file."
+              $stderr.puts "💡 The input file is not valid JSON. Please ensure it's a proper SimpleCov file."
             when ArgumentError
-              puts "💡 Please check your command-line arguments and try again."
+              $stderr.puts "💡 Please check your command-line arguments and try again."
             else
-              puts "💡 Please check file permissions and paths, then try again."
+              $stderr.puts "💡 Please check file permissions and paths, then try again."
             end
           end
 
