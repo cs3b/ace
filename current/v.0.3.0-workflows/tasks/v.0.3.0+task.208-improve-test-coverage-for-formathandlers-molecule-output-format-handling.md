@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.208
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -89,7 +89,10 @@ Why are we doing this?
 
 ## Out of Scope
 
-- ❌ …
+- ❌ Adding new output formats or handlers (focus is on testing existing functionality)
+- ❌ Performance optimization of FormatHandlers methods
+- ❌ Refactoring the FormatHandlers implementation (only improving test coverage)
+- ❌ Testing integration with other modules (focus on FormatHandlers molecule only)
 
 ## References
 
