@@ -486,7 +486,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
     end
 
     context "with file system edge cases" do
-      xit "handles repository in read-only directory" do
+      it "handles repository in read-only directory" do
         # Create a read-only directory (if possible on current platform)
         readonly_dir = File.join(temp_dir, "readonly")
         FileUtils.mkdir_p(readonly_dir)
