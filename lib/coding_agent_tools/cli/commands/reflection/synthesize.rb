@@ -39,8 +39,8 @@ module CodingAgentTools
           option :debug, type: :boolean, default: false,
             desc: "Enable debug output for verbose error information"
 
-          option :archived, type: :boolean, default: false,
-            desc: "Automatically move reflection notes to archived directory after synthesis"
+          option :archived, type: :boolean, default: true,
+            desc: "Automatically move reflection notes to archived directory after synthesis (default: true)"
 
           example [
             "# Auto-discover and synthesize all reflections in current release",

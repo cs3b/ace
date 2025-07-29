@@ -405,8 +405,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         expect($stderr).to have_received(:write).with(match(/⚠️.*warning.*could not archive.*permission denied/i))
       end
 
-      it "skips archiving when option not specified" do
-        result = command.call(reflection_notes: [reflection1, reflection2])
+      it "skips archiving when explicitly disabled" do
+        result = command.call(reflection_notes: [reflection1, reflection2], archived: false)
 
         expect(result).to eq(0)
         expect(FileUtils).not_to have_received(:mv)
