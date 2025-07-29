@@ -28,5 +28,4 @@ group :development, :test do
   gem "vcr", "~> 6.0"
   gem "aruba", "~> 2.0"
   gem "rspec-temp_dir", "~> 1.0"
-  gem "parallel_tests", "~> 4.0"
 end
