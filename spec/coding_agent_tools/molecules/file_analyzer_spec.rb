@@ -22,11 +22,14 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
   let(:sample_methods) do
     [
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: "covered_method", coverage_percentage: 100.0, total_lines: 3, to_h: {name: "covered_method"}),
+        name: "covered_method", coverage_percentage: 100.0, total_lines: 3, to_h: {name: "covered_method"},
+        under_threshold?: false),
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: "uncovered_method", coverage_percentage: 0.0, total_lines: 5, to_h: {name: "uncovered_method"}),
+        name: "uncovered_method", coverage_percentage: 0.0, total_lines: 5, to_h: {name: "uncovered_method"},
+        under_threshold?: true),
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: "partial_method", coverage_percentage: 50.0, total_lines: 4, to_h: {name: "partial_method"})
+        name: "partial_method", coverage_percentage: 50.0, total_lines: 4, to_h: {name: "partial_method"},
+        under_threshold?: true)
     ]
   end
 
@@ -149,6 +152,19 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       expect(uncovered_areas.first).to have_key(:start_line)
       expect(uncovered_areas.first).to have_key(:end_line)
     end
+
+    context "when file has no methods" do
+      before do
+        allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
+          .to receive(:map_file_coverage).and_return([])
+      end
+
+      it "provides fallback message for method analysis" do
+        result = subject.detailed_file_analysis(file_path, file_coverage_data)
+
+        expect(result[:method_analysis]).to eq({ message: "No methods found or file could not be parsed" })
+      end
+    end
   end
 
   describe "#calculate_priority_score" do
@@ -165,10 +181,13 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       # Mock method coverage percentages and sizes
       allow(sample_methods[0]).to receive(:coverage_percentage).and_return(100.0)
       allow(sample_methods[0]).to receive(:total_lines).and_return(3)
+      allow(sample_methods[0]).to receive(:under_threshold?).and_return(false)
       allow(sample_methods[1]).to receive(:coverage_percentage).and_return(0.0)  # uncovered
       allow(sample_methods[1]).to receive(:total_lines).and_return(15)  # large
+      allow(sample_methods[1]).to receive(:under_threshold?).and_return(true)
       allow(sample_methods[2]).to receive(:coverage_percentage).and_return(30.0)  # low coverage
       allow(sample_methods[2]).to receive(:total_lines).and_return(12)  # large
+      allow(sample_methods[2]).to receive(:under_threshold?).and_return(true)
     end
 
     it "calculates priority score based on coverage gaps and method analysis" do
@@ -208,6 +227,12 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
         ]
       end
 
+      before do
+        # Mock calculate_priority_score for priority sorting
+        allow(subject).to receive(:calculate_priority_score).with(file_results[0], 85.0).and_return(10)
+        allow(subject).to receive(:calculate_priority_score).with(file_results[1], 85.0).and_return(20)
+      end
+
       it "sorts by coverage percentage" do
         sorted = subject.send(:sort_file_results, file_results, 'coverage')
         expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
@@ -221,6 +246,16 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       it "sorts by file name" do
         sorted = subject.send(:sort_file_results, file_results, 'file_name')
         expect(sorted.first.relative_path).to eq("a.rb")  # alphabetical
+      end
+
+      it "sorts by priority score" do
+        sorted = subject.send(:sort_file_results, file_results, 'priority')
+        expect(sorted.first.uncovered_lines_count).to eq(10)  # highest priority first
+      end
+
+      it "defaults to coverage sorting for unknown sort criteria" do
+        sorted = subject.send(:sort_file_results, file_results, 'unknown')
+        expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
       end
     end
   end
