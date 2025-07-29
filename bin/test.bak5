@@ -113,7 +113,7 @@ run_parallel() {
             fi
         fi
         
-        # Add remaining RSpec options using -o (test-options)
+        # Add remaining RSpec options after -- separator
         if [[ -n "$rspec_options" && "$rspec_options" != " " ]]; then
             cmd_args+=("-o")
             cmd_args+=("$rspec_options")
