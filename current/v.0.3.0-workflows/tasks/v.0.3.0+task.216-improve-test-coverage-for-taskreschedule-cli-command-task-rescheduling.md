@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.216
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
@@ -18,38 +18,42 @@ tree -L 2 dev-handbook/guides | sed 's/^/    /'
 
 _Result excerpt:_
 
-```
-<insert tree here>
-```
+Files identified:
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
 
 ## Objective
 
-Why are we doing this?
+Improve test coverage for the TaskReschedule CLI command by fixing failing tests and enhancing coverage for critical rescheduling functionality. The current test suite has multiple failures and needs to properly test task reordering and scheduling logic.
 
 ## Scope of Work
 
-- Bullet 1 …
-- Bullet 2 …
+- Fix failing tests in the existing test suite
+- Improve test coverage for task resolution logic
+- Enhance testing of rescheduling algorithms (add_next and add_at_end)
+- Strengthen edge case testing and error handling validation
+- Ensure proper mock configuration and test isolation
 
 ### Deliverables
 
 #### Create
 
-- path/to/file.ext
+- No new files needed
 
 #### Modify
 
-- path/to/other.ext
+- /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
 
 #### Delete
 
-- path/to/obsolete.ext
+- No files to delete
 
 ## Phases
 
-1. Audit
-2. Extract …
-3. Refactor …
+1. Analyze failing tests and identify root causes
+2. Fix test mocking and configuration issues
+3. Enhance test coverage for core rescheduling functionality
+4. Validate edge cases and error handling
 
 ## Implementation Plan
 
@@ -93,4 +97,5 @@ Why are we doing this?
 
 ## References
 
-```
+- TaskReschedule command: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/commands/task/reschedule.rb
+- Current test file: /Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/spec/coding_agent_tools/cli/commands/task/reschedule_spec.rb
