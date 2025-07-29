@@ -6,7 +6,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   let(:command) { described_class.new }
   let(:project_root) { "/fake/project/root" }
   let(:mock_task_manager) { instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager") }
-  let(:mock_tasks_result) { instance_double("AllTasksResult") }
+  let(:mock_tasks_result) { instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager::AllTasksResult") }
 
   before do
     allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(project_root)
@@ -28,7 +28,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     context "with task manager failure" do
       it "returns error when task manager fails to get tasks" do
-        failed_result = instance_double("AllTasksResult", success?: false, message: "Failed to load tasks")
+        failed_result = instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager::AllTasksResult", success?: false, message: "Failed to load tasks")
         allow(mock_task_manager).to receive(:get_all_tasks).and_return(failed_result)
         allow(command).to receive(:error_output)
         
@@ -270,37 +270,48 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
   describe "#get_task_sort_value" do
     it "returns sort value from frontmatter hash with string key" do
-      task = instance_double("Task", frontmatter: {"sort" => "42"})
+      task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(true)
+      allow(task).to receive(:frontmatter).and_return({"sort" => "42"})
       result = command.send(:get_task_sort_value, task)
       expect(result).to eq(42)
     end
 
     it "returns sort value from frontmatter hash with symbol key" do
-      task = instance_double("Task", frontmatter: {sort: "42"})
+      task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(true)
+      allow(task).to receive(:frontmatter).and_return({sort: "42"})
       result = command.send(:get_task_sort_value, task)
       expect(result).to eq(42)
     end
 
     it "returns nil when sort value is not numeric" do
-      task = instance_double("Task", frontmatter: {"sort" => "abc"})
+      task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(true)
+      allow(task).to receive(:frontmatter).and_return({"sort" => "abc"})
       result = command.send(:get_task_sort_value, task)
       expect(result).to be_nil
     end
 
     it "returns nil when frontmatter is missing" do
-      task = instance_double("Task", frontmatter: nil)
+      task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(true)
+      allow(task).to receive(:frontmatter).and_return(nil)
       result = command.send(:get_task_sort_value, task)
       expect(result).to be_nil
     end
 
     it "returns nil when task doesn't respond to frontmatter" do
       task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(false)
       result = command.send(:get_task_sort_value, task)
       expect(result).to be_nil
     end
 
     it "returns nil when sort key is missing" do
-      task = instance_double("Task", frontmatter: {"priority" => "high"})
+      task = double("Task")
+      allow(task).to receive(:respond_to?).with(:frontmatter).and_return(true)
+      allow(task).to receive(:frontmatter).and_return({"priority" => "high"})
       result = command.send(:get_task_sort_value, task)
       expect(result).to be_nil
     end
@@ -492,7 +503,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     end
 
     context "with concurrent file access" do
-      let(:task) { instance_double("Task", path: "/path/to/task.md", id: "v.0.3.0+task.001") }
+      let(:task) { double("Task", path: "/path/to/task.md", id: "v.0.3.0+task.001") }
       let(:file_content) { "---\nid: v.0.3.0+task.001\n---\n# Task" }
 
       it "handles concurrent modification gracefully" do
