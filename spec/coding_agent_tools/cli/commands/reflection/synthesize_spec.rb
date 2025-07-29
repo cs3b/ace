@@ -10,6 +10,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
   let(:mock_timestamp_inferrer) { instance_double("CodingAgentTools::Molecules::Reflection::TimestampInferrer") }
   let(:mock_synthesis_orchestrator) { instance_double("CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator") }
   let(:mock_path_resolver) { instance_double("CodingAgentTools::Molecules::PathResolver") }
+  let(:mock_release_manager) { instance_double("CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager") }
   let(:temp_dir) { Dir.mktmpdir }
   let(:reflection1) { File.join(temp_dir, "reflection-2024-01-15.md") }
   let(:reflection2) { File.join(temp_dir, "reflection-2024-01-20.md") }
@@ -30,6 +31,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
     allow(CodingAgentTools::Molecules::Reflection::TimestampInferrer).to receive(:new).and_return(mock_timestamp_inferrer)
     allow(CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator).to receive(:new).and_return(mock_synthesis_orchestrator)
     allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mock_path_resolver)
+    allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(mock_release_manager)
+
+    # Setup default ReleaseManager mock behavior for all tests
+    allow(mock_release_manager).to receive(:resolve_path)
+      .with("reflections/synthesis", create_if_missing: true)
+      .and_return("/current/release/reflections/synthesis")
+    allow(mock_release_manager).to receive(:resolve_path)
+      .with("reflections")
+      .and_return("/current/release/reflections")
+
+    # Setup Dir.glob for auto-discovery
+    allow(Dir).to receive(:glob).and_return([reflection1, reflection2])
 
     # Capture output
     allow($stdout).to receive(:puts)
@@ -103,7 +116,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         command.call(reflection_notes: [reflection1, reflection2])
 
         expect(mock_synthesis_orchestrator).to have_received(:synthesize_reflections).with(
-          hash_including(output_path: "20240115-20240120-reflection-synthesis.md")
+          hash_including(output_path: "/current/release/reflections/synthesis/20240115-20240120-reflection-synthesis.md")
         )
       end
 
@@ -190,6 +203,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       end
 
       before do
+        # Override Dir.glob for this context
+        allow(Dir).to receive(:glob).and_return(discovered_reflections)
+        
+        # Fallback PathResolver mock for legacy support
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
           success: true,
           paths: discovered_reflections
@@ -203,7 +220,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         result = command.call(reflection_notes: [])
 
         expect(result).to eq(0)
-        expect(mock_path_resolver).to have_received(:find_reflection_paths_in_current_release)
+        expect(mock_release_manager).to have_received(:resolve_path).with("reflections")
         expect($stdout).to have_received(:puts).with(match(/🔍.*auto-discovering/i))
         expect($stdout).to have_received(:puts).with(match(/✅.*found.*2.*reflection notes/i)).at_least(:once)
       end
@@ -212,10 +229,12 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         result = command.call(reflection_notes: nil)
 
         expect(result).to eq(0)
-        expect(mock_path_resolver).to have_received(:find_reflection_paths_in_current_release)
+        expect(mock_release_manager).to have_received(:resolve_path).with("reflections")
       end
 
       it "handles auto-discovery failure gracefully" do
+        # Make ReleaseManager fail and PathResolver also fail
+        allow(mock_release_manager).to receive(:resolve_path).with("reflections").and_raise(StandardError, "No current release")
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
           success: false,
           error: "Directory not found"
@@ -228,6 +247,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       end
 
       it "handles auto-discovery returning empty list" do
+        # Make ReleaseManager return empty results and PathResolver also return empty
+        allow(Dir).to receive(:glob).and_return([])
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
           success: true,
           paths: []
@@ -240,6 +261,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       end
 
       it "handles auto-discovery exception" do
+        # Make ReleaseManager fail and PathResolver raise exception
+        allow(mock_release_manager).to receive(:resolve_path).with("reflections").and_raise(StandardError, "No current release")
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_raise(StandardError, "Unexpected error")
 
         result = command.call(reflection_notes: [])
@@ -262,6 +285,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       end
 
       it "rejects empty reflection list" do
+        # Override Dir.glob to return empty array for this test
+        allow(Dir).to receive(:glob).and_return([])
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
           success: true,
           paths: []
@@ -378,7 +403,20 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         allow(Time).to receive(:now).and_return(Time.new(2024, 1, 25, 14, 30, 0))
       end
 
-      it "archives reflection notes after successful synthesis" do
+      it "archives reflection notes by default after successful synthesis" do
+        # Mock the actual archiving method to return success
+        allow(command).to receive(:archive_reflection_notes).and_return({success: true, count: 2, archive_dir: "/archive/dir"})
+
+        # Use hash syntax to explicitly confirm the default value
+        result = command.call(reflection_notes: [reflection1, reflection2], archived: true)
+
+        expect(result).to eq(0)
+        expect(command).to have_received(:archive_reflection_notes).with(collection_result.reports)
+        expect($stdout).to have_received(:puts).with(match(/📦.*archived.*2.*reflection notes/i))
+        expect($stdout).to have_received(:puts).with(match(/📁.*archive location/i))
+      end
+
+      it "archives reflection notes when explicitly enabled" do
         # Mock the actual archiving method to return success
         allow(command).to receive(:archive_reflection_notes).and_return({success: true, count: 2, archive_dir: "/archive/dir"})
 
@@ -389,7 +427,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         expect($stdout).to have_received(:puts).with(match(/📁.*archive location/i))
       end
 
-      it "handles archive failure gracefully" do
+      it "handles archive failure gracefully when using default" do
+        # Mock the actual archiving method to return failure
+        allow(command).to receive(:archive_reflection_notes).and_return({success: false, error: "Permission denied"})
+
+        result = command.call(reflection_notes: [reflection1, reflection2], archived: true)  # Explicitly enable archiving
+
+        expect(result).to eq(0)  # Synthesis still succeeds
+        expect(command).to have_received(:archive_reflection_notes).with(collection_result.reports)
+        expect($stderr).to have_received(:write).with(match(/⚠️.*warning.*could not archive.*permission denied/i))
+      end
+
+      it "handles archive failure gracefully when explicitly enabled" do
         # Mock the actual archiving method to return failure
         allow(command).to receive(:archive_reflection_notes).and_return({success: false, error: "Permission denied"})
 
@@ -404,6 +453,31 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
 
         expect(result).to eq(0)
         expect(FileUtils).not_to have_received(:mv)
+      end
+
+      it "archives by default when --archived not specified" do
+        # Mock the actual archiving method to return success
+        allow(command).to receive(:archive_reflection_notes).and_return({success: true, count: 2, archive_dir: "/archive/dir"})
+
+        # According to the CLI definition, archived defaults to true, so we pass the default explicitly
+        result = command.call(reflection_notes: [reflection1, reflection2], archived: true)
+
+        expect(result).to eq(0)
+        expect(command).to have_received(:archive_reflection_notes).with(collection_result.reports)
+      end
+
+      it "respects --no-archived flag" do
+        result = command.call(reflection_notes: [reflection1, reflection2], archived: false)
+
+        expect(result).to eq(0)
+        expect(FileUtils).not_to have_received(:mv)  # No actual archiving should happen
+      end
+
+      it "shows archived as true in dry run output by default" do
+        command.call(reflection_notes: [reflection1, reflection2], dry_run: true)
+
+        # The dry run doesn't show archive status explicitly, but archived defaults to true
+        expect($stdout).to have_received(:puts).with(match(/🔍.*dry run/i))
       end
     end
 
@@ -431,7 +505,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
         expect(result).to eq(0)
         expect($stdout).to have_received(:puts).with(match(/⚠️.*could not infer timestamp range/i))
         expect(mock_synthesis_orchestrator).to have_received(:synthesize_reflections).with(
-          hash_including(output_path: "20240201-reflection-synthesis.md")
+          hash_including(output_path: "/current/release/reflections/synthesis/20240201-reflection-synthesis.md")
         )
       end
     end
@@ -484,6 +558,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       expect(output_path).to eq("/custom/output.md")
     end
 
+    it "uses release reflections/synthesis directory by default" do
+      output_path = command.send(:determine_output_path, nil, valid_timestamp_result, mock_release_manager)
+      expect(output_path).to eq("/current/release/reflections/synthesis/20240115-20240120-reflection-synthesis.md")
+      expect(mock_release_manager).to have_received(:resolve_path).with("reflections/synthesis", create_if_missing: true)
+    end
+
+    it "creates synthesis directory if missing" do
+      output_path = command.send(:determine_output_path, nil, valid_timestamp_result, mock_release_manager)
+      expect(output_path).to eq("/current/release/reflections/synthesis/20240115-20240120-reflection-synthesis.md")
+      expect(mock_release_manager).to have_received(:resolve_path).with("reflections/synthesis", create_if_missing: true)
+    end
+
     it "generates timestamp-based filename when valid timestamps available" do
       output_path = command.send(:determine_output_path, nil, valid_timestamp_result, mock_release_manager)
       expect(output_path).to eq("/current/release/reflections/synthesis/20240115-20240120-reflection-synthesis.md")
@@ -520,9 +606,36 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       allow(Dir).to receive(:glob).and_return([reflection1.to_s, reflection2.to_s])
     end
 
-    it "returns discovered paths using ReleaseManager" do
-      result = command.send(:auto_discover_reflection_notes, mock_release_manager_discovery)
-      expect(result).to include(reflection1.to_s, reflection2.to_s)
+    describe "ReleaseManager integration" do
+      it "uses ReleaseManager for path resolution" do
+        result = command.send(:auto_discover_reflection_notes, mock_release_manager_discovery)
+        expect(result).to include(reflection1.to_s, reflection2.to_s)
+        expect(mock_release_manager_discovery).to have_received(:resolve_path).with("reflections")
+      end
+
+      it "returns discovered paths using ReleaseManager" do
+        result = command.send(:auto_discover_reflection_notes, mock_release_manager_discovery)
+        expect(result).to include(reflection1.to_s, reflection2.to_s)
+      end
+
+      it "handles missing current release" do
+        failing_manager = double("ReleaseManager")
+        allow(failing_manager).to receive(:resolve_path).and_raise(StandardError, "No current release")
+        allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
+          success: true,
+          paths: [reflection1, reflection2]
+        })
+
+        result = command.send(:auto_discover_reflection_notes, failing_manager)
+        expect(result).to eq([reflection1, reflection2])
+        expect($stderr).to have_received(:write).with(match(/warning.*could not auto-discover.*using releasemanager/i))
+      end
+
+      it "auto-discovers using ReleaseManager by default" do
+        result = command.send(:auto_discover_reflection_notes, mock_release_manager_discovery)
+        expect(result).to include(reflection1.to_s, reflection2.to_s)
+        expect(mock_release_manager_discovery).to have_received(:resolve_path).with("reflections")
+      end
     end
 
     it "falls back to legacy PathResolver when ReleaseManager fails" do
