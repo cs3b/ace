@@ -5,11 +5,35 @@ require "fileutils"
 require "find"
 require_relative "path_config_loader"
 require_relative "project_sandbox"
+require_relative "../organisms/taskflow_management/release_manager"
 
 module CodingAgentTools
   module Molecules
+    # PathResolver handles intelligent path resolution with support for multiple patterns:
+    #
+    # 1. **Release-relative patterns**: `release:subpath`
+    #    - Resolves paths relative to the current release directory
+    #    - Examples:
+    #      - `release:reflections` -> `/project/dev-taskflow/current/v.0.3.0/reflections`
+    #      - `release:tasks` -> `/project/dev-taskflow/current/v.0.3.0/tasks`
+    #      - `release:reflections/synthesis.md` -> `/project/dev-taskflow/current/v.0.3.0/reflections/synthesis.md`
+    #    - Uses ReleaseManager for safe path resolution within current release
+    #    - Security: Inherits ReleaseManager's path validation and sandbox restrictions
+    #
+    # 2. **Scoped patterns**: `scope:pattern`
+    #    - Resolves patterns within specific project scopes (tools, handbook, etc.)
+    #    - Supports autocorrection and fuzzy matching within scopes
+    #
+    # 3. **Direct paths**: Regular file paths and patterns
+    #    - Supports both absolute and relative paths
+    #    - Includes fuzzy matching and autocorrection
+    #
+    # Future integration notes:
+    # - The release-relative pattern is designed for use with nav-path and create-path commands
+    # - Pattern detection prioritizes release-relative over other scoped patterns
+    # - Maintains full backward compatibility with existing path resolution
     class PathResolver
-      def initialize(config_loader = nil, sandbox = nil)
+      def initialize(config_loader = nil, sandbox = nil, release_manager = nil)
         @config_loader = config_loader || PathConfigLoader.new
         @config = @config_loader.load
 
@@ -18,6 +42,11 @@ module CodingAgentTools
           nil, # project_root (auto-detect)
           @config.dig("security", "allowed_patterns"), # may be nil for permissive mode
           @config.dig("security", "forbidden_patterns")
+        )
+
+        # Initialize release manager for release-relative path resolution
+        @release_manager = release_manager || Organisms::TaskflowManagement::ReleaseManager.new(
+          base_path: @sandbox.project_root
         )
       end
 
@@ -32,7 +61,12 @@ module CodingAgentTools
 
         # Check if input uses scoped pattern syntax (scope:pattern)
         if path_input.include?(":") && type == :file
-          resolve_scoped_pattern(path_input)
+          # Check for release-relative pattern first
+          if is_release_relative?(path_input)
+            resolve_release_relative(path_input)
+          else
+            resolve_scoped_pattern(path_input)
+          end
         else
           case type
           when :file
@@ -134,6 +168,30 @@ module CodingAgentTools
         success_with_list(sorted_reflections)
       rescue => e
         failure("Error finding reflection paths: #{e.message}")
+      end
+
+      # Check if path uses release-relative pattern syntax
+      def is_release_relative?(path)
+        path.to_s.start_with?("release:")
+      end
+
+      # Resolve release-relative path pattern (e.g., "release:reflections/synthesis.md")
+      def resolve_release_relative(path_input)
+        return failure("Invalid release-relative path format") unless is_release_relative?(path_input)
+
+        # Extract subpath after "release:"
+        subpath = path_input.sub(/^release:/, "")
+        return failure("Empty subpath in release-relative pattern") if subpath.strip.empty?
+
+        begin
+          # Use ReleaseManager to resolve the path within current release
+          resolved_path = @release_manager.resolve_path(subpath)
+          success(resolved_path)
+        rescue SecurityError => e
+          failure("Release-relative path resolution failed: #{e.message}")
+        rescue StandardError => e
+          failure("Release-relative path resolution failed: #{e.message}")
+        end
       end
 
       # Scoped pattern resolution (public method)
