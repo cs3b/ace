@@ -18,16 +18,27 @@ module CodingAgentTools
           option :format, type: :string, default: "text", values: %w[text json],
             desc: "Output format (text or json)"
 
+          option :path, type: :string,
+            desc: "Resolve path within current release"
+
           example [
             "",
             "--format json",
-            "--debug"
+            "--debug",
+            "--path reflections",
+            "--path reflections/synthesis --format json"
           ]
 
           def call(**options)
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: project_root)
+
+            # Handle --path option
+            if options[:path]
+              handle_path_resolution(release_manager, options[:path], options[:format])
+              return 0
+            end
 
             result = release_manager.current
 
@@ -44,6 +55,54 @@ module CodingAgentTools
           end
 
           private
+
+          def handle_path_resolution(release_manager, subpath, format)
+            resolved_path = release_manager.resolve_path(subpath)
+
+            if format == "json"
+              handle_path_json_result(resolved_path, subpath)
+            else
+              handle_path_text_result(resolved_path)
+            end
+          rescue => e
+            if format == "json"
+              handle_path_json_error(e, subpath)
+            else
+              error_output("Error resolving path '#{subpath}': #{e.message}")
+            end
+            raise e
+          end
+
+          def handle_path_text_result(resolved_path)
+            puts resolved_path
+          end
+
+          def handle_path_json_result(resolved_path, subpath)
+            require "json"
+
+            output = {
+              success: true,
+              data: {
+                subpath: subpath,
+                resolved_path: resolved_path,
+                exists: File.exist?(resolved_path)
+              }
+            }
+            puts JSON.pretty_generate(output)
+          end
+
+          def handle_path_json_error(error, subpath)
+            require "json"
+
+            output = {
+              success: false,
+              error: error.message,
+              data: {
+                subpath: subpath
+              }
+            }
+            puts JSON.pretty_generate(output)
+          end
 
           def handle_text_result(result)
             unless result.success?
