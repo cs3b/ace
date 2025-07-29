@@ -716,5 +716,189 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::ReportCollector do
         expect { collector.collect_reports([error_file]) }.to raise_error(StandardError, "Read error")
       end
     end
+
+    context "additional edge cases for coverage improvement" do
+      let(:temp_dir) { Dir.mktmpdir }
+      let(:valid_reflection) { File.join(temp_dir, "valid.md") }
+      let(:invalid_reflection) { File.join(temp_dir, "invalid.md") }
+      let(:missing_file) { File.join(temp_dir, "missing.md") }
+
+      after do
+        FileUtils.rm_rf(temp_dir)
+      end
+
+      before do
+        # Create a valid reflection file
+        File.write(valid_reflection, <<~CONTENT)
+          # Sprint Reflection
+          **Date**: 2025-01-01
+          ## What Went Well
+          Everything worked great
+          ## What Could Be Improved
+          Better communication
+        CONTENT
+
+        # Create an invalid reflection file (regular markdown)
+        File.write(invalid_reflection, <<~CONTENT)
+          # Regular Documentation
+          This is just regular documentation.
+          No reflection patterns here.
+        CONTENT
+      end
+
+      it "handles combination of valid files, invalid files, and missing files with proper error accumulation" do
+        result = collector.collect_reports([valid_reflection, invalid_reflection, missing_file])
+
+        expect(result).to be_failure
+        expect(result.error).to include("Invalid reflection file: #{invalid_reflection}")
+        expect(result.error).to include("File not found: #{missing_file}")
+        # Should not include the valid file in error
+        expect(result.error).not_to include(valid_reflection)
+      end
+
+      it "returns success when all files are valid reflections" do
+        valid_reflection2 = File.join(temp_dir, "valid2.md")
+        File.write(valid_reflection2, <<~CONTENT)
+          # Team Reflection
+          **Context**: Sprint review
+          ## What Went Well
+          Great teamwork
+          ## Key Learnings
+          New insights
+        CONTENT
+
+        result = collector.collect_reports([valid_reflection, valid_reflection2])
+
+        expect(result).to be_success
+        expect(result.data[:reports]).to contain_exactly(valid_reflection, valid_reflection2)
+        expect(result.data[:reports]).to eq(result.data[:reports].sort)
+      end
+
+      it "handles empty glob expansion gracefully" do
+        empty_glob = File.join(temp_dir, "nonexistent-pattern-*.md")
+        result = collector.collect_reports([empty_glob])
+
+        expect(result).to be_failure
+        expect(result.error).to eq("No valid reflection files found")
+      end
+
+      it "handles mixed valid files and empty glob patterns" do
+        empty_glob = File.join(temp_dir, "nonexistent-*.md")
+        result = collector.collect_reports([valid_reflection, empty_glob])
+
+        expect(result).to be_success
+        expect(result.data[:reports]).to eq([valid_reflection])
+      end
+
+      it "accumulates multiple different error types in a single call" do
+        unreadable_file = File.join(temp_dir, "unreadable.md")
+        empty_file = File.join(temp_dir, "empty.md")
+        
+        # Create unreadable file
+        File.write(unreadable_file, <<~CONTENT)
+          # Reflection
+          ## What Went Well
+          Good content
+        CONTENT
+        File.chmod(0000, unreadable_file)
+
+        # Create empty file
+        File.write(empty_file, "")
+
+        begin
+          result = collector.collect_reports([invalid_reflection, missing_file, unreadable_file, empty_file])
+
+          expect(result).to be_failure
+          # Should contain multiple error messages
+          error_msg = result.error
+          expect(error_msg).to include("Invalid reflection file")
+          expect(error_msg).to include("File not found")
+        ensure
+          File.chmod(0644, unreadable_file) # Restore permissions for cleanup
+        end
+      end
+
+      it "processes files in deterministic order despite mixed file types" do
+        # Test that sorting works correctly with mixed valid/invalid scenarios
+        reflection_a = File.join(temp_dir, "a-reflection.md")
+        reflection_z = File.join(temp_dir, "z-reflection.md")
+        
+        File.write(reflection_a, <<~CONTENT)
+          # Reflection A
+          **Date**: Today
+          ## What Went Well
+          A went well
+          ## What Could Be Improved
+          A improvements
+        CONTENT
+
+        File.write(reflection_z, <<~CONTENT)
+          # Reflection Z
+          **Context**: Final
+          ## What Went Well
+          Z went well
+          ## Key Learnings
+          Z learnings
+        CONTENT
+
+        result = collector.collect_reports([reflection_z, valid_reflection, reflection_a])
+
+        expect(result).to be_success
+        # Should be sorted alphabetically
+        expect(result.data[:reports]).to eq([reflection_a, valid_reflection, reflection_z])
+      end
+
+      it "exercises all code paths in collect_reports method" do
+        # This test specifically targets the exact flow through collect_reports
+        # to ensure all lines 15-38 are covered
+        
+        # Setup files that will exercise different code paths
+        valid_file1 = File.join(temp_dir, "reflection1.md")
+        valid_file2 = File.join(temp_dir, "reflection2.md")
+        
+        File.write(valid_file1, <<~CONTENT)
+          # Daily Reflection
+          **Date**: 2025-01-01
+          ## What Went Well
+          Great progress today
+          ## Action Items
+          Continue tomorrow
+        CONTENT
+
+        File.write(valid_file2, <<~CONTENT)
+          # Weekly Reflection
+          **Context**: Sprint review
+          ## What Could Be Improved
+          Better planning
+          ## Key Learnings
+          Good insights
+        CONTENT
+
+        # Test successful path with multiple valid files
+        result = collector.collect_reports([valid_file1, valid_file2])
+        
+        expect(result).to be_success
+        expect(result.data[:reports]).to contain_exactly(valid_file1, valid_file2)
+        expect(result.data[:reports]).to eq(result.data[:reports].sort)
+      end
+
+      it "exercises error accumulation and result failure paths" do
+        # This specifically tests the error accumulation logic in lines 19-29
+        # and the failure result creation in lines 31-34
+        
+        invalid_file = File.join(temp_dir, "not-reflection.md")
+        missing_file1 = File.join(temp_dir, "missing1.md")
+        missing_file2 = File.join(temp_dir, "missing2.md")
+        
+        File.write(invalid_file, "# Regular Doc\nNot a reflection at all.")
+        
+        result = collector.collect_reports([invalid_file, missing_file1, missing_file2])
+        
+        expect(result).to be_failure
+        expect(result.error).to include("Invalid reflection file: #{invalid_file}")
+        expect(result.error).to include("File not found: #{missing_file1}")
+        expect(result.error).to include("File not found: #{missing_file2}")
+      end
+    end
   end
 end
