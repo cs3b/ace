@@ -599,4 +599,384 @@ RSpec.describe CodingAgentTools::Atoms::Git::SubmoduleDetector do
       skip "Permission error handling varies by system"
     end
   end
+
+  describe ".gitmodules parsing edge cases", :gitmodules do
+    let(:gitmodules_path) { File.join(test_dir, ".gitmodules") }
+
+    it "handles empty .gitmodules file" do
+      File.write(gitmodules_path, "")
+      
+      result = detector.detect_submodules
+      expect(result).to eq([])
+    end
+
+    it "handles .gitmodules with only section headers" do
+      gitmodules_content = <<~GITMODULES
+        [submodule "incomplete1"]
+        [submodule "incomplete2"]
+      GITMODULES
+
+      File.write(gitmodules_path, gitmodules_content)
+      
+      result = detector.detect_submodules
+      expect(result).to eq([])
+    end
+
+    it "handles .gitmodules with paths containing spaces and special characters" do
+      special_path = "path with spaces/sub-module_test.2"
+      gitmodules_content = <<~GITMODULES
+        [submodule "special"]
+        \tpath = #{special_path}
+        \turl = https://github.com/example/special.git
+      GITMODULES
+
+      File.write(gitmodules_path, gitmodules_content)
+      FileUtils.mkdir_p(File.join(test_dir, special_path, ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:name]).to eq("sub-module_test.2")
+      expect(result.first[:path]).to eq(special_path)
+      expect(result.first[:exists]).to be true
+    end
+
+    it "handles .gitmodules with duplicate submodule names" do
+      gitmodules_content = <<~GITMODULES
+        [submodule "duplicate"]
+        \tpath = first_path
+        \turl = https://github.com/example/first.git
+        [submodule "duplicate"]
+        \tpath = second_path
+        \turl = https://github.com/example/second.git
+      GITMODULES
+
+      File.write(gitmodules_path, gitmodules_content)
+      FileUtils.mkdir_p(File.join(test_dir, "first_path", ".git"))
+      FileUtils.mkdir_p(File.join(test_dir, "second_path", ".git"))
+      
+      result = detector.detect_submodules
+      
+      # Implementation currently adds both submodules even with duplicate names
+      expect(result.length).to eq(2)
+      
+      paths = result.map { |r| r[:path] }
+      expect(paths).to include("first_path", "second_path")
+      
+      # Both should have the same name (duplicate)
+      expect(result.all? { |r| r[:name] == "first_path" || r[:name] == "second_path" }).to be true
+    end
+
+    it "handles .gitmodules with Windows-style line endings" do
+      gitmodules_content = "[submodule \"windows\"]\r\n\tpath = windows_sub\r\n\turl = https://github.com/example/windows.git\r\n"
+      
+      File.write(gitmodules_path, gitmodules_content)
+      FileUtils.mkdir_p(File.join(test_dir, "windows_sub", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:name]).to eq("windows_sub")
+      expect(result.first[:path]).to eq("windows_sub")
+    end
+
+    it "handles .gitmodules with malformed URLs" do
+      gitmodules_content = <<~GITMODULES
+        [submodule "malformed"]
+        \tpath = malformed_sub
+        \turl = not-a-valid-url://example
+      GITMODULES
+
+      File.write(gitmodules_path, gitmodules_content)
+      FileUtils.mkdir_p(File.join(test_dir, "malformed_sub", ".git"))
+      
+      result = detector.detect_submodules
+      
+      # Should still parse the submodule even with malformed URL
+      expect(result.length).to eq(1)
+      expect(result.first[:name]).to eq("malformed_sub")
+      expect(result.first[:path]).to eq("malformed_sub")
+    end
+  end
+
+  describe "git command error handling", :error_handling do
+    it "handles git command with specific error messages" do
+      allow(detector).to receive(:execute_git_command).and_raise(
+        CodingAgentTools::Atoms::Git::GitCommandError.new(
+          "Git command failed: git submodule status",
+          stderr_output: "fatal: not a git repository"
+        )
+      )
+      
+      # Should fall back to .gitmodules parsing
+      gitmodules_content = <<~GITMODULES
+        [submodule "fallback"]
+        \tpath = fallback_sub
+        \turl = https://github.com/example/fallback.git
+      GITMODULES
+
+      File.write(File.join(test_dir, ".gitmodules"), gitmodules_content)
+      FileUtils.mkdir_p(File.join(test_dir, "fallback_sub", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:name]).to eq("fallback_sub")
+    end
+
+    it "handles git command with network-related errors" do
+      allow(detector).to receive(:execute_git_command).and_raise(
+        CodingAgentTools::Atoms::Git::GitCommandError.new(
+          "Git command failed: git submodule status",
+          stderr_output: "fatal: unable to access 'https://github.com/example/repo.git/': Could not resolve host"
+        )
+      )
+      
+      # Should still fall back gracefully
+      result = detector.detect_submodules
+      expect(result).to eq([])
+    end
+
+    it "handles git command timeout scenarios" do
+      allow(detector).to receive(:execute_git_command).and_raise(
+        CodingAgentTools::Atoms::Git::GitCommandError.new(
+          "Git command failed: git submodule status",
+          stderr_output: "fatal: The remote end hung up unexpectedly"
+        )
+      )
+      
+      result = detector.detect_submodules
+      expect(result).to eq([])
+    end
+  end
+
+  describe "status parsing variations", :status_parsing do
+    it "handles merge conflict status character 'U'" do
+      submodule_output = "U1234567890abcdef sub1 (no branch, bisect started on origin/main)"
+      
+      allow(detector).to receive(:execute_git_command).and_return(submodule_output)
+      FileUtils.mkdir_p(File.join(test_dir, "sub1", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:status]).to eq(:merge_conflict)
+      expect(result.first[:branch_info]).to eq("(no branch, bisect started on origin/main)")
+    end
+
+    it "handles branch names with unusual formatting" do
+      submodule_output = " 1234567890abcdef sub1 (heads/feature/complex-branch-name-v2.1)"
+      
+      allow(detector).to receive(:execute_git_command).and_return(submodule_output)
+      FileUtils.mkdir_p(File.join(test_dir, "sub1", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:branch_info]).to eq("(heads/feature/complex-branch-name-v2.1)")
+    end
+
+    it "handles paths with Unicode characters" do
+      unicode_path = "ünîcødé/sübmødülé"
+      submodule_output = " 1234567890abcdef #{unicode_path} (heads/main)"
+      
+      allow(detector).to receive(:execute_git_command).and_return(submodule_output)
+      FileUtils.mkdir_p(File.join(test_dir, unicode_path, ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:path]).to eq(unicode_path)
+      expect(result.first[:name]).to eq("sübmødülé")
+    end
+
+    it "handles long vs short commit hashes" do
+      long_hash = "1234567890abcdef1234567890abcdef12345678"
+      short_hash = "1234567"
+      
+      long_output = " #{long_hash} sub1 (heads/main)"
+      short_output = " #{short_hash} sub2 (heads/develop)"
+      combined_output = "#{long_output}\n#{short_output}"
+      
+      allow(detector).to receive(:execute_git_command).and_return(combined_output)
+      FileUtils.mkdir_p(File.join(test_dir, "sub1", ".git"))
+      FileUtils.mkdir_p(File.join(test_dir, "sub2", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(2)
+      
+      long_sub = result.find { |r| r[:name] == "sub1" }
+      short_sub = result.find { |r| r[:name] == "sub2" }
+      
+      expect(long_sub[:commit_hash]).to eq(long_hash)
+      expect(short_sub[:commit_hash]).to eq(short_hash)
+    end
+
+    it "handles missing branch information in status" do
+      submodule_output = " 1234567890abcdef sub1"
+      
+      allow(detector).to receive(:execute_git_command).and_return(submodule_output)
+      FileUtils.mkdir_p(File.join(test_dir, "sub1", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:branch_info]).to be_nil
+    end
+
+    it "handles status lines with extra whitespace" do
+      submodule_output = "   1234567890abcdef    sub1   (heads/main)   "
+      
+      allow(detector).to receive(:execute_git_command).and_return(submodule_output)
+      FileUtils.mkdir_p(File.join(test_dir, "sub1", ".git"))
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:path]).to eq("sub1")
+      expect(result.first[:branch_info]).to eq("(heads/main)")
+    end
+  end
+
+  describe "file system edge cases", :filesystem do
+    it "handles .git files pointing to worktrees" do
+      git_file_content = "gitdir: /path/to/main/repo/.git/worktrees/submodule"
+      
+      FileUtils.mkdir_p(File.join(test_dir, "worktree_sub"))
+      File.write(File.join(test_dir, "worktree_sub", ".git"), git_file_content)
+      
+      gitmodules_content = <<~GITMODULES
+        [submodule "worktree_sub"]
+        \tpath = worktree_sub
+        \turl = https://github.com/example/worktree.git
+      GITMODULES
+
+      File.write(File.join(test_dir, ".gitmodules"), gitmodules_content)
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(1)
+      expect(result.first[:name]).to eq("worktree_sub")
+      expect(result.first[:is_git_repo]).to be true
+    end
+
+    it "handles non-existent parent directories gracefully" do
+      gitmodules_content = <<~GITMODULES
+        [submodule "deep"]
+        \tpath = very/deep/nested/path/sub
+        \turl = https://github.com/example/deep.git
+      GITMODULES
+
+      File.write(File.join(test_dir, ".gitmodules"), gitmodules_content)
+      # Don't create the directory structure
+      
+      result = detector.detect_submodules
+      
+      # Should handle gracefully by filtering out non-existent submodules
+      expect(result).to eq([])
+    end
+
+    it "handles paths with spaces requiring proper escaping" do
+      space_path = "path with many spaces/sub module"
+      
+      # Test that the git command execution would properly escape paths
+      detector_with_spaces = described_class.new("/path with spaces")
+      
+      expect(Open3).to receive(:capture3).with(/git -C .*path.*with.*spaces.* submodule status/)
+      allow(Open3).to receive(:capture3).and_return(["", "", double(success?: true)])
+      
+      detector_with_spaces.send(:execute_git_command, "submodule status")
+    end
+  end
+
+  describe "integration scenarios", :integration do
+    it "handles multiple levels of nested submodules" do
+      # Create nested structure: main -> level1 -> level2 -> level3
+      nested_structure = {
+        "level1" => "level1",
+        "level1/level2" => "level2", 
+        "level1/level2/level3" => "level3",
+        "level1/level2/level3/level4" => "level4"
+      }
+      
+      gitmodules_content = ""
+      nested_structure.each do |path, name|
+        gitmodules_content += <<~SECTION
+          [submodule "#{name}"]
+          \tpath = #{path}
+          \turl = https://github.com/example/#{name}.git
+        SECTION
+        
+        FileUtils.mkdir_p(File.join(test_dir, path, ".git"))
+      end
+      
+      File.write(File.join(test_dir, ".gitmodules"), gitmodules_content)
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(4)
+      
+      # Verify deep nesting is handled correctly
+      deepest = result.find { |r| r[:name] == "level4" }
+      expect(deepest[:path]).to eq("level1/level2/level3/level4")
+      expect(deepest[:exists]).to be true
+    end
+
+    it "handles large number of submodules efficiently" do
+      num_submodules = 50
+      gitmodules_content = ""
+      
+      (1..num_submodules).each do |i|
+        submodule_name = "sub#{i.to_s.rjust(3, '0')}"
+        gitmodules_content += <<~SECTION
+          [submodule "#{submodule_name}"]
+          \tpath = #{submodule_name}
+          \turl = https://github.com/example/#{submodule_name}.git
+        SECTION
+        
+        FileUtils.mkdir_p(File.join(test_dir, submodule_name, ".git"))
+      end
+      
+      File.write(File.join(test_dir, ".gitmodules"), gitmodules_content)
+      
+      start_time = Time.now
+      result = detector.detect_submodules
+      end_time = Time.now
+      
+      expect(result.length).to eq(num_submodules)
+      # Performance check - should complete in reasonable time (< 1 second)
+      expect(end_time - start_time).to be < 1.0
+    end
+
+    it "handles mixed submodule states in same repository" do
+      # Mix of initialized, not initialized, and checked out different commits
+      mixed_output = <<~OUTPUT
+         1234567890abcdef initialized_sub (heads/main)
+        -abcdef1234567890 not_initialized_sub
+        +fedcba0987654321 different_commit_sub (heads/feature)
+        U9999999999999999 conflict_sub (no branch)
+      OUTPUT
+      
+      allow(detector).to receive(:execute_git_command).and_return(mixed_output)
+      
+      %w[initialized_sub not_initialized_sub different_commit_sub conflict_sub].each do |sub|
+        FileUtils.mkdir_p(File.join(test_dir, sub, ".git"))
+      end
+      
+      result = detector.detect_submodules
+      
+      expect(result.length).to eq(4)
+      
+      initialized = result.find { |r| r[:name] == "initialized_sub" }
+      not_initialized = result.find { |r| r[:name] == "not_initialized_sub" }
+      different_commit = result.find { |r| r[:name] == "different_commit_sub" }
+      conflict = result.find { |r| r[:name] == "conflict_sub" }
+      
+      expect(initialized[:status]).to eq(:initialized)
+      expect(not_initialized[:status]).to eq(:not_initialized)
+      expect(different_commit[:status]).to eq(:checked_out_different_commit)
+      expect(conflict[:status]).to eq(:merge_conflict)
+    end
+  end
 end
