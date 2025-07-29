@@ -113,6 +113,43 @@ RSpec.describe CodingAgentTools::Molecules::FormatHandlers do
         expect(summary).to include("Execution time: 2.5s")
         expect(summary).not_to include("Tokens:")
       end
+
+      it "includes cost information when available" do
+        response_with_cost = {
+          text: "Test response",
+          metadata: {
+            provider: "gemini",
+            model: "gemini-2.0-flash-lite",
+            cost: {
+              total: 0.001234,
+              input: 0.0008,
+              output: 0.000434
+            }
+          }
+        }
+        summary = base_handler.generate_summary(response_with_cost, file_path)
+
+        expect(summary).to include("Response saved to: #{file_path}")
+        expect(summary).to include("Provider: gemini (gemini-2.0-flash-lite)")
+        expect(summary).to include("Cost: $0.001234 (input: $0.000800, output: $0.000434)")
+      end
+
+      it "includes cached tokens information when available" do
+        response_with_cached = {
+          text: "Test response",
+          metadata: {
+            provider: "anthropic",
+            input_tokens: 100,
+            output_tokens: 150,
+            cached_tokens: 50
+          }
+        }
+        summary = base_handler.generate_summary(response_with_cached, file_path)
+
+        expect(summary).to include("Response saved to: #{file_path}")
+        expect(summary).to include("Provider: anthropic")
+        expect(summary).to include("Tokens: 100 input, 150 output, 50 cached")
+      end
     end
 
     describe "#validate_response" do
@@ -139,6 +176,151 @@ RSpec.describe CodingAgentTools::Molecules::FormatHandlers do
         expect {
           base_handler.send(:validate_response, nil)
         }.to raise_error(CodingAgentTools::Error, "Invalid response format: missing :text field")
+      end
+    end
+
+    describe "#build_cost_summary" do
+      it "returns nil for nil cost data" do
+        result = base_handler.send(:build_cost_summary, nil)
+        expect(result).to be_nil
+      end
+
+      it "returns nil for cost data without total" do
+        cost_data = { input: 0.001, output: 0.002 }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to be_nil
+      end
+
+      it "returns basic cost for total only" do
+        cost_data = { total: 0.001234 }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.001234")
+      end
+
+      it "includes input and output cost breakdown" do
+        cost_data = {
+          total: 0.003,
+          input: 0.001,
+          output: 0.002
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.003000 (input: $0.001000, output: $0.002000)")
+      end
+
+      it "includes cache creation cost when present and non-zero" do
+        cost_data = {
+          total: 0.005,
+          input: 0.001,
+          output: 0.002,
+          cache_creation: 0.002
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.005000 (input: $0.001000, output: $0.002000, cache creation: $0.002000)")
+      end
+
+      it "excludes cache creation cost when zero" do
+        cost_data = {
+          total: 0.003,
+          input: 0.001,
+          output: 0.002,
+          cache_creation: 0.0
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.003000 (input: $0.001000, output: $0.002000)")
+      end
+
+      it "includes cache read cost when present and non-zero" do
+        cost_data = {
+          total: 0.004,
+          input: 0.001,
+          output: 0.002,
+          cache_read: 0.001
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.004000 (input: $0.001000, output: $0.002000, cache read: $0.001000)")
+      end
+
+      it "excludes cache read cost when zero" do
+        cost_data = {
+          total: 0.003,
+          input: 0.001,
+          output: 0.002,
+          cache_read: 0.0
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.003000 (input: $0.001000, output: $0.002000)")
+      end
+
+      it "includes all cost components when present" do
+        cost_data = {
+          total: 0.008,
+          input: 0.002,
+          output: 0.003,
+          cache_creation: 0.002,
+          cache_read: 0.001
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.008000 (input: $0.002000, output: $0.003000, cache creation: $0.002000, cache read: $0.001000)")
+      end
+
+      it "handles only input cost" do
+        cost_data = {
+          total: 0.001,
+          input: 0.001
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.001000 (input: $0.001000)")
+      end
+
+      it "handles only output cost" do
+        cost_data = {
+          total: 0.002,
+          output: 0.002
+        }
+        result = base_handler.send(:build_cost_summary, cost_data)
+        expect(result).to eq("Cost: $0.002000 (output: $0.002000)")
+      end
+    end
+
+    describe "#format_cost" do
+      it "formats nil as zero" do
+        result = base_handler.send(:format_cost, nil)
+        expect(result).to eq("0.000000")
+      end
+
+      it "formats zero as zero" do
+        result = base_handler.send(:format_cost, 0)
+        expect(result).to eq("0.000000")
+      end
+
+      it "formats zero float as zero" do
+        result = base_handler.send(:format_cost, 0.0)
+        expect(result).to eq("0.000000")
+      end
+
+      it "formats small numbers with 6 decimal places" do
+        result = base_handler.send(:format_cost, 0.001234)
+        expect(result).to eq("0.001234")
+      end
+
+      it "formats very small numbers with 6 decimal places" do
+        result = base_handler.send(:format_cost, 0.000001)
+        expect(result).to eq("0.000001")
+      end
+
+      it "formats larger numbers with 6 decimal places" do
+        result = base_handler.send(:format_cost, 1.234567)
+        expect(result).to eq("1.234567")
+      end
+
+      it "formats integers as decimal with 6 places" do
+        result = base_handler.send(:format_cost, 1)
+        expect(result).to eq("1.000000")
+      end
+
+      it "rounds numbers to 6 decimal places" do
+        result = base_handler.send(:format_cost, 0.1234567)
+        expect(result).to eq("0.123457")
       end
     end
   end
