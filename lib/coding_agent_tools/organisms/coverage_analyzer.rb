@@ -34,13 +34,13 @@ module CodingAgentTools
       def analyze_coverage(file_path, options = {})
         # Validate and set defaults
         validated_options = validate_options(options)
-        
+
         # Process SimpleCov data first to get coverage information
         processed_data = @data_processor.process_file(file_path, validated_options)
-        
+
         # Determine final threshold (adaptive takes precedence)
         threshold, adaptive_result = determine_final_threshold(processed_data, validated_options)
-        
+
         # Analyze files with determined threshold
         file_results = @file_analyzer.analyze_files(
           processed_data,
@@ -48,14 +48,14 @@ module CodingAgentTools
           sort_by: validated_options[:sort_by],
           detailed_analysis: validated_options[:detailed_analysis]
         )
-        
+
         # Create analysis result with adaptive threshold information
         analysis_result = Models::CoverageAnalysisResult.new(
           files: file_results,
           threshold: threshold,
           analysis_timestamp: Time.now
         )
-        
+
         # Add adaptive threshold metadata if used
         if adaptive_result
           analysis_result.instance_variable_set(:@adaptive_threshold_result, adaptive_result)
@@ -64,7 +64,7 @@ module CodingAgentTools
         else
           analysis_result.define_singleton_method(:adaptive_threshold_used?) { false }
         end
-        
+
         analysis_result
       end
 
@@ -75,7 +75,7 @@ module CodingAgentTools
       # @return [Hash] Detailed file analysis
       def analyze_file_details(file_path, coverage_data, options = {})
         validated_options = validate_options(options)
-        
+
         @file_analyzer.detailed_file_analysis(
           file_path,
           coverage_data,
@@ -92,7 +92,7 @@ module CodingAgentTools
       def generate_report(analysis_result, format = :text, options = {})
         validated_format = @report_formatter.validate_format(format)
         report_format = options[:report_format] || :compact
-        
+
         case validated_format
         when :text
           @report_formatter.format_text_report(analysis_result, format: report_format)
@@ -112,7 +112,7 @@ module CodingAgentTools
       def save_report(analysis_result, output_path, format = nil, options = {})
         format ||= @report_formatter.detect_output_format(output_path)
         report_content = generate_report(analysis_result, format, options)
-        
+
         @report_formatter.save_report(report_content, output_path)
         output_path
       end
@@ -123,13 +123,13 @@ module CodingAgentTools
       # @return [Array<Models::CoverageResult>] Prioritized list of under-covered files
       def prioritize_critical_files(analysis_result, limit = 10)
         under_covered = analysis_result.under_covered_files
-        
+
         # Calculate priority scores for each file
         scored_files = under_covered.map do |file|
           priority_score = @file_analyzer.calculate_priority_score(file, analysis_result.threshold)
-          { file: file, priority_score: priority_score }
+          {file: file, priority_score: priority_score}
         end
-        
+
         # Sort by priority score (descending) and take the top files
         scored_files
           .sort_by { |item| -item[:priority_score] }
@@ -142,11 +142,11 @@ module CodingAgentTools
       # @return [Hash] Comprehensive statistics
       def generate_statistics(analysis_result)
         base_stats = @report_formatter.generate_summary_stats(analysis_result)
-        
+
         # Add additional organism-level statistics
         files = analysis_result.files
         under_covered_files = analysis_result.under_covered_files
-        
+
         base_stats.merge(
           coverage_trends: {
             worst_file: files.min_by(&:coverage_percentage),
@@ -171,15 +171,15 @@ module CodingAgentTools
           include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
           exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           detailed_analysis: options[:detailed_analysis] || false,
-          sort_by: options[:sort_by] || 'coverage'
+          sort_by: options[:sort_by] || "coverage"
         }
-        
+
         # Validate sort_by option
-        valid_sort_options = ['coverage', 'uncovered_lines', 'file_name']
+        valid_sort_options = ["coverage", "uncovered_lines", "file_name"]
         unless valid_sort_options.include?(validated[:sort_by])
-          raise ArgumentError, "Invalid sort_by option: #{validated[:sort_by]}. Valid options: #{valid_sort_options.join(', ')}"
+          raise ArgumentError, "Invalid sort_by option: #{validated[:sort_by]}. Valid options: #{valid_sort_options.join(", ")}"
         end
-        
+
         validated
       end
 
@@ -187,10 +187,10 @@ module CodingAgentTools
         if validated_options[:adaptive_threshold]
           # Extract coverage data for adaptive calculation
           coverage_data = extract_coverage_data(processed_data)
-          
+
           # Calculate optimal threshold
           adaptive_result = @adaptive_threshold_calculator.calculate_optimal_threshold(coverage_data)
-          
+
           # Return adaptive threshold and the full result
           [adaptive_result[:optimal_threshold], adaptive_result]
         else
@@ -201,53 +201,53 @@ module CodingAgentTools
 
       def extract_coverage_data(processed_data)
         # Extract coverage percentages prioritizing already processed data to eliminate duplicate calculations
-        
+
         # Handle direct array input (test cases)
         if processed_data.is_a?(Array)
           return processed_data.map do |file|
-            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+            {coverage_percentage: file[:coverage_percentage] || 0.0}
           end
         end
-        
+
         return [] unless processed_data.is_a?(Hash)
-        
+
         # First priority: Use processed data from the main CoverageDataProcessor pipeline
         if processed_data[:file_coverage] && processed_data[:file_coverage].is_a?(Hash)
           processed_data[:file_coverage].map do |file_path, file_data|
             coverage_percentage = file_data.dig(:coverage_data, :coverage_percentage) || 0.0
-            { coverage_percentage: coverage_percentage }
+            {coverage_percentage: coverage_percentage}
           end
-        # Second priority: Already transformed data structures  
+        # Second priority: Already transformed data structures
         elsif processed_data[:files] && processed_data[:files].is_a?(Array)
           processed_data[:files].map do |file|
-            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+            {coverage_percentage: file[:coverage_percentage] || 0.0}
           end
         # Fallback: Raw SimpleCov data (for backward compatibility and tests)
         elsif processed_data.key?("RSpec") || processed_data.key?("Unit Tests") || processed_data.key?("Unknown Test Framework")
           all_files = []
           processed_data.each do |key, test_data|
             next unless test_data.is_a?(Hash) && test_data["coverage"]
-            
+
             test_data["coverage"].each do |file_path, file_coverage_data|
               next if file_coverage_data.nil?
-              
+
               # Handle both old format (direct array) and new format (hash with "lines" key)
               line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data["lines"]
-                           file_coverage_data["lines"]
-                         elsif file_coverage_data.is_a?(Array)
-                           file_coverage_data
-                         else
-                           next
-                         end
-              
+                file_coverage_data["lines"]
+              elsif file_coverage_data.is_a?(Array)
+                file_coverage_data
+              else
+                next
+              end
+
               next if line_data.nil? || !line_data.is_a?(Array)
-              
+
               # Use CoverageCalculator atom for consistent calculation
               coverage_result = @calculator.calculate_file_coverage(line_data)
               next if coverage_result[:total_lines] == 0
-              
+
               coverage_percentage = coverage_result[:coverage_percentage]
-              all_files << { coverage_percentage: coverage_percentage }
+              all_files << {coverage_percentage: coverage_percentage}
             end
           end
           all_files
@@ -258,10 +258,10 @@ module CodingAgentTools
 
       def calculate_median_coverage(files)
         return nil if files.empty?
-        
+
         sorted_percentages = files.map(&:coverage_percentage).sort
         count = sorted_percentages.length
-        
+
         if count.even?
           (sorted_percentages[count / 2 - 1] + sorted_percentages[count / 2]) / 2.0
         else

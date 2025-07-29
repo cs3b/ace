@@ -41,7 +41,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Checkout do
       end
 
       it "returns 0 for successful execution" do
-        result = capture_stdout { command.call(branch_or_paths: branch_or_paths) }
+        capture_stdout { command.call(branch_or_paths: branch_or_paths) }
         expect(mock_orchestrator).to have_received(:checkout)
       end
 
@@ -313,7 +313,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Checkout do
 
       it "shows detailed error with debug flag" do
         allow_any_instance_of(StandardError).to receive(:backtrace).and_return(["line1", "line2"])
-        
+
         output = capture_stderr { command.call(branch_or_paths: branch_or_paths, debug: true) }
 
         expect(output).to include("Error: StandardError: Unexpected error")
@@ -379,15 +379,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Checkout do
   def capture_output
     old_stdout = $stdout
     old_stderr = $stderr
-    
+
     stdout_capture = StringIO.new
     stderr_capture = StringIO.new
-    
+
     $stdout = stdout_capture
     $stderr = stderr_capture
-    
+
     yield
-    
+
     stdout_capture.string + stderr_capture.string
   ensure
     $stdout = old_stdout

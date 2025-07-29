@@ -35,7 +35,7 @@ RSpec.describe CodingAgentTools::Molecules::MethodCoverageMapper do
       1,    # 3: puts "this is covered" - COVERED
       nil,  # 4: end
       nil,  # 5: blank
-      nil,  # 6: def uncovered_method  
+      nil,  # 6: def uncovered_method
       0,    # 7: puts "this is not covered" - NOT COVERED
       0,    # 8: puts "second line not covered" - NOT COVERED
       nil,  # 9: end
@@ -52,7 +52,7 @@ RSpec.describe CodingAgentTools::Molecules::MethodCoverageMapper do
       methods = subject.map_content_coverage(sample_ruby_content, sample_lines_data)
 
       expect(methods.length).to eq(3)
-      
+
       covered_method = methods.find { |m| m.name == "covered_method" }
       expect(covered_method.coverage_percentage).to eq(100.0)
       expect(covered_method.total_lines).to eq(1)
@@ -158,13 +158,13 @@ RSpec.describe CodingAgentTools::Molecules::MethodCoverageMapper do
   describe "#identify_coverage_patterns" do
     let(:methods) do
       [
-        instance_double(CodingAgentTools::Models::MethodCoverage, 
+        instance_double(CodingAgentTools::Models::MethodCoverage,
           coverage_percentage: 0.0, total_lines: 5, name: "uncovered_method"),
-        instance_double(CodingAgentTools::Models::MethodCoverage, 
+        instance_double(CodingAgentTools::Models::MethodCoverage,
           coverage_percentage: 100.0, total_lines: 3, name: "perfect_method"),
-        instance_double(CodingAgentTools::Models::MethodCoverage, 
+        instance_double(CodingAgentTools::Models::MethodCoverage,
           coverage_percentage: 50.0, total_lines: 1, name: "single_line"),
-        instance_double(CodingAgentTools::Models::MethodCoverage, 
+        instance_double(CodingAgentTools::Models::MethodCoverage,
           coverage_percentage: 30.0, total_lines: 15, name: "large_uncovered")
       ]
     end
@@ -218,7 +218,7 @@ RSpec.describe CodingAgentTools::Molecules::MethodCoverageMapper do
       methods = subject.map_content_coverage(complex_ruby_content, complex_lines_data)
 
       expect(methods.length).to eq(3)
-      
+
       class_method = methods.find { |m| m.name == "self.class_method" }
       expect(class_method).not_to be_nil
       expect(class_method.coverage_percentage).to eq(100.0)

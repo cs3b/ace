@@ -606,7 +606,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
         content: large_diff
       })
 
-      result = prompt_builder.build_review_prompt(complex_session, complex_target, comprehensive_context)
+      prompt_builder.build_review_prompt(complex_session, complex_target, comprehensive_context)
 
       expect(@mock_prompt_combiner).to have_received(:build_prompt).with(
         complex_session,
@@ -657,7 +657,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
 
       it "handles very long target content" do
         long_content = "x" * 100_000  # 100KB of content
-        
+
         result = prompt_builder.build_immediate_prompt("architecture", long_content, minimal_context)
 
         expect(@mock_prompt_combiner).to have_received(:build_prompt) do |session, content, ctx, focus|
@@ -670,7 +670,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
 
       it "handles special characters in focus" do
         special_focus = "security & performance (high-priority!)"
-        
+
         result = prompt_builder.build_immediate_prompt(special_focus, "content", minimal_context)
 
         expect(@mock_prompt_combiner).to have_received(:build_prompt) do |session, content, ctx, focus|
@@ -693,7 +693,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
 
         expect(@mock_prompt_combiner).to have_received(:build_prompt).once
         expect(captured_session).not_to be_nil
-        
+
         # Verify session attributes
         expect(captured_session.session_id).to start_with("temp-")
         expect(captured_session.session_name).to eq("temp")
@@ -702,7 +702,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
         expect(captured_session.target).to eq("immediate")
         expect(captured_session.context_mode).to eq("minimal")
         expect(captured_session.metadata).to eq({})
-        
+
         expect(result).to eq("Immediate boundary test content")
       end
     end
@@ -742,7 +742,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::PromptBuilder do
           combined_content: "Test content",
           metadata: {}
         )
-        
+
         # Simulate nil fields that might occur in edge cases
         allow(prompt).to receive(:primary_focus).and_return(nil)
         prompt

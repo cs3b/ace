@@ -96,7 +96,7 @@ module CodingAgentTools
                 # Handle dry run output
                 info_output("🔍 Dry run completed")
               else
-                success_output("✅ Synthesis completed successfully") 
+                success_output("✅ Synthesis completed successfully")
                 if synthesis_result[:output_file]
                   success_output("📄 Report saved to: #{synthesis_result[:output_file]}")
                 end

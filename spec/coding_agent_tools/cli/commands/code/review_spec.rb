@@ -255,7 +255,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::Review do
       it "shows custom system prompt" do
         custom_prompt_file = File.join(temp_dir, "custom.md")
         File.write(custom_prompt_file, "Custom prompt content")
-        
+
         command.call(focus: "code", target: "HEAD~1..HEAD", dry_run: true, system_prompt: custom_prompt_file)
 
         expect($stdout).to have_received(:puts).with("\nSystem Prompt: review/code-review.md (custom)")

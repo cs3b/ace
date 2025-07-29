@@ -103,7 +103,7 @@ module CodingAgentTools
           # We'll resolve symlinks only when needed for path comparisons
           current_dir = Dir.pwd
           project_root_base = @project_root
-          
+
           # Normalize for comparison purposes (resolve symlinks for accurate containment checks)
           current_dir_normalized = File.realpath(current_dir)
           project_root_normalized = File.realpath(project_root_base)
@@ -124,9 +124,9 @@ module CodingAgentTools
 
           # Check if paths are within project (using normalized paths with symlinks resolved)
           # We need to normalize the resolved paths for accurate containment checks
-          current_resolved_normalized = File.exist?(current_resolved) ? File.realpath(current_resolved) : File.expand_path(current_resolved)  
+          current_resolved_normalized = File.exist?(current_resolved) ? File.realpath(current_resolved) : File.expand_path(current_resolved)
           project_resolved_normalized = File.exist?(project_resolved) ? File.realpath(project_resolved) : File.expand_path(project_resolved)
-          
+
           current_in_project = current_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
             current_resolved_normalized == project_root_normalized
           project_in_project = project_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
@@ -203,7 +203,7 @@ module CodingAgentTools
 
         def path_within_repository?(absolute_path, repo_path)
           # Normalize paths for comparison and resolve symlinks consistently
-          # Always use the same normalization approach for both paths to avoid 
+          # Always use the same normalization approach for both paths to avoid
           # symlink resolution inconsistencies
           begin
             # Try to resolve symlinks for both paths if they exist

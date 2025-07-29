@@ -29,7 +29,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::StatusColorFormatter do
 
       it "returns clean repository message with color" do
         result = described_class.format_repository_status(repo_name, clean_status)
-        
+
         expect(result).to include("[#{repo_name}]")
         expect(result).to include("Clean working directory")
         expect(result).to include("\033[32m") # Green color
@@ -197,14 +197,14 @@ RSpec.describe CodingAgentTools::Atoms::Git::StatusColorFormatter do
 
     describe "#determine_color_usage" do
       it "returns false when no_color option is set" do
-        options = { no_color: true }
+        options = {no_color: true}
         result = formatter_with_color.send(:determine_color_usage, options)
 
         expect(result).to be false
       end
 
       it "returns true when force_color option is set" do
-        options = { force_color: true }
+        options = {force_color: true}
         result = formatter_no_color.send(:determine_color_usage, options)
 
         expect(result).to be true

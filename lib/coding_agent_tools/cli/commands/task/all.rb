@@ -94,7 +94,7 @@ module CodingAgentTools
             result.sorted_tasks.each_with_index do |task, index|
               puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
-                task, 
+                task,
                 verbose: options[:verbose],
                 show_time: true,
                 show_path: !options[:verbose]  # Show path in compact mode
@@ -124,7 +124,6 @@ module CodingAgentTools
             end
           end
 
-
           def display_footer(result, options)
             if result.has_cycles?
               puts ""
@@ -134,7 +133,6 @@ module CodingAgentTools
               puts colorize("  • Review task dependencies to resolve cycles", :yellow)
             end
           end
-
 
           def status_color_for(status)
             case status&.downcase

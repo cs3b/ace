@@ -8,9 +8,9 @@ module CodingAgentTools
         # Format a single task with optional modification time and position
         def self.format_task(task, options = {})
           verbose = options[:verbose] || false
-          show_position = options[:position]
-          show_time = options[:show_time] || false
-          
+          options[:position]
+          options[:show_time] || false
+
           if verbose
             format_verbose(task, options)
           else
@@ -32,32 +32,32 @@ module CodingAgentTools
         def self.format_compact(task, options)
           title = task.title || extract_title_from_content(task)
           status = task.status.upcase
-          
+
           # Add mtime to task if not present and show_time is requested
           if options[:show_time] && !task.respond_to?(:mtime) && File.exist?(task.path)
             mtime = File.mtime(task.path)
             task.define_singleton_method(:mtime) { mtime }
           end
-          
+
           # Build main line components - Core format: ID * STATUS * [TIME_AGO *] Title
           line_parts = []
           line_parts << task.id
           line_parts << status
-          
+
           # Add modification time if available and requested
           if options[:show_time] && task.respond_to?(:mtime) && task.mtime
             line_parts << format_relative_time(task.mtime)
           end
-          
+
           line_parts << title
-          
+
           # Output main line
           puts line_parts.join(" * ")
-          
+
           # Add path on next line if requested
           if options[:show_path]
             project_root = detect_project_root
-            relative_path = task.path.sub(/^#{Regexp.escape(project_root)}\//, '')
+            relative_path = task.path.sub(/^#{Regexp.escape(project_root)}\//, "")
             puts "  #{relative_path}"
           end
         end
@@ -101,7 +101,7 @@ module CodingAgentTools
         end
 
         def self.verbose_line(label, value)
-          prefix = label == "Title" ? "     " : "     "
+          prefix = (label == "Title") ? "     " : "     "
           "#{prefix}#{label}: #{value}"
         end
 
@@ -112,7 +112,7 @@ module CodingAgentTools
           case diff
           when 0..3600
             hours = (diff / 3600).round
-            hours == 0 ? "1 hour ago" : "#{hours} hours ago"
+            (hours == 0) ? "1 hour ago" : "#{hours} hours ago"
           when 3600..86400
             hours = (diff / 3600).round
             "#{hours} hours ago"

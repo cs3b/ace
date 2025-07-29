@@ -21,7 +21,7 @@ module CodingAgentTools
         @min_threshold = min_threshold.to_f
         @max_threshold = max_threshold.to_f
         @increment = increment.to_f
-        
+
         validate_parameters
       end
 
@@ -33,10 +33,10 @@ module CodingAgentTools
 
         # Test thresholds progressively from min to max
         threshold_results = test_thresholds(coverage_data)
-        
+
         # Find optimal threshold based on actionable file count
         optimal_result = find_optimal_threshold(threshold_results)
-        
+
         build_result(optimal_result, threshold_results, coverage_data)
       end
 
@@ -45,11 +45,11 @@ module CodingAgentTools
       # @return [Boolean] True if adaptive calculation would be beneficial
       def should_use_adaptive?(coverage_data)
         return false if coverage_data.empty?
-        
+
         # Calculate spread in coverage percentages
         percentages = coverage_data.map { |file| file[:coverage_percentage] || 0 }
         spread = percentages.max - percentages.min
-        
+
         # Use adaptive if there's significant spread (>30%) or many files
         spread > 30.0 || coverage_data.length > 20
       end
@@ -60,15 +60,15 @@ module CodingAgentTools
         unless @min_threshold >= 0 && @min_threshold <= 100
           raise ArgumentError, "min_threshold must be between 0 and 100"
         end
-        
+
         unless @max_threshold >= 0 && @max_threshold <= 100
           raise ArgumentError, "max_threshold must be between 0 and 100"
         end
-        
+
         unless @min_threshold < @max_threshold
           raise ArgumentError, "min_threshold must be less than max_threshold"
         end
-        
+
         unless @increment > 0
           raise ArgumentError, "increment must be positive"
         end
@@ -80,14 +80,14 @@ module CodingAgentTools
 
         while current_threshold <= @max_threshold
           files_under_threshold = count_files_under_threshold(coverage_data, current_threshold)
-          
+
           results << {
             threshold: current_threshold,
             files_under_threshold: files_under_threshold,
             actionable: actionable_file_count?(files_under_threshold),
             preferred: preferred_file_count?(files_under_threshold)
           }
-          
+
           current_threshold += @increment
         end
 
@@ -112,7 +112,7 @@ module CodingAgentTools
       def find_optimal_threshold(threshold_results)
         # First priority: Find threshold with preferred file count (6-15 files)
         preferred_results = threshold_results.select { |result| result[:preferred] }
-        
+
         if preferred_results.any?
           # Choose the highest threshold that still produces preferred results
           return preferred_results.max_by { |result| result[:threshold] }
@@ -120,14 +120,14 @@ module CodingAgentTools
 
         # Second priority: Find threshold with actionable file count (1-15 files)
         actionable_results = threshold_results.select { |result| result[:actionable] }
-        
+
         if actionable_results.any?
           # Choose the highest threshold that still produces actionable results
           return actionable_results.max_by { |result| result[:threshold] }
         end
 
         # Third priority: Find threshold closest to actionable range
-        best_result = threshold_results.min_by do |result|
+        threshold_results.min_by do |result|
           files_count = result[:files_under_threshold]
           if files_count < MINIMUM_ACTIONABLE_FILES
             MINIMUM_ACTIONABLE_FILES - files_count
@@ -135,14 +135,12 @@ module CodingAgentTools
             files_count - MAXIMUM_ACTIONABLE_FILES
           end
         end
-
-        best_result
       end
 
       def build_result(optimal_result, all_results, coverage_data)
         files_count = optimal_result[:files_under_threshold]
         reasoning = generate_reasoning(optimal_result, files_count, coverage_data.length)
-        
+
         {
           optimal_threshold: optimal_result[:threshold],
           files_under_threshold: files_count,
@@ -168,7 +166,7 @@ module CodingAgentTools
 
       def generate_reasoning(optimal_result, files_count, total_files)
         threshold = optimal_result[:threshold]
-        
+
         if optimal_result[:preferred]
           "Threshold #{threshold}% selected: produces #{files_count} files in preferred range " \
           "(#{PREFERRED_MINIMUM_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). This provides an optimal " \

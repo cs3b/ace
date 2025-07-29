@@ -134,10 +134,10 @@ module CodingAgentTools
       def prioritize_files_by_urgency(files, threshold)
         files.map do |file|
           urgency_score = calculate_urgency_score(file, threshold)
-          { file: file, urgency_score: urgency_score }
+          {file: file, urgency_score: urgency_score}
         end
-        .sort_by { |item| -item[:urgency_score] }
-        .map { |item| item[:file] }
+          .sort_by { |item| -item[:urgency_score] }
+          .map { |item| item[:file] }
       end
 
       def calculate_urgency_score(file, threshold)
@@ -183,9 +183,9 @@ module CodingAgentTools
         medium = files.select { |f| f.coverage_percentage >= 50.0 && f.coverage_percentage < threshold }
 
         {
-          critical: { count: critical.length, files: critical.map(&:relative_path) },
-          high: { count: high.length, files: high.map(&:relative_path) },
-          medium: { count: medium.length, files: medium.map(&:relative_path) }
+          critical: {count: critical.length, files: critical.map(&:relative_path)},
+          high: {count: high.length, files: high.map(&:relative_path)},
+          medium: {count: medium.length, files: medium.map(&:relative_path)}
         }
       end
 
@@ -228,7 +228,7 @@ module CodingAgentTools
         under_covered_methods
           .sort_by(&:coverage_percentage)
           .first(limit)
-          .map { |m| { name: m.name, coverage: m.coverage_percentage } }
+          .map { |m| {name: m.name, coverage: m.coverage_percentage} }
       end
 
       def extract_critical_line_ranges(analysis_result, options)
@@ -263,11 +263,11 @@ module CodingAgentTools
         {
           estimated_test_cases: estimated_tests,
           effort_level: case estimated_tests
-                      when 0..5 then "low"
-                      when 6..15 then "medium"
-                      when 16..30 then "high"
-                      else "very_high"
-                      end
+                        when 0..5 then "low"
+                        when 6..15 then "medium"
+                        when 16..30 then "high"
+                        else "very_high"
+                        end
         }
       end
 
@@ -306,13 +306,13 @@ module CodingAgentTools
 
       def generate_comprehensive_recommendations(analysis_result)
         all_recommendations = []
-        
+
         # Critical items first
         all_recommendations.concat(generate_critical_recommendations(analysis_result))
-        
+
         # Quick wins second
         all_recommendations.concat(generate_quick_win_recommendations(analysis_result))
-        
+
         # Larger files for comprehensive coverage
         large_files = analysis_result.under_covered_files
           .select { |f| f.total_lines > 100 }

@@ -17,13 +17,13 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
           session_directory: "/path/to/session",
           session_type: "explicit_session",
           session_id: "session-123",
-          metadata: { key: "value" }
+          metadata: {key: "value"}
         )
 
         expect(result.session_directory).to eq("/path/to/session")
         expect(result.session_type).to eq("explicit_session")
         expect(result.session_id).to eq("session-123")
-        expect(result.metadata).to eq({ key: "value" })
+        expect(result.metadata).to eq({key: "value"})
       end
 
       it "creates result with default parameters" do
@@ -65,14 +65,14 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
     context "with nil or empty path" do
       it "returns empty result for nil path" do
         result = inferrer.infer_session_path(nil)
-        
+
         expect(result.no_session?).to be true
         expect(result.session_type).to be_nil
       end
 
       it "returns empty result for empty string" do
         result = inferrer.infer_session_path("")
-        
+
         expect(result.no_session?).to be true
         expect(result.session_type).to be_nil
       end
@@ -81,7 +81,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
     context "with non-existent file" do
       it "returns empty result for non-existent path" do
         result = inferrer.infer_session_path("/non/existent/path.md")
-        
+
         expect(result.no_session?).to be true
         expect(result.session_type).to be_nil
       end
@@ -91,11 +91,11 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "detects session with session.meta file" do
         session_dir = File.join(temp_dir, "session-20240101-120000")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session.meta file
         meta_path = File.join(session_dir, "session.meta")
         File.write(meta_path, "session_id: test-session\ntype: code_review\n")
-        
+
         # Create report file
         report_path = File.join(session_dir, "report.md")
         File.write(report_path, "# Test Report")
@@ -113,11 +113,11 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "handles session.meta with parse errors" do
         session_dir = File.join(temp_dir, "session-test")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create invalid session.meta file
         meta_path = File.join(session_dir, "session.meta")
         File.write(meta_path, "invalid content without colons")
-        
+
         report_path = File.join(session_dir, "report.md")
         File.write(report_path, "# Test Report")
 
@@ -131,12 +131,12 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "handles session.meta read errors gracefully" do
         session_dir = File.join(temp_dir, "session-test")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session.meta file with restricted permissions
         meta_path = File.join(session_dir, "session.meta")
         File.write(meta_path, "test: content")
-        File.chmod(0000, meta_path) # No read permissions
-        
+        File.chmod(0o000, meta_path) # No read permissions
+
         report_path = File.join(session_dir, "report.md")
         File.write(report_path, "# Test Report")
 
@@ -145,9 +145,9 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
         expect(result.has_session?).to be true
         expect(result.session_type).to eq("explicit_session")
         expect(result.metadata[:parse_error]).to include("Permission denied")
-        
+
         # Cleanup
-        File.chmod(0644, meta_path)
+        File.chmod(0o644, meta_path)
       end
     end
 
@@ -158,7 +158,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
         # path_parts[code_review_index - 1] must be "current"
         taskflow_dir = File.join(temp_dir, "dev-taskflow", "current", "code_review", "session-123")
         FileUtils.mkdir_p(taskflow_dir)
-        
+
         report_path = File.join(taskflow_dir, "report.md")
         File.write(report_path, "# Taskflow Report")
 
@@ -174,7 +174,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "handles taskflow pattern without session ID" do
         taskflow_dir = File.join(temp_dir, "dev-taskflow", "current", "code_review")
         FileUtils.mkdir_p(taskflow_dir)
-        
+
         report_path = File.join(taskflow_dir, "report.md")
         File.write(report_path, "# Taskflow Report")
 
@@ -189,7 +189,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "does not detect non-taskflow code_review directories" do
         non_taskflow_dir = File.join(temp_dir, "project", "code_review", "session-123")
         FileUtils.mkdir_p(non_taskflow_dir)
-        
+
         report_path = File.join(non_taskflow_dir, "report.md")
         File.write(report_path, "# Non-taskflow Report")
 
@@ -203,12 +203,12 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "detects session based on session files" do
         session_dir = File.join(temp_dir, "analysis-session")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session indicator files
         File.write(File.join(session_dir, "input.diff"), "diff content")
         File.write(File.join(session_dir, "project_context.md"), "context")
         File.write(File.join(session_dir, "cr-report-1.md"), "report 1")
-        
+
         report_path = File.join(session_dir, "main-report.md")
         File.write(report_path, "# Main Report")
 
@@ -226,12 +226,12 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "detects session based on timestamp pattern" do
         session_dir = File.join(temp_dir, "20240101-120000")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create minimum session indicators
         File.write(File.join(session_dir, "input.xml"), "xml content")
         File.write(File.join(session_dir, "combined_prompt.md"), "prompt")
         File.write(File.join(session_dir, "cr-report.md"), "report")
-        
+
         report_path = File.join(session_dir, "report.md")
         File.write(report_path, "# Timestamped Report")
 
@@ -246,12 +246,12 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "detects session based on name pattern" do
         session_dir = File.join(temp_dir, "review-analysis")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session indicators
         File.write(File.join(session_dir, "README.md"), "readme")
         File.write(File.join(session_dir, "session.log"), "log")
         File.write(File.join(session_dir, "cr-report.md"), "report")
-        
+
         report_path = File.join(session_dir, "report.md")
         File.write(report_path, "# Named Session Report")
 
@@ -266,10 +266,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "does not detect non-session directories" do
         regular_dir = File.join(temp_dir, "regular-directory")
         FileUtils.mkdir_p(regular_dir)
-        
+
         # Create only one indicator (insufficient for session detection)
         File.write(File.join(regular_dir, "README.md"), "readme")
-        
+
         report_path = File.join(regular_dir, "report.md")
         File.write(report_path, "# Regular Report")
 
@@ -284,10 +284,10 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "handles permission denied gracefully" do
         restricted_dir = File.join(temp_dir, "restricted")
         FileUtils.mkdir_p(restricted_dir)
-        File.chmod(0000, restricted_dir) # No access permissions
-        
+        File.chmod(0o000, restricted_dir) # No access permissions
+
         report_path = File.join(restricted_dir, "report.md")
-        
+
         # Mock File methods more comprehensively
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(report_path).and_return(true)
@@ -299,9 +299,9 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
         result = inferrer.infer_session_path(report_path)
 
         expect(result.no_session?).to be true
-        
+
         # Cleanup
-        File.chmod(0755, restricted_dir)
+        File.chmod(0o755, restricted_dir)
       end
     end
   end
@@ -318,29 +318,29 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "returns session-relative path when session is detected" do
         session_dir = File.join(temp_dir, "session-test")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session.meta file
         meta_path = File.join(session_dir, "session.meta")
         File.write(meta_path, "session_id: test\n")
-        
+
         report_path = File.join(session_dir, "input-report.md")
         File.write(report_path, "# Input Report")
 
         result = inferrer.infer_output_path([report_path])
         expected_path = File.join(session_dir, "cr-report.md")
-        
+
         expect(result).to eq(expected_path)
       end
 
       it "handles multiple report paths using first path" do
         session_dir = File.join(temp_dir, "multi-session")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create session indicators
         File.write(File.join(session_dir, "input.diff"), "diff")
         File.write(File.join(session_dir, "README.md"), "readme")
         File.write(File.join(session_dir, "cr-report.md"), "existing report")
-        
+
         report1_path = File.join(session_dir, "report1.md")
         report2_path = File.join(session_dir, "report2.md")
         File.write(report1_path, "# Report 1")
@@ -348,7 +348,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
 
         result = inferrer.infer_output_path([report1_path, report2_path])
         expected_path = File.join(session_dir, "cr-report.md")
-        
+
         expect(result).to eq(expected_path)
       end
     end
@@ -357,12 +357,12 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "returns default filename when no session detected" do
         regular_dir = File.join(temp_dir, "regular")
         FileUtils.mkdir_p(regular_dir)
-        
+
         report_path = File.join(regular_dir, "report.md")
         File.write(report_path, "# Regular Report")
 
         result = inferrer.infer_output_path([report_path])
-        
+
         expect(result).to eq("cr-report.md")
       end
     end
@@ -373,14 +373,14 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "calculates session score based on multiple indicators" do
         session_dir = File.join(temp_dir, "score-test")
         FileUtils.mkdir_p(session_dir)
-        
+
         # Create various indicators
         File.write(File.join(session_dir, "input.diff"), "diff")
         File.write(File.join(session_dir, "project_context.md"), "context")
         File.write(File.join(session_dir, "synthesis.meta"), "meta")
         File.write(File.join(session_dir, "cr-report-1.md"), "report1")
         File.write(File.join(session_dir, "cr-report-2.md"), "report2")
-        
+
         # Rename directory to include timestamp pattern
         timestamped_dir = File.join(temp_dir, "20240101-120000-session")
         File.rename(session_dir, timestamped_dir)
@@ -398,7 +398,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       it "handles directories with insufficient indicators" do
         regular_dir = File.join(temp_dir, "insufficient")
         FileUtils.mkdir_p(regular_dir)
-        
+
         # Create only one indicator
         File.write(File.join(regular_dir, "README.md"), "readme")
 
@@ -498,15 +498,15 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       base_dir = File.join(temp_dir, "complex-project")
       taskflow_session = File.join(base_dir, "dev-taskflow", "current", "code_review", "20240101-120000")
       FileUtils.mkdir_p(taskflow_session)
-      
+
       # Add session.meta for explicit detection
       meta_content = "session_id: complex-test\nproject: test-project\n"
       File.write(File.join(taskflow_session, "session.meta"), meta_content)
-      
+
       # Add session indicator files
       File.write(File.join(taskflow_session, "input.diff"), "complex diff")
       File.write(File.join(taskflow_session, "project_context.md"), "complex context")
-      
+
       report_path = File.join(taskflow_session, "comprehensive-report.md")
       File.write(report_path, "# Comprehensive Report")
 
@@ -524,13 +524,13 @@ RSpec.describe CodingAgentTools::Molecules::Code::SessionPathInferrer do
       # Create directory that matches multiple patterns
       multi_pattern_dir = File.join(temp_dir, "session-20240101-120000-review")
       FileUtils.mkdir_p(multi_pattern_dir)
-      
+
       # Add enough generic session indicators
       %w[input.diff input.xml project_context.md combined_prompt.md].each do |file|
         File.write(File.join(multi_pattern_dir, file), "content")
       end
       File.write(File.join(multi_pattern_dir, "cr-report.md"), "existing report")
-      
+
       report_path = File.join(multi_pattern_dir, "test-report.md")
       File.write(report_path, "# Multi-pattern Report")
 

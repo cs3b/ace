@@ -198,7 +198,7 @@ module CodingAgentTools
         # Resolve release path using molecules
         def resolve_release_path(release_path)
           result = Molecules::TaskflowManagement::ReleaseResolver.resolve_release(release_path, base_path: @base_path)
-          
+
           if result.success?
             {success: true, info: result.release_info, error: nil}
           else

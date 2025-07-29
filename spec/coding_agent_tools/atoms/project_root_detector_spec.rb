@@ -305,13 +305,13 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
 
       it "handles deeply nested directory structures within cache limits" do
         # Create a deeply nested structure
-        deeply_nested = File.join(temp_dir, *Array.new(15, "level"))
+        deeply_nested = File.join(temp_dir, Array.new(15, "level"))
         FileUtils.mkdir_p(deeply_nested)
-        
+
         # Add .git at the root
         git_dir = File.join(temp_dir, ".git")
         FileUtils.mkdir_p(git_dir)
-        
+
         result = detector.find_project_root(deeply_nested)
         expect(result).to eq(temp_dir)
       end
@@ -322,11 +322,11 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
         dev_handbook = File.join(temp_dir, "dev-handbook", "guides")
         FileUtils.mkdir_p(dev_tools)
         FileUtils.mkdir_p(dev_handbook)
-        
+
         # Add .git marker at root
         git_dir = File.join(temp_dir, ".git")
         FileUtils.mkdir_p(git_dir)
-        
+
         result = detector.find_project_root(dev_tools)
         expect(result).to eq(temp_dir)
       end
@@ -334,10 +334,10 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       it "handles .ruby-version tertiary marker detection" do
         ruby_version_file = File.join(temp_dir, ".ruby-version")
         FileUtils.touch(ruby_version_file)
-        
+
         subdir = File.join(temp_dir, "nested", "path")
         FileUtils.mkdir_p(subdir)
-        
+
         result = detector.find_project_root(subdir)
         expect(result).to eq(temp_dir)
       end
@@ -345,10 +345,10 @@ RSpec.describe CodingAgentTools::Atoms::ProjectRootDetector do
       it "handles .tools-meta tertiary marker detection" do
         tools_meta_file = File.join(temp_dir, ".tools-meta")
         FileUtils.touch(tools_meta_file)
-        
+
         subdir = File.join(temp_dir, "src", "lib")
         FileUtils.mkdir_p(subdir)
-        
+
         result = detector.find_project_root(subdir)
         expect(result).to eq(temp_dir)
       end

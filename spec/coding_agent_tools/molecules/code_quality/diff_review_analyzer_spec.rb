@@ -380,16 +380,16 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "writes content to temporary files" do
         before_file = instance_double(Tempfile)
         after_file = instance_double(Tempfile)
-        
+
         allow(Tempfile).to receive(:new).with(["before", ".rb"]).and_return(before_file)
         allow(Tempfile).to receive(:new).with(["after", ".rb"]).and_return(after_file)
-        
+
         expect(before_file).to receive(:write).with(before_content)
         expect(before_file).to receive(:flush)
         expect(before_file).to receive(:path).and_return("/tmp/before")
         expect(before_file).to receive(:close)
         expect(before_file).to receive(:unlink)
-        
+
         expect(after_file).to receive(:write).with(after_content)
         expect(after_file).to receive(:flush)
         expect(after_file).to receive(:path).and_return("/tmp/after")
@@ -407,7 +407,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "ensures temporary files are cleaned up" do
         before_file = instance_double(Tempfile)
         after_file = instance_double(Tempfile)
-        
+
         allow(Tempfile).to receive(:new).and_return(before_file, after_file)
         allow(before_file).to receive(:write)
         allow(before_file).to receive(:flush)
@@ -570,10 +570,10 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles binary files" do
         binary_before = "\x00\x01\x02"
         binary_after = "\x00\x01\x03"
-        
+
         allow(Open3).to receive(:capture3).and_return(["Binary files differ", "", double(success?: true)])
         allow(analyzer).to receive(:parse_unified_diff).and_return({lines_added: 0, lines_removed: 0, diff: "Binary files differ"})
-        
+
         result = analyzer.send(:calculate_diff, binary_before, binary_after, "binary.dat")
         expect(result[:diff]).to eq("Binary files differ")
       end
@@ -589,7 +589,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles snapshots with no files" do
         empty_before = {files: {}}
         empty_after = {files: {}}
-        
+
         result = analyzer.send(:analyze_snapshots, empty_before, empty_after)
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:changes]).to be_empty
@@ -598,7 +598,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles malformed snapshot structure" do
         malformed_before = {}
         malformed_after = {files: {"test.rb" => {content: "test"}}}
-        
+
         expect { analyzer.send(:analyze_snapshots, malformed_before, malformed_after) }.to raise_error
       end
     end
@@ -615,16 +615,16 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       allow(File).to receive(:size).and_return(12)
 
       before_snapshot = analyzer.create_snapshot
-      
+
       # Simulate file change
       allow(File).to receive(:read).and_return("modified test content")
       allow(File).to receive(:size).and_return(20)
-      
+
       after_snapshot = analyzer.create_snapshot
-      
+
       analysis = analyzer.analyze_changes(before_snapshot: before_snapshot, after_snapshot: after_snapshot)
       review = analyzer.format_review(analysis)
-      
+
       expect(review).to include("# Code Quality Changes Review")
       expect(analysis).to have_key(:summary)
       expect(analysis).to have_key(:changes)
@@ -637,7 +637,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
 
       analysis = analyzer.analyze_changes
       review = analyzer.format_review(analysis)
-      
+
       expect(review).to include("# Code Quality Changes Review")
       expect(analysis).to have_key(:summary)
       expect(analysis).to have_key(:changes)
@@ -690,7 +690,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       # Test Ruby file analysis
       before_content = "class Test\nend"
       after_content = "class Test\n  attr_reader :name\nend"
-      
+
       allow(Open3).to receive(:capture3).and_return([
         "@@ -1,2 +1,3 @@\n class Test\n+  attr_reader :name\n end", "", double(success?: true)
       ])
@@ -705,7 +705,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       # Test Markdown file analysis
       md_before = "# Title\nContent"
       md_after = "# Title\nContent\n\n## New Section"
-      
+
       allow(Open3).to receive(:capture3).and_return([
         "@@ -1,2 +1,4 @@\n # Title\n Content\n+\n+## New Section", "", double(success?: true)
       ])
@@ -747,17 +747,17 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       }
 
       review = analyzer.format_review(analysis)
-      
+
       # Verify complete summary is included
       expect(review).to include("Files modified: 1")
       expect(review).to include("Lines added: 10")
       expect(review).to include("Lines removed: 5")
-      
+
       # Verify all change types are included
       expect(review).to include("### modified.rb")
       expect(review).to include("### added.rb")
       expect(review).to include("### removed.rb")
-      
+
       # Verify file changes are formatted
       expect(analyzer).to receive(:format_file_changes).exactly(3).times.and_return("formatted changes")
       analyzer.format_review(analysis)
@@ -774,7 +774,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
 
       # Test error in diff calculation
       allow(Open3).to receive(:capture3).and_raise(Errno::ENOENT, "diff command not found")
-      
+
       expect {
         analyzer.send(:calculate_diff, "before", "after", "test.rb")
       }.to raise_error(Errno::ENOENT)
@@ -843,7 +843,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles completely invalid diff format" do
         invalid_diff = "this is not a valid diff format"
         result = analyzer.send(:parse_git_diff, invalid_diff)
-        
+
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:summary][:lines_added]).to eq(0)
         expect(result[:summary][:lines_removed]).to eq(0)
@@ -853,7 +853,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles diff with missing file information" do
         incomplete_diff = "5\t2\n\t\tfile.rb\n"
         result = analyzer.send(:parse_git_diff, incomplete_diff)
-        
+
         # Lines that don't have exactly 3 parts are skipped
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:changes]).to be_empty
@@ -862,7 +862,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles non-numeric line counts" do
         non_numeric_diff = "abc\tdef\tfile.rb\n5\t2\tvalid.rb"
         result = analyzer.send(:parse_git_diff, non_numeric_diff)
-        
+
         # The first line has non-numeric values but 3 parts, so it gets processed
         # The second line has numeric values and gets processed normally
         expect(result[:summary][:files_modified]).to eq(2)
@@ -877,7 +877,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
     describe "temporary file creation failures" do
       it "handles tempfile creation failure" do
         allow(Tempfile).to receive(:new).and_raise(Errno::ENOSPC, "No space left on device")
-        
+
         expect {
           analyzer.send(:calculate_diff, "before", "after", "test.rb")
         }.to raise_error(Errno::ENOSPC)
@@ -886,13 +886,13 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "ensures cleanup even when diff command fails" do
         before_file = instance_double(Tempfile)
         after_file = instance_double(Tempfile)
-        
+
         allow(Tempfile).to receive(:new).and_return(before_file, after_file)
         allow(before_file).to receive(:write)
         allow(before_file).to receive(:flush)
         allow(before_file).to receive(:path).and_return("/tmp/before")
         allow(after_file).to receive(:write)
-        allow(after_file).to receive(:flush) 
+        allow(after_file).to receive(:flush)
         allow(after_file).to receive(:path).and_return("/tmp/after")
 
         # Mock diff command failure
@@ -912,11 +912,11 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
 
     describe "empty snapshot comparisons" do
       it "handles comparison between empty snapshots" do
-        empty_before = { files: {} }
-        empty_after = { files: {} }
-        
+        empty_before = {files: {}}
+        empty_after = {files: {}}
+
         result = analyzer.send(:analyze_snapshots, empty_before, empty_after)
-        
+
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:summary][:files_added]).to eq(0)
         expect(result[:summary][:files_removed]).to eq(0)
@@ -924,15 +924,15 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       end
 
       it "handles snapshot with only added files" do
-        empty_before = { files: {} }
+        empty_before = {files: {}}
         after_with_files = {
           files: {
-            "new.rb" => { content: "new content" }
+            "new.rb" => {content: "new content"}
           }
         }
-        
+
         result = analyzer.send(:analyze_snapshots, empty_before, after_with_files)
-        
+
         expect(result[:summary][:files_added]).to eq(1)
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:summary][:files_removed]).to eq(0)
@@ -942,13 +942,13 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "handles snapshot with only removed files" do
         before_with_files = {
           files: {
-            "old.rb" => { content: "old content" }
+            "old.rb" => {content: "old content"}
           }
         }
-        empty_after = { files: {} }
-        
+        empty_after = {files: {}}
+
         result = analyzer.send(:analyze_snapshots, before_with_files, empty_after)
-        
+
         expect(result[:summary][:files_removed]).to eq(1)
         expect(result[:summary][:files_modified]).to eq(0)
         expect(result[:summary][:files_added]).to eq(0)
@@ -965,7 +965,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
       it "propagates permission errors during file read" do
         allow(File).to receive(:read).with("protected.rb").and_raise(Errno::EACCES, "Permission denied")
         allow(File).to receive(:read).with("readable.rb").and_return("content")
-        
+
         expect { analyzer.create_snapshot }.to raise_error(Errno::EACCES)
       end
 
@@ -973,7 +973,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
         allow(File).to receive(:read).and_return("content")
         allow(File).to receive(:mtime).with("protected.rb").and_raise(Errno::EPERM, "Operation not permitted")
         allow(File).to receive(:mtime).with("readable.rb").and_return(Time.now)
-        
+
         expect { analyzer.create_snapshot }.to raise_error(Errno::EPERM)
       end
 
@@ -982,7 +982,7 @@ RSpec.describe CodingAgentTools::Molecules::CodeQuality::DiffReviewAnalyzer do
         allow(File).to receive(:mtime).and_return(Time.now)
         allow(File).to receive(:size).with("protected.rb").and_raise(Errno::EACCES, "Permission denied")
         allow(File).to receive(:size).with("readable.rb").and_return(7)
-        
+
         expect { analyzer.create_snapshot }.to raise_error(Errno::EACCES)
       end
     end

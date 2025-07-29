@@ -35,7 +35,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
   describe "#register_agent" do
     it "registers an agent with default values" do
       foundation.register_agent("agent1")
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry["agent1"]).to eq({
         id: "agent1",
@@ -47,7 +47,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "registers an agent with capabilities" do
       foundation.register_agent("agent2", capabilities: ["ruby", "javascript"])
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry["agent2"]).to eq({
         id: "agent2",
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "allows registering multiple agents" do
       foundation.register_agent("agent1")
       foundation.register_agent("agent2", capabilities: ["python"])
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry.keys).to contain_exactly("agent1", "agent2")
     end
@@ -68,7 +68,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "overwrites existing agent registration" do
       foundation.register_agent("agent1", capabilities: ["ruby"])
       foundation.register_agent("agent1", capabilities: ["python"])
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry["agent1"][:capabilities]).to eq(["python"])
     end
@@ -78,7 +78,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     context "with no agents registered" do
       it "returns error when no agents are available" do
         result = foundation.assign_error_files(["error1.txt", "error2.txt"])
-        
+
         expect(result).to eq({
           success: false,
           error: "No agents registered"
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "assigns files to agents in round-robin fashion" do
         files = ["error1.txt", "error2.txt", "error3.txt", "error4.txt"]
         result = foundation.assign_error_files(files)
-        
+
         expect(result[:success]).to be true
         expect(result[:assignments]["agent1"]).to eq(["error1.txt", "error3.txt"])
         expect(result[:assignments]["agent2"]).to eq(["error2.txt", "error4.txt"])
@@ -104,7 +104,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
       it "updates agent status to assigned" do
         foundation.assign_error_files(["error1.txt"])
-        
+
         registry = foundation.instance_variable_get(:@agent_registry)
         expect(registry["agent1"][:status]).to eq(:assigned)
         expect(registry["agent1"][:assigned_file]).to eq("error1.txt")
@@ -113,9 +113,9 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "calls on_error_file_ready hook for each assignment" do
         hook_calls = []
         foundation.on_error_file_ready = ->(file, agent_id) { hook_calls << [file, agent_id] }
-        
+
         foundation.assign_error_files(["error1.txt", "error2.txt"])
-        
+
         expect(hook_calls).to contain_exactly(
           ["error1.txt", "agent1"],
           ["error2.txt", "agent2"]
@@ -124,7 +124,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
       it "stores error assignments" do
         foundation.assign_error_files(["error1.txt", "error2.txt"])
-        
+
         assignments = foundation.instance_variable_get(:@error_assignments)
         expect(assignments).to eq({
           "agent1" => ["error1.txt"],
@@ -134,7 +134,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
       it "handles single file assignment" do
         result = foundation.assign_error_files(["error1.txt"])
-        
+
         expect(result[:success]).to be true
         expect(result[:assignments]["agent1"]).to eq(["error1.txt"])
         expect(result[:agents_used]).to eq(1)
@@ -143,7 +143,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "handles more files than agents" do
         files = ["error1.txt", "error2.txt", "error3.txt"]
         result = foundation.assign_error_files(files)
-        
+
         expect(result[:success]).to be true
         expect(result[:assignments]["agent1"]).to eq(["error1.txt", "error3.txt"])
         expect(result[:assignments]["agent2"]).to eq(["error2.txt"])
@@ -152,7 +152,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
       it "handles empty file list" do
         result = foundation.assign_error_files([])
-        
+
         expect(result[:success]).to be true
         expect(result[:assignments]).to eq({})
         expect(result[:agents_used]).to eq(0)
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
   end
 
   describe "#mark_agent_complete" do
-    let(:agent_results) { { fixes_applied: 5, errors_resolved: 3 } }
+    let(:agent_results) { {fixes_applied: 5, errors_resolved: 3} }
 
     before do
       foundation.register_agent("agent1")
@@ -171,7 +171,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     context "with valid agent" do
       it "updates agent status to complete" do
         foundation.mark_agent_complete("agent1", agent_results)
-        
+
         registry = foundation.instance_variable_get(:@agent_registry)
         expect(registry["agent1"][:status]).to eq(:complete)
       end
@@ -179,9 +179,9 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "stores completion status with timestamp" do
         freeze_time = Time.parse("2024-01-01 12:00:00")
         allow(Time).to receive(:now).and_return(freeze_time)
-        
+
         foundation.mark_agent_complete("agent1", agent_results)
-        
+
         completion_status = foundation.instance_variable_get(:@completion_status)
         expect(completion_status["agent1"]).to eq({
           completed_at: freeze_time,
@@ -192,9 +192,9 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "calls on_agent_complete hook" do
         hook_calls = []
         foundation.on_agent_complete = ->(agent_id, results) { hook_calls << [agent_id, results] }
-        
+
         foundation.mark_agent_complete("agent1", agent_results)
-        
+
         expect(hook_calls).to contain_exactly(["agent1", agent_results])
       end
 
@@ -208,7 +208,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     context "with invalid agent" do
       it "returns early without error for non-existent agent" do
         expect { foundation.mark_agent_complete("nonexistent", agent_results) }.not_to raise_error
-        
+
         completion_status = foundation.instance_variable_get(:@completion_status)
         expect(completion_status).to be_empty
       end
@@ -218,10 +218,10 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "triggers on_all_agents_complete hook" do
         hook_calls = []
         foundation.on_all_agents_complete = ->(final_results) { hook_calls << final_results }
-        
-        foundation.mark_agent_complete("agent1", { fixes_applied: 3 })
-        foundation.mark_agent_complete("agent2", { fixes_applied: 2 })
-        
+
+        foundation.mark_agent_complete("agent1", {fixes_applied: 3})
+        foundation.mark_agent_complete("agent2", {fixes_applied: 2})
+
         expect(hook_calls.length).to eq(1)
         expect(hook_calls.first).to include(:total_agents, :successful_agents, :total_fixes)
       end
@@ -236,25 +236,25 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "returns current coordination status" do
       foundation.assign_error_files(["error1.txt"])
-      foundation.mark_agent_complete("agent1", { fixes_applied: 2 })
-      
+      foundation.mark_agent_complete("agent1", {fixes_applied: 2})
+
       status = foundation.status
-      
+
       expect(status).to include(
         agents: {
           "agent1" => :complete,
           "agent2" => :idle
         },
-        assignments: { "agent1" => ["error1.txt"] },
+        assignments: {"agent1" => ["error1.txt"]},
         completions: ["agent1"],
         all_complete: false
       )
     end
 
     it "shows all_complete as true when all agents are done" do
-      foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
-      foundation.mark_agent_complete("agent2", { fixes_applied: 2 })
-      
+      foundation.mark_agent_complete("agent1", {fixes_applied: 1})
+      foundation.mark_agent_complete("agent2", {fixes_applied: 2})
+
       status = foundation.status
       expect(status[:all_complete]).to be true
     end
@@ -262,7 +262,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "handles empty state" do
       empty_foundation = described_class.new
       status = empty_foundation.status
-      
+
       expect(status).to eq({
         agents: {},
         assignments: {},
@@ -277,7 +277,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "returns comprehensive metadata for parallel processing" do
       metadata = foundation.prepare_parallel_metadata(error_files)
-      
+
       expect(metadata).to include(
         total_files: 3,
         recommended_agents: anything,
@@ -311,7 +311,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "handles empty file list" do
       metadata = foundation.prepare_parallel_metadata([])
-      
+
       expect(metadata[:total_files]).to eq(0)
       expect(metadata[:recommended_agents]).to eq(0)
       expect(metadata[:parallelization_strategy]).to eq(:sequential)
@@ -323,7 +323,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "generates comprehensive instructions for agent" do
       instructions = foundation.generate_agent_instructions(error_file)
-      
+
       expect(instructions).to include(:file, :instructions, :guidelines)
     end
 
@@ -334,7 +334,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "provides step-by-step instructions" do
       instructions = foundation.generate_agent_instructions(error_file)
-      
+
       expect(instructions[:instructions]).to be_an(Array)
       expect(instructions[:instructions]).not_to be_empty
       expect(instructions[:instructions].first).to include(error_file)
@@ -342,7 +342,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "includes guidelines for agent behavior" do
       instructions = foundation.generate_agent_instructions(error_file)
-      
+
       expect(instructions[:guidelines]).to be_an(Array)
       expect(instructions[:guidelines]).not_to be_empty
     end
@@ -350,7 +350,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "references error file in instructions" do
       instructions = foundation.generate_agent_instructions(error_file)
       instruction_text = instructions[:instructions].join(" ")
-      
+
       expect(instruction_text).to include(error_file)
     end
   end
@@ -368,13 +368,13 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       end
 
       it "returns false when some agents incomplete" do
-        foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
+        foundation.mark_agent_complete("agent1", {fixes_applied: 1})
         expect(foundation.send(:all_agents_complete?)).to be false
       end
 
       it "returns true when all agents complete" do
-        foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
-        foundation.mark_agent_complete("agent2", { fixes_applied: 2 })
+        foundation.mark_agent_complete("agent1", {fixes_applied: 1})
+        foundation.mark_agent_complete("agent2", {fixes_applied: 2})
         expect(foundation.send(:all_agents_complete?)).to be true
       end
     end
@@ -383,13 +383,13 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       before do
         foundation.register_agent("agent1")
         foundation.register_agent("agent2")
-        foundation.mark_agent_complete("agent1", { fixes_applied: 3 })
-        foundation.mark_agent_complete("agent2", { fixes_applied: 2 })
+        foundation.mark_agent_complete("agent1", {fixes_applied: 3})
+        foundation.mark_agent_complete("agent2", {fixes_applied: 2})
       end
 
       it "compiles comprehensive final results" do
         results = foundation.send(:compile_final_results)
-        
+
         expect(results).to include(
           total_agents: 2,
           successful_agents: 2,
@@ -420,23 +420,23 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       it "calculates duration between first and last completion" do
         start_time = Time.parse("2024-01-01 12:00:00")
         end_time = Time.parse("2024-01-01 12:05:00")
-        
+
         foundation.instance_variable_set(:@completion_status, {
-          "agent1" => { completed_at: start_time },
-          "agent2" => { completed_at: end_time }
+          "agent1" => {completed_at: start_time},
+          "agent2" => {completed_at: end_time}
         })
-        
+
         duration = foundation.send(:calculate_total_duration)
         expect(duration).to eq(300) # 5 minutes in seconds
       end
 
       it "returns 0 for single agent completion" do
         completion_time = Time.parse("2024-01-01 12:00:00")
-        
+
         foundation.instance_variable_set(:@completion_status, {
-          "agent1" => { completed_at: completion_time }
+          "agent1" => {completed_at: completion_time}
         })
-        
+
         duration = foundation.send(:calculate_total_duration)
         expect(duration).to eq(0)
       end
@@ -521,8 +521,8 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       expect(status[:all_complete]).to be false
 
       # Complete work
-      foundation.mark_agent_complete("agent1", { fixes_applied: 2 })
-      foundation.mark_agent_complete("agent2", { fixes_applied: 1 })
+      foundation.mark_agent_complete("agent1", {fixes_applied: 2})
+      foundation.mark_agent_complete("agent2", {fixes_applied: 1})
 
       # Verify final status
       final_status = foundation.status
@@ -532,7 +532,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "handles hook integration throughout workflow" do
       hook_events = []
-      
+
       foundation.on_error_file_ready = ->(file, agent_id) { hook_events << [:file_ready, file, agent_id] }
       foundation.on_agent_complete = ->(agent_id, results) { hook_events << [:agent_complete, agent_id, results] }
       foundation.on_all_agents_complete = ->(final) { hook_events << [:all_complete, final] }
@@ -540,7 +540,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       # Register and assign
       foundation.register_agent("agent1")
       foundation.assign_error_files(["error1.txt"])
-      foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
+      foundation.mark_agent_complete("agent1", {fixes_applied: 1})
 
       expect(hook_events.length).to eq(3)
       expect(hook_events[0][0]).to eq(:file_ready)
@@ -568,7 +568,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
   describe "edge cases and error conditions" do
     it "handles agent registration with empty capabilities" do
       foundation.register_agent("agent1", capabilities: [])
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry["agent1"][:capabilities]).to eq([])
     end
@@ -580,19 +580,19 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "handles completion without results" do
       foundation.register_agent("agent1")
       foundation.mark_agent_complete("agent1", nil)
-      
+
       completion_status = foundation.instance_variable_get(:@completion_status)
       expect(completion_status["agent1"][:results]).to be_nil
     end
 
     it "handles status check with mixed agent states" do
       foundation.register_agent("agent1")
-      foundation.register_agent("agent2") 
+      foundation.register_agent("agent2")
       foundation.register_agent("agent3")
-      
+
       foundation.assign_error_files(["error1.txt"])
-      foundation.mark_agent_complete("agent2", { fixes_applied: 1 })
-      
+      foundation.mark_agent_complete("agent2", {fixes_applied: 1})
+
       status = foundation.status
       expect(status[:agents]["agent1"]).to eq(:assigned)
       expect(status[:agents]["agent2"]).to eq(:complete)
@@ -602,17 +602,17 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "maintains data consistency throughout operations" do
       foundation.register_agent("agent1")
       foundation.assign_error_files(["error1.txt", "error2.txt"])
-      
+
       # Verify internal state consistency
       registry = foundation.instance_variable_get(:@agent_registry)
       assignments = foundation.instance_variable_get(:@error_assignments)
-      
+
       expect(registry["agent1"][:status]).to eq(:assigned)
       expect(assignments["agent1"]).to eq(["error1.txt", "error2.txt"])
-      
+
       # Complete and verify consistency
-      foundation.mark_agent_complete("agent1", { fixes_applied: 2 })
-      
+      foundation.mark_agent_complete("agent1", {fixes_applied: 2})
+
       expect(registry["agent1"][:status]).to eq(:complete)
       expect(foundation.status[:all_complete]).to be true
     end
@@ -620,7 +620,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "handles hook exceptions gracefully during file assignment" do
       foundation.register_agent("agent1")
       foundation.on_error_file_ready = ->(file, agent_id) { raise StandardError, "Hook failed" }
-      
+
       # The method should continue despite hook failure
       expect { foundation.assign_error_files(["error1.txt"]) }.to raise_error(StandardError, "Hook failed")
     end
@@ -628,23 +628,23 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "handles hook exceptions gracefully during agent completion" do
       foundation.register_agent("agent1")
       foundation.on_agent_complete = ->(agent_id, results) { raise StandardError, "Completion hook failed" }
-      
+
       # The method should continue despite hook failure
-      expect { foundation.mark_agent_complete("agent1", { fixes_applied: 1 }) }.to raise_error(StandardError, "Completion hook failed")
+      expect { foundation.mark_agent_complete("agent1", {fixes_applied: 1}) }.to raise_error(StandardError, "Completion hook failed")
     end
 
     it "handles hook exceptions gracefully during all agents completion" do
       foundation.register_agent("agent1")
       foundation.on_all_agents_complete = ->(final_results) { raise StandardError, "All complete hook failed" }
-      
+
       # The method should continue despite hook failure
-      expect { foundation.mark_agent_complete("agent1", { fixes_applied: 1 }) }.to raise_error(StandardError, "All complete hook failed")
+      expect { foundation.mark_agent_complete("agent1", {fixes_applied: 1}) }.to raise_error(StandardError, "All complete hook failed")
     end
 
     it "handles large number of agents efficiently" do
       # Test with many agents
       100.times { |i| foundation.register_agent("agent#{i}") }
-      
+
       registry = foundation.instance_variable_get(:@agent_registry)
       expect(registry.size).to eq(100)
       expect(registry.keys).to include("agent0", "agent50", "agent99")
@@ -653,14 +653,14 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
     it "handles large number of error files efficiently" do
       foundation.register_agent("agent1")
       foundation.register_agent("agent2")
-      
+
       # Create many files
       large_file_list = 1000.times.map { |i| "error#{i}.txt" }
       result = foundation.assign_error_files(large_file_list)
-      
+
       expect(result[:success]).to be true
       expect(result[:agents_used]).to eq(2)
-      
+
       assignments = foundation.instance_variable_get(:@error_assignments)
       total_assigned = assignments.values.sum(&:size)
       expect(total_assigned).to eq(1000)
@@ -668,7 +668,7 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
 
     it "handles agent completion with complex results structure" do
       foundation.register_agent("agent1")
-      
+
       complex_results = {
         fixes_applied: 5,
         errors_resolved: 3,
@@ -680,22 +680,22 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
           environment: "test"
         }
       }
-      
+
       foundation.mark_agent_complete("agent1", complex_results)
-      
+
       completion_status = foundation.instance_variable_get(:@completion_status)
       expect(completion_status["agent1"][:results]).to eq(complex_results)
     end
 
     it "handles zero-duration calculations correctly" do
       foundation.register_agent("agent1")
-      
+
       # Set same completion time for all agents
       fixed_time = Time.parse("2024-01-01 12:00:00")
       allow(Time).to receive(:now).and_return(fixed_time)
-      
-      foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
-      
+
+      foundation.mark_agent_complete("agent1", {fixes_applied: 1})
+
       duration = foundation.send(:calculate_total_duration)
       expect(duration).to eq(0)
     end

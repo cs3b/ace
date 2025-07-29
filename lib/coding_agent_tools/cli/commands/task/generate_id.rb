@@ -65,10 +65,10 @@ module CodingAgentTools
               # Use release resolver to find the specified release
               project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
               result = CodingAgentTools::Molecules::TaskflowManagement::ReleaseResolver.resolve_release(
-                release_identifier, 
+                release_identifier,
                 base_path: project_root
               )
-              
+
               if result.success?
                 result.release_info.version
               else

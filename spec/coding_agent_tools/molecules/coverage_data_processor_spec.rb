@@ -54,10 +54,10 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
 
       it "combines coverage from multiple frameworks" do
         result = subject.process_coverage_data(sample_raw_data)
-        
+
         file_data = result[:file_coverage]["/test/lib/example.rb"]
         coverage = file_data[:coverage_data]
-        
+
         # Combined lines: [nil, 1, 1, 3, nil] -> 3 executable, 3 covered = 100%
         expect(coverage[:total_lines]).to eq(3)
         expect(coverage[:covered_lines]).to eq(3)
@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
     end
 
     context "with custom include patterns" do
-      let(:options) { { include_patterns: ["**/*.rb"], exclude_patterns: [] } }
+      let(:options) { {include_patterns: ["**/*.rb"], exclude_patterns: []} }
 
       it "includes all files matching pattern" do
         result = subject.process_coverage_data(sample_raw_data, options)
@@ -77,7 +77,7 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
     end
 
     context "with custom exclude patterns" do
-      let(:options) { { exclude_patterns: ["**/lib/**"] } }
+      let(:options) { {exclude_patterns: ["**/lib/**"]} }
 
       it "excludes files matching pattern" do
         result = subject.process_coverage_data(sample_raw_data, options)
@@ -116,10 +116,10 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
       {
         file_coverage: {
           "/test/lib/low_coverage.rb" => {
-            coverage_data: { coverage_percentage: 60.0 }
+            coverage_data: {coverage_percentage: 60.0}
           },
           "/test/lib/high_coverage.rb" => {
-            coverage_data: { coverage_percentage: 95.0 }
+            coverage_data: {coverage_percentage: 95.0}
           }
         }
       }
@@ -185,10 +185,10 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
 
       it "prioritizes lib files in sort order" do
         filtered = subject.send(:filter_file_paths, file_paths, ["**/*.rb"], [])
-        
+
         lib_files = filtered.select { |path| path.include?("/lib/") }
-        non_lib_files = filtered.reject { |path| path.include?("/lib/") }
-        
+        filtered.reject { |path| path.include?("/lib/") }
+
         # Check that lib files come first
         expect(filtered.first(lib_files.length)).to eq(lib_files)
       end
@@ -204,7 +204,7 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
 
       it "combines coverage arrays correctly" do
         result = subject.send(:combine_lines_data, coverage_arrays)
-        
+
         expect(result).to eq([nil, 1, 1, 3])
       end
 
@@ -213,9 +213,9 @@ RSpec.describe CodingAgentTools::Molecules::CoverageDataProcessor do
           [nil, 1, 0],
           [nil, 0, 1, 1, 2]
         ]
-        
+
         result = subject.send(:combine_lines_data, arrays)
-        
+
         expect(result).to eq([nil, 1, 1, 1, 2])
       end
     end

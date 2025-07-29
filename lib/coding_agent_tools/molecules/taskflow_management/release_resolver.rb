@@ -100,7 +100,7 @@ module CodingAgentTools
         # Find all releases matching the identifier across dev-taskflow directories
         def self.find_all_matching_releases(identifier, base_path, match_type)
           matches = []
-          
+
           search_paths = [
             File.join(base_path, "dev-taskflow/current"),
             File.join(base_path, "dev-taskflow/backlog"),
@@ -112,9 +112,9 @@ module CodingAgentTools
 
             Dir.glob(File.join(search_path, "*")).each do |release_path|
               next unless File.directory?(release_path)
-              
+
               release_name = File.basename(release_path)
-              
+
               case match_type
               when :version
                 # Match if release name starts with the version
@@ -146,19 +146,19 @@ module CodingAgentTools
             matches.each do |match|
               release_name = File.basename(match)
               release_type = case match
-                            when /\/current\//
-                              "current"
-                            when /\/backlog\//
-                              "backlog" 
-                            when /\/done\//
-                              "done"
-                            else
-                              "unknown"
-                            end
+              when /\/current\//
+                "current"
+              when /\/backlog\//
+                "backlog"
+              when /\/done\//
+                "done"
+              else
+                "unknown"
+              end
               error_message += "  - #{release_name} (#{release_type})\n"
             end
             error_message += "\nExample: task-manager recent --release #{File.basename(matches.first)}"
-            
+
             ResolutionResult.new(nil, false, error_message)
           end
         end
@@ -176,30 +176,30 @@ module CodingAgentTools
           return ResolutionResult.new(nil, false, "Directory does not exist") unless File.exist?(release_path)
 
           release_name = File.basename(release_path)
-          
+
           # Extract version and codename from directory name
-          if release_name.match(/^(v\.\d+\.\d+\.\d+)(?:-(.+))?$/)
+          if release_name =~ /^(v\.\d+\.\d+\.\d+)(?:-(.+))?$/
             version = $1
-            codename = $2
+            $2
           else
             version = release_name
-            codename = nil
+            nil
           end
 
           # Find tasks directory
           tasks_dir = Atoms::TaskflowManagement::DirectoryNavigator.find_tasks_directory(release_path)
-          
+
           # Determine release type
           release_type = case release_path
-                        when /\/current\//
-                          :current
-                        when /\/backlog\//
-                          :backlog
-                        when /\/done\//
-                          :done
-                        else
-                          :unknown
-                        end
+          when /\/current\//
+            :current
+          when /\/backlog\//
+            :backlog
+          when /\/done\//
+            :done
+          else
+            :unknown
+          end
 
           release_info = ReleasePathResolver::ReleaseInfo.new(
             release_path,

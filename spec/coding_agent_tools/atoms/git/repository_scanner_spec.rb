@@ -16,7 +16,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
     it "creates new instance and discovers repositories" do
       # Mock the project root detector to return our temp directory
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(temp_dir)
-      
+
       result = described_class.discover_repositories(temp_dir)
       expect(result).to be_an(Array)
       expect(result.first).to include(name: "main", path: ".", full_path: temp_dir)
@@ -31,7 +31,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
 
     it "uses ProjectRootDetector when no root provided" do
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return("/detected/root")
-      
+
       scanner = described_class.new
       expect(scanner.send(:project_root)).to eq("/detected/root")
     end
@@ -64,7 +64,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         # Create submodule directories
         FileUtils.mkdir_p(File.join(temp_dir, "dev-handbook", ".git"))
         FileUtils.mkdir_p(File.join(temp_dir, "dev-tools", ".git"))
-        
+
         # Create .gitmodules file
         gitmodules_content = <<~GITMODULES
           [submodule "dev-handbook"]
@@ -78,10 +78,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
 
         # Mock git submodule status output
         submodule_status = <<~STATUS
-           abc123 dev-handbook (heads/main)
-           def456 dev-tools (v1.0.0)
+          abc123 dev-handbook (heads/main)
+          def456 dev-tools (v1.0.0)
         STATUS
-        
+
         allow(scanner).to receive(:execute_git_command).with("submodule status").and_return(submodule_status)
       end
 
@@ -89,7 +89,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         result = scanner.discover_repositories
 
         expect(result.size).to eq(3) # main + 2 submodules
-        
+
         main_repo = result.find { |r| r[:name] == "main" }
         expect(main_repo).to include(name: "main", path: ".")
 
@@ -146,7 +146,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         result = scanner.discover_repositories
 
         expect(result.size).to eq(4) # main + 3 dev-* git repos
-        
+
         dev_repos = result.select { |r| r[:name].start_with?("dev-") }
         expect(dev_repos.size).to eq(3)
         expect(dev_repos.map { |r| r[:name] }).to include("dev-handbook", "dev-tools", "dev-taskflow")
@@ -190,10 +190,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
       before do
         # Create valid git repo
         FileUtils.mkdir_p(File.join(temp_dir, "dev-valid", ".git"))
-        
+
         # Create directory without .git
         FileUtils.mkdir_p(File.join(temp_dir, "dev-invalid"))
-        
+
         # Create directory with .git file (submodule style)
         FileUtils.mkdir_p(File.join(temp_dir, "dev-submodule"))
         File.write(File.join(temp_dir, "dev-submodule", ".git"), "gitdir: ../.git/modules/dev-submodule")
@@ -246,12 +246,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
       end
 
       it "includes command information in error" do
-        begin
-          scanner.send(:execute_git_command, "invalid-command")
-        rescue CodingAgentTools::Atoms::Git::GitCommandError => e
-          expect(e.message).to include("Git command failed")
-          expect(e.message).to include("invalid-command")
-        end
+        scanner.send(:execute_git_command, "invalid-command")
+      rescue CodingAgentTools::Atoms::Git::GitCommandError => e
+        expect(e.message).to include("Git command failed")
+        expect(e.message).to include("invalid-command")
       end
     end
   end
@@ -379,11 +377,11 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         20.times do |i|
           deep_path = File.join(deep_path, "level#{i}")
         end
-        
+
         begin
           FileUtils.mkdir_p(File.join(deep_path, ".git"))
           deep_scanner = described_class.new(deep_path)
-          
+
           result = deep_scanner.discover_repositories
           expect(result.first[:is_git_repo]).to be true
         rescue SystemCallError
@@ -432,7 +430,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         STATUS
 
         allow(scanner).to receive(:execute_git_command).with("submodule status").and_return(malformed_status)
-        
+
         FileUtils.mkdir_p(File.join(temp_dir, "dev-handbook", ".git"))
         FileUtils.mkdir_p(File.join(temp_dir, "dev-tools", ".git"))
 
@@ -461,7 +459,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
 
         # All results should be consistent
         first_result = results.pop
-        while !results.empty?
+        until results.empty?
           next_result = results.pop
           expect(next_result.size).to eq(first_result.size)
           expect(next_result.map { |r| r[:name] }.sort).to eq(first_result.map { |r| r[:name] }.sort)
@@ -491,8 +489,8 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
 
       it "handles large submodule status output efficiently" do
         # Generate large submodule status
-        large_status = (1..100).map { |i| " abc#{i.to_s.rjust(3, '0')} dev-module#{i} (v1.0.0)" }.join("\n")
-        
+        large_status = (1..100).map { |i| " abc#{i.to_s.rjust(3, "0")} dev-module#{i} (v1.0.0)" }.join("\n")
+
         allow(scanner).to receive(:execute_git_command).with("submodule status").and_return(large_status)
 
         # Create some of the directories (not all, to test missing directory handling)
@@ -528,11 +526,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
           )
 
           result = scanner.discover_repositories
-          
+
           # Both real and linked should be found (both match dev-* pattern)
           repo_names = result.map { |r| r[:name] }
           expect(repo_names).to include("dev-real", "dev-linked")
-
         rescue NotImplementedError
           skip "Symlinks not supported on this platform"
         end
@@ -553,7 +550,6 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
           result = scanner.discover_repositories
           # Should handle broken symlinks without crashing
           expect(result).to be_an(Array)
-
         rescue NotImplementedError, SystemCallError
           skip "Cannot create broken symlinks on this system"
         end
@@ -588,7 +584,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
     context "repository information accuracy" do
       it "provides complete repository information" do
         FileUtils.mkdir_p(File.join(temp_dir, "dev-complete", ".git"))
-        
+
         allow(scanner).to receive(:execute_git_command).and_raise(
           CodingAgentTools::Atoms::Git::GitCommandError.new("submodule failed")
         )
@@ -621,7 +617,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
         )
 
         result = scanner.discover_repositories
-        
+
         # Should not include non-git directory
         non_git_repo = result.find { |r| r[:name] == "dev-exists" }
         expect(non_git_repo).to be_nil
@@ -699,11 +695,9 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
     end
 
     it "includes stderr output in GitCommandError" do
-      begin
-        scanner.send(:execute_git_command, "invalid-git-option")
-      rescue CodingAgentTools::Atoms::Git::GitCommandError => e
-        expect(e.instance_variable_get(:@stderr_output)).to be_a(String)
-      end
+      scanner.send(:execute_git_command, "invalid-git-option")
+    rescue CodingAgentTools::Atoms::Git::GitCommandError => e
+      expect(e.instance_variable_get(:@stderr_output)).to be_a(String)
     end
   end
 
@@ -717,7 +711,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
     it "matches dev-* directory patterns correctly" do
       test_dirs = [
         "dev-handbook",
-        "dev-tools", 
+        "dev-tools",
         "dev-taskflow",
         "dev-test",
         "development", # Should not match
@@ -727,7 +721,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::RepositoryScanner do
 
       pattern = described_class.const_get(:DEV_DIRECTORY_PATTERNS).first
       matching_dirs = test_dirs.select { |dir| File.fnmatch(pattern, dir) }
-      
+
       expect(matching_dirs).to include("dev-handbook", "dev-tools", "dev-taskflow", "dev-test")
       expect(matching_dirs).not_to include("development", "devtools", "tools-dev")
     end

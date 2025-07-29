@@ -346,7 +346,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
 
     context "with scoped pattern edge cases" do
       let(:scoped_path) { "scope:file" }
-      
+
       context "when scoped pattern resolves to file" do
         before do
           allow(Dir).to receive(:exist?).and_call_original
@@ -433,7 +433,6 @@ RSpec.describe CodingAgentTools::Cli::Commands::Nav::Ls do
           capture_stdout { command.call(path: error_path, autocorrect: true) }
         }.to raise_error(StandardError, "Prioritization error")
       end
-
     end
 
     context "with empty ls output" do

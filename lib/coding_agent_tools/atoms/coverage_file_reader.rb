@@ -8,6 +8,7 @@ module CodingAgentTools
     # Handles large files efficiently and provides detailed error information
     class CoverageFileReader
       class InvalidFileError < StandardError; end
+
       class MalformedJsonError < StandardError; end
 
       def initialize
@@ -52,10 +53,10 @@ module CodingAgentTools
       # @return [Array<String>] File paths
       def extract_file_paths(data)
         file_paths = []
-        
+
         data.each do |_framework_name, framework_data|
           next unless framework_data.is_a?(Hash) && framework_data["coverage"]
-          
+
           file_paths.concat(framework_data["coverage"].keys)
         end
 
@@ -79,7 +80,7 @@ module CodingAgentTools
         JSON.parse(content)
       rescue JSON::ParserError => e
         raise MalformedJsonError, "Invalid JSON in #{file_path}: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise InvalidFileError, "Error reading #{file_path}: #{e.message}"
       end
 
@@ -102,7 +103,7 @@ module CodingAgentTools
       def validate_coverage_data(framework_name, coverage_data)
         coverage_data.each do |file_path, file_data|
           next unless file_data.is_a?(Hash)
-          
+
           unless file_data.key?("lines")
             raise InvalidFileError, "File '#{file_path}' in '#{framework_name}' missing 'lines' key"
           end

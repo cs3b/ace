@@ -9,7 +9,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
   let(:task_manager) { described_class.new(base_path: base_path) }
 
   # Sample task data structures
-  let(:task_data_pending) { 
+  let(:task_data_pending) {
     OpenStruct.new(
       id: "v.0.3.0+task.1",
       status: "pending",
@@ -21,7 +21,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
 
   let(:task_data_in_progress) {
     OpenStruct.new(
-      id: "v.0.3.0+task.2", 
+      id: "v.0.3.0+task.2",
       status: "in-progress",
       priority: "medium",
       dependencies: [],
@@ -32,7 +32,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
   let(:task_data_done) {
     OpenStruct.new(
       id: "v.0.3.0+task.3",
-      status: "done", 
+      status: "done",
       priority: "low",
       dependencies: [],
       path: "/tmp/task3.md"
@@ -43,7 +43,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
     OpenStruct.new(
       id: "v.0.3.0+task.4",
       status: "pending",
-      priority: "high", 
+      priority: "high",
       dependencies: ["v.0.3.0+task.1"],
       path: "/tmp/task4.md"
     )
@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       it "responds to found? method" do
         result = described_class::NextTaskResult.new(task_data_pending, true, nil)
         expect(result.found?).to be true
-        
+
         empty_result = described_class::NextTaskResult.new(nil, true, nil)
         expect(empty_result.found?).to be false
       end
@@ -93,7 +93,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
         tasks = [task_data_pending, task_data_done]
         result = described_class::RecentTasksResult.new(tasks, true, nil)
         expect(result.count).to eq(2)
-        
+
         empty_result = described_class::RecentTasksResult.new(nil, false, "error")
         expect(empty_result.count).to eq(0)
       end
@@ -116,7 +116,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       it "responds to fully_sorted? method" do
         fully_sorted = described_class::AllTasksResult.new([], true, nil, false, 2, 2)
         expect(fully_sorted.fully_sorted?).to be true
-        
+
         partial_sorted = described_class::AllTasksResult.new([], true, nil, true, 1, 2)
         expect(partial_sorted.fully_sorted?).to be false
       end
@@ -124,7 +124,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       it "responds to has_cycles? method" do
         with_cycles = described_class::AllTasksResult.new([], true, nil, true, 1, 2)
         expect(with_cycles.has_cycles?).to be true
-        
+
         without_cycles = described_class::AllTasksResult.new([], true, nil, false, 2, 2)
         expect(without_cycles.has_cycles?).to be false
       end
@@ -239,7 +239,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
     let(:release_result) { OpenStruct.new(success?: true, release_info: release_info) }
 
     context "with no dependencies (simple sort)" do
-      let(:tasks_result) { 
+      let(:tasks_result) {
         OpenStruct.new(tasks: [
           OpenStruct.new(id: "v.0.3.0+task.3", dependencies: []),
           OpenStruct.new(id: "v.0.3.0+task.1", dependencies: []),

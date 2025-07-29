@@ -96,7 +96,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
       end
 
       it "returns the first matching directory and logs warning" do
-        expect { 
+        expect {
           result = described_class.find_release_directory("v.0.3.0", base_path: temp_dir)
           expect(result).not_to be_nil
           expect(result[:version]).to eq("v.0.3.0")
@@ -158,7 +158,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
       end
 
       it "returns the first directory and logs warning" do
-        expect { 
+        expect {
           result = described_class.get_current_release_directory(base_path: temp_dir)
           expect(result).not_to be_nil
           expect(["v.0.3.0", "v.0.4.0"]).to include(result[:version])
@@ -492,10 +492,10 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
       it "raises SecurityError when directory creation fails" do
         # Try to create directory with invalid characters (platform-dependent)
         if Gem.win_platform?
-          invalid_path = File.join(temp_dir, "invalid:path")
+          File.join(temp_dir, "invalid:path")
         else
           # On Unix-like systems, try to create in a non-existent directory without recursive
-          invalid_path = "/non/existent/base/directory"
+          "/non/existent/base/directory"
         end
 
         # Mock FileUtils to simulate failure
@@ -699,13 +699,16 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator d
 
       it "handles permission denied errors gracefully" do
         # Make directory non-readable (if possible on current platform)
-        begin
-          FileUtils.chmod(0000, restricted_dir)
 
-          result = described_class.list_release_directories(restricted_dir)
-          expect(result).to eq([])
-        ensure
-          FileUtils.chmod(0755, restricted_dir) rescue nil
+        FileUtils.chmod(0o000, restricted_dir)
+
+        result = described_class.list_release_directories(restricted_dir)
+        expect(result).to eq([])
+      ensure
+        begin
+          FileUtils.chmod(0o755, restricted_dir)
+        rescue
+          nil
         end
       end
     end

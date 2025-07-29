@@ -346,27 +346,27 @@ RSpec.describe "Git Command Execution Order Integration" do
     context "when using sequential rm" do
       it "executes remove operations across all repositories correctly" do
         execution_order = []
-        
+
         # Mock the PathDispatcher to return multi-repo paths
         mock_dispatcher = instance_double(CodingAgentTools::Molecules::Git::PathDispatcher)
         dispatch_info = {
           "main" => {paths: ["main_file.txt"]},
           "test-submodule" => {paths: ["sub_file.txt"]}
         }
-        
+
         allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return(dispatch_info)
-        
+
         # Mock execute_sequentially to track execution
         allow(orchestrator).to receive(:execute_sequentially) do |commands_by_repo, options|
           execution_order << :sequential_execution
-          
+
           # Verify commands are built correctly
           expect(commands_by_repo).to have_key("main")
           expect(commands_by_repo).to have_key("test-submodule")
           expect(commands_by_repo["main"].first).to include("rm")
           expect(commands_by_repo["test-submodule"].first).to include("rm")
-          
+
           {
             success: true,
             results: {
@@ -393,16 +393,16 @@ RSpec.describe "Git Command Execution Order Integration" do
           "main" => {paths: ["main_file.txt"]},
           "test-submodule" => {paths: ["sub_file.txt"]}
         }
-        
+
         allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return(dispatch_info)
-        
+
         # Mock concurrent executor
         allow(CodingAgentTools::Molecules::Git::ConcurrentExecutor).to receive(:execute_concurrently) do |commands_by_repo, options|
           expect(commands_by_repo).to have_key("main")
           expect(commands_by_repo).to have_key("test-submodule")
           expect(options[:concurrent]).to be true
-          
+
           {
             success: true,
             results: {
@@ -438,10 +438,10 @@ RSpec.describe "Git Command Execution Order Integration" do
           "main" => {paths: ["existing_file.txt"]},
           "test-submodule" => {paths: ["nonexistent_file.txt"]}
         }
-        
+
         allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return(dispatch_info)
-        
+
         # Mock execute_sequentially with partial failure
         allow(orchestrator).to receive(:execute_sequentially) do |commands_by_repo, options|
           {
@@ -472,10 +472,10 @@ RSpec.describe "Git Command Execution Order Integration" do
         # Mock the PathDispatcher to return single repo paths
         mock_dispatcher = instance_double(CodingAgentTools::Molecules::Git::PathDispatcher)
         dispatch_info = {"main" => {paths: ["directory/"]}}
-        
+
         allow(CodingAgentTools::Molecules::Git::PathDispatcher).to receive(:new).and_return(mock_dispatcher)
         allow(mock_dispatcher).to receive(:dispatch_paths).and_return(dispatch_info)
-        
+
         # Mock execute_sequentially to verify command options
         allow(orchestrator).to receive(:execute_sequentially) do |commands_by_repo, options|
           # Verify the command includes the recursive flag
@@ -485,7 +485,7 @@ RSpec.describe "Git Command Execution Order Integration" do
           expect(command).to include("--recursive")
           expect(command).to include("--cached")
           expect(command).to include("directory/")
-          
+
           {
             success: true,
             results: {"main" => {success: true, stdout: "rm --force --recursive --cached 'directory/'"}},
@@ -494,9 +494,9 @@ RSpec.describe "Git Command Execution Order Integration" do
         end
 
         result = orchestrator.rm(
-          ["directory/"], 
-          force: true, 
-          recursive: true, 
+          ["directory/"],
+          force: true,
+          recursive: true,
           cached: true
         )
 

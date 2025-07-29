@@ -431,7 +431,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ErrorDistributor do
         result = distributor.distribute(errors)
         expect(result[:total_errors]).to eq(2)
         expect(result[:files_with_errors]).to eq(2)
-        
+
         # Verify complex structure is preserved
         complex_error = result[:distributions].flat_map { |d| d[:errors] }
           .find { |e| e[:file] == "file2.rb" }
@@ -447,7 +447,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ErrorDistributor do
         # The distributor should handle this without crashing
         result = distributor.distribute(errors)
         expect(result[:total_errors]).to eq(2)
-        
+
         # The invalid structure should be treated as having no file
         expect(result[:files_with_errors]).to eq(2) # "file1.rb" and "unknown"
       end
@@ -546,7 +546,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::ErrorDistributor do
 
         # All results should be identical
         first_result = results.pop
-        while !results.empty?
+        until results.empty?
           next_result = results.pop
           expect(next_result[:total_errors]).to eq(first_result[:total_errors])
           expect(next_result[:files_with_errors]).to eq(first_result[:files_with_errors])

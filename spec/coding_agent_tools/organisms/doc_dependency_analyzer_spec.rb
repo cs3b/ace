@@ -268,7 +268,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
           expect(cycle).to be_an(Array)
           expect(cycle.length).to be >= 2
         end
-        
+
         expect(circular).to be_an(Array)
       end
     end
@@ -396,7 +396,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
 
         expect(result[:file_type_distribution]).to be_a(Hash)
         expect(result[:file_type_distribution]).not_to be_empty
-        
+
         # Check for the actual key that the implementation uses
         # It may be :documentation, :markdown, or another key
         first_type = result[:file_type_distribution].keys.first
@@ -409,7 +409,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
     describe "#analyze_file_dependencies" do
       it "processes file and updates dependency graph" do
         all_files = Set.new(["docs/test.md", "docs/target.md"])
-        
+
         # Create mock parser that returns references
         mock_parser = instance_double(CodingAgentTools::Molecules::DocLinkParser)
         allow(mock_parser).to receive(:parse_file_references)
@@ -427,7 +427,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
 
       it "ensures file exists in dependencies even with no references" do
         all_files = Set.new(["docs/isolated.md"])
-        
+
         mock_parser = instance_double(CodingAgentTools::Molecules::DocLinkParser)
         allow(mock_parser).to receive(:parse_file_references).and_return([])
 
@@ -448,7 +448,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
         expect(result).to have_key(:timestamp)
         expect(result).to have_key(:statistics)
         expect(result).to have_key(:most_referenced)
-        expect(result).to have_key(:most_referencing)  
+        expect(result).to have_key(:most_referencing)
         expect(result).to have_key(:orphaned_files)
         expect(result).to have_key(:circular_dependencies)
         expect(result).to have_key(:hub_files)
@@ -516,8 +516,8 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
       it "handles empty sections gracefully" do
         test_results = {
           timestamp: Time.now,
-          statistics: {total_files: 1, files_with_outgoing_refs: 0, files_with_incoming_refs: 0, 
-                      total_references: 0, average_outgoing_refs: 0, average_incoming_refs: 0},
+          statistics: {total_files: 1, files_with_outgoing_refs: 0, files_with_incoming_refs: 0,
+                       total_references: 0, average_outgoing_refs: 0, average_incoming_refs: 0},
           most_referenced: [],
           most_referencing: [],
           hub_files: [],
@@ -541,7 +541,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
     it "delegates statistics calculation to StatisticsCalculator" do
       mock_stats_calculator = instance_double(CodingAgentTools::Molecules::StatisticsCalculator)
       expected_stats = {total_files: 5, total_references: 10}
-      
+
       allow(mock_stats_calculator).to receive(:calculate_basic_stats).and_return(expected_stats)
       analyzer.instance_variable_set(:@stats_calculator, mock_stats_calculator)
 
@@ -554,7 +554,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
     it "delegates cycle detection to CircularDependencyDetector" do
       mock_cycle_detector = instance_double(CodingAgentTools::Molecules::CircularDependencyDetector)
       expected_cycles = [["a.md", "b.md", "c.md"]]
-      
+
       allow(mock_cycle_detector).to receive(:find_cycles).and_return(expected_cycles)
       analyzer.instance_variable_set(:@cycle_detector, mock_cycle_detector)
 
@@ -567,7 +567,7 @@ RSpec.describe CodingAgentTools::Organisms::DocDependencyAnalyzer do
     it "delegates file parsing to DocLinkParser" do
       mock_parser = instance_double(CodingAgentTools::Molecules::DocLinkParser)
       expected_files = Set.new(["test.md", "other.md"])
-      
+
       allow(mock_parser).to receive(:collect_documentation_files).and_return(expected_files)
       allow(mock_parser).to receive(:parse_file_references).and_return([])
       analyzer.instance_variable_set(:@parser, mock_parser)

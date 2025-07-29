@@ -59,7 +59,7 @@ module CodingAgentTools
             runner.report(result) if result
 
             # Exit with appropriate code
-            exit(result && result[:success] ? 0 : 1)
+            exit((result && result[:success]) ? 0 : 1)
           rescue => e
             warn "Error: #{e.message}"
             exit 1

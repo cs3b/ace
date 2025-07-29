@@ -14,15 +14,15 @@ module CodingAgentTools
         def line_range
           start_line..end_line
         end
-        
+
         def public?
           visibility == :public
         end
-        
+
         def private?
           visibility == :private
         end
-        
+
         def protected?
           visibility == :protected
         end
@@ -57,7 +57,7 @@ module CodingAgentTools
 
       def read_file_content(file_path)
         File.read(file_path)
-      rescue StandardError => e
+      rescue => e
         raise ParseError, "Cannot read file #{file_path}: #{e.message}"
       end
 
@@ -65,7 +65,7 @@ module CodingAgentTools
         Parser::CurrentRuby.parse(content, source_name)
       rescue Parser::SyntaxError => e
         raise ParseError, "Syntax error in #{source_name}: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise ParseError, "Parse error in #{source_name}: #{e.message}"
       end
 
@@ -101,7 +101,7 @@ module CodingAgentTools
       def extract_instance_method(node, visibility)
         name = node.children[0].to_s
         location = node.location
-        
+
         MethodDefinition.new(
           name: name,
           start_line: location.line.to_i,
@@ -114,7 +114,7 @@ module CodingAgentTools
       def extract_class_method(node, visibility)
         name = node.children[1].to_s
         location = node.location
-        
+
         MethodDefinition.new(
           name: "self.#{name}",
           start_line: location.line.to_i,

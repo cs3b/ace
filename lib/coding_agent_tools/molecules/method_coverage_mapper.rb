@@ -125,17 +125,17 @@ module CodingAgentTools
 
       def extract_method_lines(lines_data, start_line, end_line)
         return [] if lines_data.nil? || lines_data.empty?
-        
+
         # Ensure start_line and end_line are integers
         start_line = start_line.to_i
         end_line = end_line.to_i
-        
+
         # Convert to 0-based indexing
         range_start = [start_line - 1, 0].max
         range_end = [end_line - 1, lines_data.length - 1].min
-        
+
         return [] if range_start >= lines_data.length
-        
+
         # Safely extract the range
         begin
           lines_data[range_start..range_end] || []
@@ -147,17 +147,17 @@ module CodingAgentTools
 
       def extract_uncovered_lines_in_method(method_lines, method_start_line)
         uncovered_lines = []
-        
+
         method_lines.each_with_index do |coverage, index|
           # Calculate actual line number in file
           actual_line_number = method_start_line + index
-          
+
           # Uncovered line: executable (not nil) but with 0 coverage
           if coverage == 0
             uncovered_lines << actual_line_number
           end
         end
-        
+
         uncovered_lines
       end
     end

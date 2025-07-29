@@ -36,16 +36,16 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
   let(:tasks_with_frontmatter) do
     [
       task_data.new(
-        id: "v.1.0+task.001", 
-        status: "pending", 
-        priority: "high", 
+        id: "v.1.0+task.001",
+        status: "pending",
+        priority: "high",
         dependencies: [],
         frontmatter: {"sort" => "1"}
       ),
       task_data.new(
-        id: "v.1.0+task.002", 
-        status: "pending", 
-        priority: "medium", 
+        id: "v.1.0+task.002",
+        status: "pending",
+        priority: "medium",
         dependencies: [],
         frontmatter: {"sort" => "0"}
       )
@@ -88,7 +88,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with empty sorts array" do
       it "returns tasks unchanged" do
         result = described_class.apply_sorts(basic_tasks, [])
-        
+
         expect(result.sorted_tasks).to eq(basic_tasks)
         expect(result.cycle_detected).to be false
         expect(result.sorted_count).to eq(3)
@@ -99,7 +99,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with nil sorts" do
       it "returns tasks unchanged" do
         result = described_class.apply_sorts(basic_tasks, nil)
-        
+
         expect(result.sorted_tasks).to eq(basic_tasks)
         expect(result.cycle_detected).to be false
         expect(result.sorted_count).to eq(3)
@@ -142,7 +142,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with empty sort string" do
       it "returns tasks unchanged" do
         result = described_class.apply_sort_string(basic_tasks, "")
-        
+
         expect(result[:result].sorted_tasks).to eq(basic_tasks)
         expect(result[:errors]).to be_empty
       end
@@ -151,7 +151,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with nil sort string" do
       it "returns tasks unchanged" do
         result = described_class.apply_sort_string(basic_tasks, nil)
-        
+
         expect(result[:result].sorted_tasks).to eq(basic_tasks)
         expect(result[:errors]).to be_empty
       end
@@ -160,14 +160,14 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with valid sort string" do
       it "parses and applies sorts" do
         mock_sorts = [double("SortCriteria", implementation_order?: false)]
-        
+
         allow(mock_parser).to receive(:parse_sorts).with("priority:desc").and_return(mock_sorts)
         allow(mock_parser).to receive(:validate_sorts).with(mock_sorts).and_return([])
         allow(described_class).to receive(:apply_sorts).with(basic_tasks, mock_sorts)
           .and_return(described_class::SortResult.new(basic_tasks, false, 3, 3, {}))
 
         result = described_class.apply_sort_string(basic_tasks, "priority:desc")
-        
+
         expect(result[:result]).to be_a(described_class::SortResult)
         expect(result[:errors]).to be_empty
       end
@@ -177,12 +177,12 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
       it "returns validation errors" do
         mock_sorts = [double("SortCriteria")]
         validation_errors = ["Invalid sort attribute: invalid_attr"]
-        
+
         allow(mock_parser).to receive(:parse_sorts).with("invalid_attr:desc").and_return(mock_sorts)
         allow(mock_parser).to receive(:validate_sorts).with(mock_sorts).and_return(validation_errors)
 
         result = described_class.apply_sort_string(basic_tasks, "invalid_attr:desc")
-        
+
         expect(result[:result]).to be_nil
         expect(result[:errors]).to eq(validation_errors)
       end
@@ -209,7 +209,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with tasks without dependencies" do
       it "sorts by sequential number and ID" do
         result = described_class.apply_sorts(basic_tasks, [impl_sort])
-        
+
         expect(result.sorted_tasks.first.id).to eq("v.1.0+task.001")
         expect(result.sorted_tasks.last.id).to eq("v.1.0+task.003")
         expect(result.cycle_detected).to be false
@@ -220,7 +220,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with tasks with frontmatter sort metadata" do
       it "sorts by frontmatter sort value first" do
         result = described_class.apply_sorts(tasks_with_frontmatter, [impl_sort])
-        
+
         # Task with sort: 0 should come before task with sort: 1
         expect(result.sorted_tasks.first.id).to eq("v.1.0+task.002")
         expect(result.sorted_tasks.last.id).to eq("v.1.0+task.001")
@@ -230,22 +230,22 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with tasks with dependencies" do
       it "respects dependency constraints" do
         result = described_class.apply_sorts(tasks_with_dependencies, [impl_sort])
-        
+
         sorted_ids = result.sorted_tasks.map(&:id)
-        
+
         # Task 001 should come before task 002 (dependency)
         expect(sorted_ids.index("v.1.0+task.001")).to be < sorted_ids.index("v.1.0+task.002")
         # Task 002 should come before task 003 (dependency)
         expect(sorted_ids.index("v.1.0+task.002")).to be < sorted_ids.index("v.1.0+task.003")
         # Task 002 should come before task 004 (dependency)
         expect(sorted_ids.index("v.1.0+task.002")).to be < sorted_ids.index("v.1.0+task.004")
-        
+
         expect(result.cycle_detected).to be false
       end
 
       it "includes dependency levels in metadata" do
         result = described_class.apply_sorts(tasks_with_dependencies, [impl_sort])
-        
+
         expect(result.sort_metadata[:dependency_levels]).to be_a(Hash)
         expect(result.sort_metadata[:dependency_levels]).to have_key("v.1.0+task.001")
         expect(result.sort_metadata[:dependency_levels]).to have_key("v.1.0+task.002")
@@ -257,7 +257,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with circular dependencies" do
       it "detects cycles and limits iterations" do
         result = described_class.apply_sorts(tasks_with_cycles, [impl_sort])
-        
+
         expect(result.cycle_detected).to be true
         expect(result.sorted_tasks).to eq(tasks_with_cycles) # Should return some ordering
       end
@@ -266,11 +266,10 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
 
   describe ".apply_multi_attribute_sort" do
     let(:sort_criteria) do
-      double("SortCriteria", 
-        get_sort_value: nil, 
+      double("SortCriteria",
+        get_sort_value: nil,
         descending?: false,
-        raw_sort: "priority:asc"
-      )
+        raw_sort: "priority:asc")
     end
 
     context "with single sort criteria" do
@@ -285,7 +284,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         end
 
         result = described_class.apply_multi_attribute_sort(basic_tasks, [sort_criteria])
-        
+
         expect(result.sorted_tasks.first.priority).to eq("high")
         expect(result.sorted_tasks.last.priority).to eq("low")
         expect(result.cycle_detected).to be false
@@ -305,7 +304,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         end
 
         result = described_class.apply_multi_attribute_sort(basic_tasks, [sort_criteria])
-        
+
         expect(result.sorted_tasks.first.priority).to eq("low")
         expect(result.sorted_tasks.last.priority).to eq("high")
       end
@@ -328,26 +327,24 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         end
 
         result = described_class.apply_multi_attribute_sort(tasks_with_nil, [sort_criteria])
-        
+
         expect(result.sorted_tasks.last.priority).to be_nil
       end
     end
 
     context "with multiple sort criteria" do
       let(:primary_sort) do
-        double("SortCriteria", 
-          get_sort_value: nil, 
+        double("SortCriteria",
+          get_sort_value: nil,
           descending?: false,
-          raw_sort: "status:asc"
-        )
+          raw_sort: "status:asc")
       end
-      
+
       let(:secondary_sort) do
-        double("SortCriteria", 
-          get_sort_value: nil, 
+        double("SortCriteria",
+          get_sort_value: nil,
           descending?: false,
-          raw_sort: "priority:asc"
-        )
+          raw_sort: "priority:asc")
       end
 
       it "sorts by primary criteria first, then secondary" do
@@ -374,7 +371,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         end
 
         result = described_class.apply_multi_attribute_sort(tasks_multi, [primary_sort, secondary_sort])
-        
+
         sorted_tasks = result.sorted_tasks
         # First two should be pending status, sorted by priority (high before low)
         expect(sorted_tasks[0].status).to eq("pending")
@@ -396,7 +393,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         allow(sort_criteria).to receive(:get_sort_value).and_return(0) # All equal
 
         result = described_class.apply_multi_attribute_sort(equal_tasks, [sort_criteria])
-        
+
         sorted_ids = result.sorted_tasks.map(&:id)
         expect(sorted_ids).to eq(["task.001", "task.002", "task.003"])
       end
@@ -407,9 +404,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with array dependencies" do
       it "converts to string array" do
         task = task_data.new(dependencies: ["task.001", "task.002"])
-        
+
         result = described_class.extract_dependencies(task)
-        
+
         expect(result).to eq(["task.001", "task.002"])
       end
     end
@@ -417,9 +414,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with string dependencies" do
       it "splits on comma and strips whitespace" do
         task = task_data.new(dependencies: "task.001, task.002 , task.003")
-        
+
         result = described_class.extract_dependencies(task)
-        
+
         expect(result).to eq(["task.001", "task.002", "task.003"])
       end
     end
@@ -427,9 +424,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with nil dependencies" do
       it "returns empty array" do
         task = task_data.new(dependencies: nil)
-        
+
         result = described_class.extract_dependencies(task)
-        
+
         expect(result).to eq([])
       end
     end
@@ -437,9 +434,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with other dependency types" do
       it "returns empty array" do
         task = task_data.new(dependencies: 123)
-        
+
         result = described_class.extract_dependencies(task)
-        
+
         expect(result).to eq([])
       end
     end
@@ -466,25 +463,25 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with frontmatter sort attribute" do
       it "returns numeric sort value" do
         task = task_data.new(frontmatter: {"sort" => "5"})
-        
+
         result = described_class.get_sort_metadata(task)
-        
+
         expect(result).to eq(5)
       end
 
       it "handles symbol keys" do
         task = task_data.new(frontmatter: {sort: "3"})
-        
+
         result = described_class.get_sort_metadata(task)
-        
+
         expect(result).to eq(3)
       end
 
       it "handles non-numeric sort values" do
         task = task_data.new(frontmatter: {"sort" => "invalid"})
-        
+
         result = described_class.get_sort_metadata(task)
-        
+
         expect(result).to eq(0)
       end
     end
@@ -492,9 +489,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "without frontmatter" do
       it "returns default value of 0" do
         task = task_data.new(frontmatter: nil)
-        
+
         result = described_class.get_sort_metadata(task)
-        
+
         expect(result).to eq(0)
       end
     end
@@ -502,9 +499,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "without sort attribute" do
       it "returns default value of 0" do
         task = task_data.new(frontmatter: {"other" => "value"})
-        
+
         result = described_class.get_sort_metadata(task)
-        
+
         expect(result).to eq(0)
       end
     end
@@ -516,21 +513,21 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
       impl_sort = double("SortCriteria", implementation_order?: true)
       sort_result = described_class.apply_sorts(tasks_with_dependencies, [impl_sort])
       sorted_tasks = sort_result.sorted_tasks
-      
+
       task_map = {}
       tasks_with_dependencies.each { |task| task_map[task.id] = task }
-      
+
       result = described_class.calculate_dependency_levels(sorted_tasks, task_map)
-      
+
       # Check that levels are calculated and tasks with no dependencies are at level 0
       expect(result).to be_a(Hash)
       expect(result["v.1.0+task.001"]).to eq(0) # No dependencies
-      
+
       # Check that dependent tasks have higher levels than their dependencies
       task_002_level = result["v.1.0+task.002"]
-      task_003_level = result["v.1.0+task.003"] 
+      task_003_level = result["v.1.0+task.003"]
       task_004_level = result["v.1.0+task.004"]
-      
+
       expect(task_002_level).to be >= result["v.1.0+task.001"]
       expect(task_003_level).to be >= [result["v.1.0+task.001"], task_002_level].max
       expect(task_004_level).to be >= task_002_level
@@ -539,9 +536,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     it "handles tasks without dependencies" do
       task_map = {}
       basic_tasks.each { |task| task_map[task.id] = task }
-      
+
       result = described_class.calculate_dependency_levels(basic_tasks, task_map)
-      
+
       expect(result.values.uniq).to eq([0]) # All at level 0
     end
   end
@@ -558,12 +555,12 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
         ]
 
         result = described_class.apply_sort_string(complex_tasks, "implementation-order")
-        
+
         expect(result[:errors]).to be_empty
         expect(result[:result].cycle_detected).to be false
-        
+
         sorted_ids = result[:result].sorted_tasks.map(&:id)
-        
+
         # Verify dependency constraints
         expect(sorted_ids.index("v.1.0+task.001")).to be < sorted_ids.index("v.1.0+task.003")
         expect(sorted_ids.index("v.1.0+task.003")).to be < sorted_ids.index("v.1.0+task.005")
@@ -575,7 +572,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     context "with multi-attribute sorting" do
       it "handles complex multi-attribute sort string" do
         result = described_class.apply_sort_string(basic_tasks, "status:asc,priority:desc")
-        
+
         expect(result[:errors]).to be_empty
         expect(result[:result].cycle_detected).to be false
         expect(result[:result].sort_metadata[:sort_type]).to eq("multi-attribute")

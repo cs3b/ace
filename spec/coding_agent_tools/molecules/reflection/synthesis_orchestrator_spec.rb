@@ -54,7 +54,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator do
       # Create test reflection files
       File.write(reflection_file1, "# Reflection 1\n\nThis is the first reflection.")
       File.write(reflection_file2, "# Reflection 2\n\nThis is the second reflection.")
-      
+
       # Create system prompt file (unless nil)
       if system_prompt_path
         File.write(system_prompt_path, "You are a helpful assistant.")
@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator do
         expect(result.data[:metrics][:reflections_count]).to eq(2)
         expect(result.data[:metrics][:execution_time]).to be >= 0
         expect(result.data[:synthesis_result]).to include("Reflection Synthesis")
-        
+
         # Check that output file was created
         expect(File.exist?(output_path)).to be true
       end
@@ -224,7 +224,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator do
 
         expect(result.success?).to be true
         expect(result.data[:metrics][:reflections_count]).to eq(10)
-        
+
         content = File.read(output_path)
         expect(content).to include("Synthesis of 10 reflection notes")
       end

@@ -20,7 +20,7 @@ module CodingAgentTools
       def process_file(file_path, options = {})
         raw_data = @file_reader.read(file_path)
         @file_reader.validate_structure(raw_data)
-        
+
         process_coverage_data(raw_data, options)
       end
 
@@ -40,13 +40,13 @@ module CodingAgentTools
         file_coverage_data = {}
         filtered_files.each do |file_path|
           coverage_arrays = extract_coverage_arrays_for_file(raw_data, file_path)
-          
+
           unless coverage_arrays.empty?
             combined_lines = combine_lines_data(coverage_arrays)
             combined_coverage = @calculator.calculate_combined_coverage(coverage_arrays)
             uncovered_details = @calculator.extract_uncovered_lines(combined_lines)
             line_details = @calculator.extract_detailed_line_info(combined_lines)
-            
+
             file_coverage_data[file_path] = {
               coverage_data: combined_coverage,
               uncovered_details: uncovered_details,
@@ -73,13 +73,13 @@ module CodingAgentTools
       # @return [Hash] Filtered data with under-covered files prioritized
       def prioritize_under_covered_files(processed_data, threshold)
         validated_threshold = @threshold_validator.validate_threshold(threshold)
-        
+
         under_covered = {}
         well_covered = {}
 
         processed_data[:file_coverage].each do |file_path, file_data|
           coverage_percentage = file_data[:coverage_data][:coverage_percentage]
-          
+
           if coverage_percentage < validated_threshold
             under_covered[file_path] = file_data
           else
@@ -100,7 +100,7 @@ module CodingAgentTools
 
       def normalize_patterns(patterns)
         return [] if patterns.nil?
-        
+
         Array(patterns).map do |pattern|
           @threshold_validator.validate_file_pattern(pattern)
         end.compact
@@ -110,10 +110,10 @@ module CodingAgentTools
         filtered = file_paths.select do |file_path|
           # Check include patterns (default to lib/**)
           included = include_patterns.any? { |pattern| File.fnmatch(pattern, file_path, File::FNM_PATHNAME) }
-          
+
           # Check exclude patterns
           excluded = exclude_patterns.any? { |pattern| File.fnmatch(pattern, file_path, File::FNM_PATHNAME) }
-          
+
           included && !excluded
         end
 
@@ -123,10 +123,10 @@ module CodingAgentTools
 
       def extract_coverage_arrays_for_file(raw_data, file_path)
         coverage_arrays = []
-        
+
         raw_data.each do |_framework_name, framework_data|
           next unless framework_data.is_a?(Hash) && framework_data["coverage"]
-          
+
           file_coverage = framework_data["coverage"][file_path]
           if file_coverage && file_coverage["lines"]
             coverage_arrays << file_coverage["lines"]
@@ -144,12 +144,12 @@ module CodingAgentTools
 
         (0...max_length).each do |index|
           values = coverage_arrays.map { |arr| arr[index] if index < arr.length }.compact
-          
-          if values.empty? || values.all?(&:nil?)
-            combined_lines[index] = nil
+
+          combined_lines[index] = if values.empty? || values.all?(&:nil?)
+            nil
           else
             # Sum non-nil values for combined execution count
-            combined_lines[index] = values.map { |v| v || 0 }.sum
+            values.map { |v| v || 0 }.sum
           end
         end
 
@@ -158,10 +158,10 @@ module CodingAgentTools
 
       def extract_frameworks_for_file(raw_data, file_path)
         frameworks = []
-        
+
         raw_data.each do |framework_name, framework_data|
           next unless framework_data.is_a?(Hash) && framework_data["coverage"]
-          
+
           if framework_data["coverage"][file_path]
             frameworks << framework_name
           end

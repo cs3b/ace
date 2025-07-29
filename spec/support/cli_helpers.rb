@@ -495,5 +495,4 @@ module CliHelpers
 
     options
   end
-
 end

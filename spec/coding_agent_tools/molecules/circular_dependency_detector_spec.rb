@@ -10,9 +10,9 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
     context "with no cycles" do
       it "returns empty array for acyclic graph" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: [] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: []}
         }
 
         result = detector.find_cycles(dependencies)
@@ -28,7 +28,7 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "returns empty array for single node with no references" do
         dependencies = {
-          "a.md" => { refs_to: [] }
+          "a.md" => {refs_to: []}
         }
 
         result = detector.find_cycles(dependencies)
@@ -40,63 +40,63 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
       # NOTE: The current implementation has a bug in cycle extraction logic
       # It uses path.rindex(path.last) instead of path.index(path.last)
       # This causes it to extract cycles incorrectly and filter them out
-      
+
       it "fails to detect two-node cycle (implementation bug)" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_cycles(dependencies)
         # Current buggy behavior: returns empty array
         expect(result).to eq([])
-        
+
         # TODO: Should return [["a.md", "b.md"]] when implementation is fixed
       end
 
       it "fails to detect self-referencing cycle (implementation bug)" do
         dependencies = {
-          "a.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_cycles(dependencies)
         # Current buggy behavior: returns empty array
         expect(result).to eq([])
-        
+
         # TODO: Should return [["a.md"]] when implementation is fixed
       end
 
       it "fails to detect three-node cycle (implementation bug)" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_cycles(dependencies)
         # Current buggy behavior: returns empty array
         expect(result).to eq([])
-        
+
         # TODO: Should return [["a.md", "b.md", "c.md"]] when implementation is fixed
       end
 
       it "fails to detect multiple separate cycles (implementation bug)" do
         dependencies = {
           # First cycle: a -> b -> a
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["a.md"] },
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["a.md"]},
           # Second cycle: c -> d -> e -> c
-          "c.md" => { refs_to: ["d.md"] },
-          "d.md" => { refs_to: ["e.md"] },
-          "e.md" => { refs_to: ["c.md"] },
+          "c.md" => {refs_to: ["d.md"]},
+          "d.md" => {refs_to: ["e.md"]},
+          "e.md" => {refs_to: ["c.md"]},
           # No cycle node
-          "f.md" => { refs_to: [] }
+          "f.md" => {refs_to: []}
         }
 
         result = detector.find_cycles(dependencies)
         # Current buggy behavior: returns empty array
         expect(result).to eq([])
-        
+
         # TODO: Should return [["a.md", "b.md"], ["c.md", "d.md", "e.md"]] when fixed
       end
     end
@@ -112,7 +112,7 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "raises error when refs_to is nil" do
         dependencies = {
-          "a.md" => { refs_to: nil }
+          "a.md" => {refs_to: nil}
         }
 
         expect { detector.find_cycles(dependencies) }.to raise_error(NoMethodError)
@@ -123,12 +123,12 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
   describe "#has_cycle?" do
     # This is a private method, but we can test its behavior through find_cycles
     # and by examining the path it builds
-    
+
     context "when cycle detection works correctly (private method)" do
       it "correctly identifies cycles through the public interface" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["a.md"]}
         }
 
         # Even though find_cycles returns empty due to extraction bug,
@@ -136,10 +136,10 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
         visited = Set.new
         path = []
         recursion_stack = Set.new
-        
+
         # Test the private method indirectly by calling it
         has_cycle = detector.send(:has_cycle?, "a.md", dependencies, visited, path, recursion_stack)
-        
+
         expect(has_cycle).to be true
         expect(path).to eq(["a.md", "b.md", "a.md"])
         expect(visited).to include("a.md", "b.md")
@@ -151,9 +151,9 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
     context "with no strongly connected components" do
       it "returns empty array for acyclic graph" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: [] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: []}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -171,8 +171,8 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
     context "with strongly connected components" do
       it "finds single two-node SCC" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -182,9 +182,9 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "finds three-node SCC" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -195,13 +195,13 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
       it "finds multiple SCCs" do
         dependencies = {
           # First SCC: a <-> b
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["a.md", "c.md"] },
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["a.md", "c.md"]},
           # Second SCC: c <-> d
-          "c.md" => { refs_to: ["d.md"] },
-          "d.md" => { refs_to: ["c.md"] },
+          "c.md" => {refs_to: ["d.md"]},
+          "d.md" => {refs_to: ["c.md"]},
           # Isolated node (single-node SCC, filtered out)
-          "e.md" => { refs_to: [] }
+          "e.md" => {refs_to: []}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -214,8 +214,8 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "excludes single-node SCCs" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: [] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: []}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -224,7 +224,7 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "handles self-referencing nodes as single-node SCCs (filtered out)" do
         dependencies = {
-          "a.md" => { refs_to: ["a.md"] }
+          "a.md" => {refs_to: ["a.md"]}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -241,7 +241,7 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
     context "with malformed dependency structures" do
       it "raises error when referencing non-existent nodes" do
         dependencies = {
-          "a.md" => { refs_to: ["nonexistent.md"] }
+          "a.md" => {refs_to: ["nonexistent.md"]}
         }
 
         # The implementation doesn't handle missing nodes gracefully
@@ -250,8 +250,8 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "raises error for circular references to non-existent nodes" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["nonexistent.md"] }
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["nonexistent.md"]}
         }
 
         expect { detector.find_cycles(dependencies) }.to raise_error(NoMethodError, /undefined method.*for nil/)
@@ -259,7 +259,7 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "raises error in SCC detection with missing nodes" do
         dependencies = {
-          "a.md" => { refs_to: ["nonexistent.md"] }
+          "a.md" => {refs_to: ["nonexistent.md"]}
         }
 
         expect { detector.find_strongly_connected_components(dependencies) }.to raise_error(NoMethodError, /undefined method.*for nil/)
@@ -269,11 +269,11 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
     context "with complex graph structures" do
       it "handles graph with multiple entry points to same cycle (but finds no cycles due to bug)" do
         dependencies = {
-          "entry1.md" => { refs_to: ["a.md"] },
-          "entry2.md" => { refs_to: ["b.md"] },
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: ["a.md"] } # Cycle: a -> b -> c -> a
+          "entry1.md" => {refs_to: ["a.md"]},
+          "entry2.md" => {refs_to: ["b.md"]},
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: ["a.md"]} # Cycle: a -> b -> c -> a
         }
 
         result = detector.find_cycles(dependencies)
@@ -284,16 +284,16 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
       it "processes larger dependency graphs without crashing" do
         # Create a larger graph structure
         dependencies = {}
-        
+
         # Create chain: node0 -> node1 -> ... -> node4 -> node0 (cycle)
         (0..4).each do |i|
           next_node = (i + 1) % 5
-          dependencies["node#{i}.md"] = { refs_to: ["node#{next_node}.md"] }
+          dependencies["node#{i}.md"] = {refs_to: ["node#{next_node}.md"]}
         end
-        
+
         # Add some acyclic nodes
         (5..8).each do |i|
-          dependencies["acyclic#{i}.md"] = { refs_to: [] }
+          dependencies["acyclic#{i}.md"] = {refs_to: []}
         end
 
         expect { detector.find_cycles(dependencies) }.not_to raise_error
@@ -306,17 +306,17 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
   describe "Tarjan's SCC algorithm implementation" do
     # Test the Tarjan's algorithm implementation through find_strongly_connected_components
-    
+
     context "with complex SCC scenarios" do
       it "handles graph with overlapping but separate SCCs" do
         dependencies = {
           # First SCC: a -> b -> c -> a
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: ["a.md", "d.md"] }, # Connection to second SCC
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: ["a.md", "d.md"]}, # Connection to second SCC
           # Second SCC: d -> e -> d
-          "d.md" => { refs_to: ["e.md"] },
-          "e.md" => { refs_to: ["d.md"] }
+          "d.md" => {refs_to: ["e.md"]},
+          "e.md" => {refs_to: ["d.md"]}
         }
 
         result = detector.find_strongly_connected_components(dependencies)
@@ -329,11 +329,11 @@ RSpec.describe CodingAgentTools::Molecules::CircularDependencyDetector do
 
       it "correctly identifies single large SCC" do
         dependencies = {
-          "a.md" => { refs_to: ["b.md"] },
-          "b.md" => { refs_to: ["c.md"] },
-          "c.md" => { refs_to: ["d.md"] },
-          "d.md" => { refs_to: ["e.md"] },
-          "e.md" => { refs_to: ["a.md"] } # All nodes in one big cycle
+          "a.md" => {refs_to: ["b.md"]},
+          "b.md" => {refs_to: ["c.md"]},
+          "c.md" => {refs_to: ["d.md"]},
+          "d.md" => {refs_to: ["e.md"]},
+          "e.md" => {refs_to: ["a.md"]} # All nodes in one big cycle
         }
 
         result = detector.find_strongly_connected_components(dependencies)

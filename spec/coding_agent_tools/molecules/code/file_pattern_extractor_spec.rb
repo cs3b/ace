@@ -23,9 +23,9 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
     it "initializes with file reader and scanner atoms" do
       # Test initialization without global mocks interfering
       allow(CodingAgentTools::Atoms::Code::FileContentReader).to receive(:new).and_call_original
-      
+
       new_extractor = described_class.new
-      
+
       expect(new_extractor.instance_variable_get(:@file_reader)).to be_a(CodingAgentTools::Atoms::Code::FileContentReader)
       expect(new_extractor.instance_variable_get(:@file_scanner)).to eq(CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner)
     end
@@ -295,7 +295,7 @@ RSpec.describe CodingAgentTools::Molecules::Code::FilePatternExtractor do
 
     context "when extraction fails" do
       let(:failing_pattern) { "*.xyz" }
-      
+
       before do
         allow(File).to receive(:exist?).with(failing_pattern).and_return(false)
         allow(Dir).to receive(:glob).with(failing_pattern).and_return([])

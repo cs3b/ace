@@ -31,11 +31,11 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
 
   let(:zero_cost_calculation) do
     CodingAgentTools::Models::Pricing::CostCalculation.new(
-      input_cost: BigDecimal("0"),
-      output_cost: BigDecimal("0"),
-      cache_creation_cost: BigDecimal("0"),
-      cache_read_cost: BigDecimal("0"),
-      total_cost: BigDecimal("0"),
+      input_cost: BigDecimal(0),
+      output_cost: BigDecimal(0),
+      cache_creation_cost: BigDecimal(0),
+      cache_read_cost: BigDecimal(0),
+      total_cost: BigDecimal(0),
       currency: "USD"
     )
   end
@@ -180,8 +180,8 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
         CodingAgentTools::Models::Pricing::CostCalculation.new(
           input_cost: BigDecimal("0.003"),
           output_cost: BigDecimal("0.0075"),
-          cache_creation_cost: BigDecimal("0"),
-          cache_read_cost: BigDecimal("0"),
+          cache_creation_cost: BigDecimal(0),
+          cache_read_cost: BigDecimal(0),
           total_cost: BigDecimal("0.0105"),
           currency: "USD"
         )
@@ -340,8 +340,8 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
         CodingAgentTools::Models::Pricing::CostCalculation.new(
           input_cost: BigDecimal("0.003"),
           output_cost: BigDecimal("0.0075"),
-          cache_creation_cost: BigDecimal("0"),
-          cache_read_cost: BigDecimal("0"),
+          cache_creation_cost: BigDecimal(0),
+          cache_read_cost: BigDecimal(0),
           total_cost: BigDecimal("0.0105"),
           currency: "USD"
         )
@@ -459,7 +459,7 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
 
     it "can be used anywhere UsageMetadata is expected" do
       metadata = described_class.new(**base_attributes, cost_calculation: cost_calculation)
-      
+
       # Should respond to all UsageMetadata methods
       expect(metadata).to respond_to(:input_tokens)
       expect(metadata).to respond_to(:output_tokens)
@@ -478,9 +478,9 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
       it "can be converted to JSON and back" do
         metadata = described_class.new(**base_attributes, cost_calculation: cost_calculation)
         json_string = metadata.to_json
-        
+
         parsed = JSON.parse(json_string, symbolize_names: true)
-        
+
         expect(parsed[:input_tokens]).to eq(100)
         expect(parsed[:output_tokens]).to eq(50)
         expect(parsed[:cost]).to be_a(Hash)
@@ -492,9 +492,9 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
       it "can be converted to JSON without cost info" do
         metadata = described_class.new(**base_attributes)
         json_string = metadata.to_json
-        
+
         parsed = JSON.parse(json_string, symbolize_names: true)
-        
+
         expect(parsed[:input_tokens]).to eq(100)
         expect(parsed).not_to have_key(:cost)
       end
@@ -507,8 +507,8 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
         CodingAgentTools::Models::Pricing::CostCalculation.new(
           input_cost: BigDecimal("0.000001"),
           output_cost: BigDecimal("0.000001"),
-          cache_creation_cost: BigDecimal("0"),
-          cache_read_cost: BigDecimal("0"),
+          cache_creation_cost: BigDecimal(0),
+          cache_read_cost: BigDecimal(0),
           total_cost: BigDecimal("0.000002"),
           currency: "USD"
         )
@@ -516,7 +516,7 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
 
       it "handles tiny costs correctly" do
         metadata = described_class.new(**base_attributes, cost_calculation: tiny_cost_calculation)
-        
+
         expect(metadata.total_cost).to eq(0.000002)
         expect(metadata.cost_per_token).to eq(0.000002 / 150.0)
         expect(metadata.cost_summary).to include("Total: $2.0e-06 USD")
@@ -537,7 +537,7 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
 
       it "handles large costs correctly" do
         metadata = described_class.new(**base_attributes, cost_calculation: large_cost_calculation)
-        
+
         expect(metadata.total_cost).to eq(4.4)
         expect(metadata.input_cost).to eq(1.5)
         expect(metadata.output_cost).to eq(2.75)
@@ -556,7 +556,7 @@ RSpec.describe CodingAgentTools::Models::UsageMetadataWithCost do
 
       it "handles large token counts correctly" do
         metadata = described_class.new(**extreme_attributes, cost_calculation: cost_calculation)
-        
+
         expect(metadata.cost_per_token).to eq(0.0108 / 1_500_000.0)
         expect(metadata.total_tokens).to eq(1_500_000)
       end

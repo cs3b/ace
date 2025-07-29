@@ -514,7 +514,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
         target_path = File.join(temp_dir, "dir2", "file.rb")
 
         score = resolver.send(:calculate_proximity_score, target_path, current_dir)
-        # The actual score may be 40 (within project root) rather than 80 (sibling) 
+        # The actual score may be 40 (within project root) rather than 80 (sibling)
         # depending on the exact directory structure
         expect(score).to be >= 40
       end
@@ -589,7 +589,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
       it "handles relative paths within project" do
         # Mock expanded path to be within project root
         allow(File).to receive(:expand_path).and_return(File.join(temp_dir, "relative/path"))
-        
+
         cleaned = resolver.send(:clean_path_traversal, "./relative/path")
         expect(cleaned).to eq("relative/path")
       end
@@ -597,7 +597,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
       it "handles invalid path expansion" do
         # Mock File.expand_path to raise error
         allow(File).to receive(:expand_path).and_raise(StandardError, "Invalid path")
-        
+
         cleaned = resolver.send(:clean_path_traversal, "../invalid/path")
         expect(cleaned).to eq("path")  # Should extract last meaningful part
       end
@@ -648,7 +648,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
       it "provides fallback behavior for known commands" do
         # Test the fallback logic without complex mocking
         allow(resolver).to receive(:detect_current_release_fallback).and_return("v.0.3.0-fallback")
-        
+
         # Should fall back gracefully for known commands when they fail
         expect(resolver.send(:detect_current_release_fallback)).to eq("v.0.3.0-fallback")
       end
@@ -690,7 +690,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
 
       it "handles Find.find exceptions gracefully" do
         repo = {"path" => ".", "priority" => 1}
-        
+
         # Mock Find.find to raise an exception
         allow(Find).to receive(:find).and_raise(StandardError, "Permission denied")
 
@@ -700,7 +700,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
 
       it "limits results to prevent performance issues" do
         repo = {"path" => ".", "priority" => 1}
-        
+
         # Create a fake large result set
         large_matches = (1..100).map { |i| "/fake/path#{i}.rb" }
         allow(Find).to receive(:find).and_yield(*large_matches)

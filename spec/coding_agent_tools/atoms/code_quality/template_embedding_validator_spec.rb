@@ -539,7 +539,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       end
 
       it "handles very long file paths" do
-        deep_dir = File.join(temp_dir, *Array.new(10) { "very_long_directory_name" })
+        deep_dir = File.join(temp_dir, Array.new(10) { "very_long_directory_name" })
         FileUtils.mkdir_p(deep_dir)
         long_file = File.join(deep_dir, "deep_file.md")
         File.write(long_file, "{{#include missing.md}}")
@@ -786,7 +786,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
         # All results should be consistent
         first_result = results.pop
-        while !results.empty?
+        until results.empty?
           next_result = results.pop
           expect(next_result[:success]).to eq(first_result[:success])
           expect(next_result[:findings].size).to eq(first_result[:findings].size)
@@ -806,10 +806,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       it "handles permission denied errors gracefully" do
         file_path = File.join(temp_dir, "unreadable.md")
         File.write(file_path, "{{#include template.md}}")
-        
+
         # Mock File.read to raise a permission error
         allow(File).to receive(:read).with(file_path).and_raise(Errno::EACCES.new("Permission denied"))
-        
+
         expect { validator.validate([temp_dir]) }.to raise_error(Errno::EACCES)
       end
     end
@@ -818,16 +818,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       it "follows symlinks to markdown files" do
         real_file = File.join(temp_dir, "real.md")
         symlink_file = File.join(temp_dir, "symlink.md")
-        
+
         File.write(real_file, "{{#include missing.md}}")
-        
+
         # Skip test if system doesn't support symlinks
         begin
           File.symlink(real_file, symlink_file)
         rescue NotImplementedError
           skip "Symlinks not supported on this platform"
         end
-        
+
         result = validator.validate([symlink_file])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -840,7 +840,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         binary_file = File.join(temp_dir, "binary.md")
         # Write binary content that will cause encoding issues
         File.binwrite(binary_file, "\x00\x01\x02\x03{{#include template.md}}\xFF\xFE")
-        
+
         # Should raise an encoding error when trying to process invalid UTF-8
         expect { validator.validate([temp_dir]) }.to raise_error(Encoding::CompatibilityError, /invalid byte sequence/)
       end
@@ -857,7 +857,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     context "with template paths containing special sequences" do
       it "handles template paths with newlines" do
         create_markdown_file("newlines.md", "{{#include template\nwith\nnewlines.md}}")
-        
+
         result = validator.validate([temp_dir])
         # Template path with newlines won't match pattern properly
         expect(result[:success]).to be true
@@ -866,7 +866,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
       it "handles template paths with tabs" do
         create_markdown_file("tabs.md", "{{#include template\twith\ttabs.md}}")
-        
+
         result = validator.validate([temp_dir])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -877,9 +877,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         empty_dir = File.join(temp_dir, "empty_templates")
         FileUtils.mkdir_p(empty_dir)
         validator_with_empty = described_class.new(template_dirs: [empty_dir])
-        
+
         create_markdown_file("test.md", "{{#include any.md}}")
-        
+
         result = validator_with_empty.validate([temp_dir])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -890,9 +890,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       it "handles non-existent template directories gracefully" do
         non_existent = "/path/that/does/not/exist"
         validator_with_nonexistent = described_class.new(template_dirs: [non_existent])
-        
+
         create_markdown_file("test.md", "{{#include template.md}}")
-        
+
         result = validator_with_nonexistent.validate([temp_dir])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -903,14 +903,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       it "finds missing templates even in potential circular reference scenarios" do
         File.write(File.join(templates_dir, "a.md"), "{{#include b.md}}")
         File.write(File.join(templates_dir, "b.md"), "{{#include a.md}}")
-        
+
         create_markdown_file("circular.md", <<~CONTENT
           {{#include a.md}}
           {{#include b.md}}
           {{#include missing.md}}
         CONTENT
         )
-        
+
         result = validator.validate([temp_dir])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -923,7 +923,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     it "uses expected default template directories" do
       validator = described_class.new
       defaults = validator.template_dirs
-      
+
       expect(defaults).to include("dev-handbook/.meta/tpl")
       expect(defaults).to include("templates")
       expect(defaults).to include("_includes")
@@ -933,19 +933,19 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
     context "with default directories in validation" do
       it "searches default directories when no custom dirs specified" do
         validator = described_class.new
-        
+
         # Create a template in one of the default locations
         default_dir = File.join(temp_dir, "templates")
         FileUtils.mkdir_p(default_dir)
         File.write(File.join(default_dir, "default.md"), "Default template")
-        
+
         # Change working directory temporarily
         original_dir = Dir.pwd
         begin
           Dir.chdir(temp_dir)
-          
+
           create_markdown_file("with_default.md", "{{#include default.md}}")
-          
+
           result = validator.validate([File.join(temp_dir, "with_default.md")])
           expect(result[:success]).to be true
           expect(result[:findings]).to be_empty
@@ -965,7 +965,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
     it "always returns hash with required keys" do
       result = validator.validate([])
-      
+
       expect(result).to be_a(Hash)
       expect(result.keys).to contain_exactly(:success, :findings, :errors)
       expect([true, false]).to include(result[:success])
@@ -975,10 +975,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
 
     it "maintains finding structure consistency" do
       create_markdown_file("structured.md", "{{#include missing.md}}")
-      
+
       result = validator.validate([temp_dir])
       finding = result[:findings].first
-      
+
       expect(finding).to be_a(Hash)
       expect(finding.keys).to contain_exactly(:file, :line, :template, :pattern)
       expect(finding[:file]).to be_a(String)
@@ -994,9 +994,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         {{#include missing3.md}}
       CONTENT
       )
-      
+
       result = validator.validate([temp_dir])
-      
+
       expect(result[:findings].size).to eq(result[:errors].size)
       expect(result[:findings].size).to eq(3)
     end
@@ -1015,9 +1015,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         create_markdown_file("test.md", "{{#include missing.md}}")
         File.write(File.join(temp_dir, "readme.txt"), "Not markdown")
         File.write(File.join(temp_dir, "data.json"), "{}")
-        
+
         result = validator.validate([temp_dir])
-        
+
         # Should only process the .md file
         expect(result[:findings].size).to eq(1)
         expect(result[:findings].first[:file]).to end_with("test.md")
@@ -1028,9 +1028,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         deep_dir = File.join(temp_dir, "level1", "level2", "level3")
         FileUtils.mkdir_p(deep_dir)
         File.write(File.join(deep_dir, "deep.md"), "{{#include missing.md}}")
-        
+
         result = validator.validate([temp_dir])
-        
+
         expect(result[:findings].size).to eq(1)
         expect(result[:findings].first[:file]).to include("level1/level2/level3/deep.md")
       end
@@ -1041,13 +1041,13 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
         first_dir = File.join(temp_dir, "first")
         second_dir = File.join(temp_dir, "second")
         FileUtils.mkdir_p([first_dir, second_dir])
-        
+
         # Put template in second directory only
         File.write(File.join(second_dir, "template.md"), "Template content")
-        
+
         validator_multi = described_class.new(template_dirs: [first_dir, second_dir])
         create_markdown_file("multi.md", "{{#include template.md}}")
-        
+
         result = validator_multi.validate([temp_dir])
         expect(result[:success]).to be true
         expect(result[:findings]).to be_empty
@@ -1056,13 +1056,13 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
       it "handles templates with and without .md extension consistently" do
         # Create template without extension
         File.write(File.join(templates_dir, "no_ext"), "No extension")
-        
+
         create_markdown_file("extensions.md", <<~CONTENT
           {{#include no_ext}}
           {{#include no_ext.md}}
         CONTENT
         )
-        
+
         result = validator.validate([temp_dir])
         expect(result[:success]).to be false
         expect(result[:findings].size).to eq(1)
@@ -1077,10 +1077,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TemplateEmbeddingValidator 
           {{#include missing.md}}
         CONTENT
         )
-        
+
         result = validator.validate([temp_dir])
         error = result[:errors].first
-        
+
         expect(error).to match(/error_format\.md:2: Missing template 'missing\.md'/)
         expect(error).to include(File.join(temp_dir, "error_format.md"))
       end

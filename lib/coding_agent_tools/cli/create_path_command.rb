@@ -56,18 +56,18 @@ module CodingAgentTools
 
         # Process the creation request
         result = process_creation(type, actual_target, options)
-        
+
         if result[:success]
           puts result[:message]
           puts "Created: #{result[:path]}" if result[:path]
-          return 0
+          0
         else
           puts "Error: #{result[:error]}"
-          return 1
+          1
         end
       rescue => e
         puts "Error: #{e.message}"
-        return 1
+        1
       end
 
       private
@@ -81,7 +81,7 @@ module CodingAgentTools
         case type
         when "task-new"
           create_with_nav_path_and_template(:task_new, target, options)
-        when "docs-new" 
+        when "docs-new"
           create_with_nav_path_and_template(:docs_new, target, options)
         when "file"
           create_file(target, options)
@@ -96,7 +96,7 @@ module CodingAgentTools
 
       def process_delegation_type(type, target, options)
         creation_type, nav_type = type.split(":", 2)
-        
+
         case creation_type
         when "file"
           case nav_type
@@ -122,7 +122,7 @@ module CodingAgentTools
       def create_with_nav_path_and_template(nav_type, title, options)
         # Use PathResolver to get the target path (delegates to nav-path logic)
         path_result = @path_resolver.resolve_path(title, type: nav_type)
-        
+
         unless path_result[:success]
           return {success: false, error: "Path resolution failed: #{path_result[:error]}"}
         end
@@ -130,8 +130,8 @@ module CodingAgentTools
         target_path = path_result[:path]
 
         # Get template configuration
-        template_config = get_template_config(nav_type.to_s.gsub("_", "-"))
-        
+        template_config = get_template_config(nav_type.to_s.tr("_", "-"))
+
         unless template_config
           # Create empty file with notice when template not found
           puts "Notice: Template not found for #{nav_type} - creating empty file"
@@ -140,7 +140,7 @@ module CodingAgentTools
 
         # Generate content from template
         content = generate_content_from_template(template_config, title, options, nav_type)
-        
+
         # Create the file
         create_file_with_content(target_path, content, options)
       end
@@ -158,7 +158,7 @@ module CodingAgentTools
 
         # Get content from options or prompt
         content = options[:content] || ""
-        
+
         if content.empty?
           return {success: false, error: "Content required for file creation (use --content)"}
         end
@@ -193,7 +193,7 @@ module CodingAgentTools
 
       def create_with_custom_template(title, options)
         template_path = options[:template]
-        
+
         unless template_path
           return {success: false, error: "Template path required (use --template)"}
         end
@@ -222,13 +222,11 @@ module CodingAgentTools
       end
 
       def create_file_with_content(path, content, options)
-        begin
-          # Use FileIoHandler for secure file writing
-          @file_handler.write_content(content, path, force: options[:force])
-          {success: true, message: "File created successfully", path: path}
-        rescue CodingAgentTools::Error => e
-          {success: false, error: e.message}
-        end
+        # Use FileIoHandler for secure file writing
+        @file_handler.write_content(content, path, force: options[:force])
+        {success: true, message: "File created successfully", path: path}
+      rescue CodingAgentTools::Error => e
+        {success: false, error: e.message}
       end
 
       def get_template_config(type)
@@ -237,7 +235,7 @@ module CodingAgentTools
 
       def generate_content_from_template(template_config, title, options, nav_type = nil)
         template_path = template_config["template"]
-        
+
         unless template_path && File.exist?(template_path)
           # Return contextual content when template file doesn't exist
           puts "Notice: Template file not found: #{template_path} - creating empty file"
@@ -274,9 +272,7 @@ module CodingAgentTools
         end
 
         # Apply built-in variables
-        result = apply_built_in_variables(result)
-
-        result
+        apply_built_in_variables(result)
       end
 
       def build_metadata_hash(title, options)
@@ -326,29 +322,29 @@ module CodingAgentTools
         if command.match?(/[;&|`$<>(){}\\]/)
           return "unknown"
         end
-        
+
         # Parse command into executable and arguments
         command_parts = Shellwords.split(command)
         return "unknown" if command_parts.empty?
-        
+
         executable = command_parts.first
         args = command_parts[1..]
-        
+
         # Whitelist only safe commands (extend as needed)
         safe_commands = %w[date echo pwd whoami hostname uname git task-manager]
         unless safe_commands.include?(executable)
           return "unknown"
         end
-        
+
         begin
-          stdout, stderr, status = Open3.capture3(executable, *args)
+          stdout, _, status = Open3.capture3(executable, *args)
           if status.success?
             stdout.strip
           else
             # Log the error for debugging but return unknown for security
             "unknown"
           end
-        rescue => e
+        rescue
           # Command execution failed, return default
           "unknown"
         end
@@ -384,12 +380,12 @@ module CodingAgentTools
 
         # Create contextual title based on nav_type and user title
         contextual_content = generate_contextual_content(nav_type, title)
-        
+
         begin
           @file_handler.write_content(contextual_content, target_path, force: options[:force])
           {
-            success: true, 
-            message: "Empty file created (template not found for #{nav_type})", 
+            success: true,
+            message: "Empty file created (template not found for #{nav_type})",
             path: target_path
           }
         rescue CodingAgentTools::Error => e
@@ -403,7 +399,7 @@ module CodingAgentTools
         case nav_type.to_s
         when "reflection_new"
           "# Reflection - #{title}\n\n"
-        when "docs_new" 
+        when "docs_new"
           "# Documentation - #{title}\n\n"
         when "code_review_new"
           "# Code Review - #{title}\n\n"
@@ -415,7 +411,7 @@ module CodingAgentTools
       def generate_contextual_content_from_template_context(template_config, title)
         # Extract type from template path to determine context
         template_path = template_config&.dig("template") || ""
-        
+
         if template_path.include?("docs")
           "# Documentation - #{title}\n\n"
         elsif template_path.include?("reflection")

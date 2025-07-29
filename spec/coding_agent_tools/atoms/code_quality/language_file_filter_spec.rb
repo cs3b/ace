@@ -534,7 +534,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
     context "with performance and memory considerations" do
       it "handles large numbers of file paths efficiently" do
         large_file_list = (1..10000).map { |i| "file_#{i}.rb" }
-        
+
         start_time = Time.now
         result = filter.filter_by_language(large_file_list, :ruby)
         end_time = Time.now
@@ -572,7 +572,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
 
         result = filter.expand_paths_for_language(paths, :ruby)
         main_rb_files = result.select { |f| f.end_with?("main.rb") }
-        
+
         expect(main_rb_files.size).to eq(1)
       end
     end
@@ -607,7 +607,6 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           expect(result).to include(File.join(real_dir, "nested.rb"))
           # Symlinked directory contents may or may not be included depending on Dir.glob behavior
           expect(result).to be_an(Array)
-
         rescue NotImplementedError
           skip "Symlinks not supported on this platform"
         end
@@ -619,14 +618,13 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
         begin
           link1 = File.join(temp_dir, "link1")
           link2 = File.join(temp_dir, "link2")
-          
+
           File.symlink(link2, link1)
           File.symlink(link1, link2)
 
           # Should not infinite loop
           result = filter.expand_paths_for_language([temp_dir], :ruby)
           expect(result).to be_an(Array)
-
         rescue NotImplementedError, SystemCallError
           skip "Cannot create circular symlinks on this system"
         end
@@ -642,7 +640,6 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           result = filter.expand_paths_for_language([temp_dir], :ruby)
           # Should handle broken symlinks without crashing
           expect(result).to be_an(Array)
-
         rescue NotImplementedError
           skip "Symlinks not supported on this platform"
         end
@@ -669,18 +666,17 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
 
       it "handles filesystem encoding issues" do
         # Create file with non-UTF8 name if possible
-        begin
-          weird_name = ("file_\xC0\x80.rb").dup.force_encoding("ASCII-8BIT")
-          weird_file = File.join(temp_dir, weird_name)
-          File.write(weird_file, "# weird encoding")
 
-          result = filter.expand_paths_for_language([temp_dir], :ruby)
-          # Should handle without crashing
-          expect(result).to be_an(Array)
-        rescue ArgumentError, Encoding::InvalidByteSequenceError, Errno::EILSEQ
-          # Some filesystems/platforms don't support this
-          skip "Filesystem doesn't support non-UTF8 filenames"
-        end
+        weird_name = "file_\xC0\x80.rb".dup.force_encoding("ASCII-8BIT")
+        weird_file = File.join(temp_dir, weird_name)
+        File.write(weird_file, "# weird encoding")
+
+        result = filter.expand_paths_for_language([temp_dir], :ruby)
+        # Should handle without crashing
+        expect(result).to be_an(Array)
+      rescue ArgumentError, Encoding::InvalidByteSequenceError, Errno::EILSEQ
+        # Some filesystems/platforms don't support this
+        skip "Filesystem doesn't support non-UTF8 filenames"
       end
     end
 
@@ -752,7 +748,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
           custom: ["test.custom"]
         }.each do |language, expected_files|
           result = complex_filter.filter_by_language(all_files, language)
-          expect(result).to contain_exactly(*expected_files), 
+          expect(result).to contain_exactly(*expected_files),
             "Failed for language #{language}: expected #{expected_files}, got #{result}"
         end
       end
@@ -775,7 +771,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "handles pattern precedence correctly" do
         # Test what happens with overlapping patterns
         File.write(File.join(temp_dir, "ambiguous.json.js"), "// Could match multiple patterns")
-        
+
         js_result = complex_filter.filter_by_language(["ambiguous.json.js"], :javascript)
         json_result = complex_filter.filter_by_language(["ambiguous.json.js"], :json)
 
@@ -795,7 +791,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
         FileUtils.mkdir_p(File.join(temp_dir, "src", "deep"))
         FileUtils.mkdir_p(File.join(temp_dir, "exe"))
         FileUtils.mkdir_p(File.join(temp_dir, "bin"))
-        
+
         File.write(File.join(temp_dir, "src", "main.rb"), "# main")
         File.write(File.join(temp_dir, "src", "deep", "nested.rb"), "# nested")
         File.write(File.join(temp_dir, "exe", "tool"), "#!/usr/bin/env ruby")
@@ -807,7 +803,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "handles extension patterns correctly" do
         patterns = ["*.rb"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to include(
           File.join(temp_dir, "src", "main.rb"),
           File.join(temp_dir, "src", "deep", "nested.rb")
@@ -821,7 +817,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "handles directory patterns correctly" do
         patterns = ["exe/*"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to include(File.join(temp_dir, "exe", "tool"))
         expect(result).not_to include(
           File.join(temp_dir, "bin", "setup"),
@@ -832,7 +828,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "handles exact filename patterns correctly" do
         patterns = ["Gemfile"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to include(File.join(temp_dir, "Gemfile"))
         expect(result).not_to include(
           File.join(temp_dir, "src", "main.rb"),
@@ -843,7 +839,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "combines multiple pattern types" do
         patterns = ["*.rb", "exe/*", "Gemfile"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to include(
           File.join(temp_dir, "src", "main.rb"),
           File.join(temp_dir, "src", "deep", "nested.rb"),
@@ -855,13 +851,13 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "filters out directories from results" do
         # Create a directory that matches a pattern
         FileUtils.mkdir_p(File.join(temp_dir, "test.rb"))
-        
+
         patterns = ["*.rb"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         # Should not include the directory named test.rb
         expect(result).not_to include(File.join(temp_dir, "test.rb"))
-        
+
         # But should include actual .rb files
         expect(result).to include(File.join(temp_dir, "src", "main.rb"))
       end
@@ -869,7 +865,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       it "handles empty pattern list gracefully" do
         patterns = []
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to eq([])
       end
 
@@ -877,10 +873,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
         # Create files with special characters
         File.write(File.join(temp_dir, "file[1].rb"), "# special")
         File.write(File.join(temp_dir, "file{2}.rb"), "# special")
-        
+
         patterns = ["*.rb"]
         result = test_filter.send(:find_files_in_directory, temp_dir, patterns)
-        
+
         expect(result).to include(
           File.join(temp_dir, "file[1].rb"),
           File.join(temp_dir, "file{2}.rb")
@@ -894,27 +890,27 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::LanguageFileFilter do
       # Create detector double to verify interaction
       detector_double = instance_double(CodingAgentTools::Atoms::CodeQuality::FileTypeDetector)
       allow(CodingAgentTools::Atoms::CodeQuality::FileTypeDetector).to receive(:new).and_return(detector_double)
-      
+
       # Set up detector expectations
       allow(detector_double).to receive(:matches_language?).with("test.rb", :ruby).and_return(true)
       allow(detector_double).to receive(:patterns_for).with(:ruby).and_return(["*.rb"])
-      
+
       filter = described_class.new
-      
+
       expect(filter.matches_language?("test.rb", :ruby)).to be true
       expect(filter.patterns_for(:ruby)).to eq(["*.rb"])
-      
+
       expect(detector_double).to have_received(:matches_language?).with("test.rb", :ruby)
       expect(detector_double).to have_received(:patterns_for).with(:ruby)
     end
 
     it "passes configuration correctly to FileTypeDetector" do
-      custom_config = { file_patterns: { ruby: ["*.rb"] } }
-      
+      custom_config = {file_patterns: {ruby: ["*.rb"]}}
+
       expect(CodingAgentTools::Atoms::CodeQuality::FileTypeDetector).to receive(:new)
         .with(config: custom_config)
         .and_call_original
-      
+
       described_class.new(config: custom_config)
     end
   end

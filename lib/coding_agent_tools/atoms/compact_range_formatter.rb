@@ -3,7 +3,7 @@
 module CodingAgentTools
   module Atoms
     # Formats arrays of line numbers into compact range notation
-    # Converts arrays like [11, 12, 13, 22, 23, 25, 26, 27, 28] 
+    # Converts arrays like [11, 12, 13, 22, 23, 25, 26, 27, 28]
     # into compact strings like "11..13,22,23,25..28"
     class CompactRangeFormatter
       def initialize
@@ -36,10 +36,10 @@ module CodingAgentTools
         return [] if compact_string.nil? || compact_string.strip.empty?
 
         line_numbers = []
-        
+
         # Split by commas to get individual ranges/numbers
         parts = compact_string.split(",").map(&:strip)
-        
+
         parts.each do |part|
           if part.include?("..")
             # Handle range (e.g., "11..13")
@@ -62,10 +62,10 @@ module CodingAgentTools
       # @param compact_string [String] Compact range string to validate
       # @return [Hash] validation result: { valid: Boolean, errors: Array }
       def validate_compact_format(compact_string)
-        return { valid: true, errors: [] } if compact_string.nil? || compact_string.strip.empty?
+        return {valid: true, errors: []} if compact_string.nil? || compact_string.strip.empty?
 
         errors = []
-        
+
         # Basic format validation
         unless compact_string.match?(/\A[\d,.\-\s]+\z/)
           errors << "Contains invalid characters (only digits, commas, dots, and hyphens allowed)"
@@ -111,19 +111,19 @@ module CodingAgentTools
         return zero_compression_metrics if original_array.nil? || original_array.empty?
 
         compact_string ||= format_compact_ranges(original_array)
-        
+
         # Calculate sizes in characters (rough approximation)
         original_size = original_array.join(",").length
         compact_size = compact_string.length
-        
-        compression_ratio = original_size > 0 ? (compact_size.to_f / original_size * 100).round(2) : 0.0
+
+        compression_ratio = (original_size > 0) ? (compact_size.to_f / original_size * 100).round(2) : 0.0
 
         {
           original_size: original_size,
           compact_size: compact_size,
           compression_ratio: compression_ratio,
           space_saved: original_size - compact_size,
-          space_saved_percentage: original_size > 0 ? ((original_size - compact_size).to_f / original_size * 100).round(2) : 0.0
+          space_saved_percentage: (original_size > 0) ? ((original_size - compact_size).to_f / original_size * 100).round(2) : 0.0
         }
       end
 
@@ -142,14 +142,14 @@ module CodingAgentTools
             current_end = number
           else
             # Gap found, save current range and start a new one
-            ranges << { start: current_start, end: current_end }
+            ranges << {start: current_start, end: current_end}
             current_start = number
             current_end = number
           end
         end
 
         # Add the final range
-        ranges << { start: current_start, end: current_end }
+        ranges << {start: current_start, end: current_end}
         ranges
       end
 

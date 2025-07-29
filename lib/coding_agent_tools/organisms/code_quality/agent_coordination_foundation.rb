@@ -164,7 +164,7 @@ module CodingAgentTools
           # Rough estimate: 30 seconds per error file with 4 parallel agents
           total_errors = error_files.size
           return 0 if total_errors == 0
-          
+
           parallel_factor = [total_errors, 4].min
 
           (total_errors * 30.0 / parallel_factor).ceil

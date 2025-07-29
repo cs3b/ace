@@ -51,7 +51,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 45,
       coverage_percentage: 90.0,
       methods: [sample_method_high_coverage],
-      uncovered_details: { uncovered_lines: [5, 10, 15, 20, 25], uncovered_ranges: ["5", "10", "15", "20", "25"], total_uncovered: 5 }
+      uncovered_details: {uncovered_lines: [5, 10, 15, 20, 25], uncovered_ranges: ["5", "10", "15", "20", "25"], total_uncovered: 5}
     )
   end
 
@@ -62,7 +62,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 30,
       coverage_percentage: 30.0,
       methods: [sample_method_low_coverage],
-      uncovered_details: { uncovered_lines: (31..100).to_a, uncovered_ranges: ["31-100"], total_uncovered: 70 }
+      uncovered_details: {uncovered_lines: (31..100).to_a, uncovered_ranges: ["31-100"], total_uncovered: 70}
     )
   end
 
@@ -73,7 +73,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 20,
       coverage_percentage: 10.0,
       methods: [sample_method_low_coverage],
-      uncovered_details: { uncovered_lines: (21..200).to_a, uncovered_ranges: ["21-200"], total_uncovered: 180 }
+      uncovered_details: {uncovered_lines: (21..200).to_a, uncovered_ranges: ["21-200"], total_uncovered: 180}
     )
   end
 
@@ -84,7 +84,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 0,
       coverage_percentage: 0.0,
       methods: [],
-      uncovered_details: { uncovered_lines: (1..80).to_a, uncovered_ranges: ["1-80"], total_uncovered: 80 }
+      uncovered_details: {uncovered_lines: (1..80).to_a, uncovered_ranges: ["1-80"], total_uncovered: 80}
     )
   end
 
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 200,
       coverage_percentage: 40.0,
       methods: [sample_method_low_coverage],
-      uncovered_details: { uncovered_lines: (201..500).to_a, uncovered_ranges: ["201-500"], total_uncovered: 300 }
+      uncovered_details: {uncovered_lines: (201..500).to_a, uncovered_ranges: ["201-500"], total_uncovered: 300}
     )
   end
 
@@ -106,7 +106,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       covered_lines: 8,
       coverage_percentage: 53.3,
       methods: [],
-      uncovered_details: { uncovered_lines: [1, 3, 5, 7, 9, 11, 13], uncovered_ranges: ["1", "3", "5", "7", "9", "11", "13"], total_uncovered: 7 }
+      uncovered_details: {uncovered_lines: [1, 3, 5, 7, 9, 11, 13], uncovered_ranges: ["1", "3", "5", "7", "9", "11", "13"], total_uncovered: 7}
     )
   end
 
@@ -170,7 +170,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
         expect(result[:files]).to be_an(Array)
         expect(result[:files].length).to be <= 20 # Default max_files
-        
+
         # First file should have highest urgency score
         expect(result[:files].first[:urgency_score]).to be >= result[:files].last[:urgency_score] if result[:files].length > 1
       end
@@ -219,13 +219,13 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       end
 
       it "includes method details by default" do
-        options_with_methods = { max_files: 1, include_method_details: true }
+        options_with_methods = {max_files: 1, include_method_details: true}
         result = extractor.extract_undercovered_items(sample_analysis_result, options_with_methods)
 
         # Test should pass regardless of whether methods are included
         # The important thing is that include_method_details=true is being processed
         expect(result[:files]).to_not be_empty
-        
+
         # If methods are present in the result, they should have the expected structure
         file_with_methods = result[:files].find { |f| f.has_key?(:methods) }
         if file_with_methods
@@ -265,7 +265,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
   describe "#extract_by_type" do
     context "extracting files" do
       it "extracts critical files by worst coverage" do
-        result = extractor.extract_by_type(sample_analysis_result, :files, { limit: 2 })
+        result = extractor.extract_by_type(sample_analysis_result, :files, {limit: 2})
 
         expect(result).to be_an(Array)
         expect(result.length).to eq(2)
@@ -276,7 +276,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
     context "extracting methods" do
       it "extracts critical methods under threshold" do
-        result = extractor.extract_by_type(sample_analysis_result, :methods, { limit: 5 })
+        result = extractor.extract_by_type(sample_analysis_result, :methods, {limit: 5})
 
         expect(result).to be_an(Array)
         result.each do |method|
@@ -288,7 +288,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
     context "extracting lines" do
       it "extracts critical line ranges" do
-        result = extractor.extract_by_type(sample_analysis_result, :lines, { limit: 3 })
+        result = extractor.extract_by_type(sample_analysis_result, :lines, {limit: 3})
 
         expect(result).to be_an(Array)
         result.each do |line_info|
@@ -299,7 +299,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
     context "extracting all types" do
       it "extracts all item types" do
-        result = extractor.extract_by_type(sample_analysis_result, :all, { limit: 2 })
+        result = extractor.extract_by_type(sample_analysis_result, :all, {limit: 2})
 
         expect(result).to be_a(Hash)
         expect(result).to include(:files, :methods, :lines)
@@ -325,7 +325,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
         expect(result).to be_an(Array)
         expect(result.length).to be <= 5
-        
+
         result.each do |item|
           expect(item).to include(:file, :impact_score, :improvement_potential, :effort_estimate)
           expect(item[:impact_score]).to be_a(Numeric)
@@ -344,7 +344,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
       end
 
       it "excludes files smaller than minimum size" do
-        result = extractor.find_high_impact_files(sample_analysis_result, { min_size: 50 })
+        result = extractor.find_high_impact_files(sample_analysis_result, {min_size: 50})
 
         result.each do |item|
           expect(item[:file].total_lines).to be >= 50
@@ -354,13 +354,13 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
     context "with custom options" do
       it "respects custom limit" do
-        result = extractor.find_high_impact_files(sample_analysis_result, { limit: 2 })
+        result = extractor.find_high_impact_files(sample_analysis_result, {limit: 2})
 
         expect(result.length).to be <= 2
       end
 
       it "respects custom minimum file size" do
-        result = extractor.find_high_impact_files(sample_analysis_result, { min_size: 150 })
+        result = extractor.find_high_impact_files(sample_analysis_result, {min_size: 150})
 
         result.each do |item|
           expect(item[:file].total_lines).to be >= 150
@@ -382,7 +382,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           analysis_timestamp: Time.now
         )
 
-        result = extractor.find_high_impact_files(small_files_result, { min_size: 100 })
+        result = extractor.find_high_impact_files(small_files_result, {min_size: 100})
 
         expect(result).to be_empty
       end
@@ -443,7 +443,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
     context "with different file characteristics" do
       it "calculates higher scores for files with larger coverage gaps" do
         threshold = 85.0
-        
+
         high_gap_score = extractor.send(:calculate_urgency_score, sample_file_zero_coverage, threshold)
         low_gap_score = extractor.send(:calculate_urgency_score, sample_file_high_coverage, threshold)
 
@@ -452,7 +452,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
       it "incorporates file size into scoring" do
         threshold = 85.0
-        
+
         large_file_score = extractor.send(:calculate_urgency_score, sample_large_file, threshold)
         small_file_score = extractor.send(:calculate_urgency_score, sample_small_file, threshold)
 
@@ -462,7 +462,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
       it "factors in uncovered lines ratio" do
         threshold = 85.0
-        
+
         high_uncovered_score = extractor.send(:calculate_urgency_score, sample_file_critical_coverage, threshold)
         low_uncovered_score = extractor.send(:calculate_urgency_score, sample_file_high_coverage, threshold)
 
@@ -485,7 +485,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           covered_lines: 50,
           coverage_percentage: 100.0,
           methods: [],
-          uncovered_details: { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 }
+          uncovered_details: {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0}
         )
 
         result = extractor.send(:calculate_urgency_score, perfect_file, 85.0)
@@ -500,7 +500,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           covered_lines: 0,
           coverage_percentage: 0.0,
           methods: [],
-          uncovered_details: { uncovered_lines: [1], uncovered_ranges: ["1"], total_uncovered: 1 }
+          uncovered_details: {uncovered_lines: [1], uncovered_ranges: ["1"], total_uncovered: 1}
         )
 
         result = extractor.send(:calculate_urgency_score, single_line_file, 85.0)
@@ -520,11 +520,11 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
       expect(result).to be_an(Array)
       expect(result.length).to eq(3)
-      
+
       # Verify sorting: calculate expected urgency scores
       scores = files.map { |file| extractor.send(:calculate_urgency_score, file, threshold) }
       expected_order = files.zip(scores).sort_by { |_, score| -score }.map(&:first)
-      
+
       expect(result).to eq(expected_order)
     end
 
@@ -559,7 +559,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           covered_lines: 8,
           coverage_percentage: 80.0,
           methods: [],
-          uncovered_details: { uncovered_lines: [9, 10], uncovered_ranges: ["9-10"], total_uncovered: 2 }
+          uncovered_details: {uncovered_lines: [9, 10], uncovered_ranges: ["9-10"], total_uncovered: 2}
         )
 
         large_effort_file = CodingAgentTools::Models::CoverageResult.new(
@@ -568,7 +568,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           covered_lines: 50,
           coverage_percentage: 25.0,
           methods: [],
-          uncovered_details: { uncovered_lines: (51..200).to_a, uncovered_ranges: ["51-200"], total_uncovered: 150 }
+          uncovered_details: {uncovered_lines: (51..200).to_a, uncovered_ranges: ["51-200"], total_uncovered: 150}
         )
 
         small_result = extractor.send(:estimate_testing_effort, small_effort_file)
@@ -588,7 +588,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
           covered_lines: 50,
           coverage_percentage: 100.0,
           methods: [],
-          uncovered_details: { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 }
+          uncovered_details: {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0}
         )
 
         result = extractor.send(:estimate_testing_effort, fully_covered)
@@ -619,11 +619,11 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
 
       it "handles method coverage integration" do
         file_with_methods = sample_analysis_result.under_covered_files.find { |f| f.methods.any? }
-        
+
         if file_with_methods
           result = extractor.extract_undercovered_items(sample_analysis_result)
           file_result = result[:files].find { |f| f[:file_path] == file_with_methods.relative_path }
-          
+
           expect(file_result[:methods]).to be_an(Array) if file_result&.has_key?(:methods)
         end
       end
@@ -673,7 +673,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
             covered_lines: 25 + i,
             coverage_percentage: ((25.0 + i) / (50.0 + i * 2) * 100).round(2),
             methods: [],
-            uncovered_details: { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 25 - i }
+            uncovered_details: {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 25 - i}
           )
         end
 
@@ -684,7 +684,7 @@ RSpec.describe CodingAgentTools::Organisms::UndercoveredItemsExtractor do
         )
 
         start_time = Time.now
-        result = extractor.extract_undercovered_items(large_result, { max_files: 10 })
+        result = extractor.extract_undercovered_items(large_result, {max_files: 10})
         end_time = Time.now
 
         expect(end_time - start_time).to be < 5.0 # Should complete within 5 seconds

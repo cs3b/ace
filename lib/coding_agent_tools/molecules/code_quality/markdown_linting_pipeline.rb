@@ -109,17 +109,17 @@ module CodingAgentTools
         def run_styleguide(paths, autofix, results)
           # Get styleguide configuration
           styleguide_config = config.dig("markdown", "linters", "styleguide") || {}
-          
+
           # Prepare options for KramdownFormatter
-          formatter_options = { dry_run: !autofix }
-          
+          formatter_options = {dry_run: !autofix}
+
           # Pass through supported Kramdown options
           %w[line_width hard_wrap auto_ids entity_output toc_levels smart_quotes gfm_quirks syntax_highlighter].each do |option|
             if styleguide_config.key?(option)
               formatter_options[option.to_sym] = styleguide_config[option]
             end
           end
-          
+
           formatter = Atoms::CodeQuality::KramdownFormatter.new(formatter_options)
 
           findings = []

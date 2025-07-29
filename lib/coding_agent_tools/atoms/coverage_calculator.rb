@@ -42,7 +42,7 @@ module CodingAgentTools
         # SimpleCov uses 1-based indexing with null at index 0
         range_start = [start_line - 1, 0].max
         range_end = [end_line - 1, lines.length - 1].min
-        
+
         return zero_coverage if range_start >= lines.length
 
         # Safely extract the range
@@ -67,15 +67,15 @@ module CodingAgentTools
 
         # Combine coverage data: null stays null, numbers get summed
         combined_lines = Array.new(max_length)
-        
+
         (0...max_length).each do |index|
           values = lines_arrays.map { |arr| arr[index] if index < arr.length }.compact
-          
-          if values.empty? || values.all?(&:nil?)
-            combined_lines[index] = nil
+
+          combined_lines[index] = if values.empty? || values.all?(&:nil?)
+            nil
           else
             # Sum non-nil values, treat nil as 0 for combination
-            combined_lines[index] = values.map { |v| v || 0 }.sum
+            values.map { |v| v || 0 }.sum
           end
         end
 
@@ -86,14 +86,14 @@ module CodingAgentTools
       # @param lines [Array] SimpleCov lines array (null, 0, or positive integers)
       # @return [Hash] uncovered line details: { uncovered_lines, uncovered_ranges, total_uncovered }
       def extract_uncovered_lines(lines)
-        return { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 } if lines.nil? || lines.empty?
+        return {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0} if lines.nil? || lines.empty?
 
         uncovered_lines = []
-        
+
         lines.each_with_index do |coverage, index|
           # Line numbers are 1-based, array indices are 0-based
           line_number = index + 1
-          
+
           # Uncovered line: executable (not nil) but with 0 coverage
           if coverage == 0
             uncovered_lines << line_number
@@ -114,16 +114,16 @@ module CodingAgentTools
         return [] if lines.nil? || lines.empty?
 
         line_details = []
-        
+
         lines.each_with_index do |coverage, index|
           line_number = index + 1
-          
+
           next if coverage.nil? # Skip non-executable lines
-          
+
           line_details << {
             line_number: line_number,
             coverage_count: coverage,
-            status: coverage > 0 ? :covered : :uncovered
+            status: (coverage > 0) ? :covered : :uncovered
           }
         end
 
@@ -150,7 +150,7 @@ module CodingAgentTools
 
       def calculate_percentage(covered, total)
         return 0.0 if total.zero?
-        
+
         ((covered.to_f / total) * 100).round(2)
       end
 
@@ -167,14 +167,14 @@ module CodingAgentTools
             current_end = line_num
           else
             # Gap found, save current range and start a new one
-            ranges << { start_line: current_start, end_line: current_end }
+            ranges << {start_line: current_start, end_line: current_end}
             current_start = line_num
             current_end = line_num
           end
         end
 
         # Add the final range
-        ranges << { start_line: current_start, end_line: current_end }
+        ranges << {start_line: current_start, end_line: current_end}
         ranges
       end
     end

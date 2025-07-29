@@ -11,7 +11,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     describe "#actionable?" do
       it "returns the actionable status" do
         expect(result.actionable?).to be true
-        
+
         non_actionable = described_class::DependencyResult.new("task2", false, ["dep1"], false, nil)
         expect(non_actionable.actionable?).to be false
       end
@@ -36,7 +36,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     describe "struct attributes" do
       it "has all required attributes" do
         result = described_class::DependencyResult.new("task1", true, ["dep1"], true, ["cycle"])
-        
+
         expect(result.task_id).to eq("task1")
         expect(result.actionable).to be true
         expect(result.unmet_dependencies).to eq(["dep1"])
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task doesn't exist in task_map" do
       it "returns non-actionable result" do
         result = described_class.check_task_dependencies("nonexistent", task_map)
-        
+
         expect(result.task_id).to eq("nonexistent")
         expect(result.actionable?).to be false
         expect(result.unmet_dependencies).to eq([])
@@ -73,7 +73,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task is already done" do
       it "returns actionable result" do
         result = described_class.check_task_dependencies("task2", task_map)
-        
+
         expect(result.task_id).to eq("task2")
         expect(result.actionable?).to be true
         expect(result.unmet_dependencies).to eq([])
@@ -84,7 +84,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task has no dependencies" do
       it "returns actionable result" do
         result = described_class.check_task_dependencies("task1", task_map)
-        
+
         expect(result.actionable?).to be true
         expect(result.unmet_dependencies).to eq([])
       end
@@ -93,7 +93,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task has met dependencies" do
       it "returns actionable result" do
         result = described_class.check_task_dependencies("task4", task_map)
-        
+
         expect(result.actionable?).to be true
         expect(result.unmet_dependencies).to eq([])
       end
@@ -102,14 +102,14 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task has unmet dependencies" do
       it "returns non-actionable result with unmet dependencies" do
         result = described_class.check_task_dependencies("task3", task_map)
-        
+
         expect(result.actionable?).to be false
         expect(result.unmet_dependencies).to eq(["task1"])
       end
 
       it "handles multiple unmet dependencies" do
         result = described_class.check_task_dependencies("task5", task_map)
-        
+
         expect(result.actionable?).to be false
         expect(result.unmet_dependencies).to eq(["task1"])
       end
@@ -118,7 +118,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "when task has missing dependencies" do
       it "ignores missing dependencies and checks remaining ones" do
         result = described_class.check_task_dependencies("task6", task_map)
-        
+
         expect(result.actionable?).to be true
         expect(result.unmet_dependencies).to eq([])
       end
@@ -127,15 +127,15 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "with hash-based task data" do
       let(:hash_task_map) do
         {
-          "task1" => { "id" => "task1", "status" => "pending", "dependencies" => [] },
-          "task2" => { "id" => "task2", "status" => "done", "dependencies" => [] },
-          "task3" => { "id" => "task3", "status" => "pending", "dependencies" => ["task1"] }
+          "task1" => {"id" => "task1", "status" => "pending", "dependencies" => []},
+          "task2" => {"id" => "task2", "status" => "done", "dependencies" => []},
+          "task3" => {"id" => "task3", "status" => "pending", "dependencies" => ["task1"]}
         }
       end
 
       it "works with hash-based task data" do
         result = described_class.check_task_dependencies("task3", hash_task_map)
-        
+
         expect(result.actionable?).to be false
         expect(result.unmet_dependencies).to eq(["task1"])
       end
@@ -144,15 +144,15 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     context "with symbol-key task data" do
       let(:symbol_task_map) do
         {
-          "task1" => { id: "task1", status: "pending", dependencies: [] },
-          "task2" => { id: "task2", status: "done", dependencies: [] },
-          "task3" => { id: "task3", status: "pending", dependencies: ["task1"] }
+          "task1" => {id: "task1", status: "pending", dependencies: []},
+          "task2" => {id: "task2", status: "done", dependencies: []},
+          "task3" => {id: "task3", status: "pending", dependencies: ["task1"]}
         }
       end
 
       it "works with symbol-key task data" do
         result = described_class.check_task_dependencies("task3", symbol_task_map)
-        
+
         expect(result.actionable?).to be false
         expect(result.unmet_dependencies).to eq(["task1"])
       end
@@ -172,25 +172,25 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
 
     it "returns all actionable tasks" do
       actionable_tasks = described_class.find_actionable_tasks(task_map)
-      
+
       expect(actionable_tasks).to contain_exactly("task1", "task4", "task5")
     end
 
     it "excludes done tasks" do
       actionable_tasks = described_class.find_actionable_tasks(task_map)
-      
+
       expect(actionable_tasks).not_to include("task2")
     end
 
     it "excludes tasks with unmet dependencies" do
       actionable_tasks = described_class.find_actionable_tasks(task_map)
-      
+
       expect(actionable_tasks).not_to include("task3")
     end
 
     it "handles empty task map" do
       actionable_tasks = described_class.find_actionable_tasks({})
-      
+
       expect(actionable_tasks).to eq([])
     end
 
@@ -199,9 +199,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
         "task1" => OpenStruct.new(id: "task1", status: "done", dependencies: []),
         "task2" => OpenStruct.new(id: "task2", status: "done", dependencies: [])
       }
-      
+
       actionable_tasks = described_class.find_actionable_tasks(all_done_map)
-      
+
       expect(actionable_tasks).to eq([])
     end
   end
@@ -223,17 +223,17 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
       end
 
       it "returns true for done status with hash access (string keys)" do
-        task = { "status" => "done" }
+        task = {"status" => "done"}
         expect(described_class.send(:task_done?, task)).to be true
       end
 
       it "returns true for done status with hash access (symbol keys)" do
-        task = { status: "done" }
+        task = {status: "done"}
         expect(described_class.send(:task_done?, task)).to be true
       end
 
       it "returns false for non-done status with hash access" do
-        task = { "status" => "pending" }
+        task = {"status" => "pending"}
         expect(described_class.send(:task_done?, task)).to be false
       end
 
@@ -254,12 +254,12 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
       end
 
       it "extracts dependencies from hash access (string keys)" do
-        task = { "dependencies" => ["task1", "task2"] }
+        task = {"dependencies" => ["task1", "task2"]}
         expect(described_class.send(:extract_dependencies, task)).to eq(["task1", "task2"])
       end
 
       it "extracts dependencies from hash access (symbol keys)" do
-        task = { dependencies: ["task1", "task2"] }
+        task = {dependencies: ["task1", "task2"]}
         expect(described_class.send(:extract_dependencies, task)).to eq(["task1", "task2"])
       end
 
@@ -397,8 +397,8 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
       let(:mixed_format_map) do
         {
           "struct_task" => OpenStruct.new(id: "struct_task", status: "done", dependencies: ["hash_task"]),
-          "hash_task" => { "id" => "hash_task", "status" => "pending", "dependencies" => [] },
-          "symbol_task" => { id: "symbol_task", status: "pending", dependencies: ["struct_task"] }
+          "hash_task" => {"id" => "hash_task", "status" => "pending", "dependencies" => []},
+          "symbol_task" => {id: "symbol_task", status: "pending", dependencies: ["struct_task"]}
         }
       end
 
@@ -416,7 +416,7 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskDependencyCh
     end
 
     it "handles task map with only nil values" do
-      nil_map = { "task1" => nil, "task2" => nil }
+      nil_map = {"task1" => nil, "task2" => nil}
       result = described_class.check_task_dependencies("task1", nil_map)
       expect(result.actionable?).to be false
     end

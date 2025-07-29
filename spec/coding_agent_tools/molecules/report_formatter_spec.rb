@@ -14,8 +14,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       coverage_percentage: 0.0,
       uncovered_lines: [6, 7, 8],
       uncovered_lines_compact: "6..8",
-      needs_tests?: true
-    )
+      needs_tests?: true)
     allow(method_needing_tests).to receive(:to_h).with(format: :compact).and_return({
       name: "low_coverage_method",
       start_line: 5,
@@ -38,8 +37,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       covered_lines: 10,
       coverage_percentage: 50.0,
       uncovered_lines_count: 10,
-      methods: [method_needing_tests]
-    )
+      methods: [method_needing_tests])
     allow(low_coverage_file).to receive(:under_threshold?).with(80.0).and_return(true)
     allow(low_coverage_file).to receive(:to_h).with(format: :compact).and_return({
       file_path: "/test/lib/low_coverage.rb",
@@ -55,16 +53,15 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       total_lines: 20,
       covered_lines: 10
     })
-    
+
     high_coverage_file = instance_double(CodingAgentTools::Models::CoverageResult,
-      file_path: "/test/lib/high_coverage.rb", 
+      file_path: "/test/lib/high_coverage.rb",
       relative_path: "lib/high_coverage.rb",
       total_lines: 15,
       covered_lines: 14,
       coverage_percentage: 93.3,
       uncovered_lines_count: 1,
-      methods: []
-    )
+      methods: [])
     allow(high_coverage_file).to receive(:under_threshold?).with(80.0).and_return(false)
     allow(high_coverage_file).to receive(:to_h).with(format: :compact).and_return({
       file_path: "/test/lib/high_coverage.rb",
@@ -80,7 +77,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       total_lines: 15,
       covered_lines: 14
     })
-    
+
     [low_coverage_file, high_coverage_file]
   end
 
@@ -91,9 +88,8 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       total_files: 2,
       threshold: 80.0,
       overall_coverage_percentage: 68.6,
-      analysis_timestamp: Time.new(2025, 1, 15, 10, 30, 0)
-    )
-    
+      analysis_timestamp: Time.new(2025, 1, 15, 10, 30, 0))
+
     allow(analysis_result).to receive(:to_h).with(format: :compact).and_return({
       summary: {
         total_files: 2,
@@ -107,7 +103,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       under_covered_files: [sample_coverage_results.first.to_h(format: :compact)],
       under_covered_methods: []
     })
-    
+
     allow(analysis_result).to receive(:to_h).with(format: :verbose).and_return({
       summary: {
         total_files: 2,
@@ -121,11 +117,11 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       under_covered_files: [sample_coverage_results.first.to_h(format: :verbose)],
       under_covered_methods: []
     })
-    
+
     # Mock private methods
     allow(analysis_result).to receive(:send).with(:total_executable_lines).and_return(35)
     allow(analysis_result).to receive(:send).with(:total_covered_lines).and_return(24)
-    
+
     analysis_result
   end
 
@@ -174,8 +170,8 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
             completely_uncovered: 1
           },
           uncovered_areas: [
-            { start_line: 5, end_line: 8 },
-            { start_line: 12, end_line: 15 }
+            {start_line: 5, end_line: 8},
+            {start_line: 12, end_line: 15}
           ],
           frameworks: ["RSpec"],
           priority_score: 85.5
@@ -217,8 +213,8 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
             completely_uncovered: 0
           },
           uncovered_areas: [
-            { start_line: 15, end_line: 15 },
-            { start_line: 20, end_line: 22 }
+            {start_line: 15, end_line: 15},
+            {start_line: 20, end_line: 22}
           ],
           priority_score: 75.0
         }
@@ -233,21 +229,19 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
     context "when no public methods need tests" do
       let(:good_analysis_result) do
         good_file = instance_double(CodingAgentTools::Models::CoverageResult,
-          methods: []
-        )
-        
+          methods: [])
+
         result = instance_double(CodingAgentTools::Models::CoverageAnalysisResult,
           files: [good_file],
           under_covered_files: [],
           total_files: 1,
           threshold: 80.0,
-          overall_coverage_percentage: 95.0
-        )
-        
+          overall_coverage_percentage: 95.0)
+
         # Mock private methods
         allow(result).to receive(:send).with(:total_executable_lines).and_return(100)
         allow(result).to receive(:send).with(:total_covered_lines).and_return(95)
-        
+
         result
       end
 
@@ -307,7 +301,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       allow(sample_analysis_result).to receive(:to_h).with(format: :unknown).and_return(
         sample_analysis_result.to_h(format: :compact)
       )
-      
+
       json_report = subject.format_json_report(sample_analysis_result, format: :unknown)
       parsed = JSON.parse(json_report)
 
@@ -341,22 +335,20 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
         coverage_percentage: 75.0,
         total_lines: 10,
         covered_lines: 7,
-        uncovered_lines_count: 3
-      )
+        uncovered_lines_count: 3)
       allow(special_result).to receive(:under_threshold?).with(80.0).and_return(true)
 
       allow(sample_analysis_result).to receive(:files).and_return([special_result])
 
       csv_report = subject.format_csv_report(sample_analysis_result)
-      
+
       expect(csv_report).to include("lib/file with spaces & symbols.rb")
     end
 
     context "with empty results" do
       let(:empty_analysis_result) do
         instance_double(CodingAgentTools::Models::CoverageAnalysisResult,
-          files: []
-        )
+          files: [])
       end
 
       it "generates header-only CSV" do
@@ -376,19 +368,19 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
 
     it "saves text report to file" do
       report_content = subject.format_text_report(sample_analysis_result)
-      
+
       subject.save_report(report_content, temp_file.path)
-      
+
       saved_content = File.read(temp_file.path)
       expect(saved_content).to eq(report_content)
     end
 
     it "creates directories if they don't exist" do
       nested_path = File.join(Dir.tmpdir, "coverage", "reports", "test_report.txt")
-      
+
       begin
         subject.save_report("test content", nested_path)
-        
+
         expect(File.exist?(nested_path)).to be true
         expect(File.read(nested_path)).to eq("test content")
       ensure
@@ -398,7 +390,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
 
     it "handles file write errors gracefully" do
       invalid_path = "/root/readonly/report.txt"
-      
+
       expect {
         subject.save_report("content", invalid_path)
       }.to raise_error(CodingAgentTools::Molecules::ReportFormatter::SaveError)
@@ -412,7 +404,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       expect(stats).to have_key(:files_summary)
       expect(stats).to have_key(:coverage_distribution)
       expect(stats).to have_key(:line_coverage_stats)
-      
+
       expect(stats[:files_summary][:total_files]).to eq(2)
       expect(stats[:files_summary][:under_threshold_count]).to eq(1)
       expect(stats[:files_summary][:percentage_under_threshold]).to eq(50.0)
@@ -426,7 +418,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       expect(distribution).to have_key(:good)       # 80-89%
       expect(distribution).to have_key(:fair)       # 60-79%
       expect(distribution).to have_key(:poor)       # <60%
-      
+
       expect(distribution[:excellent]).to eq(1)  # high_coverage.rb
       expect(distribution[:poor]).to eq(1)       # low_coverage.rb
     end
@@ -481,7 +473,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
     describe "#prioritize_results_by_severity" do
       it "sorts files by coverage severity" do
         sorted = subject.send(:prioritize_results_by_severity, sample_coverage_results)
-        
+
         expect(sorted.first.coverage_percentage).to eq(50.0)  # Worst first
         expect(sorted.last.coverage_percentage).to eq(93.3)   # Best last
       end
@@ -493,15 +485,15 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
       end
 
       it "formats single line ranges correctly" do
-        ranges = [{ start_line: 10, end_line: 10 }]
+        ranges = [{start_line: 10, end_line: 10}]
         expect(subject.send(:format_uncovered_ranges, ranges)).to eq("10")
       end
 
       it "formats multi-line ranges correctly" do
         ranges = [
-          { start_line: 5, end_line: 8 },
-          { start_line: 12, end_line: 12 },
-          { start_line: 20, end_line: 25 }
+          {start_line: 5, end_line: 8},
+          {start_line: 12, end_line: 12},
+          {start_line: 20, end_line: 25}
         ]
         expect(subject.send(:format_uncovered_ranges, ranges)).to eq("5-8, 12, 20-25")
       end
@@ -510,7 +502,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
     describe "#format_threshold_information" do
       it "formats regular threshold information" do
         lines = subject.send(:format_threshold_information, sample_analysis_result)
-        
+
         expect(lines).to include("Threshold: 80.0%")
         expect(lines).not_to include("adaptive")
       end
@@ -525,7 +517,7 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
         expect(report_data).to have_key(:summary)
         expect(report_data).to have_key(:details)
         expect(report_data).to have_key(:recommendations)
-        
+
         expect(report_data[:summary][:action_required]).to be true
         expect(report_data[:details][:under_covered_files]).to be_an(Array)
       end
@@ -545,9 +537,8 @@ RSpec.describe CodingAgentTools::Molecules::ReportFormatter do
           under_covered_files: [],
           total_files: 1,
           threshold: 80.0,
-          overall_coverage_percentage: 93.3
-        )
-        
+          overall_coverage_percentage: 93.3)
+
         report_data = subject.format_for_create_path(good_analysis_result)
         recommendations = report_data[:recommendations]
 

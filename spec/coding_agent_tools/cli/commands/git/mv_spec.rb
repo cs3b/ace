@@ -84,13 +84,13 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Mv do
 
     context "with insufficient arguments" do
       it "returns error when less than 2 arguments provided" do
-        output = capture_stderr { result = command.call(source_and_destination: ["single_file.rb"]) }
+        output = capture_stderr { command.call(source_and_destination: ["single_file.rb"]) }
 
         expect(output).to include("Error: git mv requires at least a source and destination")
       end
 
       it "returns error when no arguments provided" do
-        output = capture_stderr { result = command.call(source_and_destination: []) }
+        output = capture_stderr { command.call(source_and_destination: []) }
 
         expect(output).to include("Error: git mv requires at least a source and destination")
       end
@@ -306,7 +306,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Mv do
 
       it "shows detailed error with debug flag" do
         allow_any_instance_of(StandardError).to receive(:backtrace).and_return(["line1", "line2"])
-        
+
         output = capture_stderr { command.call(source_and_destination: source_and_destination, debug: true) }
 
         expect(output).to include("Error: StandardError: Unexpected error")
@@ -373,15 +373,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Mv do
   def capture_output
     old_stdout = $stdout
     old_stderr = $stderr
-    
+
     stdout_capture = StringIO.new
     stderr_capture = StringIO.new
-    
+
     $stdout = stdout_capture
     $stderr = stderr_capture
-    
+
     yield
-    
+
     stdout_capture.string + stderr_capture.string
   ensure
     $stdout = old_stdout

@@ -12,7 +12,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     # Create test directory structure
     FileUtils.mkdir_p(File.join(test_dir, "subdir1"))
     FileUtils.mkdir_p(File.join(test_dir, "subdir2", "nested"))
-    
+
     # Create test files
     File.write(File.join(test_dir, "file1.txt"), "content1")
     File.write(File.join(test_dir, "file2.rb"), "content2")
@@ -30,7 +30,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with basic parameters" do
       it "scans directory with default patterns" do
         result = described_class.scan_directory(test_dir)
-        
+
         expect(result).to be_an(Array)
         expect(result.length).to be >= 3
         expect(result).to include("file1.txt", "file2.rb", "README.md")
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "returns relative paths" do
         result = described_class.scan_directory(test_dir)
-        
+
         result.each do |path|
           expect(path).not_to start_with("/")
           expect(path).not_to include(test_dir)
@@ -49,14 +49,14 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with custom patterns" do
       it "filters files by patterns" do
         result = described_class.scan_directory(test_dir, patterns: ["*.rb"])
-        
+
         expect(result).to include("file2.rb")
         expect(result).not_to include("file1.txt", "README.md")
       end
 
       it "supports multiple patterns" do
         result = described_class.scan_directory(test_dir, patterns: ["*.rb", "*.md"])
-        
+
         expect(result).to include("file2.rb", "README.md")
         expect(result).not_to include("file1.txt")
       end
@@ -65,7 +65,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with recursive scanning" do
       it "finds files in subdirectories when recursive is true" do
         result = described_class.scan_directory(test_dir, recursive: true)
-        
+
         expect(result).to include("subdir1/nested_file.txt")
         expect(result).to include("subdir2/another.rb")
         expect(result).to include("subdir2/nested/deep_file.py")
@@ -73,7 +73,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "respects max_depth parameter" do
         result = described_class.scan_directory(test_dir, recursive: true, max_depth: 1)
-        
+
         expect(result).to include("subdir1/nested_file.txt")
         expect(result).to include("subdir2/another.rb")
         expect(result).not_to include("subdir2/nested/deep_file.py")
@@ -81,7 +81,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "does not scan subdirectories when recursive is false" do
         result = described_class.scan_directory(test_dir, recursive: false)
-        
+
         expect(result).not_to include("subdir1/nested_file.txt")
         expect(result).not_to include("subdir2/another.rb")
       end
@@ -90,7 +90,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with limits" do
       it "respects max_files limit" do
         result = described_class.scan_directory(test_dir, recursive: true, max_files: 2)
-        
+
         expect(result.length).to eq(2)
       end
     end
@@ -141,22 +141,21 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       before do
         FileUtils.mkdir_p(unreadable_dir)
-        FileUtils.chmod(0000, unreadable_dir)
+        FileUtils.chmod(0o000, unreadable_dir)
       end
 
       after do
-        FileUtils.chmod(0755, unreadable_dir)
+        FileUtils.chmod(0o755, unreadable_dir)
       end
 
       it "handles directory access errors gracefully" do
         # This test may not work on all systems due to permissions handling
         # Skip on systems where chmod doesn't prevent access
-        begin
-          described_class.scan_directory(unreadable_dir, recursive: true)
-          skip "Directory permissions not enforced on this system"
-        rescue SecurityError => e
-          expect(e.message).to match(/Directory access error/)
-        end
+
+        described_class.scan_directory(unreadable_dir, recursive: true)
+        skip "Directory permissions not enforced on this system"
+      rescue SecurityError => e
+        expect(e.message).to match(/Directory access error/)
       end
     end
   end
@@ -164,20 +163,20 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
   describe ".find_files_by_name" do
     it "finds files by exact name" do
       result = described_class.find_files_by_name(test_dir, "file1.txt")
-      
+
       expect(result).to include("file1.txt")
       expect(result).not_to include("file2.rb")
     end
 
     it "finds files recursively by default" do
       result = described_class.find_files_by_name(test_dir, "nested_file.txt")
-      
+
       expect(result).to include("subdir1/nested_file.txt")
     end
 
     it "respects recursive parameter" do
       result = described_class.find_files_by_name(test_dir, "nested_file.txt", recursive: false)
-      
+
       expect(result).to be_empty
     end
 
@@ -193,25 +192,25 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
   describe ".find_files_by_extension" do
     it "finds files by extension" do
       result = described_class.find_files_by_extension(test_dir, ".rb")
-      
+
       expect(result).to include("subdir2/another.rb")
     end
 
     it "finds files by extension without dot" do
       result = described_class.find_files_by_extension(test_dir, "rb")
-      
+
       expect(result).to include("subdir2/another.rb")
     end
 
     it "finds files recursively by default" do
       result = described_class.find_files_by_extension(test_dir, ".py")
-      
+
       expect(result).to include("subdir2/nested/deep_file.py")
     end
 
     it "respects recursive parameter" do
       result = described_class.find_files_by_extension(test_dir, ".py", recursive: false)
-      
+
       expect(result).to be_empty
     end
 
@@ -249,7 +248,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with glob patterns" do
       it "finds files using glob patterns" do
         result = described_class.find_files_with_pattern(test_dir, "*.rb")
-        
+
         expect(result[:success]).to be true
         expect(result[:files]).to include("file2.rb")
         expect(result[:error]).to be_nil
@@ -257,7 +256,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "handles recursive glob patterns" do
         result = described_class.find_files_with_pattern(test_dir, "**/*.py")
-        
+
         expect(result[:success]).to be true
         expect(result[:files]).to include("subdir2/nested/deep_file.py")
       end
@@ -266,14 +265,14 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with directory patterns" do
       it "finds all files in a directory path" do
         result = described_class.find_files_with_pattern(test_dir, "subdir1")
-        
+
         expect(result[:success]).to be true
         expect(result[:files]).to include("subdir1/nested_file.txt")
       end
 
       it "handles non-existent directory paths" do
         result = described_class.find_files_with_pattern(test_dir, "nonexistent")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("Directory does not exist")
       end
@@ -288,20 +287,20 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "handles empty pattern" do
         result = described_class.find_files_with_pattern(test_dir, "")
-        expect(result[:success]).to be false  
+        expect(result[:success]).to be false
         expect(result[:error]).to include("Unexpected error")
       end
 
       it "handles unsafe base_path" do
         result = described_class.find_files_with_pattern("../../../etc", "*.conf")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("Path failed safety validation")
       end
 
       it "handles non-existent base directory" do
         result = described_class.find_files_with_pattern("/nonexistent", "*.rb")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("Base directory does not exist")
       end
@@ -310,7 +309,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     context "with file limits" do
       it "respects max_files limit" do
         result = described_class.find_files_with_pattern(test_dir, "*", max_files: 2)
-        
+
         expect(result[:success]).to be true
         expect(result[:files].length).to be <= 2
       end
@@ -320,7 +319,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
   describe ".directory_stats" do
     it "returns comprehensive directory statistics" do
       stats = described_class.directory_stats(test_dir)
-      
+
       expect(stats[:total_files]).to be >= 6
       expect(stats[:total_directories]).to be >= 3
       expect(stats[:total_size]).to be > 0
@@ -332,23 +331,23 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
     it "respects max_depth parameter" do
       stats = described_class.directory_stats(test_dir, max_depth: 1)
-      
+
       expect(stats[:max_depth_reached]).to be <= 1
     end
 
     it "handles empty directories" do
       empty_dir = File.join(test_dir, "empty")
       FileUtils.mkdir_p(empty_dir)
-      
+
       stats = described_class.directory_stats(empty_dir)
-      
+
       expect(stats[:total_files]).to eq(0)
       expect(stats[:total_directories]).to eq(0)
     end
 
     it "tracks file extensions correctly" do
       stats = described_class.directory_stats(test_dir)
-      
+
       expect(stats[:file_types][".txt"]).to be >= 2
       expect(stats[:file_types][".rb"]).to be >= 2
       expect(stats[:file_types][".md"]).to be >= 1
@@ -358,9 +357,9 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
     it "handles files without extensions" do
       no_ext_file = File.join(test_dir, "no_extension")
       File.write(no_ext_file, "content")
-      
+
       stats = described_class.directory_stats(test_dir)
-      
+
       expect(stats[:file_types]["[no extension]"]).to be >= 1
     end
 
@@ -380,21 +379,23 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
       it "converts absolute paths to relative paths" do
         abs_path = File.join(test_dir, "subdir1", "file.txt")
         relative = described_class.send(:make_relative_path, abs_path, test_dir)
-        
+
         expect(relative).to eq("subdir1/file.txt")
       end
     end
 
     describe ".filter_by_depth" do
-      let(:files) { [
-        File.join(test_dir, "file1.txt"),
-        File.join(test_dir, "subdir1", "file2.txt"),
-        File.join(test_dir, "subdir2", "nested", "file3.txt")
-      ] }
+      let(:files) {
+        [
+          File.join(test_dir, "file1.txt"),
+          File.join(test_dir, "subdir1", "file2.txt"),
+          File.join(test_dir, "subdir2", "nested", "file3.txt")
+        ]
+      }
 
       it "filters files by depth when recursive is true" do
         filtered = described_class.send(:filter_by_depth, files, test_dir, true, 1)
-        
+
         expect(filtered).to include(File.join(test_dir, "file1.txt"))
         expect(filtered).to include(File.join(test_dir, "subdir1", "file2.txt"))
         expect(filtered).not_to include(File.join(test_dir, "subdir2", "nested", "file3.txt"))
@@ -402,7 +403,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::FileSystemScanner do
 
       it "returns empty array when recursive is false" do
         filtered = described_class.send(:filter_by_depth, files, test_dir, false, 1)
-        
+
         expect(filtered).to be_empty
       end
     end
