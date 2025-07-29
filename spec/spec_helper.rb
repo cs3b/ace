@@ -5,6 +5,9 @@ require "simplecov"
 require "simplecov-html"
 
 SimpleCov.start do
+  # Support for parallel test execution
+  command_name "RSpec:#{Process.pid}#{ENV['TEST_ENV_NUMBER']}"
+  
   add_filter "/spec/"
   add_filter "/vendor/"
   add_filter "/.bundle/"
@@ -16,9 +19,8 @@ SimpleCov.start do
   minimum_coverage 0
   minimum_coverage_by_file 0
 
-  formatter SimpleCov::Formatter::MultiFormatter.new([
-    SimpleCov::Formatter::HTMLFormatter
-  ])
+  # HTML formatter for coverage reports
+  formatter SimpleCov::Formatter::HTMLFormatter
 
   track_files "lib/**/*.rb"
 end

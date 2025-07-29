@@ -100,6 +100,8 @@ GEM
       uri
     ostruct (0.6.3)
     parallel (1.27.0)
+    parallel_tests (4.10.1)
+      parallel
     parser (3.3.9.0)
       ast (~> 2.4.1)
       racc
@@ -207,6 +209,7 @@ DEPENDENCIES
   kramdown (~> 2.0)
   kramdown-parser-gfm (~> 1.0)
   ostruct (~> 0.6.1)
+  parallel_tests (~> 4.0)
   pry
   rake (~> 13.0)
   rspec (~> 3.0)
