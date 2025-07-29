@@ -616,5 +616,88 @@ RSpec.describe CodingAgentTools::Organisms::CodeQuality::AgentCoordinationFounda
       expect(registry["agent1"][:status]).to eq(:complete)
       expect(foundation.status[:all_complete]).to be true
     end
+
+    it "handles hook exceptions gracefully during file assignment" do
+      foundation.register_agent("agent1")
+      foundation.on_error_file_ready = ->(file, agent_id) { raise StandardError, "Hook failed" }
+      
+      # The method should continue despite hook failure
+      expect { foundation.assign_error_files(["error1.txt"]) }.to raise_error(StandardError, "Hook failed")
+    end
+
+    it "handles hook exceptions gracefully during agent completion" do
+      foundation.register_agent("agent1")
+      foundation.on_agent_complete = ->(agent_id, results) { raise StandardError, "Completion hook failed" }
+      
+      # The method should continue despite hook failure
+      expect { foundation.mark_agent_complete("agent1", { fixes_applied: 1 }) }.to raise_error(StandardError, "Completion hook failed")
+    end
+
+    it "handles hook exceptions gracefully during all agents completion" do
+      foundation.register_agent("agent1")
+      foundation.on_all_agents_complete = ->(final_results) { raise StandardError, "All complete hook failed" }
+      
+      # The method should continue despite hook failure
+      expect { foundation.mark_agent_complete("agent1", { fixes_applied: 1 }) }.to raise_error(StandardError, "All complete hook failed")
+    end
+
+    it "handles large number of agents efficiently" do
+      # Test with many agents
+      100.times { |i| foundation.register_agent("agent#{i}") }
+      
+      registry = foundation.instance_variable_get(:@agent_registry)
+      expect(registry.size).to eq(100)
+      expect(registry.keys).to include("agent0", "agent50", "agent99")
+    end
+
+    it "handles large number of error files efficiently" do
+      foundation.register_agent("agent1")
+      foundation.register_agent("agent2")
+      
+      # Create many files
+      large_file_list = 1000.times.map { |i| "error#{i}.txt" }
+      result = foundation.assign_error_files(large_file_list)
+      
+      expect(result[:success]).to be true
+      expect(result[:agents_used]).to eq(2)
+      
+      assignments = foundation.instance_variable_get(:@error_assignments)
+      total_assigned = assignments.values.sum(&:size)
+      expect(total_assigned).to eq(1000)
+    end
+
+    it "handles agent completion with complex results structure" do
+      foundation.register_agent("agent1")
+      
+      complex_results = {
+        fixes_applied: 5,
+        errors_resolved: 3,
+        warnings_addressed: 7,
+        files_modified: ["file1.rb", "file2.rb"],
+        duration: 120.5,
+        metadata: {
+          tool_version: "1.0.0",
+          environment: "test"
+        }
+      }
+      
+      foundation.mark_agent_complete("agent1", complex_results)
+      
+      completion_status = foundation.instance_variable_get(:@completion_status)
+      expect(completion_status["agent1"][:results]).to eq(complex_results)
+    end
+
+    it "handles zero-duration calculations correctly" do
+      foundation.register_agent("agent1")
+      
+      # Set same completion time for all agents
+      fixed_time = Time.parse("2024-01-01 12:00:00")
+      allow(Time).to receive(:now).and_return(fixed_time)
+      
+      foundation.mark_agent_complete("agent1", { fixes_applied: 1 })
+      
+      duration = foundation.send(:calculate_total_duration)
+      expect(duration).to eq(0)
+    end
   end
 end

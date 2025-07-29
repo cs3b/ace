@@ -362,6 +362,138 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Rm do
       expect(result).to include(main_only: true)
       expect(result).not_to include(:force)
     end
+
+    it "includes all available rm options when provided" do
+      comprehensive_options = {
+        repository: "test-repo",
+        main_only: true,
+        submodules_only: true,
+        force: true,
+        dry_run: true,
+        recursive: true,
+        cached: true,
+        ignore_unmatch: true,
+        quiet: true,
+        concurrent: true
+      }
+      
+      result = command.send(:build_rm_options, files, comprehensive_options)
+
+      expect(result).to include(
+        capture_output: true,
+        repository: "test-repo",
+        main_only: true,
+        submodules_only: true,
+        force: true,
+        dry_run: true,
+        recursive: true,
+        cached: true,
+        ignore_unmatch: true,
+        quiet: true,
+        concurrent: true
+      )
+    end
+
+    it "handles empty options gracefully" do
+      result = command.send(:build_rm_options, files, {})
+
+      expect(result).to eq({capture_output: true})
+    end
+
+    it "does not include falsy boolean options" do
+      options_with_false = {
+        force: false,
+        dry_run: false,
+        recursive: false,
+        cached: false,
+        ignore_unmatch: false,
+        quiet: false,
+        concurrent: false,
+        main_only: true
+      }
+
+      result = command.send(:build_rm_options, files, options_with_false)
+
+      expect(result).to include(capture_output: true, main_only: true)
+      expect(result).not_to include(:force, :dry_run, :recursive, :cached, :ignore_unmatch, :quiet, :concurrent)
+    end
+  end
+
+  describe "return codes" do
+    context "successful operations" do
+      before do
+        allow(mock_orchestrator).to receive(:rm).and_return({
+          success: true,
+          results: {"main-repo" => {success: true, stdout: "rm 'file.rb'"}},
+          repositories_processed: ["main-repo"]
+        })
+      end
+
+      it "returns 0 on success" do
+        result = nil
+        capture_stdout { result = command.call(files: files) }
+        expect(result).to eq(0)
+      end
+    end
+
+    context "failed operations" do
+      before do
+        allow(mock_orchestrator).to receive(:rm).and_return({
+          success: false,
+          error: "Remove failed",
+          errors: [{repository: "main-repo", message: "fatal: pathspec did not match any files"}]
+        })
+      end
+
+      it "returns 1 on failure" do
+        result = nil
+        capture_stderr { result = command.call(files: files) }
+        expect(result).to eq(1)
+      end
+    end
+
+    context "when exceptions occur" do
+      before do
+        allow(mock_orchestrator).to receive(:rm).and_raise(StandardError.new("Unexpected error"))
+      end
+
+      it "returns 1 on exception" do
+        result = nil
+        capture_stderr { result = command.call(files: files) }
+        expect(result).to eq(1)
+      end
+    end
+  end
+
+  describe "edge case file handling" do
+    context "with special characters in filenames" do
+      let(:special_files) { ["file with spaces.rb", "file@special#chars.rb", "unicode文件.rb"] }
+
+      before do
+        allow(mock_orchestrator).to receive(:rm).and_return({
+          success: true,
+          results: {"main-repo" => {success: true, stdout: "rm special files"}},
+          repositories_processed: ["main-repo"]
+        })
+      end
+
+      it "handles files with special characters" do
+        output = capture_stdout { command.call(files: special_files) }
+
+        expect(output).to include("[main-repo] rm special files")
+        expect(mock_orchestrator).to have_received(:rm).with(special_files, hash_including(capture_output: true))
+      end
+    end
+
+    context "with empty file arrays" do
+      it "still passes empty array to orchestrator" do
+        allow(mock_orchestrator).to receive(:rm).and_return({success: true, results: {}, repositories_processed: []})
+        
+        capture_stdout { command.call(files: []) }
+        
+        expect(mock_orchestrator).to have_received(:rm).with([], hash_including(capture_output: true))
+      end
+    end
   end
 
   private
