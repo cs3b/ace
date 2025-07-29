@@ -58,8 +58,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     end
 
     context "with successful task resolution and add_next option" do
-      let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
-      let(:mock_task2) { instance_double("Task", id: "v.0.3.0+task.002", path: "/path/task2.md") }
+      let(:mock_task1) { double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
+      let(:mock_task2) { double("Task", id: "v.0.3.0+task.002", path: "/path/task2.md") }
       let(:mock_tasks) { [mock_task1, mock_task2] }
       
       before do
@@ -78,7 +78,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     end
 
     context "with successful task resolution and default behavior" do
-      let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
+      let(:mock_task1) { double("Task", id: "v.0.3.0+task.001", path: "/path/task1.md") }
       let(:mock_tasks) { [mock_task1] }
       
       before do
@@ -112,8 +112,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   end
 
   describe "#resolve_tasks" do
-    let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.001") }
-    let(:mock_task2) { instance_double("Task", id: "v.0.3.0+task.002") }
+    let(:mock_task1) { double("Task", id: "v.0.3.0+task.001") }
+    let(:mock_task2) { double("Task", id: "v.0.3.0+task.002") }
     let(:all_tasks) { [mock_task1, mock_task2] }
 
     before do
@@ -147,8 +147,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   end
 
   describe "#find_task" do
-    let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.001", path: "/path/to/task001.md") }
-    let(:mock_task2) { instance_double("Task", id: "v.0.3.0+task.002", path: "/path/to/task002.md") }
+    let(:mock_task1) { double("Task", id: "v.0.3.0+task.001", path: "/path/to/task001.md") }
+    let(:mock_task2) { double("Task", id: "v.0.3.0+task.002", path: "/path/to/task002.md") }
     let(:all_tasks) { [mock_task1, mock_task2] }
 
     it "finds task by exact ID match" do
@@ -188,10 +188,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   end
 
   describe "#reschedule_add_next" do
-    let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.003", status: "pending") }
-    let(:mock_task2) { instance_double("Task", id: "v.0.3.0+task.004", status: "pending") }
-    let(:pending_task) { instance_double("Task", status: "pending") }
-    let(:done_task) { instance_double("Task", status: "done") }
+    let(:mock_task1) { double("Task", id: "v.0.3.0+task.003", status: "pending") }
+    let(:mock_task2) { double("Task", id: "v.0.3.0+task.004", status: "pending") }
+    let(:pending_task) { double("Task", status: "pending") }
+    let(:done_task) { double("Task", status: "done") }
     let(:all_tasks) { [pending_task, done_task] }
     let(:tasks_to_reschedule) { [mock_task1, mock_task2] }
 
@@ -227,9 +227,9 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   end
 
   describe "#reschedule_add_at_end" do
-    let(:mock_task1) { instance_double("Task", id: "v.0.3.0+task.005") }
-    let(:mock_task2) { instance_double("Task", id: "v.0.3.0+task.006") }
-    let(:existing_task) { instance_double("Task", id: "v.0.3.0+task.003") }
+    let(:mock_task1) { double("Task", id: "v.0.3.0+task.005") }
+    let(:mock_task2) { double("Task", id: "v.0.3.0+task.006") }
+    let(:existing_task) { double("Task", id: "v.0.3.0+task.003") }
     let(:all_tasks) { [existing_task] }
     let(:tasks_to_reschedule) { [mock_task1, mock_task2] }
 
@@ -350,7 +350,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
   end
 
   describe "#update_task_sort" do
-    let(:task) { instance_double("Task", path: "/path/to/task.md", id: "v.0.3.0+task.001") }
+    let(:task) { double("Task", path: "/path/to/task.md", id: "v.0.3.0+task.001") }
     let(:frontmatter_content) { "id: v.0.3.0+task.001\nstatus: pending\npriority: high" }
     let(:body_content) { "\n# Task Title\n\nTask content here." }
     let(:file_content) { "---\n#{frontmatter_content}\n---#{body_content}" }
@@ -464,7 +464,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
   describe "edge cases and boundary conditions" do
     context "with very large sort values" do
-      let(:mock_task) { instance_double("Task", id: "v.0.3.0+task.001", path: "/path/task.md") }
+      let(:mock_task) { double("Task", id: "v.0.3.0+task.001", path: "/path/task.md") }
       let(:all_tasks) { [mock_task] }
 
       before do
@@ -483,7 +483,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     end
 
     context "with conflicting options" do
-      let(:mock_task) { instance_double("Task", id: "v.0.3.0+task.001", path: "/path/task.md") }
+      let(:mock_task) { double("Task", id: "v.0.3.0+task.001", path: "/path/task.md") }
       let(:all_tasks) { [mock_task] }
 
       before do
