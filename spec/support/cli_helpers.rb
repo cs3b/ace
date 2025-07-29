@@ -61,6 +61,8 @@ module CliHelpers
         execute_task_manager_command(args)
       when "create-path"
         execute_create_path_command(args)
+      when "release-manager"
+        execute_release_manager_command(args)
       else
         # Fallback to subprocess for unknown commands
         warn "Unknown command '#{command_name}', falling back to subprocess"
@@ -487,6 +489,107 @@ module CliHelpers
         i += 1
       when "--no-force"
         options[:force] = false
+        i += 1
+      else
+        i += 1
+      end
+    end
+
+    options
+  end
+
+  # Execute release-manager command directly
+  def execute_release_manager_command(args)
+    if args.empty? || (args.include?("--help") || args.include?("-h"))
+      # Simulate help output for release-manager
+      $stdout.puts <<~HELP
+        Commands:
+          release-manager current          # Get current release information
+          release-manager next             # Find next available release
+          release-manager all              # List all releases
+          release-manager generate-id      # Generate unique task IDs
+          release-manager validate         # Validate release context consistency
+          release-manager version          # Show version information
+      HELP
+      return 1  # help exits with error status by design
+    end
+
+    subcommand = args[0]
+    subcommand_args = args[1..]
+
+    case subcommand
+    when "version"
+      require_relative "../../lib/coding_agent_tools/version"
+      $stdout.puts "Release Manager #{CodingAgentTools::VERSION}"
+      0
+
+    when "current"
+      if subcommand_args.include?("--help")
+        $stdout.puts <<~HELP
+          Get current release information
+
+          USAGE
+            release-manager current [OPTIONS]
+
+          OPTIONS
+            --debug, -d                     # Enable debug output for verbose error information
+            --format=VALUE                  # Output format (text or json)
+            --path=VALUE                    # Resolve path within current release
+
+          EXAMPLES
+            release-manager current
+            release-manager current --format json
+            release-manager current --path reflections
+            release-manager current --path reflections/synthesis --format json
+        HELP
+        return 0
+      end
+
+      require_relative "../../lib/coding_agent_tools/cli/commands/release/current"
+      
+      # Parse options
+      options = parse_release_current_options(subcommand_args)
+      
+      begin
+        command = CodingAgentTools::Cli::Commands::Release::Current.new
+        result = command.call(**options)
+        result || 0
+      rescue SystemExit => e
+        e.status
+      rescue SecurityError, StandardError => e
+        # Error has already been output by the command
+        1
+      end
+
+    else
+      warn "Unknown release-manager command: #{subcommand}"
+      1
+    end
+  end
+
+  # Parse options for release current command
+  def parse_release_current_options(args)
+    options = {}
+    i = 0
+
+    while i < args.length
+      arg = args[i]
+
+      case arg
+      when "--debug", "-d"
+        options[:debug] = true
+        i += 1
+      when "--format"
+        options[:format] = args[i + 1]
+        i += 2
+      when /^--format=(.+)$/
+        options[:format] = $1
+        i += 1
+      when "--path"
+        options[:path] = args[i + 1]
+        i += 2
+      when /^--path=(.+)$/
+        options[:path] = $1
         i += 1
       else
         i += 1
