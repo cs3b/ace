@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.225
-status: pending
+status: done
 priority: high
 estimate: 6h
 dependencies: []
@@ -68,33 +68,48 @@ Enable ReleaseManager to resolve subdirectory paths within the current release, 
 
 *Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
 
-- [ ] Analyze current system/codebase to understand existing patterns
+- [x] Analyze current system/codebase to understand existing patterns
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
   > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+- [x] Research best practices and design approach
+- [x] Plan detailed implementation strategy
 
 ### Execution Steps
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
+- [x] Add resolve_path method to ReleaseManager class with basic signature and validation
+  > TEST: Method exists with proper signature
   > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+  > Assert: resolve_path method exists and accepts subpath parameter
+  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; puts CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.instance_methods.include?(:resolve_path)"
+- [x] Implement core path resolution logic using existing directory navigator atoms
+  > TEST: Path resolution works for basic subdirectories
+  > Type: Action Validation
+  > Assert: Method returns correct absolute paths for common subdirectories
+  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; puts rm.resolve_path('tasks').class == String rescue puts 'false'"
+- [x] Add directory creation capability with optional create_if_missing flag
+  > TEST: Directory creation works when flag is true
+  > Type: Action Validation
+  > Assert: Method creates directories when create_if_missing is true
+  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new; result = rm.resolve_path('test-subdir', create_if_missing: true); puts File.directory?(result) rescue puts 'false'"
+- [x] Implement error handling for cases when no current release exists
+  > TEST: Error handling works correctly
+  > Type: Action Validation
+  > Assert: Method raises appropriate error when no current release exists
+  > Command: cd dev-tools && bundle exec ruby -e "require_relative 'lib/coding_agent_tools'; rm = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: '/tmp/non-existent'); begin; rm.resolve_path('tasks'); puts 'false'; rescue => e; puts e.message.include?('release'); end"
 
 ## Acceptance Criteria
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+- [x] AC 1: ReleaseManager class has resolve_path method that accepts subpath and optional create_if_missing flag
+- [x] AC 2: Method returns absolute paths within current release for common subdirectories (reflections, tasks, etc.)
+- [x] AC 3: Method creates directories when create_if_missing flag is true
+- [x] AC 4: Method handles error cases appropriately when no current release exists
+- [x] AC 5: All embedded tests in the Implementation Plan pass
 
 ## Out of Scope
 
