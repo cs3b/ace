@@ -24,6 +24,26 @@ RSpec.describe "Release CLI Commands" do
     FileUtils.rm_rf(base_path) if File.exist?(base_path)
   end
 
+  # Helper method for capturing stdout
+  def capture_output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+    yield
+    $stdout.string
+  ensure
+    $stdout = original_stdout
+  end
+
+  # Helper method for capturing stderr
+  def capture_error_output
+    original_stderr = $stderr
+    $stderr = StringIO.new
+    yield
+    $stderr.string
+  ensure
+    $stderr = original_stderr
+  end
+
   describe CodingAgentTools::Cli::Commands::Release::Current do
     subject(:command) { described_class.new }
 
@@ -45,6 +65,147 @@ RSpec.describe "Release CLI Commands" do
     context "when no current release exists" do
       it "returns error" do
         expect { expect(command.call).to eq(1) }.to output(/Error:/).to_stderr
+      end
+
+      it "returns JSON error format when no current release exists" do
+        output = capture_output { command.call(format: "json") }
+        parsed = JSON.parse(output)
+        expect(parsed["success"]).to be false
+        expect(parsed["error"]).not_to be_nil
+        expect(parsed["error"]).not_to be_empty
+      end
+    end
+
+    context "error handling with debug mode" do
+      it "shows detailed error information when debug is enabled" do
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
+          .and_raise(StandardError, "Project root not found")
+
+        expect { command.call(debug: true) }.to output(/Error: StandardError: Project root not found/).to_stderr
+      end
+
+      it "shows backtrace when debug is enabled" do
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
+          .and_raise(StandardError, "Project root not found")
+
+        output = capture_error_output { command.call(debug: true) }
+        expect(output).to include("Backtrace:")
+        expect(output).to include("spec/coding_agent_tools/cli/commands/release_spec.rb")
+      end
+
+      it "shows simplified error without debug flag" do
+        allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root)
+          .and_raise(StandardError, "Project root not found")
+
+        output = capture_error_output { command.call(debug: false) }
+        expect(output).to include("Error: Project root not found")
+        expect(output).to include("Use --debug flag for more information")
+        expect(output).not_to include("Backtrace:")
+      end
+    end
+
+    context "release manager error handling" do
+      it "handles ReleaseManager failures in text format" do
+        release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
+        allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
+        
+        error_result = double("result", success?: false, error_message: "Release manager error")
+        allow(release_manager).to receive(:current).and_return(error_result)
+
+        expect { command.call }.to output(/Error: Release manager error/).to_stderr
+        expect(command.call).to eq(1)
+      end
+
+      it "returns proper JSON error format when release manager fails" do
+        release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
+        allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
+        
+        error_result = double("result", success?: false, error_message: "Release manager error")
+        allow(release_manager).to receive(:current).and_return(error_result)
+
+        output = capture_output { command.call(format: "json") }
+        parsed = JSON.parse(output)
+        expect(parsed["success"]).to be false
+        expect(parsed["error"]).to eq("Release manager error")
+      end
+    end
+
+    context "timestamp formatting" do
+      let(:test_time) { Time.new(2023, 12, 25, 15, 30, 45) }
+
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks")
+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
+        
+        # Mock the release object to return specific timestamps
+        release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
+        allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
+        
+        release_data = double("release", 
+          name: "v.0.3.0-test", 
+          version: "v.0.3.0", 
+          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test", 
+          type: :current,
+          status: "active", 
+          task_count: 1,
+          created_at: test_time,
+          modified_at: test_time
+        )
+        
+        success_result = double("result", success?: true, data: release_data)
+        allow(release_manager).to receive(:current).and_return(success_result)
+      end
+
+      it "formats timestamps correctly in text output" do
+        output = capture_output { command.call }
+        expect(output).to include("Created:   2023-12-25 15:30:45")
+        expect(output).to include("Modified:  2023-12-25 15:30:45")
+      end
+
+      it "formats timestamps as ISO8601 in JSON output" do
+        output = capture_output { command.call(format: "json") }
+        parsed = JSON.parse(output)
+        expect(parsed["data"]["created_at"]).to match(/2023-12-25T15:30:45(\+00:00|Z)/)
+        expect(parsed["data"]["modified_at"]).to match(/2023-12-25T15:30:45(\+00:00|Z)/)
+      end
+    end
+
+    context "release data edge cases" do
+      before do
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks")
+        File.write("#{base_path}/dev-taskflow/current/v.0.3.0-test/tasks/task1.md", "# Task 1")
+        
+        release_manager = instance_double(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager)
+        allow(CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager).to receive(:new).and_return(release_manager)
+        
+        release_data = double("release", 
+          name: "v.0.3.0-test", 
+          version: "v.0.3.0", 
+          path: "#{base_path}/dev-taskflow/current/v.0.3.0-test", 
+          type: :current,
+          status: "active", 
+          task_count: 1,
+          created_at: nil,
+          modified_at: nil
+        )
+        
+        success_result = double("result", success?: true, data: release_data)
+        allow(release_manager).to receive(:current).and_return(success_result)
+      end
+
+      it "handles missing timestamps gracefully in text output" do
+        output = capture_output { command.call }
+        expect(output).not_to include("Created:")
+        expect(output).not_to include("Modified:")
+        expect(output).to include("Current Release Information:")
+      end
+
+      it "handles missing timestamps gracefully in JSON output" do
+        output = capture_output { command.call(format: "json") }
+        parsed = JSON.parse(output)
+        expect(parsed["data"]["created_at"]).to be_nil
+        expect(parsed["data"]["modified_at"]).to be_nil
+        expect(parsed["success"]).to be true
       end
     end
   end
@@ -202,25 +363,6 @@ RSpec.describe "Release CLI Commands" do
       end
     end
 
-    # Helper method for capturing stdout
-    def capture_output
-      original_stdout = $stdout
-      $stdout = StringIO.new
-      yield
-      $stdout.string
-    ensure
-      $stdout = original_stdout
-    end
-
-    # Helper method for capturing stderr
-    def capture_error_output
-      original_stderr = $stderr
-      $stderr = StringIO.new
-      yield
-      $stderr.string
-    ensure
-      $stderr = original_stderr
-    end
   end
 
   describe CodingAgentTools::Cli::Commands::Release::GenerateId do
