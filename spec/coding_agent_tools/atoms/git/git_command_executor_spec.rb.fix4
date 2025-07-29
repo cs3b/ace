@@ -486,14 +486,13 @@ RSpec.describe CodingAgentTools::Atoms::Git::GitCommandExecutor do
     end
 
     context "with file system edge cases" do
-      xit "handles repository in read-only directory" do
+      it "handles repository in read-only directory" do
         # Create a read-only directory (if possible on current platform)
         readonly_dir = File.join(temp_dir, "readonly")
         FileUtils.mkdir_p(readonly_dir)
         
         begin
-          skip "Cannot create readonly directory" unless File.exist?(readonly_dir)
-          FileUtils.chmod(0444, readonly_dir)
+          FileUtils.chmod(0444, readonly_dir) if File.exist?(readonly_dir)
           readonly_executor = described_class.new(repository_path: readonly_dir)
           
           expect { readonly_executor.execute("status") }.to raise_error(
