@@ -207,7 +207,7 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
       end
     end
 
-    context "when response has malformed structure" do
+    context "when response has malformed structure", :error_handling do
       before do
         allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
           .to receive(:parse_response).and_return({success: true, data: {candidates: []}})
@@ -217,10 +217,140 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
         expect { client.generate_text(prompt) }
           .to raise_error(CodingAgentTools::Error, /candidates.*array is empty/)
       end
+
+      it "raises error when candidates is not an array" do
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return({success: true, data: {candidates: "not_an_array"}})
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /candidates.*field is not an array/)
+      end
+
+      it "raises error when data is not a hash" do
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return({success: true, data: "not_a_hash"})
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /Response data is not a Hash/)
+      end
+
+      it "raises error when first candidate is not a hash" do
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return({success: true, data: {candidates: ["not_a_hash"]}})
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /No valid first candidate found/)
+      end
+
+      it "raises error when candidate content is missing" do
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return({success: true, data: {candidates: [{}]}})
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /content.*field is missing/)
+      end
+
+      it "raises error when candidate content is not a hash" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: "not_a_hash"}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /content.*field is missing or not a Hash/)
+      end
+
+      it "raises error when content parts is missing" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /content\.parts.*field is missing/)
+      end
+
+      it "raises error when content parts is not an array" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {parts: "not_an_array"}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /content\.parts.*field is missing or not an Array/)
+      end
+
+      it "raises error when content parts is empty" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {parts: []}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /content\.parts.*array is empty/)
+      end
+
+      it "raises error when first part is not a hash" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {parts: ["not_a_hash"]}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /first element.*is not a Hash/)
+      end
+
+      it "raises error when text key is missing" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {parts: [{}]}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /does not have a 'text' key/)
+      end
+
+      it "raises error when text value is nil" do
+        malformed_response = {
+          success: true,
+          data: {
+            candidates: [{content: {parts: [{text: nil}]}}]
+          }
+        }
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return(malformed_response)
+
+        expect { client.generate_text(prompt) }
+          .to raise_error(CodingAgentTools::Error, /text missing from the first part/)
+      end
     end
   end
 
-  describe "#count_tokens" do
+  describe "#count_tokens", :token_counting do
     let(:text) { "Hello world" }
     let(:token_count_response) do
       {
@@ -249,6 +379,60 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
         .to receive(:post_json).with(expected_url, anything)
 
       client.count_tokens(text)
+    end
+
+    it "sends correct payload structure" do
+      expected_payload = {
+        contents: [
+          {
+            parts: [{text: text}]
+          }
+        ]
+      }
+
+      expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+        .to receive(:post_json).with(anything, expected_payload)
+
+      client.count_tokens(text)
+    end
+
+    context "when API returns error" do
+      let(:error_response) do
+        {
+          error: {
+            status: "PERMISSION_DENIED",
+            message: "API key not valid"
+          }
+        }
+      end
+
+      before do
+        allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+          .to receive(:parse_response).and_return({success: false, error: error_response[:error]})
+      end
+
+      it "raises error with formatted message" do
+        expect { client.count_tokens(text) }
+          .to raise_error(CodingAgentTools::Error, /Google API Error.*PERMISSION_DENIED.*API key not valid/)
+      end
+    end
+
+    context "with empty text" do
+      it "handles empty string" do
+        result = client.count_tokens("")
+        expect(result[:token_count]).to eq(15)
+        expect(result[:details]).to eq(token_count_response)
+      end
+    end
+
+    context "with special characters" do
+      let(:special_text) { "Hello 🌍 world! こんにちは" }
+
+      it "handles unicode characters" do
+        result = client.count_tokens(special_text)
+        expect(result[:token_count]).to eq(15)
+        expect(result[:details]).to eq(token_count_response)
+      end
     end
   end
 
@@ -324,7 +508,7 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
     end
   end
 
-  describe "private URL building methods" do
+  describe "private URL building methods", :url_building do
     describe "#build_url_with_path" do
       it "handles base URLs without trailing slash" do
         client_without_slash = described_class.new(
@@ -344,6 +528,215 @@ RSpec.describe CodingAgentTools::Organisms::GoogleClient do
 
         url = client_with_slash.send(:build_url_with_path, "test/path")
         expect(url).to eq("https://api.example.com/test/path?key=#{api_key}")
+      end
+
+      it "handles complex path segments with special characters" do
+        url = client.send(:build_url_with_path, "test/path-with-special_chars")
+        expect(url).to eq("https://generativelanguage.googleapis.com/v1beta/test/path-with-special_chars?key=#{api_key}")
+      end
+
+      it "handles path segments with spaces (URL encoding handled by Addressable)" do
+        url = client.send(:build_url_with_path, "test/path with spaces")
+        expect(url).to include("test/path with spaces")
+        expect(url).to include("?key=#{api_key}")
+      end
+    end
+
+    describe "#build_api_url" do
+      it "builds correct URL for generation endpoint" do
+        url = client.send(:build_api_url, "generateContent")
+        expect(url).to eq("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=#{api_key}")
+      end
+
+      it "builds correct URL for token counting endpoint" do
+        url = client.send(:build_api_url, "countTokens")
+        expect(url).to eq("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:countTokens?key=#{api_key}")
+      end
+    end
+  end
+
+  describe "error extraction", :error_extraction do
+    describe "#extract_error_content" do
+      it "extracts details message when available" do
+        error_obj = {
+          details: { message: "Detailed error message" },
+          message: "General error message",
+          raw_message: "Raw error message"
+        }
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("Detailed error message")
+      end
+
+      it "falls back to raw_message when details message is missing" do
+        error_obj = {
+          message: "General error message",
+          raw_message: "Raw error message"
+        }
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("Raw error message")
+      end
+
+      it "falls back to general message when details and raw_message are missing" do
+        error_obj = {
+          message: "General error message"
+        }
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("General error message")
+      end
+
+      it "returns default message when all specific messages are missing" do
+        error_obj = {}
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("An unspecified error occurred.")
+      end
+
+      it "handles non-hash error objects" do
+        error_obj = "string error"
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("An unspecified error occurred.")
+      end
+
+      it "handles nil error objects" do
+        error_obj = nil
+
+        result = client.send(:extract_error_content, error_obj)
+        expect(result).to eq("An unspecified error occurred.")
+      end
+    end
+  end
+
+  describe "configuration edge cases", :configuration do
+    let(:success_response) do
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {text: "Configuration test response"}
+              ]
+            },
+            finishReason: "STOP",
+            safetyRatings: []
+          }
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 20,
+          totalTokenCount: 30
+        }
+      }
+    end
+
+    before do
+      allow_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+        .to receive(:post_json).and_return(success_response)
+      allow_any_instance_of(CodingAgentTools::Molecules::APIResponseParser)
+        .to receive(:parse_response).and_return({success: true, data: success_response})
+    end
+
+    describe "with complex system instructions" do
+      let(:complex_system_instruction) { "You are a helpful assistant.\n\nPlease format your responses using markdown and include examples where appropriate." }
+
+      it "handles multi-line system instructions" do
+        expected_payload = hash_including(
+          systemInstruction: {
+            parts: [{text: complex_system_instruction}]
+          }
+        )
+
+        expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+          .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
+
+        result = client.generate_text("test prompt", system_instruction: complex_system_instruction)
+        expect(result[:text]).to eq("Configuration test response")
+      end
+
+      it "handles system instructions with special characters" do
+        special_instruction = "You are a helpful assistant! 🤖 Use emojis: ✨, 🌟, 💡"
+
+        expected_payload = hash_including(
+          systemInstruction: {
+            parts: [{text: special_instruction}]
+          }
+        )
+
+        expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+          .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
+
+        result = client.generate_text("test prompt", system_instruction: special_instruction)
+        expect(result[:text]).to eq("Configuration test response")
+      end
+    end
+
+    describe "with complex generation configs" do
+      it "handles all possible generation config options" do
+        complex_config = {
+          temperature: 0.9,
+          maxOutputTokens: 1000,
+          topP: 0.8,
+          topK: 40,
+          responseMimeType: "application/json"
+        }
+
+        expected_payload = hash_including(
+          generationConfig: complex_config
+        )
+
+        expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+          .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
+
+        result = client.generate_text("test prompt", generation_config: complex_config)
+        expect(result[:text]).to eq("Configuration test response")
+      end
+
+      it "handles generation config with boundary values" do
+        boundary_config = {
+          temperature: 2.0,
+          maxOutputTokens: 8192,
+          topP: 1.0,
+          topK: 1
+        }
+
+        expected_payload = hash_including(
+          generationConfig: boundary_config
+        )
+
+        expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+          .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
+
+        result = client.generate_text("test prompt", generation_config: boundary_config)
+        expect(result[:text]).to eq("Configuration test response")
+      end
+    end
+
+    describe "combined complex configurations" do
+      it "handles both system instruction and complex generation config" do
+        system_instruction = "You are a JSON API assistant."
+        generation_config = {
+          temperature: 0.1,
+          maxOutputTokens: 500,
+          responseMimeType: "application/json"
+        }
+
+        expected_payload = hash_including(
+          systemInstruction: {
+            parts: [{text: system_instruction}]
+          },
+          generationConfig: generation_config
+        )
+
+        expect_any_instance_of(CodingAgentTools::Molecules::HTTPRequestBuilder)
+          .to receive(:post_json).with(anything, expected_payload).and_return(success_response)
+
+        result = client.generate_text("test prompt", 
+                           system_instruction: system_instruction,
+                           generation_config: generation_config)
+        expect(result[:text]).to eq("Configuration test response")
       end
     end
   end

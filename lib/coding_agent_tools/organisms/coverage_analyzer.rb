@@ -200,51 +200,57 @@ module CodingAgentTools
       end
 
       def extract_coverage_data(processed_data)
-        # Extract coverage percentages from processed data
-        # This assumes processed_data has a structure that includes file coverage information
-        case processed_data
-        when Hash
-          if processed_data[:files]
-            processed_data[:files].map do |file|
-              { coverage_percentage: file[:coverage_percentage] || 0.0 }
-            end
-          elsif processed_data.key?("RSpec") || processed_data.key?("Unit Tests") || processed_data.key?("Unknown Test Framework")
-            # Handle SimpleCov data structure (newer format with "lines" key)
-            all_files = []
-            processed_data.each do |key, test_data|
-              next unless test_data.is_a?(Hash) && test_data["coverage"]
-              
-              test_data["coverage"].each do |file_path, file_coverage_data|
-                next if file_coverage_data.nil?
-                
-                # Handle both old format (direct array) and new format (hash with "lines" key)
-                line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data["lines"]
-                             file_coverage_data["lines"]
-                           elsif file_coverage_data.is_a?(Array)
-                             file_coverage_data
-                           else
-                             next
-                           end
-                
-                next if line_data.nil? || !line_data.is_a?(Array)
-                
-                # Use CoverageCalculator atom for consistent calculation
-                coverage_result = @calculator.calculate_file_coverage(line_data)
-                next if coverage_result[:total_lines] == 0
-                
-                coverage_percentage = coverage_result[:coverage_percentage]
-                
-                all_files << { coverage_percentage: coverage_percentage }
-              end
-            end
-            all_files
-          else
-            []
-          end
-        when Array
-          processed_data.map do |file|
+        # Extract coverage percentages prioritizing already processed data to eliminate duplicate calculations
+        
+        # Handle direct array input (test cases)
+        if processed_data.is_a?(Array)
+          return processed_data.map do |file|
             { coverage_percentage: file[:coverage_percentage] || 0.0 }
           end
+        end
+        
+        return [] unless processed_data.is_a?(Hash)
+        
+        # First priority: Use processed data from the main CoverageDataProcessor pipeline
+        if processed_data[:file_coverage] && processed_data[:file_coverage].is_a?(Hash)
+          processed_data[:file_coverage].map do |file_path, file_data|
+            coverage_percentage = file_data.dig(:coverage_data, :coverage_percentage) || 0.0
+            { coverage_percentage: coverage_percentage }
+          end
+        # Second priority: Already transformed data structures  
+        elsif processed_data[:files] && processed_data[:files].is_a?(Array)
+          processed_data[:files].map do |file|
+            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+          end
+        # Fallback: Raw SimpleCov data (for backward compatibility and tests)
+        elsif processed_data.key?("RSpec") || processed_data.key?("Unit Tests") || processed_data.key?("Unknown Test Framework")
+          all_files = []
+          processed_data.each do |key, test_data|
+            next unless test_data.is_a?(Hash) && test_data["coverage"]
+            
+            test_data["coverage"].each do |file_path, file_coverage_data|
+              next if file_coverage_data.nil?
+              
+              # Handle both old format (direct array) and new format (hash with "lines" key)
+              line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data["lines"]
+                           file_coverage_data["lines"]
+                         elsif file_coverage_data.is_a?(Array)
+                           file_coverage_data
+                         else
+                           next
+                         end
+              
+              next if line_data.nil? || !line_data.is_a?(Array)
+              
+              # Use CoverageCalculator atom for consistent calculation
+              coverage_result = @calculator.calculate_file_coverage(line_data)
+              next if coverage_result[:total_lines] == 0
+              
+              coverage_percentage = coverage_result[:coverage_percentage]
+              all_files << { coverage_percentage: coverage_percentage }
+            end
+          end
+          all_files
         else
           []
         end
