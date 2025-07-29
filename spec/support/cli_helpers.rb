@@ -2,10 +2,12 @@
 
 require "stringio"
 require "dry/cli"
+require_relative "process_helpers"
 
 # CLI Helpers for integration tests
 # Provides methods to invoke CLI commands directly without subprocess overhead
 module CliHelpers
+  include ProcessHelpers
   # Result structure that mimics ProcessHelpers output
   class CliResult
     attr_reader :stdout, :stderr, :exit_code
@@ -494,13 +496,4 @@ module CliHelpers
     options
   end
 
-  # Execute gem executable and return [stdout, stderr, status] format
-  # This method is used in integration tests that expect the ProcessHelpers format
-  def execute_gem_executable(command_name, args, env: {})
-    require_relative "process_helpers"
-    include ProcessHelpers
-
-    # Execute the command using process helpers and return the same format
-    execute_command([command_name] + args, env: env)
-  end
 end
