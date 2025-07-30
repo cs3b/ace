@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-07-24
+last_reviewed: 2025-01-30
 status: active
 ---
 
@@ -36,6 +36,7 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | v.0.3.0 | "Workflows" (Current)     | Q3 2025       | Improve workflow independence and integration capabilities for coding agents like Claude Code, Windsurf, Zed | Workflow Independence, Agent Integration, Documentation Enhancement |
+| v.0.4.0 | "Replanning"              | Q1 2025       | Introduce specification cycle architecture separating idea capture, behavioral specification, and implementation planning | Specification Cycle, Behavior-First Design, Task State Management |
 | v0.4.0  | "Conductor"               | Q4 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
 | v0.5.0  | "Pathfinder"              | Q1 2026       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
 | v0.6.0  | "Scribe"                  | Q1 2026       | Markdown Document Quality theme features.                                                 | R-MD-1, R-MD-2, R-MD-3, R-MD-4                                                                       |
@@ -48,6 +49,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 - **Advanced LLM Features (v1.0.0):** Several P1 features in v1.0.0 "Keystone", such as LLM-based context summarization (R-CTX-4) and LLM-assisted task expansion (R-TCI-2), depend on the foundational LLM Integration capabilities (completed in previous releases).
 - **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of tools infrastructure (now completed with CAT gem).
+- **Specification Cycle (v.0.4.0):** The "Replanning" release introduces foundational changes to task specification that will impact all future task management features.
 - **Workflow Enhancement (v.0.3.0):** Current workflow independence initiatives build upon the completed Ruby gem infrastructure and tools migration.
 - **External Service Dependencies:**
     - LLM Integration requires access to Google Gemini API and a local LM Studio installation.
@@ -57,6 +59,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-01-30 | Added v.0.4.0 "Replanning" release with specification cycle architecture goals | AI Assistant   |
 | 2025-07-24 | Updated roadmap to reflect current release status: removed completed releases (v0.3.0 Migration, v0.3.0 Forge), marked v.0.3.0 Workflows as current, adjusted timeline. Updated status to active. | AI Assistant   |
 | 2025-07-23 | Merged comprehensive roadmap from tools-meta including all themes, epics, and releases. Added workflow independence focus from handbook-meta. | AI Assistant   |
 | 2025-01-05 | Added v0.3.0-migration release to planned releases table.                      | AI Assistant   |
