@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.1
-status: draft
+status: pending
 priority: high
 estimate: 8h
 dependencies: []
@@ -20,6 +20,7 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
   - `--release` (default: backlog, can be current or specific version)
   - `--clipboard` to read from clipboard
   - `--file PATH` to read from file(s)
+  - `--model` (default: gflash, can be overridden)
 - **Output**: Enhanced idea file with timestamp prefix in the appropriate ideas/ directory
 
 ### Expected Behavior
@@ -47,20 +48,56 @@ ideas-manager capture --clipboard
 ## How: Implementation Plan
 
 ### Planning Steps
-* [ ] Research existing tool patterns in dev-tools for consistency
-* [ ] Design idea enhancement prompt for LLM integration
-* [ ] Plan file naming and storage strategy
-* [ ] Define question generation logic
+* [ ] Audit current ideas/ directory structure across releases
+  > TEST: Directory Structure Check
+  > Type: Pre-condition Check
+  > Assert: Ideas directories exist or creation logic is defined
+  > Command: find dev-taskflow -name "ideas" -type d
+* [ ] Research existing tool patterns in dev-tools for ATOM architecture consistency
+  > TEST: Pattern Analysis Check
+  > Type: Research Validation
+  > Assert: CLI tool patterns and LLM integration patterns are documented
+  > Command: grep -r "llm-query" dev-tools/exe/ && ls dev-tools/lib/coding_agent_tools/organisms/
+* [ ] Design idea enhancement prompt for LLM integration with project context
+* [ ] Define idea.template.md format specification with required fields
+* [ ] Implement nav-path file:capture-idea-new command to generate three paths:
+  > TEST: Nav-Path Integration Check
+  > Type: Path Generation Validation
+  > Assert: nav-path returns temp input, temp system prompt, and final output paths
+  > Command: nav-path file:capture-idea-new --title "test-idea"
+* [ ] Plan file naming and storage strategy with timestamp prefixes
+* [ ] Define question generation logic based on project architecture and goals
 
 ### Execution Steps
 - [ ] Create ideas-manager executable in dev-tools/exe/
+  > TEST: Executable Creation Check
+  > Type: File Creation Validation
+  > Assert: Executable is created with proper permissions and CLI structure
+  > Command: test -x dev-tools/exe/ideas-manager && ideas-manager --help
 - [ ] Implement IdeaCapture organism in dev-tools/lib/coding_agent_tools/organisms/
+  > TEST: Organism Implementation Check
+  > Type: Component Validation
+  > Assert: IdeaCapture follows ATOM architecture and has required methods
+  > Command: ruby -r ./dev-tools/lib/coding_agent_tools -e "puts CodingAgentTools::Organisms::IdeaCapture.new.respond_to?(:capture)"
 - [ ] Add clipboard reading molecule if not exists
-- [ ] Create idea enhancement prompt templates
-- [ ] Implement timestamped file creation logic
-- [ ] Add validation for release parameter
-- [ ] Create comprehensive tests in dev-tools/spec/
-- [ ] Update dev-tools documentation
+- [ ] Extend nav-path with file:capture-idea-new support to return three paths:
+  - ./tmp/{timestamp}-{slug}.md (temp input file)
+  - ./tmp/{timestamp}-{slug}.system.prompt.md (temp system prompt)
+  - dev-taskflow/backlog/{timestamp}-{slug}.md (final output path)
+- [ ] Create idea enhancement prompt templates (system.prompt.md and idea.template.md)
+  > TEST: Template Creation Check
+  > Type: Template Validation
+  > Assert: Templates are created with proper format and embedded context
+  > Command: test -f dev-handbook/templates/idea-manager/system.prompt.md && test -f dev-handbook/templates/idea-manager/idea.template.md
+- [ ] Implement timestamped file creation logic with proper error handling
+- [ ] Add validation for release parameter and directory creation
+- [ ] Implement LLM integration with retry logic and fallback handling
+  > TEST: LLM Integration Check
+  > Type: Integration Validation
+  > Assert: Tool successfully calls llm-query and handles responses
+  > Command: ideas-manager capture "test idea" --dry-run
+- [ ] Create comprehensive tests in dev-tools/spec/ (unit and integration)
+- [ ] Update dev-tools documentation and tools.md reference
 
 ## Scope of Work
 
@@ -72,11 +109,12 @@ ideas-manager capture --clipboard
 - dev-tools/lib/coding_agent_tools/molecules/idea_enhancer.rb
 - dev-tools/spec/organisms/idea_capture_spec.rb
 - dev-tools/spec/cli/ideas_manager_spec.rb
-- dev-handbook/templates/idea-manager/system.prompt.md (will be used for enhacing the idea with llm-query)
-- dev-handbook/templates/idea-manager/idea.template.md (the format of the idea)
+- dev-handbook/templates/idea-manager/system.prompt.md (LLM system prompt with project context)
+- dev-handbook/templates/idea-manager/idea.template.md (structured idea format template)
 
 #### Modify
 - dev-tools/lib/coding_agent_tools.rb (register new components)
+- dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb (add file:capture-idea-new support)
 - docs/tools.md (add ideas-manager documentation)
 
 ## Acceptance Criteria
@@ -89,57 +127,72 @@ ideas-manager capture --clipboard
 - [ ] All tests pass
 - [ ] Documentation is complete
 
-## Example
+## Template Specifications
 
-```bash
-idea-manager capture "every task definition should have an example section, that should demo how medium level example should work when job is done"
-```
-1. it saves the idea in tmp file -> ./tmp/20250730-102915-task-definition-with-example.md
-
-2. it prepare the system prompt -> ./tmp/20250730-102915-task-definition-with-example.system.prompt.md
-
-## the system prompt include:
-
-- the instruction
-- the output format (need to create format )
-- the project context (docs/*.md) (embeded as they are )
-
+### idea.template.md Format
 ```markdown
-# Instruction
+# {title}
 
-Enhance the note into idea. Use the template idea.template.md and take into account context
+## Goal
+{goal_description}
 
-...
+## Problem Context
+{problem_statement}
 
-<template>
-    # title
+## Project Context
+{project_relevance}
 
-    # goal
+## Key Questions
+1. {question_1}
+2. {question_2}
+3. {question_3}
 
-    # project context
+## Solution Direction
+{potential_approaches}
 
-    # questions
-    ...
-</template>
+## Expected Benefits
+{anticipated_value}
 
-<context>
-    <document path="docs/what-do-we-do.md">
-        ...
-    </document>
-    <document path="docs/architecture.md">
-        ...
-    </document>
+## Scope Considerations
+### In Scope
+- {scope_item_1}
+- {scope_item_2}
 
-    ...
-</context>
+### Out of Scope  
+- {excluded_item_1}
+- {excluded_item_2}
+
+## Next Steps
+{immediate_actions}
 ```
 
-1. it calls
+### system.prompt.md Structure
+- LLM instructions for idea enhancement
+- Embedded idea.template.md format
+- Project context from docs/*.md files
+- Output formatting constraints
+
+## Example Workflow
 
 ```bash
-llm-query gflash ./tmp/20250730-102915-task-definition-with-example.md \
---system-prompt ./tmp/20250730-102915-task-definition-with-example.system.prompt.md \
---output dev-taskflow/backlog/20250730-102915-task-definition-with-example.md
+ideas-manager capture "every task definition should have an example section"
+```
+
+1. **Get paths**: `nav-path file:capture-idea-new --title "task-definition-example"`
+   - Returns: temp input, temp system prompt, final output paths
+
+2. **Save raw idea**: Creates temp input file with raw idea text
+
+3. **Generate system prompt**: Creates temp system prompt with:
+   - Enhancement instructions
+   - Embedded idea.template.md format
+   - Project context from docs/*.md files
+
+4. **Call LLM**: 
+```bash
+llm-query gflash ./tmp/20250730-102915-task-definition-example.md \
+--system-prompt ./tmp/20250730-102915-task-definition-example.system.prompt.md \
+--output dev-taskflow/backlog/20250730-102915-task-definition-example.md
 ```
 
 ## Out of Scope
