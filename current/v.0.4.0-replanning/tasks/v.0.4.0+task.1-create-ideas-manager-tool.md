@@ -17,7 +17,6 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
 ### User Experience
 - **Command**: `ideas-manager capture "my raw idea text"`
 - **Options**:
-  - `--release` (default: backlog, can be current or specific version)
   - `--clipboard` to read from clipboard
   - `--file PATH` to read from file(s)
   - `--model` (default: gflash, can be overridden)
@@ -36,13 +35,9 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
 ideas-manager capture "Add dark mode support"
 # => Created: dev-taskflow/backlog/ideas/20250130-1430-dark-mode-support.md
 
-# With specific release
-ideas-manager capture --release v.0.4.0-replanning "Improve task workflows"
-# => Created: dev-taskflow/backlog/v.0.4.0-replanning/ideas/20250130-1431-improve-task-workflows.md
-
 # From clipboard
 ideas-manager capture --clipboard
-# => Created: dev-taskflow/current/v.0.3.0-workflows/ideas/20250130-1432-clipboard-idea.md
+# => Created: dev-taskflow/backlog/ideas/20250130-1432-clipboard-idea.md
 ```
 
 ## How: Implementation Plan
@@ -60,11 +55,11 @@ ideas-manager capture --clipboard
   > Command: grep -r "llm-query" dev-tools/exe/ && ls dev-tools/lib/coding_agent_tools/organisms/
 * [ ] Design idea enhancement prompt for LLM integration with project context
 * [ ] Define idea.template.md format specification with required fields
-* [ ] Implement nav-path file:capture-idea-new command to generate three paths:
+* [ ] Implement nav-path capture-idea-new command to generate three paths with directories:
   > TEST: Nav-Path Integration Check
   > Type: Path Generation Validation
-  > Assert: nav-path returns temp input, temp system prompt, and final output paths
-  > Command: nav-path file:capture-idea-new --title "test-idea"
+  > Assert: nav-path returns temp input, temp system prompt, and final output paths with directories created
+  > Command: nav-path capture-idea-new --context "test idea for validation"
 * [ ] Plan file naming and storage strategy with timestamp prefixes
 * [ ] Define question generation logic based on project architecture and goals
 
@@ -80,10 +75,14 @@ ideas-manager capture --clipboard
   > Assert: IdeaCapture follows ATOM architecture and has required methods
   > Command: ruby -r ./dev-tools/lib/coding_agent_tools -e "puts CodingAgentTools::Organisms::IdeaCapture.new.respond_to?(:capture)"
 - [ ] Add clipboard reading molecule if not exists
-- [ ] Extend nav-path with file:capture-idea-new support to return three paths:
-  - ./tmp/{timestamp}-{slug}.md (temp input file)
+- [ ] Extend nav-path with capture-idea-new subcommand to return three paths with directory creation:
+  - ./tmp/{timestamp}-{slug}.md (temp input file) 
   - ./tmp/{timestamp}-{slug}.system.prompt.md (temp system prompt)
-  - dev-taskflow/backlog/{timestamp}-{slug}.md (final output path)
+  - dev-taskflow/backlog/ideas/{timestamp}-{slug}.md (final output path)
+  > TEST: Path Generation and Directory Creation
+  > Type: Integration Validation
+  > Assert: All three paths returned and directories created from project root
+  > Command: nav-path capture-idea-new --context "example idea" && test -d ./tmp && test -d dev-taskflow/backlog/ideas
 - [ ] Create idea enhancement prompt templates (system.prompt.md and idea.template.md)
   > TEST: Template Creation Check
   > Type: Template Validation
@@ -114,7 +113,7 @@ ideas-manager capture --clipboard
 
 #### Modify
 - dev-tools/lib/coding_agent_tools.rb (register new components)
-- dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb (add file:capture-idea-new support)
+- dev-tools/lib/coding_agent_tools/cli/commands/nav/path.rb (add capture-idea-new subcommand)
 - docs/tools.md (add ideas-manager documentation)
 
 ## Acceptance Criteria
@@ -211,21 +210,41 @@ ideas-manager capture --clipboard
 ideas-manager capture "every task definition should have an example section"
 ```
 
-1. **Get paths**: `nav-path file:capture-idea-new --title "task-definition-example"`
-   - Returns: temp input, temp system prompt, final output paths
-
-2. **Save raw idea**: Creates temp input file with raw idea text
-
-3. **Generate system prompt**: Creates temp system prompt with:
-   - Enhancement instructions
-   - Embedded idea.template.md format
-   - Project context from docs/*.md files
-
-4. **Call LLM**: 
+### 1. **Generate Slug and Get Paths**
 ```bash
-llm-query gflash ./tmp/20250730-102915-task-definition-example.md \
---system-prompt ./tmp/20250730-102915-task-definition-example.system.prompt.md \
---output dev-taskflow/backlog/20250730-102915-task-definition-example.md
+# Generate slug using LLM
+llm-query gflash "every task definition should have an example section" --system "return only 3 word slug for the context (lowercase linked by hyphens)"
+# => task-example-section
+
+# Get three paths with directory creation
+nav-path capture-idea-new --context "every task definition should have an example section"
+```
+**Returns:**
+```
+input: ./tmp/20250730-1430-task-example-section.md
+system: ./tmp/20250730-1430-task-example-section.system.prompt.md  
+output: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+```
+
+### 2. **Save Raw Idea**
+Creates temp input file with raw idea text at returned input path.
+
+### 3. **Generate System Prompt** 
+Creates temp system prompt with:
+- Enhancement instructions using embedded template
+- Project context from docs/*.md files
+- LLM formatting constraints
+
+### 4. **Call LLM Enhancement**
+```bash
+llm-query gflash ./tmp/20250730-1430-task-example-section.md \
+--system-prompt ./tmp/20250730-1430-task-example-section.system.prompt.md \
+--output dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
+```
+
+### 5. **Return Output Path**
+```bash
+# => Created: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
 ## Out of Scope
