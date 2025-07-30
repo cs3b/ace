@@ -59,7 +59,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
       subject { described_class.new }
 
       it "initializes with default model" do
-        expect(subject.instance_variable_get(:@model)).to eq("gflash")
+        expect(subject.instance_variable_get(:@model)).to eq("google:gemini-2.5-flash-lite")
       end
 
       it "initializes with debug disabled" do
@@ -104,7 +104,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
       expect(CodingAgentTools::Molecules::ContextLoader).to have_received(:new)
       expect(CodingAgentTools::Molecules::IdeaEnhancer).to have_received(:new)
       expect(CodingAgentTools::Molecules::PathResolver).to have_received(:new)
-      expect(CodingAgentTools::Molecules::LLMClient).to have_received(:new).with(model: "gflash", debug: false)
+      expect(CodingAgentTools::Molecules::LLMClient).to have_received(:new).with(model: "google:gemini-2.5-flash-lite", debug: false)
     end
   end
 
