@@ -11,13 +11,6 @@ Use the ideas-manager tool to capture and enhance raw ideas within project conte
 * LLM provider configured (Google Gemini recommended)
 * Write access to `dev-taskflow/backlog/ideas/` directory
 
-## Project Context Loading
-
-* Load project objectives: `docs/what-do-we-build.md`
-* Load architecture overview: `docs/architecture.md`
-* Load project structure: `docs/blueprint.md`
-* Load tools documentation: `docs/tools.md`
-
 ## Process Steps
 
 1. **Identify the Idea Source:**
@@ -32,22 +25,22 @@ Use the ideas-manager tool to capture and enhance raw ideas within project conte
      ```bash
      ideas-manager capture "your raw idea text here"
      ```
-   
+
    * **From clipboard**:
      ```bash
      ideas-manager capture --clipboard
      ```
-   
+
    * **From file**:
      ```bash
      ideas-manager capture --file path/to/idea-notes.txt
      ```
-   
+
    * **For long ideas** (over 1000 words):
      ```bash
      ideas-manager capture "long idea text..." --big-user-input-allowed
      ```
-   
+
    * **With debug information**:
      ```bash
      ideas-manager capture "idea text" --debug
