@@ -21,6 +21,7 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
   - `--file PATH` to read from file(s)
   - `--model` (default: gflash, can be overridden)
   - `--debug` to show detailed error information and processing flow
+  - `--big-user-input-allowed` to allow inputs over 1000 words
 - **Output**: Enhanced idea file with timestamp prefix in the appropriate ideas/ directory
 
 ### Expected Behavior
@@ -89,6 +90,11 @@ ideas-manager capture --clipboard
   > Type: Template Validation
   > Assert: Templates are created with proper format and embedded context
   > Command: test -f dev-handbook/templates/idea-manager/system.prompt.md && test -f dev-handbook/templates/idea-manager/idea.template.md
+- [ ] Implement dynamic context loading for all docs/*.md files
+  > TEST: Context Loading Check
+  > Type: Context Integration Validation
+  > Assert: All docs/*.md files are discovered and embedded in system prompt
+  > Command: ideas-manager capture "test context loading" --debug | grep -c "<document path="
 - [ ] Implement timestamped file creation logic with proper error handling
 - [ ] Add validation for release parameter and directory creation
 - [ ] Implement LLM integration with retry logic and fallback handling
@@ -206,9 +212,54 @@ ideas-manager capture --clipboard
 
 ### system.prompt.md Structure
 - LLM instructions for idea enhancement
-- Embedded idea.template.md format
-- Project context from docs/*.md files
+- Embedded idea.template.md format  
+- Dynamic project context from all docs/*.md files
 - Output formatting constraints
+
+## Context Loading Specification
+
+### Files to Include
+**Dynamic Loading**: Load all `docs/*.md` files fresh for each command execution
+- `docs/what-do-we-build.md` (project vision)
+- `docs/architecture.md` (system design) 
+- `docs/blueprint.md` (project structure)
+- All other `docs/*.md` files found at runtime
+
+### Size Limits and Input Validation
+- **No Context Size Limit**: gflash supports 200K+ tokens (up to 1M), docs/*.md files are acceptable
+- **User Input Limit**: 1000 words maximum unless `--big-user-input-allowed` flag provided
+- **Size Reporting**: Show input size in KB and words when rejecting large inputs
+- **Example**: `"Input too large: 15.2 KB, 2,431 words. Use --big-user-input-allowed to proceed"`
+
+### Context Embedding Format
+**Use embedded documents format (similar to code-review context):**
+```xml
+<context>
+    <document path="docs/what-do-we-build.md">
+        [full file content]
+    </document>
+    <document path="docs/architecture.md">
+        [full file content]
+    </document>
+    <document path="docs/blueprint.md">
+        [full file content]
+    </document>
+    <!-- All other docs/*.md files -->
+</context>
+```
+
+### Loading Strategy  
+- **Dynamic Loading**: Fresh context load for each command (no caching)
+- **Runtime Discovery**: Scan docs/ directory for all .md files at execution time
+- **File Reading**: Read each file completely, embed in system prompt
+- **Error Tolerance**: Continue with available files if some fail to load
+
+### Fallback Behavior
+**Minimum Guarantee**: Always save raw user input to ideas folder, regardless of context loading issues
+- Show context loading errors to user
+- Continue with whatever context successfully loaded
+- Use embedded backup template if all context loading fails
+- Save raw idea as absolute minimum functionality
 
 ## Example Workflow
 
@@ -282,19 +333,20 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 #### 4. Input Processing Failures
 - **Validation**: Minimum 5 characters required
+- **Large Input Check**: Reject inputs over 1000 words unless `--big-user-input-allowed` flag provided
 - **File Size Limit**: Max 10KB input files with truncation warning
 - **Clipboard Fallback**: Prompt for manual input if clipboard fails
 - **User Feedback**:
-  - Default: `"Invalid input, please try again"`
-  - Debug: Specific validation failure reason
+  - Default: `"Input too large: [X] KB, [Y] words. Use --big-user-input-allowed to proceed"`
+  - Debug: Specific validation failure reason and input size details
 
 #### 5. System Context Loading Failures
 - **Template Missing**: Use embedded backup template
-- **Context Files Unreadable**: Continue with minimal template
-- **Size Limits**: Truncate context if too large, prioritize essential docs
+- **Context Files Unreadable**: Show errors, continue with available files, save raw idea as minimum
+- **Dynamic Loading**: Load all docs/*.md files fresh for each command
 - **User Feedback**:
-  - Default: `"Using basic template due to context issues"`
-  - Debug: List of failed context files and reasons
+  - Default: `"Context loading issues, saved raw idea: [path]"`
+  - Debug: List of failed context files, sizes, and specific error reasons
 
 ### Debug Mode Behavior
 - **Flag**: `--debug` shows detailed processing flow
