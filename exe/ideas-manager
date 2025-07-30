@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+# Ideas Manager - Tool for capturing and enhancing raw ideas
+# This provides focused entry point for idea capture operations
+
+# Ensure we use the correct Gemfile regardless of current directory
+gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
+ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+
+begin
+  require "bundler/setup"
+rescue LoadError
+  # Continue without bundler if not available
+end
+
+# Set up load paths for development if necessary
+# Use absolute path resolution to support execution from any directory
+lib_path = File.expand_path("../../lib", __FILE__)
+$LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
+
+require "coding_agent_tools/cli/commands/ideas/capture"
+require "dry/cli"
+
+module IdeasManagerCli
+  module Commands
+    extend Dry::CLI::Registry
+
+    # Register ideas commands directly under the root
+    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture
+
+    # Version command
+    class Version < Dry::CLI::Command
+      desc "Print version"
+
+      def call(*)
+        require "coding_agent_tools/version"
+        puts "Ideas Manager #{CodingAgentTools::VERSION}"
+      end
+    end
+
+    register "version", Version, aliases: ["v", "-v", "--version"]
+  end
+end
+
+begin
+  Dry::CLI.new(IdeasManagerCli::Commands).call
+rescue Dry::CLI::Error => e
+  warn "Error: #{e.message}"
+  exit 1
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end

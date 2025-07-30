@@ -9,7 +9,7 @@ module CodingAgentTools
         class Path < Dry::CLI::Command
           desc "Intelligent path resolution and generation"
 
-          argument :type, desc: "Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, file"
+          argument :type, desc: "Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file"
           argument :input, desc: "Input for path resolution (title for new paths, ID/pattern for existing paths)"
 
           option :title, desc: "Title for new path generation (alternative to input argument)"
@@ -43,13 +43,15 @@ module CodingAgentTools
               :reflection_list
             when "code-review-new", "code_review_new"
               :code_review_new
+            when "capture-idea-new", "capture_idea_new"
+              :capture_idea_new
             when "task"
               :task
             when "file"
               :file
             else
               puts "Error: Unknown path type '#{type}'"
-              puts "Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, file"
+              puts "Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file"
               return
             end
 
@@ -71,6 +73,11 @@ module CodingAgentTools
               when :list
                 # Reflection list - output each path on separate line
                 result[:paths].each { |path| puts path }
+              when :capture_idea_paths
+                # Capture idea new - output three paths with labels
+                puts "input: #{result[:input_path]}"
+                puts "system: #{result[:system_path]}"
+                puts "output: #{result[:output_path]}"
               when :multiple
                 # Use smart prioritization for multiple matches
                 prioritized = path_resolver.prioritize_matches(result[:paths])
