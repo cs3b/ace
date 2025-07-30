@@ -28,7 +28,6 @@ module CodingAgentTools
 
             # Determine input source
             input_text = determine_input(idea_text, options)
-            return unless input_text
 
             # Capture and enhance the idea
             result = idea_capture.capture_idea(input_text)
@@ -64,7 +63,7 @@ module CodingAgentTools
               puts "Usage: ideas-manager capture 'your idea text'"
               puts "       ideas-manager capture --clipboard" 
               puts "       ideas-manager capture --file path/to/file.txt"
-              nil
+              exit 1
             end
           end
 
@@ -87,30 +86,30 @@ module CodingAgentTools
             end
 
             puts "Error: Could not read from clipboard. Please install pbpaste (macOS), xclip/xsel (Linux), or use text input."
-            nil
+            exit 1
           end
 
           def read_from_file(file_path)
             unless File.exist?(file_path)
               puts "Error: File not found: #{file_path}"
-              return nil
+              exit 1
             end
 
             unless File.readable?(file_path)
               puts "Error: File not readable: #{file_path}"
-              return nil
+              exit 1
             end
 
             begin
               content = File.read(file_path).strip
               if content.empty?
                 puts "Error: File is empty: #{file_path}"
-                return nil
+                exit 1
               end
               content
             rescue => e
               puts "Error reading file #{file_path}: #{e.message}"
-              nil
+              exit 1
             end
           end
         end
