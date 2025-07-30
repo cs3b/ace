@@ -129,42 +129,75 @@ ideas-manager capture --clipboard
 
 ## Template Specifications
 
-### idea.template.md Format
-```markdown
-# {title}
+<documents>
+    <template path="dev-handbook/templates/idea-manager/idea.template.md"># {title}
 
-## Goal
-{goal_description}
+## Intention
 
-## Problem Context
-{problem_statement}
+{clear_one_sentence_purpose}
 
-## Project Context
-{project_relevance}
+## Problem It Solves
 
-## Key Questions
-1. {question_1}
-2. {question_2}
-3. {question_3}
+**Observed Issues:**
+- {specific_issue_1}
+- {specific_issue_2} 
+- {specific_issue_3}
+
+**Impact:**
+- {consequence_1}
+- {consequence_2}
+- {consequence_3}
+
+## Key Patterns from Reflections
+
+{patterns_extracted_from_project_context}
 
 ## Solution Direction
-{potential_approaches}
+
+1. **{approach_1}**: {description}
+2. **{approach_2}**: {description}
+3. **{approach_3}**: {description}
+
+## Critical Questions
+
+**Before proceeding, we need to answer:**
+1. {validation_question_1}
+2. {validation_question_2}
+3. {validation_question_3}
+
+**Open Questions:**
+- {uncertainty_1}
+- {uncertainty_2}
+- {uncertainty_3}
+
+## Assumptions to Validate
+
+**We assume that:**
+- {assumption_1} - *Needs validation*
+- {assumption_2} - *Needs validation*
+- {assumption_3} - *Needs validation*
 
 ## Expected Benefits
-{anticipated_value}
 
-## Scope Considerations
-### In Scope
-- {scope_item_1}
-- {scope_item_2}
+- {benefit_1}
+- {benefit_2}
+- {benefit_3}
 
-### Out of Scope  
-- {excluded_item_1}
-- {excluded_item_2}
+## Big Unknowns
 
-## Next Steps
-{immediate_actions}
-```
+**Technical Unknowns:**
+- {technical_uncertainty_1}
+- {technical_uncertainty_2}
+
+**User/Market Unknowns:**
+- {user_uncertainty_1}
+- {user_uncertainty_2}
+
+**Implementation Unknowns:**
+- {implementation_uncertainty_1}
+- {implementation_uncertainty_2}
+</template>
+</documents>
 
 ### system.prompt.md Structure
 - LLM instructions for idea enhancement
