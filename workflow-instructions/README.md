@@ -16,7 +16,7 @@ This comprehensive guide documents end-to-end workflow orchestration for AI agen
 
 ## Workflow Ecosystem Overview
 
-The AI-assisted development workflow ecosystem consists of 19 interconnected workflows organized into logical groups:
+The AI-assisted development workflow ecosystem consists of 20 interconnected workflows organized into logical groups:
 
 ### 1. Project Foundation & Setup
 
@@ -31,6 +31,7 @@ The AI-assisted development workflow ecosystem consists of 19 interconnected wor
 
 ### 3. Task Management
 
+- **capture-idea** - Capture and enhance raw ideas using ideas-manager tool
 - **create-task** - Transform requirements into formal task files
 - **work-on-task** - Execute task implementation following embedded plans
 - **review-task** - Review and refine task definitions before implementation
@@ -249,6 +250,8 @@ START: What is the current situation?
 │       └── → draft-release
 │
 ├── 🔧 DEVELOPMENT WORK
+│   ├── Have raw, unstructured ideas to capture?
+│   │   └── → capture-idea
 │   ├── Have specific requirements/features to implement?
 │   │   ├── Requirements are informal/unstructured?
 │   │   │   └── → create-task
@@ -679,7 +682,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | Category | Workflows | Usage |
 |----------|-----------|-------|
 | **Foundation** | `initialize-project-structure`, `load-project-context` | New projects, custom work outside workflows |
-| **Task Management** | `create-task`, `review-task`, `work-on-task` | Feature development, implementation |
+| **Task Management** | `capture-idea`, `create-task`, `review-task`, `work-on-task` | Idea capture, feature development, implementation |
 | **Quality** | `review-code`, `synthesize-reviews`, `fix-tests` | Code review, quality assurance |
 | **Release** | `draft-release`, `publish-release`, `update-roadmap` | Release management |
 | **Documentation** | `create-adr`, `create-api-docs`, `create-user-docs`, `update-blueprint` | Documentation generation |
@@ -690,6 +693,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | Scenario | Sequence | Duration |
 |----------|----------|----------|
 | **New Project** | `initialize-project-structure` → `load-project-context` → `draft-release` | 2-4h |
+| **Idea Development** | `capture-idea` → `create-task` → `review-task` → `work-on-task` | 5-20h |
 | **Feature Development** | `create-task` → `review-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
 | **Bug Fix** | `work-on-task` → `commit` → `fix-tests` | 1-8h |
 | **Release** | `synthesize-reviews` → `create-reflection-note` → `publish-release` → `update-roadmap` | 2-6h |
@@ -741,6 +745,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 
 ### Task Management
 
+- [Capture Idea](./capture-idea.wf.md): Capture and enhance raw ideas using the ideas-manager tool within project context.
 - [Create Task](./create-task.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
 
 ### Documentation Generation
