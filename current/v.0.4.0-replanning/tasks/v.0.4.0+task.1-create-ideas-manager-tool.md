@@ -16,7 +16,7 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
 
 ### User Experience
 - **Command**: `ideas-manager capture "my raw idea text"`
-- **Options**: 
+- **Options**:
   - `--release` (default: backlog, can be current or specific version)
   - `--clipboard` to read from clipboard
   - `--file PATH` to read from file(s)
@@ -72,6 +72,8 @@ ideas-manager capture --clipboard
 - dev-tools/lib/coding_agent_tools/molecules/idea_enhancer.rb
 - dev-tools/spec/organisms/idea_capture_spec.rb
 - dev-tools/spec/cli/ideas_manager_spec.rb
+- dev-handbook/templates/idea-manager/system.prompt.md (will be used for enhacing the idea with llm-query)
+- dev-handbook/templates/idea-manager/idea.template.md (the format of the idea)
 
 #### Modify
 - dev-tools/lib/coding_agent_tools.rb (register new components)
@@ -86,6 +88,59 @@ ideas-manager capture --clipboard
 - [ ] Release targeting works correctly
 - [ ] All tests pass
 - [ ] Documentation is complete
+
+## Example
+
+```bash
+idea-manager capture "every task definition should have an example section, that should demo how medium level example should work when job is done"
+```
+1. it saves the idea in tmp file -> ./tmp/20250730-102915-task-definition-with-example.md
+
+2. it prepare the system prompt -> ./tmp/20250730-102915-task-definition-with-example.system.prompt.md
+
+## the system prompt include:
+
+- the instruction
+- the output format (need to create format )
+- the project context (docs/*.md) (embeded as they are )
+
+```markdown
+# Instruction
+
+Enhance the note into idea. Use the template idea.template.md and take into account context
+
+...
+
+<template>
+    # title
+
+    # goal
+
+    # project context
+
+    # questions
+    ...
+</template>
+
+<context>
+    <document path="docs/what-do-we-do.md">
+        ...
+    </document>
+    <document path="docs/architecture.md">
+        ...
+    </document>
+
+    ...
+</context>
+```
+
+1. it calls
+
+```bash
+llm-query gflash ./tmp/20250730-102915-task-definition-with-example.md \
+--system-prompt ./tmp/20250730-102915-task-definition-with-example.system.prompt.md \
+--output dev-taskflow/backlog/20250730-102915-task-definition-with-example.md
+```
 
 ## Out of Scope
 
