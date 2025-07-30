@@ -369,9 +369,19 @@ module CodingAgentTools
           .gsub(/^-|-$/, "")
         
         # Limit slug length to prevent filesystem filename length issues
-        max_slug_length = 100
+        # Truncate at word boundaries to keep it readable
+        max_slug_length = 80
         if slug.length > max_slug_length
-          slug = slug[0, max_slug_length].gsub(/-+$/, "") # Remove trailing hyphens after truncation
+          # Find the last word boundary (hyphen) within the limit
+          truncated = slug[0, max_slug_length]
+          last_hyphen = truncated.rindex('-')
+          
+          if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
+            slug = truncated[0, last_hyphen]
+          else
+            # Fallback: truncate and clean up
+            slug = truncated.gsub(/-+$/, "")
+          end
         end
         
         slug

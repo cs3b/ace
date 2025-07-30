@@ -180,8 +180,8 @@ module CodingAgentTools
           # Generate timestamp
           timestamp = Time.now.strftime("%Y%m%d-%H%M")
           
-          # Generate slug from idea context (using existing slugify method)
-          slug = slugify(idea_context)
+          # Generate slug from idea context (try LLM first, fallback to simple slugify)
+          slug = generate_smart_slug(idea_context) || slugify(idea_context)
           
           # Create base filename
           base_filename = "#{timestamp}-#{slug}"
@@ -445,6 +445,44 @@ module CodingAgentTools
         rand(1000).to_s.rjust(3, "0")  # Simple fallback with 3-digit padding
       end
 
+      # Generate a smart 3-word slug using LLM
+      # @param idea_context [String] The raw idea text
+      # @return [String, nil] The generated slug or nil if LLM call fails
+      def generate_smart_slug(idea_context)
+        return nil if idea_context.nil? || idea_context.strip.empty?
+        
+        begin
+          # Limit context to first 100 words to keep LLM call fast and focused
+          words = idea_context.strip.split(/\s+/)
+          limited_context = words.first(100).join(' ')
+          
+          # Use llm-query to generate a smart 3-word slug
+          require 'open3'
+          require 'timeout'
+          
+          system_prompt = "return only 3 word slug for the context (lowercase linked by hyphens)"
+          command = ["llm-query", "google:gemini-2.5-flash-lite", limited_context, "--system", system_prompt]
+          
+          # Quick timeout for slug generation (5 seconds)
+          result = nil
+          Timeout.timeout(5) do
+            stdout, stderr, status = Open3.capture3(*command)
+            result = stdout.strip if status.success? && !stdout.strip.empty?
+          end
+          
+          # Validate the result looks like a proper slug
+          if result && result.match?(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/) && result.count('-') >= 1
+            result
+          else
+            nil # Fall back to simple slugify
+          end
+          
+        rescue => e
+          # Silently fall back to simple slugify on any error
+          nil
+        end
+      end
+
       def slugify(text)
         slug = text.to_s
           .downcase
@@ -454,10 +492,19 @@ module CodingAgentTools
           .gsub(/^-|-$/, "")     # Remove leading/trailing hyphens
         
         # Limit slug length to prevent filesystem filename length issues
-        # Keep it reasonable for readability while preventing "File name too long" errors
-        max_slug_length = 100
+        # Truncate at word boundaries to keep it readable
+        max_slug_length = 80
         if slug.length > max_slug_length
-          slug = slug[0, max_slug_length].gsub(/-+$/, "") # Remove trailing hyphens after truncation
+          # Find the last word boundary (hyphen) within the limit
+          truncated = slug[0, max_slug_length]
+          last_hyphen = truncated.rindex('-')
+          
+          if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
+            slug = truncated[0, last_hyphen]
+          else
+            # Fallback: truncate and clean up
+            slug = truncated.gsub(/-+$/, "")
+          end
         end
         
         slug

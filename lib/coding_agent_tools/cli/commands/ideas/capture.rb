@@ -14,7 +14,7 @@ module CodingAgentTools
 
           option :clipboard, type: :boolean, default: false, desc: "Read idea from clipboard"
           option :file, type: :string, desc: "Read idea from file path"
-          option :model, type: :string, default: "google:gemini-2.5-flash", desc: "LLM model to use for enhancement"
+          option :model, type: :string, default: "google:gemini-2.5-flash-lite", desc: "LLM model to use for enhancement"
           option :debug, type: :boolean, default: false, desc: "Show detailed error information and processing flow"
           option :big_user_input_allowed, type: :boolean, default: false, desc: "Allow inputs over 1000 words"
 
