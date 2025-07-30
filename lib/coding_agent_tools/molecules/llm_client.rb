@@ -83,8 +83,8 @@ module CodingAgentTools
 
         debug_log("Executing: #{command}")
 
-        # Execute the command
-        result = @command_executor.execute(command)
+        # Execute the command with 30-second timeout for ideas-manager
+        result = @command_executor.execute(command, timeout: 30)
         
         if result[:success] && File.exist?(output_path)
           # Verify output file has content
