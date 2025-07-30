@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/system_command_executor"
+require_relative "client_factory"
+require_relative "provider_model_parser"
+require_relative "file_io_handler"
 
 module CodingAgentTools
   module Molecules
@@ -21,7 +23,17 @@ module CodingAgentTools
       def initialize(model: "gflash", debug: false)
         @model = model
         @debug = debug
-        @command_executor = Atoms::SystemCommandExecutor.new
+        @file_handler = FileIoHandler.new
+        @parser = ProviderModelParser.new
+        
+        # Parse the model to get provider and model name
+        parse_result = @parser.parse(@model)
+        unless parse_result.valid?
+          raise ArgumentError, "Invalid model specification '#{@model}': #{parse_result.error}"
+        end
+        
+        @provider = parse_result.provider
+        @model_name = parse_result.model
       end
 
       # Enhance idea using LLM with retry logic
@@ -72,39 +84,37 @@ module CodingAgentTools
       end
 
       def execute_llm_query(input_path, system_path, output_path)
-        # Build llm-query command
-        command = [
-          "llm-query",
-          @model,
-          shell_escape(input_path),
-          "--system", shell_escape(system_path),
-          "--output", shell_escape(output_path)
-        ].join(" ")
-
-        debug_log("Executing: #{command}")
-
-        # Execute the command with 30-second timeout for ideas-manager
-        result = @command_executor.execute(command, timeout: 30)
+        debug_log("Using direct library call for LLM query with model: #{@model}")
         
-        if result[:success] && File.exist?(output_path)
-          # Verify output file has content
-          output_content = File.read(output_path).strip
-          if output_content.empty?
-            {success: false, error: "LLM produced empty output"}
-          else
+        begin
+          # Read input files
+          input_text = @file_handler.read_file(input_path)
+          system_text = @file_handler.read_file(system_path)
+          
+          # Create LLM client using ClientFactory
+          client = ClientFactory.build(@provider, {model: @model_name})
+          
+          debug_log("Generating content with #{@provider} client")
+          
+          # Generate content directly
+          response = client.generate_text(input_text, system_instruction: system_text)
+          
+          if response && !response.strip.empty?
+            # Write output to file
+            @file_handler.write_file(output_path, response)
             debug_log("LLM enhancement successful, output written to: #{output_path}")
             {success: true}
+          else
+            {success: false, error: "LLM produced empty output"}
           end
-        else
-          error_msg = result[:error] || "Unknown error during LLM query"
+          
+        rescue => e
+          error_msg = "LLM query failed: #{e.message}"
+          debug_log("Error: #{error_msg}")
           {success: false, error: error_msg}
         end
       end
 
-      def shell_escape(path)
-        # Simple shell escaping for file paths
-        "\"#{path.gsub('"', '\\"')}\""
-      end
 
       def debug_log(message)
         puts "Debug: #{message}" if @debug
