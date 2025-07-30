@@ -77,6 +77,71 @@ Redesign the task template (`task.template.md`) to clearly separate behavioral s
 - [ ] Compatible with specification cycle phases
 - [ ] Examples demonstrate proper usage
 
+## Example
+
+### Scenario 1: Creating a Feature Task
+
+A developer creating a new authentication feature task would use the template:
+
+1. **What Section First**: Start by defining expected behavior
+   ```markdown
+   ## What: Behavioral Specification
+   ### Expected Behavior
+   - Users can log in with email/password
+   - Failed attempts show clear error messages
+   - Session persists across browser tabs
+   
+   ### Interface Contract
+   - POST /auth/login accepts {email, password}
+   - Returns JWT token on success
+   - Returns 401 with error message on failure
+   
+   ### Success Criteria
+   - [ ] User can authenticate successfully
+   - [ ] Invalid credentials are rejected
+   - [ ] Session management works correctly
+   ```
+
+2. **How Section Later**: Implementation details come after behavior is clear
+   ```markdown
+   ## How: Implementation Plan
+   ### Planning Steps
+   - [ ] Design authentication flow
+   - [ ] Choose JWT library
+   - [ ] Plan database schema changes
+   
+   ### Execution Steps
+   - [ ] Create login endpoint
+   - [ ] Implement password validation
+   - [ ] Add JWT token generation
+   - [ ] Create session middleware
+   ```
+
+### Scenario 2: Draft Task Creation
+
+During initial brainstorming, a task can be created with only the What section:
+
+```markdown
+## What: Behavioral Specification
+### Expected Behavior
+- System should automatically backup user data
+- Backups should be encrypted and secure
+- Users should be notified of backup status
+
+### Interface Contract
+<!-- TODO: Define API contracts -->
+
+### Success Criteria
+- [ ] Data is backed up regularly
+- [ ] Backups are encrypted
+- [ ] Users receive notifications
+
+## How: Implementation Plan
+<!-- Implementation details to be planned later -->
+```
+
+This allows behavior-first thinking while deferring technical decisions until the specification phase is complete.
+
 ## Out of Scope
 
 - ❌ Multiple template variants

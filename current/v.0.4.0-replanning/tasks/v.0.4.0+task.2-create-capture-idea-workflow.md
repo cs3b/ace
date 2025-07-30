@@ -1,55 +1,53 @@
 ---
 id: v.0.4.0+task.2
 status: draft
-priority: high
-estimate: 4h
-dependencies: []
+priority: medium
+estimate: 2h
+dependencies: [v.0.4.0+task.1]
 ---
 
 # Create capture-idea Workflow Instruction
 
 ## Objective
 
-Design and implement the `capture-idea.wf.md` workflow instruction that guides AI agents and developers through capturing raw ideas in the project context. This workflow is the entry point for the specification cycle, focusing on contextual enhancement and question generation.
+Create a workflow instruction that guides AI agents and developers through using the `ideas-manager` tool to capture and enhance raw ideas. This workflow orchestrates the existing tool and focuses on when and how to use it effectively within the specification cycle.
 
 ## What: Behavioral Specification
 
 ### User Experience
-- **Trigger**: User provides raw idea text or reference to idea sources
-- **Process**: AI agent captures, enhances, and stores the idea
-- **Output**: Enhanced idea file with questions that bridge to behavioral specification
+- **Trigger**: User wants to capture a raw idea for future development
+- **Process**: AI agent uses `ideas-manager capture` with appropriate options
+- **Output**: Enhanced idea file ready for future specification phases
 
 ### Expected Behavior
-1. Accept various forms of input (text, file references, mixed)
-2. Load project context to understand the idea's relevance
-3. Enhance the idea with project-specific context
-4. Generate critical questions for future specification phases
-5. Store in appropriate ideas/ directory with proper naming
+1. Determine appropriate release target for the idea
+2. Choose input method (text, clipboard, file)
+3. Execute `ideas-manager capture` with proper options
+4. Verify successful idea creation and enhancement
+5. Provide path to created idea file
 
 ### Workflow Contract
-- **Input**: Raw ideas in any format
-- **Context**: Project architecture, existing features, current roadmap
-- **Enhancement**: Add project relevance, potential impact, implementation considerations
-- **Questions**: Generate 3-5 key questions that must be answered for specification
-- **Output**: Structured idea file ready for future draft-task phase
+- **Prerequisites**: `ideas-manager` tool available (from task 1)
+- **Input**: Raw idea text or reference to idea sources
+- **Process**: Tool orchestration with context awareness
+- **Output**: Path to enhanced idea file
 
 ## How: Implementation Plan
 
 ### Planning Steps
-* [ ] Analyze existing workflow patterns for consistency
-* [ ] Design idea template structure
-* [ ] Define question generation categories
-* [ ] Plan integration with ideas-manager tool
+* [ ] Review `ideas-manager` tool interface and options
+* [ ] Analyze existing workflow instruction patterns
+* [ ] Define decision tree for release targeting
+* [ ] Plan integration with project context loading
 
 ### Execution Steps
 - [ ] Create capture-idea.wf.md in dev-handbook/workflow-instructions/
-- [ ] Define prerequisites and context loading requirements
-- [ ] Document step-by-step process for idea capture
-- [ ] Include idea enhancement guidelines
-- [ ] Add question generation templates by category
-- [ ] Create examples for different input types
-- [ ] Define success criteria and output format
-- [ ] Add error handling for common scenarios
+- [ ] Document `ideas-manager` command usage patterns
+- [ ] Add decision guidance for release targeting
+- [ ] Include error handling and troubleshooting
+- [ ] Create examples showing tool usage
+- [ ] Define success criteria
+- [ ] Update workflow-instructions README.md
 
 ## Scope of Work
 
@@ -57,19 +55,40 @@ Design and implement the `capture-idea.wf.md` workflow instruction that guides A
 
 #### Create
 - dev-handbook/workflow-instructions/capture-idea.wf.md
-- dev-handbook/templates/ideas/idea.template.md
 
 #### Modify
-- dev-handbook/workflow-instructions/README.md (add new workflow)
+- dev-handbook/workflow-instructions/README.md (add new workflow reference)
 
 ## Acceptance Criteria
 
-- [ ] Workflow handles all input types (text, files, mixed)
-- [ ] Clear process for contextual enhancement
-- [ ] Question generation guidelines produce actionable questions
-- [ ] Integration with ideas-manager tool documented
-- [ ] Examples cover common use cases
-- [ ] Error scenarios addressed
+- [ ] Workflow clearly documents `ideas-manager` usage
+- [ ] Decision guidance for release targeting included
+- [ ] Examples cover common usage patterns
+- [ ] Error handling documented
+- [ ] Integration with project context explained
+
+## Example
+
+### Scenario: Capturing Ideas Using ideas-manager Tool
+
+**User Input**: "I want better error handling in the task manager"
+
+**Workflow Execution:**
+```bash
+# Step 1: AI determines release target (current backlog)
+# Step 2: AI uses ideas-manager tool to capture and enhance the idea
+ideas-manager capture "I want better error handling in the task manager" --release backlog
+
+# Output: Created: dev-taskflow/backlog/ideas/20250730-1430-better-error-handling-task-manager.md
+```
+
+**Result**: The `ideas-manager` tool automatically:
+- Loads project context from docs/*.md files
+- Enhances the raw idea with project-specific details
+- Generates contextual questions for future specification
+- Creates a properly formatted and timestamped idea file
+
+**Follow-up**: AI provides the path to the created idea file for future reference and development planning.
 
 ## Out of Scope
 

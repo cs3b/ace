@@ -145,6 +145,82 @@ _Define the conditions that signify the task is complete. These can be manual ch
 - [ ] AC 6: Direct task-manager and nav-path command invocations are integrated into workflow steps
 - [ ] AC 7: All embedded tests in Implementation Plan pass validation
 
+## Example
+
+### Scenario: Completing Task 4 (Create Task Template System)
+
+After completing `v.0.4.0+task.4-create-task-template-system.md`, run the cascade review workflow:
+
+```bash
+# Navigate to the completed task
+nav-path file v.0.4.0+task.4-create-task-template-system.md
+
+# Run the cascade review workflow  
+replan-cascade-task v.0.4.0+task.4
+```
+
+**Step 1: Dependency Identification**
+The workflow identifies downstream tasks that depend on task 4:
+- `v.0.4.0+task.6-create-cascade-review-workflow.md` (dependencies: [v.0.4.0+task.4])
+- `v.0.4.0+task.7-create-task-review-workflow.md` (dependencies: [v.0.4.0+task.4])
+
+**Step 2: Topological Processing**
+Tasks are processed in dependency order:
+
+1. **Task 6 (draft status)**: Add impact notes section at the beginning:
+   ```markdown
+   ## Impact Notes from v.0.4.0+task.4 Completion
+   
+   - New template system available: use standardized XML embedding format
+   - Template location: dev-handbook/templates/tasks/impact-note.template.md
+   - Integration point: impact note template should follow XML embedding pattern
+   ```
+
+2. **Task 7 (pending status)**: Update implementation plan:
+   ```markdown
+   ## Implementation Plan Updates
+   
+   ### Planning Steps (Updated based on Task 4 completion)
+   * [✓] Template system research → Use new standardized template system
+   * [ ] Review workflow design → Integrate with XML embedding format from task 4
+   ```
+
+**Step 3: Commit Strategy**
+Each task update creates individual commits:
+```bash
+git-commit -m "task.6: Add impact notes from task.4 template system completion
+
+Cascade review identified template integration requirements for 
+cascade workflow implementation."
+
+git-commit -m "task.7: Update implementation plan based on task.4 completion  
+
+Modified planning steps to leverage new XML embedding template 
+system for consistency with project standards."
+```
+
+**Step 4: Generated Ideas**
+New ideas discovered during cascade analysis:
+```bash
+# Auto-generated idea file
+cat > dev-taskflow/backlog/ideas/20250730-cascade-review-template-consistency.md
+```
+
+### Command Integration Examples
+
+The workflow integrates directly with project tools:
+
+```bash
+# Find dependent tasks
+task-manager deps v.0.4.0+task.4
+
+# Navigate to impact templates  
+nav-path file impact-note.template.md
+
+# Check cascade scope
+find dev-taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task.4" {} \;
+```
+
 ## Out of Scope
 
 - ❌ Fully automated cascade execution without human oversight

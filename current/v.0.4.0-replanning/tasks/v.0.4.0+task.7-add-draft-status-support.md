@@ -69,6 +69,46 @@ Enhance existing tools, particularly `create-path task-new`, to support the new 
 - [ ] Documentation updated
 - [ ] Tests cover draft status
 
+## Example
+
+```bash
+# Create a draft task to define behavior before implementation
+create-path task-new --title "implement user authentication system" --status "draft"
+```
+
+1. The command creates a new task file with draft status:
+   ```
+   # => Created: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.8-implement-user-authentication-system.md
+   ```
+
+2. The generated task file includes the draft status in metadata:
+   ```yaml
+   ---
+   id: v.0.4.0+task.8
+   status: draft
+   priority: medium
+   estimate: TBD
+   dependencies: []
+   ---
+   ```
+
+3. Draft tasks appear in normal tool outputs:
+   ```bash
+   task-manager next
+   # Shows both pending and draft tasks without special filtering
+   
+   nav-path task authentication
+   # Finds the draft task file normally
+   
+   git-status
+   # Includes draft tasks in repository status reporting
+   ```
+
+4. The draft status enables specification before implementation:
+   - Task contains behavioral requirements and acceptance criteria
+   - Implementation details are developed when status changes to "pending"
+   - Allows for review and refinement of specifications before coding begins
+
 ## Out of Scope
 
 - ❌ Automatic status transitions

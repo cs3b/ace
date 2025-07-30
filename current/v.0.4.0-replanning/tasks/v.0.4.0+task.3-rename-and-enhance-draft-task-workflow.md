@@ -70,6 +70,86 @@ Transform the existing `create-task.wf.md` workflow into `draft-task.wf.md` with
 - [ ] Integration with draft status documented
 - [ ] Migration path from create-task clear
 
+## Example
+
+### Scenario: Converting Existing Task Creation to Behavior-First Approach
+
+**Current workflow usage:**
+```bash
+# Old create-task approach (mixed what/how)
+workflow create-task "Add user authentication system"
+```
+
+**New draft-task workflow usage:**
+```bash
+# New behavior-first approach
+workflow draft-task "Add user authentication system"
+```
+
+### Step-by-Step Process
+
+1. **Behavioral Specification Phase**
+   - Define what users experience: "Users can securely log in and access protected features"
+   - Specify interface contracts: API endpoints, CLI commands, UI components
+   - Set success criteria: "Users can authenticate within 3 seconds, sessions persist for 24 hours"
+
+2. **Draft Task Creation**
+   ```markdown
+   ---
+   id: v.0.5.0+task.15
+   status: draft
+   priority: high
+   estimate: TBD
+   ---
+   
+   # Add User Authentication System
+   
+   ## Behavioral Specification
+   
+   ### User Experience
+   - Users see a login form with email/password fields
+   - Invalid credentials show clear error messages
+   - Successful login redirects to dashboard
+   - Sessions automatically expire after 24 hours
+   
+   ### Interface Contract
+   ```bash
+   # CLI Interface
+   auth-manager login --email user@example.com
+   auth-manager logout
+   auth-manager status
+   
+   # API Interface
+   POST /api/auth/login
+   DELETE /api/auth/logout
+   GET /api/auth/status
+   ```
+   
+   ### Success Criteria
+   - [ ] Users can log in with valid credentials
+   - [ ] Invalid attempts are blocked with helpful messages
+   - [ ] Sessions persist across browser refreshes
+   - [ ] Logout completely clears session data
+   ```
+
+3. **Handoff to Implementation Planning**
+   - Task remains in "draft" status
+   - Implementation details handled in separate replan phase
+   - Clear interface contract enables parallel development
+
+### Before/After Comparison
+
+**Before (create-task):**
+- Mixed behavioral requirements with implementation details
+- Unclear separation between what and how
+- Tasks ready for immediate implementation (often incomplete)
+
+**After (draft-task):**
+- Pure behavioral specification
+- Clear interface contracts
+- Draft status indicates need for implementation planning
+- Behavior-first approach ensures user value is defined upfront
+
 ## Out of Scope
 
 - ❌ Implementation planning details
