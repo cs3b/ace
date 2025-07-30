@@ -136,7 +136,7 @@ module CodingAgentTools
             content
           else
             yaml_front_matter = metadata.to_yaml
-            "---\n#{yaml_front_matter}---\n\n#{content}"
+            "#{yaml_front_matter}---\n\n#{content}"
           end
         end
       end

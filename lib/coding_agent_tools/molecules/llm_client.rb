@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "client_factory"
-require_relative "provider_model_parser"
-require_relative "file_io_handler"
-require_relative "../organisms/google_client"
-require_relative "../organisms/anthropic_client"
-require_relative "../organisms/openai_client"
+require_relative "../atoms/system_command_executor"
 
 module CodingAgentTools
   module Molecules
@@ -23,23 +18,10 @@ module CodingAgentTools
       MAX_RETRIES = 3
       RETRY_DELAYS = [1, 3, 9].freeze  # Exponential backoff
 
-      def initialize(model: "google:gemini-2.5-flash", debug: false)
+      def initialize(model: "google:gemini-2.5-flash-lite", debug: false)
         @model = model
         @debug = debug
-        @file_handler = FileIoHandler.new
-        @parser = ProviderModelParser.new
-        
-        # Manually register providers to ensure they're available
-        register_providers
-        
-        # Parse the model to get provider and model name
-        parse_result = @parser.parse(@model)
-        unless parse_result.valid?
-          raise ArgumentError, "Invalid model specification '#{@model}': #{parse_result.error}"
-        end
-        
-        @provider = parse_result.provider
-        @model_name = parse_result.model
+        @command_executor = Atoms::SystemCommandExecutor.new
       end
 
       # Enhance idea using LLM with retry logic
@@ -90,48 +72,39 @@ module CodingAgentTools
       end
 
       def execute_llm_query(input_path, system_path, output_path)
-        debug_log("Using direct library call for LLM query with model: #{@model}")
+        # Build llm-query command
+        command = [
+          "llm-query",
+          @model,
+          shell_escape(input_path),
+          "--system", shell_escape(system_path),
+          "--output", shell_escape(output_path)
+        ].join(" ")
+
+        debug_log("Executing: #{command}")
+
+        # Execute the command with 30-second timeout for ideas-manager
+        result = @command_executor.execute(command, timeout: 30)
         
-        begin
-          # Read input files
-          input_text = @file_handler.read_file(input_path)
-          system_text = @file_handler.read_file(system_path)
-          
-          # Create LLM client using ClientFactory
-          client = ClientFactory.build(@provider, {model: @model_name})
-          
-          debug_log("Generating content with #{@provider} client")
-          
-          # Generate content directly
-          response = client.generate_text(input_text, system_instruction: system_text)
-          
-          if response && !response.strip.empty?
-            # Write output to file
-            @file_handler.write_file(output_path, response)
+        if result[:success] && File.exist?(output_path)
+          # Verify output file has content
+          output_content = File.read(output_path).strip
+          if output_content.empty?
+            {success: false, error: "LLM produced empty output"}
+          else
             debug_log("LLM enhancement successful, output written to: #{output_path}")
             {success: true}
-          else
-            {success: false, error: "LLM produced empty output"}
           end
-          
-        rescue => e
-          error_msg = "LLM query failed: #{e.message}"
-          debug_log("Error: #{error_msg}")
+        else
+          error_msg = result[:error] || "Unknown error during LLM query"
           {success: false, error: error_msg}
         end
       end
 
 
-      def register_providers
-        # Manually register providers to ensure they're available
-        ClientFactory.register("google", CodingAgentTools::Organisms::GoogleClient)
-        ClientFactory.register("anthropic", CodingAgentTools::Organisms::AnthropicClient)  
-        ClientFactory.register("openai", CodingAgentTools::Organisms::OpenaiClient)
-        
-        # Register aliases in ProviderModelParser
-        ProviderModelParser.register_provider("google", CodingAgentTools::Organisms::GoogleClient.dynamic_aliases)
-        ProviderModelParser.register_provider("anthropic", CodingAgentTools::Organisms::AnthropicClient.dynamic_aliases)
-        ProviderModelParser.register_provider("openai", CodingAgentTools::Organisms::OpenaiClient.dynamic_aliases)
+      def shell_escape(path)
+        # Simple shell escaping for file paths
+        "\"#{path.gsub('"', '\\"')}\""
       end
 
       def debug_log(message)
