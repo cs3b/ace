@@ -360,13 +360,21 @@ module CodingAgentTools
       end
 
       def slugify(text)
-        text.to_s
+        slug = text.to_s
           .downcase
           .gsub(/[^\w\s-]/, "")
           .gsub(/\s+/, "-")
           .squeeze("-")
           .strip
           .gsub(/^-|-$/, "")
+        
+        # Limit slug length to prevent filesystem filename length issues
+        max_slug_length = 100
+        if slug.length > max_slug_length
+          slug = slug[0, max_slug_length].gsub(/-+$/, "") # Remove trailing hyphens after truncation
+        end
+        
+        slug
       end
 
       def create_empty_file_with_notice(target_path, nav_type, title, options)

@@ -28,7 +28,7 @@ module CodingAgentTools
       # @param model [String] LLM model to use
       # @param debug [Boolean] Enable debug output
       # @param big_user_input_allowed [Boolean] Allow large inputs
-      def initialize(model: "gflash", debug: false, big_user_input_allowed: false)
+      def initialize(model: "google:gemini-2.5-flash", debug: false, big_user_input_allowed: false)
         @model = model
         @debug = debug
         @big_user_input_allowed = big_user_input_allowed

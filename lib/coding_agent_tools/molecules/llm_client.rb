@@ -3,6 +3,9 @@
 require_relative "client_factory"
 require_relative "provider_model_parser"
 require_relative "file_io_handler"
+require_relative "../organisms/google_client"
+require_relative "../organisms/anthropic_client"
+require_relative "../organisms/openai_client"
 
 module CodingAgentTools
   module Molecules
@@ -20,11 +23,14 @@ module CodingAgentTools
       MAX_RETRIES = 3
       RETRY_DELAYS = [1, 3, 9].freeze  # Exponential backoff
 
-      def initialize(model: "gflash", debug: false)
+      def initialize(model: "google:gemini-2.5-flash", debug: false)
         @model = model
         @debug = debug
         @file_handler = FileIoHandler.new
         @parser = ProviderModelParser.new
+        
+        # Manually register providers to ensure they're available
+        register_providers
         
         # Parse the model to get provider and model name
         parse_result = @parser.parse(@model)
@@ -115,6 +121,18 @@ module CodingAgentTools
         end
       end
 
+
+      def register_providers
+        # Manually register providers to ensure they're available
+        ClientFactory.register("google", CodingAgentTools::Organisms::GoogleClient)
+        ClientFactory.register("anthropic", CodingAgentTools::Organisms::AnthropicClient)  
+        ClientFactory.register("openai", CodingAgentTools::Organisms::OpenaiClient)
+        
+        # Register aliases in ProviderModelParser
+        ProviderModelParser.register_provider("google", CodingAgentTools::Organisms::GoogleClient.dynamic_aliases)
+        ProviderModelParser.register_provider("anthropic", CodingAgentTools::Organisms::AnthropicClient.dynamic_aliases)
+        ProviderModelParser.register_provider("openai", CodingAgentTools::Organisms::OpenaiClient.dynamic_aliases)
+      end
 
       def debug_log(message)
         puts "Debug: #{message}" if @debug
