@@ -20,6 +20,7 @@ Create a new Ruby gem executable `ideas-manager` that captures raw ideas in the 
   - `--clipboard` to read from clipboard
   - `--file PATH` to read from file(s)
   - `--model` (default: gflash, can be overridden)
+  - `--debug` to show detailed error information and processing flow
 - **Output**: Enhanced idea file with timestamp prefix in the appropriate ideas/ directory
 
 ### Expected Behavior
@@ -94,7 +95,12 @@ ideas-manager capture --clipboard
   > TEST: LLM Integration Check
   > Type: Integration Validation
   > Assert: Tool successfully calls llm-query and handles responses
-  > Command: ideas-manager capture "test idea" --dry-run
+  > Command: ideas-manager capture "test idea" --debug
+- [ ] Implement error handling with degraded functionality guarantees
+  > TEST: Error Handling Validation
+  > Type: Failure Mode Testing  
+  > Assert: Tool saves raw idea even when LLM/nav-path fails
+  > Command: ideas-manager capture "test failure scenario" --debug (with simulated failures)
 - [ ] Create comprehensive tests in dev-tools/spec/ (unit and integration)
 - [ ] Update dev-tools documentation and tools.md reference
 
@@ -221,8 +227,8 @@ nav-path capture-idea-new --context "every task definition should have an exampl
 ```
 **Returns:**
 ```
-input: ./tmp/20250730-1430-task-example-section.md
-system: ./tmp/20250730-1430-task-example-section.system.prompt.md  
+input: tmp/20250730-1430-task-example-section.md
+system: tmp/20250730-1430-task-example-section.system.prompt.md  
 output: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
@@ -237,8 +243,8 @@ Creates temp system prompt with:
 
 ### 4. **Call LLM Enhancement**
 ```bash
-llm-query gflash ./tmp/20250730-1430-task-example-section.md \
---system-prompt ./tmp/20250730-1430-task-example-section.system.prompt.md \
+llm-query gflash tmp/20250730-1430-task-example-section.md \
+--system-prompt tmp/20250730-1430-task-example-section.system.prompt.md \
 --output dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
 
@@ -246,6 +252,62 @@ llm-query gflash ./tmp/20250730-1430-task-example-section.md \
 ```bash
 # => Created: dev-taskflow/backlog/ideas/20250730-1430-task-example-section.md
 ```
+
+## Error Handling Strategy
+
+### Core Principle: Degraded Functionality Over Complete Failure
+**Always save user input to ideas folder, even if enhancement fails**
+
+### Failure Scenarios & Responses
+
+#### 1. LLM API Failures
+- **Retry Logic**: 3 attempts with exponential backoff (1s, 3s, 9s)
+- **Fallback**: Save raw idea without enhancement if all retries fail
+- **User Feedback**: 
+  - Default: `"Enhancement failed, saved raw idea: [path]"`
+  - Debug: Full API error details and retry attempts
+
+#### 2. Slug Generation Failures  
+- **Input Limit**: Send max 100 first words to LLM for slug generation
+- **Fallback**: Use first 3 words from input, lowercase with hyphens
+- **nav-path Responsibility**: If nav-path fails, use basic timestamp naming
+
+#### 3. File System Failures
+- **Pre-flight Checks**: Validate write permissions before processing
+- **Atomic Operations**: Use temp files then move to final location
+- **Cleanup**: Remove partial files on failure
+- **User Feedback**:
+  - Default: `"File creation failed, check permissions"`
+  - Debug: Full path and permission details
+
+#### 4. Input Processing Failures
+- **Validation**: Minimum 5 characters required
+- **File Size Limit**: Max 10KB input files with truncation warning
+- **Clipboard Fallback**: Prompt for manual input if clipboard fails
+- **User Feedback**:
+  - Default: `"Invalid input, please try again"`
+  - Debug: Specific validation failure reason
+
+#### 5. System Context Loading Failures
+- **Template Missing**: Use embedded backup template
+- **Context Files Unreadable**: Continue with minimal template
+- **Size Limits**: Truncate context if too large, prioritize essential docs
+- **User Feedback**:
+  - Default: `"Using basic template due to context issues"`
+  - Debug: List of failed context files and reasons
+
+### Debug Mode Behavior
+- **Flag**: `--debug` shows detailed processing flow
+- **Output**: All steps, retry attempts, fallback decisions to stdout
+- **Error Details**: Full stack traces and API responses
+- **No Logging**: Debug info only goes to stdout, no persistent logs
+
+### Minimum Guarantee
+**Tool will always:**
+1. Save user input to `dev-taskflow/backlog/ideas/{timestamp}-{slug}.md`
+2. Use project tmp directory (`tmp/`) not system temp
+3. Provide meaningful file names even if slug generation fails
+4. Return path to created file regardless of enhancement status
 
 ## Out of Scope
 
