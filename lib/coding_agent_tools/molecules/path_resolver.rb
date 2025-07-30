@@ -446,12 +446,21 @@ module CodingAgentTools
       end
 
       def slugify(text)
-        text.to_s
+        slug = text.to_s
           .downcase
           .gsub(/[^\w\s-]/, "")  # Remove non-word characters except spaces and hyphens
           .gsub(/\s+/, "-").squeeze("-")       # Collapse multiple hyphens
           .strip                 # Remove leading/trailing whitespace
           .gsub(/^-|-$/, "")     # Remove leading/trailing hyphens
+        
+        # Limit slug length to prevent filesystem filename length issues
+        # Keep it reasonable for readability while preventing "File name too long" errors
+        max_slug_length = 100
+        if slug.length > max_slug_length
+          slug = slug[0, max_slug_length].gsub(/-+$/, "") # Remove trailing hyphens after truncation
+        end
+        
+        slug
       end
 
       def scan_repositories

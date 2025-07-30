@@ -101,13 +101,30 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         expect(combined_output).to include("No input provided")
       end
 
-      it "handles large ideas with size limit warning" do
-        result = run_ideas_manager(["capture", large_idea])
+      it "handles very large ideas that would cause filename length issues" do
+        # Create an extremely long idea that would definitely cause filename issues before the fix
+        extremely_long_idea = "This is an extremely long idea that would cause filename length issues. " * 50 # ~3500 chars
         
-        expect(result).not_to be_success
-        expect(result.stdout).to include("Error:")
-        expect(result.stdout).to include("File name too long")
-        # Test that the error occurs due to filename length, not input validation
+        result = run_ideas_manager(["capture", extremely_long_idea])
+        
+        # Should no longer get "File name too long" error due to filename truncation fix
+        # May still fail for other reasons (timeouts, missing API keys, etc.) but not filename length
+        expect(result.stderr).not_to include("File name too long")
+        
+        # If it does fail, it should be for a different reason than filename length
+        if !result.success?
+          # Common acceptable failure reasons in tests
+          acceptable_errors = [
+            "timed out",
+            "Invalid model specification", 
+            "No input provided",
+            "API key"
+          ]
+          
+          combined_output = "#{result.stdout}#{result.stderr}"
+          expect(acceptable_errors.any? { |error| combined_output.include?(error) }).to be(true),
+            "Expected acceptable error, got: #{combined_output}"
+        end
       end
 
       it "processes large ideas when --big-user-input-allowed flag is set" do
