@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.1
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -45,39 +45,39 @@ ideas-manager capture --clipboard
 ## How: Implementation Plan
 
 ### Planning Steps
-* [ ] Audit current ideas/ directory structure across releases
+* [x] Audit current ideas/ directory structure across releases
   > TEST: Directory Structure Check
   > Type: Pre-condition Check
   > Assert: Ideas directories exist or creation logic is defined
   > Command: find dev-taskflow -name "ideas" -type d
-* [ ] Research existing tool patterns in dev-tools for ATOM architecture consistency
+* [x] Research existing tool patterns in dev-tools for ATOM architecture consistency
   > TEST: Pattern Analysis Check
   > Type: Research Validation
   > Assert: CLI tool patterns and LLM integration patterns are documented
   > Command: ls dev-tools/exe/ | wc -l && ls dev-tools/lib/coding_agent_tools/organisms/ | wc -l
-* [ ] Design idea enhancement prompt for LLM integration with project context
-* [ ] Define idea.template.md format specification with required fields
-* [ ] Implement nav-path capture-idea-new command to generate three paths with directories:
+* [x] Design idea enhancement prompt for LLM integration with project context
+* [x] Define idea.template.md format specification with required fields
+* [x] Implement nav-path capture-idea-new command to generate three paths with directories:
   > TEST: Nav-Path Integration Check
   > Type: Path Generation Validation
   > Assert: nav-path returns temp input, temp system prompt, and final output paths with directories created
   > Command: nav-path capture-idea-new --context "test idea for validation"
-* [ ] Plan file naming and storage strategy with timestamp prefixes
-* [ ] Define question generation logic based on project architecture and goals
+* [x] Plan file naming and storage strategy with timestamp prefixes
+* [x] Define question generation logic based on project architecture and goals
 
 ### Execution Steps
-- [ ] Create ideas-manager executable in dev-tools/exe/
+- [x] Create ideas-manager executable in dev-tools/exe/
   > TEST: Executable Creation Check
   > Type: File Creation Validation
   > Assert: Executable is created with proper permissions and CLI structure
   > Command: test -x dev-tools/exe/ideas-manager && ideas-manager --help
-- [ ] Implement IdeaCapture organism in dev-tools/lib/coding_agent_tools/organisms/
+- [x] Implement IdeaCapture organism in dev-tools/lib/coding_agent_tools/organisms/
   > TEST: Organism Unit Test
   > Type: Unit Test Validation
   > Assert: IdeaCapture class loads and has required methods
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb
-- [ ] Add clipboard reading molecule if not exists
-- [ ] Extend nav-path with capture-idea-new subcommand to return three paths with directory creation:
+- [x] Add clipboard reading molecule if not exists
+- [x] Extend nav-path with capture-idea-new subcommand to return three paths with directory creation:
   - ./tmp/{timestamp}-{slug}.md (temp input file) 
   - ./tmp/{timestamp}-{slug}.system.prompt.md (temp system prompt)
   - dev-taskflow/backlog/ideas/{timestamp}-{slug}.md (final output path)
@@ -85,39 +85,39 @@ ideas-manager capture --clipboard
   > Type: Integration Validation
   > Assert: All three paths returned and directories created from project root
   > Command: nav-path capture-idea-new --context "example idea" && test -d ./tmp && test -d dev-taskflow/backlog/ideas
-- [ ] Create idea enhancement prompt templates (system.prompt.md and idea.template.md)
+- [x] Create idea enhancement prompt templates (system.prompt.md and idea.template.md)
   > TEST: Template Creation Check
   > Type: Template Validation
   > Assert: Templates are created with proper format and embedded context
   > Command: test -f dev-handbook/templates/idea-manager/system.prompt.md && test -f dev-handbook/templates/idea-manager/idea.template.md
-- [ ] Implement dynamic context loading for all docs/*.md files
+- [x] Implement dynamic context loading for all docs/*.md files
   > TEST: Context Loading Unit Test
   > Type: Unit Test Validation
   > Assert: Context loading molecule discovers and reads all docs/*.md files
   > Command: cd dev-tools && bundle exec rspec spec/molecules/context_loader_spec.rb
-- [ ] Implement timestamped file creation logic with proper error handling
-- [ ] Add validation for release parameter and directory creation
-- [ ] Implement LLM integration with retry logic and fallback handling
+- [x] Implement timestamped file creation logic with proper error handling
+- [x] Add validation for release parameter and directory creation
+- [x] Implement LLM integration with retry logic and fallback handling
   > TEST: LLM Integration Unit Test
   > Type: Unit Test Validation
   > Assert: LLM client handles retries and fallbacks correctly
   > Command: cd dev-tools && bundle exec rspec spec/molecules/llm_client_spec.rb
-- [ ] Implement error handling with degraded functionality guarantees
+- [x] Implement error handling with degraded functionality guarantees
   > TEST: Error Handling Unit Test
   > Type: Unit Test Validation
   > Assert: Error handling preserves minimum functionality (save raw idea)
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb --tag error_handling
-- [ ] Create comprehensive unit tests in dev-tools/spec/
+- [x] Create comprehensive unit tests in dev-tools/spec/
   > TEST: Unit Test Suite
   > Type: Test Coverage Validation
   > Assert: All components have unit tests with good coverage
   > Command: cd dev-tools && bundle exec rspec spec/ --format documentation
-- [ ] Create integration tests for end-to-end functionality
+- [x] Create integration tests for end-to-end functionality
   > TEST: Integration Test Suite
   > Type: End-to-End Validation
   > Assert: Tool works end-to-end with real project data and cleanup
   > Command: cd dev-tools && bundle exec rspec spec/integration/ideas_manager_integration_spec.rb
-- [ ] Update dev-tools documentation and tools.md reference
+- [x] Update dev-tools documentation and tools.md reference
 
 ## Scope of Work
 
@@ -149,13 +149,13 @@ ideas-manager capture --clipboard
 
 ## Acceptance Criteria
 
-- [ ] Tool captures ideas from text, clipboard, and files
-- [ ] Ideas are enhanced with project context
-- [ ] Relevant questions are generated for each idea
-- [ ] Files are created with proper timestamp naming
-- [ ] Release targeting works correctly
-- [ ] All tests pass
-- [ ] Documentation is complete
+- [x] Tool captures ideas from text, clipboard, and files
+- [x] Ideas are enhanced with project context
+- [x] Relevant questions are generated for each idea
+- [x] Files are created with proper timestamp naming
+- [x] Release targeting works correctly
+- [x] All tests pass
+- [x] Documentation is complete
 
 ## Template Specifications
 
