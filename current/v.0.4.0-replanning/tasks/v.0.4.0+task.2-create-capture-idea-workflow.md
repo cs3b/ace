@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.2
-status: draft
+status: done
 priority: medium
 estimate: 2h
 dependencies: [v.0.4.0+task.1]
@@ -35,19 +35,19 @@ Create a workflow instruction that guides AI agents and developers through using
 ## How: Implementation Plan
 
 ### Planning Steps
-* [ ] Review `ideas-manager` tool interface and options
-* [ ] Analyze existing workflow instruction patterns
-* [ ] Define decision tree for release targeting
-* [ ] Plan integration with project context loading
+* [x] Review `ideas-manager` tool interface and options
+* [x] Analyze existing workflow instruction patterns
+* [x] Define decision tree for release targeting
+* [x] Plan integration with project context loading
 
 ### Execution Steps
-- [ ] Create capture-idea.wf.md in dev-handbook/workflow-instructions/
-- [ ] Document `ideas-manager` command usage patterns
-- [ ] Add decision guidance for release targeting
-- [ ] Include error handling and troubleshooting
-- [ ] Create examples showing tool usage
-- [ ] Define success criteria
-- [ ] Update workflow-instructions README.md
+- [x] Create capture-idea.wf.md in dev-handbook/workflow-instructions/
+- [x] Document `ideas-manager` command usage patterns
+- [x] Add decision guidance for release targeting
+- [x] Include error handling and troubleshooting
+- [x] Create examples showing tool usage
+- [x] Define success criteria
+- [x] Update workflow-instructions README.md
 
 ## Scope of Work
 
@@ -61,11 +61,11 @@ Create a workflow instruction that guides AI agents and developers through using
 
 ## Acceptance Criteria
 
-- [ ] Workflow clearly documents `ideas-manager` usage
-- [ ] Decision guidance for release targeting included
-- [ ] Examples cover common usage patterns
-- [ ] Error handling documented
-- [ ] Integration with project context explained
+- [x] Workflow clearly documents `ideas-manager` usage
+- [x] Decision guidance for release targeting included
+- [x] Examples cover common usage patterns
+- [x] Error handling documented
+- [x] Integration with project context explained
 
 ## Example
 
@@ -75,9 +75,9 @@ Create a workflow instruction that guides AI agents and developers through using
 
 **Workflow Execution:**
 ```bash
-# Step 1: AI determines release target (current backlog)
-# Step 2: AI uses ideas-manager tool to capture and enhance the idea
-ideas-manager capture "I want better error handling in the task manager" --release backlog
+# Step 1: AI uses ideas-manager tool to capture and enhance the idea (defaults to backlog)
+# Step 2: Tool automatically loads project context and enhances the idea
+ideas-manager capture "I want better error handling in the task manager"
 
 # Output: Created: dev-taskflow/backlog/ideas/20250730-1430-better-error-handling-task-manager.md
 ```
@@ -90,12 +90,32 @@ ideas-manager capture "I want better error handling in the task manager" --relea
 
 **Follow-up**: AI provides the path to the created idea file for future reference and development planning.
 
+## Implementation Notes
+
+### Completed Deliverables
+- ✅ **Created**: `dev-handbook/workflow-instructions/capture-idea.wf.md` - Self-contained workflow instruction following ADR-001 principles
+- ✅ **Updated**: `dev-handbook/workflow-instructions/README.md` - Integrated new workflow into ecosystem (updated workflow count to 20, added to decision tree, common sequences, and reference sections)
+
+### Key Implementation Decisions
+1. **No --commit flag**: Per user clarification, did not include auto-commit functionality in workflow
+2. **Default to backlog**: Workflow assumes `dev-taskflow/backlog/ideas/` as default target (no release parameter needed)
+3. **Self-contained design**: Embedded all necessary context, examples, and guidance within the workflow file
+4. **Comprehensive coverage**: Included all ideas-manager command options, error handling, and integration patterns
+5. **AI-agent focused**: Structured for autonomous execution by AI agents
+
+### User Clarifications Applied
+- Removed --commit flag example from workflow (was implementation detail, not workflow requirement)
+- Confirmed ideas-manager tool from task.1 is assumed complete and functional
+- Focused scope on idea capture only, not task transition workflow
+- Used backlog as default target location
+
 ## Out of Scope
 
 - ❌ Automatic task creation
 - ❌ Idea validation or approval
 - ❌ Complex project analysis
 - ❌ Integration with external systems
+- ❌ Auto-commit functionality (per user clarification)
 
 ## References
 
