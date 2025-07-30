@@ -19,6 +19,7 @@
 5. **Workflow Prerequisites Checker** - Validate preconditions before execution
 6. **Error Pattern Library** - Document and prevent common failure modes
 7. **Context-First Analysis Tools** - Leverage existing context for better results
+8. **Release Scope Analysis Tools** - Analyze release complexity before publication
 
 ## Success Criteria
 
