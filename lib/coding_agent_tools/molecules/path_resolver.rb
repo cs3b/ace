@@ -73,6 +73,8 @@ module CodingAgentTools
             resolve_file_path(path_input)
           when :task_new, :docs_new, :reflection_new, :code_review_new
             generate_new_path(path_input, type)
+          when :capture_idea_new
+            generate_capture_idea_paths(path_input)
           when :task
             resolve_task_path(path_input)
           when :reflection_list
@@ -168,6 +170,42 @@ module CodingAgentTools
         success_with_list(sorted_reflections)
       rescue => e
         failure("Error finding reflection paths: #{e.message}")
+      end
+
+      # Generate three paths for idea capture: input, system prompt, and output
+      def generate_capture_idea_paths(idea_context)
+        return failure("Idea context cannot be nil or empty") if idea_context.nil? || idea_context.strip.empty?
+
+        begin
+          # Generate timestamp
+          timestamp = Time.now.strftime("%Y%m%d-%H%M")
+          
+          # Generate slug from idea context (using existing slugify method)
+          slug = slugify(idea_context)
+          
+          # Create base filename
+          base_filename = "#{timestamp}-#{slug}"
+          
+          # Generate the three paths
+          input_path = File.join(@sandbox.project_root, "tmp", "#{base_filename}.md")
+          system_path = File.join(@sandbox.project_root, "tmp", "#{base_filename}.system.prompt.md")
+          output_path = File.join(@sandbox.project_root, "dev-taskflow/backlog/ideas", "#{base_filename}.md")
+          
+          # Create directories if they don't exist
+          FileUtils.mkdir_p(File.dirname(input_path))
+          FileUtils.mkdir_p(File.dirname(output_path))
+          
+          # Return the three paths
+          {
+            success: true,
+            type: :capture_idea_paths,
+            input_path: input_path,
+            system_path: system_path,
+            output_path: output_path
+          }
+        rescue => e
+          failure("Error generating capture idea paths: #{e.message}")
+        end
       end
 
       # Check if path uses release-relative pattern syntax
