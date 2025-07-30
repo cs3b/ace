@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.1
-status: done
+status: pending
 priority: high
 estimate: 8h
 dependencies: []
@@ -107,16 +107,18 @@ ideas-manager capture --clipboard
   > Type: Unit Test Validation
   > Assert: Error handling preserves minimum functionality (save raw idea)
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb --tag error_handling
-- [x] Create comprehensive unit tests in dev-tools/spec/
+- [ ] **WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests in dev-tools/spec/
   > TEST: Unit Test Suite
   > Type: Test Coverage Validation
-  > Assert: All components have unit tests with good coverage
+  > Assert: All test files exist AND all tests pass with good coverage
   > Command: cd dev-tools && bundle exec rspec spec/ --format documentation
-- [x] Create integration tests for end-to-end functionality
+  > **CRITICAL**: This step requires writing actual RSpec test files, not just functional verification
+- [ ] **WRITE ACTUAL RSPEC TESTS** - Create integration tests for end-to-end functionality
   > TEST: Integration Test Suite
   > Type: End-to-End Validation
-  > Assert: Tool works end-to-end with real project data and cleanup
+  > Assert: Integration test file exists AND tests pass with real project data and cleanup
   > Command: cd dev-tools && bundle exec rspec spec/integration/ideas_manager_integration_spec.rb
+  > **CRITICAL**: This step requires writing actual RSpec test files, not just functional verification
 - [x] Update dev-tools documentation and tools.md reference
 
 ## Scope of Work
@@ -132,15 +134,17 @@ ideas-manager capture --clipboard
 - dev-handbook/templates/idea-manager/system.prompt.md (LLM system prompt with project context)
 - dev-handbook/templates/idea-manager/idea.template.md (structured idea format template)
 
-**Unit Tests:**
+**Unit Tests (MUST BE WRITTEN):**
 - dev-tools/spec/organisms/idea_capture_spec.rb
 - dev-tools/spec/molecules/context_loader_spec.rb
 - dev-tools/spec/molecules/llm_client_spec.rb
 - dev-tools/spec/molecules/idea_enhancer_spec.rb
 - dev-tools/spec/cli/ideas_manager_spec.rb
 
-**Integration Tests:**
+**Integration Tests (MUST BE WRITTEN):**
 - dev-tools/spec/integration/ideas_manager_integration_spec.rb
+
+**IMPORTANT**: These test files do not currently exist and must be created with actual RSpec test implementations before task can be marked complete.
 
 #### Modify
 - dev-tools/lib/coding_agent_tools.rb (register new components)
@@ -154,7 +158,7 @@ ideas-manager capture --clipboard
 - [x] Relevant questions are generated for each idea
 - [x] Files are created with proper timestamp naming
 - [x] Release targeting works correctly
-- [x] All tests pass
+- [ ] **All RSpec tests exist and pass** (cannot be marked complete until test files are written)
 - [x] Documentation is complete
 
 ## Template Specifications
@@ -382,6 +386,21 @@ llm-query gflash tmp/20250730-1430-task-example-section.md \
 
 ## Test Validation Approach
 
+### **⚠️ CRITICAL: ACTUAL TEST WRITING REQUIRED**
+
+**This task cannot be completed until all RSpec test files are written and passing.**
+
+**Current Status:**
+- ✅ Functional implementation complete (tool works manually)
+- ❌ **RSpec test files missing** (6 test files need to be written)
+- ❌ **Test execution failing** (no tests exist to run)
+
+**Required Before Task Completion:**
+1. **Write all 6 RSpec test files** with actual test implementations
+2. **Ensure all tests pass** when running `bundle exec rspec`
+3. **Verify test coverage** for all implemented components
+4. **Validate file existence** of all specified test deliverables
+
 ### Testing Strategy
 **Unit Tests First, Then Integration Tests**
 
@@ -434,6 +453,47 @@ dev-tools/spec/
 - **Fail Fast**: Commands should fail immediately if prerequisites missing
 - **Clear Assertions**: Each test has specific, testable assertions
 - **Path Independence**: Tests work from project root or dev-tools directory
+
+## Remaining Work to Complete Task
+
+### **CRITICAL: Missing Test Implementation**
+
+**The following RSpec test files must be written before task completion:**
+
+1. **`dev-tools/spec/organisms/idea_capture_spec.rb`**
+   - Test IdeaCapture organism functionality
+   - Test error handling and degraded functionality
+   - Test file creation and naming logic
+
+2. **`dev-tools/spec/molecules/context_loader_spec.rb`**
+   - Test dynamic loading of all docs/*.md files
+   - Test XML embedding format generation
+   - Test error handling for missing/unreadable files
+
+3. **`dev-tools/spec/molecules/llm_client_spec.rb`**
+   - Test LLM integration with retry logic
+   - Test fallback behavior on API failures
+   - Test different model providers
+
+4. **`dev-tools/spec/molecules/idea_enhancer_spec.rb`**
+   - Test idea enhancement workflow
+   - Test template application
+   - Test system prompt generation
+
+5. **`dev-tools/spec/cli/ideas_manager_spec.rb`**
+   - Test CLI interface and option parsing
+   - Test command execution and output
+   - Test error message formatting
+
+6. **`dev-tools/spec/integration/ideas_manager_integration_spec.rb`**
+   - Test end-to-end idea capture workflow
+   - Test real project data handling with cleanup
+   - Test integration between all components
+
+### **Acceptance Criteria Update**
+- **Task Status**: Pending (reopened)
+- **Blocker**: Missing automated test implementation
+- **Definition of Done**: All 6 test files exist AND all tests pass
 
 ## Out of Scope
 
