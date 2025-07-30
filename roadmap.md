@@ -35,7 +35,6 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| v.0.3.0 | "Workflows" (Current)     | Q3 2025       | Improve workflow independence and integration capabilities for coding agents like Claude Code, Windsurf, Zed | Workflow Independence, Agent Integration, Documentation Enhancement |
 | v.0.4.0 | "Replanning"              | Q1 2025       | Introduce specification cycle architecture separating idea capture, behavioral specification, and implementation planning | Specification Cycle, Behavior-First Design, Task State Management |
 | v0.4.0  | "Conductor"               | Q4 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
 | v0.5.0  | "Pathfinder"              | Q1 2026       | Developer Context Enhancement theme features.                                             | R-CTX-1, R-CTX-2, R-CTX-3, R-CTX-4, R-CTX-5                                                        |
@@ -59,6 +58,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-01-30 | Removed completed v.0.3.0 "Workflows" release from planned releases after successful publication with 225+ tasks completed | AI Assistant   |
 | 2025-01-30 | Added v.0.4.0 "Replanning" release with specification cycle architecture goals | AI Assistant   |
 | 2025-07-24 | Updated roadmap to reflect current release status: removed completed releases (v0.3.0 Migration, v0.3.0 Forge), marked v.0.3.0 Workflows as current, adjusted timeline. Updated status to active. | AI Assistant   |
 | 2025-07-23 | Merged comprehensive roadmap from tools-meta including all themes, epics, and releases. Added workflow independence focus from handbook-meta. | AI Assistant   |
