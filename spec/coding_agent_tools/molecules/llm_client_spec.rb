@@ -30,8 +30,8 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
     context "with default parameters" do
       let(:client) { described_class.new }
 
-      it "uses gflash as default model" do
-        expect(client.instance_variable_get(:@model)).to eq("gflash")
+      it "uses google:gemini-2.5-flash-lite as default model" do
+        expect(client.instance_variable_get(:@model)).to eq("google:gemini-2.5-flash-lite")
       end
 
       it "disables debug mode by default" do
@@ -97,7 +97,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         it "executes correct llm-query command" do
           expected_command = "llm-query test-model \"#{input_path}\" --system \"#{system_path}\" --output \"#{output_path}\""
           
-          expect(mock_command_executor).to receive(:execute).with(expected_command)
+          expect(mock_command_executor).to receive(:execute).with(expected_command, {timeout: 30})
           
           client.enhance_idea(
             input_path: input_path,
@@ -559,7 +559,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         
         # All calls should use the same model
         expect(mock_command_executor).to have_received(:execute).exactly(4).times do |command|
-          expect(command).to include("gflash")  # Default model
+          expect(command).to include("google:gemini-2.5-flash-lite")  # Default model
         end
       end
     end

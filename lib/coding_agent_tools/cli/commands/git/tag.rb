@@ -9,7 +9,7 @@ module CodingAgentTools
     module Commands
       module Git
         class Tag < Dry::CLI::Command
-          desc "Create, delete, or list tags across all repositories"
+          desc "Create, delete, list or verify tags across all repositories"
 
           option :debug, type: :boolean, default: false, aliases: ["d"],
             desc: "Enable debug output for verbose error information"
@@ -29,7 +29,7 @@ module CodingAgentTools
           option :force, type: :boolean, default: false, aliases: ["f"],
             desc: "Replace an existing tag with the given name"
 
-          option :delete, type: :boolean, default: false, aliases: ["D"],
+          option :delete, type: :boolean, default: false, aliases: ["d"],
             desc: "Delete existing tags with the given names"
 
           option :verify, type: :boolean, default: false, aliases: ["v"],
@@ -50,9 +50,6 @@ module CodingAgentTools
           option :submodules_only, type: :boolean, default: false,
             desc: "Process submodules only"
 
-          argument :tagname, required: false, desc: "The name of the tag"
-          argument :commit, required: false, desc: "The commit object to tag (defaults to HEAD)"
-
           example [
             "v1.2.3",
             "-a v1.2.3 -m 'Release version 1.2.3'",
@@ -61,12 +58,12 @@ module CodingAgentTools
             "-f v1.2.3"
           ]
 
-          def call(tagname: nil, commit: nil, **options)
+          def call(**options)
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             orchestrator = CodingAgentTools::Organisms::Git::GitOrchestrator.new(project_root, options)
 
             # Build tag options for git command
-            tag_options = build_tag_options(options, tagname, commit)
+            tag_options = build_tag_options(options)
 
             # Execute tag operation across repositories
             result = orchestrator.tag(tag_options)
@@ -85,17 +82,13 @@ module CodingAgentTools
 
           private
 
-          def build_tag_options(options, tagname, commit)
+          def build_tag_options(options)
             tag_opts = {}
 
             # Repository filtering
             tag_opts[:repository] = options[:repository] if options[:repository]
             tag_opts[:main_only] = options[:main_only] if options[:main_only]
             tag_opts[:submodules_only] = options[:submodules_only] if options[:submodules_only]
-
-            # Tag name and commit
-            tag_opts[:tagname] = tagname if tagname
-            tag_opts[:commit] = commit if commit
 
             # Git tag specific options
             tag_opts[:annotate] = options[:annotate] if options[:annotate]
@@ -112,44 +105,26 @@ module CodingAgentTools
           end
 
           def display_tag_output(result, options)
-            if options[:list] || options[:verify]
-              display_list_output(result)
-            elsif result[:formatted_output]
+            if result[:formatted_output]
               puts result[:formatted_output]
             else
-              display_operation_output(result, options)
+              display_raw_output(result)
             end
           end
 
-          def display_list_output(result)
+          def display_raw_output(result)
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
               output = repo_result[:stdout] || ""
               if output.strip.empty?
-                puts "[#{repo_name}] No tags found"
+                puts "[#{repo_name}] Clean working directory"
               else
-                puts "[#{repo_name}] Tags:"
+                puts "[#{repo_name}] Output:"
                 output.lines.each { |line| puts "  #{line.rstrip}" }
               end
               puts "" # Add spacing between repositories
             end
-          end
-
-          def display_operation_output(result, options)
-            result[:results].each do |repo_name, repo_result|
-              if repo_result[:success]
-                operation = determine_operation(options)
-                puts "[#{repo_name}] #{operation} completed successfully"
-              end
-            end
-          end
-
-          def determine_operation(options)
-            return "Tag deletion" if options[:delete]
-            return "Tag verification" if options[:verify]
-            return "Tag listing" if options[:list]
-            "Tag creation"
           end
 
           def display_errors(errors, options)

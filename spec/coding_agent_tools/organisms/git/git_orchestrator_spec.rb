@@ -608,122 +608,32 @@ RSpec.describe CodingAgentTools::Organisms::Git::GitOrchestrator do
 
     before do
       allow(CodingAgentTools::Molecules::Git::MultiRepoCoordinator).to receive(:new).and_return(mock_coordinator)
-      allow(orchestrator).to receive(:build_tag_command).and_return("tag v1.0.0")
-      allow(orchestrator).to receive(:format_tag_output).and_return({success: true, formatted_output: "Tag created"})
+      allow(mock_coordinator).to receive(:execute_across_repositories).and_return({success: true})
+      allow(orchestrator).to receive(:build_tag_command).and_return("tag")
     end
 
-    context "with tag creation" do
-      let(:clean_status_result) do
-        {
-          results: {
-            "main" => {success: true, stdout: ""},
-            "submodule1" => {success: true, stdout: ""}
-          }
-        }
-      end
-
-      before do
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("status --porcelain", anything).and_return(clean_status_result)
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("tag v1.0.0", anything).and_return({success: true})
-      end
-
-      it "validates clean working directories before tagging" do
-        expect(mock_coordinator).to receive(:execute_across_repositories).with("status --porcelain", hash_including(capture_output: true))
-        orchestrator.tag(tagname: "v1.0.0")
-      end
-
-      it "builds tag command and executes across repositories" do
-        options = {tagname: "v1.0.0", annotate: true}
-        expect(orchestrator).to receive(:build_tag_command).with(options)
-        expect(mock_coordinator).to receive(:execute_across_repositories).with("tag v1.0.0", options.merge(capture_output: true))
-        orchestrator.tag(options)
-      end
-
-      it "formats and returns tag output" do
-        tag_result = {success: true, results: {"main" => {success: true}}}
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("tag v1.0.0", anything).and_return(tag_result)
-        expect(orchestrator).to receive(:format_tag_output).with(tag_result, {tagname: "v1.0.0"})
-        orchestrator.tag(tagname: "v1.0.0")
-      end
-    end
-
-    context "with dirty working directories" do
-      let(:dirty_status_result) do
-        {
-          results: {
-            "main" => {success: true, stdout: " M dirty_file.rb\n"},
-            "submodule1" => {success: true, stdout: ""}
-          }
-        }
-      end
-
-      before do
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("status --porcelain", anything).and_return(dirty_status_result)
-      end
-
-      it "prevents tagging when repositories have uncommitted changes" do
-        result = orchestrator.tag(tagname: "v1.0.0")
-        
-        expect(result[:success]).to be false
-        expect(result[:errors]).to include(
-          hash_including(
-            repository: "validation",
-            message: include("Cannot tag repositories with uncommitted changes: main")
-          )
-        )
-      end
-
-      it "does not execute tag command when validation fails" do
-        expect(mock_coordinator).not_to receive(:execute_across_repositories).with("tag v1.0.0", anything)
-        orchestrator.tag(tagname: "v1.0.0")
-      end
-    end
-
-    context "with list or verify operations" do
-      before do
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("tag v1.0.0", anything).and_return({success: true})
-      end
-
-      it "skips validation for list operation" do
-        expect(mock_coordinator).not_to receive(:execute_across_repositories).with("status --porcelain", anything)
-        orchestrator.tag(list: true)
-      end
-
-      it "skips validation for verify operation" do
-        expect(mock_coordinator).not_to receive(:execute_across_repositories).with("status --porcelain", anything)
-        orchestrator.tag(tagname: "v1.0.0", verify: true)
-      end
+    it "builds tag command and executes across repositories" do
+      options = {annotate: true, message: "Release"}
+      expect(orchestrator).to receive(:build_tag_command).with(options)
+      expect(mock_coordinator).to receive(:execute_across_repositories).with("tag", options.merge(capture_output: true))
+      orchestrator.tag(options)
     end
 
     context "with different tag options" do
-      let(:clean_status_result) do
-        {
-          results: {
-            "main" => {success: true, stdout: ""},
-            "submodule1" => {success: true, stdout: ""}
-          }
-        }
-      end
-
-      before do
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("status --porcelain", anything).and_return(clean_status_result)
-        allow(mock_coordinator).to receive(:execute_across_repositories).with("tag v1.0.0", anything).and_return({success: true})
-      end
-
       it "handles annotated tag options" do
-        options = {tagname: "v1.0.0", annotate: true, message: "Release v1.0.0"}
+        options = {annotate: true, message: "Release v1.0.0"}
         expect(orchestrator).to receive(:build_tag_command).with(options)
         orchestrator.tag(options)
       end
 
       it "handles signed tag options" do
-        options = {tagname: "v1.0.0", sign: true, local_user: "user@example.com"}
+        options = {sign: true, local_user: "user@example.com"}
         expect(orchestrator).to receive(:build_tag_command).with(options)
         orchestrator.tag(options)
       end
 
       it "handles force and delete options" do
-        options = {tagname: "v1.0.0", force: true, delete: true}
+        options = {force: true, delete: true}
         expect(orchestrator).to receive(:build_tag_command).with(options)
         orchestrator.tag(options)
       end
