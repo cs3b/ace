@@ -47,7 +47,7 @@ Print a summary of task states (draft, pending, done, total) on top of any task 
 
 ## Solution Direction
 
-1. **Enhance Listing Commands**: Modify existing `task-manager` listing commands (e.g., `list`, `all`, `recent`) to first fetch and format the task state summary.
+1. **Enhance Listing Commands**: Modify existing `task-manager` listing commands (e.g., `list`, `all`, `recent`, `next`) to first fetch and format the task state summary.
 2. **Centralize State Counting Logic**: Create a dedicated method or helper within the `task-manager` (likely within its `Organism` or `Ecosystem` layer) to efficiently count tasks by state.
 3. **Prepend Summary to Output**: Ensure the formatted summary string is printed to standard output before the main task listing begins.
 
@@ -55,13 +55,30 @@ Print a summary of task states (draft, pending, done, total) on top of any task 
 
 **Before proceeding, we need to answer:**
 1. What are the exact state names that should be counted and displayed (e.g., 'draft', 'pending', 'in_progress', 'done', 'cancelled')?
+
+> it should dynamic - read the status from all the tasks ({release_folder}/tasks/**/*.md) and summarize (can be in alphabetic order)
+
 2. Should the summary be configurable (e.g., opt-in/out) or always displayed for listing commands?
+
+> this is one line, so lets show it always be present
+
 3. What is the most efficient way to query task states without impacting performance, especially for large task lists?
+
+> not sure, there might be more then houndreds, but lest then thousends files (meybe start with: `grep -r 'status:' dev-taskflow/current/v.0.4.0-replanning/tasks/**/*.md`)
+
 
 **Open Questions:**
 - How should the task states be defined and managed internally by the `task-manager`?
+
+> they are dynamic loaded, so just keep the structure within the atom and existing namespaces
+
 - Will this summary count tasks across all defined repositories or only within the current context?
+
+> in context of the release (same release as the task-manager use)
+
 - Should there be a limit on how far back the 'draft' or 'pending' states are counted, or are we counting all existing tasks in those states?
+
+> everything in the context of current release tasks folder
 
 ## Assumptions to Validate
 
