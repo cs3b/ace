@@ -196,6 +196,7 @@ module CodingAgentTools
         require_relative "cli/commands/git/mv"
         require_relative "cli/commands/git/rm"
         require_relative "cli/commands/git/restore"
+        require_relative "cli/commands/git/tag"
 
         register "git", aliases: [] do |prefix|
           prefix.register "status", Commands::Git::Status
@@ -211,6 +212,7 @@ module CodingAgentTools
           prefix.register "mv", Commands::Git::Mv
           prefix.register "rm", Commands::Git::Rm
           prefix.register "restore", Commands::Git::Restore
+          prefix.register "tag", Commands::Git::Tag
         end
 
         @git_commands_registered = true
