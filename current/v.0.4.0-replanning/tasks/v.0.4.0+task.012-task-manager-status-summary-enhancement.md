@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.012
-status: in-progress
+status: done
 priority: high
 estimate: 6h
 dependencies: 
@@ -189,65 +189,65 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
 
 ### Planning Steps
 
-* [ ] Analyze existing TaskFileLoader molecule API and TaskData structure
+* [x] Analyze existing TaskFileLoader molecule API and TaskData structure
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: TaskData structure and status field access patterns are identified
   > Command: grep -n "status" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
 
-* [ ] Research CLI output patterns across all task-manager commands
+* [x] Research CLI output patterns across all task-manager commands
   > TEST: Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Consistent header/output patterns identified in all CLI commands
   > Command: grep -n "puts.*Tasks" dev-tools/lib/coding_agent_tools/cli/commands/task/*.rb
 
-* [ ] Design TaskStatusSummary molecule interface and implementation approach
+* [x] Design TaskStatusSummary molecule interface and implementation approach
 
 ### Execution Steps
 
-- [ ] Create TaskStatusSummary molecule with status counting functionality
+- [x] Create TaskStatusSummary molecule with status counting functionality
   > TEST: Molecule Creation
   > Type: Action Validation
   > Assert: TaskStatusSummary molecule exists with proper ATOM structure
   > Command: test -f dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_status_summary.rb
 
-- [ ] Implement status counting algorithm in TaskStatusSummary molecule
+- [x] Implement status counting algorithm in TaskStatusSummary molecule
   > TEST: Counting Logic
   > Type: Action Validation
   > Assert: Status counting returns correct distribution from task collection
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb
 
-- [ ] Add status summary output to task/all.rb command (list command)
+- [x] Add status summary output to task/all.rb command (list command)
   > TEST: All Command Enhancement
   > Type: Action Validation
   > Assert: task-manager list shows status summary before task listing
   > Command: task-manager list | head -n 3 | grep -q "Status:"
 
-- [ ] Add status summary output to task/next.rb command
+- [x] Add status summary output to task/next.rb command
   > TEST: Next Command Enhancement
   > Type: Action Validation  
   > Assert: task-manager next shows status summary before next task display
   > Command: task-manager next | head -n 3 | grep -q "Status:"
 
-- [ ] Add status summary output to task/recent.rb command
+- [x] Add status summary output to task/recent.rb command
   > TEST: Recent Command Enhancement
   > Type: Action Validation
   > Assert: task-manager recent shows status summary before recent tasks
   > Command: task-manager recent | head -n 3 | grep -q "Status:"
 
-- [ ] Create comprehensive RSpec tests for TaskStatusSummary molecule
+- [x] Create comprehensive RSpec tests for TaskStatusSummary molecule
   > TEST: Test Coverage
   > Type: Action Validation
   > Assert: TaskStatusSummary molecule has complete test coverage
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb --format documentation
 
-- [ ] Run integration tests to verify CLI command behavior
+- [x] Run integration tests to verify CLI command behavior
   > TEST: Integration Verification
   > Type: Action Validation
   > Assert: All task-manager commands work correctly with status summaries
   > Command: cd dev-tools && bundle exec rspec spec/integration/task_manager_integration_spec.rb
 
-- [ ] Run linting and code quality checks
+- [x] Run linting and code quality checks
   > TEST: Code Quality
   > Type: Action Validation
   > Assert: All new code passes StandardRB and security checks
@@ -255,16 +255,16 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
 
 ## Acceptance Criteria
 
-- [ ] Status summary appears on first line of all task-manager listing commands (list, next, recent)
-- [ ] Status counts are dynamically determined from actual task files (not hardcoded)
-- [ ] Status counts reflect current release context only (same as task-manager scope)
-- [ ] Summary format is consistent and readable across all commands
-- [ ] Performance impact is minimal even with hundreds of task files
-- [ ] Unknown status values are handled gracefully and included in summary
-- [ ] All existing CLI output formats remain unchanged (summary prepended only)
-- [ ] TaskStatusSummary molecule follows ATOM architecture principles
-- [ ] Comprehensive test coverage for new functionality
-- [ ] Code passes all existing and new tests
+- [x] Status summary appears on first line of all task-manager listing commands (list, next, recent)
+- [x] Status counts are dynamically determined from actual task files (not hardcoded)
+- [x] Status counts reflect current release context only (same as task-manager scope)
+- [x] Summary format is consistent and readable across all commands
+- [x] Performance impact is minimal even with hundreds of task files
+- [x] Unknown status values are handled gracefully and included in summary
+- [x] All existing CLI output formats remain unchanged (summary prepended only)
+- [x] TaskStatusSummary molecule follows ATOM architecture principles
+- [x] Comprehensive test coverage for new functionality
+- [x] Code passes all existing and new tests
 
 ## Out of Scope
 
