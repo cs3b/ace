@@ -146,7 +146,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
       end
 
       it "returns 1 for failed execution" do
-        result = capture_stderr { command.call }
+        capture_stderr { command.call }
         expect(command.call).to eq(1)
       end
     end

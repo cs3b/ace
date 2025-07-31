@@ -11,7 +11,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
   let(:big_user_input_allowed) { false }
   let(:model) { "gflash" }
   let(:commit_after_capture) { false }
-  
+
   # Mock molecule dependencies
   let(:mock_context_loader) { instance_double(CodingAgentTools::Molecules::ContextLoader) }
   let(:mock_idea_enhancer) { instance_double(CodingAgentTools::Molecules::IdeaEnhancer) }
@@ -33,13 +33,13 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     allow(CodingAgentTools::Molecules::IdeaEnhancer).to receive(:new).and_return(mock_idea_enhancer)
     allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mock_path_resolver)
     allow(CodingAgentTools::Molecules::LLMClient).to receive(:new).and_return(mock_llm_client)
-    
+
     # Add default stubs for File operations to handle unexpected calls
     allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:read).and_call_original
     allow(File).to receive(:write).and_call_original
     allow(FileUtils).to receive(:mkdir_p).and_call_original
-    
+
     # Add default stubs for molecule methods
     allow(mock_context_loader).to receive(:load_docs_context).and_return({success: true, context: ""})
     allow(mock_path_resolver).to receive(:generate_capture_idea_paths).and_return({
@@ -102,7 +102,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     it "initializes molecule dependencies correctly" do
       # Create an instance to trigger the constructor calls
       described_class.new
-      
+
       expect(CodingAgentTools::Molecules::ContextLoader).to have_received(:new)
       expect(CodingAgentTools::Molecules::IdeaEnhancer).to have_received(:new)
       expect(CodingAgentTools::Molecules::PathResolver).to have_received(:new)
@@ -115,7 +115,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     let(:input_path) { File.join(temp_dir, "idea-input.md") }
     let(:system_path) { File.join(temp_dir, "system-prompt.md") }
     let(:output_path) { File.join(temp_dir, "enhanced-idea.md") }
-    
+
     let(:path_generation_result) do
       {
         success: true,
@@ -280,7 +280,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
               system_path: File.join(temp_dir, "system.prompt.md"),
               output_path: File.join(temp_dir, "enhanced-idea.md")
             })
-            
+
             result = subject.capture_idea(large_input)
 
             expect(result.success?).to be true
@@ -415,7 +415,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     let(:template_path) { File.join(project_root, "dev-handbook/templates/idea-manager/system.prompt.md") }
     let(:idea_template_path) { File.join(project_root, "dev-handbook/templates/idea-manager/idea.template.md") }
     let(:system_path) { File.join(temp_dir, "system.md") }
-    
+
     let(:context_result) do
       {
         success: true,
@@ -454,7 +454,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
       end
 
       context "without project context" do
-        let(:context_result) { { success: false, error: "No context" } }
+        let(:context_result) { {success: false, error: "No context"} }
 
         it "generates system prompt without context section" do
           expected_content = system_template
@@ -534,10 +534,10 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
             system_path: File.join(temp_dir, "system.md"),
             output_path: output_path
           )
-        
+
         # Mock raw idea save to succeed
         allow(File).to receive(:write).and_call_original
-        
+
         # Mock system prompt generation to fail
         allow(File).to receive(:exist?).and_return(false)
       end
@@ -586,7 +586,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
 
         expect(result.success?).to be true
         expect(result.output_path).to eq(output_path)
-        
+
         # Verify fallback content structure
         expect(File).to have_received(:write).with(
           output_path,
@@ -661,7 +661,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         result = subject.capture_idea(idea_text)
 
         expect(result.success?).to be true
-        
+
         # Verify orchestration sequence
         expect(mock_path_resolver).to have_received(:generate_capture_idea_paths).ordered
         expect(mock_context_loader).to have_received(:load_docs_context).ordered
@@ -710,7 +710,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
   describe "commit_after_capture functionality" do
     let(:idea_text) { "Test idea for commit functionality" }
     let(:output_path) { File.join(temp_dir, "enhanced-idea.md") }
-    
+
     before do
       # Setup successful idea capture
       success_llm_result = instance_double(
@@ -718,19 +718,19 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         success?: true
       )
       allow(mock_llm_client).to receive(:enhance_idea).and_return(success_llm_result)
-      
+
       FileUtils.mkdir_p(temp_dir)
     end
 
     context "when commit_after_capture is true" do
       let(:commit_after_capture) { true }
-      
+
       it "executes git-commit after successful idea creation" do
         allow(subject).to receive(:test_environment?).and_return(false)
         allow(subject).to receive(:execute_git_commit).and_return(true)
-        
+
         result = subject.capture_idea(idea_text)
-        
+
         expect(result.success?).to be true
         expect(subject).to have_received(:execute_git_commit).with(output_path)
       end
@@ -738,9 +738,9 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
       it "handles git-commit execution errors gracefully" do
         allow(subject).to receive(:test_environment?).and_return(false)
         allow(subject).to receive(:execute_git_commit).and_raise(StandardError.new("git failed"))
-        
+
         result = subject.capture_idea(idea_text)
-        
+
         expect(result.success?).to be true  # Idea creation still succeeds
         expect(result.error_message).to include("git failed")
       end
@@ -749,9 +749,9 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         it "skips git-commit execution when CI environment is detected" do
           with_env("CI" => "true") do
             allow(subject).to receive(:execute_git_commit)
-            
+
             result = subject.capture_idea(idea_text)
-            
+
             expect(result.success?).to be true
             expect(subject).not_to have_received(:execute_git_commit)
           end
@@ -760,9 +760,9 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         it "skips git-commit execution when TEST environment is detected" do
           with_env("TEST" => "1") do
             allow(subject).to receive(:execute_git_commit)
-            
+
             result = subject.capture_idea(idea_text)
-            
+
             expect(result.success?).to be true
             expect(subject).not_to have_received(:execute_git_commit)
           end
@@ -772,12 +772,12 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
 
     context "when commit_after_capture is false" do
       let(:commit_after_capture) { false }
-      
+
       it "does not execute git-commit after idea creation" do
         allow(subject).to receive(:execute_git_commit)
-        
+
         result = subject.capture_idea(idea_text)
-        
+
         expect(result.success?).to be true
         expect(subject).not_to have_received(:execute_git_commit)
       end
@@ -785,7 +785,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
 
     context "when idea creation fails" do
       let(:commit_after_capture) { true }
-      
+
       before do
         # Make LLM enhancement fail
         failed_llm_result = instance_double(
@@ -795,12 +795,12 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         )
         allow(mock_llm_client).to receive(:enhance_idea).and_return(failed_llm_result)
       end
-      
+
       it "does not attempt git-commit" do
         allow(subject).to receive(:execute_git_commit)
-        
+
         result = subject.capture_idea(idea_text)
-        
+
         # Should still succeed due to fallback
         expect(result.success?).to be true
         expect(subject).not_to have_received(:execute_git_commit)
@@ -811,16 +811,16 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
   describe "#execute_git_commit" do
     let(:file_path) { "/test/path/idea.md" }
     let(:git_commit_path) { File.expand_path("../../../../exe/git-commit", __FILE__) }
-    
+
     before do
       allow(File).to receive(:exist?).with(git_commit_path).and_return(true)
     end
-    
+
     it "calls git-commit executable with correct file path and intention" do
       allow(subject).to receive(:system).and_return(true)
-      
+
       subject.send(:execute_git_commit, file_path)
-      
+
       expect(subject).to have_received(:system).with(
         git_commit_path,
         file_path,
@@ -830,7 +830,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
 
     it "raises error when git-commit executable is not found" do
       allow(File).to receive(:exist?).with(git_commit_path).and_return(false)
-      
+
       expect {
         subject.send(:execute_git_commit, file_path)
       }.to raise_error(StandardError, /git-commit executable not found/)
@@ -839,10 +839,10 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     it "raises error when git-commit fails" do
       # Mock system call to return false (failure)
       allow(subject).to receive(:system).and_return(false)
-      
+
       # Mock the exit status method instead of the global variable
       allow(subject).to receive(:last_command_exit_status).and_return(1)
-      
+
       expect {
         subject.send(:execute_git_commit, file_path)
       }.to raise_error(StandardError, /git-commit failed with exit status 1/)
@@ -885,11 +885,11 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
 
   def with_env(new_env)
     old_env = ENV.to_h
-    new_env.each { |key, value| 
+    new_env.each { |key, value|
       if value.nil?
         ENV.delete(key)
       else
-        ENV[key] = value 
+        ENV[key] = value
       end
     }
     yield

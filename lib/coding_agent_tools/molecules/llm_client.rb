@@ -27,7 +27,7 @@ module CodingAgentTools
       # Enhance idea using LLM with retry logic
       # @param input_path [String] Path to input file with raw idea
       # @param system_path [String] Path to system prompt file
-      # @param output_path [String] Path to write enhanced output  
+      # @param output_path [String] Path to write enhanced output
       # @return [LLMResult] Result with success status
       def enhance_idea(input_path:, system_path:, output_path:)
         validate_paths(input_path, system_path, output_path)
@@ -37,14 +37,13 @@ module CodingAgentTools
 
         (MAX_RETRIES + 1).times do |attempt|
           debug_log("LLM enhancement attempt #{attempt + 1}/#{MAX_RETRIES + 1}")
-          
+
           begin
             result = execute_llm_query(input_path, system_path, output_path)
             return LLMResult.new(true, output_path, nil, retry_count) if result[:success]
-            
+
             last_error = result[:error]
             debug_log("Attempt #{attempt + 1} failed: #{last_error}")
-            
           rescue => e
             last_error = e.message
             debug_log("Attempt #{attempt + 1} raised exception: #{last_error}")
@@ -85,7 +84,7 @@ module CodingAgentTools
 
         # Execute the command with 30-second timeout for ideas-manager
         result = @command_executor.execute(command, timeout: 30)
-        
+
         if result[:success] && File.exist?(output_path)
           # Verify output file has content
           output_content = File.read(output_path).strip
@@ -100,7 +99,6 @@ module CodingAgentTools
           {success: false, error: error_msg}
         end
       end
-
 
       def shell_escape(path)
         # Simple shell escaping for file paths

@@ -12,12 +12,12 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
   let(:system_path) { File.join(temp_dir, "system.txt") }
   let(:output_path) { File.join(temp_dir, "output.txt") }
   let(:mock_command_executor) { instance_double(CodingAgentTools::Atoms::SystemCommandExecutor) }
-  
+
   before do
     # Create test files
     File.write(input_path, "Test input content")
     File.write(system_path, "Test system prompt")
-    
+
     # Create output directory
     FileUtils.mkdir_p(File.dirname(output_path))
   end
@@ -74,7 +74,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
             output: "Query executed successfully",
             error: nil
           })
-          
+
           # Mock file system operations more broadly
           allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?).with(output_path).and_return(true)
@@ -96,9 +96,9 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
 
         it "executes correct llm-query command" do
           expected_command = "llm-query test-model \"#{input_path}\" --system \"#{system_path}\" --output \"#{output_path}\""
-          
+
           expect(mock_command_executor).to receive(:execute).with(expected_command, {timeout: 30})
-          
+
           client.enhance_idea(
             input_path: input_path,
             system_path: system_path,
@@ -113,17 +113,17 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           allow(mock_command_executor).to receive(:execute) do
             call_count += 1
             if call_count < 3
-              { success: false, error: "Temporary API failure" }
+              {success: false, error: "Temporary API failure"}
             else
-              { success: true, output: "Query executed successfully" }
+              {success: true, output: "Query executed successfully"}
             end
           end
-          
+
           # Mock file system operations more broadly
           allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?).with(output_path) { call_count >= 3 }
           allow(File).to receive(:read).with(output_path).and_return("Enhanced content after retries")
-          
+
           # Mock sleep to prevent actual delays
           allow(client).to receive(:sleep)
         end
@@ -144,7 +144,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         it "implements exponential backoff" do
           expect(client).to receive(:sleep).with(1).ordered
           expect(client).to receive(:sleep).with(3).ordered
-          
+
           client.enhance_idea(
             input_path: input_path,
             system_path: system_path,
@@ -159,7 +159,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
             success: false,
             error: "Persistent API failure"
           })
-          
+
           # Mock sleep to prevent actual delays
           allow(client).to receive(:sleep)
         end
@@ -188,23 +188,21 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
             if call_count == 1
               raise StandardError, "Network connection failed"
             else
-              { success: true, output: "Recovery successful" }
+              {success: true, output: "Recovery successful"}
             end
           end
-          
+
           # Mock output file creation on recovery
           allow(File).to receive(:exist?) do |path|
             if path == output_path && call_count > 1
               true
             elsif [input_path, system_path].include?(path)
               true
-            elsif path == File.dirname(output_path)
-              true
             else
-              false
+              path == File.dirname(output_path)
             end
           end
-          
+
           allow(File).to receive(:read).with(output_path).and_return("Recovered content")
           allow(client).to receive(:sleep)
         end
@@ -228,7 +226,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
             success: true,
             output: "Command succeeded"
           })
-          
+
           # Mock file system operations more broadly
           allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?).with(output_path).and_return(true)
@@ -240,7 +238,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           call_count = 0
           allow(File).to receive(:read).with(output_path) do
             call_count += 1
-            call_count < 3 ? "   \n\t  " : "Valid content"
+            (call_count < 3) ? "   \n\t  " : "Valid content"
           end
 
           result = client.enhance_idea(
@@ -260,7 +258,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
             success: true,
             output: "Command succeeded"
           })
-          
+
           # Mock file system operations more broadly
           allow(File).to receive(:exist?).and_call_original
           allow(File).to receive(:exist?).with(output_path).and_return(false)
@@ -327,7 +325,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           success: true,
           output: "Success"
         })
-        
+
         # Mock file system operations more broadly
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(output_path).and_return(true)
@@ -338,12 +336,12 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         models_and_commands.each do |model, expected_command_start|
           test_client = described_class.new(model: model)
           test_client.instance_variable_set(:@command_executor, mock_command_executor)
-          
+
           expect(mock_command_executor).to receive(:execute) do |command|
             expect(command).to start_with(expected_command_start)
-            { success: true, output: "Success" }
+            {success: true, output: "Success"}
           end
-          
+
           test_client.enhance_idea(
             input_path: input_path,
             system_path: system_path,
@@ -358,12 +356,12 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
 
       before do
         client.instance_variable_set(:@command_executor, mock_command_executor)
-        
+
         allow(mock_command_executor).to receive(:execute).and_return({
           success: true,
           output: "Success"
         })
-        
+
         # Mock file system operations more broadly
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(output_path).and_return(true)
@@ -374,7 +372,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         expect(client).to receive(:puts).with(/Debug: LLM enhancement attempt 1\/4/)
         expect(client).to receive(:puts).with(/Debug: Executing:/)
         expect(client).to receive(:puts).with(/Debug: LLM enhancement successful/)
-        
+
         client.enhance_idea(
           input_path: input_path,
           system_path: system_path,
@@ -391,12 +389,12 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
       before do
         File.write(special_input_path, "Special input")
         File.write(special_system_path, "Special system")
-        
+
         allow(mock_command_executor).to receive(:execute).and_return({
           success: true,
           output: "Success"
         })
-        
+
         # Mock file system operations more broadly
         allow(File).to receive(:exist?).and_call_original
         allow(File).to receive(:exist?).with(special_output_path).and_return(true)
@@ -408,9 +406,9 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           expect(command).to include("\"#{special_input_path}\"")
           expect(command).to include("\"#{special_system_path.gsub('"', '\\"')}\"")
           expect(command).to include("\"#{special_output_path}\"")
-          { success: true, output: "Success" }
+          {success: true, output: "Success"}
         end
-        
+
         client.enhance_idea(
           input_path: special_input_path,
           system_path: special_system_path,
@@ -459,7 +457,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           success: false,
           error: "llm-query: command not found"
         })
-        
+
         allow(client).to receive(:sleep)
       end
 
@@ -481,7 +479,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           success: false,
           error: "API key not configured"
         })
-        
+
         allow(client).to receive(:sleep)
       end
 
@@ -504,14 +502,14 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           call_count += 1
           case call_count
           when 1, 2
-            { success: false, error: "Network unreachable" }
+            {success: false, error: "Network unreachable"}
           when 3
-            { success: false, error: "Connection timeout" }
+            {success: false, error: "Connection timeout"}
           else
-            { success: false, error: "Host unreachable" }
+            {success: false, error: "Host unreachable"}
           end
         end
-        
+
         allow(client).to receive(:sleep)
       end
 
@@ -540,12 +538,12 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
       it "continues with the same model (no automatic fallback)" do
         # The current implementation doesn't include automatic model fallback
         # This test documents current behavior and can be updated if fallback is added
-        
+
         allow(mock_command_executor).to receive(:execute).and_return({
           success: false,
           error: "Model unavailable"
         })
-        
+
         allow(client).to receive(:sleep)
 
         result = client.enhance_idea(
@@ -556,7 +554,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
 
         expect(result).not_to be_success
         expect(mock_command_executor).to have_received(:execute).exactly(4).times
-        
+
         # All calls should use the same model
         expect(mock_command_executor).to have_received(:execute).exactly(4).times do |command|
           expect(command).to include("google:gemini-2.5-flash-lite")  # Default model
@@ -573,7 +571,7 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
         # Use real SystemCommandExecutor but mock the actual command
         real_executor = CodingAgentTools::Atoms::SystemCommandExecutor.new
         client.instance_variable_set(:@command_executor, real_executor)
-        
+
         # Mock the system call to prevent actual llm-query execution
         allow(Open3).to receive(:popen3) do |command, &block|
           # Simulate successful command execution
@@ -581,10 +579,10 @@ RSpec.describe CodingAgentTools::Molecules::LLMClient do
           mock_stdout = double("stdout", read: "Mocked LLM response")
           mock_stderr = double("stderr", read: "")
           mock_wait_thr = double("wait_thr", value: double("process_status", exitstatus: 0))
-          
+
           # Create the output file to simulate real behavior
           File.write(output_path, "Mocked enhanced content")
-          
+
           block.call(mock_stdin, mock_stdout, mock_stderr, mock_wait_thr)
         end
       end

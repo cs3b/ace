@@ -213,7 +213,7 @@ module CodingAgentTools
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
           tag_command = build_tag_command(tagname, commit, options)
           result = coordinator.execute_across_repositories(tag_command, options.merge(capture_output: true))
-          
+
           format_tag_output(result, options)
         end
 

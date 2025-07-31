@@ -6,6 +6,7 @@ require_relative "../../../atoms/project_root_detector"
 require_relative "../../../molecules/taskflow_management/task_sort_engine"
 require_relative "../../../molecules/taskflow_management/task_filter_engine"
 require_relative "../../../molecules/taskflow_management/unified_task_formatter"
+require_relative "../../../molecules/taskflow_management/task_status_summary"
 
 module CodingAgentTools
   module Cli
@@ -76,7 +77,11 @@ module CodingAgentTools
 
             final_result = sort_result_hash[:result]
 
+            # Generate status summary from all tasks in the current release (before filtering)
+            status_summary = CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary(tasks_result.tasks)
+
             if final_result.sorted_tasks.empty?
+              puts status_summary.formatted_text
               puts "No actionable tasks found"
               return 0
             end
@@ -84,7 +89,9 @@ module CodingAgentTools
             # Limit results
             limited_tasks = final_result.sorted_tasks.take(limit)
 
-            # Show header
+            # Show header with status summary
+            puts status_summary.formatted_text
+
             if limit == 1
               puts "Next Task:"
             else

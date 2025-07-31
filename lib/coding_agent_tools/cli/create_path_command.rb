@@ -367,23 +367,23 @@ module CodingAgentTools
           .squeeze("-")
           .strip
           .gsub(/^-|-$/, "")
-        
+
         # Limit slug length to prevent filesystem filename length issues
         # Truncate at word boundaries to keep it readable
         max_slug_length = 80
         if slug.length > max_slug_length
           # Find the last word boundary (hyphen) within the limit
           truncated = slug[0, max_slug_length]
-          last_hyphen = truncated.rindex('-')
-          
-          if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
-            slug = truncated[0, last_hyphen]
+          last_hyphen = truncated.rindex("-")
+
+          slug = if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
+            truncated[0, last_hyphen]
           else
             # Fallback: truncate and clean up
-            slug = truncated.gsub(/-+$/, "")
+            truncated.gsub(/-+$/, "")
           end
         end
-        
+
         slug
       end
 

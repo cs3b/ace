@@ -899,7 +899,7 @@ RSpec.describe CodingAgentTools::Molecules::PathResolver do
         }
         full_config = config.merge(scoped_config)
         allow(config_loader).to receive(:load).and_return(full_config)
-        
+
         allow(resolver).to receive(:find_matching_paths).and_return(["/path/to/file.rb"])
 
         result = resolver.resolve_path("tools:test", type: :file)

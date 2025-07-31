@@ -15,50 +15,48 @@ module CodingAgentTools
       # Load all docs/*.md files as project context
       # @return [Hash] Result with success status and context content
       def load_docs_context
-        begin
-          docs_dir = File.join(@sandbox.project_root, "docs")
-          
-          unless Dir.exist?(docs_dir)
-            return {success: false, error: "Docs directory not found: #{docs_dir}"}
-          end
+        docs_dir = File.join(@sandbox.project_root, "docs")
 
-          context_documents = []
-          failed_files = []
-
-          # Find all .md files in docs directory
-          md_files = Dir.glob(File.join(docs_dir, "**/*.md")).sort
-
-          md_files.each do |file_path|
-            relative_path = file_path.sub(@sandbox.project_root + "/", "")
-            
-            begin
-              content = File.read(file_path)
-              context_documents << {
-                path: relative_path,
-                content: content
-              }
-            rescue => e
-              failed_files << {path: relative_path, error: e.message}
-            end
-          end
-
-          # Format context as embedded documents
-          context_content = format_embedded_context(context_documents)
-
-          result = {
-            success: true,
-            context: context_content,
-            files_loaded: context_documents.length,
-            files_failed: failed_files.length
-          }
-
-          # Add failure details if any files failed
-          result[:failed_files] = failed_files unless failed_files.empty?
-
-          result
-        rescue => e
-          {success: false, error: "Context loading failed: #{e.message}"}
+        unless Dir.exist?(docs_dir)
+          return {success: false, error: "Docs directory not found: #{docs_dir}"}
         end
+
+        context_documents = []
+        failed_files = []
+
+        # Find all .md files in docs directory
+        md_files = Dir.glob(File.join(docs_dir, "**/*.md")).sort
+
+        md_files.each do |file_path|
+          relative_path = file_path.sub(@sandbox.project_root + "/", "")
+
+          begin
+            content = File.read(file_path)
+            context_documents << {
+              path: relative_path,
+              content: content
+            }
+          rescue => e
+            failed_files << {path: relative_path, error: e.message}
+          end
+        end
+
+        # Format context as embedded documents
+        context_content = format_embedded_context(context_documents)
+
+        result = {
+          success: true,
+          context: context_content,
+          files_loaded: context_documents.length,
+          files_failed: failed_files.length
+        }
+
+        # Add failure details if any files failed
+        result[:failed_files] = failed_files unless failed_files.empty?
+
+        result
+      rescue => e
+        {success: false, error: "Context loading failed: #{e.message}"}
       end
 
       private
@@ -75,7 +73,7 @@ module CodingAgentTools
           context += "\n    </document>\n"
         end
         context += "</context>"
-        
+
         context
       end
     end

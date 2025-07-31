@@ -205,7 +205,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Reflection::Synthesize do
       before do
         # Override Dir.glob for this context
         allow(Dir).to receive(:glob).and_return(discovered_reflections)
-        
+
         # Fallback PathResolver mock for legacy support
         allow(mock_path_resolver).to receive(:find_reflection_paths_in_current_release).and_return({
           success: true,

@@ -546,17 +546,17 @@ module CliHelpers
       end
 
       require_relative "../../lib/coding_agent_tools/cli/commands/release/current"
-      
+
       # Parse options
       options = parse_release_current_options(subcommand_args)
-      
+
       begin
         command = CodingAgentTools::Cli::Commands::Release::Current.new
         result = command.call(**options)
         result || 0
       rescue SystemExit => e
         e.status
-      rescue SecurityError, StandardError => e
+      rescue SecurityError, StandardError
         # Error has already been output by the command
         1
       end

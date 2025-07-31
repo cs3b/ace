@@ -63,7 +63,7 @@ module CodingAgentTools
             else
               puts "Error: No input provided. Use idea text argument, --clipboard, or --file options."
               puts "Usage: ideas-manager capture 'your idea text'"
-              puts "       ideas-manager capture --clipboard" 
+              puts "       ideas-manager capture --clipboard"
               puts "       ideas-manager capture --file path/to/file.txt"
               exit 1
             end
@@ -79,12 +79,10 @@ module CodingAgentTools
             ]
 
             clipboard_commands.each do |cmd|
-              begin
-                content = `#{cmd} 2>/dev/null`.strip
-                return content unless content.empty? || $?.exitstatus != 0
-              rescue
-                next
-              end
+              content = `#{cmd} 2>/dev/null`.strip
+              return content unless content.empty? || $?.exitstatus != 0
+            rescue
+              next
             end
 
             puts "Error: Could not read from clipboard. Please install pbpaste (macOS), xclip/xsel (Linux), or use text input."

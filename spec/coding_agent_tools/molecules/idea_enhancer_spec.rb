@@ -329,14 +329,14 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
         expect(questions).to include("How does this integrate with existing components?")
         expect(questions).to include("What are the technical dependencies?")
 
-        # Should include improvement questions  
+        # Should include improvement questions
         expect(questions).to include("What metrics will measure the improvement?")
         # Note: Due to take(6) limit, not all questions may be included
 
         # Should include tool questions (but won't due to bug in original code)
         # The bug is that line 72 uses idea_context instead of idea_content
         # So tool questions won't be generated even though "tool" is in the content
-        
+
         # But still limited to 6 total
         expect(questions.length).to eq(6) # 3 basic + 2 feature + 1 improvement = 6 (tool questions not added due to bug)
       end
@@ -345,7 +345,7 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
     context "with edge cases" do
       it "handles empty idea content" do
         questions = idea_enhancer.generate_questions("")
-        
+
         expect(questions).to be_an(Array)
         expect(questions.length).to be >= 3
         expect(questions).to include("What specific problem does this solve?")
@@ -353,13 +353,13 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
 
       it "handles nil idea content" do
         expect {
-          questions = idea_enhancer.generate_questions(nil)
+          idea_enhancer.generate_questions(nil)
         }.to raise_error(NoMethodError)
       end
 
       it "returns array of strings" do
         questions = idea_enhancer.generate_questions("Some idea")
-        
+
         expect(questions).to be_an(Array)
         questions.each do |question|
           expect(question).to be_a(String)
@@ -450,13 +450,13 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
   describe "performance characteristics" do
     it "handles large valid idea content efficiently" do
       large_idea = "Feature: " + ("A" * 10000)
-      
+
       start_time = Time.now
-      
+
       validation = idea_enhancer.validate_idea_content(large_idea)
       title = idea_enhancer.extract_title(large_idea)
       questions = idea_enhancer.generate_questions(large_idea)
-      
+
       end_time = Time.now
       processing_time = end_time - start_time
 
@@ -468,7 +468,7 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
 
     it "handles many keywords efficiently" do
       idea_with_keywords = "Add feature improve better tool command " * 100
-      
+
       start_time = Time.now
       questions = idea_enhancer.generate_questions(idea_with_keywords)
       end_time = Time.now
@@ -502,7 +502,7 @@ RSpec.describe CodingAgentTools::Molecules::IdeaEnhancer do
 
     it "maintains consistent behavior across repeated calls" do
       idea_content = "Improve the tool feature for better performance"
-      
+
       # Call methods multiple times
       5.times do
         validation = idea_enhancer.validate_idea_content(idea_content)

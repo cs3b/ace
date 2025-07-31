@@ -6,6 +6,7 @@ require_relative "../../../atoms/project_root_detector"
 require_relative "../../../molecules/taskflow_management/task_sort_engine"
 require_relative "../../../molecules/taskflow_management/task_filter_engine"
 require_relative "../../../molecules/taskflow_management/unified_task_formatter"
+require_relative "../../../molecules/taskflow_management/task_status_summary"
 
 module CodingAgentTools
   module Cli
@@ -75,7 +76,11 @@ module CodingAgentTools
             end
 
             final_result = sort_result_hash[:result]
-            handle_result(final_result, options)
+
+            # Generate status summary from all tasks in the current release (before filtering)
+            status_summary = CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary(tasks_result.tasks)
+
+            handle_result(final_result, options, status_summary)
             0
           rescue => e
             handle_error(e, options[:debug])
@@ -84,13 +89,15 @@ module CodingAgentTools
 
           private
 
-          def handle_result(result, options)
+          def handle_result(result, options, status_summary = nil)
             if result.sorted_tasks.empty?
+              # Show status summary even when no tasks match the filter criteria
+              puts status_summary.formatted_text if status_summary
               puts "No tasks found matching criteria"
               return
             end
 
-            display_header(result, options)
+            display_header(result, options, status_summary)
             result.sorted_tasks.each_with_index do |task, index|
               puts "" if index > 0 && options[:verbose]  # Add blank line between tasks only in verbose mode
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
@@ -103,7 +110,10 @@ module CodingAgentTools
             display_footer(result, options) if options[:show_cycles] || result.has_cycles?
           end
 
-          def display_header(result, options)
+          def display_header(result, options, status_summary = nil)
+            # Display status summary first if available
+            puts status_summary.formatted_text if status_summary
+
             puts "All Tasks (#{result.sorted_tasks.size} total):"
             puts "=" * 50
 
