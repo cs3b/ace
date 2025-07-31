@@ -266,6 +266,7 @@ module CliHelpers
         Commands:
           task-manager all             # List all tasks
           task-manager generate-id     # Generate unique task IDs  
+          task-manager list            # List all tasks
           task-manager next            # Find next actionable task
           task-manager recent          # Show recently updated tasks
           task-manager version         # Show version information
