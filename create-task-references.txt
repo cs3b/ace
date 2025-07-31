@@ -1,0 +1,80 @@
+dev-handbook/.meta/gds/workflow-instructions-definition.g.md:`dev-handbook/workflow-instructions/create-task.wf.md`:
+dev-handbook/.integrations/claude/install-prompts.md:- `dev-handbook/workflow-instructions/create-task.wf.md` → `.claude/commands/create-task.md`
+dev-handbook/.integrations/claude/install-prompts.md:#### create-task.md
+dev-handbook/.integrations/claude/install-prompts.md:read whole file and follow @dev-handbook/workflow-instructions/create-task.wf.md
+dev-handbook/.integrations/claude/install-prompts.md:- Example: `create-task.wf.md` becomes `create-task.md`
+dev-handbook/guides/draft-release/README.md:- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/create-task.wf.md)
+dev-handbook/workflow-instructions/README.md:- **create-task** - Transform requirements into formal task files
+dev-handbook/workflow-instructions/README.md:create-task → review-task → work-on-task → commit → review-code
+dev-handbook/workflow-instructions/README.md:create-task → work-on-task → commit → fix-tests → review-code
+dev-handbook/workflow-instructions/README.md:review-code → synthesize-reviews → create-task (for fixes)
+dev-handbook/workflow-instructions/README.md:│   │   │   └── → create-task
+dev-handbook/workflow-instructions/README.md:│   │   └── → create-task → work-on-task
+dev-handbook/workflow-instructions/README.md:- New requirements → `create-task`
+dev-handbook/workflow-instructions/README.md:Requirements → create-task → review-task → work-on-task → commit
+dev-handbook/workflow-instructions/README.md:- `create-task` → `review-task`: Task file with embedded plan
+dev-handbook/workflow-instructions/README.md:1. **Create Task** (`create-task`)
+dev-handbook/workflow-instructions/README.md:1. **Create Urgent Task** (`create-task`)
+dev-handbook/workflow-instructions/README.md:3. **Create Follow-up Tasks** (`create-task`)
+dev-handbook/workflow-instructions/README.md:| **Task Management** | `capture-idea`, `create-task`, `review-task`, `work-on-task` | Idea capture, feature development, implementation |
+dev-handbook/workflow-instructions/README.md:| **Idea Development** | `capture-idea` → `create-task` → `review-task` → `work-on-task` | 5-20h |
+dev-handbook/workflow-instructions/README.md:| **Feature Development** | `create-task` → `review-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
+dev-handbook/workflow-instructions/README.md:| **Code Review** | `review-code` → `synthesize-reviews` → `create-task` | 1-4h |
+dev-handbook/workflow-instructions/README.md:- [Create Task](./create-task.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
+dev-handbook/workflow-instructions/improve-code-coverage.wf.md:* Access to create-task workflow for generating test improvement tasks
+dev-handbook/workflow-instructions/capture-idea.wf.md:* You already have well-structured requirements (use create-task instead)
+dev-handbook/workflow-instructions/capture-idea.wf.md:* **create-task**: When ready to turn idea into actionable task
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/.meta/gds/workflow-instructions-definition.g.md:`dev-handbook/workflow-instructions/create-task.wf.md`:
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/.integrations/claude/install-prompts.md:- `dev-handbook/workflow-instructions/create-task.wf.md` → `.claude/commands/create-task.md`
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/.integrations/claude/install-prompts.md:#### create-task.md
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/.integrations/claude/install-prompts.md:read whole file and follow @dev-handbook/workflow-instructions/create-task.wf.md
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/.integrations/claude/install-prompts.md:- Example: `create-task.wf.md` becomes `create-task.md`
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/guides/draft-release/README.md:- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/create-task.wf.md)
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:- **create-task** - Transform requirements into formal task files
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:create-task → review-task → work-on-task → commit → review-code
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:create-task → work-on-task → commit → fix-tests → review-code
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:review-code → synthesize-reviews → create-task (for fixes)
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:│   │   │   └── → create-task
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:│   │   └── → create-task → work-on-task
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:- New requirements → `create-task`
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:Requirements → create-task → review-task → work-on-task → commit
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:- `create-task` → `review-task`: Task file with embedded plan
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:1. **Create Task** (`create-task`)
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:1. **Create Urgent Task** (`create-task`)
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:3. **Create Follow-up Tasks** (`create-task`)
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:| **Task Management** | `create-task`, `review-task`, `work-on-task` | Feature development, implementation |
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:| **Feature Development** | `create-task` → `review-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:| **Code Review** | `review-code` → `synthesize-reviews` → `create-task` | 1-4h |
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/README.md:- [Create Task](./create-task.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
+dev-handbook/tmp/gtree/bench-against-qwen3/dev-handbook/workflow-instructions/improve-code-coverage.wf.md:* Access to create-task workflow for generating test improvement tasks
+dev-taskflow/backlog/ideas/exe-covarage-analyze.md:  5. and save it as a task using instruction from: dev-handbook/workflow-instructions/create-task.wf.md
+dev-taskflow/backlog/ideas/xxx-task-that-work-simultanues.md:# create-tasks / review-task
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.6-create-cascade-review-workflow.md:After completing `v.0.4.0+task.4-create-task-template-system.md`, run the cascade review workflow:
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.6-create-cascade-review-workflow.md:nav-path file v.0.4.0+task.4-create-task-template-system.md
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.6-create-cascade-review-workflow.md:* `v.0.4.0+task.7-create-task-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:# Rename create-task to draft-task with Behavior-First Focus
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:tree -L 2 dev-handbook/workflow-instructions | grep -E "(create-task|draft-task|review-task)" | sed 's/^/    /'
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:    ├── create-task.wf.md
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:Transform the existing `create-task.wf.md` workflow into `draft-task.wf.md` with a fundamental shift to behavior-first specification. This workflow becomes the
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Analyze current create-task.wf.md structure and pain points
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:  > "(implementation\|file\|code\|function)" dev-handbook/workflow-instructions/create-task.wf.md \| wc -l
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify all project references to create-task for immediate update
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Search for all create-task references across the project and maintain tracking
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:  > TEST: Reference Discovery Type: Pre-execution Check Assert: All create-task references found and documented in a list Command: grep -r "create-task"
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Copy create-task.wf.md to draft-task.wf.md
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update all create-task references to draft-task project-wide using tracking list
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:  * Work through create-task-references.txt systematically
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:> TEST: Reference Update Validation Type: Post-update Check Assert: No create-task references remain (except historical) Command: grep -r "create-task"
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Delete create-task.wf.md after all references updated
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* All files with create-task references (update to draft-task)
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* dev-handbook/workflow-instructions/create-task.wf.md (after reference updates)
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />All create-task references updated project-wide
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:# Old create-task approach (mixed what/how)
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:# For Claude Code: /create-task "Add user authentication system"
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:# For other agents: Read and follow create-task.wf.md
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:**Before (create-task):**
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md:* Current create-task.wf.md workflow
+dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.2-create-capture-idea-workflow.md:* Existing create-task workflow: dev-handbook/workflow-instructions/create-task.wf.md
+dev-taskflow/current/v.0.4.0-replanning/reflections/20250730-235137-task-review-workflow-enhancement-session.md:- **Task 3**: v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md (create-task → draft-task)
+dev-taskflow/current/v.0.4.0-replanning/v.0.4.0-replanning.md:- Current create-task.wf.md jumps directly to implementation details without behavior-first thinking
+docs/decisions/ADR-005-universal-document-embedding-system.md:   - `create-task.wf.md` (task.template.md)

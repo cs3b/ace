@@ -178,7 +178,7 @@ end
 ### Migration Priority
 
 1. **High Priority** (Duplicate Templates):
-   - `draft-task.wf.md` (task.template.md)
+   - `create-task.wf.md` (task.template.md)
    - `review-task.wf.md` (task.template.md)  
    - `update-blueprint.wf.md` (blueprint.template.md)
 
