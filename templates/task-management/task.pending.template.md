@@ -8,23 +8,20 @@ dependencies: {dependencies}
 
 # {title}
 
-## 0. Directory Audit ✅
+## Behavioral Context
+<!-- Reference the completed behavioral specification from the draft phase -->
+<!-- This section assumes behavioral requirements are already defined -->
 
-_Command run:_
+**Behavioral Specification Reference**: [Link to completed draft task or behavioral requirements]
 
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
+**Key Behavioral Requirements**:
+- [Summary of key user experience requirements]
+- [Summary of key system behavior requirements]  
+- [Summary of key interface contract requirements]
 
 ## Objective
 
-Why are we doing this?
+Why are we implementing this? Focus on technical objectives that support the defined behavioral requirements.
 
 ## Scope of Work
 
@@ -109,31 +106,58 @@ Why are we doing this?
 
 ## Implementation Plan
 
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
+<!-- This section details the specific steps required to implement the behavioral requirements -->
+<!-- Clear distinction between planning/analysis activities and concrete implementation work -->
 
 ### Planning Steps
+<!-- Research, analysis, and design activities that clarify the technical approach -->
+<!-- Use asterisk markers (* [ ]) for activities that don't change system state -->
+<!-- Focus on understanding, designing, and preparing for implementation -->
 
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
+- [ ] **System Analysis**: Analyze current system/codebase to understand existing patterns
   > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
+  > Type: Pre-condition Check  
+  > Assert: Key components, interfaces, and integration points are identified
   > Command: bin/test --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
+- [ ] **Architecture Design**: Research best practices and design technical approach
+  > TEST: Design Validation
+  > Type: Design Review
+  > Assert: Architecture decisions align with behavioral requirements
+  > Command: bin/test --validate-design-approach
+- [ ] **Implementation Strategy**: Plan detailed step-by-step implementation approach
+- [ ] **Dependency Analysis**: Identify and validate all required dependencies
+- [ ] **Risk Assessment**: Analyze technical risks and define mitigation strategies
 
-### Execution Steps
+### Execution Steps  
+<!-- Concrete implementation actions that modify code, create files, or change system state -->
+<!-- Use hyphen markers (- [ ]) for actions that result in tangible system changes -->
+<!-- Each step should be verifiable and move toward behavioral requirement fulfillment -->
 
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
+- [ ] **Foundation Setup**: [Create base structure/components needed for implementation]
+  > TEST: Foundation Verification
+  > Type: Structural Validation
+  > Assert: Base components exist and have expected structure
+  > Command: bin/test --verify-foundation path/to/base/components
+- [ ] **Core Implementation**: [Implement primary functionality that delivers core behavior]
+  > TEST: Core Functionality Check
+  > Type: Functional Validation
+  > Assert: Core behavior works as specified in behavioral requirements
+  > Command: bin/test --verify-core-behavior
+- [ ] **Interface Integration**: [Implement interfaces defined in behavioral specification]
+  > TEST: Interface Contract Validation
+  > Type: Integration Test
+  > Assert: All interface contracts work as specified
+  > Command: bin/test --verify-interfaces
+- [ ] **Error Handling**: [Implement error conditions and edge cases from behavioral spec]
+  > TEST: Error Scenario Testing
+  > Type: Edge Case Validation
+  > Assert: Error handling matches behavioral specification
+  > Command: bin/test --verify-error-handling
+- [ ] **Integration Validation**: [Ensure integration with existing system components]
+  > TEST: System Integration Check
+  > Type: End-to-End Validation
+  > Assert: Implementation integrates properly with existing system
+  > Command: bin/test --verify-integration
 
 ## Risk Assessment
 
@@ -159,11 +183,25 @@ Why are we doing this?
 
 ## Acceptance Criteria
 
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+<!-- Define conditions that signify successful implementation of behavioral requirements -->
+<!-- These should directly map to success criteria from the behavioral specification -->
+<!-- Focus on verifying that behavioral requirements are met, not just implementation completed -->
 
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
+### Behavioral Requirement Fulfillment
+- [ ] **User Experience Delivery**: All user experience requirements from behavioral spec are implemented and working
+- [ ] **Interface Contract Compliance**: All interface contracts function exactly as specified in behavioral requirements  
+- [ ] **System Behavior Validation**: System demonstrates all expected behaviors defined in behavioral specification
+
+### Implementation Quality Assurance  
+- [ ] **Code Quality**: All code meets project standards and passes quality checks
+- [ ] **Test Coverage**: All embedded tests in Implementation Plan pass successfully
+- [ ] **Integration Verification**: Implementation integrates properly with existing system components
+- [ ] **Performance Requirements**: System meets any performance criteria specified in behavioral requirements
+
+### Documentation and Validation
+- [ ] **Behavioral Validation**: Success criteria from behavioral specification are demonstrably met
+- [ ] **Error Handling**: All error conditions and edge cases handle as specified
+- [ ] **Documentation Updates**: Any necessary documentation reflects the implemented behavior
 
 ## Out of Scope
 

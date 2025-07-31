@@ -191,74 +191,90 @@ dependencies: {dependencies}
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: [What users provide]
-- **Process**: [What users experience during interaction]
-- **Output**: [What users receive]
+- **Input**: [What users provide - data, commands, interactions]
+- **Process**: [What users experience during interaction - feedback, states, flows]
+- **Output**: [What users receive - results, confirmations, artifacts]
 
 ### Expected Behavior
-[Describe WHAT the system should do, not HOW]
+<!-- Describe WHAT the system should do from the user's perspective -->
+<!-- Focus on observable outcomes, system responses, and user experience -->
+<!-- Avoid implementation details - no mention of files, code structure, or technical approaches -->
+
+[Describe the desired behavior, user experience, and system responses]
 
 ### Interface Contract
+<!-- Define all external interfaces, APIs, and interaction points -->
+<!-- Include normal operations, error conditions, and edge cases -->
+
 ```bash
 # CLI Interface (if applicable)
 command-name [options] <arguments>
+# Expected outputs, error messages, and status codes
 
-# API Interface (if applicable)
+# API Interface (if applicable)  
 GET/POST/PUT/DELETE /endpoint
+# Request/response formats, error responses, status codes
+
+# UI Interface (if applicable)
+# User interactions, form behaviors, navigation flows
 ```
+
+**Error Handling:**
+- [Error condition 1]: [Expected system response]
+- [Error condition 2]: [Expected system response]
+
+**Edge Cases:**
+- [Edge case 1]: [Expected behavior]
+- [Edge case 2]: [Expected behavior]
 
 ### Success Criteria
+<!-- Define measurable, observable criteria that indicate successful completion -->
+<!-- Focus on behavioral outcomes and user experience, not implementation artifacts -->
 
-- [ ] [Measurable outcome 1]
-- [ ] [Measurable outcome 2]
+- [ ] **Behavioral Outcome 1**: [Observable user/system behavior or capability]
+- [ ] **User Experience Goal 2**: [Measurable user experience improvement]
+- [ ] **System Performance 3**: [Measurable system behavior or performance metric]
 
 ### Validation Questions
+<!-- Questions to clarify requirements, resolve ambiguities, and validate understanding -->
+<!-- Ask about unclear requirements, edge cases, and user expectations -->
 
-- [ ] Question about unclear requirements?
-- [ ] Question about edge cases?
-- [ ] Question about user expectations?
-
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-tree -L 2 dev-handbook/guides | sed 's/^/    /'
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
+- [ ] **Requirement Clarity**: [Question about unclear or ambiguous requirements]
+- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]  
+- [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
+- [ ] **Success Definition**: [Question about how success will be measured or validated]
 
 ## Objective
 
 Why are we doing this? Focus on user value and behavioral outcomes.
 
 ## Scope of Work
+<!-- Define the behavioral scope - what user experiences and system behaviors are included -->
 
-- Behavioral requirement 1 (user experience focused)
-- Behavioral requirement 2 (interface contract focused)
+- **User Experience Scope**: [Which user interactions, workflows, and experiences are included]
+- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]  
+- **Interface Scope**: [Which APIs, commands, or interfaces are included]
 
 ### Deliverables
+<!-- Focus on behavioral and experiential deliverables, not implementation artifacts -->
 
-#### Interface Contracts
-- CLI command specifications
-- API endpoint definitions
-- UI component behaviors
+#### Behavioral Specifications
+- User experience flow definitions
+- System behavior specifications  
+- Interface contract definitions
 
-#### Behavioral Documentation
-- User experience flows
-- Success criteria definitions
-- Validation question resolutions
+#### Validation Artifacts
+- Success criteria validation methods
+- User acceptance criteria
+- Behavioral test scenarios
 
 ## Out of Scope
+<!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
-- ❌ Implementation details (file structures, code organization)
-- ❌ Technical architecture decisions
-- ❌ Tool or library selections
-- ❌ Performance optimization strategies
+- ❌ **Implementation Details**: File structures, code organization, technical architecture
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions  
+- ❌ **Performance Optimization**: Specific performance improvement strategies
+- ❌ **Future Enhancements**: Related features or capabilities not in current scope
 
 ## References
 

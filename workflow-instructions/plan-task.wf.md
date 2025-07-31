@@ -11,6 +11,28 @@ Create a detailed implementation plan for a task that already has a validated be
 - Understanding of project context and architecture
 - Access to recent git history and project status
 
+## Task Type Considerations
+
+**Code Implementation Tasks** (Full workflow applies including test planning):
+- New features with business logic
+- API endpoints and services
+- Data processing and transformation
+- Authentication and authorization systems
+- Integration with external services
+
+**Documentation/Workflow Tasks** (Skip test planning steps):
+- Creating or updating documentation
+- Workflow instruction development
+- Guide and template creation
+- Process documentation
+- Configuration documentation
+
+**Mixed Tasks** (Apply test planning selectively):
+- Configuration with validation logic
+- CLI tools with complex functionality
+- Templates with embedded logic
+- Build and deployment scripts
+
 ## Project Context Loading
 
 - Load project objectives: `docs/what-do-we-build.md`
@@ -90,19 +112,113 @@ Create a detailed implementation plan for a task that already has a validated be
    - Document reasons for removal
    - Check dependencies before deletion
 
-5. **Implementation Steps Planning:**
+5. **Test Case Planning:** *(For code implementation tasks only)*
+
+   **Note:** This step applies when the task involves code implementation (new features, APIs, business logic, etc.). Skip for documentation, workflow, or configuration-only tasks.
+
+   **Analyze Testing Requirements:**
+   - Review behavioral specification for testable components
+   - Identify input validation rules, business logic flows, output expectations
+   - Determine error scenarios and integration points
+   - Consider performance and security requirements
+
+   **Scenario Identification:**
+
+   **Happy Path Scenarios:**
+   - Standard expected usage patterns
+   - Primary user workflows and interactions
+   - Common configuration and data combinations
+   - Successful operation outcomes
+
+   **Edge Case Scenarios:**
+   - Boundary values (minimum/maximum limits)
+   - Empty, null, or missing inputs
+   - Special characters and unusual data formats
+   - Large datasets or high-volume operations
+   - Concurrent or simultaneous operations
+
+   **Error Condition Scenarios:**
+   - Invalid input validation failures
+   - Missing required data or parameters
+   - External service failures or unavailability
+   - Network timeouts and connectivity issues
+   - Permission denials and authorization failures
+
+   **Integration Point Scenarios:**
+   - External API interactions and responses
+   - Database operations and transactions
+   - File system access and manipulation
+   - Message queue and event handling
+   - Third-party service integrations
+
+   **Test Type Categorization:**
+
+   **Unit Tests** (High Priority):
+   - Individual functions and methods in isolation
+   - Pure business logic validation
+   - Input/output transformation correctness
+   - Mock external dependencies
+
+   **Integration Tests** (Medium Priority):
+   - Component interaction and communication
+   - API endpoint request/response cycles
+   - Database integration and data persistence
+   - Service layer coordination
+
+   **End-to-End Tests** (Context Dependent):
+   - Complete user journey validation
+   - Multi-step process workflows
+   - Cross-system integration flows
+   - UI interaction testing (if applicable)
+
+   **Performance Tests** (If Applicable):
+   - Response time benchmarks and limits
+   - Throughput capacity and scalability
+   - Resource usage monitoring
+   - Concurrent user load handling
+
+   **Security Tests** (If Applicable):
+   - Authentication and authorization validation
+   - Input sanitization and injection prevention
+   - Data exposure and privacy protection
+   - Access control verification
+
+   **Test Planning Documentation:**
+   - Create high-level test case matrix for edge cases
+   - Document test data requirements and prerequisites
+   - Plan test environment setup and configuration needs
+   - Identify test framework and tooling requirements
+   - Define test coverage expectations and success criteria
+   
+   **Note:** For complex features requiring comprehensive test coverage, consider creating detailed test cases using the `create-test-cases.wf.md` workflow and `test-case.template.md` template.
+
+   **Test Prioritization:**
+   - **High Priority:** Core business logic, security-critical features, user-facing functionality
+   - **Medium Priority:** Secondary features, admin functions, performance optimizations
+   - **Low Priority:** Nice-to-have features, rare edge cases, internal utilities
+
+6. **Implementation Steps Planning:**
 
    **Detailed Step Breakdown:**
    - Create specific, actionable implementation steps
    - Order steps logically with dependencies
    - Include validation and testing at each step
+   - Integrate test implementation alongside code implementation
+
+   **Test Implementation Integration:**
+   - Plan test implementation concurrent with code development
+   - Include test creation steps in execution plan
+   - Design test validation for each major implementation milestone
+   - Plan test data setup and teardown procedures
 
    **Embedded Test Planning:**
-   - Design test blocks for critical operations
-   - Plan verification commands for each step
+   - Design test blocks for critical operations using planned test scenarios
+   - Plan verification commands for each step based on test case analysis
+   - Include test execution validation at key implementation points
    - Include rollback verification where needed
+   - Reference high-level test scenarios from Test Case Planning step
 
-6. **Risk Analysis and Rollback Planning:**
+7. **Risk Analysis and Rollback Planning:**
 
    **Technical Risks:**
    - Identify potential failure points
@@ -119,7 +235,7 @@ Create a detailed implementation plan for a task that already has a validated be
    - Plan performance monitoring and validation
    - Define acceptable performance thresholds
 
-7. **Implementation Plan Assembly:**
+8. **Implementation Plan Assembly:**
 
    **Planning Steps Section:**
    - Research and analysis activities (use `* [ ]`)
@@ -141,7 +257,7 @@ Create a detailed implementation plan for a task that already has a validated be
        > Command: bin/test --verify-result
      ```
 
-8. **Task Status Promotion:**
+9. **Task Status Promotion:**
    - Update task metadata:
      - Change `status: draft` to `status: pending`
      - Verify priority and estimate are appropriate
