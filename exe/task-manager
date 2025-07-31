@@ -32,7 +32,8 @@ module TaskManagerCli
     # Register task commands directly under the root
     register "next", CodingAgentTools::Cli::Commands::Task::Next
     register "recent", CodingAgentTools::Cli::Commands::Task::Recent
-    register "all", CodingAgentTools::Cli::Commands::Task::All
+    register "list", CodingAgentTools::Cli::Commands::Task::All
+    register "all", CodingAgentTools::Cli::Commands::Task::All  # Alias for backward compatibility
     register "generate-id", CodingAgentTools::Cli::Commands::Task::GenerateId
     register "reschedule", CodingAgentTools::Cli::Commands::Task::Reschedule
 
