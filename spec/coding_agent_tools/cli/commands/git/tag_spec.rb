@@ -50,7 +50,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
           project_root,
           {}
         )
-        expect(mock_orchestrator).to have_received(:tag).with({})
+        expect(mock_orchestrator).to have_received(:tag).with(nil, nil, {})
       end
     end
 
@@ -66,7 +66,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
         capture_stdout { command.call(repository: "dev-tools") }
 
         expect(mock_orchestrator).to have_received(:tag).with(
-          hash_including(repository: "dev-tools")
+          nil, nil, hash_including(repository: "dev-tools")
         )
       end
 
@@ -74,7 +74,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
         capture_stdout { command.call(main_only: true) }
 
         expect(mock_orchestrator).to have_received(:tag).with(
-          hash_including(main_only: true)
+          nil, nil, hash_including(main_only: true)
         )
       end
 
@@ -82,7 +82,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
         capture_stdout { command.call(submodules_only: true) }
 
         expect(mock_orchestrator).to have_received(:tag).with(
-          hash_including(submodules_only: true)
+          nil, nil, hash_including(submodules_only: true)
         )
       end
 
@@ -99,7 +99,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
         end
 
         expect(mock_orchestrator).to have_received(:tag).with(
-          hash_including(
+          nil, nil, hash_including(
             annotate: true,
             sign: true,
             force: true,
@@ -170,6 +170,39 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
         expect(stderr_output).to include("Backtrace:")
       end
     end
+
+    context "with arguments" do
+      before do
+        allow(mock_orchestrator).to receive(:tag).and_return({
+          success: true,
+          results: {}
+        })
+      end
+
+      it "passes tagname argument" do
+        capture_stdout { command.call(tagname: "v1.0.0") }
+
+        expect(mock_orchestrator).to have_received(:tag).with(
+          "v1.0.0", nil, {}
+        )
+      end
+
+      it "passes both tagname and commit arguments" do
+        capture_stdout { command.call(tagname: "v1.0.0", commit: "abc123") }
+
+        expect(mock_orchestrator).to have_received(:tag).with(
+          "v1.0.0", "abc123", {}
+        )
+      end
+
+      it "combines arguments with options" do
+        capture_stdout { command.call(tagname: "v1.0.0", annotate: true, message: "Release") }
+
+        expect(mock_orchestrator).to have_received(:tag).with(
+          "v1.0.0", nil, hash_including(annotate: true, message: "Release")
+        )
+      end
+    end
   end
 
   describe "option building" do
@@ -178,7 +211,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
 
       capture_stdout { command.call }
 
-      expect(mock_orchestrator).to have_received(:tag).with({})
+      expect(mock_orchestrator).to have_received(:tag).with(nil, nil, {})
     end
 
     it "filters out false boolean options" do
@@ -186,7 +219,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
 
       capture_stdout { command.call(main_only: false, annotate: false) }
 
-      expect(mock_orchestrator).to have_received(:tag).with({})
+      expect(mock_orchestrator).to have_received(:tag).with(nil, nil, {})
     end
 
     it "includes true boolean options" do
@@ -195,7 +228,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Git::Tag do
       capture_stdout { command.call(main_only: true, annotate: true) }
 
       expect(mock_orchestrator).to have_received(:tag).with(
-        hash_including(main_only: true, annotate: true)
+        nil, nil, hash_including(main_only: true, annotate: true)
       )
     end
   end

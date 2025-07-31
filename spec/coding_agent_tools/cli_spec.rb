@@ -182,7 +182,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
     end
 
     it "requires all git command files" do
-      git_commands = %w[status commit add push pull log diff fetch checkout switch mv rm restore]
+      git_commands = %w[status commit add push pull log diff fetch checkout switch mv rm restore tag]
 
       git_commands.each do |cmd|
         expect(described_class).to receive(:require_relative).with("cli/commands/git/#{cmd}")
