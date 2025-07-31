@@ -7,7 +7,7 @@
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
-| `create-path` | Create files/directories with templates | `task-new`, `--priority`, `--estimate` |
+| `create-path` | Create files/directories with templates | `task-new`, `--priority`, `--estimate`, `--status` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
 | `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
 | `git-diff` | Enhanced git diff | `--staged`, `--stat` |
@@ -30,7 +30,7 @@
 ### AI Agent   {#ai-agent}
 
 \| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`create-path` \| Create files with templates \| `task-new`, `--priority`, `--estimate` \| \|
+`create-path` \| Create files with templates \| `task-new`, `--priority`, `--estimate`, `--status` \| \|
 `llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
 \| Navigate project paths \| `task`, `file` \| \| `release-manager`
 \| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
