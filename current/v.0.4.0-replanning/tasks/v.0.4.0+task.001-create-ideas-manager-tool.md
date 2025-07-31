@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.1
-status: pending
+status: done
 priority: high
 estimate: 8h
 dependencies: []
@@ -114,11 +114,11 @@ ideas-manager capture --clipboard
   > TEST: Error Handling Unit Test Type: Unit Test Validation Assert: Error handling preserves minimum functionality (save raw idea) Command: cd dev-tools &&
   > bundle exec rspec spec/organisms/idea\_capture\_spec.rb --tag error\_handling
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests implementing all edge cases above
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests implementing all edge cases above
   > TEST: Unit Test Suite Type: Test Coverage Validation Assert: All 6 test files exist AND all tests pass with 90%+ coverage Command: cd dev-tools && bundle exec rspec spec/ --format documentation && bundle exec rspec --require simplecov
   > **CRITICAL**: Must write actual RSpec test files with comprehensive edge case coverage per specification above
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create integration tests implementing end-to-end workflow testing  
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**WRITE ACTUAL RSPEC TESTS** - Create integration tests implementing end-to-end workflow testing  
   > TEST: Integration Test Suite Type: End-to-End Validation Assert: Integration test file exists AND tests pass with real project data and proper cleanup Command: cd dev-tools && bundle exec rspec spec/integration/ideas\_manager\_integration\_spec.rb --format documentation
   > **CRITICAL**: Must write actual RSpec test file with comprehensive end-to-end testing per specification above
 
@@ -477,7 +477,7 @@ Tests must properly detect test environments and:
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Relevant questions are generated for each idea
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Files are created with proper timestamp naming
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Release targeting works correctly
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**All RSpec tests exist and pass with comprehensive edge case coverage** (cannot be marked complete until all 6 test files are written and pass per specification above)
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />**All RSpec tests exist and pass with comprehensive edge case coverage** (cannot be marked complete until all 6 test files are written and pass per specification above)
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Documentation is complete
 
 ## Template Specifications
