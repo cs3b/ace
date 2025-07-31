@@ -34,7 +34,7 @@ The AI-assisted development workflow ecosystem consists of 20 interconnected wor
 - **capture-idea** - Capture and enhance raw ideas using ideas-manager tool
 - **draft-task** - Create behavior-first task specifications with interface contracts
 - **work-on-task** - Execute task implementation following embedded plans
-- **review-task** - Review and refine task definitions before implementation
+- **plan-task** - Create detailed implementation plans for draft tasks
 
 ### 4. Code Quality & Review
 
@@ -102,7 +102,7 @@ initialize-project-structure → load-project-context → draft-release (v.0.1.0
 **Workflow Sequence**:
 
 ```
-draft-task → review-task → work-on-task → commit → review-code
+draft-task → plan-task → work-on-task → commit → review-code
 ```
 
 **Key Decision Points**:
@@ -256,7 +256,7 @@ START: What is the current situation?
 │   │   ├── Requirements are informal/unstructured?
 │   │   │   └── → draft-task
 │   │   ├── Task exists but needs review?
-│   │   │   └── → review-task
+│   │   │   └── → plan-task
 │   │   └── Task is ready for implementation?
 │   │       └── → work-on-task
 │   │
@@ -352,13 +352,13 @@ Custom Work → load-project-context → Proceed with custom implementation
 **Pattern**: Structured task creation and execution
 
 ```
-Requirements → draft-task → review-task → work-on-task → commit
+Requirements → draft-task → plan-task → work-on-task → commit
 ```
 
 **Hand-off Points**:
 
-- `draft-task` → `review-task`: Task file with embedded plan
-- `review-task` → `work-on-task`: Reviewed and approved task
+- `draft-task` → `plan-task`: Task file with behavioral specification
+- `plan-task` → `work-on-task`: Task with complete implementation plan
 - `work-on-task` outputs: Completed implementation ready for commit
 
 ### Pattern 3: Quality Gates
@@ -535,7 +535,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
    Output: Task file with implementation plan and acceptance criteria
    ```
 
-2. **Review Task** (`review-task`)
+2. **Plan Task** (`plan-task`)
 
    ```
    Input: Task file
@@ -682,7 +682,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | Category | Workflows | Usage |
 |----------|-----------|-------|
 | **Foundation** | `initialize-project-structure`, `load-project-context` | New projects, custom work outside workflows |
-| **Task Management** | `capture-idea`, `draft-task`, `review-task`, `work-on-task` | Idea capture, feature development, implementation |
+| **Task Management** | `capture-idea`, `draft-task`, `plan-task`, `work-on-task` | Idea capture, feature development, implementation |
 | **Quality** | `review-code`, `synthesize-reviews`, `fix-tests` | Code review, quality assurance |
 | **Release** | `draft-release`, `publish-release`, `update-roadmap` | Release management |
 | **Documentation** | `create-adr`, `create-api-docs`, `create-user-docs`, `update-blueprint` | Documentation generation |
@@ -693,8 +693,8 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 | Scenario | Sequence | Duration |
 |----------|----------|----------|
 | **New Project** | `initialize-project-structure` → `load-project-context` → `draft-release` | 2-4h |
-| **Idea Development** | `capture-idea` → `draft-task` → `review-task` → `work-on-task` | 5-20h |
-| **Feature Development** | `draft-task` → `review-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
+| **Idea Development** | `capture-idea` → `draft-task` → `plan-task` → `work-on-task` | 5-20h |
+| **Feature Development** | `draft-task` → `plan-task` → `work-on-task` → `commit` → `review-code` | 4-16h |
 | **Bug Fix** | `work-on-task` → `commit` → `fix-tests` | 1-8h |
 | **Release** | `synthesize-reviews` → `create-reflection-note` → `publish-release` → `update-roadmap` | 2-6h |
 | **Code Review** | `review-code` → `synthesize-reviews` → `draft-task` | 1-4h |
@@ -729,7 +729,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 ### Core Workflow
 
 - [Load Project Context](./load-project-context.wf.md): Load project context, guides, and task information.
-- [Review Task](./review-task.wf.md): Review and analyze a task before implementation.
+- [Plan Task](./plan-task.wf.md): Create detailed implementation plans for draft tasks.
 - [Work on Task](./work-on-task.wf.md): Select and understand a task before implementation (includes TDD cycle).
 - [Commit](./commit.wf.md): Create well-structured Git commits.
 

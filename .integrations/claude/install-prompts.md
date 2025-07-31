@@ -12,7 +12,7 @@ For each workflow instruction file, create a corresponding command file:
 
 - `dev-handbook/workflow-instructions/draft-task.wf.md` → `.claude/commands/draft-task.md`
 - `dev-handbook/workflow-instructions/work-on-task.wf.md` → `.claude/commands/work-on-task.md`
-- `dev-handbook/workflow-instructions/review-task.wf.md` → `.claude/commands/review-task.md`
+- `dev-handbook/workflow-instructions/plan-task.wf.md` → `.claude/commands/plan-task.md`
 
 ### 2. Command Template
 

@@ -1,0 +1,479 @@
+# Plan Task Workflow Instruction
+
+## Goal
+
+Create a detailed implementation plan for a task that already has a validated behavioral specification. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements). Transform a draft task into a pending task with complete technical implementation details.
+
+## Prerequisites
+
+- Task file exists with **draft** status and validated behavioral specification
+- Task must have clear behavioral requirements from draft-task workflow
+- Understanding of project context and architecture
+- Access to recent git history and project status
+
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
+
+## Process Steps
+
+1. **Load and Validate Draft Task:**
+   - **Task Selection:**
+     - If specific task provided: Use the provided task path
+     - If no task specified: Run `task-manager list --status draft` to get draft tasks
+     - Document the selected task path for reference
+   - **Load Task Content:**
+     - Read the task file from the identified path
+     - Verify task has `status: draft`
+     - Parse the structure and extract:
+       - Behavioral specification (User Experience, Interface Contract, Success Criteria)
+       - Existing scope and deliverables
+       - Any existing implementation notes
+
+2. **Technical Research Phase:**
+
+   **Architecture Pattern Analysis:**
+   - Review existing project patterns and identify best fit
+   - Analyze how this feature integrates with current architecture
+   - Document architectural decisions and rationale
+
+   **Technology Stack Research:**
+   - Research available libraries, frameworks, and tools
+   - Evaluate performance implications and compatibility
+   - Consider version requirements and dependencies
+
+   **Implementation Approach Investigation:**
+   - Research industry best practices for this type of feature
+   - Analyze similar implementations in the codebase
+   - Identify proven patterns and anti-patterns
+
+   **Document Research Findings:**
+   - Summarize key technical insights
+   - Note recommended approaches with pros/cons
+   - Identify potential technical risks and mitigation strategies
+
+3. **Tool Selection:**
+
+   **Evaluation Criteria:**
+   - Performance requirements alignment
+   - Integration with existing stack
+   - Maintenance and support considerations
+   - Learning curve and team expertise
+
+   **Selection Matrix:**
+   - Create comparison matrix for major decisions
+   - Document selection rationale
+   - Note any trade-offs or compromises
+
+   **Dependency Analysis:**
+   - List all new dependencies required
+   - Verify compatibility with existing dependencies
+   - Document any potential conflicts or risks
+
+4. **File Modification Planning:**
+
+   **Create Files:**
+   - List all new files to be created with purpose and key components
+   - Define file structure and organization
+   - Plan directory structure if needed
+
+   **Modify Files:**
+   - Identify existing files requiring changes
+   - Document specific modifications and their impact
+   - Plan integration points and interfaces
+
+   **Delete Files:**
+   - Identify obsolete files to be removed
+   - Document reasons for removal
+   - Check dependencies before deletion
+
+5. **Implementation Steps Planning:**
+
+   **Detailed Step Breakdown:**
+   - Create specific, actionable implementation steps
+   - Order steps logically with dependencies
+   - Include validation and testing at each step
+
+   **Embedded Test Planning:**
+   - Design test blocks for critical operations
+   - Plan verification commands for each step
+   - Include rollback verification where needed
+
+6. **Risk Analysis and Rollback Planning:**
+
+   **Technical Risks:**
+   - Identify potential failure points
+   - Plan mitigation strategies
+   - Document fallback approaches
+
+   **Rollback Strategy:**
+   - Define rollback steps for each implementation phase
+   - Plan data preservation and recovery
+   - Document emergency procedures
+
+   **Performance Impact:**
+   - Analyze potential performance implications
+   - Plan performance monitoring and validation
+   - Define acceptable performance thresholds
+
+7. **Implementation Plan Assembly:**
+
+   **Planning Steps Section:**
+   - Research and analysis activities (use `* [ ]`)
+   - Technical investigation tasks
+   - Design and architecture decisions
+
+   **Execution Steps Section:**
+   - Concrete implementation actions (use `- [ ]`)
+   - File creation and modification tasks
+   - Testing and validation steps
+
+   **Embedded Tests:**
+   - Add test blocks for critical operations:
+     ```markdown
+     - [ ] Implementation step
+       > TEST: Action Validation
+       > Type: Action Validation
+       > Assert: Expected outcome
+       > Command: bin/test --verify-result
+     ```
+
+8. **Task Status Promotion:**
+   - Update task metadata:
+     - Change `status: draft` to `status: pending`
+     - Verify priority and estimate are appropriate
+     - Update dependencies if needed
+   - Add implementation plan sections
+   - Ensure acceptance criteria align with implementation approach
+
+## Implementation Planning Templates
+
+The following templates should be used when creating implementation plans:
+
+### Technical Approach Template
+
+```markdown
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Pattern selection and rationale
+- [ ] Integration with existing architecture
+- [ ] Impact on system design
+
+### Technology Stack
+- [ ] Libraries/frameworks needed
+- [ ] Version compatibility checks
+- [ ] Performance implications
+- [ ] Security considerations
+```
+
+### Tool Selection Matrix
+
+```markdown
+## Tool Selection
+
+| Criteria | Option A | Option B | Option C | Selected |
+|----------|----------|----------|----------|----------|
+| Performance | Good | Excellent | Fair | Option B |
+| Integration | Excellent | Good | Poor | Option B |
+| Maintenance | Good | Excellent | Fair | Option B |
+
+**Selection Rationale:** [Explain why Option B was chosen]
+```
+
+### File Modification Template
+
+```markdown
+## File Modifications
+
+### Create
+- path/to/new/file.ext
+  - Purpose: [why this file]
+  - Key components: [what it contains]
+  - Dependencies: [what it depends on]
+
+### Modify  
+- path/to/existing/file.ext
+  - Changes: [what to modify]
+  - Impact: [effects on system]
+  - Integration points: [how it connects]
+
+### Delete
+- path/to/obsolete/file.ext
+  - Reason: [why removing]
+  - Dependencies: [what depends on this]
+  - Migration strategy: [how to handle removal]
+```
+
+### Risk Assessment Template
+
+```markdown
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** [Description]
+  - **Probability:** High/Medium/Low
+  - **Impact:** High/Medium/Low
+  - **Mitigation:** [Strategy]
+  - **Rollback:** [Procedure]
+
+### Integration Risks
+- **Risk:** [Description]
+  - **Mitigation:** [Strategy]
+  - **Monitoring:** [How to detect]
+```
+
+## Content Transformation Guidelines
+
+When transforming from review-task to plan-task focus:
+
+**Remove (WHAT concerns):**
+- Behavioral specification validation
+- User experience requirements analysis
+- Interface contract definition
+- Success criteria validation
+- Requirements clarification
+
+**Keep and Enhance (HOW concerns):**
+- Technical approach analysis
+- Implementation strategy
+- Tool and library selection
+- File modification planning
+- Risk assessment and mitigation
+
+**Add (Implementation Planning):**
+- Detailed technical research
+- Architecture integration analysis
+- Step-by-step implementation plan
+- Embedded test validation
+- Rollback and recovery procedures
+
+## Output / Success Criteria
+
+- Task status changed from `draft` to `pending`
+- Complete technical implementation plan with specific steps
+- All tools and libraries selected with rationale
+- File modification plan with detailed impact analysis
+- Risk assessment with mitigation strategies
+- Embedded tests for critical operations
+- Clear integration with existing architecture
+- Rollback procedures documented
+
+## Common Patterns
+
+### New Feature Implementation
+- Start with architecture integration analysis
+- Focus on data flow and state management
+- Plan comprehensive testing strategy
+- Consider performance implications early
+
+### Refactoring Implementation
+- Document current state thoroughly
+- Plan incremental transformation steps
+- Emphasize backward compatibility
+- Create extensive rollback procedures
+
+### Integration Implementation
+- Focus on interface compatibility
+- Plan configuration management
+- Emphasize error handling and recovery
+- Document external dependencies
+
+## Usage Example
+
+**Input:** Draft task with behavioral specification
+> "Plan implementation for task dev-taskflow/current/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (status: draft)"
+
+**Process:** Technical research, tool selection, implementation planning
+
+**Output:** Task with complete implementation plan and status: pending
+
+---
+
+This workflow transforms draft tasks with validated behavioral specifications into fully planned, implementation-ready tasks with detailed technical approaches.
+
+<documents>
+    <template path="dev-handbook/templates/release-tasks/task.template.md">---
+id: <generated automatically by nav-path>
+status: pending
+priority: <high/medium/low>
+estimate: <n>h
+dependencies: [<ticket-ids>]
+---
+
+# <Verb + Object>
+
+## 0. Directory Audit ✅
+
+_Command run:_
+
+```bash
+tree -L 2 dev-handbook/guides | sed 's/^/    /'
+```
+
+_Result excerpt:_
+
+```
+<insert tree here>
+```
+
+## Objective
+
+Why are we doing this?
+
+## Scope of Work
+
+- Bullet 1 …
+- Bullet 2 …
+
+### Deliverables
+
+#### Create
+
+- path/to/file.ext
+
+#### Modify
+
+- path/to/other.ext
+
+#### Delete
+
+- path/to/obsolete.ext
+
+## Phases
+
+1. Audit
+2. Extract …
+3. Refactor …
+
+## Implementation Plan
+
+*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
+
+### Planning Steps
+
+*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
+
+- [ ] Analyze current system/codebase to understand existing patterns
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: Key components and their relationships are identified
+  > Command: bin/test --check-analysis-complete
+- [ ] Research best practices and design approach
+- [ ] Plan detailed implementation strategy
+
+### Execution Steps
+
+*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
+
+- [ ] Step 1: Describe the first implementation action.
+- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
+  > TEST: Verify Action 2 Outcome
+  > Type: Action Validation
+  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
+  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
+- [ ] ... Add more implementation steps as needed.
+
+## Acceptance Criteria
+
+*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
+
+- [ ] AC 1: All specified deliverables created/modified.
+- [ ] AC 2: Key functionalities (if applicable) are working as described.
+- [ ] AC 3: All automated checks in the Implementation Plan pass.
+
+## Out of Scope
+
+- ❌ …
+
+## References
+
+```
+</template>
+
+    <template path="dev-handbook/templates/implementation-planning/technical-approach.template.md">## Technical Approach
+
+### Architecture Pattern
+- [ ] Pattern selection and rationale
+- [ ] Integration with existing architecture
+- [ ] Impact on system design
+
+### Technology Stack
+- [ ] Libraries/frameworks needed
+- [ ] Version compatibility checks
+- [ ] Performance implications
+- [ ] Security considerations
+
+### Implementation Strategy
+- [ ] Step-by-step approach
+- [ ] Rollback considerations
+- [ ] Testing strategy
+- [ ] Performance monitoring
+</template>
+
+    <template path="dev-handbook/templates/implementation-planning/tool-selection-matrix.template.md">## Tool Selection
+
+| Criteria | Option A | Option B | Option C | Selected |
+|----------|----------|----------|----------|----------|
+| Performance | | | | |
+| Integration | | | | |
+| Maintenance | | | | |
+| Security | | | | |
+| Learning Curve | | | | |
+
+**Selection Rationale:** [Explain selection reasoning]
+
+### Dependencies
+- [ ] New dependency 1: version and reason
+- [ ] New dependency 2: version and reason
+- [ ] Compatibility verification completed
+</template>
+
+    <template path="dev-handbook/templates/implementation-planning/file-modification-checklist.template.md">## File Modifications
+
+### Create
+- path/to/new/file.ext
+  - Purpose: [why this file]
+  - Key components: [what it contains]
+  - Dependencies: [what it depends on]
+
+### Modify  
+- path/to/existing/file.ext
+  - Changes: [what to modify]
+  - Impact: [effects on system]
+  - Integration points: [how it connects]
+
+### Delete
+- path/to/obsolete/file.ext
+  - Reason: [why removing]
+  - Dependencies: [what depends on this]
+  - Migration strategy: [how to handle removal]
+</template>
+
+    <template path="dev-handbook/templates/implementation-planning/risk-assessment.template.md">## Risk Assessment
+
+### Technical Risks
+- **Risk:** [Description]
+  - **Probability:** High/Medium/Low
+  - **Impact:** High/Medium/Low
+  - **Mitigation:** [Strategy]
+  - **Rollback:** [Procedure]
+
+### Integration Risks
+- **Risk:** [Description]
+  - **Probability:** High/Medium/Low
+  - **Impact:** High/Medium/Low
+  - **Mitigation:** [Strategy]
+  - **Monitoring:** [How to detect]
+
+### Performance Risks
+- **Risk:** [Description]
+  - **Mitigation:** [Strategy]
+  - **Monitoring:** [Metrics to track]
+  - **Thresholds:** [Acceptable limits]
+</template>
+
+</documents>
