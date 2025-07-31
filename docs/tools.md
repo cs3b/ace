@@ -113,7 +113,6 @@ task-manager [COMMAND] [OPTIONS]
 |------|---------|---------|
 | `next` | Show next actionable task | N/A |
 | `list` | List all tasks | N/A |
-| `all` | List all tasks (alias for list) | N/A |
 | `recent` | Show recently modified tasks | N/A |
 | `generate-id` | Generate new task ID | N/A |
 
@@ -121,7 +120,6 @@ task-manager [COMMAND] [OPTIONS]
 ```bash
 task-manager next
 task-manager list
-task-manager all    # Alias for list (backward compatibility)
 task-manager recent
 ```
 </details>

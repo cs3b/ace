@@ -186,7 +186,7 @@ This is the largest and most comprehensive release in the project's history, est
 * **Complete 25+ CLI Tool Suite**: Comprehensive development automation toolkit
   * **Git Operations**: `git-add`, `git-commit`, `git-diff`, `git-fetch`, `git-log`, `git-pull`, `git-push`, `git-status`, `git-checkout`, `git-switch`,
     `git-mv`, `git-rm`, `git-restore` with multi-repository support
-  * **Task Management**: `task-manager next`, `task-manager recent`, `task-manager all`, `task-manager generate-id` with dependency resolution and filtering
+  * **Task Management**: `task-manager next`, `task-manager recent`, `task-manager list`, `task-manager generate-id` with dependency resolution and filtering
   * **Release Management**: `release-manager current`, `release-manager next`, `release-manager all` with validation and reporting
   * **Navigation Tools**: `nav-ls`, `nav-path`, `nav-tree` with intelligent path autocorrection
   * **LLM Integration**: `llm-query` unified interface supporting Google Gemini, OpenAI, Anthropic, Mistral, Together AI, LM Studio
