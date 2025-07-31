@@ -37,7 +37,7 @@ bin/tnid v.0.3.0          # Generate task ID
 #### New Higher-Order Approach
 ```bash
 # Single commands with intelligent behavior
-task-manager all          # List all tasks with filtering
+task-manager list         # List all tasks with filtering
 task-manager next         # Get next task based on priority and dependencies
 task-manager recent       # Show recent tasks
 ```
@@ -195,7 +195,7 @@ The following commands are deprecated in favor of higher-order alternatives:
 
 - `bin/tn` → `task-manager next`
 - `bin/tr` → `task-manager recent`
-- `bin/tal` → `task-manager all`
+- `bin/tal` → `task-manager list`
 - `bin/tnid` → Used internally by `create-path task-new`
 - `bin/rc` → Used internally by `nav-path` commands
 

@@ -17,7 +17,7 @@
 | `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
 | `git-push` | Enhanced git push | `--force`, `--dry-run` |
 | `git-status` | Enhanced git status | `--verbose`, `--short` |
-| `git-tag` | Enhanced git tag | `--annotate`, `--delete`, `--list` |
+| `git-tag` | Enhanced git tag | `[tagname]`, `--annotate`, `--delete`, `--list` |
 | `handbook` | Development handbook access | `sync-templates` |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
@@ -57,7 +57,7 @@
 | `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
 | `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
 | `git-status` | Multi-repo status | `--verbose`, `--short` |
-| `git-tag` | Multi-repo tagging | `--annotate`, `--delete`, `--list` |
+| `git-tag` | Multi-repo tagging | `[tagname]`, `--annotate`, `--delete`, `--list` |
 
 ### Release Manager   {#release-manager}
 
@@ -471,8 +471,17 @@ git-status --short --repository dev-tools
 <details><summary>Details</summary>
 
 ```bash
-git-tag [OPTIONS]
+git-tag [TAGNAME] [COMMIT] [OPTIONS]
 ```
+
+**Arguments**
+
+| Argument | Purpose |
+|----------|---------|
+| `TAGNAME` | The name of the tag to create, delete, or describe |
+| `COMMIT` | The object that the new tag will refer to (defaults to HEAD) |
+
+**Options**
 
 | Flag | Purpose | Default |
 |------|---------|---------|
@@ -488,9 +497,23 @@ git-tag [OPTIONS]
 
 **Examples**
 ```bash
+# List all tags across repositories
+git-tag -l
+
+# Create lightweight tag on HEAD
 git-tag v1.2.3
-git-tag -a v1.2.3 -m "Release version 1.2.3"  
+
+# Create annotated tag with message
+git-tag -a v1.2.3 -m "Release version 1.2.3"
+
+# Create tag on specific commit
+git-tag v1.2.3 abc123
+
+# Delete tag across all repositories
 git-tag -d v1.2.3
+
+# Force replace existing tag
+git-tag -f v1.2.3
 ```
 </details>
 

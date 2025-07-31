@@ -125,13 +125,13 @@ Recent Tasks (1/30 shown):
   Dependencies: v.0.3.0+task.07
 ```
 
-### `task-manager all`
+### `task-manager list`
 
 List all tasks in the current release with dependency-aware ordering.
 
 **Usage:**
 ```bash
-task-manager all [OPTIONS]
+task-manager list [OPTIONS]
 ```
 
 **Options:**
@@ -143,13 +143,13 @@ task-manager all [OPTIONS]
 
 ```bash
 # List all tasks
-task-manager all
+task-manager list
 
 # Show dependency cycle information
-task-manager all --show-cycles
+task-manager list --show-cycles
 
 # Debug mode
-task-manager all --debug
+task-manager list --debug
 ```
 
 **Sample Output:**
@@ -265,7 +265,7 @@ task-manager next --limit 3
 task-manager recent --last 1.week --limit 20
 
 # Get overview of all current tasks
-task-manager all
+task-manager list
 ```
 
 ### Project Planning
@@ -275,7 +275,7 @@ task-manager all
 task-manager generate-id v.2.0.0 --limit 5
 
 # Check all tasks to understand project status
-task-manager all --show-cycles
+task-manager list --show-cycles
 ```
 
 ### Sprint Management
@@ -300,7 +300,7 @@ This means either:
 
 **Solution:** Check task dependencies and status:
 ```bash
-task-manager all --show-cycles
+task-manager list --show-cycles
 ```
 
 #### "Could not determine release version"
@@ -343,7 +343,7 @@ task-manager --help
 # Command-specific help
 task-manager next --help
 task-manager recent --help
-task-manager all --help
+task-manager list --help
 task-manager generate-id --help
 ```
 
@@ -365,7 +365,7 @@ Use in continuous integration:
 
 ```bash
 # Check for dependency cycles
-task-manager all --show-cycles
+task-manager list --show-cycles
 if [ $? -ne 0 ]; then
   echo "Task dependency cycles detected!"
   exit 1
@@ -386,7 +386,7 @@ task-manager next --limit 5
 ## Best Practices
 
 1. **Regular Reviews**: Use `task-manager recent` daily to track progress
-2. **Dependency Management**: Check `task-manager all --show-cycles` regularly
+2. **Dependency Management**: Check `task-manager list --show-cycles` regularly
 3. **Planning**: Use `task-manager next --limit 10` for sprint planning
 4. **Documentation**: Include task IDs in commit messages and documentation
 5. **Automation**: Integrate task-manager commands into scripts and workflows
