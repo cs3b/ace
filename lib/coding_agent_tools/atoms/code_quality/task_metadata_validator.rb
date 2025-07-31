@@ -12,7 +12,7 @@ module CodingAgentTools
         # Metadata Validation Rules
         VALID_ID_REGEX = /^v.\d+\.\d+\.\d+\+task\.\d+$/
         REQUIRED_FIELDS = ["id", "status", "priority"]
-        VALID_STATUSES = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold"]
+        VALID_STATUSES = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold", "draft"]
         VALID_PRIORITIES = ["low", "medium", "high", "critical"]
         ESTIMATE_REGEX = /^\d+(\.\d+)?(h|d|w|sp|pt|wk|mo)$/i
 
