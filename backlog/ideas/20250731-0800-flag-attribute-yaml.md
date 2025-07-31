@@ -61,8 +61,16 @@ To allow `create-path task-new` to accept undefined flags as attributes for a ta
 
 **Open Questions:**
 - What specific YAML structure should be used within the task file to store these dynamically added attributes? Should it be a top-level `metadata:` key, or nested within existing YAML frontmatter?
+
+> top level metadada - see the example in task: dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.004-split-review-task-workflow.md
+
 - How should the tool handle potential errors during the parsing of dynamic flags into YAML (e.g., invalid values, type mismatches)?
+
+> should try to fix them, generaly we should skip that file, report error and go with next one
+
 - Should there be a limit on the number or complexity of dynamic attributes that can be passed?
+
+> no
 
 ## Assumptions to Validate
 

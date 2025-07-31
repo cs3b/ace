@@ -57,8 +57,16 @@ To establish a process for creating new tasks based on idea files found in the b
 
 **Before proceeding, we need to answer:**
 1. What is the exact path structure for the "current release folder" that the `../docs/ideas/` directory should be relative to? (e.g., is it `dev-taskflow/current/` or a more dynamic path based on the release version?)
+
+> use tool: release-manager current
+
 2. What is the expected format of the task number? Should it be zero-padded to a specific width (e.g., `001`, `023`)?
+
+> yes, same as tasks
+
 3. How should the workflow handle cases where the idea file already exists at the destination or if the task number is not yet assigned or available?
+
+> task needs to be created before procedding, if file in the same name exists, add suffix with next sequence number eg.: v2.md
 
 **Open Questions:**
 - What is the expected behavior if the `../docs/ideas/` directory does not exist in the current release folder? Should it be created automatically?
