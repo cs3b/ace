@@ -60,8 +60,16 @@ To rename the `ideas-manager capture` CLI command to `capture-it` and update all
 
 **Open Questions:**
 - Are there any other aliases or internal references to `ideas-manager capture` within the codebase that might be missed by a simple text search in documentation?
+
+> no
+
 - What is the best practice for handling such renames across a multi-repository structure, particularly concerning AI agent training data or workflow definitions?
+
+> find all files related to implemention, next find all references in lib and spec for it (also in docs, not only) in code) make a list, go one by one and rename it and next run the tests to see it goes welll
+
 - Is there an existing tool or script that can help automate the search and replace across all project documents?
+
+> no, just use search tool you have
 
 ## Assumptions to Validate
 
