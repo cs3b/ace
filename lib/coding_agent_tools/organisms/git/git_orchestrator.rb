@@ -209,9 +209,9 @@ module CodingAgentTools
         end
 
         # Tag operations across all repositories
-        def tag(options = {})
+        def tag(tagname = nil, commit = nil, options = {})
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
-          tag_command = build_tag_command(options)
+          tag_command = build_tag_command(tagname, commit, options)
           result = coordinator.execute_across_repositories(tag_command, options.merge(capture_output: true))
           
           format_tag_output(result, options)
@@ -709,7 +709,7 @@ module CodingAgentTools
         end
 
         # Build tag command with all supported options
-        def build_tag_command(options)
+        def build_tag_command(tagname, commit, options)
           cmd_parts = ["tag"]
 
           # Tag creation/modification options
@@ -724,6 +724,10 @@ module CodingAgentTools
           cmd_parts << "-d" if options[:delete]
           cmd_parts << "-l" if options[:list]
           cmd_parts << "-v" if options[:verify]
+
+          # Add positional arguments (tagname and commit)
+          cmd_parts << Shellwords.escape(tagname) if tagname
+          cmd_parts << Shellwords.escape(commit) if commit
 
           cmd_parts.join(" ")
         end

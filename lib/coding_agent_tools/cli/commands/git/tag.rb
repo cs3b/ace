@@ -50,6 +50,9 @@ module CodingAgentTools
           option :submodules_only, type: :boolean, default: false,
             desc: "Process submodules only"
 
+          argument :tagname, required: false, desc: "The name of the tag to create, delete, or describe"
+          argument :commit, required: false, desc: "The object that the new tag will refer to (defaults to HEAD)"
+
           example [
             "v1.2.3",
             "-a v1.2.3 -m 'Release version 1.2.3'",
@@ -58,7 +61,7 @@ module CodingAgentTools
             "-f v1.2.3"
           ]
 
-          def call(**options)
+          def call(tagname: nil, commit: nil, **options)
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             orchestrator = CodingAgentTools::Organisms::Git::GitOrchestrator.new(project_root, options)
 
@@ -66,7 +69,7 @@ module CodingAgentTools
             tag_options = build_tag_options(options)
 
             # Execute tag operation across repositories
-            result = orchestrator.tag(tag_options)
+            result = orchestrator.tag(tagname, commit, tag_options)
 
             if result[:success]
               display_tag_output(result, options)
