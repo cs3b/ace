@@ -114,15 +114,13 @@ ideas-manager capture --clipboard
   > TEST: Error Handling Unit Test Type: Unit Test Validation Assert: Error handling preserves minimum functionality (save raw idea) Command: cd dev-tools &&
   > bundle exec rspec spec/organisms/idea\_capture\_spec.rb --tag error\_handling
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests in dev-tools/spec/
-  > TEST: Unit Test Suite Type: Test Coverage Validation Assert: All test files exist AND all tests pass with good coverage Command: cd dev-tools && bundle exec
-  > rspec spec/ --format documentation **CRITICAL**: This step requires writing actual RSpec test files, not just functional verification
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create comprehensive unit tests implementing all edge cases above
+  > TEST: Unit Test Suite Type: Test Coverage Validation Assert: All 6 test files exist AND all tests pass with 90%+ coverage Command: cd dev-tools && bundle exec rspec spec/ --format documentation && bundle exec rspec --require simplecov
+  > **CRITICAL**: Must write actual RSpec test files with comprehensive edge case coverage per specification above
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create integration tests for end-to-end
-  functionality
-  > TEST: Integration Test Suite Type: End-to-End Validation Assert: Integration test file exists AND tests pass with real project data and cleanup Command: cd
-  > dev-tools && bundle exec rspec spec/integration/ideas\_manager\_integration\_spec.rb **CRITICAL**: This step requires writing actual RSpec test files, not
-  > just functional verification
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**WRITE ACTUAL RSPEC TESTS** - Create integration tests implementing end-to-end workflow testing  
+  > TEST: Integration Test Suite Type: End-to-End Validation Assert: Integration test file exists AND tests pass with real project data and proper cleanup Command: cd dev-tools && bundle exec rspec spec/integration/ideas\_manager\_integration\_spec.rb --format documentation
+  > **CRITICAL**: Must write actual RSpec test file with comprehensive end-to-end testing per specification above
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update dev-tools documentation and tools.md reference
 
@@ -154,6 +152,318 @@ ideas-manager capture --clipboard
 
 **IMPORTANT**: These test files do not currently exist and must be created with actual RSpec test implementations before task can be marked complete.
 
+## Comprehensive Test Edge Cases Specification
+
+### 1. IdeaCapture Organism Tests (`idea_capture_spec.rb`)
+
+**Happy Path Test Cases:**
+- ✅ Basic idea capture with valid input (10-100 words)
+- ✅ Large input with `--big-user-input-allowed` flag (>1000 words)
+- ✅ Successful LLM enhancement and file creation
+- ✅ Git commit integration when `commit_after_capture: true`
+- ✅ Debug mode output validation
+
+**Input Validation Edge Cases:**
+- ❌ `nil` input → "Idea text cannot be nil" 
+- ❌ Empty string input → "Idea text cannot be empty"
+- ❌ Whitespace-only input → "Idea text cannot be empty"
+- ❌ Input under 5 characters → "Idea text must be at least 5 characters"
+- ✅ Input exactly at 5 characters minimum
+- ✅ Input exactly at size limits (1000 words, 7000 chars)
+- ❌ Input over size limits without flag → "Input too large: X KB, Y words. Use --big-user-input-allowed to proceed"
+- ✅ Input over size limits with `big_user_input_allowed: true`
+- ✅ Unicode characters and emoji handling
+- ✅ Very long single words (no spaces)
+- ✅ Input with only newlines/tabs (should be stripped)
+
+**Path Generation Edge Cases:**
+- ❌ Path generation failure → "Path generation failed" error
+- ✅ Invalid characters in generated slugs (sanitization)
+- ✅ Very long idea text affecting path length (truncation)
+- ✅ Concurrent path generation (race conditions)
+- ❌ Directory creation permission failures → file system error
+
+**File System Edge Cases:**
+- ❌ Read-only directories → "Permission denied" error  
+- ❌ Disk space exhaustion → "No space left on device" error
+- ❌ File permission errors → proper error handling
+- ✅ Concurrent file access (atomic operations)
+- ❌ Network drive failures → fallback behavior
+- ✅ Special characters in paths (encoding)
+
+**LLM Integration Edge Cases:**
+- ❌ All retry attempts failing → save raw idea fallback
+- ✅ Partial LLM responses → validation and retry
+- ❌ LLM timeout scenarios → retry logic
+- ❌ Invalid model names → error handling
+- ❌ API rate limiting → exponential backoff
+- ❌ Network connectivity issues → fallback behavior
+- ❌ Empty LLM responses → validation error
+- ❌ Malformed LLM output → fallback to raw idea
+
+**Git Commit Edge Cases:**
+- ❌ Git not available in PATH → error message
+- ❌ Git repository not initialized → error handling
+- ❌ Dirty working directory → commit handling
+- ❌ Git hooks failing → error propagation
+- ❌ Permission errors with git files → proper error messages
+- ✅ Test environment detection (skip commits)
+
+**Context Loading Integration:**
+- ✅ Successful context loading → enhanced prompts
+- ❌ Context loading failures → degraded functionality
+- ✅ Mixed success/failure context loading → partial context usage
+- ❌ No docs directory → error handling with fallback
+
+### 2. ContextLoader Molecule Tests (`context_loader_spec.rb`)
+
+**Happy Path Test Cases:**
+- ✅ Load all docs/*.md files successfully 
+- ✅ Generate proper XML embedded format with `<context><document path="...">content</document></context>`
+- ✅ Handle nested subdirectories (docs/subdir/*.md)
+- ✅ Proper relative path generation
+
+**File Discovery Edge Cases:**
+- ❌ Empty docs directory → "No documentation files found"
+- ❌ Missing docs directory → "Docs directory not found: /path/to/docs"
+- ✅ Symlinks in docs directory (follow or ignore)
+- ✅ Hidden files (.hidden.md) → should be included
+- ❌ Files with no extension → skip silently  
+- ❌ Non-UTF8 encoded files → encoding error handling
+- ❌ Binary files with .md extension → read error handling
+
+**File Reading Edge Cases:**
+- ❌ Permission denied on specific files → add to failed_files array
+- ❌ Files locked by other processes → retry or skip
+- ❌ Files changing during read → handle gracefully
+- ✅ Extremely large documentation files (>1MB)
+- ✅ Files with BOM markers → proper encoding handling
+- ✅ Files with mixed line endings (\\r\\n, \\n, \\r)
+- ❌ Corrupted file content → skip with error log
+
+**XML Generation Edge Cases:**
+- ✅ Files with XML special characters (`<>&"'`) → proper escaping
+- ✅ Files with CDATA sections → preserve content
+- ✅ Files with encoding issues → fallback handling
+- ✅ Empty files → include with empty content
+- ✅ Files with only whitespace → preserve whitespace
+
+**Error Aggregation Tests:**
+- ✅ Partial success (some files fail) → return success with warnings
+- ✅ Complete failure (all files fail) → return failure
+- ✅ Mixed file types → process .md files only
+- ✅ Error reporting → detailed failed_files information
+
+### 3. LLMClient Molecule Tests (`llm_client_spec.rb`)
+
+**Happy Path Test Cases:**
+- ✅ Successful LLM query execution → LLMResult.success? == true
+- ✅ Proper retry logic with eventual success → retry_count tracking
+- ✅ Different model providers → model parameter handling
+- ✅ Debug mode logging → debug output validation
+
+**Retry Logic Edge Cases:**
+- ❌ All retries failing → LLMResult.success? == false, max retry_count
+- ✅ Intermittent failures → fail, succeed pattern handling
+- ✅ Exponential backoff timing → 1s, 3s, 9s delays
+- ✅ Retry on different error types → network, API, timeout errors
+- ✅ Success on final retry attempt → retry_count == MAX_RETRIES
+
+**Command Execution Edge Cases:**
+- ❌ `llm-query` executable not found → "Command not found" error
+- ❌ Invalid command line arguments → argument validation
+- ❌ System command timeout → timeout error handling
+- ❌ Process termination/signals → SIGTERM/SIGKILL handling
+- ❌ Environment variable issues → ENV validation
+- ❌ PATH resolution problems → executable path validation
+
+**Input/Output Edge Cases:**
+- ❌ Missing input files → "Input file not found" error
+- ❌ Corrupt system prompt files → file validation
+- ❌ Output directory doesn't exist → directory creation
+- ❌ Output file permission errors → permission error handling
+- ✅ Concurrent access to same files → file locking
+- ✅ Very large input/output files → streaming/chunking
+
+**Path Validation Tests:**
+- ❌ Nil paths → "Path cannot be nil" error
+- ❌ Empty string paths → "Path cannot be empty" error
+- ❌ Non-existent input paths → "Input file does not exist" error
+- ❌ Directory as file path → "Path is a directory" error
+- ✅ Relative vs absolute path handling
+
+### 4. IdeaEnhancer Molecule Tests (`idea_enhancer_spec.rb`)
+
+**Happy Path Test Cases:**
+- ✅ Extract title from various input formats
+- ✅ Generate relevant questions based on content keywords
+- ✅ Validate content successfully → {valid: true, content: cleaned}
+- ✅ Handle project context in question generation
+
+**Title Extraction Edge Cases:**
+- ✅ Single word inputs → return single word
+- ✅ Very long first lines (>80 chars) → truncate at word boundary + "..."
+- ✅ Inputs starting with prefixes → remove "idea:", "thought:", "suggestion:"
+- ✅ Inputs with only punctuation → clean punctuation-only content
+- ✅ Inputs with Unicode characters → preserve Unicode
+- ✅ Inputs with HTML/Markdown → strip formatting
+- ✅ Multiple sentences in first line → extract first sentence only
+
+**Question Generation Edge Cases:**
+- ✅ Inputs with no recognizable keywords → default validation questions
+- ✅ Inputs mentioning multiple categories → combine relevant questions
+- ✅ Very short inputs → basic validation questions only
+- ✅ Technical jargon detection → technical-specific questions
+- ✅ Feature/improvement keyword detection → category-specific questions
+- ✅ Tool/command keyword detection → CLI/integration questions
+- ✅ Question count limiting → maximum 6 questions
+
+**Content Validation Edge Cases:**
+- ❌ Nil content → {valid: false, error: "Idea content cannot be nil"}
+- ❌ Empty string → {valid: false, error: "Idea content cannot be empty"}  
+- ❌ Whitespace only → {valid: false, error: "Idea content cannot be empty"}
+- ❌ Under 5 characters → {valid: false, error: "Idea content too short"}
+- ✅ Exactly 5 characters → {valid: true, content: cleaned}
+- ✅ Mixed whitespace types → proper stripping
+- ✅ Control characters → sanitization handling
+
+### 5. CLI Command Tests (`ideas_manager_spec.rb`)
+
+**Happy Path Test Cases:**
+- ✅ Basic command execution → `ideas-manager capture "test idea"`
+- ✅ All option combinations → test matrix of all flags
+- ✅ Help command → `ideas-manager --help`
+- ✅ Version command → `ideas-manager --version`
+
+**CLI Option Edge Cases:**
+- ❌ Conflicting options → error for `--clipboard` and `--file` together
+- ❌ Invalid file paths → "File not found" error for `--file`
+- ❌ Non-existent model names → model validation error
+- ✅ Boolean flag variations → `--debug`, `--no-debug`
+- ❌ Missing required dependencies → dependency validation
+
+**Input Source Edge Cases:**
+- ❌ Clipboard empty → "Clipboard is empty" error
+- ❌ Clipboard unavailable → fallback to prompt for input
+- ❌ File doesn't exist → "File not found: /path/to/file"
+- ❌ File is binary → "File appears to be binary"
+- ❌ File is too large → size limit validation
+- ❌ Permission denied reading file → permission error
+- ❌ Network file access → network error handling
+
+**Output Handling Edge Cases:**
+- ✅ STDOUT redirection → proper output formatting
+- ✅ STDERR separation → errors to STDERR only
+- ✅ Exit code validation → 0 for success, 1 for errors
+- ✅ Signal handling → graceful SIGINT/SIGTERM handling
+- ✅ Terminal width considerations → output formatting
+
+**Error Message Format Tests:**
+- ✅ Standard error format → "Error: message"
+- ✅ Debug mode errors → full stack traces
+- ✅ User-friendly messages → avoid technical jargon
+- ✅ Actionable error suggestions → "Use --flag to proceed"
+
+### 6. Integration Tests (`ideas_manager_integration_spec.rb`)
+
+**End-to-End Workflow Tests:**
+- ✅ Complete idea capture workflow → input → enhancement → output file
+- ✅ Multiple ideas in sequence → no interference between captures
+- ✅ Concurrent idea captures → race condition testing
+- ✅ Full project context loading → real docs/* files integration
+- ✅ Real LLM integration → if API credentials available (or mock)
+
+**Cross-Component Integration:**
+- ✅ CLI → Organism → Molecules interaction chain
+- ✅ Error propagation across layers → proper error bubbling
+- ✅ Debug logging across components → consistent debug output
+- ✅ Path resolver → Context loader → LLM client chain
+
+**Real Project Data Tests:**
+- ✅ Using actual project docs/* files → real context loading
+- ✅ Testing with real project structure → file system integration
+- ✅ Cleanup of generated test files → proper test isolation
+- ✅ Integration with actual git repository → real git operations
+
+**Performance Edge Cases:**
+- ✅ Large project contexts → many docs files performance
+- ✅ High-frequency idea captures → stress testing
+- ✅ Memory usage patterns → memory leak detection
+- ✅ File system stress testing → many concurrent operations
+
+**Test Environment Setup:**
+- ✅ Mock LLM responses for consistent testing
+- ✅ Temporary directory setup and cleanup
+- ✅ Git repository isolation for commit tests
+- ✅ Environment variable management
+- ✅ Test data fixtures and factories
+
+## Test Implementation Requirements
+
+**RSpec Test Structure:**
+- All tests use `describe` and `context` blocks for organization
+- Use `let` and `let!` for test data setup
+- Include `before` and `after` hooks for setup/cleanup
+- Use shared examples for common behavior testing
+- Include proper test isolation (no state leaking between tests)
+
+**Test Coverage Requirements:**
+- **Unit Tests**: 90%+ line coverage for each component
+- **Integration Tests**: End-to-end workflow coverage
+- **Edge Cases**: All error conditions must be tested
+- **Boundary Conditions**: Test limits and thresholds
+- **Error Scenarios**: Every error path must have test coverage
+
+**Test Data Management:**
+- **Fixtures**: Use fixtures for complex test data
+- **Factories**: Create test data factories for objects
+- **Mocking**: Mock external dependencies (LLM APIs, file system)
+- **Isolation**: Each test creates and cleans up its own data
+- **Deterministic**: Tests produce consistent results
+
+**Assertion Standards:**
+- Use specific expectations (`expect().to eq()`, not `expect().to be_truthy`)
+- Test both positive and negative cases
+- Include error message validation
+- Test return value structure and types
+- Validate side effects (file creation, logging)
+
+## Test Execution Standards
+
+**Required Commands:**
+```bash
+# All tests must pass
+cd dev-tools && bundle exec rspec
+
+# Individual test files must be runnable
+cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb
+cd dev-tools && bundle exec rspec spec/molecules/context_loader_spec.rb
+cd dev-tools && bundle exec rspec spec/molecules/llm_client_spec.rb
+cd dev-tools && bundle exec rspec spec/molecules/idea_enhancer_spec.rb
+cd dev-tools && bundle exec rspec spec/cli/ideas_manager_spec.rb
+cd dev-tools && bundle exec rspec spec/integration/ideas_manager_integration_spec.rb
+
+# Test output format must be documentation style
+cd dev-tools && bundle exec rspec --format documentation
+
+# Coverage reporting
+cd dev-tools && bundle exec rspec --require simplecov
+```
+
+**Performance Requirements:**
+- Unit tests: < 5 seconds total
+- Integration tests: < 30 seconds total  
+- Individual test cases: < 1 second each
+- Memory usage: < 100MB per test suite
+
+**Test Environment Detection:**
+Tests must properly detect test environments and:
+- Skip git commits in test runs
+- Use temporary directories for file operations
+- Mock external API calls (LLM services)
+- Clean up all created files and directories
+- Not interfere with actual project files
+
 #### Modify
 
 * dev-tools/lib/coding\_agent\_tools.rb (register new components)
@@ -167,8 +477,7 @@ ideas-manager capture --clipboard
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Relevant questions are generated for each idea
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Files are created with proper timestamp naming
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Release targeting works correctly
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**All RSpec tests exist and pass** (cannot be marked complete until test files
-  are written)
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**All RSpec tests exist and pass with comprehensive edge case coverage** (cannot be marked complete until all 6 test files are written and pass per specification above)
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Documentation is complete
 
 ## Template Specifications
