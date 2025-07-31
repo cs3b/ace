@@ -89,17 +89,168 @@ Streamline idea capture workflow by automatically committing generated idea file
 
 *Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
 
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
-- [ ] Create comprehensive RSpec tests for --commit flag functionality
-  > TEST: RSpec Test Suite Creation  
-  > Type: Test Implementation
-  > Assert: Complete test coverage for --commit flag behavior and edge cases
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ideas/capture_spec.rb spec/coding_agent_tools/organisms/idea_capture_spec.rb
+- [ ] Add --commit option to ideas capture CLI command
+  > TEST: CLI Option Added
+  > Type: Syntax Validation
+  > Assert: --commit option properly registered with boolean type and description
+  > Command: cd dev-tools && ruby -c lib/coding_agent_tools/cli/commands/ideas/capture.rb && grep -n "commit.*boolean" lib/coding_agent_tools/cli/commands/ideas/capture.rb
+
+- [ ] Enhance CLI call method to pass commit_after_capture parameter to organism
+  > TEST: Parameter Passing Implementation
+  > Type: Code Integration
+  > Assert: build_capture_options includes commit_after_capture based on --commit flag
+  > Command: grep -A 10 "commit_after_capture" dev-tools/lib/coding_agent_tools/cli/commands/ideas/capture.rb
+
+- [ ] Add commit_after_capture initialization parameter to IdeaCapture organism
+  > TEST: Organism Constructor Update
+  > Type: Interface Extension
+  > Assert: IdeaCapture accepts commit_after_capture parameter with default false
+  > Command: grep -B 5 -A 15 "def initialize" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+
+- [ ] Implement execute_git_commit private method in IdeaCapture organism
+  > TEST: Git Commit Method Implementation
+  > Type: Core Functionality
+  > Assert: Method executes git-commit executable with proper intention and file path
+  > Command: grep -A 15 "execute_git_commit" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+
+- [ ] Add test_environment? private method for CI/test environment detection
+  > TEST: Environment Detection Method
+  > Type: Safety Feature
+  > Assert: Method correctly identifies CI, TEST, and RSpec environments
+  > Command: grep -A 10 "test_environment" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+
+- [ ] Integrate git-commit execution into main capture_idea workflow
+  > TEST: Workflow Integration
+  > Type: Business Logic
+  > Assert: Git commit executes after successful idea creation when flag enabled
+  > Command: grep -B 5 -A 10 "commit_after_capture.*true" dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+
+- [ ] Create comprehensive RSpec tests for CLI command --commit flag handling
+  > TEST: CLI Command Test Coverage
+  > Type: Unit Testing
+  > Assert: All --commit flag scenarios covered with proper parameter passing tests
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ideas/capture_spec.rb -f documentation
+
+- [ ] Create comprehensive RSpec tests for IdeaCapture organism commit functionality
+  > TEST: Organism Test Coverage
+  > Type: Unit Testing
+  > Assert: commit_after_capture, git execution, and environment detection fully tested
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb -f documentation
+
+- [ ] Create integration tests for end-to-end --commit flag functionality
+  > TEST: Integration Test Coverage
+  > Type: End-to-End Testing
+  > Assert: Real git operations work correctly with proper environment handling
+  > Command: cd dev-tools && bundle exec rspec spec/integration/ideas_manager_commit_spec.rb -f documentation
+
+- [ ] Verify all existing tests continue to pass with new functionality
+  > TEST: Regression Prevention
+  > Type: Full Test Suite
+  > Assert: No breaking changes to existing ideas-manager functionality
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/cli/commands/ideas/capture_spec.rb spec/coding_agent_tools/organisms/idea_capture_spec.rb spec/integration/ideas_manager_spec.rb
+
+## Technical Approach
+
+### Architecture Pattern
+- **Pattern**: ATOM Architecture - Enhance existing Organism (IdeaCapture) to orchestrate git-commit Molecule
+- **Integration**: Leverage existing git-commit executable through system call pattern used by other CLI tools
+- **Impact**: Minimal system design impact - adds optional post-processing step to existing idea capture workflow
+
+### Technology Stack  
+- **Libraries/frameworks**: Existing Dry::CLI framework for --commit option, standard Ruby system calls for git execution
+- **Version compatibility**: No new dependencies required - uses existing git-commit executable
+- **Performance implications**: Negligible - single git commit operation after idea file creation
+- **Security considerations**: Path validation inherited from existing PathResolver, test environment detection prevents accidental commits
+
+### Implementation Strategy
+- **Step-by-step approach**: CLI option → parameter passing → organism enhancement → git execution → testing
+- **Rollback considerations**: Git operations are atomic - failed commits don't affect idea file creation
+- **Testing strategy**: Unit tests for CLI/organism, integration tests for end-to-end git operations, environment detection tests
+- **Performance monitoring**: Use existing logging patterns for commit success/failure feedback
+
+## Tool Selection
+
+| Criteria | system() call | Open3.capture3 | git-commit executable | Selected |
+|----------|---------------|-----------------|----------------------|----------|
+| Performance | Good | Good | Excellent | git-commit executable |
+| Integration | Fair | Good | Excellent | git-commit executable |
+| Maintenance | Poor | Good | Excellent | git-commit executable |
+| Security | Poor | Good | Excellent | git-commit executable |
+| Learning Curve | Low | Medium | Low | git-commit executable |
+
+**Selection Rationale:** The git-commit executable provides the best integration with existing project patterns, handles multi-repo operations correctly, uses proper commit message generation, and maintains security standards already established in the codebase.
+
+### Dependencies
+- [ ] git-commit executable: existing tool in dev-tools/exe/git-commit 
+- [ ] File.expand_path for git-commit path resolution: standard Ruby library
+- [ ] ENV variable access for test environment detection: standard Ruby library
+- [ ] Compatibility verification completed: No version conflicts expected
+
+## File Modifications
+
+### Create
+- spec/integration/ideas_manager_commit_spec.rb
+  - Purpose: End-to-end integration tests for --commit flag functionality
+  - Key components: Git repository setup, commit verification, environment testing
+  - Dependencies: Temporary directory creation, git command availability
+
+### Modify
+- lib/coding_agent_tools/cli/commands/ideas/capture.rb
+  - Changes: Add --commit option declaration, enhance build_capture_options method
+  - Impact: Extends CLI interface without breaking existing functionality
+  - Integration points: Parameter passing to IdeaCapture organism constructor
+
+- lib/coding_agent_tools/organisms/idea_capture.rb  
+  - Changes: Add commit_after_capture parameter, implement git execution methods, enhance workflow
+  - Impact: Optional git integration preserves existing behavior when flag not used
+  - Integration points: Post-creation git-commit execution, environment detection
+
+- spec/coding_agent_tools/cli/commands/ideas/capture_spec.rb
+  - Changes: Add comprehensive --commit flag test scenarios
+  - Impact: Ensures CLI option handling works correctly with parameter passing
+  - Integration points: Mock verification of organism constructor calls
+
+- spec/coding_agent_tools/organisms/idea_capture_spec.rb
+  - Changes: Add commit_after_capture functionality tests, environment detection tests
+  - Impact: Ensures organism correctly handles git operations and environment safety
+  - Integration points: Mock git-commit executable calls, environment variable stubbing
+
+### Delete
+- No files require deletion
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** git-commit executable not found or fails during execution
+  - **Probability:** Low
+  - **Impact:** Medium  
+  - **Mitigation:** Graceful error handling - idea creation succeeds even if commit fails
+  - **Rollback:** Log error message, continue normal operation without commit
+
+- **Risk:** Accidental commits during test execution
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Multi-layer test environment detection (CI, TEST, RSpec detection)
+  - **Rollback:** Test environment blocks prevent any git operations
+
+### Integration Risks
+- **Risk:** Breaking changes to existing CLI interface or organism behavior
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Comprehensive regression testing, backward compatibility preservation
+  - **Monitoring:** Full test suite execution including existing integration tests
+
+- **Risk:** Git repository state conflicts or working directory issues
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Use absolute paths, validate git repository state before commit
+  - **Monitoring:** Git status verification in integration tests
+
+### Performance Risks
+- **Risk:** Slowdown in idea capture workflow due to git operations
+  - **Mitigation:** Git operations are optional (only with --commit flag), atomic operation
+  - **Monitoring:** Time execution in integration tests to ensure acceptable performance
+  - **Thresholds:** Git commit should complete within 2 seconds under normal conditions
 
 ## RSpec Test Specifications
 
