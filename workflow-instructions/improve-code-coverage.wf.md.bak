@@ -9,7 +9,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 * SimpleCov coverage report available in `.resultset.json` format
 * Access to coverage-analyze tool from dev-tools
 * Understanding of Ruby/RSpec/VCR testing patterns and ATOM architecture
-* Access to draft-task workflow for generating test improvement tasks
+* Access to create-task workflow for generating test improvement tasks
 * Source code access for uncovered line analysis
 
 ## Project Context Loading

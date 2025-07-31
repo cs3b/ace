@@ -197,7 +197,7 @@ Review these refactored workflow instructions that demonstrate self-containment 
 - Includes full v.0.0.0 release structure
 
 ### Simplified Process Example
-`dev-handbook/workflow-instructions/draft-task.wf.md`:
+`dev-handbook/workflow-instructions/create-task.wf.md`:
 - Unified approach for all input types
 - Embedded task template
 - No sub-workflow dependencies

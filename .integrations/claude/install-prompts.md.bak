@@ -10,7 +10,7 @@ This guide shows how to create Claude Code commands for each workflow instructio
 
 For each workflow instruction file, create a corresponding command file:
 
-- `dev-handbook/workflow-instructions/draft-task.wf.md` → `.claude/commands/draft-task.md`
+- `dev-handbook/workflow-instructions/create-task.wf.md` → `.claude/commands/create-task.md`
 - `dev-handbook/workflow-instructions/work-on-task.wf.md` → `.claude/commands/work-on-task.md`
 - `dev-handbook/workflow-instructions/review-task.wf.md` → `.claude/commands/review-task.md`
 
@@ -26,9 +26,9 @@ read whole file and follow @dev-handbook/workflow-instructions/workflow-name.wf.
 
 ### 3. Example Commands
 
-#### draft-task.md
+#### create-task.md
 ```md
-read whole file and follow @dev-handbook/workflow-instructions/draft-task.wf.md
+read whole file and follow @dev-handbook/workflow-instructions/create-task.wf.md
 
 /commit
 ```
@@ -51,7 +51,7 @@ read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.m
 
 - Remove `.wf` from the workflow filename
 - Keep the base name and `.md` extension
-- Example: `draft-task.wf.md` becomes `draft-task.md`
+- Example: `create-task.wf.md` becomes `create-task.md`
 
 ## Notes
 

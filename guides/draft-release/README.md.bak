@@ -78,7 +78,7 @@ These templates are referenced directly from the `draft-release.md` workflow ins
 For more details on how these templates integrate with the project management workflow, refer to:
 
 - [Project Management Guide](dev-handbook/guides/project-management.g.md)
-- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/draft-task.wf.md)
+- [Breakdown Notes into Tasks Workflow](dev-handbook/workflow-instructions/create-task.wf.md)
 - [Publish Release Guide](dev-handbook/guides/release-publish.g.md)
 
 ## Customization

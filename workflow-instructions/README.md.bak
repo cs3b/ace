@@ -32,7 +32,7 @@ The AI-assisted development workflow ecosystem consists of 20 interconnected wor
 ### 3. Task Management
 
 - **capture-idea** - Capture and enhance raw ideas using ideas-manager tool
-- **draft-task** - Create behavior-first task specifications with interface contracts
+- **draft-task** - Transform requirements into formal task files
 - **work-on-task** - Execute task implementation following embedded plans
 - **review-task** - Review and refine task definitions before implementation
 

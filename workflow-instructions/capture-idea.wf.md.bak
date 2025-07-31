@@ -77,7 +77,7 @@ Use the ideas-manager tool to capture and enhance raw ideas within project conte
 * Ideas need contextual questions for proper specification later
 
 **Don't use capture-idea when:**
-* You already have well-structured requirements (use draft-task instead)
+* You already have well-structured requirements (use create-task instead)
 * The idea is just a quick note (simple text file may suffice)
 * You need immediate implementation (use work-on-task workflow)
 
@@ -157,7 +157,7 @@ ideas-manager capture --file detailed-requirements.md --big-user-input-allowed
 ### Natural Follow-up Workflows
 
 **After capturing ideas:**
-* **draft-task**: When ready to turn idea into actionable task
+* **create-task**: When ready to turn idea into actionable task
 * **draft-release**: During release planning to review captured ideas
 * **create-reflection-note**: To document patterns from multiple ideas
 
