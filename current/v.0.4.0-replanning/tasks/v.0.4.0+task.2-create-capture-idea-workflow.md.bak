@@ -131,4 +131,4 @@ ideas-manager capture "I want better error handling in the task manager"
 ## References
 
 * Planning agent research: dev-taskflow/current/v.0.3.0-workflows/backlog/research/how-to-build-planning-agents-without-loosing-control.md
-* Existing draft-task workflow: dev-handbook/workflow-instructions/draft-task.wf.md
+* Existing create-task workflow: dev-handbook/workflow-instructions/create-task.wf.md

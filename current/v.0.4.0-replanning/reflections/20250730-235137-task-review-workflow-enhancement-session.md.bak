@@ -124,7 +124,7 @@
 
 ## Additional Context
 
-- **Task 3**: v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md (draft-task → draft-task)
+- **Task 3**: v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md (create-task → draft-task)
 - **Task 4**: v.0.4.0+task.4-split-review-task-workflow.md (review-task → plan-task)
 - **Related Reflections**: Used 6 reflection documents to inform enhancements
 - **Key Learning Source**: Task 1 development patterns (ideas-manager implementation)

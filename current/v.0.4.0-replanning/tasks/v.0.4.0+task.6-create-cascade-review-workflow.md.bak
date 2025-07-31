@@ -149,10 +149,10 @@ the Implementation Plan.*
 
 ### Scenario: Completing Task 4 (Create Task Template System)
 
-After completing `v.0.4.0+task.4-draft-task-template-system.md`, run the cascade review workflow:
+After completing `v.0.4.0+task.4-create-task-template-system.md`, run the cascade review workflow:
 
 # Navigate to the completed task
-nav-path file v.0.4.0+task.4-draft-task-template-system.md
+nav-path file v.0.4.0+task.4-create-task-template-system.md
 
 # Run the cascade review workflow  
 replan-cascade-task v.0.4.0+task.4
@@ -161,7 +161,7 @@ replan-cascade-task v.0.4.0+task.4
 **Step 1: Dependency Identification** The workflow identifies downstream tasks that depend on task 4:
 
 * `v.0.4.0+task.6-create-cascade-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
-* `v.0.4.0+task.7-draft-task-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
+* `v.0.4.0+task.7-create-task-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
 
 **Step 2: Topological Processing** Tasks are processed in dependency order:
 
