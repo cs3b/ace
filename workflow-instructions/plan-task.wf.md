@@ -23,7 +23,7 @@ Create a detailed implementation plan for a task that already has a validated be
 1. **Load and Validate Draft Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `task-manager list --status draft` to get draft tasks
+     - If no task specified: Run `task-manager list --filter status:draft` to get draft tasks
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path
@@ -195,7 +195,7 @@ The following templates should be used when creating implementation plans:
   - Key components: [what it contains]
   - Dependencies: [what it depends on]
 
-### Modify  
+### Modify
 - path/to/existing/file.ext
   - Changes: [what to modify]
   - Impact: [effects on system]
@@ -440,7 +440,7 @@ Why are we doing this?
   - Key components: [what it contains]
   - Dependencies: [what it depends on]
 
-### Modify  
+### Modify
 - path/to/existing/file.ext
   - Changes: [what to modify]
   - Impact: [effects on system]
