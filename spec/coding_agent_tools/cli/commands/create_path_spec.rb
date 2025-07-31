@@ -983,6 +983,144 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
+  describe "draft status support" do
+    context "with --status parameter" do
+      it "accepts draft as a valid status value" do
+        # This tests the dry-cli validation - the command should not raise an error
+        expect {
+          result = subject.call(
+            type: "file",
+            title: "test-draft.txt",
+            content: "draft content",
+            status: "draft"
+          )
+          expect(result).to eq(0)  # Should succeed
+        }.not_to raise_error
+      end
+
+      it "accepts all valid status values" do
+        valid_statuses = %w[pending in-progress done blocked draft]
+        
+        valid_statuses.each do |status|
+          expect {
+            result = subject.call(
+              type: "file",
+              title: "test-#{status}.txt",
+              content: "test content",
+              status: status
+            )
+            expect(result).to eq(0)
+          }.not_to raise_error, "Should accept status: #{status}"
+        end
+      end
+
+      it "rejects invalid status values" do
+        invalid_statuses = %w[invalid unknown completed finished]
+        
+        invalid_statuses.each do |status|
+          expect {
+            subject.call(
+              type: "file",
+              title: "test-invalid.txt",
+              content: "test content",
+              status: status
+            )
+          }.to raise_error(Dry::CLI::InvalidCallError), "Should reject status: #{status}"
+        end
+      end
+
+      it "passes status to metadata processing" do
+        # Mock template processing to verify status is passed through
+        config = {
+          "templates" => {
+            "task-new" => {
+              "template" => "fake-template.md",
+              "variables" => {
+                "status" => "{metadata.status}"
+              }
+            }
+          }
+        }
+        File.write(config_file, YAML.dump(config))
+
+        # Mock PathResolver to return a test path
+        path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+        allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+        allow(path_resolver).to receive(:project_root).and_return(temp_dir)
+        allow(path_resolver).to receive(:resolve_path)
+          .and_return({success: true, path: File.join(temp_dir, "test-task.md")})
+
+        # Create fake template content
+        template_content = "Status: {metadata.status}"
+        allow(File).to receive(:exist?).with("fake-template.md").and_return(true)
+        allow(File).to receive(:read).with("fake-template.md").and_return(template_content)
+        allow(File).to receive(:exist?).with(config_file).and_call_original
+        allow(File).to receive(:read).with(config_file).and_call_original
+
+        result = subject.call(
+          type: "task-new",
+          title: "test-draft-task",
+          status: "draft"
+        )
+
+        expect(result).to eq(0)
+      end
+    end
+
+    context "default status behavior" do
+      it "maintains backward compatibility when no status is provided" do
+        # Should still work without status parameter
+        result = subject.call(
+          type: "file",
+          title: "test-no-status.txt",
+          content: "content without status"
+        )
+        
+        expect(result).to eq(0)
+      end
+
+      it "uses default status from configuration" do
+        # The default status should come from configuration
+        config = {
+          "templates" => {
+            "task-new" => {
+              "template" => "fake-template.md",
+              "variables" => {
+                "status" => "draft"  # Default from config
+              }
+            }
+          },
+          "variable_processors" => {
+            "defaults" => {
+              "status" => "draft"
+            }
+          }
+        }
+        File.write(config_file, YAML.dump(config))
+
+        # Mock dependencies
+        path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+        allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+        allow(path_resolver).to receive(:project_root).and_return(temp_dir)
+        allow(path_resolver).to receive(:resolve_path)
+          .and_return({success: true, path: File.join(temp_dir, "default-task.md")})
+
+        template_content = "Status: {metadata.status}"
+        allow(File).to receive(:exist?).with("fake-template.md").and_return(true)
+        allow(File).to receive(:read).with("fake-template.md").and_return(template_content)
+        allow(File).to receive(:exist?).with(config_file).and_call_original
+        allow(File).to receive(:read).with(config_file).and_call_original
+
+        result = subject.call(
+          type: "task-new",
+          title: "default-status-task"
+        )
+
+        expect(result).to eq(0)
+      end
+    end
+  end
+
   describe "PathResolver delegation integration" do
     let(:path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
 

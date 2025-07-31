@@ -508,6 +508,95 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
     end
   end
 
+  describe "draft status support" do
+    context "with draft status" do
+      before do
+        create_task_file("draft_task.md", {
+          "id" => "v.0.4.0+task.7",
+          "status" => "draft",
+          "priority" => "medium"
+        }, "# Add Draft Status Support")
+      end
+
+      it "accepts draft as a valid status" do
+        result = validator.validate
+
+        expect(result[:success]).to be true
+        expect(result[:errors]).to be_empty
+      end
+
+      it "includes draft in VALID_STATUSES constant" do
+        expect(described_class::VALID_STATUSES).to include("draft")
+      end
+
+      it "validates draft status case-insensitively" do
+        create_task_file("draft_case.md", {
+          "id" => "v.0.4.0+task.8",
+          "status" => "DRAFT",
+          "priority" => "medium"
+        }, "# Draft Case Test")
+
+        result = validator.validate
+
+        expect(result[:success]).to be true
+        expect(result[:errors]).to be_empty
+      end
+    end
+
+    context "with mixed statuses including draft" do
+      before do
+        create_task_file("pending_task.md", {
+          "id" => "v.0.4.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Pending Task")
+
+        create_task_file("draft_task.md", {
+          "id" => "v.0.4.0+task.2",
+          "status" => "draft",
+          "priority" => "medium"
+        }, "# Draft Task")
+
+        create_task_file("in_progress_task.md", {
+          "id" => "v.0.4.0+task.3",
+          "status" => "in-progress",
+          "priority" => "high"
+        }, "# In Progress Task")
+      end
+
+      it "validates all tasks with different statuses including draft" do
+        result = validator.validate
+
+        expect(result[:success]).to be true
+        expect(result[:errors]).to be_empty
+      end
+    end
+
+    context "backward compatibility" do
+      it "maintains all existing valid statuses" do
+        expected_statuses = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold", "draft"]
+        expect(described_class::VALID_STATUSES).to match_array(expected_statuses)
+      end
+
+      it "does not break existing validation for non-draft statuses" do
+        existing_statuses = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold"]
+        
+        existing_statuses.each do |status|
+          create_task_file("existing_#{status}.md", {
+            "id" => "v.0.4.0+task.#{rand(100)}",
+            "status" => status,
+            "priority" => "medium"
+          }, "# #{status.capitalize} Task")
+        end
+
+        result = validator.validate
+
+        expect(result[:success]).to be true
+        expect(result[:errors]).to be_empty
+      end
+    end
+  end
+
   describe "constants validation" do
     it "has valid ID regex pattern" do
       valid_ids = ["v.0.1.0+task.1", "v.10.20.30+task.999"]

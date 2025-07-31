@@ -24,7 +24,7 @@ module CodingAgentTools
         desc: "Priority level (for task creation)"
       option :estimate, type: :string, desc: "Time estimate (e.g., '4h', '2d')"
       option :dependencies, type: :string, desc: "Comma-separated list of dependencies"
-      option :status, type: :string, values: %w[pending in-progress done blocked],
+      option :status, type: :string, values: %w[pending in-progress done blocked draft],
         desc: "Initial status"
 
       example [
