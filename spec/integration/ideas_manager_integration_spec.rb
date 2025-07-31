@@ -395,25 +395,32 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       cassette_name = "ideas_manager_integration/auto_create_directories"
       env = vcr_subprocess_env(cassette_name)
       
-      # Temporarily remove the ideas directory to test auto-creation
-      backup_path = "#{ideas_output_dir}.backup"
-      FileUtils.mv(ideas_output_dir, backup_path) if Dir.exist?(ideas_output_dir)
+      # Use a temporary test directory instead of moving the real directory
+      test_ideas_dir = File.join(project_root, "dev-taskflow/backlog/ideas_test_auto_create")
+      original_ideas_output_dir = ideas_output_dir
       
       begin
-        expect(Dir.exist?(ideas_output_dir)).to be(false)
+        # Override the ideas output directory for this test
+        allow_any_instance_of(CodingAgentTools::Molecules::PathResolver).to receive(:ideas_directory).and_return(test_ideas_dir)
         
-        result = run_ideas_manager(["capture", workflow_idea], env: env)
+        # Ensure test directory doesn't exist
+        FileUtils.rm_rf(test_ideas_dir) if Dir.exist?(test_ideas_dir)
+        expect(Dir.exist?(test_ideas_dir)).to be(false)
+        
+        # Run with environment that points to test directory
+        test_env = env.merge("IDEAS_OUTPUT_DIR" => test_ideas_dir)
+        result = run_ideas_manager(["capture", workflow_idea], env: test_env)
         
         expect(result).to be_success
-        expect(Dir.exist?(ideas_output_dir)).to be(true)
+        expect(Dir.exist?(test_ideas_dir)).to be(true)
         
         # Clean up created file
         created_file = extract_created_file_path(result.stdout)
         File.delete(created_file) if created_file && File.exist?(created_file)
         
       ensure
-        # Restore the original directory
-        FileUtils.mv(backup_path, ideas_output_dir) if Dir.exist?(backup_path)
+        # Clean up test directory completely
+        FileUtils.rm_rf(test_ideas_dir) if Dir.exist?(test_ideas_dir)
       end
     end
 
@@ -659,19 +666,40 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
 
   def cleanup_test_files
     # Clean up any test files that might have been created
-    pattern = File.join(ideas_output_dir, "*test*.md")
-    Dir.glob(pattern).each do |file|
-      File.delete(file) if File.exist?(file)
-    rescue
-      # Ignore cleanup errors
+    test_patterns = [
+      "*test*.md",
+      "*long-filename-issue*.md",
+      "*malicious*.md",
+      "*concurrent*.md",
+      "*integration*.md"
+    ]
+    
+    test_patterns.each do |pattern|
+      # Clean up from ideas directory
+      Dir.glob(File.join(ideas_output_dir, pattern)).each do |file|
+        File.delete(file) if File.exist?(file)
+      rescue
+        # Ignore cleanup errors
+      end
+      
+      # Clean up from temp directory
+      Dir.glob(File.join(tmp_dir, pattern)).each do |file|
+        File.delete(file) if File.exist?(file)
+      rescue
+        # Ignore cleanup errors
+      end
     end
     
-    # Clean up temp files
-    temp_pattern = File.join(tmp_dir, "*test*.md")
-    Dir.glob(temp_pattern).each do |file|
-      File.delete(file) if File.exist?(file)
+    # Clean up any test directories that might have been created
+    test_dirs = [
+      File.join(project_root, "dev-taskflow/backlog/ideas_test_auto_create"),
+      File.join(ideas_output_dir, "ideas.backup")
+    ]
+    
+    test_dirs.each do |dir|
+      FileUtils.rm_rf(dir) if Dir.exist?(dir)
     rescue
-      # Ignore cleanup errors  
+      # Ignore cleanup errors
     end
   end
 
