@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.7
-status: draft
+status: pending
 priority: medium
 estimate: 4h
 dependencies: [v.0.4.0+task.1]
