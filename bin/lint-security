@@ -92,7 +92,7 @@ if [ "$SCAN_FULL" = true ]; then
   if [ -f ".gitleaks.toml" ]; then
     cp ".gitleaks.toml" "$GITLEAKS_CONFIG_OVERRIDE"
     # Remove or comment out size limits in the temp config
-    sed -i.bak '/maxTargetMegaBytes/d' "$GITLEAKS_CONFIG_OVERRIDE" 2>/dev/null || true
+    sed -i '' '/maxTargetMegaBytes/d' "$GITLEAKS_CONFIG_OVERRIDE" 2>/dev/null || true
   else
     # Create minimal config for full scan
     cat > "$GITLEAKS_CONFIG_OVERRIDE" << 'EOF'
@@ -124,7 +124,7 @@ gitleaks_exit_code=$?
 
 # Clean up temporary config if created
 if [ "$SCAN_FULL" = true ] && [ -n "$GITLEAKS_CONFIG_OVERRIDE" ] && [ -f "$GITLEAKS_CONFIG_OVERRIDE" ]; then
-  rm -f "$GITLEAKS_CONFIG_OVERRIDE" "$GITLEAKS_CONFIG_OVERRIDE.bak" 2>/dev/null || true
+  rm -f "$GITLEAKS_CONFIG_OVERRIDE" 2>/dev/null || true
 fi
 
 # Handle results
