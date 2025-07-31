@@ -212,31 +212,8 @@ module CodingAgentTools
         def tag(options = {})
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
           tag_command = build_tag_command(options)
-          
-          # Validate clean working directories before tagging (unless listing/verifying)
-          unless options[:list] || options[:verify]
-            status_result = coordinator.execute_across_repositories("status --porcelain", options.merge(capture_output: true))
-            
-            # Check if any repository has uncommitted changes
-            dirty_repos = []
-            status_result[:results].each do |repo_name, repo_result|
-              if repo_result[:success] && !repo_result[:stdout].strip.empty?
-                dirty_repos << repo_name
-              end
-            end
-            
-            unless dirty_repos.empty?
-              return {
-                success: false,
-                errors: [{
-                  repository: "validation",
-                  message: "Cannot tag repositories with uncommitted changes: #{dirty_repos.join(', ')}"
-                }]
-              }
-            end
-          end
-          
           result = coordinator.execute_across_repositories(tag_command, options.merge(capture_output: true))
+          
           format_tag_output(result, options)
         end
 
@@ -748,44 +725,12 @@ module CodingAgentTools
           cmd_parts << "-l" if options[:list]
           cmd_parts << "-v" if options[:verify]
 
-          # Add tag name if provided
-          cmd_parts << Shellwords.escape(options[:tagname]) if options[:tagname]
-
-          # Add commit reference if provided
-          cmd_parts << Shellwords.escape(options[:commit]) if options[:commit]
-
           cmd_parts.join(" ")
         end
 
-        # Format tag operation output
+        # Format tag operation output (simplified like other git commands)
         def format_tag_output(result, options)
-          formatted_output = []
-
-          result[:results].each do |repo_name, repo_result|
-            next unless repo_result[:success]
-
-            output = repo_result[:stdout] || ""
-            if options[:list] || options[:verify]
-              # For list/verify operations, show the output
-              unless output.strip.empty?
-                formatted_output << "[#{repo_name}]"
-                output.lines.each { |line| formatted_output << "  #{line.rstrip}" }
-              end
-            else
-              # For create/delete operations, show simple confirmation
-              operation = determine_tag_operation(options)
-              formatted_output << "[#{repo_name}] #{operation} completed successfully"
-            end
-          end
-
-          result.merge(formatted_output: formatted_output.join("\n"))
-        end
-
-        def determine_tag_operation(options)
-          return "Tag deletion" if options[:delete]
-          return "Tag verification" if options[:verify]
-          return "Tag listing" if options[:list]
-          "Tag creation"
+          result
         end
 
         # Repository detection

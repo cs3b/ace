@@ -9,5 +9,5 @@ require "coding_agent_tools/molecules/executable_wrapper"
 CodingAgentTools::Molecules::ExecutableWrapper.new(
   command_path: ["git", "tag"],
   registration_method: :register_git_commands,
-  executable_name: "git-tag-all"
+  executable_name: "git-tag"
 ).call

@@ -17,7 +17,7 @@
 | `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
 | `git-push` | Enhanced git push | `--force`, `--dry-run` |
 | `git-status` | Enhanced git status | `--verbose`, `--short` |
-| `git-tag-all` | Multi-repository git tagging | `--annotate`, `--delete`, `--list` |
+| `git-tag` | Enhanced git tag | `--annotate`, `--delete`, `--list` |
 | `handbook` | Development handbook access | `sync-templates` |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
@@ -57,7 +57,7 @@
 | `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
 | `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
 | `git-status` | Multi-repo status | `--verbose`, `--short` |
-| `git-tag-all` | Multi-repo tagging | `--annotate`, `--delete`, `--list` |
+| `git-tag` | Multi-repo tagging | `--annotate`, `--delete`, `--list` |
 
 ### Release Manager   {#release-manager}
 
@@ -466,12 +466,12 @@ git-status --short --repository dev-tools
 ```
 </details>
 
-### `git-tag-all` – Multi-repository git tagging   {#git-tag-all--multi-repository-git-tagging}
+### `git-tag` – Enhanced git tag   {#git-tag--enhanced-git-tag}
 
 <details><summary>Details</summary>
 
 ```bash
-git-tag-all [TAGNAME] [COMMIT] [OPTIONS]
+git-tag [OPTIONS]
 ```
 
 | Flag | Purpose | Default |
@@ -488,9 +488,9 @@ git-tag-all [TAGNAME] [COMMIT] [OPTIONS]
 
 **Examples**
 ```bash
-git-tag-all v1.2.3
-git-tag-all -a v1.2.3 -m "Release version 1.2.3"
-git-tag-all -d v1.2.3
+git-tag v1.2.3
+git-tag -a v1.2.3 -m "Release version 1.2.3"  
+git-tag -d v1.2.3
 ```
 </details>
 
