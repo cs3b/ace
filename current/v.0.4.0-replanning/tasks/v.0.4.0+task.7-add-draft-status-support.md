@@ -99,10 +99,10 @@ create-path task-new --title "implement user authentication system" --status "dr
 3.  Draft tasks appear in normal tool outputs:
         task-manager next
         # Shows both pending and draft tasks without special filtering
-           
+
         nav-path task authentication
         # Finds the draft task file normally
-           
+
         git-status
         # Includes draft tasks in repository status reporting
     {: .language-bash}

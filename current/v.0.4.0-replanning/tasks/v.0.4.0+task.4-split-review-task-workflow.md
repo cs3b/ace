@@ -21,6 +21,7 @@ tree -L 2 dev-handbook/workflow-instructions | grep -E "(review-task|plan-task|d
 ```bash
     ├── draft-task.wf.md (from task 3)
     ├── review-task.wf.md (to be renamed)
+```
 
 ## Objective
 
@@ -302,7 +303,7 @@ The following templates should be embedded in plan-task.wf.md:
   - Purpose: [why this file]
   - Key components: [what it contains]
 
-### Modify  
+### Modify
 - path/to/existing/file.ext
   - Changes: [what to modify]
   - Impact: [effects on system]

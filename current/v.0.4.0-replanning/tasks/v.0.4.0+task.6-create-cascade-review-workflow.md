@@ -22,6 +22,7 @@ find dev-handbook/workflow-instructions -name "*.wf.md" | head -10
 dev-handbook/workflow-instructions/capture-idea.wf.md
 dev-handbook/workflow-instructions/draft-task.wf.md
 dev-handbook/workflow-instructions/plan-task.wf.md
+```
 
 ## Objective
 
@@ -70,7 +71,7 @@ and actual implementation work.*
 *Research, analysis, and design activities that help clarify the approach before implementation begins.*
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Analyze current task dependency patterns in dev-taskflow structure
-  > TEST: Dependency Pattern Analysis Type: Pre-condition Check  
+  > TEST: Dependency Pattern Analysis Type: Pre-condition Check
   > Assert: All dependency patterns and formats are documented Command: find dev-taskflow/current -name "\*.md" -exec grep -l "dependencies:" \{} \\; \| head -5
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Research topological sorting algorithms for dependency graph traversal
@@ -109,7 +110,7 @@ and actual implementation work.*
   > "(task-manager\|nav-path)" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update dev-handbook/workflow-instructions/README.md with new workflow
-  > TEST: Documentation Integration Type: Integration Validation  
+  > TEST: Documentation Integration Type: Integration Validation
   > Assert: New workflow is properly documented in README Command: grep -q "replan-cascade-task" dev-handbook/workflow-instructions/README.md
 
 ## Scope of Work
@@ -158,7 +159,7 @@ After completing `v.0.4.0+task.4-draft-task-template-system.md`, run the cascade
 # Navigate to the completed task
 nav-path file v.0.4.0+task.4-draft-task-template-system.md
 
-# Run the cascade review workflow  
+# Run the cascade review workflow
 replan-cascade-task v.0.4.0+task.4
 ```
 
@@ -172,7 +173,7 @@ replan-cascade-task v.0.4.0+task.4
 1.  **Task 6 (draft status)**: Add impact notes section at the beginning:
 ```bash
     ## Impact Notes from v.0.4.0+task.4 Completion
-       
+
     - New template system available: use standardized XML embedding format
     - Template location: dev-handbook/templates/tasks/impact-note.template.md
     - Integration point: impact note template should follow XML embedding pattern
@@ -180,7 +181,7 @@ replan-cascade-task v.0.4.0+task.4
 
 2.  **Task 7 (pending status)**: Update implementation plan:
     ## Implementation Plan Updates
-       
+
     ### Planning Steps (Updated based on Task 4 completion)
     * [✓] Template system research → Use new standardized template system
     * [ ] Review workflow design → Integrate with XML embedding format from task 4
@@ -190,12 +191,12 @@ replan-cascade-task v.0.4.0+task.4
 
 git-commit -m "task.6: Add impact notes from task.4 template system completion
 
-Cascade review identified template integration requirements for 
+Cascade review identified template integration requirements for
 cascade workflow implementation."
 
-git-commit -m "task.7: Update implementation plan based on task.4 completion  
+git-commit -m "task.7: Update implementation plan based on task.4 completion
 
-Modified planning steps to leverage new XML embedding template 
+Modified planning steps to leverage new XML embedding template
 system for consistency with project standards."
 ```
 
@@ -214,7 +215,7 @@ The workflow integrates directly with project tools:
 # Find dependent tasks
 task-manager deps v.0.4.0+task.4
 
-# Navigate to impact templates  
+# Navigate to impact templates
 nav-path file impact-note.template.md
 
 # Check cascade scope
