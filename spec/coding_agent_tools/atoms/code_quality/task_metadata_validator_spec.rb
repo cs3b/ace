@@ -509,6 +509,8 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
   end
 
   describe "draft status support" do
+    let(:validator) { described_class.new(task_dirs: [temp_dir]) }
+
     context "with draft status" do
       before do
         create_task_file("draft_task.md", {
