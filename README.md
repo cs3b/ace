@@ -109,7 +109,7 @@ corresponding command:
 * `/initialize-project-structure` - Set up project structure
 * `/load-project-context` - Load project context
 * `/publish-release` - Publish release
-* `/review-task` - Review task definition
+* `/plan-task` - Plan task implementation
 * `/update-blueprint` - Update project blueprint
 * `/update-roadmap` - Update project roadmap
 * `/work-on-task` - Work on a task
@@ -132,7 +132,7 @@ actionable tasks: This often involves a preparatory step to structure the input,
 
 ```text
 1. Prepare an analysis from your Feature Requirements Document (FRD):
-   Read and execute the workflow instruction `dev-handbook/workflow-instructions/create-task.md`.
+   Read and execute the workflow instruction `dev-handbook/workflow-instructions/draft-task.md`.
    (The AI will likely ask for the FRD content or path).
 
 2. Create tasks from the structured analysis:
@@ -141,7 +141,7 @@ actionable tasks: This often involves a preparatory step to structure the input,
    following the guidelines in `dev-handbook/guides/write-actionable-task.md`.
 ```
 
-(Note: The `dev-handbook/workflow-instructions/create-task.md` workflow handles different input sources for task creation in a single, comprehensive workflow.)
+(Note: The `dev-handbook/workflow-instructions/draft-task.md` workflow handles different input sources for task creation in a single, comprehensive workflow.)
 
 **3. Review a Task** To thoroughly review an existing task definition (e.g., the next one suggested by a script like `task-manager next`) against project goals,
 architecture, and recent changes, and to propose refinements:
@@ -153,7 +153,7 @@ a task from `dev-taskflow/current/{release_version}/tasks/`.
 
 2. Instruct the agent with the task's file path:
    Read and execute the workflow instruction
-   `dev-handbook/workflow-instructions/review-task.md` using the task file
+   `dev-handbook/workflow-instructions/plan-task.md` using the task file
    <path_to_identified_task.md>.
 ```
 
