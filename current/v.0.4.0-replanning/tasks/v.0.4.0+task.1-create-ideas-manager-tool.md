@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.1 status: pending priority: high estimate: 8h dependencies: \[\] ---
+---
+id: v.0.4.0+task.1
+status: pending
+priority: high
+estimate: 8h
+dependencies: []
+---
 
 # Create ideas-manager Tool for Idea Capture
 

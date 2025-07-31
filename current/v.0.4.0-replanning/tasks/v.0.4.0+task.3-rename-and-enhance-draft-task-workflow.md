@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.3 status: done priority: high estimate: 8h dependencies: \[v.0.4.0+task.2\] ---
+---
+id: v.0.4.0+task.3
+status: done
+priority: high
+estimate: 8h
+dependencies: [v.0.4.0+task.2]
+---
 
 # Rename draft-task to draft-task with Behavior-First Focus
 

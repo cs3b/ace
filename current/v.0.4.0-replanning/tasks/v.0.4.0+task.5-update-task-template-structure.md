@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.5 status: draft priority: high estimate: 4h dependencies: \[v.0.4.0+task.3, v.0.4.0+task.4\] ---
+---
+id: v.0.4.0+task.5
+status: draft
+priority: high
+estimate: 4h
+dependencies: [v.0.4.0+task.3, v.0.4.0+task.4]
+---
 
 # Update Task Template with Clear What/How Sections
 

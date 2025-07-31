@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.4 status: done priority: high estimate: 10h dependencies: \[v.0.4.0+task.3\] ---
+---
+id: v.0.4.0+task.4
+status: done
+priority: high
+estimate: 10h
+dependencies: [v.0.4.0+task.3]
+---
 
 # Rename review-task to plan-task for Implementation Planning
 

@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.6 status: draft priority: medium estimate: 8h dependencies: \[v.0.4.0+task.4\] ---
+---
+id: v.0.4.0+task.6
+status: draft
+priority: medium
+estimate: 8h
+dependencies: [v.0.4.0+task.4]
+---
 
 # Create replan-cascade-task Workflow for Dependency Impact Analysis
 

@@ -1,6 +1,10 @@
-* * *
-
-id: v.0.4.0+task.2 status: done priority: medium estimate: 2h dependencies: \[v.0.4.0+task.1\] ---
+---
+id: v.0.4.0+task.2
+status: done
+priority: medium
+estimate: 2h
+dependencies: [v.0.4.0+task.1]
+---
 
 # Create capture-idea Workflow Instruction
 
