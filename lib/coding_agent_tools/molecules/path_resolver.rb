@@ -179,22 +179,22 @@ module CodingAgentTools
         begin
           # Generate timestamp
           timestamp = Time.now.strftime("%Y%m%d-%H%M")
-          
+
           # Generate slug from idea context (try LLM first, fallback to simple slugify)
           slug = generate_smart_slug(idea_context) || slugify(idea_context)
-          
+
           # Create base filename
           base_filename = "#{timestamp}-#{slug}"
-          
+
           # Generate the three paths
           input_path = File.join(@sandbox.project_root, "tmp", "#{base_filename}.md")
           system_path = File.join(@sandbox.project_root, "tmp", "#{base_filename}.system.prompt.md")
           output_path = File.join(@sandbox.project_root, "dev-taskflow/backlog/ideas", "#{base_filename}.md")
-          
+
           # Create directories if they don't exist
           FileUtils.mkdir_p(File.dirname(input_path))
           FileUtils.mkdir_p(File.dirname(output_path))
-          
+
           # Return the three paths
           {
             success: true,
@@ -227,7 +227,7 @@ module CodingAgentTools
           success(resolved_path)
         rescue SecurityError => e
           failure("Release-relative path resolution failed: #{e.message}")
-        rescue StandardError => e
+        rescue => e
           failure("Release-relative path resolution failed: #{e.message}")
         end
       end
@@ -450,34 +450,33 @@ module CodingAgentTools
       # @return [String, nil] The generated slug or nil if LLM call fails
       def generate_smart_slug(idea_context)
         return nil if idea_context.nil? || idea_context.strip.empty?
-        
+
         begin
           # Limit context to first 100 words to keep LLM call fast and focused
           words = idea_context.strip.split(/\s+/)
-          limited_context = words.first(100).join(' ')
-          
+          limited_context = words.first(100).join(" ")
+
           # Use llm-query to generate a smart 3-word slug
-          require 'open3'
-          require 'timeout'
-          
+          require "open3"
+          require "timeout"
+
           system_prompt = "return only 3 word slug for the context (lowercase linked by hyphens)"
           command = ["llm-query", "google:gemini-2.5-flash-lite", limited_context, "--system", system_prompt]
-          
+
           # Quick timeout for slug generation (5 seconds)
           result = nil
           Timeout.timeout(5) do
-            stdout, stderr, status = Open3.capture3(*command)
+            stdout, _, status = Open3.capture3(*command)
             result = stdout.strip if status.success? && !stdout.strip.empty?
           end
-          
+
           # Validate the result looks like a proper slug
-          if result && result.match?(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/) && result.count('-') >= 1
+          if result && result.match?(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/) && result.count("-") >= 1
             result
           else
             nil # Fall back to simple slugify
           end
-          
-        rescue => e
+        rescue
           # Silently fall back to simple slugify on any error
           nil
         end
@@ -490,23 +489,23 @@ module CodingAgentTools
           .gsub(/\s+/, "-").squeeze("-")       # Collapse multiple hyphens
           .strip                 # Remove leading/trailing whitespace
           .gsub(/^-|-$/, "")     # Remove leading/trailing hyphens
-        
+
         # Limit slug length to prevent filesystem filename length issues
         # Truncate at word boundaries to keep it readable
         max_slug_length = 80
         if slug.length > max_slug_length
           # Find the last word boundary (hyphen) within the limit
           truncated = slug[0, max_slug_length]
-          last_hyphen = truncated.rindex('-')
-          
-          if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
-            slug = truncated[0, last_hyphen]
+          last_hyphen = truncated.rindex("-")
+
+          slug = if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
+            truncated[0, last_hyphen]
           else
             # Fallback: truncate and clean up
-            slug = truncated.gsub(/-+$/, "")
+            truncated.gsub(/-+$/, "")
           end
         end
-        
+
         slug
       end
 

@@ -13,7 +13,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
   before do
     # Set up basic project structure
     FileUtils.mkdir_p(docs_dir)
-    
+
     # Mock sandbox to return our temp directory as project root
     allow(mock_sandbox).to receive(:project_root).and_return(project_root)
   end
@@ -69,12 +69,12 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
         # Create test markdown files
         File.write(File.join(docs_dir, "README.md"), "# Main Documentation\n\nThis is the main docs.")
         File.write(File.join(docs_dir, "guide.md"), "# User Guide\n\nStep-by-step instructions.")
-        
+
         # Create subdirectory with markdown file
         subdir = File.join(docs_dir, "api")
         FileUtils.mkdir_p(subdir)
         File.write(File.join(subdir, "endpoints.md"), "# API Endpoints\n\nREST API documentation.")
-        
+
         # Create non-markdown file (should be ignored)
         File.write(File.join(docs_dir, "config.txt"), "Some config content")
       end
@@ -94,17 +94,17 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
 
         expect(context).to start_with("<context>\n")
         expect(context).to end_with("</context>")
-        
+
         # Should contain all three markdown files
         expect(context).to include('path="docs/README.md"')
         expect(context).to include('path="docs/guide.md"')
         expect(context).to include('path="docs/api/endpoints.md"')
-        
+
         # Should contain file contents
         expect(context).to include("# Main Documentation")
         expect(context).to include("# User Guide")
         expect(context).to include("# API Endpoints")
-        
+
         # Should not contain non-markdown files
         expect(context).not_to include("config.txt")
         expect(context).not_to include("Some config content")
@@ -118,7 +118,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
         lines = context.split("\n")
         content_lines = lines.select { |line| line.start_with?("        ") && !line.strip.empty? }
         expect(content_lines).not_to be_empty
-        
+
         # Verify document structure
         expect(context).to match(/    <document path="[^"]+">/)
         expect(context).to match(/        # .+/)
@@ -140,17 +140,17 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
     context "when some files are unreadable" do
       before do
         File.write(File.join(docs_dir, "readable.md"), "# Readable File\n\nContent here.")
-        
+
         # Create an unreadable file by making it write-only
         unreadable_file = File.join(docs_dir, "unreadable.md")
         File.write(unreadable_file, "# Unreadable File")
-        File.chmod(0000, unreadable_file)
+        File.chmod(0o000, unreadable_file)
       end
 
       after do
         # Restore permissions for cleanup
         unreadable_file = File.join(docs_dir, "unreadable.md")
-        File.chmod(0644, unreadable_file) if File.exist?(unreadable_file)
+        File.chmod(0o644, unreadable_file) if File.exist?(unreadable_file)
       end
 
       it "loads readable files and reports failed files" do
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
         expect(result[:files_failed]).to eq(1)
         expect(result[:failed_files]).to be_an(Array)
         expect(result[:failed_files].length).to eq(1)
-        
+
         failed_file = result[:failed_files].first
         expect(failed_file[:path]).to eq("docs/unreadable.md")
         expect(failed_file[:error]).to be_a(String)
@@ -219,7 +219,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
           Emoji: 🚀 📝 ✅
           Accents: café, naïve, résumé
         MARKDOWN
-        
+
         File.write(File.join(docs_dir, "complex.md"), complex_content)
       end
 
@@ -276,7 +276,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
             content: "# First\nContent 1"
           },
           {
-            path: "docs/second.md", 
+            path: "docs/second.md",
             content: "# Second\nContent 2"
           }
         ]
@@ -291,7 +291,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
         expect(result).to include('    <document path="docs/second.md">')
         expect(result).to include("        # Second")
         expect(result).to include("        Content 2")
-        
+
         # Verify proper document separation
         first_doc_end = result.index("    </document>")
         second_doc_start = result.index('    <document path="docs/second.md">')
@@ -328,9 +328,9 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
 
         lines = result.split("\n")
         content_lines = lines.select { |line| line.start_with?("        ") }
-        
+
         expect(content_lines[0]).to eq("        Line 1")
-        expect(content_lines[1]).to eq("        ")  # Empty line with indentation  
+        expect(content_lines[1]).to eq("        ")  # Empty line with indentation
         expect(content_lines[2]).to eq("        Line 3")
         expect(content_lines[3]).to eq("        ")  # Empty line with indentation
         expect(content_lines[4]).to eq("        ")  # Empty line with indentation
@@ -407,7 +407,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
     context "when file reading raises unexpected error" do
       before do
         File.write(File.join(docs_dir, "test.md"), "# Test")
-        
+
         # Mock File.read to raise an unexpected error for this specific file
         allow(File).to receive(:read).and_call_original
         allow(File).to receive(:read).with(File.join(docs_dir, "test.md")).and_raise(Errno::EIO.new("I/O error"))
@@ -431,7 +431,7 @@ RSpec.describe CodingAgentTools::Molecules::ContextLoader do
       before do
         # Create 50 small files to test performance
         50.times do |i|
-          File.write(File.join(docs_dir, "file_#{i.to_s.rjust(2, '0')}.md"), "# File #{i}\n\nContent for file #{i}.")
+          File.write(File.join(docs_dir, "file_#{i.to_s.rjust(2, "0")}.md"), "# File #{i}\n\nContent for file #{i}.")
         end
       end
 

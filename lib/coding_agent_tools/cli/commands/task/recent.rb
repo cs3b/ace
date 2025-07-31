@@ -4,6 +4,7 @@ require "dry/cli"
 require_relative "../../../organisms/taskflow_management/task_manager"
 require_relative "../../../atoms/project_root_detector"
 require_relative "../../../molecules/taskflow_management/unified_task_formatter"
+require_relative "../../../molecules/taskflow_management/task_status_summary"
 
 module CodingAgentTools
   module Cli
@@ -59,13 +60,21 @@ module CodingAgentTools
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
+            # Get all tasks from current release for status summary
+            all_tasks_result = task_manager.get_all_tasks(release_path: options[:release])
+            status_summary = if all_tasks_result.success?
+              CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary(all_tasks_result.tasks)
+            else
+              CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary([])
+            end
+
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,
               statuses: %w[done in-progress pending blocked],
               release_path: options[:release]
             )
 
-            handle_result(result, options.merge(limit: limit))
+            handle_result(result, options.merge(limit: limit), status_summary)
             0
           rescue => e
             handle_error(e, options[:debug])
@@ -99,19 +108,23 @@ module CodingAgentTools
             end
           end
 
-          def handle_result(result, options)
+          def handle_result(result, options, status_summary = nil)
             unless result.success?
               error_output("Error: #{result.message}")
               return
             end
 
             if result.tasks.empty?
+              puts status_summary.formatted_text if status_summary
               puts "No recent tasks found"
               return
             end
 
             # Limit results
             limited_tasks = result.tasks.take(options[:limit])
+
+            # Show status summary first
+            puts status_summary.formatted_text if status_summary
 
             puts "Recent Tasks (#{limited_tasks.size}/#{result.count} shown):"
             puts "=" * 50

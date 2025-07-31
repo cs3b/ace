@@ -11,17 +11,17 @@ RSpec.describe "Ideas Manager CLI" do
   let(:mock_idea_capture) { instance_double(CodingAgentTools::Organisms::IdeaCapture) }
   let(:success_result) do
     CodingAgentTools::Organisms::IdeaCapture::CaptureResult.new(
-      true, 
-      "/fake/path/to/captured_idea.md", 
-      nil, 
+      true,
+      "/fake/path/to/captured_idea.md",
+      nil,
       nil
     )
   end
   let(:failure_result) do
     CodingAgentTools::Organisms::IdeaCapture::CaptureResult.new(
-      false, 
-      nil, 
-      "Input too large: 10.5 KB, 1500 words. Use --big-user-input-allowed to proceed", 
+      false,
+      nil,
+      "Input too large: 10.5 KB, 1500 words. Use --big-user-input-allowed to proceed",
       nil
     )
   end
@@ -38,7 +38,7 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "captures idea successfully" do
         output = capture_stdout { capture_command.call(idea_text: idea_text) }
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: nil,
@@ -51,7 +51,7 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "passes custom model option" do
         capture_stdout { capture_command.call(idea_text: idea_text, model: "anthropic:claude-3.5-sonnet") }
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "anthropic:claude-3.5-sonnet",
           debug: nil,
@@ -62,7 +62,7 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "enables debug mode" do
         capture_stdout { capture_command.call(idea_text: idea_text, debug: true) }
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: true,
@@ -73,7 +73,7 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "allows big user input" do
         capture_stdout { capture_command.call(idea_text: idea_text, big_user_input_allowed: true) }
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: nil,
@@ -85,13 +85,13 @@ RSpec.describe "Ideas Manager CLI" do
       it "combines multiple options" do
         capture_stdout do
           capture_command.call(
-            idea_text: idea_text, 
-            model: "openai:gpt-4o", 
-            debug: true, 
+            idea_text: idea_text,
+            model: "openai:gpt-4o",
+            debug: true,
             big_user_input_allowed: true
           )
         end
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "openai:gpt-4o",
           debug: true,
@@ -110,14 +110,14 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "reads from clipboard successfully" do
         output = capture_stdout { capture_command.call(clipboard: true) }
-        
+
         expect(mock_idea_capture).to have_received(:capture_idea).with("Clipboard content from macOS")
         expect(output).to include("Created: /fake/path/to/captured_idea.md")
       end
 
       it "combines clipboard with other options" do
         capture_stdout { capture_command.call(clipboard: true, model: "mistral:mistral-large") }
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "mistral:mistral-large",
           debug: nil,
@@ -139,7 +139,7 @@ RSpec.describe "Ideas Manager CLI" do
 
         it "shows clipboard error message" do
           output = capture_stdout { capture_command.call(clipboard: true) }
-          
+
           expect(output).to include("Error: Could not read from clipboard")
           expect(output).to include("Please install pbpaste (macOS), xclip/xsel (Linux)")
         end
@@ -153,7 +153,7 @@ RSpec.describe "Ideas Manager CLI" do
 
         it "shows clipboard error message" do
           output = capture_stdout { capture_command.call(clipboard: true) }
-          
+
           expect(output).to include("Error: Could not read from clipboard")
           expect(output).to include("Please install pbpaste (macOS), xclip/xsel (Linux)")
         end
@@ -175,7 +175,7 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "reads from file successfully" do
         output = capture_stdout { capture_command.call(file: temp_file.path) }
-        
+
         expect(mock_idea_capture).to have_received(:capture_idea).with(file_content.strip)
         expect(output).to include("Created: /fake/path/to/captured_idea.md")
       end
@@ -183,12 +183,12 @@ RSpec.describe "Ideas Manager CLI" do
       it "combines file input with other options" do
         capture_stdout do
           capture_command.call(
-            file: temp_file.path, 
-            debug: true, 
+            file: temp_file.path,
+            debug: true,
             big_user_input_allowed: true
           )
         end
-        
+
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: true,
@@ -200,7 +200,7 @@ RSpec.describe "Ideas Manager CLI" do
       context "when file does not exist" do
         it "shows file not found error" do
           output = capture_stdout { capture_command.call(file: "/nonexistent/file.txt") }
-          
+
           expect(output).to include("Error: File not found: /nonexistent/file.txt")
         end
       end
@@ -213,23 +213,23 @@ RSpec.describe "Ideas Manager CLI" do
 
         it "shows empty file error" do
           output = capture_stdout { capture_command.call(file: empty_file.path) }
-          
+
           expect(output).to include("Error: File is empty: #{empty_file.path}")
         end
       end
 
       context "when file is not readable" do
         before do
-          File.chmod(0000, temp_file.path) # Remove all permissions
+          File.chmod(0o000, temp_file.path) # Remove all permissions
         end
 
         after do
-          File.chmod(0644, temp_file.path) # Restore permissions for cleanup
+          File.chmod(0o644, temp_file.path) # Restore permissions for cleanup
         end
 
         it "shows file not readable error" do
           output = capture_stdout { capture_command.call(file: temp_file.path) }
-          
+
           expect(output).to include("Error: File not readable: #{temp_file.path}")
         end
       end
@@ -252,7 +252,7 @@ RSpec.describe "Ideas Manager CLI" do
         output = capture_stdout do
           expect { capture_command.call(idea_text: "test idea") }.to raise_error(SystemExit)
         end
-        
+
         expect(output).to include("Error: Input too large: 10.5 KB, 1500 words. Use --big-user-input-allowed to proceed")
       end
     end
@@ -260,7 +260,7 @@ RSpec.describe "Ideas Manager CLI" do
     context "with no input provided" do
       it "shows usage information for no arguments" do
         output = capture_stdout { capture_command.call }
-        
+
         expect(output).to include("Error: No input provided")
         expect(output).to include("Usage: ideas-manager capture 'your idea text'")
         expect(output).to include("ideas-manager capture --clipboard")
@@ -269,14 +269,14 @@ RSpec.describe "Ideas Manager CLI" do
 
       it "shows usage information for empty string" do
         output = capture_stdout { capture_command.call(idea_text: "") }
-        
+
         expect(output).to include("Error: No input provided")
         expect(output).to include("Usage: ideas-manager capture 'your idea text'")
       end
 
       it "shows usage information for whitespace-only string" do
         output = capture_stdout { capture_command.call(idea_text: "   \n  \t  ") }
-        
+
         expect(output).to include("Error: No input provided")
         expect(output).to include("Usage: ideas-manager capture 'your idea text'")
       end
@@ -292,7 +292,7 @@ RSpec.describe "Ideas Manager CLI" do
           output = capture_stdout do
             expect { capture_command.call(idea_text: "test idea") }.to raise_error(SystemExit)
           end
-          
+
           expect(output).to include("Error: Unexpected error occurred")
           expect(output).not_to include("Debug:")
         end
@@ -317,7 +317,7 @@ RSpec.describe "Ideas Manager CLI" do
           output = capture_stdout do
             expect { capture_command.call(idea_text: "test idea", debug: true) }.to raise_error(SystemExit)
           end
-          
+
           expect(output).to include("Debug: Full error details:")
           expect(output).to include("Unexpected error occurred")
           expect(output).to include("line 1")
@@ -333,9 +333,9 @@ RSpec.describe "Ideas Manager CLI" do
       context "without big-user-input-allowed flag" do
         before do
           large_input_result = CodingAgentTools::Organisms::IdeaCapture::CaptureResult.new(
-            false, 
-            nil, 
-            "Input too large: #{(large_input.length / 1024.0).round(1)} KB, #{large_input.split.length} words. Use --big-user-input-allowed to proceed", 
+            false,
+            nil,
+            "Input too large: #{(large_input.length / 1024.0).round(1)} KB, #{large_input.split.length} words. Use --big-user-input-allowed to proceed",
             nil
           )
           allow(mock_idea_capture).to receive(:capture_idea).and_return(large_input_result)
@@ -345,7 +345,7 @@ RSpec.describe "Ideas Manager CLI" do
           output = capture_stdout do
             expect { capture_command.call(idea_text: large_input) }.to raise_error(SystemExit)
           end
-          
+
           expect(output).to include("Input too large")
           expect(output).to include("Use --big-user-input-allowed to proceed")
         end
@@ -354,7 +354,7 @@ RSpec.describe "Ideas Manager CLI" do
       context "with big-user-input-allowed flag" do
         it "accepts large input" do
           output = capture_stdout { capture_command.call(idea_text: large_input, big_user_input_allowed: true) }
-          
+
           expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
             model: nil,
             debug: nil,
@@ -370,7 +370,7 @@ RSpec.describe "Ideas Manager CLI" do
       context "when --commit flag is provided" do
         it "passes commit_after_capture: true to IdeaCapture organism" do
           capture_stdout { capture_command.call(idea_text: "test idea", commit: true) }
-          
+
           expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
             model: nil,
             debug: nil,
@@ -383,7 +383,7 @@ RSpec.describe "Ideas Manager CLI" do
       context "when --commit flag is not provided" do
         it "passes commit_after_capture: false to IdeaCapture organism" do
           capture_stdout { capture_command.call(idea_text: "test idea") }
-          
+
           expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
             model: nil,
             debug: nil,
@@ -397,12 +397,12 @@ RSpec.describe "Ideas Manager CLI" do
         it "combines --commit with --model flag correctly" do
           capture_stdout do
             capture_command.call(
-              idea_text: "test idea", 
-              commit: true, 
+              idea_text: "test idea",
+              commit: true,
               model: "anthropic:claude-3.5-sonnet"
             )
           end
-          
+
           expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
             model: "anthropic:claude-3.5-sonnet",
             debug: nil,
@@ -431,7 +431,7 @@ RSpec.describe "Ideas Manager CLI" do
     it "has correct options" do
       options = CodingAgentTools::Cli::Commands::Ideas::Capture.options
       option_names = options.map(&:name)
-      
+
       expect(option_names).to include(:clipboard)
       expect(option_names).to include(:file)
       expect(option_names).to include(:model)
@@ -465,17 +465,17 @@ RSpec.describe "Ideas Manager CLI" do
   describe "output formatting" do
     it "displays success message with output path" do
       output = capture_stdout { capture_command.call(idea_text: "test idea") }
-      
+
       expect(output.strip).to eq("Created: /fake/path/to/captured_idea.md")
     end
 
     it "displays error message on failure" do
       allow(mock_idea_capture).to receive(:capture_idea).and_return(failure_result)
-      
+
       output = capture_stdout do
         expect { capture_command.call(idea_text: "test idea") }.to raise_error(SystemExit)
       end
-      
+
       expect(output).to include("Error: Input too large")
     end
   end

@@ -15,7 +15,7 @@ module CodingAgentTools
       # @return [Hash] Validation result
       def validate_idea_content(idea_content)
         return {valid: false, error: "Idea content cannot be nil"} if idea_content.nil?
-        
+
         cleaned = idea_content.strip
         return {valid: false, error: "Idea content cannot be empty"} if cleaned.empty?
         return {valid: false, error: "Idea content too short (minimum 5 characters)"} if cleaned.length < 5
@@ -29,10 +29,10 @@ module CodingAgentTools
       def extract_title(idea_content)
         # Take first sentence or first line, clean it up
         first_line = idea_content.strip.lines.first&.strip || ""
-        
+
         # Remove common prefixes
         cleaned = first_line.gsub(/^(idea:|thought:|suggestion:)\s*/i, "")
-        
+
         # Truncate at reasonable length
         if cleaned.length > 80
           # Try to break at word boundary
@@ -52,7 +52,7 @@ module CodingAgentTools
       # @return [Array<String>] Generated questions
       def generate_questions(idea_content, project_context = nil)
         questions = []
-        
+
         # Basic validation questions
         questions << "What specific problem does this solve?"
         questions << "Who would benefit from this implementation?"

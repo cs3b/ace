@@ -25,11 +25,11 @@ module CodingAgentTools
           Timeout.timeout(timeout) do
             Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
               stdin.close  # We don't need to send input
-              
+
               # Read output and error streams
               output = stdout.read
               error_output = stderr.read
-              
+
               exit_status = wait_thr.value.exitstatus
             end
           end
@@ -40,7 +40,6 @@ module CodingAgentTools
             error_msg = error_output.empty? ? "Command failed (exit code: #{exit_status})" : error_output
             {success: false, output: output, error: error_msg}
           end
-
         rescue Timeout::Error
           {success: false, error: "Command timed out after #{timeout} seconds"}
         rescue Errno::ENOENT => e

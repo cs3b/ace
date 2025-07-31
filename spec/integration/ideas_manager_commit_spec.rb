@@ -9,7 +9,7 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
   let(:temp_dir) { Dir.mktmpdir("ideas_commit_test") }
   let(:git_repo_dir) { File.join(temp_dir, "test_repo") }
   let(:ideas_manager_path) { File.expand_path("../../../exe/ideas-manager", __FILE__) }
-  
+
   before do
     # Setup temporary git repository
     Dir.chdir(temp_dir) do
@@ -30,21 +30,21 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
     it "creates and commits idea file successfully", :focus do
       Dir.chdir(git_repo_dir) do
         # Use a simple test to bypass LLM integration
-        ENV['TEST'] = nil # Temporarily remove TEST env to allow git operations
-        
+        ENV["TEST"] = nil # Temporarily remove TEST env to allow git operations
+
         output = `#{ideas_manager_path} capture "test integration idea" --commit 2>&1`
         exit_status = $?.exitstatus
-        
+
         # Restore TEST environment
-        ENV['TEST'] = '1'
-        
+        ENV["TEST"] = "1"
+
         expect(exit_status).to eq(0)
         expect(output).to include("Created:")
-        
-        # Check if files were created in expected locations
-        idea_files_found = Dir.glob("**/test-integration-idea*.md")
+
+        # Check if files were created in expected locations (filename has timestamp prefix)
+        idea_files_found = Dir.glob("**/*test-integration-idea*.md")
         expect(idea_files_found).not_to be_empty
-        
+
         # Skip git commit verification in test environment for safety
         # This is an integration test to verify command line interface works
       end
@@ -53,25 +53,25 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
 
   context "in CI environment" do
     around do |example|
-      old_ci = ENV['CI']
-      ENV['CI'] = 'true'
+      old_ci = ENV["CI"]
+      ENV["CI"] = "true"
       example.run
     ensure
-      ENV['CI'] = old_ci
+      ENV["CI"] = old_ci
     end
-    
+
     it "creates idea file but skips commit" do
       Dir.chdir(git_repo_dir) do
         output = `#{ideas_manager_path} capture "test ci idea" --commit 2>&1`
         exit_status = $?.exitstatus
-        
+
         expect(exit_status).to eq(0)
         expect(output).to include("Created:")
-        
-        # Check if files were created
-        idea_files_found = Dir.glob("**/test-ci-idea*.md")
+
+        # Check if files were created (filename has timestamp prefix)
+        idea_files_found = Dir.glob("**/*test-ci-idea*.md")
         expect(idea_files_found).not_to be_empty
-        
+
         # In CI environment, git operations should be skipped
         # Verify no new commits were created beyond initial commit
         git_log = `git log --oneline`
@@ -87,10 +87,10 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
         # Create a minimal test that bypasses LLM but tests the --commit flag logic
         output = `#{ideas_manager_path} capture "minimal test" --commit --debug 2>&1`
         exit_status = $?.exitstatus
-        
+
         # Should succeed or fail gracefully
         expect([0, 1]).to include(exit_status)
-        
+
         # Should show some processing occurred
         expect(output).to match(/Created:|Error:|Debug:/)
       end
@@ -105,9 +105,9 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
         allow_any_instance_of(Object).to receive(:system)
           .with(anything, anything, "--intention", "capture idea")
           .and_return(false)
-        
+
         output = `#{ideas_manager_path} capture "error test" --commit 2>&1`
-        
+
         # Should handle git errors gracefully - idea creation should still succeed
         expect(output).to match(/Created:|Error:/)
       end

@@ -126,11 +126,11 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
       # Create release structure
       FileUtils.mkdir_p(reflections_dir)
       FileUtils.mkdir_p(synthesis_dir)
-      
+
       # Create sample reflection files
-      File.write(File.join(reflections_dir, "reflection-2024-01-15.md"), 
+      File.write(File.join(reflections_dir, "reflection-2024-01-15.md"),
         "# Reflection 2024-01-15\n\n**Date**: 2024-01-15\n\n## What Went Well\n- Feature implementation completed\n\n## Key Learnings\n- Path resolution works well")
-      File.write(File.join(reflections_dir, "reflection-2024-01-16.md"), 
+      File.write(File.join(reflections_dir, "reflection-2024-01-16.md"),
         "# Reflection 2024-01-16\n\n**Date**: 2024-01-16\n\n## What Went Well\n- Tests passing\n\n## Key Learnings\n- Integration tests valuable")
     end
 
@@ -143,12 +143,12 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
       require "coding_agent_tools/cli/commands/reflection/synthesize"
 
       # Set up environment to use temp directory
-      original_project_root_finder = CodingAgentTools::Atoms::ProjectRootDetector.method(:find_project_root)
+      CodingAgentTools::Atoms::ProjectRootDetector.method(:find_project_root)
       allow(CodingAgentTools::Atoms::ProjectRootDetector).to receive(:find_project_root).and_return(temp_dir)
 
       begin
         release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir)
-        
+
         # Test path resolution directly
         resolved_synthesis_path = release_manager.resolve_path("reflections/synthesis", create_if_missing: true)
         expect(resolved_synthesis_path).to eq(File.expand_path(synthesis_dir))
@@ -172,7 +172,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
       begin
         release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir)
-        
+
         # Test that resolve_path creates the directory
         resolved_path = release_manager.resolve_path("reflections/synthesis", create_if_missing: true)
         expect(File.exist?(resolved_path)).to be true
@@ -190,11 +190,11 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
       begin
         release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir)
-        
+
         # Test auto-discovery of reflection files
         reflections_path = release_manager.resolve_path("reflections")
         reflection_files = Dir.glob(File.join(reflections_path, "*.md"))
-        
+
         expect(reflection_files).not_to be_empty
         expect(reflection_files.length).to eq(2)
         expect(reflection_files.map { |f| File.basename(f) }).to include(
@@ -213,9 +213,9 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
       empty_temp_dir = Dir.mktmpdir("empty_release")
       begin
         FileUtils.mkdir_p(File.join(empty_temp_dir, "dev-taskflow", "current"))
-        
+
         release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: empty_temp_dir)
-        
+
         expect {
           release_manager.resolve_path("reflections")
         }.to raise_error(StandardError, /Cannot resolve path/)
@@ -231,7 +231,7 @@ RSpec.describe "reflection-synthesize integration", type: :integration do
 
       begin
         release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir)
-        
+
         # Test that path traversal is blocked
         expect {
           release_manager.resolve_path("../../../etc/passwd")

@@ -123,21 +123,21 @@ module CodingAgentTools
           directories = []
 
           begin
-          Dir.entries(search_path).each do |entry|
-            next if entry == "." || entry == ".."
+            Dir.entries(search_path).each do |entry|
+              next if entry == "." || entry == ".."
 
-            full_path = File.join(search_path, entry)
-            next unless File.directory?(full_path)
+              full_path = File.join(search_path, entry)
+              next unless File.directory?(full_path)
 
-            version = extract_version_from_directory_name(entry)
-            next unless version
+              version = extract_version_from_directory_name(entry)
+              next unless version
 
-            directories << {
-              path: full_path,
-              version: version,
-              name: entry
-            }
-          end
+              directories << {
+                path: full_path,
+                version: version,
+                name: entry
+              }
+            end
           rescue Errno::EACCES
             # Handle permission denied errors gracefully by returning empty array
             return []
