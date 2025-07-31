@@ -82,6 +82,14 @@ To establish a process for creating new tasks based on idea files found in the b
 - **Streamlined Workflow**: Automates a necessary file management step in the task creation process.
 - **Consistency**: Establishes a standard practice for handling idea files when creating tasks.
 
+## Example
+
+when we draft idae based on
+
+1. in claude /draft-task dev-taskflow/current/v.0.4.0-replanning/backlog/ideas/20250730-2327-auto-commit-ideas.md
+2. claude create new task dev-taskflow/current/v.0.4.0-replanning/tasks/v.0.4.0+task.009-add-commit-flag-to-ideas-manager.md
+3. after task is created it will move the original idea file to: dev-taskflow/current/v.0.4.0-replanning/docs/ideas/009-20250730-2327-auto-commit-ideas.md
+
 ## Big Unknowns
 
 **Technical Unknowns:**
