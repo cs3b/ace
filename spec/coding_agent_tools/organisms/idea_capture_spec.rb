@@ -837,8 +837,11 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     end
 
     it "raises error when git-commit fails" do
+      # Mock system call to return false (failure)
       allow(subject).to receive(:system).and_return(false)
-      allow($?).to receive(:exitstatus).and_return(1)
+      
+      # Mock the exit status method instead of the global variable
+      allow(subject).to receive(:last_command_exit_status).and_return(1)
       
       expect {
         subject.send(:execute_git_commit, file_path)

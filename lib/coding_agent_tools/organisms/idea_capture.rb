@@ -241,8 +241,12 @@ module CodingAgentTools
         success = system(git_commit_path, file_path, "--intention", "capture idea")
         
         unless success
-          raise StandardError, "git-commit failed with exit status #{$?.exitstatus}"
+          raise StandardError, "git-commit failed with exit status #{last_command_exit_status}"
         end
+      end
+
+      def last_command_exit_status
+        $?.exitstatus
       end
 
       def test_environment?
