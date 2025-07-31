@@ -24,7 +24,7 @@
 | `nav-tree` | Enhanced project tree | `--context`, `--depth` |
 | `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
 | `release-manager` | Release management tool | `current`, `report` |
-| `task-manager` | Project task management | `next`, `all` |
+| `task-manager` | Project task management | `--filter`, `--sort`, `--limit` |
 
 **💡 Pro Tip**: For file location, always use `nav-path file <filename>` instead of `find` or `ls` commands. It's intelligent, fast, and works with partial names (e.g., `nav-path file blueprint` finds `docs/blueprint.md`).
 
@@ -32,34 +32,37 @@
 
 ### AI Agent   {#ai-agent}
 
-\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`create-path` \| Create files with templates \| `task-new`, `--priority`, `--estimate` \| \|
-`llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
-\| Navigate project paths \| `task`, `file` \| \| `release-manager`
-\| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
-tasks \| `next`, `all` \|
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `create-path` | Create files with templates | `task-new`, `--priority`, `--estimate` |
+| `llm-query` | Query AI models | `--model`, `--output` |
+| `nav-path` | Navigate project paths | `task`, `file` |
+| `release-manager` | Manage releases | `current`, `report` |
+| `task-manager` | Manage tasks | `--filter`, `--sort`, `--limit` |
 
 ### Human Developer   {#human-developer}
 
-\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`code-review` \| Review code interactively \| `--interactive`, `--batch`
-\| \| `handbook` \| Access development guides \| `sync-templates` \| \|
-`reflection-synthesize` \| Generate session reports \| `--session`,
-`--focus` \|
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `code-review` | Review code interactively | `--interactive`, `--batch` |
+| `handbook` | Access development guides | `sync-templates` |
+| `reflection-synthesize` | Generate session reports | `--session`, `--focus` |
 
 ### Git Power-User   {#git-power-user}
 
-\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`git-add` \| Enhanced file staging \| `--patch`, `--all` \| \|
-`git-commit` \| Smart commit tool \| `--intention`, `--no-edit` \| \|
-`git-diff` \| Advanced diff viewer \| `--staged`, `--stat` \| \|
-`git-status` \| Multi-repo status \| `--verbose`, `--short` \|
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `git-add` | Enhanced file staging | `--patch`, `--all` |
+| `git-commit` | Smart commit tool | `--intention`, `--no-edit` |
+| `git-diff` | Advanced diff viewer | `--staged`, `--stat` |
+| `git-status` | Multi-repo status | `--verbose`, `--short` |
 
 ### Release Manager   {#release-manager}
 
-\| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`release-manager` \| Release coordination \| `current`, `report` \| \|
-`task-manager` \| Track deliverables \| `next`, `all` \|
+| Tool | Purpose | Key Flags |
+|------|---------|-----------|
+| `release-manager` | Release coordination | `current`, `report` |
+| `task-manager` | Track deliverables | `--filter`, `--sort`, `--limit` |
 
 ## Setup Requirements   {#setup-requirements}
 
@@ -177,18 +180,28 @@ llm-query csonet "Write a function" --system "You are a Ruby expert"
 task-manager [COMMAND] [OPTIONS]
 ```
 
-| Flag | Purpose | Default |
-|------|---------|---------|
-| `next` | Show next actionable task | N/A |
-| `all` | List all tasks | N/A |
-| `recent` | Show recently modified tasks | N/A |
+| Command | Purpose | Key Options |
+|---------|---------|-------------|
+| `next` | Show next actionable task | `--filter`, `--sort`, `--limit` |
+| `list` | List all tasks | `--filter`, `--sort` |
+| `all` | List all tasks (alias for list) | `--filter`, `--sort` |
+| `recent` | Show recently modified tasks | `--limit`, `--last` |
 | `generate-id` | Generate new task ID | N/A |
+
+| Flag | Purpose | Example |
+|------|---------|---------|
+| `--filter` | Filter by status/priority | `status:pending`, `priority:high` |
+| `--sort` | Sort criteria | `priority:desc,id:asc` |
+| `--limit` | Maximum results | `3` |
+| `--last` | Time period (recent only) | `2.days`, `1.week` |
 
 **Examples**
 ```bash
 task-manager next
-task-manager all
-task-manager recent
+task-manager list --filter status:draft
+task-manager next --filter priority:high --limit 3
+task-manager recent --last 2.days --limit 5
+task-manager list --sort priority:desc,id:asc
 ```
 </details>
 
