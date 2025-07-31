@@ -10,6 +10,7 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
   let(:debug) { false }
   let(:big_user_input_allowed) { false }
   let(:model) { "gflash" }
+  let(:commit_after_capture) { false }
   
   # Mock molecule dependencies
   let(:mock_context_loader) { instance_double(CodingAgentTools::Molecules::ContextLoader) }
@@ -21,7 +22,8 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     described_class.new(
       model: model,
       debug: debug,
-      big_user_input_allowed: big_user_input_allowed
+      big_user_input_allowed: big_user_input_allowed,
+      commit_after_capture: commit_after_capture
     )
   end
 
@@ -703,5 +705,192 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
         expect(mock_llm_client).to have_received(:enhance_idea)
       end
     end
+  end
+
+  describe "commit_after_capture functionality" do
+    let(:idea_text) { "Test idea for commit functionality" }
+    let(:output_path) { File.join(temp_dir, "enhanced-idea.md") }
+    
+    before do
+      # Setup successful idea capture
+      success_llm_result = instance_double(
+        CodingAgentTools::Molecules::LLMClient::LLMResult,
+        success?: true
+      )
+      allow(mock_llm_client).to receive(:enhance_idea).and_return(success_llm_result)
+      
+      FileUtils.mkdir_p(temp_dir)
+    end
+
+    context "when commit_after_capture is true" do
+      let(:commit_after_capture) { true }
+      
+      it "executes git-commit after successful idea creation" do
+        allow(subject).to receive(:test_environment?).and_return(false)
+        allow(subject).to receive(:execute_git_commit).and_return(true)
+        
+        result = subject.capture_idea(idea_text)
+        
+        expect(result.success?).to be true
+        expect(subject).to have_received(:execute_git_commit).with(output_path)
+      end
+
+      it "handles git-commit execution errors gracefully" do
+        allow(subject).to receive(:test_environment?).and_return(false)
+        allow(subject).to receive(:execute_git_commit).and_raise(StandardError.new("git failed"))
+        
+        result = subject.capture_idea(idea_text)
+        
+        expect(result.success?).to be true  # Idea creation still succeeds
+        expect(result.error_message).to include("git failed")
+      end
+
+      context "in test environment" do
+        it "skips git-commit execution when CI environment is detected" do
+          with_env("CI" => "true") do
+            allow(subject).to receive(:execute_git_commit)
+            
+            result = subject.capture_idea(idea_text)
+            
+            expect(result.success?).to be true
+            expect(subject).not_to have_received(:execute_git_commit)
+          end
+        end
+
+        it "skips git-commit execution when TEST environment is detected" do
+          with_env("TEST" => "1") do
+            allow(subject).to receive(:execute_git_commit)
+            
+            result = subject.capture_idea(idea_text)
+            
+            expect(result.success?).to be true
+            expect(subject).not_to have_received(:execute_git_commit)
+          end
+        end
+      end
+    end
+
+    context "when commit_after_capture is false" do
+      let(:commit_after_capture) { false }
+      
+      it "does not execute git-commit after idea creation" do
+        allow(subject).to receive(:execute_git_commit)
+        
+        result = subject.capture_idea(idea_text)
+        
+        expect(result.success?).to be true
+        expect(subject).not_to have_received(:execute_git_commit)
+      end
+    end
+
+    context "when idea creation fails" do
+      let(:commit_after_capture) { true }
+      
+      before do
+        # Make LLM enhancement fail
+        failed_llm_result = instance_double(
+          CodingAgentTools::Molecules::LLMClient::LLMResult,
+          success?: false,
+          error_message: "LLM enhancement failed"
+        )
+        allow(mock_llm_client).to receive(:enhance_idea).and_return(failed_llm_result)
+      end
+      
+      it "does not attempt git-commit" do
+        allow(subject).to receive(:execute_git_commit)
+        
+        result = subject.capture_idea(idea_text)
+        
+        # Should still succeed due to fallback
+        expect(result.success?).to be true
+        expect(subject).not_to have_received(:execute_git_commit)
+      end
+    end
+  end
+
+  describe "#execute_git_commit" do
+    let(:file_path) { "/test/path/idea.md" }
+    let(:git_commit_path) { File.expand_path("../../../../exe/git-commit", __FILE__) }
+    
+    before do
+      allow(File).to receive(:exist?).with(git_commit_path).and_return(true)
+    end
+    
+    it "calls git-commit executable with correct file path and intention" do
+      allow(subject).to receive(:system).and_return(true)
+      
+      subject.send(:execute_git_commit, file_path)
+      
+      expect(subject).to have_received(:system).with(
+        git_commit_path,
+        file_path,
+        "--intention", "capture idea"
+      )
+    end
+
+    it "raises error when git-commit executable is not found" do
+      allow(File).to receive(:exist?).with(git_commit_path).and_return(false)
+      
+      expect {
+        subject.send(:execute_git_commit, file_path)
+      }.to raise_error(StandardError, /git-commit executable not found/)
+    end
+
+    it "raises error when git-commit fails" do
+      allow(subject).to receive(:system).and_return(false)
+      allow($?).to receive(:exitstatus).and_return(1)
+      
+      expect {
+        subject.send(:execute_git_commit, file_path)
+      }.to raise_error(StandardError, /git-commit failed with exit status 1/)
+    end
+  end
+
+  describe "#test_environment?" do
+    it "returns true when CI environment variable is set" do
+      with_env("CI" => "true") do
+        expect(subject.send(:test_environment?)).to be true
+      end
+    end
+
+    it "returns true when TEST environment variable is set" do
+      with_env("TEST" => "1") do
+        expect(subject.send(:test_environment?)).to be true
+      end
+    end
+
+    it "returns true when RSPEC_RUN environment variable is set" do
+      with_env("RSPEC_RUN" => "true") do
+        expect(subject.send(:test_environment?)).to be true
+      end
+    end
+
+    it "returns true when RSpec is defined" do
+      # RSpec is already defined in test environment
+      expect(subject.send(:test_environment?)).to be true
+    end
+
+    it "detects test environment even when env vars are nil" do
+      # In test environment, RSpec is always defined, so method should return true
+      with_env("CI" => nil, "TEST" => nil, "RSPEC_RUN" => nil) do
+        expect(subject.send(:test_environment?)).to be true # Still true because RSpec constant exists
+      end
+    end
+  end
+
+  private
+
+  def with_env(new_env)
+    old_env = ENV.to_h
+    new_env.each { |key, value| 
+      if value.nil?
+        ENV.delete(key)
+      else
+        ENV[key] = value 
+      end
+    }
+    yield
+  ensure
+    ENV.replace(old_env)
   end
 end

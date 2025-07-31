@@ -17,13 +17,15 @@ module CodingAgentTools
           option :model, type: :string, default: "google:gemini-2.5-flash-lite", desc: "LLM model to use for enhancement"
           option :debug, type: :boolean, default: false, desc: "Show detailed error information and processing flow"
           option :big_user_input_allowed, type: :boolean, default: false, desc: "Allow inputs over 1000 words"
+          option :commit, type: :boolean, default: false, desc: "Automatically commit the generated idea file"
 
           def call(idea_text: nil, **options)
             # Initialize idea capture organism
             idea_capture = CodingAgentTools::Organisms::IdeaCapture.new(
               model: options[:model],
               debug: options[:debug],
-              big_user_input_allowed: options[:big_user_input_allowed]
+              big_user_input_allowed: options[:big_user_input_allowed],
+              commit_after_capture: options[:commit]
             )
 
             # Determine input source
