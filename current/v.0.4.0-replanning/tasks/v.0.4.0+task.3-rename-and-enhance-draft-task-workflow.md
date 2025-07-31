@@ -9,14 +9,14 @@ id: v.0.4.0+task.3 status: done priority: high estimate: 8h dependencies: \[v.0.
 *Command run:*
 
 ```bash
-tree -L 2 dev-handbook/workflow-instructions | grep -E "(draft-task|draft-task|review-task)" | sed 's/^/    /'
+tree -L 2 dev-handbook/workflow-instructions | grep -E "(draft-task|draft-task|plan-task)" | sed 's/^/    /'
 ```
 
 *Result excerpt:*
 
 ```bash
     ├── draft-task.wf.md
-    ├── review-task.wf.md
+    ├── plan-task.wf.md
 
 ## Objective
 
@@ -248,7 +248,7 @@ This provides structured input for creating a behavior-first task specification.
 * ❌ Tool selection or file lists
 * ❌ Technical architecture decisions
 * ❌ Dependency analysis
-* ❌ Changes to review-task workflow (handled in task 4)
+* ❌ Changes to plan-task workflow (handled in task 4)
 
 ## Behavioral Specification Template Update
 

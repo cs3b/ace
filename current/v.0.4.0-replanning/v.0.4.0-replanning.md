@@ -17,7 +17,7 @@ From our conversation analysis of the planning agent research and existing workf
 
 - Need to separate "what" (behavior/interface) from "how" (implementation) in task specification
 - Current draft-task.wf.md jumps directly to implementation details without behavior-first thinking
-- Current review-task.wf.md mixes concerns in a single pass
+- Current plan-task.wf.md mixes concerns in a single pass
 - Ideas should be captured separately from formal tasks (vague, might not be implemented)
 - Task states: ideas → draft → pending → in-progress → done
 - Manual cascade review after task completion to update dependent tasks

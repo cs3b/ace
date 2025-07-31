@@ -7,7 +7,7 @@
 
 ## What Went Well
 
-- **Systematic Task Review Process**: Successfully followed review-task workflow with all required steps and documentation loading
+- **Systematic Task Review Process**: Successfully followed plan-task workflow with all required steps and documentation loading
 - **Learning Integration**: Effectively incorporated patterns from task 1 development and 6 reflection documents into task enhancements
 - **Clear Workflow Separation**: Achieved clean separation between draft-task (WHAT) and plan-task (HOW) workflows
 - **User Collaboration**: User guidance led to better naming decisions (plan-task vs replan-task) and proper scope separation
@@ -15,7 +15,7 @@
 
 ## What Could Be Improved
 
-- **Initial Understanding Gap**: Initially proposed implementing behavioral validation in review-task when it should focus only on implementation planning
+- **Initial Understanding Gap**: Initially proposed implementing behavioral validation in plan-task when it should focus only on implementation planning
 - **Naming Confusion**: First suggested "replan-task" when "plan-task" is clearer and more concise
 - **Scope Mixing**: Initially tried to address both task 3 and task 4 concerns together before user clarified separation
 - **Workflow Invocation Format**: Needed clarification on proper Claude Code command format (/command vs generic workflow invocation)
@@ -34,10 +34,10 @@
 
 #### High Impact Issues
 
-- **Workflow Purpose Confusion**: Understanding the true purpose of review-task transformation
+- **Workflow Purpose Confusion**: Understanding the true purpose of plan-task transformation
   - Occurrences: 1 major conceptual correction
   - Impact: Required complete reframing of task 4 objectives
-  - Root Cause: Initial misunderstanding of review-task as behavioral validation rather than implementation planning
+  - Root Cause: Initial misunderstanding of plan-task as behavioral validation rather than implementation planning
 
 #### Medium Impact Issues
 
@@ -125,6 +125,6 @@
 ## Additional Context
 
 - **Task 3**: v.0.4.0+task.3-rename-and-enhance-draft-task-workflow.md (draft-task → draft-task)
-- **Task 4**: v.0.4.0+task.4-split-review-task-workflow.md (review-task → plan-task)
+- **Task 4**: v.0.4.0+task.4-split-plan-task-workflow.md (plan-task → plan-task)
 - **Related Reflections**: Used 6 reflection documents to inform enhancements
 - **Key Learning Source**: Task 1 development patterns (ideas-manager implementation)

@@ -4,7 +4,7 @@ Add  tasks at the very end of your todolist and
 
 ```
 - [ ] /clear
-- [ ] /review-task
+- [ ] /plan-task
 - [ ] /clear
 - [ ] /work-on-task
 - [ ] /review-code
@@ -14,7 +14,7 @@ Add  tasks at the very end of your todolist and
 - [ ] apply relevant feedback (analyze agaist the project context again)
 - [ ] repeat as everything is fine
 - [ ] /clear
-- [ ] /review-task
+- [ ] /plan-task
 - [ ] /work-on-task
 - and so on
 ```

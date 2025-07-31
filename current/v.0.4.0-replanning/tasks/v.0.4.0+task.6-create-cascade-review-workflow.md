@@ -17,7 +17,7 @@ find dev-handbook/workflow-instructions -name "*.wf.md" | head -10
 ```bash
 dev-handbook/workflow-instructions/capture-idea.wf.md
 dev-handbook/workflow-instructions/draft-task.wf.md
-dev-handbook/workflow-instructions/review-task.wf.md
+dev-handbook/workflow-instructions/plan-task.wf.md
 
 ## Objective
 
