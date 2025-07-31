@@ -23,7 +23,7 @@
 | `nav-tree` | Enhanced project tree | `--context`, `--depth` |
 | `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
 | `release-manager` | Release management tool | `current`, `report` |
-| `task-manager` | Project task management | `next`, `all` |
+| `task-manager` | Project task management | `next`, `list` |
 
 ## Persona Cheat-sheets   {#persona-cheat-sheets}
 
@@ -34,7 +34,7 @@
 `llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
 \| Navigate project paths \| `task`, `file` \| \| `release-manager`
 \| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
-tasks \| `next`, `all` \|
+tasks \| `next`, `list` \|
 
 ### Human Developer   {#human-developer}
 
@@ -56,7 +56,7 @@ tasks \| `next`, `all` \|
 
 \| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
 `release-manager` \| Release coordination \| `current`, `report` \| \|
-`task-manager` \| Track deliverables \| `next`, `all` \|
+`task-manager` \| Track deliverables \| `next`, `list` \|
 
 ## Setup Requirements   {#setup-requirements}
 
@@ -112,14 +112,16 @@ task-manager [COMMAND] [OPTIONS]
 | Flag | Purpose | Default |
 |------|---------|---------|
 | `next` | Show next actionable task | N/A |
-| `all` | List all tasks | N/A |
+| `list` | List all tasks | N/A |
+| `all` | List all tasks (alias for list) | N/A |
 | `recent` | Show recently modified tasks | N/A |
 | `generate-id` | Generate new task ID | N/A |
 
 **Examples**
 ```bash
 task-manager next
-task-manager all
+task-manager list
+task-manager all    # Alias for list (backward compatibility)
 task-manager recent
 ```
 </details>
