@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.5
-status: draft
+status: pending
 priority: high
 estimate: 4h
 dependencies: [v.0.4.0+task.3, v.0.4.0+task.4]
@@ -42,27 +42,118 @@ specification cycle architecture. The template should guide users to think behav
 ### Execution Steps
 ```
 
-## How: Implementation Plan
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Template restructuring approach: Move from implementation-first to behavior-first design
+- [ ] Integration with specification cycle: Draft -> Review -> Plan workflow phases
+- [ ] Impact on system design: Clear separation between behavioral specification and technical implementation
+
+### Technology Stack
+- [ ] Markdown template format with embedded comments for guidance
+- [ ] Template inheritance compatibility with existing task.pending.template.md structure
+- [ ] Version control preservation through backup creation
+- [ ] Documentation synchronization with handbook sync-templates command
+
+### Implementation Strategy
+- [ ] Phase 1: Analysis and backup of current template
+- [ ] Phase 2: Restructure template with What/How separation
+- [ ] Phase 3: Add inline guidance and examples
+- [ ] Phase 4: Test with sample task creation and validation
+
+## Tool Selection
+
+| Criteria | Current Template | New What/How Template | Selected |
+|----------|------------------|----------------------|----------|
+| Behavior-First | Poor | Excellent | New Template |
+| Implementation Planning | Good | Excellent | New Template |
+| User Guidance | Fair | Excellent | New Template |
+| Workflow Integration | Good | Excellent | New Template |
+| Incremental Usage | Poor | Excellent | New Template |
+
+**Selection Rationale:** The new What/How template enforces behavior-first thinking, provides better user guidance, and supports incremental task creation aligned with the specification cycle architecture.
+
+### Dependencies
+- [ ] Current task.pending.template.md as baseline structure
+- [ ] Template synchronization system (handbook sync-templates)
+- [ ] Backup directory structure in dev-handbook/templates/task-management/
+
+## File Modifications
+
+### Create
+- dev-handbook/templates/task-management/task.template.md
+  - Purpose: New behavior-first task template with What/How sections
+  - Key components: Behavioral specification sections, implementation planning sections, inline guidance
+  - Dependencies: Based on task.pending.template.md structure
+
+### Modify
+- N/A (creating new template rather than modifying existing)
+
+### Delete
+- N/A (preserving existing templates as alternatives)
+
+## Implementation Plan
+
+*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work.*
 
 ### Planning Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Review current template pain points
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Study behavioral specification best practices
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Design section hierarchy and flow
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Create inline documentation strategy
+*Research, analysis, and design activities that help clarify the approach before implementation begins.*
+
+- [ ] Analyze current task.pending.template.md structure and identify reusable components
+  > TEST: Template Analysis Complete
+  > Type: Pre-condition Check
+  > Assert: Current template structure documented and reusable components identified
+  > Command: grep -E "^##|^###" dev-handbook/templates/task-management/task.pending.template.md
+- [ ] Research behavioral specification best practices from software engineering
+- [ ] Design section hierarchy prioritizing behavioral specification over implementation
+- [ ] Create inline documentation strategy with examples and guidance comments
+- [ ] Plan template testing approach with sample task scenarios
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Backup current task.template.md
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Restructure template with What/How sections
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Expected Behavior" subsection under What
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "Interface Contract" subsection under What
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Move "Objective" into What section
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Move "Implementation Plan" into How section
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add inline comments explaining each section
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update section descriptions for clarity
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add examples within template comments
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Test template with sample task creation
+*Concrete implementation actions that modify code, create files, or change the system state.*
+
+- [ ] Create new task.template.md based on task.pending.template.md structure
+- [ ] Restructure template with "What: Behavioral Specification" as primary section
+  > TEST: What Section Structure
+  > Type: Action Validation
+  > Assert: Template contains What section with Expected Behavior, Interface Contract, Success Criteria subsections
+  > Command: grep -A 10 "## What:" dev-handbook/templates/task-management/task.template.md
+- [ ] Add "Expected Behavior" subsection with inline guidance and examples
+- [ ] Add "Interface Contract" subsection with API/interface specification guidance
+- [ ] Move "Objective" content into What section as behavioral context
+- [ ] Restructure "How: Implementation Plan" section with Planning and Execution subsections
+- [ ] Add inline comments explaining the purpose of each section
+- [ ] Include example content demonstrating proper usage patterns
+- [ ] Add template validation checklist as comments
+- [ ] Test template by creating sample authentication feature task
+  > TEST: Template Functionality
+  > Type: Action Validation
+  > Assert: Sample task created successfully demonstrates behavior-first approach
+  > Command: test -f dev-handbook/templates/task-management/sample-auth-task.md
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Template structure incompatibility with existing workflow tools
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Base new template on proven task.pending.template.md structure
+  - **Rollback:** Revert to task.pending.template.md as task.template.md
+
+### Integration Risks
+- **Risk:** User confusion during transition from old to new template structure
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Provide comprehensive inline guidance and examples
+  - **Monitoring:** Track task creation patterns and user feedback
+
+### Performance Risks
+- **Risk:** Template sync performance impact from additional comments
+  - **Mitigation:** Keep inline guidance concise and structured
+  - **Monitoring:** handbook sync-templates execution time
+  - **Thresholds:** < 2 second increase in sync time
 
 ## Scope of Work
 
