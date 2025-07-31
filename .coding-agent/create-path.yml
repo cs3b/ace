@@ -3,13 +3,25 @@
 
 # Template mappings - maps path types to template files in dev-handbook/templates/
 templates:
-  # Task creation
+  # Task creation (draft tasks - behavioral specification)
   task-new:
-    template: "dev-handbook/templates/release-tasks/task.template.md"
+    template: "dev-handbook/templates/task-management/task.draft.template.md"
     variables:
       # Metadata variables that can be passed as command arguments
       id: "task-manager generate-id" # Auto-generated task ID
-      status: "pending" # Default status
+      status: "draft" # Default status for new tasks
+      priority: "{metadata.priority}" # From --priority argument
+      estimate: "{metadata.estimate}" # From --estimate argument
+      dependencies: "{metadata.dependencies}" # From --dependencies argument
+      title: "{metadata.title}" # From title or --title argument
+
+  # Implementation planning tasks (pending status)
+  task-pending:
+    template: "dev-handbook/templates/task-management/task.pending.template.md"
+    variables:
+      # Metadata variables that can be passed as command arguments
+      id: "task-manager generate-id" # Auto-generated task ID
+      status: "pending" # Status for implementation-ready tasks
       priority: "{metadata.priority}" # From --priority argument
       estimate: "{metadata.estimate}" # From --estimate argument
       dependencies: "{metadata.dependencies}" # From --dependencies argument
