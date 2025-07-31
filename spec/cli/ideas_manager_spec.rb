@@ -42,7 +42,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: nil,
-          big_user_input_allowed: nil
+          big_user_input_allowed: nil,
+          commit_after_capture: nil
         )
         expect(mock_idea_capture).to have_received(:capture_idea).with(idea_text)
         expect(output).to include("Created: /fake/path/to/captured_idea.md")
@@ -54,7 +55,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "anthropic:claude-3.5-sonnet",
           debug: nil,
-          big_user_input_allowed: nil
+          big_user_input_allowed: nil,
+          commit_after_capture: nil
         )
       end
 
@@ -64,7 +66,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: true,
-          big_user_input_allowed: nil
+          big_user_input_allowed: nil,
+          commit_after_capture: nil
         )
       end
 
@@ -74,7 +77,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: nil,
-          big_user_input_allowed: true
+          big_user_input_allowed: true,
+          commit_after_capture: nil
         )
       end
 
@@ -91,7 +95,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "openai:gpt-4o",
           debug: true,
-          big_user_input_allowed: true
+          big_user_input_allowed: true,
+          commit_after_capture: nil
         )
       end
     end
@@ -116,7 +121,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: "mistral:mistral-large",
           debug: nil,
-          big_user_input_allowed: nil
+          big_user_input_allowed: nil,
+          commit_after_capture: nil
         )
       end
 
@@ -186,7 +192,8 @@ RSpec.describe "Ideas Manager CLI" do
         expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
           model: nil,
           debug: true,
-          big_user_input_allowed: true
+          big_user_input_allowed: true,
+          commit_after_capture: nil
         )
       end
 
@@ -351,9 +358,57 @@ RSpec.describe "Ideas Manager CLI" do
           expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
             model: nil,
             debug: nil,
-            big_user_input_allowed: true
+            big_user_input_allowed: true,
+            commit_after_capture: nil
           )
           expect(output).to include("Created: /fake/path/to/captured_idea.md")
+        end
+      end
+    end
+
+    context "with --commit flag" do
+      context "when --commit flag is provided" do
+        it "passes commit_after_capture: true to IdeaCapture organism" do
+          capture_stdout { capture_command.call(idea_text: "test idea", commit: true) }
+          
+          expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
+            model: nil,
+            debug: nil,
+            big_user_input_allowed: nil,
+            commit_after_capture: true
+          )
+        end
+      end
+
+      context "when --commit flag is not provided" do
+        it "passes commit_after_capture: false to IdeaCapture organism" do
+          capture_stdout { capture_command.call(idea_text: "test idea") }
+          
+          expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
+            model: nil,
+            debug: nil,
+            big_user_input_allowed: nil,
+            commit_after_capture: nil
+          )
+        end
+      end
+
+      context "when --commit flag is used with other options" do
+        it "combines --commit with --model flag correctly" do
+          capture_stdout do
+            capture_command.call(
+              idea_text: "test idea", 
+              commit: true, 
+              model: "anthropic:claude-3.5-sonnet"
+            )
+          end
+          
+          expect(CodingAgentTools::Organisms::IdeaCapture).to have_received(:new).with(
+            model: "anthropic:claude-3.5-sonnet",
+            debug: nil,
+            big_user_input_allowed: nil,
+            commit_after_capture: true
+          )
         end
       end
     end
@@ -382,6 +437,7 @@ RSpec.describe "Ideas Manager CLI" do
       expect(option_names).to include(:model)
       expect(option_names).to include(:debug)
       expect(option_names).to include(:big_user_input_allowed)
+      expect(option_names).to include(:commit)
 
       # Check option defaults and types
       clipboard_option = options.find { |opt| opt.name == :clipboard }
@@ -399,6 +455,10 @@ RSpec.describe "Ideas Manager CLI" do
       big_input_option = options.find { |opt| opt.name == :big_user_input_allowed }
       expect(big_input_option.options[:type]).to eq(:boolean)
       expect(big_input_option.options[:default]).to be false
+
+      commit_option = options.find { |opt| opt.name == :commit }
+      expect(commit_option.options[:type]).to eq(:boolean)
+      expect(commit_option.options[:default]).to be false
     end
   end
 

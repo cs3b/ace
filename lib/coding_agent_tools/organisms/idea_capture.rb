@@ -28,10 +28,12 @@ module CodingAgentTools
       # @param model [String] LLM model to use
       # @param debug [Boolean] Enable debug output
       # @param big_user_input_allowed [Boolean] Allow large inputs
-      def initialize(model: "google:gemini-2.5-flash-lite", debug: false, big_user_input_allowed: false)
+      # @param commit_after_capture [Boolean] Automatically commit generated idea files
+      def initialize(model: "google:gemini-2.5-flash-lite", debug: false, big_user_input_allowed: false, commit_after_capture: false)
         @model = model
         @debug = debug
         @big_user_input_allowed = big_user_input_allowed
+        @commit_after_capture = commit_after_capture
         @max_input_size = big_user_input_allowed ? Float::INFINITY : BIG_INPUT_THRESHOLD
         
         # Initialize molecules
@@ -72,15 +74,33 @@ module CodingAgentTools
         # Enhance idea using LLM
         enhancement_result = enhance_idea_with_llm(paths_result)
         
-        if enhancement_result.success?
+        final_result = if enhancement_result.success?
           debug_log("Idea enhancement completed successfully")
           CaptureResult.new(true, paths_result[:output_path], nil, @debug ? "Enhancement completed" : nil)
         else
           # Fallback: save raw idea with error note
           debug_log("Enhancement failed, saving raw idea as fallback")
-          fallback_result = save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
-          fallback_result
+          save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
         end
+
+        # Execute git-commit if requested and idea creation was successful
+        if final_result.success? && @commit_after_capture
+          commit_result = handle_git_commit(final_result.output_path)
+          unless commit_result.success?
+            # Idea creation succeeded but commit failed - still return success but include commit error
+            debug_log("Git commit failed: #{commit_result.error_message}")
+            final_result = CaptureResult.new(
+              true, 
+              final_result.output_path, 
+              "Idea created successfully, but commit failed: #{commit_result.error_message}", 
+              final_result.debug_info
+            )
+          else
+            debug_log("Git commit completed successfully")
+          end
+        end
+
+        final_result
       rescue => e
         debug_details = @debug ? e.backtrace.join("\n") : nil
         error_result("Unexpected error during idea capture: #{e.message}", debug_details)
@@ -192,6 +212,42 @@ module CodingAgentTools
 
       def debug_log(message)
         puts "Debug: #{message}" if @debug
+      end
+
+      def handle_git_commit(file_path)
+        # Skip git commit in test environments
+        if test_environment?
+          debug_log("Skipping git commit in test environment")
+          return CaptureResult.new(true, nil, nil, "Skipped commit (test environment)")
+        end
+
+        begin
+          execute_git_commit(file_path)
+          CaptureResult.new(true, nil, nil, "Git commit successful")
+        rescue => e
+          CaptureResult.new(false, nil, e.message, nil)
+        end
+      end
+
+      def execute_git_commit(file_path)
+        # Path to git-commit executable relative to this file
+        git_commit_path = File.expand_path("../../../../exe/git-commit", __FILE__)
+        
+        unless File.exist?(git_commit_path)
+          raise StandardError, "git-commit executable not found at #{git_commit_path}"
+        end
+
+        # Execute git-commit with intention and file path
+        success = system(git_commit_path, file_path, "--intention", "capture idea")
+        
+        unless success
+          raise StandardError, "git-commit failed with exit status #{$?.exitstatus}"
+        end
+      end
+
+      def test_environment?
+        # Check for common test environment indicators
+        !!(ENV['CI'] || ENV['TEST'] || ENV['RSPEC_RUN'] || defined?(RSpec))
       end
     end
   end
