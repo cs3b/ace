@@ -1,8 +1,8 @@
 ---
 id: v.0.4.0+task.012
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 6h
 dependencies: 
 ---
 
@@ -93,15 +93,190 @@ Enhance task-manager CLI commands to provide immediate status visibility by auto
 - Success criteria: consistent summary format across commands
 - Validation questions: configuration and edge case handling
 
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Molecule-level implementation using ATOM architecture
+- [ ] Status counting functionality in TaskStatusSummary molecule
+- [ ] Integration with existing CLI command patterns
+- [ ] Minimal impact on command performance
+
+### Technology Stack
+- [ ] Ruby with existing dry-cli framework
+- [ ] TaskFileLoader molecule for file parsing (already exists)
+- [ ] Consistent with existing task-manager command output patterns
+- [ ] No new external dependencies required
+
+### Implementation Strategy
+- [ ] Create TaskStatusSummary molecule for status counting logic
+- [ ] Modify CLI command classes to include status summary output
+- [ ] Preserve existing output format while prepending summary
+- [ ] Ensure performance remains acceptable for large task sets
+
+## Tool Selection
+
+| Criteria | Option A: Inline Logic | Option B: Dedicated Molecule | Option C: Organism Extension | Selected |
+|----------|-------------------------|------------------------------|------------------------------|----------|
+| Maintainability | Poor | Excellent | Good | Option B |
+| Reusability | Poor | Excellent | Fair | Option B |
+| ATOM Compliance | Poor | Excellent | Good | Option B |
+| Performance | Excellent | Good | Fair | Option B |
+| Testing | Poor | Excellent | Good | Option B |
+
+**Selection Rationale:** A dedicated TaskStatusSummary molecule provides the best balance of maintainability, reusability, and ATOM architecture compliance while maintaining good performance.
+
+### Dependencies
+- [ ] TaskFileLoader molecule: for task file parsing (already exists)
+- [ ] No new external dependencies required
+- [ ] Integration with existing CLI command structure
+
+## File Modifications
+
+### Create
+- lib/coding_agent_tools/molecules/taskflow_management/task_status_summary.rb
+  - Purpose: Count task statuses from task data collections
+  - Key components: status counting logic, summary formatting
+  - Dependencies: TaskData structures from TaskFileLoader
+
+### Modify
+- lib/coding_agent_tools/cli/commands/task/all.rb
+  - Changes: Add status summary output before existing task listing
+  - Impact: Enhanced user experience with status visibility
+  - Integration points: TaskStatusSummary molecule usage
+
+- lib/coding_agent_tools/cli/commands/task/next.rb
+  - Changes: Add status summary output before existing task listing
+  - Impact: Status context for next task selection
+  - Integration points: TaskStatusSummary molecule usage
+
+- lib/coding_agent_tools/cli/commands/task/recent.rb
+  - Changes: Add status summary output before existing task listing
+  - Impact: Status context for recent task display
+  - Integration points: TaskStatusSummary molecule usage
+
+### Delete
+- No files to delete
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Performance impact on large task collections
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Implement efficient counting algorithm with early exit strategies
+  - **Rollback:** Remove status summary functionality
+
+- **Risk:** Inconsistent status counting across commands
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Centralize counting logic in single molecule
+  - **Rollback:** Fix inconsistencies through unified molecule usage
+
+### Integration Risks
+- **Risk:** Breaking existing CLI output parsing
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Prepend summary to preserve existing output structure
+  - **Monitoring:** Test all CLI command outputs after changes
+
+### Performance Risks
+- **Risk:** Slowing down CLI commands with extra file parsing
+  - **Mitigation:** Reuse already-loaded task data for counting
+  - **Monitoring:** Time CLI command execution before and after
+  - **Thresholds:** Maximum 50ms additional latency acceptable
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze existing TaskFileLoader molecule API and TaskData structure
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: TaskData structure and status field access patterns are identified
+  > Command: grep -n "status" dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
+
+* [ ] Research CLI output patterns across all task-manager commands
+  > TEST: Pattern Analysis
+  > Type: Pre-condition Check
+  > Assert: Consistent header/output patterns identified in all CLI commands
+  > Command: grep -n "puts.*Tasks" dev-tools/lib/coding_agent_tools/cli/commands/task/*.rb
+
+* [ ] Design TaskStatusSummary molecule interface and implementation approach
+
+### Execution Steps
+
+- [ ] Create TaskStatusSummary molecule with status counting functionality
+  > TEST: Molecule Creation
+  > Type: Action Validation
+  > Assert: TaskStatusSummary molecule exists with proper ATOM structure
+  > Command: test -f dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_status_summary.rb
+
+- [ ] Implement status counting algorithm in TaskStatusSummary molecule
+  > TEST: Counting Logic
+  > Type: Action Validation
+  > Assert: Status counting returns correct distribution from task collection
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb
+
+- [ ] Add status summary output to task/all.rb command (list command)
+  > TEST: All Command Enhancement
+  > Type: Action Validation
+  > Assert: task-manager list shows status summary before task listing
+  > Command: task-manager list | head -n 3 | grep -q "Status:"
+
+- [ ] Add status summary output to task/next.rb command
+  > TEST: Next Command Enhancement
+  > Type: Action Validation  
+  > Assert: task-manager next shows status summary before next task display
+  > Command: task-manager next | head -n 3 | grep -q "Status:"
+
+- [ ] Add status summary output to task/recent.rb command
+  > TEST: Recent Command Enhancement
+  > Type: Action Validation
+  > Assert: task-manager recent shows status summary before recent tasks
+  > Command: task-manager recent | head -n 3 | grep -q "Status:"
+
+- [ ] Create comprehensive RSpec tests for TaskStatusSummary molecule
+  > TEST: Test Coverage
+  > Type: Action Validation
+  > Assert: TaskStatusSummary molecule has complete test coverage
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/taskflow_management/task_status_summary_spec.rb --format documentation
+
+- [ ] Run integration tests to verify CLI command behavior
+  > TEST: Integration Verification
+  > Type: Action Validation
+  > Assert: All task-manager commands work correctly with status summaries
+  > Command: cd dev-tools && bundle exec rspec spec/integration/task_manager_integration_spec.rb
+
+- [ ] Run linting and code quality checks
+  > TEST: Code Quality
+  > Type: Action Validation
+  > Assert: All new code passes StandardRB and security checks
+  > Command: cd dev-tools && bin/lint
+
+## Acceptance Criteria
+
+- [ ] Status summary appears on first line of all task-manager listing commands (list, next, recent)
+- [ ] Status counts are dynamically determined from actual task files (not hardcoded)
+- [ ] Status counts reflect current release context only (same as task-manager scope)
+- [ ] Summary format is consistent and readable across all commands
+- [ ] Performance impact is minimal even with hundreds of task files
+- [ ] Unknown status values are handled gracefully and included in summary
+- [ ] All existing CLI output formats remain unchanged (summary prepended only)
+- [ ] TaskStatusSummary molecule follows ATOM architecture principles
+- [ ] Comprehensive test coverage for new functionality
+- [ ] Code passes all existing and new tests
+
 ## Out of Scope
 
-- ❌ Implementation details (file parsing mechanisms, caching strategies)
-- ❌ Technical architecture decisions (ATOM pattern placement)
-- ❌ Tool or library selections for file scanning
-- ❌ Performance optimization strategies (covered in implementation phase)
+- ❌ Configuration options to disable status summary
+- ❌ Alphabetical sorting of status names in summary
+- ❌ Status summary for commands other than list, next, recent
+- ❌ Caching of status counts for performance optimization
 
 ## References
 
 - Enhanced idea: dev-taskflow/backlog/ideas/20250731-0914-task-status-summary.md
 - Task manager interface: Uses current release context for task scoping
 - CLI output patterns: Consistent with existing task-manager command outputs
+- ATOM Architecture: dev-tools/docs/architecture.md
+- TaskFileLoader: dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_file_loader.rb
