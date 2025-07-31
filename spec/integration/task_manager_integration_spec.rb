@@ -20,7 +20,6 @@ RSpec.describe "Task Manager Integration" do
       expect(result.stdout).to include("task-manager next")
       expect(result.stdout).to include("task-manager recent")
       expect(result.stdout).to include("task-manager list")
-      expect(result.stdout).to include("task-manager all")
       expect(result.stdout).to include("task-manager generate-id")
       expect(result.stdout).to include("task-manager version")
     end

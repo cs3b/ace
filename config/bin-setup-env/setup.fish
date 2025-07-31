@@ -87,7 +87,7 @@ end
 echo ""
 echo "Usage examples:"
 echo "  task-manager next          # Find next actionable task"
-echo "  task-manager all           # List all tasks"
+echo "  task-manager list          # List all tasks"
 echo "  llm-query \"your prompt\"    # Query LLM providers"
 echo "  llm-models                 # List available models"
 echo "  coding_agent_tools --help  # Show main CLI help"
