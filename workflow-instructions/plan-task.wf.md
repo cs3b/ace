@@ -296,7 +296,7 @@ When transforming from review-task to plan-task focus:
 This workflow transforms draft tasks with validated behavioral specifications into fully planned, implementation-ready tasks with detailed technical approaches.
 
 <documents>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">---
+    <template path="dev-handbook/templates/task-management/task.pending.template.md">---
 id: <generated automatically by nav-path>
 status: pending
 priority: <high/medium/low>
@@ -394,7 +394,7 @@ Why are we doing this?
 ```
 </template>
 
-    <template path="dev-handbook/templates/implementation-planning/technical-approach.template.md">## Technical Approach
+    <template path="dev-handbook/templates/task-management/task.technical-approach.template.md">## Technical Approach
 
 ### Architecture Pattern
 - [ ] Pattern selection and rationale
@@ -414,7 +414,7 @@ Why are we doing this?
 - [ ] Performance monitoring
 </template>
 
-    <template path="dev-handbook/templates/implementation-planning/tool-selection-matrix.template.md">## Tool Selection
+    <template path="dev-handbook/templates/task-management/task.tool-selection-matrix.template.md">## Tool Selection
 
 | Criteria | Option A | Option B | Option C | Selected |
 |----------|----------|----------|----------|----------|
@@ -432,7 +432,7 @@ Why are we doing this?
 - [ ] Compatibility verification completed
 </template>
 
-    <template path="dev-handbook/templates/implementation-planning/file-modification-checklist.template.md">## File Modifications
+    <template path="dev-handbook/templates/task-management/task.file-modification-checklist.template.md">## File Modifications
 
 ### Create
 - path/to/new/file.ext
@@ -453,7 +453,7 @@ Why are we doing this?
   - Migration strategy: [how to handle removal]
 </template>
 
-    <template path="dev-handbook/templates/implementation-planning/risk-assessment.template.md">## Risk Assessment
+    <template path="dev-handbook/templates/task-management/task.risk-assessment.template.md">## Risk Assessment
 
 ### Technical Risks
 - **Risk:** [Description]

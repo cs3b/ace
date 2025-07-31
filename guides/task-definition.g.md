@@ -59,7 +59,7 @@ guides
 ## 2. Task Template
 
 A re-usable Markdown template for tasks is available at:
-[`dev-handbook/templates/release-tasks/task.template.md`](../templates/release-tasks/task.template.md)
+[`dev-handbook/templates/task-management/task.draft.template.md`](../templates/task-management/task.draft.template.md)
 
 This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `bin/tnid` to generate the task ID.
 

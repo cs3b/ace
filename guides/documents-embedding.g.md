@@ -53,7 +53,7 @@ Use the universal `<documents>` container for clean, parseable document inclusio
 
 ```xml
 <documents>
-    <template path="dev-handbook/templates/release-tasks/task.template.md">
+    <template path="dev-handbook/templates/task-management/task.draft.template.md">
 ---
 id: v.X.Y.Z+task.N
 status: pending

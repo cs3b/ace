@@ -550,7 +550,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 
 <!-- Additional context, decisions, or clarifications --></template>
     
-    <template path="dev-handbook/templates/release-tasks/task.template.md">---
+    <template path="dev-handbook/templates/task-management/task.pending.template.md">---
 id: <generated automatically by nav-path>
 status: pending
 priority: <high/medium/low>

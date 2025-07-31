@@ -1,6 +1,6 @@
 ---
 id: {id}
-status: {status}
+status: pending
 priority: {priority}
 estimate: {estimate}
 dependencies: {dependencies}
@@ -51,6 +51,62 @@ Why are we doing this?
 2. Extract …
 3. Refactor …
 
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Pattern selection and rationale
+- [ ] Integration with existing architecture
+- [ ] Impact on system design
+
+### Technology Stack
+- [ ] Libraries/frameworks needed
+- [ ] Version compatibility checks
+- [ ] Performance implications
+- [ ] Security considerations
+
+### Implementation Strategy
+- [ ] Step-by-step approach
+- [ ] Rollback considerations
+- [ ] Testing strategy
+- [ ] Performance monitoring
+
+## Tool Selection
+
+| Criteria | Option A | Option B | Option C | Selected |
+|----------|----------|----------|----------|----------|
+| Performance | | | | |
+| Integration | | | | |
+| Maintenance | | | | |
+| Security | | | | |
+| Learning Curve | | | | |
+
+**Selection Rationale:** [Explain selection reasoning]
+
+### Dependencies
+- [ ] New dependency 1: version and reason
+- [ ] New dependency 2: version and reason
+- [ ] Compatibility verification completed
+
+## File Modifications
+
+### Create
+- path/to/new/file.ext
+  - Purpose: [why this file]
+  - Key components: [what it contains]
+  - Dependencies: [what it depends on]
+
+### Modify
+- path/to/existing/file.ext
+  - Changes: [what to modify]
+  - Impact: [effects on system]
+  - Integration points: [how it connects]
+
+### Delete
+- path/to/obsolete/file.ext
+  - Reason: [why removing]
+  - Dependencies: [what depends on this]
+  - Migration strategy: [how to handle removal]
+
 ## Implementation Plan
 
 *This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
@@ -79,6 +135,28 @@ Why are we doing this?
   > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
 - [ ] ... Add more implementation steps as needed.
 
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** [Description]
+  - **Probability:** High/Medium/Low
+  - **Impact:** High/Medium/Low
+  - **Mitigation:** [Strategy]
+  - **Rollback:** [Procedure]
+
+### Integration Risks
+- **Risk:** [Description]
+  - **Probability:** High/Medium/Low
+  - **Impact:** High/Medium/Low
+  - **Mitigation:** [Strategy]
+  - **Monitoring:** [How to detect]
+
+### Performance Risks
+- **Risk:** [Description]
+  - **Mitigation:** [Strategy]
+  - **Monitoring:** [Metrics to track]
+  - **Thresholds:** [Acceptable limits]
+
 ## Acceptance Criteria
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
@@ -87,7 +165,7 @@ Why are we doing this?
 - [ ] AC 2: Key functionalities (if applicable) are working as described.
 - [ ] AC 3: All automated checks in the Implementation Plan pass.
 
-## Out of Scope
+## Out of Scope
 
 - ❌ …
 

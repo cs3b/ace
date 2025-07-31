@@ -178,7 +178,7 @@ This workflow creates behavior-first specifications that serve as clear contract
 ## Embedded Templates
 
 <documents>
-<template path="dev-handbook/templates/release-tasks/task.template.md">---
+<template path="dev-handbook/templates/task-management/task.draft.template.md">---
 id: {id}
 status: draft
 priority: {priority}
