@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.7
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: [v.0.4.0+task.1]
@@ -40,21 +40,21 @@ that are not yet ready for implementation, supporting the new specification cycl
 
 ### Planning Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Review current status handling in tools
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Identify all tools that read task status
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Plan backward compatibility approach
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Design status validation logic
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Review current status handling in tools
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Identify all tools that read task status
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Plan backward compatibility approach
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Design status validation logic
 
 ### Execution Steps
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update create-path to accept --status parameter
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add "draft" to valid status values
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update task generation to use provided status
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Verify task-manager handles draft status
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Test nav-path with draft status tasks
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update tool documentation
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Add tests for draft status handling
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Ensure backward compatibility
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update create-path to accept --status parameter
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add "draft" to valid status values
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update task generation to use provided status
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Verify task-manager handles draft status
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Test nav-path with draft status tasks
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Update tool documentation
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Add tests for draft status handling
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Ensure backward compatibility
 
 ## Scope of Work
 
@@ -69,12 +69,12 @@ that are not yet ready for implementation, supporting the new specification cycl
 
 ## Acceptance Criteria
 
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />create-path accepts --status "draft"
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Draft tasks are created correctly
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Existing tools handle draft status
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Backward compatibility maintained
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Documentation updated
-* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Tests cover draft status
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />create-path accepts --status "draft"
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Draft tasks are created correctly
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Existing tools handle draft status
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Backward compatibility maintained
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Documentation updated
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Tests cover draft status
 
 ## Example
 
