@@ -6,7 +6,7 @@ self reflection note
 update externall tools
 commit changes
 
-# create-tasks / plan-task
+# draft-task / plan-task
 
 - research multiple topics at once
 
