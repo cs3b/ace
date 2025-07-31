@@ -179,7 +179,7 @@ end
 
 1. **High Priority** (Duplicate Templates):
    - `draft-task.wf.md` (task.template.md)
-   - `review-task.wf.md` (task.template.md)  
+   - `plan-task.wf.md` (task.template.md)  
    - `update-blueprint.wf.md` (blueprint.template.md)
 
 2. **Medium Priority** (Single-Use Templates):
