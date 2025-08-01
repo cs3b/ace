@@ -94,6 +94,27 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Integration with ideas-manager if applicable
    * Avoid adding implementation details
 
+7.5. **Manage Idea File Organization (Optional)**
+   * If task was created from an idea file path, automatically organize the original idea file:
+     * Extract task number from created task path: `echo "$TASK_PATH" | grep -oE "task\.([0-9]{3})" | cut -d. -f2`
+     * Get current release path: `RELEASE_PATH=$(release-manager current | grep "Path:" | awk '{print $2}')`
+     * Create destination directory if needed: `mkdir -p "$RELEASE_PATH/docs/ideas"`
+     * Build destination filename: `$TASK_NUM-$(basename "$IDEA_FILE_PATH")`
+     * Check for existing file with same prefix and handle conflicts:
+       * If file exists with same task prefix, append current task number to create combined prefix
+       * Example: If `014-idea.md` exists and we need to move idea for task 015, create `014-015-idea.md`
+     * Execute file movement: `git mv "$IDEA_FILE_PATH" "$RELEASE_PATH/docs/ideas/$DESTINATION_FILENAME"`
+     * Commit the file movement: `git-commit --intention "Move idea file to current release after task $TASK_NUM creation"`
+   * Handle errors gracefully:
+     * If source idea file doesn't exist: Continue without error, log warning
+     * If release-manager fails: Skip file movement, continue task creation
+     * If git mv fails: Continue task creation, report error to user
+     * If destination directory creation fails: Continue task creation, report error
+   * Success indicators:
+     * Report successful file movement: "Idea file moved: [old-path] -> [new-path]"
+     * Original task file maintains reference to source idea (no updates needed)
+     * File operations are atomic and don't interfere with task creation
+
 8. **Ensure Draft Creation Completion**
    * Verify all behavioral specifications are captured:
      * Cross-reference against initial requirements
