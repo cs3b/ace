@@ -52,6 +52,8 @@ needs_review: true
   - **Suggested default**: Include source task ID, target task ID, and specific changes made
   - **Why needs human input**: Balance between traceability and commit message verbosity
 
+> just the reason, what change make this notes to be added (original task id should be part of this)
+
 ## Objective
 
 Create the `replan-cascade-task.wf.md` workflow that handles manual dependency impact analysis after task completion. This workflow reviews downstream tasks to
