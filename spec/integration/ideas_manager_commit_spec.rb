@@ -5,10 +5,10 @@ require "tempfile"
 require "tmpdir"
 require "fileutils"
 
-RSpec.describe "ideas-manager with --commit flag", type: :integration do
+RSpec.describe "capture-it with --commit flag", type: :integration do
   let(:temp_dir) { Dir.mktmpdir("ideas_commit_test") }
   let(:git_repo_dir) { File.join(temp_dir, "test_repo") }
-  let(:ideas_manager_path) { File.expand_path("../../../exe/ideas-manager", __FILE__) }
+  let(:capture_it_path) { File.expand_path("../../../exe/capture-it", __FILE__) }
 
   before do
     # Setup temporary git repository
@@ -32,7 +32,7 @@ RSpec.describe "ideas-manager with --commit flag", type: :integration do
         # Use a simple test to bypass LLM integration
         ENV["TEST"] = nil # Temporarily remove TEST env to allow git operations
 
-        output = `#{ideas_manager_path} capture "test integration idea" --commit 2>&1`
+        output = `#{capture_it_path} capture "test integration idea" --commit 2>&1`
         exit_status = $?.exitstatus
 
         # Restore TEST environment

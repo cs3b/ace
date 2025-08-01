@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-# Ideas Manager - Tool for capturing and enhancing raw ideas
-# This provides focused entry point for idea capture operations
+# Capture It - Streamlined tool for capturing ideas
+# This provides intuitive entry point for idea capture operations
 
 # Ensure we use the correct Gemfile regardless of current directory
 gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
@@ -21,29 +21,20 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 require "coding_agent_tools/cli/commands/ideas/capture"
 require "dry/cli"
 
-module IdeasManagerCli
+module CaptureItCli
   module Commands
     extend Dry::CLI::Registry
 
-    # Register ideas commands directly under the root
-    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture
-
-    # Version command
-    class Version < Dry::CLI::Command
-      desc "Print version"
-
-      def call(*)
-        require "coding_agent_tools/version"
-        puts "Ideas Manager #{CodingAgentTools::VERSION}"
-      end
-    end
-
-    register "version", Version, aliases: ["v", "-v", "--version"]
+    # Register capture command as the default action
+    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture, aliases: ["c"]
+    
+    # Default to capture when no command specified
+    register "", CodingAgentTools::Cli::Commands::Ideas::Capture
   end
 end
 
 begin
-  Dry::CLI.new(IdeasManagerCli::Commands).call
+  Dry::CLI.new(CaptureItCli::Commands).call
 rescue Dry::CLI::Error => e
   warn "Error: #{e.message}"
   exit 1
