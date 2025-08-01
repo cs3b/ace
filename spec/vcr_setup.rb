@@ -27,6 +27,12 @@ WebMock.enable!
 # If the parent process provided a cassette name, insert it automatically so the
 # subprocess records/replays under the same cassette.
 if ENV["VCR_CASSETTE_NAME"] && !VCR.current_cassette
-  VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
-  at_exit { VCR.eject_cassette if VCR.current_cassette }
+  begin
+    VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
+    at_exit { VCR.eject_cassette if VCR.current_cassette }
+  rescue => e
+    # Log error but don't fail the process
+    warn "Warning: Failed to insert VCR cassette '#{ENV["VCR_CASSETTE_NAME"]}': #{e.message}"
+    # Continue without VCR cassette - this will cause HTTP requests to be made normally
+  end
 end
