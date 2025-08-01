@@ -29,7 +29,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
     context "with task manager failure" do
       it "returns error when task manager fails to get tasks" do
         failed_result = instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager::AllTasksResult", success?: false, message: "Failed to load tasks")
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(failed_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(failed_result)
         allow(command).to receive(:error_output)
 
         result = command.call(tasks: ["task.001"])
@@ -45,7 +45,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
         allow(command).to receive(:error_output)
       end
 
@@ -65,7 +65,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
         allow(command).to receive(:reschedule_add_next)
       end
 
@@ -84,7 +84,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
         allow(command).to receive(:reschedule_add_at_end)
       end
 
@@ -98,7 +98,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
 
     context "with exception handling" do
       before do
-        allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError, "Unexpected error")
+        allow(mock_task_manager).to receive(:get_list_tasks).and_raise(StandardError, "Unexpected error")
         allow(command).to receive(:handle_error)
       end
 
@@ -470,7 +470,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(all_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
         allow(command).to receive(:get_task_sort_value).and_return(999999)
         allow(command).to receive(:update_task_sort)
         allow(command).to receive(:puts)
@@ -489,7 +489,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::Reschedule do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(all_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
         allow(command).to receive(:reschedule_add_next)
         allow(command).to receive(:reschedule_add_at_end)
       end

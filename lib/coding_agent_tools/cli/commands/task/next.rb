@@ -52,7 +52,7 @@ module CodingAgentTools
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             # Get all tasks first
-            tasks_result = task_manager.get_all_tasks(release_path: options[:release])
+            tasks_result = task_manager.get_list_tasks(release_path: options[:release])
             unless tasks_result.success?
               error_output("Error: #{tasks_result.message}")
               return 1

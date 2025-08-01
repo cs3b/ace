@@ -25,9 +25,15 @@ module CaptureItCli
   module Commands
     extend Dry::CLI::Registry
 
-    # Register the capture command as the default/root command
-    register "", CodingAgentTools::Cli::Commands::Ideas::Capture
+    # Register the capture command
+    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture
   end
+end
+
+# Check if we need to add 'capture' as the first argument
+# If there are no arguments, or if the first argument is not 'capture', add 'capture' as the default subcommand
+if ARGV.empty? || ARGV[0] != 'capture'
+  ARGV.unshift('capture')
 end
 
 begin
