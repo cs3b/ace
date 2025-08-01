@@ -10,7 +10,7 @@ This guide documents the migration from primitive command sequences to higher-or
 
 The migration follows this hierarchy:
 
-1. **Highest Priority**: Complete workflow operations (`create-path task-new`, `code-review`)
+1. **Highest Priority**: Complete workflow operations (`task-manager create`, `code-review`)
 2. **High Priority**: Domain-specific operations (`task-manager`, `release-manager`)
 3. **Medium Priority**: Individual gem executables (`llm-query`, `git-commit`)
 4. **Lowest Priority**: Primitive building blocks (avoid where higher-order alternatives exist)
@@ -57,7 +57,7 @@ task_id=$(bin/tnid $version)              # Generate ID
 #### New Higher-Order Approach
 ```bash
 # Single command for complete task creation
-create-path task-new --title "Implement OAuth" --priority high --estimate "8h"
+task-manager create --title "Implement OAuth" --priority high --estimate "8h"
 # Automatically handles:
 # - Release context detection
 # - ID generation with proper sequencing
@@ -123,7 +123,7 @@ The following documentation has been updated to use higher-order tools:
 
 #### Task Creation Workflow
 - **Before**: Manual `bin/rc` + `bin/tnid` + path construction
-- **After**: Single `create-path task-new` command
+- **After**: Single `task-manager create` command
 - **Benefit**: Atomic operation, no manual coordination needed
 
 #### File Navigation Workflow
@@ -173,7 +173,7 @@ Higher-order tools provide better error handling:
 
 ### For Workflow Instructions
 
-- [ ] Replace `bin/rc` + `bin/tnid` with `create-path task-new`
+- [ ] Replace `bin/rc` + `bin/tnid` with `task-manager create`
 - [ ] Replace manual file searching with `nav-path file`
 - [ ] Replace manual session setup with `create-path file:reflection-new`
 - [ ] Update task management commands to use `task-manager`
@@ -196,7 +196,7 @@ The following commands are deprecated in favor of higher-order alternatives:
 - `bin/tn` → `task-manager next`
 - `bin/tr` → `task-manager recent`
 - `bin/tal` → `task-manager list`
-- `bin/tnid` → Used internally by `create-path task-new`
+- `bin/tnid` → `task-manager generate-id`
 - `bin/rc` → Used internally by `nav-path` commands
 
 ### Transition Period

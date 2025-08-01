@@ -199,7 +199,7 @@ module CodingAgentTools
 
         case type
         when 'task-new'
-          create_with_nav_path_and_template(:task_new, target, options)
+          { success: false, error: "The 'task-new' type has been removed. Please use 'task-manager create' instead." }
         when 'docs-new'
           create_with_nav_path_and_template(:docs_new, target, options)
         when 'file'

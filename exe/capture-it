@@ -25,18 +25,21 @@ module CaptureItCli
   module Commands
     extend Dry::CLI::Registry
 
-    # Register the capture command
-    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture
+    # Register the capture command as the default command
+    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture, aliases: [""]
   end
 end
 
-# Check if we need to add 'capture' as the first argument
-# If there are no arguments, or if the first argument is not 'capture', add 'capture' as the default subcommand
-if ARGV.empty? || ARGV[0] != 'capture'
-  ARGV.unshift('capture')
-end
-
 begin
+  # If no arguments or the first argument looks like an option, prepend "capture"
+  if ARGV.empty? || ARGV[0].start_with?('-')
+    ARGV.unshift('capture')
+  elsif !ARGV[0].start_with?('-') && ARGV[0] != 'capture'
+    # If first argument doesn't look like an option and isn't "capture", 
+    # treat it as idea text and prepend "capture"
+    ARGV.unshift('capture')
+  end
+  
   Dry::CLI.new(CaptureItCli::Commands).call
 rescue Dry::CLI::Error => e
   warn "Error: #{e.message}"

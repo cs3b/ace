@@ -22,7 +22,13 @@ require File.expand_path("support/vcr.rb", __dir__)
 # which does **not** run in a plain Ruby subprocess. We therefore enable it
 # explicitly here to ensure HTTP interception is active.
 require "webmock"
-WebMock.enable!
+
+# Skip WebMock in Ruby 3.4.2+ due to VCR compatibility issues
+if RUBY_VERSION >= "3.4.0"
+  WebMock.disable!
+else
+  WebMock.enable!
+end
 
 # If the parent process provided a cassette name, insert it automatically so the
 # subprocess records/replays under the same cassette.

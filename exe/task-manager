@@ -23,6 +23,7 @@ require "coding_agent_tools/cli/commands/task/recent"
 require "coding_agent_tools/cli/commands/task/list"
 require "coding_agent_tools/cli/commands/task/generate_id"
 require "coding_agent_tools/cli/commands/task/reschedule"
+require "coding_agent_tools/cli/commands/task/create"
 require "dry/cli"
 
 module TaskManagerCli
@@ -36,6 +37,7 @@ module TaskManagerCli
     register "all", CodingAgentTools::Cli::Commands::Task::List  # Backwards compatibility alias
     register "generate-id", CodingAgentTools::Cli::Commands::Task::GenerateId
     register "reschedule", CodingAgentTools::Cli::Commands::Task::Reschedule
+    register "create", CodingAgentTools::Cli::Commands::Task::Create
 
     # Version command
     class Version < Dry::CLI::Command
