@@ -11,69 +11,74 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: [What users provide - data, commands, interactions]
-- **Process**: [What users experience during interaction - feedback, states, flows]
-- **Output**: [What users receive - results, confirmations, artifacts]
+- **Input**: Users access documentation, workflow instructions, and help text expecting consistent command references
+- **Process**: Users experience seamless discovery of task creation commands through unified documentation and examples
+- **Output**: Users find consistent, accurate references to task-manager create throughout all project documentation
 
 ### Expected Behavior
 <!-- Describe WHAT the system should do from the user's perspective -->
 <!-- Focus on observable outcomes, system responses, and user experience -->
 <!-- Avoid implementation details - no mention of files, code structure, or technical approaches -->
 
-[Describe the desired behavior, user experience, and system responses]
+All project documentation, workflow instructions, examples, and help text consistently reference the new task-manager create command instead of the deprecated create-path task-new command. Users can confidently follow any documentation or workflow instruction knowing they will encounter the correct, current command syntax throughout the entire project ecosystem.
 
 ### Interface Contract
 <!-- Define all external interfaces, APIs, and interaction points -->
 <!-- Include normal operations, error conditions, and edge cases -->
 
 ```bash
-# CLI Interface (if applicable)
-command-name [options] <arguments>
-# Expected outputs, error messages, and status codes
+# Documentation Interface - All references updated from:
+# OLD: create-path task-new --title "Task Name"
+# NEW: task-manager create --title "Task Name"
 
-# API Interface (if applicable)  
-GET/POST/PUT/DELETE /endpoint
-# Request/response formats, error responses, status codes
+# Files requiring updates:
+# - docs/tools.md: Update CLI reference table and examples
+# - dev-handbook/workflow-instructions/*.wf.md: Update all workflow steps
+# - All spec files: Update test expectations and command examples
+# - Help text and usage documentation: Consistent command references
 
-# UI Interface (if applicable)
-# User interactions, form behaviors, navigation flows
+# Validation commands:
+# grep -r "create-path task-new" . # Should return no results after update
+# grep -r "task-manager create" . # Should show consistent usage patterns
 ```
 
 **Error Handling:**
-- [Error condition 1]: [Expected system response]
-- [Error condition 2]: [Expected system response]
+- Missed documentation references: Comprehensive grep/search to identify all occurrences
+- Inconsistent examples: Systematic review of all code examples and usage patterns
+- Workflow instruction failures: Test all updated workflows to ensure they work with new command
 
 **Edge Cases:**
-- [Edge case 1]: [Expected behavior]
-- [Edge case 2]: [Expected behavior]
+- Comments in code: Update any code comments that reference the old command
+- Historical documentation: Consider whether to update or archive older documentation versions
+- External references: Identify any external documentation that might reference the old command
 
 ### Success Criteria
 <!-- Define measurable, observable criteria that indicate successful completion -->
 <!-- Focus on behavioral outcomes and user experience, not implementation artifacts -->
 
-- [ ] **Behavioral Outcome 1**: [Observable user/system behavior or capability]
-- [ ] **User Experience Goal 2**: [Measurable user experience improvement]
-- [ ] **System Performance 3**: [Measurable system behavior or performance metric]
+- [ ] **Documentation Consistency**: Zero references to create-path task-new remain in any project documentation
+- [ ] **Workflow Functionality**: All workflow instructions execute successfully with updated command references
+- [ ] **User Discoverability**: New users can follow any documentation path and encounter consistent command syntax
 
 ### Validation Questions
 <!-- Questions to clarify requirements, resolve ambiguities, and validate understanding -->
 <!-- Ask about unclear requirements, edge cases, and user expectations -->
 
-- [ ] **Requirement Clarity**: [Question about unclear or ambiguous requirements]
-- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]  
-- [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
-- [ ] **Success Definition**: [Question about how success will be measured or validated]
+- [ ] **Update Scope**: Should we update historical ADRs and decision records that reference the old command?
+- [ ] **Example Migration**: How should we handle embedded code examples in templates that use the old command?
+- [ ] **Validation Method**: What is the best approach to systematically verify all references have been updated?
+- [ ] **Rollback Plan**: If issues are discovered post-migration, what is the rollback strategy for documentation?
 
 ## Objective
 
-Why are we doing this? Focus on user value and behavioral outcomes.
+Ensure users have a consistent, seamless experience when following any project documentation or workflow instructions. By updating all references to use the new task-manager create command, we eliminate confusion and provide a unified command experience that aligns with the improved command structure. This prevents user frustration from encountering deprecated commands in documentation.
 
 ## Scope of Work
 <!-- Define the behavioral scope - what user experiences and system behaviors are included -->
 
-- **User Experience Scope**: [Which user interactions, workflows, and experiences are included]
-- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]  
-- **Interface Scope**: [Which APIs, commands, or interfaces are included]
+- **User Experience Scope**: All documentation reading, workflow following, and example usage experiences across the entire project
+- **System Behavior Scope**: Documentation consistency, workflow instruction accuracy, and help text correctness
+- **Interface Scope**: All written documentation, embedded examples, help text, and workflow instruction files
 
 ### Deliverables
 <!-- Focus on behavioral and experiential deliverables, not implementation artifacts -->
@@ -98,6 +103,8 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 ## References
 
-- Related ideas-manager output (if applicable)
-- User experience requirements
-- Interface specification examples
+- Original idea file: dev-taskflow/backlog/ideas/20250731-0828-task-create-migrate.md
+- docs/tools.md - Main CLI reference documentation requiring updates
+- dev-handbook/workflow-instructions/ - All workflow files using task creation commands
+- All spec and test files with command examples
+- Project-wide documentation consistency standards
