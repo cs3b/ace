@@ -18,22 +18,34 @@ needs_review: true
   - **Suggested default**: Document discovered needs in impact notes only, let humans create ideas manually
   - **Why needs human input**: Auto-creating ideas could clutter backlog without proper context
 
+> should document it, and mark task status as needs_review: true
+> additional we should add this as additional counter to the status in task-manager list
+> Status: 13 done, 1 draft, 1 in-progress (15 total) => and should be
+> Status: 13 done, 1 draft, 1 in-progress (15 total) !!! Needs review: 1
+
 - [ ] When a task has multiple layers of dependencies (A→B→C), should cascade review traverse the entire chain or stop at immediate dependencies?
   - **Research conducted**: Industry best practices show full transitive dependency analysis is standard
   - **Web search findings**: Transitive dependencies can extend several layers deep and need monitoring
   - **Suggested default**: Process immediate dependencies only (single layer)
   - **Why needs human input**: Full chain traversal could create overwhelming cascades vs missing critical impacts
 
+> lets do full transitive dependency analysis
+
 - [ ] How should the workflow handle circular dependencies if detected during topological sorting?
   - **Research conducted**: Topological sort algorithms require DAG (no cycles allowed)
   - **Suggested default**: Abort workflow with clear error message listing the cycle
   - **Why needs human input**: May want softer handling or cycle-breaking heuristics
+
+> should not be, but when it found circular dependecie it should not go another time to task that it was laready scannded
+> and report at the very end to user, there is circular dependencie
 
 ### [MEDIUM] Enhancement Questions
 - [ ] Should impact notes be prepended or appended to draft tasks, and should they have an expiration/review-by date?
   - **Research conducted**: Task structure shows metadata at top, content follows
   - **Suggested default**: Prepend after metadata, no expiration date
   - **Why needs human input**: Long-term maintenance strategy for impact notes unclear
+
+> should be prepended, and mark tasks as needs_review: true
 
 - [ ] What level of detail should cascade commit messages include beyond the example format shown?
   - **Research conducted**: Project uses descriptive multi-line commit messages
