@@ -9,6 +9,37 @@ needs_review: true
 
 # Create replan-cascade-task Workflow for Dependency Impact Analysis
 
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the cascade review process automatically create new idea files when discovering unplanned work, or should it only document these in the impact notes?
+  - **Research conducted**: Examined existing workflows and idea creation patterns
+  - **Similar implementations**: `capture-idea.wf.md` shows idea creation is a separate workflow
+  - **Suggested default**: Document discovered needs in impact notes only, let humans create ideas manually
+  - **Why needs human input**: Auto-creating ideas could clutter backlog without proper context
+
+- [ ] When a task has multiple layers of dependencies (A→B→C), should cascade review traverse the entire chain or stop at immediate dependencies?
+  - **Research conducted**: Industry best practices show full transitive dependency analysis is standard
+  - **Web search findings**: Transitive dependencies can extend several layers deep and need monitoring
+  - **Suggested default**: Process immediate dependencies only (single layer)
+  - **Why needs human input**: Full chain traversal could create overwhelming cascades vs missing critical impacts
+
+- [ ] How should the workflow handle circular dependencies if detected during topological sorting?
+  - **Research conducted**: Topological sort algorithms require DAG (no cycles allowed)
+  - **Suggested default**: Abort workflow with clear error message listing the cycle
+  - **Why needs human input**: May want softer handling or cycle-breaking heuristics
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should impact notes be prepended or appended to draft tasks, and should they have an expiration/review-by date?
+  - **Research conducted**: Task structure shows metadata at top, content follows
+  - **Suggested default**: Prepend after metadata, no expiration date
+  - **Why needs human input**: Long-term maintenance strategy for impact notes unclear
+
+- [ ] What level of detail should cascade commit messages include beyond the example format shown?
+  - **Research conducted**: Project uses descriptive multi-line commit messages
+  - **Suggested default**: Include source task ID, target task ID, and specific changes made
+  - **Why needs human input**: Balance between traceability and commit message verbosity
+
 ## Objective
 
 Create the `replan-cascade-task.wf.md` workflow that handles manual dependency impact analysis after task completion. This workflow reviews downstream tasks to
@@ -62,10 +93,13 @@ and actual implementation work.*
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Research topological sorting algorithms for dependency graph traversal
   > TEST: Algorithm Selection Validation Type: Research Validation Assert: Optimal algorithm chosen for documentation-based system Command: echo "Topological
   > sort approach documented with complexity analysis"
+  > **[Added on review]** Consider Kahn's algorithm (BFS-based) for better parallel task identification vs DFS for simpler implementation
 
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Design impact note template format for draft task integration
+  > **[Added on review]** Must follow XML embedding pattern: `<documents><template path="...">` per project standards
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Plan rollback strategy with git-based recovery mechanisms
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Define cascade scope boundaries and manual override points
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**[Added on review]** Document in-degree calculation method for dependency counting
 
 ### Execution Steps
 
@@ -119,6 +153,8 @@ and actual implementation work.*
 * Git-based rollback with commit-per-file granularity and descriptive messages
 * Direct integration with task-manager and nav-path command invocations
 * XML-embedded impact note templates following project standards
+* **[Added on review]** Support for both Kahn's (BFS) and DFS topological sorting approaches
+* **[Added on review]** Transitive dependency awareness with configurable traversal depth
 
 ## Acceptance Criteria
 
@@ -227,3 +263,6 @@ find dev-taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task
 * dev-handbook/workflow-instructions/capture-idea.wf.md
 * dev-handbook/workflow-instructions/draft-task.wf.md
 * dev-handbook/workflow-instructions/plan-task.wf.md
+* **[Added on review]** dev-handbook/guides/documents-embedding.g.md - XML template embedding format
+* **[Added on review]** Industry best practices for transitive dependency management (2024)
+* **[Added on review]** Topological sorting algorithms: Kahn's algorithm and DFS-based approaches

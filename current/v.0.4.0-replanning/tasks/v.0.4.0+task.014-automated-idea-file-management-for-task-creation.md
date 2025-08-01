@@ -280,16 +280,16 @@ Establish clear traceability and organization for idea files throughout their li
 
 ## Acceptance Criteria
 
-- [ ] **Automated File Organization**: Original idea files are automatically moved and renamed with task number prefix after task creation
-- [ ] **Complete Traceability**: Clear linkage between draft tasks and their source idea files through organized file structure
-- [ ] **Zero Manual Overhead**: Users create tasks without manual file management, system handles all file operations transparently
-- [ ] **Consistent Naming Convention**: All processed idea files follow `NNN-original-filename.md` pattern in `../docs/ideas/` directory
-- [ ] **Error Resilience**: File operation failures don't prevent task creation, with clear error reporting and graceful degradation
+- [x] **Automated File Organization**: Original idea files are automatically moved and renamed with task number prefix after task creation
+- [x] **Complete Traceability**: Clear linkage between draft tasks and their source idea files through organized file structure
+- [x] **Zero Manual Overhead**: Users create tasks without manual file management, system handles all file operations transparently
+- [x] **Consistent Naming Convention**: All processed idea files follow `NNN-original-filename.md` pattern in `../docs/ideas/` directory
+- [x] **Error Resilience**: File operation failures don't prevent task creation, with clear error reporting and graceful degradation
 - [ ] **CLI Integration**: create-path command enhanced with --idea-source option for seamless integration
-- [ ] **Security Compliance**: All file operations use existing security validation framework
-- [ ] **Cross-Platform Compatibility**: File operations work consistently across different operating systems
-- [ ] **Comprehensive Testing**: >95% test coverage with full edge case validation
-- [ ] **Performance Acceptable**: <200ms additional overhead for idea file management operations
+- [x] **Security Compliance**: All file operations use existing security validation framework
+- [x] **Cross-Platform Compatibility**: File operations work consistently across different operating systems
+- [x] **Comprehensive Testing**: >95% test coverage with full edge case validation
+- [x] **Performance Acceptable**: <200ms additional overhead for idea file management operations
 
 ## Out of Scope
 
