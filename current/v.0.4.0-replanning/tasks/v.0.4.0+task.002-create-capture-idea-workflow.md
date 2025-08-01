@@ -10,7 +10,7 @@ dependencies: [v.0.4.0+task.1]
 
 ## Objective
 
-Create a workflow instruction that guides AI agents and developers through using the `ideas-manager` tool to capture and enhance raw ideas. This workflow
+Create a workflow instruction that guides AI agents and developers through using the `capture-it` tool to capture and enhance raw ideas. This workflow
 orchestrates the existing tool and focuses on when and how to use it effectively within the specification cycle.
 
 ## What: Behavioral Specification
@@ -18,14 +18,14 @@ orchestrates the existing tool and focuses on when and how to use it effectively
 ### User Experience
 
 * **Trigger**: User wants to capture a raw idea for future development
-* **Process**: AI agent uses `ideas-manager capture` with appropriate options
+* **Process**: AI agent uses `capture-it` with appropriate options
 * **Output**: Enhanced idea file ready for future specification phases
 
 ### Expected Behavior
 
 1.  Determine appropriate release target for the idea
 2.  Choose input method (text, clipboard, file)
-3.  Execute `ideas-manager capture` with proper options
+3.  Execute `capture-it` with proper options
 4.  Verify successful idea creation and enhancement
 5.  Provide path to created idea file
 
@@ -87,7 +87,7 @@ orchestrates the existing tool and focuses on when and how to use it effectively
 ```bash
 # Step 1: AI uses ideas-manager tool to capture and enhance the idea (defaults to backlog)
 # Step 2: Tool automatically loads project context and enhances the idea
-ideas-manager capture "I want better error handling in the task manager"
+capture-it "I want better error handling in the task manager"
 
 # Output: Created: dev-taskflow/backlog/ideas/20250730-1430-better-error-handling-task-manager.md
 ```

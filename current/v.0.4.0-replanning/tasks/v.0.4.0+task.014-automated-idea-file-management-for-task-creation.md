@@ -4,9 +4,36 @@ status: pending
 priority: high
 estimate: 6h
 dependencies: []
+needs_review: true
 ---
 
 # Automated Idea File Management for Task Creation
+
+## Review Questions (Pending Human Input)
+
+### [CRITICAL] Implementation Status Questions
+- [ ] Is this functionality already implemented? Evidence suggests idea files are being moved to docs/ideas/ with task prefixes
+  - **Research conducted**: Found existing moved files (008-*.md, 009-*.md, 011-*.md) in dev-taskflow/current/v.0.4.0-replanning/docs/ideas/
+  - **Current behavior**: Idea files appear to be already moved with task number prefixes
+  - **Why needs human input**: Task may be documenting existing behavior or requesting enhancement
+
+### [HIGH] Implementation Scope Questions  
+- [ ] Should the moved idea file path be updated in the task's References section?
+  - **Research conducted**: Task 009 still references original backlog path, not moved location
+  - **Suggested default**: Update References to point to new location in docs/ideas/
+  - **Why needs human input**: May affect existing tasks and tooling expectations
+
+### [HIGH] Integration Method Questions
+- [ ] Should this be integrated into create-path command or draft-task workflow?
+  - **Research conducted**: create-path uses delegation pattern, draft-task workflow calls create-path
+  - **Suggested default**: Integrate at draft-task workflow level after task creation
+  - **Why needs human input**: Architectural decision affecting tool boundaries
+
+### [MEDIUM] File Conflict Questions
+- [ ] How should we handle when an idea file is already linked to multiple tasks?
+  - **Research conducted**: No existing pattern found for multi-task ideas
+  - **Suggested default**: Keep single file, add task references in metadata
+  - **Why needs human input**: Business logic for idea-to-task relationships
 
 ## Behavioral Specification
 
@@ -73,10 +100,19 @@ create-path task-new --title "Task Title" --status draft
 <!-- Ask about unclear requirements, edge cases, and user expectations -->
 
 - [ ] **Current Release Detection**: How should the system determine the "current release folder" path when multiple releases exist?
+  - **Research conducted**: ReleaseManager uses DirectoryNavigator.get_current_release_directory to find release in dev-taskflow/current/
+  - **Current implementation**: Single subdirectory pattern (e.g., v.0.4.0-replanning)
+  - **Resolved**: Use existing ReleaseManager.current mechanism
 - [ ] **Task Number Availability**: At what point in the task creation process is the task number available for file renaming?
+  - **Research conducted**: TaskIdGenerator creates ID during create-path execution
+  - **Current implementation**: Task ID available immediately after create-path returns
+  - **Resolved**: Task number is available after create-path completes
 - [ ] **File Conflict Resolution**: Should existing files be overwritten, versioned, or should the operation fail with user notification?
+  - **Kept as validation question - needs business decision**
 - [ ] **Cross-Repository Operations**: Should the system support idea files from different repositories or maintain strict repository boundaries?
+  - **Kept as validation question - needs architectural decision**
 - [ ] **Rollback Behavior**: If task creation fails after idea file movement, should the file movement be automatically reversed?
+  - **Kept as validation question - needs error handling strategy decision**
 
 ## Objective
 
@@ -214,6 +250,12 @@ Establish clear traceability and organization for idea files throughout their li
 
 *Use asterisk markers (`* [ ]`) for research, analysis, and design activities.*
 
+* [ ] **[REVIEW NOTE]** Verify if this functionality already exists by checking existing moved idea files
+  > TEST: Implementation Status Check
+  > Type: Pre-condition Verification
+  > Assert: Determine if idea file movement is already implemented
+  > Command: ls -la dev-taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}-.*\.md"
+
 * [ ] Analyze current create-path command structure and integration points
   > TEST: Understanding Check
   > Type: Pre-condition Check
@@ -313,3 +355,6 @@ Establish clear traceability and organization for idea files throughout their li
 - Existing security framework: `dev-tools/lib/coding_agent_tools/molecules/secure_path_validator.rb`
 - CLI command patterns: `dev-tools/lib/coding_agent_tools/cli/`
 - FileIoHandler implementation: `dev-tools/lib/coding_agent_tools/molecules/file_io_handler.rb`
+- **[REVIEW FINDING]** Existing moved idea files: `dev-taskflow/current/v.0.4.0-replanning/docs/ideas/`
+- **[REVIEW FINDING]** TaskIdGenerator: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_id_generator.rb`
+- **[REVIEW FINDING]** ReleaseManager: `dev-tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb`

@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.013
-status: pending
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -54,10 +54,10 @@ capture-it [options] <arguments>
 <!-- Define measurable, observable criteria that indicate successful completion -->
 <!-- Focus on behavioral outcomes and user experience, not implementation artifacts -->
 
-- [ ] **Command Availability**: `capture-it` command executes successfully with all original functionality
-- [ ] **User Experience Improvement**: Reduced command typing (from 19 to 10 characters) improves workflow efficiency
-- [ ] **Documentation Consistency**: All help text, error messages, and documentation references use `capture-it`
-- [ ] **Complete Migration**: Only `capture-it` command exists, `ideas-manager` removed
+- [x] **Command Availability**: `capture-it` command executes successfully with all original functionality
+- [x] **User Experience Improvement**: Reduced command typing (from 19 to 10 characters) improves workflow efficiency
+- [x] **Documentation Consistency**: All help text, error messages, and documentation references use `capture-it`
+- [x] **Complete Migration**: Only `capture-it` command exists, `ideas-manager` removed
 
 ### Validation Questions
 <!-- Questions to clarify requirements, resolve ambiguities, and validate understanding -->
@@ -359,11 +359,11 @@ Improve user experience by providing a simpler, more intuitive command name for 
 
 *Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan.*
 
-- [ ] **Command Availability**: `capture-it` executable exists and is functional with all original options
-- [ ] **Functionality Preservation**: All `ideas-manager capture` functionality works identically under `capture-it`
-- [ ] **Documentation Consistency**: Usage messages, help text, and error messages reference `capture-it`
-- [ ] **Test Coverage**: All tests updated to use only `capture-it` command
-- [ ] **Complete Migration**: Only `capture-it` exists, `ideas-manager` completely removed
+- [x] **Command Availability**: `capture-it` executable exists and is functional with all original options
+- [x] **Functionality Preservation**: All `ideas-manager capture` functionality works identically under `capture-it`
+- [x] **Documentation Consistency**: Usage messages, help text, and error messages reference `capture-it`
+- [x] **Test Coverage**: All tests updated to use only `capture-it` command
+- [x] **Complete Migration**: Only `capture-it` exists, `ideas-manager` completely removed
 
 ## Out of Scope
 
