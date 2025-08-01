@@ -48,7 +48,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
     it "requires the necessary task command files" do
       expect(described_class).to receive(:require_relative).with("cli/commands/task/next")
       expect(described_class).to receive(:require_relative).with("cli/commands/task/recent")
-      expect(described_class).to receive(:require_relative).with("cli/commands/task/all")
+      expect(described_class).to receive(:require_relative).with("cli/commands/task/list")
       expect(described_class).to receive(:require_relative).with("cli/commands/task/generate_id")
 
       described_class.register_task_commands
