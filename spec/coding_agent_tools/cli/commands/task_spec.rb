@@ -3,7 +3,7 @@
 require "spec_helper"
 require "coding_agent_tools/cli/commands/task/next"
 require "coding_agent_tools/cli/commands/task/recent"
-require "coding_agent_tools/cli/commands/task/all"
+require "coding_agent_tools/cli/commands/task/list"
 require "coding_agent_tools/cli/commands/task/generate_id"
 
 RSpec.describe "Task CLI Commands" do
@@ -36,10 +36,10 @@ RSpec.describe "Task CLI Commands" do
         it "accepts positive limit values" do
           # Mock the TaskManager to avoid actual file system operations
           mock_task_manager = double("TaskManager")
-          mock_result = double("AllTasksResult", success?: true, tasks: [])
+          mock_result = double("ListTasksResult", success?: true, tasks: [])
 
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_result)
 
           expect { command.call(limit: 1) }.not_to raise_error
         end
@@ -49,7 +49,7 @@ RSpec.describe "Task CLI Commands" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
+          allow(mock_task_manager).to receive(:get_list_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
           expect(command.call).to eq(1)
@@ -59,7 +59,7 @@ RSpec.describe "Task CLI Commands" do
         it "shows debug information when debug flag is set" do
           mock_task_manager = double("TaskManager")
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
+          allow(mock_task_manager).to receive(:get_list_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
           expect(command.call(debug: true)).to eq(1)
@@ -78,11 +78,11 @@ RSpec.describe "Task CLI Commands" do
             status: "pending",
             dependencies: [])
         end
-        let(:mock_result) { double("AllTasksResult", success?: true, tasks: [mock_task]) }
+        let(:mock_result) { double("ListTasksResult", success?: true, tasks: [mock_task]) }
 
         before do
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_result)
         end
 
         it "displays task information for single task in compact format" do
@@ -148,17 +148,17 @@ RSpec.describe "Task CLI Commands" do
     end
   end
 
-  describe CodingAgentTools::Cli::Commands::Task::All do
+  describe CodingAgentTools::Cli::Commands::Task::List do
     subject(:command) { described_class.new }
 
     describe "#call" do
       context "with valid arguments" do
         it "handles successful results" do
           mock_task_manager = double("TaskManager")
-          mock_result = double("AllTasksResult", success?: true, tasks: [], has_cycles?: false, fully_sorted?: true)
+          mock_result = double("ListTasksResult", success?: true, tasks: [], has_cycles?: false, fully_sorted?: true)
 
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_result)
 
           expect(command.call).to eq(0)
         end
@@ -185,7 +185,7 @@ RSpec.describe "Task CLI Commands" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
-          allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError.new("Test error"))
+          allow(mock_task_manager).to receive(:get_list_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)
           expect(command.call).to eq(1)
