@@ -60,7 +60,7 @@ AI-assisted development workflow in a new or existing project.
 4. **Setup v.0.0.0 Bootstrap Release Tracking**:
     - **Create v.0.0.0 Structure**: Create the v.0.0.0 bootstrap structure in `dev-taskflow/current/v.0.0.0-bootstrap/` using the bootstrap release template.
     - **Customize Template Tasks**: Replace template placeholders in copied task files:
-        - Use `create-path task-new` to create actual tasks from templates with proper IDs
+        - Use `task-manager create` to create actual tasks from templates with proper IDs
         - Replace `[PLACEHOLDER]` values in the release overview file with actual project information.
         - Update task dependencies to use the actual generated task IDs.
         - Remove template notes sections from all copied files.
@@ -1367,7 +1367,7 @@ dependencies: []
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `create-path task-new`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager create`)
 2. Remove this template note section
 3. Customize content for specific project needs
 
@@ -1471,7 +1471,7 @@ dependencies: [TEMPLATE-task.1]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `create-path task-new`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager create`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -1588,7 +1588,7 @@ dependencies: [TEMPLATE-task.2]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `create-path task-new`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager create`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -1728,7 +1728,7 @@ dependencies: [TEMPLATE-task.3]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `create-path task-new`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager create`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs

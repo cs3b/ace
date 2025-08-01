@@ -108,7 +108,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
    * **Create focused test improvement task:**
      Use `create-path` to create starting file:
      ```bash
-     create-path task-new --title "Improve test coverage for [FileName] - [SpecificFocus]" --priority medium --estimate "3h"
+     task-manager create --title "Improve test coverage for [FileName] - [SpecificFocus]" --priority medium --estimate "3h"
      ```
 
    * **Task should include:**
@@ -186,7 +186,7 @@ cd dev-tools && bin/test
 coverage-analyze coverage/.resultset.json --comprehensive --detailed
 
 # Create test improvement task for a specific component
-create-path task-new --title "Improve test coverage for DirectoryCreator - error handling and edge cases" --priority medium --estimate "3h"
+task-manager create --title "Improve test coverage for DirectoryCreator - error handling and edge cases" --priority medium --estimate "3h"
 
 # Analyze specific file patterns
 coverage-analyze coverage/.resultset.json --focus "**/atoms/**" --max-files 5
