@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "usage_metadata"
-require_relative "pricing"
+require_relative 'usage_metadata'
+require_relative 'pricing'
 
 module CodingAgentTools
   module Models
@@ -57,6 +57,7 @@ module CodingAgentTools
       # @return [Float] Total cost, 0.0 if no cost info
       def total_cost
         return 0.0 unless has_cost_info?
+
         cost_calculation.total_cost.to_f
       end
 
@@ -64,6 +65,7 @@ module CodingAgentTools
       # @return [Float] Input token cost, 0.0 if no cost info
       def input_cost
         return 0.0 unless has_cost_info?
+
         cost_calculation.input_cost.to_f
       end
 
@@ -71,6 +73,7 @@ module CodingAgentTools
       # @return [Float] Output token cost, 0.0 if no cost info
       def output_cost
         return 0.0 unless has_cost_info?
+
         cost_calculation.output_cost.to_f
       end
 
@@ -78,6 +81,7 @@ module CodingAgentTools
       # @return [Float] Total cache cost, 0.0 if no cost info
       def cache_cost
         return 0.0 unless has_cost_info?
+
         (cost_calculation.cache_creation_cost + cost_calculation.cache_read_cost).to_f
       end
 
@@ -85,6 +89,7 @@ module CodingAgentTools
       # @return [Float] Cost per token (total cost / total tokens)
       def cost_per_token
         return 0.0 if total_tokens.zero? || !has_cost_info?
+
         total_cost / total_tokens.to_f
       end
 
@@ -92,6 +97,7 @@ module CodingAgentTools
       # @return [Float] Cost per second (total cost / execution time)
       def cost_per_second
         return 0.0 if took.zero? || !has_cost_info?
+
         total_cost / took
       end
 
@@ -100,9 +106,7 @@ module CodingAgentTools
       def to_h
         base_hash = super
 
-        if has_cost_info?
-          base_hash[:cost] = cost_calculation.to_json_hash
-        end
+        base_hash[:cost] = cost_calculation.to_json_hash if has_cost_info?
 
         base_hash
       end
@@ -116,10 +120,10 @@ module CodingAgentTools
       # Format cost summary for display
       # @return [String] Human-readable cost summary
       def cost_summary
-        return "Cost: N/A" unless has_cost_info?
+        return 'Cost: N/A' unless has_cost_info?
 
         lines = []
-        lines << "Cost Summary:"
+        lines << 'Cost Summary:'
         lines << "  Input: #{cost_calculation.format_cost(cost_calculation.input_cost)}"
         lines << "  Output: #{cost_calculation.format_cost(cost_calculation.output_cost)}"
 

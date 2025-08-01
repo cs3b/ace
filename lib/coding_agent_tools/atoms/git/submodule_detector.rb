@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "open3"
-require "shellwords"
-require_relative "../project_root_detector"
-require_relative "git_command_executor"
+require 'open3'
+require 'shellwords'
+require_relative '../project_root_detector'
+require_relative 'git_command_executor'
 
 module CodingAgentTools
   module Atoms
@@ -28,7 +28,7 @@ module CodingAgentTools
 
           begin
             # Try git submodule status first
-            submodule_output = execute_git_command("submodule status")
+            submodule_output = execute_git_command('submodule status')
             submodules = parse_submodule_status(submodule_output)
           rescue GitCommandError
             # Fallback to .gitmodules file if available
@@ -64,7 +64,7 @@ module CodingAgentTools
 
             commit_hash = parts[0]
             submodule_path = parts[1]
-            branch_info = parts[2..].join(" ") if parts.length > 2
+            branch_info = parts[2..].join(' ') if parts.length > 2
 
             submodules << build_submodule_info(
               submodule_path,
@@ -78,7 +78,7 @@ module CodingAgentTools
         end
 
         def parse_gitmodules_file
-          gitmodules_path = File.join(project_root, ".gitmodules")
+          gitmodules_path = File.join(project_root, '.gitmodules')
           return [] unless File.exist?(gitmodules_path)
 
           submodules = []
@@ -86,27 +86,23 @@ module CodingAgentTools
 
           File.readlines(gitmodules_path).each do |line|
             line = line.strip
-            next if line.empty? || line.start_with?("#")
+            next if line.empty? || line.start_with?('#')
 
             if line =~ /^\[submodule "(.+)"\]$/
               # Save previous submodule if complete
-              if current_submodule[:path]
-                submodules << build_submodule_info(current_submodule[:path])
-              end
+              submodules << build_submodule_info(current_submodule[:path]) if current_submodule[:path]
 
               # Start new submodule
-              current_submodule = {name: $1}
+              current_submodule = { name: ::Regexp.last_match(1) }
             elsif line =~ /^\s*path\s*=\s*(.+)$/
-              current_submodule[:path] = $1.strip
+              current_submodule[:path] = ::Regexp.last_match(1).strip
             elsif line =~ /^\s*url\s*=\s*(.+)$/
-              current_submodule[:url] = $1.strip
+              current_submodule[:url] = ::Regexp.last_match(1).strip
             end
           end
 
           # Don't forget the last submodule
-          if current_submodule[:path]
-            submodules << build_submodule_info(current_submodule[:path])
-          end
+          submodules << build_submodule_info(current_submodule[:path]) if current_submodule[:path]
 
           submodules
         end
@@ -128,13 +124,13 @@ module CodingAgentTools
 
         def parse_status_character(char)
           case char
-          when " ", nil
+          when ' ', nil
             :initialized
-          when "-"
+          when '-'
             :not_initialized
-          when "+"
+          when '+'
             :checked_out_different_commit
-          when "U"
+          when 'U'
             :merge_conflict
           else
             :unknown
@@ -151,7 +147,7 @@ module CodingAgentTools
 
         def git_repository_exists?(path = nil)
           check_path = path || project_root
-          File.exist?(File.join(check_path, ".git")) || File.directory?(File.join(check_path, ".git"))
+          File.exist?(File.join(check_path, '.git')) || File.directory?(File.join(check_path, '.git'))
         end
 
         def execute_git_command(command)

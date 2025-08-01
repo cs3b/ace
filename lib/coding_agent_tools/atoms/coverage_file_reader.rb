@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
+require 'json'
 
 module CodingAgentTools
   module Atoms
@@ -30,9 +30,7 @@ module CodingAgentTools
       # @return [Boolean] true if valid
       # @raise [InvalidFileError] If structure is invalid
       def validate_structure(data)
-        unless data.is_a?(Hash)
-          raise InvalidFileError, "Root must be a hash, got #{data.class}"
-        end
+        raise InvalidFileError, "Root must be a hash, got #{data.class}" unless data.is_a?(Hash)
 
         data.each do |framework_name, framework_data|
           validate_framework_data(framework_name, framework_data)
@@ -55,9 +53,9 @@ module CodingAgentTools
         file_paths = []
 
         data.each do |_framework_name, framework_data|
-          next unless framework_data.is_a?(Hash) && framework_data["coverage"]
+          next unless framework_data.is_a?(Hash) && framework_data['coverage']
 
-          file_paths.concat(framework_data["coverage"].keys)
+          file_paths.concat(framework_data['coverage'].keys)
         end
 
         file_paths.uniq
@@ -66,13 +64,11 @@ module CodingAgentTools
       private
 
       def validate_file_exists(file_path)
-        unless File.exist?(file_path)
-          raise InvalidFileError, "File does not exist: #{file_path}"
-        end
+        raise InvalidFileError, "File does not exist: #{file_path}" unless File.exist?(file_path)
 
-        unless File.readable?(file_path)
-          raise InvalidFileError, "File is not readable: #{file_path}"
-        end
+        return if File.readable?(file_path)
+
+        raise InvalidFileError, "File is not readable: #{file_path}"
       end
 
       def parse_json_content(file_path)
@@ -80,37 +76,33 @@ module CodingAgentTools
         JSON.parse(content)
       rescue JSON::ParserError => e
         raise MalformedJsonError, "Invalid JSON in #{file_path}: #{e.message}"
-      rescue => e
+      rescue StandardError => e
         raise InvalidFileError, "Error reading #{file_path}: #{e.message}"
       end
 
       def validate_framework_data(framework_name, framework_data)
-        unless framework_data.is_a?(Hash)
-          raise InvalidFileError, "Framework '#{framework_name}' data must be a hash"
-        end
+        raise InvalidFileError, "Framework '#{framework_name}' data must be a hash" unless framework_data.is_a?(Hash)
 
-        unless framework_data.key?("coverage")
+        unless framework_data.key?('coverage')
           raise InvalidFileError, "Framework '#{framework_name}' missing 'coverage' key"
         end
 
-        unless framework_data["coverage"].is_a?(Hash)
+        unless framework_data['coverage'].is_a?(Hash)
           raise InvalidFileError, "Framework '#{framework_name}' coverage must be a hash"
         end
 
-        validate_coverage_data(framework_name, framework_data["coverage"])
+        validate_coverage_data(framework_name, framework_data['coverage'])
       end
 
       def validate_coverage_data(framework_name, coverage_data)
         coverage_data.each do |file_path, file_data|
           next unless file_data.is_a?(Hash)
 
-          unless file_data.key?("lines")
+          unless file_data.key?('lines')
             raise InvalidFileError, "File '#{file_path}' in '#{framework_name}' missing 'lines' key"
           end
 
-          unless file_data["lines"].is_a?(Array)
-            raise InvalidFileError, "File '#{file_path}' lines must be an array"
-          end
+          raise InvalidFileError, "File '#{file_path}' lines must be an array" unless file_data['lines'].is_a?(Array)
         end
       end
     end

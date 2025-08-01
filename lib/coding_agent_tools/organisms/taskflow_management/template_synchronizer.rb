@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "fileutils"
-require "pathname"
+require 'fileutils'
+require 'pathname'
 
 module CodingAgentTools
   module Organisms
@@ -32,11 +32,11 @@ module CodingAgentTools
         # Configuration options for the synchronizer
         SyncConfig = Struct.new(:path, :dry_run, :verbose, :commit, :file_patterns) do
           def initialize(
-            path: "dev-handbook/workflow-instructions",
+            path: 'dev-handbook/workflow-instructions',
             dry_run: false,
             verbose: false,
             commit: false,
-            file_patterns: ["**/*.wf.md"]
+            file_patterns: ['**/*.wf.md']
           )
             super(path, dry_run, verbose, commit, file_patterns)
           end
@@ -119,7 +119,7 @@ module CodingAgentTools
             @warnings.concat(parse_result.warnings)
 
             if parse_result.documents.empty?
-              log("  No documents found")
+              log('  No documents found')
               return
             end
 
@@ -137,9 +137,7 @@ module CodingAgentTools
                 file_changed = true
                 log("  ✅ Document synchronized: #{document.path}")
 
-                if config.dry_run && sync_result.diff_preview
-                  log(sync_result.diff_preview)
-                end
+                log(sync_result.diff_preview) if config.dry_run && sync_result.diff_preview
               when :up_to_date
                 log("  ℹ️  Document up-to-date: #{document.path}")
               when :error
@@ -156,7 +154,7 @@ module CodingAgentTools
             elsif file_changed && config.dry_run
               @files_changed << file_path
             end
-          rescue => e
+          rescue StandardError => e
             error_message = "Error processing file #{file_path}: #{e.message}"
             log("  ❌ #{error_message}")
             @errors << error_message
@@ -165,26 +163,26 @@ module CodingAgentTools
         end
 
         def commit_changes(stats)
-          log("Committing changes...")
+          log('Committing changes...')
 
           # Check if we're in a git repository
           unless git_repository?
-            log("  ❌ Error: Not in a git repository")
-            @errors << "Not in a git repository"
+            log('  ❌ Error: Not in a git repository')
+            @errors << 'Not in a git repository'
             return
           end
 
           # Add changed files
-          system("git add -A")
+          system('git add -A')
 
           # Create commit message
           commit_message = create_commit_message(stats)
 
           # Commit changes
-          if system("git", "commit", "-m", commit_message)
-            log("  ✅ Changes committed successfully")
+          if system('git', 'commit', '-m', commit_message)
+            log('  ✅ Changes committed successfully')
           else
-            error_message = "Error committing changes"
+            error_message = 'Error committing changes'
             log("  ❌ #{error_message}")
             @errors << error_message
           end
@@ -194,21 +192,19 @@ module CodingAgentTools
           message = "chore: sync embedded templates\n\n"
 
           if stats.documents_synchronized > 0
-            message += "- Synchronized #{stats.documents_synchronized} document#{(stats.documents_synchronized == 1) ? "" : "s"}"
-            if stats.documents_up_to_date > 0
-              message += ", #{stats.documents_up_to_date} up-to-date"
-            end
+            message += "- Synchronized #{stats.documents_synchronized} document#{stats.documents_synchronized == 1 ? '' : 's'}"
+            message += ", #{stats.documents_up_to_date} up-to-date" if stats.documents_up_to_date > 0
             message += "\n\n"
           end
 
           message += "🤖 Generated with [Claude Code](https://claude.ai/code)\n\n"
-          message += "Co-Authored-By: Claude <noreply@anthropic.com>"
+          message += 'Co-Authored-By: Claude <noreply@anthropic.com>'
 
           message
         end
 
         def git_repository?
-          system("git rev-parse --git-dir > /dev/null 2>&1")
+          system('git rev-parse --git-dir > /dev/null 2>&1')
         end
 
         def create_operation_result
@@ -231,44 +227,40 @@ module CodingAgentTools
 
         def log_operation_start
           if config.dry_run
-            log("DRY RUN MODE - No files will be modified")
+            log('DRY RUN MODE - No files will be modified')
           else
-            log("Synchronizing templates")
+            log('Synchronizing templates')
           end
           log("Scanning workflow files in: #{config.path}")
-          log("")
+          log('')
         end
 
         def log_operation_summary(result)
-          log("")
-          log("Summary:")
+          log('')
+          log('Summary:')
           log("  Files processed: #{result.stats.files_processed}")
 
           if config.dry_run
-            log("  Would synchronize: #{result.stats.documents_synchronized} document#{(result.stats.documents_synchronized == 1) ? "" : "s"}")
-            log("  Would skip: #{result.stats.documents_up_to_date} document#{(result.stats.documents_up_to_date == 1) ? "" : "s"} (up-to-date)")
+            log("  Would synchronize: #{result.stats.documents_synchronized} document#{result.stats.documents_synchronized == 1 ? '' : 's'}")
+            log("  Would skip: #{result.stats.documents_up_to_date} document#{result.stats.documents_up_to_date == 1 ? '' : 's'} (up-to-date)")
           else
             log("  Documents synchronized: #{result.stats.documents_synchronized}")
             log("  Documents up-to-date: #{result.stats.documents_up_to_date}")
           end
 
-          if result.has_errors?
-            log("  Errors: #{result.errors.size}")
-          end
+          log("  Errors: #{result.errors.size}") if result.has_errors?
 
-          if result.has_warnings?
-            log("  Warnings: #{result.warnings.size}")
-          end
+          log("  Warnings: #{result.warnings.size}") if result.has_warnings?
 
-          log("")
+          log('')
         end
 
         def log(message)
           # Always show errors and summary
-          if message.include?("❌") || message.start_with?("Summary:") || message.start_with?("  Files processed:") ||
-              message.start_with?("  Documents synchronized:") || message.start_with?("  Documents up-to-date:") ||
-              message.start_with?("  Would synchronize:") || message.start_with?("  Would skip:") ||
-              message.start_with?("  Errors:") || message.start_with?("  Warnings:") || message.empty?
+          if message.include?('❌') || message.start_with?('Summary:') || message.start_with?('  Files processed:') ||
+             message.start_with?('  Documents synchronized:') || message.start_with?('  Documents up-to-date:') ||
+             message.start_with?('  Would synchronize:') || message.start_with?('  Would skip:') ||
+             message.start_with?('  Errors:') || message.start_with?('  Warnings:') || message.empty?
             puts message
           # Show all messages in verbose mode
           elsif config.verbose

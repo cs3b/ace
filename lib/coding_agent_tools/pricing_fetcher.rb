@@ -55,11 +55,9 @@ module CodingAgentTools
           save_to_cache(@pricing_data)
         rescue NetworkError => e
           # Fallback to cache if API fails
-          if cache_exists?
-            @pricing_data = load_from_cache
-          else
-            raise PricingError, "API failed and no cache available: #{e.message}"
-          end
+          raise PricingError, "API failed and no cache available: #{e.message}" unless cache_exists?
+
+          @pricing_data = load_from_cache
         end
       else
         @pricing_data = load_from_cache
@@ -157,9 +155,7 @@ module CodingAgentTools
     # @return [Hash] Cached pricing data
     # @raise [CacheError] If cache load fails
     def load_from_cache
-      unless cache_exists?
-        raise CacheError, "Cache file does not exist: #{@cache_file_path}"
-      end
+      raise CacheError, "Cache file does not exist: #{@cache_file_path}" unless cache_exists?
 
       cache_content = JSON.parse(File.read(@cache_file_path))
       cache_content["pricing_data"]
@@ -223,10 +219,10 @@ module CodingAgentTools
         case provider
         when "anthropic"
           # Many Claude models are listed as anthropic/claude-X
-          variations << "#{provider}/claude-#{model_id}" if !model_id.start_with?("claude")
+          variations << "#{provider}/claude-#{model_id}" unless model_id.start_with?("claude")
         when "openai"
           # GPT models sometimes listed as openai/gpt-X
-          variations << "#{provider}/gpt-#{model_id}" if !model_id.start_with?("gpt")
+          variations << "#{provider}/gpt-#{model_id}" unless model_id.start_with?("gpt")
         end
       end
 
@@ -245,9 +241,7 @@ module CodingAgentTools
         normalized_key = key.downcase.gsub(/[-_]/, "")
 
         # Check if the model name contains our search term
-        if normalized_key.include?(normalized_model_id) || normalized_model_id.include?(normalized_key)
-          return value
-        end
+        return value if normalized_key.include?(normalized_model_id) || normalized_model_id.include?(normalized_key)
       end
 
       nil

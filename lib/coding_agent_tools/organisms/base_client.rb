@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/api_credentials"
-require_relative "../molecules/http_request_builder"
-require_relative "../molecules/api_response_parser"
-require_relative "../molecules/client_factory"
-require_relative "../models/default_model_config"
+require_relative '../molecules/api_credentials'
+require_relative '../molecules/http_request_builder'
+require_relative '../molecules/api_response_parser'
+require_relative '../molecules/client_factory'
+require_relative '../models/default_model_config'
 
 module CodingAgentTools
   module Organisms
@@ -19,12 +19,12 @@ module CodingAgentTools
         # Register with ClientFactory if it's available
         # If not, the ensure_clients_loaded fallback will handle it
         provider_key = subclass.provider_key
-        if provider_key
-          begin
-            Molecules::ClientFactory.register(provider_key, subclass)
-          rescue NameError
-            # ClientFactory not loaded yet - that's ok, ensure_clients_loaded will handle it
-          end
+        return unless provider_key
+
+        begin
+          Molecules::ClientFactory.register(provider_key, subclass)
+        rescue NameError
+          # ClientFactory not loaded yet - that's ok, ensure_clients_loaded will handle it
         end
       end
 
@@ -35,7 +35,7 @@ module CodingAgentTools
       # @return [String, nil] Provider key for registration, nil to skip registration
       def self.provider_key
         return nil if self == BaseClient # Don't register the base class
-        return nil if name&.include?("BaseChatCompletionClient") # Don't register abstract base classes
+        return nil if name&.include?('BaseChatCompletionClient') # Don't register abstract base classes
 
         begin
           provider_name
@@ -56,7 +56,7 @@ module CodingAgentTools
       def initialize(api_key: nil, model: nil, **options)
         # Prevent direct instantiation of abstract base class
         if instance_of?(BaseClient)
-          raise NotImplementedError, "BaseClient is abstract and cannot be instantiated directly"
+          raise NotImplementedError, 'BaseClient is abstract and cannot be instantiated directly'
         end
 
         @model = model || default_model
@@ -183,7 +183,7 @@ module CodingAgentTools
       def handle_error(parsed_response)
         # Ensure error object and HTTP status are safely accessed, providing defaults
         error_obj = parsed_response[:error] || {}
-        http_status = error_obj[:status] || "Unknown HTTP Status"
+        http_status = error_obj[:status] || 'Unknown HTTP Status'
 
         # Extract error content using provider-specific logic
         specific_content = extract_error_content(error_obj)
@@ -201,7 +201,7 @@ module CodingAgentTools
         error_message = error_obj.is_a?(Hash) ? error_obj[:message] : nil
         raw_message = error_obj.is_a?(Hash) ? error_obj[:raw_message] : nil
 
-        error_message || raw_message || "An unspecified error occurred."
+        error_message || raw_message || 'An unspecified error occurred.'
       end
 
       # Format error message with provider context
@@ -210,21 +210,21 @@ module CodingAgentTools
       # @return [String] Formatted error message
       def format_error_message(http_status, content)
         provider_display_name = case provider_name
-        when "openai"
-          "OpenAI"
-        when "anthropic"
-          "Anthropic"
-        when "google"
-          "Google"
-        when "mistral"
-          "Mistral"
-        when "together_ai", "togetherai"
-          "Together AI"
-        when "lmstudio", "lm_studio"
-          "LM Studio"
-        else
-          provider_name.capitalize
-        end
+                                when 'openai'
+                                  'OpenAI'
+                                when 'anthropic'
+                                  'Anthropic'
+                                when 'google'
+                                  'Google'
+                                when 'mistral'
+                                  'Mistral'
+                                when 'together_ai', 'togetherai'
+                                  'Together AI'
+                                when 'lmstudio', 'lm_studio'
+                                  'LM Studio'
+                                else
+                                  provider_name.capitalize
+                                end
 
         "#{provider_display_name} API Error (#{http_status}): #{content}"
       end

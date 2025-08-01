@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/http_client"
-require "json"
+require_relative '../atoms/http_client'
+require 'json'
 
 module CodingAgentTools
   module Molecules
@@ -24,7 +24,8 @@ module CodingAgentTools
       # @option options [Boolean] :json (true) Whether to send/receive JSON
       # @return [Hash] Response data including status, headers, and body
       def json_request(method, url, **options)
-        headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method, body: options[:body])
+        headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method,
+                                                   body: options[:body])
         # Query parameters are now passed directly to execute_request,
         # which will pass them to HTTPClient, which in turn lets Faraday handle them.
         response = execute_request(method, url, query: options[:query], body: options[:body], headers: headers)
@@ -83,12 +84,10 @@ module CodingAgentTools
         headers.merge!(custom_headers) if custom_headers
 
         if json
-          headers["Accept"] ||= "application/json"
+          headers['Accept'] ||= 'application/json'
           # Add Content-Type for methods that typically have request bodies
           # or when a body is explicitly provided, but only if not already set
-          if should_add_content_type?(method, body)
-            headers["Content-Type"] ||= "application/json"
-          end
+          headers['Content-Type'] ||= 'application/json' if should_add_content_type?(method, body)
         end
 
         headers
@@ -101,7 +100,8 @@ module CodingAgentTools
       def should_add_content_type?(method, body)
         # Add Content-Type if there's a body or if method typically has a body
         return true if body
-        return true if method && [:post, :put, :patch].include?(method)
+        return true if method && %i[post put patch].include?(method)
+
         false
       end
 
@@ -157,12 +157,12 @@ module CodingAgentTools
           # For compatibility, provide raw_body but optimize for common cases
           # Only re-encode if it's a reasonably sized response to avoid performance issues
           raw_body = if json && body_size_reasonable?(body)
-            JSON.generate(ensure_proper_encoding(body))
-          else
-            # For very large responses, skip raw_body to avoid performance penalty
-            # This is a reasonable tradeoff for the edge case of huge JSON responses
-            nil
-          end
+                       JSON.generate(ensure_proper_encoding(body))
+                     else
+                       # For very large responses, skip raw_body to avoid performance penalty
+                       # This is a reasonable tradeoff for the edge case of huge JSON responses
+                       nil
+                     end
         end
 
         result = {
@@ -182,8 +182,8 @@ module CodingAgentTools
       # @param response [Faraday::Response] The response to check
       # @return [Boolean] Whether the response appears to be JSON
       def looks_like_json?(response)
-        content_type = response.headers["content-type"] || ""
-        content_type.include?("application/json") || content_type.include?("text/json")
+        content_type = response.headers['content-type'] || ''
+        content_type.include?('application/json') || content_type.include?('text/json')
       end
 
       # Check if body size is reasonable for re-encoding
@@ -194,13 +194,13 @@ module CodingAgentTools
         # Simple heuristic: if serialized size estimation is reasonable, allow re-encoding
         # For most API responses, this will be true. For huge responses, we skip raw_body.
         estimated_size = case body
-        when Hash
-          body.keys.size + body.values.flatten.size
-        when Array
-          body.flatten.size
-        else
-          0
-        end
+                         when Hash
+                           body.keys.size + body.values.flatten.size
+                         when Array
+                           body.flatten.size
+                         else
+                           0
+                         end
         estimated_size < 10_000 # Reasonable limit for typical API responses
       end
 
@@ -220,7 +220,7 @@ module CodingAgentTools
           end
         when Hash
           obj.transform_keys { |k| ensure_proper_encoding(k) }
-            .transform_values { |v| ensure_proper_encoding(v) }
+             .transform_values { |v| ensure_proper_encoding(v) }
         when Array
           obj.map { |item| ensure_proper_encoding(item) }
         else

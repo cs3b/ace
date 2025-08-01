@@ -4,7 +4,8 @@ module CodingAgentTools
   module Models
     # LlmModelInfo represents an AI model with its metadata including pricing information
     # This is a pure data structure following ATOM architecture - no external IO
-    LlmModelInfo = Struct.new(:id, :name, :description, :default, :context_size, :max_output_tokens, :pricing_info, keyword_init: true) do
+    LlmModelInfo = Struct.new(:id, :name, :description, :default, :context_size, :max_output_tokens, :pricing_info,
+                              keyword_init: true) do
       # Check if this is the default model
       # @return [Boolean]
       def default?
@@ -20,7 +21,7 @@ module CodingAgentTools
         output << "Description: #{description}"
         output << "Context Size: #{format_context_size}" if context_size
         output << "Max Output: #{format_max_output_tokens}" if max_output_tokens
-        output << "Status: Default model" if default?
+        output << 'Status: Default model' if default?
 
         if has_pricing?
           output << "Pricing: Input $#{pricing_info.input_cost_per_token}/token, Output $#{pricing_info.output_cost_per_token}/token"
@@ -75,7 +76,7 @@ module CodingAgentTools
       # Format context size for human-readable display
       # @return [String]
       def format_context_size
-        return "Unknown" if context_size.nil?
+        return 'Unknown' if context_size.nil?
 
         if context_size >= 1_000_000
           "#{(context_size / 1_000_000.0).round(1)}M tokens"
@@ -89,7 +90,7 @@ module CodingAgentTools
       # Format max output tokens for human-readable display
       # @return [String]
       def format_max_output_tokens
-        return "Unknown" if max_output_tokens.nil?
+        return 'Unknown' if max_output_tokens.nil?
 
         if max_output_tokens >= 1_000_000
           "#{(max_output_tokens / 1_000_000.0).round(1)}M tokens"

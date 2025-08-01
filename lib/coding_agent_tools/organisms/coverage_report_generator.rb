@@ -83,10 +83,10 @@ module CodingAgentTools
 
         # Extract critical items for action
         critical_items = if action_required
-          @extractor.find_high_impact_files(analysis_result, limit: 5)
-        else
-          []
-        end
+                           @extractor.find_high_impact_files(analysis_result, limit: 5)
+                         else
+                           []
+                         end
 
         # Generate create-path compatible structure
         {
@@ -120,8 +120,8 @@ module CodingAgentTools
       # @return [Hash] Paths to generated report files
       def generate_multi_format_reports(file_path, output_directory, options = {}, analysis_result: nil)
         validated_options = validate_report_options(options)
-        formats = validated_options[:formats] || [:text, :json]
-        base_name = validated_options[:base_name] || "coverage_report"
+        formats = validated_options[:formats] || %i[text json]
+        base_name = validated_options[:base_name] || 'coverage_report'
 
         # Ensure output directory exists
         FileUtils.mkdir_p(output_directory)
@@ -134,11 +134,11 @@ module CodingAgentTools
 
         formats.each do |format|
           extension = case format
-          when :text then ".txt"
-          when :json then ".json"
-          when :csv then ".csv"
-          else ".#{format}"
-          end
+                      when :text then '.txt'
+                      when :json then '.json'
+                      when :csv then '.csv'
+                      else ".#{format}"
+                      end
 
           output_path = File.join(output_directory, "#{base_name}#{extension}")
           report_path = @analyzer.save_report(analysis_result, output_path, format, validated_options)
@@ -198,13 +198,13 @@ module CodingAgentTools
       def validate_report_options(options)
         {
           threshold: options[:threshold] || 85.0,
-          sections: options[:sections] || [:summary, :files, :recommendations],
+          sections: options[:sections] || %i[summary files recommendations],
           include_method_analysis: options[:include_method_analysis] || false,
           max_files: options[:max_files] || 20,
-          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
-          exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
-          formats: options[:formats] || [:text, :json],
-          base_name: options[:base_name] || "coverage_report",
+          include_patterns: options[:include_patterns] || ['**/lib/**/*.rb'],
+          exclude_patterns: options[:exclude_patterns] || ['**/spec/**', '**/test/**'],
+          formats: options[:formats] || %i[text json],
+          base_name: options[:base_name] || 'coverage_report',
           include_comprehensive: options[:include_comprehensive] || false,
           report_format: options[:report_format] || :compact
         }
@@ -253,13 +253,13 @@ module CodingAgentTools
         threshold = analysis_result.threshold
 
         if overall >= threshold
-          "excellent"
+          'excellent'
         elsif overall >= threshold - 10
-          "good"
+          'good'
         elsif overall >= threshold - 20
-          "needs_improvement"
+          'needs_improvement'
         else
-          "critical"
+          'critical'
         end
       end
 
@@ -280,7 +280,7 @@ module CodingAgentTools
             recommendations << "#{large_gaps.length} file(s) have significant coverage gaps requiring immediate attention"
           end
         else
-          recommendations << "All files meet coverage threshold - consider raising the threshold for even better coverage"
+          recommendations << 'All files meet coverage threshold - consider raising the threshold for even better coverage'
         end
 
         recommendations
@@ -290,14 +290,14 @@ module CodingAgentTools
         steps = []
 
         if critical_items.any?
-          steps << "Review high-impact files identified in critical_items section"
-          steps << "Prioritize testing based on impact_score values"
+          steps << 'Review high-impact files identified in critical_items section'
+          steps << 'Prioritize testing based on impact_score values'
           steps << "Start with files marked as 'low' or 'medium' effort"
         end
 
         if analysis_result.under_covered_files.any?
-          steps << "Run coverage analysis regularly during development"
-          steps << "Set up CI/CD checks to maintain coverage threshold"
+          steps << 'Run coverage analysis regularly during development'
+          steps << 'Set up CI/CD checks to maintain coverage threshold'
         end
 
         steps

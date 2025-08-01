@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "faraday"
+require 'faraday'
 # require "json" # No longer needed for direct use here, Faraday's :json middleware handles it.
-require_relative "../middlewares/faraday_dry_monitor_logger" # Ensure middleware is loaded and registered
-require_relative "../molecules/retry_middleware" # Retry middleware for resilient HTTP operations
+require_relative '../middlewares/faraday_dry_monitor_logger' # Ensure middleware is loaded and registered
+require_relative '../molecules/retry_middleware' # Retry middleware for resilient HTTP operations
 
 module CodingAgentTools
   module Atoms
@@ -75,7 +75,7 @@ module CodingAgentTools
         begin
           notifications.register_event("#{@event_namespace}.request.coding_agent_tools")
           notifications.register_event("#{@event_namespace}.response.coding_agent_tools")
-        rescue
+        rescue StandardError
           # Silently ignore registration errors for already registered events
           # This handles cases where dry-monitor behavior might change between versions
         end
@@ -99,13 +99,13 @@ module CodingAgentTools
           # However, Faraday's :json response middleware parses the body and populates response.body.
           # Our logger accesses response.status and response.headers, which are fine.
           faraday.use CodingAgentTools::Middlewares::FaradayDryMonitorLogger,
-            notifications_instance: CodingAgentTools::Notifications.notifications,
-            event_namespace: @event_namespace
+                      notifications_instance: CodingAgentTools::Notifications.notifications,
+                      event_namespace: @event_namespace
 
           # Middleware to automatically parse JSON response bodies.
           # It will parse bodies with 'Content-Type' matching /\bjson$/.
           # Using symbolize_names: true for consistency with previous manual parsing.
-          faraday.response :json, parser_options: {symbolize_names: true}
+          faraday.response :json, parser_options: { symbolize_names: true }
 
           # Standard Faraday adapter
           faraday.adapter Faraday.default_adapter

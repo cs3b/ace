@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "language_runner"
-require_relative "../../molecules/code_quality/markdown_linting_pipeline"
-require_relative "../../atoms/code_quality/language_file_filter"
+require_relative 'language_runner'
+require_relative '../../molecules/code_quality/markdown_linting_pipeline'
+require_relative '../../atoms/code_quality/language_file_filter'
 
 module CodingAgentTools
   module Organisms
@@ -15,7 +15,7 @@ module CodingAgentTools
           @file_filter = Atoms::CodeQuality::LanguageFileFilter.new(config: config)
         end
 
-        def validate(paths: ["."], **options)
+        def validate(paths: ['.'], **_options)
           return skip_result unless language_enabled?
 
           filtered_paths = filter_markdown_files(paths)
@@ -24,7 +24,7 @@ module CodingAgentTools
           @pipeline.run(paths: filtered_paths, autofix: false)
         end
 
-        def autofix(paths: ["."], **options)
+        def autofix(paths: ['.'], **_options)
           return skip_result unless language_enabled?
 
           filtered_paths = filter_markdown_files(paths)
@@ -56,12 +56,12 @@ module CodingAgentTools
             linters: {},
             findings: [],
             skipped: true,
-            reason: "Markdown linting disabled in configuration"
+            reason: 'Markdown linting disabled in configuration'
           }
         end
 
         def format_summary(results)
-          status = results[:success] ? "✅ PASSED" : "❌ FAILED"
+          status = results[:success] ? '✅ PASSED' : '❌ FAILED'
           total_issues = results[:total_issues] || 0
           "Markdown linters: #{total_issues} issues found - #{status}"
         end
@@ -101,8 +101,8 @@ module CodingAgentTools
           case linter_name.to_sym
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
-              file = finding[:file] || "unknown"
-              message = finding[:message] || finding[:template] || finding[:link] || "issue"
+              file = finding[:file] || 'unknown'
+              message = finding[:message] || finding[:template] || finding[:link] || 'issue'
               "    ❌ #{file} - #{message}"
             else
               "    ❌ #{finding}"

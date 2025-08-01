@@ -28,7 +28,7 @@ module CodingAgentTools
           max_input_tokens: nil,
           max_output_tokens: nil,
           input_cost_per_pixel: nil,
-          mode: "chat",
+          mode: 'chat',
           supports_function_calling: false,
           supports_parallel_function_calling: false,
           supports_vision: false
@@ -50,11 +50,11 @@ module CodingAgentTools
         end
 
         attr_reader :input_cost_per_token, :output_cost_per_token,
-          :cache_creation_input_token_cost, :cache_read_input_token_cost,
-          :max_tokens, :max_input_tokens, :max_output_tokens,
-          :input_cost_per_pixel, :mode,
-          :supports_function_calling, :supports_parallel_function_calling,
-          :supports_vision
+                    :cache_creation_input_token_cost, :cache_read_input_token_cost,
+                    :max_tokens, :max_input_tokens, :max_output_tokens,
+                    :input_cost_per_pixel, :mode,
+                    :supports_function_calling, :supports_parallel_function_calling,
+                    :supports_vision
 
         # Check if model supports caching
         # @return [Boolean] True if cache pricing is available
@@ -73,16 +73,16 @@ module CodingAgentTools
           output_cost = BigDecimal(output_tokens.to_s) * BigDecimal(output_cost_per_token.to_s)
 
           cache_creation_cost = if cache_creation_input_token_cost && cache_creation_tokens > 0
-            BigDecimal(cache_creation_tokens.to_s) * BigDecimal(cache_creation_input_token_cost.to_s)
-          else
-            BigDecimal(0)
-          end
+                                  BigDecimal(cache_creation_tokens.to_s) * BigDecimal(cache_creation_input_token_cost.to_s)
+                                else
+                                  BigDecimal(0)
+                                end
 
           cache_read_cost = if cache_read_input_token_cost && cache_read_tokens > 0
-            BigDecimal(cache_read_tokens.to_s) * BigDecimal(cache_read_input_token_cost.to_s)
-          else
-            BigDecimal(0)
-          end
+                              BigDecimal(cache_read_tokens.to_s) * BigDecimal(cache_read_input_token_cost.to_s)
+                            else
+                              BigDecimal(0)
+                            end
 
           total_cost = input_cost + output_cost + cache_creation_cost + cache_read_cost
 
@@ -92,7 +92,7 @@ module CodingAgentTools
             cache_creation_cost: cache_creation_cost,
             cache_read_cost: cache_read_cost,
             total_cost: total_cost,
-            currency: "USD"
+            currency: 'USD'
           )
         end
 
@@ -120,18 +120,18 @@ module CodingAgentTools
         # @return [PricingInfo] New pricing info instance
         def self.from_litellm(litellm_data)
           new(
-            input_cost_per_token: litellm_data["input_cost_per_token"] || 0.0,
-            output_cost_per_token: litellm_data["output_cost_per_token"] || 0.0,
-            cache_creation_input_token_cost: litellm_data["cache_creation_input_token_cost"],
-            cache_read_input_token_cost: litellm_data["cache_read_input_token_cost"],
-            max_tokens: litellm_data["max_tokens"],
-            max_input_tokens: litellm_data["max_input_tokens"],
-            max_output_tokens: litellm_data["max_output_tokens"],
-            input_cost_per_pixel: litellm_data["input_cost_per_pixel"],
-            mode: litellm_data["mode"] || "chat",
-            supports_function_calling: litellm_data["supports_function_calling"] || false,
-            supports_parallel_function_calling: litellm_data["supports_parallel_function_calling"] || false,
-            supports_vision: litellm_data["supports_vision"] || false
+            input_cost_per_token: litellm_data['input_cost_per_token'] || 0.0,
+            output_cost_per_token: litellm_data['output_cost_per_token'] || 0.0,
+            cache_creation_input_token_cost: litellm_data['cache_creation_input_token_cost'],
+            cache_read_input_token_cost: litellm_data['cache_read_input_token_cost'],
+            max_tokens: litellm_data['max_tokens'],
+            max_input_tokens: litellm_data['max_input_tokens'],
+            max_output_tokens: litellm_data['max_output_tokens'],
+            input_cost_per_pixel: litellm_data['input_cost_per_pixel'],
+            mode: litellm_data['mode'] || 'chat',
+            supports_function_calling: litellm_data['supports_function_calling'] || false,
+            supports_parallel_function_calling: litellm_data['supports_parallel_function_calling'] || false,
+            supports_vision: litellm_data['supports_vision'] || false
           )
         end
       end
@@ -139,7 +139,7 @@ module CodingAgentTools
       # CostCalculation represents the result of a cost calculation
       # This provides detailed breakdown of costs by token type
       class CostCalculation
-        def initialize(input_cost:, output_cost:, cache_creation_cost:, cache_read_cost:, total_cost:, currency: "USD")
+        def initialize(input_cost:, output_cost:, cache_creation_cost:, cache_read_cost:, total_cost:, currency: 'USD')
           @input_cost = input_cost
           @output_cost = output_cost
           @cache_creation_cost = cache_creation_cost

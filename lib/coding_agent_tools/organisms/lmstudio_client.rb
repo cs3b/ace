@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "base_chat_completion_client"
-require "json"
+require_relative 'base_chat_completion_client'
+require 'json'
 
 module CodingAgentTools
   module Organisms
@@ -9,7 +9,7 @@ module CodingAgentTools
     # This is an organism - it orchestrates molecules to achieve business goals
     class LmstudioClient < BaseChatCompletionClient
       # LM Studio API base URL (local server)
-      API_BASE_URL = "http://localhost:1234"
+      API_BASE_URL = 'http://localhost:1234'
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
@@ -21,7 +21,7 @@ module CodingAgentTools
       # Explicit provider name declaration
       # @return [String] The provider name for this client
       def self.provider_name
-        "lmstudio"
+        'lmstudio'
       end
 
       # Dynamic aliases for this provider
@@ -39,8 +39,8 @@ module CodingAgentTools
       def initialize(model: nil, **options)
         # Set LM Studio-specific defaults
         options[:event_namespace] ||= :lm_studio_api
-        options[:timeout] ||= 180  # LM Studio needs longer timeout
-        options[:api_key_env] ||= "LM_STUDIO_API_KEY"
+        options[:timeout] ||= 180 # LM Studio needs longer timeout
+        options[:api_key_env] ||= 'LM_STUDIO_API_KEY'
 
         super(api_key: options[:api_key], model: model, **options)
       end
@@ -48,10 +48,10 @@ module CodingAgentTools
       # Check if LM Studio server is available
       # @return [Boolean] True if server is running and responsive
       def server_available?
-        url = build_api_url("models")
+        url = build_api_url('models')
         response_data = @request_builder.get_json(url)
         response_data[:success] && response_data[:status] == 200
-      rescue
+      rescue StandardError
         false
       end
 
@@ -94,8 +94,8 @@ module CodingAgentTools
       def fallback_model_info
         {
           id: @model,
-          object: "model",
-          owned_by: "local"
+          object: 'model',
+          owned_by: 'local'
         }
       end
 
@@ -118,14 +118,14 @@ module CodingAgentTools
         # Add system message if provided
         if options[:system_instruction]
           messages << {
-            role: "system",
+            role: 'system',
             content: options[:system_instruction]
           }
         end
 
         # Add user message
         messages << {
-          role: "user",
+          role: 'user',
           content: prompt
         }
 
@@ -149,7 +149,7 @@ module CodingAgentTools
         # 1. Verify parsed_response[:data] is a Hash
         data = parsed_response[:data]
         unless data.is_a?(Hash)
-          raise Error, "Failed to extract generated text: Response data is not a Hash, cannot find choices."
+          raise Error, 'Failed to extract generated text: Response data is not a Hash, cannot find choices.'
         end
 
         # 2. Verify data[:choices] is a non-empty Array
@@ -157,14 +157,12 @@ module CodingAgentTools
         unless choices_field.is_a?(Array)
           raise Error, "Failed to extract generated text: 'choices' field is not an array."
         end
-        if choices_field.empty?
-          raise Error, "Failed to extract generated text: 'choices' array is empty."
-        end
+        raise Error, "Failed to extract generated text: 'choices' array is empty." if choices_field.empty?
 
         # 3. Verify the first choice data[:choices][0] is a Hash
         choice = choices_field[0]
         unless choice.is_a?(Hash)
-          raise Error, "Failed to extract generated text: No valid first choice found in response."
+          raise Error, 'Failed to extract generated text: No valid first choice found in response.'
         end
 
         # 4. Verify choice[:message] is a Hash
@@ -179,9 +177,7 @@ module CodingAgentTools
         end
 
         text_content = message_field[:content]
-        if text_content.nil?
-          raise Error, "Failed to extract generated text: message content is nil."
-        end
+        raise Error, 'Failed to extract generated text: message content is nil.' if text_content.nil?
 
         {
           text: text_content,
@@ -204,7 +200,7 @@ module CodingAgentTools
         elsif error_message
           error_message
         else
-          "An unspecified error occurred."
+          'An unspecified error occurred.'
         end
       end
     end

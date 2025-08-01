@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "date"
-require_relative "../../models/result"
+require 'date'
+require_relative '../../models/result'
 
 module CodingAgentTools
   module Molecules
@@ -28,9 +28,7 @@ module CodingAgentTools
             dates.concat(file_dates)
           end
 
-          if dates.empty?
-            return Models::Result.failure("No dates found in reflection files")
-          end
+          return Models::Result.failure('No dates found in reflection files') if dates.empty?
 
           dates.sort!
           from_date = dates.first
@@ -57,10 +55,10 @@ module CodingAgentTools
 
           # Try extracting from file content
           begin
-            content = File.read(file_path, encoding: "utf-8")
+            content = File.read(file_path, encoding: 'utf-8')
             content_dates = extract_dates_from_content(content)
             dates.concat(content_dates)
-          rescue => e
+          rescue StandardError => e
             # If we can't read content, filename date is better than nothing
             Rails.logger.warn("Could not read content from #{file_path}: #{e.message}") if defined?(Rails)
           end

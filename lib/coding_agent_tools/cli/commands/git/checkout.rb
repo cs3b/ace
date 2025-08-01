@@ -1,70 +1,70 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Checkout < Dry::CLI::Command
-          desc "Switch branches or restore working tree files across all repositories"
+          desc 'Switch branches or restore working tree files across all repositories'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :quiet, type: :boolean, default: false, aliases: ["q"],
-            desc: "Quiet operation, suppress feedback messages"
+          option :quiet, type: :boolean, default: false, aliases: ['q'],
+                         desc: 'Quiet operation, suppress feedback messages'
 
-          option :force, type: :boolean, default: false, aliases: ["f"],
-            desc: "Force checkout, throw away local changes"
+          option :force, type: :boolean, default: false, aliases: ['f'],
+                         desc: 'Force checkout, throw away local changes'
 
-          option :merge, type: :boolean, default: false, aliases: ["m"],
-            desc: "3-way merge between current branch, working tree, and new branch"
+          option :merge, type: :boolean, default: false, aliases: ['m'],
+                         desc: '3-way merge between current branch, working tree, and new branch'
 
           option :detach, type: :boolean, default: false,
-            desc: "Detach HEAD at named commit"
+                          desc: 'Detach HEAD at named commit'
 
-          option :create_branch, type: :string, aliases: ["b"],
-            desc: "Create and checkout a new branch"
+          option :create_branch, type: :string, aliases: ['b'],
+                                 desc: 'Create and checkout a new branch'
 
-          option :force_create_branch, type: :string, aliases: ["B"],
-            desc: "Create/reset and checkout a branch"
+          option :force_create_branch, type: :string, aliases: ['B'],
+                                       desc: 'Create/reset and checkout a branch'
 
           option :orphan, type: :string,
-            desc: "Create a new orphan branch"
+                          desc: 'Create a new orphan branch'
 
-          option :track, type: :boolean, default: false, aliases: ["t"],
-            desc: "Set up tracking relationship"
+          option :track, type: :boolean, default: false, aliases: ['t'],
+                         desc: 'Set up tracking relationship'
 
           option :no_track, type: :boolean, default: false,
-            desc: "Do not set up tracking relationship"
+                            desc: 'Do not set up tracking relationship'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-            desc: "Execute checkout operations concurrently across repositories"
+                              desc: 'Execute checkout operations concurrently across repositories'
 
           argument :branch_or_paths, type: :array, required: false,
-            desc: "Branch name, commit, or paths to checkout"
+                                     desc: 'Branch name, commit, or paths to checkout'
 
           example [
-            "main",
-            "feature-branch",
-            "--create-branch new-feature",
-            "--force-create-branch hotfix main",
-            "--detach HEAD~1",
-            "--orphan empty-branch",
-            "-- file1.rb file2.rb",
-            "--force main"
+            'main',
+            'feature-branch',
+            '--create-branch new-feature',
+            '--force-create-branch hotfix main',
+            '--detach HEAD~1',
+            '--orphan empty-branch',
+            '-- file1.rb file2.rb',
+            '--force main'
           ]
 
           def call(branch_or_paths: [], **options)
@@ -84,14 +84,14 @@ module CodingAgentTools
               display_checkout_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
 
           private
 
-          def build_checkout_options(branch_or_paths, options)
+          def build_checkout_options(_branch_or_paths, options)
             checkout_opts = {
               capture_output: true
             }
@@ -131,10 +131,10 @@ module CodingAgentTools
               end
             end
 
-            if result[:repositories_processed]
-              repos_list = result[:repositories_processed].join(", ")
-              puts "Checkout completed across repositories: #{repos_list}" unless options[:quiet]
-            end
+            return unless result[:repositories_processed]
+
+            repos_list = result[:repositories_processed].join(', ')
+            puts "Checkout completed across repositories: #{repos_list}" unless options[:quiet]
           end
 
           def display_single_checkout_result(repo_name, result, options)
@@ -149,7 +149,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Checkout completed successfully"
               end
             else
-              error_message = result[:error] || result[:stderr] || "Checkout operation failed"
+              error_message = result[:error] || result[:stderr] || 'Checkout operation failed'
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -176,19 +176,17 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
             end
 
             # Show any partial successes
-            if result[:results]
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Checkout completed in repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results]
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Checkout completed in repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -198,7 +196,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

@@ -65,7 +65,7 @@ module CodingAgentTools
             documents.concat(extracted.documents)
             @errors.concat(extracted.errors)
             @warnings.concat(extracted.warnings)
-          rescue => e
+          rescue StandardError => e
             @errors << "Error parsing #{format_name} format: #{e.message}"
           end
 
@@ -103,11 +103,11 @@ module CodingAgentTools
 
         # Format handler for <documents> XML sections
         class DocumentsFormatHandler
-          SECTION_PATTERN = /<documents>(.*?)<\/documents>/m
-          TEMPLATE_PATTERN = /<template\s+path="([^"]+)">(.*?)<\/template>/m
-          GUIDE_PATTERN = /<guide\s+path="([^"]+)">(.*?)<\/guide>/m
+          SECTION_PATTERN = %r{<documents>(.*?)</documents>}m
+          TEMPLATE_PATTERN = %r{<template\s+path="([^"]+)">(.*?)</template>}m
+          GUIDE_PATTERN = %r{<guide\s+path="([^"]+)">(.*?)</guide>}m
 
-          def extract(content, source_file)
+          def extract(content, _source_file)
             documents = []
             errors = []
             warnings = []
@@ -153,10 +153,10 @@ module CodingAgentTools
 
         # Format handler for legacy <templates> XML sections
         class TemplatesFormatHandler
-          SECTION_PATTERN = /<templates>(.*?)<\/templates>/m
-          TEMPLATE_PATTERN = /<template\s+path="([^"]+)">(.*?)<\/template>/m
+          SECTION_PATTERN = %r{<templates>(.*?)</templates>}m
+          TEMPLATE_PATTERN = %r{<template\s+path="([^"]+)">(.*?)</template>}m
 
-          def extract(content, source_file)
+          def extract(content, _source_file)
             documents = []
             errors = []
             warnings = []
@@ -178,7 +178,7 @@ module CodingAgentTools
               end
 
               # Add warning for legacy format usage
-              warnings << "Legacy <templates> format detected, consider migrating to <documents> format"
+              warnings << 'Legacy <templates> format detected, consider migrating to <documents> format'
             end
 
             FormatResult.new(documents, errors, warnings)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent-ruby"
+require 'concurrent-ruby'
 
 module CodingAgentTools
   module Molecules
@@ -22,10 +22,10 @@ module CodingAgentTools
         end
 
         def execute_concurrently(commands_by_repo)
-          return {success: true, results: {}, errors: []} if commands_by_repo.empty?
+          return { success: true, results: {}, errors: [] } if commands_by_repo.empty?
 
           # Separate main repository for sequential execution
-          main_commands = commands_by_repo.delete("main")
+          main_commands = commands_by_repo.delete('main')
           submodule_commands = commands_by_repo
 
           results = {}
@@ -42,14 +42,14 @@ module CodingAgentTools
           if main_commands
             begin
               main_result = execute_main_repository(main_commands)
-              results["main"] = main_result
-            rescue => e
+              results['main'] = main_result
+            rescue StandardError => e
               errors << {
-                repository: "main",
+                repository: 'main',
                 error: e,
                 message: e.message
               }
-              results["main"] = {success: false, error: e.message}
+              results['main'] = { success: false, error: e.message }
             end
           end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
             future = Concurrent::Future.execute(executor: pool) do
               execute_repository_commands(repo_name, commands)
             end
-            futures << {repo_name: repo_name, future: future}
+            futures << { repo_name: repo_name, future: future }
           end
 
           # Wait for all futures to complete with timeout
@@ -87,18 +87,18 @@ module CodingAgentTools
             error_info = {
               repository: future_info[:repo_name],
               error: "Timeout after #{timeout} seconds",
-              message: "Repository operation timed out"
+              message: 'Repository operation timed out'
             }
             errors << error_info
-            results[future_info[:repo_name]] = {success: false, error: "Timeout"}
-          rescue => e
+            results[future_info[:repo_name]] = { success: false, error: 'Timeout' }
+          rescue StandardError => e
             error_info = {
               repository: future_info[:repo_name],
               error: e,
               message: e.message
             }
             errors << error_info
-            results[future_info[:repo_name]] = {success: false, error: e.message}
+            results[future_info[:repo_name]] = { success: false, error: e.message }
           end
 
           # Shutdown thread pool gracefully
@@ -115,13 +115,13 @@ module CodingAgentTools
         end
 
         def execute_main_repository(commands)
-          execute_repository_commands("main", commands)
+          execute_repository_commands('main', commands)
         end
 
         def execute_repository_commands(repo_name, commands)
-          return {success: true, commands: [], outputs: []} if commands.empty?
+          return { success: true, commands: [], outputs: [] } if commands.empty?
 
-          repository_path = (repo_name == "main") ? nil : repo_name
+          repository_path = repo_name == 'main' ? nil : repo_name
           executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
 
           command_results = []

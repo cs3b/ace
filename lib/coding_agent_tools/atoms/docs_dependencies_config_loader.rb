@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "yaml"
+require 'yaml'
 
 module CodingAgentTools::Atoms
   # Atom for loading docs-dependencies configuration
@@ -9,23 +9,23 @@ module CodingAgentTools::Atoms
     DEFAULT_CONFIG = {
       enabled: true,
       file_patterns: {
-        workflows: "dev-handbook/workflow-instructions/**/*.wf.md",
-        guides: "dev-handbook/guides/**/*.g.md",
-        tasks: "dev-taskflow/**/tasks/*.md",
-        docs: "docs/*.md",
-        taskflow_docs: "dev-taskflow/*.md"
+        workflows: 'dev-handbook/workflow-instructions/**/*.wf.md',
+        guides: 'dev-handbook/guides/**/*.g.md',
+        tasks: 'dev-taskflow/**/tasks/*.md',
+        docs: 'docs/*.md',
+        taskflow_docs: 'dev-taskflow/*.md'
       },
       exclude_patterns: [
-        "dev-taskflow/done/**/*",
-        "dev-taskflow/sessions/**/*",
-        "**/.*"
+        'dev-taskflow/done/**/*',
+        'dev-taskflow/sessions/**/*',
+        '**/.*'
       ],
       skip_folders: [],
       include_external_links: false,
       include_anchor_links: false
     }.freeze
 
-    def initialize(config_path = ".coding-agent/lint.yml")
+    def initialize(config_path = '.coding-agent/lint.yml')
       @config_path = config_path
     end
 
@@ -35,7 +35,7 @@ module CodingAgentTools::Atoms
 
       begin
         yaml_config = YAML.load_file(@config_path)
-        docs_config = yaml_config&.dig("docs_dependencies") || {}
+        docs_config = yaml_config&.dig('docs_dependencies') || {}
 
         # Merge with defaults, preserving structure
         merged_config = deep_merge(DEFAULT_CONFIG, symbolize_keys(docs_config))
@@ -44,10 +44,10 @@ module CodingAgentTools::Atoms
         validate_config(merged_config)
 
         merged_config
-      rescue => e
+      rescue StandardError => e
         unless test_environment?
           warn "Warning: Failed to load config from #{@config_path}: #{e.message}"
-          warn "Using default configuration"
+          warn 'Using default configuration'
         end
         DEFAULT_CONFIG
       end
@@ -86,13 +86,13 @@ module CodingAgentTools::Atoms
     # Check if docs-dependencies is enabled
     def enabled?(config = nil)
       config ||= load_config
-      config[:enabled] != false  # Default to true unless explicitly disabled
+      config[:enabled] != false # Default to true unless explicitly disabled
     end
 
     private
 
     def test_environment?
-      ENV["CI"] || defined?(RSpec) || ENV["RAILS_ENV"] == "test" || ENV["RACK_ENV"] == "test"
+      ENV['CI'] || defined?(RSpec) || ENV['RAILS_ENV'] == 'test' || ENV['RACK_ENV'] == 'test'
     end
 
     def deep_merge(base, override)
@@ -100,10 +100,10 @@ module CodingAgentTools::Atoms
 
       override.each do |key, value|
         result[key] = if value.is_a?(Hash) && result[key].is_a?(Hash)
-          deep_merge(result[key], value)
-        else
-          value
-        end
+                        deep_merge(result[key], value)
+                      else
+                        value
+                      end
       end
 
       result
@@ -120,17 +120,13 @@ module CodingAgentTools::Atoms
 
     def validate_config(config)
       # Basic validation
-      unless config[:file_patterns].is_a?(Hash)
-        raise "file_patterns must be a hash"
-      end
+      raise 'file_patterns must be a hash' unless config[:file_patterns].is_a?(Hash)
 
-      unless config[:exclude_patterns].is_a?(Array)
-        raise "exclude_patterns must be an array"
-      end
+      raise 'exclude_patterns must be an array' unless config[:exclude_patterns].is_a?(Array)
 
-      unless config[:skip_folders].is_a?(Array)
-        raise "skip_folders must be an array"
-      end
+      return if config[:skip_folders].is_a?(Array)
+
+      raise 'skip_folders must be an array'
     end
   end
 end

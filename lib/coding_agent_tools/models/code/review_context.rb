@@ -13,13 +13,13 @@ module CodingAgentTools
       ) do
         # Validate required fields
         def validate!
-          raise ArgumentError, "mode is required" if mode.nil? || mode.empty?
+          raise ArgumentError, 'mode is required' if mode.nil? || mode.empty?
 
           valid_modes = %w[auto none custom]
-          raise ArgumentError, "mode must be one of: #{valid_modes.join(", ")}" unless valid_modes.include?(mode)
+          raise ArgumentError, "mode must be one of: #{valid_modes.join(', ')}" unless valid_modes.include?(mode)
 
-          if mode == "custom" && (documents.nil? || documents.empty?)
-            raise ArgumentError, "documents required for custom mode"
+          if mode == 'custom' && (documents.nil? || documents.empty?)
+            raise ArgumentError, 'documents required for custom mode'
           end
 
           true
@@ -27,7 +27,7 @@ module CodingAgentTools
 
         # Check if context was loaded
         def loaded?
-          mode != "none" && !documents.nil? && !documents.empty?
+          mode != 'none' && !documents.nil? && !documents.empty?
         end
 
         # Get document count
@@ -63,7 +63,7 @@ module CodingAgentTools
 
         # Check if using default auto documents
         def using_auto_defaults?
-          mode == "auto" && document_types.sort == self.class.auto_document_types.sort
+          mode == 'auto' && document_types.sort == self.class.auto_document_types.sort
         end
       end
     end

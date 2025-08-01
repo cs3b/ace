@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
 module CodingAgentTools
   module Molecules
@@ -30,18 +30,17 @@ module CodingAgentTools
         # @param report_paths [Array<String>] Array of file paths or glob patterns
         # @return [CollectionResult] Result containing validated reports or error
         def collect_reports(report_paths)
-          return CollectionResult.new(error: "No report paths provided") if report_paths.nil? || report_paths.empty?
+          return CollectionResult.new(error: 'No report paths provided') if report_paths.nil? || report_paths.empty?
 
           # Expand glob patterns and validate files
           expanded_reports = []
 
           report_paths.each do |path|
-            if path.include?("*") || path.include?("?") || path.include?("[")
+            if path.include?('*') || path.include?('?') || path.include?('[')
               # Handle glob patterns
               glob_matches = Dir.glob(path)
-              if glob_matches.empty?
-                return CollectionResult.new(error: "No files found matching pattern: #{path}")
-              end
+              return CollectionResult.new(error: "No files found matching pattern: #{path}") if glob_matches.empty?
+
               expanded_reports.concat(glob_matches)
             else
               # Handle direct file paths
@@ -59,12 +58,10 @@ module CodingAgentTools
           # Filter for review report files
           review_reports = filter_review_reports(expanded_reports)
 
-          if review_reports.empty?
-            return CollectionResult.new(error: "No valid review report files found")
-          end
+          return CollectionResult.new(error: 'No valid review report files found') if review_reports.empty?
 
           if review_reports.length < 2
-            return CollectionResult.new(error: "At least 2 review reports are required for synthesis")
+            return CollectionResult.new(error: 'At least 2 review reports are required for synthesis')
           end
 
           CollectionResult.new(reports: review_reports)
@@ -77,24 +74,16 @@ module CodingAgentTools
         # @return [CollectionResult] Validation result
         def validate_report_files(file_paths)
           file_paths.each do |path|
-            unless File.exist?(path)
-              return CollectionResult.new(error: "File not found: #{path}")
-            end
+            return CollectionResult.new(error: "File not found: #{path}") unless File.exist?(path)
 
-            unless File.readable?(path)
-              return CollectionResult.new(error: "File not readable: #{path}")
-            end
+            return CollectionResult.new(error: "File not readable: #{path}") unless File.readable?(path)
 
-            unless File.file?(path)
-              return CollectionResult.new(error: "Path is not a file: #{path}")
-            end
+            return CollectionResult.new(error: "Path is not a file: #{path}") unless File.file?(path)
 
             # Check file size (avoid extremely large files)
             file_size = File.size(path)
             max_size = 50 * 1024 * 1024 # 50MB
-            if file_size > max_size
-              return CollectionResult.new(error: "File too large (#{file_size} bytes): #{path}")
-            end
+            return CollectionResult.new(error: "File too large (#{file_size} bytes): #{path}") if file_size > max_size
           end
 
           CollectionResult.new(reports: file_paths)
@@ -134,9 +123,7 @@ module CodingAgentTools
 
           # Also check file content for review indicators if filename check fails
           content_match = false
-          if !pattern_match && file_readable_sample?(file_path)
-            content_match = review_content_indicators?(file_path)
-          end
+          content_match = review_content_indicators?(file_path) if !pattern_match && file_readable_sample?(file_path)
 
           pattern_match || content_match
         end
@@ -153,7 +140,7 @@ module CodingAgentTools
         # @return [Boolean] True if content indicates review report
         def review_content_indicators?(file_path)
           # Read first 2KB to check for review content markers
-          sample = File.read(file_path, 2048, encoding: "UTF-8")
+          sample = File.read(file_path, 2048, encoding: 'UTF-8')
 
           # Look for common review report section headers
           review_headers = [
@@ -182,7 +169,7 @@ module CodingAgentTools
           has_metadata = metadata_patterns.any? { |pattern| sample =~ pattern }
 
           has_headers || has_metadata
-        rescue
+        rescue StandardError
           # If we can't read the file for content check, assume it's not a review
           false
         end

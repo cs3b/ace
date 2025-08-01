@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/context_loader"
-require_relative "../molecules/idea_enhancer"
-require_relative "../molecules/path_resolver"
-require_relative "../molecules/llm_client"
-require "fileutils"
+require_relative '../molecules/context_loader'
+require_relative '../molecules/idea_enhancer'
+require_relative '../molecules/path_resolver'
+require_relative '../molecules/llm_client'
+require 'fileutils'
 
 module CodingAgentTools
   module Organisms
@@ -22,14 +22,15 @@ module CodingAgentTools
       DEFAULT_MAX_INPUT_SIZE = 7000
 
       # Big input threshold for --big-user-input-allowed flag
-      BIG_INPUT_THRESHOLD = 1000 * 7  # ~1000 words
+      BIG_INPUT_THRESHOLD = 1000 * 7 # ~1000 words
 
       # Initialize IdeaCapture
       # @param model [String] LLM model to use
       # @param debug [Boolean] Enable debug output
       # @param big_user_input_allowed [Boolean] Allow large inputs
       # @param commit_after_capture [Boolean] Automatically commit generated idea files
-      def initialize(model: "google:gemini-2.5-flash-lite", debug: false, big_user_input_allowed: false, commit_after_capture: false)
+      def initialize(model: 'google:gemini-2.5-flash-lite', debug: false, big_user_input_allowed: false,
+                     commit_after_capture: false)
         @model = model
         @debug = debug
         @big_user_input_allowed = big_user_input_allowed
@@ -47,7 +48,7 @@ module CodingAgentTools
       # @param idea_text [String] Raw idea text
       # @return [CaptureResult] Result with success status and output path
       def capture_idea(idea_text)
-        debug_log("Starting idea capture process")
+        debug_log('Starting idea capture process')
 
         # Validate input
         validation_result = validate_input(idea_text)
@@ -65,7 +66,7 @@ module CodingAgentTools
 
         # Load project context
         context_result = load_project_context
-        debug_log("Context loading result: #{context_result[:success] ? "success" : context_result[:error]}")
+        debug_log("Context loading result: #{context_result[:success] ? 'success' : context_result[:error]}")
 
         # Generate system prompt
         system_prompt_result = generate_system_prompt(context_result, paths_result[:system_path])
@@ -75,19 +76,20 @@ module CodingAgentTools
         enhancement_result = enhance_idea_with_llm(paths_result)
 
         final_result = if enhancement_result.success?
-          debug_log("Idea enhancement completed successfully")
-          CaptureResult.new(true, paths_result[:output_path], nil, @debug ? "Enhancement completed" : nil)
-        else
-          # Fallback: save raw idea with error note
-          debug_log("Enhancement failed, saving raw idea as fallback")
-          save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
-        end
+                         debug_log('Idea enhancement completed successfully')
+                         CaptureResult.new(true, paths_result[:output_path], nil,
+                                           @debug ? 'Enhancement completed' : nil)
+                       else
+                         # Fallback: save raw idea with error note
+                         debug_log('Enhancement failed, saving raw idea as fallback')
+                         save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
+                       end
 
         # Execute git-commit if requested and idea creation was successful
         if final_result.success? && @commit_after_capture
           commit_result = handle_git_commit(final_result.output_path)
           if commit_result.success?
-            debug_log("Git commit completed successfully")
+            debug_log('Git commit completed successfully')
           else
             # Idea creation succeeded but commit failed - still return success but include commit error
             debug_log("Git commit failed: #{commit_result.error_message}")
@@ -101,7 +103,7 @@ module CodingAgentTools
         end
 
         final_result
-      rescue => e
+      rescue StandardError => e
         debug_details = @debug ? e.backtrace.join("\n") : nil
         error_result("Unexpected error during idea capture: #{e.message}", debug_details)
       end
@@ -109,11 +111,11 @@ module CodingAgentTools
       private
 
       def validate_input(idea_text)
-        return error_result("Idea text cannot be nil") if idea_text.nil?
+        return error_result('Idea text cannot be nil') if idea_text.nil?
 
         cleaned_text = idea_text.strip
-        return error_result("Idea text cannot be empty") if cleaned_text.empty?
-        return error_result("Idea text must be at least 5 characters") if cleaned_text.length < 5
+        return error_result('Idea text cannot be empty') if cleaned_text.empty?
+        return error_result('Idea text must be at least 5 characters') if cleaned_text.length < 5
 
         # Check size limits
         word_count = cleaned_text.split.length
@@ -135,7 +137,7 @@ module CodingAgentTools
         File.write(input_path, idea_text.strip)
         debug_log("Saved raw idea to: #{input_path}")
         CaptureResult.new(true, nil, nil, nil)
-      rescue => e
+      rescue StandardError => e
         error_result("Failed to save raw idea: #{e.message}")
       end
 
@@ -146,12 +148,10 @@ module CodingAgentTools
       def generate_system_prompt(context_result, system_path)
         # Load system prompt template
         # Get project root by going up from dev-tools/lib/coding_agent_tools/organisms/
-        project_root = File.expand_path("../../../../../", __FILE__)
-        template_path = File.join(project_root, "dev-handbook/templates/idea-manager/system.prompt.md")
+        project_root = File.expand_path('../../../..', __dir__)
+        template_path = File.join(project_root, 'dev-handbook/templates/idea-manager/system.prompt.md')
 
-        unless File.exist?(template_path)
-          return error_result("System prompt template not found: #{template_path}")
-        end
+        return error_result("System prompt template not found: #{template_path}") unless File.exist?(template_path)
 
         system_prompt = File.read(template_path)
 
@@ -162,7 +162,7 @@ module CodingAgentTools
         end
 
         # Embed idea template
-        idea_template_path = File.join(project_root, "dev-handbook/templates/idea-manager/idea.template.md")
+        idea_template_path = File.join(project_root, 'dev-handbook/templates/idea-manager/idea.template.md')
         if File.exist?(idea_template_path)
           idea_template = File.read(idea_template_path)
           system_prompt += "\n\n## Template Format\n\nUse this exact template format:\n\n```markdown\n"
@@ -175,7 +175,7 @@ module CodingAgentTools
         debug_log("Generated system prompt: #{system_path}")
 
         CaptureResult.new(true, nil, nil, nil)
-      rescue => e
+      rescue StandardError => e
         error_result("Failed to generate system prompt: #{e.message}")
       end
 
@@ -195,8 +195,8 @@ module CodingAgentTools
         File.write(output_path, fallback_content)
         debug_log("Saved fallback idea to: #{output_path}")
 
-        CaptureResult.new(true, output_path, nil, "Saved raw idea due to enhancement failure")
-      rescue => e
+        CaptureResult.new(true, output_path, nil, 'Saved raw idea due to enhancement failure')
+      rescue StandardError => e
         error_result("Failed to save fallback idea: #{e.message}")
       end
 
@@ -211,32 +211,30 @@ module CodingAgentTools
       def handle_git_commit(file_path)
         # Skip git commit in test environments
         if test_environment?
-          debug_log("Skipping git commit in test environment")
-          return CaptureResult.new(true, nil, nil, "Skipped commit (test environment)")
+          debug_log('Skipping git commit in test environment')
+          return CaptureResult.new(true, nil, nil, 'Skipped commit (test environment)')
         end
 
         begin
           execute_git_commit(file_path)
-          CaptureResult.new(true, nil, nil, "Git commit successful")
-        rescue => e
+          CaptureResult.new(true, nil, nil, 'Git commit successful')
+        rescue StandardError => e
           CaptureResult.new(false, nil, e.message, nil)
         end
       end
 
       def execute_git_commit(file_path)
         # Path to git-commit executable relative to this file
-        git_commit_path = File.expand_path("../../../../exe/git-commit", __FILE__)
+        git_commit_path = File.expand_path('../../../exe/git-commit', __dir__)
 
-        unless File.exist?(git_commit_path)
-          raise StandardError, "git-commit executable not found at #{git_commit_path}"
-        end
+        raise StandardError, "git-commit executable not found at #{git_commit_path}" unless File.exist?(git_commit_path)
 
         # Execute git-commit with intention and file path
-        success = system(git_commit_path, file_path, "--intention", "capture idea")
+        success = system(git_commit_path, file_path, '--intention', 'capture idea')
 
-        unless success
-          raise StandardError, "git-commit failed with exit status #{last_command_exit_status}"
-        end
+        return if success
+
+        raise StandardError, "git-commit failed with exit status #{last_command_exit_status}"
       end
 
       def last_command_exit_status
@@ -245,7 +243,7 @@ module CodingAgentTools
 
       def test_environment?
         # Check for common test environment indicators
-        !!(ENV["CI"] || ENV["TEST"] || ENV["RSPEC_RUN"] || defined?(RSpec))
+        !!(ENV['CI'] || ENV['TEST'] || ENV['RSPEC_RUN'] || defined?(RSpec))
       end
     end
   end

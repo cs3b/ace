@@ -7,10 +7,10 @@ module CodingAgentTools::Atoms
     # Generate DOT graph content from dependencies hash
     def generate_dot_content(dependencies)
       lines = []
-      lines << "digraph DocumentDependencies {"
-      lines << "  rankdir=LR;"
-      lines << "  node [shape=box];"
-      lines << ""
+      lines << 'digraph DocumentDependencies {'
+      lines << '  rankdir=LR;'
+      lines << '  node [shape=box];'
+      lines << ''
 
       # Add colored nodes based on file type
       dependencies.each_key do |file|
@@ -18,7 +18,7 @@ module CodingAgentTools::Atoms
         lines << "  \"#{file}\" [fillcolor=#{color}, style=filled];"
       end
 
-      lines << ""
+      lines << ''
 
       # Add edges
       dependencies.each do |from, deps|
@@ -27,12 +27,12 @@ module CodingAgentTools::Atoms
         end
       end
 
-      lines << "}"
+      lines << '}'
       lines.join("\n")
     end
 
     # Write DOT graph to file
-    def write_dot_file(dependencies, filename = "doc-dependencies.dot")
+    def write_dot_file(dependencies, filename = 'doc-dependencies.dot')
       content = generate_dot_content(dependencies)
       File.write(filename, content)
       filename
@@ -42,19 +42,19 @@ module CodingAgentTools::Atoms
     def node_color(file)
       case file
       when /\.wf\.md$/
-        "lightblue"
+        'lightblue'
       when /\.g\.md$/
-        "lightgreen"
+        'lightgreen'
       when /tasks.*\.md$/
-        "lightyellow"
+        'lightyellow'
       else
-        "lightgray"
+        'lightgray'
       end
     end
 
     # Generate instructions for creating PNG from DOT file
     def png_generation_instructions(dot_filename)
-      png_filename = dot_filename.sub(/\.dot$/, ".png")
+      png_filename = dot_filename.sub(/\.dot$/, '.png')
       "dot -Tpng #{dot_filename} -o #{png_filename}"
     end
   end

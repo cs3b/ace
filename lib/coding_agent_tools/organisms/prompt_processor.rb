@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/json_formatter"
+require_relative '../atoms/json_formatter'
 
 module CodingAgentTools
   module Organisms
@@ -24,10 +24,10 @@ module CodingAgentTools
       # @raise [Error] If file cannot be read or is too large
       def process(input, from_file: false)
         text_content = if from_file
-          read_prompt_from_file(input) # This already strips the content
-        else
-          input # Raw input string, validate_prompt_string will strip it
-        end
+                         read_prompt_from_file(input) # This already strips the content
+                       else
+                         input # Raw input string, validate_prompt_string will strip it
+                       end
         # validate_prompt_string will check if (already stripped if from file) text_content is empty,
         # and raise if so. It also returns the stripped version.
         validate_prompt_string(text_content)
@@ -46,7 +46,7 @@ module CodingAgentTools
       # @param roles [Array<String>] Array of roles (user/assistant)
       # @return [Array<Hash>] Conversation structure
       def build_conversation(prompts, roles = nil)
-        roles ||= prompts.map.with_index { |_, i| i.even? ? "user" : "assistant" }
+        roles ||= prompts.map.with_index { |_, i| i.even? ? 'user' : 'assistant' }
 
         prompts.zip(roles).map do |prompt, role|
           {
@@ -60,13 +60,11 @@ module CodingAgentTools
       # @param file_path [String] Path to JSON file
       # @param prompt_key [String] Key to extract prompts from
       # @return [Array<String>, String] Extracted prompt(s)
-      def extract_from_json(file_path, prompt_key = "prompt")
+      def extract_from_json(file_path, prompt_key = 'prompt')
         content = read_file(file_path)
         data = Atoms::JSONFormatter.safe_parse(content)
 
-        unless data
-          raise Error, "Invalid JSON in file: #{file_path}"
-        end
+        raise Error, "Invalid JSON in file: #{file_path}" unless data
 
         extract_prompt_from_data(data, prompt_key)
       end
@@ -91,9 +89,7 @@ module CodingAgentTools
         unfilled_double = result.scan(/\{\{(\w+)\}\}/).flatten
         unfilled = (unfilled_single + unfilled_double).uniq
 
-        unless unfilled.empty?
-          raise Error, "Unfilled template variables: #{unfilled.join(", ")}"
-        end
+        raise Error, "Unfilled template variables: #{unfilled.join(', ')}" unless unfilled.empty?
 
         result
       end
@@ -104,9 +100,7 @@ module CodingAgentTools
       # @return [String] Validated prompt
       def validate(prompt, max_length: nil)
         # Check if prompt is empty
-        if prompt.nil? || prompt.strip.empty?
-          raise Error, "Prompt cannot be empty"
-        end
+        raise Error, 'Prompt cannot be empty' if prompt.nil? || prompt.strip.empty?
 
         # Check length if specified
         if max_length && prompt.length > max_length
@@ -150,18 +144,17 @@ module CodingAgentTools
             # or if chunk_end itself didn't advance (unlikely but a safeguard),
             # then move position to chunk_end to ensure progress.
             position = if next_pos > position
-              next_pos
-            else # overlap >= chunk_size or chunk_end didn't advance
-              chunk_end
-            end
+                         next_pos
+                       else # overlap >= chunk_size or chunk_end didn't advance
+                         chunk_end
+                       end
           end
         end
 
         # Remove any empty chunks and ensure at least one chunk if prompt was not empty
         final_chunks = chunks.map(&:strip).reject(&:empty?)
-        if final_chunks.empty? && !prompt.strip.empty?
-          return [prompt.strip]
-        end
+        return [prompt.strip] if final_chunks.empty? && !prompt.strip.empty?
+
         final_chunks
       end
 
@@ -171,23 +164,17 @@ module CodingAgentTools
       # @param file_path [String] Path to file
       # @return [String] File contents
       def read_prompt_from_file(file_path)
-        unless File.exist?(file_path)
-          raise Error, "Prompt file not found: #{file_path}"
-        end
+        raise Error, "Prompt file not found: #{file_path}" unless File.exist?(file_path)
 
         file_size = File.size(file_path)
-        if file_size > @max_file_size
-          raise Error, "File too large: #{file_size} bytes (max: #{@max_file_size})"
-        end
+        raise Error, "File too large: #{file_size} bytes (max: #{@max_file_size})" if file_size > @max_file_size
 
         content = read_file(file_path)
 
         # Auto-detect and validate JSON files
-        if file_path.downcase.end_with?(".json")
+        if file_path.downcase.end_with?('.json')
           data = Atoms::JSONFormatter.safe_parse(content)
-          unless data
-            raise Error, "Invalid JSON in file: #{file_path}"
-          end
+          raise Error, "Invalid JSON in file: #{file_path}" unless data
         end
 
         content
@@ -197,7 +184,7 @@ module CodingAgentTools
       # @param file_path [String] Path to file
       # @return [String] File contents
       def read_file(file_path)
-        File.read(file_path, encoding: "UTF-8").strip
+        File.read(file_path, encoding: 'UTF-8').strip
       rescue Errno::EACCES => e
         new_error = Error.new("Permission denied reading file: #{file_path}")
         new_error.set_backtrace(e.backtrace)
@@ -206,7 +193,7 @@ module CodingAgentTools
         new_error = Error.new("File not found: #{file_path}")
         new_error.set_backtrace(e.backtrace)
         raise new_error
-      rescue => e
+      rescue StandardError => e
         new_error = Error.new("Error reading file #{file_path}: #{e.message}")
         new_error.set_backtrace(e.backtrace)
         raise new_error
@@ -216,9 +203,7 @@ module CodingAgentTools
       # @param prompt [String] Prompt to validate
       # @return [String] Validated prompt
       def validate_prompt_string(prompt)
-        if prompt.nil? || prompt.strip.empty?
-          raise Error, "Prompt cannot be empty"
-        end
+        raise Error, 'Prompt cannot be empty' if prompt.nil? || prompt.strip.empty?
 
         prompt.strip
       end

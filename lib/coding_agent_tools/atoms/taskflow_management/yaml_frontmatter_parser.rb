@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "yaml"
+require 'yaml'
 
 module CodingAgentTools
   module Atoms
@@ -41,14 +41,12 @@ module CodingAgentTools
         # @return [ParseResult] Parse result with frontmatter and content
         # @raise [ParseError] If YAML is malformed
         # @raise [SecurityError] If YAML contains unsafe content
-        def self.parse(content, delimiter: "---", safe_mode: true)
-          raise ArgumentError, "content cannot be nil" if content.nil?
-          raise ArgumentError, "delimiter cannot be nil or empty" if delimiter.nil? || delimiter.empty?
+        def self.parse(content, delimiter: '---', safe_mode: true)
+          raise ArgumentError, 'content cannot be nil' if content.nil?
+          raise ArgumentError, 'delimiter cannot be nil or empty' if delimiter.nil? || delimiter.empty?
 
           # Handle empty content
-          if content.strip.empty?
-            return ParseResult.new({}, "", "", false)
-          end
+          return ParseResult.new({}, '', '', false) if content.strip.empty?
 
           # Split content into lines for processing
           lines = content.split("\n")
@@ -56,7 +54,7 @@ module CodingAgentTools
           # Check if first line is delimiter
           unless lines.first&.strip == delimiter
             # No frontmatter - return entire content as body
-            return ParseResult.new({}, content, "", false)
+            return ParseResult.new({}, content, '', false)
           end
 
           # Find closing delimiter
@@ -64,7 +62,7 @@ module CodingAgentTools
 
           if closing_delimiter_index.nil?
             # No closing delimiter found - treat as regular content
-            return ParseResult.new({}, content, "", false)
+            return ParseResult.new({}, content, '', false)
           end
 
           # Extract frontmatter lines (excluding delimiters)
@@ -89,27 +87,25 @@ module CodingAgentTools
         # @raise [ParseError] If YAML is malformed
         # @raise [SecurityError] If YAML contains unsafe content
         # @raise [ArgumentError] If file doesn't exist or isn't readable
-        def self.parse_file(file_path, delimiter: "---", safe_mode: true)
-          raise ArgumentError, "file_path cannot be nil or empty" if file_path.nil? || file_path.empty?
+        def self.parse_file(file_path, delimiter: '---', safe_mode: true)
+          raise ArgumentError, 'file_path cannot be nil or empty' if file_path.nil? || file_path.empty?
 
           # Basic security check first
           if file_path.include?("\0") || file_path.match?(/[\x00-\x1f\x7f]/)
-            raise SecurityError, "File path contains invalid characters"
+            raise SecurityError, 'File path contains invalid characters'
           end
 
           raise ArgumentError, "File does not exist: #{file_path}" unless File.exist?(file_path)
           raise ArgumentError, "File is not readable: #{file_path}" unless File.readable?(file_path)
 
           begin
-            content = File.read(file_path, encoding: "UTF-8")
+            content = File.read(file_path, encoding: 'UTF-8')
           rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
             # Try reading as binary and force UTF-8 encoding
-            content = File.read(file_path, mode: "rb")
-            content = content.force_encoding("UTF-8")
-            unless content.valid_encoding?
-              raise ArgumentError, "File contains invalid UTF-8 content: #{file_path}"
-            end
-          rescue => e
+            content = File.read(file_path, mode: 'rb')
+            content = content.force_encoding('UTF-8')
+            raise ArgumentError, "File contains invalid UTF-8 content: #{file_path}" unless content.valid_encoding?
+          rescue StandardError => e
             raise ArgumentError, "Error reading file: #{e.message}"
           end
 
@@ -120,7 +116,7 @@ module CodingAgentTools
         # @param content [String] Content to check
         # @param delimiter [String] Frontmatter delimiter (default: "---")
         # @return [Boolean] True if content has frontmatter
-        def self.has_frontmatter?(content, delimiter: "---")
+        def self.has_frontmatter?(content, delimiter: '---')
           return false if content.nil? || content.strip.empty?
 
           lines = content.split("\n")
@@ -139,7 +135,7 @@ module CodingAgentTools
         # @param delimiter [String] Frontmatter delimiter (default: "---")
         # @param safe_mode [Boolean] Whether to use safe YAML parsing (default: true)
         # @return [Hash] Parsed frontmatter hash
-        def self.extract_frontmatter(content, delimiter: "---", safe_mode: true)
+        def self.extract_frontmatter(content, delimiter: '---', safe_mode: true)
           result = parse(content, delimiter: delimiter, safe_mode: safe_mode)
           result.frontmatter || {}
         end
@@ -148,9 +144,9 @@ module CodingAgentTools
         # @param content [String] Content to parse
         # @param delimiter [String] Frontmatter delimiter (default: "---")
         # @return [String] Content without frontmatter
-        def self.extract_content(content, delimiter: "---")
+        def self.extract_content(content, delimiter: '---')
           result = parse(content, delimiter: delimiter, safe_mode: false)
-          result.content || ""
+          result.content || ''
         end
 
         # Validate YAML frontmatter structure
@@ -179,9 +175,7 @@ module CodingAgentTools
           if allowed_keys
             frontmatter.keys.each do |key|
               key_str = key.to_s
-              unless allowed_keys.include?(key_str)
-                result[:warnings] << "Unknown key: #{key_str}"
-              end
+              result[:warnings] << "Unknown key: #{key_str}" unless allowed_keys.include?(key_str)
             end
           end
 
@@ -214,19 +208,17 @@ module CodingAgentTools
             return {} if yaml_content.strip.empty?
 
             # Security checks for potentially dangerous YAML
-            if safe_mode
-              perform_security_checks(yaml_content)
-            end
+            perform_security_checks(yaml_content) if safe_mode
 
             begin
               parsed = if safe_mode
-                # Use safe_load to prevent code execution
-                # Allow Date, Time, and DateTime for task metadata
-                YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime], aliases: false)
-              else
-                # Use regular load (less secure but more permissive)
-                YAML.load(yaml_content)
-              end
+                         # Use safe_load to prevent code execution
+                         # Allow Date, Time, and DateTime for task metadata
+                         YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime], aliases: false)
+                       else
+                         # Use regular load (less secure but more permissive)
+                         YAML.load(yaml_content)
+                       end
 
               # Ensure result is a hash
               case parsed
@@ -246,11 +238,13 @@ module CodingAgentTools
               )
             rescue ArgumentError => e
               # Check if it's a date parsing error
-              if e.message.include?("invalid date") || e.message.include?("Date")
-                raise ParseError.new("Invalid date format in YAML: #{e.message}. Use ISO format (YYYY-MM-DD) for dates.", yaml_error: e)
-              else
+              unless e.message.include?('invalid date') || e.message.include?('Date')
                 raise ParseError.new("YAML parsing error: #{e.message}", yaml_error: e)
               end
+
+              raise ParseError.new(
+                "Invalid date format in YAML: #{e.message}. Use ISO format (YYYY-MM-DD) for dates.", yaml_error: e
+              )
             end
           end
 
@@ -260,15 +254,15 @@ module CodingAgentTools
           def perform_security_checks(yaml_content)
             # Check for potentially dangerous patterns
             dangerous_patterns = [
-              /!ruby\/object/i,        # Ruby object serialization
-              /!ruby\/class/i,         # Ruby class references
-              /!ruby\/module/i,        # Ruby module references
-              /!ruby\/regexp/i,        # Ruby regexp objects
-              /!ruby\/string/i,        # Ruby string objects
-              /!!ruby\/object/i,       # Alternative Ruby object syntax
-              /!!python\/object/i,     # Python object serialization
-              /!!binary/i,             # Binary data
-              /!![a-z]+\/object/i,     # Generic object serialization
+              %r{!ruby/object}i,        # Ruby object serialization
+              %r{!ruby/class}i,         # Ruby class references
+              %r{!ruby/module}i,        # Ruby module references
+              %r{!ruby/regexp}i,        # Ruby regexp objects
+              %r{!ruby/string}i,        # Ruby string objects
+              %r{!!ruby/object}i,       # Alternative Ruby object syntax
+              %r{!!python/object}i,     # Python object serialization
+              /!!binary/i, # Binary data
+              %r{!![a-z]+/object}i, # Generic object serialization
               /<%.*%>/,                # ERB-style tags
               /{{.*}}/,                # Template-style tags
               /\$\{.*\}/,              # Variable substitution
@@ -300,20 +294,16 @@ module CodingAgentTools
             current_nesting = 0
             yaml_content.each_char do |char|
               case char
-              when "{", "[", "-"
+              when '{', '[', '-'
                 current_nesting += 1
-                if current_nesting > max_nesting
-                  raise SecurityError, "YAML content exceeds maximum nesting level"
-                end
-              when "}", "]"
+                raise SecurityError, 'YAML content exceeds maximum nesting level' if current_nesting > max_nesting
+              when '}', ']'
                 current_nesting -= 1
               end
             end
 
             # Check for excessive length
-            if yaml_content.length > 100_000
-              raise SecurityError, "YAML content exceeds maximum length"
-            end
+            raise SecurityError, 'YAML content exceeds maximum length' if yaml_content.length > 100_000
           end
         end
       end

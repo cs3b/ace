@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "base_chat_completion_client"
-require "addressable/uri"
+require_relative 'base_chat_completion_client'
+require 'addressable/uri'
 
 module CodingAgentTools
   module Organisms
@@ -9,10 +9,10 @@ module CodingAgentTools
     # This is an organism - it orchestrates molecules to achieve business goals
     class GoogleClient < BaseChatCompletionClient
       # Google Gemini API base URL
-      API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
+      API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
 
       # Default environment variable name for Google API key
-      DEFAULT_API_KEY_ENV = "GOOGLE_API_KEY"
+      DEFAULT_API_KEY_ENV = 'GOOGLE_API_KEY'
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
@@ -23,15 +23,15 @@ module CodingAgentTools
       # Explicit provider name declaration
       # @return [String] The provider name for this client
       def self.provider_name
-        "google"
+        'google'
       end
 
       # Dynamic aliases for this provider
       # @return [Hash] Mapping of aliases to provider:model combinations
       def self.dynamic_aliases
         {
-          "gflash" => "google:gemini-2.5-flash",
-          "gpro" => "google:gemini-2.5-pro"
+          'gflash' => 'google:gemini-2.5-flash',
+          'gpro' => 'google:gemini-2.5-pro'
         }
       end
 
@@ -64,7 +64,7 @@ module CodingAgentTools
 
       # Google uses a different generation endpoint
       def generation_endpoint
-        "generateContent"
+        'generateContent'
       end
 
       # Google extracts models from 'models' field
@@ -78,12 +78,12 @@ module CodingAgentTools
         payload = {
           contents: [
             {
-              parts: [{text: text}]
+              parts: [{ text: text }]
             }
           ]
         }
 
-        url = build_api_url("countTokens")
+        url = build_api_url('countTokens')
         parsed = post_json_request(url, payload)
 
         if parsed[:success]
@@ -97,13 +97,13 @@ module CodingAgentTools
       end
 
       # Build generation URL for Google (model-specific)
-      def build_generation_url(options)
+      def build_generation_url(_options)
         build_api_url(generation_endpoint)
       end
 
       # Build models URL for Google
       def build_models_url
-        build_url_with_path("models")
+        build_url_with_path('models')
       end
 
       # Build model info URL for Google
@@ -128,11 +128,11 @@ module CodingAgentTools
         url_obj = Addressable::URI.parse(@base_url)
 
         # Use File.join-style logic to avoid double slashes
-        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        base_path = url_obj.path.end_with?('/') ? url_obj.path.chomp('/') : url_obj.path
         url_obj.path = "#{base_path}/#{path_segment}"
 
         # Set query parameters
-        url_obj.query_values = {key: @api_key}
+        url_obj.query_values = { key: @api_key }
         url_obj.to_s
       end
 
@@ -144,8 +144,8 @@ module CodingAgentTools
         payload = {
           contents: [
             {
-              role: "user",
-              parts: [{text: prompt}]
+              role: 'user',
+              parts: [{ text: prompt }]
             }
           ],
           generationConfig: @generation_config.merge(
@@ -156,7 +156,7 @@ module CodingAgentTools
         # Add system instruction if provided
         if options[:system_instruction]
           payload[:systemInstruction] = {
-            parts: [{text: options[:system_instruction]}]
+            parts: [{ text: options[:system_instruction] }]
           }
         end
 
@@ -170,7 +170,7 @@ module CodingAgentTools
         # 1. Verify parsed_response[:data] is a Hash
         data = parsed_response[:data]
         unless data.is_a?(Hash)
-          raise Error, "Failed to extract generated text: Response data is not a Hash, cannot find candidates."
+          raise Error, 'Failed to extract generated text: Response data is not a Hash, cannot find candidates.'
         end
 
         # 2. Verify data[:candidates] is a non-empty Array
@@ -178,15 +178,13 @@ module CodingAgentTools
         unless candidates_field.is_a?(Array)
           raise Error, "Failed to extract generated text: 'candidates' field is not an array."
         end
-        if candidates_field.empty?
-          raise Error, "Failed to extract generated text: 'candidates' array is empty."
-        end
+        raise Error, "Failed to extract generated text: 'candidates' array is empty." if candidates_field.empty?
 
         # 3. Verify the first candidate data[:candidates][0] is a Hash
         candidate = candidates_field[0]
         unless candidate.is_a?(Hash)
           # This specific message is expected by a test when candidate is not a hash (e.g. a string)
-          raise Error, "Failed to extract generated text: No valid first candidate found in response."
+          raise Error, 'Failed to extract generated text: No valid first candidate found in response.'
         end
 
         # 4. Verify candidate[:content] is a Hash
@@ -200,19 +198,19 @@ module CodingAgentTools
         unless parts_field.is_a?(Array)
           raise Error, "Failed to extract generated text: candidate 'content.parts' field is missing or not an Array."
         end
-        if parts_field.empty?
-          raise Error, "Failed to extract generated text: candidate 'content.parts' array is empty."
-        end
+        raise Error, "Failed to extract generated text: candidate 'content.parts' array is empty." if parts_field.empty?
 
         # 6. Verify the first part candidate[:content][:parts][0] is a Hash
         first_part = parts_field[0]
         unless first_part.is_a?(Hash)
-          raise Error, "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash."
+          raise Error,
+                "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash."
         end
 
         # 7. Verify the text field within the first part
         unless first_part.key?(:text)
-          raise Error, "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil."
+          raise Error,
+                "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil."
         end
 
         text_content = first_part[:text]
@@ -245,7 +243,7 @@ module CodingAgentTools
         elsif error_message
           error_message
         else
-          "An unspecified error occurred."
+          'An unspecified error occurred.'
         end
       end
     end

@@ -1,61 +1,61 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Commit < Dry::CLI::Command
-          desc "Commit changes across repositories with LLM-generated messages"
+          desc 'Commit changes across repositories with LLM-generated messages'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :intention, type: :string, aliases: ["i"],
-            desc: "Intention context for commit message generation"
+          option :intention, type: :string, aliases: ['i'],
+                             desc: 'Intention context for commit message generation'
 
-          option :local, type: :boolean, default: false, aliases: ["l"],
-            desc: "Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503)"
+          option :local, type: :boolean, default: false, aliases: ['l'],
+                         desc: 'Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503)'
 
-          option :no_edit, type: :boolean, default: false, aliases: ["n"],
-            desc: "Skip editor and commit directly with generated message"
+          option :no_edit, type: :boolean, default: false, aliases: ['n'],
+                           desc: 'Skip editor and commit directly with generated message'
 
-          option :message, type: :string, aliases: ["m"],
-            desc: "Use provided message instead of LLM generation"
+          option :message, type: :string, aliases: ['m'],
+                           desc: 'Use provided message instead of LLM generation'
 
-          option :all, type: :boolean, default: false, aliases: ["a"],
-            desc: "Stage all changes before committing"
+          option :all, type: :boolean, default: false, aliases: ['a'],
+                       desc: 'Stage all changes before committing'
 
           option :model, type: :string,
-            desc: "Specify LLM model (provider:model format, e.g., 'google:gemini-2.0-flash-lite', 'anthropic:claude-3.5-sonnet')"
+                         desc: "Specify LLM model (provider:model format, e.g., 'google:gemini-2.0-flash-lite', 'anthropic:claude-3.5-sonnet')"
 
           option :concurrent, type: :boolean, default: false,
-            desc: "Execute commits concurrently across repositories"
+                              desc: 'Execute commits concurrently across repositories'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           option :repo_only, type: :boolean, default: false,
-            desc: "Process only the current repository instead of all repositories"
+                             desc: 'Process only the current repository instead of all repositories'
 
           argument :files, type: :array, required: false,
-            desc: "Specific files to commit (optional)"
+                           desc: 'Specific files to commit (optional)'
 
           example [
-            "",
+            '',
             "--intention 'implement user authentication'",
             "--message 'fix typo in documentation'",
             "--intention 'refactor database layer'",
-            "dev-handbook/guide.md lib/auth.rb",
+            'dev-handbook/guide.md lib/auth.rb',
             "--concurrent --intention 'update across all repos'",
             "--repository dev-tools --message 'update gem version'",
             "--repo-only --intention 'local change only'",
@@ -80,7 +80,7 @@ module CodingAgentTools
               display_commit_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
@@ -113,7 +113,7 @@ module CodingAgentTools
               commit_opts[:model] = options[:model]
             elsif options[:local]
               # Use local LM Studio model when --local flag is specified
-              commit_opts[:model] = "lmstudio:mistral-small-3.1-24b-instruct-2503"
+              commit_opts[:model] = 'lmstudio:mistral-small-3.1-24b-instruct-2503'
             end
             # Otherwise, use the default model (google:gemini-2.0-flash-lite)
             commit_opts[:debug] = options[:debug] if options[:debug]
@@ -136,13 +136,13 @@ module CodingAgentTools
               end
             end
 
-            if result[:repositories_processed]
-              repos_list = result[:repositories_processed].join(", ")
-              puts "\nCommit completed across repositories: #{repos_list}"
-            end
+            return unless result[:repositories_processed]
+
+            repos_list = result[:repositories_processed].join(', ')
+            puts "\nCommit completed across repositories: #{repos_list}"
           end
 
-          def display_single_commit_result(repo_name, result, options)
+          def display_single_commit_result(repo_name, result, _options)
             if result[:success]
               if result[:stdout] && !result[:stdout].strip.empty?
                 puts "[#{repo_name}] #{result[:stdout].strip}"
@@ -152,7 +152,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Commit successful"
               end
             else
-              error_message = result[:error] || result[:stderr] || "Commit failed"
+              error_message = result[:error] || result[:stderr] || 'Commit failed'
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -182,20 +182,18 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
               has_errors = true
             end
 
             # Show any partial successes (only once)
-            if result[:results] && has_errors
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Committed in repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results] && has_errors
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Committed in repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -205,7 +203,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

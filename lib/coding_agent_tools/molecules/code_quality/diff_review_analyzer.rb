@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "open3"
-require "tempfile"
+require 'open3'
+require 'tempfile'
 
 module CodingAgentTools
   module Molecules
@@ -41,28 +41,28 @@ module CodingAgentTools
 
         def format_review(analysis)
           review = []
-          review << "# Code Quality Changes Review"
-          review << ""
+          review << '# Code Quality Changes Review'
+          review << ''
           review << "Generated at: #{Time.now}"
-          review << ""
+          review << ''
 
           if analysis[:summary]
-            review << "## Summary"
+            review << '## Summary'
             review << "- Files modified: #{analysis[:summary][:files_modified]}"
             review << "- Lines added: #{analysis[:summary][:lines_added]}"
             review << "- Lines removed: #{analysis[:summary][:lines_removed]}"
-            review << ""
+            review << ''
           end
 
           if analysis[:changes] && !analysis[:changes].empty?
-            review << "## File Changes"
-            review << ""
+            review << '## File Changes'
+            review << ''
 
             analysis[:changes].each do |file, changes|
               review << "### #{file}"
-              review << ""
+              review << ''
               review << format_file_changes(changes)
-              review << ""
+              review << ''
             end
           end
 
@@ -73,25 +73,23 @@ module CodingAgentTools
 
         def relevant_files
           # Get all Ruby and Markdown files
-          ruby_files = Dir.glob("**/*.rb").reject { |f| f.start_with?("spec/", "vendor/") }
-          md_files = Dir.glob("**/*.md").reject { |f| f.start_with?("vendor/") }
+          ruby_files = Dir.glob('**/*.rb').reject { |f| f.start_with?('spec/', 'vendor/') }
+          md_files = Dir.glob('**/*.md').reject { |f| f.start_with?('vendor/') }
 
           ruby_files + md_files
         end
 
         def analyze_git_changes
           # Check if we're in a git repository
-          unless system("git rev-parse --git-dir > /dev/null 2>&1")
-            return {error: "Not in a git repository"}
-          end
+          return { error: 'Not in a git repository' } unless system('git rev-parse --git-dir > /dev/null 2>&1')
 
           # Get the diff
-          stdout, stderr, status = Open3.capture3("git diff --numstat")
+          stdout, stderr, status = Open3.capture3('git diff --numstat')
 
           if status.success?
             parse_git_diff(stdout)
           else
-            {error: "Failed to get git diff: #{stderr}"}
+            { error: "Failed to get git diff: #{stderr}" }
           end
         end
 
@@ -165,7 +163,7 @@ module CodingAgentTools
               lines = after_data[:content].lines.size
               analysis[:summary][:lines_added] += lines
               analysis[:changes][file] = {
-                status: "added",
+                status: 'added',
                 lines_added: lines,
                 lines_removed: 0
               }
@@ -175,7 +173,7 @@ module CodingAgentTools
               lines = before_data[:content].lines.size
               analysis[:summary][:lines_removed] += lines
               analysis[:changes][file] = {
-                status: "removed",
+                status: 'removed',
                 lines_added: 0,
                 lines_removed: lines
               }
@@ -187,8 +185,8 @@ module CodingAgentTools
 
         def calculate_diff(before_content, after_content, filename)
           # Use temporary files for diff
-          before_file = Tempfile.new(["before", File.extname(filename)])
-          after_file = Tempfile.new(["after", File.extname(filename)])
+          before_file = Tempfile.new(['before', File.extname(filename)])
+          after_file = Tempfile.new(['after', File.extname(filename)])
 
           begin
             before_file.write(before_content)
@@ -215,9 +213,9 @@ module CodingAgentTools
           lines_removed = 0
 
           diff_output.each_line do |line|
-            if line.start_with?("+") && !line.start_with?("+++")
+            if line.start_with?('+') && !line.start_with?('+++')
               lines_added += 1
-            elsif line.start_with?("-") && !line.start_with?("---")
+            elsif line.start_with?('-') && !line.start_with?('---')
               lines_removed += 1
             end
           end
@@ -233,19 +231,19 @@ module CodingAgentTools
           lines = []
 
           lines << if changes[:status]
-            "**Status:** #{changes[:status]}"
-          else
-            "**Status:** modified"
-          end
+                     "**Status:** #{changes[:status]}"
+                   else
+                     '**Status:** modified'
+                   end
 
           lines << "**Lines added:** #{changes[:lines_added]}"
           lines << "**Lines removed:** #{changes[:lines_removed]}"
 
           if changes[:diff] && changes[:diff].size < 1000
-            lines << ""
-            lines << "```diff"
+            lines << ''
+            lines << '```diff'
             lines << changes[:diff]
-            lines << "```"
+            lines << '```'
           end
 
           lines.join("\n")

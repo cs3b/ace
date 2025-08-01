@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "zeitwerk"
+require 'zeitwerk'
 
 loader = Zeitwerk::Loader.new
 loader.push_dir(__dir__)
 loader.inflector.inflect(
-  "json_formatter" => "JSONFormatter",
-  "http_client" => "HTTPClient",
-  "http_request_builder" => "HTTPRequestBuilder",
-  "api_credentials" => "APICredentials",
-  "api_response_parser" => "APIResponseParser",
-  "xdg_directory_resolver" => "XDGDirectoryResolver"
+  'json_formatter' => 'JSONFormatter',
+  'http_client' => 'HTTPClient',
+  'http_request_builder' => 'HTTPRequestBuilder',
+  'api_credentials' => 'APICredentials',
+  'api_response_parser' => 'APIResponseParser',
+  'xdg_directory_resolver' => 'XDGDirectoryResolver'
 )
 loader.setup
 

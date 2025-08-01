@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../models/result"
+require_relative '../../models/result'
 
 module CodingAgentTools
   module Molecules
@@ -8,7 +8,7 @@ module CodingAgentTools
       # Collects and validates reflection note files for synthesis
       class ReportCollector
         def initialize
-          @valid_extensions = [".md", ".markdown"]
+          @valid_extensions = ['.md', '.markdown']
         end
 
         def collect_reports(reflection_paths)
@@ -29,9 +29,9 @@ module CodingAgentTools
           end
 
           if errors.any?
-            Models::Result.failure(errors.join(", "))
+            Models::Result.failure(errors.join(', '))
           elsif valid_reports.empty?
-            Models::Result.failure("No valid reflection files found")
+            Models::Result.failure('No valid reflection files found')
           else
             Models::Result.success(reports: valid_reports.sort)
           end
@@ -42,7 +42,7 @@ module CodingAgentTools
         def expand_glob_patterns(paths)
           expanded = []
           paths.each do |path|
-            if path.include?("*")
+            if path.include?('*')
               expanded.concat(Dir.glob(path))
             else
               expanded << path
@@ -57,7 +57,7 @@ module CodingAgentTools
           return false if File.zero?(path)
 
           # Basic content validation - check for reflection-like structure
-          content = File.read(path, encoding: "utf-8")
+          content = File.read(path, encoding: 'utf-8')
           has_reflection_markers?(content)
         end
 

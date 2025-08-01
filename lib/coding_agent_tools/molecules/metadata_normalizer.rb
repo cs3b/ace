@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "provider_usage_parsers/google_usage_parser"
-require_relative "provider_usage_parsers/lmstudio_usage_parser"
-require_relative "provider_usage_parsers/anthropic_usage_parser"
-require_relative "provider_usage_parsers/openai_usage_parser"
-require_relative "provider_usage_parsers/mistral_usage_parser"
-require_relative "provider_usage_parsers/togetherai_usage_parser"
-require_relative "../cost_tracker"
-require_relative "../models/usage_metadata_with_cost"
+require_relative 'provider_usage_parsers/google_usage_parser'
+require_relative 'provider_usage_parsers/lmstudio_usage_parser'
+require_relative 'provider_usage_parsers/anthropic_usage_parser'
+require_relative 'provider_usage_parsers/openai_usage_parser'
+require_relative 'provider_usage_parsers/mistral_usage_parser'
+require_relative 'provider_usage_parsers/togetherai_usage_parser'
+require_relative '../cost_tracker'
+require_relative '../models/usage_metadata_with_cost'
 
 module CodingAgentTools
   module Molecules
@@ -49,19 +49,19 @@ module CodingAgentTools
 
         # Calculate cost if tracker is provided
         cost_calculation = if cost_tracker
-          begin
-            cost_tracker.calculate_cost_with_fallback(
-              model_id: model,
-              input_tokens: usage_metadata.input_tokens,
-              output_tokens: usage_metadata.output_tokens,
-              cache_creation_tokens: 0,
-              cache_read_tokens: usage_metadata.cached_tokens || 0
-            )
-          rescue
-            # If cost calculation fails, continue without cost info
-            nil
-          end
-        end
+                             begin
+                               cost_tracker.calculate_cost_with_fallback(
+                                 model_id: model,
+                                 input_tokens: usage_metadata.input_tokens,
+                                 output_tokens: usage_metadata.output_tokens,
+                                 cache_creation_tokens: 0,
+                                 cache_read_tokens: usage_metadata.cached_tokens || 0
+                               )
+                             rescue StandardError
+                               # If cost calculation fails, continue without cost info
+                               nil
+                             end
+                           end
 
         # Return enhanced metadata with cost information
         Models::UsageMetadataWithCost.from_usage_metadata(usage_metadata, cost_calculation)
@@ -73,17 +73,17 @@ module CodingAgentTools
       # @return [Hash] Parsed usage information
       def self.parse_usage_metadata(response, provider)
         case provider
-        when "google"
+        when 'google'
           ProviderUsageParsers::GoogleUsageParser.parse(response)
-        when "lmstudio"
+        when 'lmstudio'
           ProviderUsageParsers::LMStudioUsageParser.parse(response)
-        when "anthropic"
+        when 'anthropic'
           ProviderUsageParsers::AnthropicUsageParser.parse(response)
-        when "openai"
+        when 'openai'
           ProviderUsageParsers::OpenaiUsageParser.parse(response)
-        when "mistral"
+        when 'mistral'
           ProviderUsageParsers::MistralUsageParser.parse(response)
-        when "together_ai", "togetherai"
+        when 'together_ai', 'togetherai'
           ProviderUsageParsers::TogetheraiUsageParser.parse(response)
         else
           # Fallback for unknown providers
@@ -91,7 +91,7 @@ module CodingAgentTools
             input_tokens: 0,
             output_tokens: 0,
             total_tokens: 0,
-            provider_specific: response[:usage_metadata] || response["usage_metadata"]
+            provider_specific: response[:usage_metadata] || response['usage_metadata']
           }
         end
       end
@@ -124,8 +124,8 @@ module CodingAgentTools
       # @return [String] Normalized provider name
       def self.normalize_provider_name(provider)
         case provider.to_s.downcase
-        when "together_ai", "togetherai"
-          "together_ai"
+        when 'together_ai', 'togetherai'
+          'together_ai'
         else
           provider.to_s.downcase
         end
@@ -134,7 +134,7 @@ module CodingAgentTools
       # Get current timestamp in ISO 8601 format
       # @return [String] Current timestamp
       def self.current_timestamp
-        Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+        Time.now.utc.strftime('%Y-%m-%dT%H:%M:%SZ')
       end
 
       # Normalize Google response metadata
@@ -147,11 +147,11 @@ module CodingAgentTools
 
         {
           finish_reason: extract_finish_reason(response[:finish_reason]),
-          input_tokens: usage[:promptTokenCount] || usage["promptTokenCount"] || 0,
-          output_tokens: usage[:candidatesTokenCount] || usage["candidatesTokenCount"] || 0,
+          input_tokens: usage[:promptTokenCount] || usage['promptTokenCount'] || 0,
+          output_tokens: usage[:candidatesTokenCount] || usage['candidatesTokenCount'] || 0,
           total_tokens: calculate_total_tokens(usage, :gemini),
           took: execution_time.round(3),
-          provider: "google",
+          provider: 'google',
           model: model,
           timestamp: current_timestamp,
           safety_ratings: response[:safety_ratings]
@@ -168,11 +168,11 @@ module CodingAgentTools
 
         {
           finish_reason: extract_finish_reason(response[:finish_reason]),
-          input_tokens: usage[:prompt_tokens] || usage["prompt_tokens"] || 0,
-          output_tokens: usage[:completion_tokens] || usage["completion_tokens"] || 0,
+          input_tokens: usage[:prompt_tokens] || usage['prompt_tokens'] || 0,
+          output_tokens: usage[:completion_tokens] || usage['completion_tokens'] || 0,
           total_tokens: calculate_total_tokens(usage, :lmstudio),
           took: execution_time.round(3),
-          provider: "lmstudio",
+          provider: 'lmstudio',
           model: model,
           timestamp: current_timestamp
         }.compact
@@ -202,17 +202,17 @@ module CodingAgentTools
       # @param finish_reason [String, Symbol, nil] Raw finish reason
       # @return [String] Normalized finish reason
       def self.extract_finish_reason(finish_reason)
-        return "unknown" if finish_reason.nil?
+        return 'unknown' if finish_reason.nil?
 
         case finish_reason.to_s.downcase
-        when "stop", "finished"
-          "stop"
-        when "length", "max_tokens"
-          "length"
-        when "error", "failed"
-          "error"
-        when "cancelled", "canceled"
-          "cancelled"
+        when 'stop', 'finished'
+          'stop'
+        when 'length', 'max_tokens'
+          'length'
+        when 'error', 'failed'
+          'error'
+        when 'cancelled', 'canceled'
+          'cancelled'
         else
           finish_reason.to_s
         end
@@ -225,12 +225,12 @@ module CodingAgentTools
       def self.calculate_total_tokens(usage, provider)
         case provider
         when :gemini
-          prompt_tokens = usage[:promptTokenCount] || usage["promptTokenCount"] || 0
-          candidate_tokens = usage[:candidatesTokenCount] || usage["candidatesTokenCount"] || 0
+          prompt_tokens = usage[:promptTokenCount] || usage['promptTokenCount'] || 0
+          candidate_tokens = usage[:candidatesTokenCount] || usage['candidatesTokenCount'] || 0
           prompt_tokens + candidate_tokens
         when :lmstudio
-          prompt_tokens = usage[:prompt_tokens] || usage["prompt_tokens"] || 0
-          completion_tokens = usage[:completion_tokens] || usage["completion_tokens"] || 0
+          prompt_tokens = usage[:prompt_tokens] || usage['prompt_tokens'] || 0
+          completion_tokens = usage[:completion_tokens] || usage['completion_tokens'] || 0
           prompt_tokens + completion_tokens
         else
           0
@@ -239,9 +239,9 @@ module CodingAgentTools
 
       # Mark private class methods
       private_class_method :parse_usage_metadata, :build_normalized_metadata,
-        :normalize_provider_name, :normalize_google_metadata, :normalize_lmstudio_metadata,
-        :normalize_unknown_metadata, :extract_finish_reason,
-        :calculate_total_tokens
+                           :normalize_provider_name, :normalize_google_metadata, :normalize_lmstudio_metadata,
+                           :normalize_unknown_metadata, :extract_finish_reason,
+                           :calculate_total_tokens
     end
   end
 end

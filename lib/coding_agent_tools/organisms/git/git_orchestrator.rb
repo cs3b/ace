@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require "time"
-require "shellwords"
-require_relative "../../atoms/git/git_command_executor"
-require_relative "../../atoms/git/repository_scanner"
-require_relative "../../atoms/git/submodule_detector"
-require_relative "../../atoms/git/path_resolver"
-require_relative "../../atoms/git/status_color_formatter"
-require_relative "../../atoms/git/log_color_formatter"
-require_relative "../../molecules/git/path_dispatcher"
-require_relative "../../molecules/git/multi_repo_coordinator"
-require_relative "../../molecules/git/concurrent_executor"
-require_relative "../../molecules/git/commit_message_generator"
+require 'time'
+require 'shellwords'
+require_relative '../../atoms/git/git_command_executor'
+require_relative '../../atoms/git/repository_scanner'
+require_relative '../../atoms/git/submodule_detector'
+require_relative '../../atoms/git/path_resolver'
+require_relative '../../atoms/git/status_color_formatter'
+require_relative '../../atoms/git/log_color_formatter'
+require_relative '../../molecules/git/path_dispatcher'
+require_relative '../../molecules/git/multi_repo_coordinator'
+require_relative '../../molecules/git/concurrent_executor'
+require_relative '../../molecules/git/commit_message_generator'
 
 module CodingAgentTools
   module Organisms
@@ -28,7 +28,7 @@ module CodingAgentTools
         # Status operations
         def status(options = {})
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
-          result = coordinator.execute_across_repositories("status", options.merge(capture_output: true))
+          result = coordinator.execute_across_repositories('status', options.merge(capture_output: true))
 
           format_status_output(result, options)
         end
@@ -44,7 +44,7 @@ module CodingAgentTools
 
         # Add operations with path intelligence
         def add(paths, options = {})
-          return {success: false, error: "No paths provided"} if paths.nil? || paths.empty?
+          return { success: false, error: 'No paths provided' } if paths.nil? || paths.empty?
 
           dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
           dispatch_info = dispatcher.dispatch_paths(paths)
@@ -77,7 +77,7 @@ module CodingAgentTools
           elsif options[:debug]
             puts "DEBUG: Skipping add_all because repo_only = #{options[:repo_only]}"
           end
-          # Note: With --repo-only flag, commit only already staged changes
+          # NOTE: With --repo-only flag, commit only already staged changes
 
           if options[:message]
             commit_with_message(options[:message], options)
@@ -138,7 +138,8 @@ module CodingAgentTools
           checkout_command = build_checkout_command(branch_or_paths, options)
 
           if options[:concurrent]
-            coordinator.execute_across_repositories(checkout_command, options.merge(capture_output: true, concurrent: true))
+            coordinator.execute_across_repositories(checkout_command,
+                                                    options.merge(capture_output: true, concurrent: true))
           else
             coordinator.execute_across_repositories(checkout_command, options.merge(capture_output: true))
           end
@@ -150,7 +151,8 @@ module CodingAgentTools
           switch_command = build_switch_command(branch, options)
 
           if options[:concurrent]
-            coordinator.execute_across_repositories(switch_command, options.merge(capture_output: true, concurrent: true))
+            coordinator.execute_across_repositories(switch_command,
+                                                    options.merge(capture_output: true, concurrent: true))
           else
             coordinator.execute_across_repositories(switch_command, options.merge(capture_output: true))
           end
@@ -158,8 +160,8 @@ module CodingAgentTools
 
         # Move/rename operations with path intelligence
         def mv(sources, destination, options = {})
-          return {success: false, error: "No sources provided"} if sources.nil? || sources.empty?
-          return {success: false, error: "No destination provided"} if destination.nil? || destination.empty?
+          return { success: false, error: 'No sources provided' } if sources.nil? || sources.empty?
+          return { success: false, error: 'No destination provided' } if destination.nil? || destination.empty?
 
           dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
 
@@ -178,7 +180,7 @@ module CodingAgentTools
 
         # Remove operations with path intelligence
         def rm(paths, options = {})
-          return {success: false, error: "No paths provided"} if paths.nil? || paths.empty?
+          return { success: false, error: 'No paths provided' } if paths.nil? || paths.empty?
 
           dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
           dispatch_info = dispatcher.dispatch_paths(paths)
@@ -194,7 +196,7 @@ module CodingAgentTools
 
         # Restore operations with path intelligence
         def restore(pathspecs, options = {})
-          return {success: false, error: "No pathspecs provided"} if pathspecs.nil? || pathspecs.empty?
+          return { success: false, error: 'No pathspecs provided' } if pathspecs.nil? || pathspecs.empty?
 
           dispatcher = CodingAgentTools::Molecules::Git::PathDispatcher.new(@project_root)
           dispatch_info = dispatcher.dispatch_paths(pathspecs)
@@ -232,7 +234,7 @@ module CodingAgentTools
           result[:results].each do |repo_name, repo_result|
             next unless repo_result[:success]
 
-            output = repo_result[:stdout] || ""
+            output = repo_result[:stdout] || ''
             next if output.strip.empty? && !options[:verbose]
 
             formatted_line = color_formatter.format_repository_status(repo_name, output)
@@ -244,26 +246,26 @@ module CodingAgentTools
 
         # Log command building and formatting
         def build_log_command(options)
-          cmd_parts = ["log"]
+          cmd_parts = ['log']
 
           # Always include timestamp for sorting, but format according to user preference
           if options[:oneline]
             # For oneline, include timestamp at the end in a parseable format
-            cmd_parts << "--pretty=format:#{Shellwords.escape("%h %s (%ci)")}"
+            cmd_parts << "--pretty=format:#{Shellwords.escape('%h %s (%ci)')}"
           else
             # For regular format, use default but add timestamp marker for parsing
-            cmd_parts << "--date=iso"
-            cmd_parts << "--pretty=format:#{Shellwords.escape("TIMESTAMP:%ci%ncommit %H%nAuthor: %an <%ae>%nDate:   %ci%n%n%w(0,4,4)%s%n%+b")}"
+            cmd_parts << '--date=iso'
+            cmd_parts << "--pretty=format:#{Shellwords.escape('TIMESTAMP:%ci%ncommit %H%nAuthor: %an <%ae>%nDate:   %ci%n%n%w(0,4,4)%s%n%+b')}"
           end
 
-          cmd_parts << "--graph" if options[:graph]
+          cmd_parts << '--graph' if options[:graph]
           cmd_parts << "--since=#{Shellwords.escape(options[:since])}" if options[:since]
           cmd_parts << "--until=#{Shellwords.escape(options[:until])}" if options[:until]
           cmd_parts << "--author=#{Shellwords.escape(options[:author])}" if options[:author]
           cmd_parts << "--grep=#{Shellwords.escape(options[:grep])}" if options[:grep]
           cmd_parts << "-n #{options[:max_count]}" if options[:max_count]
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def format_log_output(result, options)
@@ -281,7 +283,7 @@ module CodingAgentTools
           result[:results].each do |repo_name, repo_result|
             next unless repo_result[:success]
 
-            output = repo_result[:stdout] || ""
+            output = repo_result[:stdout] || ''
             commits = parse_commits_from_output(output, repo_name)
             all_commits.concat(commits)
           end
@@ -295,18 +297,18 @@ module CodingAgentTools
           result.merge(formatted_output: formatted_output)
         end
 
-        def format_separated_log(result, options = {})
+        def format_separated_log(result, _options = {})
           formatted_output = []
 
           result[:results].each do |repo_name, repo_result|
             next unless repo_result[:success]
 
-            output = repo_result[:stdout] || ""
+            output = repo_result[:stdout] || ''
             next if output.strip.empty?
 
             formatted_output << "[#{repo_name}] Recent commits:"
             output.lines.each { |line| formatted_output << "  #{line.rstrip}" }
-            formatted_output << ""
+            formatted_output << ''
           end
 
           result.merge(formatted_output: formatted_output.join("\n"))
@@ -314,7 +316,7 @@ module CodingAgentTools
 
         # Format commits with proper padding and visual separation
         def format_commits_with_padding(all_commits, options = {})
-          return "" if all_commits.empty?
+          return '' if all_commits.empty?
 
           # Initialize color formatter
           color_formatter = CodingAgentTools::Atoms::Git::LogColorFormatter.new(options)
@@ -332,9 +334,11 @@ module CodingAgentTools
             padded_repo_plain = plain_repo.ljust(max_repo_length + 2)
 
             # Apply color to the padded repository name
-            colored_repo = color_formatter.should_use_color? ?
-              color_formatter.send(:colorize, padded_repo_plain, :repo_name) :
-              padded_repo_plain
+            colored_repo = if color_formatter.should_use_color?
+                             color_formatter.send(:colorize, padded_repo_plain, :repo_name)
+                           else
+                             padded_repo_plain
+                           end
 
             # Apply color formatting to commit content
             colored_content = color_formatter.format_commit(commit)
@@ -347,7 +351,7 @@ module CodingAgentTools
                   formatted_lines << "#{colored_repo} #{line}"
                 else
                   # Indent continuation lines to align with content
-                  padding = " " * (max_repo_length + 3)
+                  padding = ' ' * (max_repo_length + 3)
                   formatted_lines << "#{padding} #{line}"
                 end
               end
@@ -357,7 +361,7 @@ module CodingAgentTools
             end
 
             # Add spacing between commits for better readability
-            formatted_lines << "" unless index == all_commits.length - 1
+            formatted_lines << '' unless index == all_commits.length - 1
           end
 
           formatted_lines.join("\n")
@@ -367,7 +371,7 @@ module CodingAgentTools
         def parse_commits_from_output(output, repo_name)
           commits = []
 
-          if output.include?("TIMESTAMP:")
+          if output.include?('TIMESTAMP:')
             # Handle full commit format with TIMESTAMP markers
             commit_blocks = output.split(/^TIMESTAMP:/)
             commit_blocks.shift if commit_blocks.first&.strip&.empty? # Remove empty first block
@@ -387,7 +391,7 @@ module CodingAgentTools
                   display_line: commit_content,
                   type: :multiline
                 }
-              rescue
+              rescue StandardError
                 # Skip commits with unparseable timestamps
               end
             end
@@ -395,6 +399,7 @@ module CodingAgentTools
             # Handle oneline format
             output.lines.each do |line|
               next if line.strip.empty?
+
               commit_info = parse_commit_line(line.rstrip, repo_name)
               commits << commit_info if commit_info
             end
@@ -407,9 +412,9 @@ module CodingAgentTools
         def parse_commit_line(line, repo_name)
           # Handle oneline format: hash message (timestamp)
           if line =~ /^(\w+)\s+(.+?)\s+\((\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+[+-]\d{4})\)$/
-            hash_part = $1
-            message_part = $2
-            timestamp_str = $3
+            hash_part = ::Regexp.last_match(1)
+            message_part = ::Regexp.last_match(2)
+            timestamp_str = ::Regexp.last_match(3)
 
             begin
               timestamp = Time.parse(timestamp_str)
@@ -421,7 +426,7 @@ module CodingAgentTools
                 display_line: display_line,
                 type: :oneline
               }
-            rescue
+            rescue StandardError
               nil # Skip unparseable lines
             end
           else
@@ -437,14 +442,14 @@ module CodingAgentTools
             paths = repo_info[:paths]
             next if paths.empty?
 
-            add_cmd_parts = ["add"]
-            add_cmd_parts << "--all" if options[:all]
-            add_cmd_parts << "--update" if options[:update]
-            add_cmd_parts << "--force" if options[:force]
-            add_cmd_parts << "--patch" if options[:patch]
+            add_cmd_parts = ['add']
+            add_cmd_parts << '--all' if options[:all]
+            add_cmd_parts << '--update' if options[:update]
+            add_cmd_parts << '--force' if options[:force]
+            add_cmd_parts << '--patch' if options[:patch]
             add_cmd_parts.concat(paths.map { |p| Shellwords.escape(p) })
 
-            commands_by_repo[repo_name] = [add_cmd_parts.join(" ")]
+            commands_by_repo[repo_name] = [add_cmd_parts.join(' ')]
           end
 
           commands_by_repo
@@ -452,7 +457,7 @@ module CodingAgentTools
 
         def add_all(options)
           coordinator = CodingAgentTools::Molecules::Git::MultiRepoCoordinator.new(@project_root)
-          coordinator.execute_across_repositories("add --all", options)
+          coordinator.execute_across_repositories('add --all', options)
         end
 
         # Commit operations
@@ -462,7 +467,8 @@ module CodingAgentTools
           commit_command = "commit -m #{escaped_message}"
 
           # Execute submodules first, then main repository for proper dependency order
-          submodule_result = coordinator.execute_across_repositories(commit_command, options.merge(submodules_only: true))
+          submodule_result = coordinator.execute_across_repositories(commit_command,
+                                                                     options.merge(submodules_only: true))
           main_result = coordinator.execute_across_repositories(commit_command, options.merge(main_only: true))
 
           # Merge results
@@ -495,20 +501,18 @@ module CodingAgentTools
               # Default to non-interactive commits for programmatic operations
               # Only use --edit when explicitly requested AND in an interactive context
               commit_command = if options[:edit] && $stdin.tty?
-                "commit --edit -m #{escaped_message}"
-              else
-                "commit -m #{escaped_message}"
-              end
+                                 "commit --edit -m #{escaped_message}"
+                               else
+                                 "commit -m #{escaped_message}"
+                               end
 
               commands_by_repo[repo[:name]] = [commit_command]
             rescue CodingAgentTools::Molecules::Git::CommitMessageGenerationError => e
-              return {success: false, error: "Failed to generate commit message for #{repo[:name]}: #{e.message}"}
+              return { success: false, error: "Failed to generate commit message for #{repo[:name]}: #{e.message}" }
             end
           end
 
-          if commands_by_repo.empty?
-            return {success: false, error: "No staged changes to commit"}
-          end
+          return { success: false, error: 'No staged changes to commit' } if commands_by_repo.empty?
 
           if options[:concurrent]
             CodingAgentTools::Molecules::Git::ConcurrentExecutor.execute_concurrently(commands_by_repo, options)
@@ -522,72 +526,72 @@ module CodingAgentTools
           executor = CodingAgentTools::Atoms::Git::GitCommandExecutor.new(repository_path: repository_path)
 
           begin
-            result = executor.execute("diff --staged")
-            result[:stdout] || ""
+            result = executor.execute('diff --staged')
+            result[:stdout] || ''
           rescue CodingAgentTools::Atoms::Git::GitCommandError
-            ""
+            ''
           end
         end
 
         # Push/Pull operations
         def build_push_command(options)
-          cmd_parts = ["push"]
-          cmd_parts << "--force" if options[:force]
-          cmd_parts << "--dry-run" if options[:dry_run]
-          cmd_parts << "--set-upstream" if options[:set_upstream]
-          cmd_parts << "--tags" if options[:tags]
+          cmd_parts = ['push']
+          cmd_parts << '--force' if options[:force]
+          cmd_parts << '--dry-run' if options[:dry_run]
+          cmd_parts << '--set-upstream' if options[:set_upstream]
+          cmd_parts << '--tags' if options[:tags]
           cmd_parts << options[:remote] if options[:remote]
           cmd_parts << options[:branch] if options[:branch]
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def build_pull_command(options)
-          cmd_parts = ["pull"]
-          cmd_parts << "--rebase" if options[:rebase]
-          cmd_parts << "--ff-only" if options[:ff_only]
-          cmd_parts << "--no-commit" if options[:no_commit]
+          cmd_parts = ['pull']
+          cmd_parts << '--rebase' if options[:rebase]
+          cmd_parts << '--ff-only' if options[:ff_only]
+          cmd_parts << '--no-commit' if options[:no_commit]
           cmd_parts << "--strategy=#{options[:strategy]}" if options[:strategy]
           cmd_parts << options[:remote] if options[:remote]
           cmd_parts << options[:branch] if options[:branch]
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def build_diff_command(options)
-          cmd_parts = ["diff"]
-          cmd_parts << "--staged" if options[:staged]
-          cmd_parts << "--name-only" if options[:name_only]
-          cmd_parts << "--stat" if options[:stat]
+          cmd_parts = ['diff']
+          cmd_parts << '--staged' if options[:staged]
+          cmd_parts << '--name-only' if options[:name_only]
+          cmd_parts << '--stat' if options[:stat]
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def build_fetch_command(options)
-          cmd_parts = ["fetch"]
-          cmd_parts << "--all" if options[:all]
-          cmd_parts << "--prune" if options[:prune]
-          cmd_parts << "--tags" if options[:tags]
+          cmd_parts = ['fetch']
+          cmd_parts << '--all' if options[:all]
+          cmd_parts << '--prune' if options[:prune]
+          cmd_parts << '--tags' if options[:tags]
           cmd_parts << options[:remote] if options[:remote]
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def build_checkout_command(branch_or_paths, options)
-          cmd_parts = ["checkout"]
-          cmd_parts << "--quiet" if options[:quiet]
-          cmd_parts << "--force" if options[:force]
-          cmd_parts << "--merge" if options[:merge]
-          cmd_parts << "--detach" if options[:detach]
-          cmd_parts << "--track" if options[:track]
-          cmd_parts << "--no-track" if options[:no_track]
+          cmd_parts = ['checkout']
+          cmd_parts << '--quiet' if options[:quiet]
+          cmd_parts << '--force' if options[:force]
+          cmd_parts << '--merge' if options[:merge]
+          cmd_parts << '--detach' if options[:detach]
+          cmd_parts << '--track' if options[:track]
+          cmd_parts << '--no-track' if options[:no_track]
 
           if options[:create_branch]
-            cmd_parts << "-b" << Shellwords.escape(options[:create_branch])
+            cmd_parts << '-b' << Shellwords.escape(options[:create_branch])
           elsif options[:force_create_branch]
-            cmd_parts << "-B" << Shellwords.escape(options[:force_create_branch])
+            cmd_parts << '-B' << Shellwords.escape(options[:force_create_branch])
           elsif options[:orphan]
-            cmd_parts << "--orphan" << Shellwords.escape(options[:orphan])
+            cmd_parts << '--orphan' << Shellwords.escape(options[:orphan])
           end
 
           # Add branch or paths
@@ -595,31 +599,31 @@ module CodingAgentTools
             branch_or_paths.each { |item| cmd_parts << Shellwords.escape(item) }
           end
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         def build_switch_command(branch, options)
-          cmd_parts = ["switch"]
-          cmd_parts << "--quiet" if options[:quiet]
-          cmd_parts << "--force" if options[:force]
-          cmd_parts << "--merge" if options[:merge]
-          cmd_parts << "--detach" if options[:detach]
-          cmd_parts << "--track" if options[:track]
-          cmd_parts << "--no-track" if options[:no_track]
-          cmd_parts << "--no-guess" if options[:no_guess]
+          cmd_parts = ['switch']
+          cmd_parts << '--quiet' if options[:quiet]
+          cmd_parts << '--force' if options[:force]
+          cmd_parts << '--merge' if options[:merge]
+          cmd_parts << '--detach' if options[:detach]
+          cmd_parts << '--track' if options[:track]
+          cmd_parts << '--no-track' if options[:no_track]
+          cmd_parts << '--no-guess' if options[:no_guess]
 
           if options[:create]
-            cmd_parts << "-c" << Shellwords.escape(options[:create])
+            cmd_parts << '-c' << Shellwords.escape(options[:create])
           elsif options[:force_create]
-            cmd_parts << "-C" << Shellwords.escape(options[:force_create])
+            cmd_parts << '-C' << Shellwords.escape(options[:force_create])
           elsif options[:orphan]
-            cmd_parts << "--orphan" << Shellwords.escape(options[:orphan])
+            cmd_parts << '--orphan' << Shellwords.escape(options[:orphan])
           end
 
           # Add branch name
           cmd_parts << Shellwords.escape(branch) if branch
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         # Build mv commands grouped by repository
@@ -640,17 +644,17 @@ module CodingAgentTools
             repo_destination = destination if repo_info[:paths].include?(destination)
 
             # Only create command if we have sources and destination in same repo
-            if repo_sources.any? && repo_destination
-              mv_cmd_parts = ["mv"]
-              mv_cmd_parts << "--force" if options[:force]
-              mv_cmd_parts << "--dry-run" if options[:dry_run]
-              mv_cmd_parts << "--verbose" if options[:verbose]
+            next unless repo_sources.any? && repo_destination
 
-              repo_sources.each { |src| mv_cmd_parts << Shellwords.escape(src) }
-              mv_cmd_parts << Shellwords.escape(repo_destination)
+            mv_cmd_parts = ['mv']
+            mv_cmd_parts << '--force' if options[:force]
+            mv_cmd_parts << '--dry-run' if options[:dry_run]
+            mv_cmd_parts << '--verbose' if options[:verbose]
 
-              commands_by_repo[repo_name] = [mv_cmd_parts.join(" ")]
-            end
+            repo_sources.each { |src| mv_cmd_parts << Shellwords.escape(src) }
+            mv_cmd_parts << Shellwords.escape(repo_destination)
+
+            commands_by_repo[repo_name] = [mv_cmd_parts.join(' ')]
           end
 
           commands_by_repo
@@ -664,17 +668,17 @@ module CodingAgentTools
             paths = repo_info[:paths]
             next if paths.empty?
 
-            rm_cmd_parts = ["rm"]
-            rm_cmd_parts << "--force" if options[:force]
-            rm_cmd_parts << "--dry-run" if options[:dry_run]
-            rm_cmd_parts << "--recursive" if options[:recursive]
-            rm_cmd_parts << "--cached" if options[:cached]
-            rm_cmd_parts << "--ignore-unmatch" if options[:ignore_unmatch]
-            rm_cmd_parts << "--quiet" if options[:quiet]
+            rm_cmd_parts = ['rm']
+            rm_cmd_parts << '--force' if options[:force]
+            rm_cmd_parts << '--dry-run' if options[:dry_run]
+            rm_cmd_parts << '--recursive' if options[:recursive]
+            rm_cmd_parts << '--cached' if options[:cached]
+            rm_cmd_parts << '--ignore-unmatch' if options[:ignore_unmatch]
+            rm_cmd_parts << '--quiet' if options[:quiet]
 
             paths.each { |path| rm_cmd_parts << Shellwords.escape(path) }
 
-            commands_by_repo[repo_name] = [rm_cmd_parts.join(" ")]
+            commands_by_repo[repo_name] = [rm_cmd_parts.join(' ')]
           end
 
           commands_by_repo
@@ -688,21 +692,21 @@ module CodingAgentTools
             paths = repo_info[:paths]
             next if paths.empty?
 
-            restore_cmd_parts = ["restore"]
+            restore_cmd_parts = ['restore']
             restore_cmd_parts << "--source=#{Shellwords.escape(options[:source])}" if options[:source]
-            restore_cmd_parts << "--staged" if options[:staged]
-            restore_cmd_parts << "--worktree" if options[:worktree]
-            restore_cmd_parts << "--merge" if options[:merge]
+            restore_cmd_parts << '--staged' if options[:staged]
+            restore_cmd_parts << '--worktree' if options[:worktree]
+            restore_cmd_parts << '--merge' if options[:merge]
             restore_cmd_parts << "--conflict=#{options[:conflict]}" if options[:conflict]
-            restore_cmd_parts << "--ours" if options[:ours]
-            restore_cmd_parts << "--theirs" if options[:theirs]
-            restore_cmd_parts << "--patch" if options[:patch]
-            restore_cmd_parts << "--quiet" if options[:quiet]
-            restore_cmd_parts << "--progress" if options[:progress]
+            restore_cmd_parts << '--ours' if options[:ours]
+            restore_cmd_parts << '--theirs' if options[:theirs]
+            restore_cmd_parts << '--patch' if options[:patch]
+            restore_cmd_parts << '--quiet' if options[:quiet]
+            restore_cmd_parts << '--progress' if options[:progress]
 
             paths.each { |path| restore_cmd_parts << Shellwords.escape(path) }
 
-            commands_by_repo[repo_name] = [restore_cmd_parts.join(" ")]
+            commands_by_repo[repo_name] = [restore_cmd_parts.join(' ')]
           end
 
           commands_by_repo
@@ -710,30 +714,30 @@ module CodingAgentTools
 
         # Build tag command with all supported options
         def build_tag_command(tagname, commit, options)
-          cmd_parts = ["tag"]
+          cmd_parts = ['tag']
 
           # Tag creation/modification options
-          cmd_parts << "-a" if options[:annotate]
-          cmd_parts << "-s" if options[:sign]
+          cmd_parts << '-a' if options[:annotate]
+          cmd_parts << '-s' if options[:sign]
           cmd_parts << "-u #{Shellwords.escape(options[:local_user])}" if options[:local_user]
-          cmd_parts << "-f" if options[:force]
+          cmd_parts << '-f' if options[:force]
           cmd_parts << "-m #{Shellwords.escape(options[:message])}" if options[:message]
           cmd_parts << "-F #{Shellwords.escape(options[:file])}" if options[:file]
 
           # Tag deletion/listing/verification options
-          cmd_parts << "-d" if options[:delete]
-          cmd_parts << "-l" if options[:list]
-          cmd_parts << "-v" if options[:verify]
+          cmd_parts << '-d' if options[:delete]
+          cmd_parts << '-l' if options[:list]
+          cmd_parts << '-v' if options[:verify]
 
           # Add positional arguments (tagname and commit)
           cmd_parts << Shellwords.escape(tagname) if tagname
           cmd_parts << Shellwords.escape(commit) if commit
 
-          cmd_parts.join(" ")
+          cmd_parts.join(' ')
         end
 
         # Format tag operation output (simplified like other git commands)
-        def format_tag_output(result, options)
+        def format_tag_output(result, _options)
           result
         end
 
@@ -749,18 +753,14 @@ module CodingAgentTools
 
           # Check if we're in a submodule first (more specific)
           repositories.each do |repo|
-            if repo[:path] && File.expand_path(current_dir) == File.expand_path(repo[:path])
-              return repo[:name]
-            end
+            return repo[:name] if repo[:path] && File.expand_path(current_dir) == File.expand_path(repo[:path])
           end
 
           # Check if we're in the main repository
-          if File.expand_path(current_dir) == File.expand_path(@project_root)
-            return "main"
-          end
+          return 'main' if File.expand_path(current_dir) == File.expand_path(@project_root)
 
           # Default to main if not found
-          "main"
+          'main'
         end
 
         # Execution methods
@@ -868,13 +868,13 @@ module CodingAgentTools
               commands: repo_results,
               repository: repo_name
             }
-          rescue => e
+          rescue StandardError => e
             errors << {
               repository: repo_name,
               error: e,
               message: e.message
             }
-            results[repo_name] = {success: false, error: e.message}
+            results[repo_name] = { success: false, error: e.message }
           end
 
           {
@@ -893,11 +893,11 @@ module CodingAgentTools
 
           # Add submodules to execution order first
           commands_by_repo.keys.each do |repo_name|
-            execution_order << repo_name unless repo_name == "main"
+            execution_order << repo_name unless repo_name == 'main'
           end
 
           # Add main repository last
-          execution_order << "main" if commands_by_repo.key?("main")
+          execution_order << 'main' if commands_by_repo.key?('main')
 
           execution_order.each do |repo_name|
             commands = commands_by_repo[repo_name]
@@ -919,13 +919,13 @@ module CodingAgentTools
                 commands: repo_results,
                 repository: repo_name
               }
-            rescue => e
+            rescue StandardError => e
               errors << {
                 repository: repo_name,
                 error: e,
                 message: e.message
               }
-              results[repo_name] = {success: false, error: e.message}
+              results[repo_name] = { success: false, error: e.message }
             end
           end
 

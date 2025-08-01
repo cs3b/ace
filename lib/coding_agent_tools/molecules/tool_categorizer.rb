@@ -10,48 +10,48 @@ module CodingAgentTools
     # - Provide category metadata and descriptions
     class ToolCategorizer
       CATEGORIES = {
-        "LLM Integration" => {
-          description: "Tools for interacting with language models and AI providers",
-          patterns: ["llm-*"],
+        'LLM Integration' => {
+          description: 'Tools for interacting with language models and AI providers',
+          patterns: ['llm-*'],
           tools: []
         },
-        "Git Operations" => {
-          description: "Enhanced git commands with multi-repo support",
-          patterns: ["git-*"],
+        'Git Operations' => {
+          description: 'Enhanced git commands with multi-repo support',
+          patterns: ['git-*'],
           tools: []
         },
-        "Task Management" => {
-          description: "Project task management and navigation tools",
-          patterns: ["task-*", "release-*"],
+        'Task Management' => {
+          description: 'Project task management and navigation tools',
+          patterns: ['task-*', 'release-*'],
           tools: []
         },
-        "Navigation" => {
-          description: "File system navigation and project exploration tools",
-          patterns: ["nav-*"],
+        'Navigation' => {
+          description: 'File system navigation and project exploration tools',
+          patterns: ['nav-*'],
           tools: []
         },
-        "Code Review" => {
-          description: "Code review and analysis tools",
-          patterns: ["code-review*"],
+        'Code Review' => {
+          description: 'Code review and analysis tools',
+          patterns: ['code-review*'],
           tools: []
         },
-        "Code Quality" => {
-          description: "Code linting, formatting, and quality tools",
-          patterns: ["code-lint*"],
+        'Code Quality' => {
+          description: 'Code linting, formatting, and quality tools',
+          patterns: ['code-lint*'],
           tools: []
         },
-        "Documentation" => {
-          description: "Documentation management and handbook tools",
-          patterns: ["handbook*"],
+        'Documentation' => {
+          description: 'Documentation management and handbook tools',
+          patterns: ['handbook*'],
           tools: []
         },
-        "Reflection & Analysis" => {
-          description: "Session reflection and analysis tools",
-          patterns: ["reflection-*"],
+        'Reflection & Analysis' => {
+          description: 'Session reflection and analysis tools',
+          patterns: ['reflection-*'],
           tools: []
         },
-        "Development Tools" => {
-          description: "General development and automation tools",
+        'Development Tools' => {
+          description: 'General development and automation tools',
           patterns: [],
           tools: []
         }
@@ -98,9 +98,9 @@ module CodingAgentTools
         # Check each category's patterns
         @categories.each do |category_name, category_data|
           category_data[:patterns].each do |pattern|
-            if pattern.include?("*")
+            if pattern.include?('*')
               # Convert shell glob to regex
-              regex_pattern = pattern.gsub("*", ".*")
+              regex_pattern = pattern.gsub('*', '.*')
               return category_name if tool_name.match?(/^#{regex_pattern}$/)
             elsif tool_name == pattern
               return category_name
@@ -110,18 +110,18 @@ module CodingAgentTools
 
         # Special case matching for tools that don't fit standard patterns
         case tool_name
-        when "handbook"
-          "Documentation"
+        when 'handbook'
+          'Documentation'
         when /^code-/
-          if tool_name.include?("review")
-            "Code Review"
-          elsif tool_name.include?("lint")
-            "Code Quality"
+          if tool_name.include?('review')
+            'Code Review'
+          elsif tool_name.include?('lint')
+            'Code Quality'
           else
-            "Development Tools"
+            'Development Tools'
           end
         else
-          "Development Tools"
+          'Development Tools'
         end
       end
 

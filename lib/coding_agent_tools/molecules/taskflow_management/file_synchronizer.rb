@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "fileutils"
+require 'pathname'
+require 'fileutils'
 
 module CodingAgentTools
   module Molecules
@@ -12,7 +12,7 @@ module CodingAgentTools
         # Synchronization result structure
         SyncResult = Struct.new(:status, :updated_content, :error_message, :diff_preview) do
           def success?
-            status == :updated || status == :up_to_date
+            %i[updated up_to_date].include?(status)
           end
 
           def updated?
@@ -106,15 +106,15 @@ module CodingAgentTools
         # @param document_path [String] Path to the document
         # @return [String] Formatted diff preview
         def generate_diff_preview(embedded_content, file_content, document_path)
-          lines = ["📋 WOULD UPDATE: #{document_path}", "", "Differences found:"]
+          lines = ["📋 WOULD UPDATE: #{document_path}", '', 'Differences found:']
 
           embedded_lines = embedded_content.split("\n")
           file_lines = file_content.split("\n")
           max_lines = [embedded_lines.length, file_lines.length].max
 
           (0...max_lines).each do |i|
-            old_line = embedded_lines[i] || ""
-            new_line = file_lines[i] || ""
+            old_line = embedded_lines[i] || ''
+            new_line = file_lines[i] || ''
 
             if old_line != new_line
               lines << "- Line #{i + 1}: [OLD] #{old_line}"
@@ -145,33 +145,33 @@ module CodingAgentTools
           validation_result = path_validator.validate_path(document.path)
 
           if validation_result.invalid?
-            return {error: "Security validation failed: #{validation_result.error_message}"}
+            return { error: "Security validation failed: #{validation_result.error_message}" }
           end
 
           # Additional document-type specific validation
           case document.type
           when :template
-            unless document.path.start_with?("dev-handbook/templates/") && document.path.end_with?(".template.md")
-              return {error: "Invalid template path: #{document.path} (must be in dev-handbook/templates/ and end with .template.md)"}
+            unless document.path.start_with?('dev-handbook/templates/') && document.path.end_with?('.template.md')
+              return { error: "Invalid template path: #{document.path} (must be in dev-handbook/templates/ and end with .template.md)" }
             end
           when :guide
-            unless document.path.start_with?("dev-handbook/guides/") && document.path.end_with?(".g.md")
-              return {error: "Invalid guide path: #{document.path} (must be in dev-handbook/guides/ and end with .g.md)"}
+            unless document.path.start_with?('dev-handbook/guides/') && document.path.end_with?('.g.md')
+              return { error: "Invalid guide path: #{document.path} (must be in dev-handbook/guides/ and end with .g.md)" }
             end
           else
-            return {error: "Unknown document type: #{document.type}"}
+            return { error: "Unknown document type: #{document.type}" }
           end
 
-          {error: nil}
+          { error: nil }
         end
 
         def read_target_file(file_path)
           content = File.read(file_path)
-          {content: content, error: nil}
+          { content: content, error: nil }
         rescue Errno::ENOENT
-          {content: nil, error: "Target file not found: #{file_path}"}
-        rescue => e
-          {content: nil, error: "Failed to read target file #{file_path}: #{e.message}"}
+          { content: nil, error: "Target file not found: #{file_path}" }
+        rescue StandardError => e
+          { content: nil, error: "Failed to read target file #{file_path}: #{e.message}" }
         end
 
         def content_differs?(embedded_content, file_content)
@@ -183,7 +183,7 @@ module CodingAgentTools
           content.strip.gsub("\r\n", "\n")
         end
 
-        def handle_content_difference(workflow_content, document, target_content, workflow_file_path)
+        def handle_content_difference(workflow_content, document, target_content, _workflow_file_path)
           if dry_run
             diff_preview = generate_diff_preview(document.content, target_content, document.path)
             SyncResult.new(:updated, nil, nil, diff_preview)
@@ -204,11 +204,11 @@ module CodingAgentTools
         def update_documents_format(workflow_content, document, new_content, escaped_path)
           case document.type
           when :template
-            pattern = /(<documents>.*?<template\s+path="#{escaped_path}">)(.*?)(<\/template>.*?<\/documents>)/m
-            workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+            pattern = %r{(<documents>.*?<template\s+path="#{escaped_path}">)(.*?)(</template>.*?</documents>)}m
+            workflow_content.gsub(pattern) { "#{::Regexp.last_match(1)}#{new_content}#{::Regexp.last_match(3)}" }
           when :guide
-            pattern = /(<documents>.*?<guide\s+path="#{escaped_path}">)(.*?)(<\/guide>.*?<\/documents>)/m
-            workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+            pattern = %r{(<documents>.*?<guide\s+path="#{escaped_path}">)(.*?)(</guide>.*?</documents>)}m
+            workflow_content.gsub(pattern) { "#{::Regexp.last_match(1)}#{new_content}#{::Regexp.last_match(3)}" }
           else
             raise "Unsupported document type for documents format: #{document.type}"
           end
@@ -220,8 +220,8 @@ module CodingAgentTools
             raise "Legacy templates format only supports template type, got: #{document.type}"
           end
 
-          pattern = /(<template\s+path="#{escaped_path}">)(.*?)(<\/template>)/m
-          workflow_content.gsub(pattern) { "#{$1}#{new_content}#{$3}" }
+          pattern = %r{(<template\s+path="#{escaped_path}">)(.*?)(</template>)}m
+          workflow_content.gsub(pattern) { "#{::Regexp.last_match(1)}#{new_content}#{::Regexp.last_match(3)}" }
         end
 
         def create_path_validator

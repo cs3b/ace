@@ -8,15 +8,15 @@ module CodingAgentTools
         # Default file patterns for supported languages
         DEFAULT_PATTERNS = {
           ruby: [
-            "*.rb",
-            "*.gemspec",
-            "Gemfile",
-            "Rakefile",
-            "exe/*"
+            '*.rb',
+            '*.gemspec',
+            'Gemfile',
+            'Rakefile',
+            'exe/*'
           ].freeze,
           markdown: [
-            "*.md",
-            "*.markdown"
+            '*.md',
+            '*.markdown'
           ].freeze
         }.freeze
 
@@ -75,7 +75,7 @@ module CodingAgentTools
             # Extension pattern like "*.rb"
             extension = pattern[2..]
             file_name.end_with?(".#{extension}")
-          when /\/\*$/
+          when %r{/\*$}
             # Directory pattern like "exe/*"
             dir_pattern = pattern[0..-3]
             file_dir.end_with?(dir_pattern) || file_path.include?("/#{dir_pattern}/")

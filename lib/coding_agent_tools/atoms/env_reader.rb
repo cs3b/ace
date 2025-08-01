@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dotenv"
+require 'dotenv'
 
 module CodingAgentTools
   module Atoms
@@ -11,7 +11,7 @@ module CodingAgentTools
       # @param path [String] Path to .env file (default: ".env")
       # @param overload [Boolean] Whether to overwrite existing env vars
       # @return [Hash] The loaded environment variables
-      def self.load_env_file(path = ".env", overload: false)
+      def self.load_env_file(path = '.env', overload: false)
         return {} unless File.exist?(path)
 
         if overload

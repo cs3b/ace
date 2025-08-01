@@ -8,7 +8,7 @@ module CodingAgentTools
         COLORS = {
           reset: "\033[0m",
           # Repository names
-          repo_name: "\033[33m",      # Yellow for repository names
+          repo_name: "\033[33m", # Yellow for repository names
           # Commit elements
           commit_hash: "\033[33m",    # Yellow for commit hash
           author: "\033[36m",         # Cyan for author
@@ -58,10 +58,10 @@ module CodingAgentTools
           return false if options[:no_color]
 
           # Environment variable NO_COLOR takes precedence
-          return false if ENV["NO_COLOR"]
+          return false if ENV['NO_COLOR']
 
           # FORCE_COLOR environment variable or --force-color option enables color
-          return true if ENV["FORCE_COLOR"] || options[:force_color]
+          return true if ENV['FORCE_COLOR'] || options[:force_color]
 
           # Since --force-color is now default true, we'll use colors by default
           # unless explicitly disabled
@@ -71,8 +71,8 @@ module CodingAgentTools
         def format_oneline_commit(commit)
           # Extract hash and message from display line
           if commit[:display_line] =~ /^(\w+)\s+(.+)$/
-            hash_part = $1
-            message_part = $2
+            hash_part = ::Regexp.last_match(1)
+            message_part = ::Regexp.last_match(2)
 
             "#{colorize(hash_part, :commit_hash)} #{colorize(message_part, :commit_subject)}"
           else
@@ -88,16 +88,16 @@ module CodingAgentTools
             case line
             when /^commit\s+(\w+)$/
               # Commit hash line
-              hash = $1
-              formatted_lines << "#{colorize("commit", :bold)} #{colorize(hash, :commit_hash)}"
+              hash = ::Regexp.last_match(1)
+              formatted_lines << "#{colorize('commit', :bold)} #{colorize(hash, :commit_hash)}"
             when /^Author:\s+(.+)$/
               # Author line
-              author = $1
-              formatted_lines << "#{colorize("Author:", :bold)} #{colorize(author, :author)}"
+              author = ::Regexp.last_match(1)
+              formatted_lines << "#{colorize('Author:', :bold)} #{colorize(author, :author)}"
             when /^Date:\s+(.+)$/
               # Date line
-              date = $1
-              formatted_lines << "#{colorize("Date:", :bold)}   #{colorize(date, :date)}"
+              date = ::Regexp.last_match(1)
+              formatted_lines << "#{colorize('Date:', :bold)}   #{colorize(date, :date)}"
             when /^\s{4,}/
               # Indented lines (commit message)
               formatted_lines << colorize(line, :commit_subject)
@@ -112,6 +112,7 @@ module CodingAgentTools
 
         def colorize(text, color)
           return text unless @use_color && COLORS[color]
+
           "#{COLORS[color]}#{text}#{COLORS[:reset]}"
         end
       end

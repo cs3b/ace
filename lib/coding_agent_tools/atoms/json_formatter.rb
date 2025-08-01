@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
+require 'json'
 
 module CodingAgentTools
   module Atoms
@@ -12,7 +12,7 @@ module CodingAgentTools
       # @param indent [String] Indentation string (default: "  ")
       # @return [String] Pretty-formatted JSON string
       # @raise [JSON::ParserError] If string input cannot be parsed as JSON
-      def self.pretty_print(data, indent: "  ")
+      def self.pretty_print(data, indent: '  ')
         data = JSON.parse(data) if data.is_a?(String)
         JSON.pretty_generate(ensure_proper_encoding(data), indent: indent)
       end
@@ -21,7 +21,7 @@ module CodingAgentTools
       # @param data [Hash, Array, String] Data to format (String will be parsed first)
       # @param indent [String] Indentation string (default: "  ")
       # @return [String] Pretty-formatted JSON string
-      def self.pretty_format(data, indent: "  ")
+      def self.pretty_format(data, indent: '  ')
         pretty_print(data, indent: indent)
       end
 
@@ -65,7 +65,7 @@ module CodingAgentTools
       def self.extract_path(data, path)
         return nil if data.nil? || path.nil?
 
-        path.split(".").reduce(data) do |current, key|
+        path.split('.').reduce(data) do |current, key|
           case current
           when Hash
             current[key] || current[key.to_sym]
@@ -81,7 +81,7 @@ module CodingAgentTools
       # @param sensitive_keys [Array<String, Symbol>] Keys to redact
       # @param redact_value [String] Value to replace sensitive data with
       # @return [Hash, Array] Sanitized data
-      def self.sanitize(data, sensitive_keys: %w[api_key token password secret], redact_value: "[REDACTED]")
+      def self.sanitize(data, sensitive_keys: %w[api_key token password secret], redact_value: '[REDACTED]')
         current_data = data
         if data.is_a?(String)
           begin
@@ -98,9 +98,7 @@ module CodingAgentTools
             # Performance optimization: skip regex processing for large strings without sensitive keys
             # This avoids expensive regex operations on large blobs that don't contain sensitive data
             # Use case-insensitive check to match the regex behavior
-            unless sensitive_keys.any? { |key| current_data.downcase.include?(key.to_s.downcase) }
-              return current_data
-            end
+            return current_data unless sensitive_keys.any? { |key| current_data.downcase.include?(key.to_s.downcase) }
 
             sensitive_keys.each do |key_sym_or_str|
               key_str = key_sym_or_str.to_s
@@ -110,7 +108,7 @@ module CodingAgentTools
               # Captures: 1=key_part_and_separator, 2=opening_quote, 3=value_content. \2 ensures matching closing quote.
               # Replaces only the value content, preserving original quoting and key form.
               # The 'x' flag allows for comments and insignificant whitespace. The 'i' flag makes key matching case-insensitive.
-              quoted_value_regex = %r{
+              quoted_value_regex = /
                 (                                      # Start of Capture Group $1 (key part and separator)
                   (?:["']?)#{escaped_key}(?:["']?)     # Optional quotes around the key, then the key, then optional quotes
                   \s*[:=]\s*                           # Separator (colon or equals) surrounded by optional whitespace
@@ -118,14 +116,16 @@ module CodingAgentTools
                 (["'])                                 # Capture Group $2: The opening quote of the value
                 (.*?)                                  # Capture Group $3: The actual value content (non-greedy)
                 \2                                     # Backreference to Group $2, ensuring matching closing quote
-              }xi
-              current_data.gsub!(quoted_value_regex) { "#{$1}#{$2}#{redact_value}#{$2}" }
+              /xi
+              current_data.gsub!(quoted_value_regex) do
+                "#{::Regexp.last_match(1)}#{::Regexp.last_match(2)}#{redact_value}#{::Regexp.last_match(2)}"
+              end
 
               # Regex for unquoted values (e.g., key:value, key=value)
               # Value is a sequence of characters not including spaces, quotes, commas, or common structure/query delimiters.
               # Captures: 1=key_part_and_separator, 2=unquoted_value_content.
               # Replaces value content with redact_value (unquoted), preserving key form.
-              unquoted_value_regex = %r{
+              unquoted_value_regex = /
                 (                                      # Start of Capture Group $1 (key part and separator)
                   (?:["']?)#{escaped_key}(?:["']?)     # Optional quotes around the key, then the key, then optional quotes
                   \s*[:=]\s*                           # Separator (colon or equals) surrounded by optional whitespace
@@ -133,8 +133,8 @@ module CodingAgentTools
                 (                                      # Start of Capture Group $2 (the unquoted value itself)
                   [^\s,"'\[\]{}&;]+                    # Match one or more characters that are not whitespace or common delimiters
                 )                                      # End of Capture Group $2
-              }xi
-              current_data.gsub!(unquoted_value_regex) { "#{$1}#{redact_value}" }
+              /xi
+              current_data.gsub!(unquoted_value_regex) { "#{::Regexp.last_match(1)}#{redact_value}" }
             end
             # current_data is now the regex-sanitized string.
             # It will fall through to the 'case' statement. If it's still a string (which it is),
@@ -146,10 +146,10 @@ module CodingAgentTools
         when Hash
           current_data.each_with_object({}) do |(key, value), result|
             result[key] = if sensitive_keys.any? { |sensitive| key.to_s == sensitive.to_s }
-              redact_value
-            else
-              sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
-            end
+                            redact_value
+                          else
+                            sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
+                          end
           end
         when Array
           current_data.map { |item| sanitize(item, sensitive_keys: sensitive_keys, redact_value: redact_value) }
@@ -174,7 +174,7 @@ module CodingAgentTools
           end
         when Hash
           obj.transform_keys { |k| ensure_proper_encoding(k) }
-            .transform_values { |v| ensure_proper_encoding(v) }
+             .transform_values { |v| ensure_proper_encoding(v) }
         when Array
           obj.map { |item| ensure_proper_encoding(item) }
         else

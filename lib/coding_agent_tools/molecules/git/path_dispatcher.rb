@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "shellwords"
-require_relative "../../atoms/git/path_resolver"
-require_relative "../../atoms/git/repository_scanner"
-require_relative "../../atoms/project_root_detector"
+require 'shellwords'
+require_relative '../../atoms/git/path_resolver'
+require_relative '../../atoms/git/repository_scanner'
+require_relative '../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Molecules
@@ -41,9 +41,9 @@ module CodingAgentTools
         def validate_paths(paths)
           invalid_paths = paths.select { |path| path.nil? || path.strip.empty? }
 
-          unless invalid_paths.empty?
-            raise PathDispatchError, "Invalid paths provided: #{invalid_paths.inspect}"
-          end
+          return if invalid_paths.empty?
+
+          raise PathDispatchError, "Invalid paths provided: #{invalid_paths.inspect}"
         end
 
         def build_dispatch_commands(grouped_paths)
@@ -66,9 +66,7 @@ module CodingAgentTools
         def find_repository_by_name(name)
           repository = repositories.find { |repo| repo[:name] == name }
 
-          unless repository
-            raise PathDispatchError, "Repository not found: #{name}"
-          end
+          raise PathDispatchError, "Repository not found: #{name}" unless repository
 
           repository
         end

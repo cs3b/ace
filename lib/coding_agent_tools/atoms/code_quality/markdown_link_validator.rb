@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
 module CodingAgentTools
   module Atoms
@@ -14,11 +14,11 @@ module CodingAgentTools
         attr_reader :root_path, :context_lines
 
         def initialize(options = {})
-          @root_path = Pathname.new(File.expand_path(options[:root] || "."))
+          @root_path = Pathname.new(File.expand_path(options[:root] || '.'))
           @context_lines = options[:context] || 3
         end
 
-        def validate(paths = ["."])
+        def validate(paths = ['.'])
           md_files = collect_markdown_files(paths)
           broken_links = []
 
@@ -37,7 +37,7 @@ module CodingAgentTools
 
         def collect_markdown_files(paths)
           paths.flat_map do |p|
-            File.directory?(p) ? Dir.glob(File.join(p, "**", "*.md")) : [p]
+            File.directory?(p) ? Dir.glob(File.join(p, '**', '*.md')) : [p]
           end
         end
 
@@ -48,7 +48,7 @@ module CodingAgentTools
           lines.each_with_index do |line, idx|
             # Toggle code block mode
             fence_start = line.lstrip[0, 3]
-            if fence_start == "```" || fence_start == "~~~"
+            if ['```', '~~~'].include?(fence_start)
               in_code_block = !in_code_block
               next
             end
@@ -72,12 +72,12 @@ module CodingAgentTools
         end
 
         def should_skip_link?(target)
-          target.match?(SCHEME_SKIP) || target.start_with?("#")
+          target.match?(SCHEME_SKIP) || target.start_with?('#')
         end
 
         def link_exists?(target, source_file)
           # Clean up fragment identifiers
-          clean_target = target.split("#").first || target
+          clean_target = target.split('#').first || target
 
           # Try relative to source file first
           source_dir = Pathname.new(File.dirname(source_file))

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "open3"
-require "timeout"
-require "shellwords"
-require_relative "../project_root_detector"
+require 'open3'
+require 'timeout'
+require 'shellwords'
+require_relative '../project_root_detector'
 
 module CodingAgentTools
   module Atoms
@@ -43,7 +43,7 @@ module CodingAgentTools
         attr_reader :repository_path
 
         def build_command(command)
-          if repository_path && repository_path != "."
+          if repository_path && repository_path != '.'
             resolved_path = resolve_repository_path(repository_path)
             "git -C #{Shellwords.escape(resolved_path)} #{command}"
           else
@@ -85,7 +85,7 @@ module CodingAgentTools
               "Git command timed out after #{timeout_seconds} seconds: #{format_command_for_display(full_command)}",
               command: full_command,
               exit_status: 124, # Standard timeout exit code
-              stderr_output: "Command timed out"
+              stderr_output: 'Command timed out'
             )
           end
 
@@ -131,7 +131,7 @@ module CodingAgentTools
           # Replace common shell escapes with their original characters
           command
             .gsub(/\\(.)/m, '\1')  # Unescape any escaped character
-            .gsub(/\s+/, " ")      # Normalize whitespace
+            .gsub(/\s+/, ' ')      # Normalize whitespace
             .strip
         end
       end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../../molecules/path_resolver"
+require_relative '../../../molecules/path_resolver'
 
 module CodingAgentTools
   module CLI
@@ -12,11 +12,11 @@ module CodingAgentTools
             @path_resolver = path_resolver || CodingAgentTools::Molecules::PathResolver.new
           end
 
-          def call(session_name: nil, **options)
+          def call(session_name: nil, **_options)
             unless session_name
-              puts "Error: Session name is required"
-              puts "Usage: nav-path code-review-new \"session name\""
-              puts "Example: nav-path code-review-new \"docs-handbook-workflows\""
+              puts 'Error: Session name is required'
+              puts 'Usage: nav-path code-review-new "session name"'
+              puts 'Example: nav-path code-review-new "docs-handbook-workflows"'
               return false
             end
 
@@ -29,7 +29,7 @@ module CodingAgentTools
               puts "Error: #{result[:error]}"
               false
             end
-          rescue => e
+          rescue StandardError => e
             puts "Error generating code review session path: #{e.message}"
             false
           end

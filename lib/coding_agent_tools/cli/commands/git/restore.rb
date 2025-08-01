@@ -1,73 +1,73 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Restore < Dry::CLI::Command
-          desc "Restore working tree files with intelligent path grouping"
+          desc 'Restore working tree files with intelligent path grouping'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :source, type: :string, aliases: ["s"],
-            desc: "Restore from a specific source tree (commit, branch, etc.)"
+          option :source, type: :string, aliases: ['s'],
+                          desc: 'Restore from a specific source tree (commit, branch, etc.)'
 
           option :staged, type: :boolean, default: false,
-            desc: "Restore the staging area"
+                          desc: 'Restore the staging area'
 
           option :worktree, type: :boolean, default: false,
-            desc: "Restore the working tree (default behavior)"
+                            desc: 'Restore the working tree (default behavior)'
 
-          option :merge, type: :boolean, default: false, aliases: ["m"],
-            desc: "3-way merge when restoring"
+          option :merge, type: :boolean, default: false, aliases: ['m'],
+                         desc: '3-way merge when restoring'
 
           option :conflict, type: :string,
-            desc: "How to handle conflicts (merge, diff3, zdiff3)"
+                            desc: 'How to handle conflicts (merge, diff3, zdiff3)'
 
           option :ours, type: :boolean, default: false,
-            desc: "Use 'ours' version for unmerged paths"
+                        desc: "Use 'ours' version for unmerged paths"
 
           option :theirs, type: :boolean, default: false,
-            desc: "Use 'theirs' version for unmerged paths"
+                          desc: "Use 'theirs' version for unmerged paths"
 
-          option :patch, type: :boolean, default: false, aliases: ["p"],
-            desc: "Interactively select hunks to restore"
+          option :patch, type: :boolean, default: false, aliases: ['p'],
+                         desc: 'Interactively select hunks to restore'
 
-          option :quiet, type: :boolean, default: false, aliases: ["q"],
-            desc: "Suppress output"
+          option :quiet, type: :boolean, default: false, aliases: ['q'],
+                         desc: 'Suppress output'
 
           option :progress, type: :boolean, default: false,
-            desc: "Show progress status"
+                            desc: 'Show progress status'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-            desc: "Execute restore operations concurrently across repositories"
+                              desc: 'Execute restore operations concurrently across repositories'
 
           argument :pathspecs, type: :array, required: true,
-            desc: "Files or directories to restore"
+                               desc: 'Files or directories to restore'
 
           example [
-            "file.rb",
-            "--staged modified_file.rb",
-            "--source HEAD~1 old_version_file.rb",
-            "--worktree --staged both_areas.rb",
-            "--patch interactive_file.rb",
-            "--ours conflicted_file.rb",
-            "dev-handbook/guide.md dev-tools/lib/module.rb",
-            "--concurrent --staged ."
+            'file.rb',
+            '--staged modified_file.rb',
+            '--source HEAD~1 old_version_file.rb',
+            '--worktree --staged both_areas.rb',
+            '--patch interactive_file.rb',
+            '--ours conflicted_file.rb',
+            'dev-handbook/guide.md dev-tools/lib/module.rb',
+            '--concurrent --staged .'
           ]
 
           def call(pathspecs:, **options)
@@ -87,14 +87,14 @@ module CodingAgentTools
               display_restore_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
 
           private
 
-          def build_restore_options(pathspecs, options)
+          def build_restore_options(_pathspecs, options)
             restore_opts = {
               capture_output: true
             }
@@ -137,10 +137,10 @@ module CodingAgentTools
               end
             end
 
-            if result[:repositories_processed]
-              repos_list = result[:repositories_processed].join(", ")
-              puts "Restore operations completed across repositories: #{repos_list}"
-            end
+            return unless result[:repositories_processed]
+
+            repos_list = result[:repositories_processed].join(', ')
+            puts "Restore operations completed across repositories: #{repos_list}"
           end
 
           def display_single_restore_result(repo_name, result, options)
@@ -155,7 +155,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Restore completed successfully"
               end
             else
-              error_message = result[:error] || result[:stderr] || "Restore operation failed"
+              error_message = result[:error] || result[:stderr] || 'Restore operation failed'
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -182,19 +182,17 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
             end
 
             # Show any partial successes
-            if result[:results]
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Restore completed in repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results]
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Restore completed in repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -204,7 +202,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

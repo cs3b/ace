@@ -9,7 +9,7 @@ module CodingAgentTools
         # Generate timestamp in YYYYMMDD-HHMMSS format
         # @return [String] formatted timestamp
         def generate
-          Time.now.strftime("%Y%m%d-%H%M%S")
+          Time.now.strftime('%Y%m%d-%H%M%S')
         end
 
         # Generate ISO8601 timestamp
@@ -22,7 +22,7 @@ module CodingAgentTools
         # @param time [Time] the time to format
         # @return [String] formatted timestamp
         def generate_for_time(time)
-          time.strftime("%Y%m%d-%H%M%S")
+          time.strftime('%Y%m%d-%H%M%S')
         end
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "yaml"
+require 'yaml'
 
 module CodingAgentTools
   module Atoms
@@ -18,14 +18,12 @@ module CodingAgentTools
       # @return [Hash] Parsed YAML content as Hash
       # @raise [CodingAgentTools::Error] If file doesn't exist or YAML is invalid
       def self.read_file(file_path)
-        unless File.exist?(file_path)
-          raise CodingAgentTools::Error, "YAML file not found: #{file_path}"
-        end
+        raise CodingAgentTools::Error, "YAML file not found: #{file_path}" unless File.exist?(file_path)
 
         YAML.safe_load_file(file_path, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax in #{file_path}: #{e.message}"
-      rescue => e
+      rescue StandardError => e
         raise CodingAgentTools::Error, "Failed to read YAML file #{file_path}: #{e.message}"
       end
 
@@ -38,7 +36,7 @@ module CodingAgentTools
         YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax: #{e.message}"
-      rescue => e
+      rescue StandardError => e
         raise CodingAgentTools::Error, "Failed to parse YAML content: #{e.message}"
       end
     end

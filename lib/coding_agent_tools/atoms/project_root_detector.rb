@@ -8,7 +8,7 @@ module CodingAgentTools
           start_path ||= Dir.pwd
 
           # Check cache first
-          cache_key = "#{start_path}:#{ENV["PROJECT_ROOT"]}"
+          cache_key = "#{start_path}:#{ENV['PROJECT_ROOT']}"
           return @cached_root if @cached_root && @cached_cache_key == cache_key
 
           @cached_cache_key = cache_key
@@ -30,9 +30,9 @@ module CodingAgentTools
 
         def detect_root(start_path)
           # 1. Highest priority: PROJECT_ROOT environment variable
-          if ENV["PROJECT_ROOT"]
-            debug_log "Checking PROJECT_ROOT environment variable: #{ENV["PROJECT_ROOT"]}"
-            env_root = File.expand_path(ENV["PROJECT_ROOT"])
+          if ENV['PROJECT_ROOT']
+            debug_log "Checking PROJECT_ROOT environment variable: #{ENV['PROJECT_ROOT']}"
+            env_root = File.expand_path(ENV['PROJECT_ROOT'])
             if validate_project_root(env_root)
               debug_log "Using PROJECT_ROOT from environment: #{env_root}"
               return env_root
@@ -84,14 +84,14 @@ module CodingAgentTools
         def marker_exists_in_path?(path, marker)
           marker_path = File.join(path, marker)
           exists = File.exist?(marker_path)
-          debug_log "  Checking #{marker}: #{exists ? "FOUND" : "not found"} at #{marker_path}"
+          debug_log "  Checking #{marker}: #{exists ? 'FOUND' : 'not found'} at #{marker_path}"
           exists
         end
 
         def gemspec_exists_in_path?(path)
-          gemspec_files = Dir.glob(File.join(path, "*.gemspec"))
+          gemspec_files = Dir.glob(File.join(path, '*.gemspec'))
           exists = !gemspec_files.empty?
-          debug_log "  Checking *.gemspec: #{exists ? "FOUND (#{gemspec_files.first})" : "not found"} in #{path}"
+          debug_log "  Checking *.gemspec: #{exists ? "FOUND (#{gemspec_files.first})" : 'not found'} in #{path}"
           exists
         end
 
@@ -99,9 +99,7 @@ module CodingAgentTools
           return false unless File.directory?(path)
 
           # Check if it has any of our expected markers
-          if root_marker_exists?(path)
-            return true
-          end
+          return true if root_marker_exists?(path)
 
           # Or contains the expected multi-repo structure (at least 2 dev-* directories)
           dev_dirs_present = DEV_DIRECTORIES.count { |dir| File.directory?(File.join(path, dir)) }
@@ -117,7 +115,7 @@ module CodingAgentTools
 
           # Get the parent directory of the dev-* directory
           parent_path = File.join(*path_parts[0...dev_dir_index])
-          parent_path = "/" if parent_path.empty?
+          parent_path = '/' if parent_path.empty?
 
           debug_log "Found dev-* directory '#{path_parts[dev_dir_index]}', checking parent: #{parent_path}"
 
@@ -134,10 +132,10 @@ module CodingAgentTools
           puts "[ProjectRootDetector] #{message}" if debug_mode
         end
 
-        PRIMARY_MARKERS = [".git"].freeze
-        SECONDARY_MARKERS = ["Gemfile"].freeze
-        TERTIARY_MARKERS = [".ruby-version", ".tools-meta"].freeze
-        DEV_DIRECTORIES = ["dev-handbook", "dev-tools", "dev-taskflow"].freeze
+        PRIMARY_MARKERS = ['.git'].freeze
+        SECONDARY_MARKERS = ['Gemfile'].freeze
+        TERTIARY_MARKERS = ['.ruby-version', '.tools-meta'].freeze
+        DEV_DIRECTORIES = %w[dev-handbook dev-tools dev-taskflow].freeze
       end
     end
   end

@@ -62,8 +62,8 @@ module CodingAgentTools
 
           # Step 6: Create-path integration if requested
           create_path_results = if workflow_options[:create_path_integration]
-            generate_create_path_output(input_file, analysis_result, workflow_options)
-          end
+                                  generate_create_path_output(input_file, analysis_result, workflow_options)
+                                end
 
           # Step 7: Generate workflow summary
           execution_summary = {
@@ -94,8 +94,8 @@ module CodingAgentTools
             create_path_results: create_path_results,
             execution_summary: execution_summary
           }
-        rescue => error
-          handle_workflow_error(error, input_file, workflow_options)
+        rescue StandardError => e
+          handle_workflow_error(e, input_file, workflow_options)
         end
       end
 
@@ -105,10 +105,10 @@ module CodingAgentTools
       # @return [Hash] Quick analysis results
       def execute_quick_analysis(input_file, options = {})
         workflow_options = validate_and_prepare_options(options.merge(
-          formats: [:text],
-          detailed_analysis: false,
-          max_files: 10
-        ))
+                                                          formats: [:text],
+                                                          detailed_analysis: false,
+                                                          max_files: 10
+                                                        ))
 
         analysis_result = @analyzer.analyze_coverage(input_file, workflow_options)
         critical_files = @analyzer.prioritize_critical_files(analysis_result, 5)
@@ -137,8 +137,8 @@ module CodingAgentTools
       # @return [Hash] Focused analysis results
       def execute_focused_analysis(input_file, focus_patterns, options = {})
         workflow_options = validate_and_prepare_options(options.merge(
-          include_patterns: focus_patterns
-        ))
+                                                          include_patterns: focus_patterns
+                                                        ))
 
         focused_report = @report_generator.generate_focused_report(
           input_file,
@@ -171,7 +171,7 @@ module CodingAgentTools
         file_paths = file_reader.extract_file_paths(raw_data)
 
         # Analyze file patterns
-        lib_files = file_paths.select { |path| path.include?("/lib/") }
+        lib_files = file_paths.select { |path| path.include?('/lib/') }
         test_files = file_paths.select { |path| path.match?(%r{/(spec|test)/}) }
 
         {
@@ -184,14 +184,14 @@ module CodingAgentTools
           },
           analysis_recommendations: {
             suggested_threshold: suggest_threshold_based_on_size(lib_files.length),
-            recommended_focus: (lib_files.length > 50) ? "focused_analysis" : "full_analysis",
+            recommended_focus: lib_files.length > 50 ? 'focused_analysis' : 'full_analysis',
             estimated_analysis_time: estimate_analysis_time(lib_files.length),
-            suggested_output_formats: [:text, :json]
+            suggested_output_formats: %i[text json]
           },
           workflow_suggestions: {
             include_method_analysis: lib_files.length <= 20,
             enable_create_path: true,
-            focus_patterns: (lib_files.length > 50) ? suggest_focus_patterns(lib_files) : nil
+            focus_patterns: lib_files.length > 50 ? suggest_focus_patterns(lib_files) : nil
           }
         }
       end
@@ -202,40 +202,36 @@ module CodingAgentTools
         {
           threshold: @threshold_validator.validate_threshold(options[:threshold] || 85.0),
           adaptive_threshold: options[:adaptive_threshold] || false,
-          output_dir: options[:output_dir] || "./coverage_analysis",
-          formats: options[:formats] || [:text, :json],
+          output_dir: options[:output_dir] || './coverage_analysis',
+          formats: options[:formats] || %i[text json],
           create_path_integration: options[:create_path_integration] || false,
           detailed_analysis: options[:detailed_analysis] || false,
-          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
-          exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
+          include_patterns: options[:include_patterns] || ['**/lib/**/*.rb'],
+          exclude_patterns: options[:exclude_patterns] || ['**/spec/**', '**/test/**'],
           max_files: options[:max_files] || 20,
-          base_name: options[:base_name] || "coverage_analysis",
+          base_name: options[:base_name] || 'coverage_analysis',
           include_comprehensive: options[:include_comprehensive] || false
         }
       end
 
       def validate_input_file(input_file)
-        unless File.exist?(input_file)
-          raise ArgumentError, "Input file does not exist: #{input_file}"
-        end
+        raise ArgumentError, "Input file does not exist: #{input_file}" unless File.exist?(input_file)
 
-        unless File.readable?(input_file)
-          raise ArgumentError, "Input file is not readable: #{input_file}"
-        end
+        raise ArgumentError, "Input file is not readable: #{input_file}" unless File.readable?(input_file)
 
-        unless input_file.end_with?(".json")
-          raise ArgumentError, "Input file must be a JSON file: #{input_file}"
-        end
+        return if input_file.end_with?('.json')
+
+        raise ArgumentError, "Input file must be a JSON file: #{input_file}"
       end
 
       def prepare_output_directory(output_dir)
         FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
-      rescue => error
-        raise "Failed to create output directory #{output_dir}: #{error.message}"
+      rescue StandardError => e
+        raise "Failed to create output directory #{output_dir}: #{e.message}"
       end
 
-      def generate_create_path_output(input_file, analysis_result, options)
-        create_path_output = File.join(options[:output_dir], "create_path_integration.json")
+      def generate_create_path_output(input_file, _analysis_result, options)
+        create_path_output = File.join(options[:output_dir], 'create_path_integration.json')
 
         create_path_data = @report_generator.generate_for_create_path(
           input_file,
@@ -259,13 +255,13 @@ module CodingAgentTools
         under_covered_count = analysis_result.under_covered_files.length
 
         if overall >= threshold && under_covered_count == 0
-          "excellent"
+          'excellent'
         elsif overall >= threshold - 5
-          "good"
+          'good'
         elsif overall >= threshold - 15
-          "needs_improvement"
+          'needs_improvement'
         else
-          "critical"
+          'critical'
         end
       end
 
@@ -274,7 +270,7 @@ module CodingAgentTools
         under_covered = analysis_result.under_covered_files
 
         if under_covered.empty?
-          recommendations << "All files meet the coverage threshold! Consider raising the threshold for even better coverage."
+          recommendations << 'All files meet the coverage threshold! Consider raising the threshold for even better coverage.'
         else
           worst_file = under_covered.min_by(&:coverage_percentage)
           recommendations << "Start with #{worst_file.relative_path} (#{worst_file.coverage_percentage}% coverage)"
@@ -323,19 +319,19 @@ module CodingAgentTools
         # Very rough estimates in seconds
         case file_count
         when 0..10
-          "< 5 seconds"
+          '< 5 seconds'
         when 11..50
-          "5-15 seconds"
+          '5-15 seconds'
         when 51..200
-          "15-60 seconds"
+          '15-60 seconds'
         else
-          "1-3 minutes"
+          '1-3 minutes'
         end
       end
 
       def suggest_focus_patterns(lib_files)
         # Suggest focusing on most common directories
-        directories = lib_files.map { |path| File.dirname(path).split("/lib/").last&.split("/")&.first }.compact
+        directories = lib_files.map { |path| File.dirname(path).split('/lib/').last&.split('/')&.first }.compact
         common_dirs = directories.tally.sort_by { |_, count| -count }.first(3).map(&:first)
 
         common_dirs.map { |dir| "**/lib/#{dir}/**" }
@@ -357,17 +353,17 @@ module CodingAgentTools
       def generate_error_suggestions(error)
         case error
         when Atoms::CoverageFileReader::InvalidFileError
-          ["Ensure the input file is a valid SimpleCov .resultset.json file",
-            "Check that SimpleCov generated the file correctly",
-            "Verify file permissions and accessibility"]
+          ['Ensure the input file is a valid SimpleCov .resultset.json file',
+           'Check that SimpleCov generated the file correctly',
+           'Verify file permissions and accessibility']
         when ArgumentError
-          ["Check command-line arguments and file paths",
-            "Ensure threshold values are between 0 and 100",
-            "Verify output directory permissions"]
+          ['Check command-line arguments and file paths',
+           'Ensure threshold values are between 0 and 100',
+           'Verify output directory permissions']
         else
-          ["Check file permissions and paths",
-            "Ensure sufficient disk space for output files",
-            "Try with simpler options to isolate the issue"]
+          ['Check file permissions and paths',
+           'Ensure sufficient disk space for output files',
+           'Try with simpler options to isolate the issue']
         end
       end
     end

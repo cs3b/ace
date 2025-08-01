@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "yaml"
+require 'pathname'
+require 'yaml'
 
 module CodingAgentTools
   module Atoms
@@ -11,9 +11,9 @@ module CodingAgentTools
       class TaskMetadataValidator
         # Metadata Validation Rules
         VALID_ID_REGEX = /^v.\d+\.\d+\.\d+\+task\.\d+$/
-        REQUIRED_FIELDS = ["id", "status", "priority"]
-        VALID_STATUSES = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold", "draft"]
-        VALID_PRIORITIES = ["low", "medium", "high", "critical"]
+        REQUIRED_FIELDS = %w[id status priority]
+        VALID_STATUSES = %w[pending in-progress done blocked icebox on-hold draft]
+        VALID_PRIORITIES = %w[low medium high critical]
         ESTIMATE_REGEX = /^\d+(\.\d+)?(h|d|w|sp|pt|wk|mo)$/i
 
         attr_reader :task_dirs, :project_root
@@ -31,8 +31,8 @@ module CodingAgentTools
             # Use provided paths instead of default task directories
             files_to_check = paths.flat_map do |path|
               if File.directory?(path)
-                Dir.glob(File.join(path, "**", "*.md"))
-              elsif path.end_with?(".md")
+                Dir.glob(File.join(path, '**', '*.md'))
+              elsif path.end_with?('.md')
                 [path]
               else
                 []
@@ -47,7 +47,7 @@ module CodingAgentTools
             task_dirs.each do |dir|
               next unless Dir.exist?(dir)
 
-              Dir.glob(File.join(dir, "**", "*.md")).each do |file|
+              Dir.glob(File.join(dir, '**', '*.md')).each do |file|
                 validate_task_file(file, errors, findings)
               end
             end
@@ -64,12 +64,12 @@ module CodingAgentTools
 
         def default_task_dirs
           [
-            "dev-taskflow/current",
-            "dev-taskflow/backlog"
+            'dev-taskflow/current',
+            'dev-taskflow/backlog'
           ]
         end
 
-        def validate_task_file(file_path, errors, findings)
+        def validate_task_file(file_path, errors, _findings)
           begin
             content = File.read(file_path)
           rescue IOError, SystemCallError => e
@@ -96,7 +96,7 @@ module CodingAgentTools
           end
 
           frontmatter_text = parts[1]
-          body_text = parts[2] || ""
+          body_text = parts[2] || ''
 
           begin
             frontmatter = YAML.safe_load(frontmatter_text)
@@ -117,26 +117,22 @@ module CodingAgentTools
         def validate_frontmatter(fm, file_path, errors)
           # Check required fields
           REQUIRED_FIELDS.each do |field|
-            unless fm.key?(field)
-              errors << "#{file_path}: Missing required field '#{field}'"
-            end
+            errors << "#{file_path}: Missing required field '#{field}'" unless fm.key?(field)
           end
 
           # Validate ID format
-          if fm.key?("id")
-            id_val = fm["id"]
+          if fm.key?('id')
+            id_val = fm['id']
             if id_val.is_a?(String)
-              unless id_val.match?(VALID_ID_REGEX)
-                errors << "#{file_path}: Invalid ID format '#{id_val}'"
-              end
-            elsif !(id_val.is_a?(Integer) && file_path.include?("backlog"))
+              errors << "#{file_path}: Invalid ID format '#{id_val}'" unless id_val.match?(VALID_ID_REGEX)
+            elsif !(id_val.is_a?(Integer) && file_path.include?('backlog'))
               errors << "#{file_path}: ID must be a string"
             end
           end
 
           # Validate status
-          if fm.key?("status")
-            status_val = fm["status"]
+          if fm.key?('status')
+            status_val = fm['status']
             if status_val.is_a?(String)
               unless VALID_STATUSES.include?(status_val.downcase)
                 errors << "#{file_path}: Invalid status '#{status_val}'"
@@ -147,8 +143,8 @@ module CodingAgentTools
           end
 
           # Validate priority
-          if fm.key?("priority")
-            priority_val = fm["priority"]
+          if fm.key?('priority')
+            priority_val = fm['priority']
             if priority_val.is_a?(String)
               unless VALID_PRIORITIES.include?(priority_val.downcase)
                 errors << "#{file_path}: Invalid priority '#{priority_val}'"
@@ -159,36 +155,33 @@ module CodingAgentTools
           end
 
           # Validate estimate format
-          if fm.key?("estimate")
-            estimate_val = fm["estimate"]
-            if estimate_val.is_a?(String)
-              unless estimate_val.match?(ESTIMATE_REGEX)
-                errors << "#{file_path}: Invalid estimate format '#{estimate_val}'"
-              end
+          if fm.key?('estimate')
+            estimate_val = fm['estimate']
+            if estimate_val.is_a?(String) && !estimate_val.match?(ESTIMATE_REGEX)
+              errors << "#{file_path}: Invalid estimate format '#{estimate_val}'"
             end
           end
 
           # Validate dependencies
-          if fm.key?("dependencies") && !fm["dependencies"].nil?
-            unless fm["dependencies"].is_a?(Array)
-              errors << "#{file_path}: Dependencies must be an array"
-            end
-          end
+          return unless fm.key?('dependencies') && !fm['dependencies'].nil?
+          return if fm['dependencies'].is_a?(Array)
+
+          errors << "#{file_path}: Dependencies must be an array"
         end
 
         def validate_h1_title(body, file_path, errors)
           lines = body.lines
-          h1_match = lines.find { |line| line.strip.start_with?("# ") }
+          h1_match = lines.find { |line| line.strip.start_with?('# ') }
 
-          unless h1_match
-            errors << "#{file_path}: Missing H1 title in body"
-          end
+          return if h1_match
+
+          errors << "#{file_path}: Missing H1 title in body"
         end
 
         def make_path_relative(path)
           return path unless path && File.absolute_path?(path) && project_root
 
-          path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
+          path.start_with?(project_root) ? path.sub("#{project_root}/", '') : path
         end
       end
     end

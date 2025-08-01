@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/code/directory_creator"
-require_relative "../../atoms/code/session_timestamp_generator"
-require_relative "../../atoms/code/session_name_builder"
-require_relative "../../models/code/review_session"
-require_relative "../path_resolver"
+require_relative '../../atoms/code/directory_creator'
+require_relative '../../atoms/code/session_timestamp_generator'
+require_relative '../../atoms/code/session_name_builder'
+require_relative '../../models/code/review_session'
+require_relative '../path_resolver'
 
 module CodingAgentTools
   module Molecules
@@ -54,7 +54,7 @@ module CodingAgentTools
             directory_path: directory_path,
             focus: focus,
             target: target,
-            context_mode: nil,  # Will be set later
+            context_mode: nil, # Will be set later
             metadata: {
               created_at: Time.now,
               base_path: base_path
@@ -95,7 +95,7 @@ module CodingAgentTools
         # Write session metadata to file
         # @param session [Models::Code::ReviewSession] session data
         def write_session_metadata(session)
-          metadata_path = File.join(session.directory_path, "session.meta")
+          metadata_path = File.join(session.directory_path, 'session.meta')
 
           content = <<~METADATA
             command: @review-code #{session.focus} #{session.target} #{session.context_mode_with_default}

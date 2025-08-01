@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/git/repository_scanner"
-require_relative "../../atoms/git/git_command_executor"
-require_relative "../../atoms/project_root_detector"
+require_relative '../../atoms/git/repository_scanner'
+require_relative '../../atoms/git/git_command_executor'
+require_relative '../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Molecules
@@ -29,14 +29,14 @@ module CodingAgentTools
           repositories_to_process.each do |repository|
             result = execute_for_repository(repository, command, options)
             results[repository[:name]] = result
-          rescue => e
+          rescue StandardError => e
             error_info = {
               repository: repository[:name],
               error: e,
               message: e.message
             }
             errors << error_info
-            results[repository[:name]] = {success: false, error: e.message}
+            results[repository[:name]] = { success: false, error: e.message }
           end
 
           {
@@ -59,14 +59,13 @@ module CodingAgentTools
           if options[:repository]
             # Specific repository requested
             specific_repo = repositories.find { |repo| repo[:name] == options[:repository] }
-            unless specific_repo
-              raise MultiRepoCoordinationError, "Repository not found: #{options[:repository]}"
-            end
+            raise MultiRepoCoordinationError, "Repository not found: #{options[:repository]}" unless specific_repo
+
             [specific_repo]
           elsif options[:main_only]
-            repositories.select { |repo| repo[:name] == "main" }
+            repositories.select { |repo| repo[:name] == 'main' }
           elsif options[:submodules_only]
-            repositories.select { |repo| repo[:name] != "main" }
+            repositories.select { |repo| repo[:name] != 'main' }
           else
             # Default: all repositories
             repositories
@@ -76,15 +75,15 @@ module CodingAgentTools
         def validate_repositories(repos_to_process)
           invalid_repos = repos_to_process.reject { |repo| repo[:exists] && repo[:is_git_repo] }
 
-          unless invalid_repos.empty?
-            invalid_names = invalid_repos.map { |repo| repo[:name] }
-            raise MultiRepoCoordinationError,
-              "Invalid repositories (not git repos or don't exist): #{invalid_names.join(", ")}"
-          end
+          return if invalid_repos.empty?
+
+          invalid_names = invalid_repos.map { |repo| repo[:name] }
+          raise MultiRepoCoordinationError,
+                "Invalid repositories (not git repos or don't exist): #{invalid_names.join(', ')}"
         end
 
         def execute_for_repository(repository, command, options)
-          repository_path = (repository[:name] == "main") ? nil : repository[:path]
+          repository_path = repository[:name] == 'main' ? nil : repository[:path]
 
           # Build the command with any repository-specific modifications
           final_command = build_repository_command(command, repository, options)
@@ -101,7 +100,7 @@ module CodingAgentTools
           )
         end
 
-        def build_repository_command(base_command, repository, options)
+        def build_repository_command(base_command, _repository, _options)
           # For most commands, no modification needed
           # Subclasses can override this for command-specific modifications
           base_command

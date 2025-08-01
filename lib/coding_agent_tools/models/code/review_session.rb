@@ -18,28 +18,29 @@ module CodingAgentTools
       ) do
         # Validate required fields
         def validate!
-          raise ArgumentError, "session_id is required" if session_id.nil? || session_id.empty?
-          raise ArgumentError, "session_name is required" if session_name.nil? || session_name.empty?
-          raise ArgumentError, "timestamp is required" if timestamp.nil?
-          raise ArgumentError, "directory_path is required" if directory_path.nil? || directory_path.empty?
-          raise ArgumentError, "focus is required" if focus.nil? || focus.empty?
-          raise ArgumentError, "target is required" if target.nil? || target.empty?
+          raise ArgumentError, 'session_id is required' if session_id.nil? || session_id.empty?
+          raise ArgumentError, 'session_name is required' if session_name.nil? || session_name.empty?
+          raise ArgumentError, 'timestamp is required' if timestamp.nil?
+          raise ArgumentError, 'directory_path is required' if directory_path.nil? || directory_path.empty?
+          raise ArgumentError, 'focus is required' if focus.nil? || focus.empty?
+          raise ArgumentError, 'target is required' if target.nil? || target.empty?
+
           true
         end
 
         # Check if session has multiple focus areas
         def multi_focus?
-          focus.include?(" ")
+          focus.include?(' ')
         end
 
         # Get array of focus areas
         def focus_areas
-          focus.split(" ")
+          focus.split(' ')
         end
 
         # Get context mode with default
         def context_mode_with_default
-          context_mode || "auto"
+          context_mode || 'auto'
         end
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "yaml"
+require 'yaml'
 
 module CodingAgentTools
   module Molecules
@@ -14,7 +14,7 @@ module CodingAgentTools
         # @param options [Hash] Additional formatting options
         # @return [String] Formatted output
         def format(response, **options)
-          raise NotImplementedError, "Subclasses must implement #format"
+          raise NotImplementedError, 'Subclasses must implement #format'
         end
 
         # Generate summary for stdout when writing to file
@@ -29,19 +29,19 @@ module CodingAgentTools
 
           if metadata[:provider]
             summary_parts << if metadata[:model]
-              "Provider: #{metadata[:provider]} (#{metadata[:model]})"
-            else
-              "Provider: #{metadata[:provider]}"
-            end
+                               "Provider: #{metadata[:provider]} (#{metadata[:model]})"
+                             else
+                               "Provider: #{metadata[:provider]}"
+                             end
           end
 
-          if metadata[:took]
-            summary_parts << "Execution time: #{metadata[:took]}s"
-          end
+          summary_parts << "Execution time: #{metadata[:took]}s" if metadata[:took]
 
           if metadata[:input_tokens] && metadata[:output_tokens]
             tokens_info = "Tokens: #{metadata[:input_tokens]} input, #{metadata[:output_tokens]} output"
-            tokens_info += ", #{metadata[:cached_tokens]} cached" if metadata[:cached_tokens] && metadata[:cached_tokens] > 0
+            if metadata[:cached_tokens] && metadata[:cached_tokens] > 0
+              tokens_info += ", #{metadata[:cached_tokens]} cached"
+            end
             summary_parts << tokens_info
           end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
               breakdown << "cache read: $#{format_cost(cost_data[:cache_read])}"
             end
 
-            cost_parts << " (#{breakdown.join(", ")})" unless breakdown.empty?
+            cost_parts << " (#{breakdown.join(', ')})" unless breakdown.empty?
           end
 
           cost_parts.join
@@ -86,8 +86,9 @@ module CodingAgentTools
         # @param cost [Float, Numeric] Cost value
         # @return [String] Formatted cost string
         def format_cost(cost)
-          return "0.000000" if cost.nil? || cost.zero?
-          sprintf("%.6f", cost)
+          return '0.000000' if cost.nil? || cost.zero?
+
+          format('%.6f', cost)
         end
 
         protected
@@ -96,9 +97,9 @@ module CodingAgentTools
         # @param response [Hash] Response to validate
         # @raise [Error] If response is invalid
         def validate_response(response)
-          unless response.is_a?(Hash) && response[:text]
-            raise Error, "Invalid response format: missing :text field"
-          end
+          return if response.is_a?(Hash) && response[:text]
+
+          raise Error, 'Invalid response format: missing :text field'
         end
       end
 
@@ -108,7 +109,7 @@ module CodingAgentTools
         # @param response [Hash] Response with :text and normalized metadata
         # @param options [Hash] Additional formatting options
         # @return [String] JSON formatted output
-        def format(response, **options)
+        def format(response, **_options)
           validate_response(response)
 
           output = {
@@ -126,7 +127,7 @@ module CodingAgentTools
         # @param response [Hash] Response with :text and normalized metadata
         # @param options [Hash] Additional formatting options
         # @return [String] Markdown formatted output
-        def format(response, **options)
+        def format(response, **_options)
           validate_response(response)
 
           metadata = response[:metadata] || {}
@@ -147,7 +148,7 @@ module CodingAgentTools
         # @param response [Hash] Response with :text and normalized metadata
         # @param options [Hash] Additional formatting options
         # @return [String] Plain text output
-        def format(response, **options)
+        def format(response, **_options)
           validate_response(response)
           response[:text]
         end
@@ -158,11 +159,11 @@ module CodingAgentTools
       # @return [Base] Format handler instance
       def self.get_handler(format)
         case format.to_s.downcase
-        when "json"
+        when 'json'
           JSON.new
-        when "markdown", "md"
+        when 'markdown', 'md'
           Markdown.new
-        when "text", "txt"
+        when 'text', 'txt'
           Text.new
         else
           raise Error, "Unsupported format: #{format}"

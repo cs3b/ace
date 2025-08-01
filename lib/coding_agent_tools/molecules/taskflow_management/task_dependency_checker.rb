@@ -51,28 +51,28 @@ module CodingAgentTools
             return false if task_data.nil?
 
             status = if task_data.respond_to?(:status)
-              task_data.status
-            elsif task_data.respond_to?(:[])
-              task_data[:status] || task_data["status"]
-            end
+                       task_data.status
+                     elsif task_data.respond_to?(:[])
+                       task_data[:status] || task_data['status']
+                     end
 
-            status == "done"
+            status == 'done'
           end
 
           def extract_dependencies(task_data)
             return [] if task_data.nil?
 
             deps = if task_data.respond_to?(:dependencies)
-              task_data.dependencies
-            elsif task_data.respond_to?(:[])
-              task_data[:dependencies] || task_data["dependencies"]
-            end
+                     task_data.dependencies
+                   elsif task_data.respond_to?(:[])
+                     task_data[:dependencies] || task_data['dependencies']
+                   end
 
             case deps
             when Array
               deps.map(&:to_s)
             when String
-              deps.split(",").map(&:strip)
+              deps.split(',').map(&:strip)
             else
               []
             end

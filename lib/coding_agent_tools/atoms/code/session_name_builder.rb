@@ -32,10 +32,10 @@ module CodingAgentTools
         # @return [String] sanitized target
         def sanitize_target(target)
           target
-            .tr("/", "-")           # Replace slashes with hyphens
-            .gsub(/\s+/, "_")          # Replace spaces with underscores
-            .gsub(/[^\w\-._]+/, "")    # Remove special characters except word chars, hyphens, dots, underscores
-            .gsub(/^\.+|\.+$/, "")     # Remove leading/trailing dots
+            .tr('/', '-') # Replace slashes with hyphens
+            .gsub(/\s+/, '_')          # Replace spaces with underscores
+            .gsub(/[^\w\-._]+/, '')    # Remove special characters except word chars, hyphens, dots, underscores
+            .gsub(/^\.+|\.+$/, '')     # Remove leading/trailing dots
             .slice(0, 50)              # Limit length to prevent overly long names
         end
       end

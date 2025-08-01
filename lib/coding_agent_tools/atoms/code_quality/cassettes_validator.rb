@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
 module CodingAgentTools
   module Atoms
@@ -9,7 +9,7 @@ module CodingAgentTools
       # Extracted from dev-tools/bin/lint-cassettes
       class CassettesValidator
         DEFAULT_THRESHOLD = 50 * 1024 # 50KB in bytes
-        CASSETTES_DIR = "spec/cassettes"
+        CASSETTES_DIR = 'spec/cassettes'
 
         attr_reader :threshold, :cassettes_dir
 
@@ -43,26 +43,26 @@ module CodingAgentTools
         end
 
         def find_large_cassettes
-          cassette_files = Dir.glob(cassettes_dir.join("**", "*.{json,yml}"))
+          cassette_files = Dir.glob(cassettes_dir.join('**', '*.{json,yml}'))
 
           large_files = []
 
           cassette_files.each do |file_path|
             file_size = File.size(file_path)
 
-            if file_size > threshold
-              relative_path = begin
-                Pathname.new(file_path).relative_path_from(Pathname.pwd)
-              rescue ArgumentError
-                file_path
-              end
+            next unless file_size > threshold
 
-              large_files << {
-                path: relative_path.to_s,
-                size: file_size,
-                size_formatted: format_size(file_size)
-              }
+            relative_path = begin
+              Pathname.new(file_path).relative_path_from(Pathname.pwd)
+            rescue ArgumentError
+              file_path
             end
+
+            large_files << {
+              path: relative_path.to_s,
+              size: file_size,
+              size_formatted: format_size(file_size)
+            }
           end
 
           # Sort by size, largest first

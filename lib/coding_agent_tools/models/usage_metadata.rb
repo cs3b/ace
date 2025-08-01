@@ -46,8 +46,8 @@ module CodingAgentTools
       end
 
       attr_reader :input_tokens, :output_tokens, :total_tokens, :took,
-        :provider, :model, :timestamp, :finish_reason,
-        :provider_specific, :safety_ratings, :cached_tokens
+                  :provider, :model, :timestamp, :finish_reason,
+                  :provider_specific, :safety_ratings, :cached_tokens
 
       # Convert to hash representation
       # @return [Hash] Hash representation of usage metadata
@@ -76,31 +76,32 @@ module CodingAgentTools
       # Check if metadata indicates successful completion
       # @return [Boolean] True if request completed successfully
       def successful?
-        finish_reason == "stop"
+        finish_reason == 'stop'
       end
 
       # Check if request was truncated due to length limits
       # @return [Boolean] True if truncated due to length
       def truncated?
-        finish_reason == "length"
+        finish_reason == 'length'
       end
 
       # Check if request had errors
       # @return [Boolean] True if request failed
       def error?
-        finish_reason == "error"
+        finish_reason == 'error'
       end
 
       # Check if request was cancelled
       # @return [Boolean] True if request was cancelled
       def cancelled?
-        finish_reason == "cancelled"
+        finish_reason == 'cancelled'
       end
 
       # Calculate tokens per second rate
       # @return [Float] Output tokens per second
       def tokens_per_second
         return 0.0 if took.zero? || output_tokens.zero?
+
         output_tokens.to_f / took
       end
 
@@ -108,6 +109,7 @@ module CodingAgentTools
       # @return [Float] Total tokens per second
       def efficiency_rate
         return 0.0 if took.zero? || total_tokens.zero?
+
         total_tokens.to_f / took
       end
 

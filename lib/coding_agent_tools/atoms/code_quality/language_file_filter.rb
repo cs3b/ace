@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "file_type_detector"
+require_relative 'file_type_detector'
 
 module CodingAgentTools
   module Atoms
@@ -60,14 +60,14 @@ module CodingAgentTools
             when /^\*\./
               # Extension pattern like "*.rb"
               extension = pattern[2..]
-              found_files.concat(Dir.glob(File.join(directory, "**", "*.#{extension}")))
-            when /\/\*$/
+              found_files.concat(Dir.glob(File.join(directory, '**', "*.#{extension}")))
+            when %r{/\*$}
               # Directory pattern like "exe/*"
               dir_pattern = pattern[0..-3]
-              found_files.concat(Dir.glob(File.join(directory, "**", dir_pattern, "*")))
+              found_files.concat(Dir.glob(File.join(directory, '**', dir_pattern, '*')))
             else
               # Exact filename match like "Gemfile"
-              found_files.concat(Dir.glob(File.join(directory, "**", pattern)))
+              found_files.concat(Dir.glob(File.join(directory, '**', pattern)))
             end
           end
 

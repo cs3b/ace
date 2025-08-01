@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "yaml"
-require "pathname"
+require 'yaml'
+require 'pathname'
 
 module CodingAgentTools
   module Atoms
@@ -9,28 +9,28 @@ module CodingAgentTools
       # Atom for loading and merging lint configuration
       class ConfigurationLoader
         DEFAULT_CONFIG = {
-          "ruby" => {
-            "enabled" => true,
-            "linters" => {
-              "standardrb" => {"enabled" => true, "autofix" => true},
-              "security" => {"enabled" => true, "full_scan" => false},
-              "cassettes" => {"enabled" => true, "threshold" => 51200} # 50KB
+          'ruby' => {
+            'enabled' => true,
+            'linters' => {
+              'standardrb' => { 'enabled' => true, 'autofix' => true },
+              'security' => { 'enabled' => true, 'full_scan' => false },
+              'cassettes' => { 'enabled' => true, 'threshold' => 51_200 } # 50KB
             }
           },
-          "markdown" => {
-            "enabled" => true,
-            "linters" => {
-              "styleguide" => {"enabled" => true, "autofix" => true},
-              "link_validation" => {"enabled" => true},
-              "template_embedding" => {"enabled" => true},
-              "task_metadata" => {"enabled" => true}
+          'markdown' => {
+            'enabled' => true,
+            'linters' => {
+              'styleguide' => { 'enabled' => true, 'autofix' => true },
+              'link_validation' => { 'enabled' => true },
+              'template_embedding' => { 'enabled' => true },
+              'task_metadata' => { 'enabled' => true }
             },
-            "order" => ["task_metadata", "link_validation", "template_embedding", "styleguide"]
+            'order' => %w[task_metadata link_validation template_embedding styleguide]
           },
-          "error_distribution" => {
-            "enabled" => true,
-            "max_files" => 4,
-            "one_issue_per_file" => true
+          'error_distribution' => {
+            'enabled' => true,
+            'max_files' => 4,
+            'one_issue_per_file' => true
           }
         }.freeze
 
@@ -53,13 +53,13 @@ module CodingAgentTools
         end
 
         def validate
-          return {valid: false, error: "Config file not found"} unless config_path
+          return { valid: false, error: 'Config file not found' } unless config_path
 
           begin
             config = load_yaml_file(config_path)
             validate_structure(config)
-          rescue => e
-            {valid: false, error: e.message}
+          rescue StandardError => e
+            { valid: false, error: e.message }
           end
         end
 
@@ -70,14 +70,14 @@ module CodingAgentTools
 
           # Look for .coding-agent/lint.yml in project root
           root = find_project_root
-          default_path = File.join(root, ".coding-agent", "lint.yml")
+          default_path = File.join(root, '.coding-agent', 'lint.yml')
 
           File.exist?(default_path) ? default_path : nil
         end
 
         def find_project_root
           # Look for common project markers
-          markers = [".git", "Gemfile", "package.json", ".coding-agent"]
+          markers = ['.git', 'Gemfile', 'package.json', '.coding-agent']
 
           current = Pathname.pwd
           until current.root?
@@ -111,24 +111,20 @@ module CodingAgentTools
 
           # Validate top-level keys
           %w[ruby markdown].each do |lang|
-            if config[lang] && !config[lang].is_a?(Hash)
-              errors << "#{lang} must be a hash"
-            end
+            errors << "#{lang} must be a hash" if config[lang] && !config[lang].is_a?(Hash)
           end
 
           # Validate linter configurations
-          if config["ruby"] && config["ruby"]["linters"]
-            validate_linters(config["ruby"]["linters"], "ruby", errors)
-          end
+          validate_linters(config['ruby']['linters'], 'ruby', errors) if config['ruby'] && config['ruby']['linters']
 
-          if config["markdown"] && config["markdown"]["linters"]
-            validate_linters(config["markdown"]["linters"], "markdown", errors)
+          if config['markdown'] && config['markdown']['linters']
+            validate_linters(config['markdown']['linters'], 'markdown', errors)
           end
 
           if errors.empty?
-            {valid: true}
+            { valid: true }
           else
-            {valid: false, errors: errors}
+            { valid: false, errors: errors }
           end
         end
 
@@ -139,9 +135,7 @@ module CodingAgentTools
           end
 
           linters.each do |name, settings|
-            unless settings.is_a?(Hash)
-              errors << "#{language}.linters.#{name} must be a hash"
-            end
+            errors << "#{language}.linters.#{name} must be a hash" unless settings.is_a?(Hash)
           end
         end
       end

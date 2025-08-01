@@ -58,20 +58,18 @@ module CodingAgentTools
 
       def validate_parameters
         unless @min_threshold >= 0 && @min_threshold <= 100
-          raise ArgumentError, "min_threshold must be between 0 and 100"
+          raise ArgumentError, 'min_threshold must be between 0 and 100'
         end
 
         unless @max_threshold >= 0 && @max_threshold <= 100
-          raise ArgumentError, "max_threshold must be between 0 and 100"
+          raise ArgumentError, 'max_threshold must be between 0 and 100'
         end
 
-        unless @min_threshold < @max_threshold
-          raise ArgumentError, "min_threshold must be less than max_threshold"
-        end
+        raise ArgumentError, 'min_threshold must be less than max_threshold' unless @min_threshold < @max_threshold
 
-        unless @increment > 0
-          raise ArgumentError, "increment must be positive"
-        end
+        return if @increment > 0
+
+        raise ArgumentError, 'increment must be positive'
       end
 
       def test_thresholds(coverage_data)
@@ -164,13 +162,13 @@ module CodingAgentTools
         }
       end
 
-      def generate_reasoning(optimal_result, files_count, total_files)
+      def generate_reasoning(optimal_result, files_count, _total_files)
         threshold = optimal_result[:threshold]
 
         if optimal_result[:preferred]
           "Threshold #{threshold}% selected: produces #{files_count} files in preferred range " \
           "(#{PREFERRED_MINIMUM_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). This provides an optimal " \
-          "balance of meaningful work without overwhelming the developer."
+          'balance of meaningful work without overwhelming the developer.'
         elsif optimal_result[:actionable]
           "Threshold #{threshold}% selected: produces #{files_count} actionable files " \
           "(within fallback range of #{MINIMUM_ACTIONABLE_FILES}-#{MAXIMUM_ACTIONABLE_FILES}). " \
@@ -178,14 +176,14 @@ module CodingAgentTools
           "provides focused work that won't overwhelm."
         elsif files_count == 0
           "Threshold #{threshold}% selected: no files need attention at this level. " \
-          "Consider this excellent coverage! You might want to increase your standards."
+          'Consider this excellent coverage! You might want to increase your standards.'
         elsif files_count < MINIMUM_ACTIONABLE_FILES
           "Threshold #{threshold}% selected: only #{files_count} files under threshold. " \
-          "This represents the highest standard where files still need attention."
+          'This represents the highest standard where files still need attention.'
         else
           "Threshold #{threshold}% selected: #{files_count} files under threshold. " \
           "While above the ideal range (#{MAXIMUM_ACTIONABLE_FILES}), this represents " \
-          "the most focused view possible given current coverage distribution."
+          'the most focused view possible given current coverage distribution.'
         end
       end
 
