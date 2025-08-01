@@ -72,6 +72,14 @@ Create a detailed implementation plan for a task that already has a validated be
    - Analyze similar implementations in the codebase
    - Identify proven patterns and anti-patterns
 
+   **Naming Consistency Analysis:**
+   - For rename/refactoring tasks, analyze comprehensive scope:
+     - Search for all files and directories containing the old name
+     - Identify library structure patterns that need renaming
+     - Check test file naming conventions and related test assets
+     - Review module and class naming throughout the codebase
+   - Document the full renaming scope to prevent partial migrations
+
    **Document Research Findings:**
    - Summarize key technical insights
    - Note recommended approaches with pros/cons
@@ -111,6 +119,29 @@ Create a detailed implementation plan for a task that already has a validated be
    - Identify obsolete files to be removed
    - Document reasons for removal
    - Check dependencies before deletion
+
+   **Naming Consistency Analysis:**
+   - When renaming commands, tools, or components, identify ALL related items:
+     - Executable/command files
+     - Library directory structures (e.g., `lib/.../old_name/` → `lib/.../new_name/`)
+     - Test file patterns (e.g., `old_name_spec.rb` → `new_name_spec.rb`)
+     - Test fixture/cassette directories
+     - Module and class names in code
+     - Import/require statements throughout codebase
+     - Documentation references in markdown files
+     - Configuration file references
+   - Use systematic search commands:
+     ```bash
+     # Find all directories with the old name
+     find . -type d -name "*old_name*" | grep -v ".git"
+     
+     # Find all files with the old name
+     find . -type f -name "*old_name*" | grep -v ".git"
+     
+     # Find all code references
+     grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --include="*.md"
+     ```
+   - Document the complete renaming scope to avoid partial migrations
 
 5. **Test Case Planning:** *(For code implementation tasks only)*
 
@@ -322,6 +353,16 @@ The following templates should be used when creating implementation plans:
   - Reason: [why removing]
   - Dependencies: [what depends on this]
   - Migration strategy: [how to handle removal]
+
+### Rename (for comprehensive migrations)
+- old/path/name.ext → new/path/name.ext
+  - Type: [file/directory/both]
+  - Related renames:
+    - Library directories: `lib/old_name/` → `lib/new_name/`
+    - Test files: `*old_name*.rb` → `*new_name*.rb`
+    - Module/class names: `OldName` → `NewName`
+  - Import updates: [number of files with require/import statements]
+  - Documentation updates: [number of markdown files with references]
 ```
 
 ### Risk Assessment Template
@@ -567,6 +608,16 @@ Why are we doing this?
   - Reason: [why removing]
   - Dependencies: [what depends on this]
   - Migration strategy: [how to handle removal]
+
+### Rename (for comprehensive migrations)
+- old/path/name.ext → new/path/name.ext
+  - Type: [file/directory/both]
+  - Related renames:
+    - Library directories: `lib/old_name/` → `lib/new_name/`
+    - Test files: `*old_name*.rb` → `*new_name*.rb`
+    - Module/class names: `OldName` → `NewName`
+  - Import updates: [number of files with require/import statements]
+  - Documentation updates: [number of markdown files with references]
 </template>
 
     <template path="dev-handbook/templates/task-management/task.risk-assessment.template.md">## Risk Assessment

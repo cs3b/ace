@@ -52,6 +52,10 @@ Review and update task content without changing its status. This workflow enable
      - Find ambiguous requirements that could lead to wrong implementations
      - Spot assumptions that need validation
      - Detect edge cases not covered in current specification
+     - Check for comprehensive renaming scope:
+       - If task involves renaming, are all related files identified?
+       - Are library directories, test files, and imports considered?
+       - Have module/class names been addressed?
    - **Filter Questions by Resolution Status:**
      - Questions answered through research (document the answer)
      - Questions with reasonable defaults (document assumption)
@@ -103,7 +107,10 @@ Review and update task content without changing its status. This workflow enable
      - Update tool selection based on research
      - Add newly discovered test scenarios
      - Enhance risk mitigation strategies
-     - Clarify file modification plans
+     - Clarify file modification plans:
+       - Verify comprehensive renaming scope is captured
+       - Check for missed library/test/doc renames
+       - Ensure import/require updates are included
    - **Avoid:**
      - Changing behavioral specifications
      - Modifying core interface contracts
@@ -358,6 +365,30 @@ review-task dev-taskflow/done/v.0.4.0/tasks/task.010.md
 # Add retrospective notes
 # Document what could be improved
 # Identify follow-up tasks
+```
+
+### Pattern 5: Comprehensive Renaming Review (pending)
+```bash
+# Review task involving renaming to ensure comprehensive scope
+review-task dev-taskflow/current/v.0.5.0/tasks/rename-component.md
+
+# Check for missing rename scope:
+# 1. Find all directories with old name
+find . -type d -name "*old_name*" | grep -v ".git"
+
+# 2. Find all files with old name  
+find . -type f -name "*old_name*" | grep -v ".git"
+
+# 3. Find all code references
+grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --include="*.md"
+
+# Update task to include:
+# - Library directory renames (lib/old_name/ → lib/new_name/)
+# - Test file renames (*old_name_spec.rb → *new_name_spec.rb)
+# - Test fixture/cassette renames
+# - Module/class name changes
+# - Import/require statement updates
+# - Documentation reference updates
 ```
 
 ## Error Handling
