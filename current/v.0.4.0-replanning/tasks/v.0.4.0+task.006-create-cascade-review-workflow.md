@@ -8,22 +8,6 @@ dependencies: [v.0.4.0+task.4]
 
 # Create replan-cascade-task Workflow for Dependency Impact Analysis
 
-## 0. Directory Audit ✅
-
-*Command run:*
-
-```bash
-find dev-handbook/workflow-instructions -name "*.wf.md" | head -10
-```
-
-*Result excerpt:*
-
-```bash
-dev-handbook/workflow-instructions/capture-idea.wf.md
-dev-handbook/workflow-instructions/draft-task.wf.md
-dev-handbook/workflow-instructions/plan-task.wf.md
-```
-
 ## Objective
 
 Create the `replan-cascade-task.wf.md` workflow that handles manual dependency impact analysis after task completion. This workflow reviews downstream tasks to
@@ -239,3 +223,6 @@ find dev-taskflow/current -name "*.md" -exec grep -l "dependencies.*v.0.4.0+task
 * Current project's ATOM architecture principles (dev-tools/)
 * Existing workflow instruction patterns (dev-handbook/workflow-instructions/)
 * Git-based multi-repository coordination strategies (CLAUDE.md)
+* dev-handbook/workflow-instructions/capture-idea.wf.md
+* dev-handbook/workflow-instructions/draft-task.wf.md
+* dev-handbook/workflow-instructions/plan-task.wf.md
