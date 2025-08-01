@@ -16,7 +16,7 @@ This comprehensive guide documents end-to-end workflow orchestration for AI agen
 
 ## Workflow Ecosystem Overview
 
-The AI-assisted development workflow ecosystem consists of 20 interconnected workflows organized into logical groups:
+The AI-assisted development workflow ecosystem consists of 21 interconnected workflows organized into logical groups:
 
 ### 1. Project Foundation & Setup
 
@@ -35,6 +35,7 @@ The AI-assisted development workflow ecosystem consists of 20 interconnected wor
 - **draft-task** - Create behavior-first task specifications with interface contracts
 - **work-on-task** - Execute task implementation following embedded plans
 - **plan-task** - Create detailed implementation plans for draft tasks
+- **replan-cascade-task** - Review and update downstream tasks after task completion
 
 ### 4. Code Quality & Review
 
@@ -259,6 +260,9 @@ START: What is the current situation?
 │   │   │   └── → plan-task
 │   │   └── Task is ready for implementation?
 │   │       └── → work-on-task
+│   │
+│   ├── Just completed a task with dependencies?
+│   │   └── → replan-cascade-task
 │   │
 │   ├── Need to fix bugs or failing tests?
 │   │   ├── Is this urgent/critical?
@@ -747,6 +751,7 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 
 - [Capture Idea](./capture-idea.wf.md): Capture and enhance raw ideas using the ideas-manager tool within project context.
 - [Create Task](./draft-task.wf.md): Transform unstructured notes, feedback, or requirements into well-structured, actionable task files.
+- [Replan Cascade Task](./replan-cascade-task.wf.md): Review and update downstream tasks after completing a task with dependencies.
 
 ### Documentation Generation
 
