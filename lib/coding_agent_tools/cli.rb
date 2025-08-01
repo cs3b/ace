@@ -44,13 +44,14 @@ module CodingAgentTools
 
         require_relative "cli/commands/task/next"
         require_relative "cli/commands/task/recent"
-        require_relative "cli/commands/task/all"
+        require_relative "cli/commands/task/list"
         require_relative "cli/commands/task/generate_id"
 
         register "task", aliases: [] do |prefix|
           prefix.register "next", Commands::Task::Next
           prefix.register "recent", Commands::Task::Recent
-          prefix.register "all", Commands::Task::All
+          prefix.register "list", Commands::Task::List
+          prefix.register "all", Commands::Task::List  # Backwards compatibility alias
           prefix.register "generate-id", Commands::Task::GenerateId
         end
 

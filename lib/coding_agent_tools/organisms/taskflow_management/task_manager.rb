@@ -34,7 +34,7 @@ module CodingAgentTools
           end
         end
 
-        AllTasksResult = Struct.new(:tasks, :success, :message, :cycle_detected, :sorted_count, :total_count) do
+        ListTasksResult = Struct.new(:tasks, :success, :message, :cycle_detected, :sorted_count, :total_count) do
           def success?
             success
           end
@@ -150,20 +150,20 @@ module CodingAgentTools
 
         # Get all tasks with topological sorting
         # @param release_path [String, nil] Optional specific release path
-        # @return [AllTasksResult] Result with all tasks in topological order
-        def get_all_tasks(release_path: nil)
+        # @return [ListTasksResult] Result with all tasks in topological order
+        def get_list_tasks(release_path: nil)
           # Resolve release path
           release_info = resolve_release_path(release_path)
-          return AllTasksResult.new([], false, release_info[:error], false, 0, 0) unless release_info[:success]
+          return ListTasksResult.new([], false, release_info[:error], false, 0, 0) unless release_info[:success]
 
           # Load tasks from the release
           tasks_result = load_tasks_from_release(release_info[:info])
-          return AllTasksResult.new([], false, tasks_result[:error], false, 0, 0) unless tasks_result[:success]
+          return ListTasksResult.new([], false, tasks_result[:error], false, 0, 0) unless tasks_result[:success]
 
           # Perform topological sort
           sorted_result = topological_sort(tasks_result[:tasks])
 
-          AllTasksResult.new(
+          ListTasksResult.new(
             sorted_result[:sorted_tasks],
             true,
             nil,
@@ -172,7 +172,7 @@ module CodingAgentTools
             sorted_result[:total_count]
           )
         rescue StandardError => e
-          AllTasksResult.new([], false, "Error getting all tasks: #{e.message}", false, 0, 0)
+          ListTasksResult.new([], false, "Error getting all tasks: #{e.message}", false, 0, 0)
         end
 
         # Find the next actionable task with priority logic

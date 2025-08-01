@@ -2,11 +2,11 @@
 
 require "spec_helper"
 
-RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
+RSpec.describe CodingAgentTools::Cli::Commands::Task::List do
   let(:command) { described_class.new }
   let(:project_root) { "/fake/project/root" }
   let(:mock_task_manager) { instance_double("CodingAgentTools::Organisms::TaskflowManagement::TaskManager") }
-  let(:mock_tasks_result) { double("AllTasksResult") }
+  let(:mock_tasks_result) { double("ListTasksResult") }
   let(:mock_sort_result) { double("SortResult") }
   let(:mock_filter_result) { {tasks: [], errors: []} }
 
@@ -36,11 +36,11 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         # Mock sort engine
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
@@ -63,7 +63,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         result = command.call
 
         expect(result).to eq(0)
-        expect(mock_task_manager).to have_received(:get_all_tasks).with(release_path: nil)
+        expect(mock_task_manager).to have_received(:get_list_tasks).with(release_path: nil)
         expect(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to have_received(:apply_sort_string).with(mock_tasks, "implementation-order")
       end
@@ -72,7 +72,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
         result = command.call(release: "v.0.4.0")
 
         expect(result).to eq(0)
-        expect(mock_task_manager).to have_received(:get_all_tasks).with(release_path: "v.0.4.0")
+        expect(mock_task_manager).to have_received(:get_list_tasks).with(release_path: "v.0.4.0")
       end
 
       it "formats tasks correctly with default options" do
@@ -130,8 +130,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
     context "with task manager failure" do
       it "returns error when task manager fails to get tasks" do
-        failed_result = double("AllTasksResult", success?: false, message: "Failed to load tasks")
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(failed_result)
+        failed_result = double("ListTasksResult", success?: false, message: "Failed to load tasks")
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(failed_result)
         allow(command).to receive(:error_output)
 
         result = command.call
@@ -153,7 +153,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         # Mock filter engine
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFilterEngine)
@@ -161,7 +161,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
         # Mock sort engine with filtered tasks
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).with(filtered_tasks, "implementation-order")
           .and_return({result: mock_sort_result, errors: []})
@@ -207,7 +207,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({
@@ -228,18 +228,18 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
     context "with dependency cycles" do
       let(:mock_tasks) {
         [
-          double("Task", id: "v.0.3.0+task.001"),
-          double("Task", id: "v.0.3.0+task.002")
+          double("Task", id: "v.0.3.0+task.001", status: "pending"),
+          double("Task", id: "v.0.3.0+task.002", status: "in-progress")
         ]
       }
 
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
@@ -283,10 +283,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return([])
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
@@ -304,7 +304,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
 
     context "with exception handling" do
       before do
-        allow(mock_task_manager).to receive(:get_all_tasks).and_raise(StandardError, "Unexpected error")
+        allow(mock_task_manager).to receive(:get_list_tasks).and_raise(StandardError, "Unexpected error")
         allow(command).to receive(:handle_error)
       end
 
@@ -571,10 +571,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 
@@ -619,15 +619,15 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::All do
     end
 
     context "with malformed data" do
-      let(:mock_tasks) { [double("Task", id: "malformed-task")] }
+      let(:mock_tasks) { [double("Task", id: "malformed-task", status: "pending")] }
 
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
         allow(mock_tasks_result).to receive(:tasks).and_return(mock_tasks)
-        allow(mock_task_manager).to receive(:get_all_tasks).and_return(mock_tasks_result)
+        allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_tasks_result)
 
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
-          .to receive(:default_all_sort).and_return("implementation-order")
+          .to receive(:default_list_sort).and_return("implementation-order")
         allow(CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine)
           .to receive(:apply_sort_string).and_return({result: mock_sort_result, errors: []})
 

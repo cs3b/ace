@@ -12,8 +12,8 @@ module CodingAgentTools
   module Cli
     module Commands
       module Task
-        # All command for listing all tasks with topological sorting
-        class All < Dry::CLI::Command
+        # List command for listing all tasks with topological sorting
+        class List < Dry::CLI::Command
           desc 'List all tasks in current release with dependency order'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
@@ -49,7 +49,7 @@ module CodingAgentTools
             task_manager = CodingAgentTools::Organisms::TaskflowManagement::TaskManager.new(base_path: project_root)
 
             # Get all tasks first
-            tasks_result = task_manager.get_all_tasks(release_path: options[:release])
+            tasks_result = task_manager.get_list_tasks(release_path: options[:release])
             unless tasks_result.success?
               error_output("Error: #{tasks_result.message}")
               return 1
@@ -70,7 +70,7 @@ module CodingAgentTools
             end
 
             # Apply sorting (default to implementation-order)
-            sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_all_sort
+            sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_list_sort
             sort_result_hash = CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.apply_sort_string(tasks,
                                                                                                                  sort_string)
             unless sort_result_hash[:errors].empty?
