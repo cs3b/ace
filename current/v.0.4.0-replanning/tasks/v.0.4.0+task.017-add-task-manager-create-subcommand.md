@@ -4,34 +4,41 @@ status: pending
 priority: high
 estimate: 4h
 dependencies: []
-needs_review: true
 ---
 
 # Add task-manager create subcommand
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] Should we remove create-path task-new immediately or maintain it for backward compatibility during a transition period?
+- [x] Should we remove create-path task-new immediately or maintain it for backward compatibility during a transition period?
   - **Research conducted**: Found user note in idea file stating "just gone (we are prealpha, we can break the api)"
   - **Suggested default**: Remove immediately as we're pre-alpha
   - **Why needs human input**: This contradicts the task specification which mentions "backwards compatibility maintained"
 
-- [ ] Should the old implementation in CreatePathCommand be fully deleted or just the task-new case?
+  > remove and update docs, and anything that is it in the code to the new tool
+
+- [x] Should the old implementation in CreatePathCommand be fully deleted or just the task-new case?
   - **Research conducted**: CreatePathCommand handles multiple types (file, directory, docs-new, template)
   - **Suggested default**: Only remove task-new case, keep other functionality
   - **Why needs human input**: User note says "ensure we delete the old implementation" - unclear if entire class or just task-new
 
-### [MEDIUM] Enhancement Questions
-- [ ] Should task-manager create use release-manager for path resolution as mentioned in the idea?
+  > only crate-path task-new (the rest of the create-path stays as it is)
+
+### [MEDIUM] Enhancement Questions  
+- [x] Should task-manager create use release-manager for path resolution as mentioned in the idea?
   - **Research conducted**: Currently create-path uses PathResolver and nav-path integration
   - **Suggested default**: Use ReleasePathManager for consistency with other task-manager commands
   - **Why needs human input**: Architecture decision that affects dependency structure
 
-- [ ] How should we handle the migration of dynamic flag handling feature (task 015)?
+  > yes, definitely
+
+- [x] How should we handle the migration of dynamic flag handling feature (task 015)?
   - **Research conducted**: Task 015 enables create-path task-new to accept undefined flags
   - **Suggested default**: Implement same capability in task-manager create
   - **Why needs human input**: Feature is still pending, affects implementation approach
+
+  > this the feature that should be moved to task-manager create (we should be able to use dynamic tags, exactly as it was implemented in #15 but in the new part of the system). the implementation of dynamic flags from create-path should be removed (it stays only in context of task-manager create)
 
 ## Behavioral Specification
 
@@ -110,7 +117,7 @@ Improve the discoverability and intuitive nature of task creation by moving the 
 
 #### Behavioral Specifications
 - User experience flow definitions
-- System behavior specifications  
+- System behavior specifications
 - Interface contract definitions
 
 #### Validation Artifacts
@@ -122,7 +129,7 @@ Improve the discoverability and intuitive nature of task creation by moving the 
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
 - ❌ **Implementation Details**: File structures, code organization, technical architecture
-- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions  
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions
 - ❌ **Performance Optimization**: Specific performance improvement strategies
 - ❌ **Future Enhancements**: Related features or capabilities not in current scope
 
@@ -130,32 +137,34 @@ Improve the discoverability and intuitive nature of task creation by moving the 
 
 ### Architecture Pattern
 - **CLI Command Extension**: Add new subcommand to existing task-manager CLI using dry-cli registry pattern
-- **Code Reuse**: Leverage existing create-path task-new functionality through delegation
-- **ATOM Integration**: Create new CLI command class in organisms layer, delegate to existing molecules
-- **Backwards Compatibility**: Maintain create-path task-new during transition period
+- **Direct Implementation**: Implement task creation logic directly in task-manager, no delegation
+- **ATOM Integration**: Create new CLI command class in organisms layer, use ReleasePathManager
+- **Breaking Change**: Remove create-path task-new immediately (pre-alpha status allows this)
 
 ### Technology Stack
 - **CLI Framework**: dry-cli (already in use by task-manager)
-- **Implementation Pattern**: Command delegation to existing CreatePathCommand
-- **File Operations**: Reuse existing FileIoHandler and PathResolver molecules
-- **Configuration**: Extend task-manager configuration if needed
+- **Implementation Pattern**: Direct implementation with ReleasePathManager
+- **File Operations**: Use existing FileIoHandler and TemplateRenderer molecules
+- **Path Resolution**: Use ReleasePathManager instead of PathResolver
+- **Dynamic Flags**: Migrate dynamic flag handling from task 015 implementation
 
 ### Implementation Strategy
-- **Phase 1**: Create new task-manager create command that delegates to create-path
-- **Phase 2**: Add command to task-manager registry and executable
-- **Phase 3**: Test integration and validate identical functionality
-- **Phase 4**: Update documentation and help text
+- **Phase 1**: Implement task-manager create with dynamic flag handling
+- **Phase 2**: Remove create-path task-new functionality
+- **Phase 3**: Update all documentation and workflow references
+- **Phase 4**: Update test suites to reflect new command structure
 
 ## Tool Selection
 
 | Criteria | create-path delegation | Direct implementation | Selected |
 |----------|------------------------|----------------------|----------|
-| Development Speed | Excellent | Fair | create-path delegation |
-| Code Consistency | Excellent | Good | create-path delegation |
-| Maintenance | Good | Fair | create-path delegation |
-| Risk Level | Low | Medium | create-path delegation |
+| Development Speed | Good | Good | Direct implementation |
+| Code Consistency | Poor (two places) | Excellent | Direct implementation |
+| Maintenance | Poor (duplication) | Excellent | Direct implementation |
+| Risk Level | Low | Low | Direct implementation |
+| Path Resolution | PathResolver | ReleasePathManager | Direct implementation |
 
-**Selection Rationale:** Delegating to existing create-path task-new functionality ensures identical behavior, reduces development time, and minimizes risk of introducing bugs. This approach allows immediate user benefit while providing foundation for future consolidation.
+**Selection Rationale:** Direct implementation eliminates code duplication, uses consistent ReleasePathManager for path resolution (matching other task-manager commands), and allows proper integration of dynamic flag handling. Pre-alpha status permits breaking changes.
 
 ### Dependencies
 - **No new dependencies**: Reuses existing dry-cli, create-path infrastructure
@@ -172,9 +181,9 @@ Based on research, the following additional files need modification:
 
 ### Create
 - `dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb`
-  - Purpose: New CLI command class that delegates to create-path task-new
-  - Key components: Dry::CLI::Command subclass with identical interface
-  - Dependencies: Existing CreatePathCommand, standard CLI patterns
+  - Purpose: New CLI command class implementing task creation logic
+  - Key components: Dry::CLI::Command subclass with dynamic flag handling
+  - Dependencies: ReleasePathManager, FileIoHandler, TemplateRenderer
 
 ### Modify
 - `dev-tools/exe/task-manager`
@@ -187,7 +196,7 @@ Based on research, the following additional files need modification:
   - Impact: Makes create subcommand available in task-manager CLI
   - Integration points: Existing command registry pattern
 
-### Delete/Remove (if breaking change approved)
+### Delete/Remove
 - `dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
   - Changes: Remove 'task-new' case from switch statement (lines 201-202)
   - Impact: Breaking change - create-path task-new will no longer work
@@ -214,7 +223,7 @@ Based on research, the following additional files need modification:
 - `dev-tools/spec/coding_agent_tools/cli/commands/create_path_spec.rb`
   - Changes: Remove tests for task-new functionality
   - Impact: Ensures create-path doesn't support task-new anymore
-  
+
 - `dev-tools/spec/coding_agent_tools/cli/commands/nav/path_spec.rb`
   - Changes: Remove tests for task-new path type
   - Impact: Ensures nav-path doesn't generate task-new paths
@@ -260,16 +269,16 @@ Based on research, the following additional files need modification:
   > Type: Action Validation
   > Assert: File exists with proper class structure and dry-cli inheritance
   > Command: test -f dev-tools/lib/coding_agent_tools/cli/commands/task/create.rb
-- [ ] Implement command class with identical interface to create-path task-new
-  > TEST: Interface Compatibility
+- [ ] Implement task creation logic with ReleasePathManager integration
+  > TEST: Path Resolution Working
   > Type: Functional Validation
-  > Assert: All create-path task-new options available in task-manager create
-  > Command: task-manager create --help | grep -E "title|priority|estimate|status"
-- [ ] Add delegation logic to call existing CreatePathCommand functionality
-  > TEST: Delegation Working
+  > Assert: Task files created in correct release directory
+  > Command: task-manager create --title "test-task" && ls -la dev-taskflow/current/*/tasks/
+- [ ] Add dynamic flag handling to accept arbitrary metadata flags
+  > TEST: Dynamic Flags Working
   > Type: Integration Validation
-  > Assert: task-manager create produces same results as create-path task-new
-  > Command: task-manager create --title "test-task" --priority high
+  > Assert: Undefined flags become task metadata
+  > Command: task-manager create --title "test-task" --custom-field "value" --another "test"
 - [ ] Add require statement for create command in task-manager executable
   > TEST: Command Loading
   > Type: Action Validation
@@ -290,11 +299,26 @@ Based on research, the following additional files need modification:
   > Type: Integration Validation
   > Assert: task-manager create and create-path task-new produce identical results
   > Command: diff <(task-manager create --title "test1" --priority high 2>&1) <(create-path task-new --title "test1" --priority high 2>&1)
-- [ ] Update task-manager help text and documentation
+- [ ] Remove create-path task-new functionality from CreatePathCommand
+  > TEST: Task-New Removed
+  > Type: Functional Validation
+  > Assert: create-path task-new returns error
+  > Command: create-path task-new --title "test" 2>&1 | grep -E "Unknown|Invalid|Error"
+- [ ] Remove nav-path task-new path generation capability
+  > TEST: Nav-Path Updated
+  > Type: Functional Validation
+  > Assert: nav-path task-new only finds existing tasks
+  > Command: nav-path task-new "test" 2>&1 | grep -v "Creating"
+- [ ] Update all documentation files to use task-manager create
   > TEST: Documentation Updated
   > Type: Quality Validation
-  > Assert: create command documented in help and tools reference
-  > Command: task-manager --help | grep -A3 "create.*Create new task"
+  > Assert: No references to create-path task-new remain
+  > Command: grep -r "create-path task-new" docs/ dev-handbook/ dev-taskflow/ | wc -l
+- [ ] Update workflow instructions to use new command
+  > TEST: Workflows Updated
+  > Type: Quality Validation
+  > Assert: All workflows use task-manager create
+  > Command: grep -r "task-manager create" dev-handbook/workflow-instructions/*.wf.md | wc -l
 
 ## Acceptance Criteria
 
@@ -307,10 +331,10 @@ Based on research, the following additional files need modification:
 
 ## Out of Scope
 
-- ❌ **Removing create-path task-new**: Backwards compatibility maintained for transition period
-- ❌ **Configuration Migration**: Will use existing .coding-agent/path.yml for consistency
+- ❌ **Maintaining create-path task-new**: Breaking change - command will be removed
+- ❌ **Configuration Migration from path.yml**: Will use task-manager.yml configuration
 - ❌ **Command Aliases**: tm create shorthand not included in initial implementation
-- ❌ **UI/UX Changes**: Command behavior and output format remain identical
+- ❌ **Gradual Migration**: No transition period - immediate removal
 
 ## References
 
@@ -322,21 +346,24 @@ Based on research, the following additional files need modification:
 
 ## Review Summary
 
-**Questions Generated:** 4 total (2 high, 2 medium)
-**Critical Blockers:** 
-1. Backward compatibility vs immediate removal decision
-2. Scope of CreatePathCommand deletion
+**Questions Resolved:** All 4 questions answered
+**Implementation Approach Clarified:**
+1. Breaking change approved - remove create-path task-new immediately
+2. Only remove task-new case from CreatePathCommand
+3. Use ReleasePathManager for path resolution
+4. Migrate dynamic flag handling to task-manager create
 
-**Implementation Readiness:** Blocked on answers - significant scope differences between maintaining compatibility vs breaking change
+**Implementation Readiness:** Ready to proceed with clear direction
 
-**Recommended Next Steps:** 
-1. Clarify breaking change approach (immediate removal vs transition)
-2. Define exact scope of what to delete from CreatePathCommand
-3. Decide on ReleasePathManager vs PathResolver for path generation
-4. Coordinate with task 015 (dynamic flag handling) implementation
+**Updated Implementation Plan:**
+1. Direct implementation in task-manager (no delegation)
+2. Remove create-path task-new functionality completely
+3. Use ReleasePathManager for consistent path resolution
+4. Include dynamic flag handling from task 015
 
-**Additional Findings:**
-- Comprehensive documentation updates needed (33+ files)
-- Test suite modifications required (4 spec files)
+**Comprehensive Scope Confirmed:**
+- Documentation updates needed (33+ files)
+- Test suite modifications required (4 spec files)  
 - Workflow instruction updates needed (4 files)
-- nav-path command also needs updates to remove task-new support
+- nav-path command updates to remove task-new support
+- Dynamic flag handling migration from create-path
