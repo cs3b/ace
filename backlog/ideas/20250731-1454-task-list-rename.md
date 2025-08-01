@@ -59,8 +59,16 @@ Align the `task-manager` CLI command's internal reference from 'all' to 'list' t
 
 **Open Questions:**
 - What is the exact command or method call that needs to be updated?
+
+> it's not about command call, this is already changed, but internally it stays all instead of list for task-manager
+
 - Are there any configuration files or external scripts that might be implicitly relying on the 'all' subcommand name?
+
+> no, maybe some tests, but the cmd have beend already changed
+
 - What is the expected behavior of the `task-manager` command if an invalid subcommand is provided after this change?
+
+> there is already no old command check `task-manager --help` we are doing internal cleanup
 
 ## Assumptions to Validate
 
