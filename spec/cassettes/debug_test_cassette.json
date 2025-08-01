@@ -3,7 +3,7 @@
     {
       "request": {
         "method": "post",
-        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=<GOOGLE_API_KEY>",
+        "uri": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=test_key",
         "body": {
           "encoding": "UTF-8",
           "string": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"Test\"}]}],\"generationConfig\":{\"temperature\":0.7,\"maxOutputTokens\":8192}}"
@@ -25,20 +25,20 @@
       },
       "response": {
         "status": {
-          "code": 200,
-          "message": "OK"
+          "code": 400,
+          "message": "Bad Request"
         },
         "headers": {
-          "Content-Type": [
-            "application/json; charset=UTF-8"
-          ],
           "Vary": [
             "Origin",
             "Referer",
             "X-Origin"
           ],
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ],
           "Date": [
-            "Sun, 27 Jul 2025 13:22:42 GMT"
+            "Fri, 01 Aug 2025 23:08:57 GMT"
           ],
           "Server": [
             "scaffolding on HTTPServer2"
@@ -53,7 +53,7 @@
             "nosniff"
           ],
           "Server-Timing": [
-            "gfet4t7; dur=1049"
+            "gfet4t7; dur=25"
           ],
           "Alt-Svc": [
             "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
@@ -64,10 +64,10 @@
         },
         "body": {
           "encoding": "ASCII-8BIT",
-          "string": "{\n  \"candidates\": [\n    {\n      \"content\": {\n        \"parts\": [\n          {\n            \"text\": \"---\\ntitle: Test Response\\ndate: 2025-07-27\\n---\\n\\n# Test Response\\n\\nOkay, I'm ready. Test complete. Let me know what you'd like me to do next!\\n\"\n          }\n        ],\n        \"role\": \"model\"\n      },\n      \"finishReason\": \"STOP\",\n      \"avgLogprobs\": -0.33332089583079022\n    }\n  ],\n  \"usageMetadata\": {\n    \"promptTokenCount\": 1,\n    \"candidatesTokenCount\": 35,\n    \"totalTokenCount\": 36,\n    \"promptTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 1\n      }\n    ],\n    \"candidatesTokensDetails\": [\n      {\n        \"modality\": \"TEXT\",\n        \"tokenCount\": 35\n      }\n    ]\n  },\n  \"modelVersion\": \"gemini-2.0-flash-lite\",\n  \"responseId\": \"IiiGaMT2DrKLqsMPrdqi8QY\"\n}\n"
+          "string": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"API key not valid. Please pass a valid API key.\",\n    \"status\": \"INVALID_ARGUMENT\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.ErrorInfo\",\n        \"reason\": \"API_KEY_INVALID\",\n        \"domain\": \"googleapis.com\",\n        \"metadata\": {\n          \"service\": \"generativelanguage.googleapis.com\"\n        }\n      },\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.LocalizedMessage\",\n        \"locale\": \"en-US\",\n        \"message\": \"API key not valid. Please pass a valid API key.\"\n      }\n    ]\n  }\n}\n"
         }
       },
-      "recorded_at": "Sun, 27 Jul 2025 13:22:42 GMT"
+      "recorded_at": "Fri, 01 Aug 2025 23:08:57 GMT"
     }
   ],
   "recorded_with": "VCR 6.3.1"

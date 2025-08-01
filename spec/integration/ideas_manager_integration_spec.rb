@@ -306,7 +306,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         expect(result).not_to be_success
         expect(result.stdout).to include("Error: No input provided")
         expect(result.stdout).to include("Usage:")
-        expect(result.stdout).to include("ideas-manager capture")
+        expect(result.stdout).to include("capture-it")
       end
     end
   end
