@@ -4,55 +4,9 @@ status: draft
 priority: medium
 estimate: 8h
 dependencies: [v.0.4.0+task.4]
-needs_review: true
 ---
 
 # Create replan-cascade-task Workflow for Dependency Impact Analysis
-
-## Review Questions (Pending Human Input)
-
-### [HIGH] Critical Implementation Questions
-- [ ] Should the cascade review process automatically create new idea files when discovering unplanned work, or should it only document these in the impact notes?
-  - **Research conducted**: Examined existing workflows and idea creation patterns
-  - **Similar implementations**: `capture-idea.wf.md` shows idea creation is a separate workflow
-  - **Suggested default**: Document discovered needs in impact notes only, let humans create ideas manually
-  - **Why needs human input**: Auto-creating ideas could clutter backlog without proper context
-
-> should document it, and mark task status as needs_review: true
-> additional we should add this as additional counter to the status in task-manager list
-> Status: 13 done, 1 draft, 1 in-progress (15 total) => and should be
-> Status: 13 done, 1 draft, 1 in-progress (15 total) !!! Needs review: 1
-
-- [ ] When a task has multiple layers of dependencies (A→B→C), should cascade review traverse the entire chain or stop at immediate dependencies?
-  - **Research conducted**: Industry best practices show full transitive dependency analysis is standard
-  - **Web search findings**: Transitive dependencies can extend several layers deep and need monitoring
-  - **Suggested default**: Process immediate dependencies only (single layer)
-  - **Why needs human input**: Full chain traversal could create overwhelming cascades vs missing critical impacts
-
-> lets do full transitive dependency analysis
-
-- [ ] How should the workflow handle circular dependencies if detected during topological sorting?
-  - **Research conducted**: Topological sort algorithms require DAG (no cycles allowed)
-  - **Suggested default**: Abort workflow with clear error message listing the cycle
-  - **Why needs human input**: May want softer handling or cycle-breaking heuristics
-
-> should not be, but when it found circular dependecie it should not go another time to task that it was laready scannded
-> and report at the very end to user, there is circular dependencie
-
-### [MEDIUM] Enhancement Questions
-- [ ] Should impact notes be prepended or appended to draft tasks, and should they have an expiration/review-by date?
-  - **Research conducted**: Task structure shows metadata at top, content follows
-  - **Suggested default**: Prepend after metadata, no expiration date
-  - **Why needs human input**: Long-term maintenance strategy for impact notes unclear
-
-> should be prepended, and mark tasks as needs_review: true
-
-- [ ] What level of detail should cascade commit messages include beyond the example format shown?
-  - **Research conducted**: Project uses descriptive multi-line commit messages
-  - **Suggested default**: Include source task ID, target task ID, and specific changes made
-  - **Why needs human input**: Balance between traceability and commit message verbosity
-
-> just the reason, what change make this notes to be added (original task id should be part of this)
 
 ## Objective
 
@@ -70,19 +24,24 @@ and controlled cascade operations.
 
 ### Expected Behavior
 
-1.  Identify all tasks dependent on the completed task
-2.  Process dependencies in topological order
-3.  For draft tasks: Add impact notes at the beginning
-4.  For pending tasks: Review and update implementation details
-5.  Generate new ideas for discovered needs
-6.  Commit each task update separately for rollback capability
+1.  Identify all tasks dependent on the completed task (full transitive dependency analysis)
+2.  Process dependencies in topological order with cycle detection
+3.  For draft tasks: Prepend impact notes after metadata and set `needs_review: true`
+4.  For pending tasks: Review and update implementation details and set `needs_review: true`
+5.  Document discovered needs in impact notes (do not auto-create idea files)
+6.  Commit each task update separately with descriptive messages including source task ID
+7.  Display needs_review count in task-manager list output: "!!! Needs review: X"
+8.  Track already-visited tasks to prevent infinite loops in circular dependencies
+9.  Report circular dependencies at workflow completion rather than aborting
 
 ### Impact Handling Rules
 
-* **Draft tasks**: Add notes section with impacts, preserve draft status
-* **Pending tasks**: Update implementation plan based on changes
-* **In-progress tasks**: Flag for developer attention only
+* **Draft tasks**: Prepend impact notes after metadata, set `needs_review: true`, preserve draft status
+* **Pending tasks**: Update implementation plan based on changes, set `needs_review: true`
+* **In-progress tasks**: Flag for developer attention only with `needs_review: true`
 * **No automatic status changes**: Maintain human control
+* **Circular dependencies**: Continue processing with visited-task tracking, report at end
+* **Commit messages**: Include source task ID and brief impact description
 
 ## Phases
 
@@ -142,6 +101,9 @@ and actual implementation work.*
   > TEST: Tool Integration Type: Command Integration Assert: Workflow includes direct command invocations for task-manager and nav-path Command: grep -E
   > "(task-manager\|nav-path)" dev-handbook/workflow-instructions/replan-cascade-task.wf.md
 
+* {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />**[Added after review]** Implement needs_review counter display in task-manager list command
+  > TEST: Needs Review Counter Type: Feature Validation Assert: task-manager list shows needs_review count prominently Command: task-manager list | grep -q "Needs review:"
+
 * {: .task-list-item} <input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Update dev-handbook/workflow-instructions/README.md with new workflow
   > TEST: Documentation Integration Type: Integration Validation
   > Assert: New workflow is properly documented in README Command: grep -q "replan-cascade-task" dev-handbook/workflow-instructions/README.md
@@ -161,14 +123,16 @@ and actual implementation work.*
 
 ### Key Features
 
-* Topological dependency graph traversal algorithm (single-release scope)
-* Automated impact scope identification with cycle detection
+* Full transitive dependency graph traversal algorithm (not limited to immediate dependencies)
+* Automated impact scope identification with cycle detection and reporting
 * Manual approval gates at critical decision points
 * Git-based rollback with commit-per-file granularity and descriptive messages
 * Direct integration with task-manager and nav-path command invocations
 * XML-embedded impact note templates following project standards
 * **[Added on review]** Support for both Kahn's (BFS) and DFS topological sorting approaches
-* **[Added on review]** Transitive dependency awareness with configurable traversal depth
+* **[Added after review]** Automatic `needs_review: true` flag setting for impacted tasks
+* **[Added after review]** Needs review counter display in task-manager list output
+* **[Added after review]** Visited-task tracking to handle circular dependencies gracefully
 
 ## Acceptance Criteria
 
@@ -191,6 +155,7 @@ the Implementation Plan.*
 
 After completing `v.0.4.0+task.4-draft-task-template-system.md`, run the cascade review workflow:
 
+```bash
 # Navigate to the completed task
 nav-path file v.0.4.0+task.4-draft-task-template-system.md
 
@@ -198,48 +163,77 @@ nav-path file v.0.4.0+task.4-draft-task-template-system.md
 replan-cascade-task v.0.4.0+task.4
 ```
 
-**Step 1: Dependency Identification** The workflow identifies downstream tasks that depend on task 4:
+**Step 1: Dependency Identification** The workflow identifies all downstream tasks (transitive) that depend on task 4:
 
 * `v.0.4.0+task.6-create-cascade-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
 * `v.0.4.0+task.7-draft-task-review-workflow.md` (dependencies: \[v.0.4.0+task.4\])
+* `v.0.4.0+task.12-enhance-tooling.md` (dependencies: \[v.0.4.0+task.7\]) - transitive dependency
 
-**Step 2: Topological Processing** Tasks are processed in dependency order:
+**Step 2: Topological Processing** Tasks are processed in dependency order with cycle detection:
 
-1.  **Task 6 (draft status)**: Add impact notes section at the beginning:
-```bash
-    ## Impact Notes from v.0.4.0+task.4 Completion
+1.  **Task 6 (draft status)**: Prepend impact notes and set needs_review:
+```markdown
+---
+id: v.0.4.0+task.6
+status: draft
+needs_review: true
+---
 
-    - New template system available: use standardized XML embedding format
-    - Template location: dev-handbook/templates/tasks/impact-note.template.md
-    - Integration point: impact note template should follow XML embedding pattern
+## Impact Notes from v.0.4.0+task.4 Completion
 
+- New template system available: use standardized XML embedding format
+- Template location: dev-handbook/templates/tasks/impact-note.template.md
+- Integration point: impact note template should follow XML embedding pattern
+- **Action needed**: Review and update cascade workflow design to use new templates
 
-2.  **Task 7 (pending status)**: Update implementation plan:
-    ## Implementation Plan Updates
-
-    ### Planning Steps (Updated based on Task 4 completion)
-    * [✓] Template system research → Use new standardized template system
-    * [ ] Review workflow design → Integrate with XML embedding format from task 4
-
-
-**Step 3: Commit Strategy** Each task update creates individual commits:
-
-git-commit -m "task.6: Add impact notes from task.4 template system completion
-
-Cascade review identified template integration requirements for
-cascade workflow implementation."
-
-git-commit -m "task.7: Update implementation plan based on task.4 completion
-
-Modified planning steps to leverage new XML embedding template
-system for consistency with project standards."
+[Original content follows...]
 ```
 
-**Step 4: Generated Ideas** New ideas discovered during cascade analysis:
+2.  **Task 7 (pending status)**: Update implementation plan and set needs_review:
+```markdown
+---
+id: v.0.4.0+task.7
+status: pending
+needs_review: true
+---
+
+## Implementation Plan Updates
+
+### Planning Steps (Updated based on Task 4 completion)
+* [✓] Template system research → Use new standardized template system
+* [ ] Review workflow design → Integrate with XML embedding format from task 4
+```
+
+**Step 3: Commit Strategy** Each task update creates individual commits with impact rationale:
 
 ```bash
-# Auto-generated idea file
-cat > dev-taskflow/backlog/ideas/20250730-cascade-review-template-consistency.md
+git-commit -m "task.6: Impact from task.4 - new template system available
+
+Added impact notes for XML embedding template integration"
+
+git-commit -m "task.7: Impact from task.4 - template system changes
+
+Updated implementation plan to use new standardized templates"
+
+git-commit -m "task.12: Transitive impact from task.4 via task.7
+
+Flagged for review due to upstream template system changes"
+```
+
+**Step 4: Task Manager Display** After cascade review:
+
+```bash
+task-manager list
+# Output:
+# Status: 13 done, 1 draft, 1 in-progress (15 total) !!! Needs review: 3
+```
+
+**Step 5: Circular Dependency Report** If circular dependencies detected:
+
+```
+WARNING: Circular dependencies detected:
+- task.8 → task.9 → task.10 → task.8
+Processing continued with visited-task tracking to prevent infinite loops.
 ```
 
 ### Command Integration Examples
