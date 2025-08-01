@@ -1,8 +1,8 @@
 ---
 id: v.0.4.0+task.014
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 6h
 dependencies: []
 ---
 
@@ -110,9 +110,206 @@ Establish clear traceability and organization for idea files throughout their li
 - ❌ **Performance Optimization**: Specific performance improvement strategies
 - ❌ **Future Enhancements**: Related features or capabilities not in current scope
 
+## Technical Approach
+
+### Architecture Pattern
+- **ATOM Architecture Integration**: New IdeaFileManager molecule integrating with existing FileIoHandler and SecurePathValidator molecules
+- **CLI Command Enhancement**: Extend create-path command with --idea-source option for transparent file management
+- **Path Resolution Integration**: Leverage existing PathResolver for consistent path handling across the system
+
+### Technology Stack
+- **Ruby FileUtils**: Core file operations (move, copy, rename) with proper error handling
+- **Existing Security Framework**: Leverage SecurePathValidator and FileIoHandler for consistent security
+- **CLI Framework Integration**: Extend dry-cli command structure with idea file management options
+- **Path Standards**: Follow XDG-compliant path handling and project path conventions
+
+### Implementation Strategy
+- **Transparent Integration**: File operations occur automatically during task creation without additional user commands
+- **Graceful Degradation**: Task creation continues successfully even if idea file operations fail
+- **Conflict Resolution**: Automatic versioning (v2.md, v3.md) for destination file conflicts
+
+## Tool Selection
+
+| Criteria | Ruby FileUtils | Shell Commands | Custom Implementation | Selected |
+|----------|---------------|----------------|---------------------|----------|
+| Security | Good (with validation) | Poor (injection risks) | Excellent | Ruby FileUtils |
+| Integration | Excellent | Poor | Good | Ruby FileUtils |
+| Error Handling | Excellent | Fair | Good | Ruby FileUtils |
+| Maintainability | Excellent | Poor | Fair | Ruby FileUtils |
+| ATOM Compliance | Excellent | Poor | Good | Ruby FileUtils |
+
+**Selection Rationale:** Ruby FileUtils provides the best balance of security, integration with existing ATOM architecture, and maintainability while leveraging existing security validation infrastructure.
+
+### Dependencies
+- **Existing**: FileUtils (Ruby stdlib), FileIoHandler, SecurePathValidator, PathResolver
+- **New**: None - leverages existing infrastructure
+- **Compatibility**: Full compatibility with existing CLI command structure
+
+## File Modifications
+
+### Create
+- dev-tools/lib/coding_agent_tools/molecules/idea_file_manager.rb
+  - Purpose: ATOM molecule for idea file operations (move, rename, organize)
+  - Key components: File movement, conflict resolution, path generation
+  - Dependencies: FileIoHandler, SecurePathValidator, FileUtils
+
+- dev-tools/spec/coding_agent_tools/molecules/idea_file_manager_spec.rb
+  - Purpose: Comprehensive test coverage for idea file management molecule
+  - Key components: Unit tests for all file operations and edge cases
+  - Dependencies: RSpec, temporary file fixtures
+
+### Modify
+- dev-tools/lib/coding_agent_tools/cli/create_path_command.rb
+  - Changes: Add --idea-source option, integrate IdeaFileManager molecule
+  - Impact: Enhanced task creation with transparent idea file management
+  - Integration points: Connects to IdeaFileManager after successful task creation
+
+- dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb
+  - Changes: Add current release detection and idea destination path generation
+  - Impact: Consistent path resolution for idea file destinations
+  - Integration points: Used by IdeaFileManager for destination path calculation
+
+### Delete
+- None: All changes are additive to maintain backward compatibility
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** File move operations fail due to permissions or filesystem issues
+  - **Probability:** Medium
+  - **Impact:** Low (task creation continues)
+  - **Mitigation:** Comprehensive error handling with graceful degradation
+  - **Rollback:** No rollback needed - original file remains untouched on failure
+
+- **Risk:** Path traversal or security vulnerabilities in file operations
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Leverage existing SecurePathValidator for all path operations
+  - **Rollback:** Security logging and immediate operation termination
+
+### Integration Risks
+- **Risk:** Breaking existing create-path command functionality
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Additive changes only, comprehensive test coverage
+  - **Monitoring:** Existing CLI test suite validates backward compatibility
+
+- **Risk:** Inconsistent behavior across different operating systems
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Use Ruby FileUtils cross-platform abstractions
+  - **Monitoring:** Multi-platform test execution in CI
+
+### Performance Risks
+- **Risk:** File operations slow down task creation process
+  - **Mitigation:** Asynchronous file operations after task creation success
+  - **Monitoring:** Performance benchmarks for create-path command execution time
+  - **Thresholds:** <200ms additional overhead for file operations
+
+## Implementation Plan
+
+*This section details the specific steps required to complete the task, divided into planning activities and implementation work.*
+
+### Planning Steps
+
+*Use asterisk markers (`* [ ]`) for research, analysis, and design activities.*
+
+* [ ] Analyze current create-path command structure and integration points
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: Command flow and extension points are identified
+  > Command: grep -r "create_path" dev-tools/lib/ --include="*.rb"
+
+* [ ] Research FileUtils cross-platform compatibility for file move operations
+  > TEST: Compatibility Verification
+  > Type: Research Validation
+  > Assert: FileUtils.mv behavior consistent across target platforms
+  > Command: ruby -e "require 'fileutils'; puts FileUtils.respond_to?(:mv)"
+
+* [ ] Design IdeaFileManager molecule interface following ATOM architecture patterns
+  > TEST: Architecture Compliance
+  > Type: Design Validation
+  > Assert: Interface follows established molecule patterns in codebase
+  > Command: find dev-tools/lib/coding_agent_tools/molecules/ -name "*.rb" | head -3 | xargs grep -l "def initialize"
+
+### Execution Steps
+
+*Use hyphen markers (`- [ ]`) for concrete implementation actions.*
+
+- [ ] Create IdeaFileManager molecule with core file operations
+  > TEST: Molecule Creation
+  > Type: Implementation Validation
+  > Assert: IdeaFileManager class created with required methods (move_idea_file, generate_destination_path, handle_conflicts)
+  > Command: ruby -c dev-tools/lib/coding_agent_tools/molecules/idea_file_manager.rb
+
+- [ ] Implement secure file movement with conflict resolution
+  > TEST: File Operations
+  > Type: Functional Validation
+  > Assert: Files moved correctly with version suffixes for conflicts
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb -t file_movement
+
+- [ ] Enhance create-path command with --idea-source option and integration
+  > TEST: CLI Integration
+  > Type: Integration Validation
+  > Assert: create-path command accepts --idea-source and processes files
+  > Command: cd dev-tools && bundle exec exe/create-path task-new --title "test-task" --idea-source "/tmp/test-idea.md" --help | grep "idea-source"
+
+- [ ] Add current release detection to PathResolver molecule
+  > TEST: Path Resolution
+  > Type: Component Validation
+  > Assert: PathResolver correctly identifies current release directory
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/path_resolver_spec.rb -t current_release
+
+- [ ] Implement comprehensive error handling and logging for file operations
+  > TEST: Error Handling
+  > Type: Reliability Validation
+  > Assert: All error conditions handled gracefully with appropriate logging
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb -t error_handling
+
+- [ ] Create complete test suite covering all scenarios and edge cases
+  > TEST: Test Coverage
+  > Type: Quality Validation
+  > Assert: Test coverage >95% for all new code with edge case coverage
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb --format progress
+
+- [ ] Update CLI help documentation and command examples
+  > TEST: Documentation Update
+  > Type: Usability Validation
+  > Assert: Help text includes --idea-source option with clear examples
+  > Command: cd dev-tools && bundle exec exe/create-path --help | grep -A5 "idea-source"
+
+- [ ] Validate integration with existing draft-task workflow
+  > TEST: Workflow Integration
+  > Type: End-to-End Validation
+  > Assert: Draft-task workflow can use enhanced create-path with idea file management
+  > Command: create-path task-new --title "integration-test" --idea-source "test-idea.md" --status draft
+
+## Acceptance Criteria
+
+- [ ] **Automated File Organization**: Original idea files are automatically moved and renamed with task number prefix after task creation
+- [ ] **Complete Traceability**: Clear linkage between draft tasks and their source idea files through organized file structure
+- [ ] **Zero Manual Overhead**: Users create tasks without manual file management, system handles all file operations transparently
+- [ ] **Consistent Naming Convention**: All processed idea files follow `NNN-original-filename.md` pattern in `../docs/ideas/` directory
+- [ ] **Error Resilience**: File operation failures don't prevent task creation, with clear error reporting and graceful degradation
+- [ ] **CLI Integration**: create-path command enhanced with --idea-source option for seamless integration
+- [ ] **Security Compliance**: All file operations use existing security validation framework
+- [ ] **Cross-Platform Compatibility**: File operations work consistently across different operating systems
+- [ ] **Comprehensive Testing**: >95% test coverage with full edge case validation
+- [ ] **Performance Acceptable**: <200ms additional overhead for idea file management operations
+
+## Out of Scope
+
+- ❌ **GUI Interface**: Command-line only, no graphical user interface for file management
+- ❌ **Batch Processing**: Single idea file per task creation, no bulk operations
+- ❌ **Version Control Integration**: File operations are filesystem-only, no automatic git operations
+- ❌ **Cross-Repository Operations**: Idea files must be within the same repository structure
+- ❌ **Advanced Conflict Resolution**: Simple versioning (v2, v3) only, no merge strategies
+
 ## References
 
 - Source idea file: `dev-taskflow/backlog/ideas/20250731-0753-draft-task-move.md`
 - Draft-task workflow: `dev-handbook/workflow-instructions/draft-task.wf.md`
-- ATOM Architecture patterns for file operations
-- XDG directory standards and project path conventions
+- ATOM Architecture patterns: `dev-tools/lib/coding_agent_tools/molecules/`
+- Existing security framework: `dev-tools/lib/coding_agent_tools/molecules/secure_path_validator.rb`
+- CLI command patterns: `dev-tools/lib/coding_agent_tools/cli/`
+- FileIoHandler implementation: `dev-tools/lib/coding_agent_tools/molecules/file_io_handler.rb`
