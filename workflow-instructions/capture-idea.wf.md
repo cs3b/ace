@@ -2,11 +2,11 @@
 
 ## Goal
 
-Use the ideas-manager tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
+Use the capture-it tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
 
 ## Prerequisites
 
-* `ideas-manager` tool available (from dev-tools Ruby gem)
+* `capture-it` tool available (from dev-tools Ruby gem)
 * Raw idea text or concept to capture
 * LLM provider configured (Google Gemini recommended)
 * Write access to `dev-taskflow/backlog/ideas/` directory
@@ -23,31 +23,31 @@ Use the ideas-manager tool to capture and enhance raw ideas within project conte
 2. **Choose Appropriate Command Options:**
    * **Basic usage** (most common):
      ```bash
-     ideas-manager capture "your raw idea text here"
+     capture-it "your raw idea text here"
      ```
 
    * **From clipboard**:
      ```bash
-     ideas-manager capture --clipboard
+     capture-it --clipboard
      ```
 
    * **From file**:
      ```bash
-     ideas-manager capture --file path/to/idea-notes.txt
+     capture-it --file path/to/idea-notes.txt
      ```
 
    * **For long ideas** (over 1000 words):
      ```bash
-     ideas-manager capture "long idea text..." --big-user-input-allowed
+     capture-it "long idea text..." --big-user-input-allowed
      ```
 
    * **With debug information**:
      ```bash
-     ideas-manager capture "idea text" --debug
+     capture-it "idea text" --debug
      ```
 
 3. **Execute Idea Capture:**
-   * Run the selected ideas-manager command
+   * Run the selected capture-it command
    * The tool will automatically:
      * Load current project context from all `docs/*.md` files
      * Generate project-specific enhancement questions
@@ -93,28 +93,28 @@ Use the ideas-manager tool to capture and enhance raw ideas within project conte
 ### Pattern 1: Quick Idea Capture
 ```bash
 # Capture a brief concept immediately
-ideas-manager capture "Add real-time notifications to the dashboard"
+capture-it "Add real-time notifications to the dashboard"
 # => Created: dev-taskflow/backlog/ideas/20250730-1430-real-time-dashboard-notifications.md
 ```
 
 ### Pattern 2: Detailed Idea from Notes
 ```bash
 # Capture from prepared notes file
-ideas-manager capture --file brainstorm-session-notes.txt
+capture-it --file brainstorm-session-notes.txt
 # => Created: dev-taskflow/backlog/ideas/20250730-1432-brainstorm-session-insights.md
 ```
 
 ### Pattern 3: Clipboard Integration
 ```bash
 # Copy idea text to clipboard first, then:
-ideas-manager capture --clipboard
+capture-it --clipboard
 # => Created: dev-taskflow/backlog/ideas/20250730-1434-clipboard-captured-idea.md
 ```
 
 ### Pattern 4: Long-form Idea Processing
 ```bash
 # For comprehensive ideas or requirements documents
-ideas-manager capture --file detailed-requirements.md --big-user-input-allowed
+capture-it --file detailed-requirements.md --big-user-input-allowed
 # => Created: dev-taskflow/backlog/ideas/20250730-1436-detailed-requirements-analysis.md
 ```
 
@@ -124,7 +124,7 @@ ideas-manager capture --file detailed-requirements.md --big-user-input-allowed
 
 **"No input provided" Error:**
 * **Cause**: Missing idea text argument and no clipboard/file specified
-* **Solution**: Provide idea text: `ideas-manager capture "your idea"`
+* **Solution**: Provide idea text: `capture-it "your idea"`
 
 **"Input too large" Error:**
 * **Cause**: Idea text exceeds 1000 words without permission flag
@@ -170,21 +170,21 @@ ideas-manager capture --file detailed-requirements.md --big-user-input-allowed
 ### Example 1: User Feedback Integration
 ```bash
 # After receiving user feedback: "Users want better mobile experience"
-ideas-manager capture "Users report difficulties with mobile interface - want better responsive design and touch interactions"
+capture-it "Users report difficulties with mobile interface - want better responsive design and touch interactions"
 # Output: Creates enhanced idea with mobile UX questions and project-specific considerations
 ```
 
 ### Example 2: Technical Improvement Ideas
 ```bash
 # During code review, note performance concerns
-ideas-manager capture "Database queries in user dashboard are slow - consider caching layer and query optimization"
+capture-it "Database queries in user dashboard are slow - consider caching layer and query optimization"
 # Output: Creates idea with technical questions about architecture and performance impact
 ```
 
 ### Example 3: Feature Brainstorming Session
 ```bash
 # Capture multiple ideas from team meeting
-ideas-manager capture --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
+capture-it --file team-brainstorm-2025-01-30.txt --big-user-input-allowed
 # Output: Creates comprehensive idea file with context-aware enhancement questions
 ```
 
