@@ -20,7 +20,7 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "coding_agent_tools/cli/commands/task/next"
 require "coding_agent_tools/cli/commands/task/recent"
-require "coding_agent_tools/cli/commands/task/all"
+require "coding_agent_tools/cli/commands/task/list"
 require "coding_agent_tools/cli/commands/task/generate_id"
 require "coding_agent_tools/cli/commands/task/reschedule"
 require "dry/cli"
@@ -32,7 +32,8 @@ module TaskManagerCli
     # Register task commands directly under the root
     register "next", CodingAgentTools::Cli::Commands::Task::Next
     register "recent", CodingAgentTools::Cli::Commands::Task::Recent
-    register "list", CodingAgentTools::Cli::Commands::Task::All
+    register "list", CodingAgentTools::Cli::Commands::Task::List
+    register "all", CodingAgentTools::Cli::Commands::Task::List  # Backwards compatibility alias
     register "generate-id", CodingAgentTools::Cli::Commands::Task::GenerateId
     register "reschedule", CodingAgentTools::Cli::Commands::Task::Reschedule
 

@@ -58,9 +58,9 @@ module CodingAgentTools
           { result: result, errors: [] }
         end
 
-        # Get default sort for all command (implementation-order)
-        # @return [String] Default sort string for all command
-        def self.default_all_sort
+        # Get default sort for list command (implementation-order)
+        # @return [String] Default sort string for list command
+        def self.default_list_sort
           'implementation-order'
         end
 
