@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan phase.
+Create high-level behavioral specifications that define WHAT the system should do (UX/DX/AX) rather than HOW to implement it. This workflow transforms ideas or requirements into behavior-first draft tasks with clear interface contracts, leaving implementation details for the replan phase. The workflow also includes automated idea file management, moving original idea files to organized locations with task number prefixes for clear traceability.
 
 ## Prerequisites
 
@@ -173,6 +173,8 @@ Create high-level behavioral specifications that define WHAT the system should d
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
 * Clear handoff to implementation planning phase
+* Automated idea file organization with task number prefixes (when applicable)
+* Original idea files moved to current release docs/ideas/ directory for traceability
 
 ## Error Handling
 
