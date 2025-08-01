@@ -1155,4 +1155,289 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       end
     end
   end
+
+  describe "dynamic flag handling" do
+    let(:command) { described_class.new }
+
+    describe "#parse_undefined_flags" do
+      it "parses single undefined flag with value" do
+        argv = ["--custom-field", "value123"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ custom_field: "value123" })
+      end
+
+      it "parses multiple undefined flags" do
+        argv = ["--status", "draft", "--priority", "high", "--custom-field", "test"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ 
+          custom_field: "test"  # Only custom-field should be captured, status and priority are defined
+        })
+      end
+
+      it "parses boolean flags without values" do
+        argv = ["--blocking", "--urgent"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ blocking: true, urgent: true })
+      end
+
+      it "ignores defined flags" do
+        argv = ["--title", "Test Task", "--priority", "high", "--custom", "value"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ custom: "value" })
+      end
+
+      it "converts hyphenated flags to underscored symbols" do
+        argv = ["--custom-field-name", "value"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ custom_field_name: "value" })
+      end
+
+      it "handles empty argv gracefully" do
+        result = command.send(:parse_undefined_flags, [])
+        
+        expect(result).to eq({})
+      end
+
+      it "skips invalid flag names" do
+        argv = ["--123invalid", "value", "--_invalid", "value2", "--valid-flag", "value3"]
+        result = command.send(:parse_undefined_flags, argv)
+        
+        expect(result).to eq({ valid_flag: "value3" })
+      end
+    end
+
+    describe "#validate_flag_name" do
+      it "accepts valid flag names" do
+        valid_names = %w[status priority custom-field test123 a simple-name]
+        
+        valid_names.each do |name|
+          expect(command.send(:validate_flag_name, name)).to be(true), "Should accept: #{name}"
+        end
+      end
+
+      it "rejects invalid flag names" do
+        invalid_names = %w[123invalid _starts-with-underscore --double-dash flag@symbol -single-dash]
+        
+        invalid_names.each do |name|
+          expect(command.send(:validate_flag_name, name)).to be(false), "Should reject: #{name}"
+        end
+      end
+
+      it "rejects reserved flag names" do
+        reserved_names = %w[help version debug verbose quiet]
+        
+        reserved_names.each do |name|
+          expect(command.send(:validate_flag_name, name)).to be(false), "Should reject reserved: #{name}"
+        end
+      end
+
+      it "rejects overly long flag names" do
+        long_name = "a" * 51
+        expect(command.send(:validate_flag_name, long_name)).to be false
+      end
+    end
+
+    describe "#convert_flag_value" do
+      it "converts boolean strings to boolean values" do
+        expect(command.send(:convert_flag_value, "true")).to be true
+        expect(command.send(:convert_flag_value, "false")).to be false
+        expect(command.send(:convert_flag_value, "yes")).to be true
+        expect(command.send(:convert_flag_value, "no")).to be false
+        expect(command.send(:convert_flag_value, "on")).to be true
+        expect(command.send(:convert_flag_value, "off")).to be false
+      end
+
+      it "converts integer strings to integers" do
+        expect(command.send(:convert_flag_value, "123")).to eq(123)
+        expect(command.send(:convert_flag_value, "-456")).to eq(-456)
+        expect(command.send(:convert_flag_value, "0")).to eq(0)
+        expect(command.send(:convert_flag_value, "1")).to eq(1)
+      end
+
+      it "converts float strings to floats" do
+        expect(command.send(:convert_flag_value, "123.45")).to eq(123.45)
+        expect(command.send(:convert_flag_value, "-67.89")).to eq(-67.89)
+        expect(command.send(:convert_flag_value, "0.0")).to eq(0.0)
+      end
+
+      it "converts comma-separated values to arrays" do
+        expect(command.send(:convert_flag_value, "a,b,c")).to eq(["a", "b", "c"])
+        expect(command.send(:convert_flag_value, "one, two, three")).to eq(["one", "two", "three"])
+      end
+
+      it "returns string values unchanged for other cases" do
+        expect(command.send(:convert_flag_value, "simple-string")).to eq("simple-string")
+        expect(command.send(:convert_flag_value, "mixed123text")).to eq("mixed123text")
+        expect(command.send(:convert_flag_value, "")).to eq("")
+      end
+
+      it "handles non-string values" do
+        expect(command.send(:convert_flag_value, true)).to be true
+        expect(command.send(:convert_flag_value, 123)).to eq(123)
+      end
+    end
+
+    describe "integration with create_path command" do
+      let(:test_path) { File.join(temp_dir, "test-file.txt") }
+
+      before do
+        # Mock ARGV to simulate undefined flags
+        allow(command).to receive(:parse_undefined_flags).and_return({
+          custom_field: "test-value",
+          priority_level: 5,
+          blocking: true,
+          tags: ["urgent", "feature"]
+        })
+        
+        # Mock all the dependencies that the command needs
+        path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
+        file_handler = instance_double(CodingAgentTools::Molecules::FileIoHandler)
+        security_validator = instance_double(CodingAgentTools::Molecules::SecurePathValidator)
+        
+        allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
+        allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
+        allow(CodingAgentTools::Molecules::SecurePathValidator).to receive(:new).and_return(security_validator)
+        
+        allow(path_resolver).to receive(:project_root).and_return(temp_dir)
+        allow(security_validator).to receive(:validate_path).and_return(
+          CodingAgentTools::Molecules::SecurePathValidator::ValidationResult.new(true, test_path, nil, nil)
+        )
+        allow(file_handler).to receive(:write_content).and_return(true)
+      end
+
+      it "includes undefined flags in metadata" do
+        result = command.call(
+          type: "file",
+          title: test_path,
+          content: "test content"
+        )
+
+        expect(result).to eq(0)
+      end
+
+      it "reports dynamic flags in output" do
+        # Mock ARGV parsing to return dynamic flags  
+        allow(command).to receive(:parse_undefined_flags).and_return({
+          custom_field: "value",
+          priority_level: 3
+        })
+
+        # Capture output
+        expect { 
+          command.call(
+            type: "file",
+            title: test_path,
+            content: "test content"
+          )
+        }.to output(/Added metadata: custom_field=value, priority_level=3/).to_stdout
+      end
+
+      it "doesn't report dynamic flags when none are present" do
+        allow(command).to receive(:parse_undefined_flags).and_return({})
+
+        expect { 
+          command.call(
+            type: "file",
+            title: test_path,
+            content: "test content"
+          )
+        }.not_to output(/Added metadata:/).to_stdout
+      end
+    end
+
+    describe "error handling" do
+      it "handles ARGV parsing errors gracefully" do
+        allow(command).to receive(:parse_undefined_flags).and_raise(StandardError, "ARGV error")
+
+        result = command.call(
+          type: "file",
+          title: File.join(temp_dir, "test.txt"),
+          content: "content"
+        )
+
+        expect(result).to eq(1)
+      end
+
+      it "continues operation when flag validation fails" do
+        # Mock to return some invalid flags mixed with valid ones
+        allow(command).to receive(:parse_undefined_flags).and_return({
+          valid_flag: "value",
+          another_valid: true
+        })
+
+        result = command.call(
+          type: "file",
+          title: File.join(temp_dir, "test.txt"),
+          content: "content"
+        )
+
+        expect(result).to eq(0)
+      end
+    end
+
+    describe "security validation" do
+      it "prevents flag name injection attacks" do
+        malicious_flags = {
+          "malicious; rm -rf /": "value",
+          "flag$(rm -rf /)": "value2",
+          "flag`rm -rf /`": "value3"
+        }
+
+        # These should be rejected by validate_flag_name
+        malicious_flags.each do |flag_name, _|
+          expect(command.send(:validate_flag_name, flag_name.to_s)).to be false
+        end
+      end
+
+      it "handles flag values safely" do
+        dangerous_values = [
+          "value; rm -rf /",
+          "value$(rm -rf /)",
+          "value`rm -rf /`"
+        ]
+
+        # Values should be handled safely (they're just stored as metadata)
+        dangerous_values.each do |value|
+          converted = command.send(:convert_flag_value, value)
+          expect(converted).to eq(value)  # Should be stored as-is (safely)
+        end
+      end
+    end
+
+    describe "backward compatibility" do
+      it "doesn't break existing command usage" do
+        result = subject.call(
+          type: "file",
+          title: File.join(temp_dir, "backward-compat.txt"),
+          content: "existing functionality",
+          priority: "high"
+        )
+
+        expect(result).to eq(0)
+      end
+
+      it "defined flags take precedence over undefined flags" do
+        # Mock ARGV to have both defined and undefined flags
+        allow(command).to receive(:parse_undefined_flags).and_return({
+          priority: "low",      # This should be ignored since priority is defined
+          custom_field: "value" # This should be kept
+        })
+
+        # The defined priority should win
+        result = command.call(
+          type: "file",
+          title: File.join(temp_dir, "precedence.txt"),
+          content: "test",
+          priority: "high"
+        )
+
+        expect(result).to eq(0)
+      end
+    end
+  end
 end

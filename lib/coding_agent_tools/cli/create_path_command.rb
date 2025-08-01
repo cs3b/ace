@@ -46,8 +46,12 @@ module CodingAgentTools
         @security_validator = Molecules::SecurePathValidator.new
         @config_loader = load_create_path_config
 
+        # Parse undefined flags from ARGV and merge with options
+        undefined_flags = parse_undefined_flags(ARGV)
+        enhanced_options = options.merge(undefined_flags)
+
         # Get target from title option (now required)
-        actual_target = options[:title]
+        actual_target = enhanced_options[:title]
 
         if actual_target.nil? || actual_target.strip.empty?
           puts 'Error: Title required for path creation'
@@ -56,11 +60,19 @@ module CodingAgentTools
         end
 
         # Process the creation request
-        result = process_creation(type, actual_target, options)
+        result = process_creation(type, actual_target, enhanced_options)
 
         if result[:success]
           puts result[:message]
           puts "Created: #{result[:path]}" if result[:path]
+          
+          # Report dynamic flags that were added
+          dynamic_flags = undefined_flags.reject { |k, _| k == :title }
+          unless dynamic_flags.empty?
+            flag_summary = dynamic_flags.map { |k, v| "#{k}=#{v}" }.join(', ')
+            puts "Added metadata: #{flag_summary}"
+          end
+          
           0
         else
           puts "Error: #{result[:error]}"
@@ -72,6 +84,114 @@ module CodingAgentTools
       end
 
       private
+
+      # Parse undefined flags from ARGV that weren't processed by dry-cli
+      # This captures dynamic flags like --custom-field value
+      def parse_undefined_flags(argv)
+        undefined_flags = {}
+        defined_flag_names = get_defined_flag_names
+        
+        i = 0
+        while i < argv.length
+          arg = argv[i]
+          
+          # Check if this is a flag (starts with --)
+          if arg.start_with?('--')
+            flag_name = arg.sub(/^--/, '')
+            
+            # Skip if this is a defined flag or if it's the command/type
+            if defined_flag_names.include?(flag_name) || 
+               %w[task-new file directory docs-new template].include?(arg)
+              i += 1
+              next
+            end
+            
+            # Look for the value (next argument that doesn't start with --)
+            value = nil
+            if i + 1 < argv.length && !argv[i + 1].start_with?('--')
+              value = argv[i + 1]
+              i += 2  # Skip both flag and value
+            else
+              # Boolean flag with no value
+              value = true
+              i += 1
+            end
+            
+            # Validate flag name for security
+            if validate_flag_name(flag_name)
+              # Convert value to appropriate type and store
+              converted_value = convert_flag_value(value)
+              undefined_flags[flag_name.tr('-', '_').to_sym] = converted_value
+            else
+              warn "Warning: Skipped invalid flag name: --#{flag_name}"
+            end
+          else
+            i += 1
+          end
+        end
+        
+        undefined_flags
+      rescue StandardError => e
+        warn "Warning: Error parsing undefined flags: #{e.message}"
+        {}
+      end
+
+      # Get list of defined flag names for conflict detection
+      def get_defined_flag_names
+        %w[title force content template priority estimate dependencies status]
+      end
+
+      # Validate flag name for security and conflicts
+      def validate_flag_name(flag_name)
+        # Check for valid flag name pattern (letters, numbers, hyphens)
+        return false unless flag_name.match?(/\A[a-z][a-z0-9\-]*\z/i)
+        
+        # Check length limit
+        return false if flag_name.length > 50
+        
+        # Check for reserved names
+        reserved_names = %w[help version debug verbose quiet]
+        return false if reserved_names.include?(flag_name)
+        
+        true
+      end
+
+      # Convert flag value to appropriate YAML type
+      def convert_flag_value(value)
+        return value unless value.is_a?(String)
+        
+        # Handle empty strings
+        return '' if value.empty?
+        
+        # Try boolean conversion first (but be more specific to avoid conflicts with numbers)
+        case value.downcase
+        when 'true', 'yes', 'on'
+          return true
+        when 'false', 'no', 'off'
+          return false
+        when '1', '0'  # Handle numeric booleans separately to avoid conflicts
+          # For '1' and '0', prefer integer interpretation unless explicitly boolean context
+          return value.to_i
+        end
+        
+        # Try integer conversion
+        if value.match?(/\A-?\d+\z/)
+          return value.to_i
+        end
+        
+        # Try float conversion  
+        if value.match?(/\A-?\d+\.\d+\z/)
+          return value.to_f
+        end
+        
+        # Handle arrays (comma-separated values)
+        if value.include?(',')
+          return value.split(',').map(&:strip)
+        end
+        
+        # Return as string (default)
+        value
+      end
 
       def process_creation(type, target, options)
         # Handle delegation format (file:type, directory:type)
