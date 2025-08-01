@@ -18,7 +18,7 @@ formal tasks.
 
 ### User Experience
 
-* **Command**: `ideas-manager capture "my raw idea text"`
+* **Command**: `capture-it "my raw idea text"`
 * **Options**:
   * `--clipboard` to read from clipboard
   * `--file PATH` to read from file(s)
@@ -39,11 +39,11 @@ formal tasks.
 
 ```bash
 # Basic usage
-ideas-manager capture "Add dark mode support"
+capture-it "Add dark mode support"
 # => Created: dev-taskflow/backlog/ideas/20250130-1430-dark-mode-support.md
 
 # From clipboard
-ideas-manager capture --clipboard
+capture-it --clipboard
 # => Created: dev-taskflow/backlog/ideas/20250130-1432-clipboard-idea.md
 ```
 
@@ -330,7 +330,7 @@ ideas-manager capture --clipboard
 ### 5. CLI Command Tests (`ideas_manager_spec.rb`)
 
 **Happy Path Test Cases:**
-- ✅ Basic command execution → `ideas-manager capture "test idea"`
+- ✅ Basic command execution → `capture-it "test idea"`
 - ✅ All option combinations → test matrix of all flags
 - ✅ Help command → `ideas-manager --help`
 - ✅ Version command → `ideas-manager --version`
@@ -614,7 +614,7 @@ Tests must properly detect test environments and:
 ## Example Workflow
 
 ```bash
-ideas-manager capture "every task definition should have an example section"
+capture-it "every task definition should have an example section"
 ```
 
 ### 1. **Generate Slug and Get Paths**
