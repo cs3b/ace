@@ -2,38 +2,11 @@
 id: v.0.4.0+task.014
 status: pending
 priority: high
-estimate: 6h
+estimate: 4h
 dependencies: []
-needs_review: true
 ---
 
 # Automated Idea File Management for Task Creation
-
-## Review Questions (Pending Human Input)
-
-### [CRITICAL] Implementation Status Questions
-- [ ] Is this functionality already implemented? Evidence suggests idea files are being moved to docs/ideas/ with task prefixes
-  - **Research conducted**: Found existing moved files (008-*.md, 009-*.md, 011-*.md) in dev-taskflow/current/v.0.4.0-replanning/docs/ideas/
-  - **Current behavior**: Idea files appear to be already moved with task number prefixes
-  - **Why needs human input**: Task may be documenting existing behavior or requesting enhancement
-
-### [HIGH] Implementation Scope Questions  
-- [ ] Should the moved idea file path be updated in the task's References section?
-  - **Research conducted**: Task 009 still references original backlog path, not moved location
-  - **Suggested default**: Update References to point to new location in docs/ideas/
-  - **Why needs human input**: May affect existing tasks and tooling expectations
-
-### [HIGH] Integration Method Questions
-- [ ] Should this be integrated into create-path command or draft-task workflow?
-  - **Research conducted**: create-path uses delegation pattern, draft-task workflow calls create-path
-  - **Suggested default**: Integrate at draft-task workflow level after task creation
-  - **Why needs human input**: Architectural decision affecting tool boundaries
-
-### [MEDIUM] File Conflict Questions
-- [ ] How should we handle when an idea file is already linked to multiple tasks?
-  - **Research conducted**: No existing pattern found for multi-task ideas
-  - **Suggested default**: Keep single file, add task references in metadata
-  - **Why needs human input**: Business logic for idea-to-task relationships
 
 ## Behavioral Specification
 
@@ -60,17 +33,17 @@ Users experience seamless task creation without manual file management overhead,
 # When executing: draft-task dev-taskflow/backlog/ideas/YYYY-MMDD-HHMM-idea-name.md
 # System behavior:
 # 1. Creates task: dev-taskflow/current/vX.Y.Z-release/tasks/vX.Y.Z+task.NNN-task-title.md
-# 2. Moves idea: dev-taskflow/current/vX.Y.Z-release/docs/ideas/NNN-YYYY-MMDD-HHMM-idea-name.md
+# 2. Gets current release path: release-manager current
+# 3. Moves idea: git-commit old-path new-path --intention "Move idea file to current release after task creation"
+#    Destination: dev-taskflow/current/vX.Y.Z-release/docs/ideas/NNN-YYYY-MMDD-HHMM-idea-name.md
 
 # Expected outputs:
 # - "Draft task created: [task-path]"
 # - "Idea file moved: [old-path] -> [new-path]"
-# - Task file contains reference to moved idea file
+# - Task file maintains original idea reference (no update needed)
 
-# Integration with create-path tool:
-create-path task-new --title "Task Title" --status draft
-# Automatically detects if created from idea file context
-# Performs file management operations transparently
+# Workflow integration (no create-path changes needed):
+# draft-task workflow handles file movement after task creation
 ```
 
 **Error Handling:**
@@ -81,9 +54,9 @@ create-path task-new --title "Task Title" --status draft
 
 **Edge Cases:**
 - **Task number not yet assigned**: Wait for task creation completion before file operations
-- **Multiple ideas for same task**: Support multiple idea file references in task metadata
+- **Multiple tasks from same idea**: Use combined task number prefix (e.g., 009-010-012-original-name.md)
 - **Idea file in different release folder**: Support cross-release idea referencing with clear path handling
-- **No current release defined**: Default to backlog location with clear notification
+- **No current release defined**: Skip file movement with warning, continue task creation
 
 ### Success Criteria
 <!-- Define measurable, observable criteria that indicate successful completion -->
@@ -99,20 +72,12 @@ create-path task-new --title "Task Title" --status draft
 <!-- Questions to clarify requirements, resolve ambiguities, and validate understanding -->
 <!-- Ask about unclear requirements, edge cases, and user expectations -->
 
-- [ ] **Current Release Detection**: How should the system determine the "current release folder" path when multiple releases exist?
-  - **Research conducted**: ReleaseManager uses DirectoryNavigator.get_current_release_directory to find release in dev-taskflow/current/
-  - **Current implementation**: Single subdirectory pattern (e.g., v.0.4.0-replanning)
-  - **Resolved**: Use existing ReleaseManager.current mechanism
-- [ ] **Task Number Availability**: At what point in the task creation process is the task number available for file renaming?
-  - **Research conducted**: TaskIdGenerator creates ID during create-path execution
-  - **Current implementation**: Task ID available immediately after create-path returns
-  - **Resolved**: Task number is available after create-path completes
-- [ ] **File Conflict Resolution**: Should existing files be overwritten, versioned, or should the operation fail with user notification?
-  - **Kept as validation question - needs business decision**
+- [x] **File Conflict Resolution**: Should existing files be overwritten, versioned, or should the operation fail with user notification?
+  - **Decision**: Append task number to existing prefix (creating combined prefixes like 009-010-filename.md)
 - [ ] **Cross-Repository Operations**: Should the system support idea files from different repositories or maintain strict repository boundaries?
-  - **Kept as validation question - needs architectural decision**
+  - **Assumption**: Maintain repository boundaries - only move files within same repository
 - [ ] **Rollback Behavior**: If task creation fails after idea file movement, should the file movement be automatically reversed?
-  - **Kept as validation question - needs error handling strategy decision**
+  - **Assumption**: No rollback - file movement is housekeeping, task creation failure doesn't invalidate the move
 
 ## Objective
 
@@ -130,7 +95,7 @@ Establish clear traceability and organization for idea files throughout their li
 
 #### Behavioral Specifications
 - User experience flow definitions
-- System behavior specifications  
+- System behavior specifications
 - Interface contract definitions
 
 #### Validation Artifacts
@@ -142,68 +107,61 @@ Establish clear traceability and organization for idea files throughout their li
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
 - ❌ **Implementation Details**: File structures, code organization, technical architecture
-- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions  
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions
 - ❌ **Performance Optimization**: Specific performance improvement strategies
 - ❌ **Future Enhancements**: Related features or capabilities not in current scope
 
 ## Technical Approach
 
 ### Architecture Pattern
-- **ATOM Architecture Integration**: New IdeaFileManager molecule integrating with existing FileIoHandler and SecurePathValidator molecules
-- **CLI Command Enhancement**: Extend create-path command with --idea-source option for transparent file management
-- **Path Resolution Integration**: Leverage existing PathResolver for consistent path handling across the system
+- **Workflow Enhancement**: Modify draft-task workflow to handle idea file movement after task creation
+- **No CLI Changes**: Use existing tools (release-manager, git-commit) without modifying create-path
+- **Path Resolution**: Use `release-manager current` to determine destination path dynamically
 
 ### Technology Stack
-- **Ruby FileUtils**: Core file operations (move, copy, rename) with proper error handling
-- **Existing Security Framework**: Leverage SecurePathValidator and FileIoHandler for consistent security
-- **CLI Framework Integration**: Extend dry-cli command structure with idea file management options
-- **Path Standards**: Follow XDG-compliant path handling and project path conventions
+- **Existing Tools**: release-manager, git-commit with file movement support
+- **Workflow Script**: Enhanced draft-task.wf.md with file movement logic
+- **Git Integration**: Use `git-commit old-path new-path --intention` for atomic moves
+- **Path Standards**: Follow existing project conventions for docs/ideas/ structure
 
 ### Implementation Strategy
-- **Transparent Integration**: File operations occur automatically during task creation without additional user commands
-- **Graceful Degradation**: Task creation continues successfully even if idea file operations fail
-- **Conflict Resolution**: Automatic versioning (v2.md, v3.md) for destination file conflicts
+- **Workflow-Level Integration**: All logic in draft-task workflow, no tool modifications
+- **Graceful Degradation**: Task creation continues if file movement fails
+- **Conflict Resolution**: Combined task number prefixes (009-010-012-filename.md)
 
 ## Tool Selection
 
-| Criteria | Ruby FileUtils | Shell Commands | Custom Implementation | Selected |
-|----------|---------------|----------------|---------------------|----------|
-| Security | Good (with validation) | Poor (injection risks) | Excellent | Ruby FileUtils |
-| Integration | Excellent | Poor | Good | Ruby FileUtils |
-| Error Handling | Excellent | Fair | Good | Ruby FileUtils |
-| Maintainability | Excellent | Poor | Fair | Ruby FileUtils |
-| ATOM Compliance | Excellent | Poor | Good | Ruby FileUtils |
+| Criteria | git-commit move | Shell mv | Ruby FileUtils | Selected |
+|----------|----------------|----------|----------------|----------|
+| Git Integration | Excellent | Poor | Fair | git-commit |
+| Atomic Operations | Excellent | Poor | Good | git-commit |
+| Error Handling | Excellent | Poor | Good | git-commit |
+| Workflow Integration | Excellent | Good | Poor | git-commit |
+| Existing Tool | Yes | Yes | No (new code) | git-commit |
 
-**Selection Rationale:** Ruby FileUtils provides the best balance of security, integration with existing ATOM architecture, and maintainability while leveraging existing security validation infrastructure.
+**Selection Rationale:** Using `git-commit old-path new-path --intention` provides atomic git-aware file movement without requiring new code, maintaining consistency with existing project practices.
 
 ### Dependencies
-- **Existing**: FileUtils (Ruby stdlib), FileIoHandler, SecurePathValidator, PathResolver
-- **New**: None - leverages existing infrastructure
-- **Compatibility**: Full compatibility with existing CLI command structure
+- **Existing**: release-manager, git-commit, draft-task workflow
+- **New**: None - uses only existing tools
+- **Compatibility**: No changes to existing tools, only workflow enhancement
 
 ## File Modifications
 
 ### Create
-- dev-tools/lib/coding_agent_tools/molecules/idea_file_manager.rb
-  - Purpose: ATOM molecule for idea file operations (move, rename, organize)
-  - Key components: File movement, conflict resolution, path generation
-  - Dependencies: FileIoHandler, SecurePathValidator, FileUtils
-
-- dev-tools/spec/coding_agent_tools/molecules/idea_file_manager_spec.rb
-  - Purpose: Comprehensive test coverage for idea file management molecule
-  - Key components: Unit tests for all file operations and edge cases
-  - Dependencies: RSpec, temporary file fixtures
+- None: No new files needed, using existing tools
 
 ### Modify
-- dev-tools/lib/coding_agent_tools/cli/create_path_command.rb
-  - Changes: Add --idea-source option, integrate IdeaFileManager molecule
-  - Impact: Enhanced task creation with transparent idea file management
-  - Integration points: Connects to IdeaFileManager after successful task creation
-
-- dev-tools/lib/coding_agent_tools/molecules/path_resolver.rb
-  - Changes: Add current release detection and idea destination path generation
-  - Impact: Consistent path resolution for idea file destinations
-  - Integration points: Used by IdeaFileManager for destination path calculation
+- dev-handbook/workflow-instructions/draft-task.wf.md
+  - Changes: Add step 7.5 for idea file movement after task creation
+  - Impact: Automated idea file organization during task drafting
+  - Integration points: Between task creation (step 7) and completion verification (step 8)
+  - Key logic:
+    - Extract task number from created task path
+    - Get current release path via `release-manager current`
+    - Build destination path: `current-release/docs/ideas/NNN-original-name.md`
+    - Execute: `git-commit old-path new-path --intention "Move idea file to current release after task NNN creation"`
+    - Handle multi-task prefixes by checking if file already exists with prefix
 
 ### Delete
 - None: All changes are additive to maintain backward compatibility
@@ -250,81 +208,75 @@ Establish clear traceability and organization for idea files throughout their li
 
 *Use asterisk markers (`* [ ]`) for research, analysis, and design activities.*
 
-* [ ] **[REVIEW NOTE]** Verify if this functionality already exists by checking existing moved idea files
-  > TEST: Implementation Status Check
-  > Type: Pre-condition Verification
-  > Assert: Determine if idea file movement is already implemented
-  > Command: ls -la dev-taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}-.*\.md"
-
-* [ ] Analyze current create-path command structure and integration points
-  > TEST: Understanding Check
+* [ ] Analyze draft-task workflow to identify optimal insertion point for file movement
+  > TEST: Workflow Understanding
   > Type: Pre-condition Check
-  > Assert: Command flow and extension points are identified
-  > Command: grep -r "create_path" dev-tools/lib/ --include="*.rb"
+  > Assert: Identify point after task creation but before completion
+  > Command: grep -n "create-path task-new" dev-handbook/workflow-instructions/draft-task.wf.md
 
-* [ ] Research FileUtils cross-platform compatibility for file move operations
-  > TEST: Compatibility Verification
+* [ ] Study git-commit command's file movement capabilities
+  > TEST: Tool Capability Check
   > Type: Research Validation
-  > Assert: FileUtils.mv behavior consistent across target platforms
-  > Command: ruby -e "require 'fileutils'; puts FileUtils.respond_to?(:mv)"
+  > Assert: Confirm git-commit supports "old-path new-path" pattern
+  > Command: git-commit --help | grep -A5 "file movement"
 
-* [ ] Design IdeaFileManager molecule interface following ATOM architecture patterns
-  > TEST: Architecture Compliance
-  > Type: Design Validation
-  > Assert: Interface follows established molecule patterns in codebase
-  > Command: find dev-tools/lib/coding_agent_tools/molecules/ -name "*.rb" | head -3 | xargs grep -l "def initialize"
+* [ ] Verify release-manager output format for path extraction
+  > TEST: Output Format Verification
+  > Type: Integration Check
+  > Assert: release-manager current provides parseable path output
+  > Command: release-manager current | grep "Path:"
 
 ### Execution Steps
 
 *Use hyphen markers (`- [ ]`) for concrete implementation actions.*
 
-- [ ] Create IdeaFileManager molecule with core file operations
-  > TEST: Molecule Creation
+- [ ] Add idea file movement logic to draft-task workflow after step 7
+  > TEST: Workflow Enhancement
   > Type: Implementation Validation
-  > Assert: IdeaFileManager class created with required methods (move_idea_file, generate_destination_path, handle_conflicts)
-  > Command: ruby -c dev-tools/lib/coding_agent_tools/molecules/idea_file_manager.rb
+  > Assert: New step 7.5 added with proper file movement logic
+  > Command: grep -A10 "Create Draft Task Files" dev-handbook/workflow-instructions/draft-task.wf.md
 
-- [ ] Implement secure file movement with conflict resolution
-  > TEST: File Operations
+- [ ] Implement task number extraction from created task path
+  > TEST: Pattern Extraction
   > Type: Functional Validation
-  > Assert: Files moved correctly with version suffixes for conflicts
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb -t file_movement
+  > Assert: Extract NNN from path like "v.0.4.0+task.NNN-title.md"
+  > Command: echo "v.0.4.0+task.014-title.md" | grep -oE "task\.([0-9]{3})" | cut -d. -f2
 
-- [ ] Enhance create-path command with --idea-source option and integration
-  > TEST: CLI Integration
+- [ ] Add release-manager integration for current release path
+  > TEST: Tool Integration
   > Type: Integration Validation
-  > Assert: create-path command accepts --idea-source and processes files
-  > Command: cd dev-tools && bundle exec exe/create-path task-new --title "test-task" --idea-source "/tmp/test-idea.md" --help | grep "idea-source"
+  > Assert: Workflow correctly calls release-manager current and extracts path
+  > Command: release-manager current | grep "Path:" | awk '{print $2}'
 
-- [ ] Add current release detection to PathResolver molecule
-  > TEST: Path Resolution
-  > Type: Component Validation
-  > Assert: PathResolver correctly identifies current release directory
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/path_resolver_spec.rb -t current_release
+- [ ] Implement git-commit file movement with proper intention message
+  > TEST: Git Integration
+  > Type: Command Validation
+  > Assert: git-commit correctly moves files with intention
+  > Command: git-commit --dry-run old-path new-path --intention "Move idea file to current release"
 
-- [ ] Implement comprehensive error handling and logging for file operations
+- [ ] Add multi-task prefix handling for existing files
+  > TEST: Conflict Resolution
+  > Type: Edge Case Validation
+  > Assert: Properly handles 009-010-012-filename.md pattern
+  > Command: ls dev-taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}(-[0-9]{3})*-.*\.md"
+
+- [ ] Implement error handling for missing release or failed moves
   > TEST: Error Handling
   > Type: Reliability Validation
-  > Assert: All error conditions handled gracefully with appropriate logging
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb -t error_handling
+  > Assert: Workflow continues if file movement fails
+  > Command: Test with non-existent idea file path
 
-- [ ] Create complete test suite covering all scenarios and edge cases
-  > TEST: Test Coverage
-  > Type: Quality Validation
-  > Assert: Test coverage >95% for all new code with edge case coverage
-  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/molecules/idea_file_manager_spec.rb --format progress
+- [ ] Test complete workflow with real idea file
+  > TEST: End-to-End Validation
+  > Type: Integration Test
+  > Assert: Idea file correctly moved after task creation
+  > Command: Execute draft-task workflow with test idea file
 
-- [ ] Update CLI help documentation and command examples
+- [ ] Document the enhanced workflow behavior
   > TEST: Documentation Update
   > Type: Usability Validation
-  > Assert: Help text includes --idea-source option with clear examples
-  > Command: cd dev-tools && bundle exec exe/create-path --help | grep -A5 "idea-source"
-
-- [ ] Validate integration with existing draft-task workflow
-  > TEST: Workflow Integration
-  > Type: End-to-End Validation
-  > Assert: Draft-task workflow can use enhanced create-path with idea file management
-  > Command: create-path task-new --title "integration-test" --idea-source "test-idea.md" --status draft
+  > Assert: Workflow documentation includes file movement behavior
+  > Command: grep -A5 "idea file movement" dev-handbook/workflow-instructions/draft-task.wf.md
 
 ## Acceptance Criteria
 
@@ -341,11 +293,11 @@ Establish clear traceability and organization for idea files throughout their li
 
 ## Out of Scope
 
-- ❌ **GUI Interface**: Command-line only, no graphical user interface for file management
+- ❌ **Tool Modifications**: No changes to existing CLI tools (create-path, release-manager, git-commit)
 - ❌ **Batch Processing**: Single idea file per task creation, no bulk operations
-- ❌ **Version Control Integration**: File operations are filesystem-only, no automatic git operations
+- ❌ **Reference Updates**: Task files maintain original idea references (housekeeping only)
 - ❌ **Cross-Repository Operations**: Idea files must be within the same repository structure
-- ❌ **Advanced Conflict Resolution**: Simple versioning (v2, v3) only, no merge strategies
+- ❌ **Complex Conflict Resolution**: Simple prefix combination only (009-010-012-filename.md)
 
 ## References
 
@@ -358,3 +310,4 @@ Establish clear traceability and organization for idea files throughout their li
 - **[REVIEW FINDING]** Existing moved idea files: `dev-taskflow/current/v.0.4.0-replanning/docs/ideas/`
 - **[REVIEW FINDING]** TaskIdGenerator: `dev-tools/lib/coding_agent_tools/molecules/taskflow_management/task_id_generator.rb`
 - **[REVIEW FINDING]** ReleaseManager: `dev-tools/lib/coding_agent_tools/organisms/taskflow_management/release_manager.rb`
+
