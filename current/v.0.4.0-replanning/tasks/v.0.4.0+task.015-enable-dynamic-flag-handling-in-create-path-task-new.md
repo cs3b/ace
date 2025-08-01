@@ -1,12 +1,183 @@
 ---
 id: v.0.4.0+task.015
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 6h
 dependencies: []
 ---
 
 # Enable Dynamic Flag Handling in create-path task-new
+
+## Technical Approach
+
+### Architecture Pattern
+The solution integrates with the existing ATOM architecture by extending the CreatePathCommand at the Molecule level. The approach maintains compatibility with dry-cli while adding pre-processing capabilities for undefined flags.
+
+**Integration with existing architecture:**
+- Preserves existing security validation patterns
+- Maintains template substitution system
+- Extends metadata building without breaking changes
+- Uses existing FileIoHandler and PathResolver components
+
+**Pattern Selection Rationale:**
+- **Hybrid Pre-processing**: Extract undefined flags before dry-cli validation
+- **Metadata Integration**: Merge undefined flags into existing metadata hash
+- **Security Preservation**: Apply same validation patterns to dynamic flags
+
+### Technology Stack
+- **ARGV Pre-processing**: Ruby's ARGV manipulation before dry-cli
+- **YAML Integration**: Extend existing YAML metadata serialization
+- **Type Detection**: Intelligent type conversion (string/int/float/boolean)
+- **Security Framework**: Apply existing path validation and sanitization
+
+**Performance implications:**
+- Minimal startup overhead (< 5ms for flag parsing)
+- Memory efficient with lazy processing
+- No impact on existing command performance
+
+**Security considerations:**
+- Validate dynamic flag names against safe patterns
+- Apply same sanitization as existing metadata
+- Prevent flag name conflicts with future defined options
+
+### Implementation Strategy
+1. **ARGV Pre-processing**: Extract undefined flags before dry-cli processes them
+2. **Metadata Merging**: Integrate undefined flags into build_metadata_hash
+3. **Type Intelligence**: Auto-detect and convert flag values to appropriate types
+4. **Backwards Compatibility**: Ensure existing workflows continue unchanged
+
+## Tool Selection
+
+| Criteria | ARGV Pre-parse | Custom Parser | dry-cli Extension | Selected |
+|----------|---------------|---------------|-------------------|----------|
+| Compatibility | Excellent | Poor | Good | ARGV Pre-parse |
+| Security | Excellent | Fair | Good | ARGV Pre-parse |
+| Maintenance | Excellent | Poor | Fair | ARGV Pre-parse |
+| Performance | Excellent | Good | Good | ARGV Pre-parse |
+
+**Selection Rationale:** ARGV pre-processing maintains full compatibility with existing dry-cli architecture while providing the needed flexibility. It preserves all existing security validations and requires minimal code changes.
+
+### Dependencies
+- No new external dependencies required
+- Uses existing Ruby standard library (YAML, etc.)
+- Leverages existing ATOM components
+
+## File Modifications
+
+### Modify
+- `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-tools/lib/coding_agent_tools/cli/create_path_command.rb`
+  - **Changes**: Add parse_undefined_flags method, extend build_metadata_hash to merge dynamic flags, add type conversion logic
+  - **Impact**: Enhanced task creation flexibility, backward compatible
+  - **Integration points**: Existing metadata system, template substitution engine
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Flag name conflicts with future defined options
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Implement reserved flag name checking, clear error messages for conflicts
+  - **Rollback:** Disable dynamic flag parsing via configuration flag
+
+- **Risk:** YAML serialization errors from invalid flag values
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Validate flag values before YAML generation, graceful error handling
+  - **Rollback:** Skip invalid flags with warning messages
+
+### Integration Risks
+- **Risk:** Backward compatibility issues with existing templates
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Extensive testing with existing task templates, metadata key collision detection
+  - **Monitoring:** Monitor task creation success rates after deployment
+
+### Performance Risks
+- **Risk:** Command startup time degradation
+  - **Mitigation:** Lazy processing, efficient ARGV parsing
+  - **Monitoring:** Track command execution times
+  - **Thresholds:** < 5ms additional startup time
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Research existing metadata key patterns in task templates
+  > TEST: Template Analysis Complete
+  > Type: Pre-condition Check
+  > Assert: All task template metadata keys are catalogued for conflict detection
+  > Command: grep -r "^[a-z_-]*:" dev-handbook/templates/task-management/
+
+* [ ] Analyze dry-cli option processing flow to identify integration points
+  > TEST: Integration Point Identification
+  > Type: Architecture Analysis
+  > Assert: ARGV pre-processing integration point identified without breaking dry-cli
+  > Command: ruby -c modified_create_path_command.rb
+
+* [ ] Design type detection algorithm for intelligent flag value conversion
+  > TEST: Type Detection Algorithm
+  > Type: Design Validation
+  > Assert: Algorithm correctly identifies strings, integers, floats, booleans from flag values
+  > Command: ruby type_conversion_test.rb
+
+### Execution Steps
+
+- [ ] Implement parse_undefined_flags method to extract dynamic flags from ARGV
+  > TEST: Flag Parsing Validation
+  > Type: Unit Test
+  > Assert: Method correctly extracts undefined flags while preserving defined flags
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb -e "parse_undefined_flags"
+
+- [ ] Add intelligent type conversion for flag values (string, int, float, boolean)
+  > TEST: Type Conversion Validation
+  > Type: Unit Test
+  > Assert: Flag values converted to appropriate YAML types based on content analysis
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb -e "type_conversion"
+
+- [ ] Extend build_metadata_hash to merge undefined flags with existing metadata
+  > TEST: Metadata Integration
+  > Type: Integration Test
+  > Assert: Dynamic flags properly merged into task YAML metadata without conflicts
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb -e "metadata_merging"
+
+- [ ] Implement conflict detection for reserved/defined flag names
+  > TEST: Conflict Detection
+  > Type: Unit Test
+  > Assert: System detects and handles conflicts between dynamic and defined flags
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb -e "conflict_detection"
+
+- [ ] Add comprehensive error handling for invalid flag values and YAML issues
+  > TEST: Error Handling Validation
+  > Type: Integration Test
+  > Assert: Invalid flags handled gracefully without breaking task creation
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb -e "error_handling"
+
+- [ ] Create comprehensive test cases covering happy path, edge cases, and error conditions
+  > TEST: Test Coverage Validation
+  > Type: Test Suite
+  > Assert: All scenarios covered including type conversion, conflicts, and error conditions
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/create_path_spec.rb && coverage_check
+
+- [ ] Validate backward compatibility with existing task-new workflows
+  > TEST: Backward Compatibility
+  > Type: Regression Test
+  > Assert: Existing create-path task-new commands work unchanged
+  > Command: test_existing_workflows.rb
+
+- [ ] Test dynamic flag handling with real task creation scenarios
+  > TEST: End-to-end Validation
+  > Type: System Test
+  > Assert: Dynamic flags appear correctly in created task YAML frontmatter
+  > Command: create-path task-new --title "Test Task" --status draft --priority high --custom-field value && validate_task_metadata.rb
+
+## Acceptance Criteria
+
+- [ ] **Dynamic Metadata Creation**: Users can add arbitrary metadata to tasks via undefined command-line flags without modifying the create-path command definition
+- [ ] **Workflow Integration**: AI workflows and automation scripts can pass context-specific task attributes dynamically during task creation
+- [ ] **YAML Compatibility**: All undefined flags are properly serialized as valid YAML metadata that integrates with existing task management workflows
+- [ ] **Type Intelligence**: Flag values are automatically converted to appropriate YAML types (string, integer, float, boolean) based on content analysis
+- [ ] **Error Resilience**: Invalid or problematic flags are handled gracefully without breaking task creation
+- [ ] **Backward Compatibility**: Existing create-path task-new commands continue to work without modification
 
 ## Behavioral Specification
 
