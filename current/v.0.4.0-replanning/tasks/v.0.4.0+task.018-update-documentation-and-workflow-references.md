@@ -1,9 +1,9 @@
 ---
 id: v.0.4.0+task.018
-status: draft
+status: pending
 priority: high
-estimate: TBD
-dependencies: []
+estimate: 6h
+dependencies: [v.0.4.0+task.017]
 ---
 
 # Update documentation and workflow references
