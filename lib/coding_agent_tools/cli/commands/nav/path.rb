@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require 'dry/cli'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Nav
         class Path < Dry::CLI::Command
-          desc "Intelligent path resolution and generation"
+          desc 'Intelligent path resolution and generation'
 
-          argument :type, desc: "Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file"
-          argument :input, desc: "Input for path resolution (title for new paths, ID/pattern for existing paths)"
+          argument :type,
+                   desc: 'Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
+          argument :input, desc: 'Input for path resolution (title for new paths, ID/pattern for existing paths)'
 
-          option :title, desc: "Title for new path generation (alternative to input argument)"
+          option :title, desc: 'Title for new path generation (alternative to input argument)'
 
           def call(type:, input: nil, **options)
             # Initialize components
@@ -22,53 +23,50 @@ module CodingAgentTools
             actual_input = input || options[:title]
 
             # reflection-list doesn't need input
-            unless type == "reflection-list" || type == "reflection_list"
-              if actual_input.nil? || actual_input.strip.empty?
-                puts "Error: Input required for path resolution"
-                puts "Usage: nav path TYPE INPUT [OPTIONS]"
-                puts "       nav path TYPE --title 'Title'"
-                return
-              end
+            if !%w[reflection-list
+                   reflection_list].include?(type) && (actual_input.nil? || actual_input.strip.empty?)
+              puts 'Error: Input required for path resolution'
+              puts 'Usage: nav path TYPE INPUT [OPTIONS]'
+              puts "       nav path TYPE --title 'Title'"
+              return
             end
 
             # Determine path type
             path_type = case type
-            when "task-new", "task_new"
-              :task_new
-            when "docs-new", "docs_new"
-              :docs_new
-            when "reflection-new", "reflection_new"
-              :reflection_new
-            when "reflection-list", "reflection_list"
-              :reflection_list
-            when "code-review-new", "code_review_new"
-              :code_review_new
-            when "capture-idea-new", "capture_idea_new"
-              :capture_idea_new
-            when "task"
-              :task
-            when "file"
-              :file
-            else
-              puts "Error: Unknown path type '#{type}'"
-              puts "Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file"
-              return
-            end
+                        when 'task-new', 'task_new'
+                          :task_new
+                        when 'docs-new', 'docs_new'
+                          :docs_new
+                        when 'reflection-new', 'reflection_new'
+                          :reflection_new
+                        when 'reflection-list', 'reflection_list'
+                          :reflection_list
+                        when 'code-review-new', 'code_review_new'
+                          :code_review_new
+                        when 'capture-idea-new', 'capture_idea_new'
+                          :capture_idea_new
+                        when 'task'
+                          :task
+                        when 'file'
+                          :file
+                        else
+                          puts "Error: Unknown path type '#{type}'"
+                          puts 'Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
+                          return
+                        end
 
             # Resolve the path
             result = if path_type == :reflection_list
-              path_resolver.find_reflection_paths_in_current_release
-            else
-              path_resolver.resolve_path(actual_input, type: path_type)
-            end
+                       path_resolver.find_reflection_paths_in_current_release
+                     else
+                       path_resolver.resolve_path(actual_input, type: path_type)
+                     end
 
             if result[:success]
               case result[:type]
               when :single
                 # Standard single result
-                if result[:autocorrect_message]
-                  puts result[:autocorrect_message]
-                end
+                puts result[:autocorrect_message] if result[:autocorrect_message]
                 puts result[:path]
               when :list
                 # Reflection list - output each path on separate line
@@ -90,9 +88,7 @@ module CodingAgentTools
                 end
               when :scoped_multiple
                 # Scoped pattern with multiple matches
-                if result[:autocorrect_message]
-                  puts result[:autocorrect_message]
-                end
+                puts result[:autocorrect_message] if result[:autocorrect_message]
                 puts result[:path]
 
                 # Show scoped alternatives if any exist
@@ -103,7 +99,7 @@ module CodingAgentTools
             else
               puts "Error: #{result[:error]}"
             end
-          rescue => e
+          rescue StandardError => e
             puts "Error: #{e.message}"
           end
         end

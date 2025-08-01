@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "shellwords"
-require "open3"
-require "time"
+require 'shellwords'
+require 'open3'
+require 'time'
 
 module CodingAgentTools
   module Molecules
@@ -31,7 +31,7 @@ module CodingAgentTools
         end
 
         # Default system prompt template location
-        DEFAULT_SYSTEM_PROMPT = "dev-handbook/templates/review-synthesizer/system.prompt.md"
+        DEFAULT_SYSTEM_PROMPT = 'dev-handbook/templates/review-synthesizer/system.prompt.md'
 
         # Initialize the synthesis orchestrator
         # @param options [Hash] Configuration options
@@ -50,30 +50,29 @@ module CodingAgentTools
         # @param force [Boolean] Force overwrite existing files
         # @param debug [Boolean] Enable debug output
         # @return [SynthesisResult] Result of synthesis operation
-        def synthesize_reports(reports:, session_info:, model:, output_path:, format: "markdown", system_prompt_path: nil, force: false, debug: false)
+        def synthesize_reports(reports:, session_info:, model:, output_path:, format: 'markdown',
+                               system_prompt_path: nil, force: false, debug: false)
           start_time = Time.now
 
           # Prepare synthesis prompt
-          puts "📝 Building comprehensive synthesis prompt..."
+          puts '📝 Building comprehensive synthesis prompt...'
           prompt_content = build_synthesis_prompt(reports, session_info, system_prompt_path)
           puts "✅ Synthesis prompt prepared (#{prompt_content.length} characters)"
 
           # Handle output file sequencing
-          puts "📂 Checking output file path and sequencing..."
+          puts '📂 Checking output file path and sequencing...'
           final_output_path = handle_output_sequencing(output_path, force)
-          if final_output_path != output_path
-            puts "📁 Using sequenced output path: #{File.basename(final_output_path)}"
-          end
+          puts "📁 Using sequenced output path: #{File.basename(final_output_path)}" if final_output_path != output_path
 
           # Execute LLM query
-          puts "🚀 Executing LLM synthesis (this may take a moment)..."
+          puts '🚀 Executing LLM synthesis (this may take a moment)...'
           execution_result = execute_llm_synthesis(model, prompt_content, final_output_path, format, debug)
 
           end_time = Time.now
           execution_time = end_time - start_time
 
           if execution_result[:success]
-            puts "✅ LLM synthesis completed successfully"
+            puts '✅ LLM synthesis completed successfully'
             metrics = extract_synthesis_metrics(execution_result, execution_time, reports.length)
 
             SynthesisResult.new(
@@ -82,13 +81,13 @@ module CodingAgentTools
               success: true
             )
           else
-            puts "❌ LLM synthesis failed"
+            puts '❌ LLM synthesis failed'
             SynthesisResult.new(
               error: execution_result[:error],
               success: false
             )
           end
-        rescue => e
+        rescue StandardError => e
           SynthesisResult.new(
             error: "Synthesis orchestration failed: #{e.message}",
             success: false
@@ -114,9 +113,9 @@ module CodingAgentTools
           result = synthesize_reports(
             reports: options[:reports] || [],
             session_info: nil, # Not used in test interface
-            model: options[:model] || "google:gemini-2.5-pro",
-            output_path: options[:output_file] || "cr-report.md",
-            format: options[:format] || "markdown",
+            model: options[:model] || 'google:gemini-2.5-pro',
+            output_path: options[:output_file] || 'cr-report.md',
+            format: options[:format] || 'markdown',
             system_prompt_path: options[:system_prompt],
             force: options[:force] || false,
             debug: options[:debug] || false
@@ -128,7 +127,7 @@ module CodingAgentTools
             output_file: result.output_path,
             error: result.error
           }
-        rescue => e
+        rescue StandardError => e
           {
             success: false,
             error: e.message
@@ -150,9 +149,7 @@ module CodingAgentTools
           prompt_parts << "# System Instructions\n\n#{system_prompt}" if system_prompt
 
           # Add session context
-          if session_info.has_session?
-            prompt_parts << build_session_context(session_info)
-          end
+          prompt_parts << build_session_context(session_info) if session_info.has_session?
 
           # Add combined reports
           prompt_parts << build_combined_reports_section(reports)
@@ -171,8 +168,8 @@ module CodingAgentTools
 
           return nil unless prompt_path && File.exist?(prompt_path)
 
-          File.read(prompt_path, encoding: "UTF-8").strip
-        rescue => e
+          File.read(prompt_path, encoding: 'UTF-8').strip
+        rescue StandardError => e
           # Log error but continue without system prompt
           warn "Warning: Could not load system prompt from #{prompt_path}: #{e.message}" if @debug
           nil
@@ -182,7 +179,7 @@ module CodingAgentTools
         # @param session_info [SessionPathInferrer::InferenceResult] Session information
         # @return [String] Session context content
         def build_session_context(session_info)
-          context_parts = ["# Session Context"]
+          context_parts = ['# Session Context']
 
           context_parts << "**Session Directory**: #{session_info.session_directory}"
           context_parts << "**Session Type**: #{session_info.session_type}"
@@ -202,25 +199,25 @@ module CodingAgentTools
         # @param reports [Array<String>] Report file paths
         # @return [String] Combined reports content
         def build_combined_reports_section(reports)
-          section_parts = ["# Review Reports to Synthesize"]
+          section_parts = ['# Review Reports to Synthesize']
 
           section_parts << "The following #{reports.length} review reports need to be synthesized:"
-          section_parts << ""
+          section_parts << ''
 
           reports.each_with_index do |report_path, index|
             section_parts << "## Report #{index + 1}: #{File.basename(report_path)}"
-            section_parts << ""
+            section_parts << ''
 
             begin
-              report_content = File.read(report_path, encoding: "UTF-8").strip
+              report_content = File.read(report_path, encoding: 'UTF-8').strip
               section_parts << report_content
-            rescue => e
+            rescue StandardError => e
               section_parts << "**Error reading report**: #{e.message}"
             end
 
-            section_parts << ""
-            section_parts << "---" unless index == reports.length - 1
-            section_parts << ""
+            section_parts << ''
+            section_parts << '---' unless index == reports.length - 1
+            section_parts << ''
           end
 
           section_parts.join("\n")
@@ -230,27 +227,27 @@ module CodingAgentTools
         # @param report_count [Integer] Number of reports being synthesized
         # @return [String] Synthesis instructions
         def build_synthesis_instructions(report_count)
-          instructions = ["# Synthesis Instructions"]
+          instructions = ['# Synthesis Instructions']
 
           instructions << "Please synthesize these #{report_count} review reports into a unified analysis following these guidelines:"
-          instructions << ""
-          instructions << "## Synthesis Goals"
-          instructions << "- Create a consolidated executive summary"
-          instructions << "- Identify consensus findings across all reports"
-          instructions << "- Resolve conflicts between different recommendations"
-          instructions << "- Prioritize action items based on frequency and impact"
-          instructions << "- Provide a unified implementation timeline"
-          instructions << "- Highlight unique insights from individual reports"
-          instructions << ""
-          instructions << "## Output Structure"
-          instructions << "Please structure your synthesis using these sections:"
-          instructions << "1. **Executive Summary** - Overall assessment and key findings"
-          instructions << "2. **Consensus Findings** - Issues identified by multiple reports"
-          instructions << "3. **Conflict Resolution** - Areas where reports disagreed and recommended approach"
-          instructions << "4. **Prioritized Action Items** - Unified priority list with 🔴🟡🟢 indicators"
-          instructions << "5. **Implementation Timeline** - Phased approach to address findings"
-          instructions << "6. **Unique Insights** - Valuable findings that appeared in only one report"
-          instructions << "7. **Synthesis Methodology** - Brief explanation of how conflicts were resolved"
+          instructions << ''
+          instructions << '## Synthesis Goals'
+          instructions << '- Create a consolidated executive summary'
+          instructions << '- Identify consensus findings across all reports'
+          instructions << '- Resolve conflicts between different recommendations'
+          instructions << '- Prioritize action items based on frequency and impact'
+          instructions << '- Provide a unified implementation timeline'
+          instructions << '- Highlight unique insights from individual reports'
+          instructions << ''
+          instructions << '## Output Structure'
+          instructions << 'Please structure your synthesis using these sections:'
+          instructions << '1. **Executive Summary** - Overall assessment and key findings'
+          instructions << '2. **Consensus Findings** - Issues identified by multiple reports'
+          instructions << '3. **Conflict Resolution** - Areas where reports disagreed and recommended approach'
+          instructions << '4. **Prioritized Action Items** - Unified priority list with 🔴🟡🟢 indicators'
+          instructions << '5. **Implementation Timeline** - Phased approach to address findings'
+          instructions << '6. **Unique Insights** - Valuable findings that appeared in only one report'
+          instructions << '7. **Synthesis Methodology** - Brief explanation of how conflicts were resolved'
 
           instructions.join("\n")
         end
@@ -263,13 +260,14 @@ module CodingAgentTools
           return output_path if force || !File.exist?(output_path)
 
           # Find next available sequence number
-          base_path = output_path.sub(/\.([^.]+)$/, "")
+          base_path = output_path.sub(/\.([^.]+)$/, '')
           extension = File.extname(output_path)
 
           sequence = 1
           loop do
             sequenced_path = "#{base_path}.#{sequence}#{extension}"
             break sequenced_path unless File.exist?(sequenced_path)
+
             sequence += 1
           end
         end
@@ -320,9 +318,9 @@ module CodingAgentTools
         # @param content [String] Prompt content
         # @return [String] Path to temporary file
         def create_temp_prompt_file(content)
-          require "tempfile"
+          require 'tempfile'
 
-          temp_file = Tempfile.new(["synthesis-prompt", ".md"])
+          temp_file = Tempfile.new(['synthesis-prompt', '.md'])
           temp_file.write(content)
           temp_file.close
 
@@ -341,10 +339,10 @@ module CodingAgentTools
           llm_query_path = find_llm_query_executable
 
           cmd = [llm_query_path, model, prompt_file]
-          cmd += ["--output", output_path]
-          cmd += ["--format", format] if format && format != "text"
-          cmd += ["--force"] # Always force since we handle sequencing ourselves
-          cmd += ["--debug"] if debug
+          cmd += ['--output', output_path]
+          cmd += ['--format', format] if format && format != 'text'
+          cmd += ['--force'] # Always force since we handle sequencing ourselves
+          cmd += ['--debug'] if debug
 
           cmd
         end
@@ -353,7 +351,7 @@ module CodingAgentTools
         # @return [String] Path to llm-query executable
         def find_llm_query_executable
           # Try relative path first (from dev-tools)
-          relative_path = File.expand_path("../../../../../exe/llm-query", __FILE__)
+          relative_path = File.expand_path('../../../../exe/llm-query', __dir__)
           return relative_path if File.executable?(relative_path)
 
           # Try PATH
@@ -361,7 +359,7 @@ module CodingAgentTools
           return which_result unless which_result.empty?
 
           # Fallback to assumed location
-          "llm-query"
+          'llm-query'
         end
 
         # Parse llm-query output for metrics
@@ -406,7 +404,7 @@ module CodingAgentTools
         # Create file I/O handler instance
         # @return [FileIoHandler] File handler
         def create_file_handler
-          require_relative "../file_io_handler"
+          require_relative '../file_io_handler'
           FileIoHandler.new
         end
       end

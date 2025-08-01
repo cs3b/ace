@@ -16,7 +16,7 @@ module CodingAgentTools
         end
 
         def distribute(errors)
-          return {distributions: [], total_errors: 0} if errors.empty?
+          return { distributions: [], total_errors: 0 } if errors.empty?
 
           grouped_errors = group_errors_by_file(errors)
           distributions = create_distributions(grouped_errors)
@@ -34,7 +34,7 @@ module CodingAgentTools
           grouped = {}
 
           errors.each do |error|
-            file = error[:file] || error["file"] || "unknown"
+            file = error[:file] || error['file'] || 'unknown'
             grouped[file] ||= []
             grouped[file] << error
           end
@@ -64,7 +64,7 @@ module CodingAgentTools
         def distribute_one_per_file(grouped_errors, distributions)
           file_index = 0
 
-          grouped_errors.each do |file, errors|
+          grouped_errors.each do |_file, errors|
             # Take only the first error from each file
             error = errors.first
 

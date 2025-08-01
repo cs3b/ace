@@ -13,8 +13,8 @@ module CodingAgentTools
             attribute_value = get_attribute_value(task_data, attribute)
 
             # Handle OR values (pipe-separated)
-            if value.include?("|")
-              or_values = value.split("|").map(&:strip)
+            if value.include?('|')
+              or_values = value.split('|').map(&:strip)
               matches = or_values.any? do |or_value|
                 if attribute_value.is_a?(Array)
                   attribute_value.any? { |v| value_matches?(v, or_value) }
@@ -67,7 +67,7 @@ module CodingAgentTools
           return nil unless filter_string&.is_a?(String)
 
           # Split on first colon
-          parts = filter_string.split(":", 2)
+          parts = filter_string.split(':', 2)
           return nil unless parts.length == 2
 
           attribute = parts[0]&.strip
@@ -77,7 +77,7 @@ module CodingAgentTools
 
           # Check for negation
           negated = false
-          if value_part.start_with?("!")
+          if value_part.start_with?('!')
             negated = true
             value_part = value_part[1..]&.strip
             return nil if value_part.empty?

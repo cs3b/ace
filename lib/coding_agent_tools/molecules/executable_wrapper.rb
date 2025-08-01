@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "stringio"
+require 'stringio'
 
 module CodingAgentTools
   module Molecules
@@ -40,7 +40,7 @@ module CodingAgentTools
         setup_load_path
         require_dependencies
         execute_with_output_capture
-      rescue => e
+      rescue StandardError => e
         handle_error(e)
       ensure
         restore_streams
@@ -49,7 +49,7 @@ module CodingAgentTools
       private
 
       attr_reader :command_path, :registration_method, :executable_name,
-        :original_stdout, :original_stderr
+                  :original_stdout, :original_stderr
 
       # Sets up bundler if available and needed
       def setup_bundler
@@ -58,11 +58,11 @@ module CodingAgentTools
 
         # Explicitly set the Gemfile path to ensure we use the gem's Gemfile
         # regardless of the current working directory
-        gem_gemfile_path = File.expand_path("../../../../Gemfile", __FILE__)
-        ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+        gem_gemfile_path = File.expand_path('../../../Gemfile', __dir__)
+        ENV['BUNDLE_GEMFILE'] = gem_gemfile_path if File.exist?(gem_gemfile_path)
 
         begin
-          require "bundler/setup"
+          require 'bundler/setup'
         rescue LoadError
           # If bundler isn't available, continue without it
           # This can happen in subprocess calls where Ruby version differs
@@ -71,20 +71,20 @@ module CodingAgentTools
 
       # Checks if we're in a bundler environment
       def bundler_environment?
-        !!(ENV["BUNDLE_GEMFILE"] || File.exist?(File.expand_path("../../../../Gemfile", __FILE__)))
+        !!(ENV['BUNDLE_GEMFILE'] || File.exist?(File.expand_path('../../../Gemfile', __dir__)))
       end
 
       # Sets up load paths for development
       def setup_load_path
-        lib_path = File.expand_path("../../../../lib", __FILE__)
+        lib_path = File.expand_path('../../../lib', __dir__)
         $LOAD_PATH.unshift(lib_path) unless $LOAD_PATH.include?(lib_path)
       end
 
       # Requires necessary dependencies
       def require_dependencies
-        require "coding_agent_tools"
-        require "coding_agent_tools/cli"
-        require "coding_agent_tools/error_reporter"
+        require 'coding_agent_tools'
+        require 'coding_agent_tools/cli'
+        require 'coding_agent_tools/error_reporter'
       end
 
       # Executes the CLI command with output capturing and modification
@@ -138,8 +138,8 @@ module CodingAgentTools
         else
           # If we get an unexpected type from Dry::CLI, check captured stderr for errors
           # This is a workaround for Dry::CLI sometimes returning unexpected types
-          stderr_content = @captured_stderr&.string || ""
-          if stderr_content.include?("Error:") || stderr_content.include?("ERROR:")
+          stderr_content = @captured_stderr&.string || ''
+          if stderr_content.include?('Error:') || stderr_content.include?('ERROR:')
             1  # Indicate failure if there are error messages
           else
             0  # Default to success if no obvious errors
@@ -156,7 +156,7 @@ module CodingAgentTools
         # Handle case where CLI returns unexpected types (e.g., Set instead of Integer)
         # This can happen when CLI registration has issues
         unless status_code.is_a?(Integer)
-          status_code = 0  # Assume success if we get an unexpected type
+          status_code = 0 # Assume success if we get an unexpected type
         end
 
         exit(status_code) if status_code != 0
@@ -187,7 +187,7 @@ module CodingAgentTools
 
       # Modifies output messages to show executable name instead of full command path
       def modify_output_messages(content)
-        command_string = command_path.join(" ")
+        command_string = command_path.join(' ')
 
         stdout_content = content[:stdout]
         stderr_content = content[:stderr]
@@ -197,7 +197,7 @@ module CodingAgentTools
           stderr_content = modify_stderr_content(stderr_content, command_string)
         end
 
-        {stdout: stdout_content, stderr: stderr_content}
+        { stdout: stdout_content, stderr: stderr_content }
       end
 
       # Modifies stdout content
@@ -224,7 +224,7 @@ module CodingAgentTools
 
       # Handles errors through the centralized error reporter
       def handle_error(error)
-        CodingAgentTools::ErrorReporter.call(error, debug: ENV["DEBUG"] == "true")
+        CodingAgentTools::ErrorReporter.call(error, debug: ENV['DEBUG'] == 'true')
         exit 1
       end
     end

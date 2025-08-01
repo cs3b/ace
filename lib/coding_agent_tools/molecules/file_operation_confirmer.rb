@@ -32,22 +32,20 @@ module CodingAgentTools
         # If force is enabled, auto-confirm
         if force
           @security_logger.log_event(:overwrite_confirmed,
-            path: file_path,
-            metadata: {forced: true, reason: "Force flag provided"})
-          return ConfirmationResult.new(true, "Force flag provided", true)
+                                     path: file_path,
+                                     metadata: { forced: true, reason: 'Force flag provided' })
+          return ConfirmationResult.new(true, 'Force flag provided', true)
         end
 
         # Check if file exists
-        unless File.exist?(file_path)
-          return ConfirmationResult.new(true, "File does not exist", true)
-        end
+        return ConfirmationResult.new(true, 'File does not exist', true) unless File.exist?(file_path)
 
         # In non-interactive environments, deny by default for safety
         unless interactive_environment?
           @security_logger.log_event(:overwrite_denied,
-            path: file_path,
-            metadata: {reason: "Non-interactive environment", auto_decision: true})
-          return ConfirmationResult.new(false, "Non-interactive environment (use --force to override)", true)
+                                     path: file_path,
+                                     metadata: { reason: 'Non-interactive environment', auto_decision: true })
+          return ConfirmationResult.new(false, 'Non-interactive environment (use --force to override)', true)
         end
 
         # Interactive confirmation
@@ -55,12 +53,12 @@ module CodingAgentTools
 
         if result.confirmed?
           @security_logger.log_event(:overwrite_confirmed,
-            path: file_path,
-            metadata: {interactive: true, reason: result.reason})
+                                     path: file_path,
+                                     metadata: { interactive: true, reason: result.reason })
         else
           @security_logger.log_event(:overwrite_denied,
-            path: file_path,
-            metadata: {interactive: true, reason: result.reason})
+                                     path: file_path,
+                                     metadata: { interactive: true, reason: result.reason })
         end
 
         result
@@ -73,16 +71,16 @@ module CodingAgentTools
         return false unless @input.tty? && @output.tty?
 
         # Check for common CI environment indicators
-        ci_indicators = [
-          "CI",
-          "CONTINUOUS_INTEGRATION",
-          "GITHUB_ACTIONS",
-          "GITLAB_CI",
-          "TRAVIS",
-          "CIRCLECI",
-          "JENKINS_URL",
-          "BUILDKITE",
-          "DRONE"
+        ci_indicators = %w[
+          CI
+          CONTINUOUS_INTEGRATION
+          GITHUB_ACTIONS
+          GITLAB_CI
+          TRAVIS
+          CIRCLECI
+          JENKINS_URL
+          BUILDKITE
+          DRONE
         ]
 
         # If any CI indicator is set, we're likely in CI
@@ -97,7 +95,7 @@ module CodingAgentTools
       # Create default security logger
       # @return [SecurityLogger] Default logger instance
       def create_default_logger
-        require_relative "../atoms/security_logger"
+        require_relative '../atoms/security_logger'
         Atoms::SecurityLogger.new
       end
 
@@ -122,17 +120,17 @@ module CodingAgentTools
           end
 
           case response
-          when "y", "yes"
-            ConfirmationResult.new(true, "User confirmed", false)
-          when "n", "no", "", nil
-            ConfirmationResult.new(false, "User declined", false)
+          when 'y', 'yes'
+            ConfirmationResult.new(true, 'User confirmed', false)
+          when 'n', 'no', '', nil
+            ConfirmationResult.new(false, 'User declined', false)
           else
             # Invalid response, treat as decline for safety
-            ConfirmationResult.new(false, "Invalid response (treated as decline)", false)
+            ConfirmationResult.new(false, 'Invalid response (treated as decline)', false)
           end
-        rescue => e
+        rescue StandardError => e
           # If anything goes wrong with the prompt, err on the side of caution
-          @security_logger.log_error(e, context: {operation: "user_prompt", file_path: file_path})
+          @security_logger.log_error(e, context: { operation: 'user_prompt', file_path: file_path })
           ConfirmationResult.new(false, "Prompt error (#{e.class.name})", true)
         end
       end

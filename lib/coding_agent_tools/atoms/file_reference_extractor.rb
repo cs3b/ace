@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "set"
+require 'set'
 
 module CodingAgentTools::Atoms
   # Atom for extracting file references from document content
@@ -16,7 +16,7 @@ module CodingAgentTools::Atoms
     # Matches patterns like "Load project objectives: `docs/file.md`"
     def extract_context_references(content)
       content.scan(/(?:Load|load|Check|check|Read|read|See|see).*?[:\s]+`([^`]+\.(?:md|wf\.md|g\.md))`/i)
-        .map(&:first)
+             .map(&:first)
     end
 
     # Extract all file references from content
@@ -27,7 +27,7 @@ module CodingAgentTools::Atoms
       # Process markdown links
       extract_markdown_links(content).each do |_text, link|
         # Skip external links and anchors
-        next if link.start_with?("http://", "https://", "#")
+        next if link.start_with?('http://', 'https://', '#')
 
         references << link
       end
@@ -42,12 +42,12 @@ module CodingAgentTools::Atoms
 
     # Check if a link is external (http/https)
     def external_link?(link)
-      link.start_with?("http://", "https://")
+      link.start_with?('http://', 'https://')
     end
 
     # Check if a link is an anchor (starts with #)
     def anchor_link?(link)
-      link.start_with?("#")
+      link.start_with?('#')
     end
 
     # Check if a link is internal (not external or anchor)

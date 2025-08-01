@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dry/cli"
+require 'dry/cli'
 
 module CodingAgentTools
   module Cli
@@ -9,35 +9,39 @@ module CodingAgentTools
         # CLI command for coverage analysis operations
         # Provides comprehensive coverage analysis with multiple output formats
         class Analyze < Dry::CLI::Command
-          desc "Analyze SimpleCov coverage data and generate reports with adaptive threshold detection"
+          desc 'Analyze SimpleCov coverage data and generate reports with adaptive threshold detection'
 
-          argument :input_file, required: true, desc: "Path to SimpleCov .resultset.json file"
+          argument :input_file, required: true, desc: 'Path to SimpleCov .resultset.json file'
 
-          option :threshold, type: :string, default: "auto", desc: "Coverage threshold: percentage (0-100) or 'auto' for adaptive detection"
-          option :output_dir, type: :string, default: "./coverage_analysis", desc: "Output directory for reports"
-          option :format, type: :string, default: "text,json", desc: "Output formats (comma-separated: text,json,csv)"
-          option :include_patterns, type: :string, default: "**/lib/**/*.rb", desc: "File patterns to include (comma-separated)"
-          option :exclude_patterns, type: :string, default: "**/spec/**,**/test/**", desc: "File patterns to exclude (comma-separated)"
-          option :detailed, type: :boolean, default: false, desc: "Include method-level analysis"
-          option :quick, type: :boolean, default: false, desc: "Quick analysis mode (faster, less detailed)"
-          option :focus, type: :string, desc: "Focus on specific file patterns (comma-separated)"
-          option :create_path, type: :boolean, default: false, desc: "Enable create-path workflow integration"
-          option :max_files, type: :integer, default: 20, desc: "Maximum number of files to analyze in detail"
-          option :comprehensive, type: :boolean, default: false, desc: "Generate comprehensive report with all sections"
-          option :recommend, type: :boolean, default: false, desc: "Only analyze file and provide recommendations (no full analysis)"
-          option :compact, type: :boolean, default: true, desc: "Use compact range format for uncovered lines (default)"
-          option :verbose, type: :boolean, default: false, desc: "Use verbose format with full uncovered line arrays"
+          option :threshold, type: :string, default: 'auto',
+                             desc: "Coverage threshold: percentage (0-100) or 'auto' for adaptive detection"
+          option :output_dir, type: :string, default: './coverage_analysis', desc: 'Output directory for reports'
+          option :format, type: :string, default: 'text,json', desc: 'Output formats (comma-separated: text,json,csv)'
+          option :include_patterns, type: :string, default: '**/lib/**/*.rb',
+                                    desc: 'File patterns to include (comma-separated)'
+          option :exclude_patterns, type: :string, default: '**/spec/**,**/test/**',
+                                    desc: 'File patterns to exclude (comma-separated)'
+          option :detailed, type: :boolean, default: false, desc: 'Include method-level analysis'
+          option :quick, type: :boolean, default: false, desc: 'Quick analysis mode (faster, less detailed)'
+          option :focus, type: :string, desc: 'Focus on specific file patterns (comma-separated)'
+          option :create_path, type: :boolean, default: false, desc: 'Enable create-path workflow integration'
+          option :max_files, type: :integer, default: 20, desc: 'Maximum number of files to analyze in detail'
+          option :comprehensive, type: :boolean, default: false, desc: 'Generate comprehensive report with all sections'
+          option :recommend, type: :boolean, default: false,
+                             desc: 'Only analyze file and provide recommendations (no full analysis)'
+          option :compact, type: :boolean, default: true, desc: 'Use compact range format for uncovered lines (default)'
+          option :verbose, type: :boolean, default: false, desc: 'Use verbose format with full uncovered line arrays'
 
           example [
-            "coverage.resultset.json                                    # Basic analysis with adaptive threshold (default)",
-            "coverage.resultset.json --threshold 90                    # Use fixed 90% threshold",
-            "coverage.resultset.json --threshold auto                  # Explicitly use adaptive threshold detection",
-            "coverage.resultset.json --quick --output_dir ./reports     # Quick analysis to custom directory",
-            "coverage.resultset.json --focus \"**/models/**,**/services/**\" # Focus on specific directories",
-            "coverage.resultset.json --detailed --comprehensive        # Full detailed analysis with all sections",
-            "coverage.resultset.json --recommend                       # Just get recommendations without full analysis",
-            "coverage.resultset.json --verbose                         # Use verbose format with full line arrays",
-            "coverage.resultset.json --compact                         # Use compact range format (default)"
+            'coverage.resultset.json                                    # Basic analysis with adaptive threshold (default)',
+            'coverage.resultset.json --threshold 90                    # Use fixed 90% threshold',
+            'coverage.resultset.json --threshold auto                  # Explicitly use adaptive threshold detection',
+            'coverage.resultset.json --quick --output_dir ./reports     # Quick analysis to custom directory',
+            'coverage.resultset.json --focus "**/models/**,**/services/**" # Focus on specific directories',
+            'coverage.resultset.json --detailed --comprehensive        # Full detailed analysis with all sections',
+            'coverage.resultset.json --recommend                       # Just get recommendations without full analysis',
+            'coverage.resultset.json --verbose                         # Use verbose format with full line arrays',
+            'coverage.resultset.json --compact                         # Use compact range format (default)'
           ]
 
           def call(input_file:, **options)
@@ -61,8 +65,8 @@ module CodingAgentTools
               else
                 handle_full_analysis(workflow, input_file, workflow_options)
               end
-            rescue => error
-              handle_error(error, input_file)
+            rescue StandardError => e
+              handle_error(e, input_file)
               exit(1)
             end
           end
@@ -72,10 +76,10 @@ module CodingAgentTools
           def prepare_workflow_options(options)
             # Determine report format (verbose takes precedence over compact if both are specified)
             report_format = if options[:verbose]
-              :verbose
-            else
-              :compact
-            end
+                              :verbose
+                            else
+                              :compact
+                            end
 
             # Parse threshold option
             threshold_value, adaptive_mode = parse_threshold_option(options[:threshold])
@@ -97,7 +101,8 @@ module CodingAgentTools
 
           def parse_comma_separated(value)
             return [] if value.nil? || value.empty?
-            value.split(",").map(&:strip).reject(&:empty?)
+
+            value.split(',').map(&:strip).reject(&:empty?)
           end
 
           def parse_threshold_option(threshold_value)
@@ -105,7 +110,7 @@ module CodingAgentTools
             return [85.0, true] if threshold_value.nil?
 
             case threshold_value.to_s.downcase
-            when "auto", ""
+            when 'auto', ''
               # Use adaptive threshold detection with default fallback
               [85.0, true]
             else
@@ -120,7 +125,7 @@ module CodingAgentTools
           end
 
           def handle_recommend_mode(workflow, input_file)
-            puts "🔍 Analyzing SimpleCov file for recommendations..."
+            puts '🔍 Analyzing SimpleCov file for recommendations...'
             puts
 
             recommendations = workflow.analyze_and_recommend(input_file)
@@ -131,7 +136,7 @@ module CodingAgentTools
           end
 
           def handle_quick_analysis(workflow, input_file, options)
-            puts "⚡ Executing quick coverage analysis..."
+            puts '⚡ Executing quick coverage analysis...'
             puts
 
             result = workflow.execute_quick_analysis(input_file, options)
@@ -141,7 +146,7 @@ module CodingAgentTools
 
           def handle_focused_analysis(workflow, input_file, focus_patterns, options)
             patterns = parse_comma_separated(focus_patterns)
-            puts "🎯 Executing focused analysis on: #{patterns.join(", ")}"
+            puts "🎯 Executing focused analysis on: #{patterns.join(', ')}"
             puts
 
             result = workflow.execute_focused_analysis(input_file, patterns, options)
@@ -150,7 +155,7 @@ module CodingAgentTools
           end
 
           def handle_full_analysis(workflow, input_file, options)
-            puts "🔄 Executing full coverage analysis..."
+            puts '🔄 Executing full coverage analysis...'
             puts
 
             result = workflow.execute_full_analysis(input_file, options)
@@ -164,9 +169,9 @@ module CodingAgentTools
           end
 
           def display_validation_results(validation)
-            puts "📋 File Validation Results:"
-            puts "  Status: ✅ Valid SimpleCov file"
-            puts "  Frameworks: #{validation[:frameworks_detected].join(", ")}"
+            puts '📋 File Validation Results:'
+            puts '  Status: ✅ Valid SimpleCov file'
+            puts "  Frameworks: #{validation[:frameworks_detected].join(', ')}"
             puts "  Total files: #{validation[:total_files]}"
             puts "  Library files: #{validation[:lib_files]}"
             puts "  Test files: #{validation[:test_files]}"
@@ -174,28 +179,28 @@ module CodingAgentTools
           end
 
           def display_analysis_recommendations(recommendations)
-            puts "💡 Analysis Recommendations:"
+            puts '💡 Analysis Recommendations:'
             puts "  Suggested threshold: #{recommendations[:suggested_threshold]}%"
             puts "  Recommended approach: #{recommendations[:recommended_focus]}"
             puts "  Estimated time: #{recommendations[:estimated_analysis_time]}"
-            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(", ")}"
+            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(', ')}"
             puts
           end
 
           def display_workflow_suggestions(suggestions)
-            puts "⚙️  Workflow Suggestions:"
-            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? "✅" : "❌"}"
-            puts "  Enable create-path: #{suggestions[:enable_create_path] ? "✅" : "❌"}"
+            puts '⚙️  Workflow Suggestions:'
+            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? '✅' : '❌'}"
+            puts "  Enable create-path: #{suggestions[:enable_create_path] ? '✅' : '❌'}"
 
             if suggestions[:focus_patterns]
-              puts "  Suggested focus patterns:"
+              puts '  Suggested focus patterns:'
               suggestions[:focus_patterns].each { |pattern| puts "    - #{pattern}" }
             end
             puts
           end
 
           def display_quick_results(result)
-            puts "📊 Quick Analysis Results:"
+            puts '📊 Quick Analysis Results:'
             puts "  Overall Coverage: #{format_percentage(result[:overall_coverage])}"
             puts "  Threshold: #{format_percentage(result[:threshold])}"
             puts "  Status: #{format_status(result[:status])}"
@@ -203,14 +208,14 @@ module CodingAgentTools
             puts
 
             if result[:critical_files].any?
-              puts "🚨 Critical Files (Top 5):"
+              puts '🚨 Critical Files (Top 5):'
               result[:critical_files].each_with_index do |file, index|
                 puts "  #{index + 1}. #{file[:path]}: #{format_percentage(file[:coverage])} (#{file[:uncovered_lines]} uncovered lines)"
               end
               puts
             end
 
-            puts "📝 Quick Recommendations:"
+            puts '📝 Quick Recommendations:'
             result[:recommendations].each { |rec| puts "  • #{rec}" }
             puts
           end
@@ -219,15 +224,15 @@ module CodingAgentTools
             focus_area = result[:focus_patterns]
             summary = result[:summary]
 
-            puts "🎯 Focused Analysis Results:"
-            puts "  Focus patterns: #{focus_area.join(", ")}"
+            puts '🎯 Focused Analysis Results:'
+            puts "  Focus patterns: #{focus_area.join(', ')}"
             puts "  Files found: #{summary[:files_found]}"
             puts "  Files under threshold: #{summary[:files_under_threshold]}"
             puts
 
             if summary[:coverage_distribution]
               dist = summary[:coverage_distribution]
-              puts "📈 Coverage Distribution:"
+              puts '📈 Coverage Distribution:'
               puts "  Range: #{format_percentage(dist[:min_coverage])} - #{format_percentage(dist[:max_coverage])}"
               puts "  Average: #{format_percentage(dist[:average_coverage])}"
               puts "  Files under 50%: #{dist[:files_under_50]}"
@@ -240,12 +245,12 @@ module CodingAgentTools
             summary = result[:execution_summary]
             analysis = summary[:analysis_summary]
 
-            puts "✅ Full Analysis Complete!"
+            puts '✅ Full Analysis Complete!'
             puts "  Execution time: #{format_duration(summary[:execution_time])}"
             puts "  Output directory: #{summary[:output_directory]}"
             puts
 
-            puts "📊 Analysis Summary:"
+            puts '📊 Analysis Summary:'
             puts "  Overall Coverage: #{format_percentage(analysis[:overall_coverage])}"
             puts "  Threshold: #{format_percentage(analysis[:threshold])}"
             puts "  Status: #{format_status(analysis[:coverage_status])}"
@@ -253,7 +258,7 @@ module CodingAgentTools
             puts "  Files under threshold: #{analysis[:under_covered_files]}"
             puts
 
-            puts "📄 Generated Reports:"
+            puts '📄 Generated Reports:'
             result[:generated_reports].each do |format, path|
               puts "  #{format.to_s.upcase}: #{path}"
             end
@@ -261,7 +266,7 @@ module CodingAgentTools
 
             undercovered = summary[:undercovered_summary]
             if undercovered[:critical_files] > 0 || undercovered[:high_priority_files] > 0
-              puts "🚨 Priority Summary:"
+              puts '🚨 Priority Summary:'
               puts "  Critical files: #{undercovered[:critical_files]}"
               puts "  High priority files: #{undercovered[:high_priority_files]}"
               puts "  Total recommendations: #{undercovered[:total_recommendations]}"
@@ -270,60 +275,61 @@ module CodingAgentTools
 
             if result[:create_path_results]
               create_path = result[:create_path_results]
-              puts "🔗 Create-Path Integration:"
+              puts '🔗 Create-Path Integration:'
               puts "  Output file: #{create_path[:output_file]}"
-              puts "  Action required: #{create_path[:action_required] ? "✅" : "❌"}"
+              puts "  Action required: #{create_path[:action_required] ? '✅' : '❌'}"
               puts "  Critical items: #{create_path[:critical_items_count]}"
               puts
             end
 
-            puts "🎉 Analysis complete! Check the generated reports for detailed information."
+            puts '🎉 Analysis complete! Check the generated reports for detailed information.'
           end
 
           def display_workflow_error(error)
-            warn "❌ Analysis failed:"
+            warn '❌ Analysis failed:'
             warn "  Error: #{error[:type]} - #{error[:message]}"
             $stderr.puts
 
-            if error[:suggestions]
-              warn "💡 Suggestions:"
-              error[:suggestions].each { |suggestion| warn "  • #{suggestion}" }
-            end
+            return unless error[:suggestions]
+
+            warn '💡 Suggestions:'
+            error[:suggestions].each { |suggestion| warn "  • #{suggestion}" }
           end
 
           def handle_error(error, input_file)
-            warn "❌ Error analyzing coverage:"
+            warn '❌ Error analyzing coverage:'
             warn "  File: #{input_file}"
             warn "  Error: #{error.class.name} - #{error.message}"
             $stderr.puts
 
             case error
             when Errno::ENOENT
-              warn "💡 The input file was not found. Please check the file path."
+              warn '💡 The input file was not found. Please check the file path.'
             when JSON::ParserError
               warn "💡 The input file is not valid JSON. Please ensure it's a proper SimpleCov file."
             when ArgumentError
-              warn "💡 Please check your command-line arguments and try again."
+              warn '💡 Please check your command-line arguments and try again.'
             else
-              warn "💡 Please check file permissions and paths, then try again."
+              warn '💡 Please check file permissions and paths, then try again.'
             end
           end
 
           def format_percentage(value)
-            return "N/A" if value.nil?
+            return 'N/A' if value.nil?
+
             "#{value.round(1)}%"
           end
 
           def format_status(status)
             case status
-            when "excellent"
-              "🟢 Excellent"
-            when "good"
-              "🟡 Good"
-            when "needs_improvement"
-              "🟠 Needs Improvement"
-            when "critical"
-              "🔴 Critical"
+            when 'excellent'
+              '🟢 Excellent'
+            when 'good'
+              '🟡 Good'
+            when 'needs_improvement'
+              '🟠 Needs Improvement'
+            when 'critical'
+              '🔴 Critical'
             else
               status.to_s.capitalize
             end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/json_formatter"
+require_relative '../atoms/json_formatter'
 
 module CodingAgentTools
   module Molecules
@@ -9,14 +9,14 @@ module CodingAgentTools
     class APIResponseParser
       # Common API error status codes
       ERROR_STATUS_CODES = {
-        400 => "Bad Request",
-        401 => "Unauthorized",
-        403 => "Forbidden",
-        404 => "Not Found",
-        429 => "Too Many Requests",
-        500 => "Internal Server Error",
-        502 => "Bad Gateway",
-        503 => "Service Unavailable"
+        400 => 'Bad Request',
+        401 => 'Unauthorized',
+        403 => 'Forbidden',
+        404 => 'Not Found',
+        429 => 'Too Many Requests',
+        500 => 'Internal Server Error',
+        502 => 'Bad Gateway',
+        503 => 'Service Unavailable'
       }.freeze
 
       # Parse a raw API response
@@ -61,7 +61,7 @@ module CodingAgentTools
 
         error = {
           status: response_data[:status],
-          message: ERROR_STATUS_CODES[response_data[:status]] || "Unknown Error"
+          message: ERROR_STATUS_CODES[response_data[:status]] || 'Unknown Error'
         }
 
         # Try to extract error details from response body
@@ -72,16 +72,14 @@ module CodingAgentTools
           begin
             json_string = Atoms::JSONFormatter.compact(response_data[:body])
             effective_body = Atoms::JSONFormatter.safe_parse(json_string, symbolize_names: true)
-          rescue
+          rescue StandardError
             # If conversion to JSON string fails (e.g., body contains non-serializable objects),
             # try a shallow symbolization as a fallback. This might not handle nested string keys.
-            effective_body = response_data[:body].transform_keys { |k|
-              begin
-                k.is_a?(String) ? k.to_sym : k
-              rescue
-                k
-              end
-            }
+            effective_body = response_data[:body].transform_keys do |k|
+              k.is_a?(String) ? k.to_sym : k
+            rescue StandardError
+              k
+            end
           end
         elsif response_data[:body].is_a?(String) && !response_data[:body].empty?
           effective_body = Atoms::JSONFormatter.safe_parse(response_data[:body], symbolize_names: true)
@@ -122,10 +120,10 @@ module CodingAgentTools
         headers = response_data[:headers] || {}
 
         {
-          limit: headers["x-ratelimit-limit"] || headers["ratelimit-limit"],
-          remaining: headers["x-ratelimit-remaining"] || headers["ratelimit-remaining"],
-          reset: headers["x-ratelimit-reset"] || headers["ratelimit-reset"],
-          retry_after: headers["retry-after"]
+          limit: headers['x-ratelimit-limit'] || headers['ratelimit-limit'],
+          remaining: headers['x-ratelimit-remaining'] || headers['ratelimit-remaining'],
+          reset: headers['x-ratelimit-reset'] || headers['ratelimit-reset'],
+          retry_after: headers['retry-after']
         }.compact
       end
 
@@ -179,7 +177,10 @@ module CodingAgentTools
           # Ensure original :error key points to the (potentially symbolized) nested hash
           details[:error] = nested_error_content
           # Merge the contents of the nested error hash into the main details hash
-          details.merge!(nested_error_content) { |_key, old_val, new_val| old_val } # Keep original if key conflict, though body[field] already set it
+          # Keep original if key conflict, though body[field] already set it
+          details.merge!(nested_error_content) do |_key, old_val, _new_val|
+            old_val
+          end
         end
 
         details.compact! # Remove keys with nil values

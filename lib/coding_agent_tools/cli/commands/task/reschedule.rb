@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../atoms/project_root_detector"
-require_relative "../../../organisms/taskflow_management/task_manager"
-require_relative "../../../molecules/taskflow_management/task_filter_engine"
+require 'dry/cli'
+require_relative '../../../atoms/project_root_detector'
+require_relative '../../../organisms/taskflow_management/task_manager'
+require_relative '../../../molecules/taskflow_management/task_filter_engine'
 
 module CodingAgentTools
   module Cli
@@ -11,33 +11,33 @@ module CodingAgentTools
       module Task
         # Reschedule command for reordering tasks with flexible sorting options
         class Reschedule < Dry::CLI::Command
-          desc "Reschedule tasks by updating their sort order"
+          desc 'Reschedule tasks by updating their sort order'
 
-          argument :tasks, desc: "List of task IDs or file paths to reschedule", type: :array
+          argument :tasks, desc: 'List of task IDs or file paths to reschedule', type: :array
 
-          option :add_next, type: :boolean, default: false, aliases: ["n"],
-            desc: "Add tasks before existing pending tasks"
+          option :add_next, type: :boolean, default: false, aliases: ['n'],
+                            desc: 'Add tasks before existing pending tasks'
 
-          option :add_at_the_end, type: :boolean, default: false, aliases: ["e"],
-            desc: "Add tasks after highest pending task number (default behavior)"
+          option :add_at_the_end, type: :boolean, default: false, aliases: ['e'],
+                                  desc: 'Add tasks after highest pending task number (default behavior)'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
           option :release, type: :string,
-            desc: "Release to work with (version, codename, fullname, or path). Defaults to current release."
+                           desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
 
           example [
-            "v.0.3.0+task.001 v.0.3.0+task.002",
-            "118 119 120 --add-next",
-            "path/to/task1.md path/to/task2.md --add-at-the-end",
-            "--add-next task.001 task.002 task.003"
+            'v.0.3.0+task.001 v.0.3.0+task.002',
+            '118 119 120 --add-next',
+            'path/to/task1.md path/to/task2.md --add-at-the-end',
+            '--add-next task.001 task.002 task.003'
           ]
 
           def call(tasks: [], **options)
             if tasks.empty?
-              error_output("Error: No tasks specified for rescheduling")
-              error_output("Usage: task-manager reschedule TASK_ID [TASK_ID...] [OPTIONS]")
+              error_output('Error: No tasks specified for rescheduling')
+              error_output('Usage: task-manager reschedule TASK_ID [TASK_ID...] [OPTIONS]')
               return 1
             end
 
@@ -55,7 +55,7 @@ module CodingAgentTools
             # Resolve task identifiers to actual tasks
             tasks_to_reschedule = resolve_tasks(tasks, tasks_result.tasks)
             if tasks_to_reschedule.empty?
-              error_output("Error: No valid tasks found from provided identifiers")
+              error_output('Error: No valid tasks found from provided identifiers')
               return 1
             end
 
@@ -69,7 +69,7 @@ module CodingAgentTools
 
             puts "Successfully rescheduled #{tasks_to_reschedule.length} task(s)"
             0
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
@@ -113,7 +113,7 @@ module CodingAgentTools
 
           def reschedule_add_next(tasks_to_reschedule, all_tasks, task_manager)
             # Find the lowest sort value among pending tasks
-            pending_tasks = all_tasks.select { |t| t.status == "pending" }
+            pending_tasks = all_tasks.select { |t| t.status == 'pending' }
 
             # Get current sort values
             min_sort = pending_tasks.map { |t| get_task_sort_value(t) }.compact.min || 1000
@@ -147,7 +147,7 @@ module CodingAgentTools
 
           def get_task_sort_value(task)
             if task.respond_to?(:frontmatter) && task.frontmatter
-              sort_value = task.frontmatter["sort"] || task.frontmatter[:sort]
+              sort_value = task.frontmatter['sort'] || task.frontmatter[:sort]
               return sort_value.to_i if sort_value&.to_s&.match?(/^\d+$/)
             end
             nil
@@ -155,27 +155,28 @@ module CodingAgentTools
 
           def parse_task_sequential_number(task_id_str)
             return nil unless task_id_str&.is_a?(String)
+
             match = task_id_str.match(/\+task\.(\d+)$/)
             match ? match[1].to_i : nil
           end
 
-          def update_task_sort(task, sort_value, task_manager)
+          def update_task_sort(task, sort_value, _task_manager)
             # Read the task file
             content = File.read(task.path)
 
             # Parse frontmatter
             if content =~ /\A---\n(.*?)\n---\n(.*)/m
-              frontmatter = $1
-              body = $2
+              frontmatter = ::Regexp.last_match(1)
+              body = ::Regexp.last_match(2)
 
               # Check if sort already exists in frontmatter
               new_frontmatter = if /^sort:\s*\d+$/.match?(frontmatter)
-                # Update existing sort value
-                frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
-              else
-                # Add sort value to frontmatter
-                frontmatter + "\nsort: #{sort_value}"
-              end
+                                  # Update existing sort value
+                                  frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
+                                else
+                                  # Add sort value to frontmatter
+                                  frontmatter + "\nsort: #{sort_value}"
+                                end
 
               # Write updated content
               new_content = "---\n#{new_frontmatter}\n---\n#{body}"
@@ -189,12 +190,10 @@ module CodingAgentTools
             if debug_enabled
               error_output("Error: #{error.class.name}: #{error.message}")
               error_output("\nBacktrace:")
-              if error.backtrace
-                error.backtrace.each { |line| error_output("  #{line}") }
-              end
+              error.backtrace.each { |line| error_output("  #{line}") } if error.backtrace
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

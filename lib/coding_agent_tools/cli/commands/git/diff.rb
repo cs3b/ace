@@ -1,44 +1,44 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Diff < Dry::CLI::Command
-          desc "Show differences across repositories"
+          desc 'Show differences across repositories'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :staged, type: :boolean, default: false,
-            desc: "Show staged changes only"
+                          desc: 'Show staged changes only'
 
           option :name_only, type: :boolean, default: false,
-            desc: "Show only names of changed files"
+                             desc: 'Show only names of changed files'
 
           option :stat, type: :boolean, default: false,
-            desc: "Show diffstat"
+                        desc: 'Show diffstat'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           example [
-            "",
-            "--staged",
-            "--name-only",
-            "--stat",
-            "--repository dev-tools",
-            "--main-only"
+            '',
+            '--staged',
+            '--name-only',
+            '--stat',
+            '--repository dev-tools',
+            '--main-only'
           ]
 
           def call(**options)
@@ -58,7 +58,7 @@ module CodingAgentTools
               display_diff_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
@@ -89,7 +89,7 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ""
+              output = repo_result[:stdout] || ''
               next if output.strip.empty?
 
               has_changes = true
@@ -104,12 +104,12 @@ module CodingAgentTools
                 puts "[#{repo_name}] Differences:"
                 puts output
               end
-              puts "" # Add spacing between repositories
+              puts '' # Add spacing between repositories
             end
 
-            unless has_changes
-              puts "No changes found across repositories"
-            end
+            return if has_changes
+
+            puts 'No changes found across repositories'
           end
 
           def display_diff_errors(result, options)
@@ -128,19 +128,17 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
             end
 
             # Show any partial successes
-            if result[:results]
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Diff shown for repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results]
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Diff shown for repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -150,7 +148,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

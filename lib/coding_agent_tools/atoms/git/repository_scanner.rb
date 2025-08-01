@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "open3"
-require "shellwords"
-require "pathname"
-require_relative "../project_root_detector"
-require_relative "git_command_executor"
+require 'open3'
+require 'shellwords'
+require 'pathname'
+require_relative '../project_root_detector'
+require_relative 'git_command_executor'
 
 module CodingAgentTools
   module Atoms
@@ -24,7 +24,7 @@ module CodingAgentTools
           repositories = []
 
           # Add main repository
-          repositories << build_repository_info("main", ".", @project_root)
+          repositories << build_repository_info('main', '.', @project_root)
 
           # Discover submodules
           submodules = discover_submodules
@@ -49,7 +49,7 @@ module CodingAgentTools
           submodules = []
 
           begin
-            submodule_output = execute_git_command("submodule status")
+            submodule_output = execute_git_command('submodule status')
             submodule_output.split("\n").each do |line|
               next if line.strip.empty?
 
@@ -102,7 +102,7 @@ module CodingAgentTools
 
         def git_repository_exists?(path = nil)
           check_path = path || project_root
-          File.exist?(File.join(check_path, ".git")) || File.directory?(File.join(check_path, ".git"))
+          File.exist?(File.join(check_path, '.git')) || File.directory?(File.join(check_path, '.git'))
         end
 
         def execute_git_command(command)
@@ -119,7 +119,7 @@ module CodingAgentTools
           stdout_str
         end
 
-        DEV_DIRECTORY_PATTERNS = ["dev-*"].freeze
+        DEV_DIRECTORY_PATTERNS = ['dev-*'].freeze
 
         private_constant :DEV_DIRECTORY_PATTERNS
       end

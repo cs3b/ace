@@ -42,9 +42,9 @@ module CodingAgentTools
         {
           enabled: true,
           linters: {
-            standardrb: {enabled: true, autofix: true},
-            security: {enabled: true},
-            cassettes: {enabled: true}
+            standardrb: { enabled: true, autofix: true },
+            security: { enabled: true },
+            cassettes: { enabled: true }
           }
         }
       end
@@ -53,10 +53,10 @@ module CodingAgentTools
         {
           enabled: true,
           linters: {
-            styleguide: {enabled: true, autofix: true},
-            link_validation: {enabled: true},
-            template_embedding: {enabled: true},
-            task_metadata: {enabled: true}
+            styleguide: { enabled: true, autofix: true },
+            link_validation: { enabled: true },
+            template_embedding: { enabled: true },
+            task_metadata: { enabled: true }
           }
         }
       end

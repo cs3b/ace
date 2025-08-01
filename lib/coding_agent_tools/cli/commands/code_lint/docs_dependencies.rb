@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/doc_dependency_analyzer"
+require 'dry/cli'
+require_relative '../../../organisms/doc_dependency_analyzer'
 
 module CodingAgentTools
   module Cli
@@ -10,55 +10,55 @@ module CodingAgentTools
         # CLI command for documentation dependency analysis
         # Provides same functionality as bin/analyze-doc-dependencies
         class DocsDependencies < Dry::CLI::Command
-          desc "Analyze dependencies between documentation files"
+          desc 'Analyze dependencies between documentation files'
 
           option :format,
-            aliases: ["-f"],
-            default: "text",
-            values: %w[text json],
-            desc: "Output format (text, json)"
+                 aliases: ['-f'],
+                 default: 'text',
+                 values: %w[text json],
+                 desc: 'Output format (text, json)'
 
           option :output,
-            aliases: ["-o"],
-            desc: "Output file path (default: stdout)"
+                 aliases: ['-o'],
+                 desc: 'Output file path (default: stdout)'
 
           option :dot_file,
-            aliases: ["-d"],
-            default: "doc-dependencies.dot",
-            desc: "DOT graph output file"
+                 aliases: ['-d'],
+                 default: 'doc-dependencies.dot',
+                 desc: 'DOT graph output file'
 
           option :json_file,
-            aliases: ["-j"],
-            default: "doc-dependencies.json",
-            desc: "JSON export output file"
+                 aliases: ['-j'],
+                 default: 'doc-dependencies.json',
+                 desc: 'JSON export output file'
 
           option :no_exports,
-            aliases: ["--no-exports"],
-            type: :boolean,
-            default: false,
-            desc: "Skip DOT and JSON file exports"
+                 aliases: ['--no-exports'],
+                 type: :boolean,
+                 default: false,
+                 desc: 'Skip DOT and JSON file exports'
 
           option :stats_only,
-            aliases: ["--stats-only"],
-            type: :boolean,
-            default: false,
-            desc: "Show only summary statistics"
+                 aliases: ['--stats-only'],
+                 type: :boolean,
+                 default: false,
+                 desc: 'Show only summary statistics'
 
           option :config,
-            aliases: ["-c"],
-            desc: "Path to configuration file"
+                 aliases: ['-c'],
+                 desc: 'Path to configuration file'
 
           example [
-            "                                      # Full analysis with exports",
-            "--format json                         # JSON output format",
-            "--output analysis.txt                 # Save to file",
-            "--no-exports                          # Skip file exports",
-            "--stats-only                          # Summary only",
-            "--config custom-lint.yml             # Use custom config file"
+            '                                      # Full analysis with exports',
+            '--format json                         # JSON output format',
+            '--output analysis.txt                 # Save to file',
+            '--no-exports                          # Skip file exports',
+            '--stats-only                          # Summary only',
+            '--config custom-lint.yml             # Use custom config file'
           ]
 
           def call(**options)
-            config_path = options[:config] || ".coding-agent/lint.yml"
+            config_path = options[:config] || '.coding-agent/lint.yml'
             analyzer = CodingAgentTools::Organisms::DocDependencyAnalyzer.new(config_path)
 
             if options[:stats_only]
@@ -66,9 +66,9 @@ module CodingAgentTools
             else
               output_full_analysis(analyzer, options)
             end
-          rescue => e
+          rescue StandardError => e
             warn "Error during analysis: #{e.message}"
-            warn e.backtrace.join("\n") if ENV["DEBUG"]
+            warn e.backtrace.join("\n") if ENV['DEBUG']
             exit 1
           end
 
@@ -79,7 +79,7 @@ module CodingAgentTools
             analyzer.analyze_dependencies_only
             stats = analyzer.get_statistics
 
-            puts "## Documentation Dependency Statistics"
+            puts '## Documentation Dependency Statistics'
             puts "- Total files analyzed: #{stats[:total_files]}"
             puts "- Files with outgoing references: #{stats[:files_with_outgoing_refs]}"
             puts "- Files with incoming references: #{stats[:files_with_incoming_refs]}"
@@ -121,9 +121,9 @@ module CodingAgentTools
               puts "- To generate PNG: dot -Tpng #{options[:dot_file]} -o doc-dependencies.png"
             end
 
-            if export_json && !options[:stats_only]
-              puts "- JSON data: #{options[:json_file]}"
-            end
+            return unless export_json && !options[:stats_only]
+
+            puts "- JSON data: #{options[:json_file]}"
           end
         end
       end

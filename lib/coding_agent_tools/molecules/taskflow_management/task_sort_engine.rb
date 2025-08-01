@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "task_sort_parser"
-require "set"
+require_relative 'task_sort_parser'
+require 'set'
 
 module CodingAgentTools
   module Molecules
@@ -40,35 +40,38 @@ module CodingAgentTools
         # @param sort_string [String] Sort string like "priority:desc,id:asc"
         # @return [Hash] Hash with :result and :errors keys
         def self.apply_sort_string(tasks, sort_string)
-          return {result: SortResult.new(tasks, false, tasks.length, tasks.length, {}), errors: []} if !sort_string || sort_string.strip.empty?
+          if !sort_string || sort_string.strip.empty?
+            return { result: SortResult.new(tasks, false, tasks.length, tasks.length, {}),
+                     errors: [] }
+          end
 
           # Parse sorts
           sorts = TaskSortParser.parse_sorts(sort_string)
 
           # Validate sorts
           errors = TaskSortParser.validate_sorts(sorts)
-          return {result: nil, errors: errors} unless errors.empty?
+          return { result: nil, errors: errors } unless errors.empty?
 
           # Apply sorts
           result = apply_sorts(tasks, sorts)
 
-          {result: result, errors: []}
+          { result: result, errors: [] }
         end
 
         # Get default sort for all command (implementation-order)
         # @return [String] Default sort string for all command
         def self.default_all_sort
-          "implementation-order"
+          'implementation-order'
         end
 
         # Get default sort for next command (implementation-order)
         # @return [String] Default sort string for next command
         def self.default_next_sort
-          "implementation-order"
+          'implementation-order'
         end
 
         # Apply implementation-order sorting (ID-based with dependency constraints)
-        def self.apply_implementation_order_sort(tasks, sorts)
+        def self.apply_implementation_order_sort(tasks, _sorts)
           # Create task map
           task_map = {}
           tasks.each { |task| task_map[task.id] = task }
@@ -76,9 +79,9 @@ module CodingAgentTools
           # Start with tasks sorted by ID (natural order)
           sorted_tasks = tasks.sort_by do |task|
             [
-              get_sort_metadata(task),                    # Optional sort metadata
-              parse_task_sequential_number(task.id),     # Task sequential number
-              task.id.to_s                              # Task ID for deterministic ordering
+              get_sort_metadata(task), # Optional sort metadata
+              parse_task_sequential_number(task.id), # Task sequential number
+              task.id.to_s # Task ID for deterministic ordering
             ]
           end
 
@@ -117,20 +120,18 @@ module CodingAgentTools
               latest_dep_position = -1
               dependencies.each do |dep_id|
                 dep_position = sorted_tasks.find_index { |t| t.id == dep_id }
-                if dep_position && dep_position > latest_dep_position
-                  latest_dep_position = dep_position
-                end
+                latest_dep_position = dep_position if dep_position && dep_position > latest_dep_position
               end
 
               # If this task appears before its latest dependency, move it after
-              if latest_dep_position >= 0 && i <= latest_dep_position
-                # Remove task from current position
-                task_to_move = sorted_tasks.delete_at(i)
-                # Insert after the latest dependency
-                sorted_tasks.insert(latest_dep_position, task_to_move)
-                made_changes = true
-                break  # Restart the check after making a change
-              end
+              next unless latest_dep_position >= 0 && i <= latest_dep_position
+
+              # Remove task from current position
+              task_to_move = sorted_tasks.delete_at(i)
+              # Insert after the latest dependency
+              sorted_tasks.insert(latest_dep_position, task_to_move)
+              made_changes = true
+              break # Restart the check after making a change
             end
 
             # If no changes were made, we're done
@@ -145,7 +146,8 @@ module CodingAgentTools
             cycle_detected,
             sorted_tasks.length,
             tasks.length,
-            {sort_type: "implementation-order", dependency_levels: calculate_dependency_levels(sorted_tasks, task_map)}
+            { sort_type: 'implementation-order',
+              dependency_levels: calculate_dependency_levels(sorted_tasks, task_map) }
           )
         end
 
@@ -160,14 +162,14 @@ module CodingAgentTools
 
               # Handle nil values (put them last)
               comparison = if a_value.nil? && b_value.nil?
-                0
-              elsif a_value.nil?
-                1
-              elsif b_value.nil?
-                -1
-              else
-                a_value <=> b_value
-              end
+                             0
+                           elsif a_value.nil?
+                             1
+                           elsif b_value.nil?
+                             -1
+                           else
+                             a_value <=> b_value
+                           end
 
               # Apply direction
               comparison = -comparison if sort.descending?
@@ -188,7 +190,7 @@ module CodingAgentTools
             false,
             sorted_tasks.length,
             tasks.length,
-            {sort_type: "multi-attribute", criteria: sorts.map(&:raw_sort)}
+            { sort_type: 'multi-attribute', criteria: sorts.map(&:raw_sort) }
           )
         end
 
@@ -200,7 +202,7 @@ module CodingAgentTools
           when Array
             task.dependencies.map(&:to_s)
           when String
-            task.dependencies.split(",").map(&:strip)
+            task.dependencies.split(',').map(&:strip)
           else
             []
           end
@@ -218,7 +220,7 @@ module CodingAgentTools
         def self.get_sort_metadata(task)
           # Try to get 'sort' attribute from frontmatter
           if task.respond_to?(:frontmatter) && task.frontmatter
-            sort_value = task.frontmatter["sort"] || task.frontmatter[:sort]
+            sort_value = task.frontmatter['sort'] || task.frontmatter[:sort]
             return sort_value.to_i if sort_value&.to_s&.match?(/^\d+$/)
           end
 

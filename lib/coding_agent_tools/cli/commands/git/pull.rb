@@ -1,57 +1,57 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Pull < Dry::CLI::Command
-          desc "Pull changes from remote repositories concurrently"
+          desc 'Pull changes from remote repositories concurrently'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :rebase, type: :boolean, default: false, aliases: ["r"],
-            desc: "Rebase instead of merge"
+          option :rebase, type: :boolean, default: false, aliases: ['r'],
+                          desc: 'Rebase instead of merge'
 
           option :ff_only, type: :boolean, default: false,
-            desc: "Only allow fast-forward merges"
+                           desc: 'Only allow fast-forward merges'
 
           option :no_commit, type: :boolean, default: false,
-            desc: "Don't commit automatic merge"
+                             desc: "Don't commit automatic merge"
 
           option :strategy, type: :string,
-            desc: "Merge strategy to use"
+                            desc: 'Merge strategy to use'
 
           option :concurrent, type: :boolean, default: true,
-            desc: "Execute pull operations concurrently (default: true)"
+                              desc: 'Execute pull operations concurrently (default: true)'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           argument :remote, type: :string, required: false,
-            desc: "Remote name (default: origin)"
+                            desc: 'Remote name (default: origin)'
 
           argument :branch, type: :string, required: false,
-            desc: "Branch name (default: current branch)"
+                            desc: 'Branch name (default: current branch)'
 
           example [
-            "",
-            "--rebase",
-            "--ff-only",
-            "--no-commit",
-            "upstream main",
-            "--concurrent",
-            "--strategy=recursive"
+            '',
+            '--rebase',
+            '--ff-only',
+            '--no-commit',
+            'upstream main',
+            '--concurrent',
+            '--strategy=recursive'
           ]
 
           def call(remote: nil, branch: nil, **options)
@@ -71,7 +71,7 @@ module CodingAgentTools
               display_pull_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
@@ -115,13 +115,13 @@ module CodingAgentTools
               end
             end
 
-            if result[:repositories_processed]
-              repos_list = result[:repositories_processed].join(", ")
-              puts "Pull completed across repositories: #{repos_list}"
-            end
+            return unless result[:repositories_processed]
+
+            repos_list = result[:repositories_processed].join(', ')
+            puts "Pull completed across repositories: #{repos_list}"
           end
 
-          def display_single_pull_result(repo_name, result, options)
+          def display_single_pull_result(repo_name, result, _options)
             if result[:success]
               if result[:stdout] && !result[:stdout].strip.empty?
                 output_lines = result[:stdout].strip.split("\n")
@@ -133,7 +133,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Pull successful"
               end
             else
-              error_message = result[:error] || result[:stderr] || "Pull operation failed"
+              error_message = result[:error] || result[:stderr] || 'Pull operation failed'
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -160,19 +160,17 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
             end
 
             # Show any partial successes
-            if result[:results]
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Pull completed in repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results]
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Pull completed in repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -182,7 +180,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

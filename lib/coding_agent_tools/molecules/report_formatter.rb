@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "json"
-require "csv"
-require "fileutils"
+require 'json'
+require 'csv'
+require 'fileutils'
 
 module CodingAgentTools
   module Molecules
@@ -13,7 +13,7 @@ module CodingAgentTools
 
       class InvalidFormatError < StandardError; end
 
-      SUPPORTED_FORMATS = [:text, :json, :csv].freeze
+      SUPPORTED_FORMATS = %i[text json csv].freeze
 
       def initialize(threshold_validator: nil)
         @threshold_validator = threshold_validator || Atoms::ThresholdValidator.new
@@ -25,29 +25,29 @@ module CodingAgentTools
       # @return [String] Text formatted report
       def format_text_report(analysis_result, format: :compact)
         lines = []
-        lines << "Coverage Analysis Report"
-        lines << "=" * 50
-        lines << ""
+        lines << 'Coverage Analysis Report'
+        lines << '=' * 50
+        lines << ''
 
         # Summary section
         lines << "Overall Coverage: #{format_coverage_percentage(analysis_result.overall_coverage_percentage)}"
         lines.concat(format_threshold_information(analysis_result))
         lines << "Files Under Threshold: #{analysis_result.under_covered_files.length} of #{analysis_result.total_files}"
-        lines << ""
+        lines << ''
         lines << "Total Lines: #{analysis_result.send(:total_executable_lines)}"
         lines << "Covered Lines: #{analysis_result.send(:total_covered_lines)}"
-        # Note: frameworks info will be added when extended in organisms
-        lines << ""
+        # NOTE: frameworks info will be added when extended in organisms
+        lines << ''
 
         # Public methods needing tests section
         public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
 
         if public_methods_needing_tests.any?
-          lines << "Public Methods Needing Tests:"
-          lines << "-" * 50
+          lines << 'Public Methods Needing Tests:'
+          lines << '-' * 50
 
           public_methods_needing_tests.each do |file_path, methods|
-            relative_path = file_path.gsub(%r{^.*/lib/}, "lib/")
+            relative_path = file_path.gsub(%r{^.*/lib/}, 'lib/')
             lines << "#{relative_path}:"
 
             methods.each do |method|
@@ -55,20 +55,20 @@ module CodingAgentTools
               lines << "    Coverage: #{format_coverage_percentage(method.coverage_percentage)}"
 
               if method.uncovered_lines.any?
-                uncovered_display = (format == :verbose) ? method.uncovered_lines.join(", ") : method.uncovered_lines_compact
+                uncovered_display = format == :verbose ? method.uncovered_lines.join(', ') : method.uncovered_lines_compact
                 lines << "    Uncovered lines: #{uncovered_display}"
-                lines << "    → Write tests to cover these specific lines"
+                lines << '    → Write tests to cover these specific lines'
               end
-              lines << ""
+              lines << ''
             end
           end
 
-          lines << "📝 Testing Priority:"
-          lines << "• Focus on public methods with 0% coverage first"
-          lines << "• Test uncovered lines within each method"
-          lines << "• Private/protected methods are not shown (typically tested indirectly)"
+          lines << '📝 Testing Priority:'
+          lines << '• Focus on public methods with 0% coverage first'
+          lines << '• Test uncovered lines within each method'
+          lines << '• Private/protected methods are not shown (typically tested indirectly)'
         else
-          lines << "All public methods have test coverage!"
+          lines << 'All public methods have test coverage!'
         end
 
         lines.join("\n")
@@ -84,31 +84,29 @@ module CodingAgentTools
         uncovered_areas = detailed_analysis[:uncovered_areas]
 
         lines << "File: #{file_info[:relative_path]}"
-        lines << ""
+        lines << ''
 
         if method_analysis
-          lines << "Method Analysis:"
+          lines << 'Method Analysis:'
           lines << "Total Methods: #{method_analysis[:total_methods]}"
           lines << "Under-Covered Methods: #{method_analysis[:under_covered_methods]}"
           lines << "Completely Uncovered: #{method_analysis[:completely_uncovered]}"
-          lines << ""
+          lines << ''
         end
 
         if uncovered_areas && uncovered_areas.any?
-          lines << "Uncovered Areas:"
+          lines << 'Uncovered Areas:'
           uncovered_areas.each do |area|
             lines << if area[:start_line] == area[:end_line]
-              "Line #{area[:start_line]}"
-            else
-              "Lines #{area[:start_line]}-#{area[:end_line]}"
-            end
+                       "Line #{area[:start_line]}"
+                     else
+                       "Lines #{area[:start_line]}-#{area[:end_line]}"
+                     end
           end
-          lines << ""
+          lines << ''
         end
 
-        if detailed_analysis[:priority_score]
-          lines << "Priority Score: #{detailed_analysis[:priority_score]}"
-        end
+        lines << "Priority Score: #{detailed_analysis[:priority_score]}" if detailed_analysis[:priority_score]
 
         lines.join("\n")
       end
@@ -127,7 +125,8 @@ module CodingAgentTools
         when :verbose
           # Verbose format returns a hash, add metadata
           public_methods_needing_tests = extract_public_methods_needing_tests(analysis_result)
-          report_data[:public_methods_needing_tests] = format_public_methods_for_json(public_methods_needing_tests, format: format)
+          report_data[:public_methods_needing_tests] =
+            format_public_methods_for_json(public_methods_needing_tests, format: format)
 
           report_data[:metadata] = {
             generated_at: Time.now.iso8601,
@@ -152,7 +151,8 @@ module CodingAgentTools
       def format_csv_report(analysis_result)
         CSV.generate do |csv|
           # Header row
-          csv << ["file_path", "coverage_percentage", "total_lines", "covered_lines", "uncovered_lines", "under_threshold"]
+          csv << %w[file_path coverage_percentage total_lines covered_lines uncovered_lines
+                    under_threshold]
 
           # File data rows
           analysis_result.files.each do |file|
@@ -174,7 +174,7 @@ module CodingAgentTools
       def save_report(content, file_path)
         FileUtils.mkdir_p(File.dirname(file_path))
         File.write(file_path, content)
-      rescue => e
+      rescue StandardError => e
         raise SaveError, "Failed to save report to #{file_path}: #{e.message}"
       end
 
@@ -211,9 +211,9 @@ module CodingAgentTools
       def detect_output_format(file_path)
         extension = File.extname(file_path).downcase
         case extension
-        when ".json"
+        when '.json'
           :json
-        when ".csv"
+        when '.csv'
           :csv
         else
           :text
@@ -228,7 +228,7 @@ module CodingAgentTools
         format_symbol = format.is_a?(String) ? format.to_sym : format
 
         unless SUPPORTED_FORMATS.include?(format_symbol)
-          raise InvalidFormatError, "Unsupported format: #{format}. Supported formats: #{SUPPORTED_FORMATS.join(", ")}"
+          raise InvalidFormatError, "Unsupported format: #{format}. Supported formats: #{SUPPORTED_FORMATS.join(', ')}"
         end
 
         format_symbol
@@ -298,7 +298,7 @@ module CodingAgentTools
       end
 
       def format_uncovered_ranges(ranges)
-        return "" if ranges.empty?
+        return '' if ranges.empty?
 
         formatted_ranges = ranges.map do |range|
           if range[:start_line] == range[:end_line]
@@ -308,7 +308,7 @@ module CodingAgentTools
           end
         end
 
-        formatted_ranges.join(", ")
+        formatted_ranges.join(', ')
       end
 
       def extract_public_methods_needing_tests(analysis_result)
@@ -317,9 +317,7 @@ module CodingAgentTools
         analysis_result.files.each do |file|
           public_methods = file.methods.select(&:needs_tests?)
 
-          if public_methods.any?
-            public_methods_by_file[file.file_path] = public_methods.sort_by(&:coverage_percentage)
-          end
+          public_methods_by_file[file.file_path] = public_methods.sort_by(&:coverage_percentage) if public_methods.any?
         end
 
         public_methods_by_file
@@ -329,7 +327,7 @@ module CodingAgentTools
         formatted = {}
 
         public_methods_by_file.each do |file_path, methods|
-          relative_path = file_path.gsub(%r{^.*/lib/}, "lib/")
+          relative_path = file_path.gsub(%r{^.*/lib/}, 'lib/')
           formatted[relative_path] = methods.map { |method| method.to_h(format: format) }
         end
 
@@ -346,6 +344,7 @@ module CodingAgentTools
 
       def calculate_percentage(numerator, denominator)
         return 0.0 if denominator.zero?
+
         ((numerator.to_f / denominator) * 100).round(1)
       end
 
@@ -354,13 +353,13 @@ module CodingAgentTools
         under_covered_files = analysis_result.under_covered_files
 
         if under_covered_files.any?
-          recommendations << "#{under_covered_files.length} file#{(under_covered_files.length == 1) ? "" : "s"} below #{analysis_result.threshold}% threshold requires attention"
+          recommendations << "#{under_covered_files.length} file#{under_covered_files.length == 1 ? '' : 's'} below #{analysis_result.threshold}% threshold requires attention"
 
           # Focus on worst file
           worst_file = under_covered_files.min_by(&:coverage_percentage)
           recommendations << "Focus testing efforts on #{worst_file.relative_path} (#{format_coverage_percentage(worst_file.coverage_percentage)} coverage)"
         else
-          recommendations << "All files meet coverage threshold - excellent work!"
+          recommendations << 'All files meet coverage threshold - excellent work!'
         end
 
         recommendations

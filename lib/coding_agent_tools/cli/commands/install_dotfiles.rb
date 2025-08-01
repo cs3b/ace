@@ -1,30 +1,30 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require "fileutils"
-require_relative "../../atoms/project_root_detector"
+require 'dry/cli'
+require 'fileutils'
+require_relative '../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       # Install dotfiles command for setting up configuration files in new projects
       class InstallDotfiles < Dry::CLI::Command
-        desc "Install configuration files (.coding-agent/*.yml) in the current project"
+        desc 'Install configuration files (.coding-agent/*.yml) in the current project'
 
-        option :force, type: :boolean, default: false, aliases: ["f"],
-          desc: "Overwrite existing configuration files"
+        option :force, type: :boolean, default: false, aliases: ['f'],
+                       desc: 'Overwrite existing configuration files'
 
         option :dry_run, type: :boolean, default: false,
-          desc: "Show what would be copied without actually copying"
+                         desc: 'Show what would be copied without actually copying'
 
-        option :debug, type: :boolean, default: false, aliases: ["d"],
-          desc: "Enable debug output for verbose information"
+        option :debug, type: :boolean, default: false, aliases: ['d'],
+                       desc: 'Enable debug output for verbose information'
 
         example [
-          "",
-          "--force",
-          "--dry-run",
-          "--debug"
+          '',
+          '--force',
+          '--dry-run',
+          '--debug'
         ]
 
         def call(**options)
@@ -33,12 +33,12 @@ module CodingAgentTools
           template_dir = find_template_directory(project_root)
 
           unless template_dir
-            error_output("Error: Could not find dotfiles templates.")
-            error_output("Expected location: dev-handbook/.meta/tpl/dotfiles/")
+            error_output('Error: Could not find dotfiles templates.')
+            error_output('Expected location: dev-handbook/.meta/tpl/dotfiles/')
             return 1
           end
 
-          target_dir = File.join(project_root, ".coding-agent")
+          target_dir = File.join(project_root, '.coding-agent')
 
           if options[:debug]
             debug_output("Debug: Project root: #{project_root}")
@@ -57,7 +57,7 @@ module CodingAgentTools
           end
 
           # Find all template files
-          template_files = Dir.glob(File.join(template_dir, "*.yml"))
+          template_files = Dir.glob(File.join(template_dir, '*.yml'))
 
           if template_files.empty?
             error_output("Error: No template files found in #{template_dir}")
@@ -91,22 +91,22 @@ module CodingAgentTools
           end
 
           # Summary
-          info_output("")
+          info_output('')
           if options[:dry_run]
-            info_output("Dry run complete:")
+            info_output('Dry run complete:')
             info_output("  Would copy: #{copied_count} files")
             info_output("  Would skip: #{skipped_count} files")
           else
-            info_output("Installation complete:")
+            info_output('Installation complete:')
             info_output("  Copied: #{copied_count} files")
             info_output("  Skipped: #{skipped_count} files")
-            info_output("")
-            info_output("Configuration files are now available in .coding-agent/")
+            info_output('')
+            info_output('Configuration files are now available in .coding-agent/')
             info_output("You can customize them for your project's specific needs.")
           end
 
           0
-        rescue => e
+        rescue StandardError => e
           handle_error(e, options[:debug])
           1
         end
@@ -116,12 +116,12 @@ module CodingAgentTools
         def find_template_directory(project_root)
           # Look for the template directory in the project
           candidate_paths = [
-            File.join(project_root, "dev-handbook", ".meta", "tpl", "dotfiles"),
-            File.join(project_root, ".meta", "tpl", "dotfiles"),
-            File.join(project_root, "templates", "dotfiles")
+            File.join(project_root, 'dev-handbook', '.meta', 'tpl', 'dotfiles'),
+            File.join(project_root, '.meta', 'tpl', 'dotfiles'),
+            File.join(project_root, 'templates', 'dotfiles')
           ]
 
-          candidate_paths.find { |path| Dir.exist?(path) && !Dir.glob(File.join(path, "*.yml")).empty? }
+          candidate_paths.find { |path| Dir.exist?(path) && !Dir.glob(File.join(path, '*.yml')).empty? }
         end
 
         def handle_error(error, debug_enabled)
@@ -131,7 +131,7 @@ module CodingAgentTools
             error.backtrace.each { |line| error_output("  #{line}") }
           else
             error_output("Error: #{error.message}")
-            error_output("Use --debug flag for more information")
+            error_output('Use --debug flag for more information')
           end
         end
 
@@ -146,11 +146,11 @@ module CodingAgentTools
         end
 
         def test_environment?
-          ENV["CI"] || defined?(RSpec) || ENV["RAILS_ENV"] == "test" || ENV["RACK_ENV"] == "test"
+          ENV['CI'] || defined?(RSpec) || ENV['RAILS_ENV'] == 'test' || ENV['RACK_ENV'] == 'test'
         end
 
         def debug_explicitly_enabled?
-          ENV["DEBUG"] == "true" || ENV["TEST_DEBUG"] == "true"
+          ENV['DEBUG'] == 'true' || ENV['TEST_DEBUG'] == 'true'
         end
 
         def info_output(message)

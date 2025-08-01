@@ -15,22 +15,25 @@ module CodingAgentTools
       ) do
         # Validate required fields
         def validate!
-          raise ArgumentError, "type is required" if type.nil? || type.empty?
-          raise ArgumentError, "target_spec is required" if target_spec.nil? || target_spec.empty?
-          raise ArgumentError, "content_type is required" if content_type.nil? || content_type.empty?
+          raise ArgumentError, 'type is required' if type.nil? || type.empty?
+          raise ArgumentError, 'target_spec is required' if target_spec.nil? || target_spec.empty?
+          raise ArgumentError, 'content_type is required' if content_type.nil? || content_type.empty?
 
           valid_types = %w[git_diff file_pattern single_file]
-          raise ArgumentError, "type must be one of: #{valid_types.join(", ")}" unless valid_types.include?(type)
+          raise ArgumentError, "type must be one of: #{valid_types.join(', ')}" unless valid_types.include?(type)
 
           valid_content_types = %w[diff xml]
-          raise ArgumentError, "content_type must be one of: #{valid_content_types.join(", ")}" unless valid_content_types.include?(content_type)
+          unless valid_content_types.include?(content_type)
+            raise ArgumentError,
+                  "content_type must be one of: #{valid_content_types.join(', ')}"
+          end
 
           true
         end
 
         # Check if target is git-based
         def git_based?
-          type == "git_diff"
+          type == 'git_diff'
         end
 
         # Check if target is file-based

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
+require 'json'
 
 module CodingAgentTools::Atoms
   # Atom for exporting data to JSON format
@@ -19,7 +19,7 @@ module CodingAgentTools::Atoms
     end
 
     # Export dependencies to JSON file
-    def export_to_file(dependencies, filename = "doc-dependencies.json")
+    def export_to_file(dependencies, filename = 'doc-dependencies.json')
       data = format_dependencies(dependencies)
       json_content = JSON.pretty_generate(data)
       File.write(filename, json_content)

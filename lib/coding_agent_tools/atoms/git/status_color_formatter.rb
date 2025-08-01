@@ -14,7 +14,7 @@ module CodingAgentTools
           blue: "\033[34m",          # For unknown status
           bold: "\033[1m",           # For emphasis
           # File status colors (following git's color scheme)
-          staged_new: "\033[32m",    # Green for new files (staged)
+          staged_new: "\033[32m", # Green for new files (staged)
           staged_modified: "\033[32m", # Green for modified files (staged)
           staged_deleted: "\033[32m",  # Green for deleted files (staged)
           modified: "\033[31m",      # Red for modified files (not staged)
@@ -63,10 +63,10 @@ module CodingAgentTools
           return false if options[:no_color]
 
           # Environment variable NO_COLOR takes precedence
-          return false if ENV["NO_COLOR"]
+          return false if ENV['NO_COLOR']
 
           # FORCE_COLOR environment variable or --force-color option enables color
-          return true if ENV["FORCE_COLOR"] || options[:force_color]
+          return true if ENV['FORCE_COLOR'] || options[:force_color]
 
           # Since --force-color is now default true, we'll use colors by default
           # unless explicitly disabled
@@ -80,24 +80,20 @@ module CodingAgentTools
           output_text = status_output.downcase
 
           # Check for conflict markers
-          if output_text.include?("both modified") || output_text.include?("merge conflict")
-            return :conflict
-          end
+          return :conflict if output_text.include?('both modified') || output_text.include?('merge conflict')
 
           # Check for any changes (modified, added, deleted, renamed, etc.)
-          if output_text.include?("modified:") ||
-              output_text.include?("deleted:") ||
-              output_text.include?("new file:") ||
-              output_text.include?("renamed:") ||
-              output_text.include?("changes not staged") ||
-              output_text.include?("changes to be committed")
+          if output_text.include?('modified:') ||
+             output_text.include?('deleted:') ||
+             output_text.include?('new file:') ||
+             output_text.include?('renamed:') ||
+             output_text.include?('changes not staged') ||
+             output_text.include?('changes to be committed')
             return :changes
           end
 
           # Check for untracked files
-          if output_text.include?("untracked files:")
-            return :untracked
-          end
+          return :untracked if output_text.include?('untracked files:')
 
           # If it has content but doesn't match patterns, treat as changes
           :changes
@@ -119,17 +115,22 @@ module CodingAgentTools
         end
 
         def format_clean_repository(repo_name, color)
-          use_color ? "#{colorize("[#{repo_name}]", color)} Clean working directory" : "[#{repo_name}] Clean working directory"
+          if use_color
+            "#{colorize("[#{repo_name}]",
+                        color)} Clean working directory"
+          else
+            "[#{repo_name}] Clean working directory"
+          end
         end
 
         def format_repository_with_changes(repo_name, status_output, color)
           lines = []
 
           lines << if use_color
-            "#{colorize("[#{repo_name}]", color)} Status:"
-          else
-            "[#{repo_name}] Status:"
-          end
+                     "#{colorize("[#{repo_name}]", color)} Status:"
+                   else
+                     "[#{repo_name}] Status:"
+                   end
 
           # Process each line with appropriate coloring
           status_output.lines.each do |line|
@@ -144,7 +145,7 @@ module CodingAgentTools
           case line
           # Branch information
           when /^On branch (.+)$/
-            branch_name = $1
+            branch_name = ::Regexp.last_match(1)
             "On branch #{colorize(branch_name, :branch)}"
           when /^Your branch is (.+)$/
             # Keep branch status messages in default color but highlight key parts
@@ -160,23 +161,23 @@ module CodingAgentTools
 
           # File status lines
           when /^\s*(new file|added):\s+(.+)$/
-            prefix = $1
-            filename = $2
-            "\t#{colorize(prefix + ":", :staged_new)} #{colorize(filename, :staged_new)}"
+            prefix = ::Regexp.last_match(1)
+            filename = ::Regexp.last_match(2)
+            "\t#{colorize(prefix + ':', :staged_new)} #{colorize(filename, :staged_new)}"
           when /^\s*modified:\s+(.+)$/
-            filename = $1
+            filename = ::Regexp.last_match(1)
             # Determine if this is in "Changes to be committed" or "Changes not staged"
             # We'll use context from previous lines, but for now, default to modified (red)
-            "\t#{colorize("modified:", :modified)} #{colorize(filename, :modified)}"
+            "\t#{colorize('modified:', :modified)} #{colorize(filename, :modified)}"
           when /^\s*deleted:\s+(.+)$/
-            filename = $1
-            "\t#{colorize("deleted:", :deleted)} #{colorize(filename, :deleted)}"
+            filename = ::Regexp.last_match(1)
+            "\t#{colorize('deleted:', :deleted)} #{colorize(filename, :deleted)}"
           when /^\s*renamed:\s+(.+)$/
-            filename = $1
-            "\t#{colorize("renamed:", :staged_modified)} #{colorize(filename, :staged_modified)}"
+            filename = ::Regexp.last_match(1)
+            "\t#{colorize('renamed:', :staged_modified)} #{colorize(filename, :staged_modified)}"
           when /^\s*copied:\s+(.+)$/
-            filename = $1
-            "\t#{colorize("copied:", :staged_new)} #{colorize(filename, :staged_new)}"
+            filename = ::Regexp.last_match(1)
+            "\t#{colorize('copied:', :staged_new)} #{colorize(filename, :staged_new)}"
 
           # Meta information and hints (must come before untracked files)
           when /^\s*\(use ".+" to .+\)$/
@@ -187,7 +188,7 @@ module CodingAgentTools
             colorize(line, :meta)
 
           # Untracked files (filenames without status prefix, after filtering out meta text)
-          when /^\s+([^:\(\)].+)$/
+          when /^\s+([^:()].+)$/
             # This matches indented lines that don't have status prefixes and aren't meta text
             filename = line.strip
             "\t#{colorize(filename, :untracked)}"
@@ -200,6 +201,7 @@ module CodingAgentTools
 
         def colorize(text, color)
           return text unless use_color && COLORS[color]
+
           "#{COLORS[color]}#{text}#{COLORS[:reset]}"
         end
       end

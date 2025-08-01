@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "session_manager"
-require_relative "content_extractor"
-require_relative "context_loader"
-require_relative "prompt_builder"
-require "fileutils"
+require_relative 'session_manager'
+require_relative 'content_extractor'
+require_relative 'context_loader'
+require_relative 'prompt_builder'
+require 'fileutils'
 
 module CodingAgentTools
   module Organisms
@@ -28,7 +28,7 @@ module CodingAgentTools
         # @param base_path [String] base path for sessions
         # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] {session: ReviewSession, success: Boolean, error: String}
-        def create_review_session(focus, target, context = "auto", base_path = nil, system_prompt_override = nil)
+        def create_review_session(focus, target, context = 'auto', base_path = nil, system_prompt_override = nil)
           # Create session
           session = @session_manager.create_session(
             focus: focus,
@@ -40,9 +40,7 @@ module CodingAgentTools
           # Extract and save content
           target_model = @content_extractor.extract_and_save(target, session.directory_path)
 
-          if target_model.type == "error"
-            raise "Failed to extract target content: #{target_model.size_info[:error]}"
-          end
+          raise "Failed to extract target content: #{target_model.size_info[:error]}" if target_model.type == 'error'
 
           # Load and save context
           context_model = @context_loader.load_context(context, session)
@@ -62,7 +60,7 @@ module CodingAgentTools
             success: true,
             error: nil
           }
-        rescue => e
+        rescue StandardError => e
           {
             session: nil,
             success: false,
@@ -73,13 +71,13 @@ module CodingAgentTools
         # Execute review using LLM
         # @param session [Models::Code::ReviewSession] review session
         # @return [Hash] {reports: Array, success: Boolean, error: String}
-        def execute_review(session)
+        def execute_review(_session)
           # This method would integrate with existing LLM clients
           # For now, return placeholder
           {
             reports: [],
             success: false,
-            error: "LLM integration not yet implemented"
+            error: 'LLM integration not yet implemented'
           }
         end
 
@@ -94,9 +92,9 @@ module CodingAgentTools
           # Write execution summary
           write_execution_summary(session, reports)
 
-          {success: true, error: nil}
-        rescue => e
-          {success: false, error: e.message}
+          { success: true, error: nil }
+        rescue StandardError => e
+          { success: false, error: e.message }
         end
 
         # Prepare review components without creating session
@@ -105,12 +103,14 @@ module CodingAgentTools
         # @param context [String] context mode
         # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] preparation results
-        def prepare_review(focus, target, context = "auto", system_prompt_override = nil)
+        def prepare_review(focus, target, _context = 'auto', system_prompt_override = nil)
           {
             target_info: analyze_target(target),
             context_info: @context_loader.check_availability,
             system_prompt: @prompt_builder.select_system_prompt(focus, system_prompt_override),
-            focus_areas: focus.split.flat_map { |f| CodingAgentTools::Models::Code::ReviewPrompt.get_focus_descriptions(f) }
+            focus_areas: focus.split.flat_map do |f|
+              CodingAgentTools::Models::Code::ReviewPrompt.get_focus_descriptions(f)
+            end
           }
         end
 
@@ -121,11 +121,11 @@ module CodingAgentTools
         # @return [Hash] target analysis
         def analyze_target(target)
           if @content_extractor.instance_variable_get(:@diff_extractor).git_diff_target?(target)
-            {type: "git_diff", format: "diff"}
+            { type: 'git_diff', format: 'diff' }
           elsif File.exist?(target) && !File.directory?(target)
-            {type: "single_file", format: "xml", path: target}
+            { type: 'single_file', format: 'xml', path: target }
           else
-            {type: "file_pattern", format: "xml", pattern: target}
+            { type: 'file_pattern', format: 'xml', pattern: target }
           end
         end
 
@@ -135,43 +135,43 @@ module CodingAgentTools
         # @param context [Models::Code::ReviewContext] context
         # @param prompt [Models::Code::ReviewPrompt] prompt
         def write_session_summary(session, target, context, prompt)
-          summary_path = File.join(session.directory_path, "session-summary.md")
+          summary_path = File.join(session.directory_path, 'session-summary.md')
 
           summary = <<~SUMMARY
             # Code Review Session Summary
-            
+
             ## Session Information
             - **ID**: #{session.session_id}
             - **Name**: #{session.session_name}
             - **Created**: #{session.timestamp}
             - **Directory**: #{session.directory_path}
-            
+
             ## Review Configuration
             - **Focus**: #{session.focus}
             - **Target**: #{session.target}
             - **Context Mode**: #{session.context_mode_with_default}
-            
+
             ## Target Analysis
             - **Type**: #{target.type}
             - **Content Format**: #{target.content_type}
             - **Files**: #{target.file_count}
             - **Lines**: #{target.line_count}
-            
+
             ## Context Summary
             #{@context_loader.get_context_summary(context)}
-            
+
             ## Prompt Statistics
             - **Size**: #{prompt.word_count} words
             - **Focus Areas**: #{prompt.focus_areas.size}
             - **System Prompt**: #{prompt.system_prompt_path}
-            
+
             ## Files Generated
             - `session.meta` - Session metadata
             - `input.#{target.content_type}` - Target content
             - `input.meta` - Target metadata
             - `prompt.md` - Combined review prompt
             - `context.yaml` - Context metadata
-            
+
             ## Next Steps
             Execute the review using:
             ```
@@ -186,16 +186,16 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] session
         # @param reports [Array<Hash>] review reports
         def update_session_index(session, reports)
-          index_path = File.join(session.directory_path, "README.md")
+          index_path = File.join(session.directory_path, 'README.md')
 
           # Read existing content
-          existing = File.exist?(index_path) ? File.read(index_path) : ""
+          existing = File.exist?(index_path) ? File.read(index_path) : ''
 
           # Add reports section
           reports_section = <<~REPORTS
-            
+
             ## Review Reports
-            
+
           REPORTS
 
           reports.each do |report|
@@ -203,13 +203,13 @@ module CodingAgentTools
           end
 
           # Update content
-          updated = if existing.include?("## Review Reports")
-            # Replace existing section
-            existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
-          else
-            # Append new section
-            existing + "\n" + reports_section
-          end
+          updated = if existing.include?('## Review Reports')
+                      # Replace existing section
+                      existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
+                    else
+                      # Append new section
+                      existing + "\n" + reports_section
+                    end
 
           File.write(index_path, updated)
         end
@@ -218,14 +218,14 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] session
         # @param reports [Array<Hash>] review reports
         def write_execution_summary(session, reports)
-          summary_path = File.join(session.directory_path, "execution.summary")
+          summary_path = File.join(session.directory_path, 'execution.summary')
 
           summary = <<~SUMMARY
             Session: #{session.session_name}
             Timestamp: #{Time.now.iso8601}
             Target: #{session.target}
             Focus: #{session.focus}
-            
+
             Execution Results:
           SUMMARY
 
@@ -234,9 +234,9 @@ module CodingAgentTools
           end
 
           summary += <<~SUMMARY
-            
+
             Files Generated:
-            #{Dir.glob(File.join(session.directory_path, "*")).map { |f| File.basename(f) }.join("\n")}
+            #{Dir.glob(File.join(session.directory_path, '*')).map { |f| File.basename(f) }.join("\n")}
           SUMMARY
 
           File.write(summary_path, summary)

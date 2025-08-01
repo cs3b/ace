@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "parser/current"
+require 'parser/current'
 
 module CodingAgentTools
   module Atoms
@@ -48,7 +48,7 @@ module CodingAgentTools
       # @param source_name [String] Name for error reporting (usually file path)
       # @return [Array<MethodDefinition>] Method definitions with line ranges
       # @raise [ParseError] If content cannot be parsed
-      def parse_content(content, source_name = "<string>")
+      def parse_content(content, source_name = '<string>')
         ast = parse_ast(content, source_name)
         extract_methods(ast)
       end
@@ -57,7 +57,7 @@ module CodingAgentTools
 
       def read_file_content(file_path)
         File.read(file_path)
-      rescue => e
+      rescue StandardError => e
         raise ParseError, "Cannot read file #{file_path}: #{e.message}"
       end
 
@@ -65,7 +65,7 @@ module CodingAgentTools
         Parser::CurrentRuby.parse(content, source_name)
       rescue Parser::SyntaxError => e
         raise ParseError, "Syntax error in #{source_name}: #{e.message}"
-      rescue => e
+      rescue StandardError => e
         raise ParseError, "Parse error in #{source_name}: #{e.message}"
       end
 
@@ -129,14 +129,14 @@ module CodingAgentTools
         return false unless node.children[0].nil? # No receiver
 
         modifier_name = node.children[1]
-        [:private, :protected, :public].include?(modifier_name)
+        %i[private protected public].include?(modifier_name)
       end
 
       def search_children(node, methods, current_visibility)
-        if node.respond_to?(:children) && node.children
-          node.children.each do |child|
-            extract_methods(child, methods, current_visibility) if child.is_a?(Parser::AST::Node)
-          end
+        return unless node.respond_to?(:children) && node.children
+
+        node.children.each do |child|
+          extract_methods(child, methods, current_visibility) if child.is_a?(Parser::AST::Node)
         end
       end
 

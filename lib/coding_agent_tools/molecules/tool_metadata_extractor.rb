@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "open3"
-require "timeout"
+require 'open3'
+require 'timeout'
 
 module CodingAgentTools
   module Molecules
@@ -13,7 +13,7 @@ module CodingAgentTools
     # - Handle various help output formats
     # - Provide fallback descriptions for tools without help
     class ToolMetadataExtractor
-      HELP_FLAGS = ["--help", "-h", "help"].freeze
+      HELP_FLAGS = ['--help', '-h', 'help'].freeze
       TIMEOUT_SECONDS = 5
 
       def initialize
@@ -45,7 +45,7 @@ module CodingAgentTools
 
         # Fallback to generic description based on tool name
         generate_fallback_description(tool_name)
-      rescue => e
+      rescue StandardError => e
         # If all extraction methods fail, provide a generic description
         "CLI tool (description unavailable: #{e.message})"
       end
@@ -63,7 +63,7 @@ module CodingAgentTools
         parse_help_output(stdout, stderr, File.basename(tool_path))
       rescue Timeout::Error
         nil
-      rescue
+      rescue StandardError
         # Log error but don't fail - we'll try other methods
         nil
       end
@@ -85,9 +85,9 @@ module CodingAgentTools
         # Pattern 1: dry-cli style "desc" line
         lines.each do |line|
           if line =~ /^desc\s*[:"]\s*(.+?)["']?$/i
-            return $1
+            return ::Regexp.last_match(1)
           elsif line =~ /^description\s*[:"]\s*(.+?)["']?$/i
-            return $1
+            return ::Regexp.last_match(1)
           end
         end
 
@@ -102,7 +102,7 @@ module CodingAgentTools
           next unless usage_found
           next if line.empty?
           next if /^(options?|arguments?|examples?|commands?):/i.match?(line)
-          next if line.start_with?("-") # Skip option lines
+          next if line.start_with?('-') # Skip option lines
 
           # This looks like a description line
           return line if line.length > 10 && line.match?(/[a-z]/)
@@ -112,11 +112,9 @@ module CodingAgentTools
         lines.each do |line|
           next if line.length < 10
           next if line.match?(/^[-\w]+:/) # Skip section headers
-          next if line.start_with?("-") # Skip options
+          next if line.start_with?('-') # Skip options
 
-          if line.match?(/^[A-Z][^:]*[a-z]/) && line.include?(" ")
-            return line
-          end
+          return line if line.match?(/^[A-Z][^:]*[a-z]/) && line.include?(' ')
         end
 
         nil
@@ -124,12 +122,10 @@ module CodingAgentTools
 
       def clean_description(description)
         # Remove quotes and clean up whitespace
-        cleaned = description.gsub(/^["']|["']$/, "").strip
+        cleaned = description.gsub(/^["']|["']$/, '').strip
 
         # Ensure it ends with a period if it doesn't already have punctuation
-        unless cleaned.match?(/[.!?]$/)
-          cleaned += "."
-        end
+        cleaned += '.' unless cleaned.match?(/[.!?]$/)
 
         # Capitalize first letter
         cleaned[0] = cleaned[0].upcase if cleaned.length > 0
@@ -141,23 +137,23 @@ module CodingAgentTools
         # Generate description based on tool name patterns
         case tool_name
         when /^git-(.+)/
-          "Enhanced git #{$1} with additional functionality."
+          "Enhanced git #{::Regexp.last_match(1)} with additional functionality."
         when /^llm-(.+)/
-          "LLM integration tool for #{$1.tr("-", " ")}."
+          "LLM integration tool for #{::Regexp.last_match(1).tr('-', ' ')}."
         when /^nav-(.+)/
-          "Navigation tool for #{$1.tr("-", " ")}."
+          "Navigation tool for #{::Regexp.last_match(1).tr('-', ' ')}."
         when /^task-(.+)/
-          "Task management tool for #{$1.tr("-", " ")}."
+          "Task management tool for #{::Regexp.last_match(1).tr('-', ' ')}."
         when /^code-(.+)/
-          "Code #{$1.tr("-", " ")} tool."
+          "Code #{::Regexp.last_match(1).tr('-', ' ')} tool."
         when /^release-(.+)/
-          "Release management tool for #{$1.tr("-", " ")}."
+          "Release management tool for #{::Regexp.last_match(1).tr('-', ' ')}."
         when /^reflection-(.+)/
-          "Reflection and analysis tool for #{$1.tr("-", " ")}."
-        when "handbook"
-          "Development handbook access and management tool."
+          "Reflection and analysis tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+        when 'handbook'
+          'Development handbook access and management tool.'
         else
-          "Development automation tool."
+          'Development automation tool.'
         end
       end
     end

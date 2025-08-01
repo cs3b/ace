@@ -1,53 +1,53 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/git/git_orchestrator"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/git/git_orchestrator'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Add < Dry::CLI::Command
-          desc "Add files to staging area with intelligent path grouping"
+          desc 'Add files to staging area with intelligent path grouping'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :repository, type: :string, aliases: ["C"],
-            desc: "Specify explicit repository context (e.g., 'dev-tools')"
+          option :repository, type: :string, aliases: ['C'],
+                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :all, type: :boolean, default: false, aliases: ["A"],
-            desc: "Add all changes (new, modified, deleted)"
+          option :all, type: :boolean, default: false, aliases: ['A'],
+                       desc: 'Add all changes (new, modified, deleted)'
 
-          option :update, type: :boolean, default: false, aliases: ["u"],
-            desc: "Add only modified and deleted files"
+          option :update, type: :boolean, default: false, aliases: ['u'],
+                          desc: 'Add only modified and deleted files'
 
-          option :patch, type: :boolean, default: false, aliases: ["p"],
-            desc: "Interactively choose hunks to add"
+          option :patch, type: :boolean, default: false, aliases: ['p'],
+                         desc: 'Interactively choose hunks to add'
 
-          option :force, type: :boolean, default: false, aliases: ["f"],
-            desc: "Allow adding ignored files"
+          option :force, type: :boolean, default: false, aliases: ['f'],
+                         desc: 'Allow adding ignored files'
 
           option :concurrent, type: :boolean, default: false,
-            desc: "Execute add operations concurrently across repositories"
+                              desc: 'Execute add operations concurrently across repositories'
 
           option :main_only, type: :boolean, default: false,
-            desc: "Process main repository only"
+                             desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-            desc: "Process submodules only"
+                                   desc: 'Process submodules only'
 
           argument :files, type: :array, required: true,
-            desc: "Files or directories to add"
+                           desc: 'Files or directories to add'
 
           example [
-            "file1.rb file2.rb",
-            "--all",
-            "--update",
-            "dev-handbook/guide.md lib/auth.rb",
-            "--patch lib/core.rb",
-            "--concurrent dev-handbook/file.md dev-tools/lib/file.rb"
+            'file1.rb file2.rb',
+            '--all',
+            '--update',
+            'dev-handbook/guide.md lib/auth.rb',
+            '--patch lib/core.rb',
+            '--concurrent dev-handbook/file.md dev-tools/lib/file.rb'
           ]
 
           def call(files:, **options)
@@ -67,14 +67,14 @@ module CodingAgentTools
               display_add_errors(result, options)
               1
             end
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
 
           private
 
-          def build_add_options(files, options)
+          def build_add_options(_files, options)
             add_opts = {
               capture_output: true
             }
@@ -109,13 +109,13 @@ module CodingAgentTools
               end
             end
 
-            if result[:repositories_processed]
-              repos_list = result[:repositories_processed].join(", ")
-              puts "Files added across repositories: #{repos_list}"
-            end
+            return unless result[:repositories_processed]
+
+            repos_list = result[:repositories_processed].join(', ')
+            puts "Files added across repositories: #{repos_list}"
           end
 
-          def display_single_add_result(repo_name, result, options)
+          def display_single_add_result(repo_name, result, _options)
             if result[:success]
               if result[:stdout] && !result[:stdout].strip.empty?
                 puts "[#{repo_name}] #{result[:stdout].strip}"
@@ -125,7 +125,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Files added successfully"
               end
             else
-              error_message = result[:error] || result[:stderr] || "Add operation failed"
+              error_message = result[:error] || result[:stderr] || 'Add operation failed'
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -152,19 +152,17 @@ module CodingAgentTools
                 end
               end
 
-              unless options[:debug]
-                error_output("Use --debug flag for more information")
-              end
+              error_output('Use --debug flag for more information') unless options[:debug]
             end
 
             # Show any partial successes
-            if result[:results]
-              successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
-              if successful_repos.any?
-                successful_names = successful_repos.keys.join(", ")
-                puts "Partial success: Files added in repositories: #{successful_names}"
-              end
-            end
+            return unless result[:results]
+
+            successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
+            return unless successful_repos.any?
+
+            successful_names = successful_repos.keys.join(', ')
+            puts "Partial success: Files added in repositories: #{successful_names}"
           end
 
           def handle_error(error, debug_enabled)
@@ -174,7 +172,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "kramdown"
-require "kramdown-parser-gfm"
+require 'kramdown'
+require 'kramdown-parser-gfm'
 
 module CodingAgentTools
   module Atoms
@@ -13,12 +13,12 @@ module CodingAgentTools
 
         def initialize(options = {})
           @options = {
-            input: "GFM",           # GitHub Flavored Markdown
+            input: 'GFM',           # GitHub Flavored Markdown
             hard_wrap: false,
             auto_ids: true,         # Enable auto IDs by default
             entity_output: :as_char,
-            toc_levels: "1..6",
-            smart_quotes: ["rsquo", "rsquo", "rdquo", "rdquo"],
+            toc_levels: '1..6',
+            smart_quotes: %w[rsquo rsquo rdquo rdquo],
             gfm_quirks: [:paragraph_end],  # Preserve GFM paragraph handling
             syntax_highlighter: nil        # Disable syntax highlighting to preserve code blocks
           }.merge(options)
@@ -33,7 +33,7 @@ module CodingAgentTools
             formatted: formatted,
             changed: content != formatted
           }
-        rescue => e
+        rescue StandardError => e
           {
             success: false,
             error: e.message,
@@ -83,7 +83,7 @@ module CodingAgentTools
             valid: warnings.empty?,
             warnings: warnings
           }
-        rescue => e
+        rescue StandardError => e
           {
             valid: false,
             error: e.message
@@ -96,28 +96,32 @@ module CodingAgentTools
           Kramdown::Document.new(content, @options)
         end
 
-        def convert_to_gfm(doc, original_content)
+        def convert_to_gfm(doc, _original_content)
           kramdown_output = doc.to_kramdown
 
           # Convert Kramdown task list format back to GFM format
-          kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" \/>(.+)$/m, '- [ ] \1')
-          kramdown_output = kramdown_output.gsub(/^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" checked="checked" \/>(.+)$/m, '- [x] \1')
+          kramdown_output = kramdown_output.gsub(
+            %r{^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" />(.+)$}m, '- [ ] \1'
+          )
+          kramdown_output = kramdown_output.gsub(
+            %r{^\* \{: \.task-list-item\} <input type="checkbox" class="task-list-item-checkbox"\n  disabled="disabled" checked="checked" />(.+)$}m, '- [x] \1'
+          )
 
           # Remove task-list class marker
-          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, "")
+          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, '')
 
           # Convert indented code blocks back to fenced code blocks
           kramdown_output = kramdown_output.gsub(/^    (.+?)$\n^\{: \.language-(\w+)\}$/m) do |match|
-            language = $2
-            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, "") }
+            language = ::Regexp.last_match(2)
+            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, '') }
             "```#{language}\n#{code_lines.join("\n")}\n```"
           end
 
           # Clean up remaining language markers
-          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, "")
+          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, '')
 
           # Clean up header ID attributes if auto_ids was disabled
-          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, "")
+          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, '')
 
           kramdown_output.strip
         end

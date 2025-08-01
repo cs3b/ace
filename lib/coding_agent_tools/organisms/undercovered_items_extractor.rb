@@ -29,7 +29,7 @@ module CodingAgentTools
 
         # Prioritize files by urgency
         prioritized_files = prioritize_files_by_urgency(under_covered_files, threshold)
-          .first(validated_options[:max_files])
+                            .first(validated_options[:max_files])
 
         {
           summary: {
@@ -82,7 +82,7 @@ module CodingAgentTools
         threshold = analysis_result.threshold
 
         under_covered_files = analysis_result.under_covered_files
-          .select { |file| file.total_lines >= min_size }
+                                             .select { |file| file.total_lines >= min_size }
 
         # Calculate impact score: (uncovered_lines * coverage_gap) / file_size
         # This favors files with many uncovered lines but penalizes very large files
@@ -134,10 +134,10 @@ module CodingAgentTools
       def prioritize_files_by_urgency(files, threshold)
         files.map do |file|
           urgency_score = calculate_urgency_score(file, threshold)
-          {file: file, urgency_score: urgency_score}
+          { file: file, urgency_score: urgency_score }
         end
           .sort_by { |item| -item[:urgency_score] }
-          .map { |item| item[:file] }
+             .map { |item| item[:file] }
       end
 
       def calculate_urgency_score(file, threshold)
@@ -160,8 +160,8 @@ module CodingAgentTools
 
         if options[:include_method_details] && file.methods.any?
           under_covered_methods = file.methods
-            .select { |m| m.under_threshold?(threshold) }
-            .first(options[:max_methods_per_file])
+                                      .select { |m| m.under_threshold?(threshold) }
+                                      .first(options[:max_methods_per_file])
 
           base_info[:methods] = under_covered_methods.map do |method|
             {
@@ -183,13 +183,13 @@ module CodingAgentTools
         medium = files.select { |f| f.coverage_percentage >= 50.0 && f.coverage_percentage < threshold }
 
         {
-          critical: {count: critical.length, files: critical.map(&:relative_path)},
-          high: {count: high.length, files: high.map(&:relative_path)},
-          medium: {count: medium.length, files: medium.map(&:relative_path)}
+          critical: { count: critical.length, files: critical.map(&:relative_path) },
+          high: { count: high.length, files: high.map(&:relative_path) },
+          medium: { count: medium.length, files: medium.map(&:relative_path) }
         }
       end
 
-      def generate_action_recommendations(files, threshold)
+      def generate_action_recommendations(files, _threshold)
         recommendations = []
 
         if files.any?
@@ -213,9 +213,9 @@ module CodingAgentTools
       def extract_critical_files(analysis_result, options)
         limit = options[:limit] || 10
         analysis_result.under_covered_files
-          .sort_by(&:coverage_percentage)
-          .first(limit)
-          .map(&:relative_path)
+                       .sort_by(&:coverage_percentage)
+                       .first(limit)
+                       .map(&:relative_path)
       end
 
       def extract_critical_methods(analysis_result, options)
@@ -228,7 +228,7 @@ module CodingAgentTools
         under_covered_methods
           .sort_by(&:coverage_percentage)
           .first(limit)
-          .map { |m| {name: m.name, coverage: m.coverage_percentage} }
+          .map { |m| { name: m.name, coverage: m.coverage_percentage } }
       end
 
       def extract_critical_line_ranges(analysis_result, options)
@@ -263,23 +263,23 @@ module CodingAgentTools
         {
           estimated_test_cases: estimated_tests,
           effort_level: case estimated_tests
-                        when 0..5 then "low"
-                        when 6..15 then "medium"
-                        when 16..30 then "high"
-                        else "very_high"
+                        when 0..5 then 'low'
+                        when 6..15 then 'medium'
+                        when 16..30 then 'high'
+                        else 'very_high'
                         end
         }
       end
 
       def generate_critical_recommendations(analysis_result)
         critical_files = analysis_result.under_covered_files
-          .select { |f| f.coverage_percentage < 25.0 }
-          .first(3)
+                                        .select { |f| f.coverage_percentage < 25.0 }
+                                        .first(3)
 
         critical_files.map do |file|
           {
-            priority: "CRITICAL",
-            action: "Add basic test coverage",
+            priority: 'CRITICAL',
+            action: 'Add basic test coverage',
             target: file.relative_path,
             current_coverage: file.coverage_percentage,
             estimated_effort: estimate_testing_effort(file)[:effort_level]
@@ -290,16 +290,16 @@ module CodingAgentTools
       def generate_quick_win_recommendations(analysis_result)
         # Focus on smaller files with moderate coverage gaps
         quick_wins = analysis_result.under_covered_files
-          .select { |f| f.total_lines < 50 && f.coverage_percentage > 40.0 }
-          .first(5)
+                                    .select { |f| f.total_lines < 50 && f.coverage_percentage > 40.0 }
+                                    .first(5)
 
         quick_wins.map do |file|
           {
-            priority: "QUICK_WIN",
-            action: "Fill coverage gaps",
+            priority: 'QUICK_WIN',
+            action: 'Fill coverage gaps',
             target: file.relative_path,
             current_coverage: file.coverage_percentage,
-            estimated_effort: "low"
+            estimated_effort: 'low'
           }
         end
       end
@@ -315,13 +315,13 @@ module CodingAgentTools
 
         # Larger files for comprehensive coverage
         large_files = analysis_result.under_covered_files
-          .select { |f| f.total_lines > 100 }
-          .first(3)
+                                     .select { |f| f.total_lines > 100 }
+                                     .first(3)
 
         large_files.each do |file|
           all_recommendations << {
-            priority: "STRATEGIC",
-            action: "Comprehensive test coverage",
+            priority: 'STRATEGIC',
+            action: 'Comprehensive test coverage',
             target: file.relative_path,
             current_coverage: file.coverage_percentage,
             estimated_effort: estimate_testing_effort(file)[:effort_level]

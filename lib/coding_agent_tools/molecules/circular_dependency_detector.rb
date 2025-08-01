@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "set"
+require 'set'
 
 module CodingAgentTools::Molecules
   # Molecule for detecting circular dependencies in documentation
@@ -15,12 +15,12 @@ module CodingAgentTools::Molecules
         path = []
         recursion_stack = Set.new
 
-        if has_cycle?(file, dependencies, visited, path, recursion_stack)
-          # Extract the cycle from the path
-          cycle_start = path.rindex(path.last)
-          cycle = path[cycle_start..] if cycle_start
-          circular << cycle.sort if cycle && cycle.length > 1
-        end
+        next unless has_cycle?(file, dependencies, visited, path, recursion_stack)
+
+        # Extract the cycle from the path
+        cycle_start = path.rindex(path.last)
+        cycle = path[cycle_start..] if cycle_start
+        circular << cycle.sort if cycle && cycle.length > 1
       end
 
       circular.to_a
@@ -86,16 +86,16 @@ module CodingAgentTools::Molecules
         end
       end
 
-      if lowlinks[v] == indices[v]
-        scc = []
-        loop do
-          w = stack.pop
-          on_stack.delete(w)
-          scc << w
-          break if w == v
-        end
-        sccs << scc if scc.length > 0
+      return unless lowlinks[v] == indices[v]
+
+      scc = []
+      loop do
+        w = stack.pop
+        on_stack.delete(w)
+        scc << w
+        break if w == v
       end
+      sccs << scc if scc.length > 0
     end
 
     # Check if a specific path creates a cycle

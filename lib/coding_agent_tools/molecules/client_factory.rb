@@ -30,7 +30,7 @@ module CodingAgentTools
 
           if client_class.nil?
             raise UnknownProviderError, "Unknown provider '#{provider_name}'. " \
-                                       "Registered providers: #{registered_providers.join(", ")}"
+                                       "Registered providers: #{registered_providers.join(', ')}"
           end
 
           client_class.new(**options)
@@ -62,12 +62,10 @@ module CodingAgentTools
         def collect_provider_metadata(provider_name, client_class)
           # Get dynamic aliases if the client class supports them
           aliases = {}
-          if client_class.respond_to?(:dynamic_aliases)
-            aliases = client_class.dynamic_aliases || {}
-          end
+          aliases = client_class.dynamic_aliases || {} if client_class.respond_to?(:dynamic_aliases)
 
           # Notify ProviderModelParser about the new provider
-          require_relative "provider_model_parser"
+          require_relative 'provider_model_parser'
           ProviderModelParser.register_provider(provider_name, aliases)
         end
       end

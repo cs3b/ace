@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../organisms/tool_lister"
+require 'dry/cli'
+require_relative '../../organisms/tool_lister'
 
 module CodingAgentTools
   module Cli
@@ -9,34 +9,34 @@ module CodingAgentTools
       # All command for listing available tools
       # Provides comprehensive discovery of all CLI tools with categorization
       class All < Dry::CLI::Command
-        desc "List all available coding agent tools with descriptions and categories"
+        desc 'List all available coding agent tools with descriptions and categories'
 
-        option :format, type: :string, values: %w[table json plain names], default: "table",
-          desc: "Output format (table, json, plain, names)"
+        option :format, type: :string, values: %w[table json plain names], default: 'table',
+                        desc: 'Output format (table, json, plain, names)'
 
         option :category, type: :string,
-          desc: "Show tools from specific category only"
+                          desc: 'Show tools from specific category only'
 
         option :no_descriptions, type: :boolean, default: false,
-          desc: "Hide tool descriptions (faster output)"
+                                 desc: 'Hide tool descriptions (faster output)'
 
         option :no_categories, type: :boolean, default: false,
-          desc: "Don't group tools by category"
+                               desc: "Don't group tools by category"
 
         example [
-          "",
-          "--format json",
+          '',
+          '--format json',
           "--category 'Git Operations'",
-          "--format names",
-          "--no-descriptions",
-          "--no-categories"
+          '--format names',
+          '--no-descriptions',
+          '--no-categories'
         ]
 
         def call(format: nil, category: nil, no_descriptions: false, no_categories: false, **)
           tool_lister = CodingAgentTools::Organisms::ToolLister.new
 
           # Handle names format separately for efficiency
-          if format == "names"
+          if format == 'names'
             tool_names = tool_lister.list_tool_names
             puts tool_names.join("\n")
             return
@@ -53,7 +53,7 @@ module CodingAgentTools
           # Filter by category if specified
           if category && tool_data[:categories]
             unless tool_data[:categories].key?(category)
-              available_categories = tool_data[:categories].keys.join(", ")
+              available_categories = tool_data[:categories].keys.join(', ')
               puts "Error: Category '#{category}' not found."
               puts "Available categories: #{available_categories}"
               return 1
@@ -62,16 +62,16 @@ module CodingAgentTools
             # Convert to single category format
             category_data = tool_data[:categories][category]
             tool_data = {
-              categories: {category => category_data},
+              categories: { category => category_data },
               total: category_data[:count]
             }
           end
 
           # Output based on format
           case format
-          when "json"
+          when 'json'
             output_json(tool_data)
-          when "plain"
+          when 'plain'
             output_plain(tool_data)
           else # "table" (default)
             output_table(tool_data)
@@ -81,9 +81,9 @@ module CodingAgentTools
         rescue CodingAgentTools::Error => e
           puts "Error: #{e.message}"
           1
-        rescue => e
+        rescue StandardError => e
           puts "Unexpected error: #{e.message}"
-          puts "Use --debug flag for more information" if respond_to?(:debug_enabled) && !debug_enabled
+          puts 'Use --debug flag for more information' if respond_to?(:debug_enabled) && !debug_enabled
           1
         end
 
@@ -136,7 +136,7 @@ module CodingAgentTools
         end
 
         def output_json(tool_data)
-          require "json"
+          require 'json'
           puts JSON.pretty_generate(tool_data)
         end
 

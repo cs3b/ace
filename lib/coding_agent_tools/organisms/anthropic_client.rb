@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "base_chat_completion_client"
-require "addressable/uri"
+require_relative 'base_chat_completion_client'
+require 'addressable/uri'
 
 module CodingAgentTools
   module Organisms
@@ -9,13 +9,13 @@ module CodingAgentTools
     # This is an organism - it orchestrates molecules to achieve business goals
     class AnthropicClient < BaseChatCompletionClient
       # Anthropic API base URL
-      API_BASE_URL = "https://api.anthropic.com/v1"
+      API_BASE_URL = 'https://api.anthropic.com/v1'
 
       # Default environment variable name for Anthropic API key
-      DEFAULT_API_KEY_ENV = "ANTHROPIC_API_KEY"
+      DEFAULT_API_KEY_ENV = 'ANTHROPIC_API_KEY'
 
       # API version
-      API_VERSION = "2023-06-01"
+      API_VERSION = '2023-06-01'
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
@@ -26,15 +26,15 @@ module CodingAgentTools
       # Explicit provider name declaration
       # @return [String] The provider name for this client
       def self.provider_name
-        "anthropic"
+        'anthropic'
       end
 
       # Dynamic aliases for this provider
       # @return [Hash] Mapping of aliases to provider:model combinations
       def self.dynamic_aliases
         {
-          "csonet" => "anthropic:claude-4-0-sonnet-latest",
-          "copus" => "anthropic:claude-4-0-opus-latest"
+          'csonet' => 'anthropic:claude-4-0-sonnet-latest',
+          'copus' => 'anthropic:claude-4-0-opus-latest'
         }
       end
 
@@ -59,7 +59,7 @@ module CodingAgentTools
         after_id = nil
 
         loop do
-          url = build_api_url("models")
+          url = build_api_url('models')
           query_params = {}
           query_params[:after_id] = after_id if after_id
           query_params[:limit] = 100 # Maximum allowed per page
@@ -74,31 +74,31 @@ module CodingAgentTools
           request_options = build_request_options({})
           parsed = get_json_request(url, **request_options)
 
-          if parsed[:success]
-            data = parsed[:data]
-            models_data = data[:data] || []
+          return fallback_models_list unless parsed[:success]
 
-            # Transform API response to match expected format
-            models_data.each do |model|
-              all_models << {
-                id: model[:id],
-                name: model[:display_name],
-                description: generate_model_description(model[:id]),
-                created: parse_created_at(model[:created_at])
-              }
-            end
+          data = parsed[:data]
+          models_data = data[:data] || []
 
-            # Check if there are more pages
-            break unless data[:has_more]
-            after_id = data[:last_id]
-          else
-            # If API call fails, fall back to static list
-            return fallback_models_list
+          # Transform API response to match expected format
+          models_data.each do |model|
+            all_models << {
+              id: model[:id],
+              name: model[:display_name],
+              description: generate_model_description(model[:id]),
+              created: parse_created_at(model[:created_at])
+            }
           end
+
+          # Check if there are more pages
+          break unless data[:has_more]
+
+          after_id = data[:last_id]
+
+          # If API call fails, fall back to static list
         end
 
         all_models
-      rescue
+      rescue StandardError
         # If any error occurs, fall back to static list
         fallback_models_list
       end
@@ -112,15 +112,15 @@ module CodingAgentTools
 
       # Anthropic uses messages endpoint
       def generation_endpoint
-        "messages"
+        'messages'
       end
 
       # Override fallback for when model not found in list
       def fallback_model_info
         {
           id: @model,
-          name: @model.split("-").map(&:capitalize).join(" "),
-          description: "Anthropic Claude model"
+          name: @model.split('-').map(&:capitalize).join(' '),
+          description: 'Anthropic Claude model'
         }
       end
 
@@ -133,7 +133,7 @@ module CodingAgentTools
         url_obj = Addressable::URI.parse(@base_url)
 
         # Use File.join-style logic to avoid double slashes
-        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
+        base_path = url_obj.path.end_with?('/') ? url_obj.path.chomp('/') : url_obj.path
         url_obj.path = "#{base_path}/#{endpoint}"
 
         url_obj.to_s
@@ -143,9 +143,9 @@ module CodingAgentTools
       # @return [Hash] Authentication headers
       def auth_headers
         {
-          "x-api-key" => @api_key,
-          "anthropic-version" => API_VERSION,
-          "Content-Type" => "application/json"
+          'x-api-key' => @api_key,
+          'anthropic-version' => API_VERSION,
+          'Content-Type' => 'application/json'
         }
       end
 
@@ -162,7 +162,7 @@ module CodingAgentTools
           model: @model,
           messages: [
             {
-              role: "user",
+              role: 'user',
               content: prompt
             }
           ],
@@ -171,9 +171,7 @@ module CodingAgentTools
         }
 
         # Add system message if provided
-        if options[:system_instruction]
-          payload[:system] = options[:system_instruction]
-        end
+        payload[:system] = options[:system_instruction] if options[:system_instruction]
 
         payload
       end
@@ -184,30 +182,22 @@ module CodingAgentTools
       def extract_generated_text(parsed_response)
         # 1. Verify parsed_response[:data] is a Hash
         data = parsed_response[:data]
-        unless data.is_a?(Hash)
-          raise Error, "Failed to extract generated text: Response data is not a Hash."
-        end
+        raise Error, 'Failed to extract generated text: Response data is not a Hash.' unless data.is_a?(Hash)
 
         # 2. Verify data[:content] is a non-empty Array
         content_field = data[:content]
         unless content_field.is_a?(Array)
           raise Error, "Failed to extract generated text: 'content' field is not an array."
         end
-        if content_field.empty?
-          raise Error, "Failed to extract generated text: 'content' array is empty."
-        end
+        raise Error, "Failed to extract generated text: 'content' array is empty." if content_field.empty?
 
         # 3. Extract text from all content blocks
         text_parts = []
         content_field.each do |block|
-          if block.is_a?(Hash) && block[:type] == "text" && block[:text]
-            text_parts << block[:text]
-          end
+          text_parts << block[:text] if block.is_a?(Hash) && block[:type] == 'text' && block[:text]
         end
 
-        if text_parts.empty?
-          raise Error, "Failed to extract generated text: No text blocks found in content."
-        end
+        raise Error, 'Failed to extract generated text: No text blocks found in content.' if text_parts.empty?
 
         {
           text: text_parts.join("\n"),
@@ -230,7 +220,7 @@ module CodingAgentTools
         elsif raw_message
           raw_message
         else
-          "An unspecified error occurred."
+          'An unspecified error occurred.'
         end
       end
 
@@ -240,23 +230,23 @@ module CodingAgentTools
       def generate_model_description(model_id)
         case model_id
         when /claude-opus-4/
-          "Our most capable model"
+          'Our most capable model'
         when /claude-sonnet-4/
-          "High-performance model"
+          'High-performance model'
         when /claude-3-7-sonnet/
-          "High-performance model with early extended thinking"
+          'High-performance model with early extended thinking'
         when /claude-3-5-sonnet/
-          "Balanced intelligence and speed"
+          'Balanced intelligence and speed'
         when /claude-3-5-haiku/
-          "Fast and cost-effective"
+          'Fast and cost-effective'
         when /claude-3-opus/
-          "Powerful model for complex tasks"
+          'Powerful model for complex tasks'
         when /claude-3-sonnet/
-          "Balanced performance and speed"
+          'Balanced performance and speed'
         when /claude-3-haiku/
-          "Fast, compact, and cost-effective"
+          'Fast, compact, and cost-effective'
         else
-          "Anthropic Claude model"
+          'Anthropic Claude model'
         end
       end
 
@@ -267,7 +257,7 @@ module CodingAgentTools
         return Time.now.to_i if created_at.nil? || created_at.empty?
 
         Time.parse(created_at).to_i
-      rescue
+      rescue StandardError
         Time.now.to_i
       end
 
@@ -276,34 +266,34 @@ module CodingAgentTools
       def fallback_models_list
         [
           {
-            id: "claude-3-5-sonnet-20241022",
-            name: "Claude 3.5 Sonnet",
-            description: "Most intelligent Claude model",
-            created: 1729555200
+            id: 'claude-3-5-sonnet-20241022',
+            name: 'Claude 3.5 Sonnet',
+            description: 'Most intelligent Claude model',
+            created: 1_729_555_200
           },
           {
-            id: "claude-3-5-haiku-20241022",
-            name: "Claude 3.5 Haiku",
-            description: "Fast and cost-effective",
-            created: 1729555200
+            id: 'claude-3-5-haiku-20241022',
+            name: 'Claude 3.5 Haiku',
+            description: 'Fast and cost-effective',
+            created: 1_729_555_200
           },
           {
-            id: "claude-3-opus-20240229",
-            name: "Claude 3 Opus",
-            description: "Powerful model for complex tasks",
-            created: 1709251200
+            id: 'claude-3-opus-20240229',
+            name: 'Claude 3 Opus',
+            description: 'Powerful model for complex tasks',
+            created: 1_709_251_200
           },
           {
-            id: "claude-3-sonnet-20240229",
-            name: "Claude 3 Sonnet",
-            description: "Balanced performance and speed",
-            created: 1709251200
+            id: 'claude-3-sonnet-20240229',
+            name: 'Claude 3 Sonnet',
+            description: 'Balanced performance and speed',
+            created: 1_709_251_200
           },
           {
-            id: "claude-3-haiku-20240307",
-            name: "Claude 3 Haiku",
-            description: "Fast, compact, and cost-effective",
-            created: 1709769600
+            id: 'claude-3-haiku-20240307',
+            name: 'Claude 3 Haiku',
+            description: 'Fast, compact, and cost-effective',
+            created: 1_709_769_600
           }
         ]
       end

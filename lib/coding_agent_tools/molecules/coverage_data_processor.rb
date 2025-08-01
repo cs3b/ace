@@ -29,8 +29,8 @@ module CodingAgentTools
       # @param options [Hash] Processing options
       # @return [Hash] Processed coverage data
       def process_coverage_data(raw_data, options = {})
-        include_patterns = normalize_patterns(options[:include_patterns] || ["**/lib/**/*.rb"])
-        exclude_patterns = normalize_patterns(options[:exclude_patterns] || ["**/spec/**", "**/test/**"])
+        include_patterns = normalize_patterns(options[:include_patterns] || ['**/lib/**/*.rb'])
+        exclude_patterns = normalize_patterns(options[:exclude_patterns] || ['**/spec/**', '**/test/**'])
 
         # Extract all file paths across frameworks
         all_file_paths = @file_reader.extract_file_paths(raw_data)
@@ -41,20 +41,20 @@ module CodingAgentTools
         filtered_files.each do |file_path|
           coverage_arrays = extract_coverage_arrays_for_file(raw_data, file_path)
 
-          unless coverage_arrays.empty?
-            combined_lines = combine_lines_data(coverage_arrays)
-            combined_coverage = @calculator.calculate_combined_coverage(coverage_arrays)
-            uncovered_details = @calculator.extract_uncovered_lines(combined_lines)
-            line_details = @calculator.extract_detailed_line_info(combined_lines)
+          next if coverage_arrays.empty?
 
-            file_coverage_data[file_path] = {
-              coverage_data: combined_coverage,
-              uncovered_details: uncovered_details,
-              line_details: line_details,
-              lines_data: combined_lines,
-              frameworks: extract_frameworks_for_file(raw_data, file_path)
-            }
-          end
+          combined_lines = combine_lines_data(coverage_arrays)
+          combined_coverage = @calculator.calculate_combined_coverage(coverage_arrays)
+          uncovered_details = @calculator.extract_uncovered_lines(combined_lines)
+          line_details = @calculator.extract_detailed_line_info(combined_lines)
+
+          file_coverage_data[file_path] = {
+            coverage_data: combined_coverage,
+            uncovered_details: uncovered_details,
+            line_details: line_details,
+            lines_data: combined_lines,
+            frameworks: extract_frameworks_for_file(raw_data, file_path)
+          }
         end
 
         {
@@ -118,19 +118,17 @@ module CodingAgentTools
         end
 
         # Sort to prioritize lib files first
-        filtered.sort_by { |path| path.include?("/lib/") ? 0 : 1 }
+        filtered.sort_by { |path| path.include?('/lib/') ? 0 : 1 }
       end
 
       def extract_coverage_arrays_for_file(raw_data, file_path)
         coverage_arrays = []
 
         raw_data.each do |_framework_name, framework_data|
-          next unless framework_data.is_a?(Hash) && framework_data["coverage"]
+          next unless framework_data.is_a?(Hash) && framework_data['coverage']
 
-          file_coverage = framework_data["coverage"][file_path]
-          if file_coverage && file_coverage["lines"]
-            coverage_arrays << file_coverage["lines"]
-          end
+          file_coverage = framework_data['coverage'][file_path]
+          coverage_arrays << file_coverage['lines'] if file_coverage && file_coverage['lines']
         end
 
         coverage_arrays
@@ -146,11 +144,11 @@ module CodingAgentTools
           values = coverage_arrays.map { |arr| arr[index] if index < arr.length }.compact
 
           combined_lines[index] = if values.empty? || values.all?(&:nil?)
-            nil
-          else
-            # Sum non-nil values for combined execution count
-            values.map { |v| v || 0 }.sum
-          end
+                                    nil
+                                  else
+                                    # Sum non-nil values for combined execution count
+                                    values.map { |v| v || 0 }.sum
+                                  end
         end
 
         combined_lines
@@ -160,11 +158,9 @@ module CodingAgentTools
         frameworks = []
 
         raw_data.each do |framework_name, framework_data|
-          next unless framework_data.is_a?(Hash) && framework_data["coverage"]
+          next unless framework_data.is_a?(Hash) && framework_data['coverage']
 
-          if framework_data["coverage"][file_path]
-            frameworks << framework_name
-          end
+          frameworks << framework_name if framework_data['coverage'][file_path]
         end
 
         frameworks
@@ -172,9 +168,9 @@ module CodingAgentTools
 
       def extract_latest_timestamp(raw_data)
         timestamps = raw_data.values
-          .select { |data| data.is_a?(Hash) && data["timestamp"] }
-          .map { |data| data["timestamp"] }
-          .compact
+                             .select { |data| data.is_a?(Hash) && data['timestamp'] }
+                             .map { |data| data['timestamp'] }
+                             .compact
 
         timestamps.empty? ? Time.now.to_i : timestamps.max
       end

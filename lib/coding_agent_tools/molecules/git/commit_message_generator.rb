@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/project_root_detector"
-require_relative "../client_factory"
-require_relative "../provider_model_parser"
-require_relative "../../error"
+require_relative '../../atoms/project_root_detector'
+require_relative '../client_factory'
+require_relative '../provider_model_parser'
+require_relative '../../error'
 
 module CodingAgentTools
   module Molecules
@@ -11,7 +11,7 @@ module CodingAgentTools
       class CommitMessageGenerationError < StandardError; end
 
       class CommitMessageGenerator
-        DEFAULT_MODEL = "google:gemini-2.0-flash-lite"
+        DEFAULT_MODEL = 'google:gemini-2.0-flash-lite'
 
         def self.generate_message(diff, options = {})
           new(options).generate_message(diff)
@@ -37,9 +37,9 @@ module CodingAgentTools
         attr_reader :intention, :debug, :model
 
         def validate_diff(diff)
-          if diff.nil? || diff.strip.empty?
-            raise CommitMessageGenerationError, "Diff cannot be empty"
-          end
+          return unless diff.nil? || diff.strip.empty?
+
+          raise CommitMessageGenerationError, 'Diff cannot be empty'
         end
 
         def build_system_message
@@ -53,7 +53,7 @@ module CodingAgentTools
         end
 
         def build_user_prompt(diff)
-          prompt = "Generate a commit message"
+          prompt = 'Generate a commit message'
 
           if intention && !intention.strip.empty?
             prompt += ", taking into account the following intention: #{intention}"
@@ -98,14 +98,14 @@ module CodingAgentTools
           begin
             response = client.generate_text(user_prompt, **generation_options)
             clean_response(response[:text])
-          rescue => e
+          rescue StandardError => e
             error_message = "Failed to generate commit message using #{parse_result.provider}:#{parse_result.model}."
 
             error_message += if debug
-              "\nError: #{e.class.name}: #{e.message}"
-            else
-              "\nRun with --debug for more details."
-            end
+                               "\nError: #{e.class.name}: #{e.message}"
+                             else
+                               "\nRun with --debug for more details."
+                             end
 
             raise CommitMessageGenerationError, error_message
           end
@@ -127,7 +127,7 @@ module CodingAgentTools
             require_relative "../../organisms/#{provider_file}"
 
             # Convert filename to class name and manually register if needed
-            class_name = provider_file.split("_").map(&:capitalize).join
+            class_name = provider_file.split('_').map(&:capitalize).join
             client_class = CodingAgentTools::Organisms.const_get(class_name)
 
             if client_class.respond_to?(:provider_name)
@@ -149,22 +149,20 @@ module CodingAgentTools
 
         def find_system_prompt_template_path
           project_root = find_project_root
-          File.join(project_root, "dev-handbook", ".meta", "tpl", "git-commit.system.prompt.md")
+          File.join(project_root, 'dev-handbook', '.meta', 'tpl', 'git-commit.system.prompt.md')
         end
 
         def clean_response(response)
-          return "" if response.nil?
+          return '' if response.nil?
 
           # Remove markdown code block markers
-          cleaned = response.gsub(/^```[a-zA-Z0-9_-]*\s*/, "")
-            .gsub(/```\s*$/, "")
+          cleaned = response.gsub(/^```[a-zA-Z0-9_-]*\s*/, '')
+                            .gsub(/```\s*$/, '')
 
           # Trim whitespace and ensure single newline at end
           cleaned = cleaned.strip
 
-          if cleaned.empty?
-            raise CommitMessageGenerationError, "LLM returned empty commit message after cleaning"
-          end
+          raise CommitMessageGenerationError, 'LLM returned empty commit message after cleaning' if cleaned.empty?
 
           cleaned
         end

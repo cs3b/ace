@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "find"
-require_relative "project_sandbox"
+require 'find'
+require_relative 'project_sandbox'
 
 module CodingAgentTools
   module Molecules
@@ -15,20 +15,18 @@ module CodingAgentTools
       # Load all docs/*.md files as project context
       # @return [Hash] Result with success status and context content
       def load_docs_context
-        docs_dir = File.join(@sandbox.project_root, "docs")
+        docs_dir = File.join(@sandbox.project_root, 'docs')
 
-        unless Dir.exist?(docs_dir)
-          return {success: false, error: "Docs directory not found: #{docs_dir}"}
-        end
+        return { success: false, error: "Docs directory not found: #{docs_dir}" } unless Dir.exist?(docs_dir)
 
         context_documents = []
         failed_files = []
 
         # Find all .md files in docs directory
-        md_files = Dir.glob(File.join(docs_dir, "**/*.md")).sort
+        md_files = Dir.glob(File.join(docs_dir, '**/*.md')).sort
 
         md_files.each do |file_path|
-          relative_path = file_path.sub(@sandbox.project_root + "/", "")
+          relative_path = file_path.sub(@sandbox.project_root + '/', '')
 
           begin
             content = File.read(file_path)
@@ -36,8 +34,8 @@ module CodingAgentTools
               path: relative_path,
               content: content
             }
-          rescue => e
-            failed_files << {path: relative_path, error: e.message}
+          rescue StandardError => e
+            failed_files << { path: relative_path, error: e.message }
           end
         end
 
@@ -55,14 +53,14 @@ module CodingAgentTools
         result[:failed_files] = failed_files unless failed_files.empty?
 
         result
-      rescue => e
-        {success: false, error: "Context loading failed: #{e.message}"}
+      rescue StandardError => e
+        { success: false, error: "Context loading failed: #{e.message}" }
       end
 
       private
 
       def format_embedded_context(documents)
-        return "" if documents.empty?
+        return '' if documents.empty?
 
         context = "<context>\n"
         documents.each do |doc|
@@ -72,7 +70,7 @@ module CodingAgentTools
           context += indented_content
           context += "\n    </document>\n"
         end
-        context += "</context>"
+        context += '</context>'
 
         context
       end

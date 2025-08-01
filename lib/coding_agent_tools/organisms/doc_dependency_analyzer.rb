@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "set"
-require "json"
-require_relative "../molecules/doc_link_parser"
-require_relative "../molecules/circular_dependency_detector"
-require_relative "../molecules/statistics_calculator"
-require_relative "../atoms/dot_graph_writer"
-require_relative "../atoms/json_exporter"
+require 'set'
+require 'json'
+require_relative '../molecules/doc_link_parser'
+require_relative '../molecules/circular_dependency_detector'
+require_relative '../molecules/statistics_calculator'
+require_relative '../atoms/dot_graph_writer'
+require_relative '../atoms/json_exporter'
 
 module CodingAgentTools::Organisms
   # Organism for complete documentation dependency analysis
@@ -18,7 +18,7 @@ module CodingAgentTools::Organisms
       @stats_calculator = CodingAgentTools::Molecules::StatisticsCalculator.new
       @dot_writer = CodingAgentTools::Atoms::DotGraphWriter.new
       @json_exporter = CodingAgentTools::Atoms::JsonExporter.new
-      @dependencies = Hash.new { |h, k| h[k] = {refs_to: Set.new, refs_from: Set.new} }
+      @dependencies = Hash.new { |h, k| h[k] = { refs_to: Set.new, refs_from: Set.new } }
     end
 
     # Run complete dependency analysis
@@ -40,9 +40,7 @@ module CodingAgentTools::Organisms
         results[:png_command] = @dot_writer.png_generation_instructions(results[:dot_file])
       end
 
-      if export_json
-        results[:json_file] = @json_exporter.export_to_file(@dependencies)
-      end
+      results[:json_file] = @json_exporter.export_to_file(@dependencies) if export_json
 
       # Step 5: Format output
       case output_format
@@ -114,85 +112,85 @@ module CodingAgentTools::Organisms
 
     def format_text_output(results)
       output = []
-      output << "# Document Dependency Analysis"
+      output << '# Document Dependency Analysis'
       output << "Generated: #{results[:timestamp]}"
-      output << ""
+      output << ''
 
       # Summary statistics
       stats = results[:statistics]
-      output << "## Summary"
+      output << '## Summary'
       output << "- Total files analyzed: #{stats[:total_files]}"
       output << "- Files with outgoing references: #{stats[:files_with_outgoing_refs]}"
       output << "- Files with incoming references: #{stats[:files_with_incoming_refs]}"
       output << "- Total references: #{stats[:total_references]}"
       output << "- Average outgoing references per file: #{stats[:average_outgoing_refs]}"
       output << "- Average incoming references per file: #{stats[:average_incoming_refs]}"
-      output << ""
+      output << ''
 
       # Most referenced files
       if results[:most_referenced].any?
-        output << "## Most Referenced Files (Top 10)"
+        output << '## Most Referenced Files (Top 10)'
         results[:most_referenced].each do |item|
           output << "- **#{item[:file]}** - Referenced by #{item[:reference_count]} files"
         end
-        output << ""
+        output << ''
       end
 
       # Most referencing files
       if results[:most_referencing].any?
-        output << "## Most Referencing Files (Top 10)"
+        output << '## Most Referencing Files (Top 10)'
         results[:most_referencing].each do |item|
           output << "- **#{item[:file]}** - References #{item[:reference_count]} other files"
         end
-        output << ""
+        output << ''
       end
 
       # Hub files
       if results[:hub_files].any?
-        output << "## Hub Files (High Connectivity)"
+        output << '## Hub Files (High Connectivity)'
         results[:hub_files].each do |hub|
           output << "- **#{hub[:file]}** - #{hub[:incoming_count]} incoming, #{hub[:outgoing_count]} outgoing (#{hub[:total_connections]} total)"
         end
-        output << ""
+        output << ''
       end
 
       # Orphaned files
       if results[:orphaned_files].any?
-        output << "## Orphaned Files (No References)"
+        output << '## Orphaned Files (No References)'
         results[:orphaned_files].each { |f| output << "- #{f}" }
-        output << ""
+        output << ''
       end
 
       # Circular dependencies
       if results[:circular_dependencies].any?
-        output << "## Circular Dependencies"
+        output << '## Circular Dependencies'
         results[:circular_dependencies].each do |cycle|
-          output << "- #{cycle.join(" → ")} → #{cycle.first}"
+          output << "- #{cycle.join(' → ')} → #{cycle.first}"
         end
-        output << ""
+        output << ''
       end
 
       # File type distribution
       if results[:file_type_distribution].any?
-        output << "## File Type Distribution"
+        output << '## File Type Distribution'
         results[:file_type_distribution].each do |type, count|
           output << "- #{type.to_s.capitalize}: #{count} files"
         end
-        output << ""
+        output << ''
       end
 
       # Visualization info
       if results[:dot_file]
-        output << "## Visualization"
+        output << '## Visualization'
         output << "Dependency graph saved to: #{results[:dot_file]}"
         output << "To generate an image: #{results[:png_command]}"
-        output << ""
+        output << ''
       end
 
       # JSON export info
       if results[:json_file]
         output << "Detailed dependency data saved to: #{results[:json_file]}"
-        output << ""
+        output << ''
       end
 
       output.join("\n")
@@ -204,13 +202,13 @@ module CodingAgentTools::Organisms
 
       results.each do |key, value|
         serialized[key] = case key
-        when :timestamp
-          value.iso8601
-        when :dependencies
-          @json_exporter.format_dependencies(value)
-        else
-          value
-        end
+                          when :timestamp
+                            value.iso8601
+                          when :dependencies
+                            @json_exporter.format_dependencies(value)
+                          else
+                            value
+                          end
       end
 
       serialized

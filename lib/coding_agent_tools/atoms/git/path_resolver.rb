@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "pathname"
-require_relative "../project_root_detector"
+require 'pathname'
+require_relative '../project_root_detector'
 
 module CodingAgentTools
   module Atoms
@@ -71,13 +71,13 @@ module CodingAgentTools
         attr_reader :repositories, :project_root
 
         def validate_path(path)
-          if path.nil? || path.strip.empty?
-            raise PathResolutionError.new(
-              "Path cannot be nil or empty",
-              path: path,
-              reason: :invalid_input
-            )
-          end
+          return unless path.nil? || path.strip.empty?
+
+          raise PathResolutionError.new(
+            'Path cannot be nil or empty',
+            path: path,
+            reason: :invalid_input
+          )
         end
 
         def normalize_path(path)
@@ -115,9 +115,7 @@ module CodingAgentTools
           project_resolved = File.expand_path(path, project_root_base)
 
           # If current directory is the project root, use current resolution
-          if current_dir_normalized == project_root_normalized
-            return current_resolved
-          end
+          return current_resolved if current_dir_normalized == project_root_normalized
 
           # If we're in a submodule directory, we need to be more intelligent
           # Check if the file would make more sense from project root
@@ -128,9 +126,9 @@ module CodingAgentTools
           project_resolved_normalized = File.exist?(project_resolved) ? File.realpath(project_resolved) : File.expand_path(project_resolved)
 
           current_in_project = current_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
-            current_resolved_normalized == project_root_normalized
+                               current_resolved_normalized == project_root_normalized
           project_in_project = project_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
-            project_resolved_normalized == project_root_normalized
+                               project_resolved_normalized == project_root_normalized
 
           # If both are in project, check which one actually exists or makes more sense
           if current_in_project && project_in_project
@@ -142,14 +140,14 @@ module CodingAgentTools
               project_resolved
             elsif File.exist?(current_resolved) && File.exist?(project_resolved)
               # Both files exist - use heuristics to decide
-              if path.start_with?(".")
+              if path.start_with?('.')
                 # Dot-prefixed paths likely belong to main repository
                 project_resolved
               else
                 # Regular files in submodule directory - prefer local
                 current_resolved
               end
-            elsif path.start_with?(".")
+            elsif path.start_with?('.')
               # Neither exists, but we need to make a decision based on path characteristics
               # Dot-prefixed paths likely belong to main repo
               project_resolved
@@ -187,11 +185,11 @@ module CodingAgentTools
             matching_repo
           else
             # Default to main repository if no specific match found
-            main_repo = repositories.find { |repo| repo[:name] == "main" }
+            main_repo = repositories.find { |repo| repo[:name] == 'main' }
 
             unless main_repo
               raise PathResolutionError.new(
-                "No repository found for path and no main repository available",
+                'No repository found for path and no main repository available',
                 path: absolute_path,
                 reason: :no_repository_match
               )
@@ -216,7 +214,7 @@ module CodingAgentTools
               normalized_path = File.expand_path(absolute_path)
               normalized_repo_path = File.expand_path(repo_path)
             end
-          rescue
+          rescue StandardError
             # If any realpath fails, fall back to expand_path for both
             normalized_path = File.expand_path(absolute_path)
             normalized_repo_path = File.expand_path(repo_path)
@@ -230,14 +228,18 @@ module CodingAgentTools
         def calculate_relative_path(absolute_path, repository_info)
           # Ensure we're working with real paths to handle symlinks consistently
           begin
-            repo_real_path = File.exist?(repository_info[:full_path]) ?
-              File.realpath(repository_info[:full_path]) :
-              File.expand_path(repository_info[:full_path])
+            repo_real_path = if File.exist?(repository_info[:full_path])
+                               File.realpath(repository_info[:full_path])
+                             else
+                               File.expand_path(repository_info[:full_path])
+                             end
 
-            file_real_path = File.exist?(absolute_path) ?
-              File.realpath(absolute_path) :
-              File.expand_path(absolute_path)
-          rescue
+            file_real_path = if File.exist?(absolute_path)
+                               File.realpath(absolute_path)
+                             else
+                               File.expand_path(absolute_path)
+                             end
+          rescue StandardError
             # Fallback if realpath fails
             repo_real_path = File.expand_path(repository_info[:full_path])
             file_real_path = File.expand_path(absolute_path)

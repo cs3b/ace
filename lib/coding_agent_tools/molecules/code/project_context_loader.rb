@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/code/file_content_reader"
-require_relative "../../atoms/yaml_reader"
-require_relative "../../models/code/review_context"
+require_relative '../../atoms/code/file_content_reader'
+require_relative '../../atoms/yaml_reader'
+require_relative '../../models/code/review_context'
 
 module CodingAgentTools
   module Molecules
@@ -12,9 +12,9 @@ module CodingAgentTools
       class ProjectContextLoader
         # Standard project documents for auto mode
         AUTO_DOCUMENTS = {
-          blueprint: "docs/blueprint.md",
-          vision: "docs/what-do-we-build.md",
-          architecture: "docs/architecture.md"
+          blueprint: 'docs/blueprint.md',
+          vision: 'docs/what-do-we-build.md',
+          architecture: 'docs/architecture.md'
         }.freeze
 
         def initialize
@@ -28,11 +28,11 @@ module CodingAgentTools
         # @return [Models::Code::ReviewContext] loaded context
         def load_context(mode, custom_path = nil)
           case mode
-          when "auto"
+          when 'auto'
             load_auto_context
-          when "none"
+          when 'none'
             load_none_context
-          when "custom"
+          when 'custom'
             load_custom_context(custom_path || mode)
           else
             # If mode looks like a file path, treat as custom
@@ -56,9 +56,9 @@ module CodingAgentTools
 
           AUTO_DOCUMENTS.each do |type, path|
             if @file_reader.readable?(path)
-              found << {type: type.to_s, path: path}
+              found << { type: type.to_s, path: path }
             else
-              missing << {type: type.to_s, path: path}
+              missing << { type: type.to_s, path: path }
             end
           end
 
@@ -78,17 +78,17 @@ module CodingAgentTools
 
           AUTO_DOCUMENTS.each do |type, path|
             result = @file_reader.read(path)
-            if result[:success]
-              documents << {
-                type: type.to_s,
-                path: path,
-                content: result[:content]
-              }
-            end
+            next unless result[:success]
+
+            documents << {
+              type: type.to_s,
+              path: path,
+              content: result[:content]
+            }
           end
 
           Models::Code::ReviewContext.new(
-            mode: "auto",
+            mode: 'auto',
             documents: documents,
             loaded_at: Time.now
           )
@@ -98,7 +98,7 @@ module CodingAgentTools
         # @return [Models::Code::ReviewContext] empty context
         def load_none_context
           Models::Code::ReviewContext.new(
-            mode: "none",
+            mode: 'none',
             documents: [],
             loaded_at: Time.now
           )
@@ -111,17 +111,17 @@ module CodingAgentTools
           result = @file_reader.read(path)
 
           documents = if result[:success]
-            [{
-              type: "custom",
-              path: path,
-              content: result[:content]
-            }]
-          else
-            []
-          end
+                        [{
+                          type: 'custom',
+                          path: path,
+                          content: result[:content]
+                        }]
+                      else
+                        []
+                      end
 
           Models::Code::ReviewContext.new(
-            mode: "custom",
+            mode: 'custom',
             documents: documents,
             loaded_at: Time.now
           )

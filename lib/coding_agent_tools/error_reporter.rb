@@ -13,11 +13,11 @@ module CodingAgentTools
     def self.call(exception, debug: false, logger: $stderr)
       logger.puts "ERROR: #{exception.message}"
 
-      if debug && exception.backtrace
-        logger.puts "Backtrace:"
-        exception.backtrace.each do |line|
-          logger.puts "  #{line}"
-        end
+      return unless debug && exception.backtrace
+
+      logger.puts "Backtrace:"
+      exception.backtrace.each do |line|
+        logger.puts "  #{line}"
       end
     end
   end

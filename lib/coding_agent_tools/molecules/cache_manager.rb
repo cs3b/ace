@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "yaml"
-require "fileutils"
-require "json"
-require_relative "../atoms/xdg_directory_resolver"
+require 'yaml'
+require 'fileutils'
+require 'json'
+require_relative '../atoms/xdg_directory_resolver'
 
 module CodingAgentTools
   module Molecules
@@ -12,10 +12,10 @@ module CodingAgentTools
     # This molecule uses the XDGDirectoryResolver atom for path resolution.
     class CacheManager
       # Legacy cache directory (for backward compatibility)
-      LEGACY_CACHE_DIR = "~/.coding-agent-tools-cache"
+      LEGACY_CACHE_DIR = '~/.coding-agent-tools-cache'
 
       # Migration marker file
-      MIGRATION_MARKER = ".migration_complete"
+      MIGRATION_MARKER = '.migration_complete'
 
       # Default cache subdirectories
       DEFAULT_CACHE_TYPES = %w[models http temp].freeze
@@ -105,7 +105,7 @@ module CodingAgentTools
 
         begin
           YAML.load_file(file_path)
-        rescue => e
+        rescue StandardError => e
           # Handle corrupted cache files gracefully
           warn "Warning: Failed to read cache file #{file_path}: #{e.message}"
           nil
@@ -122,7 +122,7 @@ module CodingAgentTools
 
         File.delete(file_path)
         true
-      rescue => e
+      rescue StandardError => e
         warn "Warning: Failed to delete cache file #{file_path}: #{e.message}"
         false
       end
@@ -139,7 +139,7 @@ module CodingAgentTools
         FileUtils.rm_rf(cache_dir)
         ensure_cache_structure
         true
-      rescue => e
+      rescue StandardError => e
         warn "Warning: Failed to clear cache: #{e.message}"
         false
       end
@@ -164,7 +164,7 @@ module CodingAgentTools
           create_migration_marker
           @migration_completed = true
           true
-        rescue => e
+        rescue StandardError => e
           warn "Error: Cache migration failed: #{e.message}"
           false
         end
@@ -260,9 +260,9 @@ module CodingAgentTools
         @xdg_resolver.ensure_cache_directory
 
         # Copy all files from legacy cache to models subdirectory
-        models_subdir = @xdg_resolver.ensure_cache_subdirectory("models")
+        models_subdir = @xdg_resolver.ensure_cache_subdirectory('models')
 
-        Dir.glob(File.join(source_dir, "*")).each do |source_file|
+        Dir.glob(File.join(source_dir, '*')).each do |source_file|
           next unless File.file?(source_file)
 
           filename = File.basename(source_file)
@@ -273,7 +273,7 @@ module CodingAgentTools
         end
 
         puts "INFO: Migrated cache from #{source_dir} to #{target_dir}"
-        puts "INFO: Legacy cache preserved for safety"
+        puts 'INFO: Legacy cache preserved for safety'
       end
 
       # Calculate total cache size in bytes
@@ -283,7 +283,7 @@ module CodingAgentTools
         return 0 unless File.directory?(cache_dir)
 
         total_size = 0
-        Dir.glob(File.join(cache_dir, "**", "*")).each do |file|
+        Dir.glob(File.join(cache_dir, '**', '*')).each do |file|
           total_size += File.size(file) if File.file?(file)
         end
         total_size

@@ -52,24 +52,24 @@ module CodingAgentTools
           standardrb = ruby_results.dig(:linters, :standardrb)
           return unless standardrb
 
-          if standardrb[:fixed]
-            # Count correctable issues that were likely fixed
-            fixed_count = standardrb[:findings].count { |f| f[:correctable] }
+          return unless standardrb[:fixed]
 
-            if fixed_count > 0
-              summary[:total_fixed] += fixed_count
-              summary[:fixes_applied] << {
-                type: "ruby_standardrb",
-                count: fixed_count,
-                message: "Applied StandardRB formatting fixes"
-              }
-            else
-              summary[:total_failed] += 1
-              summary[:failures] << {
-                type: "ruby_standardrb",
-                error: "No correctable issues found to fix"
-              }
-            end
+          # Count correctable issues that were likely fixed
+          fixed_count = standardrb[:findings].count { |f| f[:correctable] }
+
+          if fixed_count > 0
+            summary[:total_fixed] += fixed_count
+            summary[:fixes_applied] << {
+              type: 'ruby_standardrb',
+              count: fixed_count,
+              message: 'Applied StandardRB formatting fixes'
+            }
+          else
+            summary[:total_failed] += 1
+            summary[:failures] << {
+              type: 'ruby_standardrb',
+              error: 'No correctable issues found to fix'
+            }
           end
         end
 
@@ -79,14 +79,14 @@ module CodingAgentTools
 
           fixed_count = styleguide[:findings].count { |f| f[:fixed] }
 
-          if fixed_count > 0
-            summary[:total_fixed] += fixed_count
-            summary[:fixes_applied] << {
-              type: "markdown_formatting",
-              count: fixed_count,
-              message: "Applied Kramdown formatting to markdown files"
-            }
-          end
+          return unless fixed_count > 0
+
+          summary[:total_fixed] += fixed_count
+          summary[:fixes_applied] << {
+            type: 'markdown_formatting',
+            count: fixed_count,
+            message: 'Applied Kramdown formatting to markdown files'
+          }
         end
 
         def compare_results(before, after, validation)
@@ -96,9 +96,7 @@ module CodingAgentTools
 
           # Find resolved issues
           before_issues.each do |issue|
-            unless find_matching_issue(issue, after_issues)
-              validation[:resolved_issues] << issue
-            end
+            validation[:resolved_issues] << issue unless find_matching_issue(issue, after_issues)
           end
 
           # Find new issues
@@ -111,9 +109,7 @@ module CodingAgentTools
 
           # Find persistent issues
           after_issues.each do |issue|
-            if find_matching_issue(issue, before_issues)
-              validation[:persistent_issues] << issue
-            end
+            validation[:persistent_issues] << issue if find_matching_issue(issue, before_issues)
           end
         end
 

@@ -30,7 +30,8 @@ module CodingAgentTools
       pricing_data = get_model_pricing(model_id)
 
       unless pricing_data
-        raise ModelNotFoundError, "Pricing data not found for model: #{model_id}. Use CostTracker#available_models to see supported models."
+        raise ModelNotFoundError,
+          "Pricing data not found for model: #{model_id}. Use CostTracker#available_models to see supported models."
       end
 
       pricing_info = Models::Pricing::PricingInfo.from_litellm(pricing_data)
@@ -125,7 +126,8 @@ module CodingAgentTools
     # @param cache_creation_tokens [Integer] Number of cache creation tokens
     # @param cache_read_tokens [Integer] Number of cache read tokens
     # @return [Models::Pricing::CostCalculation] Cost calculation (zero for free models)
-    def calculate_cost_with_fallback(model_id:, input_tokens: 0, output_tokens: 0, cache_creation_tokens: 0, cache_read_tokens: 0)
+    def calculate_cost_with_fallback(model_id:, input_tokens: 0, output_tokens: 0, cache_creation_tokens: 0,
+      cache_read_tokens: 0)
       return zero_cost_calculation if free_model?(model_id)
 
       begin

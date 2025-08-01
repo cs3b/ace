@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../../atoms/git/git_command_executor"
-require_relative "../../atoms/code/file_content_reader"
+require_relative '../../atoms/git/git_command_executor'
+require_relative '../../atoms/code/file_content_reader'
 
 module CodingAgentTools
   module Molecules
@@ -22,7 +22,7 @@ module CodingAgentTools
           begin
             diff_command = build_diff_command(target_spec)
             result = @git_executor.execute(diff_command)
-          rescue => e
+          rescue StandardError => e
             return {
               content: nil,
               metadata: {},
@@ -44,7 +44,7 @@ module CodingAgentTools
               content: nil,
               metadata: {},
               success: false,
-              error: result[:stderr] || "Unknown error"
+              error: result[:stderr] || 'Unknown error'
             }
           end
         end
@@ -59,8 +59,8 @@ module CodingAgentTools
           return result unless result[:success]
 
           # Save diff file
-          diff_file = File.join(session_dir, "input.diff")
-          meta_file = File.join(session_dir, "input.meta")
+          diff_file = File.join(session_dir, 'input.diff')
+          meta_file = File.join(session_dir, 'input.meta')
 
           begin
             File.write(diff_file, result[:content])
@@ -80,7 +80,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue => e
+          rescue StandardError => e
             {
               diff_file: nil,
               meta_file: nil,
@@ -96,8 +96,9 @@ module CodingAgentTools
         def git_diff_target?(target)
           return false if target.nil? || target.empty?
           return true if %w[staged unstaged working].include?(target)
-          return true if target.include?("..")
-          return true if /^[a-f0-9]{7,40}$/.match?(target)  # Git SHA
+          return true if target.include?('..')
+          return true if /^[a-f0-9]{7,40}$/.match?(target) # Git SHA
+
           false
         end
 
@@ -107,15 +108,15 @@ module CodingAgentTools
         # @param target_spec [String] target specification
         # @return [String] git diff command
         def build_diff_command(target_spec)
-          base_args = ["diff", "--no-color"]
+          base_args = ['diff', '--no-color']
 
           case target_spec
-          when "staged"
-            base_args << "--staged"
-          when "unstaged"
+          when 'staged'
+            base_args << '--staged'
+          when 'unstaged'
             # Default diff (unstaged changes)
-          when "working"
-            base_args << "HEAD"
+          when 'working'
+            base_args << 'HEAD'
           when /\.\./
             # Commit range
             base_args << target_spec
@@ -124,7 +125,7 @@ module CodingAgentTools
             base_args << target_spec
           end
 
-          base_args.join(" ")
+          base_args.join(' ')
         end
 
         # Build metadata for diff
@@ -135,7 +136,7 @@ module CodingAgentTools
           lines = content.lines
           {
             target: target_spec,
-            type: "git_diff",
+            type: 'git_diff',
             line_count: lines.count,
             word_count: content.split(/\s+/).count,
             files_changed: count_files_in_diff(lines),
@@ -149,21 +150,21 @@ module CodingAgentTools
         # @param lines [Array<String>] diff lines
         # @return [Integer] number of files
         def count_files_in_diff(lines)
-          lines.count { |line| line.start_with?("diff --git") }
+          lines.count { |line| line.start_with?('diff --git') }
         end
 
         # Count additions in diff
         # @param lines [Array<String>] diff lines
         # @return [Integer] number of additions
         def count_additions(lines)
-          lines.count { |line| line.start_with?("+") && !line.start_with?("+++") }
+          lines.count { |line| line.start_with?('+') && !line.start_with?('+++') }
         end
 
         # Count deletions in diff
         # @param lines [Array<String>] diff lines
         # @return [Integer] number of deletions
         def count_deletions(lines)
-          lines.count { |line| line.start_with?("-") && !line.start_with?("---") }
+          lines.count { |line| line.start_with?('-') && !line.start_with?('---') }
         end
       end
     end

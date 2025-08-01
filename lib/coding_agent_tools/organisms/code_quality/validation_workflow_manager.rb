@@ -23,9 +23,7 @@ module CodingAgentTools
           run_cross_validations(linting_results, workflow)
 
           # Check for autofix regressions
-          if autofix_applied
-            check_autofix_regressions(linting_results, workflow)
-          end
+          check_autofix_regressions(linting_results, workflow) if autofix_applied
 
           # Generate recommendations
           generate_recommendations(linting_results, workflow)
@@ -39,13 +37,13 @@ module CodingAgentTools
           # Check for conflicting fixes
           if has_conflicting_fixes?(results)
             workflow[:validations_failed] << {
-              type: "conflicting_fixes",
-              message: "Detected conflicting autofix rules between linters"
+              type: 'conflicting_fixes',
+              message: 'Detected conflicting autofix rules between linters'
             }
           else
             workflow[:validations_passed] << {
-              type: "conflicting_fixes",
-              message: "No conflicting fixes detected"
+              type: 'conflicting_fixes',
+              message: 'No conflicting fixes detected'
             }
           end
 
@@ -99,13 +97,13 @@ module CodingAgentTools
 
           if integrity_issues.empty?
             workflow[:validations_passed] << {
-              type: "file_integrity",
-              message: "All files passed integrity checks"
+              type: 'file_integrity',
+              message: 'All files passed integrity checks'
             }
           else
             workflow[:validations_failed] << {
-              type: "file_integrity",
-              message: "File integrity issues detected",
+              type: 'file_integrity',
+              message: 'File integrity issues detected',
               details: integrity_issues
             }
           end
@@ -135,20 +133,18 @@ module CodingAgentTools
 
           # Look for contradictions
           file_issues.each do |file, issues|
-            if has_contradictory_issues?(issues)
-              inconsistencies << file
-            end
+            inconsistencies << file if has_contradictory_issues?(issues)
           end
 
           if inconsistencies.empty?
             workflow[:validations_passed] << {
-              type: "linter_consistency",
-              message: "Linters are consistent"
+              type: 'linter_consistency',
+              message: 'Linters are consistent'
             }
           else
             workflow[:validations_failed] << {
-              type: "linter_consistency",
-              message: "Inconsistent linter results",
+              type: 'linter_consistency',
+              message: 'Inconsistent linter results',
               files: inconsistencies
             }
           end
@@ -173,14 +169,14 @@ module CodingAgentTools
 
           if new_issues_count > 0
             workflow[:validations_failed] << {
-              type: "autofix_regression",
-              message: "Autofix may have introduced new issues",
+              type: 'autofix_regression',
+              message: 'Autofix may have introduced new issues',
               count: new_issues_count
             }
           else
             workflow[:validations_passed] << {
-              type: "autofix_regression",
-              message: "No regressions detected from autofix"
+              type: 'autofix_regression',
+              message: 'No regressions detected from autofix'
             }
           end
         end
@@ -190,24 +186,24 @@ module CodingAgentTools
 
           if total_issues > 100
             workflow[:recommendations] << {
-              priority: "high",
-              message: "Consider fixing issues incrementally due to high count"
+              priority: 'high',
+              message: 'Consider fixing issues incrementally due to high count'
             }
           end
 
           if has_security_issues?(results)
             workflow[:recommendations] << {
-              priority: "critical",
-              message: "Security issues detected - fix these first"
+              priority: 'critical',
+              message: 'Security issues detected - fix these first'
             }
           end
 
-          if has_broken_links?(results)
-            workflow[:recommendations] << {
-              priority: "medium",
-              message: "Broken links detected - may impact documentation quality"
-            }
-          end
+          return unless has_broken_links?(results)
+
+          workflow[:recommendations] << {
+            priority: 'medium',
+            message: 'Broken links detected - may impact documentation quality'
+          }
         end
 
         def extract_all_files(results)

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "fileutils"
-require "pathname"
+require 'fileutils'
+require 'pathname'
 
 module CodingAgentTools
   module Atoms
@@ -10,11 +10,11 @@ module CodingAgentTools
     # This atom has no dependencies on other parts of this gem.
     class XDGDirectoryResolver
       # Application name used in directory paths
-      APP_NAME = "coding-agent-tools"
+      APP_NAME = 'coding-agent-tools'
 
       # Environment variable names
-      XDG_CACHE_HOME = "XDG_CACHE_HOME"
-      HOME = "HOME"
+      XDG_CACHE_HOME = 'XDG_CACHE_HOME'
+      HOME = 'HOME'
 
       # Default directory permissions
       DEFAULT_DIR_PERMISSIONS = 0o700
@@ -28,14 +28,14 @@ module CodingAgentTools
 
         # Use XDG_CACHE_HOME if set and non-empty
         cache_base = if xdg_cache_home && !xdg_cache_home.strip.empty?
-          File.expand_path(xdg_cache_home.strip)
-        elsif home_dir && !home_dir.strip.empty?
-          # Fall back to ~/.cache if HOME is available
-          File.expand_path(".cache", home_dir.strip)
-        else
-          # Last resort: use current directory
-          File.expand_path(".cache")
-        end
+                       File.expand_path(xdg_cache_home.strip)
+                     elsif home_dir && !home_dir.strip.empty?
+                       # Fall back to ~/.cache if HOME is available
+                       File.expand_path('.cache', home_dir.strip)
+                     else
+                       # Last resort: use current directory
+                       File.expand_path('.cache')
+                     end
 
         File.join(cache_base, APP_NAME)
       end
@@ -107,14 +107,14 @@ module CodingAgentTools
         return false if path.include?("\0")
 
         # Reject paths with parent directory traversal attempts
-        return false if path.include?("..")
+        return false if path.include?('..')
 
         # Must be absolute path after expansion
         begin
           expanded = File.expand_path(path)
           pathname = Pathname.new(expanded)
           return false unless pathname.absolute?
-        rescue
+        rescue StandardError
           return false
         end
 

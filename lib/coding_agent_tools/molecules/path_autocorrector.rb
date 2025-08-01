@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "open3"
-require "shellwords"
-require "find"
-require "pathname"
+require 'open3'
+require 'shellwords'
+require 'find'
+require 'pathname'
 
 module CodingAgentTools
   module Molecules
@@ -15,8 +15,8 @@ module CodingAgentTools
       end
 
       def autocorrect(input_path, options = {})
-        return failure("Path input cannot be nil") if input_path.nil?
-        return failure("Path input cannot be empty") if input_path.to_s.strip.empty?
+        return failure('Path input cannot be nil') if input_path.nil?
+        return failure('Path input cannot be empty') if input_path.to_s.strip.empty?
 
         max_suggestions = options.fetch(:max_suggestions, 10)
         use_fzf = options.fetch(:use_fzf, fzf_enabled?)
@@ -62,7 +62,7 @@ module CodingAgentTools
 
       def interactive_select(input_path, candidates = nil)
         candidates ||= find_candidates(input_path)
-        return failure("No candidates found") if candidates.empty?
+        return failure('No candidates found') if candidates.empty?
 
         if fzf_available? && fzf_enabled?
           use_fzf_selection(candidates, input_path)
@@ -96,7 +96,7 @@ module CodingAgentTools
         paths << File.join(@sandbox.project_root, input_path) unless Pathname.new(input_path).absolute?
 
         # With common extensions if no extension provided
-        unless File.extname(input_path) != ""
+        unless File.extname(input_path) != ''
           %w[.md .rb .yml .yaml .sh].each do |ext|
             paths << "#{input_path}#{ext}"
             paths << File.join(@sandbox.project_root, "#{input_path}#{ext}")
@@ -104,7 +104,7 @@ module CodingAgentTools
         end
 
         # In important directories
-        important_dirs = @config.dig("resolution", "file_preferences", "important_directories") || []
+        important_dirs = @config.dig('resolution', 'file_preferences', 'important_directories') || []
         important_dirs.each do |dir|
           dir_path = File.join(@sandbox.project_root, dir)
           next unless Dir.exist?(dir_path)
@@ -113,10 +113,10 @@ module CodingAgentTools
           paths << File.join(dir_path, basename)
 
           # With extensions
-          unless File.extname(basename) != ""
-            %w[.md .rb .yml .yaml .sh].each do |ext|
-              paths << File.join(dir_path, "#{basename}#{ext}")
-            end
+          next if File.extname(basename) != ''
+
+          %w[.md .rb .yml .yaml .sh].each do |ext|
+            paths << File.join(dir_path, "#{basename}#{ext}")
           end
         end
 
@@ -128,13 +128,13 @@ module CodingAgentTools
         search_pattern = File.basename(input_path).downcase
 
         # Search across all configured repositories
-        repositories = @config.dig("repositories", "scan_order") || default_repositories
+        repositories = @config.dig('repositories', 'scan_order') || default_repositories
 
         repositories.each do |repo|
-          repo_path = File.join(@sandbox.project_root, repo["path"])
+          repo_path = File.join(@sandbox.project_root, repo['path'])
           next unless Dir.exist?(repo_path)
 
-          repo_candidates = scan_directory_for_candidates(repo_path, search_pattern, repo["priority"])
+          repo_candidates = scan_directory_for_candidates(repo_path, search_pattern, repo['priority'])
           candidates.concat(repo_candidates)
         end
 
@@ -147,7 +147,7 @@ module CodingAgentTools
 
       def scan_directory_for_candidates(directory, pattern, priority = 1)
         candidates = []
-        max_files = @config.dig("performance", "limits", "max_files_scan") || 1000
+        max_files = @config.dig('performance', 'limits', 'max_files_scan') || 1000
 
         Find.find(directory) do |path|
           break if candidates.length >= max_files
@@ -160,19 +160,19 @@ module CodingAgentTools
 
           # Score based on basename and directory name similarity
           if basename.include?(pattern) || dirname.include?(pattern) ||
-              levenshtein_distance(basename, pattern) <= 3
+             levenshtein_distance(basename, pattern) <= 3
             candidates << path
           end
         end
 
         candidates.sort_by { |path| [priority, File.basename(path)] }
-      rescue
+      rescue StandardError
         []
       end
 
       def matches_preferred_extensions?(path)
-        preferred = @config.dig("resolution", "file_preferences", "preferred_extensions") ||
-          [".md", ".rb", ".yml", ".yaml", ".sh"]
+        preferred = @config.dig('resolution', 'file_preferences', 'preferred_extensions') ||
+                    ['.md', '.rb', '.yml', '.yaml', '.sh']
 
         preferred.any? { |ext| path.end_with?(ext) }
       end
@@ -241,7 +241,7 @@ module CodingAgentTools
 
         (1..str1.length).each do |i|
           (1..str2.length).each do |j|
-            cost = (str1[i - 1] == str2[j - 1]) ? 0 : 1
+            cost = str1[i - 1] == str2[j - 1] ? 0 : 1
             matrix[i][j] = [
               matrix[i - 1][j] + 1,      # deletion
               matrix[i][j - 1] + 1,      # insertion
@@ -254,11 +254,11 @@ module CodingAgentTools
       end
 
       def use_fzf_selection(candidates, query)
-        return failure("FZF not available") unless fzf_available?
+        return failure('FZF not available') unless fzf_available?
 
         # Prepare candidates for fzf
         candidate_list = candidates.map { |path| relative_path_for_display(path) }.join("\n")
-        fzf_options = @config.dig("integration", "tools", "fzf", "options") || "--height 40% --reverse --border"
+        fzf_options = @config.dig('integration', 'tools', 'fzf', 'options') || '--height 40% --reverse --border'
 
         # Run fzf with query
         stdin_data = candidate_list
@@ -273,12 +273,12 @@ module CodingAgentTools
           if selected_absolute
             success(selected_absolute)
           else
-            failure("Selected path not found in candidates")
+            failure('Selected path not found in candidates')
           end
         else
           failure("No selection made or FZF error: #{stderr}")
         end
-      rescue => e
+      rescue StandardError => e
         failure("FZF execution failed: #{e.message}")
       end
 
@@ -296,47 +296,47 @@ module CodingAgentTools
         if target_path.to_s.start_with?(project_path.to_s)
           target_path.relative_path_from(project_path).to_s
         else
-          path  # Return original path if it's outside the project
+          path # Return original path if it's outside the project
         end
       rescue ArgumentError
         path
       end
 
-      def generate_explanation(input, match, score)
+      def generate_explanation(_input, _match, score)
         if score >= 0.9
-          "Exact or very close match"
+          'Exact or very close match'
         elsif score >= 0.7
-          "Close match based on filename similarity"
+          'Close match based on filename similarity'
         elsif score >= 0.5
-          "Partial match based on character overlap"
+          'Partial match based on character overlap'
         else
-          "Weak match - consider refining your search"
+          'Weak match - consider refining your search'
         end
       end
 
       def fzf_available?
         return @fzf_available if defined?(@fzf_available)
 
-        @fzf_available = system("which fzf > /dev/null 2>&1")
+        @fzf_available = system('which fzf > /dev/null 2>&1')
       end
 
       def fzf_enabled?
         return false unless fzf_available?
 
-        @config.dig("integration", "tools", "fzf", "enabled") != false &&
-          @config.dig("resolution", "fuzzy", "use_fzf") != false
+        @config.dig('integration', 'tools', 'fzf', 'enabled') != false &&
+          @config.dig('resolution', 'fuzzy', 'use_fzf') != false
       end
 
       def min_similarity_threshold
-        @config.dig("resolution", "fuzzy", "min_similarity") || 0.5
+        @config.dig('resolution', 'fuzzy', 'min_similarity') || 0.5
       end
 
       def default_repositories
-        [{"name" => "current", "path" => ".", "priority" => 1}]
+        [{ 'name' => 'current', 'path' => '.', 'priority' => 1 }]
       end
 
       def success(path)
-        {success: true, path: path, type: :single}
+        { success: true, path: path, type: :single }
       end
 
       def success_with_suggestions(paths, display_paths = nil)
@@ -345,12 +345,12 @@ module CodingAgentTools
           type: :multiple,
           paths: paths,
           display_paths: display_paths || paths.map { |p| relative_path_for_display(p) },
-          message: "Multiple matches found. Please select:"
+          message: 'Multiple matches found. Please select:'
         }
       end
 
       def failure(error)
-        {success: false, error: error}
+        { success: false, error: error }
       end
     end
   end

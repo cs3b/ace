@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../organisms/taskflow_management/release_manager"
-require_relative "../../../atoms/project_root_detector"
+require 'dry/cli'
+require_relative '../../../organisms/taskflow_management/release_manager'
+require_relative '../../../atoms/project_root_detector'
 
 module CodingAgentTools
   module Cli
@@ -10,26 +10,26 @@ module CodingAgentTools
       module Release
         # All command for listing all releases across done/current/backlog
         class All < Dry::CLI::Command
-          desc "List all releases across done/current/backlog with metadata"
+          desc 'List all releases across done/current/backlog with metadata'
 
-          option :debug, type: :boolean, default: false, aliases: ["d"],
-            desc: "Enable debug output for verbose error information"
+          option :debug, type: :boolean, default: false, aliases: ['d'],
+                         desc: 'Enable debug output for verbose error information'
 
-          option :format, type: :string, default: "text", values: %w[text json],
-            desc: "Output format (text or json)"
+          option :format, type: :string, default: 'text', values: %w[text json],
+                          desc: 'Output format (text or json)'
 
           option :type, type: :string, values: %w[done current backlog],
-            desc: "Filter by release type (done, current, or backlog)"
+                        desc: 'Filter by release type (done, current, or backlog)'
 
           option :limit, type: :integer,
-            desc: "Maximum number of releases to show"
+                         desc: 'Maximum number of releases to show'
 
           example [
-            "",
-            "--type current",
-            "--format json",
-            "--limit 5",
-            "--debug"
+            '',
+            '--type current',
+            '--format json',
+            '--limit 5',
+            '--debug'
           ]
 
           def call(**options)
@@ -40,7 +40,7 @@ module CodingAgentTools
             result = release_manager.all
 
             unless result.success?
-              if options[:format] == "json"
+              if options[:format] == 'json'
                 handle_json_error(result)
               else
                 error_output("Error: #{result.error_message}")
@@ -50,14 +50,14 @@ module CodingAgentTools
 
             releases = filter_releases(result.data, options)
 
-            if options[:format] == "json"
+            if options[:format] == 'json'
               handle_json_result(releases)
             else
               handle_text_result(releases, options)
             end
 
             0
-          rescue => e
+          rescue StandardError => e
             handle_error(e, options[:debug])
             1
           end
@@ -82,24 +82,24 @@ module CodingAgentTools
 
           def handle_text_result(releases, options)
             if releases.empty?
-              puts "No releases found"
+              puts 'No releases found'
               return
             end
 
             total_count = releases.length
-            type_filter = options[:type] ? " (#{options[:type]})" : ""
+            type_filter = options[:type] ? " (#{options[:type]})" : ''
 
             puts "All Releases#{type_filter} (#{total_count} total):"
-            puts "=" * 60
+            puts '=' * 60
 
             releases.each_with_index do |release, index|
-              puts "" if index > 0  # Add blank line between releases
+              puts '' if index > 0 # Add blank line between releases
               display_release_info(release, index + 1)
             end
 
             # Summary
             puts
-            puts "Summary:"
+            puts 'Summary:'
             puts "  Total releases: #{total_count}"
 
             type_counts = releases.group_by(&:type).transform_values(&:count)
@@ -122,17 +122,15 @@ module CodingAgentTools
             puts "     Path: #{release.path}"
             puts "     Tasks: #{release.task_count}"
 
-            if release.created_at
-              puts "     Created: #{format_time(release.created_at)}"
-            end
+            puts "     Created: #{format_time(release.created_at)}" if release.created_at
 
-            if release.modified_at
-              puts "     Modified: #{format_time(release.modified_at)}"
-            end
+            return unless release.modified_at
+
+            puts "     Modified: #{format_time(release.modified_at)}"
           end
 
           def handle_json_result(releases)
-            require "json"
+            require 'json'
 
             data = releases.map do |release|
               {
@@ -162,7 +160,7 @@ module CodingAgentTools
           end
 
           def handle_json_error(result)
-            require "json"
+            require 'json'
 
             output = {
               success: false,
@@ -174,11 +172,11 @@ module CodingAgentTools
 
           def colorize_status(status)
             case status
-            when "active"
+            when 'active'
               colorize(status.upcase, :blue)
-            when "archived"
+            when 'archived'
               colorize(status.upcase, :green)
-            when "planned"
+            when 'planned'
               colorize(status.upcase, :yellow)
             else
               status.upcase
@@ -214,7 +212,7 @@ module CodingAgentTools
           end
 
           def format_time(time)
-            time.strftime("%Y-%m-%d %H:%M:%S")
+            time.strftime('%Y-%m-%d %H:%M:%S')
           end
 
           def handle_error(error, debug_enabled)
@@ -224,7 +222,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output("Use --debug flag for more information")
+              error_output('Use --debug flag for more information')
             end
           end
 

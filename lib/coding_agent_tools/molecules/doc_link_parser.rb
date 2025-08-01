@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/file_reference_extractor"
-require_relative "../atoms/path_resolver"
-require_relative "../atoms/docs_dependencies_config_loader"
+require_relative '../atoms/file_reference_extractor'
+require_relative '../atoms/path_resolver'
+require_relative '../atoms/docs_dependencies_config_loader'
 
 module CodingAgentTools::Molecules
   # Molecule for parsing and resolving documentation links
@@ -27,29 +27,23 @@ module CodingAgentTools::Molecules
 
       raw_references.each do |link|
         # Check if we should skip external links
-        if @reference_extractor.external_link?(link) && !@config_loader.include_external_links?(@config)
-          next
-        end
+        next if @reference_extractor.external_link?(link) && !@config_loader.include_external_links?(@config)
 
         # Check if we should skip anchor links
-        if @reference_extractor.anchor_link?(link) && !@config_loader.include_anchor_links?(@config)
-          next
-        end
+        next if @reference_extractor.anchor_link?(link) && !@config_loader.include_anchor_links?(@config)
 
         # Skip if it's neither external nor anchor but also not internal
         # (this handles edge cases)
         is_valid_link = @reference_extractor.internal_link?(link) ||
-          (@reference_extractor.external_link?(link) && @config_loader.include_external_links?(@config)) ||
-          (@reference_extractor.anchor_link?(link) && @config_loader.include_anchor_links?(@config))
+                        (@reference_extractor.external_link?(link) && @config_loader.include_external_links?(@config)) ||
+                        (@reference_extractor.anchor_link?(link) && @config_loader.include_anchor_links?(@config))
         next unless is_valid_link
 
         # Resolve the link relative to the source file
         resolved_path = @path_resolver.resolve_link(file_path, link)
 
         # Only include if target exists in our file set
-        if all_files.include?(resolved_path)
-          references << resolved_path
-        end
+        references << resolved_path if all_files.include?(resolved_path)
       end
 
       references
@@ -82,10 +76,10 @@ module CodingAgentTools::Molecules
 
     # Parse references with context about link types
     def parse_with_context(file_path, all_files)
-      return {markdown_links: [], context_refs: []} unless File.exist?(file_path)
+      return { markdown_links: [], context_refs: [] } unless File.exist?(file_path)
 
       content = File.read(file_path)
-      result = {markdown_links: [], context_refs: []}
+      result = { markdown_links: [], context_refs: [] }
 
       # Process markdown links separately
       @reference_extractor.extract_markdown_links(content).each do |text, link|
@@ -93,16 +87,14 @@ module CodingAgentTools::Molecules
 
         resolved_path = @path_resolver.resolve_link(file_path, link)
         if all_files.include?(resolved_path)
-          result[:markdown_links] << {text: text, link: link, resolved: resolved_path}
+          result[:markdown_links] << { text: text, link: link, resolved: resolved_path }
         end
       end
 
       # Process context references separately
       @reference_extractor.extract_context_references(content).each do |ref|
         resolved_path = @path_resolver.resolve_link(file_path, ref)
-        if all_files.include?(resolved_path)
-          result[:context_refs] << {original: ref, resolved: resolved_path}
-        end
+        result[:context_refs] << { original: ref, resolved: resolved_path } if all_files.include?(resolved_path)
       end
 
       result
