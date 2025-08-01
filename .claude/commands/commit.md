@@ -15,7 +15,7 @@ Ensure all changes you have made in the current session, or what user point to a
    - **Specific files**: `git-commit path/1/file path/2/file --intention "why we commit"`
      - Use full paths from project root (works with submodules): `dev-tools/lib/main.rb dev-handbook/guide.md`
      - Or local paths from current directory: `lib/main.rb spec/test.rb`
-   - **All changes**: `git-commit --intention "why we commit"`
+   - **All changes**: `git-commit --intention "why we commit"` (only when everything in the repos should be commited)
 
 **Examples:**
 ```bash
