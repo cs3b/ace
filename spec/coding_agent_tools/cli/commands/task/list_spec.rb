@@ -202,7 +202,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::List do
     end
 
     context "with sorting errors" do
-      let(:mock_tasks) { [double("Task", id: "v.0.3.0+task.001")] }
+      let(:mock_tasks) { [double("Task", id: "v.0.3.0+task.001", status: "pending")] }
 
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
@@ -352,7 +352,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::List do
       it "displays header and formats tasks" do
         command.send(:handle_result, result_with_tasks, {})
 
-        expect(command).to have_received(:display_header).with(result_with_tasks, {})
+        expect(command).to have_received(:display_header).with(result_with_tasks, {}, nil)
         expect(CodingAgentTools::Molecules::TaskflowManagement::UnifiedTaskFormatter)
           .to have_received(:format_task).once
       end
@@ -566,7 +566,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Task::List do
 
   describe "edge cases and boundary conditions" do
     context "with conflicting options" do
-      let(:mock_tasks) { [double("Task", id: "v.0.3.0+task.001")] }
+      let(:mock_tasks) { [double("Task", id: "v.0.3.0+task.001", status: "pending")] }
 
       before do
         allow(mock_tasks_result).to receive(:success?).and_return(true)
