@@ -139,7 +139,7 @@ create-path TYPE TARGET [OPTIONS]
 
 **Examples**
 ```bash
-create-path task-new "implement-feature-x" --priority high --estimate 4h
+task-manager create --title "implement-feature-x" --priority high --estimate 4h
 create-path file README.md --content "# My Project"
 create-path directory src/components
 create-path docs-new "api-documentation" --title "API Documentation"
@@ -556,7 +556,7 @@ nav-path [COMMAND] [OPTIONS]
 **Examples**
 ```bash
 # Task management
-create-path task-new --title "Feature Name"
+task-manager create --title "Feature Name"
 nav-path task 42
 
 # File location (PREFERRED over find/ls commands)
@@ -692,7 +692,7 @@ release-manager report --format detailed
     llm-query google "How to implement feature X?"
     
     # Generate new task when needed
-    create-path task-new --title "Implement feature X"
+    task-manager create --title "Implement feature X"
 {: .language-bash}
 
 ### Human Developer Workflow   {#human-developer-workflow}

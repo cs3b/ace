@@ -6,7 +6,7 @@ require "tmpdir"
 require "json"
 require "fileutils"
 
-RSpec.describe "Ideas Manager Integration", type: :integration do
+RSpec.describe "capture-it Integration", type: :integration do
   include CliHelpers
 
   let(:executable_path) { File.expand_path("../../exe/capture-it", __dir__) }
@@ -33,20 +33,24 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
   describe "basic CLI functionality" do
     it "shows help when called with --help" do
       result = run_capture_it(["--help"])
-      expect(result.exitstatus).to eq(1) # dry-cli exits with 1 for help by design
+      expect(result.exitstatus).to eq(0) # capture-it help exits with 0
       combined_output = "#{result.stdout}#{result.stderr}"
-      expect(combined_output).to include("Commands:")
-      expect(combined_output).to include("capture")
-      # capture-it no longer has a version subcommand
+      expect(combined_output).to include("Command:")
+      expect(combined_output).to include("capture-it capture")
     end
 
     # Version command removed - capture-it is now a single command
 
-    it "handles invalid commands gracefully" do
+    it "treats arguments as idea text since capture-it is a single command" do
       result = run_capture_it(["invalid-command"])
-      # Invalid commands show help by default in dry-cli
-      combined_output = "#{result.stdout}#{result.stderr}"
-      expect(combined_output).to include("Commands:")
+      # Invalid commands are treated as idea text since capture-it is a single command
+      # So "invalid-command" becomes the idea text and should succeed
+      expect(result.exitstatus).to eq(0)
+      expect(result.stdout).to include("Created:")
+      
+      # Clean up created file
+      created_file = extract_created_file_path(result.stdout)
+      File.delete(created_file) if created_file && File.exist?(created_file)
     end
   end
 
@@ -61,7 +65,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         # Skip if no API key is available (for CI/local development)
         skip "LLM integration test requires API key" unless integration_test_enabled?
 
-        result = run_capture_it(["capture", test_idea])
+        result = run_capture_it([test_idea])
         expect(result).to be_success
         expect(result.stdout).to include("Created:")
 
@@ -80,7 +84,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       end
 
       it "handles very short ideas with appropriate error" do
-        result = run_capture_it(["capture", "Ab"])
+        result = run_capture_it(["Ab"])
 
         expect(result).not_to be_success
         combined_output = "#{result.stdout}#{result.stderr}"
@@ -89,7 +93,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       end
 
       it "handles empty ideas with appropriate error" do
-        result = run_capture_it(["capture", empty_idea])
+        result = run_capture_it([empty_idea])
 
         expect(result).not_to be_success
         combined_output = "#{result.stdout}#{result.stderr}"
@@ -101,7 +105,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         # Create an extremely long idea that would definitely cause filename issues before the fix
         extremely_long_idea = "This is an extremely long idea that would cause filename length issues. " * 50 # ~3500 chars
 
-        result = run_capture_it(["capture", extremely_long_idea])
+        result = run_capture_it([extremely_long_idea])
 
         # Should no longer get "File name too long" error due to filename truncation fix
         # May still fail for other reasons (timeouts, missing API keys, etc.) but not filename length
@@ -135,7 +139,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
           )
         )
 
-        result = run_capture_it(["capture", large_idea, "--big-user-input-allowed"])
+        result = run_capture_it([large_idea, "--big-user-input-allowed"])
 
         expect(result).to be_success
         expect(result.stdout).to include("Created:")
@@ -148,7 +152,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       it "uses custom model when specified", :integration do
         skip "LLM integration test requires API key" unless integration_test_enabled?
 
-        result = run_capture_it(["capture", test_idea, "--model", "claude"])
+        result = run_capture_it([test_idea, "--model", "claude"])
 
         # May succeed with the model or timeout/fail gracefully
         if result.success?
@@ -176,7 +180,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         )
 
         # Use invalid model to trigger fallback
-        result = run_capture_it(["capture", test_idea, "--model", "invalid_model_name"])
+        result = run_capture_it([test_idea, "--model", "invalid_model_name"])
 
         if result.success?
           expect(result.stdout).to include("Created:")
@@ -209,7 +213,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       it "provides debug information when --debug flag is set", :integration do
         skip "LLM integration test requires API key" unless integration_test_enabled?
 
-        result = run_capture_it(["capture", test_idea, "--debug"])
+        result = run_capture_it([test_idea, "--debug"])
         expect(result).to be_success
         expect(result.stdout).to include("Debug:")
         expect(result.stdout).to include("Created:")
@@ -233,7 +237,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       it "captures ideas from file successfully", :integration do
         skip "LLM integration test requires API key" unless integration_test_enabled?
 
-        result = run_capture_it(["capture", "--file", idea_file])
+        result = run_capture_it(["--file", idea_file])
         expect(result).to be_success
         expect(result.stdout).to include("Created:")
 
@@ -245,7 +249,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       end
 
       it "handles empty files with appropriate error" do
-        result = run_capture_it(["capture", "--file", empty_file])
+        result = run_capture_it(["--file", empty_file])
 
         expect(result).not_to be_success
         expect(result.stdout).to include("Error:")
@@ -253,7 +257,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       end
 
       it "handles non-existent files with appropriate error" do
-        result = run_capture_it(["capture", "--file", nonexistent_file])
+        result = run_capture_it(["--file", nonexistent_file])
 
         expect(result).not_to be_success
         expect(result.stdout).to include("Error:")
@@ -267,7 +271,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
 
         begin
           File.chmod(0o000, unreadable_file)
-          result = run_capture_it(["capture", "--file", unreadable_file])
+          result = run_capture_it(["--file", unreadable_file])
 
           expect(result).not_to be_success
           expect(result.stdout).to include("Error:")
@@ -287,7 +291,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         safe_path = ([ruby_bin_path] + essential_paths).join(":")
 
         env = ENV.to_h.merge("PATH" => safe_path)
-        result = run_capture_it(["capture", "--clipboard"], env: env)
+        result = run_capture_it(["--clipboard"], env: env)
 
         expect(result).not_to be_success
         expect(result.stdout).to include("Error:")
@@ -297,7 +301,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
 
     context "with missing input" do
       it "shows usage information when no input is provided" do
-        result = run_capture_it(["capture"])
+        result = run_capture_it([])
 
         expect(result).not_to be_success
         expect(result.stdout).to include("Error: No input provided")
@@ -315,7 +319,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       env = vcr_subprocess_env(cassette_name)
 
       # Run the complete workflow
-      result = run_capture_it(["capture", workflow_idea, "--debug"], env: env)
+      result = run_capture_it([workflow_idea, "--debug"], env: env)
 
       expect(result).to be_success
       expect(result.stdout).to include("Debug:")
@@ -366,7 +370,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       env = vcr_subprocess_env(cassette_name)
 
       # Use an invalid model to trigger enhancement failure
-      result = run_capture_it(["capture", workflow_idea, "--model", "invalid_model"], env: env)
+      result = run_capture_it([workflow_idea, "--model", "invalid_model"], env: env)
 
       # Should still succeed with fallback
       expect(result).to be_success
@@ -393,7 +397,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
 
       begin
         # Run ideas-manager and check if it creates the default directory structure
-        result = run_capture_it(["capture", workflow_idea], env: env)
+        result = run_capture_it([workflow_idea], env: env)
 
         expect(result).to be_success
 
@@ -421,7 +425,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
 
       # Capture multiple ideas in quick succession
       ideas.each do |idea|
-        result = run_capture_it(["capture", idea], env: env)
+        result = run_capture_it([idea], env: env)
         expect(result).to be_success
 
         created_file = extract_created_file_path(result.stdout)
@@ -446,7 +450,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
     it "integrates CLI -> IdeaCapture -> molecules -> file system correctly", :integration do
       skip "LLM integration test requires API key" unless integration_test_enabled?
 
-      result = run_capture_it(["capture", integration_idea, "--debug"])
+      result = run_capture_it([integration_idea, "--debug"])
 
       expect(result).to be_success
 
@@ -466,7 +470,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
     it "validates PathResolver integration for idea file generation", :integration do
       skip "LLM integration test requires API key" unless integration_test_enabled?
 
-      result = run_capture_it(["capture", integration_idea])
+      result = run_capture_it([integration_idea])
 
       expect(result).to be_success
 
@@ -490,7 +494,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       models_to_test = ["google:gemini-2.5-flash-lite", "claude"]
 
       models_to_test.each do |model|
-        result = run_capture_it(["capture", "#{integration_idea} with #{model}", "--model", model])
+        result = run_capture_it(["#{integration_idea} with #{model}", "--model", model])
 
         # Should succeed (or gracefully handle unavailable models)
         if result.success?
@@ -518,7 +522,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       cassette_name = "ideas_manager_integration/permission_errors"
       env = vcr_subprocess_env(cassette_name)
 
-      result = run_capture_it(["capture", "Test idea for permissions"], env: env)
+      result = run_capture_it(["Test idea for permissions"], env: env)
 
       # Should either succeed or provide meaningful error
       if result.success?
@@ -538,7 +542,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       cassette_name = "ideas_manager_integration/interrupted_processing"
       env = vcr_subprocess_env(cassette_name)
 
-      result = run_capture_it(["capture", very_long_idea, "--big-user-input-allowed"], env: env)
+      result = run_capture_it([very_long_idea, "--big-user-input-allowed"], env: env)
 
       # Should either succeed or fail gracefully (including timeout)
       combined_output = "#{result.stdout}#{result.stderr}"
@@ -562,7 +566,7 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
         cassette_name = "ideas_manager_integration/security_test_#{index + 1}"
         env = vcr_subprocess_env(cassette_name)
 
-        result = run_capture_it(["capture", input], env: env)
+        result = run_capture_it([input], env: env)
 
         if result.success?
           created_file = extract_created_file_path(result.stdout)

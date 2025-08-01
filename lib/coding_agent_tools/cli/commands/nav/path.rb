@@ -10,7 +10,7 @@ module CodingAgentTools
           desc 'Intelligent path resolution and generation'
 
           argument :type,
-                   desc: 'Path operation type: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
+                   desc: 'Path operation type: task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
           argument :input, desc: 'Input for path resolution (title for new paths, ID/pattern for existing paths)'
 
           option :title, desc: 'Title for new path generation (alternative to input argument)'
@@ -34,7 +34,8 @@ module CodingAgentTools
             # Determine path type
             path_type = case type
                         when 'task-new', 'task_new'
-                          :task_new
+                          puts "Error: The 'task-new' type has been removed. Please use 'task-manager create' instead."
+                          return
                         when 'docs-new', 'docs_new'
                           :docs_new
                         when 'reflection-new', 'reflection_new'
@@ -51,7 +52,7 @@ module CodingAgentTools
                           :file
                         else
                           puts "Error: Unknown path type '#{type}'"
-                          puts 'Valid types: task-new, task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
+                          puts 'Valid types: task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
                           return
                         end
 

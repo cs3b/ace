@@ -1439,5 +1439,18 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(result).to eq(0)
       end
     end
+
+    describe "task-new removal" do
+      it "returns error message when task-new type is used" do
+        expect(subject).to receive(:puts).with("Error: The 'task-new' type has been removed. Please use 'task-manager create' instead.")
+        
+        result = subject.call(
+          type: "task-new",
+          title: "Test task"
+        )
+        
+        expect(result).to eq(1)
+      end
+    end
   end
 end
