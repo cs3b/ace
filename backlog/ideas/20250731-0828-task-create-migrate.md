@@ -56,13 +56,29 @@ To improve the clarity and discoverability of creating new tasks within the `tas
 
 **Before proceeding, we need to answer:**
 1. What are the exact arguments and flags that `task-manager create` should accept, mirroring or improving upon `create-path task-new` (e.g., for title, priority, estimate)?
+
+> --title is the only treat differently (used for docuemnt title and filename exactly as create-path task-new works, the rest sohuld be used as metadata as they are passed) -> we should move the whole implmenteation from create-path to task-manager create
+
 2. How will the new `task-manager create` command integrate with the existing task file structure and naming conventions (e.g., `task-id.md`)?
+
+> should behave the same way the create-path task-new (use the same templates, the configs will only change from .coding-agent/path.yml -> .coding-agent/task-manager.yml - only relevant parts )
+
 3. What is the strategy for deprecating `create-path task-new` to ensure a smooth transition for existing users and workflows?
+
+> just gone (we are prealpha, we can break the api), we have to update the all the docs in the repository
 
 **Open Questions:**
 - Should `task-manager create` also support other `create-path` functionalities (e.g., creating project directories) if it becomes the primary creation command, or should it remain focused solely on task creation?
+
+> no
+
 - How will the `task-manager create` command interact with the `nav-path` tool, if at all?
+
+> will not, will use only release-manager as support for release path
+
 - What is the impact of this change on existing AI agent workflows that might be hardcoded to use `create-path task-new`?
+
+> we should update everything that is using it (also specs/*)
 
 ## Assumptions to Validate
 
