@@ -25,10 +25,7 @@ module CaptureItCli
   module Commands
     extend Dry::CLI::Registry
 
-    # Register capture command as the default action
-    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture, aliases: ["c"]
-    
-    # Default to capture when no command specified
+    # Register the capture command as the default/root command
     register "", CodingAgentTools::Cli::Commands::Ideas::Capture
   end
 end
