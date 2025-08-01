@@ -262,23 +262,23 @@ RSpec.describe "Ideas Manager CLI" do
         output = capture_stdout { capture_command.call }
 
         expect(output).to include("Error: No input provided")
-        expect(output).to include("Usage: ideas-manager capture 'your idea text'")
-        expect(output).to include("ideas-manager capture --clipboard")
-        expect(output).to include("ideas-manager capture --file path/to/file.txt")
+        expect(output).to include("Usage: capture-it 'your idea text'")
+        expect(output).to include("capture-it --clipboard")
+        expect(output).to include("capture-it --file path/to/file.txt")
       end
 
       it "shows usage information for empty string" do
         output = capture_stdout { capture_command.call(idea_text: "") }
 
         expect(output).to include("Error: No input provided")
-        expect(output).to include("Usage: ideas-manager capture 'your idea text'")
+        expect(output).to include("Usage: capture-it 'your idea text'")
       end
 
       it "shows usage information for whitespace-only string" do
         output = capture_stdout { capture_command.call(idea_text: "   \n  \t  ") }
 
         expect(output).to include("Error: No input provided")
-        expect(output).to include("Usage: ideas-manager capture 'your idea text'")
+        expect(output).to include("Usage: capture-it 'your idea text'")
       end
     end
 

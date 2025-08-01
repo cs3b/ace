@@ -62,9 +62,9 @@ module CodingAgentTools
               idea_text
             else
               puts "Error: No input provided. Use idea text argument, --clipboard, or --file options."
-              puts "Usage: ideas-manager capture 'your idea text'"
-              puts "       ideas-manager capture --clipboard"
-              puts "       ideas-manager capture --file path/to/file.txt"
+              puts "Usage: capture-it 'your idea text'"
+              puts "       capture-it --clipboard"
+              puts "       capture-it --file path/to/file.txt"
               exit 1
             end
           end
