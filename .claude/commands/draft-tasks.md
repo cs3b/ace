@@ -30,23 +30,15 @@ Execute the complete draft-task workflow for: <idea-file-path>
   - Follow all steps in the workflow exactly as written
   - Context: Reflect on the draft task creation just completed
 
-- [ ] **Commit draft task changes:**
-  - Use git-commit to commit all draft task files created during processing
-  - Include clear commit message referencing the idea file and created tasks
+- [ ] **Commit draft task file:**
+  - Capture the exact file path returned by create-path command during draft creation
+  - Use git-commit with specific file path and intention
+  - Example: git-commit /path/to/draft-task-file.md --intention "implement draft-task for [idea-topic]"
 
 - [ ] **Commit reflection note:**
-  - Use git-commit for the reflection file created
-  - Include appropriate commit message for the reflection
-
-- [ ] **Tag Repositories:**
-  # Extract idea filename for tagging (e.g., idea.20250730-2324)
-  IDEA_ID="idea.$(basename '<idea-file-path>' .md | cut -d'-' -f1-2)"
-  
-  # Tag all repositories
-  git -C dev-handbook tag "$IDEA_ID"
-  git -C dev-tools tag "$IDEA_ID" 
-  git -C dev-taskflow tag "$IDEA_ID"
-  git tag "$IDEA_ID"
+  - Capture the exact file path of the reflection file created
+  - Use git-commit with specific file path and intention  
+  - Example: git-commit /path/to/reflection-file.md --intention "add reflection for draft-task workflow execution"
 
 - [ ] **Processing Summary:**
   - Idea file processed
@@ -115,10 +107,10 @@ If an idea file fails during processing:
 - Execute idea files sequentially (no parallel processing)
 - Each idea file gets full draft-task workflow treatment with expanded instructions
 - Never use Task tool to invoke other slash commands - expand everything inline
-- Create proper git tags for tracking each processed idea file
+- Commit only specific files created (no broad commits or tagging)
 - Maintain detailed logs of progress throughout
 - Stop if critical errors occur that would cause data loss
 - Always create reflection notes for learning and improvement
-- Commit changes incrementally (draft tasks, then reflection) for better tracking
+- Commit changes with specific file paths and clear intentions for better tracking
 - Focus on behavioral specifications, not implementation details
 - All created tasks should have `status: draft` indicating need for implementation planning
