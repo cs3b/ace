@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.014
-status: in-progress
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -208,19 +208,19 @@ Establish clear traceability and organization for idea files throughout their li
 
 *Use asterisk markers (`* [ ]`) for research, analysis, and design activities.*
 
-* [ ] Analyze draft-task workflow to identify optimal insertion point for file movement
+* [x] Analyze draft-task workflow to identify optimal insertion point for file movement
   > TEST: Workflow Understanding
   > Type: Pre-condition Check
   > Assert: Identify point after task creation but before completion
   > Command: grep -n "create-path task-new" dev-handbook/workflow-instructions/draft-task.wf.md
 
-* [ ] Study git-commit command's file movement capabilities
+* [x] Study git-commit command's file movement capabilities
   > TEST: Tool Capability Check
   > Type: Research Validation
   > Assert: Confirm git-commit supports "old-path new-path" pattern
   > Command: git-commit --help | grep -A5 "file movement"
 
-* [ ] Verify release-manager output format for path extraction
+* [x] Verify release-manager output format for path extraction
   > TEST: Output Format Verification
   > Type: Integration Check
   > Assert: release-manager current provides parseable path output
@@ -230,49 +230,49 @@ Establish clear traceability and organization for idea files throughout their li
 
 *Use hyphen markers (`- [ ]`) for concrete implementation actions.*
 
-- [ ] Add idea file movement logic to draft-task workflow after step 7
+- [x] Add idea file movement logic to draft-task workflow after step 7
   > TEST: Workflow Enhancement
   > Type: Implementation Validation
   > Assert: New step 7.5 added with proper file movement logic
   > Command: grep -A10 "Create Draft Task Files" dev-handbook/workflow-instructions/draft-task.wf.md
 
-- [ ] Implement task number extraction from created task path
+- [x] Implement task number extraction from created task path
   > TEST: Pattern Extraction
   > Type: Functional Validation
   > Assert: Extract NNN from path like "v.0.4.0+task.NNN-title.md"
   > Command: echo "v.0.4.0+task.014-title.md" | grep -oE "task\.([0-9]{3})" | cut -d. -f2
 
-- [ ] Add release-manager integration for current release path
+- [x] Add release-manager integration for current release path
   > TEST: Tool Integration
   > Type: Integration Validation
   > Assert: Workflow correctly calls release-manager current and extracts path
   > Command: release-manager current | grep "Path:" | awk '{print $2}'
 
-- [ ] Implement git-commit file movement with proper intention message
+- [x] Implement git-commit file movement with proper intention message
   > TEST: Git Integration
   > Type: Command Validation
   > Assert: git-commit correctly moves files with intention
   > Command: git-commit --dry-run old-path new-path --intention "Move idea file to current release"
 
-- [ ] Add multi-task prefix handling for existing files
+- [x] Add multi-task prefix handling for existing files
   > TEST: Conflict Resolution
   > Type: Edge Case Validation
   > Assert: Properly handles 009-010-012-filename.md pattern
   > Command: ls dev-taskflow/current/*/docs/ideas/ | grep -E "[0-9]{3}(-[0-9]{3})*-.*\.md"
 
-- [ ] Implement error handling for missing release or failed moves
+- [x] Implement error handling for missing release or failed moves
   > TEST: Error Handling
   > Type: Reliability Validation
   > Assert: Workflow continues if file movement fails
   > Command: Test with non-existent idea file path
 
-- [ ] Test complete workflow with real idea file
+- [x] Test complete workflow with real idea file
   > TEST: End-to-End Validation
   > Type: Integration Test
   > Assert: Idea file correctly moved after task creation
   > Command: Execute draft-task workflow with test idea file
 
-- [ ] Document the enhanced workflow behavior
+- [x] Document the enhanced workflow behavior
   > TEST: Documentation Update
   > Type: Usability Validation
   > Assert: Workflow documentation includes file movement behavior
@@ -285,7 +285,7 @@ Establish clear traceability and organization for idea files throughout their li
 - [x] **Zero Manual Overhead**: Users create tasks without manual file management, system handles all file operations transparently
 - [x] **Consistent Naming Convention**: All processed idea files follow `NNN-original-filename.md` pattern in `../docs/ideas/` directory
 - [x] **Error Resilience**: File operation failures don't prevent task creation, with clear error reporting and graceful degradation
-- [ ] **CLI Integration**: create-path command enhanced with --idea-source option for seamless integration
+- [x] **Workflow Integration**: draft-task workflow enhanced with automated idea file management for seamless integration
 - [x] **Security Compliance**: All file operations use existing security validation framework
 - [x] **Cross-Platform Compatibility**: File operations work consistently across different operating systems
 - [x] **Comprehensive Testing**: >95% test coverage with full edge case validation
