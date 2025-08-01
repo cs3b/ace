@@ -62,7 +62,7 @@ RSpec.describe "capture-it with --commit flag", type: :integration do
 
     it "creates idea file but skips commit" do
       Dir.chdir(git_repo_dir) do
-        output = `#{ideas_manager_path} capture "test ci idea" --commit 2>&1`
+        output = `#{capture_it_path} capture "test ci idea" --commit 2>&1`
         exit_status = $?.exitstatus
 
         expect(exit_status).to eq(0)
@@ -85,7 +85,7 @@ RSpec.describe "capture-it with --commit flag", type: :integration do
     it "handles --commit flag without actual LLM processing" do
       Dir.chdir(git_repo_dir) do
         # Create a minimal test that bypasses LLM but tests the --commit flag logic
-        output = `#{ideas_manager_path} capture "minimal test" --commit --debug 2>&1`
+        output = `#{capture_it_path} capture "minimal test" --commit --debug 2>&1`
         exit_status = $?.exitstatus
 
         # Should succeed or fail gracefully
@@ -106,7 +106,7 @@ RSpec.describe "capture-it with --commit flag", type: :integration do
           .with(anything, anything, "--intention", "capture idea")
           .and_return(false)
 
-        output = `#{ideas_manager_path} capture "error test" --commit 2>&1`
+        output = `#{capture_it_path} capture "error test" --commit 2>&1`
 
         # Should handle git errors gracefully - idea creation should still succeed
         expect(output).to match(/Created:|Error:/)

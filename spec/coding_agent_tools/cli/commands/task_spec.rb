@@ -126,9 +126,11 @@ RSpec.describe "Task CLI Commands" do
         it "accepts valid time period formats" do
           mock_task_manager = double("TaskManager")
           mock_result = double("RecentTasksResult", success?: true, tasks: [])
+          mock_list_result = double("ListTasksResult", success?: true, tasks: [])
 
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
           allow(mock_task_manager).to receive(:find_recent_tasks).and_return(mock_result)
+          allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_list_result)
 
           expect { command.call(last: "2.days", limit: 5) }.not_to raise_error
         end
@@ -137,7 +139,10 @@ RSpec.describe "Task CLI Commands" do
       context "error handling" do
         it "handles TaskManager errors gracefully" do
           mock_task_manager = double("TaskManager")
+          mock_list_result = double("ListTasksResult", success?: true, tasks: [])
+          
           allow(CodingAgentTools::Organisms::TaskflowManagement::TaskManager).to receive(:new).and_return(mock_task_manager)
+          allow(mock_task_manager).to receive(:get_list_tasks).and_return(mock_list_result)
           allow(mock_task_manager).to receive(:find_recent_tasks).and_raise(StandardError.new("Test error"))
 
           allow(command).to receive(:warn)

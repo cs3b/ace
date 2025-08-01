@@ -37,14 +37,10 @@ RSpec.describe "Ideas Manager Integration", type: :integration do
       combined_output = "#{result.stdout}#{result.stderr}"
       expect(combined_output).to include("Commands:")
       expect(combined_output).to include("capture")
-      expect(combined_output).to include("version")
+      # capture-it no longer has a version subcommand
     end
 
-    it "shows version information" do
-      result = run_capture_it(["version"])
-      expect(result).to be_success
-      expect(result.stdout.strip).to match(/Ideas Manager \d+\.\d+\.\d+/)
-    end
+    # Version command removed - capture-it is now a single command
 
     it "handles invalid commands gracefully" do
       result = run_capture_it(["invalid-command"])

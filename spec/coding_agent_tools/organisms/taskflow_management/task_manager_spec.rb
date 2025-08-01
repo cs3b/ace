@@ -234,7 +234,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
     end
   end
 
-  describe "#get_all_tasks" do
+  describe "#get_list_tasks" do
     let(:release_info) { OpenStruct.new(path: "#{base_path}/dev-taskflow/current/v.0.3.0-test") }
     let(:release_result) { OpenStruct.new(success?: true, release_info: release_info) }
 
@@ -254,7 +254,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       end
 
       it "returns tasks in sorted order" do
-        result = task_manager.get_all_tasks
+        result = task_manager.get_list_tasks
 
         expect(result.success?).to be true
         expect(result.fully_sorted?).to be true
@@ -279,7 +279,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       end
 
       it "returns tasks in topological order" do
-        result = task_manager.get_all_tasks
+        result = task_manager.get_list_tasks
 
         expect(result.success?).to be true
         expect(result.fully_sorted?).to be true
@@ -303,7 +303,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       end
 
       it "detects cycles and returns partial results" do
-        result = task_manager.get_all_tasks
+        result = task_manager.get_list_tasks
 
         expect(result.success?).to be true
         expect(result.fully_sorted?).to be false
@@ -321,7 +321,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       end
 
       it "returns error result" do
-        result = task_manager.get_all_tasks
+        result = task_manager.get_list_tasks
 
         expect(result.success?).to be false
         expect(result.message).to eq("Release not found")
@@ -335,7 +335,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       end
 
       it "returns error result with exception message" do
-        result = task_manager.get_all_tasks
+        result = task_manager.get_list_tasks
 
         expect(result.success?).to be false
         expect(result.message).to include("Error getting all tasks: Sorting error")
@@ -448,7 +448,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       tasks_result = OpenStruct.new(tasks: tasks)
       allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFileLoader).to receive(:load_tasks_from_directory).and_return(tasks_result)
 
-      result = task_manager.get_all_tasks
+      result = task_manager.get_list_tasks
 
       expect(result.success?).to be true
       expect(result.tasks.map(&:id)).to eq(["v.0.3.0+task.1", "v.0.3.0+task.2"])
@@ -462,7 +462,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       tasks_result = OpenStruct.new(tasks: tasks)
       allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFileLoader).to receive(:load_tasks_from_directory).and_return(tasks_result)
 
-      result = task_manager.get_all_tasks
+      result = task_manager.get_list_tasks
 
       expect(result.success?).to be true
       expect(result.tasks.map(&:id)).to eq(["v.0.3.0+task.1", "v.0.3.0+task.2"])
@@ -477,7 +477,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       tasks_result = OpenStruct.new(tasks: tasks)
       allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFileLoader).to receive(:load_tasks_from_directory).and_return(tasks_result)
 
-      result = task_manager.get_all_tasks
+      result = task_manager.get_list_tasks
 
       expect(result.success?).to be true
       expect(result.tasks.map(&:id)).to eq(["v.0.3.0+task.1", "v.0.3.0+task.2", "v.0.3.0+task.3"])
@@ -491,7 +491,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::TaskManager do
       tasks_result = OpenStruct.new(tasks: tasks)
       allow(CodingAgentTools::Molecules::TaskflowManagement::TaskFileLoader).to receive(:load_tasks_from_directory).and_return(tasks_result)
 
-      result = task_manager.get_all_tasks
+      result = task_manager.get_list_tasks
 
       expect(result.success?).to be true
       expect(result.tasks.size).to eq(2) # Both tasks processed despite invalid deps
