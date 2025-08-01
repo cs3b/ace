@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.016
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -289,12 +289,12 @@ Improve consistency between the public CLI interface and internal implementation
 
 ## Acceptance Criteria
 
-- [ ] **AC 1**: All internal code references use 'list' terminology instead of 'all' for task listing functionality
-- [ ] **AC 2**: `task-manager list` command continues to work exactly as before with no breaking changes
-- [ ] **AC 3**: `task-manager all` command (if it exists) continues to work as an alias
-- [ ] **AC 4**: All tests pass with updated internal terminology
-- [ ] **AC 5**: Help output and internal documentation consistently reference 'list' command
-- [ ] **AC 6**: No other CLI commands (next, recent, reschedule) are affected by the changes
+- [x] **AC 1**: All internal code references use 'list' terminology instead of 'all' for task listing functionality
+- [x] **AC 2**: `task-manager list` command continues to work exactly as before with no breaking changes
+- [x] **AC 3**: `task-manager all` command (if it exists) continues to work as an alias
+- [x] **AC 4**: All tests pass with updated internal terminology
+- [x] **AC 5**: Help output and internal documentation consistently reference 'list' command
+- [x] **AC 6**: No other CLI commands (next, recent, reschedule) are affected by the changes
 
 ## Out of Scope
 
