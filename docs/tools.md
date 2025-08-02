@@ -35,11 +35,10 @@
 
 | Tool | Purpose | Key Flags |
 |------|---------|-----------|
-| `create-path` | Create files with templates | `task-new`, `--priority`, `--estimate` |
+| `task-manager` | Manage tasks | `create`, `--filter`, `--sort`, `--limit` |
 | `llm-query` | Query AI models | `--model`, `--output` |
 | `nav-path` | Navigate project paths | `task`, `file` |
 | `release-manager` | Manage releases | `current`, `report` |
-| `task-manager` | Manage tasks | `--filter`, `--sort`, `--limit` |
 
 ### Human Developer   {#human-developer}
 
@@ -131,7 +130,6 @@ create-path TYPE TARGET [OPTIONS]
 | `--status` | Initial status (pending, in-progress, done, blocked) | `pending` |
 
 **Types:**
-- `task-new` - Create task using PathResolver and templates
 - `file` - Create file with direct content
 - `directory` - Create directory with recursive support
 - `docs-new` - Create documentation file
@@ -139,7 +137,10 @@ create-path TYPE TARGET [OPTIONS]
 
 **Examples**
 ```bash
+# Create new task
 task-manager create --title "implement-feature-x" --priority high --estimate 4h
+
+# Create files and directories
 create-path file README.md --content "# My Project"
 create-path directory src/components
 create-path docs-new "api-documentation" --title "API Documentation"
@@ -548,7 +549,6 @@ nav-path [COMMAND] [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `task-new` | Generate new task path | N/A |
 | `task` | Resolve task by ID | N/A |
 | `file` | Resolve file path | N/A |
 | `--title` | Title for new items | Required |
