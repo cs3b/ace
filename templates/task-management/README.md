@@ -19,7 +19,7 @@ The task management system uses a two-template approach that mirrors the specifi
 
 **Purpose**: Define **what** needs to be accomplished from a behavioral perspective:
 - User experience requirements
-- System behavior specifications  
+- System behavior specifications
 - Interface contracts and interactions
 - Success criteria and validation questions
 
@@ -45,7 +45,7 @@ The task management system uses a two-template approach that mirrors the specifi
 **Key Sections**:
 - **Behavioral Context**: Reference to completed behavioral specification
 - **Planning Steps**: Research, analysis, design (use `* [ ]` markers)
-- **Execution Steps**: Implementation actions (use `- [ ]` markers) 
+- **Execution Steps**: Implementation actions (use `- [ ]` markers)
 - **Technical Details**: Architecture, tools, file modifications
 - **Risk Assessment**: Technical, integration, and performance risks
 
@@ -80,7 +80,7 @@ Both templates support embedded test specifications:
 ```
 - [ ] Step description
   > TEST: Test Name
-  > Type: Test Category  
+  > Type: Test Category
   > Assert: Expected outcome
   > Command: bin/test --verify-something
 ```
@@ -96,7 +96,7 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - Return appropriate message if no draft tasks exist
 ```
 
-### Good Pending Task (Implementation Focus)  
+### Good Pending Task (Implementation Focus)
 ```markdown
 ### Execution Steps
 - [ ] **Filter Implementation**: Add status filtering logic to TaskManager#list method
@@ -112,7 +112,7 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - **Draft**: Focus on command syntax, output format, error messages
 - **Pending**: Focus on argument parsing, validation logic, output formatting
 
-### UI Features  
+### UI Features
 - **Draft**: Focus on user interactions, visual feedback, navigation flows
 - **Pending**: Focus on component structure, state management, styling
 
@@ -129,7 +129,7 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - [ ] No implementation details present
 - [ ] All validation questions addressed
 
-### Pending Template Quality  
+### Pending Template Quality
 - [ ] References completed behavioral specification
 - [ ] Clear Planning vs Execution step distinction
 - [ ] Embedded tests throughout execution steps
@@ -141,10 +141,10 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 ### Creating Tasks
 ```bash
 # Create draft task (behavioral specification)
-create-path task --title "Feature Name" --status "draft"
+task-manager create --title "Feature Name" --status "draft"
 
-# Create pending task (implementation planning)  
-create-path task --title "Feature Name" --status "pending"
+# Create pending task (implementation planning)
+task-manager create --title "Feature Name" --status "pending"
 ```
 
 ### Task Management
