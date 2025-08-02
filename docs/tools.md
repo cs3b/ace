@@ -7,7 +7,7 @@
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
 | `code-review-synthesize` | Review synthesis tool | `--format`, `--include-recommendations` |
-| `create-path` | Create files/directories with templates | `task-new`, `--priority`, `--estimate`, `--status` |
+| `create-path` | Create files/directories with templates | `file`, `directory`, `docs-new`, `--content` |
 | `git-add` | Enhanced git add | `--patch`, `--all` |
 | `git-commit` | Enhanced git commit | `--intention`, `--no-edit` |
 | `git-diff` | Enhanced git diff | `--staged`, `--stat` |
@@ -30,11 +30,10 @@
 ### AI Agent   {#ai-agent}
 
 \| Tool \| Purpose \| Key Flags \| \|------\|---------\|-----------\| \|
-`create-path` \| Create files with templates \| `task-new`, `--priority`, `--estimate`, `--status` \| \|
+`task-manager` \| Manage tasks \| `next`, `list`, `create --title` \| \|
 `llm-query` \| Query AI models \| `--model`, `--output` \| \| `nav-path`
 \| Navigate project paths \| `task`, `file` \| \| `release-manager`
-\| Manage releases \| `current`, `report` \| \| `task-manager` \| Manage
-tasks \| `next`, `list` \|
+\| Manage releases \| `current`, `report` \|
 
 ### Human Developer   {#human-developer}
 
@@ -414,14 +413,13 @@ nav-path [COMMAND] [OPTIONS]
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `task-new` | Generate new task path | N/A |
 | `task` | Resolve task by ID | N/A |
 | `file` | Resolve file path | N/A |
 | `--title` | Title for new items | Required |
 
 **Examples**
 ```bash
-create-path task-new --title "Feature Name"
+task-manager create --title "Feature Name"
 nav-path task 42
 nav-path file README
 ```
@@ -522,7 +520,7 @@ release-manager report --format detailed
     llm-query google "How to implement feature X?"
     
     # Generate new task when needed
-    create-path task-new --title "Implement feature X"
+    task-manager create --title "Implement feature X"
 {: .language-bash}
 
 ### Human Developer Workflow   {#human-developer-workflow}
