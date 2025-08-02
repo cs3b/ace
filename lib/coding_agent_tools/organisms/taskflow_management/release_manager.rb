@@ -89,18 +89,18 @@ module CodingAgentTools
           ManagerResult.new(nil, false, "Error finding next release: #{e.message}")
         end
 
-        # Generate next available task ID with minor version bump
+        # Generate next available task ID for current release
         # @return [ManagerResult] Result containing generated task ID or error
         def generate_id
-          # Get all releases to find the latest version
-          all_releases_result = all
-          return all_releases_result unless all_releases_result.success?
+          # Get current release to use its version
+          current_result = current
+          return current_result unless current_result.success?
 
-          latest_version = find_latest_version(all_releases_result.data)
-          next_version = bump_minor_version(latest_version)
-          next_task_number = find_next_task_number(next_version)
+          current_release = current_result.data
+          current_version = current_release.version
+          next_task_number = find_next_task_number(current_version, current_release.path)
 
-          new_task_id = "#{next_version}+task.#{next_task_number}"
+          new_task_id = "#{current_version}+task.#{next_task_number.to_s.rjust(3, '0')}"
           ManagerResult.new(new_task_id, true, nil)
         rescue StandardError => e
           ManagerResult.new(nil, false, "Error generating task ID: #{e.message}")
@@ -464,11 +464,23 @@ module CodingAgentTools
           end
         end
 
-        # Find next task number for a version
-        def find_next_task_number(_version)
-          # For now, start with task 1 for new versions
-          # This could be enhanced to scan existing tasks for the version
-          1
+        # Find next task number for a version by scanning existing tasks
+        def find_next_task_number(version, release_path)
+          tasks_dir = File.join(release_path, 'tasks')
+          return 1 unless File.exist?(tasks_dir) && File.directory?(tasks_dir)
+
+          # Find all task files for this version
+          task_files = Dir.glob(File.join(tasks_dir, "#{version}+task.*.md"))
+          
+          # Extract task numbers from filenames
+          task_numbers = task_files.map do |file|
+            filename = File.basename(file, '.md')
+            match = filename.match(/#{Regexp.escape(version)}\+task\.(\d+)/)
+            match ? match[1].to_i : 0
+          end
+
+          # Return next available number
+          task_numbers.empty? ? 1 : task_numbers.max + 1
         end
       end
     end
