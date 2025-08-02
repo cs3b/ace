@@ -67,10 +67,14 @@ module CodingAgentTools
       # Check if we're in an interactive environment
       # @return [Boolean] True if environment supports interactive prompts
       def interactive_environment?
-        # Check if we're in a TTY
-        return false unless @input.tty? && @output.tty?
+        # Allow environment override for development scenarios
+        # This is useful for AI coding environments like Claude Code
+        if ENV['CODING_AGENT_TOOLS_FORCE_INTERACTIVE']
+          debug_log("Environment override: FORCE_INTERACTIVE enabled")
+          return ENV['CODING_AGENT_TOOLS_FORCE_INTERACTIVE'] == 'true'
+        end
 
-        # Check for common CI environment indicators
+        # Check for common CI environment indicators first
         ci_indicators = %w[
           CI
           CONTINUOUS_INTEGRATION
@@ -83,11 +87,31 @@ module CodingAgentTools
           DRONE
         ]
 
-        # If any CI indicator is set, we're likely in CI
+        # If any CI indicator is set, we're definitely in CI
         ci_detected = ci_indicators.any? { |var| ENV[var] }
+        if ci_detected
+          debug_log("CI environment detected, treating as non-interactive")
+          return false
+        end
 
-        # Return true only if we have TTY and no CI detected
-        !ci_detected
+        # Check if we're in a TTY
+        has_tty = @input.tty? && @output.tty?
+        
+        # For development environments that might not have proper TTY
+        # but are still interactive (like Claude Code), be more permissive
+        if !has_tty
+          # Check for known development environment indicators
+          if ENV['TERM'] || ENV['CLAUDE_CODE'] || ENV['VSCODE_PID']
+            debug_log("Development environment detected without TTY, treating as interactive")
+            return true
+          end
+          
+          debug_log("No TTY and no development environment indicators, treating as non-interactive")
+          return false
+        end
+
+        debug_log("TTY detected and no CI environment, treating as interactive")
+        true
       end
 
       private
@@ -133,6 +157,13 @@ module CodingAgentTools
           @security_logger.log_error(e, context: { operation: 'user_prompt', file_path: file_path })
           ConfirmationResult.new(false, "Prompt error (#{e.class.name})", true)
         end
+      end
+
+      # Debug logging helper
+      # @param message [String] Debug message to log
+      def debug_log(message)
+        # Only log if debug environment variable is set
+        puts "Debug: #{message}" if ENV['CODING_AGENT_TOOLS_DEBUG']
       end
     end
   end

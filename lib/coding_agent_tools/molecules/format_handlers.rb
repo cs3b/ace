@@ -88,7 +88,7 @@ module CodingAgentTools
         def format_cost(cost)
           return '0.000000' if cost.nil? || cost.zero?
 
-          format('%.6f', cost)
+          sprintf('%.6f', cost)
         end
 
         protected
