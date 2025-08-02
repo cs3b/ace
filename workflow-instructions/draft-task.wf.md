@@ -10,6 +10,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 * Understanding of user experience and interface requirements
 * Access to `dev-taskflow/` directory for task storage
 * Higher-order navigation tools available (nav-path)
+* Load Project Context
 
 ## Project Context Loading
 
@@ -234,7 +235,7 @@ dependencies: {dependencies}
 command-name [options] <arguments>
 # Expected outputs, error messages, and status codes
 
-# API Interface (if applicable)  
+# API Interface (if applicable)
 GET/POST/PUT/DELETE /endpoint
 # Request/response formats, error responses, status codes
 
@@ -263,7 +264,7 @@ GET/POST/PUT/DELETE /endpoint
 <!-- Ask about unclear requirements, edge cases, and user expectations -->
 
 - [ ] **Requirement Clarity**: [Question about unclear or ambiguous requirements]
-- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]  
+- [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]
 - [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
 - [ ] **Success Definition**: [Question about how success will be measured or validated]
 
@@ -275,7 +276,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 <!-- Define the behavioral scope - what user experiences and system behaviors are included -->
 
 - **User Experience Scope**: [Which user interactions, workflows, and experiences are included]
-- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]  
+- **System Behavior Scope**: [Which system capabilities, responses, and behaviors are included]
 - **Interface Scope**: [Which APIs, commands, or interfaces are included]
 
 ### Deliverables
@@ -283,7 +284,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 #### Behavioral Specifications
 - User experience flow definitions
-- System behavior specifications  
+- System behavior specifications
 - Interface contract definitions
 
 #### Validation Artifacts
@@ -295,7 +296,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
 
 - ❌ **Implementation Details**: File structures, code organization, technical architecture
-- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions  
+- ❌ **Technology Decisions**: Tool selections, library choices, framework decisions
 - ❌ **Performance Optimization**: Specific performance improvement strategies
 - ❌ **Future Enhancements**: Related features or capabilities not in current scope
 

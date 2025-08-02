@@ -10,6 +10,14 @@ Create a detailed implementation plan for a task that already has a validated be
 - Task must have clear behavioral requirements from draft-task workflow
 - Understanding of project context and architecture
 - Access to recent git history and project status
+- load project context
+
+## Project Context Loading
+
+- Load project objectives: `docs/what-do-we-build.md`
+- Load architecture overview: `docs/architecture.md`
+- Load project structure: `docs/blueprint.md`
+- Load tools documentation: `docs/tools.md`
 
 ## Task Type Considerations
 
@@ -33,12 +41,6 @@ Create a detailed implementation plan for a task that already has a validated be
 - Templates with embedded logic
 - Build and deployment scripts
 
-## Project Context Loading
-
-- Load project objectives: `docs/what-do-we-build.md`
-- Load architecture overview: `docs/architecture.md`
-- Load project structure: `docs/blueprint.md`
-- Load tools documentation: `docs/tools.md`
 
 ## Process Steps
 
@@ -134,10 +136,10 @@ Create a detailed implementation plan for a task that already has a validated be
      ```bash
      # Find all directories with the old name
      find . -type d -name "*old_name*" | grep -v ".git"
-     
+
      # Find all files with the old name
      find . -type f -name "*old_name*" | grep -v ".git"
-     
+
      # Find all code references
      grep -r "old_name" . --include="*.rb" --include="*.py" --include="*.js" --include="*.md"
      ```
@@ -220,7 +222,7 @@ Create a detailed implementation plan for a task that already has a validated be
    - Plan test environment setup and configuration needs
    - Identify test framework and tooling requirements
    - Define test coverage expectations and success criteria
-   
+
    **Note:** For complex features requiring comprehensive test coverage, consider creating detailed test cases using the `create-test-cases.wf.md` workflow and `test-case.template.md` template.
 
    **Test Prioritization:**
