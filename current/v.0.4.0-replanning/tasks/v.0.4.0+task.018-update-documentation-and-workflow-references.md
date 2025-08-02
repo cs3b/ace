@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.018
-status: in-progress
+status: done
 priority: high
 estimate: 6h
 dependencies: [v.0.4.0+task.017]
@@ -207,37 +207,37 @@ Based on systematic analysis, 33+ files contain references to create-path task-n
 
 *Concrete implementation actions that modify documentation and files.*
 
-- [ ] Update main tools documentation (docs/tools.md)
+- [x] Update main tools documentation (docs/tools.md)
   > TEST: Verify Main Documentation Update
   > Type: Content Validation
   > Assert: All create-path task-new references replaced with task-manager create
   > Command: ! grep -r "create-path.*task-new" docs/tools.md
 
-- [ ] Update dev-tools specific documentation (dev-tools/docs/tools.md)
+- [x] Update dev-tools specific documentation (dev-tools/docs/tools.md)
   > TEST: Verify Tools Documentation Update
   > Type: Content Validation
   > Assert: All command examples use new syntax
   > Command: ! grep -r "create-path.*task-new" dev-tools/docs/tools.md
 
-- [ ] Update workflow instruction files in dev-handbook
+- [x] Update workflow instruction files in dev-handbook
   > TEST: Verify Workflow Instructions Update
   > Type: Content Validation
   > Assert: All workflow files use task-manager create syntax
   > Command: ! grep -r "create-path.*task-new" dev-handbook/workflow-instructions/
 
-- [ ] Update migration guide documentation
+- [x] Update migration guide documentation
   > TEST: Verify Migration Guide Update
   > Type: Content Validation
   > Assert: Migration examples reflect new command structure
   > Command: ! grep -r "create-path.*task-new" dev-tools/docs/migrations/
 
-- [ ] Update historical task and reflection files for consistency
+- [x] Update historical task and reflection files for consistency
   > TEST: Verify Historical Files Update
   > Type: Content Validation
   > Assert: Historical references updated for consistency
   > Command: ! grep -r "create-path.*task-new" dev-taskflow/ --include="*.md"
 
-- [ ] Perform comprehensive verification scan
+- [x] Perform comprehensive verification scan
   > TEST: Verify Complete Migration
   > Type: Final Validation
   > Assert: Zero references to create-path task-new remain in project
@@ -247,11 +247,11 @@ Based on systematic analysis, 33+ files contain references to create-path task-n
 
 *Define the conditions that signify the task is complete.*
 
-- [ ] **AC 1**: All documentation files consistently reference task-manager create instead of create-path task-new
-- [ ] **AC 2**: All workflow instructions execute successfully with updated command references
-- [ ] **AC 3**: Comprehensive grep search returns zero matches for "create-path.*task-new" pattern in active documentation
-- [ ] **AC 4**: All embedded examples and code blocks use correct new command syntax
-- [ ] **AC 5**: Historical documentation maintains consistency with new command structure
+- [x] **AC 1**: All documentation files consistently reference task-manager create instead of create-path task-new
+- [x] **AC 2**: All workflow instructions execute successfully with updated command references
+- [x] **AC 3**: Comprehensive grep search returns zero matches for "create-path.*task-new" pattern in active documentation
+- [x] **AC 4**: All embedded examples and code blocks use correct new command syntax
+- [x] **AC 5**: Historical documentation maintains consistency with new command structure
 
 ## References
 
