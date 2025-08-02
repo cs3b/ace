@@ -188,6 +188,22 @@ module CodingAgentTools
       end
 
       def save_fallback_idea(idea_text, output_path, error_message)
+        # Check if file already exists and has enhanced content
+        if File.exist?(output_path)
+          existing_content = File.read(output_path).strip
+          
+          # If file has substantial content that doesn't look like our fallback format,
+          # it might be enhanced content that was written before security blocked further operations
+          if !existing_content.empty? && 
+             !existing_content.start_with?('# Raw Idea (Enhanced Version Failed)') &&
+             existing_content.length > idea_text.length + 50 # Heuristic: enhanced content should be longer
+            
+            debug_log("Output file already contains enhanced content, preserving it: #{output_path}")
+            return CaptureResult.new(true, output_path, nil, 'Enhanced content preserved despite security error')
+          end
+        end
+
+        # Only write fallback if we don't have enhanced content
         fallback_content = "# Raw Idea (Enhanced Version Failed)\n\n"
         fallback_content += "**Enhancement Error:** #{error_message}\n\n"
         fallback_content += "## Original Idea\n\n#{idea_text.strip}"

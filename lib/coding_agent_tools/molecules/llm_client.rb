@@ -76,6 +76,24 @@ module CodingAgentTools
       end
 
       def execute_llm_query(input_path, system_path, output_path)
+        # Check if output file already exists with valid enhanced content
+        # This prevents unnecessary retries when first attempt succeeded but security blocked subsequent overwrites
+        if File.exist?(output_path)
+          output_content = File.read(output_path).strip
+          unless output_content.empty?
+            # Read the input to compare content length (heuristic for enhancement)
+            input_content = File.read(input_path).strip
+            
+            # If output is significantly longer than input and doesn't look like a fallback,
+            # consider it already successfully enhanced
+            if output_content.length > input_content.length + 50 && 
+               !output_content.start_with?('# Raw Idea (Enhanced Version Failed)')
+              debug_log("Output file already contains enhanced content, skipping LLM query: #{output_path}")
+              return { success: true }
+            end
+          end
+        end
+
         # Build llm-query command
         command = [
           'llm-query',
