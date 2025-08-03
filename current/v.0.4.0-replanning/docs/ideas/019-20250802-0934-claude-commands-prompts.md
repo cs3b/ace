@@ -51,17 +51,24 @@ To integrate custom Claude commands for planning, working on, and drafting tasks
 
 1. **Analyze `install-prompts.md` Structure**: Examine the existing `dev-handbook/.integrations/claude/install-prompts.md` file to understand how prompts/commands are currently defined, registered, or structured.
 2. **Define Command Integration Strategy**: Determine the best method to register and expose the custom commands (`plan-tasks`, `work-on-tasks`, `draft-tasks`) within the Claude integration script. This could involve:
-    - Adding new entries to a configuration file.
-    - Creating new Ruby/Python files that are automatically discovered.
-    - Modifying the script to parse and execute these commands.
+    - Adding custome commands to dev-handbook/.integrations/claude/commands (each in seperate files)
+    - Modifying the script to copy this custom commands from this directory
 3. **Implement Command Logic**: Ensure the actual logic for `plan-tasks`, `work-on-tasks`, and `draft-tasks` is either already present in a callable format or needs to be developed and placed in an accessible location.
 
 ## Critical Questions
 
 **Before proceeding, we need to answer:**
 1. What is the exact structure and format of `dev-handbook/.integrations/claude/install-prompts.md` and how are commands typically added?
+
+> you need to figure out it by analyzing this script, where to add copying the custom commands
+
 2. Where is the implementation logic for `plan-tasks`, `work-on-tasks`, and `draft-tasks` located, and in what language is it written (e.g., Ruby, Python)?
+
+> those are markdown files
+
 3. What is the expected output or behavior of these custom commands when invoked by the Claude integration script?
+
+> they are alrady defined from this project, so just copy them to the handbook module
 
 **Open Questions:**
 - Does the Claude integration script support arbitrary command execution, or does it require commands to conform to a specific interface or registration method?

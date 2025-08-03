@@ -1,5 +1,5 @@
 ---
-id: v.0.6.0+task.1
+id: v.0.4.0+task.019
 status: draft
 priority: high
 estimate: TBD
@@ -12,8 +12,8 @@ dependencies: []
 
 ### User Experience
 - **Input**: Users invoke Claude Code integration with access to custom task management commands
-- **Process**: Commands are discovered and executed seamlessly within Claude environment  
-- **Output**: Task management operations (`plan-tasks`, `work-on-tasks`, `draft-tasks`) work natively in Claude Code
+- **Process**: Commands are discovered and executed seamlessly within Claude environment
+- **Output**: Task management operations (`plan-tasks`, `work-on-tasks`, `draft-tasks`, `review-tasks`) work natively in Claude Code
 
 ### Expected Behavior
 
@@ -28,6 +28,7 @@ The system should provide AI agents and developers with seamless access to task 
 plan-tasks [task-criteria]         # Plan tasks based on criteria
 work-on-tasks [task-id]           # Work on specific task
 draft-tasks [idea-file-path]      # Draft tasks from idea files
+review-tasks [tasks]
 
 # Integration Script Behavior
 install-prompts.md                # Copies custom commands from designated directory
