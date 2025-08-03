@@ -4,35 +4,29 @@ status: draft
 priority: high
 estimate: TBD
 dependencies: []
-needs_review: true
 ---
 
 # Integrate Custom Claude Commands into Claude Code Integration Script
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] Should the commands.json registration be automated or manual when adding new commands?
-  - **Research conducted**: Analyzed existing commands.json structure and command patterns
-  - **Similar implementations**: Found `/draft-tasks` and `/review-tasks` entries missing from commands.json
-  - **Suggested default**: Manual registration with documentation updates
-  - **Why needs human input**: Architecture decision - automation vs explicit control trade-off
+- [x] Should the commands.json registration be automated or manual when adding new commands?
+  - **Answer**: Automated (maintaining existing pattern)
+  - **Implementation**: Script should automatically add entries to commands.json
 
-- [ ] How should command conflicts be resolved when a command already exists in .claude/commands/?
-  - **Research conducted**: No existing conflict resolution mechanism found
-  - **Suggested default**: Skip with warning message, preserve existing command
-  - **Why needs human input**: User experience decision for upgrade scenarios
+- [x] How should command conflicts be resolved when a command already exists in .claude/commands/?
+  - **Answer**: Skip existing commands, only add new ones
+  - **Implementation**: Check existence before creating, preserve user modifications
 
 ### [MEDIUM] Enhancement Questions
-- [ ] Should the integration validate that referenced workflow files exist before creating commands?
-  - **Research conducted**: Current process creates commands regardless of workflow existence
-  - **Suggested default**: Add validation step with clear error reporting
-  - **Why needs human input**: Balance between safety and flexibility
+- [x] Should the integration validate that referenced workflow files exist before creating commands?
+  - **Answer**: No validation needed
+  - **Implementation**: Create commands regardless of workflow file existence
 
-- [ ] Should old/deprecated commands be automatically removed during integration?
-  - **Research conducted**: No cleanup mechanism currently exists
-  - **Suggested default**: Keep deprecated commands, add deprecation notice
-  - **Why needs human input**: Backward compatibility requirements unclear
+- [x] Should old/deprecated commands be automatically removed during integration?
+  - **Answer**: No, preserve all existing commands
+  - **Rationale**: Users may have created custom commands or modified existing ones
 
 ## Behavioral Specification
 
@@ -43,43 +37,58 @@ needs_review: true
 
 ### Expected Behavior
 
-Enable custom Claude commands for planning, working on, and drafting tasks to be integrated into the Claude code integration script, ensuring these commands are discoverable and usable within the `dev-handbook/.integrations/claude/install-prompts.md` system.
+The `dev-handbook/.integrations/claude/install-prompts.md` script should be enhanced to automatically:
+1. Scan `dev-handbook/workflow-instructions/*.wf.md` files
+2. Generate corresponding command files in `.claude/commands/`
+3. Automatically update `.claude/commands/commands.json` with new command entries
+4. Skip existing commands to preserve user modifications
+5. Provide clear output showing which commands were created/skipped
 
-The system should provide AI agents and developers with seamless access to task management workflows directly within Claude Code integration, eliminating the need for manual command setup or external task management.
+This automation ensures all workflow instructions are immediately available as Claude Code commands without manual intervention.
 
 ### Interface Contract
 
 ```bash
-# Custom Commands Available Post-Integration
-plan-tasks [task-criteria]         # Plan tasks based on criteria
-work-on-tasks [task-id]           # Work on specific task
-draft-tasks [idea-file-path]      # Draft tasks from idea files
-review-tasks [tasks]
+# Script Execution
+./install-prompts.sh              # Run the automated installation script
+# OR
+claude-integrate                  # Alternative command name
 
-# Integration Script Behavior
-install-prompts.md                # Copies custom commands from designated directory
-# Commands sourced from: dev-handbook/.integrations/claude/commands/
-# Target: Claude Code accessible command registry
+# Script Behavior
+- Scans: dev-handbook/workflow-instructions/*.wf.md
+- Creates: .claude/commands/[workflow-name].md (if not exists)
+- Updates: .claude/commands/commands.json (adds missing entries)
+- Preserves: Existing commands and user modifications
+
+# Output Example
+Installing Claude Code commands...
+✓ Created: draft-task.md
+✓ Created: plan-task.md
+✗ Skipped: work-on-task.md (already exists)
+✓ Updated: commands.json (2 new entries added)
+Installation complete: 2 created, 1 skipped
 ```
 
 **Error Handling:**
-- Missing source commands: Clear error message indicating which commands are unavailable
-- Copy operation failure: Detailed error with file permissions and path information
-- Integration script failure: Rollback mechanism and clear error reporting
+- File permission issues: Clear error with suggested chmod/chown commands
+- JSON parsing errors: Backup original commands.json before modification
+- Write failures: Transaction-like approach with rollback on failure
 
 **Edge Cases:**
-- Command conflicts: Strategy for handling naming collisions with existing commands
-- Version mismatches: Handling of command updates and compatibility
-- Partial integration: Behavior when some but not all commands integrate successfully
+- Existing commands: Skip and report (preserve user modifications)
+- Custom templates: Use template from install-prompts.md if defined
+- Special characters in filenames: Sanitize workflow names for command files
+- Empty workflow directory: Report "No workflows found" gracefully
 
 ### Success Criteria
 
-- [ ] **Command Registration**: Missing entries (`/draft-tasks`, `/review-tasks`) added to commands.json file
-- [ ] **Command Verification**: All task management commands (`plan-tasks`, `work-on-tasks`, `draft-tasks`, `review-tasks`) properly registered and accessible
-- [ ] **Documentation Update**: `install-prompts.md` updated with clear instructions for registering new commands in commands.json
-- [ ] **Consistency Check**: All command files in `.claude/commands/` have corresponding entries in commands.json
-- [ ] **Integration Testing**: Verify commands execute their respective workflow instructions correctly
-- [ ] **Pattern Documentation**: Clear pattern documented for adding future custom commands including json registration
+- [ ] **Automation Script Created**: Executable script that automates the entire command installation process
+- [ ] **Command Generation**: Script automatically creates command files from workflow instructions
+- [ ] **JSON Registration**: Script automatically updates commands.json with new entries
+- [ ] **Preservation Logic**: Script skips existing commands to preserve user modifications
+- [ ] **Status Reporting**: Script provides clear output showing created/skipped/updated items
+- [ ] **Documentation Update**: install-prompts.md updated to reference the automation script
+- [ ] **Integration Testing**: All generated commands execute their workflow instructions correctly
 
 ### Validation Questions
 
@@ -120,43 +129,49 @@ install-prompts.md                # Copies custom commands from designated direc
 
 ## Objective
 
-To integrate custom Claude commands for planning, working on, and drafting tasks into the Claude code integration script, ensuring these commands are discoverable and usable within the `dev-handbook/.integrations/claude/install-prompts.md` system for seamless AI agent and developer task management workflows.
+To create an automated script that generates Claude Code commands from workflow instructions, eliminating manual command creation and ensuring all workflows are immediately accessible as Claude commands with proper JSON registration and user modification preservation.
 
 ## Scope of Work
 
 ### User Experience Scope
-- Command integration workflow for AI agents using Claude Code
-- Seamless task management command execution within Claude environment
-- Standardized custom command addition process for future extensions
+- One-command installation of all workflow commands
+- Clear feedback on installation progress and results
+- Preservation of user customizations during updates
 
 ### System Behavior Scope
-- Enhanced `install-prompts.md` script to copy custom commands
-- Command discovery and registration mechanism in Claude Code
-- Error handling and validation for integration operations
+- Automated scanning of workflow instruction files
+- Intelligent command file generation with template support
+- Automatic JSON registration with conflict detection
+- Status reporting and error handling
 
 ### Interface Scope
-- Custom task management commands: `plan-tasks`, `work-on-tasks`, `draft-tasks`
-- Integration script interface for command copying and registration
-- Standard pattern for future custom command additions
+- Single executable script for command installation
+- Command-line interface with progress indicators
+- JSON file management with backup capabilities
 
 ### Deliverables
 
-#### Behavioral Specifications
-- User experience flow for command integration and usage
-- System behavior specifications for script enhancement
-- Interface contract definitions for all custom commands
+#### Automation Script
+- Executable script for automated command installation
+- Support for both initial setup and incremental updates
+- Clear output and error reporting
 
-#### Validation Artifacts
-- Success criteria validation through integration testing
-- Command availability verification in Claude Code environment
-- Integration pattern documentation for future use
+#### Command Management
+- Automatic generation of command files from workflows
+- Automatic registration in commands.json
+- Preservation of existing user modifications
+
+#### Documentation
+- Updated install-prompts.md referencing automation
+- Usage instructions for the installation script
+- Pattern documentation for future enhancements
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: Specific file copying mechanisms, script internal architecture
-- ❌ **Technology Decisions**: Choice of scripting language or integration framework
-- ❌ **Performance Optimization**: Script execution speed or resource usage optimization
-- ❌ **Future Enhancements**: Additional custom commands beyond the three specified
+- ❌ **Command Content Modification**: Changing how existing commands work internally
+- ❌ **Workflow Creation**: Creating new workflow instruction files
+- ❌ **Claude Code Internal Changes**: Modifying Claude Code's command execution mechanism
+- ❌ **Complex Versioning System**: Git-based versioning or command history tracking
 
 ## References
 
