@@ -30,16 +30,6 @@ Execute the complete draft-task workflow for: <idea-file-path>
   - Follow all steps in the workflow exactly as written
   - Context: Reflect on the draft task creation just completed
 
-- [ ] **Commit draft task file:**
-  - Capture the exact file path returned by create-path command during draft creation
-  - Use git-commit with specific file path and intention
-  - Example: git-commit /path/to/draft-task-file.md --intention "implement draft-task for [idea-topic]"
-
-- [ ] **Commit reflection note:**
-  - Capture the exact file path of the reflection file created
-  - Use git-commit with specific file path and intention  
-  - Example: git-commit /path/to/reflection-file.md --intention "add reflection for draft-task workflow execution"
-
 - [ ] **Processing Summary:**
   - Idea file processed
   - Draft tasks created (IDs and titles)

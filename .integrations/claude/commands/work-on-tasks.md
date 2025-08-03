@@ -29,21 +29,13 @@ Execute the complete task workflow for: <task-path>
   - Follow all steps in the workflow exactly as written
   - Context: Reflect on the task work just completed
 
-- [ ] **Commit task work changes:**
-  - Use git-commit to commit all files modified during task work
-  - Include clear commit message referencing the task ID and purpose
-
-- [ ] **Commit reflection note:**
-  - Use git-commit for the reflection file created
-  - Include appropriate commit message for the reflection
-
 - [ ] **Tag Repositories:**
   # Extract task ID from task path (e.g., v.0.4.0+task.5)
   TASK_ID="<extracted-task-id>"
-  
+
   # Tag all repositories
   git -C dev-handbook tag "$TASK_ID"
-  git -C dev-tools tag "$TASK_ID" 
+  git -C dev-tools tag "$TASK_ID"
   git -C dev-taskflow tag "$TASK_ID"
   git tag "$TASK_ID"
 
@@ -80,7 +72,7 @@ After all tasks are completed:
 - [ ] **Summary Report:**
   Provide comprehensive summary including:
   - Total tasks processed
-  - Success/failure count  
+  - Success/failure count
   - Overview of all changes made
   - Any blockers or issues that need attention
   - Recommendations for next steps
@@ -101,7 +93,7 @@ If a task fails during execution:
 # Work on next single task
 /work-on-tasks
 
-# Work on next 5 tasks  
+# Work on next 5 tasks
 /work-on-tasks task-manager next --limit 5
 
 # Work on specific tasks (as provided in arguments)

@@ -1,9 +1,3 @@
-
-
-
-
-------
-
 # Goal
 
 Ensure all changes made in the current session or workflow are properly committed to git.

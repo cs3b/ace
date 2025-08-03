@@ -31,14 +31,6 @@ Execute the complete plan-task workflow for: <task-path>
   - Follow all steps in the workflow exactly as written
   - Context: Reflect on the task planning work just completed
 
-- [ ] **Commit planning changes:**
-  - Use git-commit to commit the task file with status change to pending
-  - Include clear commit message referencing the task ID and planning completion
-
-- [ ] **Commit reflection note:**
-  - Use git-commit for the reflection file created
-  - Include appropriate commit message for the reflection
-
 - [ ] **Planning Summary:**
   - Task ID and title
   - Status change: draft → pending
@@ -96,7 +88,7 @@ If a draft task fails during planning:
 # Plan all draft tasks
 /plan-tasks
 
-# Plan next 5 draft tasks  
+# Plan next 5 draft tasks
 /plan-tasks task-manager list --filter status:draft --limit 5
 
 # Plan specific draft tasks (as provided in arguments)
