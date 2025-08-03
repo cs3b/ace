@@ -849,6 +849,218 @@ RSpec.describe CodingAgentTools::Organisms::IdeaCapture do
     end
   end
 
+  describe "#append_source_section" do
+    let(:content) { "# Enhanced Idea\n\nThis is the enhanced content." }
+    let(:raw_input) { "This is the raw user input" }
+
+    it "appends SOURCE section to content" do
+      result = subject.send(:append_source_section, content, raw_input)
+      
+      expect(result).to include(content)
+      expect(result).to include("> SOURCE")
+      expect(result).to include("```text")
+      expect(result).to include(raw_input)
+      expect(result).to include("```")
+    end
+
+    it "properly formats the SOURCE section" do
+      result = subject.send(:append_source_section, content, raw_input)
+      
+      # Check proper formatting
+      lines = result.split("\n")
+      source_index = lines.index("> SOURCE")
+      
+      expect(source_index).not_to be_nil
+      expect(lines[source_index - 1]).to eq("") # Empty line before SOURCE
+      expect(lines[source_index + 1]).to eq("") # Empty line after SOURCE
+      expect(lines[source_index + 2]).to eq("```text") # Code block start
+      expect(lines[source_index + 3]).to eq(raw_input) # Raw input
+      expect(lines[source_index + 4]).to eq("```") # Code block end
+    end
+
+    context "with markdown code blocks in raw input" do
+      let(:raw_input) { "Here is code:\n```ruby\nputs 'hello'\n```\nEnd of code" }
+
+      it "escapes code blocks properly" do
+        result = subject.send(:append_source_section, content, raw_input)
+        
+        # Should use quad backticks to escape triple backticks in input
+        expect(result).to include("````text")
+        expect(result).to include("````")
+        expect(result).to include(raw_input)
+      end
+    end
+
+    context "with nested code blocks in raw input" do
+      let(:raw_input) { "Code:\n````ruby\n```inner\ncode\n```\n````" }
+
+      it "uses enough backticks to escape all levels" do
+        result = subject.send(:append_source_section, content, raw_input)
+        
+        # Should use 5 backticks to escape quad backticks in input
+        expect(result).to include("`````text")
+        expect(result).to include("`````")
+      end
+    end
+
+    context "with large input" do
+      let(:large_input) { "a" * (described_class::BIG_INPUT_THRESHOLD + 1000) }
+      
+      context "when big input is not allowed" do
+        let(:big_user_input_allowed) { false }
+        
+        it "truncates the input and adds truncation notice" do
+          result = subject.send(:append_source_section, content, large_input)
+          
+          expect(result).to include("[truncated at #{described_class::BIG_INPUT_THRESHOLD} characters]")
+          # Check that truncated content is correct length
+          expect(result).to include("a" * described_class::BIG_INPUT_THRESHOLD)
+          expect(result).not_to include("a" * (described_class::BIG_INPUT_THRESHOLD + 1))
+        end
+      end
+      
+      context "when big input is allowed" do
+        let(:big_user_input_allowed) { true }
+        
+        it "includes full input without truncation" do
+          result = subject.send(:append_source_section, content, large_input)
+          
+          expect(result).not_to include("[truncated")
+          expect(result).to include(large_input)
+        end
+      end
+    end
+
+    it "strips trailing whitespace from content before appending" do
+      content_with_trailing = content + "\n\n\n"
+      result = subject.send(:append_source_section, content_with_trailing, raw_input)
+      
+      # Should have exactly 2 newlines between content and SOURCE
+      expect(result).to match(/#{Regexp.escape(content.rstrip)}\n\n> SOURCE/)
+    end
+
+    it "strips whitespace from raw input" do
+      raw_with_whitespace = "  \n" + raw_input + "\n\n  "
+      result = subject.send(:append_source_section, content, raw_with_whitespace)
+      
+      expect(result).to include(raw_input)
+      expect(result).not_to match(/```text\n\s+#{Regexp.escape(raw_input)}/)
+    end
+  end
+
+  describe "SOURCE section integration" do
+    let(:idea_text) { "This is my idea for a new feature" }
+    let(:enhanced_content) { "# Enhanced Idea\n\n## Intention\n\nTo create a new feature\n\n## Details\n\nThis is the enhanced version" }
+    let(:input_path) { File.join(temp_dir, "idea-input.md") }
+    let(:system_path) { File.join(temp_dir, "system.prompt.md") }
+    let(:output_path) { File.join(temp_dir, "enhanced-idea.md") }
+
+    before do
+      FileUtils.mkdir_p(temp_dir)
+      
+      # Setup successful path generation
+      allow(mock_path_resolver).to receive(:generate_capture_idea_paths).and_return({
+        success: true,
+        input_path: input_path,
+        system_path: system_path,
+        output_path: output_path
+      })
+
+      # Mock successful context loading
+      allow(mock_context_loader).to receive(:load_docs_context).and_return({
+        success: true,
+        context: "Project context"
+      })
+
+      # Mock template files
+      project_root = File.expand_path("../../../../../", __FILE__)
+      template_path = File.join(project_root, "dev-handbook/templates/idea-manager/system.prompt.md")
+      idea_template_path = File.join(project_root, "dev-handbook/templates/idea-manager/idea.template.md")
+      
+      allow(File).to receive(:exist?).with(template_path).and_return(true)
+      allow(File).to receive(:exist?).with(idea_template_path).and_return(true)
+      allow(File).to receive(:read).with(template_path).and_return("System template")
+      allow(File).to receive(:read).with(idea_template_path).and_return("Idea template")
+    end
+
+    context "when enhancement succeeds" do
+      before do
+        # Mock successful LLM enhancement
+        allow(mock_llm_client).to receive(:enhance_idea).and_return(
+          CodingAgentTools::Molecules::LLMClient::LLMResult.new(true, output_path, nil, 0)
+        )
+
+        # Mock the enhanced content being written by LLM
+        allow(File).to receive(:read).with(output_path).and_return(enhanced_content)
+      end
+
+      it "appends SOURCE section to enhanced idea" do
+        # Expect the file to be written with SOURCE section
+        expect(File).to receive(:write).with(output_path, anything) do |path, content|
+          expect(content).to include(enhanced_content)
+          expect(content).to include("> SOURCE")
+          expect(content).to include("```text")
+          expect(content).to include(idea_text)
+          expect(content).to include("```")
+        end
+
+        result = subject.capture_idea(idea_text)
+        expect(result.success?).to be true
+      end
+    end
+
+    context "when enhancement fails and fallback is used" do
+      before do
+        # Mock failed LLM enhancement
+        allow(mock_llm_client).to receive(:enhance_idea).and_return(
+          CodingAgentTools::Molecules::LLMClient::LLMResult.new(false, nil, "LLM error", 3)
+        )
+      end
+
+      it "includes SOURCE section in fallback idea" do
+        # Expect the fallback file to be written with SOURCE section
+        expect(File).to receive(:write).with(output_path, anything) do |path, content|
+          expect(content).to include("# Raw Idea (Enhanced Version Failed)")
+          expect(content).to include("## Original Idea")
+          expect(content).to include(idea_text)
+          expect(content).to include("> SOURCE")
+          expect(content).to include("```text")
+        end
+
+        result = subject.capture_idea(idea_text)
+        expect(result.success?).to be true
+      end
+    end
+
+    context "when file already exists with enhanced content" do
+      let(:existing_enhanced) { "# Previously Enhanced\n\nSome existing enhanced content that is longer than the raw input" }
+
+      before do
+        # Mock failed LLM enhancement
+        allow(mock_llm_client).to receive(:enhance_idea).and_return(
+          CodingAgentTools::Molecules::LLMClient::LLMResult.new(false, nil, "Security error", 0)
+        )
+
+        # Mock existing file with enhanced content
+        allow(File).to receive(:exist?).with(output_path).and_return(true)
+        allow(File).to receive(:read).with(output_path).and_return(existing_enhanced)
+      end
+
+      it "preserves existing content and adds SOURCE section" do
+        expect(File).to receive(:write).with(output_path, anything) do |path, content|
+          expect(content).to include(existing_enhanced)
+          expect(content).to include("> SOURCE")
+          expect(content).to include(idea_text)
+          expect(content).not_to include("# Raw Idea (Enhanced Version Failed)")
+        end
+
+        result = subject.capture_idea(idea_text)
+        expect(result.success?).to be true
+        expect(result.debug_info).to include("Enhanced content preserved with SOURCE")
+      end
+    end
+  end
+
   describe "#test_environment?" do
     it "returns true when CI environment variable is set" do
       with_env("CI" => "true") do

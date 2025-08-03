@@ -77,8 +77,14 @@ module CodingAgentTools
 
         final_result = if enhancement_result.success?
                          debug_log('Idea enhancement completed successfully')
+                         # Read the enhanced content and append SOURCE section
+                         enhanced_content = File.read(paths_result[:output_path])
+                         content_with_source = append_source_section(enhanced_content, idea_text)
+                         File.write(paths_result[:output_path], content_with_source)
+                         debug_log('Appended SOURCE section to enhanced idea')
+                         
                          CaptureResult.new(true, paths_result[:output_path], nil,
-                                           @debug ? 'Enhancement completed' : nil)
+                                           @debug ? 'Enhancement completed with SOURCE' : nil)
                        else
                          # Fallback: save raw idea with error note
                          debug_log('Enhancement failed, saving raw idea as fallback')
@@ -199,7 +205,11 @@ module CodingAgentTools
              existing_content.length > idea_text.length + 50 # Heuristic: enhanced content should be longer
             
             debug_log("Output file already contains enhanced content, preserving it: #{output_path}")
-            return CaptureResult.new(true, output_path, nil, 'Enhanced content preserved despite security error')
+            # Add SOURCE section to existing enhanced content
+            content_with_source = append_source_section(existing_content, idea_text)
+            File.write(output_path, content_with_source)
+            debug_log('Appended SOURCE section to existing enhanced content')
+            return CaptureResult.new(true, output_path, nil, 'Enhanced content preserved with SOURCE despite security error')
           end
         end
 
@@ -207,11 +217,14 @@ module CodingAgentTools
         fallback_content = "# Raw Idea (Enhanced Version Failed)\n\n"
         fallback_content += "**Enhancement Error:** #{error_message}\n\n"
         fallback_content += "## Original Idea\n\n#{idea_text.strip}"
+        
+        # Add SOURCE section to fallback content too
+        fallback_content_with_source = append_source_section(fallback_content, idea_text)
+        
+        File.write(output_path, fallback_content_with_source)
+        debug_log("Saved fallback idea with SOURCE section to: #{output_path}")
 
-        File.write(output_path, fallback_content)
-        debug_log("Saved fallback idea to: #{output_path}")
-
-        CaptureResult.new(true, output_path, nil, 'Saved raw idea due to enhancement failure')
+        CaptureResult.new(true, output_path, nil, 'Saved raw idea with SOURCE due to enhancement failure')
       rescue StandardError => e
         error_result("Failed to save fallback idea: #{e.message}")
       end
@@ -222,6 +235,40 @@ module CodingAgentTools
 
       def debug_log(message)
         puts "Debug: #{message}" if @debug
+      end
+
+      # Append SOURCE section with raw input to the enhanced content
+      # @param content [String] The enhanced idea content
+      # @param raw_input [String] The original raw user input
+      # @return [String] Content with SOURCE section appended
+      def append_source_section(content, raw_input)
+        # Ensure content ends with newlines for proper separation
+        formatted_content = content.rstrip + "\n\n"
+        
+        # Add SOURCE section header
+        formatted_content += "> SOURCE\n\n"
+        
+        # Check if raw input needs truncation
+        truncated_input = raw_input.strip
+        if truncated_input.length > @max_input_size && !@big_user_input_allowed
+          truncated_input = truncated_input[0...@max_input_size]
+          truncated_input += "\n\n[truncated at #{@max_input_size} characters]"
+          debug_log("SOURCE section truncated at #{@max_input_size} characters")
+        end
+        
+        # Escape markdown code blocks if present in raw input
+        # If raw input contains triple backticks, use quad backticks for SOURCE block
+        backtick_count = 3
+        while truncated_input.include?('`' * backtick_count)
+          backtick_count += 1
+        end
+        
+        # Add raw input in code block
+        formatted_content += "#{'`' * backtick_count}text\n"
+        formatted_content += truncated_input
+        formatted_content += "\n#{'`' * backtick_count}\n"
+        
+        formatted_content
       end
 
       def handle_git_commit(file_path)
