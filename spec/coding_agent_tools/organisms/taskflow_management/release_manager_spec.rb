@@ -130,37 +130,39 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.2.0-synapse")
       end
 
-      it "generates next task ID with minor version bump" do
+      it "generates next task ID for current release" do
         result = manager.generate_id
 
         expect(result.success?).to be true
-        expect(result.data).to eq("v.0.4.0+task.1")
+        expect(result.data).to eq("v.0.3.0+task.001")
       end
     end
 
     context "when no releases exist" do
-      it "generates first task ID" do
+      it "returns error when no current release exists" do
         result = manager.generate_id
 
-        expect(result.success?).to be true
-        expect(result.data).to eq("v.0.1.0+task.1")
+        expect(result.success?).to be false
+        expect(result.error_message).to include("No current release directory found")
       end
     end
 
     context "error scenarios" do
-      it "handles failure from all method" do
-        # Mock the all method to fail
-        allow(manager).to receive(:all).and_return(
-          described_class::ManagerResult.new(nil, false, "Failed to get releases")
+      it "handles failure from current method" do
+        # Mock the current method to fail
+        allow(manager).to receive(:current).and_return(
+          described_class::ManagerResult.new(nil, false, "Failed to get current release")
         )
 
         result = manager.generate_id
 
         expect(result.success?).to be false
-        expect(result.error_message).to include("Failed to get releases")
+        expect(result.error_message).to include("Failed to get current release")
       end
 
       it "handles malformed version parsing errors" do
+        # Create current release
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.0.1.0-test")
         # Create releases with malformed versions that could cause parsing issues
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/malformed-version")
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.x.y.z-invalid")
@@ -168,7 +170,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         result = manager.generate_id
 
         expect(result.success?).to be true
-        expect(result.data).to eq("v.0.1.0+task.1")  # Should fallback to default
+        expect(result.data).to eq("v.0.1.0+task.001")  # Should use current release version
       end
     end
   end
@@ -592,6 +594,8 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
       end
 
       it "finds correct latest version with edge cases" do
+        # Create current release
+        FileUtils.mkdir_p("#{base_path}/dev-taskflow/current/v.1.0.0-current")
         # Create mix of versions with various edge cases
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.0.1-tiny")
         FileUtils.mkdir_p("#{base_path}/dev-taskflow/done/v.0.10.0-double-digit")
@@ -601,7 +605,7 @@ RSpec.describe CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager d
         result = manager.generate_id
 
         expect(result.success?).to be true
-        expect(result.data).to eq("v.1.1.0+task.1")  # Should bump minor from v.1.0.0
+        expect(result.data).to eq("v.1.0.0+task.001")  # Should use current release version
       end
 
       it "handles empty and whitespace-only directory names" do

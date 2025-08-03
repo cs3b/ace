@@ -238,29 +238,24 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
 
       it "returns true when no CI environment detected" do
-        # Clear the force interactive override first
-        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
-        
-        # Clear CI environment variables
-        ci_vars = ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "TRAVIS", "CIRCLECI"]
-        ci_vars.each { |var| allow(ENV).to receive(:[]).with(var).and_return(nil) }
-        allow(ENV).to receive(:[]).with("CONTINUOUS_INTEGRATION").and_return(nil)
-        allow(ENV).to receive(:[]).with("JENKINS_URL").and_return(nil)
-        allow(ENV).to receive(:[]).with("BUILDKITE").and_return(nil)
-        allow(ENV).to receive(:[]).with("DRONE").and_return(nil)
+        # Mock all ENV access
+        allow(ENV).to receive(:[]).and_return(nil)
+        allow($stdin).to receive(:tty?).and_return(true)
+        allow($stdout).to receive(:tty?).and_return(true)
 
         expect(real_confirmer.interactive_environment?).to be true
       end
 
       it "returns false when CI environment detected" do
-        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
-        allow(ENV).to receive(:[]).with("CI").and_return("true")
+        # Mock all ENV access, with CI set to true
+        allow(ENV).to receive(:[]) do |key|
+          key == "CI" ? "true" : nil
+        end
 
         expect(real_confirmer.interactive_environment?).to be false
       end
 
       it "detects various CI environments" do
-        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
         ci_environments = {
           "CI" => "true",
           "CONTINUOUS_INTEGRATION" => "true",
@@ -274,10 +269,9 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         }
 
         ci_environments.each do |env_var, value|
-          # Clear all other CI vars
-          ci_environments.keys.each do |var|
-            allow(ENV).to receive(:[]).with(var).and_return((var == env_var) ? value : nil)
-          end
+          # Mock all ENV access - return nil for everything except the specific CI var
+          allow(ENV).to receive(:[]).and_return(nil)
+          allow(ENV).to receive(:[]).with(env_var).and_return(value)
 
           expect(real_confirmer.interactive_environment?).to be(false),
             "Expected #{env_var}=#{value} to be detected as CI environment"
