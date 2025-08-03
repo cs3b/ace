@@ -1,32 +1,46 @@
 # Goal
 
-Ensure all changes you have made in the current session, or what user point to are commit in git.
+Ensure all changes made in the current session or workflow are properly committed to git.
 
-# PLAN
+# Implementation
 
-1. Ensure you commit (using `git-commit`) all changes that you have modified / created / deleted in this session (if user not ask differently). e.g.: git-commit item1/path/to item2/path/to item3/path/to ... --intention "write a intention of changes in the session" => `git-commit dev-tools/src/main.rb dev-tools/spec/test.rb dev-handbook/tpl/dotfiles/path.yml --intention "fix authentication bug"`
+Use the git-commit-manager agent to handle the commit process.
 
-2. Run `git-status` to check if everything you modified have beedn commited.
+# Usage
 
-# Supplementary Inforatiom about Git toolbox
+When called from a workflow command, determine the context automatically:
+- Check what workflow was just executed
+- Use git-status to see what changed
+- Create appropriate commit with workflow context
 
-1. **Check current status**: Run `git-status` to see all changes across repositories
-2. **Commit with intention**:
-   - **Specific files**: `git-commit path/1/file path/2/file --intention "why we commit"`
-     - Use full paths from project root (works with submodules): `dev-tools/lib/main.rb dev-handbook/guide.md`
-     - Or local paths from current directory: `lib/main.rb spec/test.rb`
-   - **All changes**: `git-commit --intention "why we commit"` (only when everything in the repos should be commited)
+When called directly, use the session context:
+- Review all changes made in current session
+- Group related changes appropriately
+- Commit with clear intention
 
-**Examples:**
-```bash
-# Commit specific files with intention (local paths)
-git-commit src/main.rb spec/test.rb --intention "fix authentication bug"
+## Agent Invocation
 
-# Commit files across submodules (full paths from project root)
-git-commit dev-tools/lib/main.rb dev-handbook/guides/setup.md --intention "update setup documentation"
-
-# Commit all changes
-git-commit --intention "update documentation"
+```
+Use the git-commit-manager agent to commit changes.
+Context: [Brief description of what was done]
+Files modified: [File paths or globs like ".claude/commands/*.md" OR "Check git-status" if unknown]
+Intention: [Purpose and goal of these changes]
 ```
 
-The enhanced git-commit tool automatically generates appropriate commit messages based on changes and intention.
+Example with specific files:
+```
+Use the git-commit-manager agent to commit changes.
+Context: Created git-commit-manager agent and updated command files
+Files modified: .claude/agents/git-commit-manager.md, .claude/commands/*.md, dev-handbook/.integrations/claude/install-prompts.md
+Intention: Centralize git commit management through specialized agent and update all commands to reference /commit instead of duplicating logic
+```
+
+Example without files (agent will check git-status):
+```
+Use the git-commit-manager agent to commit changes.
+Context: Completed work-on-task workflow
+Files modified: Check git-status
+Intention: Implement task requirements as specified in the workflow
+```
+
+The agent will analyze the changes and create appropriate commits.
