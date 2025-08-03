@@ -4,9 +4,35 @@ status: draft
 priority: high
 estimate: TBD
 dependencies: []
+needs_review: true
 ---
 
 # Integrate Custom Claude Commands into Claude Code Integration Script
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the commands.json registration be automated or manual when adding new commands?
+  - **Research conducted**: Analyzed existing commands.json structure and command patterns
+  - **Similar implementations**: Found `/draft-tasks` and `/review-tasks` entries missing from commands.json
+  - **Suggested default**: Manual registration with documentation updates
+  - **Why needs human input**: Architecture decision - automation vs explicit control trade-off
+
+- [ ] How should command conflicts be resolved when a command already exists in .claude/commands/?
+  - **Research conducted**: No existing conflict resolution mechanism found
+  - **Suggested default**: Skip with warning message, preserve existing command
+  - **Why needs human input**: User experience decision for upgrade scenarios
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the integration validate that referenced workflow files exist before creating commands?
+  - **Research conducted**: Current process creates commands regardless of workflow existence
+  - **Suggested default**: Add validation step with clear error reporting
+  - **Why needs human input**: Balance between safety and flexibility
+
+- [ ] Should old/deprecated commands be automatically removed during integration?
+  - **Research conducted**: No cleanup mechanism currently exists
+  - **Suggested default**: Keep deprecated commands, add deprecation notice
+  - **Why needs human input**: Backward compatibility requirements unclear
 
 ## Behavioral Specification
 
@@ -48,17 +74,49 @@ install-prompts.md                # Copies custom commands from designated direc
 
 ### Success Criteria
 
-- [ ] **Command Integration**: Custom commands (`plan-tasks`, `work-on-tasks`, `draft-tasks`) are accessible within Claude Code environment
-- [ ] **Script Enhancement**: `install-prompts.md` script automatically copies custom commands from source directory
-- [ ] **Discovery Mechanism**: Commands are discoverable through Claude Code's standard command discovery process
-- [ ] **Standard Pattern**: Clear integration pattern established for adding future custom commands
+- [ ] **Command Registration**: Missing entries (`/draft-tasks`, `/review-tasks`) added to commands.json file
+- [ ] **Command Verification**: All task management commands (`plan-tasks`, `work-on-tasks`, `draft-tasks`, `review-tasks`) properly registered and accessible
+- [ ] **Documentation Update**: `install-prompts.md` updated with clear instructions for registering new commands in commands.json
+- [ ] **Consistency Check**: All command files in `.claude/commands/` have corresponding entries in commands.json
+- [ ] **Integration Testing**: Verify commands execute their respective workflow instructions correctly
+- [ ] **Pattern Documentation**: Clear pattern documented for adding future custom commands including json registration
 
 ### Validation Questions
 
-- [ ] **Script Analysis**: What is the exact structure and copying mechanism of `dev-handbook/.integrations/claude/install-prompts.md`?
-- [ ] **Command Location**: Where should custom command markdown files be placed for script discovery?
-- [ ] **Integration Method**: How does the script register commands with Claude Code integration?
+- [x] **Script Analysis**: What is the exact structure and copying mechanism of `dev-handbook/.integrations/claude/install-prompts.md`?
+  - **Answer found through research**: The install-prompts.md file provides a template-based approach for creating commands. Each workflow file (*.wf.md) maps to a command file in .claude/commands/. The script uses a simple template: "read whole file and follow @dev-handbook/workflow-instructions/[workflow-name].wf.md" followed by "/commit".
+
+- [x] **Command Location**: Where should custom command markdown files be placed for script discovery?
+  - **Answer found through research**: Commands should be placed in `.claude/commands/` directory at the project root, with corresponding entries in `.claude/commands/commands.json`.
+
+- [x] **Integration Method**: How does the script register commands with Claude Code integration?
+  - **Answer found through research**: Commands are registered via the `commands.json` file in `.claude/commands/`. Each command has an entry with its name (e.g., "/draft-task") and optional configuration for workspace restrictions and tool permissions.
+
 - [ ] **Update Process**: How are command modifications and versioning handled in the integration workflow?
+  - **Partial answer through research**: No versioning mechanism found. Commands appear to be overwritten when updated.
+  - **Still needs clarification**: Should there be a versioning strategy for command updates?
+
+## Research Findings
+
+### Current State Analysis
+- **Commands Directory**: `.claude/commands/` contains 26 command files including complex multi-task commands
+- **Registration File**: `commands.json` manages command registration with optional workspace restrictions
+- **Existing Task Commands**: Found `draft-tasks.md`, `plan-tasks.md`, `work-on-tasks.md`, `review-tasks.md` already exist
+- **Registration Gap**: `/draft-tasks` and `/review-tasks` commands exist but are missing from commands.json
+- **Template Pattern**: Commands follow consistent pattern referencing workflow files with `@` prefix
+- **Custom Templates**: Some commands (commit.wf.md, load-project-context.wf.md) have custom templates in install-prompts.md
+
+### Implementation Clarity Achieved
+- **Command Creation Process**: Well-documented in install-prompts.md with clear mapping rules
+- **File Structure**: Commands use `.md` extension, workflows use `.wf.md` extension
+- **Command Format**: Simple reference pattern with `/commit` suffix for most commands
+- **Integration Mechanism**: Manual creation of command files and json registration
+
+### Remaining Ambiguities
+- **Automation vs Manual**: No clear guidance on whether command creation should be automated
+- **Conflict Resolution**: No documented strategy for handling existing commands during updates
+- **Version Management**: No versioning system for command updates or migrations
+- **Validation Requirements**: No validation that referenced workflow files exist
 
 ## Objective
 
