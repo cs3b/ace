@@ -42,10 +42,14 @@ read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.m
 
 ## Implementation Steps
 
-1. **Identify missing commands**: Compare workflow files with existing command files
-2. **Create missing commands**: Use the template above for each missing workflow
-3. **Test commands**: Verify each command references the correct workflow file
-4. **Update commands list**: Ensure all commands are registered in `.claude/commands/commands.json`
+1. **Copy custom multi-task commands**: Copy pre-built commands from templates
+   ```bash
+   cp dev-handbook/.integrations/claude/commands/*.md .claude/commands/
+   ```
+2. **Identify missing commands**: Compare workflow files with existing command files
+3. **Create missing commands**: Use the template above for each missing workflow
+4. **Test commands**: Verify each command references the correct workflow file
+5. **Update commands list**: Ensure all commands are registered in `.claude/commands/commands.json`
 
 ## Naming Convention
 
