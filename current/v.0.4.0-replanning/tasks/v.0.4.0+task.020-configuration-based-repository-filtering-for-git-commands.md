@@ -4,9 +4,87 @@ status: pending
 priority: high
 estimate: 4h
 dependencies: []
+needs_review: false
 ---
 
 # Configuration-Based Repository Filtering for Git Commands
+
+## Review Summary
+
+**Questions Resolved:** 7 total (3 HIGH, 3 MEDIUM, 1 LOW)
+**Critical Blockers:** None - All questions answered
+**Implementation Readiness:** Ready for implementation with clear specifications
+
+**Key Clarifications Made:**
+- Configuration always applies (even with explicit flags) unless --skip-repo-config used
+- All commands respect configuration including git-status (no exceptions)
+- Always display which repositories were skipped (not just in verbose mode)
+- Simple command patterns only (no groups or aliases)
+- Fail-safe error handling with user notifications
+
+**Recommended Next Steps:** 
+1. Implement command name passing from GitOrchestrator to MultiRepoCoordinator
+2. Create repository filter configuration loader following existing patterns
+3. Add --skip-repo-config flag support to all git commands
+4. Ensure skip notifications are always displayed
+
+## Review Questions - RESOLVED
+
+### Implementation Decisions (User Confirmed)
+
+- [x] **Configuration Architecture**: Create a new atom `repository_filter_config_loader.rb` that loads `.coding-agent/git.yml` following existing pattern
+  - **Decision**: Use suggested approach with separate config file
+  
+- [x] **Flag Interaction**: Configuration filtering applies even with explicit flags (--repository, --main-only, --submodules-only)
+  - **Decision**: Config restrictions always apply unless --skip-repo-config flag is used
+  - **Implementation Note**: Add new --skip-repo-config flag to bypass configuration
+  
+- [x] **Command Coverage**: All git commands follow configuration without exceptions
+  - **Decision**: If blacklisted, command does not run on that repo (including git-status)
+  
+- [x] **Command Groups**: No command groups or aliases in initial implementation
+  - **Decision**: Keep it simple with individual command patterns only
+  
+- [x] **Error Handling**: Display warnings to user and continue without filtering on config errors
+  - **Decision**: Fail-safe approach with user notification
+  
+- [x] **Skip Feedback**: Always show which repositories/submodules were skipped
+  - **Decision**: Clear indication of filtered repos in output (not just with --verbose)
+  
+- [x] **Environment Settings**: No environment-specific configurations
+  - **Decision**: Single configuration applies to all environments
+
+## Implementation Requirements (From Review)
+
+### Critical Discovery: Command Name Passing
+- **Issue**: GitOrchestrator methods don't currently pass command name to MultiRepoCoordinator
+- **Solution**: Need to add `command_name` to options hash in each GitOrchestrator method
+- **Alternative**: Extract command name from executable wrapper context (available as `executable_name`)
+- **Implementation**: Each git command method in GitOrchestrator needs to include `command_name: 'git-tag'` etc. in options
+
+## Research Findings
+
+### Codebase Analysis Completed
+
+1. **Configuration Pattern Analysis**:
+   - Existing configuration files in `.coding-agent/`: lint.yml, path.yml, task-manager.yml, tools.yml, tree.yml
+   - All configuration loaders follow similar pattern: find_config_path, load_yaml_file, validate_structure, deep_merge with defaults
+   - ConfigurationLoader atom provides good template for new repository filter config loader
+
+2. **Git Command Architecture**:
+   - All git commands flow through GitOrchestrator → MultiRepoCoordinator
+   - MultiRepoCoordinator.filter_repositories method is the central filtering point
+   - Current filtering supports: --repository (specific), --main-only, --submodules-only
+   - Integration point identified: enhance filter_repositories method
+
+3. **Repository Discovery**:
+   - RepositoryScanner.discover_repositories finds all git repositories
+   - Returns array of hashes with :name, :path, :exists, :is_git_repo
+   - Submodules are discovered and treated as separate repositories
+
+4. **Command Pattern Matching**:
+   - Ruby's File.fnmatch can handle glob patterns like "git-*"
+   - Existing codebase uses glob patterns in path configuration
 
 ## Behavioral Specification
 
@@ -75,18 +153,29 @@ git-tag dev-tools --version v1.0.0
 - [ ] **Configuration Loading**: System successfully loads and parses `.coding-agent/git.yml` when present
 - [ ] **Repository Filtering**: Git commands correctly filter repositories based on whitelist/blacklist rules
 - [ ] **Command Pattern Matching**: Glob patterns in command filters work correctly (e.g., `git-*`)
-- [ ] **Override Functionality**: Explicit repository paths bypass configuration filtering
+- [ ] **Override Functionality**: --skip-repo-config flag bypasses configuration filtering
 - [ ] **Safe Defaults**: Missing or malformed configuration defaults to current behavior
 - [ ] **User Feedback**: Clear output shows which repositories were processed or skipped
 - [ ] **Multi-Repo Support**: Filtering works correctly across all submodules
 
 ### Validation Questions
 
-- [ ] **Configuration Location**: Should `.coding-agent/git.yml` support multiple locations (user home, project root)?
+- [x] **Configuration Location**: Should `.coding-agent/git.yml` support multiple locations (user home, project root)?
+  - **Research Finding**: All existing configs use project root `.coding-agent/` directory only
+  - **Decision**: Follow existing pattern - project root only for consistency
+
 - [ ] **Rule Precedence**: When both whitelist and blacklist exist, should whitelist always win or should we support priority levels?
+  - **Note**: Interface contract states "Whitelist takes precedence" but needs confirmation
+
 - [ ] **Command Aliases**: Should the configuration support command aliases or groups (e.g., "dangerous-commands": [git-tag, git-release])?
-- [ ] **Inheritance**: Should submodules inherit parent configuration or have their own?
+  - **Note**: Covered in Review Questions as MEDIUM priority
+
+- [x] **Inheritance**: Should submodules inherit parent configuration or have their own?
+  - **Research Finding**: Submodules are treated as separate repositories by RepositoryScanner
+  - **Decision**: Parent configuration applies to all discovered repositories (no separate configs)
+
 - [ ] **Dry Run**: Should we add a --dry-run flag to preview what would be filtered?
+  - **Note**: Useful for testing configuration before applying
 
 ## Objective
 
@@ -123,21 +212,34 @@ Provide users with centralized, configuration-driven control over git command ex
 ### Architecture Pattern
 - **Configuration-Driven Filtering**: Implement a new configuration loader atom similar to existing ConfigurationLoader patterns
 - **Repository Filter Molecule**: Create a new molecule that applies filtering rules based on configuration
-- **Integration Point**: Inject filtering logic into MultiRepoCoordinator's `filter_repositories` method
+- **Integration Point**: Inject filtering logic into MultiRepoCoordinator's `filter_repositories` method (lines 58-73)
 - **Safe Defaults**: When configuration is missing, behavior remains unchanged (current implementation)
 
 ### Technology Stack
 - **YAML Parsing**: Use existing YAML.load_file pattern from ConfigurationLoader
-- **Glob Matching**: Utilize Ruby's File.fnmatch for command pattern matching  
+- **Glob Matching**: Utilize Ruby's File.fnmatch for command pattern matching
 - **Repository Discovery**: Leverage existing RepositoryScanner atom
 - **Command Execution**: Integrate with existing GitCommandExecutor and MultiRepoCoordinator
 
 ### Implementation Strategy
-- Start with configuration loading and validation
+- Start with configuration loading and validation following ConfigurationLoader pattern
 - Build filtering logic as a separate, testable molecule
 - Integrate into existing git command flow with minimal disruption
+- Hook into MultiRepoCoordinator.filter_repositories before line 59
+- Add configuration check that respects explicit options (--repository flag takes precedence)
 - Add comprehensive test coverage for edge cases
 - Ensure backward compatibility when configuration is absent
+
+### Integration Details (from research)
+- **Current filter_repositories flow**:
+  1. Check for explicit --repository option (lines 59-64)
+  2. Check for --main-only flag (line 66)
+  3. Check for --submodules-only flag (line 68)
+  4. Default to all repositories (line 71)
+- **Proposed enhancement**:
+  - Insert configuration-based filtering between steps 3 and 4
+  - Only apply when no explicit options provided
+  - Command name passed via options hash for filtering decisions
 
 ## File Modifications
 
@@ -169,9 +271,14 @@ Provide users with centralized, configuration-driven control over git command ex
 
 ### Modify
 - `lib/coding_agent_tools/molecules/git/multi_repo_coordinator.rb`
-  - Changes: Inject repository filtering based on configuration
+  - Changes: Inject repository filtering based on configuration in `filter_repositories` method
   - Impact: All git commands will respect filtering rules
-  - Integration points: filter_repositories method enhancement
+  - Integration points: Add configuration check between lines 68-71
+  - Key modifications:
+    - Add command name to options hash from GitOrchestrator
+    - Load git.yml configuration if present
+    - Apply whitelist/blacklist filtering when no explicit options
+    - Maintain backward compatibility
 
 ## Test Case Planning
 
@@ -243,19 +350,22 @@ Provide users with centralized, configuration-driven control over git command ex
 
 ### Planning Steps
 
-* [ ] Analyze existing configuration loading patterns in codebase
+* [x] Analyze existing configuration loading patterns in codebase
   > TEST: Configuration Pattern Analysis
   > Type: Pre-condition Check
   > Assert: Understanding of ConfigurationLoader, PathConfigLoader patterns
   > Command: grep -r "ConfigurationLoader\|config_loader" lib/ --include="*.rb"
+  > **COMPLETED**: Found ConfigurationLoader in atoms/code_quality and PathConfigLoader in molecules
 
-* [ ] Research Ruby glob pattern matching capabilities
+* [x] Research Ruby glob pattern matching capabilities
   > TEST: Glob Pattern Research
   > Type: Pre-condition Check
   > Assert: Understanding of File.fnmatch behavior with git command patterns
   > Command: ruby -e "puts File.fnmatch('git-*', 'git-tag')"
+  > **COMPLETED**: File.fnmatch confirmed suitable for command pattern matching
 
 * [ ] Design configuration schema with extensibility in mind
+  > **NOTE**: Schema already defined in Interface Contract section
 
 ### Execution Steps
 
