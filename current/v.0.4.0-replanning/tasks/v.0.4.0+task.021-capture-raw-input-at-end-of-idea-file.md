@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.021
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -206,7 +206,7 @@ To ensure complete traceability and auditability by preserving the exact origina
 
 ### Execution Steps
 
-- [ ] Step 1: Add SOURCE section appending method to IdeaCapture organism
+- [x] Step 1: Add SOURCE section appending method to IdeaCapture organism
   - Create `append_source_section` private method
   - Handle character limit with truncation indicator (use @max_input_size from initialize)
   - Format SOURCE section with markdown code block
@@ -216,7 +216,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Assert: Method correctly formats and appends SOURCE section
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "appends SOURCE"
 
-- [ ] Step 2: Integrate SOURCE appending into capture_idea flow
+- [x] Step 2: Integrate SOURCE appending into capture_idea flow
   - Modify enhance_idea_with_llm result handling (lines 76-86)
   - Call append_source_section before final file write
   - Also modify save_fallback_idea to include SOURCE section
@@ -226,7 +226,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Assert: Generated idea files contain SOURCE section at end
   > Command: cd dev-tools && bundle exec rspec spec/integration/idea_capture_integration_spec.rb
 
-- [ ] Step 3: Handle edge cases and special characters
+- [x] Step 3: Handle edge cases and special characters
   - Escape markdown code blocks in raw input if present
   - Handle multi-line input correctly
   - Preserve exact formatting including whitespace
@@ -235,7 +235,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Assert: Special characters and markdown preserved correctly
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "handles special"
 
-- [ ] Step 4: Add character limit enforcement
+- [x] Step 4: Add character limit enforcement
   - Use @max_input_size from instance (already set based on big_user_input_allowed)
   - Truncate with "[truncated at X characters]" indicator when exceeded
   - Use debug_log method for truncation logging
@@ -244,7 +244,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Assert: Large inputs truncated with indicator
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "truncates large"
 
-- [ ] Step 5: Update tests for SOURCE section validation
+- [x] Step 5: Update tests for SOURCE section validation
   - Add test cases for SOURCE section presence
   - Test exact reproduction of raw input
   - Test truncation behavior
@@ -254,7 +254,7 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Assert: All new tests pass
   > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb
 
-- [ ] Step 6: Manual testing with various input types
+- [x] Step 6: Manual testing with various input types
   - Test with simple one-line ideas
   - Test with multi-paragraph ideas
   - Test with ideas containing markdown
@@ -266,12 +266,12 @@ To ensure complete traceability and auditability by preserving the exact origina
 
 ## Acceptance Criteria
 
-- [ ] Every generated idea file includes SOURCE section at the end
-- [ ] SOURCE section contains exact unmodified raw input
-- [ ] Large inputs are truncated with clear indicator
-- [ ] Special characters and formatting preserved correctly
-- [ ] All existing tests continue to pass
-- [ ] New tests validate SOURCE section behavior
+- [x] Every generated idea file includes SOURCE section at the end
+- [x] SOURCE section contains exact unmodified raw input
+- [x] Large inputs are truncated with clear indicator
+- [x] Special characters and formatting preserved correctly
+- [x] All existing tests continue to pass
+- [x] New tests validate SOURCE section behavior
 
 ## Out of Scope
 
