@@ -238,6 +238,9 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
 
       it "returns true when no CI environment detected" do
+        # Clear the force interactive override first
+        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
+        
         # Clear CI environment variables
         ci_vars = ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "TRAVIS", "CIRCLECI"]
         ci_vars.each { |var| allow(ENV).to receive(:[]).with(var).and_return(nil) }
@@ -250,12 +253,14 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
 
       it "returns false when CI environment detected" do
+        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
         allow(ENV).to receive(:[]).with("CI").and_return("true")
 
         expect(real_confirmer.interactive_environment?).to be false
       end
 
       it "detects various CI environments" do
+        allow(ENV).to receive(:[]).with("CODING_AGENT_TOOLS_FORCE_INTERACTIVE").and_return(nil)
         ci_environments = {
           "CI" => "true",
           "CONTINUOUS_INTEGRATION" => "true",
