@@ -1,8 +1,8 @@
 ---
 id: v.0.4.0+task.021
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -103,8 +103,152 @@ To ensure complete traceability and auditability by preserving the exact origina
 - ❌ **UI Enhancement**: Changes to the command-line interface or additional flags
 - ❌ **Historical Migration**: Retroactively adding SOURCE sections to existing idea files
 
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Enhancement Pattern: Post-processing enhancement after LLM generation
+- [ ] Integration Pattern: Modify the IdeaCapture organism to append SOURCE section
+- [ ] Data Flow: Raw input → LLM enhancement → Append SOURCE section → Save file
+
+### Technology Stack
+- [ ] Ruby for implementation (existing dev-tools gem)
+- [ ] File I/O operations for appending content
+- [ ] Character limit handling from llm-query patterns
+- [ ] No new dependencies required
+
+### Implementation Strategy
+- [ ] Minimal change approach: Modify only the final file writing step
+- [ ] Preserve exact input before any processing
+- [ ] Use consistent markdown formatting for SOURCE section
+- [ ] Apply same character limits as llm-query for consistency
+
+## File Modifications
+
+### Modify
+- `dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb`
+  - Changes: Add SOURCE section appending logic after LLM enhancement
+  - Impact: All generated idea files will include raw input preservation
+  - Integration points: After enhance_idea_with_llm, before final file write
+
+- `dev-tools/lib/coding_agent_tools/molecules/llm_client.rb`
+  - Changes: Ensure SOURCE section is appended after successful enhancement
+  - Impact: Preserves raw input even when LLM modifies content
+  - Integration points: After execute_llm_query success
+
+### Test Files to Update
+- `dev-tools/spec/organisms/idea_capture_spec.rb`
+  - Changes: Add tests for SOURCE section presence and format
+  - Impact: Ensures feature works correctly
+  - Integration points: New test cases for SOURCE section validation
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** LLM might already include a SOURCE-like section
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Append our SOURCE section regardless, as standardization is valuable
+  - **Rollback:** Simple removal of appending logic
+
+- **Risk:** Character limit truncation might cut off important raw input
+  - **Probability:** Medium
+  - **Impact:** Medium  
+  - **Mitigation:** Add truncation indicator when limit exceeded
+  - **Monitoring:** Check output files for truncation markers
+
+### Integration Risks
+- **Risk:** Breaking existing idea file parsing tools
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** SOURCE section at end won't affect header parsing
+  - **Monitoring:** Test with existing task-manager tools
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review current character limit implementation in llm-query
+* [ ] Analyze existing idea file structure patterns
+* [ ] Determine optimal SOURCE section format and placement
+* [ ] Check for any existing raw input preservation patterns
+
+### Execution Steps
+
+- [ ] Step 1: Add SOURCE section appending method to IdeaCapture organism
+  - Create `append_source_section` private method
+  - Handle character limit with truncation indicator
+  - Format SOURCE section with markdown code block
+  > TEST: SOURCE Section Method
+  > Type: Unit Test
+  > Assert: Method correctly formats and appends SOURCE section
+  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "appends SOURCE"
+
+- [ ] Step 2: Integrate SOURCE appending into capture_idea flow
+  - Call append_source_section after successful LLM enhancement
+  - Also append SOURCE for fallback raw ideas
+  - Ensure SOURCE is always last section
+  > TEST: Integration Flow
+  > Type: Integration Test  
+  > Assert: Generated idea files contain SOURCE section at end
+  > Command: cd dev-tools && bundle exec rspec spec/integration/idea_capture_integration_spec.rb
+
+- [ ] Step 3: Handle edge cases and special characters
+  - Escape markdown code blocks in raw input if present
+  - Handle multi-line input correctly
+  - Preserve exact formatting including whitespace
+  > TEST: Edge Case Handling
+  > Type: Unit Test
+  > Assert: Special characters and markdown preserved correctly
+  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "handles special"
+
+- [ ] Step 4: Add character limit enforcement
+  - Get character limit from configuration or use default
+  - Truncate with "[truncated]" indicator when exceeded
+  - Log when truncation occurs for debugging
+  > TEST: Character Limit
+  > Type: Unit Test
+  > Assert: Large inputs truncated with indicator
+  > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "truncates large"
+
+- [ ] Step 5: Update tests for SOURCE section validation
+  - Add test cases for SOURCE section presence
+  - Test exact reproduction of raw input
+  - Test truncation behavior
+  > TEST: Test Coverage
+  > Type: Test Suite
+  > Assert: All new tests pass
+  > Command: cd dev-tools && bundle exec rspec
+
+- [ ] Step 6: Manual testing with various input types
+  - Test with simple one-line ideas
+  - Test with multi-paragraph ideas
+  - Test with ideas containing markdown
+  - Test with very large inputs
+  > TEST: Manual Validation
+  > Type: Manual Test
+  > Assert: SOURCE section appears correctly in all cases
+  > Command: capture-it "test idea" && tail -20 dev-taskflow/backlog/ideas/*.md
+
+## Acceptance Criteria
+
+- [ ] Every generated idea file includes SOURCE section at the end
+- [ ] SOURCE section contains exact unmodified raw input
+- [ ] Large inputs are truncated with clear indicator
+- [ ] Special characters and formatting preserved correctly
+- [ ] All existing tests continue to pass
+- [ ] New tests validate SOURCE section behavior
+
+## Out of Scope
+
+- ❌ Retroactive addition of SOURCE to existing idea files
+- ❌ UI changes to capture-it command interface  
+- ❌ Changes to LLM prompts or enhancement logic
+- ❌ Modification of idea file header format
+- ❌ Integration with other tools beyond capture-it
+
 ## References
 
 - Source idea file: dev-taskflow/backlog/ideas/20250803-1644-raw-input-capture.md
-- Related tool: ideas-manager workflow
+- Related tool: capture-it (formerly ideas-manager) workflow
 - Character limit reference: llm-query tool configuration
+- Implementation files: dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
