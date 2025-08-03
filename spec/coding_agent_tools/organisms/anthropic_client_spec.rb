@@ -481,6 +481,23 @@ RSpec.describe CodingAgentTools::Organisms::AnthropicClient do
 
   describe "#model_info" do
     it "returns basic model information" do
+      # Stub the API request for listing models
+      stub_request(:get, "https://api.anthropic.com/v1/models")
+        .with(query: { limit: 100 })
+        .to_return(
+          status: 200,
+          body: {
+            data: [
+              {
+                id: "claude-3-5-haiku-20241022",
+                created_at: "2024-10-22T00:00:00Z",
+                display_name: "Claude 3.5 Haiku"
+              }
+            ]
+          }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        )
+
       result = client.model_info
 
       expect(result[:id]).to eq("claude-3-5-haiku-20241022")
