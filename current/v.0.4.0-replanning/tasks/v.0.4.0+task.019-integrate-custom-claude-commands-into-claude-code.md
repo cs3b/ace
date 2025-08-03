@@ -1,8 +1,8 @@
 ---
 id: v.0.4.0+task.019
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 3h
 dependencies: []
 ---
 
@@ -173,8 +173,206 @@ To create an automated script that generates Claude Code commands from workflow 
 - ❌ **Claude Code Internal Changes**: Modifying Claude Code's command execution mechanism
 - ❌ **Complex Versioning System**: Git-based versioning or command history tracking
 
+## Technical Approach
+
+### Architecture Pattern
+- **Script Type**: Ruby executable leveraging existing dev-tools infrastructure
+- **Integration Point**: New executable in bin/ directory: `bin/claude-integrate`
+- **Pattern**: Command-pattern with JSON manipulation and file generation
+- **Architecture Fit**: Aligns with existing Ruby-based tooling ecosystem
+
+### Technology Stack
+- **Language**: Ruby (consistent with dev-tools ecosystem)
+- **Libraries**: 
+  - JSON (Ruby standard library) for commands.json manipulation
+  - FileUtils (Ruby standard library) for file operations
+  - Pathname (Ruby standard library) for path manipulation
+- **Template Engine**: ERB or simple string interpolation for command file generation
+- **Version Compatibility**: Ruby 3.0+ (matching dev-tools requirements)
+
+### Implementation Strategy
+- **Discovery**: Scan workflow directory for *.wf.md files
+- **Generation**: Create command files using template pattern from install-prompts.md
+- **Registration**: Update commands.json atomically with backup
+- **Preservation**: Skip existing files to preserve user modifications
+- **Reporting**: Clear console output with status indicators
+
+## Tool Selection
+
+| Criteria | Ruby Script | Bash Script | Node.js Script | Selected |
+|----------|------------|-------------|----------------|----------|
+| Performance | Good | Good | Good | Ruby |
+| Integration | Excellent | Fair | Poor | Ruby |
+| Maintenance | Excellent | Fair | Good | Ruby |
+| Testing | Excellent | Poor | Good | Ruby |
+| JSON Handling | Good | Poor | Excellent | Ruby |
+
+**Selection Rationale:** Ruby selected for consistency with existing dev-tools ecosystem, excellent testing support via RSpec, and native JSON handling capabilities.
+
+## File Modifications
+
+### Create
+- bin/claude-integrate
+  - Purpose: Main executable script for automated command installation
+  - Key components: Workflow scanner, command generator, JSON updater
+  - Dependencies: Ruby standard libraries, filesystem access
+
+- dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - Purpose: Core logic for command installation process
+  - Key components: WorkflowScanner, CommandGenerator, JsonRegistry classes
+  - Dependencies: JSON, FileUtils, Pathname libraries
+
+- dev-tools/spec/integrations/claude_commands_installer_spec.rb
+  - Purpose: Comprehensive test suite for installer
+  - Key components: Unit tests, integration tests, edge case tests
+  - Dependencies: RSpec, test fixtures
+
+### Modify
+- dev-handbook/.integrations/claude/install-prompts.md
+  - Changes: Add section referencing automated script
+  - Impact: Documentation now guides users to automation
+  - Integration points: Links to bin/claude-integrate
+
+- .claude/commands/commands.json
+  - Changes: Automatic addition of missing command entries
+  - Impact: All workflow commands properly registered
+  - Integration points: Atomic updates with backup
+
+### Delete
+- None - preserving all existing files
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** JSON corruption during update
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Create backup before modification, atomic write operations
+  - **Rollback:** Restore from .json.backup file
+
+- **Risk:** File permission issues in .claude/commands/
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** Check permissions before write, provide clear error messages
+  - **Rollback:** Manual permission fix with suggested commands
+
+### Integration Risks
+- **Risk:** Command name conflicts with existing user commands
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Skip existing files, report skipped items
+  - **Monitoring:** Status output shows created vs skipped
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze command file patterns and template requirements
+  > TEST: Template Pattern Validation
+  > Type: Pre-condition Check
+  > Assert: All workflow files follow consistent naming pattern
+  > Command: ls dev-handbook/workflow-instructions/*.wf.md | wc -l
+
+* [ ] Research Ruby JSON manipulation best practices for atomic updates
+* [ ] Design class structure for modular installer components
+
+### Execution Steps
+
+- [ ] Step 1: Create main executable script bin/claude-integrate
+  ```ruby
+  #!/usr/bin/env ruby
+  require_relative '../dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'
+  CodingAgentTools::Integrations::ClaudeCommandsInstaller.new.run
+  ```
+  > TEST: Executable Creation
+  > Type: File Validation
+  > Assert: Script is executable and has proper shebang
+  > Command: test -x bin/claude-integrate && head -1 bin/claude-integrate | grep -q "#!/usr/bin/env ruby"
+
+- [ ] Step 2: Implement core installer class with workflow scanning
+  - Create WorkflowScanner to find all *.wf.md files
+  - Extract workflow names and map to command names
+  > TEST: Workflow Discovery
+  > Type: Component Test
+  > Assert: Scanner finds all workflow files
+  > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'; puts CodingAgentTools::Integrations::ClaudeCommandsInstaller::WorkflowScanner.new.scan.count"
+
+- [ ] Step 3: Implement command file generator with template support
+  - Load templates from install-prompts.md if custom template exists
+  - Generate command content using default template pattern
+  - Skip existing command files to preserve modifications
+  > TEST: Command Generation
+  > Type: Integration Test
+  > Assert: Generated commands match expected template format
+  > Command: bin/claude-integrate --dry-run | grep "Would create:"
+
+- [ ] Step 4: Implement JSON registry updater with backup mechanism
+  - Read existing commands.json
+  - Create backup before modification
+  - Add missing command entries
+  - Write atomically to prevent corruption
+  > TEST: JSON Update Safety
+  > Type: Safety Validation
+  > Assert: Backup created before modification
+  > Command: ls -la .claude/commands/commands.json.backup 2>/dev/null
+
+- [ ] Step 5: Add comprehensive status reporting and error handling
+  - Clear output showing created/skipped/updated items
+  - Error messages with actionable fix suggestions
+  - Summary statistics at completion
+  > TEST: Status Reporting
+  > Type: Output Validation
+  > Assert: Script provides clear status output
+  > Command: bin/claude-integrate | grep -E "(Created|Skipped|Updated|complete)"
+
+- [ ] Step 6: Create comprehensive test suite
+  - Unit tests for each component
+  - Integration tests for full workflow
+  - Edge case tests for error conditions
+  > TEST: Test Coverage
+  > Type: Quality Check
+  > Assert: Test suite covers main functionality
+  > Command: bin/test dev-tools/spec/integrations/claude_commands_installer_spec.rb
+
+- [ ] Step 7: Update install-prompts.md documentation
+  - Add automated installation section
+  - Reference bin/claude-integrate script
+  - Keep manual instructions as fallback
+  > TEST: Documentation Update
+  > Type: Content Validation
+  > Assert: Documentation references automation script
+  > Command: grep -q "claude-integrate" dev-handbook/.integrations/claude/install-prompts.md
+
+- [ ] Step 8: Perform end-to-end validation
+  - Run script to install all commands
+  - Verify commands.json properly updated
+  - Test sample commands work correctly
+  > TEST: End-to-End Validation
+  > Type: Integration Test
+  > Assert: All workflow commands accessible in Claude Code
+  > Command: test -f .claude/commands/draft-task.md && grep -q "/draft-task" .claude/commands/commands.json
+
+## Acceptance Criteria
+
+- [ ] **Automation Script Created**: Executable script bin/claude-integrate that automates the entire command installation process
+- [ ] **Command Generation**: Script automatically creates command files from workflow instructions
+- [ ] **JSON Registration**: Script automatically updates commands.json with new entries
+- [ ] **Preservation Logic**: Script skips existing commands to preserve user modifications
+- [ ] **Status Reporting**: Script provides clear output showing created/skipped/updated items
+- [ ] **Documentation Update**: install-prompts.md updated to reference the automation script
+- [ ] **Integration Testing**: All generated commands execute their workflow instructions correctly
+
+## Out of Scope
+
+- ❌ **Command Content Modification**: Changing how existing commands work internally
+- ❌ **Workflow Creation**: Creating new workflow instruction files
+- ❌ **Claude Code Internal Changes**: Modifying Claude Code's command execution mechanism
+- ❌ **Complex Versioning System**: Git-based versioning or command history tracking
+
 ## References
 
 - Source idea file: dev-taskflow/backlog/ideas/20250802-0934-claude-commands-prompts.md
 - Integration script: dev-handbook/.integrations/claude/install-prompts.md
 - Task management workflow documentation in dev-handbook
+- Existing commands: .claude/commands/
+- Ruby dev-tools: dev-tools/lib/coding_agent_tools/
