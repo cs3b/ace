@@ -4,9 +4,36 @@ status: pending
 priority: high
 estimate: 2h
 dependencies: []
+needs_review: true
 ---
 
 # Capture Raw Input at End of Idea File
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the SOURCE section be added even when the LLM enhancement fails and fallback content is written?
+  - **Research conducted**: Checked `save_fallback_idea` method which creates a "Raw Idea (Enhanced Version Failed)" format
+  - **Current implementation**: Fallback includes "## Original Idea" section with raw text
+  - **Suggested default**: Add SOURCE section to both enhanced and fallback files for consistency
+  - **Why needs human input**: Design decision about whether SOURCE section should be universal or only for successful enhancements
+
+- [ ] How should markdown code blocks within the raw input be escaped to prevent parsing conflicts?
+  - **Research conducted**: Examined current file writing patterns, no escaping logic found
+  - **Similar implementations**: Standard markdown uses nested backticks or HTML entities
+  - **Suggested default**: Use 4 backticks for SOURCE block when input contains 3 backticks
+  - **Why needs human input**: Edge case handling strategy needs confirmation
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the SOURCE section include metadata like timestamp and character count?
+  - **Research conducted**: Current idea files include metadata header with tokens, cost, timestamp
+  - **Suggested default**: Keep SOURCE minimal - just the raw text in a code block
+  - **Why needs human input**: Balance between traceability and simplicity
+
+- [ ] Should very long inputs show a truncation notice inline or just truncate silently?
+  - **Research conducted**: Current limit is 7000 chars (BIG_INPUT_THRESHOLD), expandable with --big-user-input-allowed
+  - **Suggested default**: Add "[truncated at 7000 characters]" marker when truncated
+  - **Why needs human input**: User experience for understanding truncation
 
 ## Behavioral Specification
 
@@ -68,7 +95,7 @@ ideas-manager [OPTIONS] "Raw idea or prompt text"
 - [x] **Section Naming**: Should the section be called "SOURCE" as suggested? - Yes, confirmed in idea file
 - [x] **Format Choice**: Should raw input be in a text code block? - Yes, confirmed in idea file  
 - [x] **Character Limit**: Should we use the same limit as llm-query? - Yes, confirmed in idea file
-- [ ] **Encoding Handling**: How should we handle special characters or encoding issues in raw input?
+- [x] **Encoding Handling**: How should we handle special characters or encoding issues in raw input? - Research: Ruby's File.write handles UTF-8 by default, preserve as-is
 
 ## Objective
 
@@ -106,21 +133,21 @@ To ensure complete traceability and auditability by preserving the exact origina
 ## Technical Approach
 
 ### Architecture Pattern
-- [ ] Enhancement Pattern: Post-processing enhancement after LLM generation
-- [ ] Integration Pattern: Modify the IdeaCapture organism to append SOURCE section
-- [ ] Data Flow: Raw input → LLM enhancement → Append SOURCE section → Save file
+- [x] Enhancement Pattern: Post-processing enhancement after LLM generation - Confirmed through code review
+- [x] Integration Pattern: Modify the IdeaCapture organism to append SOURCE section - Verified in idea_capture.rb
+- [x] Data Flow: Raw input → LLM enhancement → Append SOURCE section → Save file - Traced through implementation
 
 ### Technology Stack
-- [ ] Ruby for implementation (existing dev-tools gem)
-- [ ] File I/O operations for appending content
-- [ ] Character limit handling from llm-query patterns
-- [ ] No new dependencies required
+- [x] Ruby for implementation (existing dev-tools gem) - Confirmed
+- [x] File I/O operations for appending content - Using standard Ruby File class
+- [x] Character limit handling from llm-query patterns - BIG_INPUT_THRESHOLD = 7000 found
+- [x] No new dependencies required - Verified, uses existing infrastructure
 
 ### Implementation Strategy
-- [ ] Minimal change approach: Modify only the final file writing step
-- [ ] Preserve exact input before any processing
-- [ ] Use consistent markdown formatting for SOURCE section
-- [ ] Apply same character limits as llm-query for consistency
+- [x] Minimal change approach: Modify only the final file writing step - Optimal approach confirmed
+- [x] Preserve exact input before any processing - Input available in capture_idea method
+- [x] Use consistent markdown formatting for SOURCE section - Format defined in idea file
+- [x] Apply same character limits as llm-query for consistency - Use BIG_INPUT_THRESHOLD constant
 
 ## File Modifications
 
@@ -131,15 +158,20 @@ To ensure complete traceability and auditability by preserving the exact origina
   - Integration points: After enhance_idea_with_llm, before final file write
 
 - `dev-tools/lib/coding_agent_tools/molecules/llm_client.rb`
-  - Changes: Ensure SOURCE section is appended after successful enhancement
-  - Impact: Preserves raw input even when LLM modifies content
-  - Integration points: After execute_llm_query success
+  - Changes: No changes needed - LLM client only handles query execution
+  - Impact: SOURCE section appending happens in IdeaCapture after LLM completes
+  - Integration points: None - maintain separation of concerns
 
 ### Test Files to Update
-- `dev-tools/spec/organisms/idea_capture_spec.rb`
+- `dev-tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb` (path corrected)
   - Changes: Add tests for SOURCE section presence and format
   - Impact: Ensures feature works correctly
   - Integration points: New test cases for SOURCE section validation
+
+- `dev-tools/spec/integration/ideas_manager_integration_spec.rb`
+  - Changes: Add integration test for end-to-end SOURCE section
+  - Impact: Validates complete workflow
+  - Integration points: Test actual file output contains SOURCE
 
 ## Risk Assessment
 
@@ -167,25 +199,27 @@ To ensure complete traceability and auditability by preserving the exact origina
 
 ### Planning Steps
 
-* [ ] Review current character limit implementation in llm-query
-* [ ] Analyze existing idea file structure patterns
-* [ ] Determine optimal SOURCE section format and placement
-* [ ] Check for any existing raw input preservation patterns
+* [x] Review current character limit implementation in llm-query - Found BIG_INPUT_THRESHOLD = 7000
+* [x] Analyze existing idea file structure patterns - Reviewed template and generated files
+* [x] Determine optimal SOURCE section format and placement - Use > SOURCE header with ```text block
+* [x] Check for any existing raw input preservation patterns - None found, fallback has different format
 
 ### Execution Steps
 
 - [ ] Step 1: Add SOURCE section appending method to IdeaCapture organism
   - Create `append_source_section` private method
-  - Handle character limit with truncation indicator
+  - Handle character limit with truncation indicator (use @max_input_size from initialize)
   - Format SOURCE section with markdown code block
+  - Method signature: `append_source_section(content, raw_input)`
   > TEST: SOURCE Section Method
   > Type: Unit Test
   > Assert: Method correctly formats and appends SOURCE section
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "appends SOURCE"
 
 - [ ] Step 2: Integrate SOURCE appending into capture_idea flow
-  - Call append_source_section after successful LLM enhancement
-  - Also append SOURCE for fallback raw ideas
+  - Modify enhance_idea_with_llm result handling (lines 76-86)
+  - Call append_source_section before final file write
+  - Also modify save_fallback_idea to include SOURCE section
   - Ensure SOURCE is always last section
   > TEST: Integration Flow
   > Type: Integration Test  
@@ -202,9 +236,9 @@ To ensure complete traceability and auditability by preserving the exact origina
   > Command: cd dev-tools && bundle exec rspec spec/organisms/idea_capture_spec.rb -e "handles special"
 
 - [ ] Step 4: Add character limit enforcement
-  - Get character limit from configuration or use default
-  - Truncate with "[truncated]" indicator when exceeded
-  - Log when truncation occurs for debugging
+  - Use @max_input_size from instance (already set based on big_user_input_allowed)
+  - Truncate with "[truncated at X characters]" indicator when exceeded
+  - Use debug_log method for truncation logging
   > TEST: Character Limit
   > Type: Unit Test
   > Assert: Large inputs truncated with indicator
@@ -214,10 +248,11 @@ To ensure complete traceability and auditability by preserving the exact origina
   - Add test cases for SOURCE section presence
   - Test exact reproduction of raw input
   - Test truncation behavior
+  - Test markdown escaping for nested code blocks
   > TEST: Test Coverage
   > Type: Test Suite
   > Assert: All new tests pass
-  > Command: cd dev-tools && bundle exec rspec
+  > Command: cd dev-tools && bundle exec rspec spec/coding_agent_tools/organisms/idea_capture_spec.rb
 
 - [ ] Step 6: Manual testing with various input types
   - Test with simple one-line ideas
@@ -248,7 +283,13 @@ To ensure complete traceability and auditability by preserving the exact origina
 
 ## References
 
-- Source idea file: dev-taskflow/backlog/ideas/20250803-1644-raw-input-capture.md
+- Source idea file: dev-taskflow/current/v.0.4.0-replanning/docs/ideas/021-20250803-1644-raw-input-capture.md
 - Related tool: capture-it (formerly ideas-manager) workflow
-- Character limit reference: llm-query tool configuration
-- Implementation files: dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+- Character limit reference: BIG_INPUT_THRESHOLD constant (7000 chars)
+- Implementation files:
+  - Main: dev-tools/lib/coding_agent_tools/organisms/idea_capture.rb
+  - Tests: dev-tools/spec/coding_agent_tools/organisms/idea_capture_spec.rb
+  - Integration: dev-tools/spec/integration/ideas_manager_integration_spec.rb
+- Template files:
+  - dev-handbook/templates/idea-manager/idea.template.md
+  - dev-handbook/templates/idea-manager/system.prompt.md
