@@ -4,6 +4,90 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-08-04
+
+### Added
+
+#### Comprehensive Specification Cycle Architecture
+* **Idea Management System**: Created ideas-manager tool for systematic idea capture
+  * Implemented `capture-it` command for quick idea capture with automatic file management
+  * Added automatic commit flag support for immediate git commits
+  * Enabled raw input capture at end of idea files for better context preservation
+  * Created structured idea templates with metadata tracking
+
+* **Enhanced Task Workflows**: Refactored workflow system for clear phase separation
+  * Created capture-idea workflow for initial idea recording
+  * Enhanced draft-task workflow for behavioral specification focus
+  * Split review-task workflow into plan-task and review-task components
+  * Created cascade-review workflow for managing dependent task updates
+  * Updated task template structure with distinct what/how sections
+
+* **Task Management Enhancements**: Major improvements to task-manager tool
+  * Added `list` command as primary alias for improved discoverability
+  * Implemented `create` subcommand for direct task creation
+  * Enhanced status summary capabilities with improved formatting
+  * Added draft status support for better workflow integration
+  * Improved CLI consistency across all subcommands
+
+* **Multi-Repository Management**: New tools for cross-repository operations
+  * Created git-tag tool for synchronized multi-repository tagging
+  * Enhanced release management with multi-repo support
+  * Improved git operations across submodules
+
+* **Claude Code Integration**: Deep integration with Claude AI assistant
+  * Integrated custom Claude commands into Claude Code workflow
+  * Created .claude/commands/ directory structure for custom commands
+  * Developed feature-research subagent for systematic feature analysis
+  * Added installation prompts and configuration management
+
+* **Advanced Features**: Additional capability enhancements
+  * Dynamic flag handling in create-path tool
+  * Automated idea file management for task creation
+  * Configuration-based repository filtering for git commands
+  * Enhanced template organization for draft/plan workflow separation
+
+### Changed
+
+* **Workflow Reorganization**: Fundamental restructuring of specification process
+  * Renamed draft-task workflow to better reflect behavioral specification focus
+  * Reorganized task templates for clearer draft/plan separation
+  * Updated all workflow references to use new terminology
+  * Enhanced documentation to explain phase boundaries
+
+* **Tool Improvements**: CLI and usability enhancements
+  * Updated task-manager CLI for consistency and clarity
+  * Improved ideas-manager capture command naming (capture → capture-it)
+  * Enhanced create-path with dynamic flag support
+  * Refined git command filtering for better control
+
+### Fixed
+
+* **Workflow Issues**: Resolution of process-related problems
+  * Fixed task status tracking inconsistencies
+  * Resolved workflow dependency conflicts
+  * Corrected template path references
+  * Fixed cascade review update propagation
+
+* **Tool Bugs**: Various tool-related fixes
+  * Fixed ideas-manager file naming issues
+  * Resolved task-manager ID generation conflicts
+  * Corrected git-tag submodule handling
+  * Fixed create-path flag parsing errors
+
+### Documentation
+
+* **Workflow Documentation**: Comprehensive updates to workflow instructions
+  * Updated all 21 workflow instructions for new phase structure
+  * Created detailed cascade-review workflow documentation
+  * Enhanced draft-task and plan-task workflow guides
+  * Added clear phase transition documentation
+
+* **Tool Documentation**: Enhanced tool reference materials
+  * Updated task-manager documentation with new commands
+  * Created ideas-manager usage guide
+  * Added git-tag tool documentation
+  * Enhanced Claude integration documentation
+
 ## [0.3.233] - 2025-01-30
 
 ### Added
