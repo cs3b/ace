@@ -4,37 +4,29 @@ status: pending
 priority: high
 estimate: 2h
 dependencies: []
-needs_review: true
 ---
 
 # Create Feature Research Subagent
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
-### [HIGH] Critical Implementation Questions
-- [ ] **Model Selection**: Should the feature-research agent use a specific Claude model (haiku/sonnet/opus) for cost optimization?
-  - **Research conducted**: Web search found Claude Code v1.0.64+ supports model selection in YAML
-  - **Current config**: No model specified (uses system default)
-  - **Suggested default**: Use 'sonnet' for balance of cost and capability
-  - **Why needs human input**: Cost vs capability trade-off decision required
+### [HIGH] Critical Implementation Questions - RESOLVED
+- [x] **Model Selection**: Agent will use Opus model by default
+  - **Decision**: Use Opus for maximum capability
+  - **Implemented**: Added `model: opus` to YAML frontmatter
 
-- [ ] **Proactive Invocation**: Should the agent be marked for proactive use with "MUST BE USED" in description?
-  - **Research conducted**: Best practices suggest "use PROACTIVELY" for automatic delegation
-  - **Current config**: Has "Use proactively" in description
-  - **Suggested default**: Keep current proactive phrasing
-  - **Why needs human input**: Confirm automatic vs manual invocation preference
+- [x] **Proactive Invocation**: Using recommended "use PROACTIVELY" phrasing
+  - **Decision**: Follow best practices for automatic delegation
+  - **Implemented**: Updated description to include "Use PROACTIVELY"
 
-### [MEDIUM] Enhancement Questions
-- [ ] **Parallel Research**: Should the agent delegate sub-research tasks to other agents for parallel processing?
-  - **Research conducted**: Claude Code supports parallel agent execution (max 10)
-  - **Current config**: Has Task tool access for delegation
-  - **Suggested default**: Enable delegation for large research scopes
-  - **Why needs human input**: Performance vs simplicity trade-off
+### [MEDIUM] Enhancement Questions - RESOLVED
+- [x] **Parallel Research**: Enabled for multiple research areas
+  - **Decision**: Use Task tool for parallel execution when multiple research streams identified
+  - **Implemented**: Added parallel research instructions to system prompt
 
-- [ ] **Output Versioning**: Should .fr.md files include a schema version for future compatibility?
-  - **Research conducted**: No standard versioning found in similar agents
-  - **Suggested default**: Add 'schema_version: 1.0' to template
-  - **Why needs human input**: Future-proofing strategy decision
+- [x] **Output Versioning**: Not required
+  - **Decision**: No schema version needed in .fr.md files
+  - **Implemented**: No changes needed
 
 ## Research Findings (Added During Review)
 
@@ -43,7 +35,7 @@ needs_review: true
 #### 1. Model Selection Capability
 As of Claude Code v1.0.64, subagents can specify which model to use:
 ```yaml
-model: sonnet  # Optional - haiku/sonnet/opus
+model: opus  # Selected for maximum capability
 ```
 This allows cost optimization for specific tasks.
 
@@ -186,8 +178,8 @@ Create a specialized Claude Code subagent that autonomously researches and ident
 - [x] **System Prompt Engineering**: Comprehensive instructions for autonomous research
 - [x] **Template-Driven Output**: Structured .fr.md format for consistency
 - [x] **Workflow Integration**: Outputs compatible with existing task management system
-- [ ] **Model Optimization**: Consider adding model selection for cost/performance balance
-- [ ] **Parallel Processing**: Consider enabling sub-task delegation for large research scopes
+- [x] **Model Optimization**: Configured to use Opus model for maximum capability
+- [x] **Parallel Processing**: Enabled sub-task delegation for large research scopes
 
 ## Tool Selection
 
