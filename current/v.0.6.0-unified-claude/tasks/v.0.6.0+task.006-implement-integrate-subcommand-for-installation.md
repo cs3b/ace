@@ -5,57 +5,64 @@ priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.004]
 release: v.0.6.0-unified-claude
-needs_review: true
+needs_review: false
 ---
 
 # Implement integrate subcommand for installation
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
-### [HIGH] Critical Implementation Questions
-- [ ] Should we refactor the existing ClaudeCommandsInstaller class or create a new ClaudeInstaller organism?
+### [HIGH] Critical Implementation Questions (Resolved)
+- [x] Should we refactor the existing ClaudeCommandsInstaller class or create a new ClaudeInstaller organism?
   - **Research conducted**: Found existing `CodingAgentTools::Integrations::ClaudeCommandsInstaller` class
   - **Current implementation**: Handles only commands, not agents; has hardcoded paths
   - **Suggested default**: Create new `ClaudeInstaller` organism for cleaner separation
-  - **Why needs human input**: Major architectural decision affecting maintainability
+  - **Human answer**: "we should follow the architecture, refactor whats possible, ensure that our system works as we describe in tasks"
+  - **Decision**: Refactor existing ClaudeCommandsInstaller to support new requirements while maintaining compatibility
 
-- [ ] How should we handle the directory structure difference between source and target?
+- [x] How should we handle the directory structure difference between source and target?
   - **Research conducted**: Source has `commands/_custom` and `commands/_generated` subdirs (per task.003 answers)
   - **Research conducted**: Target `.claude/commands/` is flat (no subdirectories)
   - **Current behavior**: ClaudeCommandsInstaller copies from single custom dir
   - **Suggested default**: Flatten both _custom and _generated into single commands/ dir
-  - **Why needs human input**: Need confirmation on flattening strategy and conflict resolution
+  - **Human answer**: "in claude commands and agents we have use flat structure - so the names in the dev-handbook part needs to be unique"
+  - **Decision**: Flatten _custom and _generated directories into single .claude/commands/ directory
 
-### [MEDIUM] Enhancement Questions
-- [ ] Should file permissions be preserved during copy on Unix systems?
+### [MEDIUM] Enhancement Questions (Resolved)
+- [x] Should file permissions be preserved during copy on Unix systems?
   - **Research conducted**: Ruby FileUtils always copies permissions regardless of preserve flag
   - **Web search findings**: Windows has issues with preserve flag for ownership/timestamps
   - **Suggested default**: Use simple FileUtils.cp (permissions copied, no ownership preserved)
-  - **Why needs human input**: Cross-platform compatibility vs Unix permission fidelity
+  - **Human answer**: "yes"
+  - **Decision**: Use FileUtils.cp which preserves file permissions by default
 
-- [ ] What should happen if source directories are missing?
+- [x] What should happen if source directories are missing?
   - **Research conducted**: Current installer checks for workflow-instructions but not all dirs
   - **Current behavior**: ClaudeCommandsInstaller returns empty array if dir missing
   - **Suggested default**: Warn for missing dirs but continue with available files
-  - **Why needs human input**: Fail-fast vs graceful degradation philosophy
+  - **Human answer**: "if source is missing (from dev-handbook), then we should print error"
+  - **Decision**: Print error and exit if source directories are missing
 
-- [ ] How should agent files be handled differently from commands?
+- [x] How should agent files be handled differently from commands?
   - **Research conducted**: Agents dir exists at `dev-handbook/.integrations/claude/agents/`
   - **Current implementation**: ClaudeCommandsInstaller doesn't handle agents at all
   - **Suggested default**: Copy agents to `.claude/agents/` with same flattening logic
-  - **Why needs human input**: Agent-specific handling requirements unclear
+  - **Human answer**: "they should also be copied (same flattening logic)"
+  - **Decision**: Copy agents to .claude/agents/ using same flattening approach
 
-### [LOW] Future Enhancement Questions  
-- [ ] Should we track installed version in a metadata file?
+### [LOW] Future Enhancement Questions (Resolved)
+- [x] Should we track installed version in a metadata file?
   - **Research conducted**: No version tracking found in current implementation
   - **Suggested default**: Add `.claude/.installed-version` with timestamp and source hash
-  - **Why needs human input**: Versioning strategy for future updates
+  - **Human answer**: "we should have version as timestamp, when it was last time modified (in metadata, in both commands and agents definition)"
+  - **Decision**: Add last_modified timestamp metadata to each command and agent file's YAML front-matter
 
-- [ ] Should symbolic links be used instead of copies for development mode?
+- [x] Should symbolic links be used instead of copies for development mode?
   - **Research conducted**: No symlink usage found in current codebase
   - **Web search findings**: FileUtils supports symlinks but cross-platform issues exist
   - **Suggested default**: Always copy files (simpler, more portable)
-  - **Why needs human input**: Development workflow preferences
+  - **Human answer**: "no, user should explicitly update the agents / commands"
+  - **Decision**: Always copy files, no symbolic links
 
 ## Behavioral Specification
 
@@ -84,7 +91,7 @@ Installation complete:
   Location: .claude/
   Commands: 25
   Agents: 2
-  
+
 Run 'claude code' to use the new commands
 
 # Dry run
@@ -99,7 +106,7 @@ Would install:
   Agents:
     - feature-research.md
     - git-commit-manager.md
-  
+
 No changes made
 
 # Integration with backup
@@ -177,7 +184,7 @@ Provide a seamless installation experience that copies all Claude integration fi
 ## References
 
 - Claude Code command structure requirements
-- File system best practices  
+- File system best practices
 - Existing claude-integrate script behavior
 - Existing CodingAgentTools::Integrations::ClaudeCommandsInstaller class (legacy implementation)
 - Task v.0.6.0+task.003 decisions on directory structure (_custom/_generated subdirs)
@@ -185,10 +192,12 @@ Provide a seamless installation experience that copies all Claude integration fi
 ## Technical Approach
 
 ### Architecture Pattern
+- Refactor existing ClaudeCommandsInstaller to support new requirements
 - File copy orchestration with transaction-like behavior
 - Backup management for safety
-- Flattened directory structure for Claude compatibility
-- Separation of concerns: CLI command delegates to organism
+- Flattened directory structure for Claude compatibility (merge _custom and _generated)
+- Add agent copying functionality to existing installer
+- Add timestamp metadata to copied files' YAML front-matter
 
 ### Technology Stack
 - Ruby FileUtils for file operations (cross-platform compatible)
@@ -207,13 +216,16 @@ Provide a seamless installation experience that copies all Claude integration fi
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/claude_installer.rb` - Installation logic
-- `dev-tools/spec/coding_agent_tools/organisms/claude_installer_spec.rb` - Tests
+- `dev-handbook/.integrations/claude/commands/_custom/` - Directory for custom commands (if not exists)
+- `dev-handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
+- `dev-tools/spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb` - New tests for enhanced functionality
 
 ### Modify
-- `.claude/commands/` - Destination directory (populated)
-- `.claude/commands/commands.json` - Updated registry
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Update command to support new options
+- `dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Refactor to support agents, subdirectories, metadata
+- `.claude/commands/` - Destination directory (populated with flattened structure)
+- `.claude/agents/` - Destination directory for agents (created and populated)
+- `.claude/commands/commands.json` - Updated registry (maintained for backward compatibility)
 
 ### Delete
 - None required (unless --force used)
@@ -236,22 +248,27 @@ Provide a seamless installation experience that copies all Claude integration fi
 
 ### Planning Steps
 
-* [ ] Analyze current .claude directory structure requirements
-  - Review existing 32+ command files in `.claude/commands/`
-  - Understand flat vs hierarchical structure needs
+* [x] Analyze current .claude directory structure requirements
+  - **Completed**: Reviewed existing 32+ command files in `.claude/commands/`
+  - **Finding**: Commands are flat, agents in separate directory
+* [x] Study existing ClaudeCommandsInstaller implementation
+  - **Completed**: Analyzed current implementation and patterns
+  - **Finding**: Already has dry_run, verbose, Result struct pattern
 * [ ] Design backup rotation strategy
   - Timestamp-based backup naming (existing pattern: `.backup.YYYYMMDD-HHMM`)
   - Consider cleanup of old backups
-* [ ] Plan transaction-like installation with rollback
-  - Track copied files for potential rollback
-  - Handle partial failures gracefully
-* [ ] Define file permission handling approach
-  - Use standard FileUtils.cp (auto-preserves permissions)
-  - Avoid preserve: true flag for Windows compatibility
+* [ ] Plan subdirectory handling for _custom and _generated
+  - Scan both subdirectories in source
+  - Flatten into target directories
+  - Handle name conflicts (skip or force)
+* [ ] Define metadata injection approach
+  - Read existing YAML front-matter if present
+  - Add/update last_modified timestamp
+  - Preserve other metadata fields
 
 ### Execution Steps
 
-- [ ] Implement integrate command class
+- [ ] Update integrate command class to support new options
   ```ruby
   # lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb
   module CodingAgentTools
@@ -261,12 +278,12 @@ Provide a seamless installation experience that copies all Claude integration fi
           module Claude
             class Integrate < Dry::CLI::Command
               desc "Install Claude commands into .claude/ directory"
-              
+
               option :dry_run, type: :boolean, default: false, desc: "Show what would be done"
               option :backup, type: :boolean, default: false, desc: "Backup existing installation"
               option :force, type: :boolean, default: false, desc: "Overwrite existing files"
               option :source, type: :string, desc: "Custom source directory"
-              
+
               def call(**options)
                 installer = CodingAgentTools::Organisms::ClaudeInstaller.new
                 installer.install(options)
@@ -279,161 +296,197 @@ Provide a seamless installation experience that copies all Claude integration fi
   end
   ```
 
-- [ ] Create installer organism
+- [ ] Refactor ClaudeCommandsInstaller to support new requirements
   ```ruby
-  # lib/coding_agent_tools/organisms/claude_installer.rb
-  module CodingAgentTools
-    module Organisms
-      class ClaudeInstaller
-        def initialize
-          @source_base = "dev-handbook/.integrations/claude"
-          @target_base = ".claude"
-        end
-        
-        def install(options)
-          @source_base = options[:source] if options[:source]
-          
-          validate_source!
-          create_backup if options[:backup]
-          
-          if options[:dry_run]
-            display_dry_run
-          else
-            perform_installation(options[:force])
-          end
-        end
-        
-        private
-        
-        def source_dirs
-          {
-            custom_commands: "#{@source_base}/commands/_custom",
-            generated_commands: "#{@source_base}/commands/_generated", 
-            agents: "#{@source_base}/agents"
-          }
-        end
+  # lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  # Refactor existing class to add:
+  def copy_custom_commands
+    # Update to handle both _custom and _generated subdirectories
+    custom_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
+    generated_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
+    
+    # Copy from both directories, flattening structure
+    [custom_dir, generated_dir].each do |dir|
+      next unless dir.exist?
+      
+      puts "Copying from #{dir.basename}..."
+      dir.glob('*.md').each do |file|
+        copy_command_with_metadata(file, project_root / '.claude' / 'commands' / file.basename)
       end
     end
   end
-  ```
-  > TEST: Installer Initialization
-  > Type: Unit Test
-  > Assert: Installer sets correct paths
-  > Command: bundle exec rspec -e "initializes with paths"
 
-- [ ] Implement source validation
+  def copy_agents
+    agents_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'agents'
+    target_dir = project_root / '.claude' / 'agents'
+    
+    return unless agents_dir.exist?
+    
+    ensure_directory_exists(target_dir)
+    
+    puts "Copying agents..."
+    agents_dir.glob('*.md').each do |file|
+      copy_file_with_metadata(file, target_dir / file.basename, 'agent')
+    end
+  end
+
+  def copy_file_with_metadata(source, target, type = 'command')
+    if target.exist? && !options[:force]
+      puts "  ✗ Skipped: #{target.basename} (already exists)"
+      stats[:skipped] += 1
+      return
+    end
+
+    content = source.read
+    
+    # Add or update metadata
+    content = inject_metadata(content, {
+      'last_modified' => Time.now.strftime('%Y-%m-%d %H:%M:%S')
+    })
+    
+    if options[:dry_run]
+      puts "  ✓ Would create: #{target.basename} (with metadata)"
+    else
+      target.write(content)
+      puts "  ✓ Created: #{target.basename}"
+    end
+    stats[:created] += 1
+  end
+
+  def inject_metadata(content, metadata)
+    # Handle YAML front-matter injection/update
+    if content =~ /\A---\n(.*?)\n---\n/m
+      # Update existing front-matter
+      yaml = YAML.safe_load($1) || {}
+      yaml.merge!(metadata)
+      new_frontmatter = YAML.dump(yaml).sub(/^---\n/, '')
+      content.sub(/\A---\n.*?\n---\n/m, "---\n#{new_frontmatter}---\n")
+    else
+      # Add new front-matter
+      "---\n#{YAML.dump(metadata).sub(/^---\n/, '')}---\n\n#{content}"
+    end
+  end
+  ```
+  > TEST: Metadata Injection
+  > Type: Unit Test
+  > Assert: Correctly adds/updates YAML front-matter
+  > Command: bundle exec rspec -e "injects metadata"
+
+- [ ] Implement enhanced source validation
   ```ruby
   def validate_source!
-    # Check for either new structure (with subdirs) or legacy structure
-    has_new_structure = File.directory?(File.join(@source_base, "commands/_custom")) ||
-                       File.directory?(File.join(@source_base, "commands/_generated"))
-    has_legacy_structure = File.directory?(File.join(@source_base, "commands")) &&
-                          !has_new_structure
+    source_base = project_root / 'dev-handbook' / '.integrations' / 'claude'
     
-    unless has_new_structure || has_legacy_structure
-      raise "No valid command structure found at #{@source_base}"
+    # Check for new structure with subdirectories
+    commands_exist = (source_base / 'commands').exist?
+    custom_exist = (source_base / 'commands' / '_custom').exist?
+    generated_exist = (source_base / 'commands' / '_generated').exist?
+    agents_exist = (source_base / 'agents').exist?
+    
+    # For now, accept current flat structure or new subdirectory structure
+    if !commands_exist && !custom_exist && !generated_exist
+      puts "Error: No command directories found at #{source_base}"
+      exit 1
     end
     
-    # Warn if agents directory missing (non-fatal)
-    unless File.directory?(File.join(@source_base, "agents"))
-      puts "⚠ Warning: No agents directory found"
+    unless agents_exist
+      puts "Warning: No agents directory found at #{source_base / 'agents'}"
     end
   end
   ```
   > TEST: Source Validation
   > Type: Unit Test
-  > Assert: Validates required directories exist
+  > Assert: Validates required directories and exits on error
   > Command: bundle exec rspec -e "validates source structure"
 
-- [ ] Implement backup functionality
+- [ ] Add backup option to existing installer
   ```ruby
   def create_backup
-    if File.directory?(@target_base)
-      timestamp = Time.now.strftime("%Y%m%d-%H%M")
-      backup_dir = "#{@target_base}.backup.#{timestamp}"
-      
-      FileUtils.cp_r(@target_base, backup_dir)
-      puts "✓ Backed up existing .claude/ to #{backup_dir}/"
+    target = project_root / '.claude'
+    return unless target.exist? && options[:backup]
+    
+    timestamp = Time.now.strftime("%Y%m%d-%H%M")
+    backup_path = project_root / ".claude.backup.#{timestamp}"
+    
+    if options[:dry_run]
+      puts "Would create backup at: #{backup_path}" if options[:verbose]
+    else
+      FileUtils.cp_r(target, backup_path)
+      puts "✓ Backed up existing .claude/ to #{backup_path}/"
     end
   end
   ```
 
-- [ ] Implement file copying with flattening
+- [ ] Update the run method to include new functionality
   ```ruby
-  def perform_installation(force)
-    ensure_target_directories
+  def run
+    puts "Installing Claude commands#{options[:dry_run] ? ' (DRY RUN)' : ''}..."
+    puts "Project root: #{project_root}" if options[:verbose]
+    puts
+
+    # Validate source directories
+    validate_source!
     
-    stats = {
-      custom_commands: 0,
-      generated_commands: 0,
-      agents: 0
-    }
-    
-    # Copy custom commands (flatten structure)
-    stats[:custom_commands] = copy_commands("commands/_custom", force)
-    
-    # Copy generated commands (flatten structure)
-    stats[:generated_commands] = copy_commands("commands/_generated", force)
+    # Create backup if requested
+    create_backup if options[:backup]
+
+    # Ensure directories exist
+    ensure_directories_exist
+
+    # Copy commands from new structure (_custom and _generated)
+    copy_custom_commands
     
     # Copy agents
-    stats[:agents] = copy_agents(force)
+    copy_agents
+
+    # Scan workflows and create generated commands (existing functionality)
+    workflow_files = scan_workflows
+    create_commands_from_workflows(workflow_files)
+
+    # Update commands.json
+    update_commands_json
+
+    # Print summary
+    print_enhanced_summary
     
-    # Copy registry
-    copy_registry(force)
-    
-    display_summary(stats)
+    # Return result object
+    Result.new(success: stats[:errors].empty?, exit_code: stats[:errors].empty? ? 0 : 1, stats: stats)
+  rescue StandardError => e
+    puts "Error: #{e.message}"
+    puts e.backtrace if ENV['DEBUG'] || options[:verbose]
+    stats[:errors] << e.message
+    Result.new(success: false, exit_code: 1, stats: stats)
   end
-  
-  def copy_commands(subdir, force)
-    source_dir = File.join(@source_base, subdir)
-    target_dir = File.join(@target_base, "commands")
-    counter = 0
+
+  def print_enhanced_summary
+    puts "="*50
+    puts "Installation complete:"
+    puts "  Commands:"
+    puts "    #{stats[:custom_commands] || 0} custom commands"
+    puts "    #{stats[:generated_commands] || 0} generated commands"
+    puts "    #{stats[:workflow_commands] || 0} workflow commands"
+    puts "  Agents:"
+    puts "    #{stats[:agents] || 0} agents"
+    puts "  Other:"
+    puts "    #{stats[:updated]} files updated"
+    puts "    #{stats[:skipped]} files skipped"
     
-    return counter unless File.directory?(source_dir)
-    
-    Dir.glob(File.join(source_dir, "*.md")).each do |source|
-      target = File.join(target_dir, File.basename(source))
-      
-      if File.exist?(target) && !force
-        puts "  ⚠ Skipped: #{File.basename(source)} (already exists)"
-      else
-        FileUtils.cp(source, target)
-        counter += 1
-        puts "  ✓ Copied: #{File.basename(source)}"
-      end
+    if stats[:errors].any?
+      puts
+      puts "Errors encountered:"
+      stats[:errors].each { |error| puts "  - #{error}" }
     end
     
-    counter
-  end
-  
-  def copy_agents(force)
-    source_dir = File.join(@source_base, "agents")
-    target_dir = File.join(@target_base, "agents")
-    counter = 0
-    
-    return counter unless File.directory?(source_dir)
-    
-    FileUtils.mkdir_p(target_dir)
-    
-    Dir.glob(File.join(source_dir, "*.md")).each do |source|
-      target = File.join(target_dir, File.basename(source))
-      
-      if File.exist?(target) && !force
-        puts "  ⚠ Skipped: #{File.basename(source)} (already exists)"
-      else
-        FileUtils.cp(source, target)
-        counter += 1
-        puts "  ✓ Copied: #{File.basename(source)}"
-      end
-    end
-    
-    counter
+    puts "="*50
+    puts
+    puts "Location: #{project_root / '.claude'}"
+    puts "Run 'claude code' to use the new commands"
   end
   ```
-  > TEST: File Copying
+  > TEST: Enhanced Installation
   > Type: Integration Test
-  > Assert: Files copied to correct locations
-  > Command: bundle exec rspec -e "copies files correctly"
+  > Assert: Installs commands, agents with metadata
+  > Command: bundle exec rspec -e "performs full installation"
 
 - [ ] Add comprehensive test coverage
   ```ruby
@@ -443,11 +496,11 @@ Provide a seamless installation experience that copies all Claude integration fi
       it "creates backup when requested" do
         # Test implementation
       end
-      
+
       it "respects dry-run flag" do
         # Test implementation
       end
-      
+
       it "handles force flag correctly" do
         # Test implementation
       end
@@ -463,10 +516,56 @@ Provide a seamless installation experience that copies all Claude integration fi
 
 ## Acceptance Criteria
 
-- [ ] Copies all commands from both directories
+- [ ] Copies all commands from both _custom and _generated directories
 - [ ] Flattens directory structure in .claude/commands/
 - [ ] Copies all agents to .claude/agents/
-- [ ] Updates commands.json registry
-- [ ] Creates backup when requested
+- [ ] Adds last_modified timestamp to all copied files' YAML front-matter
+- [ ] Updates commands.json registry (for backward compatibility)
+- [ ] Creates backup when --backup flag is used
 - [ ] Respects --force flag for overwrites
-- [ ] Provides clear installation summary
+- [ ] Exits with error if source directories are missing
+- [ ] Provides clear installation summary with categorized counts
+- [ ] Maintains compatibility with existing ClaudeCommandsInstaller patterns
+
+## Review Summary
+
+**Date:** 2025-08-04
+**Reviewer:** Claude (Automated Review)
+
+**Questions Previously Generated:** 7 total (2 HIGH, 3 MEDIUM, 2 LOW)
+**Questions Resolved:** All 7 questions have been answered by human input
+**Critical Blockers:** None - all questions resolved
+
+**Research Conducted:**
+- ✅ Analyzed existing ClaudeCommandsInstaller class - already has dry_run, verbose, Result struct
+- ✅ Verified existing CLI command at handbook/claude/integrate.rb
+- ✅ Checked current .claude directory structure - flat commands/, separate agents/
+- ✅ Reviewed task.003 decisions about _custom and _generated subdirectories
+- ✅ Examined task.004 for metadata requirements (YAML front-matter with timestamps)
+- ✅ Verified current implementation copies only from flat commands/ directory
+- ✅ Confirmed agents directory exists but is not handled by current installer
+
+**Content Updates Made:**
+- Moved all Review Questions to "Resolved" section with human answers and decisions
+- Updated Technical Approach to refactor existing installer instead of creating new organism
+- Modified File Modifications to reflect refactoring approach
+- Enhanced Implementation Plan with completed research steps
+- Updated code examples to extend existing ClaudeCommandsInstaller functionality
+- Added metadata injection logic for last_modified timestamps in YAML front-matter
+- Added support for copying from _custom and _generated subdirectories
+- Added agent copying functionality with same flattening approach
+- Added error handling for missing source directories (exit on error)
+- Enhanced summary output to show categorized counts
+- Set needs_review flag to false as all questions are resolved
+
+**Implementation Readiness:** Ready for implementation
+
+**Recommended Next Steps:**
+1. Create _custom and _generated subdirectories if they don't exist
+2. Migrate existing custom commands to _custom/ subdirectory
+3. Refactor ClaudeCommandsInstaller to support new directory structure
+4. Add agent copying functionality with metadata injection
+5. Implement backup option (--backup flag)
+6. Add comprehensive error handling for missing directories
+7. Update installation summary to show categorized counts
+8. Test with various scenarios (missing dirs, existing files, metadata injection)

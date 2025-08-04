@@ -5,7 +5,6 @@ priority: low
 estimate: 1h
 dependencies: [v.0.6.0+task.006, v.0.6.0+task.011]
 release: v.0.6.0-unified-claude
-needs_review: true
 ---
 
 # Deprecate legacy claude-integrate script
@@ -19,11 +18,15 @@ needs_review: true
   - **Suggested default**: Auto-run new command with deprecation notice in CI
   - **Why needs human input**: Balance between CI stability and forcing migration
 
+> no, just cleanup what we don't need anymore
+
 - [ ] Should the migration guide be created at `dev-handbook/.integrations/claude/MIGRATION.md` or elsewhere?
   - **Research conducted**: Directory exists with other Claude docs but no MIGRATION.md yet
   - **Similar patterns**: `dev-tools/docs/migrations/migration-guide.md` exists for tools
   - **Suggested default**: Create at `dev-handbook/.integrations/claude/MIGRATION.md`
   - **Why needs human input**: Documentation structure consistency
+
+> no, we don' need it
 
 ### [MEDIUM] Enhancement Questions
 - [ ] Should we keep the Ruby implementation or switch to bash for the deprecation wrapper?
@@ -32,11 +35,15 @@ needs_review: true
   - **Suggested default**: Use bash for simpler deprecation logic
   - **Why needs human input**: Implementation language affects maintainability
 
+> no need for bash
+
 - [ ] How should we handle the case where the new `handbook claude integrate` command doesn't exist?
   - **Research conducted**: Dependencies show task.006 implements the new command
   - **Current behavior**: Script has fallback to inline implementation
   - **Suggested default**: Provide setup instructions if command not found
   - **Why needs human input**: Error handling strategy for partial migrations
+
+> it must exists :-)
 
 ### [LOW] Future Enhancement Questions
 - [ ] Should we log usage of the deprecated script for analytics?
@@ -44,6 +51,8 @@ needs_review: true
   - **Privacy consideration**: Would need user consent
   - **Suggested default**: No tracking, just deprecation warnings
   - **Why needs human input**: Privacy and analytics policy decision
+
+> no because we delete it
 
 ## Behavioral Specification
 
@@ -80,7 +89,7 @@ Would you like to:
 2. Continue with legacy script (will be removed in v0.7.0)
 3. See migration guide
 
-Choice [1-3]: 
+Choice [1-3]:
 
 # If user chooses 1:
 Executing: handbook claude integrate
@@ -166,9 +175,8 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
 
 | Tool/Library | Purpose | Rationale |
 |--------------|---------|-----------|
-| Bash | Wrapper script | Already in use |
-| tput | Terminal colors | Cross-platform |
-| env vars | CI detection | Standard approach |
+| Git | File deletion | Version control |
+| Grep | Find references | Search documentation |
 
 ## File Modifications
 
@@ -216,19 +224,19 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
   ```bash
   #!/usr/bin/env bash
   # bin/claude-integrate - Deprecation wrapper
-  
+
   # Colors for output
   YELLOW='\033[1;33m'
   GREEN='\033[0;32m'
   NC='\033[0m' # No Color
-  
+
   # Check if running in CI
   if [ -n "$CI" ] || [ -n "$CONTINUOUS_INTEGRATION" ] || [ -n "$GITHUB_ACTIONS" ]; then
     echo "⚠️  claude-integrate is deprecated. Use: handbook claude integrate" >&2
     # In CI, try to run new command automatically
     exec handbook claude integrate "$@"
   fi
-  
+
   # Interactive deprecation notice
   echo -e "${YELLOW}⚠️  DEPRECATION WARNING: claude-integrate is deprecated${NC}"
   echo ""
@@ -247,7 +255,7 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
   echo "3. See migration guide"
   echo ""
   read -p "Choice [1-3]: " choice
-  
+
   case $choice in
     1)
       echo "Executing: handbook claude integrate"
@@ -292,24 +300,24 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
   ```bash
   # Find all references
   grep -r "bin/claude-integrate" docs/ --include="*.md"
-  
+
   # Update to mention deprecation
   ```
 
 - [ ] Add deprecation notice to README
   ```markdown
   ## ⚠️ Deprecation Notice
-  
+
   The `bin/claude-integrate` script is deprecated as of v0.6.0.
   Please use `handbook claude integrate` instead.
-  
+
   The old script will be removed in v0.7.0.
   ```
 
 - [ ] Plan removal timeline
   ```markdown
   ## Deprecation Timeline
-  
+
   - v0.6.0 (current): Deprecation wrapper added
   - v0.6.x: Grace period with compatibility mode
   - v0.7.0: Complete removal of old script

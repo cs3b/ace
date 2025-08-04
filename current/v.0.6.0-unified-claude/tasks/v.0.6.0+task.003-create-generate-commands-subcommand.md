@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.003
-status: pending
+status: in-progress
 priority: high
 estimate: 6h
 dependencies: [v.0.6.0+task.002]
@@ -233,8 +233,8 @@ Enable automatic generation of Claude commands for workflow instructions that la
   - **Completed**: Only workflow_name needed based on current template
 * [x] Design command detection logic (custom vs missing)
   - **Completed**: Check _custom/ first, then _generated/, skip if either exists
-* [ ] Plan dry-run implementation approach
-  - **Next**: Follow git patterns - display actions without writing files
+* [x] Plan dry-run implementation approach
+  - **Completed**: Follow git patterns - display actions without writing files
 
 ### Execution Steps
 

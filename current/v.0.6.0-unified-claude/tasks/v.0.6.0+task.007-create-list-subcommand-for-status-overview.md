@@ -5,47 +5,57 @@ priority: medium
 estimate: 2h
 dependencies: [v.0.6.0+task.002]
 release: v.0.6.0-unified-claude
-needs_review: true
 ---
 
 # Create list subcommand for status overview
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] How should the command distinguish between "custom" and "generated" commands?
+- [x] How should the command distinguish between "custom" and "generated" commands?
   - **Research conducted**: Found ClaudeCommandsInstaller copies from dev-handbook/.integrations/claude/commands/ (6 custom multi-task commands)
   - **Current structure**: All commands end up in .claude/commands/ directory
   - **Suggested approach**: Custom = matches files in dev-handbook/.integrations/claude/commands/, Generated = others
   - **Alternative approach**: Add metadata to commands.json to track source
   - **Why needs human input**: Architecture decision affecting data structure and future extensibility
+  - **Human answer**: "in dev-handbook/.integrations/claude/commands/{_custom,_generated} - separate folders"
+  - **Human clarification**: "as mention in task.004 we don't need and we should not update commands.json"
+  - **Decision**: Use separate subdirectories _custom/ and _generated/ within dev-handbook/.integrations/claude/commands/
 
-- [ ] What exactly are "Missing Commands" and how should they be detected?
-  - **Research conducted**: Found 24 workflow files in dev-handbook/workflow-instructions/
-  - **Commands exist for**: Most workflows have corresponding commands (31 total commands found)
+- [x] What exactly are "Missing Commands" and how should they be detected?
+  - **Research conducted**: Found 25 workflow files in dev-handbook/workflow-instructions/
+  - **Commands exist for**: Most workflows have corresponding commands (32 total commands found)
   - **Unclear**: Should "missing" mean workflows without commands, or commands without workflows?
   - **Suggested default**: Missing = workflows in workflow-instructions/ without corresponding .claude/commands/*.md file
   - **Why needs human input**: Core functionality definition affects implementation approach
+  - **Human answer**: "exactly as you suggest"
+  - **Decision**: Missing = workflows in workflow-instructions/ without corresponding command file in .claude/commands/
 
 ### [MEDIUM] Enhancement Questions
-- [ ] Should the command require the Claude namespace to be registered first (from task.002)?
+- [x] Should the command require the Claude namespace to be registered first (from task.002)?
   - **Research conducted**: Task depends on v.0.6.0+task.002 which implements the claude namespace
-  - **Current state**: Task.002 has needs_review flag and is pending
+  - **Current state**: Task.002 is now in-progress (verified)
   - **Suggested approach**: Build assuming namespace exists, coordinate implementation
   - **Why needs human input**: Implementation sequencing and integration approach
+  - **Human answer**: "yes task.002 should be done before"
+  - **Decision**: Wait for task.002 completion or coordinate closely with its implementation
 
-- [ ] Should the verbose output include file size and line count in addition to modification time?
+- [x] Should the verbose output include file size and line count in addition to modification time?
   - **Research conducted**: Task list command shows minimal file info
   - **Similar patterns**: Git status shows size changes, ls -l shows sizes
   - **Suggested default**: Include file size (more useful than line count for .md files)
   - **Why needs human input**: Output format affects user experience
+  - **Human answer**: "file size / modification - easy way to check the diff ( `diff path_older_file path_newer_file` )"
+  - **Decision**: Include file size and modification time in verbose output to facilitate diff comparison
 
 ### [LOW] Future Enhancement Questions
-- [ ] Should the JSON output include additional metadata like file paths and timestamps?
+- [x] Should the JSON output include additional metadata like file paths and timestamps?
   - **Research conducted**: Current spec shows simple arrays in JSON
   - **Standard practice**: API responses often include metadata
   - **Suggested default**: Simple arrays initially, richer format can be added later
   - **Why needs human input**: API design decision affecting downstream consumers
+  - **Human answer**: "file paths and timestamp yes"
+  - **Decision**: JSON output should include file paths and timestamps as metadata
 
 ## Behavioral Specification
 
@@ -108,9 +118,29 @@ Custom Commands (6):
 handbook claude list --format json
 # Output:
 {
-  "custom": ["commit", "draft-tasks", ...],
-  "generated": ["capture-idea", ...],
-  "missing": ["fix-linting-issue-from", ...]
+  "custom": [
+    {
+      "name": "commit",
+      "path": "_custom/commit.md",
+      "modified": "2025-01-30T10:15:32Z",
+      "size": 245
+    },
+    {
+      "name": "draft-tasks",
+      "path": "_custom/draft-tasks.md",
+      "modified": "2025-01-30T10:15:32Z",
+      "size": 312
+    }
+  ],
+  "generated": [
+    {
+      "name": "capture-idea",
+      "path": "_generated/capture-idea.md",
+      "modified": "2025-01-30T10:15:32Z",
+      "size": 189
+    }
+  ],
+  "missing": ["fix-linting-issue-from", "rebase-against"]
 }
 ```
 
@@ -242,11 +272,11 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
           module Claude
             class List < Dry::CLI::Command
               desc "List all commands and their status"
-              
+
               option :verbose, type: :boolean, default: false, desc: "Show detailed information"
               option :type, type: :string, values: %w[custom generated missing all], default: "all", desc: "Filter by type"
               option :format, type: :string, values: %w[text json], default: "text", desc: "Output format"
-              
+
               def call(**options)
                 lister = CodingAgentTools::Organisms::ClaudeCommandLister.new
                 lister.list(options)
@@ -264,7 +294,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   # lib/coding_agent_tools/organisms/claude_command_lister.rb
   def list(options)
     inventory = build_inventory
-    
+
     case options[:format]
     when "json"
       output_json(inventory, options)
@@ -272,23 +302,42 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
       output_text(inventory, options)
     end
   end
-  
+
   def build_inventory
-    # Scan all commands in .claude/commands/
-    all_commands = scan_commands_directory
+    # Scan commands from both source directories
+    custom_commands = scan_custom_commands
+    generated_commands = scan_generated_commands
     
-    # Categorize based on source
-    custom_commands = identify_custom_commands(all_commands)
-    generated_commands = all_commands - custom_commands
-    
-    # Find workflows without commands
-    missing_commands = find_missing_workflows(all_commands)
-    
+    # Also scan .claude/commands/ for installed commands
+    installed_commands = scan_installed_commands
+
+    # Find workflows without corresponding commands
+    missing_commands = find_missing_workflows(installed_commands)
+
     {
       custom: custom_commands,
       generated: generated_commands,
-      missing: missing_commands
+      missing: missing_commands,
+      installed: installed_commands
     }
+  end
+  
+  def scan_custom_commands
+    dir = File.join(project_root, 'dev-handbook', '.integrations', 'claude', 'commands', '_custom')
+    return [] unless Dir.exist?(dir)
+    
+    Dir.glob(File.join(dir, '*.md')).map do |path|
+      build_command_info(path, 'custom')
+    end
+  end
+  
+  def scan_generated_commands
+    dir = File.join(project_root, 'dev-handbook', '.integrations', 'claude', 'commands', '_generated')
+    return [] unless Dir.exist?(dir)
+    
+    Dir.glob(File.join(dir, '*.md')).map do |path|
+      build_command_info(path, 'generated')
+    end
   end
   ```
   > TEST: Inventory Building
@@ -302,13 +351,13 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
     puts "Claude Commands Overview"
     puts "========================"
     puts ""
-    
+
     if options[:type] == "all" || options[:type] == "custom"
       output_category("Custom Commands", inventory[:custom], options[:verbose])
     end
-    
+
     # Similar for generated and missing
-    
+
     output_summary(inventory) if options[:type] == "all"
   end
   ```
@@ -336,3 +385,40 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 - ClaudeCommandsInstaller implementation (dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb)
 - Task list command pattern (dev-tools/lib/coding_agent_tools/cli/commands/task/list.rb)
 - Handbook namespace structure (dev-tools/lib/coding_agent_tools/cli/commands/handbook/)
+
+## Review Summary
+
+**Date:** 2025-08-04
+**Reviewer:** Claude (Automated Review)
+
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
+**Questions Resolved:** All 5 questions have been answered by human input
+**Critical Blockers:** None - all questions resolved
+
+**Research Conducted:**
+- ✅ Verified task.002 is in-progress with namespace structure already created
+- ✅ Found existing list.rb stub file ready for implementation
+- ✅ Confirmed 25 workflow files exist in workflow-instructions directory
+- ✅ Verified 32 command files currently exist in .claude/commands/
+- ✅ Examined ClaudeCommandsInstaller implementation patterns
+- ✅ Studied task list command colorization and formatting patterns
+- ✅ Confirmed task.004 mentions not updating commands.json
+
+**Content Updates Made:**
+- Moved all Review Questions to "Resolved" section with human answers and decisions
+- Updated directory structure to use _custom/ and _generated/ subdirectories
+- Enhanced JSON output format to include file paths, timestamps, and sizes
+- Updated implementation plan to scan separate source directories
+- Clarified that task.002 is now in-progress (not pending)
+- Updated missing command detection to align with human confirmation
+- Removed needs_review flag as all questions are resolved
+
+**Implementation Readiness:** Ready for implementation after task.002 completion
+
+**Recommended Next Steps:**
+1. Wait for task.002 to complete the Claude namespace implementation
+2. Create the ClaudeCommandLister organism with subdirectory scanning
+3. Implement the list command with all output formats
+4. Add colorization following the task list command pattern
+5. Test with both empty and populated command directories
+6. Verify JSON output includes all requested metadata

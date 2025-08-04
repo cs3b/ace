@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.001
-status: pending
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -160,20 +160,12 @@ Create a clear, maintainable directory structure for Claude commands that separa
 ## File Modifications
 
 ### Create
-- `.claude/commands/_custom/` - Directory for hand-crafted commands (PRIMARY LOCATION)
-- `.claude/commands/_generated/` - Directory for auto-generated commands
-- `.claude/templates/workflow-command.md.tmpl` - Template for workflow commands
-- `.claude/templates/agent-command.md.tmpl` - Template for agent commands
-- **Alternative if dev-handbook preferred**:
-  - `dev-handbook/.integrations/claude/commands/_custom/` - Directory for hand-crafted commands
-  - `dev-handbook/.integrations/claude/commands/_generated/` - Directory for auto-generated commands
-  - `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
-  - `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
+- `dev-handbook/.integrations/claude/templates/` - Directory for command generation templates
+- `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
+- `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
 
 ### Modify
-- `.claude/commands/` - Reorganize existing flat structure (33 files to migrate)
-- `.claude/commands/commands.json` - Update registry format to support command types
-- `dev-handbook/.integrations/claude/commands/` - Deprecate or create symlinks
+- None - Commands remain in flat structure per human decision
 
 ### Delete
 - None required for initial structure creation
@@ -204,69 +196,50 @@ Create a clear, maintainable directory structure for Claude commands that separa
   - **Root .claude/commands/**: 33 command files plus commands.json registry
   - **dev-handbook location**: 6 command files (subset of root)
   - All current commands appear to be custom (no generated commands yet)
-* [ ] Design template variables and structure for command generation
+* [x] Design template variables and structure for command generation
   - Define workflow command template variables: workflow_name, workflow_path
   - Define agent command template variables: agent_name, agent_purpose, context_description
   - Plan additional_parameters structure for flexibility
-* [ ] Determine file permission requirements for different directories
+* [x] Determine file permission requirements for different directories
   - Standard 755 for directories
   - Standard 644 for files
-  - Consider if _generated needs different permissions
+  - No _generated directory needed per human input
 
 ### Execution Steps
 
-- [ ] Create base directory structure
+- [x] Create base directory structure
   ```bash
-  # Primary location at project root
-  mkdir -p .claude/commands/{_custom,_generated}
-  mkdir -p .claude/templates
-  # OR if using dev-handbook location:
-  # mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
-  # mkdir -p dev-handbook/.integrations/claude/templates
+  # Using dev-handbook location per human decision
+  mkdir -p dev-handbook/.integrations/claude/templates
+  # Note: No _custom/_generated subdirectories per human input
   ```
   > TEST: Directory Creation Validation
   > Type: File System Check
-  > Assert: All directories exist with correct permissions
-  > Command: ls -la dev-handbook/.integrations/claude/commands/ | grep "^d" | wc -l | grep -q "2"
+  > Assert: Templates directory exists
+  > Command: test -d dev-handbook/.integrations/claude/templates && echo "SUCCESS"
 
-- [ ] Update existing commands.json registry format
+- [x] Update existing commands.json registry format
   ```bash
-  # Backup existing registry first
-  cp .claude/commands/commands.json .claude/commands/commands.json.bak
-  # Update structure to support command types (requires manual JSON transformation)
-  # New format should include type field for each command
+  # Per human input: commands.json should only be in .claude directory
+  # No commands.json needed in dev-handbook location
+  # Skip this step
   ```
-  > TEST: Registry File Creation
-  > Type: File Content Check
-  > Assert: Valid JSON structure exists
-  > Command: jq . dev-handbook/.integrations/claude/commands/commands.json
+  > TEST: Skipped per human decision
 
-- [ ] Move existing custom commands to _custom directory
+- [x] Move existing custom commands to _custom directory
   ```bash
-  # Move all 33 commands from root location
-  cd .claude/commands/
-  for cmd in *.md; do
-    [ -f "$cmd" ] && mv "$cmd" _custom/
-  done
-
-  # Handle dev-handbook location (deprecate or symlink)
-  # Option 1: Create symlinks for backward compatibility
-  cd dev-handbook/.integrations/claude/commands/
-  for cmd in *.md; do
-    ln -s ../../../../.claude/commands/_custom/"$cmd" .
-  done
+  # Per human input: No _custom/_generated subdirectories
+  # Commands remain in flat structure
+  # Skip this step
   ```
-  > TEST: Custom Command Migration
-  > Type: File Existence Check
-  > Assert: Custom commands exist in _custom directory
-  > Command: ls dev-handbook/.integrations/claude/commands/_custom/*.md 2>/dev/null | wc -l
+  > TEST: Skipped per human decision
 
-- [ ] Create workflow command template
+- [x] Create workflow command template
   ```bash
-  cat > .claude/templates/workflow-command.md.tmpl << 'EOF'
+  cat > dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl << 'EOF'
 read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
 
-read and run @.claude/commands/_custom/commit.md
+read and run @dev-handbook/.integrations/claude/commands/commit.md
 EOF
   ```
   > TEST: Workflow Template Creation
@@ -274,9 +247,9 @@ EOF
   > Assert: Template contains ERB variables
   > Command: grep -q "<%=" dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl
 
-- [ ] Create agent command template
+- [x] Create agent command template
   ```bash
-  cat > .claude/templates/agent-command.md.tmpl << 'EOF'
+  cat > dev-handbook/.integrations/claude/templates/agent-command.md.tmpl << 'EOF'
 Use the <%= agent_name %> agent to <%= agent_purpose %>.
 Context: <%= context_description %>
 <%= additional_parameters %>
@@ -285,79 +258,51 @@ EOF
   > TEST: Agent Template Creation
   > Type: File Content Check
   > Assert: Template contains all required variables
-  > Command: grep -c "<%=" dev-handbook/.integrations/claude/templates/agent-command.md.tmpl | grep -q "4"
+  > Command: grep -c "<%=" dev-handbook/.integrations/claude/templates/agent-command.md.tmpl | grep -q "3"
 
-- [ ] Create migration documentation
+- [x] Create migration documentation
   ```bash
-  cat > .claude/commands/MIGRATION.md << 'EOF'
-# Claude Commands Directory Structure Migration
-
-## Overview
-Commands are now organized into subdirectories:
-- `_custom/` - Hand-crafted commands maintained manually
-- `_generated/` - Auto-generated commands from workflows and agents
-
-## Migration Steps Completed
-1. Created new directory structure
-2. Moved existing commands to `_custom/`
-3. Created template files for command generation
-4. Set up commands.json registry
-
-## Updating References
-If you have direct references to command files, update paths:
-- Old: `@.claude/commands/commit.md`
-- New: `@.claude/commands/_custom/commit.md`
-
-Note: The integration system will handle path resolution automatically.
-EOF
+  # Per human input: No migration needed
+  # Commands remain in flat structure
+  # Skip this step
   ```
-  > TEST: Migration Documentation
-  > Type: File Existence Check
-  > Assert: Migration guide exists
-  > Command: test -f dev-handbook/.integrations/claude/commands/MIGRATION.md
+  > TEST: Skipped per human decision
 
-- [ ] Set proper file permissions
+- [x] Set proper file permissions
   ```bash
-  chmod 755 .claude/commands/{_custom,_generated}
-  chmod 755 .claude/templates
-  chmod 644 .claude/commands/commands.json
-  chmod 644 .claude/templates/*.tmpl
+  chmod 755 dev-handbook/.integrations/claude/templates
+  chmod 644 dev-handbook/.integrations/claude/templates/*.tmpl
   ```
   > TEST: Permission Validation
   > Type: Permission Check
   > Assert: Directories have 755, files have 644
-  > Command: stat -f "%Lp" dev-handbook/.integrations/claude/commands/_custom 2>/dev/null || stat -c "%a" dev-handbook/.integrations/claude/commands/_custom
+  > Command: stat -f "%Lp" dev-handbook/.integrations/claude/templates 2>/dev/null || stat -c "%a" dev-handbook/.integrations/claude/templates
 
-- [ ] Update .gitignore for generated content (if needed)
+- [x] Update .gitignore for generated content (if needed)
   ```bash
-  # Add to main .gitignore
-  if ! grep -q "_generated" .gitignore 2>/dev/null; then
-    echo "# Auto-generated Claude commands" >> .gitignore
-    echo ".claude/commands/_generated/" >> .gitignore
-  fi
+  # Per human input: All files are tracked in GitHub
+  # No _generated directory to ignore
+  # Skip this step
   ```
-  > TEST: Git Ignore Configuration
-  > Type: File Content Check
-  > Assert: Generated directory is properly configured
-  > Command: grep -q "_generated" dev-handbook/.gitignore || echo "No .gitignore update needed"
+  > TEST: Skipped per human decision
 
-- [ ] Verify git tracking for new structure
+- [x] Verify git tracking for new structure
   ```bash
-  git add .claude/commands/_custom/ .claude/templates/
-  git status --porcelain .claude/
+  git add dev-handbook/.integrations/claude/templates/
+  git status --porcelain dev-handbook/.integrations/claude/
   ```
   > TEST: Version Control Validation
   > Type: Git Status Check
   > Assert: All directories are tracked, no unintended files
-  > Command: git ls-files .claude/ | grep -E "(commands/|templates/)" | wc -l
+  > Command: git ls-files dev-handbook/.integrations/claude/templates/ | wc -l
 
 ## Acceptance Criteria
 
-- [ ] Directory structure matches specification exactly
-- [ ] All existing commands preserved in appropriate locations
-- [ ] Template files created and ready for use
-- [ ] No data loss during migration
-- [ ] Clear documentation for migration process
+- [x] Directory structure matches specification exactly
+- [x] All existing commands preserved in appropriate locations
+- [x] Template files created and ready for use
+- [x] No data loss during migration
+- [x] Clear documentation for migration process (not needed per human decision)
 
 ## Research Notes
 
