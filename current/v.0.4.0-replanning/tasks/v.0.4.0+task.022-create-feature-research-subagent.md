@@ -4,9 +4,65 @@ status: pending
 priority: high
 estimate: 2h
 dependencies: []
+needs_review: true
 ---
 
 # Create Feature Research Subagent
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] **Model Selection**: Should the feature-research agent use a specific Claude model (haiku/sonnet/opus) for cost optimization?
+  - **Research conducted**: Web search found Claude Code v1.0.64+ supports model selection in YAML
+  - **Current config**: No model specified (uses system default)
+  - **Suggested default**: Use 'sonnet' for balance of cost and capability
+  - **Why needs human input**: Cost vs capability trade-off decision required
+
+- [ ] **Proactive Invocation**: Should the agent be marked for proactive use with "MUST BE USED" in description?
+  - **Research conducted**: Best practices suggest "use PROACTIVELY" for automatic delegation
+  - **Current config**: Has "Use proactively" in description
+  - **Suggested default**: Keep current proactive phrasing
+  - **Why needs human input**: Confirm automatic vs manual invocation preference
+
+### [MEDIUM] Enhancement Questions
+- [ ] **Parallel Research**: Should the agent delegate sub-research tasks to other agents for parallel processing?
+  - **Research conducted**: Claude Code supports parallel agent execution (max 10)
+  - **Current config**: Has Task tool access for delegation
+  - **Suggested default**: Enable delegation for large research scopes
+  - **Why needs human input**: Performance vs simplicity trade-off
+
+- [ ] **Output Versioning**: Should .fr.md files include a schema version for future compatibility?
+  - **Research conducted**: No standard versioning found in similar agents
+  - **Suggested default**: Add 'schema_version: 1.0' to template
+  - **Why needs human input**: Future-proofing strategy decision
+
+## Research Findings (Added During Review)
+
+### Best Practices Beyond Documentation (2025)
+
+#### 1. Model Selection Capability
+As of Claude Code v1.0.64, subagents can specify which model to use:
+```yaml
+model: sonnet  # Optional - haiku/sonnet/opus
+```
+This allows cost optimization for specific tasks.
+
+#### 2. Context Isolation Benefits
+- Each subagent gets its own context window
+- Prevents context pollution in long conversations
+- Enables handling larger codebases effectively
+
+#### 3. Orchestration Patterns
+Common patterns for agent coordination:
+- **Sequential**: A → B → C → Result
+- **Parallel**: A + B (simultaneous) → Merge
+- **Routing**: Analysis → Route to specialist
+- **Review**: Primary → Review → Final
+
+#### 4. Performance Optimizations
+- Parallelism capped at 10 concurrent agents
+- Task queueing for overflow
+- Early delegation preserves main context
 
 ## Behavioral Specification
 
@@ -51,11 +107,15 @@ The feature research agent autonomously:
 - [ ] **Output Format**: Creates properly formatted .fr.md file in correct location
 - [ ] **Integration Ready**: Research findings can be converted to draft tasks using existing workflows
 
-### Validation Questions
-- [ ] **Research Scope**: What level of detail is expected in the feature analysis?
-- [ ] **Prioritization Criteria**: What specific factors should drive feature prioritization (user value, technical debt, competitive advantage)?
-- [ ] **External Research**: Should the agent research competitor products or focus only on internal gaps?
-- [ ] **Implementation Assessment**: How deep should the technical feasibility analysis go?
+### Validation Questions (Original - Answered Through Research)
+- [x] **Research Scope**: What level of detail is expected in the feature analysis?
+  - **Answer**: Based on template, comprehensive 5-phase approach with executive summary level detail
+- [x] **Prioritization Criteria**: What specific factors should drive feature prioritization?
+  - **Answer**: Current prompt uses: user value, complexity, security, competitive parity
+- [x] **External Research**: Should the agent research competitor products or focus only on internal gaps?
+  - **Answer**: Phase 2 explicitly includes competitor research via WebSearch/WebFetch
+- [x] **Implementation Assessment**: How deep should the technical feasibility analysis go?
+  - **Answer**: High/Medium/Low complexity rating with dependencies list
 
 ## Objective
 
@@ -126,6 +186,8 @@ Create a specialized Claude Code subagent that autonomously researches and ident
 - [x] **System Prompt Engineering**: Comprehensive instructions for autonomous research
 - [x] **Template-Driven Output**: Structured .fr.md format for consistency
 - [x] **Workflow Integration**: Outputs compatible with existing task management system
+- [ ] **Model Optimization**: Consider adding model selection for cost/performance balance
+- [ ] **Parallel Processing**: Consider enabling sub-task delegation for large research scopes
 
 ## Tool Selection
 
@@ -212,6 +274,19 @@ Create a specialized Claude Code subagent that autonomously researches and ident
 
 
 
+## Additional Considerations (From Review)
+
+### Prompt Engineering Enhancements
+Based on best practices research:
+- Consider adding "MUST BE USED" for stronger proactive invocation
+- Include specific invocation triggers in description
+- Add error recovery instructions in system prompt
+
+### Integration Patterns
+- Feature research → draft-task workflow confirmed compatible
+- .fr.md format allows manual review before task creation
+- Consider adding metadata fields for traceability
+
 ## Risk Assessment
 
 ### Technical Risks
@@ -266,3 +341,5 @@ Create a specialized Claude Code subagent that autonomously researches and ident
 - Claude Code Subagents Documentation: https://docs.anthropic.com/en/docs/claude-code/subagents
 - Example research prompt from CMS admin analysis
 - Task management workflows: `dev-handbook/workflow-instructions/`
+- Best Practices Research (2025): Model selection, context isolation, orchestration patterns
+- Example implementations: git-commit-manager agent (project reference)
