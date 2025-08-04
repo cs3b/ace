@@ -2,7 +2,7 @@
 
 require 'pathname'
 require 'fileutils'
-require 'erb'
+require 'yaml'
 
 module CodingAgentTools
   module Organisms
@@ -15,7 +15,7 @@ module CodingAgentTools
         @workflow_dir = @project_root / "dev-handbook/workflow-instructions"
         @custom_dir = @project_root / "dev-handbook/.integrations/claude/commands/_custom"
         @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands/_generated"
-        @template_path = @project_root / "dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl"
+        @template_path = @project_root / "dev-handbook/.integrations/claude/command.template.md"
         @stats = { generated: 0, skipped: 0, errors: [] }
       end
 
@@ -142,6 +142,12 @@ module CodingAgentTools
 
           begin
             content = render_template(template_content, workflow)
+            
+            # Validate YAML front-matter
+            unless validate_yaml_frontmatter(content)
+              puts "⚠ Warning: Invalid YAML front-matter for #{workflow}.md"
+            end
+            
             output_path.write(content)
             puts "✓ Created: _generated/#{workflow}.md"
             @stats[:generated] += 1
@@ -159,18 +165,123 @@ module CodingAgentTools
         if @template_path.exist?
           @template_path.read
         else
-          # Fallback to hardcoded template if file doesn't exist
-          <<~TEMPLATE
-            read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
-
-            read and run @dev-handbook/.integrations/claude/commands/commit.md
-          TEMPLATE
+          # Return nil to indicate template is missing
+          # The render_template method will handle this gracefully
+          nil
         end
       end
 
       def render_template(template_content, workflow_name)
-        # Use ERB for template rendering to match the existing .tmpl file
-        ERB.new(template_content).result(binding)
+        metadata = infer_metadata(workflow_name)
+        
+        # Build YAML front-matter programmatically (safer than eval)
+        yaml_lines = ["---"]
+        yaml_lines << "description: #{metadata[:description]}"
+        yaml_lines << "allowed-tools: #{metadata[:allowed_tools]}" if metadata[:allowed_tools]
+        yaml_lines << "argument-hint: \"#{metadata[:argument_hint]}\"" if metadata[:argument_hint]
+        yaml_lines << "model: #{metadata[:model]}" if metadata[:model]
+        yaml_lines << "---"
+        yaml_lines << ""
+        
+        # Add the workflow reference lines
+        yaml_lines << "read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md"
+        yaml_lines << ""
+        yaml_lines << "read and run @.claude/commands/commit.md"
+        
+        yaml_lines.join("\n")
+      end
+
+      def infer_metadata(workflow)
+        metadata = {}
+
+        # Generate description from workflow name - more sophisticated
+        description = workflow.gsub('-', ' ')
+        description = description.split.map(&:capitalize).join(' ')
+        # Special case handling for common abbreviations
+        description.gsub!(/\bApi\b/, 'API')
+        description.gsub!(/\bAdr\b/, 'ADR')
+        metadata[:description] = description
+
+        # Comprehensive allowed-tools inference based on workflow type
+        case workflow
+        # Git operations
+        when /^git-/, /commit/, /rebase/, /merge/
+          metadata[:allowed_tools] = "Bash(git *), Read, Write"
+        # Task management workflows
+        when /^draft-task/, /^plan-task/, /^work-on-task/, /^review-task/, /^complete-task/
+          metadata[:allowed_tools] = "Read, Write, TodoWrite, Bash(task-manager *)"
+        # Creation workflows
+        when /^create-adr/, /^create-api-docs/, /^create-user-docs/, /^create-reflection-note/
+          metadata[:allowed_tools] = "Read, Write, Grep, Glob"
+        when /^create-test-cases/
+          metadata[:allowed_tools] = "Read, Write, Bash(bundle exec rspec), Grep"
+        # Testing and fixing workflows
+        when /^test-/, /^validate-/
+          metadata[:allowed_tools] = "Bash, Read, Grep"
+        when /^fix-tests/, /^fix-linting-issue/
+          metadata[:allowed_tools] = "Read, Write, Edit, Bash(bundle exec *), Grep"
+        # Research and analysis workflows
+        when /^research/, /analyze/
+          metadata[:allowed_tools] = "Read, Grep, Glob, WebSearch"
+        # Synthesis workflows
+        when /^synthesize-reflection-notes/
+          metadata[:allowed_tools] = "Read, Write, Grep, TodoWrite"
+        # Project context loading
+        when /^load-project-context/
+          metadata[:allowed_tools] = "Read, LS"
+        # Release workflows
+        when /^draft-release/, /^release/
+          metadata[:allowed_tools] = "Read, Write, Bash(task-manager release *), Grep"
+        # Update workflows
+        when /^update-blueprint/
+          metadata[:allowed_tools] = "Read, Write, Edit, Grep"
+        # Capture workflows
+        when /^capture-idea/
+          metadata[:allowed_tools] = "Write, TodoWrite"
+        # Default fallback for any uncategorized workflows
+        else
+          metadata[:allowed_tools] = "Read, Write, Edit, Grep"
+        end
+
+        # Add argument hints for parameterized workflows
+        case workflow
+        when /work-on-task/, /review-task/, /plan-task/, /complete-task/
+          metadata[:argument_hint] = "[task-id]"
+        when /rebase-against/, /merge-from/
+          metadata[:argument_hint] = "[branch-name]"
+        when /fix-linting-issue-from/
+          metadata[:argument_hint] = "[linter-output-file]"
+        when /draft-release/, /release/
+          metadata[:argument_hint] = "[version]"
+        when /capture-idea/
+          metadata[:argument_hint] = "[idea-description]"
+        when /create-adr/
+          metadata[:argument_hint] = "[decision-title]"
+        end
+
+        # Select model for complex workflows
+        case workflow
+        when /analyze/, /synthesize/, /research/
+          metadata[:model] = "opus"
+        when /fix-tests/, /fix-linting/
+          metadata[:model] = "sonnet"  # Fast iteration for fixes
+        end
+
+        metadata
+      end
+
+      def validate_yaml_frontmatter(content)
+        # Extract YAML between --- markers
+        yaml_match = content.match(/\A---\n(.*?)\n---/m)
+        return false unless yaml_match
+
+        begin
+          YAML.safe_load(yaml_match[1])
+          true
+        rescue Psych::SyntaxError => e
+          puts "Warning: Invalid YAML in generated command: #{e.message}"
+          false
+        end
       end
     end
   end
