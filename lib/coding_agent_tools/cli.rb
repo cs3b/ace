@@ -169,12 +169,14 @@ module CodingAgentTools
 
         register "handbook", aliases: [] do |prefix|
           prefix.register "sync-templates", Commands::Handbook::SyncTemplates
-          # Register claude commands with hyphenated names
-          prefix.register "claude-generate-commands", Commands::Handbook::Claude::GenerateCommands
-          prefix.register "claude-update-registry", Commands::Handbook::Claude::UpdateRegistry
-          prefix.register "claude-integrate", Commands::Handbook::Claude::Integrate
-          prefix.register "claude-validate", Commands::Handbook::Claude::Validate
-          prefix.register "claude-list", Commands::Handbook::Claude::List
+          # Register claude commands as a proper subcommand namespace
+          prefix.register "claude", aliases: [] do |claude|
+            claude.register "generate-commands", Commands::Handbook::Claude::GenerateCommands
+            claude.register "update-registry", Commands::Handbook::Claude::UpdateRegistry
+            claude.register "integrate", Commands::Handbook::Claude::Integrate
+            claude.register "validate", Commands::Handbook::Claude::Validate
+            claude.register "list", Commands::Handbook::Claude::List
+          end
         end
 
         @handbook_commands_registered = true

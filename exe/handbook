@@ -34,12 +34,14 @@ module HandbookCli
     # Register handbook commands directly under the root
     register "sync-templates", CodingAgentTools::Cli::Commands::Handbook::SyncTemplates
     
-    # Register claude commands
-    register "claude-generate-commands", CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
-    register "claude-update-registry", CodingAgentTools::Cli::Commands::Handbook::Claude::UpdateRegistry
-    register "claude-integrate", CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
-    register "claude-validate", CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
-    register "claude-list", CodingAgentTools::Cli::Commands::Handbook::Claude::List
+    # Register claude commands as a proper subcommand namespace
+    register "claude", aliases: [] do |prefix|
+      prefix.register "generate-commands", CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
+      prefix.register "update-registry", CodingAgentTools::Cli::Commands::Handbook::Claude::UpdateRegistry
+      prefix.register "integrate", CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
+      prefix.register "validate", CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
+      prefix.register "list", CodingAgentTools::Cli::Commands::Handbook::Claude::List
+    end
 
     # Version command
     class Version < Dry::CLI::Command
