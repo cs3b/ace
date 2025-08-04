@@ -1,30 +1,69 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Coding Agent Tools - Handbook CLI
-#
-# This executable provides handbook functionality including template synchronization
-# and other handbook-related operations.
-#
-# Usage: handbook [SUBCOMMAND] [options]
-#
-# Examples:
-#   handbook sync-templates
-#   handbook sync-templates --dry-run
-#   handbook sync-templates --path custom/path --verbose
-#   handbook sync-templates --commit
-#
-# Subcommands:
-#   sync-templates  Synchronize XML-embedded template content with files
+# Handbook - Direct interface to handbook functionality
+# This provides a focused entry point for handbook operations
 
+# Ensure we use the correct Gemfile regardless of current directory
+gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
+ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+
+begin
+  require "bundler/setup"
+rescue LoadError
+  # Continue without bundler if not available
+end
+
+# Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
 lib_path = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/molecules/executable_wrapper"
+require "coding_agent_tools/cli/commands/handbook/sync_templates"
+require "coding_agent_tools/cli/commands/handbook/claude/generate_commands"
+require "coding_agent_tools/cli/commands/handbook/claude/update_registry"
+require "coding_agent_tools/cli/commands/handbook/claude/integrate"
+require "coding_agent_tools/cli/commands/handbook/claude/validate"
+require "coding_agent_tools/cli/commands/handbook/claude/list"
+require "dry/cli"
 
-CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ["handbook"],
-  registration_method: :register_handbook_commands,
-  executable_name: "handbook"
-).call
+module HandbookCli
+  module Commands
+    extend Dry::CLI::Registry
+
+    # Register handbook commands directly under the root
+    register "sync-templates", CodingAgentTools::Cli::Commands::Handbook::SyncTemplates
+    
+    # Register claude commands
+    register "claude-generate-commands", CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
+    register "claude-update-registry", CodingAgentTools::Cli::Commands::Handbook::Claude::UpdateRegistry
+    register "claude-integrate", CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
+    register "claude-validate", CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
+    register "claude-list", CodingAgentTools::Cli::Commands::Handbook::Claude::List
+
+    # Version command
+    class Version < Dry::CLI::Command
+      desc "Print version"
+
+      def call(*)
+        require "coding_agent_tools/version"
+        puts "Handbook #{CodingAgentTools::VERSION}"
+      end
+    end
+
+    register "version", Version, aliases: ["v", "-v", "--version"]
+  end
+end
+
+begin
+  result = Dry::CLI.new(HandbookCli::Commands).call
+  # dry-cli returns 0 for successful commands including help
+  exit(result.is_a?(Integer) ? result : 0)
+rescue Dry::CLI::Error => e
+  warn "Error: #{e.message}"
+  exit 1
+rescue => e
+  warn "An unexpected error occurred: #{e.message}"
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  exit 1
+end

@@ -161,9 +161,20 @@ module CodingAgentTools
         return if @handbook_commands_registered
 
         require_relative "cli/commands/handbook/sync_templates"
+        require_relative "cli/commands/handbook/claude/generate_commands"
+        require_relative "cli/commands/handbook/claude/update_registry"
+        require_relative "cli/commands/handbook/claude/integrate"
+        require_relative "cli/commands/handbook/claude/validate"
+        require_relative "cli/commands/handbook/claude/list"
 
         register "handbook", aliases: [] do |prefix|
           prefix.register "sync-templates", Commands::Handbook::SyncTemplates
+          # Register claude commands with hyphenated names
+          prefix.register "claude-generate-commands", Commands::Handbook::Claude::GenerateCommands
+          prefix.register "claude-update-registry", Commands::Handbook::Claude::UpdateRegistry
+          prefix.register "claude-integrate", Commands::Handbook::Claude::Integrate
+          prefix.register "claude-validate", Commands::Handbook::Claude::Validate
+          prefix.register "claude-list", Commands::Handbook::Claude::List
         end
 
         @handbook_commands_registered = true
