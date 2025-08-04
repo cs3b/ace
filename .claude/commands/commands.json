@@ -1,8 +1,15 @@
 {
+  "/capture-idea": {},
   "/code-review": {
     "workspace_restrictions": {
-      "allowed_roots": ["/Users/michalczyz/Projects/coding-agent-tools"],
-      "blocked_patterns": ["../", "~", "/Users/michalczyz/.*"]
+      "allowed_roots": [
+        "/Users/michalczyz/Projects/coding-agent-tools"
+      ],
+      "blocked_patterns": [
+        "../",
+        "~",
+        "/Users/michalczyz/.*"
+      ]
     },
     "tools": {
       "Edit": "project_only",
@@ -10,42 +17,43 @@
       "MultiEdit": "project_only"
     }
   },
-  "/create-self-reflection-note": {
-    "workspace_restrictions": {
-      "allowed_roots": ["/Users/michalczyz/Projects/coding-agent-tools"],
-      "enforce_project_boundary": true
-    }
-  },
   "/commit": {},
   "/create-adr": {},
   "/create-api-docs": {},
   "/create-reflection-note": {},
-  "/draft-task": {},
+  "/create-self-reflection-note": {
+    "workspace_restrictions": {
+      "allowed_roots": [
+        "/Users/michalczyz/Projects/coding-agent-tools"
+      ],
+      "enforce_project_boundary": true
+    }
+  },
   "/create-test-cases": {},
   "/create-user-docs": {},
   "/draft-release": {},
+  "/draft-task": {},
+  "/draft-tasks": {},
+  "/fix-linting-issue-from": {},
   "/fix-tests": {},
+  "/handbook-review": {},
+  "/improve-code-coverage": {},
   "/initialize-project-structure": {},
   "/load-project-context": {},
-  "/publish-release": {},
   "/plan-task": {},
+  "/plan-tasks": {},
+  "/publish-release": {},
+  "/rebase-against": {},
+  "/replan-cascade-task": {},
+  "/review-code": {},
+  "/review-synthesizer": {},
+  "/review-task": {},
+  "/review-tasks": {},
   "/save-session-context": {},
+  "/synthesize-reflection-notes": {},
+  "/synthesize-reviews": {},
   "/update-blueprint": {},
   "/update-roadmap": {},
   "/work-on-task": {},
-  "/fix-linting-issue-from": {},
-  "/handbook-review": {},
-  "/improve-code-coverage": {},
-  "/rebase-against": {},
-  "/review-code": {},
-  "/review-synthesizer": {},
-  "/synthesize-reflection-notes": {},
-  "/synthesize-reviews": {},
-  "/work-on-tasks": {},
-  "/plan-tasks": {},
-  "/capture-idea": {},
-  "/replan-cascade-task": {},
-  "/draft-tasks": {},
-  "/review-task": {},
-  "/review-tasks": {}
+  "/work-on-tasks": {}
 }
