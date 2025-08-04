@@ -14,14 +14,21 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/workflow-instructions"))
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_custom"))
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated"))
-    FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/templates"))
+    FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude"))
     
     # Create template file
-    template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl")
+    template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/command.template.md")
     File.write(template_path, <<~TEMPLATE)
-      read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
+      ---
+      description: \#{description}
+      \#{allowed_tools ? "allowed-tools: \#{allowed_tools}" : ""}
+      \#{argument_hint ? "argument-hint: \"\#{argument_hint}\"" : ""}
+      \#{model ? "model: \#{model}" : ""}
+      ---
 
-      read and run @dev-handbook/.integrations/claude/commands/commit.md
+      read whole file and follow @dev-handbook/workflow-instructions/\#{workflow_name}.wf.md
+
+      read and run @.claude/commands/commit.md
     TEMPLATE
 
     # Create some workflow files
@@ -69,8 +76,11 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
         # Verify files were created with correct content
         test_file = File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated/test-workflow.md")
         expect(File.exist?(test_file)).to be true
-        expect(File.read(test_file)).to include("@dev-handbook/workflow-instructions/test-workflow.wf.md")
-        expect(File.read(test_file)).to include("@dev-handbook/.integrations/claude/commands/commit.md")
+        content = File.read(test_file)
+        expect(content).to include("@dev-handbook/workflow-instructions/test-workflow.wf.md")
+        expect(content).to include("@.claude/commands/commit.md")
+        expect(content).to include("---")
+        expect(content).to include("description: Test Workflow")
       end
 
       it "skips existing generated commands by default" do
@@ -139,7 +149,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
     context "error handling" do
       it "handles missing template gracefully" do
         # Remove template file
-        template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl")
+        template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/command.template.md")
         FileUtils.rm(template_path)
         
         result = generator.generate
@@ -159,6 +169,69 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
         expect(result.stats[:generated]).to eq(0)
         expect(result.missing_workflows).to be_empty
       end
+    end
+  end
+
+  describe "#generate_command_content" do
+    it "includes YAML front-matter" do
+      # Create capture-idea workflow
+      File.write(
+        File.join(tmpdir, "dev-handbook/workflow-instructions/capture-idea.wf.md"),
+        "# capture-idea workflow content"
+      )
+      
+      result = generator.generate(workflow: "capture-idea")
+      
+      expect(result.stats[:generated]).to eq(1)
+      content_file = File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated/capture-idea.md")
+      content = File.read(content_file)
+      expect(content).to start_with("---")
+      expect(content).to include("description: Capture Idea")
+    end
+
+    it "adds allowed-tools for git workflows" do
+      # Create git-commit workflow
+      File.write(
+        File.join(tmpdir, "dev-handbook/workflow-instructions/git-commit.wf.md"),
+        "# git-commit workflow content"
+      )
+      
+      result = generator.generate(workflow: "git-commit")
+      
+      expect(result.stats[:generated]).to eq(1)
+      content_file = File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated/git-commit.md")
+      content = File.read(content_file)
+      expect(content).to include("allowed-tools: Bash(git *), Read, Write")
+    end
+
+    it "adds argument-hint for parameterized workflows" do
+      # Create work-on-task workflow
+      File.write(
+        File.join(tmpdir, "dev-handbook/workflow-instructions/work-on-task.wf.md"),
+        "# work-on-task workflow content"
+      )
+      
+      result = generator.generate(workflow: "work-on-task")
+      
+      expect(result.stats[:generated]).to eq(1)
+      content_file = File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated/work-on-task.md")
+      content = File.read(content_file)
+      expect(content).to include('argument-hint: "[task-id]"')
+    end
+
+    it "generates valid YAML" do
+      result = generator.generate(workflow: "test-workflow")
+      
+      expect(result.stats[:generated]).to eq(1)
+      content_file = File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated/test-workflow.md")
+      content = File.read(content_file)
+      
+      # Extract YAML front-matter
+      yaml_match = content.match(/\A---\n(.*?)\n---/m)
+      expect(yaml_match).not_to be_nil
+      
+      # Should be valid YAML
+      expect { YAML.safe_load(yaml_match[1]) }.not_to raise_error
     end
   end
 
