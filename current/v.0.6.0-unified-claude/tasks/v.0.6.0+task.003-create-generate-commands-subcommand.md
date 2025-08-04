@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.003
-status: in-progress
+status: done
 priority: high
 estimate: 6h
 dependencies: [v.0.6.0+task.002]
@@ -125,11 +125,11 @@ handbook claude generate-commands --workflow capture-idea
 - Template variables missing: Use safe defaults
 
 ### Success Criteria
-- [ ] **Workflow Scanning**: All .wf.md files are discovered and analyzed
-- [ ] **Gap Detection**: Missing commands are accurately identified
-- [ ] **Template Application**: Commands generated using correct template
-- [ ] **Progress Reporting**: Clear output showing what's being done
-- [ ] **Idempotent Operation**: Running twice produces same result
+- [x] **Workflow Scanning**: All .wf.md files are discovered and analyzed
+- [x] **Gap Detection**: Missing commands are accurately identified
+- [x] **Template Application**: Commands generated using correct template
+- [x] **Progress Reporting**: Clear output showing what's being done
+- [x] **Idempotent Operation**: Running twice produces same result
 
 ### Validation Questions
 - [ ] **Custom Detection**: How to identify if a command is custom vs should be generated?
@@ -238,7 +238,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
 ### Execution Steps
 
-- [ ] Implement generate-commands command class
+- [x] Implement generate-commands command class
   ```ruby
   # lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb
   module CodingAgentTools
@@ -265,7 +265,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   end
   ```
 
-- [ ] Create command generator organism
+- [x] Create command generator organism
   ```ruby
   # lib/coding_agent_tools/organisms/claude_command_generator.rb
   module CodingAgentTools
@@ -297,7 +297,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   > Assert: Generator creates with correct paths
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
 
-- [ ] Implement workflow scanning
+- [x] Implement workflow scanning
   ```ruby
   def find_workflows(specific = nil)
     if specific
@@ -316,7 +316,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   > Assert: Finds all .wf.md files
   > Command: bundle exec rspec -e "finds all workflow files"
 
-- [ ] Implement missing command detection
+- [x] Implement missing command detection
   ```ruby
   def find_missing_commands(workflows)
     workflows.reject do |workflow|
@@ -327,7 +327,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   end
   ```
 
-- [ ] Implement template-based generation
+- [x] Implement template-based generation
   ```ruby
   def generate_commands(workflows, force)
     # Use simple template matching existing pattern
@@ -356,7 +356,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   > Assert: Creates command files with correct content
   > Command: bundle exec rspec -e "generates command files"
 
-- [ ] Add comprehensive test coverage
+- [x] Add comprehensive test coverage
   ```ruby
   # spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
   RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
@@ -378,7 +378,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
   end
   ```
 
-- [ ] Test idempotency
+- [x] Test idempotency
   > TEST: Idempotent Generation
   > Type: Integration Test
   > Assert: Running twice produces same result
@@ -386,13 +386,13 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
 ## Acceptance Criteria
 
-- [ ] Scans all workflow files correctly
-- [ ] Identifies missing commands accurately
-- [ ] Generates commands using template
-- [ ] Respects --dry-run flag
-- [ ] Respects --force flag for regeneration
-- [ ] Supports --workflow for specific generation
-- [ ] Clear progress output during generation
+- [x] Scans all workflow files correctly
+- [x] Identifies missing commands accurately
+- [x] Generates commands using template
+- [x] Respects --dry-run flag
+- [x] Respects --force flag for regeneration
+- [x] Supports --workflow for specific generation
+- [x] Clear progress output during generation
 
 ## References
 
