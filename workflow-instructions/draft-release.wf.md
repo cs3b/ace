@@ -37,12 +37,10 @@ user-provided release scope into actionable tasks.
      ```
      dev-taskflow/backlog/v.X.Y.Z-codename/
      ├── tasks/
+     ├── ideas/
      ├── docs/
-     ├── decisions/
-     ├── codemods/
      ├── reflections/
      ├── researches/
-     ├── test-cases/
      └── user-experience/
      ```
 
@@ -65,11 +63,8 @@ user-provided release scope into actionable tasks.
    * For each distinct item or group:
      a. Determine the appropriate category:
         * `tasks/` - Implementation work
-        * `decisions/` - Architecture decisions (ADRs)
         * `docs/` - Documentation tasks
         * `researches/` - Investigation/spike tasks
-        * `test-cases/` - Test scenario definitions
-        * `user-experience/` - UX/UI related tasks
 
      b. Create a new task file using the task template:
 
@@ -106,7 +101,7 @@ user-provided release scope into actionable tasks.
    * Commit roadmap changes separately with message:
 
      ```bash
-     git commit -m "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
+     git-commit -i "docs(roadmap): add release v.X.Y.Z-codename to planned releases"
      ```
 
 8. **Validate Directory Structure**
@@ -115,15 +110,15 @@ user-provided release scope into actionable tasks.
      ```bash
      # Verify directory structure
      ls -la dev-taskflow/backlog/v.X.Y.Z-codename/
-     
+
      # Check subdirectories
      for dir in tasks docs decisions codemods reflections researches test-cases user-experience; do
        [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || echo "✗ $dir missing"
      done
-     
+
      # Verify overview file
      [ -f "dev-taskflow/backlog/v.X.Y.Z-codename/v.X.Y.Z-codename.md" ] && echo "✓ Overview file" || echo "✗ Overview file missing"
-     
+
      # Count created tasks
      find dev-taskflow/backlog/v.X.Y.Z-codename/tasks -name "*.md" | wc -l
      ```
@@ -132,7 +127,7 @@ user-provided release scope into actionable tasks.
    * Display the following git command for the user:
 
      ```bash
-     bin/gc -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
+     git-commit -i "scaffold release v.X.Y.Z-codename with initial structure and tasks"
      ```
 
    * Do **not** run the command automatically
@@ -264,40 +259,6 @@ user-provided release scope into actionable tasks.
 
 **Prevention:**
 
-* Verify dev-taskflow structure exists before starting
-* Check write permissions early in process
-* Use absolute paths for directory operations
-
-**Template File Missing:**
-
-**Symptoms:**
-
-* Cannot find release overview template
-* Task template files not available
-* Template content appears corrupted
-
-**Recovery Steps:**
-
-1. Check template file existence:
-
-   ```bash
-   ls -la dev-handbook/templates/release-management/
-   ls -la dev-handbook/templates/release-tasks/
-   ```
-
-2. Verify dev-handbook submodule is initialized:
-
-   ```bash
-   git submodule status
-   git submodule update --init --recursive
-   ```
-
-3. Use fallback basic template format if templates unavailable
-4. Create minimal template structure manually
-5. Ask user to check submodule configuration
-
-**Prevention:**
-
 * Verify template availability before release creation
 * Check dev-handbook submodule status
 * Have fallback template formats ready
@@ -418,7 +379,7 @@ user-provided release scope into actionable tasks.
 2. Verify each required subdirectory exists:
 
    ```bash
-   for dir in tasks docs decisions codemods reflections researches test-cases user-experience; do
+   for dir in tasks docs reflections researches; do
      [ -d "dev-taskflow/backlog/v.X.Y.Z-codename/$dir" ] && echo "✓ $dir" || mkdir -p "dev-taskflow/backlog/v.X.Y.Z-codename/$dir"
    done
    ```
@@ -475,7 +436,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 
 - **Type**: [Major | Feature | Bug Fix]
 - **Start Date**: YYYY-MM-DD
-- **Target Date**: YYYY-MM-DD  
+- **Target Date**: YYYY-MM-DD
 - **Status**: Planning
 
 ## Collected Notes
@@ -508,7 +469,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
    - [ ] <!-- Architecture decision/design task -->
    - [ ] <!-- API design task -->
 
-2. **Dependencies**  
+2. **Dependencies**
    - [ ] <!-- Dependency setup task -->
    - [ ] <!-- Integration task -->
 
@@ -549,7 +510,7 @@ moves to `current/`. For publishing completed releases, use the publish-release 
 ## Notes
 
 <!-- Additional context, decisions, or clarifications --></template>
-    
+
     <template path="dev-handbook/templates/task-management/task.pending.template.md">---
 id: <generated automatically by nav-path>
 status: pending
