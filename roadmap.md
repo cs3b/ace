@@ -1,6 +1,6 @@
 ---
 title: Project Roadmap
-last_reviewed: 2025-01-31
+last_reviewed: 2025-08-04
 status: active
 ---
 
@@ -35,7 +35,6 @@ To empower developers and AI agents with Coding Agent Tools (CAT), a seamless Ru
 
 | Version | Codename                  | Target Window | Goals                                                                                     | Key Epics (Conceptual/Requirement IDs)                                                               |
 |---------|---------------------------|---------------|-------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| v.0.4.0 | "Replanning"              | Q1 2025       | Introduce specification cycle architecture separating idea capture, behavioral specification, and implementation planning | Specification Cycle, Behavior-First Design, Task State Management |
 | v.0.5.0 | "Insights"                | Q1 2025       | Address reflection-driven improvements for tool reliability, workflow refinement, and development efficiency | Tool Output Validation, Model Interface Discovery, Synthesis Quality, Error Pattern Library |
 | v.0.6.0 | "unified-claude"          | Feb 2025      | Unify Claude Code integration under handbook CLI with hybrid command management           | Claude CLI Integration, Command Generation, Validation Framework, Static Command Management          |
 | v.0.7.0 | "Conductor"               | Q4 2025       | Task Management & Orchestration theme features. Beta release.                             | R-TASK-1, R-TASK-2, R-TASK-3, R-TASK-4, R-TASK-5, R-TASK-6                                         |
@@ -49,9 +48,9 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 ## 5. Cross-Release Dependencies
 
 - **Advanced LLM Features (v1.0.0):** Several P1 features in v1.0.0 "Keystone", such as LLM-based context summarization (R-CTX-4) and LLM-assisted task expansion (R-TCI-2), depend on the foundational LLM Integration capabilities (completed in previous releases).
-- **Task Utilities Data Source (v0.4.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.4.0 "Conductor" depend on the availability and stability of tools infrastructure (now completed with CAT gem).
-- **Specification Cycle (v.0.4.0):** The "Replanning" release introduces foundational changes to task specification that will impact all future task management features.
-- **Workflow Enhancement (v.0.3.0):** Current workflow independence initiatives build upon the completed Ruby gem infrastructure and tools migration.
+- **Task Utilities Data Source (v0.7.0):** The "Task Management & Orchestration" features (R-TASK-1, R-TASK-2, R-TASK-4) in v0.7.0 "Conductor" depend on the availability and stability of tools infrastructure (now completed with CAT gem).
+- **Specification Cycle Foundation:** The completed v.0.4.0 "Replanning" release introduced foundational changes to task specification that will impact all future task management features.
+- **Workflow Enhancement:** Completed workflow independence initiatives build upon the Ruby gem infrastructure and tools migration.
 - **External Service Dependencies:**
     - LLM Integration requires access to Google Gemini API and a local LM Studio installation.
     - Git Workflow Automation for repository creation requires a configured GitHub App/token.
@@ -60,6 +59,7 @@ _Note: Release planning should align with project folder structure in `dev-taskf
 
 | Date       | Summary                                                                         | Author         |
 |------------|---------------------------------------------------------------------------------|----------------|
+| 2025-08-04 | Removed completed v.0.4.0 "Replanning" release from planned releases after successful publication with 21 tasks completed | AI Assistant   |
 | 2025-01-31 | Added v.0.6.0 "unified-claude" release for unifying Claude commands under handbook CLI | AI Assistant   |
 | 2025-01-30 | Added v.0.5.0 "Insights" release based on reflection analysis with focus on tool reliability and development efficiency | AI Assistant   |
 | 2025-01-30 | Removed completed v.0.3.0 "Workflows" release from planned releases after successful publication with 225+ tasks completed | AI Assistant   |

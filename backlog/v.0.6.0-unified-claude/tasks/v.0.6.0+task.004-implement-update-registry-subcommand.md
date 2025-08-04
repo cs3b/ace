@@ -5,9 +5,38 @@ priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.001, v.0.6.0+task.002]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Implement update-registry subcommand
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the registry updater scan `.claude/commands/` or `dev-handbook/.integrations/claude/commands/`?
+  - **Research conducted**: Found `.claude/commands/` contains 32 command files and commands.json
+  - **Research conducted**: `dev-handbook/.integrations/claude/commands/` only has 6 files, no commands.json
+  - **Current state**: Commands.json exists at `.claude/commands/commands.json`
+  - **Suggested default**: Scan `.claude/commands/` which is the active location
+  - **Why needs human input**: Task spec mentions dev-handbook path but actual files are elsewhere
+
+- [ ] Should update-registry wait for task.001 directory structure creation or work with current flat structure?
+  - **Research conducted**: No `_custom` or `_generated` directories exist yet
+  - **Research conducted**: Task.001 is a dependency and will create these directories
+  - **Suggested default**: Implement to support both flat and subdirectory structures
+  - **Why needs human input**: Implementation approach depends on timing and coordination
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the command be `handbook claude update-registry` or `handbook update-registry`?
+  - **Research conducted**: Current pattern is `handbook sync-templates` (no nested claude)
+  - **Research conducted**: No existing claude subcommand namespace in CLI
+  - **Suggested default**: `handbook update-registry` for consistency
+  - **Why needs human input**: Architecture decision for Claude-specific commands
+
+- [ ] What should happen if commands.json doesn't exist yet?
+  - **Research conducted**: Current commands.json exists with 33 commands registered
+  - **Suggested default**: Create new commands.json with proper structure
+  - **Why needs human input**: Bootstrap behavior needs specification
 
 ## Behavioral Specification
 
@@ -78,9 +107,18 @@ No changes made
 
 ### Validation Questions
 - [ ] **Metadata Format**: What fields should each command entry contain?
+  - **Research conducted**: Current format uses path as key with config object as value
+  - **Example found**: `"/capture-idea": {}` or with config like `"workspace_restrictions"`
+  - **Suggested default**: Preserve current format, add metadata only if needed
 - [ ] **Sort Order**: Should commands be alphabetically sorted?
+  - **Research conducted**: Current commands.json is alphabetically sorted by key
+  - **Suggested default**: Maintain alphabetical sorting for consistency
 - [ ] **Custom Fields**: Which non-standard fields should be preserved?
+  - **Research conducted**: Found `workspace_restrictions`, `tools` fields in some entries
+  - **Suggested default**: Preserve all existing fields during updates
 - [ ] **Version Control**: Should registry include version information?
+  - **Research conducted**: No version field in current commands.json
+  - **Suggested default**: Add optional `version` and `generated_at` at root level
 
 ## Objective
 
@@ -122,11 +160,13 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
 - Directory scanner for command discovery
 - JSON builder with schema validation
 - Backup management for safety
+- Follow existing organism pattern (similar to TemplateSynchronizer)
 
 ### Technology Stack
 - Ruby File/Dir for scanning
 - JSON library for parsing/generation
 - FileUtils for backup operations
+- Dry::CLI for command structure (existing pattern)
 
 ## Tool Selection
 
@@ -139,12 +179,14 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb` - Command implementation
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/update_registry.rb` - Command implementation (or in claude/ subdirectory if namespace needed)
 - `dev-tools/lib/coding_agent_tools/organisms/claude_registry_updater.rb` - Business logic
 - `dev-tools/spec/coding_agent_tools/organisms/claude_registry_updater_spec.rb` - Tests
+- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/update_registry_spec.rb` - Command tests
 
 ### Modify
-- `dev-handbook/.integrations/claude/commands/commands.json` - Registry file (regenerated)
+- `.claude/commands/commands.json` - Registry file (regenerated)
+- `dev-tools/lib/coding_agent_tools/cli.rb` - Register new command (if claude namespace, update register_handbook_commands)
 
 ### Delete
 - None required
@@ -162,6 +204,8 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
   - Mitigation: Report conflicts, use directory prefix in registry
 - **Missing Metadata**: Commands without proper headers
   - Mitigation: Extract from filename, provide defaults
+- **Path Discrepancy**: Task spec vs actual file locations
+  - Mitigation: Make paths configurable with sensible defaults
 
 ## Implementation Plan
 
@@ -176,12 +220,12 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
 
 - [ ] Implement update-registry command class
   ```ruby
-  # lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb
+  # lib/coding_agent_tools/cli/commands/handbook/update_registry.rb (path TBD based on namespace decision)
   module CodingAgentTools
-    module CLI
+    module Cli  # Note: Cli not CLI based on existing pattern
       module Commands
         module Handbook
-          module Claude
+          # module Claude if nested namespace needed
             class UpdateRegistry < Dry::CLI::Command
               desc "Update Claude commands.json registry"
               
@@ -208,9 +252,10 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
     module Organisms
       class ClaudeRegistryUpdater
         def initialize
-          @custom_dir = "dev-handbook/.integrations/claude/commands/_custom"
-          @generated_dir = "dev-handbook/.integrations/claude/commands/_generated"
-          @registry_path = "dev-handbook/.integrations/claude/commands/commands.json"
+          # Paths to be confirmed based on review questions
+          @custom_dir = ".claude/commands/_custom"  # After task.001 creates these
+          @generated_dir = ".claude/commands/_generated"  # After task.001 creates these
+          @registry_path = ".claude/commands/commands.json"  # Current location
         end
         
         def update(options)

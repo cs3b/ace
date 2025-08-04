@@ -20,10 +20,14 @@ needs_review: true
   - **Suggested default**: Use `.claude/commands/` at project root as primary location
   - **Why needs human input**: Two existing structures conflict - need decision on consolidation strategy
 
+  > the primary is dev-handbook/.integrations/claude/commands/, .claude/commands/ its just duplication from shared project dev-handbook
+
 - [ ] Should we consolidate commands from both locations or maintain dual structure?
   - **Research conducted**: Root `.claude/commands/` has more complete set; dev-handbook location has subset
   - **Suggested default**: Consolidate all commands into root `.claude/commands/` with new subdirectory structure
   - **Why needs human input**: Architectural decision affecting all future Claude integration
+
+  > we are maintaining dev-handbook (installation script will allow to duplicate them for the project purpose)
 
 - [ ] How should existing commands.json be migrated to support the new structure?
   - **Research conducted**: Current commands.json uses flat structure with path-based keys
@@ -31,16 +35,22 @@ needs_review: true
   - **Suggested default**: Add `type: "custom"|"generated"` field to each command entry
   - **Why needs human input**: Breaking change to existing format needs approval
 
+  > command.json should be only in .claude directory (its part of installing commands to claude) we don't need info custom or generated
+
 ### [MEDIUM] Enhancement Questions
 - [ ] Should generated commands be tracked in version control or added to .gitignore?
   - **Research conducted**: No current .gitignore patterns for Claude directories
   - **Suggested default**: Add `.claude/commands/_generated/` to .gitignore
   - **Why needs human input**: Version control strategy affects collaboration
 
+> we do not create folder .claude/commands/_generated/ - we only modify dev-handbook (and yes all the files are tracked there by github)
+
 - [ ] What naming convention should distinguish custom vs generated commands in commands.json?
   - **Research conducted**: Current commands use simple slash-prefixed names
   - **Suggested default**: Keep existing names, add metadata field for type
   - **Why needs human input**: Affects command discovery and tooling
+
+> no (command is command, sync script that is responsibility of task-003 will take care about it)
 
 ### [LOW] Implementation Details
 - [ ] Should we preserve the dev-handbook/.integrations/claude structure for backward compatibility?
@@ -149,7 +159,7 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 ### Create
 - `.claude/commands/_custom/` - Directory for hand-crafted commands (PRIMARY LOCATION)
-- `.claude/commands/_generated/` - Directory for auto-generated commands  
+- `.claude/commands/_generated/` - Directory for auto-generated commands
 - `.claude/templates/workflow-command.md.tmpl` - Template for workflow commands
 - `.claude/templates/agent-command.md.tmpl` - Template for agent commands
 - **Alternative if dev-handbook preferred**:
@@ -236,7 +246,7 @@ Create a clear, maintainable directory structure for Claude commands that separa
   for cmd in *.md; do
     [ -f "$cmd" ] && mv "$cmd" _custom/
   done
-  
+
   # Handle dev-handbook location (deprecate or symlink)
   # Option 1: Create symlinks for backward compatibility
   cd dev-handbook/.integrations/claude/commands/
@@ -365,5 +375,5 @@ EOF
 ## References
 
 - Current Claude integration structure
-- Best practices for command organization  
+- Best practices for command organization
 - Version control considerations for generated content
