@@ -106,6 +106,21 @@ module CodingAgentTools
           ManagerResult.new(nil, false, "Error generating task ID: #{e.message}")
         end
 
+        # Generate next available task ID for a specific release
+        # @param release_info [ReleaseInfo] Release information object
+        # @return [ManagerResult] Result containing generated task ID or error
+        def generate_id_for_release(release_info)
+          return ManagerResult.new(nil, false, 'Release info is required') unless release_info
+          
+          release_version = release_info.version
+          next_task_number = find_next_task_number(release_version, release_info.path)
+
+          new_task_id = "#{release_version}+task.#{next_task_number.to_s.rjust(3, '0')}"
+          ManagerResult.new(new_task_id, true, nil)
+        rescue StandardError => e
+          ManagerResult.new(nil, false, "Error generating task ID for release: #{e.message}")
+        end
+
         # Generate next release directory with codename
         # @param codename [String] Optional codename for the release
         # @return [ManagerResult] Result containing version and path or error

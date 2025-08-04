@@ -4,6 +4,7 @@ require 'dry/cli'
 require 'yaml'
 require_relative '../../../organisms/taskflow_management/release_manager'
 require_relative '../../../organisms/taskflow_management/task_manager'
+require_relative '../../../molecules/taskflow_management/release_resolver'
 require_relative '../../../molecules/file_io_handler'
 require_relative '../../../atoms/project_root_detector'
 
@@ -22,11 +23,14 @@ module CodingAgentTools
                             desc: "Time estimate (e.g., '4h', '2d', 'TBD')"
           option :status, type: :string, values: %w[pending in-progress done blocked draft], default: 'draft',
                           desc: 'Initial task status'
+          option :release, type: :string,
+                           desc: 'Release to create task in (version, codename, fullname, or path). Defaults to current release.'
 
           example [
             '--title "Implement feature X" --priority high --estimate 4h',
             '--title "Fix bug in authentication" --priority medium --status pending',
-            '--title "Research new library" --custom-field "library-name" --another-flag "value"'
+            '--title "Research new library" --custom-field "library-name" --another-flag "value"',
+            '--release v.0.5.0 --title "Task for specific release"'
           ]
 
           def call(**options)
@@ -40,20 +44,50 @@ module CodingAgentTools
             undefined_flags = parse_undefined_flags(ARGV)
             enhanced_options = options.merge(undefined_flags)
 
-            # Generate task ID
-            id_result = @release_manager.generate_id
-            unless id_result.success?
-              puts "Error: #{id_result.error_message}"
-              return 1
-            end
-            task_id = id_result.data
+            # Resolve release if specified
+            if options[:release]
+              release_result = CodingAgentTools::Molecules::TaskflowManagement::ReleaseResolver.resolve_release(
+                options[:release],
+                base_path: @project_root
+              )
+              
+              unless release_result.success?
+                puts "Error: #{release_result.error_message}"
+                return 1
+              end
+              
+              release_info = release_result.release_info
+              
+              # Generate task ID for the specified release
+              id_result = @release_manager.generate_id_for_release(release_info)
+              unless id_result.success?
+                puts "Error: #{id_result.error_message}"
+                return 1
+              end
+              task_id = id_result.data
+              
+              # Get tasks directory for the specified release
+              tasks_dir = File.join(release_info.path, 'tasks')
+              unless File.exist?(tasks_dir)
+                Dir.mkdir(tasks_dir)
+              end
+            else
+              # Use current release (original behavior)
+              # Generate task ID
+              id_result = @release_manager.generate_id
+              unless id_result.success?
+                puts "Error: #{id_result.error_message}"
+                return 1
+              end
+              task_id = id_result.data
 
-            # Get current release path
-            begin
-              tasks_dir = @release_manager.resolve_path('tasks', create_if_missing: true)
-            rescue StandardError => e
-              puts "Error: #{e.message}"
-              return 1
+              # Get current release path
+              begin
+                tasks_dir = @release_manager.resolve_path('tasks', create_if_missing: true)
+              rescue StandardError => e
+                puts "Error: #{e.message}"
+                return 1
+              end
             end
 
             # Generate filename from title
@@ -92,7 +126,7 @@ module CodingAgentTools
           # This captures dynamic flags like --custom-field value
           def parse_undefined_flags(argv)
             undefined_flags = {}
-            defined_flag_names = %w[title priority estimate status]
+            defined_flag_names = %w[title priority estimate status release]
             
             i = 0
             while i < argv.length
