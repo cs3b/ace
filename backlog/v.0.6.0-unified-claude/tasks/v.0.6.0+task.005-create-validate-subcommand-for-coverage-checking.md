@@ -19,11 +19,15 @@ needs_review: true
   - **Suggested default**: Separate ClaudeValidator class for single responsibility principle
   - **Why needs human input**: Architecture decision - could extend installer or keep separate
 
+> keep the ATOM architecture, and if there is need to refactor, let it go, but do not overload the class
+
 - [ ] How should we handle the directory structure difference between custom and generated commands?
   - **Research conducted**: Custom commands in dev-handbook/.integrations/claude/commands/, installed to .claude/commands/
   - **Current pattern**: ClaudeCommandsInstaller copies from both custom and generates from workflows
   - **Suggested default**: Check both _custom/ and _generated/ subdirectories if they exist
   - **Why needs human input**: Directory structure is evolving with task.003 adding _generated/
+
+> we should work on command / agent names (in dev-handbook they structure is different, but the names should be the same))
 
 ### [MEDIUM] Enhancement Questions
 - [ ] Should validation report format support JSON output for CI/CD integration?
@@ -32,17 +36,23 @@ needs_review: true
   - **Suggested default**: Support both text (default) and JSON formats
   - **Why needs human input**: Feature scope and CI/CD requirements
 
+> yes
+
 - [ ] What constitutes "outdated" - file timestamp or content hash comparison?
   - **Research conducted**: ClaudeCommandsInstaller uses File.mtime for comparison
   - **Current approach**: Timestamp-based comparison is simpler and faster
   - **Suggested default**: Use mtime (consistent with installer), add --deep flag for content comparison later
   - **Why needs human input**: Trade-off between accuracy and performance
 
-### [LOW] Future Enhancement Questions  
+> content hash
+
+### [LOW] Future Enhancement Questions
 - [ ] Should validation results be cacheable to speed up repeated runs?
   - **Research conducted**: No caching patterns found in existing validation commands
   - **Suggested default**: No caching initially, add if performance becomes an issue
   - **Why needs human input**: Premature optimization vs future needs
+
+> no - we are working on less then 100 files
 
 ## Behavioral Specification
 
@@ -248,15 +258,15 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
           module Claude
             class Validate < Dry::CLI::Command
               desc "Validate Claude command coverage"
-              
+
               option :check, type: :string, desc: "Specific check to run (missing, outdated, duplicates)"
               option :strict, type: :boolean, default: false, desc: "Exit with code 1 if issues found"
               option :workflow, type: :string, desc: "Validate specific workflow"
-              
+
               def call(**options)
                 validator = CodingAgentTools::Organisms::ClaudeValidator.new
                 result = validator.validate(options)
-                
+
                 exit(1) if options[:strict] && result.has_issues?
               end
             end
@@ -272,12 +282,12 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   # lib/coding_agent_tools/organisms/claude_validator.rb
   require 'pathname'
   require 'json'
-  
+
   module CodingAgentTools
     module Organisms
       class ClaudeValidator
         attr_reader :project_root, :validation_results
-        
+
         def initialize(project_root = nil)
           @project_root = Pathname.new(project_root || find_project_root)
           @workflow_dir = @project_root / "dev-handbook" / "workflow-instructions"
@@ -294,7 +304,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
             valid: []
           }
         end
-        
+
         def validate(options = {})
           if options[:workflow]
             validate_single_workflow(options[:workflow])
@@ -303,18 +313,18 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
           else
             run_all_validations
           end
-          
+
           format_output(options[:format] || 'text')
         end
-        
+
         def has_issues?
-          validation_results[:missing].any? || 
-          validation_results[:outdated].any? || 
+          validation_results[:missing].any? ||
+          validation_results[:outdated].any? ||
           validation_results[:duplicates].any?
         end
-        
+
         private
-        
+
         def find_project_root
           # Reuse logic from ClaudeCommandsInstaller
           current = Pathname.pwd
@@ -338,17 +348,17 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   def find_missing_commands
     workflows = Dir.glob(File.join(@workflow_dir, "*.wf.md"))
     missing = []
-    
+
     workflows.each do |workflow_path|
       name = File.basename(workflow_path, ".wf.md")
       unless command_exists?(name)
         missing << name
       end
     end
-    
+
     missing
   end
-  
+
   def command_exists?(name)
     File.exist?(File.join(@custom_dir, "#{name}.md")) ||
     File.exist?(File.join(@generated_dir, "#{name}.md"))
@@ -363,11 +373,11 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   ```ruby
   def find_outdated_commands
     outdated = []
-    
+
     all_commands.each do |cmd_path|
       workflow_name = File.basename(cmd_path, ".md")
       workflow_path = File.join(@workflow_dir, "#{workflow_name}.wf.md")
-      
+
       if File.exist?(workflow_path)
         if File.mtime(workflow_path) > File.mtime(cmd_path)
           outdated << {
@@ -378,7 +388,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
         end
       end
     end
-    
+
     outdated
   end
   ```
@@ -388,9 +398,9 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   def find_duplicate_commands
     custom_commands = @custom_dir.glob("*.md").map { |p| p.basename(".md").to_s } if @custom_dir.exist?
     generated_commands = @generated_dir.glob("*.md").map { |p| p.basename(".md").to_s } if @generated_dir.exist?
-    
+
     return [] unless custom_commands && generated_commands
-    
+
     duplicates = custom_commands & generated_commands
     duplicates.map { |name| { name: name, locations: ["_custom/", "_generated/"] } }
   end
@@ -404,9 +414,9 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   ```ruby
   def find_orphaned_commands
     workflows = @workflow_dir.glob("*.wf.md").map { |p| p.basename(".wf.md").to_s }
-    
+
     orphaned = []
-    
+
     # Check .claude/commands directory
     if @claude_dir.exist?
       @claude_dir.glob("*.md").each do |cmd_path|
@@ -416,10 +426,10 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
         end
       end
     end
-    
+
     orphaned
   end
-  
+
   def is_multi_task_command?(name)
     # Commands that handle multiple tasks don't map 1:1 to workflows
     %w[commit handbook-review load-project-context draft-tasks plan-tasks review-tasks work-on-tasks].include?(name)
@@ -434,13 +444,13 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   ```ruby
   def generate_report(validation_results)
     report = StringIO.new
-    
+
     report.puts "Validating Claude command coverage..."
     report.puts ""
     report.puts "Workflows found: #{validation_results[:workflow_count]}"
     report.puts "Commands found: #{validation_results[:command_count]}"
     report.puts ""
-    
+
     if validation_results[:missing].any?
       report.puts "✗ Missing commands:"
       validation_results[:missing].each do |name|
@@ -448,9 +458,9 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
       end
       report.puts ""
     end
-    
+
     # ... similar for outdated and duplicates
-    
+
     report.string
   end
   ```
@@ -463,11 +473,11 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
       it "runs all validations by default" do
         # Test implementation
       end
-      
+
       it "validates single workflow when specified" do
         # Test implementation
       end
-      
+
       it "runs specific check when requested" do
         # Test implementation
       end
