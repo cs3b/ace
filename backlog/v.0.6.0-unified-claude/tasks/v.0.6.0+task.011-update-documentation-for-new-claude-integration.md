@@ -5,9 +5,45 @@ priority: medium
 estimate: 3h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006, v.0.6.0+task.007]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Update documentation for new Claude integration
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the main Claude integration guide be created at `dev-handbook/.integrations/claude/README.md` or elsewhere?
+  - **Research conducted**: Directory `.integrations/claude/` exists with only `install-prompts.md`
+  - **No README.md found**: Main integration guide doesn't exist yet
+  - **Suggested default**: Create at `dev-handbook/.integrations/claude/README.md`
+  - **Why needs human input**: Confirm documentation structure matches intended organization
+
+- [ ] How should we handle the transition from `bin/claude-integrate` script references?
+  - **Research conducted**: Found 14 files referencing `claude-integrate` or `ClaudeCommandsInstaller`
+  - **Current state**: Script exists at `bin/claude-integrate` using old approach
+  - **Suggested default**: Add deprecation notices with clear migration path
+  - **Why needs human input**: User communication strategy for breaking changes
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should we include command examples for each subcommand or just main workflows?
+  - **Research conducted**: Current tools.md shows minimal examples (only sync-templates)
+  - **Similar patterns**: Other commands have 1-2 examples each
+  - **Suggested default**: 2-3 examples per subcommand showing common use cases
+  - **Why needs human input**: Documentation depth vs maintenance burden
+
+- [ ] What level of detail for the developer guide in `dev-tools/docs/development/`?
+  - **Research conducted**: Existing dev guides focus on implementation details
+  - **Current structure**: Has BUILD.md, DEVELOPMENT.md, etc.
+  - **Suggested default**: Include architecture, extension points, and testing guide
+  - **Why needs human input**: Target audience (contributors vs users) unclear
+
+### [LOW] Documentation Style Questions
+- [ ] Should command documentation use table format (like current tools.md) or detailed sections?
+  - **Research conducted**: tools.md uses tables for command overview
+  - **Pattern observed**: Brief table + detailed sections for complex commands
+  - **Suggested default**: Table for quick reference, sections for details
+  - **Why needs human input**: Consistency with existing documentation style
 
 ## Behavioral Specification
 
@@ -74,6 +110,8 @@ handbook claude generate-commands
 - [ ] **Example Depth**: How many examples per command?
 - [ ] **Version Notes**: How to mark deprecated features?
 - [ ] **Visual Aids**: Should we include diagrams?
+- [ ] **Cross-references**: How to link between handbook docs and tool docs?
+- [ ] **Command naming**: Confirm final names for all subcommands?
 
 ## Objective
 
@@ -157,14 +195,25 @@ Update all documentation to comprehensively cover the new unified Claude integra
 
 ### Planning Steps
 
-* [ ] Audit existing documentation
-* [ ] Create documentation outline
-* [ ] Identify all references to old system
+* [x] Audit existing documentation
+  - Found: `install-prompts.md` exists but no main README
+  - Found: tools.md has minimal handbook coverage
+  - Found: No Claude-specific developer documentation
+* [x] Create documentation outline
+  - Main guide at `.integrations/claude/README.md`
+  - Migration guide for transition
+  - Developer guide for contributors
+* [x] Identify all references to old system
+  - Found: 14 files reference `claude-integrate` or installer
+  - Includes: bin script, specs, tasks, reflections
 * [ ] Plan example scenarios
+  - Need: First-time setup flow
+  - Need: Migration from old system
+  - Need: Troubleshooting common issues
 
 ### Execution Steps
 
-- [ ] Update main integration guide
+- [ ] Create main integration guide (new file)
   ```markdown
   # Claude Code Integration
   
@@ -180,6 +229,17 @@ Update all documentation to comprehensively cover the new unified Claude integra
   handbook claude list
   handbook claude validate
   ```
+  
+  ## Overview
+  
+  The handbook CLI provides a unified interface for managing Claude Code commands and agents, replacing the legacy `claude-integrate` script with a more robust, integrated solution.
+  
+  ## Features
+  
+  - **Automatic Command Generation**: Creates commands from workflow instructions
+  - **Smart Categorization**: Separates custom and generated commands
+  - **Coverage Validation**: Ensures all workflows have corresponding commands
+  - **Agent Management**: Handles both commands and agent configurations
   ```
 
 - [ ] Create migration guide
@@ -219,9 +279,14 @@ Update all documentation to comprehensively cover the new unified Claude integra
   - Consistent format
   ```
 
-- [ ] Update tools.md
+- [ ] Update tools.md (add new section after handbook entry)
   ```markdown
-  ### Claude Integration Commands
+  ### Handbook Commands
+  
+  #### handbook sync-templates
+  Synchronize documentation templates (existing command)
+  
+  #### handbook claude - Claude Code Integration
   
   | Command | Purpose | Example |
   |---------|---------|---------|
@@ -292,5 +357,45 @@ Update all documentation to comprehensively cover the new unified Claude integra
 ## References
 
 - Current documentation structure
-- Documentation style guide
+- Documentation style guide  
 - User feedback on old documentation
+- Existing `dev-handbook/.integrations/claude/install-prompts.md`
+- Current `dev-tools/docs/tools.md` format
+- Migration guide pattern at `dev-tools/docs/migrations/migration-guide.md`
+- Related task dependencies (task.002 through task.007)
+
+## Review Summary
+
+**Date:** 2025-08-04
+**Reviewer:** Claude (Automated Review)
+
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
+**Critical Blockers:** 
+- Location for main Claude integration guide needs confirmation
+- Migration strategy for existing users needs approval
+
+**Research Conducted:**
+- ✅ Verified `.integrations/claude/` directory exists with minimal content
+- ✅ Found 14 files referencing old `claude-integrate` system
+- ✅ Confirmed tools.md structure and format requirements
+- ✅ Identified missing documentation components (no main README)
+- ✅ Reviewed existing migration guide patterns
+- ✅ Analyzed current handbook command documentation (minimal)
+
+**Content Updates Made:**
+- Added needs_review flag to metadata
+- Added Review Questions section with 5 prioritized questions
+- Updated Planning Steps with completed research
+- Enhanced execution steps with more detailed content
+- Added file creation clarification (main guide is new, not modify)
+- Expanded references section with specific files found
+- Added validation questions for cross-references and naming
+
+**Implementation Readiness:** Blocked on documentation structure and migration strategy decisions
+
+**Recommended Next Steps:**
+1. Confirm location for main Claude integration guide
+2. Approve migration communication strategy
+3. Decide on documentation depth and example coverage
+4. Begin creating new documentation files
+5. Update existing documentation with new commands

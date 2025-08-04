@@ -5,9 +5,51 @@ priority: medium
 estimate: 3h
 dependencies: [v.0.6.0+task.001]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Migrate existing commands to new structure
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the migration script be part of the Ruby gem or a standalone shell script?
+  - **Research conducted**: ClaudeCommandsInstaller is part of dev-tools Ruby gem
+  - **Current pattern**: All command management is done through Ruby classes
+  - **Suggested default**: Add migration method to ClaudeCommandsInstaller class
+  - **Why needs human input**: Integration approach affects maintainability
+
+- [ ] How should we handle the fact that .claude/commands/ directory doesn't exist at project root?
+  - **Research conducted**: .claude directory not found at handbook-meta root
+  - **Task.001 context**: Shows confusion about primary location (dev-handbook vs root)
+  - **User clarified**: Primary is dev-handbook/.integrations/claude/commands/
+  - **Suggested default**: Only migrate within dev-handbook, ignore .claude references
+  - **Why needs human input**: Task description assumes .claude exists but it doesn't
+
+- [ ] Should migration preserve git history using `git mv` or regular file operations?
+  - **Research conducted**: Task specifies "git mv for tracking" in multiple places
+  - **Risk identified**: Git operations require clean working directory
+  - **Suggested default**: Use git mv with pre-check for clean status
+  - **Why needs human input**: Confirm git preservation is mandatory requirement
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the migration create a backup before moving files?
+  - **Research conducted**: Task mentions "optional backup" but not required
+  - **Best practice**: Always backup before destructive operations
+  - **Suggested default**: Create timestamped backup in .backups/ directory
+  - **Why needs human input**: Backup strategy and location preferences
+
+- [ ] How to handle if _custom or _generated directories already exist with files?
+  - **Research conducted**: Directories don't currently exist
+  - **Edge case**: Partial migration or manual attempts might create conflicts
+  - **Suggested default**: Merge contents, report conflicts for manual resolution
+  - **Why needs human input**: Conflict resolution strategy
+
+### [LOW] Implementation Details
+- [ ] Should migration report be saved to a file or just output to console?
+  - **Research conducted**: Task shows markdown report example
+  - **Suggested default**: Both - console output and save to MIGRATION_REPORT.md
+  - **Why needs human input**: Report persistence requirements
 
 ## Behavioral Specification
 
@@ -132,13 +174,54 @@ Safely migrate existing Claude commands from flat structure to new organized dir
 - **CI/CD Breakage**: Paths hardcoded in scripts
   - Mitigation: Search for path references first
 
+## Research Notes
+
+### Current State Analysis
+- **Primary location confirmed**: dev-handbook/.integrations/claude/commands/
+- **No .claude directory** at project root (contrary to task assumptions)
+- **All existing commands are custom**: No generated commands exist yet
+- **ClaudeCommandsInstaller**: Currently copies commands to .claude/commands/ during installation
+- **Task.001 clarifications**: User confirmed dev-handbook is primary, .claude is just duplication
+
+### Directory Structure Findings
+```
+dev-handbook/.integrations/claude/
+├── agents/           # Contains feature-research.md, git-commit-manager.md
+├── commands/         # 6 custom command files (flat structure)
+└── install-prompts.md
+```
+
+### Related Task Dependencies
+- **Task.001**: Creates _custom and _generated subdirectories
+- **Task.003**: Will generate commands in _generated directory
+- **Task.004**: Updates template with YAML front-matter
+- **This task (008)**: Migrates existing 6 commands to _custom
+
+### Implementation Readiness Assessment
+**Ready with clarifications**: The migration can proceed once the critical questions are answered. The scope is clear (6 files to move), but the approach needs confirmation regarding git operations, backup strategy, and handling of the non-existent .claude directory references.
+
 ## Implementation Plan
 
 ### Planning Steps
 
-* [ ] Inventory all existing command files
-* [ ] Identify custom vs generated commands
-* [ ] Search codebase for hardcoded paths
+* [x] Inventory all existing command files
+  - **Completed Research**: Found 6 commands in dev-handbook/.integrations/claude/commands/:
+    - commit.md
+    - draft-tasks.md
+    - load-project-context.md
+    - plan-tasks.md
+    - review-tasks.md
+    - work-on-tasks.md
+  - **Note**: No .claude/commands/ directory exists at project root
+* [x] Identify custom vs generated commands
+  - **Research Finding**: All 6 existing commands are custom (hand-crafted)
+  - **No generated commands exist yet** (will be created by task.003)
+* [x] Search codebase for hardcoded paths
+  - **Found references in**:
+    - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
+    - dev-tools/spec files
+    - Various task files in v.0.6.0-unified-claude
+  - **Critical files to update**: ClaudeCommandsInstaller class
 * [ ] Plan migration timing with team
 
 ### Execution Steps
@@ -236,15 +319,18 @@ Safely migrate existing Claude commands from flat structure to new organized dir
 
 ## Acceptance Criteria
 
-- [ ] All .md files moved to appropriate subdirectories
-- [ ] Git history preserved for all files
+- [ ] All 6 custom .md files moved to _custom subdirectory
+- [ ] Git history preserved for all files (if using git mv)
 - [ ] No files lost during migration
-- [ ] Migration report generated
+- [ ] Migration report generated with file counts and status
 - [ ] All tests pass after migration
+- [ ] ClaudeCommandsInstaller updated to handle new structure
 - [ ] No broken references in codebase
 
 ## References
 
 - Git mv documentation
-- Current command inventory
+- Current command inventory (6 custom commands identified)
 - Version control best practices
+- Task.001 for directory structure creation
+- ClaudeCommandsInstaller implementation in dev-tools
