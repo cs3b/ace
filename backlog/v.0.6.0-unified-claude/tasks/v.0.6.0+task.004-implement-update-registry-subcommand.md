@@ -16,15 +16,24 @@ needs_review: true
 - [ ] Should the registry updater scan `.claude/commands/` or `dev-handbook/.integrations/claude/commands/`?
   - **Research conducted**: Found `.claude/commands/` contains 32 command files and commands.json
   - **Research conducted**: `dev-handbook/.integrations/claude/commands/` only has 6 files, no commands.json
+  - **Research conducted**: Task.006 copies from dev-handbook to .claude during integration
   - **Current state**: Commands.json exists at `.claude/commands/commands.json`
-  - **Suggested default**: Scan `.claude/commands/` which is the active location
-  - **Why needs human input**: Task spec mentions dev-handbook path but actual files are elsewhere
+  - **Suggested default**: Scan `.claude/commands/` which is the installed/active location
+  - **Why needs human input**: Task spec mentions dev-handbook path but registry is in .claude
 
 - [ ] Should update-registry wait for task.001 directory structure creation or work with current flat structure?
-  - **Research conducted**: No `_custom` or `_generated` directories exist yet
-  - **Research conducted**: Task.001 is a dependency and will create these directories
-  - **Suggested default**: Implement to support both flat and subdirectory structures
-  - **Why needs human input**: Implementation approach depends on timing and coordination
+  - **Research conducted**: No `_custom` or `_generated` directories exist yet in either location
+  - **Research conducted**: Task.001 is a dependency and will create these in dev-handbook
+  - **Research conducted**: Task.006 flattens structure when copying to .claude/
+  - **Suggested default**: Scan flat `.claude/commands/` structure (post-integration)
+  - **Why needs human input**: Clarify if registry update is for dev-handbook or .claude
+
+- [ ] Is update-registry meant to scan installed commands in .claude/ or source commands in dev-handbook?
+  - **Research conducted**: ClaudeCommandsInstaller copies from dev-handbook to .claude/
+  - **Research conducted**: Task.006 (integrate) handles installation to .claude/
+  - **Research conducted**: Commands.json only exists in .claude/, not in dev-handbook
+  - **Suggested default**: Update registry in .claude/ based on what's installed there
+  - **Why needs human input**: Workflow clarity - is this for development or end-user use?
 
 ### [MEDIUM] Enhancement Questions
 - [ ] Should the command be `handbook claude update-registry` or `handbook update-registry`?
@@ -213,8 +222,9 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
 
 * [ ] Analyze current commands.json structure
 * [ ] Define required metadata fields for each command
-* [ ] Design backup rotation strategy
+* [ ] Design backup rotation strategy  
 * [ ] Plan JSON validation approach
+* [ ] Clarify relationship with task.006 (integrate) workflow
 
 ### Execution Steps
 
@@ -252,15 +262,15 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
     module Organisms
       class ClaudeRegistryUpdater
         def initialize
-          # Paths to be confirmed based on review questions
-          @custom_dir = ".claude/commands/_custom"  # After task.001 creates these
-          @generated_dir = ".claude/commands/_generated"  # After task.001 creates these
+          # Based on research: .claude/commands/ has flat structure after integration
+          # The _custom/_generated dirs exist in dev-handbook but not in .claude
+          @commands_dir = ".claude/commands"  # Flat structure, all commands
           @registry_path = ".claude/commands/commands.json"  # Current location
         end
         
         def update(options)
           create_backup if options[:backup]
-          commands = scan_commands
+          commands = scan_commands  # Scans flat .claude/commands/ directory
           
           if options[:dry_run]
             display_dry_run(commands)
@@ -283,19 +293,16 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
   def scan_commands
     commands = {}
     
-    # Scan custom commands
-    Dir.glob(File.join(@custom_dir, "*.md")).each do |path|
+    # Scan all commands in flat .claude/commands/ directory
+    # Note: After integration by task.006, all commands are flattened here
+    Dir.glob(File.join(@commands_dir, "*.md")).each do |path|
       name = File.basename(path, ".md")
-      commands[name] = extract_metadata(path, "custom")
+      # Convert to slash-prefixed format for registry
+      registry_key = "/#{name}"
+      commands[registry_key] = extract_metadata(path)
     end
     
-    # Scan generated commands
-    Dir.glob(File.join(@generated_dir, "*.md")).each do |path|
-      name = File.basename(path, ".md")
-      commands[name] = extract_metadata(path, "generated")
-    end
-    
-    commands
+    commands.sort.to_h  # Sort alphabetically for consistency
   end
   ```
   > TEST: Command Scanning
@@ -305,24 +312,21 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
 
 - [ ] Implement metadata extraction
   ```ruby
-  def extract_metadata(path, type)
-    {
-      "name" => File.basename(path, ".md"),
-      "type" => type,
-      "path" => path.sub("dev-handbook/.integrations/claude/", ""),
-      "modified" => File.mtime(path).iso8601
-    }
+  def extract_metadata(path)
+    # Extract existing metadata if present in file
+    # For now, return empty hash to preserve current format
+    # Can be enhanced to extract workspace_restrictions, tools, etc.
+    existing_config = read_existing_config(path)
+    existing_config || {}
   end
   ```
 
 - [ ] Implement registry writing with validation
   ```ruby
   def write_registry(commands)
-    registry = {
-      "version" => "1.0",
-      "generated_at" => Time.now.iso8601,
-      "commands" => commands
-    }
+    # Match current format: flat object with slash-prefixed keys
+    # No version or metadata at root level in current format
+    registry = commands  # Already formatted as {"/command-name": {...}}
     
     json = JSON.pretty_generate(registry)
     File.write(@registry_path, json)
@@ -374,6 +378,12 @@ Maintain an accurate, up-to-date registry of all Claude commands that enables pr
   > Type: Integration Test
   > Assert: Multiple runs produce same result
   > Command: handbook claude update-registry && handbook claude update-registry
+
+- [ ] Test integration with task.006 workflow
+  > TEST: Post-Integration Registry Update
+  > Type: Integration Test  
+  > Assert: Registry reflects all integrated commands
+  > Command: handbook claude integrate && handbook claude update-registry
 
 ## Acceptance Criteria
 
