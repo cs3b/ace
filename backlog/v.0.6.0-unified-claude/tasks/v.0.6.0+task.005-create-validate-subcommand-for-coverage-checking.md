@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.005
-status: draft
+status: pending
 priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002]
@@ -123,3 +123,246 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 - Workflow instruction conventions
 - Command file standards
 - CI/CD best practices for validation tools
+
+## Technical Approach
+
+### Architecture Pattern
+- Validation engine pattern with pluggable checks
+- Report builder for different output formats
+- Exit code management for CI integration
+
+### Technology Stack
+- Ruby for validation logic
+- File comparison utilities
+- Structured reporting system
+
+## Tool Selection
+
+| Tool/Library | Purpose | Rationale |
+|--------------|---------|-----------|
+| File.mtime | Freshness checking | Built-in, reliable timestamps |
+| Set | Duplicate detection | Efficient set operations |
+| StringIO | Report building | In-memory report generation |
+
+## File Modifications
+
+### Create
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Command implementation
+- `dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb` - Validation logic
+- `dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb` - Tests
+
+### Modify
+- None required
+
+### Delete
+- None required
+
+## Risk Assessment
+
+### Technical Risks
+- **Performance on Large Projects**: Many workflows could slow validation
+  - Mitigation: Implement caching for repeated validations
+- **File System Race Conditions**: Files changing during validation
+  - Mitigation: Single pass snapshot approach
+
+### Integration Risks
+- **CI/CD Exit Codes**: Non-standard codes might break pipelines
+  - Mitigation: Use standard 0/1 exit codes
+- **Whitelist Management**: Complex exclusion rules
+  - Mitigation: Simple pattern-based whitelist file
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Define validation rules and severity levels
+* [ ] Design report format for different output modes
+* [ ] Plan whitelist/ignore file format
+* [ ] Define exit code strategy for CI
+
+### Execution Steps
+
+- [ ] Implement validate command class
+  ```ruby
+  # lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb
+  module CodingAgentTools
+    module CLI
+      module Commands
+        module Handbook
+          module Claude
+            class Validate < Dry::CLI::Command
+              desc "Validate Claude command coverage"
+              
+              option :check, type: :string, desc: "Specific check to run (missing, outdated, duplicates)"
+              option :strict, type: :boolean, default: false, desc: "Exit with code 1 if issues found"
+              option :workflow, type: :string, desc: "Validate specific workflow"
+              
+              def call(**options)
+                validator = CodingAgentTools::Organisms::ClaudeValidator.new
+                result = validator.validate(options)
+                
+                exit(1) if options[:strict] && result.has_issues?
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  ```
+
+- [ ] Create validator organism
+  ```ruby
+  # lib/coding_agent_tools/organisms/claude_validator.rb
+  module CodingAgentTools
+    module Organisms
+      class ClaudeValidator
+        def initialize
+          @workflow_dir = "dev-handbook/workflow-instructions"
+          @custom_dir = "dev-handbook/.integrations/claude/commands/_custom"
+          @generated_dir = "dev-handbook/.integrations/claude/commands/_generated"
+        end
+        
+        def validate(options)
+          if options[:workflow]
+            validate_single_workflow(options[:workflow])
+          elsif options[:check]
+            run_specific_check(options[:check])
+          else
+            run_all_validations
+          end
+        end
+      end
+    end
+  end
+  ```
+  > TEST: Validator Initialization
+  > Type: Unit Test
+  > Assert: Validator initializes with correct paths
+  > Command: bundle exec rspec -e "initializes with paths"
+
+- [ ] Implement missing command detection
+  ```ruby
+  def find_missing_commands
+    workflows = Dir.glob(File.join(@workflow_dir, "*.wf.md"))
+    missing = []
+    
+    workflows.each do |workflow_path|
+      name = File.basename(workflow_path, ".wf.md")
+      unless command_exists?(name)
+        missing << name
+      end
+    end
+    
+    missing
+  end
+  
+  def command_exists?(name)
+    File.exist?(File.join(@custom_dir, "#{name}.md")) ||
+    File.exist?(File.join(@generated_dir, "#{name}.md"))
+  end
+  ```
+  > TEST: Missing Command Detection
+  > Type: Integration Test
+  > Assert: Finds workflows without commands
+  > Command: bundle exec rspec -e "detects missing commands"
+
+- [ ] Implement outdated command detection
+  ```ruby
+  def find_outdated_commands
+    outdated = []
+    
+    all_commands.each do |cmd_path|
+      workflow_name = File.basename(cmd_path, ".md")
+      workflow_path = File.join(@workflow_dir, "#{workflow_name}.wf.md")
+      
+      if File.exist?(workflow_path)
+        if File.mtime(workflow_path) > File.mtime(cmd_path)
+          outdated << {
+            command: File.basename(cmd_path),
+            workflow_updated: File.mtime(workflow_path),
+            command_updated: File.mtime(cmd_path)
+          }
+        end
+      end
+    end
+    
+    outdated
+  end
+  ```
+
+- [ ] Implement duplicate detection
+  ```ruby
+  def find_duplicate_commands
+    custom_commands = Dir.glob(File.join(@custom_dir, "*.md")).map { |p| File.basename(p, ".md") }
+    generated_commands = Dir.glob(File.join(@generated_dir, "*.md")).map { |p| File.basename(p, ".md") }
+    
+    duplicates = custom_commands & generated_commands
+    duplicates.map { |name| "#{name} appears in both _custom/ and _generated/" }
+  end
+  ```
+  > TEST: Duplicate Detection
+  > Type: Unit Test
+  > Assert: Finds commands in both directories
+  > Command: bundle exec rspec -e "detects duplicates"
+
+- [ ] Implement report generation
+  ```ruby
+  def generate_report(validation_results)
+    report = StringIO.new
+    
+    report.puts "Validating Claude command coverage..."
+    report.puts ""
+    report.puts "Workflows found: #{validation_results[:workflow_count]}"
+    report.puts "Commands found: #{validation_results[:command_count]}"
+    report.puts ""
+    
+    if validation_results[:missing].any?
+      report.puts "✗ Missing commands:"
+      validation_results[:missing].each do |name|
+        report.puts "  - #{name}.wf.md (no command found)"
+      end
+      report.puts ""
+    end
+    
+    # ... similar for outdated and duplicates
+    
+    report.string
+  end
+  ```
+
+- [ ] Add comprehensive test coverage
+  ```ruby
+  # spec/coding_agent_tools/organisms/claude_validator_spec.rb
+  RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
+    describe "#validate" do
+      it "runs all validations by default" do
+        # Test implementation
+      end
+      
+      it "validates single workflow when specified" do
+        # Test implementation
+      end
+      
+      it "runs specific check when requested" do
+        # Test implementation
+      end
+    end
+  end
+  ```
+
+- [ ] Test CI integration
+  > TEST: Exit Code Behavior
+  > Type: Integration Test
+  > Assert: Returns 1 with --strict and issues
+  > Command: handbook claude validate --strict; echo $?
+
+## Acceptance Criteria
+
+- [ ] Detects all missing commands accurately
+- [ ] Identifies outdated commands based on timestamps
+- [ ] Finds duplicate commands across directories
+- [ ] Generates clear, actionable reports
+- [ ] Supports specific workflow validation
+- [ ] Provides proper exit codes for CI
+- [ ] Handles edge cases gracefully
