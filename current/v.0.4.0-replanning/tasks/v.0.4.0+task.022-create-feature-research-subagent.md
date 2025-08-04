@@ -1,8 +1,8 @@
 ---
 id: v.0.4.0+task.022
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -87,115 +87,171 @@ Create a specialized Claude Code subagent that autonomously researches and ident
 
 ## Implementation Plan
 
-### Phase 1: Agent Configuration
-- [ ] Create `.claude/agents/feature-research.md` with specialized system prompt
-- [ ] Configure tool access (Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task)
-- [ ] Define agent invocation patterns and descriptions
+### Planning Steps
+* [ ] **Architecture Analysis**: Review Claude Code subagent architecture and file structure
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: Subagent configuration structure and requirements are understood
+  > Command: Verify .claude/agents/ directory structure and YAML frontmatter format
 
-### Phase 2: Research Methodology
-- [ ] Develop structured research approach based on example CMS admin research
-- [ ] Create prioritization framework for discovered features
-- [ ] Define output format template for .fr.md files
+* [ ] **Research Methodology Design**: Analyze existing research patterns and best practices
+  > TEST: Methodology Validation
+  > Type: Design Review
+  > Assert: Research methodology covers all required phases (analysis, research, gap identification, prioritization)
+  > Command: Review methodology against example CMS admin research requirements
 
-### Phase 3: Integration & Testing
-- [ ] Test agent with example research prompts
-- [ ] Validate output file generation and format
-- [ ] Ensure integration with task management workflows
+* [ ] **Tool Selection Analysis**: Verify required tools for comprehensive research
+  > TEST: Tool Coverage Check
+  > Type: Capability Validation
+  > Assert: Selected tools (Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task) cover all research needs
+  > Command: Validate each tool's purpose in research workflow
+
+### Execution Steps
 
 ## Technical Approach
 
-### System Prompt Design
-The agent's system prompt will include:
-- Research methodology instructions
-- Context analysis patterns
-- Feature prioritization framework
-- Documentation synthesis capabilities
-- Comparative analysis approach
-- Structured output formatting for .fr.md files
+### Architecture Pattern
+- [x] **Claude Code Subagent Pattern**: Markdown file with YAML frontmatter configuration
+- [x] **Integration**: Project-level subagent in `.claude/agents/` directory
+- [x] **Impact**: Extends Claude Code with specialized research capabilities
 
-### Tool Configuration
-```yaml
-tools: Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task
-```
+### Technology Stack
+- [x] **Claude Code Platform**: Built-in subagent system with Task tool delegation
+- [x] **Tool Access**: Read, Grep, Glob for code analysis; WebSearch, WebFetch for external research
+- [x] **Output Format**: Markdown files (.fr.md) for structured documentation
+- [x] **Version Compatibility**: Compatible with current Claude Code version
 
-### Output Format (.fr.md)
-```markdown
-# Feature Research: [Topic]
-Date: {datetime}
-Status: research-complete
+### Implementation Strategy
+- [x] **Configuration-First Approach**: Leverage existing subagent infrastructure
+- [x] **System Prompt Engineering**: Comprehensive instructions for autonomous research
+- [x] **Template-Driven Output**: Structured .fr.md format for consistency
+- [x] **Workflow Integration**: Outputs compatible with existing task management system
 
-## Executive Summary
-[Brief overview of research findings]
+## Tool Selection
 
-## Current State Analysis
-[Analysis of existing functionality]
+| Criteria | Built-in Tools | External APIs | Custom Scripts | Selected |
+|----------|---------------|---------------|----------------|----------|
+| Performance | Excellent | Good | Fair | Built-in |
+| Integration | Native | Requires setup | Complex | Built-in |
+| Maintenance | Managed | API changes | High effort | Built-in |
+| Security | Sandboxed | API keys | Risk exposure | Built-in |
+| Learning Curve | Documented | Variable | High | Built-in |
 
-## Comparable Systems Research
-[Research on similar systems and best practices]
+**Selection Rationale:** Built-in Claude Code tools provide native integration, security, and maintenance-free operation
 
-## Identified Gaps
-[List of missing features with rationale]
-
-## Prioritized Feature List
-### High Priority
-- Feature 1: [Description and justification]
-- Feature 2: [Description and justification]
-
-### Medium Priority
-- Feature 3: [Description and justification]
-
-### Low Priority
-- Feature 4: [Description and justification]
-
-## Implementation Readiness Assessment
-[Technical feasibility and dependencies]
-
-## Recommendations
-[Next steps and action items]
-```
+### Dependencies
+- [x] **Claude Code Platform**: Required for subagent execution
+- [x] **File System Access**: For reading code and writing research reports
+- [x] **Web Access**: For external research (via WebSearch/WebFetch tools)
 
 
 ## File Modifications
 
-### Create
+### Verify Existing
 - `.claude/agents/feature-research.md`
+  - Status: **Already exists** (created in draft-task workflow)
   - Purpose: Subagent configuration with specialized system prompt
-  - Key components: Agent metadata, tool access list, research methodology prompt
+  - Key components: YAML frontmatter (name, description, tools), 5-phase research methodology, output template
   - Dependencies: Claude Code subagent system
+  - Validation: Ensure all components are properly configured
 
+### Create (Runtime)
 - `dev-taskflow/backlog/{datetime}-{topic}.fr.md` (output files)
-  - Purpose: Structured feature research reports
-  - Key components: Gap analysis, prioritized features, implementation readiness
-  - Dependencies: Task management workflow
+  - Purpose: Structured feature research reports generated by agent
+  - Key components: Executive summary, gap analysis, prioritized features, implementation readiness
+  - Dependencies: Agent execution, Write tool access
+  - Naming: ISO datetime format (YYYYMMDD-HHMM) with hyphenated topic
 
-## Execution Steps
+- [ ] **Step 1: Verify Agent Configuration Structure**
+  > TEST: Configuration File Validation
+  > Type: File Structure Check
+  > Assert: .claude/agents/feature-research.md exists with correct YAML frontmatter (name, description, tools)
+  > Command: cat .claude/agents/feature-research.md | head -10
 
-- [ ] **Create Agent Configuration**: Write `.claude/agents/feature-research.md` with system prompt
-  > TEST: Agent Configuration Validation
-  > Assert: Agent file exists with proper YAML frontmatter and system prompt
-  > Command: Verify file structure and tool access configuration
+- [ ] **Step 2: Validate System Prompt Components**
+  > TEST: Prompt Completeness Check
+  > Type: Content Validation
+  > Assert: System prompt includes all 5 research phases, prioritization framework, and output template
+  > Command: grep -E "Phase [1-5]:|Priority:|Output Format" .claude/agents/feature-research.md
 
-- [ ] **Implement Research Methodology**: Define structured approach in system prompt
-  > TEST: Methodology Completeness
-  > Assert: System prompt includes all research phases and prioritization framework
-  > Command: Review prompt for comprehensive research instructions
+- [ ] **Step 3: Test Agent Invocation**
+  > TEST: Agent Accessibility
+  > Type: Integration Test
+  > Assert: Agent can be invoked with "Use the feature-research agent" command
+  > Command: echo "Test: Agent responds to invocation pattern"
 
-- [ ] **Configure Output Format**: Establish .fr.md template structure in agent prompt
-  > TEST: Output Format Validation
-  > Assert: Agent generates properly formatted feature research files
-  > Command: Test with example prompt and verify output structure
+- [ ] **Step 4: Validate Research Methodology**
+  > TEST: Research Workflow Validation
+  > Type: Process Verification
+  > Assert: Agent follows structured 5-phase research approach
+  > Command: grep -A 5 "Research Methodology" .claude/agents/feature-research.md
 
-- [ ] **Test Feature Discovery**: Validate agent can identify and prioritize features
-  > TEST: Research Quality Check
-  > Assert: Agent produces actionable, prioritized feature recommendations
-  > Command: Run test research on known system area
+- [ ] **Step 5: Verify Output Template**
+  > TEST: Template Structure Check
+  > Type: Format Validation
+  > Assert: .fr.md template includes all required sections (Executive Summary, Current State, Gaps, Priorities, etc.)
+  > Command: grep -E "Executive Summary|Current State|Identified Gaps|Prioritized Feature List" .claude/agents/feature-research.md
 
-- [ ] **Verify File Generation**: Ensure agent saves reports to correct location
-  > TEST: File Output Validation
-  > Assert: Research reports saved to dev-taskflow/backlog/ with correct naming
-  > Command: Check file creation with proper datetime-topic.fr.md format
+- [ ] **Step 6: Test File Output Configuration**
+  > TEST: Output Path Validation
+  > Type: Configuration Check
+  > Assert: Agent configured to save files to dev-taskflow/backlog/ with {datetime}-{topic}.fr.md pattern
+  > Command: grep "dev-taskflow/backlog" .claude/agents/feature-research.md
+
+- [ ] **Step 7: Create Test Invocation Example**
+  > TEST: Example Usage Documentation
+  > Type: Documentation Validation
+  > Assert: Agent includes clear invocation examples
+  > Command: grep -A 3 "Example Invocation" .claude/agents/feature-research.md
+
+- [ ] **Step 8: Document Integration Points**
+  > TEST: Workflow Integration
+  > Type: Process Integration Check
+  > Assert: Research outputs can be used with draft-task workflow
+  > Command: Verify .fr.md files can be referenced as input for task creation
 
 
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Agent may produce inconsistent output formats
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Detailed template in system prompt
+  - **Rollback:** Manual formatting of research reports
+
+### Integration Risks
+- **Risk:** Research reports may not integrate with task workflow
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Standardized .fr.md format compatible with draft-task workflow
+  - **Monitoring:** Test conversion of research to draft tasks
+
+### Performance Risks
+- **Risk:** Web research tools may timeout or fail
+  - **Mitigation:** Agent instructed to continue with available information
+  - **Monitoring:** Check research completeness in reports
+  - **Thresholds:** Minimum 3 comparable systems researched
+
+## Acceptance Criteria
+
+### Behavioral Requirement Fulfillment
+- [ ] **Research Automation**: Agent performs autonomous feature research when invoked
+- [ ] **Gap Analysis**: Agent identifies and documents missing features with rationale
+- [ ] **Prioritization**: Features are categorized by priority with clear justification
+- [ ] **Output Generation**: Research reports are saved to correct location with proper format
+
+### Implementation Quality Assurance
+- [ ] **Configuration Validity**: Agent file has correct YAML frontmatter and tools
+- [ ] **Prompt Completeness**: System prompt includes all research phases and templates
+- [ ] **Integration Verification**: Research outputs can be used with draft-task workflow
+- [ ] **Error Handling**: Agent handles missing resources gracefully
+
+### Documentation and Validation
+- [ ] **Invocation Examples**: Clear examples for using the agent
+- [ ] **Quality Standards**: Research meets defined quality criteria
+- [ ] **Workflow Integration**: Documented path from research to task creation
 
 ## Out of Scope
 
