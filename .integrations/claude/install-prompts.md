@@ -4,7 +4,26 @@
 
 This guide shows how to create Claude Code commands for each workflow instruction. Each workflow file in `dev-handbook/workflow-instructions/*.wf.md` should have a corresponding command in `.claude/commands/`.
 
-## Command Creation Process
+## Automated Installation (Recommended)
+
+Run the automated installation script from the project root:
+
+```bash
+# From project root (handbook-meta)
+./bin/claude-integrate
+
+# Or if you have it in your PATH
+claude-integrate
+```
+
+The script will:
+- Copy custom multi-task commands from templates
+- Create command files for all workflow instructions
+- Update `.claude/commands/commands.json` automatically
+- Skip existing files to preserve user modifications
+- Create backups before modifying JSON files
+
+## Manual Command Creation Process
 
 ### 1. Map Workflow Files to Commands
 
@@ -41,7 +60,36 @@ read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.m
 read and run @.claude/commands/commit.md
 ```
 
-## Implementation Steps
+## Script Output Example
+
+```
+Installing Claude Code commands...
+Project root: /path/to/project
+
+Copying custom multi-task commands...
+✓ Created: draft-tasks.md
+✓ Created: plan-tasks.md
+✗ Skipped: work-on-tasks.md (already exists)
+
+Found 25 workflow files
+Creating command files...
+✓ Created: draft-task.md
+✓ Created: plan-task.md
+✗ Skipped: work-on-task.md (already exists)
+
+✓ Updated: commands.json (2 new entries added)
+
+==================================================
+Installation complete:
+  4 created
+  2 skipped
+  1 files updated
+==================================================
+```
+
+## Manual Implementation Steps
+
+If you prefer manual setup or the automated script is not available:
 
 1. **Copy custom multi-task commands**: Copy pre-built commands from templates
    ```bash
