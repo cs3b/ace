@@ -185,28 +185,18 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       end
 
-      it "delegates path generation to PathResolver" do
-        expected_path = File.join(temp_dir, "generated-task.md")
-
-        allow(path_resolver).to receive(:resolve_path)
-          .with("test-task", type: :task_new)
-          .and_return({success: true, path: expected_path})
-
+      it "returns error message for removed task-new type" do
         allow(path_resolver).to receive(:project_root)
           .and_return(temp_dir)
 
-        # Mock file reading for template
-        allow(File).to receive(:exist?).and_call_original
-        allow(File).to receive(:exist?).with(nil).and_return(false)
-        allow(File).to receive(:read).and_call_original
-
-        subject.call(
+        result = subject.call(
           type: "task-new",
           title: "test-task",
           priority: "high"
         )
 
-        expect(path_resolver).to have_received(:resolve_path).with("test-task", type: :task_new)
+        expect(result).to eq(1)
+        expect { subject.call(type: "task-new", title: "test-task") }.to output(/task-new.*has been removed.*use 'task-manager create'/).to_stdout
       end
     end
   end
@@ -421,10 +411,10 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       expect(result).to eq(0) # Should succeed with fallback
     end
 
-    it "handles invalid template mappings" do
+    it "handles invalid template mappings for docs-new" do
       invalid_config = {
         "templates" => {
-          "task-new" => {
+          "docs-new" => {
             "template" => "/nonexistent/template.md"
           }
         }
@@ -436,18 +426,18 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-task", type: :task_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-task.md")})
+        .with("test-doc", type: :docs_new)
+        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: "docs-new", title: "test-doc")
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
 
-    it "handles missing template references" do
+    it "handles missing template references for docs-new" do
       config_with_missing_template = {
         "templates" => {
-          "task-new" => {
+          "docs-new" => {
             "template" => nil
           }
         }
@@ -459,10 +449,10 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-task", type: :task_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-task.md")})
+        .with("test-doc", type: :docs_new)
+        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: "docs-new", title: "test-doc")
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
@@ -476,10 +466,10 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       FileUtils.mkdir_p(template_dir)
     end
 
-    it "handles missing template files" do
+    it "handles missing template files for docs-new" do
       config_with_missing_file = {
         "templates" => {
-          "task-new" => {
+          "docs-new" => {
             "template" => "/completely/nonexistent/template.md"
           }
         }
@@ -491,10 +481,10 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-task", type: :task_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-task.md")})
+        .with("test-doc", type: :docs_new)
+        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: "docs-new", title: "test-doc")
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
@@ -1017,43 +1007,18 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       # Note: Invalid status validation is handled by dry-cli at the argument parsing level,
       # not within the command itself. This is framework-level validation that doesn't need testing.
 
-      it "passes status to metadata processing" do
-        # Mock template processing to verify status is passed through
-        config = {
-          "templates" => {
-            "task-new" => {
-              "template" => "fake-template.md",
-              "variables" => {
-                "status" => "{metadata.status}"
-              }
-            }
-          }
-        }
-        File.write(config_file, YAML.dump(config))
-
-        # Mock PathResolver to return a test path
-        path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
-        allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
-        allow(path_resolver).to receive(:project_root).and_return(temp_dir)
-        allow(path_resolver).to receive(:resolve_path)
-          .and_return({success: true, path: File.join(temp_dir, "test-task.md")})
-
-        # Create fake template content
-        template_content = "Status: {metadata.status}"
-        allow(File).to receive(:exist?).with("fake-template.md").and_return(true)
-        allow(File).to receive(:read).with("fake-template.md").and_return(template_content)
-        allow(File).to receive(:exist?).with(config_file).and_call_original
-        allow(File).to receive(:read).with(config_file).and_call_original
-        # Allow File.exist? for any other file paths
-        allow(File).to receive(:exist?).and_call_original
-
+      it "passes custom metadata through to file creation" do
+        # This tests that dynamic metadata is preserved for file type
+        test_path = File.join(temp_dir, "test-with-metadata.txt")
         result = subject.call(
-          type: "task-new",
-          title: "test-draft-task",
+          type: "file",
+          title: test_path,
+          content: "content with metadata",
           status: "draft"
         )
-
+        
         expect(result).to eq(0)
+        expect(File.exist?(test_path)).to be true
       end
     end
 
@@ -1070,11 +1035,11 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(result).to eq(0)
       end
 
-      it "uses default status from configuration" do
-        # The default status should come from configuration
+      it "uses default values from configuration" do
+        # The default values should come from configuration
         config = {
           "templates" => {
-            "task-new" => {
+            "docs-new" => {
               "template" => "fake-template.md",
               "variables" => {
                 "status" => "draft"  # Default from config
@@ -1104,12 +1069,13 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         # Allow File.exist? for any other file paths
         allow(File).to receive(:exist?).and_call_original
 
+        # Test that task-new returns error
         result = subject.call(
           type: "task-new",
           title: "default-status-task"
         )
 
-        expect(result).to eq(0)
+        expect(result).to eq(1) # Should fail since task-new is removed
       end
     end
   end
