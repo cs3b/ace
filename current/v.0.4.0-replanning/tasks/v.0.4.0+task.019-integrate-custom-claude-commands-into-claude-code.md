@@ -1,6 +1,6 @@
 ---
 id: v.0.4.0+task.019
-status: in-progress
+status: done
 priority: high
 estimate: 3h
 dependencies: []
@@ -267,18 +267,18 @@ To create an automated script that generates Claude Code commands from workflow 
 
 ### Planning Steps
 
-* [ ] Analyze command file patterns and template requirements
+* [x] Analyze command file patterns and template requirements
   > TEST: Template Pattern Validation
   > Type: Pre-condition Check
   > Assert: All workflow files follow consistent naming pattern
   > Command: ls dev-handbook/workflow-instructions/*.wf.md | wc -l
 
-* [ ] Research Ruby JSON manipulation best practices for atomic updates
-* [ ] Design class structure for modular installer components
+* [x] Research Ruby JSON manipulation best practices for atomic updates
+* [x] Design class structure for modular installer components
 
 ### Execution Steps
 
-- [ ] Step 1: Create main executable script bin/claude-integrate
+- [x] Step 1: Create main executable script bin/claude-integrate
   ```ruby
   #!/usr/bin/env ruby
   require_relative '../dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'
@@ -289,7 +289,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Script is executable and has proper shebang
   > Command: test -x bin/claude-integrate && head -1 bin/claude-integrate | grep -q "#!/usr/bin/env ruby"
 
-- [ ] Step 2: Implement core installer class with workflow scanning
+- [x] Step 2: Implement core installer class with workflow scanning
   - Create WorkflowScanner to find all *.wf.md files
   - Extract workflow names and map to command names
   > TEST: Workflow Discovery
@@ -297,7 +297,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Scanner finds all workflow files
   > Command: ruby -e "require './dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer'; puts CodingAgentTools::Integrations::ClaudeCommandsInstaller::WorkflowScanner.new.scan.count"
 
-- [ ] Step 3: Implement command file generator with template support
+- [x] Step 3: Implement command file generator with template support
   - Load templates from install-prompts.md if custom template exists
   - Generate command content using default template pattern
   - Skip existing command files to preserve modifications
@@ -306,7 +306,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Generated commands match expected template format
   > Command: bin/claude-integrate --dry-run | grep "Would create:"
 
-- [ ] Step 4: Implement JSON registry updater with backup mechanism
+- [x] Step 4: Implement JSON registry updater with backup mechanism
   - Read existing commands.json
   - Create backup before modification
   - Add missing command entries
@@ -316,7 +316,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Backup created before modification
   > Command: ls -la .claude/commands/commands.json.backup 2>/dev/null
 
-- [ ] Step 5: Add comprehensive status reporting and error handling
+- [x] Step 5: Add comprehensive status reporting and error handling
   - Clear output showing created/skipped/updated items
   - Error messages with actionable fix suggestions
   - Summary statistics at completion
@@ -325,7 +325,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Script provides clear status output
   > Command: bin/claude-integrate | grep -E "(Created|Skipped|Updated|complete)"
 
-- [ ] Step 6: Create comprehensive test suite
+- [x] Step 6: Create comprehensive test suite
   - Unit tests for each component
   - Integration tests for full workflow
   - Edge case tests for error conditions
@@ -334,7 +334,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Test suite covers main functionality
   > Command: bin/test dev-tools/spec/integrations/claude_commands_installer_spec.rb
 
-- [ ] Step 7: Update install-prompts.md documentation
+- [x] Step 7: Update install-prompts.md documentation
   - Add automated installation section
   - Reference bin/claude-integrate script
   - Keep manual instructions as fallback
@@ -343,7 +343,7 @@ To create an automated script that generates Claude Code commands from workflow 
   > Assert: Documentation references automation script
   > Command: grep -q "claude-integrate" dev-handbook/.integrations/claude/install-prompts.md
 
-- [ ] Step 8: Perform end-to-end validation
+- [x] Step 8: Perform end-to-end validation
   - Run script to install all commands
   - Verify commands.json properly updated
   - Test sample commands work correctly
@@ -354,13 +354,13 @@ To create an automated script that generates Claude Code commands from workflow 
 
 ## Acceptance Criteria
 
-- [ ] **Automation Script Created**: Executable script bin/claude-integrate that automates the entire command installation process
-- [ ] **Command Generation**: Script automatically creates command files from workflow instructions
-- [ ] **JSON Registration**: Script automatically updates commands.json with new entries
-- [ ] **Preservation Logic**: Script skips existing commands to preserve user modifications
-- [ ] **Status Reporting**: Script provides clear output showing created/skipped/updated items
-- [ ] **Documentation Update**: install-prompts.md updated to reference the automation script
-- [ ] **Integration Testing**: All generated commands execute their workflow instructions correctly
+- [x] **Automation Script Created**: Executable script bin/claude-integrate that automates the entire command installation process
+- [x] **Command Generation**: Script automatically creates command files from workflow instructions
+- [x] **JSON Registration**: Script automatically updates commands.json with new entries
+- [x] **Preservation Logic**: Script skips existing commands to preserve user modifications
+- [x] **Status Reporting**: Script provides clear output showing created/skipped/updated items
+- [x] **Documentation Update**: install-prompts.md updated to reference the automation script
+- [x] **Integration Testing**: All generated commands execute their workflow instructions correctly
 
 ## Out of Scope
 
