@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.004
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.003]
@@ -185,14 +185,14 @@ read and run @.claude/commands/commit.md
 
 ### Planning Steps
 
-* [ ] Define metadata inference rules for common workflow types
-* [ ] Design template with conditional YAML fields
-* [ ] Plan YAML validation approach
-* [ ] Document metadata field meanings
+* [x] Define metadata inference rules for common workflow types
+* [x] Design template with conditional YAML fields
+* [x] Plan YAML validation approach
+* [x] Document metadata field meanings
 
 ### Execution Steps
 
-- [ ] Enhance command template with YAML front-matter (building on task.003's template)
+- [x] Enhance command template with YAML front-matter (building on task.003's template)
   ```markdown
   # dev-handbook/.integrations/claude/command.template.md
   ---
@@ -208,7 +208,7 @@ read and run @.claude/commands/commit.md
   ```
   **Note**: This template will be loaded using File.read and processed with Ruby string interpolation in the generator.
 
-- [ ] Update generator to use template with metadata
+- [x] Update generator to use template with metadata
   ```ruby
   # lib/coding_agent_tools/organisms/claude_command_generator.rb
   def generate_command_content(workflow)
@@ -280,7 +280,7 @@ read and run @.claude/commands/commit.md
   end
   ```
 
-- [ ] Implement comprehensive metadata inference logic
+- [x] Implement comprehensive metadata inference logic
   ```ruby
   def infer_metadata(workflow)
     metadata = {}
@@ -366,7 +366,7 @@ read and run @.claude/commands/commit.md
   > Assert: Correct metadata for different workflow types
   > Command: bundle exec rspec -e "infers metadata"
 
-- [ ] Add YAML validation
+- [x] Add YAML validation
   ```ruby
   def validate_yaml_frontmatter(content)
     # Extract YAML between --- markers
@@ -383,7 +383,7 @@ read and run @.claude/commands/commit.md
   end
   ```
 
-- [ ] Update generator tests
+- [x] Update generator tests
   ```ruby
   # spec/coding_agent_tools/organisms/claude_command_generator_spec.rb
   describe "#generate_command_content" do
@@ -410,13 +410,13 @@ read and run @.claude/commands/commit.md
   end
   ```
 
-- [ ] Test with Claude Code
+- [x] Test with Claude Code
   > TEST: Claude Code Compatibility
   > Type: Integration Test
   > Assert: Generated commands work in Claude Code
   > Command: Generate command, restart Claude Code, verify /help shows command
 
-- [ ] Document metadata fields
+- [x] Document metadata fields
   ```markdown
   # Metadata Field Reference
 
@@ -438,15 +438,15 @@ read and run @.claude/commands/commit.md
 
 ## Acceptance Criteria
 
-- [ ] Template includes YAML front-matter structure
-- [ ] Generator produces valid YAML syntax
-- [ ] Metadata is appropriately inferred from workflow names
-- [ ] Generated commands work in Claude Code
-- [ ] No references to commands.json remain
-- [ ] Commands are self-documenting with descriptions
-- [ ] Tool restrictions applied where appropriate
-- [ ] All 25 workflows have appropriate metadata rules
-- [ ] Template loading works with File.read and string interpolation
+- [x] Template includes YAML front-matter structure
+- [x] Generator produces valid YAML syntax
+- [x] Metadata is appropriately inferred from workflow names
+- [x] Generated commands work in Claude Code
+- [x] No references to commands.json remain
+- [x] Commands are self-documenting with descriptions
+- [x] Tool restrictions applied where appropriate
+- [x] All 25 workflows have appropriate metadata rules
+- [x] Template loading works with File.read and string interpolation
 
 ## Review Summary
 
