@@ -19,24 +19,34 @@ needs_review: true
   - **Suggested default**: Use Ruby string interpolation `#{}` in heredocs
   - **Why needs human input**: Inconsistency between task.003 requirement and task.004 examples
 
+> use the same styl as task.003 will defined the base
+
 - [ ] Where exactly should the template file be created?
   - **Research conducted**: Task.003 mentions `dev-handbook/.integrations/claude/command.template.md`
   - **Current task**: Shows same path in file modifications section
   - **Suggested default**: Create at `dev-handbook/.integrations/claude/command.template.md`
   - **Why needs human input**: Confirm this is the correct location for a template file
 
-### [MEDIUM] Enhancement Questions  
+> we are enhancing what will be defined by task.003
+
+
+### [MEDIUM] Enhancement Questions
 - [ ] Should the template be a literal file or programmatically generated?
   - **Research conducted**: Task.003 says "template should be defined in proper folder"
   - **Current approach**: Shows both template file and Ruby code generation
   - **Suggested default**: Use Ruby heredocs in generator, no separate template file
   - **Why needs human input**: Clarify if physical template file is needed vs embedded in code
 
+> we are enhancing what will be defined by task.003
+
+
 - [ ] How should the generator handle workflows without clear categorization?
   - **Research conducted**: Current inference rules cover git, create, test workflows
   - **Missing coverage**: Workflows like `update-blueprint`, `synthesize-reflection-notes`
   - **Suggested default**: No metadata for uncategorized workflows (all fields optional)
   - **Why needs human input**: Define default behavior for unmatched workflows
+
+> we should have commands for all workflows (custom or generated have to cover everything)
 
 ## Behavioral Specification
 
@@ -196,9 +206,9 @@ read and run @.claude/commands/commit.md
   #{argument_hint ? "argument-hint: \"#{argument_hint}\"" : ""}
   #{model ? "model: #{model}" : ""}
   ---
-  
+
   read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md
-  
+
   read and run @.claude/commands/commit.md
   ```
   **Note**: This assumes Ruby string interpolation. If a literal template file is needed, a different approach would be required.
@@ -208,7 +218,7 @@ read and run @.claude/commands/commit.md
   # lib/coding_agent_tools/organisms/claude_command_generator.rb
   def generate_command_content(workflow)
     metadata = infer_metadata(workflow)
-    
+
     # Use string interpolation as specified (not ERB)
     content = []
     content << "---"
@@ -221,7 +231,7 @@ read and run @.claude/commands/commit.md
     content << "read whole file and follow @dev-handbook/workflow-instructions/#{workflow}.wf.md"
     content << ""
     content << "read and run @.claude/commands/commit.md"
-    
+
     content.join("\n")
   end
   ```
@@ -230,10 +240,10 @@ read and run @.claude/commands/commit.md
   ```ruby
   def infer_metadata(workflow)
     metadata = {}
-    
+
     # Generate description from workflow name
     metadata[:description] = workflow.gsub('-', ' ').capitalize
-    
+
     # Infer allowed-tools based on workflow type
     case workflow
     when /^git-/, /commit/, /rebase/, /merge/
@@ -243,7 +253,7 @@ read and run @.claude/commands/commit.md
     when /^test-/, /^validate-/
       metadata[:allowed_tools] = "Bash, Read"
     end
-    
+
     # Add argument hints for parameterized workflows
     case workflow
     when /work-on-task/, /review-task/
@@ -253,13 +263,13 @@ read and run @.claude/commands/commit.md
     when /fix.*from/
       metadata[:argument_hint] = "[source-file]"
     end
-    
+
     # Select model for complex workflows
     case workflow
     when /analyze/, /synthesize/, /research/
       metadata[:model] = "opus"
     end
-    
+
     metadata
   end
   ```
@@ -274,7 +284,7 @@ read and run @.claude/commands/commit.md
     # Extract YAML between --- markers
     yaml_match = content.match(/\A---\n(.*?)\n---/m)
     return false unless yaml_match
-    
+
     begin
       YAML.safe_load(yaml_match[1])
       true
@@ -294,17 +304,17 @@ read and run @.claude/commands/commit.md
       expect(content).to start_with("---")
       expect(content).to include("description: Capture idea")
     end
-    
+
     it "adds allowed-tools for git workflows" do
       content = generator.generate_command_content("git-commit")
       expect(content).to include("allowed-tools: Bash(git *)")
     end
-    
+
     it "adds argument-hint for parameterized workflows" do
       content = generator.generate_command_content("work-on-task")
       expect(content).to include('argument-hint: "[task-id]"')
     end
-    
+
     it "generates valid YAML" do
       content = generator.generate_command_content("test-workflow")
       expect(generator.validate_yaml_frontmatter(content)).to be true
@@ -321,18 +331,18 @@ read and run @.claude/commands/commit.md
 - [ ] Document metadata fields
   ```markdown
   # Metadata Field Reference
-  
+
   ## description
   Short help text shown in Claude Code's /help output
-  
+
   ## allowed-tools
   Restricts which tools the command can use (security feature)
   Format: Tool(pattern), Tool2, Tool3(specific:command)
-  
+
   ## argument-hint
   Shown in autocomplete, helps users understand expected arguments
   Format: "[argument-name]" or "[arg1] [arg2]"
-  
+
   ## model
   Forces specific model (sonnet, opus, haiku) for this command
   Default: User's selected model
