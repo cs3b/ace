@@ -5,9 +5,51 @@ priority: high
 estimate: 6h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006, v.0.6.0+task.007]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Write tests for Claude CLI commands
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Where are the Claude command implementations located?
+  - **Research conducted**: Searched for Claude command files in lib/coding_agent_tools/cli/commands/handbook/claude/
+  - **Similar implementations**: Found sync_templates.rb in handbook namespace
+  - **Finding**: No Claude command implementations exist yet in expected location
+  - **Why needs human input**: Dependencies indicate commands should exist but are not found
+
+- [ ] Should tests be written before or alongside command implementations?
+  - **Research conducted**: Checked task dependencies - all command implementation tasks are listed
+  - **Industry practice**: TDD suggests writing tests first, but requires interfaces
+  - **Suggested default**: Write test stubs with pending examples until implementations exist
+  - **Why needs human input**: Testing strategy depends on development workflow preference
+
+- [ ] What specific Claude commands need test coverage?
+  - **Research conducted**: Found references to 5 commands in release notes
+  - **Commands identified**: generate-commands, update-registry, integrate, validate, list
+  - **Similar pattern**: handbook sync-templates command exists with tests
+  - **Why needs human input**: Need confirmation of exact command names and behaviors
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should we use VCR for testing external API calls to Claude?
+  - **Research conducted**: Found VCR setup in spec/support/vcr.rb
+  - **Current practice**: Other LLM tests use VCR (anthropic_client_spec.rb exists)
+  - **Suggested default**: Use VCR for any Claude API interactions
+  - **Why needs human input**: Depends on whether commands make API calls
+
+- [ ] What test data/fixtures are needed for Claude command tests?
+  - **Research conducted**: Found spec/fixtures directory with coverage samples
+  - **Similar fixtures**: No Claude-specific fixtures exist yet
+  - **Suggested default**: Create spec/fixtures/claude/ with sample workflows and commands
+  - **Why needs human input**: Fixture requirements depend on command implementations
+
+### [LOW] Optimization Questions  
+- [ ] Should integration tests be in spec/integration/ or with unit tests?
+  - **Research conducted**: Found both patterns - spec/integration/ exists with various tests
+  - **Current pattern**: Integration tests are separate from unit tests
+  - **Suggested default**: Follow existing pattern with spec/integration/claude_workflow_spec.rb
+  - **Why needs human input**: Team preference for test organization
 
 ## Behavioral Specification
 
@@ -71,9 +113,13 @@ Coverage: 95%
 
 ### Validation Questions
 - [ ] **Test Isolation**: How to prevent tests affecting each other?
+  - **[Resolved through research]**: spec_helper.rb already handles isolation with temp dirs and cleanup
 - [ ] **Fixture Strategy**: Real files vs mocks for file operations?
+  - **[Resolved through research]**: Use temp directories (rspec/temp_dir) and mock external calls
 - [ ] **Performance**: How to keep test suite fast?
+  - **[Resolved through research]**: Use CliHelpers for direct invocation, avoid subprocess overhead
 - [ ] **Coverage Target**: What percentage coverage is required?
+  - **[Resolved through research]**: SimpleCov configured with 0% minimum (will increase over time)
 
 ## Objective
 
@@ -135,9 +181,13 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
 - `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/list_spec.rb`
 - `dev-tools/spec/support/claude_test_helpers.rb`
 - `dev-tools/spec/fixtures/claude/` - Test fixtures directory
+- **[Added on review]** `dev-tools/spec/fixtures/claude/sample_workflows/` - Sample workflow files
+- **[Added on review]** `dev-tools/spec/fixtures/claude/commands/` - Sample command files
+- **[Added on review]** `dev-tools/spec/integration/claude_workflow_spec.rb` - Integration tests
 
 ### Modify
 - `dev-tools/spec/spec_helper.rb` - Add Claude test configuration
+- **[Added on review]** `dev-tools/spec/support/cli_helpers.rb` - Add Claude command execution helpers
 
 ### Delete
 - None required
@@ -147,8 +197,13 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
 ### Technical Risks
 - **File System Dependencies**: Tests might be fragile
   - Mitigation: Use temporary directories, proper cleanup
+  - **[Added on review]**: Use safe_directory_cleanup helper from spec_helper.rb
 - **Test Interdependence**: Order-dependent failures
   - Mitigation: Proper isolation, random test order
+  - **[Added on review]**: RSpec configured with random order and proper cleanup hooks
+- **Missing Implementation Risk**: Commands don't exist yet
+  - **[Added on review]**: Tests may need pending examples until implementations complete
+  - Mitigation: Use test doubles and stubs for missing components
 
 ### Integration Risks
 - **CI Environment Differences**: Local vs CI behavior
@@ -179,7 +234,23 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
     end
     
     def teardown_claude_test_environment
-      FileUtils.rm_rf(@temp_dir) if @temp_dir
+      # Use safe_directory_cleanup from spec_helper
+      safe_directory_cleanup(@temp_dir) if @temp_dir
+    end
+    
+    # Helper to create sample workflow files for testing
+    def create_sample_workflow(name, content = nil)
+      workflow_dir = File.join(@handbook_dir, "workflow-instructions")
+      FileUtils.mkdir_p(workflow_dir)
+      
+      content ||= "# #{name} Workflow\n\n## Goal\nTest workflow"
+      File.write(File.join(workflow_dir, "#{name}.wf.md"), content)
+    end
+    
+    # Helper to verify command generation
+    def expect_command_generated(workflow_name)
+      command_file = File.join(@claude_dir, "commands", "#{workflow_name}.md")
+      expect(File.exist?(command_file)).to be true
     end
   end
   ```
@@ -290,9 +361,15 @@ Create comprehensive test suite for all Claude CLI commands ensuring reliability
 - [ ] Test coverage > 90%
 - [ ] All tests pass in CI environment
 - [ ] Test execution time < 30 seconds
+- **[Added on review]** Tests follow RSpec best practices (describe/context/it structure)
+- **[Added on review]** Tests use shared examples for common behaviors
+- **[Added on review]** Tests are documented with --format documentation output
 
 ## References
 
 - RSpec best practices
 - Existing test patterns in dev-tools
 - Testing file system operations
+- **[Added on review]** spec/coding_agent_tools/cli/commands/handbook/sync_templates_spec.rb - Similar command test pattern
+- **[Added on review]** spec/support/cli_helpers.rb - CLI command testing infrastructure
+- **[Added on review]** Web research: RSpec 2025 best practices for CLI testing with dry-cli
