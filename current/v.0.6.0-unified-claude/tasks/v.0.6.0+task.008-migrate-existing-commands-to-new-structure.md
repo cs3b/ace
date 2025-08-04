@@ -5,51 +5,70 @@ priority: medium
 estimate: 3h
 dependencies: [v.0.6.0+task.001]
 release: v.0.6.0-unified-claude
-needs_review: true
 ---
 
 # Migrate existing commands to new structure
 
-## Review Questions (Pending Human Input)
+## Migration Instructions for Claude Code
 
-### [HIGH] Critical Implementation Questions
-- [ ] Should the migration script be part of the Ruby gem or a standalone shell script?
-  - **Research conducted**: ClaudeCommandsInstaller is part of dev-tools Ruby gem
-  - **Current pattern**: All command management is done through Ruby classes
-  - **Suggested default**: Add migration method to ClaudeCommandsInstaller class
-  - **Why needs human input**: Integration approach affects maintainability
+Based on user clarifications, this migration will be performed as a one-time prompt for Claude Code. The following instructions should be used to perform the migration:
 
-- [ ] How should we handle the fact that .claude/commands/ directory doesn't exist at project root?
-  - **Research conducted**: .claude directory not found at handbook-meta root
-  - **Task.001 context**: Shows confusion about primary location (dev-handbook vs root)
-  - **User clarified**: Primary is dev-handbook/.integrations/claude/commands/
-  - **Suggested default**: Only migrate within dev-handbook, ignore .claude references
-  - **Why needs human input**: Task description assumes .claude exists but it doesn't
+### Migration Prompt
 
-- [ ] Should migration preserve git history using `git mv` or regular file operations?
-  - **Research conducted**: Task specifies "git mv for tracking" in multiple places
-  - **Risk identified**: Git operations require clean working directory
-  - **Suggested default**: Use git mv with pre-check for clean status
-  - **Why needs human input**: Confirm git preservation is mandatory requirement
+```
+Migrate existing Claude commands to the new directory structure:
 
-### [MEDIUM] Enhancement Questions
-- [ ] Should the migration create a backup before moving files?
-  - **Research conducted**: Task mentions "optional backup" but not required
-  - **Best practice**: Always backup before destructive operations
-  - **Suggested default**: Create timestamped backup in .backups/ directory
-  - **Why needs human input**: Backup strategy and location preferences
+1. First, check if the directories exist:
+   - dev-handbook/.integrations/claude/commands/_custom
+   - dev-handbook/.integrations/claude/commands/_generated
+   - .claude/commands/_custom
+   - .claude/commands/_generated
 
-- [ ] How to handle if _custom or _generated directories already exist with files?
-  - **Research conducted**: Directories don't currently exist
-  - **Edge case**: Partial migration or manual attempts might create conflicts
-  - **Suggested default**: Merge contents, report conflicts for manual resolution
-  - **Why needs human input**: Conflict resolution strategy
+2. If directories don't exist, create them:
+   mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
+   mkdir -p .claude/commands/{_custom,_generated}
 
-### [LOW] Implementation Details
-- [ ] Should migration report be saved to a file or just output to console?
-  - **Research conducted**: Task shows markdown report example
-  - **Suggested default**: Both - console output and save to MIGRATION_REPORT.md
-  - **Why needs human input**: Report persistence requirements
+3. In dev-handbook/.integrations/claude/commands/, use git mv to move the 6 custom commands to _custom/:
+   - commit.md
+   - draft-tasks.md
+   - load-project-context.md
+   - plan-tasks.md
+   - review-tasks.md
+   - work-on-tasks.md
+
+4. In .claude/commands/, analyze each file:
+   - If the file exists in dev-handbook/.integrations/claude/commands/_custom/, move it to _custom/
+   - Otherwise, move it to _generated/
+   - Skip any files that are already in _custom/ or _generated/ directories
+
+5. Use git mv when possible for all file movements to preserve history
+
+6. Generate a migration report and save it to:
+   dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+
+Report format:
+# Command Migration Report - [Date]
+
+## Summary
+- Commands migrated in dev-handbook: X
+- Commands migrated in .claude: Y  
+- Commands skipped (already migrated): Z
+
+## dev-handbook Migration
+### Custom Commands Moved
+- List each file moved
+
+## .claude Migration  
+### Custom Commands
+- List files moved to _custom/
+
+### Generated Commands
+- List files moved to _generated/
+
+## Verification
+- Git history preserved: Yes/No
+- All files accounted for: Yes/No
+```
 
 ## Behavioral Specification
 
@@ -177,11 +196,10 @@ Safely migrate existing Claude commands from flat structure to new organized dir
 ## Research Notes
 
 ### Current State Analysis
-- **Primary location confirmed**: dev-handbook/.integrations/claude/commands/
-- **No .claude directory** at project root (contrary to task assumptions)
-- **All existing commands are custom**: No generated commands exist yet
-- **ClaudeCommandsInstaller**: Currently copies commands to .claude/commands/ during installation
-- **Task.001 clarifications**: User confirmed dev-handbook is primary, .claude is just duplication
+- **Primary source location**: dev-handbook/.integrations/claude/commands/ (6 custom commands)
+- **.claude directory EXISTS** at project root with 35 command files
+- **ClaudeCommandsInstaller**: Copies custom commands from dev-handbook to .claude/commands/
+- **User clarification**: dev-handbook is the source, .claude is the deployed location
 
 ### Directory Structure Findings
 ```
@@ -189,6 +207,11 @@ dev-handbook/.integrations/claude/
 ├── agents/           # Contains feature-research.md, git-commit-manager.md
 ├── commands/         # 6 custom command files (flat structure)
 └── install-prompts.md
+
+.claude/
+├── agents/           # 2 agent files
+├── commands/         # 35 command files (mix of custom and generated)
+└── settings.local.json
 ```
 
 ### Related Task Dependencies
@@ -198,124 +221,39 @@ dev-handbook/.integrations/claude/
 - **This task (008)**: Migrates existing 6 commands to _custom
 
 ### Implementation Readiness Assessment
-**Ready with clarifications**: The migration can proceed once the critical questions are answered. The scope is clear (6 files to move), but the approach needs confirmation regarding git operations, backup strategy, and handling of the non-existent .claude directory references.
+**Ready for implementation**: All critical questions have been answered by the user. The migration will be performed using a Claude Code prompt (one-time execution), using git mv to preserve history, without creating backups (relying on git), and will migrate files in both dev-handbook and .claude directories. The migration report will be saved to the release docs folder.
 
 ## Implementation Plan
 
 ### Planning Steps
 
 * [x] Inventory all existing command files
-  - **Completed Research**: Found 6 commands in dev-handbook/.integrations/claude/commands/:
-    - commit.md
-    - draft-tasks.md
-    - load-project-context.md
-    - plan-tasks.md
-    - review-tasks.md
-    - work-on-tasks.md
-  - **Note**: No .claude/commands/ directory exists at project root
+  - **Completed Research**: 
+    - Found 6 commands in dev-handbook/.integrations/claude/commands/ (source)
+    - Found 35 files in .claude/commands/ (target location)
+    - Confirmed .claude/commands/ DOES exist at project root
 * [x] Identify custom vs generated commands
-  - **Research Finding**: All 6 existing commands are custom (hand-crafted)
-  - **No generated commands exist yet** (will be created by task.003)
+  - **Research Finding**: 
+    - All 6 commands in dev-handbook are custom (hand-crafted)
+    - The .claude/commands/ contains mix of custom (copied from dev-handbook) and generated files
 * [x] Search codebase for hardcoded paths
   - **Found references in**:
     - dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
     - dev-tools/spec files
     - Various task files in v.0.6.0-unified-claude
-  - **Critical files to update**: ClaudeCommandsInstaller class
-* [ ] Plan migration timing with team
+  - **Critical files to update**: ClaudeCommandsInstaller class (will be handled in separate task)
+* [x] Plan migration approach
+  - **User Decision**: Use Claude Code prompt for one-time migration
+  - **No permanent script needed**: Just instructions for AI agent
 
 ### Execution Steps
 
-- [ ] Create migration checklist
-  ```markdown
-  # Migration Checklist
-  - [ ] All team members notified
-  - [ ] No active PRs modifying commands
-  - [ ] Full backup created
-  - [ ] Git status clean
-  ```
-
-- [ ] Perform pre-migration inventory
-  ```bash
-  find dev-handbook/.integrations/claude/commands -name "*.md" | sort > pre-migration.txt
-  wc -l pre-migration.txt
-  ```
-  > TEST: File Count Verification
-  > Type: Manual Check
-  > Assert: Count matches expected number
-  > Command: wc -l pre-migration.txt
-
-- [ ] Create directory structure (if not exists)
-  ```bash
-  mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
-  ```
-
-- [ ] Migrate custom commands with git
-  ```bash
-  cd dev-handbook/.integrations/claude
-  git mv commands/commit.md commands/_custom/
-  git mv commands/draft-tasks.md commands/_custom/
-  git mv commands/plan-tasks.md commands/_custom/
-  git mv commands/work-on-tasks.md commands/_custom/
-  git mv commands/review-tasks.md commands/_custom/
-  git mv commands/load-project-context.md commands/_custom/
-  ```
-  > TEST: Git History Preservation
-  > Type: Git Log Check
-  > Assert: History follows file
-  > Command: git log --follow commands/_custom/commit.md
-
-- [ ] Migrate remaining commands to _generated
-  ```bash
-  for file in commands/*.md; do
-    if [ -f "$file" ]; then
-      git mv "$file" commands/_generated/
-    fi
-  done
-  ```
-
-- [ ] Verify migration completeness
-  ```bash
-  find dev-handbook/.integrations/claude/commands -name "*.md" | sort > post-migration.txt
-  diff pre-migration.txt post-migration.txt
-  ```
-  > TEST: Migration Completeness
-  > Type: File Comparison
-  > Assert: All files accounted for
-  > Command: diff pre-migration.txt post-migration.txt
-
-- [ ] Update any hardcoded references
-  ```bash
-  # Search for old paths
-  grep -r "commands/commit.md" . --include="*.rb" --include="*.md"
-  # Update found references
-  ```
-
-- [ ] Create migration report
-  ```markdown
-  # Migration Report - [Date]
-  
-  ## Summary
-  - Custom commands moved: 6
-  - Generated commands moved: X
-  - Total files migrated: Y
-  
-  ## Custom Commands
-  - commit.md
-  - draft-tasks.md
-  - plan-tasks.md
-  - work-on-tasks.md  
-  - review-tasks.md
-  - load-project-context.md
-  
-  ## Issues
-  - None encountered
-  
-  ## Verification
-  - Git history preserved: ✓
-  - All files accounted for: ✓
-  - No broken references: ✓
-  ```
+- [ ] Execute the migration using Claude Code with the prompt from "Migration Instructions" section above
+- [ ] Verify migration was successful:
+  - Check directory structures in both locations
+  - Confirm git history preserved  
+  - Review generated migration report
+- [ ] Update ClaudeCommandsInstaller to handle new directory structure (separate task)
 
 ## Acceptance Criteria
 
