@@ -5,10 +5,38 @@ priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.003]
 release: v.0.6.0-unified-claude
-needs_review: false
+needs_review: true
 ---
 
 # Update command template with YAML front-matter
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the template file use ERB-style placeholders or a different format?
+  - **Research conducted**: Task.003 specifies "string interpolation" not ERB
+  - **Template shown**: Uses ERB-style `<%= %>` syntax in examples
+  - **Suggested default**: Use Ruby string interpolation `#{}` in heredocs
+  - **Why needs human input**: Inconsistency between task.003 requirement and task.004 examples
+
+- [ ] Where exactly should the template file be created?
+  - **Research conducted**: Task.003 mentions `dev-handbook/.integrations/claude/command.template.md`
+  - **Current task**: Shows same path in file modifications section
+  - **Suggested default**: Create at `dev-handbook/.integrations/claude/command.template.md`
+  - **Why needs human input**: Confirm this is the correct location for a template file
+
+### [MEDIUM] Enhancement Questions  
+- [ ] Should the template be a literal file or programmatically generated?
+  - **Research conducted**: Task.003 says "template should be defined in proper folder"
+  - **Current approach**: Shows both template file and Ruby code generation
+  - **Suggested default**: Use Ruby heredocs in generator, no separate template file
+  - **Why needs human input**: Clarify if physical template file is needed vs embedded in code
+
+- [ ] How should the generator handle workflows without clear categorization?
+  - **Research conducted**: Current inference rules cover git, create, test workflows
+  - **Missing coverage**: Workflows like `update-blueprint`, `synthesize-reflection-notes`
+  - **Suggested default**: No metadata for uncategorized workflows (all fields optional)
+  - **Why needs human input**: Define default behavior for unmatched workflows
 
 ## Behavioral Specification
 
@@ -95,16 +123,18 @@ Update the command generation template to produce Claude Code-native command fil
 ### Template Structure
 ```markdown
 ---
-description: <%= description %>
-<% if allowed_tools %>allowed-tools: <%= allowed_tools %><% end %>
-<% if argument_hint %>argument-hint: "<%= argument_hint %>"<% end %>
-<% if model %>model: <%= model %><% end %>
+description: #{description}
+#{allowed_tools ? "allowed-tools: #{allowed_tools}" : ""}
+#{argument_hint ? "argument-hint: \"#{argument_hint}\"" : ""}
+#{model ? "model: #{model}" : ""}
 ---
 
-read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
+read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md
 
 read and run @.claude/commands/commit.md
 ```
+
+**Note**: This shows Ruby string interpolation syntax as required by task.003, not ERB.
 
 ### Metadata Generation Rules
 - **description**: Convert workflow name from kebab-case to readable sentence
@@ -157,20 +187,21 @@ read and run @.claude/commands/commit.md
 
 ### Execution Steps
 
-- [ ] Create command template with YAML front-matter
+- [ ] Create command template with YAML front-matter (if using template file approach)
   ```markdown
   # dev-handbook/.integrations/claude/command.template.md
   ---
-  description: <%= description %>
-  <% if allowed_tools %>allowed-tools: <%= allowed_tools %><% end %>
-  <% if argument_hint %>argument-hint: "<%= argument_hint %>"<% end %>
-  <% if model %>model: <%= model %><% end %>
+  description: #{description}
+  #{allowed_tools ? "allowed-tools: #{allowed_tools}" : ""}
+  #{argument_hint ? "argument-hint: \"#{argument_hint}\"" : ""}
+  #{model ? "model: #{model}" : ""}
   ---
   
-  read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
+  read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md
   
   read and run @.claude/commands/commit.md
   ```
+  **Note**: This assumes Ruby string interpolation. If a literal template file is needed, a different approach would be required.
 
 - [ ] Update generator to use template with metadata
   ```ruby
