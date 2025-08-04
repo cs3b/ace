@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Claude Code Integration Script
+# Automatically creates and registers Claude Code commands from workflow instructions
+
+require 'pathname'
+
+# Add dev-tools lib to load path if it exists
+dev_tools_lib = File.expand_path('../dev-tools/lib', __dir__)
+if File.directory?(dev_tools_lib)
+  $LOAD_PATH.unshift(dev_tools_lib)
+  require 'coding_agent_tools/integrations/claude_commands_installer'
+else
+  # Fallback to inline implementation if dev-tools not available
+  require_relative '../lib/claude_commands_installer'
+end
+
+# Run the installer
+begin
+  CodingAgentTools::Integrations::ClaudeCommandsInstaller.new.run
+rescue NameError
+  # If the class doesn't exist in dev-tools, use inline implementation
+  require_relative '../lib/claude_commands_installer'
+  ClaudeCommandsInstaller.new.run
+end
