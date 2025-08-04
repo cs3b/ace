@@ -5,9 +5,48 @@ priority: high
 estimate: 2h
 dependencies: []
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Create Claude command directory structure
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Which location should be the primary directory for Claude commands?
+  - **Research conducted**: Found two existing locations with Claude commands:
+    - `/Users/michalczyz/Projects/CodingAgent/handbook-meta/.claude/commands/` (33 commands)
+    - `/Users/michalczyz/Projects/CodingAgent/handbook-meta/dev-handbook/.integrations/claude/commands/` (6 commands)
+  - **Suggested default**: Use `.claude/commands/` at project root as primary location
+  - **Why needs human input**: Two existing structures conflict - need decision on consolidation strategy
+
+- [ ] Should we consolidate commands from both locations or maintain dual structure?
+  - **Research conducted**: Root `.claude/commands/` has more complete set; dev-handbook location has subset
+  - **Suggested default**: Consolidate all commands into root `.claude/commands/` with new subdirectory structure
+  - **Why needs human input**: Architectural decision affecting all future Claude integration
+
+- [ ] How should existing commands.json be migrated to support the new structure?
+  - **Research conducted**: Current commands.json uses flat structure with path-based keys
+  - **Current format**: `{"/command-name": {config}}`
+  - **Suggested default**: Add `type: "custom"|"generated"` field to each command entry
+  - **Why needs human input**: Breaking change to existing format needs approval
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should generated commands be tracked in version control or added to .gitignore?
+  - **Research conducted**: No current .gitignore patterns for Claude directories
+  - **Suggested default**: Add `.claude/commands/_generated/` to .gitignore
+  - **Why needs human input**: Version control strategy affects collaboration
+
+- [ ] What naming convention should distinguish custom vs generated commands in commands.json?
+  - **Research conducted**: Current commands use simple slash-prefixed names
+  - **Suggested default**: Keep existing names, add metadata field for type
+  - **Why needs human input**: Affects command discovery and tooling
+
+### [LOW] Implementation Details
+- [ ] Should we preserve the dev-handbook/.integrations/claude structure for backward compatibility?
+  - **Research conducted**: Only 6 commands in this location vs 33 in root
+  - **Suggested default**: Deprecate but preserve with symlinks to new location
+  - **Why needs human input**: Migration timeline and compatibility requirements
 
 ## Behavioral Specification
 
@@ -50,9 +89,13 @@ dev-handbook/.integrations/claude/
 
 ### Validation Questions
 - [ ] **Migration Strategy**: How should existing commands be handled during structure creation?
+  - **Resolved through research**: Commands exist in two locations; need consolidation
 - [ ] **Naming Convention**: Should underscore prefix (_custom, _generated) be used or alternative?
+  - **Resolved through research**: Underscore prefix appropriate for directory sorting
 - [ ] **Template Format**: What variables and structure should templates support?
+  - **Partially resolved**: Basic variables identified (workflow_name, agent_name, etc.)
 - [ ] **Permissions**: What file permissions should be set for different directory types?
+  - **Resolved through research**: Standard 755 for directories, 644 for files
 
 ## Objective
 
@@ -105,13 +148,20 @@ Create a clear, maintainable directory structure for Claude commands that separa
 ## File Modifications
 
 ### Create
-- `dev-handbook/.integrations/claude/commands/_custom/` - Directory for hand-crafted commands
-- `dev-handbook/.integrations/claude/commands/_generated/` - Directory for auto-generated commands
-- `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
-- `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
+- `.claude/commands/_custom/` - Directory for hand-crafted commands (PRIMARY LOCATION)
+- `.claude/commands/_generated/` - Directory for auto-generated commands  
+- `.claude/templates/workflow-command.md.tmpl` - Template for workflow commands
+- `.claude/templates/agent-command.md.tmpl` - Template for agent commands
+- **Alternative if dev-handbook preferred**:
+  - `dev-handbook/.integrations/claude/commands/_custom/` - Directory for hand-crafted commands
+  - `dev-handbook/.integrations/claude/commands/_generated/` - Directory for auto-generated commands
+  - `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl` - Template for workflow commands
+  - `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl` - Template for agent commands
 
 ### Modify
-- `dev-handbook/.integrations/claude/commands/` - Reorganize existing flat structure
+- `.claude/commands/` - Reorganize existing flat structure (33 files to migrate)
+- `.claude/commands/commands.json` - Update registry format to support command types
+- `dev-handbook/.integrations/claude/commands/` - Deprecate or create symlinks
 
 ### Delete
 - None required for initial structure creation
@@ -134,14 +184,14 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 ### Planning Steps
 
-* [ ] Analyze current command structure in dev-handbook/.integrations/claude/
-  - Review existing commands directory for custom commands
-  - Check for any generated commands or patterns
-  - Document current file organization
-* [ ] Document existing commands for migration planning
-  - List all .md files in commands directory
-  - Categorize as custom vs potentially generated
-  - Identify any special cases or dependencies
+* [x] Analyze current command structure in dev-handbook/.integrations/claude/
+  - **Completed Research**: Found 6 commands in dev-handbook location
+  - Commands: commit.md, draft-tasks.md, load-project-context.md, plan-tasks.md, review-tasks.md, work-on-tasks.md
+  - All appear to be custom hand-crafted commands
+* [x] Document existing commands for migration planning
+  - **Root .claude/commands/**: 33 command files plus commands.json registry
+  - **dev-handbook location**: 6 command files (subset of root)
+  - All current commands appear to be custom (no generated commands yet)
 * [ ] Design template variables and structure for command generation
   - Define workflow command template variables: workflow_name, workflow_path
   - Define agent command template variables: agent_name, agent_purpose, context_description
@@ -155,17 +205,24 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 - [ ] Create base directory structure
   ```bash
-  mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
-  mkdir -p dev-handbook/.integrations/claude/templates
+  # Primary location at project root
+  mkdir -p .claude/commands/{_custom,_generated}
+  mkdir -p .claude/templates
+  # OR if using dev-handbook location:
+  # mkdir -p dev-handbook/.integrations/claude/commands/{_custom,_generated}
+  # mkdir -p dev-handbook/.integrations/claude/templates
   ```
   > TEST: Directory Creation Validation
   > Type: File System Check
   > Assert: All directories exist with correct permissions
   > Command: ls -la dev-handbook/.integrations/claude/commands/ | grep "^d" | wc -l | grep -q "2"
 
-- [ ] Create initial commands.json registry file
+- [ ] Update existing commands.json registry format
   ```bash
-  echo '{"version": "1.0.0", "custom_commands": [], "generated_commands": []}' > dev-handbook/.integrations/claude/commands/commands.json
+  # Backup existing registry first
+  cp .claude/commands/commands.json .claude/commands/commands.json.bak
+  # Update structure to support command types (requires manual JSON transformation)
+  # New format should include type field for each command
   ```
   > TEST: Registry File Creation
   > Type: File Content Check
@@ -174,15 +231,18 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 - [ ] Move existing custom commands to _custom directory
   ```bash
-  # Check for existing commands first
-  if ls dev-handbook/.integrations/claude/commands/*.md 2>/dev/null; then
-    # Move known custom commands
-    for cmd in commit draft-tasks plan-tasks work-on-tasks review-tasks load-project-context; do
-      [ -f "dev-handbook/.integrations/claude/commands/${cmd}.md" ] && \
-      mv "dev-handbook/.integrations/claude/commands/${cmd}.md" \
-         "dev-handbook/.integrations/claude/commands/_custom/"
-    done
-  fi
+  # Move all 33 commands from root location
+  cd .claude/commands/
+  for cmd in *.md; do
+    [ -f "$cmd" ] && mv "$cmd" _custom/
+  done
+  
+  # Handle dev-handbook location (deprecate or symlink)
+  # Option 1: Create symlinks for backward compatibility
+  cd dev-handbook/.integrations/claude/commands/
+  for cmd in *.md; do
+    ln -s ../../../../.claude/commands/_custom/"$cmd" .
+  done
   ```
   > TEST: Custom Command Migration
   > Type: File Existence Check
@@ -191,10 +251,10 @@ Create a clear, maintainable directory structure for Claude commands that separa
 
 - [ ] Create workflow command template
   ```bash
-  cat > dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl << 'EOF'
+  cat > .claude/templates/workflow-command.md.tmpl << 'EOF'
 read whole file and follow @dev-handbook/workflow-instructions/<%= workflow_name %>.wf.md
 
-read and run @.claude/commands/commit.md
+read and run @.claude/commands/_custom/commit.md
 EOF
   ```
   > TEST: Workflow Template Creation
@@ -204,7 +264,7 @@ EOF
 
 - [ ] Create agent command template
   ```bash
-  cat > dev-handbook/.integrations/claude/templates/agent-command.md.tmpl << 'EOF'
+  cat > .claude/templates/agent-command.md.tmpl << 'EOF'
 Use the <%= agent_name %> agent to <%= agent_purpose %>.
 Context: <%= context_description %>
 <%= additional_parameters %>
@@ -217,7 +277,7 @@ EOF
 
 - [ ] Create migration documentation
   ```bash
-  cat > dev-handbook/.integrations/claude/commands/MIGRATION.md << 'EOF'
+  cat > .claude/commands/MIGRATION.md << 'EOF'
 # Claude Commands Directory Structure Migration
 
 ## Overview
@@ -246,10 +306,10 @@ EOF
 
 - [ ] Set proper file permissions
   ```bash
-  chmod 755 dev-handbook/.integrations/claude/commands/{_custom,_generated}
-  chmod 755 dev-handbook/.integrations/claude/templates
-  chmod 644 dev-handbook/.integrations/claude/commands/commands.json
-  chmod 644 dev-handbook/.integrations/claude/templates/*.tmpl
+  chmod 755 .claude/commands/{_custom,_generated}
+  chmod 755 .claude/templates
+  chmod 644 .claude/commands/commands.json
+  chmod 644 .claude/templates/*.tmpl
   ```
   > TEST: Permission Validation
   > Type: Permission Check
@@ -258,10 +318,10 @@ EOF
 
 - [ ] Update .gitignore for generated content (if needed)
   ```bash
-  # Check if .gitignore needs updating
-  if ! grep -q "_generated" dev-handbook/.gitignore 2>/dev/null; then
-    echo "# Auto-generated Claude commands" >> dev-handbook/.gitignore
-    echo ".integrations/claude/commands/_generated/*.md" >> dev-handbook/.gitignore
+  # Add to main .gitignore
+  if ! grep -q "_generated" .gitignore 2>/dev/null; then
+    echo "# Auto-generated Claude commands" >> .gitignore
+    echo ".claude/commands/_generated/" >> .gitignore
   fi
   ```
   > TEST: Git Ignore Configuration
@@ -271,13 +331,13 @@ EOF
 
 - [ ] Verify git tracking for new structure
   ```bash
-  cd dev-handbook && git add .integrations/claude/commands/ .integrations/claude/templates/
-  git status --porcelain .integrations/claude/
+  git add .claude/commands/_custom/ .claude/templates/
+  git status --porcelain .claude/
   ```
   > TEST: Version Control Validation
   > Type: Git Status Check
   > Assert: All directories are tracked, no unintended files
-  > Command: cd dev-handbook && git ls-files .integrations/claude/ | grep -E "(commands/|templates/)" | wc -l
+  > Command: git ls-files .claude/ | grep -E "(commands/|templates/)" | wc -l
 
 ## Acceptance Criteria
 
@@ -287,8 +347,23 @@ EOF
 - [ ] No data loss during migration
 - [ ] Clear documentation for migration process
 
+## Research Notes
+
+### Current State Analysis
+- **Two Claude command locations discovered**:
+  1. Root: `.claude/commands/` with 33 command files and commands.json registry
+  2. Dev-handbook: `dev-handbook/.integrations/claude/commands/` with 6 command files
+- **No existing generated commands** - all current commands are custom/hand-crafted
+- **Existing agents location**: Both locations have `agents/` directory
+- **No current .gitignore patterns** for Claude directories
+
+### Implementation Readiness
+- **Blocked on location decision**: Need to choose between root `.claude/` or `dev-handbook/.integrations/claude/`
+- **Migration complexity**: 33 files to reorganize plus registry format update
+- **Backward compatibility concern**: Some tools may reference old paths
+
 ## References
 
 - Current Claude integration structure
-- Best practices for command organization
+- Best practices for command organization  
 - Version control considerations for generated content

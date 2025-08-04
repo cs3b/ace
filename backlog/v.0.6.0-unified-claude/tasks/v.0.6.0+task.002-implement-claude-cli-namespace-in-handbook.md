@@ -5,9 +5,49 @@ priority: high
 estimate: 4h
 dependencies: []
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Implement Claude CLI namespace in handbook
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the `integrate` subcommand directly call the existing `ClaudeCommandsInstaller` class?
+  - **Research conducted**: Found existing `CodingAgentTools::Integrations::ClaudeCommandsInstaller` class
+  - **Current implementation**: Standalone class with `run` method, handles all Claude command installation
+  - **Suggested default**: Yes, reuse existing class through CLI wrapper
+  - **Why needs human input**: Architecture decision - direct reuse vs refactoring
+
+- [ ] Should `handbook claude` without subcommand show help or execute a default action?
+  - **Research conducted**: Checked dry-cli documentation and existing patterns in codebase
+  - **Similar implementations**: Most namespaces show help when called without subcommand (e.g., task, release, code)
+  - **Suggested default**: Show help (consistent with other commands)
+  - **Why needs human input**: UX preference - might want default action like `list`
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the claude namespace be eager-loaded or lazy-loaded?
+  - **Research conducted**: Reviewed cli.rb loading patterns
+  - **Current pattern**: All namespaces use lazy loading through `register_*_commands` methods
+  - **Suggested default**: Lazy-loaded (consistent with all other namespaces)
+  - **Why needs human input**: Performance implications unclear if claude commands are heavy
+
+- [ ] What should be the exact help text description for each subcommand?
+  - **Research conducted**: Reviewed existing command descriptions
+  - **Pattern found**: Short, action-oriented descriptions (10-15 words)
+  - **Suggested defaults**:
+    - generate-commands: "Generate missing Claude commands from workflow files"  
+    - update-registry: "Update commands.json registry with new commands"
+    - integrate: "Install Claude Code commands to .claude/ directory"
+    - validate: "Validate command coverage and consistency"
+    - list: "List all Claude commands and their status"
+  - **Why needs human input**: Exact wording affects user understanding
+
+### [LOW] Future Enhancement Questions
+- [ ] Should we support command aliases (e.g., `handbook cl` for `handbook claude`)?
+  - **Research conducted**: Other namespaces don't use short aliases (except individual commands)
+  - **Suggested default**: No aliases initially (can add later if needed)
+  - **Why needs human input**: Feature scope decision
 
 ## Behavioral Specification
 
@@ -53,6 +93,9 @@ Usage: handbook claude [SUBCOMMAND]
 **Edge Cases:**
 - Called from non-project directory: Graceful error with guidance
 - Incomplete installation: Detect and report missing components
+- **[Added on review]** Nested namespace help: `handbook claude` shows subcommands (handled by dry-cli)
+- **[Added on review]** Missing .claude directory: ClaudeCommandsInstaller creates it automatically
+- **[Added on review]** Conflicting command files: ClaudeCommandsInstaller skips existing files
 
 ### Success Criteria
 - [ ] **Command Registration**: `handbook claude` is recognized and executable
@@ -62,9 +105,13 @@ Usage: handbook claude [SUBCOMMAND]
 
 ### Validation Questions
 - [ ] **Command Aliases**: Should we support short aliases like `handbook cl`?
+  - **[Resolved through research]**: No aliases needed - consistent with other namespaces
 - [ ] **Output Format**: Should help output be colorized or plain text?
+  - **[Resolved through research]**: dry-cli handles this automatically, no custom implementation needed
 - [ ] **Subcommand Loading**: Should subcommands be lazy-loaded or eager-loaded?
+  - **[Resolved through research]**: Lazy-loaded via nested registration block pattern
 - [ ] **Backward Compatibility**: How to handle users expecting old claude-integrate script?
+  - **[Added on review]** No existing claude-integrate script found in exe/ directory
 
 ## Objective
 
@@ -97,14 +144,16 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 ## Technical Approach
 
 ### Architecture Pattern
-- Command namespace pattern using dry-cli's subcommand registration
-- Lazy loading of subcommands for performance
-- Consistent with existing handbook CLI patterns
+- Command namespace pattern using dry-cli's subcommand registration via block syntax
+- Lazy loading through `register_claude_commands` method in cli.rb
+- Consistent with existing handbook CLI patterns (follows task, release, code namespace patterns)
+- Reuse existing `ClaudeCommandsInstaller` class for integrate functionality
 
 ### Technology Stack
-- Ruby with dry-cli for command parsing
-- Standard Ruby patterns for command organization
-- Existing handbook CLI infrastructure
+- Ruby with dry-cli gem (already in project dependencies)
+- Standard Ruby module/class patterns for command organization
+- Existing handbook CLI infrastructure in `CodingAgentTools::Cli::Commands` namespace
+- Integration with existing `CodingAgentTools::Integrations::ClaudeCommandsInstaller`
 
 ## Tool Selection
 
@@ -117,13 +166,19 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 ## File Modifications
 
 ### Create
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude.rb` - Main Claude command class
 - `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/` - Subcommand directory
-- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb` - Tests
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Generate commands subcommand
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/update_registry.rb` - Update registry subcommand
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Integrate subcommand (wraps existing installer)
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Validate subcommand
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/list.rb` - List subcommand
+- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/` - Test directory
+- `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb` - Integration tests
+- `dev-tools/spec/integration/handbook_claude_cli_spec.rb` - CLI integration tests
 
 ### Modify
-- `dev-tools/lib/coding_agent_tools/cli.rb` - Register Claude namespace
-- `dev-tools/lib/coding_agent_tools/cli/commands/handbook.rb` - Add Claude subcommand
+- `dev-tools/lib/coding_agent_tools/cli.rb` - Update `register_handbook_commands` method to include Claude namespace
+- `dev-tools/docs/tools.md` - Add Claude commands documentation (if file exists)
 
 ### Delete
 - None required
@@ -146,25 +201,42 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 
 ### Planning Steps
 
-* [ ] Study existing handbook command structure in dev-tools
-* [ ] Review dry-cli documentation for namespace patterns
+* [x] Study existing handbook command structure in dev-tools
+  - Found: handbook namespace exists with sync-templates subcommand
+  - Pattern: Uses `register_handbook_commands` lazy loading method
+* [x] Review dry-cli documentation for namespace patterns
+  - Confirmed: Block syntax with `prefix.register` for subcommands
+  - Help: Automatically generated from desc attribute
 * [ ] Design command hierarchy and help text
 * [ ] Plan backward compatibility approach
 
 ### Execution Steps
 
-- [ ] Update CLI registration to include Claude namespace
+- [ ] Update CLI registration to add Claude as a subcommand of handbook
   ```ruby
-  # In lib/coding_agent_tools/cli.rb
+  # In lib/coding_agent_tools/cli.rb, update register_handbook_commands method
   def self.register_handbook_commands
     return if @handbook_commands_registered
 
     require_relative "cli/commands/handbook/sync_templates"
-    require_relative "cli/commands/handbook/claude"
+    # Note: Claude subcommands will be registered within the Claude command class
 
     register "handbook", aliases: [] do |prefix|
       prefix.register "sync-templates", Commands::Handbook::SyncTemplates
-      prefix.register "claude", Commands::Handbook::Claude
+      # Claude will be a namespace with its own subcommands
+      prefix.register "claude", aliases: [] do |claude_prefix|
+        require_relative "cli/commands/handbook/claude/generate_commands"
+        require_relative "cli/commands/handbook/claude/update_registry"
+        require_relative "cli/commands/handbook/claude/integrate"
+        require_relative "cli/commands/handbook/claude/validate"
+        require_relative "cli/commands/handbook/claude/list"
+        
+        claude_prefix.register "generate-commands", Commands::Handbook::Claude::GenerateCommands
+        claude_prefix.register "update-registry", Commands::Handbook::Claude::UpdateRegistry
+        claude_prefix.register "integrate", Commands::Handbook::Claude::Integrate
+        claude_prefix.register "validate", Commands::Handbook::Claude::Validate
+        claude_prefix.register "list", Commands::Handbook::Claude::List
+      end
     end
 
     @handbook_commands_registered = true
@@ -175,58 +247,27 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
   > Assert: handbook claude is recognized
   > Command: bundle exec exe/handbook claude --help
 
-- [ ] Create main Claude command class
+- [ ] Note: Main Claude command class not needed with nested registration
+  - dry-cli automatically handles help display for namespace commands
+  - When `handbook claude` is called without subcommand, it will show available subcommands
+  - This is consistent with how other namespaces work (e.g., `task`, `release`, `code`)
+
+- [ ] Create subcommand classes
   ```ruby
-  # lib/coding_agent_tools/cli/commands/handbook/claude.rb
+  # lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb
   module CodingAgentTools
-    module CLI
-      module Commands
-        module Handbook
-          class Claude < Dry::CLI::Command
-            desc "Manage Claude Code integration"
-
-            def call(*)
-              puts "Usage: handbook claude [SUBCOMMAND]"
-              puts ""
-              puts "Subcommands:"
-              puts "  generate-commands  Generate missing Claude commands from workflows"
-              puts "  update-registry    Update commands.json registry"
-              puts "  integrate          Copy commands to .claude/ directory"
-              puts "  validate           Validate command coverage"
-              puts "  list               List all commands and their status"
-            end
-          end
-        end
-      end
-    end
-  end
-  ```
-
-- [ ] Set up subcommand registration structure
-  ```ruby
-  # In claude.rb, add subcommand loading
-  Dir[File.join(__dir__, "claude", "*.rb")].each { |f| require f }
-  
-  register "generate-commands", Claude::GenerateCommands
-  register "update-registry", Claude::UpdateRegistry
-  register "integrate", Claude::Integrate
-  register "validate", Claude::Validate
-  register "list", Claude::List
-  ```
-
-- [ ] Create placeholder subcommand classes
-  ```ruby
-  # Example: lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb
-  module CodingAgentTools
-    module CLI
+    module Cli  # Note: Cli not CLI based on existing pattern
       module Commands
         module Handbook
           module Claude
-            class GenerateCommands < Dry::CLI::Command
-              desc "Generate missing Claude commands from workflows"
+            class Integrate < Dry::CLI::Command
+              desc "Install Claude Code commands to .claude/ directory"
               
               def call(*)
-                puts "generate-commands: Not yet implemented"
+                # Reuse existing installer
+                installer = CodingAgentTools::Integrations::ClaudeCommandsInstaller.new
+                exit_code = installer.run
+                exit(exit_code) if exit_code != 0
               end
             end
           end
@@ -235,22 +276,75 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
     end
   end
   ```
-
-- [ ] Add comprehensive tests
+  
   ```ruby
-  # spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb
-  RSpec.describe CodingAgentTools::CLI::Commands::Handbook::Claude do
-    it "displays help when called without subcommand" do
-      output = capture_output { subject.call }
-      expect(output).to include("Usage: handbook claude [SUBCOMMAND]")
-      expect(output).to include("generate-commands")
+  # lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb
+  module CodingAgentTools
+    module Cli
+      module Commands
+        module Handbook
+          module Claude
+            class GenerateCommands < Dry::CLI::Command
+              desc "Generate missing Claude commands from workflow files"
+              
+              def call(*)
+                puts "generate-commands: Not yet implemented"
+                puts "This will scan workflow files and generate missing command files"
+              end
+            end
+          end
+        end
+      end
     end
   end
   ```
-  > TEST: Help Display
+  
+  ```ruby
+  # Similar structure for update_registry.rb, validate.rb, and list.rb
+  ```
+
+- [ ] Add comprehensive tests
+  ```ruby
+  # spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
+  RSpec.describe CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate do
+    let(:installer_mock) { instance_double(CodingAgentTools::Integrations::ClaudeCommandsInstaller) }
+    
+    before do
+      allow(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
+        .to receive(:new).and_return(installer_mock)
+    end
+    
+    it "calls the ClaudeCommandsInstaller" do
+      expect(installer_mock).to receive(:run).and_return(0)
+      subject.call
+    end
+  end
+  ```
+  > TEST: Integrate Command
   > Type: Unit Test
-  > Assert: Help text includes all subcommands
-  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude_spec.rb
+  > Assert: Integrate command calls ClaudeCommandsInstaller
+  > Command: bundle exec rspec spec/coding_agent_tools/cli/commands/handbook/claude/integrate_spec.rb
+  
+  ```ruby
+  # spec/integration/handbook_claude_cli_spec.rb
+  RSpec.describe "handbook claude CLI" do
+    it "displays help for claude namespace" do
+      output = `bundle exec exe/handbook claude --help 2>&1`
+      expect(output).to include("generate-commands")
+      expect(output).to include("integrate")
+      expect(output).to include("validate")
+    end
+    
+    it "executes integrate subcommand" do
+      output = `bundle exec exe/handbook claude integrate --help 2>&1`
+      expect(output).to include("Install Claude Code commands")
+    end
+  end
+  ```
+  > TEST: CLI Integration
+  > Type: Integration Test
+  > Assert: CLI properly routes to claude subcommands
+  > Command: bundle exec rspec spec/integration/handbook_claude_cli_spec.rb
 
 - [ ] Update documentation
   ```markdown
@@ -271,6 +365,41 @@ Establish the Claude namespace within the handbook CLI to provide a unified, dis
 
 ## References
 
-- Existing handbook CLI structure
-- dry-cli documentation for subcommand patterns
+- Existing handbook CLI structure in dev-tools/lib/coding_agent_tools/cli.rb
+- dry-cli documentation for subcommand patterns (nested registration with blocks)
 - Current handbook command implementations (sync-templates)
+- Existing ClaudeCommandsInstaller class in dev-tools/lib/coding_agent_tools/integrations/
+
+## Review Summary
+
+**Date:** 2025-08-04
+**Reviewer:** Claude (Automated Review)
+
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
+**Questions Resolved Through Research:** 4 (output format, subcommand loading, command aliases, backward compatibility)
+**Critical Blockers:** 2 HIGH priority questions remain for human input
+
+**Research Conducted:**
+- ✅ Analyzed existing CLI structure and patterns in dev-tools
+- ✅ Reviewed dry-cli documentation and nested namespace patterns
+- ✅ Found existing ClaudeCommandsInstaller class for reuse
+- ✅ Confirmed no existing claude-integrate executable
+- ✅ Verified module naming convention (Cli not CLI)
+- ✅ Checked handbook namespace registration pattern
+
+**Content Updates Made:**
+- Added Review Questions section with research context
+- Updated Technical Approach with specific implementation details
+- Refined Implementation Plan based on dry-cli patterns
+- Corrected File Modifications list (removed unnecessary claude.rb)
+- Added discovered edge cases for testing
+- Updated test examples with proper module paths
+- Resolved validation questions through research
+
+**Implementation Readiness:** Ready with assumptions - can proceed once HIGH priority questions are answered
+
+**Recommended Next Steps:**
+1. Answer the 2 HIGH priority questions about ClaudeCommandsInstaller reuse and default behavior
+2. Answer the 2 MEDIUM priority questions about lazy loading and help text descriptions
+3. Proceed with implementation using suggested defaults if no response
+4. The task is well-specified and can be implemented with the research findings
