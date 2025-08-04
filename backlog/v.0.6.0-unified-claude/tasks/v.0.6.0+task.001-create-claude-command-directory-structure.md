@@ -58,6 +58,8 @@ needs_review: true
   - **Suggested default**: Deprecate but preserve with symlinks to new location
   - **Why needs human input**: Migration timeline and compatibility requirements
 
+> yes we should keep evertything that is related to claude integration in this directory
+
 ## Behavioral Specification
 
 ### User Experience
