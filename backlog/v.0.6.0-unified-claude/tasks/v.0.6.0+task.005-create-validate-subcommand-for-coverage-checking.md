@@ -5,54 +5,54 @@ priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002]
 release: v.0.6.0-unified-claude
-needs_review: true
+needs_review: false
 ---
 
 # Create validate subcommand for coverage checking
 
-## Review Questions (Pending Human Input)
+## Review Questions (Resolved)
 
 ### [HIGH] Critical Implementation Questions
-- [ ] Should the validate command be integrated with the ClaudeCommandsInstaller class or be completely separate?
+- [x] Should the validate command be integrated with the ClaudeCommandsInstaller class or be completely separate?
   - **Research conducted**: ClaudeCommandsInstaller handles installation but doesn't have validation logic
   - **Current structure**: Installer scans workflows and generates/copies commands
   - **Suggested default**: Separate ClaudeValidator class for single responsibility principle
   - **Why needs human input**: Architecture decision - could extend installer or keep separate
+  - **Human answer**: keep the ATOM architecture, and if there is need to refactor, let it go, but do not overload the class
+  - **Decision**: Create separate ClaudeValidator organism following ATOM architecture
 
-> keep the ATOM architecture, and if there is need to refactor, let it go, but do not overload the class
-
-- [ ] How should we handle the directory structure difference between custom and generated commands?
+- [x] How should we handle the directory structure difference between custom and generated commands?
   - **Research conducted**: Custom commands in dev-handbook/.integrations/claude/commands/, installed to .claude/commands/
   - **Current pattern**: ClaudeCommandsInstaller copies from both custom and generates from workflows
   - **Suggested default**: Check both _custom/ and _generated/ subdirectories if they exist
   - **Why needs human input**: Directory structure is evolving with task.003 adding _generated/
-
-> we should work on command / agent names (in dev-handbook they structure is different, but the names should be the same))
+  - **Human answer**: we should work on command / agent names (in dev-handbook they structure is different, but the names should be the same)
+  - **Decision**: Check both _custom/ and _generated/ subdirectories, focus on matching command names
 
 ### [MEDIUM] Enhancement Questions
-- [ ] Should validation report format support JSON output for CI/CD integration?
+- [x] Should validation report format support JSON output for CI/CD integration?
   - **Research conducted**: release validate command supports --format json option
   - **Pattern found**: JSON output used for programmatic consumption in CI pipelines
   - **Suggested default**: Support both text (default) and JSON formats
   - **Why needs human input**: Feature scope and CI/CD requirements
+  - **Human answer**: yes
+  - **Decision**: Support both text and JSON output formats
 
-> yes
-
-- [ ] What constitutes "outdated" - file timestamp or content hash comparison?
+- [x] What constitutes "outdated" - file timestamp or content hash comparison?
   - **Research conducted**: ClaudeCommandsInstaller uses File.mtime for comparison
   - **Current approach**: Timestamp-based comparison is simpler and faster
   - **Suggested default**: Use mtime (consistent with installer), add --deep flag for content comparison later
   - **Why needs human input**: Trade-off between accuracy and performance
-
-> content hash
+  - **Human answer**: content hash
+  - **Decision**: Use content hash comparison for accuracy
 
 ### [LOW] Future Enhancement Questions
-- [ ] Should validation results be cacheable to speed up repeated runs?
+- [x] Should validation results be cacheable to speed up repeated runs?
   - **Research conducted**: No caching patterns found in existing validation commands
   - **Suggested default**: No caching initially, add if performance becomes an issue
   - **Why needs human input**: Premature optimization vs future needs
-
-> no - we are working on less then 100 files
+  - **Human answer**: no - we are working on less than 100 files
+  - **Decision**: No caching needed for current scale
 
 ## Behavioral Specification
 
@@ -184,6 +184,8 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 - Validation engine pattern with pluggable checks
 - Report builder for different output formats
 - Exit code management for CI integration
+- Separate ClaudeValidator organism following ATOM architecture
+- Reuse path resolution and workflow scanning logic from ClaudeCommandsInstaller where appropriate
 
 ### Technology Stack
 - Ruby for validation logic
@@ -194,7 +196,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
 | Tool/Library | Purpose | Rationale |
 |--------------|---------|-----------|
-| File.mtime | Freshness checking | Built-in, reliable timestamps |
+| Digest::SHA256 | Content comparison | Accurate change detection via content hash |
 | Set | Duplicate detection | Efficient set operations |
 | StringIO | Report building | In-memory report generation |
 
@@ -202,11 +204,34 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
 ### Create
 - `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb` - Validation logic
-- `dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb` - Tests
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude.rb` - Namespace registration (if not exists)
+- `dev-tools/lib/coding_agent_tools/organisms/claude_validator.rb` - Validation organism
+- `dev-tools/lib/coding_agent_tools/molecules/claude_command_content_generator.rb` - Content generation molecule (shared with installer)
+- `dev-tools/spec/coding_agent_tools/organisms/claude_validator_spec.rb` - Organism tests
+- `dev-tools/spec/coding_agent_tools/molecules/claude_command_content_generator_spec.rb` - Molecule tests
 
 ### Modify
-- None required
+- `dev-tools/lib/coding_agent_tools/cli.rb` - Add claude subcommand registration to handbook namespace:
+  ```ruby
+  def self.register_handbook_commands
+    return if @handbook_commands_registered
+
+    require_relative "cli/commands/handbook/sync_templates"
+    require_relative "cli/commands/handbook/claude/validate"
+
+    register "handbook", aliases: [] do |prefix|
+      prefix.register "sync-templates", Commands::Handbook::SyncTemplates
+      
+      # Register claude subcommands
+      prefix.register "claude", aliases: [] do |claude|
+        claude.register "validate", Commands::Handbook::Claude::Validate
+      end
+    end
+
+    @handbook_commands_registered = true
+  end
+  ```
+- `dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb` - Extract content generation to shared molecule (optional refactor)
 
 ### Delete
 - None required
@@ -231,7 +256,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
 * [ ] Define validation rules and severity levels
   - Missing command: ERROR (affects exit code)
-  - Outdated command: WARNING (informational)
+  - Outdated command: WARNING (informational) - based on content hash mismatch
   - Duplicate command: WARNING (informational)
   - Orphaned command: INFO (command without workflow)
 * [ ] Design report format for different output modes
@@ -245,6 +270,10 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   - 0: No issues found
   - 1: Errors found (missing commands)
   - Use --strict flag to make warnings fail (exit 1)
+* [ ] Implement content hash comparison logic
+  - Use Digest::SHA256 for content hashing
+  - Compare generated template content with actual file content
+  - Handle custom commands specially (may have different content)
 
 ### Execution Steps
 
@@ -360,8 +389,16 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   end
 
   def command_exists?(name)
-    File.exist?(File.join(@custom_dir, "#{name}.md")) ||
-    File.exist?(File.join(@generated_dir, "#{name}.md"))
+    # Check in _custom/ and _generated/ subdirectories per task.003 structure
+    custom_path = @custom_dir / "_custom" / "#{name}.md"
+    generated_path = @custom_dir / "_generated" / "#{name}.md"
+    
+    # Also check legacy locations for backward compatibility
+    legacy_custom = @custom_dir / "#{name}.md"
+    legacy_generated = @generated_dir / "#{name}.md" if @generated_dir.exist?
+    
+    custom_path.exist? || generated_path.exist? || 
+    legacy_custom.exist? || (legacy_generated && legacy_generated.exist?)
   end
   ```
   > TEST: Missing Command Detection
@@ -372,6 +409,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 - [ ] Implement outdated command detection
   ```ruby
   def find_outdated_commands
+    require 'digest'
     outdated = []
 
     all_commands.each do |cmd_path|
@@ -379,17 +417,36 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
       workflow_path = File.join(@workflow_dir, "#{workflow_name}.wf.md")
 
       if File.exist?(workflow_path)
-        if File.mtime(workflow_path) > File.mtime(cmd_path)
+        # Generate expected command content based on workflow
+        expected_content = generate_command_content(workflow_path)
+        actual_content = File.read(cmd_path)
+        
+        # Compare content hashes
+        expected_hash = Digest::SHA256.hexdigest(expected_content)
+        actual_hash = Digest::SHA256.hexdigest(actual_content)
+        
+        if expected_hash != actual_hash
           outdated << {
             command: File.basename(cmd_path),
-            workflow_updated: File.mtime(workflow_path),
-            command_updated: File.mtime(cmd_path)
+            workflow_path: workflow_path,
+            expected_hash: expected_hash[0..7], # First 8 chars for display
+            actual_hash: actual_hash[0..7]
           }
         end
       end
     end
 
     outdated
+  end
+  
+  def generate_command_content(workflow_path)
+    # Generate the expected command content for comparison
+    workflow_name = File.basename(workflow_path)
+    <<~CONTENT
+      read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}
+
+      read and run @.claude/commands/commit.md
+    CONTENT
   end
   ```
 
@@ -491,10 +548,16 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   > Assert: Returns 1 with --strict and issues
   > Command: handbook claude validate --strict; echo $?
 
+- [ ] Add content hash comparison tests
+  > TEST: Content Hash Detection
+  > Type: Unit Test
+  > Assert: Detects outdated commands via content hash
+  > Command: bundle exec rspec -e "detects content changes"
+
 ## Acceptance Criteria
 
 - [ ] Detects all missing commands accurately
-- [ ] Identifies outdated commands based on timestamps
+- [ ] Identifies outdated commands based on content hash
 - [ ] Finds duplicate commands across directories
 - [ ] Generates clear, actionable reports
 - [ ] Supports specific workflow validation
@@ -506,51 +569,55 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 **Date:** 2025-08-04
 **Reviewer:** Claude (Automated Review)
 
-**Questions Generated:** 8 total (2 HIGH, 2 MEDIUM, 1 LOW, 3 validation questions)
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
 
-**Questions Resolved Through Research:** 3
-- Staleness definition: Use mtime comparison (consistent with ClaudeCommandsInstaller)
-- Validation levels: Missing=error, outdated/duplicate=warning pattern
-- Custom rules: Start without configuration, add if needed
+**Questions Answered by User:** 5 (All questions resolved)
+- Architecture: Keep ATOM architecture, separate ClaudeValidator class
+- Directory structure: Check both _custom/ and _generated/ subdirectories
+- JSON output: Yes, support both text and JSON formats
+- Staleness detection: Use content hash comparison instead of timestamps
+- Caching: Not needed for ~100 files
 
-**Critical Blockers:** 2 HIGH priority questions need human input:
-1. Architecture decision on ClaudeValidator vs extending ClaudeCommandsInstaller
-2. Directory structure handling for custom vs generated commands
+**Research Conducted (Current Review):**
+- ✅ Deep analysis of ClaudeCommandsInstaller implementation (215 lines)
+- ✅ Examined existing validator patterns in the codebase (10+ validator files found)
+- ✅ Reviewed release validate command for JSON/text output patterns
+- ✅ Investigated CLI registration in handbook namespace
+- ✅ Checked task.003 for _generated/ directory structure details
+- ✅ Analyzed ATOM architecture patterns in existing validators
+- ✅ No Digest usage found - will need to add for content hashing
 
-**Research Conducted:**
-- ✅ Analyzed ClaudeCommandsInstaller implementation and patterns
-- ✅ Reviewed release validate command for output format patterns
-- ✅ Checked for existing whitelist/configuration patterns (none found)
-- ✅ Investigated project structure and command locations
-- ✅ Examined CLI registration patterns in handbook namespace
-- ✅ Verified no commands.json file exists currently
-- ✅ Found no workflow annotations for skipping command generation
+**Content Updates Made (Current Review):**
+- Changed needs_review flag to false (all questions resolved)
+- Marked all review questions as resolved with decisions
+- Updated implementation to use Digest::SHA256 for content comparison
+- Enhanced architecture pattern section with ATOM adherence notes
+- Added shared molecule for content generation (DRY principle)
+- Updated file modifications to include refactoring of installer
+- Added content hash comparison tests
+- Updated command_exists? to check new _custom/ and _generated/ structure
+- Added generate_command_content method for hash comparison
+- Updated planning steps to include content hash implementation
 
-**Content Updates Made:**
-- Added Review Questions section with detailed research context
-- Enhanced Planning Steps with specific validation rules and severity levels
-- Improved validator organism implementation with proper Pathname usage
-- Added orphaned command detection logic
-- Included multi-task command recognition
-- Updated code examples to use Pathname API consistently
-- Added JSON output format support following release validate pattern
-- Clarified exit code strategy for CI integration
+**Implementation Readiness:** READY - All questions resolved, clear technical approach defined
 
-**Implementation Readiness:** Ready with assumptions - can proceed with suggested defaults if human input not provided
+**Architecture Decisions:**
+1. **ATOM Compliance**: Create ClaudeValidator as separate organism
+2. **Content Generation**: Extract to shared molecule (ClaudeCommandContentGenerator)
+3. **Directory Structure**: Support both _custom/ and _generated/ subdirectories
+4. **Comparison Method**: Use SHA256 content hashing for accuracy
+5. **Output Formats**: Support both text and JSON (following release validate pattern)
 
-**Recommended Next Steps:**
-1. Answer HIGH priority questions about architecture and directory structure
-2. Consider JSON output format requirement for CI/CD
-3. Decide on timestamp vs content comparison for staleness
-4. Implementation can proceed with suggested defaults:
-   - Separate ClaudeValidator class (single responsibility)
-   - Check both _custom/ and _generated/ directories
-   - Support text and JSON output formats
-   - Use mtime for staleness detection
+**Key Technical Details:**
+- Use Digest::SHA256 for content comparison
+- Generate expected command content for comparison
+- Handle custom commands specially (different content expected)
+- Support multi-task commands that don't map 1:1 to workflows
+- Implement proper exit codes for CI integration (0=success, 1=errors)
 
-**Key Insights from Research:**
-- ClaudeCommandsInstaller provides good patterns to follow but shouldn't be extended
-- Release validate command provides excellent template for JSON/text output handling
-- Project uses Pathname consistently for path operations
-- No existing configuration infrastructure for Claude commands
-- Multi-task commands need special handling as they don't map 1:1 to workflows
+**Next Steps:**
+1. Create ClaudeValidator organism with content hash comparison
+2. Extract shared content generation logic to molecule
+3. Implement JSON output format support
+4. Add comprehensive test coverage
+5. Update CLI registration for handbook claude validate command
