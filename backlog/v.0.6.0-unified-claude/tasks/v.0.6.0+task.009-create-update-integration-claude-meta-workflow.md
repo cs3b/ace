@@ -5,9 +5,51 @@ priority: high
 estimate: 2h
 dependencies: [v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Create update-integration-claude meta workflow
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the meta workflow be created as a .wf.md file or use a different naming convention?
+  - **Research conducted**: Examined existing workflow patterns in dev-handbook/workflow-instructions/
+  - **Found pattern**: All workflows use .wf.md extension (e.g., update-blueprint.wf.md)
+  - **Suggested default**: Create as update-integration-claude.wf.md in .meta/wfi/ directory
+  - **Why needs human input**: Confirm meta workflow naming convention and placement
+
+- [ ] How should the workflow handle first-time setup vs maintenance updates?
+  - **Research conducted**: Dependencies show generate, validate, and integrate subcommands
+  - **Current design**: Commands assume existing setup based on interface examples
+  - **Suggested default**: Add prerequisite check step with setup guidance if .claude/ missing
+  - **Why needs human input**: Need clear separation between initialization and update flows
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the workflow include automated backup of existing Claude integration?
+  - **Research conducted**: No backup patterns found in current workflows
+  - **Integration commands**: Support --dry-run but no explicit backup
+  - **Suggested default**: Add optional backup step before integrate command
+  - **Why needs human input**: Safety vs simplicity trade-off
+
+- [ ] What should be the recommended frequency for running this workflow?
+  - **Research conducted**: Validation question asks about frequency but no answer provided
+  - **Similar workflows**: update-blueprint has no fixed schedule
+  - **Suggested default**: Run when adding new workflows or after major handbook updates
+  - **Why needs human input**: Balance between staying current and workflow overhead
+
+- [ ] Should the workflow include a step to test generated commands in Claude Code?
+  - **Research conducted**: Success criteria mentions "Test commands in Claude Code"
+  - **Current spec**: Verification step exists but lacks detail
+  - **Suggested default**: Add specific test examples for common command types
+  - **Why needs human input**: Level of testing detail needed in workflow
+
+### [LOW] Future Enhancement Questions
+- [ ] Should the workflow support team synchronization features?
+  - **Research conducted**: Validation question mentions "team sharing"
+  - **Current scope**: Out of scope section excludes "team sharing"
+  - **Suggested default**: Document as future enhancement, not in v1
+  - **Why needs human input**: Confirm this remains out of initial scope
 
 ## Behavioral Specification
 
@@ -128,10 +170,14 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 ## File Modifications
 
 ### Create
-- `dev-handbook/.meta/wfi/update-integration-claude.md` - Meta workflow file
+- `dev-handbook/.meta/wfi/update-integration-claude.wf.md` - Meta workflow file
+  - Note: Using .wf.md extension to match workflow instruction pattern
+  - Location: .meta/wfi/ for meta workflow instructions
 
 ### Modify
 - `dev-handbook/workflow-instructions/README.md` - Add reference to new workflow
+  - Add link in meta workflows section (create if doesn't exist)
+  - Format: `- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md)`
 
 ### Delete
 - None required
@@ -155,9 +201,21 @@ Create a comprehensive meta workflow that guides developers through maintaining 
 ### Planning Steps
 
 * [ ] Review existing meta workflow patterns
+  - Study update-blueprint.wf.md structure and format
+  - Analyze workflow instruction template patterns
+  - Identify common sections: Goal, Prerequisites, Process Steps
 * [ ] Define decision tree for customization
+  - When to use generated vs custom commands
+  - How to identify workflows needing custom implementation
+  - Criteria for command metadata selection
 * [ ] Plan troubleshooting section
+  - Common validation errors and fixes
+  - Permission issues with .claude directory
+  - Handling missing dependencies or subcommands
 * [ ] Design workflow verification steps
+  - Command execution testing
+  - Registry JSON validation
+  - Installation success criteria
 
 ### Execution Steps
 
@@ -165,6 +223,7 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   ```bash
   mkdir -p dev-handbook/.meta/wfi
   ```
+  > Note: .meta/wfi directory for meta workflow instructions
 
 - [ ] Create workflow file with standard header
   ```markdown
@@ -174,9 +233,16 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   Maintain Claude Code integration using unified handbook CLI commands
   
   ## Prerequisites
-  - handbook CLI with Claude commands installed
+  - handbook CLI with Claude commands installed (v0.6.0+)
   - Access to dev-handbook submodule
-  - Understanding of Claude command types
+  - Understanding of Claude command types (custom vs generated)
+  - Write access to .claude/ directory in project root
+  
+  ## When to Use This Workflow
+  - After adding new workflow instructions
+  - When Claude commands are out of sync
+  - During major handbook version updates
+  - For periodic integration maintenance
   ```
 
 - [ ] Document status checking phase
@@ -215,14 +281,31 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   handbook claude generate-commands
   ```
   
-  Decision point: Should this be custom?
-  - High complexity or special behavior → Create custom
-  - Standard workflow reference → Use generated
+  **Decision Tree: Custom vs Generated Commands**
+  
+  Should this workflow have a custom command?
+  
+  1. Does it require special tools or model selection?
+     - YES → Create custom command with metadata
+     - NO → Continue to next question
+  
+  2. Does it have complex multi-step operations?
+     - YES → Consider custom command for clarity
+     - NO → Continue to next question
+  
+  3. Is it a simple workflow reference?
+     - YES → Use generated command
+     - NO → Evaluate custom needs
+  
+  Examples:
+  - `commit.md` → Custom (git operations, special formatting)
+  - `capture-idea.wf.md` → Generated (simple workflow reference)
+  - `load-project-context.md` → Custom (complex initialization)
   ```
-  > TEST: Workflow Clarity
+  > TEST: Decision Tree Clarity
   > Type: Documentation Review
-  > Assert: Steps are clear and actionable
-  > Command: Review with team member
+  > Assert: Decision criteria are clear and examples help
+  > Command: Test with sample workflows
 
 - [ ] Document registry and installation steps
   ```markdown
@@ -243,40 +326,93 @@ Create a comprehensive meta workflow that guides developers through maintaining 
   ```
   ```
 
-- [ ] Add troubleshooting section
+- [ ] Add comprehensive troubleshooting section
   ```markdown
   ## Troubleshooting
   
-  ### Common Issues
+  ### Common Issues and Solutions
   
   **Missing commands after generation**
-  - Check file permissions
-  - Verify template exists
+  - Check file permissions in dev-handbook/.integrations/claude/
+  - Verify template exists at correct location
+  - Ensure workflow files have .wf.md extension
+  - Run with --verbose flag for detailed output
   
   **Validation failures**
-  - Review timestamp mismatches
-  - Check for naming conflicts
+  - Review content hash mismatches (outdated commands)
+  - Check for naming conflicts between custom and generated
+  - Verify JSON registry syntax is valid
+  - Look for duplicate command definitions
+  
+  **Installation errors**
+  - Ensure .claude/ directory exists and is writable
+  - Check if commands are being flattened correctly
+  - Verify no path conflicts during copy
+  - Run with --dry-run first to preview changes
+  
+  **Command not working in Claude Code**
+  - Verify YAML front-matter syntax is correct
+  - Check that workflow path references are absolute
+  - Ensure @.claude/commands/commit.md reference exists
+  - Test with simpler command first
+  
+  ### Diagnostic Commands
+  
+  ```bash
+  # Check current state
+  handbook claude list --verbose
+  
+  # Validate with detailed output
+  handbook claude validate --format json
+  
+  # Test specific workflow
+  handbook claude generate-commands --workflow capture-idea
+  ```
   ```
 
-- [ ] Create verification checklist
+- [ ] Create comprehensive verification checklist
   ```markdown
+  ## Verification Checklist
+  
+  ### Pre-Integration Checks
+  - [ ] All workflows have commands (custom or generated)
+  - [ ] No validation errors reported
+  - [ ] Registry JSON is valid and complete
+  - [ ] Dry-run shows expected changes
+  
+  ### Post-Integration Verification
+  - [ ] Commands appear in .claude/commands/
+  - [ ] Agents appear in .claude/agents/ (if applicable)
+  - [ ] Test basic command: `@load-project-context`
+  - [ ] Test workflow command: `@capture-idea "test idea"`
+  - [ ] Verify commit command works: `@commit`
+  
+  ### Quality Checks
+  - [ ] YAML front-matter validates correctly
+  - [ ] Command descriptions are meaningful
+  - [ ] Tool restrictions are appropriate
+  - [ ] Model preferences are set where needed
+  
   ## Success Criteria
   
-  - [ ] All workflows have commands (or are whitelisted)
-  - [ ] No validation errors reported
-  - [ ] Commands work in Claude Code
-  - [ ] Registry is up to date
+  The workflow is successful when:
+  - All workflows have corresponding Claude commands
+  - Validation passes without errors
+  - Commands execute properly in Claude Code
+  - Registry accurately reflects current state
+  - No duplicate or conflicting commands exist
   ```
 
 - [ ] Update workflow index
   ```bash
-  # Add reference in workflow README
-  echo "- [Update Claude Integration](../.meta/wfi/update-integration-claude.md) - Maintain Claude commands" >> dev-handbook/workflow-instructions/README.md
+  # Add reference in workflow README under meta workflows section
+  # Note: May need to create "Meta Workflows" section if it doesn't exist
+  echo "- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md) - Maintain Claude commands" >> dev-handbook/workflow-instructions/README.md
   ```
   > TEST: Workflow Discovery
   > Type: Documentation Check
   > Assert: Workflow is referenced in index
-  > Command: grep "update-integration-claude" dev-handbook/workflow-instructions/README.md
+  > Command: grep "update-integration-claude.wf.md" dev-handbook/workflow-instructions/README.md
 
 ## Acceptance Criteria
 
