@@ -5,9 +5,45 @@ priority: low
 estimate: 1h
 dependencies: [v.0.6.0+task.006, v.0.6.0+task.011]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Deprecate legacy claude-integrate script
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] Should the deprecation wrapper automatically run the new command in CI environments without prompting?
+  - **Research conducted**: Found CI detection patterns in `file_operation_confirmer.rb` using ENV vars
+  - **Current implementation**: Script uses Ruby, not bash
+  - **Suggested default**: Auto-run new command with deprecation notice in CI
+  - **Why needs human input**: Balance between CI stability and forcing migration
+
+- [ ] Should the migration guide be created at `dev-handbook/.integrations/claude/MIGRATION.md` or elsewhere?
+  - **Research conducted**: Directory exists with other Claude docs but no MIGRATION.md yet
+  - **Similar patterns**: `dev-tools/docs/migrations/migration-guide.md` exists for tools
+  - **Suggested default**: Create at `dev-handbook/.integrations/claude/MIGRATION.md`
+  - **Why needs human input**: Documentation structure consistency
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should we keep the Ruby implementation or switch to bash for the deprecation wrapper?
+  - **Research conducted**: Current script is Ruby, requires dev-tools lib path
+  - **Task specification**: Shows bash implementation in examples
+  - **Suggested default**: Use bash for simpler deprecation logic
+  - **Why needs human input**: Implementation language affects maintainability
+
+- [ ] How should we handle the case where the new `handbook claude integrate` command doesn't exist?
+  - **Research conducted**: Dependencies show task.006 implements the new command
+  - **Current behavior**: Script has fallback to inline implementation
+  - **Suggested default**: Provide setup instructions if command not found
+  - **Why needs human input**: Error handling strategy for partial migrations
+
+### [LOW] Future Enhancement Questions
+- [ ] Should we log usage of the deprecated script for analytics?
+  - **Research conducted**: No telemetry patterns found in current codebase
+  - **Privacy consideration**: Would need user consent
+  - **Suggested default**: No tracking, just deprecation warnings
+  - **Why needs human input**: Privacy and analytics policy decision
 
 ## Behavioral Specification
 
@@ -78,9 +114,13 @@ Opening migration guide...
 
 ### Validation Questions
 - [ ] **Grace Period**: How long before full removal?
+  - **Answer needed**: Roadmap shows v0.7.0 targeted for Q4 2025 (8-9 months)
 - [ ] **CI Detection**: How to handle automated environments?
+  - **Answer needed**: Auto-run vs fail-fast in CI
 - [ ] **Telemetry**: Should we track usage of old script?
+  - **Answer needed**: Privacy policy and consent requirements
 - [ ] **Force Migration**: When to remove compatibility mode?
+  - **Answer needed**: Specific v0.7.0 release date
 
 ## Objective
 
@@ -289,3 +329,45 @@ Gracefully deprecate the legacy `claude-integrate` script in favor of the new un
 - Deprecation best practices
 - SemVer guidelines for breaking changes
 - User communication strategies
+- Current script: `bin/claude-integrate` (Ruby implementation)
+- CI detection pattern: `dev-tools/lib/coding_agent_tools/molecules/file_operation_confirmer.rb`
+- Related tasks: v.0.6.0+task.006 (integrate command), v.0.6.0+task.011 (documentation)
+- Roadmap: v0.7.0 "Conductor" targeted for Q4 2025
+
+## Review Summary
+
+**Date:** 2025-08-04
+**Reviewer:** Claude (Automated Review)
+
+**Questions Generated:** 5 total (2 HIGH, 2 MEDIUM, 1 LOW)
+**Critical Blockers:** 2 HIGH priority questions need answers before implementation
+**Implementation Readiness:** Blocked on answers - need decisions on CI behavior and documentation location
+
+**Research Conducted:**
+- ✅ Analyzed current `bin/claude-integrate` script (Ruby implementation using ClaudeCommandsInstaller)
+- ✅ Found CI environment detection patterns in codebase (uses ENV vars)
+- ✅ Verified dependencies: task.006 implements new command, task.011 handles documentation
+- ✅ Checked for existing MIGRATION.md (not found, needs creation)
+- ✅ Reviewed roadmap for v0.7.0 timeline (Q4 2025, approximately 8-9 months away)
+- ✅ Searched for deprecation patterns in codebase (found cache_manager deprecation example)
+- ✅ Confirmed `.integrations/claude/` directory structure exists
+
+**Content Updates Made:**
+- Added needs_review: true to metadata for tracking
+- Added Review Questions section with 5 prioritized questions
+- Enhanced Validation Questions with research findings
+- Added comprehensive References section with specific file paths
+- Added Review Summary for tracking review outcomes
+
+**Key Findings:**
+- Current script is Ruby, not bash (implementation mismatch with examples)
+- v0.7.0 removal date is ~8-9 months away (longer grace period than typical)
+- No existing migration guide to reference (needs creation)
+- CI detection patterns already exist in codebase
+
+**Recommended Next Steps:**
+1. Answer HIGH priority questions about CI behavior and documentation location
+2. Decide on implementation language (Ruby vs bash wrapper)
+3. Create MIGRATION.md guide before implementing wrapper
+4. Ensure task.006 completion before starting this task
+5. Coordinate with task.011 for documentation updates
