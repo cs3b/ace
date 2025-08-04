@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.005
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002]
@@ -254,30 +254,30 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
 ### Planning Steps
 
-* [ ] Define validation rules and severity levels
+* [x] Define validation rules and severity levels
   - Missing command: ERROR (affects exit code)
   - Outdated command: WARNING (informational) - based on content hash mismatch
   - Duplicate command: WARNING (informational)
   - Orphaned command: INFO (command without workflow)
-* [ ] Design report format for different output modes
+* [x] Design report format for different output modes
   - Text format: Human-readable with symbols (✓, ✗, ⚠)
   - JSON format: Structured for CI consumption (following release validate pattern)
-* [ ] Plan whitelist/ignore file format
+* [x] Plan whitelist/ignore file format
   - Option 1: .claudeignore file with glob patterns
   - Option 2: Comment directive in workflow files (# claude: skip)
   - Start without whitelist, add if requested
-* [ ] Define exit code strategy for CI
+* [x] Define exit code strategy for CI
   - 0: No issues found
   - 1: Errors found (missing commands)
   - Use --strict flag to make warnings fail (exit 1)
-* [ ] Implement content hash comparison logic
+* [x] Implement content hash comparison logic
   - Use Digest::SHA256 for content hashing
   - Compare generated template content with actual file content
   - Handle custom commands specially (may have different content)
 
 ### Execution Steps
 
-- [ ] Implement validate command class
+- [x] Implement validate command class
   ```ruby
   # lib/coding_agent_tools/cli/commands/handbook/claude/validate.rb
   module CodingAgentTools
@@ -306,7 +306,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   end
   ```
 
-- [ ] Create validator organism
+- [x] Create validator organism
   ```ruby
   # lib/coding_agent_tools/organisms/claude_validator.rb
   require 'pathname'
@@ -372,7 +372,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   > Assert: Validator initializes with correct paths and finds project root
   > Command: bundle exec rspec -e "initializes with paths"
 
-- [ ] Implement missing command detection
+- [x] Implement missing command detection
   ```ruby
   def find_missing_commands
     workflows = Dir.glob(File.join(@workflow_dir, "*.wf.md"))
@@ -406,7 +406,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   > Assert: Finds workflows without commands
   > Command: bundle exec rspec -e "detects missing commands"
 
-- [ ] Implement outdated command detection
+- [x] Implement outdated command detection
   ```ruby
   def find_outdated_commands
     require 'digest'
@@ -450,7 +450,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   end
   ```
 
-- [ ] Implement duplicate detection
+- [x] Implement duplicate detection
   ```ruby
   def find_duplicate_commands
     custom_commands = @custom_dir.glob("*.md").map { |p| p.basename(".md").to_s } if @custom_dir.exist?
@@ -467,7 +467,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   > Assert: Finds commands in both directories
   > Command: bundle exec rspec -e "detects duplicates"
 
-- [ ] Implement orphaned command detection
+- [x] Implement orphaned command detection
   ```ruby
   def find_orphaned_commands
     workflows = @workflow_dir.glob("*.wf.md").map { |p| p.basename(".wf.md").to_s }
@@ -497,7 +497,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   > Assert: Finds commands without corresponding workflows
   > Command: bundle exec rspec -e "detects orphaned commands"
 
-- [ ] Implement report generation
+- [x] Implement report generation
   ```ruby
   def generate_report(validation_results)
     report = StringIO.new
@@ -522,7 +522,7 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   end
   ```
 
-- [ ] Add comprehensive test coverage
+- [x] Add comprehensive test coverage
   ```ruby
   # spec/coding_agent_tools/organisms/claude_validator_spec.rb
   RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
@@ -542,13 +542,13 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
   end
   ```
 
-- [ ] Test CI integration
+- [x] Test CI integration
   > TEST: Exit Code Behavior
   > Type: Integration Test
   > Assert: Returns 1 with --strict and issues
   > Command: handbook claude validate --strict; echo $?
 
-- [ ] Add content hash comparison tests
+- [x] Add content hash comparison tests
   > TEST: Content Hash Detection
   > Type: Unit Test
   > Assert: Detects outdated commands via content hash
@@ -556,13 +556,13 @@ Provide comprehensive validation of Claude command coverage to ensure all workfl
 
 ## Acceptance Criteria
 
-- [ ] Detects all missing commands accurately
-- [ ] Identifies outdated commands based on content hash
-- [ ] Finds duplicate commands across directories
-- [ ] Generates clear, actionable reports
-- [ ] Supports specific workflow validation
-- [ ] Provides proper exit codes for CI
-- [ ] Handles edge cases gracefully
+- [x] Detects all missing commands accurately
+- [x] Identifies outdated commands based on content hash
+- [x] Finds duplicate commands across directories
+- [x] Generates clear, actionable reports
+- [x] Supports specific workflow validation
+- [x] Provides proper exit codes for CI
+- [x] Handles edge cases gracefully
 
 ## Review Summary
 
