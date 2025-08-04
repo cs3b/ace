@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.006
-status: draft
+status: pending
 priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.004]
@@ -131,3 +131,236 @@ Provide a seamless installation experience that copies all Claude integration fi
 - Claude Code command structure requirements
 - File system best practices
 - Existing claude-integrate script behavior
+
+## Technical Approach
+
+### Architecture Pattern
+- File copy orchestration with transaction-like behavior
+- Backup management for safety
+- Flattened directory structure for Claude compatibility
+
+### Technology Stack
+- Ruby FileUtils for file operations
+- JSON for registry management
+- Pathname for cross-platform path handling
+
+## Tool Selection
+
+| Tool/Library | Purpose | Rationale |
+|--------------|---------|-----------|
+| FileUtils | File copying | Standard library, reliable |
+| Pathname | Path manipulation | Cross-platform compatibility |
+| Find | Directory traversal | Efficient file discovery |
+
+## File Modifications
+
+### Create
+- `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb` - Command implementation
+- `dev-tools/lib/coding_agent_tools/organisms/claude_installer.rb` - Installation logic
+- `dev-tools/spec/coding_agent_tools/organisms/claude_installer_spec.rb` - Tests
+
+### Modify
+- `.claude/commands/` - Destination directory (populated)
+- `.claude/commands/commands.json` - Updated registry
+
+### Delete
+- None required (unless --force used)
+
+## Risk Assessment
+
+### Technical Risks
+- **Partial Installation**: Failure mid-copy could leave incomplete state
+  - Mitigation: Implement rollback on failure
+- **Permission Issues**: Different file permissions across systems
+  - Mitigation: Preserve source permissions, handle errors gracefully
+
+### Integration Risks
+- **Overwriting User Customizations**: Users might have modified .claude files
+  - Mitigation: Skip by default, require --force to overwrite
+- **Path Resolution**: Different OS path separators
+  - Mitigation: Use Pathname for cross-platform support
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current .claude directory structure requirements
+* [ ] Design backup rotation strategy
+* [ ] Plan transaction-like installation with rollback
+* [ ] Define file permission handling approach
+
+### Execution Steps
+
+- [ ] Implement integrate command class
+  ```ruby
+  # lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb
+  module CodingAgentTools
+    module CLI
+      module Commands
+        module Handbook
+          module Claude
+            class Integrate < Dry::CLI::Command
+              desc "Install Claude commands into .claude/ directory"
+              
+              option :dry_run, type: :boolean, default: false, desc: "Show what would be done"
+              option :backup, type: :boolean, default: false, desc: "Backup existing installation"
+              option :force, type: :boolean, default: false, desc: "Overwrite existing files"
+              option :source, type: :string, desc: "Custom source directory"
+              
+              def call(**options)
+                installer = CodingAgentTools::Organisms::ClaudeInstaller.new
+                installer.install(options)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  ```
+
+- [ ] Create installer organism
+  ```ruby
+  # lib/coding_agent_tools/organisms/claude_installer.rb
+  module CodingAgentTools
+    module Organisms
+      class ClaudeInstaller
+        def initialize
+          @source_base = "dev-handbook/.integrations/claude"
+          @target_base = ".claude"
+        end
+        
+        def install(options)
+          @source_base = options[:source] if options[:source]
+          
+          validate_source!
+          create_backup if options[:backup]
+          
+          if options[:dry_run]
+            display_dry_run
+          else
+            perform_installation(options[:force])
+          end
+        end
+      end
+    end
+  end
+  ```
+  > TEST: Installer Initialization
+  > Type: Unit Test
+  > Assert: Installer sets correct paths
+  > Command: bundle exec rspec -e "initializes with paths"
+
+- [ ] Implement source validation
+  ```ruby
+  def validate_source!
+    required_dirs = ["commands/_custom", "commands/_generated", "agents"]
+    missing = required_dirs.reject do |dir|
+      File.directory?(File.join(@source_base, dir))
+    end
+    
+    if missing.any?
+      raise "Missing required directories: #{missing.join(', ')}"
+    end
+  end
+  ```
+  > TEST: Source Validation
+  > Type: Unit Test
+  > Assert: Validates required directories exist
+  > Command: bundle exec rspec -e "validates source structure"
+
+- [ ] Implement backup functionality
+  ```ruby
+  def create_backup
+    if File.directory?(@target_base)
+      timestamp = Time.now.strftime("%Y%m%d-%H%M")
+      backup_dir = "#{@target_base}.backup.#{timestamp}"
+      
+      FileUtils.cp_r(@target_base, backup_dir)
+      puts "✓ Backed up existing .claude/ to #{backup_dir}/"
+    end
+  end
+  ```
+
+- [ ] Implement file copying with flattening
+  ```ruby
+  def perform_installation(force)
+    ensure_target_directories
+    
+    stats = {
+      custom_commands: 0,
+      generated_commands: 0,
+      agents: 0
+    }
+    
+    # Copy custom commands (flatten structure)
+    copy_commands("commands/_custom", stats[:custom_commands], force)
+    
+    # Copy generated commands (flatten structure)
+    copy_commands("commands/_generated", stats[:generated_commands], force)
+    
+    # Copy agents
+    copy_agents(stats[:agents], force)
+    
+    # Copy registry
+    copy_registry(force)
+    
+    display_summary(stats)
+  end
+  
+  def copy_commands(subdir, counter, force)
+    source_dir = File.join(@source_base, subdir)
+    target_dir = File.join(@target_base, "commands")
+    
+    Dir.glob(File.join(source_dir, "*.md")).each do |source|
+      target = File.join(target_dir, File.basename(source))
+      
+      if File.exist?(target) && !force
+        puts "⚠ Skipped: #{File.basename(source)} (already exists)"
+      else
+        FileUtils.cp(source, target)
+        counter += 1
+      end
+    end
+  end
+  ```
+  > TEST: File Copying
+  > Type: Integration Test
+  > Assert: Files copied to correct locations
+  > Command: bundle exec rspec -e "copies files correctly"
+
+- [ ] Add comprehensive test coverage
+  ```ruby
+  # spec/coding_agent_tools/organisms/claude_installer_spec.rb
+  RSpec.describe CodingAgentTools::Organisms::ClaudeInstaller do
+    describe "#install" do
+      it "creates backup when requested" do
+        # Test implementation
+      end
+      
+      it "respects dry-run flag" do
+        # Test implementation
+      end
+      
+      it "handles force flag correctly" do
+        # Test implementation
+      end
+    end
+  end
+  ```
+
+- [ ] Test idempotency
+  > TEST: Idempotent Installation
+  > Type: Integration Test
+  > Assert: Multiple runs are safe
+  > Command: handbook claude integrate && handbook claude integrate
+
+## Acceptance Criteria
+
+- [ ] Copies all commands from both directories
+- [ ] Flattens directory structure in .claude/commands/
+- [ ] Copies all agents to .claude/agents/
+- [ ] Updates commands.json registry
+- [ ] Creates backup when requested
+- [ ] Respects --force flag for overwrites
+- [ ] Provides clear installation summary
