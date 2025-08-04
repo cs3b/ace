@@ -154,8 +154,8 @@ Create a clear, maintainable directory structure for Claude commands that separa
 | Tool/Library | Purpose | Rationale |
 |--------------|---------|-----------|
 | FileUtils (Ruby) | Directory creation | Standard library, no dependencies |
-| ERB | Template processing | Built-in Ruby templating |
-| JSON (Ruby) | Registry management | Standard library for JSON handling |
+| String interpolation | Template processing | Simple, no external dependencies |
+| File I/O (Ruby) | File operations | Standard library for file handling |
 
 ## File Modifications
 
