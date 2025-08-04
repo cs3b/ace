@@ -32,7 +32,7 @@ module CodingAgentTools
 
           # Execute the template synchronization command
           # @param options [Hash] Command-line options
-          def call(options = {})
+          def call(**options)
             if options[:help]
               puts help_message
               return 0

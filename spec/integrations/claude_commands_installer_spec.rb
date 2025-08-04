@@ -8,6 +8,7 @@ require 'coding_agent_tools/integrations/claude_commands_installer'
 RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
   let(:test_dir) { Dir.mktmpdir('claude_installer_test') }
   let(:installer) { described_class.new(test_dir) }
+  let(:installer_with_options) { described_class.new(test_dir, dry_run: true, verbose: true) }
 
   before do
     # Create test directory structure
@@ -45,7 +46,12 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'creates command files from workflows' do
-        expect { installer.run }.to output(/Creating command files/).to_stdout
+        result = nil
+        expect { result = installer.run }.to output(/Creating command files/).to_stdout
+        
+        expect(result).to be_a(CodingAgentTools::Integrations::ClaudeCommandsInstaller::Result)
+        expect(result.success).to be true
+        expect(result.exit_code).to eq(0)
         
         command_file = File.join(test_dir, '.claude', 'commands', 'test-workflow.md')
         expect(File.exist?(command_file)).to be true
@@ -56,7 +62,8 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'updates commands.json' do
-        installer.run
+        result = installer.run
+        expect(result.success).to be true
         
         json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
         expect(File.exist?(json_file)).to be true
@@ -67,7 +74,9 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'reports correct statistics' do
-        expect { installer.run }.to output(/2 created/).to_stdout
+        result = nil
+        expect { result = installer.run }.to output(/2 created/).to_stdout
+        expect(result.stats[:created]).to eq(2)
       end
     end
 
@@ -85,7 +94,9 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'skips existing commands' do
-        expect { installer.run }.to output(/Skipped: existing.md/).to_stdout
+        result = nil
+        expect { result = installer.run }.to output(/Skipped: existing.md/).to_stdout
+        expect(result.success).to be true
         
         # Check that file wasn't overwritten
         content = File.read(File.join(test_dir, '.claude', 'commands', 'existing.md'))
@@ -93,7 +104,9 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'reports skipped files in statistics' do
-        expect { installer.run }.to output(/1 skipped/).to_stdout
+        result = nil
+        expect { result = installer.run }.to output(/1 skipped/).to_stdout
+        expect(result.stats[:skipped]).to eq(1)
       end
     end
 
@@ -196,8 +209,10 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
 
       it 'handles missing workflow directory gracefully' do
-        expect { installer.run }.to output(/Warning: Workflow instructions directory not found/).to_stdout
+        result = nil
+        expect { result = installer.run }.to output(/Warning: Workflow instructions directory not found/).to_stdout
         expect { installer.run }.not_to raise_error
+        expect(result.success).to be true
       end
     end
   end
@@ -225,6 +240,38 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       it 'skips files with permission issues' do
         expect { installer.run }.to output(/Skipped: readonly.md/).to_stdout
+      end
+    end
+
+    context 'with dry_run option' do
+      before do
+        File.write(
+          File.join(test_dir, 'dev-handbook', 'workflow-instructions', 'test.wf.md'),
+          '# Test Workflow'
+        )
+      end
+
+      it 'does not create files in dry run mode' do
+        installer_dry = described_class.new(test_dir, dry_run: true)
+        result = nil
+        expect { result = installer_dry.run }.to output(/DRY RUN/).to_stdout
+        
+        command_file = File.join(test_dir, '.claude', 'commands', 'test.md')
+        expect(File.exist?(command_file)).to be false
+        expect(result.success).to be true
+      end
+
+      it 'shows what would be created' do
+        installer_dry = described_class.new(test_dir, dry_run: true)
+        expect { installer_dry.run }.to output(/DRY RUN/).to_stdout
+        expect { installer_dry.run }.to output(/Created: test.md/).to_stdout
+      end
+    end
+
+    context 'with verbose option' do
+      it 'shows detailed output' do
+        installer_verbose = described_class.new(test_dir, verbose: true)
+        expect { installer_verbose.run }.to output(/Project root:/).to_stdout
       end
     end
   end

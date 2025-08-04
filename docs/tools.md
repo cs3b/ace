@@ -18,7 +18,7 @@
 | `git-push` | Enhanced git push | `--force`, `--dry-run` |
 | `git-status` | Enhanced git status | `--verbose`, `--short` |
 | `git-tag` | Enhanced git tag | `[tagname]`, `--annotate`, `--delete`, `--list` |
-| `handbook` | Development handbook access | `sync-templates` |
+| `handbook` | Development handbook access | `sync-templates`, `claude-*` commands |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
 | `nav-path` | Intelligent path navigation | `task`, `file` |
@@ -621,14 +621,66 @@ nav-tree --depth 3 docs/
 handbook [COMMAND]
 ```
 
-| Flag | Purpose | Default |
-|------|---------|---------|
-| `sync-templates` | Sync template content | N/A |
+| Command | Purpose |
+|---------|---------|
+| `sync-templates` | Sync template content |
+| `claude` | Claude Code integration commands |
 
 **Examples**
 ```bash
 handbook sync-templates
+handbook --help  # Shows all commands including claude-* commands
 ```
+</details>
+
+### `handbook claude-*` – Claude Code integration commands   {#handbook-claude--claude-code-integration-commands}
+
+<details><summary>Details</summary>
+
+```bash
+handbook claude-[COMMAND] [OPTIONS]
+```
+
+| Command | Purpose | Key Options |
+|---------|---------|-------------|
+| `claude-generate-commands` | Generate missing Claude commands from workflow files | N/A |
+| `claude-update-registry` | Update commands.json registry with new commands | N/A |
+| `claude-integrate` | Install Claude Code commands to .claude/ directory | `--dry-run`, `--verbose` |
+| `claude-validate` | Validate Claude command coverage and consistency | N/A |
+| `claude-list` | List all Claude commands and their status | N/A |
+
+**claude-integrate options:**
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `--dry-run` | Show what would be installed without modifying files | `false` |
+| `--verbose` | Show detailed installation information | `false` |
+
+**Examples**
+```bash
+# Show available handbook commands including Claude commands
+handbook --help
+
+# Install Claude commands (with preview)
+handbook claude-integrate --dry-run
+
+# Install Claude commands
+handbook claude-integrate
+
+# Install with verbose output
+handbook claude-integrate --verbose
+
+# List all commands (when implemented)
+handbook claude-list
+
+# Validate command coverage (when implemented)
+handbook claude-validate
+```
+
+**Purpose:**
+The Claude namespace provides tools for integrating with Claude Code (claude.ai/code). It manages the installation and maintenance of command files that enable Claude to understand and execute project-specific workflows.
+
+**Note:** Currently, only the `integrate` subcommand is fully implemented. Other subcommands display placeholder messages indicating future functionality.
 </details>
 
 ### `release-manager` – Release management tool   {#release-manager--release-management-tool}

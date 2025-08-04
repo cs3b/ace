@@ -8,16 +8,17 @@ module CodingAgentTools
   module Integrations
     # Installer for Claude Code commands from workflow instructions
     class ClaudeCommandsInstaller
-      attr_reader :project_root, :stats
+      attr_reader :project_root, :stats, :options
 
-      def initialize(project_root = nil)
+      def initialize(project_root = nil, options = {})
         @project_root = Pathname.new(project_root || find_project_root)
         @stats = { created: 0, skipped: 0, updated: 0, errors: [] }
+        @options = { dry_run: false, verbose: false }.merge(options)
       end
 
       def run
-        puts "Installing Claude Code commands..."
-        puts "Project root: #{project_root}"
+        puts "Installing Claude Code commands#{options[:dry_run] ? ' (DRY RUN)' : ''}..."
+        puts "Project root: #{project_root}" if options[:verbose]
         puts
 
         # Ensure directories exist
@@ -35,11 +36,18 @@ module CodingAgentTools
 
         # Print summary
         print_summary
+        
+        # Return result object instead of exiting
+        Result.new(success: stats[:errors].empty?, exit_code: stats[:errors].empty? ? 0 : 1, stats: stats)
       rescue StandardError => e
         puts "Error: #{e.message}"
-        puts e.backtrace if ENV['DEBUG']
-        exit 1
+        puts e.backtrace if ENV['DEBUG'] || options[:verbose]
+        stats[:errors] << e.message
+        Result.new(success: false, exit_code: 1, stats: stats)
       end
+
+      # Result object for CLI integration
+      Result = Struct.new(:success, :exit_code, :stats, keyword_init: true)
 
       private
 
@@ -57,26 +65,54 @@ module CodingAgentTools
 
       def ensure_directories_exist
         commands_dir = project_root / '.claude' / 'commands'
-        FileUtils.mkdir_p(commands_dir) unless commands_dir.exist?
+        unless commands_dir.exist?
+          if options[:dry_run]
+            puts "Would create directory: #{commands_dir}" if options[:verbose]
+          else
+            FileUtils.mkdir_p(commands_dir)
+            puts "Created directory: #{commands_dir}" if options[:verbose]
+          end
+        end
       end
 
       def copy_custom_commands
-        custom_commands_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands'
-        return unless custom_commands_dir.exist?
+        # Look for commands in both _custom and _generated directories
+        custom_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
+        generated_dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
+        
+        # Copy custom commands
+        if custom_dir.exist?
+          puts "Copying custom multi-task commands..."
+          custom_dir.glob('*.md').each do |file|
+            copy_command_file(file)
+          end
+        end
 
-        puts "Copying custom multi-task commands..."
-        custom_commands_dir.glob('*.md').each do |file|
-          target = project_root / '.claude' / 'commands' / file.basename
-          if target.exist?
-            puts "  ✗ Skipped: #{file.basename} (already exists)"
-            stats[:skipped] += 1
+        # Copy generated commands
+        if generated_dir.exist?
+          puts "Copying generated workflow commands..."
+          generated_dir.glob('*.md').each do |file|
+            copy_command_file(file)
+          end
+        end
+        
+        puts if custom_dir.exist? || generated_dir.exist?
+      end
+
+      def copy_command_file(file)
+        target = project_root / '.claude' / 'commands' / file.basename
+        if target.exist?
+          puts "  ✗ Skipped: #{file.basename} (already exists)"
+          stats[:skipped] += 1
+        else
+          if options[:dry_run]
+            puts "  ✓ Would create: #{file.basename}"
           else
             FileUtils.cp(file, target)
             puts "  ✓ Created: #{file.basename}"
-            stats[:created] += 1
           end
+          stats[:created] += 1
         end
-        puts
       end
 
       def scan_workflows
@@ -116,16 +152,20 @@ module CodingAgentTools
         # Check for custom template
         custom_content = get_custom_template(workflow_name)
         
-        if custom_content
-          command_file.write(custom_content)
+        content = if custom_content
+          custom_content
         else
           # Use default template
-          content = <<~CONTENT
+          <<~CONTENT
             read whole file and follow @dev-handbook/workflow-instructions/#{workflow_file.basename}
 
             read and run @.claude/commands/commit.md
           CONTENT
-          
+        end
+        
+        if options[:dry_run]
+          puts "    Would write: #{command_file.relative_path_from(project_root)}" if options[:verbose]
+        else
           command_file.write(content)
         end
       end
@@ -155,10 +195,10 @@ module CodingAgentTools
         json_file = project_root / '.claude' / 'commands' / 'commands.json'
         
         # Create backup if file exists
-        if json_file.exist?
+        if json_file.exist? && !options[:dry_run]
           backup_file = project_root / '.claude' / 'commands' / 'commands.json.backup'
           FileUtils.cp(json_file, backup_file)
-          puts "Created backup: commands.json.backup"
+          puts "Created backup: commands.json.backup" if options[:verbose]
         end
 
         # Load existing JSON or create new
@@ -182,13 +222,22 @@ module CodingAgentTools
         sorted_commands = commands.sort.to_h
         
         # Write updated JSON
-        json_file.write(JSON.pretty_generate(sorted_commands) + "\n")
-        
-        if new_commands > 0
-          puts "✓ Updated: commands.json (#{new_commands} new entries added)"
-          stats[:updated] += 1
+        if options[:dry_run]
+          if new_commands > 0
+            puts "✓ Would update: commands.json (#{new_commands} new entries)"
+            stats[:updated] += 1
+          else
+            puts "✓ commands.json is up to date"
+          end
         else
-          puts "✓ commands.json is up to date"
+          json_file.write(JSON.pretty_generate(sorted_commands) + "\n")
+          
+          if new_commands > 0
+            puts "✓ Updated: commands.json (#{new_commands} new entries added)"
+            stats[:updated] += 1
+          else
+            puts "✓ commands.json is up to date"
+          end
         end
         puts
       end
