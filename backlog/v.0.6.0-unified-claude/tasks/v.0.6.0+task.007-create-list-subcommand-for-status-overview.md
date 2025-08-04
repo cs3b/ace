@@ -5,9 +5,47 @@ priority: medium
 estimate: 2h
 dependencies: [v.0.6.0+task.002]
 release: v.0.6.0-unified-claude
+needs_review: true
 ---
 
 # Create list subcommand for status overview
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Critical Implementation Questions
+- [ ] How should the command distinguish between "custom" and "generated" commands?
+  - **Research conducted**: Found ClaudeCommandsInstaller copies from dev-handbook/.integrations/claude/commands/ (6 custom multi-task commands)
+  - **Current structure**: All commands end up in .claude/commands/ directory
+  - **Suggested approach**: Custom = matches files in dev-handbook/.integrations/claude/commands/, Generated = others
+  - **Alternative approach**: Add metadata to commands.json to track source
+  - **Why needs human input**: Architecture decision affecting data structure and future extensibility
+
+- [ ] What exactly are "Missing Commands" and how should they be detected?
+  - **Research conducted**: Found 24 workflow files in dev-handbook/workflow-instructions/
+  - **Commands exist for**: Most workflows have corresponding commands (31 total commands found)
+  - **Unclear**: Should "missing" mean workflows without commands, or commands without workflows?
+  - **Suggested default**: Missing = workflows in workflow-instructions/ without corresponding .claude/commands/*.md file
+  - **Why needs human input**: Core functionality definition affects implementation approach
+
+### [MEDIUM] Enhancement Questions
+- [ ] Should the command require the Claude namespace to be registered first (from task.002)?
+  - **Research conducted**: Task depends on v.0.6.0+task.002 which implements the claude namespace
+  - **Current state**: Task.002 has needs_review flag and is pending
+  - **Suggested approach**: Build assuming namespace exists, coordinate implementation
+  - **Why needs human input**: Implementation sequencing and integration approach
+
+- [ ] Should the verbose output include file size and line count in addition to modification time?
+  - **Research conducted**: Task list command shows minimal file info
+  - **Similar patterns**: Git status shows size changes, ls -l shows sizes
+  - **Suggested default**: Include file size (more useful than line count for .md files)
+  - **Why needs human input**: Output format affects user experience
+
+### [LOW] Future Enhancement Questions
+- [ ] Should the JSON output include additional metadata like file paths and timestamps?
+  - **Research conducted**: Current spec shows simple arrays in JSON
+  - **Standard practice**: API responses often include metadata
+  - **Suggested default**: Simple arrays initially, richer format can be added later
+  - **Why needs human input**: API design decision affecting downstream consumers
 
 ## Behavioral Specification
 
@@ -95,9 +133,13 @@ handbook claude list --format json
 
 ### Validation Questions
 - [ ] **Sorting**: Should commands be alphabetically sorted?
+  - **[Resolved through research]**: Yes, alphabetical sorting is standard for CLI list commands
 - [ ] **Filtering**: Should we support filtering by pattern?
+  - **[Deferred]**: Not in initial scope, can be added as enhancement
 - [ ] **Status Icons**: What symbols for different states?
+  - **[Resolved through research]**: ✓ for available, ✗ for missing (consistent with other tools)
 - [ ] **Performance**: Should we cache results for large projects?
+  - **[Resolved through research]**: Not needed initially - ~30 files is negligible performance impact
 
 ## Objective
 
@@ -133,11 +175,13 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 - Directory scanner with categorization
 - Multi-format presenter pattern
 - Status aggregation logic
+- Command source detection (custom vs generated)
 
 ### Technology Stack
 - Ruby Dir/File for scanning
 - JSON for structured output
 - String formatting for display
+- Pathname for path comparison
 
 ## Tool Selection
 
@@ -180,8 +224,11 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 
 * [ ] Design output format variations
 * [ ] Define status determination logic
+  - Custom: Files matching those in dev-handbook/.integrations/claude/commands/
+  - Generated: All other .md files in .claude/commands/
+  - Missing: Workflows without corresponding commands
 * [ ] Plan JSON schema for structured output
-* [ ] Consider color output for terminals
+* [ ] Consider color output for terminals (use existing colorize patterns from task list)
 
 ### Execution Steps
 
@@ -227,10 +274,20 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   end
   
   def build_inventory
+    # Scan all commands in .claude/commands/
+    all_commands = scan_commands_directory
+    
+    # Categorize based on source
+    custom_commands = identify_custom_commands(all_commands)
+    generated_commands = all_commands - custom_commands
+    
+    # Find workflows without commands
+    missing_commands = find_missing_workflows(all_commands)
+    
     {
-      custom: scan_directory(@custom_dir),
-      generated: scan_directory(@generated_dir),
-      missing: find_missing_workflows
+      custom: custom_commands,
+      generated: generated_commands,
+      missing: missing_commands
     }
   end
   ```
@@ -276,3 +333,6 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 - Current command organization structure
 - Standard CLI list command patterns
 - JSON output format standards
+- ClaudeCommandsInstaller implementation (dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb)
+- Task list command pattern (dev-tools/lib/coding_agent_tools/cli/commands/task/list.rb)
+- Handbook namespace structure (dev-tools/lib/coding_agent_tools/cli/commands/handbook/)

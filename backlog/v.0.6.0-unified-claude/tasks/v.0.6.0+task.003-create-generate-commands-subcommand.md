@@ -19,11 +19,15 @@ needs_review: true
   - **Suggested default**: Create in dev-handbook/.integrations/claude/commands/_generated/ for version control
   - **Why needs human input**: Architecture decision about where generated files should live
 
+> dev-handbook (only integrate sub cmd will be working in .claude)
+
 - [ ] Should the subcommand modify ClaudeCommandsInstaller or create a new generator class?
   - **Research conducted**: ClaudeCommandsInstaller currently handles both custom and workflow commands
   - **Current implementation**: Monolithic class doing scanning, generation, and installation
   - **Suggested default**: New ClaudeCommandGenerator class focused on generation only
   - **Why needs human input**: Refactoring scope - might affect existing functionality
+
+> we should reuse what possible, and refactor what necesity (the current task define behaviour)
 
 ### [MEDIUM] Enhancement Questions
 - [ ] How should the template handle workflows that already have custom implementations?
@@ -32,22 +36,30 @@ needs_review: true
   - **Suggested default**: Check both custom and generated dirs, skip if either exists
   - **Why needs human input**: Need clear separation strategy between custom and generated
 
+> there is proposal to keep them in seperate sub folders (_custom, _generated), by default it should not overwrite exising once (only of there --force then overwrite existing files )
+
 - [ ] Should generated commands include the commit.md reference line?
   - **Research conducted**: Current template includes "read and run @.claude/commands/commit.md"
   - **Pattern observed**: All current generated commands have this line
   - **Suggested default**: Include it (maintains consistency)
   - **Why needs human input**: May not be appropriate for all workflow types
 
-### [LOW] Future Enhancement Questions  
+> yes, as it's the default way to call commit standalone (and wihtin other workflow)
+
+### [LOW] Future Enhancement Questions
 - [ ] Should the command support batch operations with glob patterns?
   - **Research conducted**: No existing commands use glob patterns for batch operations
   - **Suggested default**: Start with --workflow flag for single workflow only
   - **Why needs human input**: Feature scope for initial implementation
 
+> yes
+
 - [ ] Should we use ERB templates or simple string interpolation?
   - **Research conducted**: No ERB usage found in codebase, ClaudeCommandsInstaller uses heredocs
   - **Suggested default**: Simple heredocs matching existing pattern (no ERB dependency)
   - **Why needs human input**: Extensibility vs simplicity trade-off
+
+> string interpolation - template should be defined in proper folder in dev-handbook/.integrations/claude/command.template.md
 
 ## Behavioral Specification
 
@@ -168,7 +180,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 - Separation of custom vs generated commands via directory structure
 
 ### Technology Stack
-- Ruby File/Dir for filesystem scanning  
+- Ruby File/Dir for filesystem scanning
 - Heredocs for template generation (matching existing pattern)
 - Pathname for path operations (consistent with ClaudeCommandsInstaller)
 
@@ -185,7 +197,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
 ### Create
 - `dev-tools/lib/coding_agent_tools/cli/commands/handbook/claude/generate_commands.rb` - Command implementation
-- `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Business logic  
+- `dev-tools/lib/coding_agent_tools/organisms/claude_command_generator.rb` - Business logic
 - `dev-tools/spec/coding_agent_tools/organisms/claude_command_generator_spec.rb` - Unit tests
 - `dev-tools/spec/coding_agent_tools/cli/commands/handbook/claude/generate_commands_spec.rb` - Command tests
 - `dev-handbook/.integrations/claude/commands/_generated/` - Directory for generated commands (if not exists)
@@ -216,7 +228,7 @@ Enable automatic generation of Claude commands for workflow instructions that la
 
 * [x] Analyze workflow naming patterns in dev-handbook
   - **Completed**: All workflows use .wf.md extension, names are kebab-case
-* [x] Define template variable requirements  
+* [x] Define template variable requirements
   - **Completed**: Only workflow_name needed based on current template
 * [x] Design command detection logic (custom vs missing)
   - **Completed**: Check _custom/ first, then _generated/, skip if either exists
@@ -235,11 +247,11 @@ Enable automatic generation of Claude commands for workflow instructions that la
           module Claude
             class GenerateCommands < Dry::CLI::Command
               desc "Generate missing Claude commands from workflows"
-              
+
               option :dry_run, type: :boolean, default: false, desc: "Show what would be generated"
               option :force, type: :boolean, default: false, desc: "Overwrite existing generated commands"
               option :workflow, type: :string, desc: "Generate for specific workflow"
-              
+
               def call(**options)
                 generator = CodingAgentTools::Organisms::ClaudeCommandGenerator.new
                 generator.generate(options)
@@ -264,11 +276,11 @@ Enable automatic generation of Claude commands for workflow instructions that la
           @generated_dir = "dev-handbook/.integrations/claude/commands/_generated"
           # No template path needed - using heredocs
         end
-        
+
         def generate(options)
           workflows = find_workflows(options[:workflow])
           missing = find_missing_commands(workflows)
-          
+
           if options[:dry_run]
             display_dry_run(missing)
           else
@@ -320,19 +332,19 @@ Enable automatic generation of Claude commands for workflow instructions that la
     # Use simple template matching existing pattern
     workflows.each do |workflow|
       output_path = File.join(@generated_dir, "#{workflow}.md")
-      
+
       if File.exist?(output_path) && !force
         puts "⚠ Skipped: #{workflow}.md (already exists)"
         next
       end
-      
+
       # Match existing ClaudeCommandsInstaller template pattern
       content = <<~CONTENT
         read whole file and follow @dev-handbook/workflow-instructions/#{workflow}.wf.md
 
         read and run @.claude/commands/commit.md
       CONTENT
-      
+
       File.write(output_path, content)
       puts "✓ Created: _generated/#{workflow}.md"
     end
@@ -352,12 +364,12 @@ Enable automatic generation of Claude commands for workflow instructions that la
         # Test implementation
       end
     end
-    
+
     describe "#generate" do
       it "respects dry-run flag" do
         # Test implementation
       end
-      
+
       it "skips existing custom commands" do
         # Test implementation
       end
