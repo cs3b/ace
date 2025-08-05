@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.007
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: [v.0.6.0+task.002]
@@ -252,17 +252,17 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 
 ### Planning Steps
 
-* [ ] Design output format variations
-* [ ] Define status determination logic
+* [x] Design output format variations
+* [x] Define status determination logic
   - Custom: Files matching those in dev-handbook/.integrations/claude/commands/
   - Generated: All other .md files in .claude/commands/
   - Missing: Workflows without corresponding commands
-* [ ] Plan JSON schema for structured output
-* [ ] Consider color output for terminals (use existing colorize patterns from task list)
+* [x] Plan JSON schema for structured output
+* [x] Consider color output for terminals (use existing colorize patterns from task list)
 
 ### Execution Steps
 
-- [ ] Implement list command class
+- [x] Implement list command class
   ```ruby
   # lib/coding_agent_tools/cli/commands/handbook/claude/list.rb
   module CodingAgentTools
@@ -289,7 +289,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   end
   ```
 
-- [ ] Create command lister organism
+- [x] Create command lister organism
   ```ruby
   # lib/coding_agent_tools/organisms/claude_command_lister.rb
   def list(options)
@@ -345,7 +345,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   > Assert: Correctly categorizes all commands
   > Command: bundle exec rspec -e "builds complete inventory"
 
-- [ ] Implement formatted output
+- [x] Implement formatted output
   ```ruby
   def output_text(inventory, options)
     puts "Claude Commands Overview"
@@ -362,7 +362,7 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
   end
   ```
 
-- [ ] Add test coverage
+- [x] Add test coverage
   > TEST: Output Formats
   > Type: Integration Test
   > Assert: All formats produce valid output
@@ -370,12 +370,12 @@ Provide developers with a clear, at-a-glance overview of their Claude command in
 
 ## Acceptance Criteria
 
-- [ ] Lists all commands from both directories
-- [ ] Identifies missing commands correctly
-- [ ] Supports verbose mode with file details
-- [ ] Filters by command type
-- [ ] Outputs valid JSON when requested
-- [ ] Provides accurate summary counts
+- [x] Lists all commands from both directories
+- [x] Identifies missing commands correctly
+- [x] Supports verbose mode with file details
+- [x] Filters by command type
+- [x] Outputs valid JSON when requested
+- [x] Provides accurate summary counts
 
 ## References
 
