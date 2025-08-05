@@ -165,7 +165,7 @@ module CodingAgentTools::Organisms
       if results[:circular_dependencies].any?
         output << '## Circular Dependencies'
         results[:circular_dependencies].each do |cycle|
-          output << "- #{cycle.join(' → ')} → #{cycle.first}"
+          output << "- #{cycle.join(" → ")} → #{cycle.first}"
         end
         output << ''
       end
@@ -202,13 +202,13 @@ module CodingAgentTools::Organisms
 
       results.each do |key, value|
         serialized[key] = case key
-                          when :timestamp
+        when :timestamp
                             value.iso8601
-                          when :dependencies
+        when :dependencies
                             @json_exporter.format_dependencies(value)
                           else
                             value
-                          end
+        end
       end
 
       serialized

@@ -48,18 +48,18 @@ module CodingAgentTools
       def run(project_root = nil, options = {})
         # Convert options to model if needed
         @options = case options
-                   when Models::InstallationOptions
+        when Models::InstallationOptions
                      options
-                   when Hash
+        when Hash
                      Models::InstallationOptions.from_hash(options)
                    else
                      Models::InstallationOptions.new
-                   end
+        end
 
         # Find project root
         @project_root = find_and_validate_project_root(project_root)
-        
-        puts "Installing Claude commands#{@options.dry_run? ? ' (DRY RUN)' : ''}..."
+
+        puts "Installing Claude commands#{@options.dry_run? ? " (DRY RUN)" : ""}..."
         puts "Project root: #{@project_root}" if @options.verbose?
         puts
 
@@ -68,13 +68,13 @@ module CodingAgentTools
         create_backup_if_requested
         ensure_target_directories_exist
         install_all_components
-        
+
         # Print summary
         print_summary
-        
+
         # Return result
         create_result
-      rescue StandardError => e
+      rescue => e
         handle_error(e)
       end
 
@@ -91,12 +91,12 @@ module CodingAgentTools
       def validate_source_directories
         source_base = determine_source_base
         validation = @source_validator.validate(source_base)
-        
+
         unless validation[:valid]
           puts "Error: #{validation[:errors].first}"
           exit 1
         end
-        
+
         validation[:warnings].each { |warning| puts "Warning: #{warning}" }
         @source_validation = validation
       end
@@ -111,10 +111,10 @@ module CodingAgentTools
 
       def create_backup_if_requested
         return unless @options.backup?
-        
+
         target = @project_root / '.claude'
         result = @backup_creator.create_backup(target, dry_run: @options.dry_run?)
-        
+
         if result[:success]
           puts "✓ #{result[:message] || result[:path]}"
         else
@@ -125,7 +125,7 @@ module CodingAgentTools
       def ensure_target_directories_exist
         commands_dir = @project_root / '.claude' / 'commands'
         agents_dir = @project_root / '.claude' / 'agents'
-        
+
         [commands_dir, agents_dir].each do |dir|
           result = @directory_creator.create_if_not_exists(dir.to_s)
           if result[:created] && @options.verbose?
@@ -137,16 +137,16 @@ module CodingAgentTools
       def install_all_components
         source_base = determine_source_base
         target_base = @project_root / '.claude'
-        
+
         # Discover all components
         discovery = @command_discoverer.discover(source_base)
-        
+
         # Install commands based on structure
         install_discovered_commands(discovery[:commands], target_base / 'commands')
-        
+
         # Install agents
         install_agents(source_base / 'agents', target_base / 'agents')
-        
+
         # Generate workflow commands
         generate_workflow_commands(target_base / 'commands')
       end
@@ -162,7 +162,7 @@ module CodingAgentTools
           update_stats_from_result(result, :custom_commands)
           puts "  ✓ Copied #{result[:installed_count] || 0} commands from flat structure" if result[:installed_count]
         end
-        
+
         # Install custom commands
         if commands[:custom].any?
           result = @command_installer.install_commands(
@@ -173,7 +173,7 @@ module CodingAgentTools
           update_stats_from_result(result, :custom_commands)
           puts "  ✓ Copied #{result[:installed_count] || 0} custom commands" if result[:installed_count]
         end
-        
+
         # Install generated commands
         if commands[:generated].any?
           result = @command_installer.install_commands(
@@ -184,7 +184,7 @@ module CodingAgentTools
           update_stats_from_result(result, :generated_commands)
           puts "  ✓ Copied #{result[:installed_count] || 0} generated commands" if result[:installed_count]
         end
-        
+
         puts if commands.values.any?(&:any?)
       end
 
@@ -196,7 +196,7 @@ module CodingAgentTools
       def generate_workflow_commands(target_dir)
         workflow_files = @workflow_generator.scan_workflows(@project_root)
         return if workflow_files.empty?
-        
+
         result = @workflow_generator.generate_commands(
           workflow_files,
           target_dir,
@@ -207,7 +207,7 @@ module CodingAgentTools
 
       def update_stats_from_result(result, category = nil)
         return unless result[:stats]
-        
+
         other_stats = result[:stats]
         @stats_collector.merge!(
           Molecules::StatisticsCollector.new(initial_stats: other_stats)
@@ -216,25 +216,25 @@ module CodingAgentTools
 
       def print_summary
         stats = @stats_collector.stats
-        
-        puts "="*50
-        puts "Installation complete:"
-        puts "  Location: #{@project_root / '.claude'}/"
+
+        puts '='*50
+        puts 'Installation complete:'
+        puts "  Location: #{@project_root / ".claude"}/"
         puts "  Commands: #{stats.total_commands}"
         puts "  Agents: #{stats.agents}"
-        
+
         unless @options.dry_run?
           puts
           puts "Run 'claude code' to use the new commands"
         end
-        
+
         if stats.errors?
           puts
-          puts "Errors encountered:"
+          puts 'Errors encountered:'
           stats.errors.each { |error| puts "  - #{error}" }
         end
-        
-        puts "="*50
+
+        puts '='*50
       end
 
       def create_result

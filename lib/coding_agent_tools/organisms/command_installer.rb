@@ -29,15 +29,15 @@ module CodingAgentTools
       # @param options [Hash] Installation options
       # @return [Hash] Installation result
       def install_commands(source_files, target_dir, options = {})
-        puts "Copying commands:" if options[:verbose]
-        
+        puts 'Copying commands:' if options[:verbose]
+
         operations = prepare_operations(source_files, target_dir, options)
         results = []
 
         operations.each do |operation|
           result = install_single_command(operation, options)
           results << result
-          
+
           # Print progress
           print_operation_result(operation, result, options)
         end
@@ -61,19 +61,19 @@ module CodingAgentTools
           return {
             status: :skipped,
             operation: operation,
-            message: "Already exists"
+            message: 'Already exists'
           }
         end
 
         # Add metadata to content
         enhanced_operation = add_metadata_to_operation(operation)
-        
+
         # Execute the operation
         result = @file_executor.execute(enhanced_operation, options)
-        
+
         # Record statistics
         @stats_collector.record_operation(result, :command)
-        
+
         result
       end
 
@@ -82,7 +82,7 @@ module CodingAgentTools
       def prepare_operations(source_files, target_dir, options)
         source_files.map do |source_file|
           target_file = target_dir / source_file.basename
-          
+
           Models::FileOperation.new(
             source: source_file,
             target: target_file,
@@ -97,18 +97,18 @@ module CodingAgentTools
       def add_metadata_to_operation(operation)
         # Read source content
         return operation unless operation.source.exist?
-        
+
         content = operation.source.read
-        
+
         # Create metadata
         metadata = Models::CommandMetadata.new(
           last_modified: Atoms::TimestampGenerator.iso_timestamp,
           source: operation.metadata[:source_type]
         )
-        
+
         # Inject metadata into content
         enhanced_content = @metadata_injector.inject(content, metadata)
-        
+
         # Return new operation with enhanced content
         operation.with_metadata(
           operation.metadata.merge(content: enhanced_content)
@@ -117,7 +117,7 @@ module CodingAgentTools
 
       def detect_source_type(file_path)
         parent_dir = file_path.parent.basename.to_s
-        
+
         case parent_dir
         when '_custom'
           'custom'
@@ -132,7 +132,7 @@ module CodingAgentTools
 
       def print_operation_result(operation, result, options)
         return if options[:dry_run]
-        
+
         case result[:status]
         when :completed
           puts "  ✓ Created: #{operation.target_filename}"

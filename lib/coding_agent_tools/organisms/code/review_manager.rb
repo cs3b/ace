@@ -60,7 +60,7 @@ module CodingAgentTools
             success: true,
             error: nil
           }
-        rescue StandardError => e
+        rescue => e
           {
             session: nil,
             success: false,
@@ -93,7 +93,7 @@ module CodingAgentTools
           write_execution_summary(session, reports)
 
           { success: true, error: nil }
-        rescue StandardError => e
+        rescue => e
           { success: false, error: e.message }
         end
 
@@ -205,11 +205,11 @@ module CodingAgentTools
           # Update content
           updated = if existing.include?('## Review Reports')
                       # Replace existing section
-                      existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
-                    else
+            existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
+          else
                       # Append new section
-                      existing + "\n" + reports_section
-                    end
+            existing + "\n" + reports_section
+          end
 
           File.write(index_path, updated)
         end
@@ -236,7 +236,7 @@ module CodingAgentTools
           summary += <<~SUMMARY
 
             Files Generated:
-            #{Dir.glob(File.join(session.directory_path, '*')).map { |f| File.basename(f) }.join("\n")}
+            #{Dir.glob(File.join(session.directory_path, "*")).map { |f| File.basename(f) }.join("\n")}
           SUMMARY
 
           File.write(summary_path, summary)

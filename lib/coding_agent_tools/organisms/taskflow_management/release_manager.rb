@@ -55,7 +55,7 @@ module CodingAgentTools
           else
             ManagerResult.new(nil, false, result.error_message)
           end
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error getting current release: #{e.message}")
         end
 
@@ -85,7 +85,7 @@ module CodingAgentTools
           next_release = sorted_releases.first
 
           ManagerResult.new(next_release, true, nil)
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error finding next release: #{e.message}")
         end
 
@@ -100,9 +100,9 @@ module CodingAgentTools
           current_version = current_release.version
           next_task_number = find_next_task_number(current_version, current_release.path)
 
-          new_task_id = "#{current_version}+task.#{next_task_number.to_s.rjust(3, '0')}"
+          new_task_id = "#{current_version}+task.#{next_task_number.to_s.rjust(3, "0")}"
           ManagerResult.new(new_task_id, true, nil)
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error generating task ID: #{e.message}")
         end
 
@@ -111,13 +111,13 @@ module CodingAgentTools
         # @return [ManagerResult] Result containing generated task ID or error
         def generate_id_for_release(release_info)
           return ManagerResult.new(nil, false, 'Release info is required') unless release_info
-          
+
           release_version = release_info.version
           next_task_number = find_next_task_number(release_version, release_info.path)
 
-          new_task_id = "#{release_version}+task.#{next_task_number.to_s.rjust(3, '0')}"
+          new_task_id = "#{release_version}+task.#{next_task_number.to_s.rjust(3, "0")}"
           ManagerResult.new(new_task_id, true, nil)
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error generating task ID for release: #{e.message}")
         end
 
@@ -153,7 +153,7 @@ module CodingAgentTools
           }
 
           ManagerResult.new(result_data, true, nil)
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error generating release: #{e.message}")
         end
 
@@ -175,7 +175,7 @@ module CodingAgentTools
           sorted_releases = sort_releases_by_version(all_releases)
 
           ManagerResult.new(sorted_releases, true, nil)
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new([], false, "Error listing all releases: #{e.message}")
         end
 
@@ -234,12 +234,12 @@ module CodingAgentTools
               detected_name = subdirs.first
               if detected_name != current_release.name
                 return ManagerResult.new(nil, false,
-                                         "Inconsistency detected: Directory name '#{detected_name}' != detected release name '#{current_release.name}'")
+                  "Inconsistency detected: Directory name '#{detected_name}' != detected release name '#{current_release.name}'")
               end
             else
               # Multiple releases in current - this could cause inconsistencies
               return ManagerResult.new(nil, false,
-                                       "Multiple releases in current directory: #{subdirs.join(', ')}. This may cause tool inconsistencies.")
+                "Multiple releases in current directory: #{subdirs.join(", ")}. This may cause tool inconsistencies.")
             end
           end
 
@@ -250,7 +250,7 @@ module CodingAgentTools
           }
 
           ManagerResult.new(validation_info, true, 'Release context validation passed')
-        rescue StandardError => e
+        rescue => e
           ManagerResult.new(nil, false, "Error validating release context: #{e.message}")
         end
 
@@ -372,7 +372,7 @@ module CodingAgentTools
           existing_codenames = extract_existing_codenames(existing_releases)
 
           # Use llm-query with system prompt for cleaner generation
-          system_prompt = "return only with one word codename, we already have #{existing_codenames.join(', ')}"
+          system_prompt = "return only with one word codename, we already have #{existing_codenames.join(", ")}"
           user_prompt = 'give one word codename for release'
 
           # Use shell escaping to handle quotes properly
@@ -435,7 +435,7 @@ module CodingAgentTools
             ## Status
             - Status: PLANNED
             - Type: BACKLOG
-            - Created: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}
+            - Created: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
 
             ## Tasks
             Tasks for this release will be added to the `tasks/` directory.
@@ -486,7 +486,7 @@ module CodingAgentTools
 
           # Find all task files for this version
           task_files = Dir.glob(File.join(tasks_dir, "#{version}+task.*.md"))
-          
+
           # Extract task numbers from filenames
           task_numbers = task_files.map do |file|
             filename = File.basename(file, '.md')

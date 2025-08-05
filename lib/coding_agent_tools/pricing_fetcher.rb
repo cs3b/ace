@@ -21,11 +21,11 @@ module CodingAgentTools
     CACHE_EXPIRATION = 24 * 60 * 60
 
     # Pricing data structure keys that LiteLLM uses
-    PRICING_FIELDS = %w[
-      input_cost_per_token
-      output_cost_per_token
-      cache_creation_input_token_cost
-      cache_read_input_token_cost
+    PRICING_FIELDS = [
+      "input_cost_per_token",
+      "output_cost_per_token",
+      "cache_creation_input_token_cost",
+      "cache_read_input_token_cost"
     ].freeze
 
     class PricingError < StandardError; end
@@ -210,7 +210,7 @@ module CodingAgentTools
       variations = []
 
       # Try common provider prefixes
-      providers = %w[anthropic openai google mistralai meta-llama together_ai]
+      providers = ["anthropic", "openai", "google", "mistralai", "meta-llama", "together_ai"]
 
       providers.each do |provider|
         variations << "#{provider}/#{model_id}"

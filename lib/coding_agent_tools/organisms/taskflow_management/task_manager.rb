@@ -76,7 +76,7 @@ module CodingAgentTools
           else
             NextTaskResult.new(nil, true, 'No actionable tasks found')
           end
-        rescue StandardError => e
+        rescue => e
           NextTaskResult.new(nil, false, "Error finding next task: #{e.message}")
         end
 
@@ -85,7 +85,7 @@ module CodingAgentTools
         # @param statuses [Array<String>] Statuses to filter by (default: ['done', 'in-progress'])
         # @param release_path [String, nil] Optional specific release path
         # @return [RecentTasksResult] Result with recent tasks
-        def find_recent_tasks(since_seconds: 86_400, statuses: %w[done in-progress], release_path: nil)
+        def find_recent_tasks(since_seconds: 86_400, statuses: ['done', 'in-progress'], release_path: nil)
           since_time = since_seconds ? Time.now - since_seconds : nil
           all_tasks = []
 
@@ -144,7 +144,7 @@ module CodingAgentTools
           all_tasks.sort_by! { |task| -task.mtime.to_i }
 
           RecentTasksResult.new(all_tasks, true, nil)
-        rescue StandardError => e
+        rescue => e
           RecentTasksResult.new([], false, "Error finding recent tasks: #{e.message}")
         end
 
@@ -171,7 +171,7 @@ module CodingAgentTools
             sorted_result[:sorted_count],
             sorted_result[:total_count]
           )
-        rescue StandardError => e
+        rescue => e
           ListTasksResult.new([], false, "Error getting all tasks: #{e.message}", false, 0, 0)
         end
 
@@ -205,10 +205,10 @@ module CodingAgentTools
         # Load tasks from release using molecules
         def load_tasks_from_release(release_info)
           tasks_dir = if release_info.respond_to?(:tasks_directory)
-                        release_info.tasks_directory
-                      else
-                        File.join(release_info[:path] || release_info.path, 'tasks')
-                      end
+            release_info.tasks_directory
+          else
+            File.join(release_info[:path] || release_info.path, 'tasks')
+          end
 
           return { success: false, error: "Tasks directory not found: #{tasks_dir}" } unless File.exist?(tasks_dir)
 
@@ -239,10 +239,10 @@ module CodingAgentTools
           # Sort candidates by priority logic
           sorted_candidates = candidates.sort_by do |task|
             status_priority = case task.status&.downcase
-                              when 'in-progress' then 0
-                              when 'pending' then 1
+            when 'in-progress' then 0
+            when 'pending' then 1
                               else 2
-                              end
+            end
 
             task_sequential_num = parse_task_sequential_number(task.id)
             [status_priority, task_sequential_num, task.id.to_s]

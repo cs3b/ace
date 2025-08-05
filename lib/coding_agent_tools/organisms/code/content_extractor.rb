@@ -179,7 +179,7 @@ module CodingAgentTools
         # @return [Integer] line count
         def count_lines_in_file(file_path)
           File.readlines(file_path).count
-        rescue StandardError
+        rescue
           0
         end
 

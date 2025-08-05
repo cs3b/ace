@@ -105,7 +105,7 @@ module CodingAgentTools
           else
             DEFAULT_BLACKLIST
           end
-        rescue StandardError
+        rescue
           # If config loading fails, fall back to default
           DEFAULT_BLACKLIST
         end

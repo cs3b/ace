@@ -83,10 +83,10 @@ module CodingAgentTools
 
         # Extract critical items for action
         critical_items = if action_required
-                           @extractor.find_high_impact_files(analysis_result, limit: 5)
-                         else
-                           []
-                         end
+          @extractor.find_high_impact_files(analysis_result, limit: 5)
+        else
+          []
+        end
 
         # Generate create-path compatible structure
         {
@@ -134,11 +134,11 @@ module CodingAgentTools
 
         formats.each do |format|
           extension = case format
-                      when :text then '.txt'
-                      when :json then '.json'
-                      when :csv then '.csv'
+          when :text then '.txt'
+          when :json then '.json'
+          when :csv then '.csv'
                       else ".#{format}"
-                      end
+          end
 
           output_path = File.join(output_directory, "#{base_name}#{extension}")
           report_path = @analyzer.save_report(analysis_result, output_path, format, validated_options)

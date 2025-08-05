@@ -70,7 +70,7 @@ module CodingAgentTools
             end
 
             { success: true, error: nil }
-          rescue StandardError => e
+          rescue => e
             { success: false, error: "Failed to save context: #{e.message}" }
           end
         end
@@ -123,7 +123,7 @@ module CodingAgentTools
           LOG
 
           File.open(log_file, 'a') { |f| f.write(log_entry) }
-        rescue StandardError
+        rescue
           # Ignore logging errors
         end
 
