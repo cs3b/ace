@@ -770,12 +770,6 @@ Implementation → create-adr/create-api-docs/create-user-docs → update-bluepr
 - [Save Session Context](./save-session-context.wf.md): Log a compact summary of the current session for context saving/reloading.
 - [Create Reflection Note](./create-reflection-note.wf.md): Capture individual observations and learnings using the standard reflection template.
 
-### Meta Workflows
-
-Meta workflows guide the maintenance and evolution of the handbook itself:
-
-- [Update Claude Integration](../.meta/wfi/update-integration-claude.wf.md): Maintain Claude Code integration using unified handbook CLI commands.
-
 ---
 
 *This integration guide provides comprehensive orchestration guidance for AI agents navigating the complete development lifecycle. It should be updated as workflows evolve and new integration patterns emerge.*
