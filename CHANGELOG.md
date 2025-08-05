@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-08-05
+
+### Added
+
+#### Unified Claude Code Integration
+* **Claude Command Structure**: Created organized directory structure for commands under `.claude/commands/`
+  * Implemented hybrid system supporting both custom hand-crafted commands and auto-generated ones
+  * Created clear separation between static command management and dynamic generation
+  * Established versioning control for all Claude commands within dev-handbook
+
+* **Handbook CLI Integration**: Added comprehensive Claude subcommands to handbook CLI
+  * `handbook claude generate-commands` - Smart command generation from workflow instructions
+  * `handbook claude validate` - Coverage checking and validation framework
+  * `handbook claude integrate` - Simplified installation via copy/link operation
+  * `handbook claude list` - Status overview with table format display
+  * Deprecated legacy standalone Claude integration script
+
+* **Command Generation System**: Implemented intelligent command generation from workflows
+  * Auto-detection of workflow instructions requiring Claude commands
+  * Template-based command generation with YAML frontmatter
+  * Validation system ensuring complete coverage of workflow instructions
+  * Support for custom command metadata and tool specifications
+
+* **ATOM Architecture Implementation**: Complete refactoring to ATOM architectural patterns
+  * Refactored `claude_commands_installer` to ATOM architecture
+  * Refactored `handbook-claude-tools` to ATOM architecture
+  * Improved code organization and maintainability
+  * Enhanced test coverage and code quality
+
+### Changed
+
+* **Command Organization**: Unified all Claude-related commands under handbook CLI
+  * Moved from auto-generated commands only to hybrid approach
+  * Simplified command discovery through single interface
+  * Improved documentation and user experience
+  * Enhanced meta workflow for command validation
+
+* **Installation Process**: Streamlined Claude integration installation
+  * Simplified to copy/link operation from complex script execution
+  * Added proper YAML frontmatter preservation
+  * Improved command count display in integration output
+  * Enhanced error handling and validation
+
+### Fixed
+
+* **Command Integration Issues**: Resolved various integration and display problems
+  * Fixed invalid Claude tool specifications in command metadata
+  * Fixed command count display in handbook claude integrate
+  * Fixed YAML frontmatter preservation during integration
+  * Addressed code style violations with RuboCop compliance
+
+* **Test Coverage**: Systematic improvements to test suite
+  * Fixed handbook Claude CLI command tests
+  * Improved test coverage to 70%+
+  * Systematic test suite maintenance and cleanup
+  * Enhanced test reliability and consistency
+
+### Documentation
+
+* **Claude Integration Documentation**: Comprehensive documentation updates
+  * Updated install-prompts.md with new unified process
+  * Created comprehensive command reference documentation
+  * Enhanced template organization and standardization
+  * Updated meta workflow documentation
+
+* **Architecture Documentation**: Enhanced technical documentation
+  * Added ATOM architecture implementation guides
+  * Created migration guides and reports
+  * Updated development setup and usage instructions
+  * Improved troubleshooting and error handling guides
+
 ## [0.4.0] - 2025-08-04
 
 ### Added
