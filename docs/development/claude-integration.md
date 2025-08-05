@@ -135,8 +135,7 @@ end
 ### Template System
 
 Command generation uses ERB templates located in:
-- `dev-handbook/.integrations/claude/templates/workflow-command.md.tmpl`
-- `dev-handbook/.integrations/claude/templates/agent-command.md.tmpl`
+- `dev-handbook/.integrations/claude/templates/command.md.tmpl`
 
 To customize generation:
 
@@ -145,7 +144,7 @@ To customize generation:
 
 ```ruby
 def generate_command_content(workflow_path)
-  template = load_template('workflow-command.md.tmpl')
+  template = load_template('command.md.tmpl')
   
   # Add custom variables
   context = {
