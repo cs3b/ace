@@ -189,9 +189,9 @@ RSpec.describe CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine d
     end
   end
 
-  describe '.default_all_sort' do
+  describe '.default_list_sort' do
     it 'returns implementation-order' do
-      expect(described_class.default_all_sort).to eq('implementation-order')
+      expect(described_class.default_list_sort).to eq('implementation-order')
     end
   end
 

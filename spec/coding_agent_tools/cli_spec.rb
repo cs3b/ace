@@ -281,6 +281,8 @@ RSpec.describe CodingAgentTools::Cli::Commands do
   end
 
   describe '.call' do
+    let(:cli_instance) { Dry::CLI.new(described_class) }
+    
     before do
       # Reset all registration flags
       %i[@llm_commands_registered @task_commands_registered @release_commands_registered
@@ -292,7 +294,7 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       end
     end
 
-    it 'registers all command groups when call is invoked' do
+    it 'registers all command groups when CLI is invoked' do
       # Track which methods are called
       calls = []
       
@@ -311,10 +313,9 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       allow(described_class).to receive(:register_coverage_commands) { calls << :coverage }
       allow(described_class).to receive(:register_all_commands) { calls << :all }
 
-      # Allow the CLI processing to proceed (we're testing registration, not CLI behavior)
-      allow(described_class.singleton_class.superclass.instance_method(:call)).to receive(:bind_call)
-
-      described_class.call
+      # Call with a valid command to trigger registration (Dry::CLI#call takes no args, uses ARGV)
+      allow(ARGV).to receive(:dup).and_return(['version'])
+      cli_instance.call
 
       # Verify all registrations were called
       expect(calls).to eq([:llm, :task, :release, :dotfiles, :code, :code_lint, 
@@ -322,29 +323,41 @@ RSpec.describe CodingAgentTools::Cli::Commands do
                           :git, :create_path, :coverage, :all])
     end
 
-    it 'only calls registration methods, then delegates to parent' do
-      # This tests that the overridden call method follows the expected pattern:
-      # 1. Register all commands
-      # 2. Call super (the parent implementation)
+    it 'registers commands only once on multiple calls' do
+      # Count registration calls
+      registration_count = 0
+      allow(described_class).to receive(:register_llm_commands) { registration_count += 1 }
       
-      # Count how many times each registration is called
-      registration_counts = Hash.new(0)
+      # Stub other registrations
+      %i[register_task_commands register_release_commands
+         register_dotfiles_commands register_code_commands register_code_lint_commands
+         register_code_review_prepare_commands register_nav_commands register_handbook_commands
+         register_reflection_commands register_git_commands register_create_path_commands
+         register_coverage_commands register_all_commands].each do |method|
+        allow(described_class).to receive(method)
+      end
+
+      # Call multiple times
+      allow(ARGV).to receive(:dup).and_return(['version'])
+      3.times { cli_instance.call }
       
+      # Should only register once
+      expect(registration_count).to eq(1)
+    end
+
+    it 'handles command execution after registration' do
+      # Stub all registrations
       %i[register_llm_commands register_task_commands register_release_commands
          register_dotfiles_commands register_code_commands register_code_lint_commands
          register_code_review_prepare_commands register_nav_commands register_handbook_commands
          register_reflection_commands register_git_commands register_create_path_commands
          register_coverage_commands register_all_commands].each do |method|
-        allow(described_class).to receive(method) { registration_counts[method] += 1 }
+        allow(described_class).to receive(method)
       end
 
-      # We can't easily test super, but we can ensure our registrations happen
-      expect { described_class.call }.not_to raise_error
-      
-      # Each registration should be called exactly once
-      registration_counts.each do |method, count|
-        expect(count).to eq(1), "#{method} was called #{count} times, expected 1"
-      end
+      # Test with version command
+      allow(ARGV).to receive(:dup).and_return(['version'])
+      expect { cli_instance.call }.to output(/\d+\.\d+\.\d+/).to_stdout
     end
   end
 
