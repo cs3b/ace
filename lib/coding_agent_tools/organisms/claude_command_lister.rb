@@ -4,6 +4,7 @@ require 'json'
 require 'pathname'
 require 'time'
 require_relative '../atoms/project_root_detector'
+require_relative '../atoms/table_renderer'
 
 module CodingAgentTools
   module Organisms
@@ -38,17 +39,45 @@ module CodingAgentTools
         custom_commands = scan_custom_commands
         generated_commands = scan_generated_commands
         
-        # Also scan .claude/commands/ for installed commands
-        installed_commands = scan_installed_commands
+        # Get list of installed command names
+        installed_names = scan_installed_command_names
+        
+        # Build unified command list with installation status
+        all_commands = []
+        
+        # Add custom commands
+        custom_commands.each do |cmd|
+          all_commands << cmd.merge(
+            installed: installed_names.include?(cmd[:name]),
+            valid: true  # Custom commands in dev-handbook are always valid
+          )
+        end
+        
+        # Add generated commands
+        generated_commands.each do |cmd|
+          all_commands << cmd.merge(
+            installed: installed_names.include?(cmd[:name]),
+            valid: true  # Generated commands in dev-handbook are always valid
+          )
+        end
         
         # Find workflows without corresponding commands
-        missing_commands = find_missing_workflows(installed_commands)
+        missing_commands = find_missing_workflows(custom_commands + generated_commands)
+        
+        # Add missing commands
+        missing_commands.each do |name|
+          all_commands << {
+            name: name,
+            type: 'missing',
+            installed: false,
+            valid: false
+          }
+        end
         
         {
-          custom: custom_commands,
-          generated: generated_commands,
-          missing: missing_commands,
-          installed: installed_commands
+          commands: all_commands.sort_by { |cmd| cmd[:name] },
+          installed_count: all_commands.count { |cmd| cmd[:installed] },
+          missing_count: all_commands.count { |cmd| !cmd[:valid] }
         }
       end
 
@@ -70,16 +99,37 @@ module CodingAgentTools
         end.sort_by { |cmd| cmd[:name] }
       end
 
-      def scan_installed_commands
+      def scan_installed_command_names
         dir = project_root / '.claude' / 'commands'
         return [] unless dir.exist?
         
-        Dir.glob(File.join(dir, '*.md')).reject { |f| File.basename(f) == 'README.md' }.map do |path|
-          build_command_info(path, 'installed')
-        end.sort_by { |cmd| cmd[:name] }
+        # Check both subdirectories and root directory
+        custom_dir = dir / '_custom'
+        generated_dir = dir / '_generated'
+        
+        names = []
+        
+        # Scan custom commands
+        if custom_dir.exist?
+          names += Dir.glob(File.join(custom_dir, '*.md'))
+                      .map { |path| File.basename(path, '.md') }
+        end
+        
+        # Scan generated commands
+        if generated_dir.exist?
+          names += Dir.glob(File.join(generated_dir, '*.md'))
+                      .map { |path| File.basename(path, '.md') }
+        end
+        
+        # Also check root directory for flat structure
+        names += Dir.glob(File.join(dir, '*.md'))
+                    .reject { |f| File.basename(f) == 'README.md' }
+                    .map { |path| File.basename(path, '.md') }
+        
+        names.uniq
       end
 
-      def find_missing_workflows(installed_commands)
+      def find_missing_workflows(known_commands)
         workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
         return [] unless workflows_dir.exist?
         
@@ -88,11 +138,11 @@ module CodingAgentTools
           File.basename(path, '.wf.md')
         end
         
-        # Get installed command names
-        installed_names = installed_commands.map { |cmd| cmd[:name] }
+        # Get known command names (custom + generated)
+        known_names = known_commands.map { |cmd| cmd[:name] }
         
         # Find workflows without commands
-        missing = workflow_names - installed_names
+        missing = workflow_names - known_names
         missing.sort
       end
 
@@ -111,47 +161,45 @@ module CodingAgentTools
       end
 
       def filter_inventory(inventory, type)
-        case type
+        filtered_commands = case type
         when 'custom'
-          { custom: inventory[:custom] }
+          inventory[:commands].select { |cmd| cmd[:type] == 'custom' }
         when 'generated'
-          { generated: inventory[:generated] }
+          inventory[:commands].select { |cmd| cmd[:type] == 'generated' }
         when 'missing'
-          { missing: inventory[:missing] }
+          inventory[:commands].select { |cmd| cmd[:type] == 'missing' }
         else
-          inventory
+          inventory[:commands]
         end
+        
+        {
+          commands: filtered_commands,
+          installed_count: filtered_commands.count { |cmd| cmd[:installed] },
+          missing_count: filtered_commands.count { |cmd| !cmd[:valid] }
+        }
       end
 
       def output_json(inventory, _options)
-        output = {}
-        
-        # Add custom commands with metadata
-        if inventory[:custom]
-          output['custom'] = inventory[:custom].map do |cmd|
+        output = {
+          'commands' => inventory[:commands].map do |cmd|
             {
               'name' => cmd[:name],
-              'path' => cmd[:path],
-              'modified' => cmd[:modified_iso],
-              'size' => cmd[:size]
-            }
-          end
-        end
-        
-        # Add generated commands with metadata
-        if inventory[:generated]
-          output['generated'] = inventory[:generated].map do |cmd|
-            {
-              'name' => cmd[:name],
-              'path' => cmd[:path],
-              'modified' => cmd[:modified_iso],
-              'size' => cmd[:size]
-            }
-          end
-        end
-        
-        # Add missing commands (just names)
-        output['missing'] = inventory[:missing] if inventory[:missing]
+              'installed' => cmd[:installed],
+              'type' => cmd[:type],
+              'valid' => cmd[:valid]
+            }.tap do |h|
+              # Add optional fields if present
+              h['path'] = cmd[:path] if cmd[:path]
+              h['modified'] = cmd[:modified_iso] if cmd[:modified_iso]
+              h['size'] = cmd[:size] if cmd[:size]
+            end
+          end,
+          'summary' => {
+            'installed' => inventory[:installed_count],
+            'missing' => inventory[:missing_count],
+            'total' => inventory[:commands].length
+          }
+        }
         
         puts JSON.pretty_generate(output)
       end
@@ -160,63 +208,102 @@ module CodingAgentTools
         puts "Claude Commands Overview"
         puts "========================"
         puts
-
-        # Count totals
-        custom_count = inventory[:custom]&.length || 0
-        generated_count = inventory[:generated]&.length || 0
-        missing_count = inventory[:missing]&.length || 0
-        total_available = custom_count + generated_count
-
+        
+        if options[:verbose]
+          # Use old verbose format
+          output_verbose(inventory, options)
+        else
+          # Use new table format
+          output_table(inventory, options)
+        end
+      end
+      
+      def output_table(inventory, options)
+        # Define columns
+        columns = [
+          { name: 'Installed', width: 10, align: :center },
+          { name: 'Type', width: 10, align: :left },
+          { name: 'Valid', width: 8, align: :center },
+          { name: 'Command Name', align: :left }
+        ]
+        
+        # Create table renderer
+        table = Atoms::TableRenderer.new(columns)
+        
+        # Add rows
+        inventory[:commands].each do |cmd|
+          installed_mark = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
+          valid_mark = cmd[:valid] ? colorize('✓', :green) : colorize('✗', :red)
+          
+          table.add_row([
+            installed_mark,
+            cmd[:type],
+            valid_mark,
+            cmd[:name]
+          ])
+        end
+        
+        # Render table
+        puts table.render
+        puts
+        
+        # Display summary
+        total = inventory[:commands].length
+        installed = inventory[:installed_count]
+        missing = inventory[:missing_count]
+        
+        puts "Summary: #{installed} commands installed, #{missing} missing (#{total} total)"
+      end
+      
+      def output_verbose(inventory, options)
+        # Group commands by type for verbose output
+        by_type = inventory[:commands].group_by { |cmd| cmd[:type] }
+        
         # Display custom commands
-        if inventory[:custom] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'custom')
-          if options[:verbose]
-            puts "Custom Commands (#{custom_count}):"
-            inventory[:custom].each do |cmd|
-              puts "  #{colorize('✓', :green)} #{cmd[:name]}"
+        if by_type['custom'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'custom')
+          puts "Custom Commands (#{by_type['custom'].length}):"
+          by_type['custom'].each do |cmd|
+            status = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
+            puts "  #{status} #{cmd[:name]}"
+            if cmd[:path]
               puts "    Path: #{cmd[:path]}"
               puts "    Modified: #{cmd[:modified].strftime('%Y-%m-%d %H:%M:%S')}"
               puts "    Size: #{format_size(cmd[:size])}"
-            end
-          else
-            puts "Custom Commands (#{custom_count}):"
-            inventory[:custom].each do |cmd|
-              puts "  #{colorize('✓', :green)} #{cmd[:name]}"
             end
           end
           puts
         end
 
         # Display generated commands
-        if inventory[:generated] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'generated')
-          if options[:verbose]
-            puts "Generated Commands (#{generated_count}):"
-            inventory[:generated].each do |cmd|
-              puts "  #{colorize('✓', :green)} #{cmd[:name]}"
+        if by_type['generated'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'generated')
+          puts "Generated Commands (#{by_type['generated'].length}):"
+          by_type['generated'].each do |cmd|
+            status = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
+            puts "  #{status} #{cmd[:name]}"
+            if cmd[:path]
               puts "    Path: #{cmd[:path]}"
               puts "    Modified: #{cmd[:modified].strftime('%Y-%m-%d %H:%M:%S')}"
               puts "    Size: #{format_size(cmd[:size])}"
-            end
-          else
-            puts "Generated Commands (#{generated_count}):"
-            inventory[:generated].each do |cmd|
-              puts "  #{colorize('✓', :green)} #{cmd[:name]}"
             end
           end
           puts
         end
 
         # Display missing commands
-        if inventory[:missing]&.any? && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'missing')
-          puts "Missing Commands (#{missing_count}):"
-          inventory[:missing].each do |name|
-            puts "  #{colorize('✗', :red)} #{name}"
+        if by_type['missing'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'missing')
+          puts "Missing Commands (#{by_type['missing'].length}):"
+          by_type['missing'].each do |cmd|
+            puts "  #{colorize('✗', :red)} #{cmd[:name]}"
           end
           puts
         end
 
         # Display summary
         if options[:type].nil? || options[:type] == 'all'
-          puts "Summary: #{total_available} commands available, #{missing_count} missing"
+          total = inventory[:commands].length
+          installed = inventory[:installed_count]
+          missing = inventory[:missing_count]
+          puts "Summary: #{installed} commands installed, #{missing} missing (#{total} total)"
         end
       end
 
