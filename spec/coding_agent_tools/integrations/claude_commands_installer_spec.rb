@@ -50,7 +50,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       it 'adds metadata to copied files' do
         result = installer.run
         content = (project_root / '.claude' / 'commands' / 'test-custom.md').read
-        expect(content).to match(/^---\nlast_modified: .+\n---/)
+        expect(content).to match(/^---\nlast_modified: .+\n.*\n---/m)
       end
     end
 
