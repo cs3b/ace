@@ -23,7 +23,7 @@ RSpec.describe "handbook claude commands" do
       
       expect(status.exitstatus).to eq(1)
       expect(output).to include("generate-commands")
-      expect(output).to include("update-registry")
+      # update-registry command has been removed
       expect(output).to include("integrate")
       expect(output).to include("validate")
       expect(output).to include("list")
@@ -50,23 +50,20 @@ RSpec.describe "handbook claude commands" do
     end
   end
 
-  describe "handbook claude update-registry" do
-    it "displays not implemented message" do
-      output, status = Open3.capture2e("bundle", "exec", exe_path, "claude", "update-registry")
-      
-      expect(status).to be_success
-      expect(output).to include("update-registry: Not yet implemented")
-      expect(output).to include("commands.json")
-    end
-  end
+  # update-registry command has been removed
+  # describe "handbook claude update-registry" do
+  #   ...
+  # end
 
   describe "handbook claude validate" do
-    it "displays not implemented message" do
+    it "runs validation and displays coverage information" do
       output, status = Open3.capture2e("bundle", "exec", exe_path, "claude", "validate")
       
-      expect(status).to be_success
-      expect(output).to include("validate: Not yet implemented")
-      expect(output).to include("consistency and coverage")
+      # Validate command may return non-zero exit code if there are issues
+      # This is expected behavior
+      expect(output).to include("Validating Claude command coverage")
+      expect(output).to match(/Workflows found: \d+/)
+      expect(output).to match(/Commands found: \d+/)
     end
   end
 

@@ -18,7 +18,7 @@ RSpec.describe "handbook claude namespace" do
       expect(result.exit_code).to eq(1)
       expect(result.stdout).to include("handbook claude [SUBCOMMAND]")
       expect(result.stdout).to include("generate-commands")
-      expect(result.stdout).to include("update-registry")
+      # update-registry command has been removed
       expect(result.stdout).to include("integrate")
       expect(result.stdout).to include("validate")
       expect(result.stdout).to include("list")
@@ -28,7 +28,7 @@ RSpec.describe "handbook claude namespace" do
       result = execute_cli_command("handbook", ["claude"])
       
       expect(result.stdout).to include("Generate Claude commands from workflow")
-      expect(result.stdout).to include("Update Claude commands registry")
+      # Update Claude commands registry line has been removed
       expect(result.stdout).to include("Install Claude Code commands")
       expect(result.stdout).to include("Validate Claude integration")
       expect(result.stdout).to include("List available Claude commands")
@@ -72,7 +72,7 @@ RSpec.describe "handbook claude namespace" do
   end
 
   describe "subcommand help" do
-    %w[generate-commands update-registry integrate validate list].each do |subcommand|
+    %w[generate-commands integrate validate list].each do |subcommand|
       context "handbook claude #{subcommand}" do
         include_examples "claude command", subcommand
       end

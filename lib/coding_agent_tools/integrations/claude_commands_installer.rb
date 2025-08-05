@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'json'
 require 'fileutils'
 require 'pathname'
 require 'yaml'
@@ -55,9 +54,6 @@ module CodingAgentTools
         # Scan workflows and create generated commands (existing functionality)
         workflow_files = scan_workflows
         create_commands_from_workflows(workflow_files)
-
-        # Update commands.json
-        update_commands_json
 
         # Print summary
         print_enhanced_summary
@@ -335,56 +331,6 @@ module CodingAgentTools
         end
       end
 
-      def update_commands_json
-        json_file = project_root / '.claude' / 'commands' / 'commands.json'
-        
-        # Create backup if file exists
-        if json_file.exist? && !options[:dry_run]
-          backup_file = project_root / '.claude' / 'commands' / 'commands.json.backup'
-          FileUtils.cp(json_file, backup_file)
-          puts "Created backup: commands.json.backup" if options[:verbose]
-        end
-
-        # Load existing JSON or create new
-        commands = json_file.exist? ? JSON.parse(json_file.read) : {}
-        
-        # Get all command files
-        command_files = (project_root / '.claude' / 'commands').glob('*.md')
-        new_commands = 0
-        
-        command_files.each do |file|
-          next if file.basename.to_s == 'README.md'
-          
-          command_name = "/#{file.basename.to_s.sub('.md', '')}"
-          unless commands.key?(command_name)
-            commands[command_name] = {}
-            new_commands += 1
-          end
-        end
-        
-        # Sort commands alphabetically
-        sorted_commands = commands.sort.to_h
-        
-        # Write updated JSON
-        if options[:dry_run]
-          if new_commands > 0
-            puts "✓ Would update: commands.json (#{new_commands} new entries)"
-            stats[:updated] += 1
-          else
-            puts "✓ commands.json is up to date"
-          end
-        else
-          json_file.write(JSON.pretty_generate(sorted_commands) + "\n")
-          
-          if new_commands > 0
-            puts "✓ Updated: commands.json (#{new_commands} new entries added)"
-            stats[:updated] += 1
-          else
-            puts "✓ commands.json is up to date"
-          end
-        end
-        puts
-      end
 
       def print_enhanced_summary
         puts "="*50
