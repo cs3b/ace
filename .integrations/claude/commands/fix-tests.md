@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Fix Tests
 allowed-tools: Read, Write, Edit, Bash(bundle exec *), Grep
 model: sonnet

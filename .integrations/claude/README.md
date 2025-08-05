@@ -156,11 +156,11 @@ handbook claude integrate --skip-validation
 
 ## Command Organization
 
-Commands are organized in two directories within `.integrations/claude/commands/`:
+Commands are organized in a flat structure within `.integrations/claude/commands/` with metadata indicating their origin:
 
-### _custom/
+### Custom Commands
 
-Hand-crafted commands with special behavior that cannot be auto-generated:
+Hand-crafted commands with special behavior that cannot be auto-generated (marked with `origin: custom`):
 
 - **commit.md**: Intelligent git commit with conventional commit support
 - **draft-tasks.md**: Multi-task creation from specifications
@@ -169,9 +169,9 @@ Hand-crafted commands with special behavior that cannot be auto-generated:
 - **review-tasks.md**: Task review and validation
 - **work-on-tasks.md**: Execute multiple tasks in sequence
 
-### _generated/
+### Generated Commands
 
-Auto-generated commands from workflow instructions:
+Auto-generated commands from workflow instructions (marked with `origin: generated`):
 
 - Standard workflow references with consistent format
 - Automatically updated when workflows change
@@ -233,10 +233,9 @@ The integration uses `.integrations/claude/registry.json` to track commands and 
 
 ### Creating Custom Commands
 
-1. Create a new markdown file in `_custom/`
-2. Follow the command template structure
-3. Run `handbook claude update-registry` to register
-4. Run `handbook claude integrate` to install
+1. Create a new markdown file in `commands/` directory
+2. Follow the command template structure with `origin: custom` metadata
+3. Run `handbook claude integrate` to install
 
 ### Extending the Integration
 

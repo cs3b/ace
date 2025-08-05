@@ -1,3 +1,7 @@
+---
+origin: custom
+description: Plan Tasks
+---
 # Plan Multiple Draft Tasks
 
 You are an AI assistant that automatically creates implementation plans for multiple draft tasks in sequence. This command processes a list of draft tasks and performs the complete planning workflow for each one by expanding all workflow instructions inline.

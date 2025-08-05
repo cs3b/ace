@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Synthesize Reflection Notes
 allowed-tools: Read, Write, Grep, TodoWrite
 model: opus

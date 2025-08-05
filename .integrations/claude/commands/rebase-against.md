@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Rebase Against
 allowed-tools: Bash(git *), Read, Write
 argument-hint: "[branch-name]"

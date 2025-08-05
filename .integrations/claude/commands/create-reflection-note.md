@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Create Reflection Note
 allowed-tools: Read, Write, Grep, Glob
 ---

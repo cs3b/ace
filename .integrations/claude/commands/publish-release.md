@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Publish Release
 allowed-tools: Read, Write, Edit, Grep
 argument-hint: "[version]"

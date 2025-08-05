@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Initialize Project Structure
 allowed-tools: Read, Write, Edit, Grep
 ---

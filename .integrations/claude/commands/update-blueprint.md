@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Update Blueprint
 allowed-tools: Read, Write, Edit, Grep
 ---

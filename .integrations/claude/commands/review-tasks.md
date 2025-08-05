@@ -1,3 +1,7 @@
+---
+origin: custom
+description: Review Tasks
+---
 # Review Multiple Tasks
 
 You are an AI assistant that automatically reviews multiple tasks in sequence. This command processes a list of tasks and performs the complete review task workflow for each one.

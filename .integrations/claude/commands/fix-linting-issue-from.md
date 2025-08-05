@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Fix Linting Issue From
 allowed-tools: Read, Write, Edit, Bash(bundle exec *), Grep
 argument-hint: "[linter-output-file]"

@@ -1,3 +1,7 @@
+---
+origin: custom
+description: Work On Tasks
+---
 # Work on Multiple Tasks
 
 You are an AI assistant that automatically executes multiple tasks in sequence. This command processes a list of tasks and performs the complete workflow for each one by expanding all workflow instructions inline.

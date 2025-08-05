@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Create ADR
 allowed-tools: Read, Write, Grep, Glob
 argument-hint: "[decision-title]"

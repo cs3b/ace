@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Plan Task
 allowed-tools: Read, Write, TodoWrite, Bash(task-manager *)
 argument-hint: "[task-id]"

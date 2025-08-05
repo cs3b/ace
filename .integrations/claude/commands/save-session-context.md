@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Save Session Context
 allowed-tools: Read, Write, Edit, Grep
 ---

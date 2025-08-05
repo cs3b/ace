@@ -6,15 +6,21 @@ This document explains how Claude commands are organized and managed within the 
 
 ```
 .integrations/claude/commands/
-├── _custom/          # Hand-crafted commands
-└── _generated/       # Auto-generated from workflows
+├── capture-idea.md
+├── commit.md
+├── create-adr.md
+├── draft-task.md
+├── ... (all command files in flat structure)
+└── README.md
 ```
+
+Commands are now organized in a flat structure for simplified discovery and management. Each command file includes metadata indicating its origin (custom, generated, or workflow).
 
 ## Command Categories
 
-### _custom/ - Custom Commands
+### Custom Commands
 
-These are hand-crafted commands that provide specialized functionality beyond simple workflow execution. They cannot be auto-generated due to their complex behavior or special requirements.
+These are hand-crafted commands that provide specialized functionality beyond simple workflow execution. They cannot be auto-generated due to their complex behavior or special requirements. Custom commands have `origin: custom` in their metadata.
 
 #### Current Custom Commands
 
@@ -54,9 +60,9 @@ These are hand-crafted commands that provide specialized functionality beyond si
 - Manages task dependencies
 - Provides progress tracking
 
-### _generated/ - Generated Commands
+### Generated Commands
 
-These commands are automatically generated from workflow instructions. They follow a consistent format and should not be manually edited.
+These commands are automatically generated from workflow instructions. They follow a consistent format and should not be manually edited. Generated commands have `origin: generated` in their metadata.
 
 #### Generation Process
 
@@ -83,15 +89,16 @@ Commands are generated for all workflow instructions, including:
 
 ### Metadata Structure
 
-All commands (custom and generated) follow this metadata format:
+All commands follow this metadata format:
 
 ```yaml
-command: command-name
+---
+origin: custom|generated|workflow
 description: Brief description of what the command does
-version: 1.0.0
-workflow: optional-workflow-reference
-agent: optional-agent-reference
-parameters: optional-parameters-list
+allowed-tools: List of allowed tools (for generated commands)
+argument-hint: "[optional-argument-description]"
+model: optional-model-preference
+---
 ```
 
 ### Custom Command Structure
@@ -120,10 +127,10 @@ Generated commands follow a standard template:
 
 **Custom Commands:**
 1. Identify need for specialized behavior
-2. Create markdown file in `_custom/`
-3. Write command following the format
+2. Create markdown file in `commands/` directory
+3. Write command following the format with `origin: custom`
 4. Test command in Claude
-5. Update registry with `handbook claude update-registry`
+5. Run `handbook claude integrate` to install
 
 **Generated Commands:**
 1. Create or update workflow instruction
@@ -134,10 +141,10 @@ Generated commands follow a standard template:
 ### Maintenance
 
 **Custom Commands:**
-- Edit directly in `_custom/`
+- Edit directly in `commands/` directory
 - Version control changes
 - Test modifications
-- Update registry if metadata changes
+- Run `handbook claude integrate` to update installation
 
 **Generated Commands:**
 - Never edit directly
@@ -185,24 +192,23 @@ Generated commands follow a standard template:
 
 ## Registry Management
 
-The `registry.json` file tracks all commands and agents:
+Commands are tracked through their metadata. Each command file includes an `origin` field indicating whether it's custom, generated, or from a workflow:
 
-```json
-{
-  "version": "1.0.0",
-  "commands": {
-    "commit": {
-      "path": "commands/_custom/commit.md",
-      "type": "custom",
-      "description": "Create git commits"
-    },
-    "work-on-task": {
-      "path": "commands/_generated/work-on-task.md",
-      "type": "generated",
-      "workflow": "workflow-instructions/work-on-task.wf.md"
-    }
-  }
-}
+```yaml
+---
+origin: custom
+description: Create git commits
+---
+```
+
+or
+
+```yaml
+---
+origin: generated
+description: Work On Task
+allowed-tools: Read, Write, Edit, Grep
+---
 ```
 
 ### Updating the Registry

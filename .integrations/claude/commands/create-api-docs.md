@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Create API Docs
 allowed-tools: Read, Write, Grep, Glob
 ---

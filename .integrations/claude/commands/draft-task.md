@@ -1,4 +1,5 @@
 ---
+origin: generated
 description: Draft Task
 allowed-tools: Read, Write, TodoWrite, Bash(task-manager *)
 ---
