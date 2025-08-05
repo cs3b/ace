@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.011
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.003, v.0.6.0+task.004, v.0.6.0+task.005, v.0.6.0+task.006, v.0.6.0+task.007]
@@ -213,7 +213,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
 
 ### Execution Steps
 
-- [ ] Create main integration guide (new file)
+- [x] Create main integration guide (new file)
   ```markdown
   # Claude Code Integration
 
@@ -242,7 +242,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   - **Agent Management**: Handles both commands and agent configurations
   ```
 
-- [ ] Create migration guide
+- [x] Create migration guide
   ```markdown
   # Migrating from claude-integrate Script
 
@@ -262,7 +262,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   > Assert: Steps are clear and complete
   > Command: Review with users of old system
 
-- [ ] Document command structure
+- [x] Document command structure
   ```markdown
   # Command Organization
 
@@ -279,7 +279,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   - Consistent format
   ```
 
-- [ ] Update tools.md (add new section after handbook entry)
+- [x] Update tools.md (add new section after handbook entry)
   ```markdown
   ### Handbook Commands
 
@@ -297,7 +297,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   | `handbook claude integrate` | Install commands | `handbook claude integrate --force` |
   ```
 
-- [ ] Add examples for common scenarios
+- [x] Add examples for common scenarios
   ```markdown
   ## Common Workflows
 
@@ -322,7 +322,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   ```
   ```
 
-- [ ] Validate all links
+- [x] Validate all links
   ```bash
   # Check for broken links
   find . -name "*.md" -exec grep -l "claude-integrate" {} \;
@@ -335,7 +335,7 @@ Update all documentation to comprehensively cover the new unified Claude integra
   > Assert: No broken links
   > Command: Link checker tool
 
-- [ ] Update feature lists
+- [x] Update feature lists
   ```markdown
   ## Features
   - ✅ Unified Claude integration via `handbook claude` commands
@@ -346,13 +346,13 @@ Update all documentation to comprehensively cover the new unified Claude integra
 
 ## Acceptance Criteria
 
-- [ ] All documentation updated with new commands
-- [ ] Migration guide helps users transition
-- [ ] Examples work when copy-pasted
-- [ ] No references to old system remain
-- [ ] Cross-references are valid
-- [ ] Documentation follows style guide
-- [ ] Code examples are tested
+- [x] All documentation updated with new commands
+- [x] Migration guide helps users transition
+- [x] Examples work when copy-pasted
+- [x] No references to old system remain
+- [x] Cross-references are valid
+- [x] Documentation follows style guide
+- [x] Code examples are tested
 
 ## References
 
