@@ -20,10 +20,10 @@ module CodingAgentTools
       def initialize(project_root = nil, options = {})
         @project_root_param = project_root
         @options_param = options
-        
+
         # Build the orchestrator with all dependencies
         @orchestrator = build_orchestrator
-        
+
         # Initialize backward-compatible attributes
         initialize_legacy_attributes(project_root, options)
       end
@@ -31,10 +31,10 @@ module CodingAgentTools
       def run
         # Delegate to orchestrator
         result = @orchestrator.run(@project_root_param, @options_param)
-        
+
         # Update legacy attributes from result
         update_legacy_attributes(result)
-        
+
         # Convert to legacy Result format
         convert_to_legacy_result(result)
       end
@@ -102,36 +102,7 @@ module CodingAgentTools
       end
 
       # Legacy private methods kept for tests that might use them directly
-      def validate_source!
-        # Now handled by orchestrator through SourceDirectoryValidator
-        # Keeping for backward compatibility
-        source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
-        
-        # Check for various structures
-        commands_exist = (source_base / 'commands').exist?
-        custom_exist = (source_base / 'commands' / '_custom').exist?
-        generated_exist = (source_base / 'commands' / '_generated').exist?
-        agents_exist = (source_base / 'agents').exist?
-        
-        # Check if flat structure has command files
-        has_flat_commands = false
-        if commands_exist
-          has_flat_commands = (source_base / 'commands').glob('*.md').reject { |f| f.basename.to_s == 'README.md' }.any?
-        end
-        
-        # Accept flat structure, subdirectory structure, or both
-        if !commands_exist && !custom_exist && !generated_exist
-          puts "Error: No command directories found at #{source_base}"
-          exit 1
-        elsif commands_exist && !has_flat_commands && !custom_exist && !generated_exist
-          puts "Error: Commands directory exists but contains no command files"
-          exit 1
-        end
-        
-        unless agents_exist
-          puts "Warning: No agents directory found at #{source_base / 'agents'}"
-        end
-      end
+      # NOTE: validate_source! is defined as a public method above for backward compatibility
 
       # All the legacy private methods below are kept for backward compatibility
       # They are no longer used by the main run method, which delegates to the orchestrator
@@ -141,10 +112,10 @@ module CodingAgentTools
         # Legacy method - now handled by BackupCreator molecule
         target = project_root / '.claude'
         return unless target.exist? && options[:backup]
-        
-        timestamp = Time.now.strftime("%Y%m%d-%H%M")
+
+        timestamp = Time.now.strftime('%Y%m%d-%H%M')
         backup_path = project_root / ".claude.backup.#{timestamp}"
-        
+
         if options[:dry_run]
           puts "Would create backup at: #{backup_path}" if options[:verbose]
         else
@@ -158,12 +129,12 @@ module CodingAgentTools
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
         agents_dir = source_base / 'agents'
         target_dir = project_root / '.claude' / 'agents'
-        
+
         return unless agents_dir.exist?
-        
+
         ensure_directory_exists(target_dir)
-        
-        puts "Copying agents..."
+
+        puts 'Copying agents...'
         agent_count = 0
         agents_dir.glob('*.md').each do |file|
           result = copy_file_with_metadata(file, target_dir / file.basename, 'agent')
@@ -182,12 +153,12 @@ module CodingAgentTools
         end
 
         content = source.read
-        
+
         # Add or update metadata
         content = inject_metadata(content, {
           'last_modified' => Time.now.strftime('%Y-%m-%d %H:%M:%S')
         })
-        
+
         if options[:dry_run]
           puts "  ✓ Would create: #{target.basename} (with metadata)"
         else
@@ -218,7 +189,7 @@ module CodingAgentTools
           return current if (current / '.claude' / 'commands').directory?
           current = current.parent
         end
-        
+
         # Fallback to current directory if .claude/commands doesn't exist
         Pathname.pwd
       end
@@ -227,7 +198,7 @@ module CodingAgentTools
         # Legacy method - now handled by orchestrator
         commands_dir = project_root / '.claude' / 'commands'
         agents_dir = project_root / '.claude' / 'agents'
-        
+
         ensure_directory_exists(commands_dir)
         ensure_directory_exists(agents_dir)
       end
@@ -239,14 +210,14 @@ module CodingAgentTools
         custom_dir = source_base / 'commands' / '_custom'
         generated_dir = source_base / 'commands' / '_generated'
         target_dir = project_root / '.claude' / 'commands'
-        
+
         # Check if we have a flat structure (new) or subdirectory structure (legacy)
         has_flat_structure = commands_dir.glob('*.md').reject { |f| f.basename.to_s == 'README.md' }.any?
         has_subdirs = custom_dir.exist? || generated_dir.exist?
-        
-        puts "Copying commands:"
+
+        puts 'Copying commands:'
         total_count = 0
-        
+
         if has_flat_structure
           # Copy from flat structure
           commands_dir.glob('*.md').each do |file|
@@ -259,7 +230,7 @@ module CodingAgentTools
           # Legacy: Copy from subdirectories
           custom_count = 0
           generated_count = 0
-          
+
           # Copy custom commands
           if custom_dir.exist?
             custom_dir.glob('*.md').each do |file|
@@ -269,7 +240,7 @@ module CodingAgentTools
             stats[:custom_commands] = custom_count
           end
 
-          # Copy generated commands  
+          # Copy generated commands
           if generated_dir.exist?
             generated_dir.glob('*.md').each do |file|
               result = copy_file_with_metadata(file, target_dir / file.basename, 'generated_command')
@@ -277,12 +248,12 @@ module CodingAgentTools
             end
             stats[:generated_commands] = generated_count
           end
-          
+
           total_count = custom_count + generated_count
           puts "  ✓ Copied #{custom_count} custom commands" if custom_count > 0
           puts "  ✓ Copied #{generated_count} generated commands" if generated_count > 0
         end
-        
+
         stats[:custom_commands] = total_count if has_flat_structure
         puts if total_count > 0
       end
@@ -320,12 +291,12 @@ module CodingAgentTools
 
       def create_commands_from_workflows(workflow_files)
         # Legacy method - now handled by WorkflowCommandGenerator organism
-        puts "Creating command files..."
-        
+        puts 'Creating command files...'
+
         workflow_files.each do |workflow_file|
           command_name = workflow_file.basename.to_s.sub('.wf.md', '')
           command_file = project_root / '.claude' / 'commands' / "#{command_name}.md"
-          
+
           if command_file.exist?
             puts "  ✗ Skipped: #{command_name}.md (already exists)"
             stats[:skipped] += 1
@@ -342,10 +313,10 @@ module CodingAgentTools
       def create_command_file(workflow_file, command_file)
         # Legacy method - now handled by CommandTemplateRenderer molecule
         workflow_name = workflow_file.basename.to_s.sub('.wf.md', '')
-        
+
         # Check for custom template
         custom_content = get_custom_template(workflow_name)
-        
+
         content = if custom_content
           custom_content
         else
@@ -356,7 +327,7 @@ module CodingAgentTools
             read and run @.claude/commands/commit.md
           CONTENT
         end
-        
+
         if options[:dry_run]
           puts "    Would write: #{command_file.relative_path_from(project_root)}" if options[:verbose]
         else
@@ -386,24 +357,24 @@ module CodingAgentTools
 
       def print_enhanced_summary
         # Legacy method - now handled by orchestrator
-        puts "="*50
-        puts "Installation complete:"
-        puts "  Location: #{project_root / '.claude'}/"
+        puts '='*50
+        puts 'Installation complete:'
+        puts "  Location: #{project_root / ".claude"}/"
         puts "  Commands: #{stats[:custom_commands] + stats[:generated_commands] + stats[:workflow_commands]}"
         puts "  Agents: #{stats[:agents]}"
-        
+
         unless options[:dry_run]
           puts
           puts "Run 'claude code' to use the new commands"
         end
-        
+
         if stats[:errors].any?
           puts
-          puts "Errors encountered:"
+          puts 'Errors encountered:'
           stats[:errors].each { |error| puts "  - #{error}" }
         end
-        
-        puts "="*50
+
+        puts '='*50
       end
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "dry/cli"
-require_relative "../../../../integrations/claude_commands_installer"
+require 'dry/cli'
+require_relative '../../../../integrations/claude_commands_installer'
 
 module CodingAgentTools
   module Cli
@@ -9,18 +9,18 @@ module CodingAgentTools
       module Handbook
         module Claude
           class Integrate < Dry::CLI::Command
-            desc "Install Claude Code commands to .claude/ directory"
-            
+            desc 'Install Claude Code commands to .claude/ directory'
+
             option :dry_run, type: :boolean, default: false,
-                            desc: 'Show what would be installed without modifying files'
+              desc: 'Show what would be installed without modifying files'
             option :verbose, type: :boolean, default: false,
-                            desc: 'Show detailed installation information'
+              desc: 'Show detailed installation information'
             option :backup, type: :boolean, default: false,
-                            desc: 'Backup existing installation'
+              desc: 'Backup existing installation'
             option :force, type: :boolean, default: false,
-                            desc: 'Overwrite existing files'
+              desc: 'Overwrite existing files'
             option :source, type: :string,
-                            desc: 'Custom source directory'
+              desc: 'Custom source directory'
 
             def call(**options)
               # Use refactored installer with CLI options

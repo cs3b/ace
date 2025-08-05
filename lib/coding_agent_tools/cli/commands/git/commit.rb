@@ -12,43 +12,43 @@ module CodingAgentTools
           desc 'Commit changes across repositories with LLM-generated messages'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :intention, type: :string, aliases: ['i'],
-                             desc: 'Intention context for commit message generation'
+            desc: 'Intention context for commit message generation'
 
           option :local, type: :boolean, default: false, aliases: ['l'],
-                         desc: 'Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503)'
+            desc: 'Use local LM Studio model (lmstudio:mistral-small-3.1-24b-instruct-2503)'
 
           option :no_edit, type: :boolean, default: false, aliases: ['n'],
-                           desc: 'Skip editor and commit directly with generated message'
+            desc: 'Skip editor and commit directly with generated message'
 
           option :message, type: :string, aliases: ['m'],
-                           desc: 'Use provided message instead of LLM generation'
+            desc: 'Use provided message instead of LLM generation'
 
           option :all, type: :boolean, default: false, aliases: ['a'],
-                       desc: 'Stage all changes before committing'
+            desc: 'Stage all changes before committing'
 
           option :model, type: :string,
-                         desc: "Specify LLM model (provider:model format, e.g., 'google:gemini-2.0-flash-lite', 'anthropic:claude-3.5-sonnet')"
+            desc: "Specify LLM model (provider:model format, e.g., 'google:gemini-2.0-flash-lite', 'anthropic:claude-3.5-sonnet')"
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute commits concurrently across repositories'
+            desc: 'Execute commits concurrently across repositories'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :repo_only, type: :boolean, default: false,
-                             desc: 'Process only the current repository instead of all repositories'
+            desc: 'Process only the current repository instead of all repositories'
 
           argument :files, type: :array, required: false,
-                           desc: 'Specific files to commit (optional)'
+            desc: 'Specific files to commit (optional)'
 
           example [
             '',
@@ -80,7 +80,7 @@ module CodingAgentTools
               display_commit_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

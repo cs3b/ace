@@ -29,7 +29,7 @@ module CodingAgentTools
               puts "Error: #{result[:error]}"
               false
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error generating code review session path: #{e.message}"
             false
           end

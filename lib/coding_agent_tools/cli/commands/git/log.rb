@@ -12,46 +12,46 @@ module CodingAgentTools
           desc 'Show commit logs across repositories with repository names per commit'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :oneline, type: :boolean, default: false,
-                           desc: 'Show commits in oneline format'
+            desc: 'Show commits in oneline format'
 
           option :graph, type: :boolean, default: false,
-                         desc: 'Show commit graph'
+            desc: 'Show commit graph'
 
           option :since, type: :string,
-                         desc: "Show commits since date (e.g., '2 weeks ago')"
+            desc: "Show commits since date (e.g., '2 weeks ago')"
 
           option :until, type: :string,
-                         desc: 'Show commits until date'
+            desc: 'Show commits until date'
 
           option :author, type: :string,
-                          desc: 'Show commits by specific author'
+            desc: 'Show commits by specific author'
 
           option :grep, type: :string,
-                        desc: 'Search commit messages'
+            desc: 'Search commit messages'
 
           option :max_count, type: :integer, aliases: ['n'],
-                             desc: 'Maximum number of commits to show'
+            desc: 'Maximum number of commits to show'
 
           option :separated, type: :boolean, default: false,
-                             desc: 'Show commits grouped by repository (default: show repository with each commit)'
+            desc: 'Show commits grouped by repository (default: show repository with each commit)'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :no_color, type: :boolean, default: false,
-                            desc: 'Disable colored output'
+            desc: 'Disable colored output'
 
           option :force_color, type: :boolean, default: true,
-                               desc: 'Force colored output even when not on TTY (default: true)'
+            desc: 'Force colored output even when not on TTY (default: true)'
 
           example [
             '',
@@ -82,7 +82,7 @@ module CodingAgentTools
               display_log_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

@@ -13,16 +13,16 @@ module CodingAgentTools
           desc 'List all releases across done/current/backlog with metadata'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
-          option :format, type: :string, default: 'text', values: %w[text json],
-                          desc: 'Output format (text or json)'
+          option :format, type: :string, default: 'text', values: ['text', 'json'],
+            desc: 'Output format (text or json)'
 
-          option :type, type: :string, values: %w[done current backlog],
-                        desc: 'Filter by release type (done, current, or backlog)'
+          option :type, type: :string, values: ['done', 'current', 'backlog'],
+            desc: 'Filter by release type (done, current, or backlog)'
 
           option :limit, type: :integer,
-                         desc: 'Maximum number of releases to show'
+            desc: 'Maximum number of releases to show'
 
           example [
             '',
@@ -57,7 +57,7 @@ module CodingAgentTools
             end
 
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

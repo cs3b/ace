@@ -13,14 +13,14 @@ module CodingAgentTools
         @success = success
         @exit_code = exit_code
         @stats = case stats
-                 when InstallationStats
+        when InstallationStats
                    stats
-                 when Hash
+        when Hash
                    # Support hash for backward compatibility
                    InstallationStats.new(**stats)
                  else
-                   raise ArgumentError, "stats must be InstallationStats or Hash"
-                 end
+                   raise ArgumentError, 'stats must be InstallationStats or Hash'
+        end
       end
 
       # Check if installation was successful

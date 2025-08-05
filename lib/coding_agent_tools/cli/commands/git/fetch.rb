@@ -12,28 +12,28 @@ module CodingAgentTools
           desc 'Fetch changes from remote repositories'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :all, type: :boolean, default: false,
-                       desc: 'Fetch all remotes'
+            desc: 'Fetch all remotes'
 
           option :prune, type: :boolean, default: false,
-                         desc: 'Remove remote-tracking references that no longer exist on remote'
+            desc: 'Remove remote-tracking references that no longer exist on remote'
 
           option :tags, type: :boolean, default: false,
-                        desc: 'Fetch tags'
+            desc: 'Fetch tags'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           argument :remote, type: :string, required: false,
-                            desc: 'Remote name to fetch from (optional)'
+            desc: 'Remote name to fetch from (optional)'
 
           example [
             '',
@@ -61,7 +61,7 @@ module CodingAgentTools
               display_fetch_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

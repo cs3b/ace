@@ -14,28 +14,28 @@ module CodingAgentTools
           desc 'Synthesize multiple code review reports into unified analysis'
 
           argument :reports, required: true, type: :array,
-                             desc: 'Review report files to synthesize (minimum 2 files)'
+            desc: 'Review report files to synthesize (minimum 2 files)'
 
           option :model, type: :string, default: 'google:gemini-2.5-pro',
-                         desc: 'LLM model to use (default: google:gemini-2.5-pro)'
+            desc: 'LLM model to use (default: google:gemini-2.5-pro)'
 
           option :output, type: :string,
-                          desc: 'Output file path (default: inferred from session or cr-report.md)'
+            desc: 'Output file path (default: inferred from session or cr-report.md)'
 
-          option :format, type: :string, values: %w[text json markdown], default: 'markdown',
-                          desc: 'Output format (default: markdown)'
+          option :format, type: :string, values: ['text', 'json', 'markdown'], default: 'markdown',
+            desc: 'Output format (default: markdown)'
 
           option :system_prompt, type: :string,
-                                 desc: 'Custom system prompt file path'
+            desc: 'Custom system prompt file path'
 
           option :force, type: :boolean, default: false,
-                         desc: 'Force overwrite existing files without confirmation'
+            desc: 'Force overwrite existing files without confirmation'
 
           option :dry_run, type: :boolean, default: false,
-                           desc: 'Show what would be done without executing synthesis'
+            desc: 'Show what would be done without executing synthesis'
 
           option :debug, type: :boolean, default: false,
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           example [
             'cr-report-claude-opus.md cr-report-gpt4.md',
@@ -70,11 +70,11 @@ module CodingAgentTools
 
             # Determine output file path
             output_path = if options[:output]
-                            options[:output]
-                          else
-                            session_inferrer = CodingAgentTools::Molecules::Code::SessionPathInferrer.new
+              options[:output]
+            else
+              session_inferrer = CodingAgentTools::Molecules::Code::SessionPathInferrer.new
                             session_inferrer.infer_output_path(reports)
-                          end
+            end
             info_output("📄 Output will be saved to: #{File.basename(output_path)}")
 
             # Execute synthesis (including dry run)
@@ -105,7 +105,7 @@ module CodingAgentTools
               error_output("Error: #{synthesis_result[:error]}")
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -148,7 +148,7 @@ module CodingAgentTools
             info_output("  🤖 Model: #{options[:model]}")
             info_output("  📄 Output: #{output_path}")
             info_output("  📝 Format: #{options[:format]}")
-            info_output("  🎯 System prompt: #{options[:system_prompt] || 'default'}")
+            info_output("  🎯 System prompt: #{options[:system_prompt] || "default"}")
             info_output("  💪 Force overwrite: #{options[:force]}")
             info_output('')
 
@@ -162,10 +162,10 @@ module CodingAgentTools
             info_output('📊 Synthesis Metrics:')
 
             metrics = synthesis_result.metrics
-            info_output("  📝 Reports processed: #{metrics[:reports_count] || 'unknown'}")
-            info_output("  ⏱️  Processing time: #{metrics[:execution_time] || 'unknown'}s") if metrics[:execution_time]
+            info_output("  📝 Reports processed: #{metrics[:reports_count] || "unknown"}")
+            info_output("  ⏱️  Processing time: #{metrics[:execution_time] || "unknown"}s") if metrics[:execution_time]
             info_output("  🔤 Output tokens: #{metrics[:output_tokens]}") if metrics[:output_tokens]
-            info_output("  💰 Cost: $#{format('%.6f', metrics[:cost])}") if metrics[:cost]
+            info_output("  💰 Cost: $#{format("%.6f", metrics[:cost])}") if metrics[:cost]
           end
 
           def handle_error(error, debug_enabled)

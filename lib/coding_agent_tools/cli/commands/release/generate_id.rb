@@ -13,13 +13,13 @@ module CodingAgentTools
           desc 'Create next release directory with codename'
 
           option :codename, type: :string,
-                            desc: "Codename for the release (e.g., 'whisty'). If not provided, generates unique codename using LLM"
+            desc: "Codename for the release (e.g., 'whisty'). If not provided, generates unique codename using LLM"
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
-          option :format, type: :string, default: 'text', values: %w[text json],
-                          desc: 'Output format (text or json)'
+          option :format, type: :string, default: 'text', values: ['text', 'json'],
+            desc: 'Output format (text or json)'
 
           example [
             '',
@@ -36,7 +36,7 @@ module CodingAgentTools
             # Generate release with optional codename
             result = release_manager.generate_release(codename: options[:codename])
             handle_result(result, options)
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -68,18 +68,18 @@ module CodingAgentTools
             require 'json'
 
             output = if result.success?
-                       {
-                         success: true,
-                         version: result.data[:version],
-                         codename: result.data[:codename],
-                         path: result.data[:path]
-                       }
-                     else
-                       {
-                         success: false,
-                         error: result.error_message
-                       }
-                     end
+              {
+                success: true,
+                version: result.data[:version],
+                codename: result.data[:codename],
+                path: result.data[:path]
+              }
+            else
+              {
+                success: false,
+                error: result.error_message
+              }
+            end
 
             puts JSON.pretty_generate(output)
           end

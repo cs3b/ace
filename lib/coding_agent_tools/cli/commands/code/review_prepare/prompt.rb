@@ -17,13 +17,13 @@ module CodingAgentTools
             desc 'Build combined review prompt'
 
             option :session_dir, type: :string, required: true,
-                                 desc: 'Session directory path'
+              desc: 'Session directory path'
 
             option :focus, type: :string, required: true,
-                           desc: 'Review focus for prompt building'
+              desc: 'Review focus for prompt building'
 
             option :output, type: :string,
-                            desc: 'Output file for prompt (default: prompt.md in session)'
+              desc: 'Output file for prompt (default: prompt.md in session)'
 
             example [
               '--session_dir /path/to/session --focus code',
@@ -56,7 +56,7 @@ module CodingAgentTools
                 puts "📊 Prompt size: #{prompt.word_count} words"
                 puts "🎯 Focus areas: #{prompt.focus_areas.size}"
                 0
-              rescue StandardError => e
+              rescue => e
                 $stderr.write "Error: #{e.message}\n"
                 1
               end

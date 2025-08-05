@@ -12,49 +12,49 @@ module CodingAgentTools
           desc 'Switch branches or restore working tree files across all repositories'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :quiet, type: :boolean, default: false, aliases: ['q'],
-                         desc: 'Quiet operation, suppress feedback messages'
+            desc: 'Quiet operation, suppress feedback messages'
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Force checkout, throw away local changes'
+            desc: 'Force checkout, throw away local changes'
 
           option :merge, type: :boolean, default: false, aliases: ['m'],
-                         desc: '3-way merge between current branch, working tree, and new branch'
+            desc: '3-way merge between current branch, working tree, and new branch'
 
           option :detach, type: :boolean, default: false,
-                          desc: 'Detach HEAD at named commit'
+            desc: 'Detach HEAD at named commit'
 
           option :create_branch, type: :string, aliases: ['b'],
-                                 desc: 'Create and checkout a new branch'
+            desc: 'Create and checkout a new branch'
 
           option :force_create_branch, type: :string, aliases: ['B'],
-                                       desc: 'Create/reset and checkout a branch'
+            desc: 'Create/reset and checkout a branch'
 
           option :orphan, type: :string,
-                          desc: 'Create a new orphan branch'
+            desc: 'Create a new orphan branch'
 
           option :track, type: :boolean, default: false, aliases: ['t'],
-                         desc: 'Set up tracking relationship'
+            desc: 'Set up tracking relationship'
 
           option :no_track, type: :boolean, default: false,
-                            desc: 'Do not set up tracking relationship'
+            desc: 'Do not set up tracking relationship'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute checkout operations concurrently across repositories'
+            desc: 'Execute checkout operations concurrently across repositories'
 
           argument :branch_or_paths, type: :array, required: false,
-                                     desc: 'Branch name, commit, or paths to checkout'
+            desc: 'Branch name, commit, or paths to checkout'
 
           example [
             'main',
@@ -84,7 +84,7 @@ module CodingAgentTools
               display_checkout_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

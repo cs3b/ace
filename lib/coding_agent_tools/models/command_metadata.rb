@@ -28,19 +28,19 @@ module CodingAgentTools
         hash['source'] = source if source
         hash['auto_generated'] = auto_generated if auto_generated
         hash['version'] = version if version
-        
+
         # Add any custom fields
         custom_fields.each do |key, value|
           hash[key.to_s] = value
         end
-        
+
         hash
       end
 
       # Create from hash (for parsing existing metadata)
       def self.from_hash(hash)
         return new if hash.nil? || hash.empty?
-        
+
         # Extract known fields
         known_fields = {
           last_modified: hash['last_modified'],
@@ -48,17 +48,17 @@ module CodingAgentTools
           auto_generated: hash['auto_generated'],
           version: hash['version']
         }
-        
+
         # Collect remaining fields as custom
-        custom = hash.reject { |k, _| %w[last_modified source auto_generated version].include?(k) }
-        
+        custom = hash.reject { |k, _| ['last_modified', 'source', 'auto_generated', 'version'].include?(k) }
+
         new(**known_fields, **custom)
       end
 
       # Merge with another metadata object
       def merge(other)
         return self unless other.is_a?(CommandMetadata)
-        
+
         merged_hash = to_h.merge(other.to_h)
         self.class.from_hash(merged_hash)
       end

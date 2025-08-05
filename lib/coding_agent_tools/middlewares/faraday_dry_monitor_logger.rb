@@ -78,7 +78,7 @@ module CodingAgentTools
 
         begin
           response = @app.call(request_env)
-        rescue StandardError => e
+        rescue => e
           error_object = e
           raise # Re-raise after instrumentation in ensure block
         ensure

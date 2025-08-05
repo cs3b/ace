@@ -16,31 +16,31 @@ module CodingAgentTools
           desc 'Synthesize multiple reflection notes into unified analysis'
 
           argument :reflection_notes, required: false, type: :array,
-                                      desc: 'Reflection note files to synthesize (default: auto-discover from current release)'
+            desc: 'Reflection note files to synthesize (default: auto-discover from current release)'
 
           option :model, type: :string, default: 'google:gemini-2.5-pro',
-                         desc: 'LLM model to use (default: google:gemini-2.5-pro)'
+            desc: 'LLM model to use (default: google:gemini-2.5-pro)'
 
           option :output, type: :string,
-                          desc: 'Output file path (default: timestampfrom-timestampto-reflection-synthesis.md)'
+            desc: 'Output file path (default: timestampfrom-timestampto-reflection-synthesis.md)'
 
-          option :format, type: :string, values: %w[text json markdown], default: 'markdown',
-                          desc: 'Output format (default: markdown)'
+          option :format, type: :string, values: ['text', 'json', 'markdown'], default: 'markdown',
+            desc: 'Output format (default: markdown)'
 
           option :system_prompt, type: :string,
-                                 desc: 'Custom system prompt file path (default: dev-handbook/templates/release-reflections/synthsize.system.prompt.md)'
+            desc: 'Custom system prompt file path (default: dev-handbook/templates/release-reflections/synthsize.system.prompt.md)'
 
           option :force, type: :boolean, default: false,
-                         desc: 'Force overwrite existing files without confirmation'
+            desc: 'Force overwrite existing files without confirmation'
 
           option :dry_run, type: :boolean, default: false,
-                           desc: 'Show what would be done without executing synthesis'
+            desc: 'Show what would be done without executing synthesis'
 
           option :debug, type: :boolean, default: false,
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :archived, type: :boolean, default: true,
-                            desc: 'Automatically move reflection notes to archived directory after synthesis (default: true)'
+            desc: 'Automatically move reflection notes to archived directory after synthesis (default: true)'
 
           example [
             '# Auto-discover and synthesize all reflections in current release',
@@ -149,7 +149,7 @@ module CodingAgentTools
               error_output("❌ Synthesis failed: #{synthesis_result.error}")
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -161,20 +161,20 @@ module CodingAgentTools
 
             # Generate timestamp-based filename
             output_filename = if timestamp_result.valid?
-                                from_date = timestamp_result.from_date.strftime('%Y%m%d')
+              from_date = timestamp_result.from_date.strftime('%Y%m%d')
                                 to_date = timestamp_result.to_date.strftime('%Y%m%d')
                                 "#{from_date}-#{to_date}-reflection-synthesis.md"
-                              else
+            else
                                 # Fallback to current date
-                                current_date = Time.now.strftime('%Y%m%d')
+              current_date = Time.now.strftime('%Y%m%d')
                                 "#{current_date}-reflection-synthesis.md"
-                              end
+            end
 
             # Use ReleaseManager to resolve the synthesis directory path
             begin
               synthesis_dir = release_manager.resolve_path('reflections/synthesis', create_if_missing: true)
               File.join(synthesis_dir, output_filename)
-            rescue StandardError => e
+            rescue => e
               error_output("Warning: Could not resolve release path for synthesis directory: #{e.message}")
               error_output('This usually means no current release is active.')
               error_output('Falling back to current working directory')
@@ -238,7 +238,7 @@ module CodingAgentTools
 
             # Remove duplicates and filter out synthesis files
             reflection_files.uniq.reject { |file| File.basename(file).include?('synthesis') }
-          rescue StandardError => e
+          rescue => e
             error_output("Warning: Could not auto-discover reflections using ReleaseManager: #{e.message}")
             error_output('This usually means no current release is active.')
             error_output('Falling back to legacy path resolver...')
@@ -254,7 +254,7 @@ module CodingAgentTools
                 error_output("Warning: Could not auto-discover reflections: #{result[:error]}")
                 []
               end
-            rescue StandardError => fallback_error
+            rescue => fallback_error
               error_output("Warning: Auto-discovery failed: #{fallback_error.message}")
               []
             end
@@ -286,7 +286,7 @@ module CodingAgentTools
               create_archive_summary(archive_dir, reflection_paths, archived_count)
 
               { success: true, count: archived_count, archive_dir: archive_dir }
-            rescue StandardError => e
+            rescue => e
               { success: false, error: e.message }
             end
           end
@@ -305,7 +305,7 @@ module CodingAgentTools
             content = <<~MARKDOWN
               # Reflection Archive Summary
 
-              **Archive Date**: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}
+              **Archive Date**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}
               **Reflections Archived**: #{archived_count}
               **Archive Directory**: #{archive_dir}
 
@@ -331,10 +331,10 @@ module CodingAgentTools
             info_output('📊 Synthesis Metrics:')
 
             metrics = synthesis_result.metrics
-            info_output("  📝 Reflections processed: #{metrics[:reflections_count] || 'unknown'}")
-            info_output("  ⏱️  Processing time: #{metrics[:execution_time] || 'unknown'}s") if metrics[:execution_time]
+            info_output("  📝 Reflections processed: #{metrics[:reflections_count] || "unknown"}")
+            info_output("  ⏱️  Processing time: #{metrics[:execution_time] || "unknown"}s") if metrics[:execution_time]
             info_output("  🔤 Output tokens: #{metrics[:output_tokens]}") if metrics[:output_tokens]
-            info_output("  💰 Cost: $#{format('%.6f', metrics[:cost])}") if metrics[:cost]
+            info_output("  💰 Cost: $#{format("%.6f", metrics[:cost])}") if metrics[:cost]
           end
 
           def handle_error(error, debug_enabled)

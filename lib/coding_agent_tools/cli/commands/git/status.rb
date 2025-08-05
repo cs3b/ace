@@ -12,34 +12,34 @@ module CodingAgentTools
           desc 'Show status across all repositories with clear prefixes'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :porcelain, type: :boolean, default: false,
-                             desc: 'Give the output in porcelain format'
+            desc: 'Give the output in porcelain format'
 
           option :short, type: :boolean, default: false, aliases: ['s'],
-                         desc: 'Give the output in short format'
+            desc: 'Give the output in short format'
 
           option :verbose, type: :boolean, default: false, aliases: ['v'],
-                           desc: 'Show detailed status information'
+            desc: 'Show detailed status information'
 
           option :untracked_files, type: :string, default: 'normal',
-                                   desc: 'Show untracked files (no|normal|all)'
+            desc: 'Show untracked files (no|normal|all)'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :no_color, type: :boolean, default: false,
-                            desc: 'Disable colored output'
+            desc: 'Disable colored output'
 
           option :force_color, type: :boolean, default: true,
-                               desc: 'Force colored output even when not on TTY (default: true)'
+            desc: 'Force colored output even when not on TTY (default: true)'
 
           example [
             '',
@@ -70,7 +70,7 @@ module CodingAgentTools
               display_errors(result[:errors], options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

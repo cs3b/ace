@@ -14,23 +14,23 @@ module CodingAgentTools
           desc 'Generate usage and cost reports from LLM query logs'
 
           option :format, type: :string, default: 'table',
-                          values: %w[table json csv],
-                          desc: 'Output format (table, json, csv)'
+            values: ['table', 'json', 'csv'],
+            desc: 'Output format (table, json, csv)'
 
           option :date_range, type: :string,
-                              desc: 'Date range filter (today, week, month, or YYYY-MM-DD:YYYY-MM-DD)'
+            desc: 'Date range filter (today, week, month, or YYYY-MM-DD:YYYY-MM-DD)'
 
           option :provider, type: :string,
-                            desc: 'Filter by provider (google, anthropic, openai, etc.)'
+            desc: 'Filter by provider (google, anthropic, openai, etc.)'
 
           option :model, type: :string,
-                         desc: 'Filter by specific model'
+            desc: 'Filter by specific model'
 
           option :output, type: :string, aliases: ['o'],
-                          desc: 'Output file path (format inferred from extension)'
+            desc: 'Output file path (format inferred from extension)'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           example [
             '',
@@ -47,7 +47,7 @@ module CodingAgentTools
             # In a real implementation, this would read from cache/logs
             generate_sample_report(options)
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -170,9 +170,9 @@ module CodingAgentTools
 
             puts 'Summary:'
             puts "  Total Queries: #{total_queries}"
-            puts "  Total Cost: $#{'%.6f' % total_cost}"
+            puts "  Total Cost: $#{"%.6f" % total_cost}"
             puts "  Total Tokens: #{total_tokens}"
-            puts "  Average Cost per Query: $#{'%.6f' % avg_cost_per_query}"
+            puts "  Average Cost per Query: $#{"%.6f" % avg_cost_per_query}"
             puts
 
             # Provider breakdown
@@ -181,7 +181,7 @@ module CodingAgentTools
             provider_stats.each do |provider, items|
               provider_cost = items.sum { |item| item[:total_cost] }
               provider_queries = items.length
-              puts "  #{provider.capitalize}: #{provider_queries} queries, $#{'%.6f' % provider_cost}"
+              puts "  #{provider.capitalize}: #{provider_queries} queries, $#{"%.6f" % provider_cost}"
             end
             puts
 
@@ -192,14 +192,14 @@ module CodingAgentTools
 
             data.each do |item|
               puts format('%-19s %-12s %-20s %8d %8d %8d $%8.6f %6.1fs',
-                          item[:timestamp][0..18],
-                          item[:provider],
-                          item[:model][0..19],
-                          item[:input_tokens],
-                          item[:output_tokens],
-                          item[:cached_tokens],
-                          item[:total_cost],
-                          item[:execution_time])
+                item[:timestamp][0..18],
+                item[:provider],
+                item[:model][0..19],
+                item[:input_tokens],
+                item[:output_tokens],
+                item[:cached_tokens],
+                item[:total_cost],
+                item[:execution_time])
             end
           end
 
@@ -224,9 +224,7 @@ module CodingAgentTools
           def output_csv(data, options)
             csv_string = CSV.generate do |csv|
               # Header
-              csv << %w[timestamp provider model input_tokens output_tokens
-                        cached_tokens total_cost input_cost output_cost cache_cost
-                        execution_time]
+              csv << ['timestamp', 'provider', 'model', 'input_tokens', 'output_tokens', 'cached_tokens', 'total_cost', 'input_cost', 'output_cost', 'cache_cost', 'execution_time']
 
               # Data rows
               data.each do |item|

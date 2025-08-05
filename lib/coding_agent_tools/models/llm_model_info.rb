@@ -5,7 +5,7 @@ module CodingAgentTools
     # LlmModelInfo represents an AI model with its metadata including pricing information
     # This is a pure data structure following ATOM architecture - no external IO
     LlmModelInfo = Struct.new(:id, :name, :description, :default, :context_size, :max_output_tokens, :pricing_info,
-                              keyword_init: true) do
+      keyword_init: true) do
       # Check if this is the default model
       # @return [Boolean]
       def default?

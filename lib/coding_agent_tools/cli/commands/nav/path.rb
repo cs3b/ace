@@ -10,7 +10,7 @@ module CodingAgentTools
           desc 'Intelligent path resolution and generation'
 
           argument :type,
-                   desc: 'Path operation type: task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
+            desc: 'Path operation type: task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
           argument :input, desc: 'Input for path resolution (title for new paths, ID/pattern for existing paths)'
 
           option :title, desc: 'Title for new path generation (alternative to input argument)'
@@ -23,8 +23,8 @@ module CodingAgentTools
             actual_input = input || options[:title]
 
             # reflection-list doesn't need input
-            if !%w[reflection-list
-                   reflection_list].include?(type) && (actual_input.nil? || actual_input.strip.empty?)
+            if !['reflection-list',
+                   'reflection_list'].include?(type) && (actual_input.nil? || actual_input.strip.empty?)
               puts 'Error: Input required for path resolution'
               puts 'Usage: nav path TYPE INPUT [OPTIONS]'
               puts "       nav path TYPE --title 'Title'"
@@ -33,35 +33,35 @@ module CodingAgentTools
 
             # Determine path type
             path_type = case type
-                        when 'task-new', 'task_new'
+            when 'task-new', 'task_new'
                           puts "Error: The 'task-new' type has been removed. Please use 'task-manager create' instead."
                           return
-                        when 'docs-new', 'docs_new'
+            when 'docs-new', 'docs_new'
                           :docs_new
-                        when 'reflection-new', 'reflection_new'
+            when 'reflection-new', 'reflection_new'
                           :reflection_new
-                        when 'reflection-list', 'reflection_list'
+            when 'reflection-list', 'reflection_list'
                           :reflection_list
-                        when 'code-review-new', 'code_review_new'
+            when 'code-review-new', 'code_review_new'
                           :code_review_new
-                        when 'capture-idea-new', 'capture_idea_new'
+            when 'capture-idea-new', 'capture_idea_new'
                           :capture_idea_new
-                        when 'task'
+            when 'task'
                           :task
-                        when 'file'
+            when 'file'
                           :file
                         else
                           puts "Error: Unknown path type '#{type}'"
                           puts 'Valid types: task, docs-new, reflection-new, reflection-list, code-review-new, capture-idea-new, file'
                           return
-                        end
+            end
 
             # Resolve the path
             result = if path_type == :reflection_list
-                       path_resolver.find_reflection_paths_in_current_release
-                     else
-                       path_resolver.resolve_path(actual_input, type: path_type)
-                     end
+              path_resolver.find_reflection_paths_in_current_release
+            else
+              path_resolver.resolve_path(actual_input, type: path_type)
+            end
 
             if result[:success]
               case result[:type]
@@ -100,7 +100,7 @@ module CodingAgentTools
             else
               puts "Error: #{result[:error]}"
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
           end
         end

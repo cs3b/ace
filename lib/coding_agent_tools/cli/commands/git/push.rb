@@ -12,40 +12,40 @@ module CodingAgentTools
           desc 'Push changes to remote repositories concurrently'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Force push (use with caution)'
+            desc: 'Force push (use with caution)'
 
           option :dry_run, type: :boolean, default: false,
-                           desc: 'Show what would be pushed without actually pushing'
+            desc: 'Show what would be pushed without actually pushing'
 
           option :set_upstream, type: :boolean, default: false, aliases: ['u'],
-                                desc: 'Set upstream tracking for new branches'
+            desc: 'Set upstream tracking for new branches'
 
           option :tags, type: :boolean, default: false,
-                        desc: 'Push tags along with commits'
+            desc: 'Push tags along with commits'
 
           option :concurrent, type: :boolean, default: true,
-                              desc: 'Execute push operations concurrently (default: true)'
+            desc: 'Execute push operations concurrently (default: true)'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :repo_only, type: :boolean, default: false,
-                             desc: 'Process only the current repository instead of all repositories'
+            desc: 'Process only the current repository instead of all repositories'
 
           argument :remote, type: :string, required: false,
-                            desc: 'Remote name (default: origin)'
+            desc: 'Remote name (default: origin)'
 
           argument :branch, type: :string, required: false,
-                            desc: 'Branch name (default: current branch)'
+            desc: 'Branch name (default: current branch)'
 
           example [
             '',
@@ -75,7 +75,7 @@ module CodingAgentTools
               display_push_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

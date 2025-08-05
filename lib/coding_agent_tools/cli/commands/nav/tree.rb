@@ -49,7 +49,7 @@ module CodingAgentTools
               puts "Error executing tree command: #{tree_command}"
               puts "Output: #{output}" unless output.strip.empty?
             end
-          rescue StandardError => e
+          rescue => e
             puts "Error: #{e.message}"
           end
 

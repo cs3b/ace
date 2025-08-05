@@ -12,25 +12,25 @@ module CodingAgentTools
           desc 'Show differences across repositories'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :staged, type: :boolean, default: false,
-                          desc: 'Show staged changes only'
+            desc: 'Show staged changes only'
 
           option :name_only, type: :boolean, default: false,
-                             desc: 'Show only names of changed files'
+            desc: 'Show only names of changed files'
 
           option :stat, type: :boolean, default: false,
-                        desc: 'Show diffstat'
+            desc: 'Show diffstat'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           example [
             '',
@@ -58,7 +58,7 @@ module CodingAgentTools
               display_diff_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

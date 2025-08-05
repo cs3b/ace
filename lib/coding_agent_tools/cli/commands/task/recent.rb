@@ -15,19 +15,19 @@ module CodingAgentTools
           desc 'Find recently modified tasks'
 
           option :last, type: :string,
-                        desc: "Time period to search (e.g., '2.days', '1.week', '3.hours'). Default: 1.day when no --limit specified"
+            desc: "Time period to search (e.g., '2.days', '1.week', '3.hours'). Default: 1.day when no --limit specified"
 
           option :limit, type: :integer, default: 10,
-                         desc: 'Maximum number of tasks to return (default: 10)'
+            desc: 'Maximum number of tasks to return (default: 10)'
 
           option :verbose, type: :boolean, default: false,
-                           desc: 'Show detailed task information'
+            desc: 'Show detailed task information'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :release, type: :string,
-                           desc: 'Release to work with (version, codename, fullname, or path). Note: Recent command searches across all releases by default.'
+            desc: 'Release to work with (version, codename, fullname, or path). Note: Recent command searches across all releases by default.'
 
           example [
             '',
@@ -49,12 +49,12 @@ module CodingAgentTools
             # - If --last not specified and --limit explicitly specified: no time filter (get most recent X)
             # - If neither specified: default to 1 day filter
             since_seconds = if options[:last]
-                              parse_time_period(options[:last])
-                            elsif explicit_limit
-                              nil # No time filter when --limit explicitly specified
-                            else
-                              parse_time_period('1.day') # Default behavior
-                            end
+              parse_time_period(options[:last])
+            elsif explicit_limit
+              nil # No time filter when --limit explicitly specified
+            else
+              parse_time_period('1.day') # Default behavior
+            end
 
             # Use ProjectRootDetector for reliable path resolution
             project_root = CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
@@ -63,20 +63,20 @@ module CodingAgentTools
             # Get all tasks from current release for status summary
             all_tasks_result = task_manager.get_list_tasks(release_path: options[:release])
             status_summary = if all_tasks_result.success?
-                               CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary(all_tasks_result.tasks)
-                             else
-                               CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary([])
-                             end
+              CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary(all_tasks_result.tasks)
+            else
+              CodingAgentTools::Molecules::TaskflowManagement::TaskStatusSummary.generate_summary([])
+            end
 
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,
-              statuses: %w[done in-progress pending blocked],
+              statuses: ['done', 'in-progress', 'pending', 'blocked'],
               release_path: options[:release]
             )
 
             handle_result(result, options.merge(limit: limit), status_summary)
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

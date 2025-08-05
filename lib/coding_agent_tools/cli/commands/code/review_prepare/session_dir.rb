@@ -13,13 +13,13 @@ module CodingAgentTools
             desc 'Create session directory structure'
 
             option :focus, type: :string, required: true,
-                           desc: 'Review focus: code, tests, docs, or combination'
+              desc: 'Review focus: code, tests, docs, or combination'
 
             option :target, type: :string, required: true,
-                            desc: 'Review target specification'
+              desc: 'Review target specification'
 
             option :base_path, type: :string,
-                               desc: 'Base path for session storage'
+              desc: 'Base path for session storage'
 
             example [
               '--focus code --target HEAD~1..HEAD',
@@ -44,7 +44,7 @@ module CodingAgentTools
                 puts "✅ Created session directory: #{session.directory_path}"
                 puts "📁 Session ID: #{session.session_id}"
                 0
-              rescue StandardError => e
+              rescue => e
                 $stderr.write "Error: #{e.message}\n"
                 1
               end
