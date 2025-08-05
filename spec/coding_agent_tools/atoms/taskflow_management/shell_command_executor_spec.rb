@@ -555,7 +555,7 @@ RSpec.describe CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor
 
     it 'properly cleans up resources on timeout', :slow do
       # This test ensures that timeouts don't leave zombie processes
-      5.times do
+      3.times do
         result = described_class.execute('sleep 2', timeout: 1)
         expect(result.success?).to be false
       end

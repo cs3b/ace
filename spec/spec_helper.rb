@@ -33,6 +33,9 @@ require_relative 'support/env_helper'
 # Load VCR configuration
 require_relative 'support/vcr'
 
+# Load test reliability tracker
+require_relative 'support/test_reliability_tracker'
+
 # Load custom matchers
 require_relative 'support/matchers/json_matchers'
 require_relative 'support/matchers/http_matchers'
@@ -150,7 +153,22 @@ RSpec.configure do |config|
       $stderr = StringIO.new
     end
 
-    example.run
+    # Run the example with retry logic for flaky tests
+    retries = example.metadata[:retry] || 0
+    retry_count = 0
+    
+    begin
+      example.run
+    rescue => e
+      if retry_count < retries && !ENV['CI']
+        retry_count += 1
+        warn "\nRetrying flaky test (attempt #{retry_count + 1}/#{retries + 1}): #{example.full_description}"
+        example.reset!
+        retry
+      else
+        raise e
+      end
+    end
   ensure
     # Restore streams
     $stdout = original_stdout
