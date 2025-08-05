@@ -31,8 +31,6 @@ module ClaudeTestHelpers
     command_class = case command_name
     when "generate-commands"
       CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
-    when "update-registry"
-      CodingAgentTools::Cli::Commands::Handbook::Claude::UpdateRegistry
     when "validate"
       CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
     when "integrate"
@@ -90,25 +88,8 @@ module ClaudeTestHelpers
     File.write(command_file, content)
   end
 
-  # Helper to create a commands.json registry file
-  # @param commands [Array<Hash>] Array of command definitions
-  def create_command_registry(commands = [])
-    default_commands = commands.empty? ? [
-      {
-        "name" => "test-workflow",
-        "file" => "commands/test-workflow.md",
-        "source" => "workflow-instructions/test-workflow.wf.md"
-      }
-    ] : commands
-    
-    registry_content = {
-      "version" => "1.0",
-      "commands" => default_commands,
-      "generated_at" => Time.now.iso8601
-    }
-    
-    File.write(File.join(@claude_dir, "commands.json"), JSON.pretty_generate(registry_content))
-  end
+  # Commands.json functionality has been removed
+  # The create_command_registry method is no longer needed
 
   # Helper to verify command generation
   # @param workflow_name [String] The workflow name to check

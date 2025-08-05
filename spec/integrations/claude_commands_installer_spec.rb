@@ -70,17 +70,18 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
         expect(content).to include('@.claude/commands/commit.md')
       end
 
-      it 'updates commands.json' do
-        result = installer.run
-        expect(result.success).to be true
-        
-        json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
-        expect(File.exist?(json_file)).to be true
-        
-        commands = JSON.parse(File.read(json_file))
-        expect(commands).to have_key('/test-workflow')
-        expect(commands).to have_key('/another-workflow')
-      end
+      # Commands.json functionality has been removed
+      # it 'updates commands.json' do
+      #   result = installer.run
+      #   expect(result.success).to be true
+      #   
+      #   json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
+      #   expect(File.exist?(json_file)).to be true
+      #   
+      #   commands = JSON.parse(File.read(json_file))
+      #   expect(commands).to have_key('/test-workflow')
+      #   expect(commands).to have_key('/another-workflow')
+      # end
 
       it 'reports correct statistics' do
         result = nil
@@ -142,47 +143,10 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       end
     end
 
-    context 'with existing commands.json' do
-      before do
-        existing_json = { '/existing-command' => { 'some' => 'config' } }
-        File.write(
-          File.join(test_dir, '.claude', 'commands', 'commands.json'),
-          JSON.pretty_generate(existing_json)
-        )
-        
-        # Add a workflow file
-        File.write(
-          File.join(test_dir, 'dev-handbook', 'workflow-instructions', 'new-workflow.wf.md'),
-          '# New Workflow'
-        )
-      end
-
-      it 'creates backup before modification' do
-        installer.run
-        
-        backup_file = File.join(test_dir, '.claude', 'commands', 'commands.json.backup')
-        expect(File.exist?(backup_file)).to be true
-      end
-
-      it 'preserves existing commands in JSON' do
-        installer.run
-        
-        json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
-        commands = JSON.parse(File.read(json_file))
-        
-        expect(commands).to have_key('/existing-command')
-        expect(commands['/existing-command']).to eq({ 'some' => 'config' })
-      end
-
-      it 'adds new commands to JSON' do
-        installer.run
-        
-        json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
-        commands = JSON.parse(File.read(json_file))
-        
-        expect(commands).to have_key('/new-workflow')
-      end
-    end
+    # Commands.json functionality has been removed
+    # context 'with existing commands.json' do
+    #   ...test code removed...
+    # end
 
     context 'with custom templates' do
       before do

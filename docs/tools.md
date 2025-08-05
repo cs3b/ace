@@ -646,7 +646,6 @@ handbook claude [SUBCOMMAND] [OPTIONS]
 | `list` | List all Claude commands and their status | `--verbose`, `--type` |
 | `validate` | Validate command coverage and consistency | `--strict`, `--fix` |
 | `generate-commands` | Generate missing commands from workflows | `--dry-run`, `--force` |
-| `update-registry` | Update command registry JSON file | `--backup`, `--validate` |
 | `integrate` | Run complete integration workflow | `--force`, `--skip-validation` |
 
 **Common Options:**
@@ -673,10 +672,6 @@ handbook claude validate --fix
 handbook claude generate-commands
 handbook claude generate-commands --dry-run
 handbook claude generate-commands --force
-
-# Update command registry
-handbook claude update-registry
-handbook claude update-registry --backup
 
 # Run complete integration
 handbook claude integrate
