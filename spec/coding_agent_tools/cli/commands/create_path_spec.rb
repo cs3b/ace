@@ -1,30 +1,30 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-require "yaml"
-require "coding_agent_tools/cli/create_path_command"
+require 'spec_helper'
+require 'yaml'
+require 'coding_agent_tools/cli/create_path_command'
 
 RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
-  include_context "uses temp dir"
+  include_context 'uses temp dir'
 
   subject { described_class.new }
 
-  let(:config_dir) { File.join(temp_dir, ".coding-agent") }
-  let(:config_file) { File.join(config_dir, "create-path.yml") }
+  let(:config_dir) { File.join(temp_dir, '.coding-agent') }
+  let(:config_file) { File.join(config_dir, 'create-path.yml') }
 
   before do
     FileUtils.mkdir_p(config_dir)
 
     # Create basic config
     config = {
-      "templates" => {
-        "file" => {},
-        "directory" => {"type" => "directory"}
+      'templates' => {
+        'file' => {},
+        'directory' => { 'type' => 'directory' }
       },
-      "variable_processors" => {
-        "defaults" => {
-          "priority" => "medium",
-          "status" => "pending"
+      'variable_processors' => {
+        'defaults' => {
+          'priority' => 'medium',
+          'status' => 'pending'
         }
       }
     }
@@ -37,8 +37,8 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       .and_return(temp_dir)
   end
 
-  describe "encapsulation compliance" do
-    it "uses public interface instead of accessing private instance variables" do
+  describe 'encapsulation compliance' do
+    it 'uses public interface instead of accessing private instance variables' do
       # Create a PathResolver instance to test encapsulation
       path_resolver = CodingAgentTools::Molecules::PathResolver.new
 
@@ -48,7 +48,7 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       # Mock PathResolver to verify correct method call
       mocked_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
       allow(mocked_resolver).to receive(:project_root).and_return(temp_dir)
-      allow(mocked_resolver).to receive(:resolve_path).and_return({success: false, error: "test"})
+      allow(mocked_resolver).to receive(:resolve_path).and_return({ success: false, error: 'test' })
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(mocked_resolver)
 
       # Mock other dependencies to avoid errors
@@ -62,153 +62,153 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
 
       # Call the command to trigger load_create_path_config
       command = described_class.new
-      command.call(type: "task-new", title: "test")
+      command.call(type: 'task-new', title: 'test')
     end
 
-    it "does not use instance_variable_get to access PathResolver internals" do
+    it 'does not use instance_variable_get to access PathResolver internals' do
       # Verify that the source code does not contain the encapsulation violation
-      source_file = File.read(File.join(__dir__, "../../../../lib/coding_agent_tools/cli/create_path_command.rb"))
+      source_file = File.read(File.join(__dir__, '../../../../lib/coding_agent_tools/cli/create_path_command.rb'))
 
       # Should not contain the old encapsulation violation pattern
-      expect(source_file).not_to include("instance_variable_get(:@sandbox)")
+      expect(source_file).not_to include('instance_variable_get(:@sandbox)')
 
       # Should use the proper public method instead
-      expect(source_file).to include("@path_resolver.project_root")
+      expect(source_file).to include('@path_resolver.project_root')
     end
   end
 
-  describe "security validation" do
-    context "when attempting path traversal" do
-      it "blocks path traversal attempts" do
-        result = subject.call(type: "file", title: "../../../etc/passwd", content: "malicious")
+  describe 'security validation' do
+    context 'when attempting path traversal' do
+      it 'blocks path traversal attempts' do
+        result = subject.call(type: 'file', title: '../../../etc/passwd', content: 'malicious')
 
         expect(result).to eq(1)
       end
 
-      it "blocks access to forbidden patterns" do
-        result = subject.call(type: "file", title: ".git/config", content: "test")
+      it 'blocks access to forbidden patterns' do
+        result = subject.call(type: 'file', title: '.git/config', content: 'test')
 
         expect(result).to eq(1)
       end
     end
 
-    context "when using valid paths" do
-      it "allows creation in safe directories" do
-        safe_path = File.join(temp_dir, "safe-file.txt")
+    context 'when using valid paths' do
+      it 'allows creation in safe directories' do
+        safe_path = File.join(temp_dir, 'safe-file.txt')
 
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: safe_path,
-          content: "safe content"
+          content: 'safe content'
         )
 
         expect(result).to eq(0)
         expect(File.exist?(safe_path)).to be true
-        expect(File.read(safe_path)).to eq("safe content")
+        expect(File.read(safe_path)).to eq('safe content')
       end
     end
 
-    context "command injection protection" do
-      it "prevents command injection in template variable commands" do
+    context 'command injection protection' do
+      it 'prevents command injection in template variable commands' do
         command = described_class.new
 
         # Mock config that has a malicious command
-        malicious_source = "date; rm -rf /"
+        malicious_source = 'date; rm -rf /'
 
         # Test that execute_command safely handles malicious input
         result = command.send(:execute_command, malicious_source)
 
         # Should return "unknown" instead of executing malicious command
-        expect(result).to eq("unknown")
+        expect(result).to eq('unknown')
       end
 
-      it "safely handles shell metacharacters in commands" do
+      it 'safely handles shell metacharacters in commands' do
         command = described_class.new
 
         # Test various shell metacharacters
         dangerous_commands = [
-          "echo test; rm -rf /",
-          "echo test && rm -rf /",
-          "echo test | rm -rf /",
-          "echo test$(rm -rf /)",
-          "echo test`rm -rf /`",
-          "echo test > /etc/passwd"
+          'echo test; rm -rf /',
+          'echo test && rm -rf /',
+          'echo test | rm -rf /',
+          'echo test$(rm -rf /)',
+          'echo test`rm -rf /`',
+          'echo test > /etc/passwd'
         ]
 
         dangerous_commands.each do |dangerous_cmd|
           result = command.send(:execute_command, dangerous_cmd)
           # All should return "unknown" instead of executing
-          expect(result).to eq("unknown"), "Failed for command: #{dangerous_cmd}"
+          expect(result).to eq('unknown'), "Failed for command: #{dangerous_cmd}"
         end
       end
 
-      it "handles invalid commands gracefully" do
+      it 'handles invalid commands gracefully' do
         command = described_class.new
 
         # Test non-existent commands
-        result = command.send(:execute_command, "nonexistent_command_12345")
-        expect(result).to eq("unknown")
+        result = command.send(:execute_command, 'nonexistent_command_12345')
+        expect(result).to eq('unknown')
       end
 
-      it "allows safe commands to execute properly" do
+      it 'allows safe commands to execute properly' do
         command = described_class.new
 
         # Test a safe command that should work
-        result = command.send(:execute_command, "echo safe_test")
-        expect(result).to eq("safe_test")
+        result = command.send(:execute_command, 'echo safe_test')
+        expect(result).to eq('safe_test')
       end
 
-      it "prevents command injection via file paths in template variables" do
+      it 'prevents command injection via file paths in template variables' do
         command = described_class.new
 
         # Mock the config loader
         allow(command).to receive(:load_create_path_config).and_return({})
 
         # Test template with malicious command in metadata
-        template_content = "Value: {variable}"
-        template_variables = {"variable" => "echo test; rm -rf /"}
+        template_content = 'Value: {variable}'
+        template_variables = { 'variable' => 'echo test; rm -rf /' }
 
-        result = command.send(:apply_variable_substitution, template_content, "test", {}, template_variables)
+        result = command.send(:apply_variable_substitution, template_content, 'test', {}, template_variables)
 
         # Should contain "unknown" instead of executing the command
-        expect(result).to include("unknown")
-        expect(result).not_to include("rm -rf")
+        expect(result).to include('unknown')
+        expect(result).not_to include('rm -rf')
       end
     end
   end
 
-  describe "path resolution" do
-    context "when using PathResolver integration" do
+  describe 'path resolution' do
+    context 'when using PathResolver integration' do
       let(:path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
 
       before do
         allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       end
 
-      it "returns error message for removed task-new type" do
+      it 'returns error message for removed task-new type' do
         allow(path_resolver).to receive(:project_root)
           .and_return(temp_dir)
 
         result = subject.call(
-          type: "task-new",
-          title: "test-task",
-          priority: "high"
+          type: 'task-new',
+          title: 'test-task',
+          priority: 'high'
         )
 
         expect(result).to eq(1)
-        expect { subject.call(type: "task-new", title: "test-task") }.to output(/task-new.*has been removed.*use 'task-manager create'/).to_stdout
+        expect { subject.call(type: 'task-new', title: 'test-task') }.to output(/task-new.*has been removed.*use 'task-manager create'/).to_stdout
       end
     end
   end
 
-  describe "content injection" do
-    context "when creating files with direct content" do
-      it "creates files with correct content from various sources" do
-        target_path = File.join(temp_dir, "content-test.txt")
-        test_content = "This is test content"
+  describe 'content injection' do
+    context 'when creating files with direct content' do
+      it 'creates files with correct content from various sources' do
+        target_path = File.join(temp_dir, 'content-test.txt')
+        test_content = 'This is test content'
 
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: target_path,
           content: test_content
         )
@@ -219,12 +219,12 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       end
     end
 
-    context "when creating directories" do
-      it "creates directories successfully" do
-        target_path = File.join(temp_dir, "test-directory")
+    context 'when creating directories' do
+      it 'creates directories successfully' do
+        target_path = File.join(temp_dir, 'test-directory')
 
         result = subject.call(
-          type: "directory",
+          type: 'directory',
           title: target_path
         )
 
@@ -234,30 +234,30 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "variable substitution" do
-    it "applies metadata to template variables" do
+  describe 'variable substitution' do
+    it 'applies metadata to template variables' do
       command = described_class.new
 
       # Mock the config loader to avoid nil error
       allow(command).to receive(:load_create_path_config).and_return({
-        "variable_processors" => {
-          "defaults" => {
-            "priority" => "medium",
-            "status" => "pending"
+        'variable_processors' => {
+          'defaults' => {
+            'priority' => 'medium',
+            'status' => 'pending'
           }
         }
       })
 
       template_content = "Priority: {metadata.priority}\nTitle: {metadata.title}"
-      options = {priority: "high"}
+      options = { priority: 'high' }
 
-      result = command.send(:apply_variable_substitution, template_content, "Test Title", options)
+      result = command.send(:apply_variable_substitution, template_content, 'Test Title', options)
 
-      expect(result).to include("Priority: high")
-      expect(result).to include("Title: Test Title")
+      expect(result).to include('Priority: high')
+      expect(result).to include('Title: Test Title')
     end
 
-    it "applies built-in timestamp variables" do
+    it 'applies built-in timestamp variables' do
       command = described_class.new
 
       template_content = "Created: {timestamp}\nDate: {date}"
@@ -269,19 +269,19 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "file system errors" do
-    it "handles permission denied errors gracefully" do
+  describe 'file system errors' do
+    it 'handles permission denied errors gracefully' do
       # Create a directory with restricted permissions
-      restricted_dir = File.join(temp_dir, "restricted")
+      restricted_dir = File.join(temp_dir, 'restricted')
       FileUtils.mkdir_p(restricted_dir)
       FileUtils.chmod(0o444, restricted_dir) # Read-only
 
-      target_path = File.join(restricted_dir, "test-file.txt")
+      target_path = File.join(restricted_dir, 'test-file.txt')
 
       result = subject.call(
-        type: "file",
+        type: 'file',
         title: target_path,
-        content: "test content"
+        content: 'test content'
       )
 
       expect(result).to eq(1)
@@ -294,128 +294,128 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       end
     end
 
-    it "handles disk full errors appropriately" do
+    it 'handles disk full errors appropriately' do
       # Mock FileUtils to simulate disk full error
-      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ENOSPC, "No space left on device")
+      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ENOSPC, 'No space left on device')
 
       result = subject.call(
-        type: "directory",
-        title: File.join(temp_dir, "test-dir")
+        type: 'directory',
+        title: File.join(temp_dir, 'test-dir')
       )
 
       expect(result).to eq(1)
     end
 
-    it "handles readonly filesystem scenarios" do
+    it 'handles readonly filesystem scenarios' do
       # Mock file writing to simulate readonly filesystem
       file_handler = instance_double(CodingAgentTools::Molecules::FileIoHandler)
       allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
-      allow(file_handler).to receive(:write_content).and_raise(Errno::EROFS, "Read-only file system")
+      allow(file_handler).to receive(:write_content).and_raise(Errno::EROFS, 'Read-only file system')
 
       result = subject.call(
-        type: "file",
-        title: File.join(temp_dir, "test-file.txt"),
-        content: "test content"
+        type: 'file',
+        title: File.join(temp_dir, 'test-file.txt'),
+        content: 'test content'
       )
 
       expect(result).to eq(1)
     end
 
-    it "handles network filesystem timeouts" do
+    it 'handles network filesystem timeouts' do
       # Mock file operations to simulate network timeout
-      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ETIMEDOUT, "Connection timed out")
+      allow(FileUtils).to receive(:mkdir_p).and_raise(Errno::ETIMEDOUT, 'Connection timed out')
 
       result = subject.call(
-        type: "directory",
-        title: File.join(temp_dir, "network-dir")
+        type: 'directory',
+        title: File.join(temp_dir, 'network-dir')
       )
 
       expect(result).to eq(1)
     end
   end
 
-  describe "input validation" do
-    it "validates required parameters are present" do
-      result = subject.call(type: "file", title: nil)
+  describe 'input validation' do
+    it 'validates required parameters are present' do
+      result = subject.call(type: 'file', title: nil)
       expect(result).to eq(1)
 
-      result = subject.call(type: "file", title: "")
+      result = subject.call(type: 'file', title: '')
       expect(result).to eq(1)
 
-      result = subject.call(type: "file", title: "   ")
+      result = subject.call(type: 'file', title: '   ')
       expect(result).to eq(1)
     end
 
-    it "handles malformed command line arguments" do
+    it 'handles malformed command line arguments' do
       # Test with unknown type
-      result = subject.call(type: "unknown-type", title: "test")
+      result = subject.call(type: 'unknown-type', title: 'test')
       expect(result).to eq(1)
     end
 
-    it "validates path format and characters" do
+    it 'validates path format and characters' do
       # These will be handled by the security validator, but test the integration
       invalid_paths = [
         "\x00null-byte-path",
         "path/with\x01control-chars",
-        "extremely-" + "long-" * 100 + "path.txt"
+        'extremely-' + 'long-' * 100 + 'path.txt'
       ]
 
       invalid_paths.each do |invalid_path|
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: invalid_path,
-          content: "test"
+          content: 'test'
         )
         expect(result).to eq(1), "Should reject path: #{invalid_path}"
       end
     end
 
-    it "handles empty or whitespace-only inputs" do
-      result = subject.call(type: "file", title: "", content: "test")
+    it 'handles empty or whitespace-only inputs' do
+      result = subject.call(type: 'file', title: '', content: 'test')
       expect(result).to eq(1)
 
-      result = subject.call(type: "file", title: "   ", content: "test")
+      result = subject.call(type: 'file', title: '   ', content: 'test')
       expect(result).to eq(1)
 
-      result = subject.call(type: "file", title: "test.txt", content: "")
+      result = subject.call(type: 'file', title: 'test.txt', content: '')
       expect(result).to eq(1)
     end
   end
 
-  describe "configuration errors" do
-    it "handles missing .coding-agent/create-path.yml" do
+  describe 'configuration errors' do
+    it 'handles missing .coding-agent/create-path.yml' do
       # Remove the config file
       FileUtils.rm_f(config_file)
 
       # Test should still work with empty config
       result = subject.call(
-        type: "file",
-        title: File.join(temp_dir, "test.txt"),
-        content: "test content"
+        type: 'file',
+        title: File.join(temp_dir, 'test.txt'),
+        content: 'test content'
       )
 
       expect(result).to eq(0) # Should succeed with default behavior
     end
 
-    it "handles malformed YAML configuration" do
+    it 'handles malformed YAML configuration' do
       # Write invalid YAML to config file
-      File.write(config_file, "invalid: yaml: content: [")
+      File.write(config_file, 'invalid: yaml: content: [')
 
       # Command should handle gracefully and fall back to defaults
       result = subject.call(
-        type: "file",
-        title: File.join(temp_dir, "test.txt"),
-        content: "test content"
+        type: 'file',
+        title: File.join(temp_dir, 'test.txt'),
+        content: 'test content'
       )
 
       expect(result).to eq(0) # Should succeed with fallback
     end
 
-    it "handles invalid template mappings for docs-new" do
+    it 'handles invalid template mappings for docs-new' do
       invalid_config = {
-        "templates" => {
-          "docs-new" => {
-            "template" => "/nonexistent/template.md"
+        'templates' => {
+          'docs-new' => {
+            'template' => '/nonexistent/template.md'
           }
         }
       }
@@ -426,19 +426,19 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-doc", type: :docs_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
+        .with('test-doc', type: :docs_new)
+        .and_return({ success: true, path: File.join(temp_dir, 'test-doc.md') })
 
-      result = subject.call(type: "docs-new", title: "test-doc")
+      result = subject.call(type: 'docs-new', title: 'test-doc')
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
 
-    it "handles missing template references for docs-new" do
+    it 'handles missing template references for docs-new' do
       config_with_missing_template = {
-        "templates" => {
-          "docs-new" => {
-            "template" => nil
+        'templates' => {
+          'docs-new' => {
+            'template' => nil
           }
         }
       }
@@ -449,28 +449,28 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-doc", type: :docs_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
+        .with('test-doc', type: :docs_new)
+        .and_return({ success: true, path: File.join(temp_dir, 'test-doc.md') })
 
-      result = subject.call(type: "docs-new", title: "test-doc")
+      result = subject.call(type: 'docs-new', title: 'test-doc')
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
   end
 
-  describe "template errors" do
-    let(:template_dir) { File.join(temp_dir, "templates") }
-    let(:template_file) { File.join(template_dir, "test-template.md") }
+  describe 'template errors' do
+    let(:template_dir) { File.join(temp_dir, 'templates') }
+    let(:template_file) { File.join(template_dir, 'test-template.md') }
 
     before do
       FileUtils.mkdir_p(template_dir)
     end
 
-    it "handles missing template files for docs-new" do
+    it 'handles missing template files for docs-new' do
       config_with_missing_file = {
-        "templates" => {
-          "docs-new" => {
-            "template" => "/completely/nonexistent/template.md"
+        'templates' => {
+          'docs-new' => {
+            'template' => '/completely/nonexistent/template.md'
           }
         }
       }
@@ -481,22 +481,22 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
       allow(path_resolver).to receive(:resolve_path)
-        .with("test-doc", type: :docs_new)
-        .and_return({success: true, path: File.join(temp_dir, "test-doc.md")})
+        .with('test-doc', type: :docs_new)
+        .and_return({ success: true, path: File.join(temp_dir, 'test-doc.md') })
 
-      result = subject.call(type: "docs-new", title: "test-doc")
+      result = subject.call(type: 'docs-new', title: 'test-doc')
 
       expect(result).to eq(0) # Should succeed with fallback content
     end
 
-    it "handles template parsing errors" do
+    it 'handles template parsing errors' do
       # Create template with problematic content
-      File.write(template_file, "Template with {unclosed variable")
+      File.write(template_file, 'Template with {unclosed variable')
 
       config_with_template = {
-        "templates" => {
-          "template" => {
-            "template" => template_file
+        'templates' => {
+          'template' => {
+            'template' => template_file
           }
         }
       }
@@ -504,118 +504,118 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
 
       # This should still work, just with the literal content
       result = subject.call(
-        type: "template",
-        title: File.join(temp_dir, "output.txt"),
+        type: 'template',
+        title: File.join(temp_dir, 'output.txt'),
         template: template_file
       )
 
       expect(result).to eq(0) # Should handle gracefully
     end
 
-    it "handles variable substitution failures" do
-      File.write(template_file, "Title: {metadata.nonexistent}")
+    it 'handles variable substitution failures' do
+      File.write(template_file, 'Title: {metadata.nonexistent}')
 
       result = subject.call(
-        type: "template",
-        title: File.join(temp_dir, "output.txt"),
+        type: 'template',
+        title: File.join(temp_dir, 'output.txt'),
         template: template_file
       )
 
       expect(result).to eq(0) # Should handle gracefully
 
       # Verify the content was created (variable not substituted when unknown)
-      content = File.read(File.join(temp_dir, "output.txt"))
-      expect(content).to include("Title:")
+      content = File.read(File.join(temp_dir, 'output.txt'))
+      expect(content).to include('Title:')
     end
 
-    it "handles circular template dependencies" do
+    it 'handles circular template dependencies' do
       # This is more about variable resolution, create a complex substitution
-      template_content = "Value: {metadata.recursive}"
+      template_content = 'Value: {metadata.recursive}'
       File.write(template_file, template_content)
 
       # Test with recursive metadata (shouldn't cause infinite loops)
       result = subject.call(
-        type: "template",
-        title: File.join(temp_dir, "output.txt"),
+        type: 'template',
+        title: File.join(temp_dir, 'output.txt'),
         template: template_file,
-        recursive: "{metadata.recursive}"
+        recursive: '{metadata.recursive}'
       )
 
       expect(result).to eq(0) # Should handle gracefully
     end
   end
 
-  describe "path resolution errors" do
-    it "handles PathResolver initialization failures" do
+  describe 'path resolution errors' do
+    it 'handles PathResolver initialization failures' do
       # Mock PathResolver to fail on initialization
-      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_raise(StandardError, "PathResolver init failed")
+      allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_raise(StandardError, 'PathResolver init failed')
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: 'task-new', title: 'test-task')
 
       expect(result).to eq(1)
     end
 
-    it "handles invalid repository context" do
+    it 'handles invalid repository context' do
       path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
-      allow(path_resolver).to receive(:project_root).and_raise(StandardError, "No project root found")
-      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "Invalid context"})
+      allow(path_resolver).to receive(:project_root).and_raise(StandardError, 'No project root found')
+      allow(path_resolver).to receive(:resolve_path).and_return({ success: false, error: 'Invalid context' })
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: 'task-new', title: 'test-task')
 
       expect(result).to eq(1)
     end
 
-    it "handles missing project root detection" do
+    it 'handles missing project root detection' do
       path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(nil)
-      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "No project root"})
+      allow(path_resolver).to receive(:resolve_path).and_return({ success: false, error: 'No project root' })
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: 'task-new', title: 'test-task')
 
       expect(result).to eq(1)
     end
 
-    it "handles submodule resolution failures" do
+    it 'handles submodule resolution failures' do
       path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
-      allow(path_resolver).to receive(:resolve_path).and_return({success: false, error: "Submodule not found"})
+      allow(path_resolver).to receive(:resolve_path).and_return({ success: false, error: 'Submodule not found' })
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
 
-      result = subject.call(type: "task-new", title: "test-task")
+      result = subject.call(type: 'task-new', title: 'test-task')
 
       expect(result).to eq(1)
     end
   end
 
-  describe "concurrency" do
-    it "handles file creation conflicts" do
-      target_path = File.join(temp_dir, "concurrent-test.txt")
+  describe 'concurrency' do
+    it 'handles file creation conflicts' do
+      target_path = File.join(temp_dir, 'concurrent-test.txt')
 
       # Create the file first to simulate conflict
-      File.write(target_path, "existing content")
+      File.write(target_path, 'existing content')
 
       # Try to create without force
       result = subject.call(
-        type: "file",
+        type: 'file',
         title: target_path,
-        content: "new content"
+        content: 'new content'
       )
 
       # Should handle the conflict appropriately (depends on FileIoHandler implementation)
       expect([0, 1]).to include(result)
     end
 
-    it "handles concurrent modifications" do
-      target_dir = File.join(temp_dir, "concurrent-dir")
+    it 'handles concurrent modifications' do
+      target_dir = File.join(temp_dir, 'concurrent-dir')
 
       # Create directory first
       FileUtils.mkdir_p(target_dir)
 
       # Try to create again without force
       result = subject.call(
-        type: "directory",
+        type: 'directory',
         title: target_dir
       )
 
@@ -623,238 +623,238 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "delegation format processing" do
+  describe 'delegation format processing' do
     let(:path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
-    let(:test_path) { File.join(temp_dir, "delegated-file.md") }
+    let(:test_path) { File.join(temp_dir, 'delegated-file.md') }
 
     before do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
     end
 
-    context "valid delegation formats" do
-      it "parses file:docs-new correctly" do
+    context 'valid delegation formats' do
+      it 'parses file:docs-new correctly' do
         allow(path_resolver).to receive(:resolve_path)
-          .with("test-doc", type: :docs_new)
-          .and_return({success: true, path: test_path})
+          .with('test-doc', type: :docs_new)
+          .and_return({ success: true, path: test_path })
 
-        result = subject.call(type: "file:docs-new", title: "test-doc")
+        result = subject.call(type: 'file:docs-new', title: 'test-doc')
 
-        expect(path_resolver).to have_received(:resolve_path).with("test-doc", type: :docs_new)
+        expect(path_resolver).to have_received(:resolve_path).with('test-doc', type: :docs_new)
         expect(result).to eq(0)
       end
 
-      it "parses file:reflection-new correctly" do
+      it 'parses file:reflection-new correctly' do
         allow(path_resolver).to receive(:resolve_path)
-          .with("oauth-review", type: :reflection_new)
-          .and_return({success: true, path: test_path})
+          .with('oauth-review', type: :reflection_new)
+          .and_return({ success: true, path: test_path })
 
-        result = subject.call(type: "file:reflection-new", title: "oauth-review")
+        result = subject.call(type: 'file:reflection-new', title: 'oauth-review')
 
-        expect(path_resolver).to have_received(:resolve_path).with("oauth-review", type: :reflection_new)
+        expect(path_resolver).to have_received(:resolve_path).with('oauth-review', type: :reflection_new)
         expect(result).to eq(0)
       end
 
-      it "parses directory:code-review-new correctly" do
-        dir_path = File.join(temp_dir, "review-session")
+      it 'parses directory:code-review-new correctly' do
+        dir_path = File.join(temp_dir, 'review-session')
         allow(path_resolver).to receive(:resolve_path)
-          .with("auth-session", type: :code_review_new)
-          .and_return({success: true, path: dir_path})
+          .with('auth-session', type: :code_review_new)
+          .and_return({ success: true, path: dir_path })
 
-        result = subject.call(type: "directory:code-review-new", title: "auth-session")
+        result = subject.call(type: 'directory:code-review-new', title: 'auth-session')
 
-        expect(path_resolver).to have_received(:resolve_path).with("auth-session", type: :code_review_new)
+        expect(path_resolver).to have_received(:resolve_path).with('auth-session', type: :code_review_new)
         expect(result).to eq(0)
       end
     end
 
-    context "invalid delegation formats" do
-      it "rejects malformed delegation (no colon)" do
-        result = subject.call(type: "file-docs-new", title: "test")
+    context 'invalid delegation formats' do
+      it 'rejects malformed delegation (no colon)' do
+        result = subject.call(type: 'file-docs-new', title: 'test')
 
         expect(result).to eq(1)
       end
 
-      it "rejects multiple colons in delegation" do
-        result = subject.call(type: "file:docs:new", title: "test")
+      it 'rejects multiple colons in delegation' do
+        result = subject.call(type: 'file:docs:new', title: 'test')
 
         expect(result).to eq(1)
       end
 
-      it "rejects unknown creation types" do
-        result = subject.call(type: "unknown:docs-new", title: "test")
+      it 'rejects unknown creation types' do
+        result = subject.call(type: 'unknown:docs-new', title: 'test')
 
         expect(result).to eq(1)
       end
 
-      it "rejects unknown nav types for file creation" do
-        result = subject.call(type: "file:unknown-type", title: "test")
+      it 'rejects unknown nav types for file creation' do
+        result = subject.call(type: 'file:unknown-type', title: 'test')
 
         expect(result).to eq(1)
       end
 
-      it "rejects unknown nav types for directory creation" do
-        result = subject.call(type: "directory:unknown-type", title: "test")
+      it 'rejects unknown nav types for directory creation' do
+        result = subject.call(type: 'directory:unknown-type', title: 'test')
 
         expect(result).to eq(1)
       end
     end
 
-    context "edge cases" do
-      it "handles empty titles gracefully" do
-        result = subject.call(type: "file:docs-new", title: "")
+    context 'edge cases' do
+      it 'handles empty titles gracefully' do
+        result = subject.call(type: 'file:docs-new', title: '')
 
         expect(result).to eq(1)
       end
 
-      it "handles whitespace-only titles" do
-        result = subject.call(type: "file:docs-new", title: "   ")
+      it 'handles whitespace-only titles' do
+        result = subject.call(type: 'file:docs-new', title: '   ')
 
         expect(result).to eq(1)
       end
 
-      it "handles titles with special characters" do
+      it 'handles titles with special characters' do
         allow(path_resolver).to receive(:resolve_path)
-          .with("test@#$%^&*()", type: :docs_new)
-          .and_return({success: true, path: test_path})
+          .with("test@\#$%^&*()", type: :docs_new)
+          .and_return({ success: true, path: test_path })
 
-        result = subject.call(type: "file:docs-new", title: "test@#$%^&*()")
+        result = subject.call(type: 'file:docs-new', title: "test@\#$%^&*()")
 
         expect(result).to eq(0)
       end
 
-      it "handles very long titles" do
-        long_title = "very-" + "long-" * 50 + "title"
+      it 'handles very long titles' do
+        long_title = 'very-' + 'long-' * 50 + 'title'
         allow(path_resolver).to receive(:resolve_path)
           .with(long_title, type: :docs_new)
-          .and_return({success: true, path: test_path})
+          .and_return({ success: true, path: test_path })
 
-        result = subject.call(type: "file:docs-new", title: long_title)
+        result = subject.call(type: 'file:docs-new', title: long_title)
 
         expect(result).to eq(0)
       end
     end
   end
 
-  describe "contextual content generation" do
+  describe 'contextual content generation' do
     let(:command) { described_class.new }
 
-    context "generate_contextual_content method" do
-      it "generates reflection headers correctly" do
-        content = command.send(:generate_contextual_content, :reflection_new, "OAuth Implementation")
+    context 'generate_contextual_content method' do
+      it 'generates reflection headers correctly' do
+        content = command.send(:generate_contextual_content, :reflection_new, 'OAuth Implementation')
 
         expect(content).to eq("# Reflection - OAuth Implementation\n\n")
       end
 
-      it "generates documentation headers correctly" do
-        content = command.send(:generate_contextual_content, :docs_new, "API Guide")
+      it 'generates documentation headers correctly' do
+        content = command.send(:generate_contextual_content, :docs_new, 'API Guide')
 
         expect(content).to eq("# Documentation - API Guide\n\n")
       end
 
-      it "generates code review headers correctly" do
-        content = command.send(:generate_contextual_content, :code_review_new, "Auth Session")
+      it 'generates code review headers correctly' do
+        content = command.send(:generate_contextual_content, :code_review_new, 'Auth Session')
 
         expect(content).to eq("# Code Review - Auth Session\n\n")
       end
 
-      it "handles unknown nav_types with default format" do
-        content = command.send(:generate_contextual_content, :unknown_type, "test title")
+      it 'handles unknown nav_types with default format' do
+        content = command.send(:generate_contextual_content, :unknown_type, 'test title')
 
         expect(content).to eq("# Test title\n\n")
       end
 
-      it "handles special characters in titles" do
-        content = command.send(:generate_contextual_content, :docs_new, "Test & Special (chars)")
+      it 'handles special characters in titles' do
+        content = command.send(:generate_contextual_content, :docs_new, 'Test & Special (chars)')
 
         expect(content).to eq("# Documentation - Test & Special (chars)\n\n")
       end
 
-      it "handles empty titles gracefully" do
-        content = command.send(:generate_contextual_content, :docs_new, "")
+      it 'handles empty titles gracefully' do
+        content = command.send(:generate_contextual_content, :docs_new, '')
 
         expect(content).to eq("# Documentation - \n\n")
       end
 
-      it "handles nil titles gracefully" do
+      it 'handles nil titles gracefully' do
         content = command.send(:generate_contextual_content, :docs_new, nil)
 
         expect(content).to eq("# Documentation - \n\n")
       end
     end
 
-    context "generate_contextual_content_from_template_context method" do
-      it "generates docs content from template path" do
-        template_config = {"template" => "/path/to/docs/template.md"}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Doc")
+    context 'generate_contextual_content_from_template_context method' do
+      it 'generates docs content from template path' do
+        template_config = { 'template' => '/path/to/docs/template.md' }
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Doc')
 
         expect(content).to eq("# Documentation - Test Doc\n\n")
       end
 
-      it "generates reflection content from template path" do
-        template_config = {"template" => "/path/to/reflection/template.md"}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Reflection")
+      it 'generates reflection content from template path' do
+        template_config = { 'template' => '/path/to/reflection/template.md' }
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Reflection')
 
         expect(content).to eq("# Reflection - Test Reflection\n\n")
       end
 
-      it "generates code review content from template path" do
-        template_config = {"template" => "/path/to/code-review/template.md"}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Review")
+      it 'generates code review content from template path' do
+        template_config = { 'template' => '/path/to/code-review/template.md' }
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Review')
 
         expect(content).to eq("# Code Review - Test Review\n\n")
       end
 
-      it "generates code review content from review path" do
-        template_config = {"template" => "/path/to/review/template.md"}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Review")
+      it 'generates code review content from review path' do
+        template_config = { 'template' => '/path/to/review/template.md' }
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Review')
 
         expect(content).to eq("# Code Review - Test Review\n\n")
       end
 
-      it "handles default case for unknown template paths" do
-        template_config = {"template" => "/path/to/unknown/template.md"}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Title")
+      it 'handles default case for unknown template paths' do
+        template_config = { 'template' => '/path/to/unknown/template.md' }
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Title')
 
         expect(content).to eq("# Test title\n\n")
       end
 
-      it "handles missing template path" do
+      it 'handles missing template path' do
         template_config = {}
-        content = command.send(:generate_contextual_content_from_template_context, template_config, "Test Title")
+        content = command.send(:generate_contextual_content_from_template_context, template_config, 'Test Title')
 
         expect(content).to eq("# Test title\n\n")
       end
 
-      it "handles nil template config" do
-        content = command.send(:generate_contextual_content_from_template_context, nil, "Test Title")
+      it 'handles nil template config' do
+        content = command.send(:generate_contextual_content_from_template_context, nil, 'Test Title')
 
         expect(content).to eq("# Test title\n\n")
       end
     end
   end
 
-  describe "missing template handling" do
+  describe 'missing template handling' do
     let(:path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
-    let(:test_path) { File.join(temp_dir, "test-file.md") }
+    let(:test_path) { File.join(temp_dir, 'test-file.md') }
 
     before do
       allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
-      allow(path_resolver).to receive(:resolve_path).and_return({success: true, path: test_path})
+      allow(path_resolver).to receive(:resolve_path).and_return({ success: true, path: test_path })
     end
 
-    context "missing template configuration" do
-      it "creates contextual content for reflection_new" do
+    context 'missing template configuration' do
+      it 'creates contextual content for reflection_new' do
         # Create config without reflection-new template
         config = {
-          "templates" => {
-            "docs-new" => {"template" => "docs-template.md"}
+          'templates' => {
+            'docs-new' => { 'template' => 'docs-template.md' }
           }
         }
         File.write(config_file, YAML.dump(config))
 
-        result = subject.call(type: "file:reflection-new", title: "oauth review")
+        result = subject.call(type: 'file:reflection-new', title: 'oauth review')
 
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
@@ -862,12 +862,12 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(content).to eq("# Reflection - oauth review\n\n")
       end
 
-      it "creates contextual content for docs_new" do
+      it 'creates contextual content for docs_new' do
         # Create config without docs-new template
-        config = {"templates" => {}}
+        config = { 'templates' => {} }
         File.write(config_file, YAML.dump(config))
 
-        result = subject.call(type: "file:docs-new", title: "API guide")
+        result = subject.call(type: 'file:docs-new', title: 'API guide')
 
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
@@ -875,12 +875,12 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(content).to eq("# Documentation - API guide\n\n")
       end
 
-      it "creates contextual content for code_review_new" do
+      it 'creates contextual content for code_review_new' do
         # Create config without code-review-new template
-        config = {"templates" => {}}
+        config = { 'templates' => {} }
         File.write(config_file, YAML.dump(config))
 
-        result = subject.call(type: "directory:code-review-new", title: "auth session")
+        result = subject.call(type: 'directory:code-review-new', title: 'auth session')
 
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
@@ -889,17 +889,17 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       end
     end
 
-    context "missing template files" do
-      it "generates contextual content when template file missing" do
+    context 'missing template files' do
+      it 'generates contextual content when template file missing' do
         # Create config with non-existent template file
         config = {
-          "templates" => {
-            "reflection-new" => {"template" => "/nonexistent/template.md"}
+          'templates' => {
+            'reflection-new' => { 'template' => '/nonexistent/template.md' }
           }
         }
         File.write(config_file, YAML.dump(config))
 
-        result = subject.call(type: "file:reflection-new", title: "oauth review")
+        result = subject.call(type: 'file:reflection-new', title: 'oauth review')
 
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
@@ -907,16 +907,16 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         expect(content).to eq("# Reflection - oauth review\n\n")
       end
 
-      it "handles template path resolution failures" do
+      it 'handles template path resolution failures' do
         # Create config with nil template path
         config = {
-          "templates" => {
-            "docs-new" => {"template" => nil}
+          'templates' => {
+            'docs-new' => { 'template' => nil }
           }
         }
         File.write(config_file, YAML.dump(config))
 
-        result = subject.call(type: "file:docs-new", title: "API guide")
+        result = subject.call(type: 'file:docs-new', title: 'API guide')
 
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
@@ -926,129 +926,129 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "delegation security validation" do
-    context "delegation input sanitization" do
-      it "validates delegation input for injection attacks" do
+  describe 'delegation security validation' do
+    context 'delegation input sanitization' do
+      it 'validates delegation input for injection attacks' do
         malicious_types = [
-          "file;rm -rf /:docs-new",
-          "file$(rm -rf /):docs-new",
-          "file`rm -rf /`:docs-new",
-          "file|rm -rf /:docs-new",
-          "file&&rm -rf /:docs-new"
+          'file;rm -rf /:docs-new',
+          'file$(rm -rf /):docs-new',
+          'file`rm -rf /`:docs-new',
+          'file|rm -rf /:docs-new',
+          'file&&rm -rf /:docs-new'
         ]
 
         malicious_types.each do |malicious_type|
-          result = subject.call(type: malicious_type, title: "test")
+          result = subject.call(type: malicious_type, title: 'test')
           expect(result).to eq(1), "Should reject malicious type: #{malicious_type}"
         end
       end
 
-      it "sanitizes nav-type parameters" do
+      it 'sanitizes nav-type parameters' do
         malicious_nav_types = [
-          "file:docs-new;rm -rf /",
-          "file:docs-new$(rm -rf /)",
-          "file:docs-new`rm -rf /`",
-          "file:docs-new|rm -rf /",
-          "file:docs-new&&rm -rf /"
+          'file:docs-new;rm -rf /',
+          'file:docs-new$(rm -rf /)',
+          'file:docs-new`rm -rf /`',
+          'file:docs-new|rm -rf /',
+          'file:docs-new&&rm -rf /'
         ]
 
         malicious_nav_types.each do |malicious_nav_type|
-          result = subject.call(type: malicious_nav_type, title: "test")
+          result = subject.call(type: malicious_nav_type, title: 'test')
           expect(result).to eq(1), "Should reject malicious nav-type: #{malicious_nav_type}"
         end
       end
 
-      it "prevents path traversal via delegation" do
+      it 'prevents path traversal via delegation' do
         traversal_types = [
-          "file:../../etc/passwd",
-          "file:../../../root/.ssh",
-          "directory:../../../../tmp"
+          'file:../../etc/passwd',
+          'file:../../../root/.ssh',
+          'directory:../../../../tmp'
         ]
 
         traversal_types.each do |traversal_type|
-          result = subject.call(type: traversal_type, title: "test")
+          result = subject.call(type: traversal_type, title: 'test')
           expect(result).to eq(1), "Should reject path traversal: #{traversal_type}"
         end
       end
     end
   end
 
-  describe "draft status support" do
-    context "with --status parameter" do
-      it "accepts draft as a valid status value" do
+  describe 'draft status support' do
+    context 'with --status parameter' do
+      it 'accepts draft as a valid status value' do
         # This tests the dry-cli validation - the command should not raise an error
-        test_path = File.join(temp_dir, "test-draft.txt")
+        test_path = File.join(temp_dir, 'test-draft.txt')
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: test_path,
-          content: "draft content",
-          status: "draft"
+          content: 'draft content',
+          status: 'draft'
         )
         expect(result).to eq(0), "Command failed with status #{result}"
       end
 
-      it "accepts all valid status values" do
-        valid_statuses = %w[pending in-progress done blocked draft]
-        
+      it 'accepts all valid status values' do
+        valid_statuses = ['pending', 'in-progress', 'done', 'blocked', 'draft']
+
         valid_statuses.each do |status|
-          expect {
+          expect do
             test_path = File.join(temp_dir, "test-#{status}.txt")
             result = subject.call(
-              type: "file",
+              type: 'file',
               title: test_path,
-              content: "test content",
+              content: 'test content',
               status: status
             )
             expect(result).to eq(0)
-          }.not_to raise_error, "Should accept status: #{status}"
+          end.not_to raise_error, "Should accept status: #{status}"
         end
       end
 
       # Note: Invalid status validation is handled by dry-cli at the argument parsing level,
       # not within the command itself. This is framework-level validation that doesn't need testing.
 
-      it "passes custom metadata through to file creation" do
+      it 'passes custom metadata through to file creation' do
         # This tests that dynamic metadata is preserved for file type
-        test_path = File.join(temp_dir, "test-with-metadata.txt")
+        test_path = File.join(temp_dir, 'test-with-metadata.txt')
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: test_path,
-          content: "content with metadata",
-          status: "draft"
+          content: 'content with metadata',
+          status: 'draft'
         )
-        
+
         expect(result).to eq(0)
         expect(File.exist?(test_path)).to be true
       end
     end
 
-    context "default status behavior" do
-      it "maintains backward compatibility when no status is provided" do
+    context 'default status behavior' do
+      it 'maintains backward compatibility when no status is provided' do
         # Should still work without status parameter
-        test_path = File.join(temp_dir, "test-no-status.txt")
+        test_path = File.join(temp_dir, 'test-no-status.txt')
         result = subject.call(
-          type: "file",
+          type: 'file',
           title: test_path,
-          content: "content without status"
+          content: 'content without status'
         )
-        
+
         expect(result).to eq(0)
       end
 
-      it "uses default values from configuration" do
+      it 'uses default values from configuration' do
         # The default values should come from configuration
         config = {
-          "templates" => {
-            "docs-new" => {
-              "template" => "fake-template.md",
-              "variables" => {
-                "status" => "draft"  # Default from config
+          'templates' => {
+            'docs-new' => {
+              'template' => 'fake-template.md',
+              'variables' => {
+                'status' => 'draft'  # Default from config
               }
             }
           },
-          "variable_processors" => {
-            "defaults" => {
-              "status" => "draft"
+          'variable_processors' => {
+            'defaults' => {
+              'status' => 'draft'
             }
           }
         }
@@ -1059,11 +1059,11 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
         allow(path_resolver).to receive(:project_root).and_return(temp_dir)
         allow(path_resolver).to receive(:resolve_path)
-          .and_return({success: true, path: File.join(temp_dir, "default-task.md")})
+          .and_return({ success: true, path: File.join(temp_dir, 'default-task.md') })
 
-        template_content = "Status: {metadata.status}"
-        allow(File).to receive(:exist?).with("fake-template.md").and_return(true)
-        allow(File).to receive(:read).with("fake-template.md").and_return(template_content)
+        template_content = 'Status: {metadata.status}'
+        allow(File).to receive(:exist?).with('fake-template.md').and_return(true)
+        allow(File).to receive(:read).with('fake-template.md').and_return(template_content)
         allow(File).to receive(:exist?).with(config_file).and_call_original
         allow(File).to receive(:read).with(config_file).and_call_original
         # Allow File.exist? for any other file paths
@@ -1071,8 +1071,8 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
 
         # Test that task-new returns error
         result = subject.call(
-          type: "task-new",
-          title: "default-status-task"
+          type: 'task-new',
+          title: 'default-status-task'
         )
 
         expect(result).to eq(1) # Should fail since task-new is removed
@@ -1080,7 +1080,7 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "PathResolver delegation integration" do
+  describe 'PathResolver delegation integration' do
     let(:path_resolver) { instance_double(CodingAgentTools::Molecules::PathResolver) }
 
     before do
@@ -1088,33 +1088,33 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       allow(path_resolver).to receive(:project_root).and_return(temp_dir)
     end
 
-    context "PathResolver failures" do
-      it "handles PathResolver failures gracefully" do
+    context 'PathResolver failures' do
+      it 'handles PathResolver failures gracefully' do
         allow(path_resolver).to receive(:resolve_path)
-          .and_return({success: false, error: "Path resolution failed"})
+          .and_return({ success: false, error: 'Path resolution failed' })
 
-        result = subject.call(type: "file:docs-new", title: "test")
+        result = subject.call(type: 'file:docs-new', title: 'test')
 
         expect(result).to eq(1)
       end
 
-      it "passes correct nav_type to PathResolver" do
+      it 'passes correct nav_type to PathResolver' do
         allow(path_resolver).to receive(:resolve_path)
-          .with("test-doc", type: :docs_new)
-          .and_return({success: true, path: File.join(temp_dir, "test.md")})
+          .with('test-doc', type: :docs_new)
+          .and_return({ success: true, path: File.join(temp_dir, 'test.md') })
 
-        subject.call(type: "file:docs-new", title: "test-doc")
+        subject.call(type: 'file:docs-new', title: 'test-doc')
 
-        expect(path_resolver).to have_received(:resolve_path).with("test-doc", type: :docs_new)
+        expect(path_resolver).to have_received(:resolve_path).with('test-doc', type: :docs_new)
       end
 
-      it "validates resolved paths from delegation" do
-        malicious_path = "../../../../etc/passwd"
+      it 'validates resolved paths from delegation' do
+        malicious_path = '../../../../etc/passwd'
         allow(path_resolver).to receive(:resolve_path)
-          .and_return({success: true, path: malicious_path})
+          .and_return({ success: true, path: malicious_path })
 
         # The security validator should catch this
-        result = subject.call(type: "file:docs-new", title: "test")
+        result = subject.call(type: 'file:docs-new', title: 'test')
 
         # Result depends on security validator implementation
         expect([0, 1]).to include(result)
@@ -1122,153 +1122,153 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
     end
   end
 
-  describe "dynamic flag handling" do
+  describe 'dynamic flag handling' do
     let(:command) { described_class.new }
 
-    describe "#parse_undefined_flags" do
-      it "parses single undefined flag with value" do
-        argv = ["--custom-field", "value123"]
+    describe '#parse_undefined_flags' do
+      it 'parses single undefined flag with value' do
+        argv = ['--custom-field', 'value123']
         result = command.send(:parse_undefined_flags, argv)
-        
-        expect(result).to eq({ custom_field: "value123" })
+
+        expect(result).to eq({ custom_field: 'value123' })
       end
 
-      it "parses multiple undefined flags" do
-        argv = ["--status", "draft", "--priority", "high", "--custom-field", "test"]
+      it 'parses multiple undefined flags' do
+        argv = ['--status', 'draft', '--priority', 'high', '--custom-field', 'test']
         result = command.send(:parse_undefined_flags, argv)
-        
-        expect(result).to eq({ 
-          custom_field: "test"  # Only custom-field should be captured, status and priority are defined
+
+        expect(result).to eq({
+          custom_field: 'test'  # Only custom-field should be captured, status and priority are defined
         })
       end
 
-      it "parses boolean flags without values" do
-        argv = ["--blocking", "--urgent"]
+      it 'parses boolean flags without values' do
+        argv = ['--blocking', '--urgent']
         result = command.send(:parse_undefined_flags, argv)
-        
+
         expect(result).to eq({ blocking: true, urgent: true })
       end
 
-      it "ignores defined flags" do
-        argv = ["--title", "Test Task", "--priority", "high", "--custom", "value"]
+      it 'ignores defined flags' do
+        argv = ['--title', 'Test Task', '--priority', 'high', '--custom', 'value']
         result = command.send(:parse_undefined_flags, argv)
-        
-        expect(result).to eq({ custom: "value" })
+
+        expect(result).to eq({ custom: 'value' })
       end
 
-      it "converts hyphenated flags to underscored symbols" do
-        argv = ["--custom-field-name", "value"]
+      it 'converts hyphenated flags to underscored symbols' do
+        argv = ['--custom-field-name', 'value']
         result = command.send(:parse_undefined_flags, argv)
-        
-        expect(result).to eq({ custom_field_name: "value" })
+
+        expect(result).to eq({ custom_field_name: 'value' })
       end
 
-      it "handles empty argv gracefully" do
+      it 'handles empty argv gracefully' do
         result = command.send(:parse_undefined_flags, [])
-        
+
         expect(result).to eq({})
       end
 
-      it "skips invalid flag names" do
-        argv = ["--123invalid", "value", "--_invalid", "value2", "--valid-flag", "value3"]
+      it 'skips invalid flag names' do
+        argv = ['--123invalid', 'value', '--_invalid', 'value2', '--valid-flag', 'value3']
         result = command.send(:parse_undefined_flags, argv)
-        
-        expect(result).to eq({ valid_flag: "value3" })
+
+        expect(result).to eq({ valid_flag: 'value3' })
       end
     end
 
-    describe "#validate_flag_name" do
-      it "accepts valid flag names" do
-        valid_names = %w[status priority custom-field test123 a simple-name]
-        
+    describe '#validate_flag_name' do
+      it 'accepts valid flag names' do
+        valid_names = ['status', 'priority', 'custom-field', 'test123', 'a', 'simple-name']
+
         valid_names.each do |name|
           expect(command.send(:validate_flag_name, name)).to be(true), "Should accept: #{name}"
         end
       end
 
-      it "rejects invalid flag names" do
-        invalid_names = %w[123invalid _starts-with-underscore --double-dash flag@symbol -single-dash]
-        
+      it 'rejects invalid flag names' do
+        invalid_names = ['123invalid', '_starts-with-underscore', '--double-dash', 'flag@symbol', '-single-dash']
+
         invalid_names.each do |name|
           expect(command.send(:validate_flag_name, name)).to be(false), "Should reject: #{name}"
         end
       end
 
-      it "rejects reserved flag names" do
-        reserved_names = %w[help version debug verbose quiet]
-        
+      it 'rejects reserved flag names' do
+        reserved_names = ['help', 'version', 'debug', 'verbose', 'quiet']
+
         reserved_names.each do |name|
           expect(command.send(:validate_flag_name, name)).to be(false), "Should reject reserved: #{name}"
         end
       end
 
-      it "rejects overly long flag names" do
-        long_name = "a" * 51
+      it 'rejects overly long flag names' do
+        long_name = 'a' * 51
         expect(command.send(:validate_flag_name, long_name)).to be false
       end
     end
 
-    describe "#convert_flag_value" do
-      it "converts boolean strings to boolean values" do
-        expect(command.send(:convert_flag_value, "true")).to be true
-        expect(command.send(:convert_flag_value, "false")).to be false
-        expect(command.send(:convert_flag_value, "yes")).to be true
-        expect(command.send(:convert_flag_value, "no")).to be false
-        expect(command.send(:convert_flag_value, "on")).to be true
-        expect(command.send(:convert_flag_value, "off")).to be false
+    describe '#convert_flag_value' do
+      it 'converts boolean strings to boolean values' do
+        expect(command.send(:convert_flag_value, 'true')).to be true
+        expect(command.send(:convert_flag_value, 'false')).to be false
+        expect(command.send(:convert_flag_value, 'yes')).to be true
+        expect(command.send(:convert_flag_value, 'no')).to be false
+        expect(command.send(:convert_flag_value, 'on')).to be true
+        expect(command.send(:convert_flag_value, 'off')).to be false
       end
 
-      it "converts integer strings to integers" do
-        expect(command.send(:convert_flag_value, "123")).to eq(123)
-        expect(command.send(:convert_flag_value, "-456")).to eq(-456)
-        expect(command.send(:convert_flag_value, "0")).to eq(0)
-        expect(command.send(:convert_flag_value, "1")).to eq(1)
+      it 'converts integer strings to integers' do
+        expect(command.send(:convert_flag_value, '123')).to eq(123)
+        expect(command.send(:convert_flag_value, '-456')).to eq(-456)
+        expect(command.send(:convert_flag_value, '0')).to eq(0)
+        expect(command.send(:convert_flag_value, '1')).to eq(1)
       end
 
-      it "converts float strings to floats" do
-        expect(command.send(:convert_flag_value, "123.45")).to eq(123.45)
-        expect(command.send(:convert_flag_value, "-67.89")).to eq(-67.89)
-        expect(command.send(:convert_flag_value, "0.0")).to eq(0.0)
+      it 'converts float strings to floats' do
+        expect(command.send(:convert_flag_value, '123.45')).to eq(123.45)
+        expect(command.send(:convert_flag_value, '-67.89')).to eq(-67.89)
+        expect(command.send(:convert_flag_value, '0.0')).to eq(0.0)
       end
 
-      it "converts comma-separated values to arrays" do
-        expect(command.send(:convert_flag_value, "a,b,c")).to eq(["a", "b", "c"])
-        expect(command.send(:convert_flag_value, "one, two, three")).to eq(["one", "two", "three"])
+      it 'converts comma-separated values to arrays' do
+        expect(command.send(:convert_flag_value, 'a,b,c')).to eq(['a', 'b', 'c'])
+        expect(command.send(:convert_flag_value, 'one, two, three')).to eq(['one', 'two', 'three'])
       end
 
-      it "returns string values unchanged for other cases" do
-        expect(command.send(:convert_flag_value, "simple-string")).to eq("simple-string")
-        expect(command.send(:convert_flag_value, "mixed123text")).to eq("mixed123text")
-        expect(command.send(:convert_flag_value, "")).to eq("")
+      it 'returns string values unchanged for other cases' do
+        expect(command.send(:convert_flag_value, 'simple-string')).to eq('simple-string')
+        expect(command.send(:convert_flag_value, 'mixed123text')).to eq('mixed123text')
+        expect(command.send(:convert_flag_value, '')).to eq('')
       end
 
-      it "handles non-string values" do
+      it 'handles non-string values' do
         expect(command.send(:convert_flag_value, true)).to be true
         expect(command.send(:convert_flag_value, 123)).to eq(123)
       end
     end
 
-    describe "integration with create_path command" do
-      let(:test_path) { File.join(temp_dir, "test-file.txt") }
+    describe 'integration with create_path command' do
+      let(:test_path) { File.join(temp_dir, 'test-file.txt') }
 
       before do
         # Mock ARGV to simulate undefined flags
         allow(command).to receive(:parse_undefined_flags).and_return({
-          custom_field: "test-value",
+          custom_field: 'test-value',
           priority_level: 5,
           blocking: true,
-          tags: ["urgent", "feature"]
+          tags: ['urgent', 'feature']
         })
-        
+
         # Mock all the dependencies that the command needs
         path_resolver = instance_double(CodingAgentTools::Molecules::PathResolver)
         file_handler = instance_double(CodingAgentTools::Molecules::FileIoHandler)
         security_validator = instance_double(CodingAgentTools::Molecules::SecurePathValidator)
-        
+
         allow(CodingAgentTools::Molecules::PathResolver).to receive(:new).and_return(path_resolver)
         allow(CodingAgentTools::Molecules::FileIoHandler).to receive(:new).and_return(file_handler)
         allow(CodingAgentTools::Molecules::SecurePathValidator).to receive(:new).and_return(security_validator)
-        
+
         allow(path_resolver).to receive(:project_root).and_return(temp_dir)
         allow(security_validator).to receive(:validate_path).and_return(
           CodingAgentTools::Molecules::SecurePathValidator::ValidationResult.new(true, test_path, nil, nil)
@@ -1276,82 +1276,82 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         allow(file_handler).to receive(:write_content).and_return(true)
       end
 
-      it "includes undefined flags in metadata" do
+      it 'includes undefined flags in metadata' do
         result = command.call(
-          type: "file",
+          type: 'file',
           title: test_path,
-          content: "test content"
+          content: 'test content'
         )
 
         expect(result).to eq(0)
       end
 
-      it "reports dynamic flags in output" do
-        # Mock ARGV parsing to return dynamic flags  
+      it 'reports dynamic flags in output' do
+        # Mock ARGV parsing to return dynamic flags
         allow(command).to receive(:parse_undefined_flags).and_return({
-          custom_field: "value",
+          custom_field: 'value',
           priority_level: 3
         })
 
         # Capture output
-        expect { 
+        expect do
           command.call(
-            type: "file",
+            type: 'file',
             title: test_path,
-            content: "test content"
+            content: 'test content'
           )
-        }.to output(/Added metadata: custom_field=value, priority_level=3/).to_stdout
+        end.to output(/Added metadata: custom_field=value, priority_level=3/).to_stdout
       end
 
       it "doesn't report dynamic flags when none are present" do
         allow(command).to receive(:parse_undefined_flags).and_return({})
 
-        expect { 
+        expect do
           command.call(
-            type: "file",
+            type: 'file',
             title: test_path,
-            content: "test content"
+            content: 'test content'
           )
-        }.not_to output(/Added metadata:/).to_stdout
+        end.not_to output(/Added metadata:/).to_stdout
       end
     end
 
-    describe "error handling" do
-      it "handles ARGV parsing errors gracefully" do
-        allow(command).to receive(:parse_undefined_flags).and_raise(StandardError, "ARGV error")
+    describe 'error handling' do
+      it 'handles ARGV parsing errors gracefully' do
+        allow(command).to receive(:parse_undefined_flags).and_raise(StandardError, 'ARGV error')
 
         result = command.call(
-          type: "file",
-          title: File.join(temp_dir, "test.txt"),
-          content: "content"
+          type: 'file',
+          title: File.join(temp_dir, 'test.txt'),
+          content: 'content'
         )
 
         expect(result).to eq(1)
       end
 
-      it "continues operation when flag validation fails" do
+      it 'continues operation when flag validation fails' do
         # Mock to return some invalid flags mixed with valid ones
         allow(command).to receive(:parse_undefined_flags).and_return({
-          valid_flag: "value",
+          valid_flag: 'value',
           another_valid: true
         })
 
         result = command.call(
-          type: "file",
-          title: File.join(temp_dir, "test.txt"),
-          content: "content"
+          type: 'file',
+          title: File.join(temp_dir, 'test.txt'),
+          content: 'content'
         )
 
         expect(result).to eq(0)
       end
     end
 
-    describe "security validation" do
-      it "prevents flag name injection attacks" do
+    describe 'security validation' do
+      it 'prevents flag name injection attacks' do
         malicious_flags = {
-          "malicious; rm -rf /": "value",
-          "flag$(rm -rf /)": "value2",
-          "flag`rm -rf /`": "value3"
+          "malicious; rm -rf /": 'value',
+          "flag$(rm -rf /)": 'value2',
+          "flag`rm -rf /`": 'value3'
         }
 
         # These should be rejected by validate_flag_name
@@ -1360,11 +1360,11 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
         end
       end
 
-      it "handles flag values safely" do
+      it 'handles flag values safely' do
         dangerous_values = [
-          "value; rm -rf /",
-          "value$(rm -rf /)",
-          "value`rm -rf /`"
+          'value; rm -rf /',
+          'value$(rm -rf /)',
+          'value`rm -rf /`'
         ]
 
         # Values should be handled safely (they're just stored as metadata)
@@ -1375,46 +1375,46 @@ RSpec.describe CodingAgentTools::Cli::CreatePathCommand do
       end
     end
 
-    describe "backward compatibility" do
+    describe 'backward compatibility' do
       it "doesn't break existing command usage" do
         result = subject.call(
-          type: "file",
-          title: File.join(temp_dir, "backward-compat.txt"),
-          content: "existing functionality",
-          priority: "high"
+          type: 'file',
+          title: File.join(temp_dir, 'backward-compat.txt'),
+          content: 'existing functionality',
+          priority: 'high'
         )
 
         expect(result).to eq(0)
       end
 
-      it "defined flags take precedence over undefined flags" do
+      it 'defined flags take precedence over undefined flags' do
         # Mock ARGV to have both defined and undefined flags
         allow(command).to receive(:parse_undefined_flags).and_return({
-          priority: "low",      # This should be ignored since priority is defined
-          custom_field: "value" # This should be kept
+          priority: 'low',      # This should be ignored since priority is defined
+          custom_field: 'value' # This should be kept
         })
 
         # The defined priority should win
         result = command.call(
-          type: "file",
-          title: File.join(temp_dir, "precedence.txt"),
-          content: "test",
-          priority: "high"
+          type: 'file',
+          title: File.join(temp_dir, 'precedence.txt'),
+          content: 'test',
+          priority: 'high'
         )
 
         expect(result).to eq(0)
       end
     end
 
-    describe "task-new removal" do
-      it "returns error message when task-new type is used" do
+    describe 'task-new removal' do
+      it 'returns error message when task-new type is used' do
         expect(subject).to receive(:puts).with("Error: The 'task-new' type has been removed. Please use 'task-manager create' instead.")
-        
+
         result = subject.call(
-          type: "task-new",
-          title: "Test task"
+          type: 'task-new',
+          title: 'Test task'
         )
-        
+
         expect(result).to eq(1)
       end
     end
