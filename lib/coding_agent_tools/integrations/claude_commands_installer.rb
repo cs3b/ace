@@ -75,15 +75,24 @@ module CodingAgentTools
       def validate_source!
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
         
-        # Check for new structure with subdirectories
+        # Check for various structures
         commands_exist = (source_base / 'commands').exist?
         custom_exist = (source_base / 'commands' / '_custom').exist?
         generated_exist = (source_base / 'commands' / '_generated').exist?
         agents_exist = (source_base / 'agents').exist?
         
-        # For now, accept current flat structure or new subdirectory structure
+        # Check if flat structure has command files
+        has_flat_commands = false
+        if commands_exist
+          has_flat_commands = (source_base / 'commands').glob('*.md').reject { |f| f.basename.to_s == 'README.md' }.any?
+        end
+        
+        # Accept flat structure, subdirectory structure, or both
         if !commands_exist && !custom_exist && !generated_exist
           puts "Error: No command directories found at #{source_base}"
+          exit 1
+        elsif commands_exist && !has_flat_commands && !custom_exist && !generated_exist
+          puts "Error: Commands directory exists but contains no command files"
           exit 1
         end
         
@@ -207,34 +216,56 @@ module CodingAgentTools
 
       def copy_custom_commands
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
+        commands_dir = source_base / 'commands'
         custom_dir = source_base / 'commands' / '_custom'
         generated_dir = source_base / 'commands' / '_generated'
         target_dir = project_root / '.claude' / 'commands'
         
-        # Copy custom commands
-        if custom_dir.exist?
-          puts "Copying commands:"
+        # Check if we have a flat structure (new) or subdirectory structure (legacy)
+        has_flat_structure = commands_dir.glob('*.md').reject { |f| f.basename.to_s == 'README.md' }.any?
+        has_subdirs = custom_dir.exist? || generated_dir.exist?
+        
+        puts "Copying commands:"
+        total_count = 0
+        
+        if has_flat_structure
+          # Copy from flat structure
+          commands_dir.glob('*.md').each do |file|
+            next if file.basename.to_s == 'README.md'
+            result = copy_file_with_metadata(file, target_dir / file.basename, 'command')
+            total_count += 1 if result == :created
+          end
+          puts "  ✓ Copied #{total_count} commands from flat structure"
+        elsif has_subdirs
+          # Legacy: Copy from subdirectories
           custom_count = 0
-          custom_dir.glob('*.md').each do |file|
-            result = copy_file_with_metadata(file, target_dir / file.basename, 'custom_command')
-            custom_count += 1 if result == :created
-          end
-          stats[:custom_commands] = custom_count
-          puts "  ✓ Copied #{custom_count} custom commands"
-        end
-
-        # Copy generated commands  
-        if generated_dir.exist?
           generated_count = 0
-          generated_dir.glob('*.md').each do |file|
-            result = copy_file_with_metadata(file, target_dir / file.basename, 'generated_command')
-            generated_count += 1 if result == :created
+          
+          # Copy custom commands
+          if custom_dir.exist?
+            custom_dir.glob('*.md').each do |file|
+              result = copy_file_with_metadata(file, target_dir / file.basename, 'custom_command')
+              custom_count += 1 if result == :created
+            end
+            stats[:custom_commands] = custom_count
           end
-          stats[:generated_commands] = generated_count
-          puts "  ✓ Copied #{generated_count} generated commands"
+
+          # Copy generated commands  
+          if generated_dir.exist?
+            generated_dir.glob('*.md').each do |file|
+              result = copy_file_with_metadata(file, target_dir / file.basename, 'generated_command')
+              generated_count += 1 if result == :created
+            end
+            stats[:generated_commands] = generated_count
+          end
+          
+          total_count = custom_count + generated_count
+          puts "  ✓ Copied #{custom_count} custom commands" if custom_count > 0
+          puts "  ✓ Copied #{generated_count} generated commands" if generated_count > 0
         end
         
-        puts if custom_dir.exist? || generated_dir.exist?
+        stats[:custom_commands] = total_count if has_flat_structure
+        puts if total_count > 0
       end
 
       def copy_command_file(file)
