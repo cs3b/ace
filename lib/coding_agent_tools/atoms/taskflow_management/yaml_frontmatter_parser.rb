@@ -105,7 +105,7 @@ module CodingAgentTools
             content = File.read(file_path, mode: 'rb')
             content = content.force_encoding('UTF-8')
             raise ArgumentError, "File contains invalid UTF-8 content: #{file_path}" unless content.valid_encoding?
-          rescue StandardError => e
+          rescue => e
             raise ArgumentError, "Error reading file: #{e.message}"
           end
 
@@ -214,11 +214,11 @@ module CodingAgentTools
               parsed = if safe_mode
                          # Use safe_load to prevent code execution
                          # Allow Date, Time, and DateTime for task metadata
-                         YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime], aliases: false)
-                       else
+                YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime], aliases: false)
+              else
                          # Use regular load (less secure but more permissive)
-                         YAML.load(yaml_content)
-                       end
+                YAML.load(yaml_content)
+              end
 
               # Ensure result is a hash
               case parsed

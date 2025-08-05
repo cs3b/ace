@@ -51,7 +51,7 @@ module CodingAgentTools
         end
 
         def build_command(paths)
-          cmd = %w[bundle exec standardrb]
+          cmd = ['bundle', 'exec', 'standardrb']
 
           if options[:fix]
             # Use fix-unsafely to actually apply all available fixes

@@ -18,7 +18,7 @@ module CodingAgentTools
             auto_ids: true,         # Enable auto IDs by default
             entity_output: :as_char,
             toc_levels: '1..6',
-            smart_quotes: %w[rsquo rsquo rdquo rdquo],
+            smart_quotes: ['rsquo', 'rsquo', 'rdquo', 'rdquo'],
             gfm_quirks: [:paragraph_end],  # Preserve GFM paragraph handling
             syntax_highlighter: nil        # Disable syntax highlighting to preserve code blocks
           }.merge(options)
@@ -33,7 +33,7 @@ module CodingAgentTools
             formatted: formatted,
             changed: content != formatted
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: e.message,
@@ -83,7 +83,7 @@ module CodingAgentTools
             valid: warnings.empty?,
             warnings: warnings
           }
-        rescue StandardError => e
+        rescue => e
           {
             valid: false,
             error: e.message

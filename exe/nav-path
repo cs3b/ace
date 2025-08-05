@@ -29,13 +29,13 @@
 #   --title         Title for new path generation (alternative to input argument)
 
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path("../../lib", __FILE__)
+lib_path = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/molecules/executable_wrapper"
+require 'coding_agent_tools/molecules/executable_wrapper'
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ["nav", "path"],
+  command_path: ['nav', 'path'],
   registration_method: :register_nav_commands,
-  executable_name: "nav-path"
+  executable_name: 'nav-path'
 ).call

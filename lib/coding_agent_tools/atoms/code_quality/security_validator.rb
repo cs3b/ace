@@ -35,7 +35,7 @@ module CodingAgentTools
         end
 
         def build_command
-          cmd = %w[gitleaks detect]
+          cmd = ['gitleaks', 'detect']
 
           cmd << '--verbose' if options[:verbose]
           cmd << '--no-git' unless options[:git_history]

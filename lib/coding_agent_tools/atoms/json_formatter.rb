@@ -81,7 +81,7 @@ module CodingAgentTools
       # @param sensitive_keys [Array<String, Symbol>] Keys to redact
       # @param redact_value [String] Value to replace sensitive data with
       # @return [Hash, Array] Sanitized data
-      def self.sanitize(data, sensitive_keys: %w[api_key token password secret], redact_value: '[REDACTED]')
+      def self.sanitize(data, sensitive_keys: ['api_key', 'token', 'password', 'secret'], redact_value: '[REDACTED]')
         current_data = data
         if data.is_a?(String)
           begin
@@ -146,10 +146,10 @@ module CodingAgentTools
         when Hash
           current_data.each_with_object({}) do |(key, value), result|
             result[key] = if sensitive_keys.any? { |sensitive| key.to_s == sensitive.to_s }
-                            redact_value
-                          else
-                            sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
-                          end
+              redact_value
+            else
+              sanitize(value, sensitive_keys: sensitive_keys, redact_value: redact_value)
+            end
           end
         when Array
           current_data.map { |item| sanitize(item, sensitive_keys: sensitive_keys, redact_value: redact_value) }
@@ -174,7 +174,7 @@ module CodingAgentTools
           end
         when Hash
           obj.transform_keys { |k| ensure_proper_encoding(k) }
-             .transform_values { |v| ensure_proper_encoding(v) }
+            .transform_values { |v| ensure_proper_encoding(v) }
         when Array
           obj.map { |item| ensure_proper_encoding(item) }
         else

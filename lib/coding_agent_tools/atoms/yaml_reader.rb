@@ -23,7 +23,7 @@ module CodingAgentTools
         YAML.safe_load_file(file_path, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax in #{file_path}: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise CodingAgentTools::Error, "Failed to read YAML file #{file_path}: #{e.message}"
       end
 
@@ -36,7 +36,7 @@ module CodingAgentTools
         YAML.safe_load(yaml_content, permitted_classes: [Date, Time, DateTime])
       rescue Psych::SyntaxError => e
         raise CodingAgentTools::Error, "Invalid YAML syntax: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise CodingAgentTools::Error, "Failed to parse YAML content: #{e.message}"
       end
     end

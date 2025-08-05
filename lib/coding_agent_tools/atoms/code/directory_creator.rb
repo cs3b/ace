@@ -30,7 +30,7 @@ module CodingAgentTools
               success: false,
               error: "Parent is not a directory: #{path}"
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               error: "Error creating directory: #{e.message}"
@@ -96,7 +96,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               path: nil,
               success: false,

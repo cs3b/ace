@@ -41,6 +41,10 @@ jobs:
       - name: Run tests
         run: bin/test spec/
 
+      - name: Run RuboCop
+        run: bundle exec rubocop --parallel
+        # Run style checks to ensure code quality
+
       - name: Upload coverage reports
         if: matrix.ruby-version == '3.4'
         uses: actions/upload-artifact@v4

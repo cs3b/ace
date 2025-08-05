@@ -214,7 +214,7 @@ module CodingAgentTools
               normalized_path = File.expand_path(absolute_path)
               normalized_repo_path = File.expand_path(repo_path)
             end
-          rescue StandardError
+          rescue
             # If any realpath fails, fall back to expand_path for both
             normalized_path = File.expand_path(absolute_path)
             normalized_repo_path = File.expand_path(repo_path)
@@ -229,17 +229,17 @@ module CodingAgentTools
           # Ensure we're working with real paths to handle symlinks consistently
           begin
             repo_real_path = if File.exist?(repository_info[:full_path])
-                               File.realpath(repository_info[:full_path])
-                             else
-                               File.expand_path(repository_info[:full_path])
-                             end
+              File.realpath(repository_info[:full_path])
+            else
+              File.expand_path(repository_info[:full_path])
+            end
 
             file_real_path = if File.exist?(absolute_path)
-                               File.realpath(absolute_path)
-                             else
-                               File.expand_path(absolute_path)
-                             end
-          rescue StandardError
+              File.realpath(absolute_path)
+            else
+              File.expand_path(absolute_path)
+            end
+          rescue
             # Fallback if realpath fails
             repo_real_path = File.expand_path(repository_info[:full_path])
             file_real_path = File.expand_path(absolute_path)

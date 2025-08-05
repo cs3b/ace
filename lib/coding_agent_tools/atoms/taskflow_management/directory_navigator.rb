@@ -42,7 +42,7 @@ module CodingAgentTools
             if matching_dirs.size > 1
               log_warning("Multiple release directories found for version '#{version}' in #{search_path}: #{matching_dirs.map do |d|
                 File.basename(d)
-              end.join(', ')}. Using the first one.")
+              end.join(", ")}. Using the first one.")
             end
 
             return {
@@ -84,7 +84,7 @@ module CodingAgentTools
               }
             end
           else
-            log_warning("Multiple release directories found in #{current_path}: #{subdirs.join(', ')}. Using the first one.")
+            log_warning("Multiple release directories found in #{current_path}: #{subdirs.join(", ")}. Using the first one.")
             dir_path = File.join(current_path, subdirs.first)
             version = extract_version_from_directory_name(subdirs.first)
 

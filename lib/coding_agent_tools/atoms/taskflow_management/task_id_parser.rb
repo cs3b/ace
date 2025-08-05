@@ -72,7 +72,7 @@ module CodingAgentTools
 
           unless current_max.is_a?(Integer) && current_max >= 0
             raise ArgumentError,
-                  'current_max must be a non-negative integer'
+              'current_max must be a non-negative integer'
           end
 
           next_number = current_max + 1
@@ -149,14 +149,14 @@ module CodingAgentTools
 
           unless sequential_number.is_a?(Integer) && sequential_number > 0
             raise ArgumentError,
-                  'sequential_number must be a positive integer'
+              'sequential_number must be a positive integer'
           end
 
           formatted_number = if zero_pad
-                               sequential_number.to_s.rjust(2, '0')
-                             else
-                               sequential_number.to_s
-                             end
+            sequential_number.to_s.rjust(2, '0')
+          else
+            sequential_number.to_s
+          end
 
           "#{version}+task.#{formatted_number}"
         end

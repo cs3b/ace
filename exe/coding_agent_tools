@@ -1,14 +1,15 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Set up load paths for development if necessary (e.g., when not installed as a gem)
 # This ensures that `lib` is on the load path.
 # If the gem is installed, this line is not strictly necessary but doesn't hurt.
 # If running from the project's exe directory, it's crucial.
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path("../../lib", __FILE__)
+lib_path = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/cli" # Loads dry/cli and our command registry
+require 'coding_agent_tools/cli' # Loads dry/cli and our command registry
 
 # Register all commands
 # CodingAgentTools::Cli::Commands.register_llm_commands  # Skip LLM for now due to dependency issues

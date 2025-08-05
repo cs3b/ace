@@ -8,7 +8,7 @@ module CodingAgentTools
           start_path ||= Dir.pwd
 
           # Check cache first
-          cache_key = "#{start_path}:#{ENV['PROJECT_ROOT']}"
+          cache_key = "#{start_path}:#{ENV["PROJECT_ROOT"]}"
           return @cached_root if @cached_root && @cached_cache_key == cache_key
 
           @cached_cache_key = cache_key
@@ -31,7 +31,7 @@ module CodingAgentTools
         def detect_root(start_path)
           # 1. Highest priority: PROJECT_ROOT environment variable
           if ENV['PROJECT_ROOT']
-            debug_log "Checking PROJECT_ROOT environment variable: #{ENV['PROJECT_ROOT']}"
+            debug_log "Checking PROJECT_ROOT environment variable: #{ENV["PROJECT_ROOT"]}"
             env_root = File.expand_path(ENV['PROJECT_ROOT'])
             if validate_project_root(env_root)
               debug_log "Using PROJECT_ROOT from environment: #{env_root}"
@@ -84,14 +84,14 @@ module CodingAgentTools
         def marker_exists_in_path?(path, marker)
           marker_path = File.join(path, marker)
           exists = File.exist?(marker_path)
-          debug_log "  Checking #{marker}: #{exists ? 'FOUND' : 'not found'} at #{marker_path}"
+          debug_log "  Checking #{marker}: #{exists ? "FOUND" : "not found"} at #{marker_path}"
           exists
         end
 
         def gemspec_exists_in_path?(path)
           gemspec_files = Dir.glob(File.join(path, '*.gemspec'))
           exists = !gemspec_files.empty?
-          debug_log "  Checking *.gemspec: #{exists ? "FOUND (#{gemspec_files.first})" : 'not found'} in #{path}"
+          debug_log "  Checking *.gemspec: #{exists ? "FOUND (#{gemspec_files.first})" : "not found"} in #{path}"
           exists
         end
 
@@ -135,7 +135,7 @@ module CodingAgentTools
         PRIMARY_MARKERS = ['.git'].freeze
         SECONDARY_MARKERS = ['Gemfile'].freeze
         TERTIARY_MARKERS = ['.ruby-version', '.tools-meta'].freeze
-        DEV_DIRECTORIES = %w[dev-handbook dev-tools dev-taskflow].freeze
+        DEV_DIRECTORIES = ['dev-handbook', 'dev-tools', 'dev-taskflow'].freeze
       end
     end
   end

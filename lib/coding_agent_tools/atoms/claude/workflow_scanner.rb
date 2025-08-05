@@ -17,16 +17,16 @@ module CodingAgentTools
 
           glob_pattern = if pattern
                            # Support glob patterns
-                           if pattern.include?('*')
-                             File.join(workflow_dir, "#{pattern}.wf.md")
-                           else
-                             # Single workflow name
-                             File.join(workflow_dir, "#{pattern}.wf.md")
-                           end
-                         else
+            if pattern.include?('*')
+              File.join(workflow_dir, "#{pattern}.wf.md")
+            else
+              # Single workflow name
+              File.join(workflow_dir, "#{pattern}.wf.md")
+            end
+          else
                            # All workflows
-                           File.join(workflow_dir, "*.wf.md")
-                         end
+            File.join(workflow_dir, '*.wf.md')
+          end
 
           # If pattern is specific and file doesn't exist, return empty
           if pattern && !pattern.include?('*')
@@ -37,7 +37,7 @@ module CodingAgentTools
 
           # Scan for matching files
           Dir.glob(glob_pattern).map do |path|
-            File.basename(path, ".wf.md")
+            File.basename(path, '.wf.md')
           end.sort
         end
       end
