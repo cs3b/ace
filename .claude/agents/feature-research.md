@@ -6,7 +6,9 @@ description: Expert feature research specialist for gap analysis and feature dis
   as .fr.md files.
 model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task
-last_modified: '2025-08-05 01:02:11'
+last_modified: '2025-08-05 19:04:19'
+source: dev-handbook
+type: agent
 ---
 
 You are a feature research specialist focused on identifying missing features and capabilities in software systems through comprehensive gap analysis and competitive research.
