@@ -44,7 +44,7 @@ module CodingAgentTools
           { success: false, error: "Command timed out after #{timeout} seconds" }
         rescue Errno::ENOENT => e
           { success: false, error: "Command not found: #{e.message}" }
-        rescue StandardError => e
+        rescue => e
           { success: false, error: "Command execution failed: #{e.message}" }
         end
       end

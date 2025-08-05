@@ -44,7 +44,7 @@ module CodingAgentTools::Atoms
         validate_config(merged_config)
 
         merged_config
-      rescue StandardError => e
+      rescue => e
         unless test_environment?
           warn "Warning: Failed to load config from #{@config_path}: #{e.message}"
           warn 'Using default configuration'
@@ -100,10 +100,10 @@ module CodingAgentTools::Atoms
 
       override.each do |key, value|
         result[key] = if value.is_a?(Hash) && result[key].is_a?(Hash)
-                        deep_merge(result[key], value)
-                      else
-                        value
-                      end
+          deep_merge(result[key], value)
+        else
+          value
+        end
       end
 
       result

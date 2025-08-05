@@ -11,9 +11,9 @@ module CodingAgentTools
       class TaskMetadataValidator
         # Metadata Validation Rules
         VALID_ID_REGEX = /^v.\d+\.\d+\.\d+\+task\.\d+$/
-        REQUIRED_FIELDS = %w[id status priority]
-        VALID_STATUSES = %w[pending in-progress done blocked icebox on-hold draft]
-        VALID_PRIORITIES = %w[low medium high critical]
+        REQUIRED_FIELDS = ['id', 'status', 'priority']
+        VALID_STATUSES = ['pending', 'in-progress', 'done', 'blocked', 'icebox', 'on-hold', 'draft']
+        VALID_PRIORITIES = ['low', 'medium', 'high', 'critical']
         ESTIMATE_REGEX = /^\d+(\.\d+)?(h|d|w|sp|pt|wk|mo)$/i
 
         attr_reader :task_dirs, :project_root

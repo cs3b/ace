@@ -72,11 +72,11 @@ module CodingAgentTools
           values = lines_arrays.map { |arr| arr[index] if index < arr.length }.compact
 
           combined_lines[index] = if values.empty? || values.all?(&:nil?)
-                                    nil
-                                  else
+            nil
+          else
                                     # Sum non-nil values, treat nil as 0 for combination
-                                    values.map { |v| v || 0 }.sum
-                                  end
+            values.map { |v| v || 0 }.sum
+          end
         end
 
         calculate_file_coverage(combined_lines)

@@ -75,7 +75,7 @@ module CodingAgentTools
         begin
           notifications.register_event("#{@event_namespace}.request.coding_agent_tools")
           notifications.register_event("#{@event_namespace}.response.coding_agent_tools")
-        rescue StandardError
+        rescue
           # Silently ignore registration errors for already registered events
           # This handles cases where dry-monitor behavior might change between versions
         end
@@ -99,8 +99,8 @@ module CodingAgentTools
           # However, Faraday's :json response middleware parses the body and populates response.body.
           # Our logger accesses response.status and response.headers, which are fine.
           faraday.use CodingAgentTools::Middlewares::FaradayDryMonitorLogger,
-                      notifications_instance: CodingAgentTools::Notifications.notifications,
-                      event_namespace: @event_namespace
+            notifications_instance: CodingAgentTools::Notifications.notifications,
+            event_namespace: @event_namespace
 
           # Middleware to automatically parse JSON response bodies.
           # It will parse bodies with 'Content-Type' matching /\bjson$/.

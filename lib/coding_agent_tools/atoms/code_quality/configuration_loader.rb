@@ -25,7 +25,7 @@ module CodingAgentTools
               'template_embedding' => { 'enabled' => true },
               'task_metadata' => { 'enabled' => true }
             },
-            'order' => %w[task_metadata link_validation template_embedding styleguide]
+            'order' => ['task_metadata', 'link_validation', 'template_embedding', 'styleguide']
           },
           'error_distribution' => {
             'enabled' => true,
@@ -58,7 +58,7 @@ module CodingAgentTools
           begin
             config = load_yaml_file(config_path)
             validate_structure(config)
-          rescue StandardError => e
+          rescue => e
             { valid: false, error: e.message }
           end
         end
@@ -110,7 +110,7 @@ module CodingAgentTools
           errors = []
 
           # Validate top-level keys
-          %w[ruby markdown].each do |lang|
+          ['ruby', 'markdown'].each do |lang|
             errors << "#{lang} must be a hash" if config[lang] && !config[lang].is_a?(Hash)
           end
 

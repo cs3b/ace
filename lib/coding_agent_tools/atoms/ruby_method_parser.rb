@@ -57,7 +57,7 @@ module CodingAgentTools
 
       def read_file_content(file_path)
         File.read(file_path)
-      rescue StandardError => e
+      rescue => e
         raise ParseError, "Cannot read file #{file_path}: #{e.message}"
       end
 
@@ -65,7 +65,7 @@ module CodingAgentTools
         Parser::CurrentRuby.parse(content, source_name)
       rescue Parser::SyntaxError => e
         raise ParseError, "Syntax error in #{source_name}: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise ParseError, "Parse error in #{source_name}: #{e.message}"
       end
 

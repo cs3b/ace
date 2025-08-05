@@ -31,7 +31,7 @@ module CodingAgentTools
               success: false,
               error: "Permission denied: #{path}"
             }
-          rescue StandardError => e
+          rescue => e
             {
               content: nil,
               success: false,
@@ -58,7 +58,7 @@ module CodingAgentTools
             end
 
             read(path)
-          rescue StandardError => e
+          rescue => e
             {
               content: nil,
               success: false,
@@ -93,7 +93,7 @@ module CodingAgentTools
               readable: false
             }
           end
-        rescue StandardError => e
+        rescue => e
           {
             exists: false,
             size: 0,

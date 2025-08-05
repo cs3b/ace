@@ -13,7 +13,7 @@ module CodingAgentTools
         # @return [Boolean] True if valid YAML
         def self.valid?(content)
           return false if content.nil? || content.empty?
-          
+
           # Extract YAML between --- markers
           yaml_match = content.match(/\A---\n(.*?)\n---/m)
           return false unless yaml_match
@@ -32,7 +32,7 @@ module CodingAgentTools
         # @return [Hash, nil] Parsed YAML data or nil if invalid
         def self.parse(content)
           return nil if content.nil? || content.empty?
-          
+
           # Extract YAML between --- markers
           yaml_match = content.match(/\A---\n(.*?)\n---/m)
           return nil unless yaml_match
@@ -51,7 +51,7 @@ module CodingAgentTools
         # @return [String, nil] YAML frontmatter content (without markers) or nil
         def self.extract_frontmatter(content)
           return nil if content.nil? || content.empty?
-          
+
           yaml_match = content.match(/\A---\n(.*?)\n---/m)
           yaml_match ? yaml_match[1] : nil
         end
@@ -61,7 +61,7 @@ module CodingAgentTools
         # @return [Boolean] True if content has frontmatter markers
         def self.has_frontmatter?(content)
           return false if content.nil? || content.empty?
-          
+
           content.match?(/\A---\n.*?\n---/m)
         end
       end

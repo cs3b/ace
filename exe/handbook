@@ -5,53 +5,53 @@
 # This provides a focused entry point for handbook operations
 
 # Ensure we use the correct Gemfile regardless of current directory
-gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
-ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+gem_gemfile_path = File.expand_path('../../Gemfile', __FILE__)
+ENV['BUNDLE_GEMFILE'] = gem_gemfile_path if File.exist?(gem_gemfile_path)
 
 begin
-  require "bundler/setup"
+  require 'bundler/setup'
 rescue LoadError
   # Continue without bundler if not available
 end
 
 # Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path("../../lib", __FILE__)
+lib_path = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/cli/commands/handbook/sync_templates"
-require "coding_agent_tools/cli/commands/handbook/claude/generate_commands"
-require "coding_agent_tools/cli/commands/handbook/claude/integrate"
-require "coding_agent_tools/cli/commands/handbook/claude/validate"
-require "coding_agent_tools/cli/commands/handbook/claude/list"
-require "dry/cli"
+require 'coding_agent_tools/cli/commands/handbook/sync_templates'
+require 'coding_agent_tools/cli/commands/handbook/claude/generate_commands'
+require 'coding_agent_tools/cli/commands/handbook/claude/integrate'
+require 'coding_agent_tools/cli/commands/handbook/claude/validate'
+require 'coding_agent_tools/cli/commands/handbook/claude/list'
+require 'dry/cli'
 
 module HandbookCli
   module Commands
     extend Dry::CLI::Registry
 
     # Register handbook commands directly under the root
-    register "sync-templates", CodingAgentTools::Cli::Commands::Handbook::SyncTemplates
-    
+    register 'sync-templates', CodingAgentTools::Cli::Commands::Handbook::SyncTemplates
+
     # Register claude commands as a proper subcommand namespace
-    register "claude", aliases: [] do |prefix|
-      prefix.register "generate-commands", CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
-      prefix.register "integrate", CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
-      prefix.register "validate", CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
-      prefix.register "list", CodingAgentTools::Cli::Commands::Handbook::Claude::List
+    register 'claude', aliases: [] do |prefix|
+      prefix.register 'generate-commands', CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
+      prefix.register 'integrate', CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
+      prefix.register 'validate', CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
+      prefix.register 'list', CodingAgentTools::Cli::Commands::Handbook::Claude::List
     end
 
     # Version command
     class Version < Dry::CLI::Command
-      desc "Print version"
+      desc 'Print version'
 
       def call(*)
-        require "coding_agent_tools/version"
+        require 'coding_agent_tools/version'
         puts "Handbook #{CodingAgentTools::VERSION}"
       end
     end
 
-    register "version", Version, aliases: ["v", "-v", "--version"]
+    register 'version', Version, aliases: ['v', '-v', '--version']
   end
 end
 
@@ -64,6 +64,6 @@ rescue Dry::CLI::Error => e
   exit 1
 rescue => e
   warn "An unexpected error occurred: #{e.message}"
-  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  warn e.backtrace.join("\n") if ENV['DEBUG']
   exit 1
 end

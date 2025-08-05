@@ -45,14 +45,14 @@ module CodingAgentTools
       # @return [String] Validated format
       # @raise [ValidationError] If format is invalid
       def validate_format(format)
-        valid_formats = %w[text json csv]
+        valid_formats = ['text', 'json', 'csv']
 
         raise ValidationError, "Format must be a string, got #{format.class}" unless format.is_a?(String)
 
         normalized_format = format.strip.downcase
 
         unless valid_formats.include?(normalized_format)
-          raise ValidationError, "Format must be one of: #{valid_formats.join(', ')}, got '#{format}'"
+          raise ValidationError, "Format must be one of: #{valid_formats.join(", ")}, got '#{format}'"
         end
 
         normalized_format
@@ -69,12 +69,12 @@ module CodingAgentTools
 
         return 'both' if mode.empty?
 
-        valid_modes = %w[files methods both]
+        valid_modes = ['files', 'methods', 'both']
 
         normalized_mode = mode.strip.downcase
 
         unless valid_modes.include?(normalized_mode)
-          raise ValidationError, "Analysis mode must be one of: #{valid_modes.join(', ')}, got '#{mode}'"
+          raise ValidationError, "Analysis mode must be one of: #{valid_modes.join(", ")}, got '#{mode}'"
         end
 
         normalized_mode

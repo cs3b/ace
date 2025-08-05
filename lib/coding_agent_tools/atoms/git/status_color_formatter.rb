@@ -117,7 +117,7 @@ module CodingAgentTools
         def format_clean_repository(repo_name, color)
           if use_color
             "#{colorize("[#{repo_name}]",
-                        color)} Clean working directory"
+              color)} Clean working directory"
           else
             "[#{repo_name}] Clean working directory"
           end
@@ -127,10 +127,10 @@ module CodingAgentTools
           lines = []
 
           lines << if use_color
-                     "#{colorize("[#{repo_name}]", color)} Status:"
-                   else
-                     "[#{repo_name}] Status:"
-                   end
+            "#{colorize("[#{repo_name}]", color)} Status:"
+          else
+            "[#{repo_name}] Status:"
+          end
 
           # Process each line with appropriate coloring
           status_output.lines.each do |line|
@@ -163,21 +163,21 @@ module CodingAgentTools
           when /^\s*(new file|added):\s+(.+)$/
             prefix = ::Regexp.last_match(1)
             filename = ::Regexp.last_match(2)
-            "\t#{colorize(prefix + ':', :staged_new)} #{colorize(filename, :staged_new)}"
+            "\t#{colorize(prefix + ":", :staged_new)} #{colorize(filename, :staged_new)}"
           when /^\s*modified:\s+(.+)$/
             filename = ::Regexp.last_match(1)
             # Determine if this is in "Changes to be committed" or "Changes not staged"
             # We'll use context from previous lines, but for now, default to modified (red)
-            "\t#{colorize('modified:', :modified)} #{colorize(filename, :modified)}"
+            "\t#{colorize("modified:", :modified)} #{colorize(filename, :modified)}"
           when /^\s*deleted:\s+(.+)$/
             filename = ::Regexp.last_match(1)
-            "\t#{colorize('deleted:', :deleted)} #{colorize(filename, :deleted)}"
+            "\t#{colorize("deleted:", :deleted)} #{colorize(filename, :deleted)}"
           when /^\s*renamed:\s+(.+)$/
             filename = ::Regexp.last_match(1)
-            "\t#{colorize('renamed:', :staged_modified)} #{colorize(filename, :staged_modified)}"
+            "\t#{colorize("renamed:", :staged_modified)} #{colorize(filename, :staged_modified)}"
           when /^\s*copied:\s+(.+)$/
             filename = ::Regexp.last_match(1)
-            "\t#{colorize('copied:', :staged_new)} #{colorize(filename, :staged_new)}"
+            "\t#{colorize("copied:", :staged_new)} #{colorize(filename, :staged_new)}"
 
           # Meta information and hints (must come before untracked files)
           when /^\s*\(use ".+" to .+\)$/

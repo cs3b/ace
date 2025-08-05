@@ -34,10 +34,10 @@ module CodingAgentTools
           raise ArgumentError, "Directory does not exist: #{abs_base_path}" unless File.directory?(abs_base_path)
 
           matching_files = if recursive
-                             scan_recursive(abs_base_path, patterns, max_depth, max_files)
-                           else
-                             scan_flat(abs_base_path, patterns, max_files)
-                           end
+            scan_recursive(abs_base_path, patterns, max_depth, max_files)
+          else
+            scan_flat(abs_base_path, patterns, max_files)
+          end
 
           # Return relative paths for consistency
           matching_files.map { |file| make_relative_path(file, abs_base_path) }
@@ -126,7 +126,7 @@ module CodingAgentTools
             success: false,
             error: e.message
           }
-        rescue StandardError => e
+        rescue => e
           {
             files: [],
             success: false,
@@ -256,10 +256,10 @@ module CodingAgentTools
           def find_files_by_glob_pattern(base_path, pattern, recursive, max_depth, max_files)
             # Convert pattern to absolute path if it's relative
             full_pattern = if Pathname.new(pattern).absolute?
-                             pattern
-                           else
-                             File.join(base_path, pattern)
-                           end
+              pattern
+            else
+              File.join(base_path, pattern)
+            end
 
             # Use Ruby's Dir.glob for glob patterns
             matching_files = Dir.glob(full_pattern).select do |path|
@@ -276,7 +276,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               files: [],
               success: false,
@@ -294,10 +294,10 @@ module CodingAgentTools
           def find_files_in_directory_path(base_path, dir_pattern, recursive, max_depth, max_files)
             # Resolve the target directory path
             target_path = if Pathname.new(dir_pattern).absolute?
-                            dir_pattern
-                          else
-                            File.join(base_path, dir_pattern)
-                          end
+              dir_pattern
+            else
+              File.join(base_path, dir_pattern)
+            end
 
             # Ensure target directory exists
             unless File.directory?(target_path)
@@ -311,7 +311,7 @@ module CodingAgentTools
             # Use existing scan_directory method to find all files
             patterns = ['*'] # Match all files
             matching_files = scan_directory(target_path, patterns: patterns, recursive: recursive,
-                                                         max_depth: max_depth, max_files: max_files)
+              max_depth: max_depth, max_files: max_files)
 
             # Convert to absolute paths and then back to relative from base_path
             abs_matching_files = matching_files.map { |relative_file| File.join(target_path, relative_file) }
@@ -321,7 +321,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               files: [],
               success: false,
@@ -370,7 +370,7 @@ module CodingAgentTools
                   # Add file size if accessible
                   begin
                     stats[:total_size] += File.size(full_path)
-                  rescue StandardError
+                  rescue
                     # Skip if we can't get file size
                   end
 

@@ -89,15 +89,15 @@ module CodingAgentTools
             when /^commit\s+(\w+)$/
               # Commit hash line
               hash = ::Regexp.last_match(1)
-              formatted_lines << "#{colorize('commit', :bold)} #{colorize(hash, :commit_hash)}"
+              formatted_lines << "#{colorize("commit", :bold)} #{colorize(hash, :commit_hash)}"
             when /^Author:\s+(.+)$/
               # Author line
               author = ::Regexp.last_match(1)
-              formatted_lines << "#{colorize('Author:', :bold)} #{colorize(author, :author)}"
+              formatted_lines << "#{colorize("Author:", :bold)} #{colorize(author, :author)}"
             when /^Date:\s+(.+)$/
               # Date line
               date = ::Regexp.last_match(1)
-              formatted_lines << "#{colorize('Date:', :bold)}   #{colorize(date, :date)}"
+              formatted_lines << "#{colorize("Date:", :bold)}   #{colorize(date, :date)}"
             when /^\s{4,}/
               # Indented lines (commit message)
               formatted_lines << colorize(line, :commit_subject)

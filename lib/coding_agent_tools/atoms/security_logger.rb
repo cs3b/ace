@@ -99,17 +99,17 @@ module CodingAgentTools
 
         details.each do |key, value|
           sanitized[key] = case key
-                           when :path
+          when :path
                              sanitize_path(value.to_s)
-                           when :paths
+          when :paths
                              value.map { |p| sanitize_path(p.to_s) }
-                           when :reason, :message
+          when :reason, :message
                              sanitize_message(value.to_s)
-                           when :metadata
+          when :metadata
                              value.is_a?(Hash) ? sanitize_details(value) : value.to_s
                            else
                              value.to_s
-                           end
+          end
         end
 
         sanitized
@@ -132,16 +132,16 @@ module CodingAgentTools
           # Expand path to see where it leads
           begin
             expanded = File.expand_path(path)
-          rescue StandardError
+          rescue
             return '[invalid-path]'
           end
 
           # For path traversal attempts, hide the path components
           components = Pathname.new(expanded).each_filename.to_a
           if components.length > 2
-            return "[hidden]/#{components[-2..].join('/')}"
+            return "[hidden]/#{components[-2..].join("/")}"
           elsif components.length > 0
-            return "[hidden]/#{components.join('/')}"
+            return "[hidden]/#{components.join("/")}"
           else
             return '[hidden]'
           end
@@ -150,7 +150,7 @@ module CodingAgentTools
         # Expand path to handle relative components and get absolute form
         begin
           expanded = File.expand_path(path)
-        rescue StandardError
+        rescue
           # If path expansion fails, sanitize conservatively
           return '[invalid-path]'
         end
@@ -165,9 +165,9 @@ module CodingAgentTools
           # Show only the last two components for context
           components = Pathname.new(expanded).each_filename.to_a
           if components.length > 2
-            return "[hidden]/#{components[-2..].join('/')}"
+            return "[hidden]/#{components[-2..].join("/")}"
           elsif components.length > 0
-            return "[hidden]/#{components.join('/')}"
+            return "[hidden]/#{components.join("/")}"
           end
         end
 
@@ -220,22 +220,22 @@ module CodingAgentTools
       def format_value(value)
         case value
         when Array
-          "[#{value.join(', ')}]"
+          "[#{value.join(", ")}]"
         when Hash
           # Format hash recursively, handling nested values
           pairs = value.map do |k, v|
             formatted_v = case v
-                          when Hash, Array
+            when Hash, Array
                             format_value(v)
-                          when String
+            when String
                             # Don't add quotes for simple values in nested hashes
                             v
                           else
                             v.to_s
-                          end
+            end
             "#{k}: #{formatted_v}"
           end
-          "{#{pairs.join(', ')}}"
+          "{#{pairs.join(", ")}}"
         else
           value.to_s
         end

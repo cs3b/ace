@@ -1,32 +1,33 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Capture It - Streamlined tool for capturing ideas
 # This provides intuitive entry point for idea capture operations
 
 # Ensure we use the correct Gemfile regardless of current directory
-gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
-ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+gem_gemfile_path = File.expand_path('../../Gemfile', __FILE__)
+ENV['BUNDLE_GEMFILE'] = gem_gemfile_path if File.exist?(gem_gemfile_path)
 
 begin
-  require "bundler/setup"
+  require 'bundler/setup'
 rescue LoadError
   # Continue without bundler if not available
 end
 
 # Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path("../../lib", __FILE__)
+lib_path = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/cli/commands/ideas/capture"
-require "dry/cli"
+require 'coding_agent_tools/cli/commands/ideas/capture'
+require 'dry/cli'
 
 module CaptureItCli
   module Commands
     extend Dry::CLI::Registry
 
     # Register the capture command as the default command
-    register "capture", CodingAgentTools::Cli::Commands::Ideas::Capture, aliases: [""]
+    register 'capture', CodingAgentTools::Cli::Commands::Ideas::Capture, aliases: ['']
   end
 end
 
@@ -35,17 +36,17 @@ begin
   if ARGV.empty? || ARGV[0].start_with?('-')
     ARGV.unshift('capture')
   elsif !ARGV[0].start_with?('-') && ARGV[0] != 'capture'
-    # If first argument doesn't look like an option and isn't "capture", 
+    # If first argument doesn't look like an option and isn't "capture",
     # treat it as idea text and prepend "capture"
     ARGV.unshift('capture')
   end
-  
+
   Dry::CLI.new(CaptureItCli::Commands).call
 rescue Dry::CLI::Error => e
   warn "Error: #{e.message}"
   exit 1
 rescue => e
   warn "An unexpected error occurred: #{e.message}"
-  warn e.backtrace.join("\n") if ENV["DEBUG"]
+  warn e.backtrace.join("\n") if ENV['DEBUG']
   exit 1
 end

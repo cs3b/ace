@@ -28,14 +28,14 @@ module CodingAgentTools
 
         # Use XDG_CACHE_HOME if set and non-empty
         cache_base = if xdg_cache_home && !xdg_cache_home.strip.empty?
-                       File.expand_path(xdg_cache_home.strip)
-                     elsif home_dir && !home_dir.strip.empty?
+          File.expand_path(xdg_cache_home.strip)
+        elsif home_dir && !home_dir.strip.empty?
                        # Fall back to ~/.cache if HOME is available
-                       File.expand_path('.cache', home_dir.strip)
-                     else
+          File.expand_path('.cache', home_dir.strip)
+        else
                        # Last resort: use current directory
-                       File.expand_path('.cache')
-                     end
+          File.expand_path('.cache')
+        end
 
         File.join(cache_base, APP_NAME)
       end
@@ -114,7 +114,7 @@ module CodingAgentTools
           expanded = File.expand_path(path)
           pathname = Pathname.new(expanded)
           return false unless pathname.absolute?
-        rescue StandardError
+        rescue
           return false
         end
 

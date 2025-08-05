@@ -58,7 +58,7 @@ module CodingAgentTools
             else
               execute_without_capture(command, execution_env, options, timeout, start_time)
             end
-          rescue StandardError => e
+          rescue => e
             duration = Time.now - start_time
             CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
           end
@@ -74,7 +74,7 @@ module CodingAgentTools
           # Capture output during tests to prevent pollution
           capture_output = test_environment?
           result = execute(command, timeout: timeout, working_directory: working_directory, environment: environment,
-                                    capture_output: capture_output)
+            capture_output: capture_output)
           result.success?
         end
 
@@ -217,7 +217,7 @@ module CodingAgentTools
             rescue Timeout::Error
               duration = Time.now - start_time
               return CommandResult.new(false, '', "Command timed out after #{timeout} seconds", -1, duration)
-            rescue StandardError => e
+            rescue => e
               duration = Time.now - start_time
               return CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
             end
@@ -244,7 +244,7 @@ module CodingAgentTools
             rescue Timeout::Error
               duration = Time.now - start_time
               return CommandResult.new(false, '', "Command timed out after #{timeout} seconds", -1, duration)
-            rescue StandardError => e
+            rescue => e
               duration = Time.now - start_time
               return CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
             end

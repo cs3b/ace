@@ -21,15 +21,15 @@
 #   --flag          [Description of boolean flag]
 
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path("../../lib", __FILE__)
+lib_path = File.expand_path('../../lib', __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require "coding_agent_tools/molecules/executable_wrapper"
+require 'coding_agent_tools/molecules/executable_wrapper'
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ["command", "subcommand"],        # Array of command path segments
+  command_path: ['command', 'subcommand'],        # Array of command path segments
   registration_method: :register_xxx_commands,   # Optional: method to register commands
-  executable_name: "command-name"                # Optional: name for error reporting
+  executable_name: 'command-name'                # Optional: name for error reporting
 ).call
 
 # Template Instructions:

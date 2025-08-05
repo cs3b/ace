@@ -76,7 +76,7 @@ module CodingAgentTools
         JSON.parse(content)
       rescue JSON::ParserError => e
         raise MalformedJsonError, "Invalid JSON in #{file_path}: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise InvalidFileError, "Error reading #{file_path}: #{e.message}"
       end
 

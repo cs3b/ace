@@ -16,7 +16,7 @@ module CodingAgentTools::Atoms
     # Matches patterns like "Load project objectives: `docs/file.md`"
     def extract_context_references(content)
       content.scan(/(?:Load|load|Check|check|Read|read|See|see).*?[:\s]+`([^`]+\.(?:md|wf\.md|g\.md))`/i)
-             .map(&:first)
+        .map(&:first)
     end
 
     # Extract all file references from content
