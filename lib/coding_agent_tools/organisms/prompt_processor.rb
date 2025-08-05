@@ -24,10 +24,10 @@ module CodingAgentTools
       # @raise [Error] If file cannot be read or is too large
       def process(input, from_file: false)
         text_content = if from_file
-                         read_prompt_from_file(input) # This already strips the content
-                       else
-                         input # Raw input string, validate_prompt_string will strip it
-                       end
+          read_prompt_from_file(input) # This already strips the content
+        else
+          input # Raw input string, validate_prompt_string will strip it
+        end
         # validate_prompt_string will check if (already stripped if from file) text_content is empty,
         # and raise if so. It also returns the stripped version.
         validate_prompt_string(text_content)
@@ -89,7 +89,7 @@ module CodingAgentTools
         unfilled_double = result.scan(/\{\{(\w+)\}\}/).flatten
         unfilled = (unfilled_single + unfilled_double).uniq
 
-        raise Error, "Unfilled template variables: #{unfilled.join(', ')}" unless unfilled.empty?
+        raise Error, "Unfilled template variables: #{unfilled.join(", ")}" unless unfilled.empty?
 
         result
       end
@@ -144,10 +144,10 @@ module CodingAgentTools
             # or if chunk_end itself didn't advance (unlikely but a safeguard),
             # then move position to chunk_end to ensure progress.
             position = if next_pos > position
-                         next_pos
-                       else # overlap >= chunk_size or chunk_end didn't advance
-                         chunk_end
-                       end
+              next_pos
+            else # overlap >= chunk_size or chunk_end didn't advance
+              chunk_end
+            end
           end
         end
 
@@ -193,7 +193,7 @@ module CodingAgentTools
         new_error = Error.new("File not found: #{file_path}")
         new_error.set_backtrace(e.backtrace)
         raise new_error
-      rescue StandardError => e
+      rescue => e
         new_error = Error.new("Error reading file #{file_path}: #{e.message}")
         new_error.set_backtrace(e.backtrace)
         raise new_error

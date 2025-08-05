@@ -98,7 +98,7 @@ module CodingAgentTools
         end
 
         all_models
-      rescue StandardError
+      rescue
         # If any error occurs, fall back to static list
         fallback_models_list
       end
@@ -257,7 +257,7 @@ module CodingAgentTools
         return Time.now.to_i if created_at.nil? || created_at.empty?
 
         Time.parse(created_at).to_i
-      rescue StandardError
+      rescue
         Time.now.to_i
       end
 

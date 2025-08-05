@@ -210,21 +210,21 @@ module CodingAgentTools
       # @return [String] Formatted error message
       def format_error_message(http_status, content)
         provider_display_name = case provider_name
-                                when 'openai'
+        when 'openai'
                                   'OpenAI'
-                                when 'anthropic'
+        when 'anthropic'
                                   'Anthropic'
-                                when 'google'
+        when 'google'
                                   'Google'
-                                when 'mistral'
+        when 'mistral'
                                   'Mistral'
-                                when 'together_ai', 'togetherai'
+        when 'together_ai', 'togetherai'
                                   'Together AI'
-                                when 'lmstudio', 'lm_studio'
+        when 'lmstudio', 'lm_studio'
                                   'LM Studio'
                                 else
                                   provider_name.capitalize
-                                end
+        end
 
         "#{provider_display_name} API Error (#{http_status}): #{content}"
       end

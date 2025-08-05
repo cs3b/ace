@@ -67,32 +67,32 @@ module CodingAgentTools
           before_snapshot = diff_analyzer.create_snapshot if autofix
 
           # Run Ruby linters
-          if %w[ruby all].include?(target)
+          if ['ruby', 'all'].include?(target)
             ruby_runner = LanguageRunnerFactory.create_runner(
               'ruby',
               config: @config,
               path_resolver: @path_resolver
             )
             results[:ruby] = if autofix
-                               ruby_runner.autofix(paths: paths)
-                             else
-                               ruby_runner.validate(paths: paths)
-                             end
+              ruby_runner.autofix(paths: paths)
+            else
+              ruby_runner.validate(paths: paths)
+            end
             results[:success] &&= results[:ruby][:success]
           end
 
           # Run Markdown linters
-          if %w[markdown all].include?(target)
+          if ['markdown', 'all'].include?(target)
             markdown_runner = LanguageRunnerFactory.create_runner(
               'markdown',
               config: @config,
               path_resolver: @path_resolver
             )
             results[:markdown] = if autofix
-                                   markdown_runner.autofix(paths: paths)
-                                 else
-                                   markdown_runner.validate(paths: paths)
-                                 end
+              markdown_runner.autofix(paths: paths)
+            else
+              markdown_runner.validate(paths: paths)
+            end
             results[:success] &&= results[:markdown][:success]
           end
 
@@ -356,7 +356,7 @@ module CodingAgentTools
 
           File.open(report_path, 'w') do |f|
             f.puts '# Code Quality Report'
-            f.puts "\n**Generated**: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+            f.puts "\n**Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
             f.puts "**Target**: #{target}"
             f.puts "\n## Summary"
 

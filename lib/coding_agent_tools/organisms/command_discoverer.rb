@@ -17,7 +17,7 @@ module CodingAgentTools
       # @return [Hash] Discovered commands by category
       def discover(source_base)
         validation = @source_validator.validate(source_base)
-        
+
         unless validation[:valid]
           return {
             success: false,
@@ -28,7 +28,7 @@ module CodingAgentTools
 
         base_path = validation[:base_path]
         structure_type = @source_validator.structure_type(validation)
-        
+
         commands = {
           custom: [],
           generated: [],
@@ -64,9 +64,9 @@ module CodingAgentTools
       def discover_agents(source_base)
         base_path = normalize_path(source_base)
         agents_dir = base_path / 'agents'
-        
+
         return [] unless agents_dir.exist? && agents_dir.directory?
-        
+
         agents_dir.glob('*.md').sort
       end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
       # @return [Symbol] Command category
       def categorize_command(file_path, source_structure = :unknown)
         parent_dir = file_path.parent.basename.to_s
-        
+
         case parent_dir
         when '_custom'
           :custom
@@ -105,7 +105,7 @@ module CodingAgentTools
 
       def discover_subdir_commands(base_path, commands)
         commands_dir = base_path / 'commands'
-        
+
         # Check custom commands
         custom_dir = commands_dir / '_custom'
         if custom_dir.exist?
@@ -123,7 +123,7 @@ module CodingAgentTools
         # Look for workflow files in parent directories
         parent = base_path.parent
         workflows_dir = parent.parent / 'workflow-instructions'
-        
+
         if workflows_dir.exist?
           workflow_files = workflows_dir.glob('*.wf.md').sort
           commands[:workflow] = workflow_files

@@ -139,7 +139,7 @@ module CodingAgentTools
 
           if options[:concurrent]
             coordinator.execute_across_repositories(checkout_command,
-                                                    options.merge(capture_output: true, concurrent: true))
+              options.merge(capture_output: true, concurrent: true))
           else
             coordinator.execute_across_repositories(checkout_command, options.merge(capture_output: true))
           end
@@ -152,7 +152,7 @@ module CodingAgentTools
 
           if options[:concurrent]
             coordinator.execute_across_repositories(switch_command,
-                                                    options.merge(capture_output: true, concurrent: true))
+              options.merge(capture_output: true, concurrent: true))
           else
             coordinator.execute_across_repositories(switch_command, options.merge(capture_output: true))
           end
@@ -251,11 +251,11 @@ module CodingAgentTools
           # Always include timestamp for sorting, but format according to user preference
           if options[:oneline]
             # For oneline, include timestamp at the end in a parseable format
-            cmd_parts << "--pretty=format:#{Shellwords.escape('%h %s (%ci)')}"
+            cmd_parts << "--pretty=format:#{Shellwords.escape("%h %s (%ci)")}"
           else
             # For regular format, use default but add timestamp marker for parsing
             cmd_parts << '--date=iso'
-            cmd_parts << "--pretty=format:#{Shellwords.escape('TIMESTAMP:%ci%ncommit %H%nAuthor: %an <%ae>%nDate:   %ci%n%n%w(0,4,4)%s%n%+b')}"
+            cmd_parts << "--pretty=format:#{Shellwords.escape("TIMESTAMP:%ci%ncommit %H%nAuthor: %an <%ae>%nDate:   %ci%n%n%w(0,4,4)%s%n%+b")}"
           end
 
           cmd_parts << '--graph' if options[:graph]
@@ -335,10 +335,10 @@ module CodingAgentTools
 
             # Apply color to the padded repository name
             colored_repo = if color_formatter.should_use_color?
-                             color_formatter.send(:colorize, padded_repo_plain, :repo_name)
-                           else
-                             padded_repo_plain
-                           end
+              color_formatter.send(:colorize, padded_repo_plain, :repo_name)
+            else
+              padded_repo_plain
+            end
 
             # Apply color formatting to commit content
             colored_content = color_formatter.format_commit(commit)
@@ -391,7 +391,7 @@ module CodingAgentTools
                   display_line: commit_content,
                   type: :multiline
                 }
-              rescue StandardError
+              rescue
                 # Skip commits with unparseable timestamps
               end
             end
@@ -426,7 +426,7 @@ module CodingAgentTools
                 display_line: display_line,
                 type: :oneline
               }
-            rescue StandardError
+            rescue
               nil # Skip unparseable lines
             end
           else
@@ -468,7 +468,7 @@ module CodingAgentTools
 
           # Execute submodules first, then main repository for proper dependency order
           submodule_result = coordinator.execute_across_repositories(commit_command,
-                                                                     options.merge(submodules_only: true))
+            options.merge(submodules_only: true))
           main_result = coordinator.execute_across_repositories(commit_command, options.merge(main_only: true))
 
           # Merge results
@@ -501,10 +501,10 @@ module CodingAgentTools
               # Default to non-interactive commits for programmatic operations
               # Only use --edit when explicitly requested AND in an interactive context
               commit_command = if options[:edit] && $stdin.tty?
-                                 "commit --edit -m #{escaped_message}"
-                               else
-                                 "commit -m #{escaped_message}"
-                               end
+                "commit --edit -m #{escaped_message}"
+              else
+                "commit -m #{escaped_message}"
+              end
 
               commands_by_repo[repo[:name]] = [commit_command]
             rescue CodingAgentTools::Molecules::Git::CommitMessageGenerationError => e
@@ -868,7 +868,7 @@ module CodingAgentTools
               commands: repo_results,
               repository: repo_name
             }
-          rescue StandardError => e
+          rescue => e
             errors << {
               repository: repo_name,
               error: e,
@@ -919,7 +919,7 @@ module CodingAgentTools
                 commands: repo_results,
                 repository: repo_name
               }
-            rescue StandardError => e
+            rescue => e
               errors << {
                 repository: repo_name,
                 error: e,

@@ -27,8 +27,8 @@ module CodingAgentTools
       # @param options [Hash] Generation options
       # @return [Hash] Generation result
       def generate_commands(workflow_files, target_dir, options = {})
-        puts "Creating command files..." if options[:verbose]
-        
+        puts 'Creating command files...' if options[:verbose]
+
         operations = prepare_operations(workflow_files, target_dir)
         results = []
 
@@ -60,25 +60,25 @@ module CodingAgentTools
           return {
             status: :skipped,
             operation: operation,
-            message: "Already exists"
+            message: 'Already exists'
           }
         end
 
         # Generate command content
         workflow_name = extract_workflow_name(operation.source)
         content = @template_renderer.render(workflow_name, operation.source.basename.to_s)
-        
+
         # Create operation with content
         create_operation = operation.with_metadata(
           operation.metadata.merge(content: content)
         )
-        
+
         # Execute operation
         result = @file_executor.execute(create_operation, options)
-        
+
         # Record statistics
         @stats_collector.record_operation(result, :workflow_command)
-        
+
         result
       end
 
@@ -87,7 +87,7 @@ module CodingAgentTools
       # @return [Array<Pathname>] Found workflow files
       def scan_workflows(project_root)
         workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
-        
+
         unless workflows_dir.exist?
           puts "Warning: Workflow instructions directory not found at #{workflows_dir}"
           return []
@@ -104,7 +104,7 @@ module CodingAgentTools
         workflow_files.map do |workflow_file|
           command_name = workflow_file.basename.to_s.sub('.wf.md', '')
           target_file = target_dir / "#{command_name}.md"
-          
+
           Models::FileOperation.new(
             source: workflow_file,
             target: target_file,
@@ -123,7 +123,7 @@ module CodingAgentTools
 
       def print_result(operation, result, options)
         command_name = operation.metadata[:workflow_name]
-        
+
         case result[:status]
         when :completed
           puts "  ✓ Created: #{command_name}.md"

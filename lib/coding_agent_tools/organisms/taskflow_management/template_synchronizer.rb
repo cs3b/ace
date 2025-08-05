@@ -154,7 +154,7 @@ module CodingAgentTools
             elsif file_changed && config.dry_run
               @files_changed << file_path
             end
-          rescue StandardError => e
+          rescue => e
             error_message = "Error processing file #{file_path}: #{e.message}"
             log("  ❌ #{error_message}")
             @errors << error_message
@@ -192,7 +192,7 @@ module CodingAgentTools
           message = "chore: sync embedded templates\n\n"
 
           if stats.documents_synchronized > 0
-            message += "- Synchronized #{stats.documents_synchronized} document#{stats.documents_synchronized == 1 ? '' : 's'}"
+            message += "- Synchronized #{stats.documents_synchronized} document#{stats.documents_synchronized == 1 ? "" : "s"}"
             message += ", #{stats.documents_up_to_date} up-to-date" if stats.documents_up_to_date > 0
             message += "\n\n"
           end
@@ -241,8 +241,8 @@ module CodingAgentTools
           log("  Files processed: #{result.stats.files_processed}")
 
           if config.dry_run
-            log("  Would synchronize: #{result.stats.documents_synchronized} document#{result.stats.documents_synchronized == 1 ? '' : 's'}")
-            log("  Would skip: #{result.stats.documents_up_to_date} document#{result.stats.documents_up_to_date == 1 ? '' : 's'} (up-to-date)")
+            log("  Would synchronize: #{result.stats.documents_synchronized} document#{result.stats.documents_synchronized == 1 ? "" : "s"}")
+            log("  Would skip: #{result.stats.documents_up_to_date} document#{result.stats.documents_up_to_date == 1 ? "" : "s"} (up-to-date)")
           else
             log("  Documents synchronized: #{result.stats.documents_synchronized}")
             log("  Documents up-to-date: #{result.stats.documents_up_to_date}")

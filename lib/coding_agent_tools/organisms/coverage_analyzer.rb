@@ -179,10 +179,10 @@ module CodingAgentTools
         }
 
         # Validate sort_by option
-        valid_sort_options = %w[coverage uncovered_lines file_name]
+        valid_sort_options = ['coverage', 'uncovered_lines', 'file_name']
         unless valid_sort_options.include?(validated[:sort_by])
           raise ArgumentError,
-                "Invalid sort_by option: #{validated[:sort_by]}. Valid options: #{valid_sort_options.join(', ')}"
+            "Invalid sort_by option: #{validated[:sort_by]}. Valid options: #{valid_sort_options.join(", ")}"
         end
 
         validated
@@ -238,12 +238,12 @@ module CodingAgentTools
 
               # Handle both old format (direct array) and new format (hash with "lines" key)
               line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data['lines']
-                            file_coverage_data['lines']
-                          elsif file_coverage_data.is_a?(Array)
-                            file_coverage_data
-                          else
-                            next
-                          end
+                file_coverage_data['lines']
+              elsif file_coverage_data.is_a?(Array)
+                file_coverage_data
+              else
+                next
+              end
 
               next if line_data.nil? || !line_data.is_a?(Array)
 

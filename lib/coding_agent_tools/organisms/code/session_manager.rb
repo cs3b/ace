@@ -179,7 +179,7 @@ module CodingAgentTools
           end
 
           metadata.empty? ? nil : metadata
-        rescue StandardError
+        rescue
           nil
         end
 

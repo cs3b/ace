@@ -204,13 +204,13 @@ module CodingAgentTools
         first_part = parts_field[0]
         unless first_part.is_a?(Hash)
           raise Error,
-                "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash."
+            "Failed to extract generated text: first element in candidate 'content.parts' array is not a Hash."
         end
 
         # 7. Verify the text field within the first part
         unless first_part.key?(:text)
           raise Error,
-                "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil."
+            "Failed to extract generated text: first element in candidate 'content.parts' array does not have a 'text' key, or its value is nil."
         end
 
         text_content = first_part[:text]

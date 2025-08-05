@@ -51,7 +51,7 @@ module CodingAgentTools
         url = build_api_url('models')
         response_data = @request_builder.get_json(url)
         response_data[:success] && response_data[:status] == 200
-      rescue StandardError
+      rescue
         false
       end
 

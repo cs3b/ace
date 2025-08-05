@@ -28,7 +28,7 @@ module CodingAgentTools
           end
 
           def supported_languages
-            %w[ruby markdown]
+            ['ruby', 'markdown']
           end
 
           def language_supported?(language)

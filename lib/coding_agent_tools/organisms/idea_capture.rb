@@ -66,7 +66,7 @@ module CodingAgentTools
 
         # Load project context
         context_result = load_project_context
-        debug_log("Context loading result: #{context_result[:success] ? 'success' : context_result[:error]}")
+        debug_log("Context loading result: #{context_result[:success] ? "success" : context_result[:error]}")
 
         # Generate system prompt
         system_prompt_result = generate_system_prompt(context_result, paths_result[:system_path])
@@ -76,20 +76,20 @@ module CodingAgentTools
         enhancement_result = enhance_idea_with_llm(paths_result)
 
         final_result = if enhancement_result.success?
-                         debug_log('Idea enhancement completed successfully')
+          debug_log('Idea enhancement completed successfully')
                          # Read the enhanced content and append SOURCE section
                          enhanced_content = File.read(paths_result[:output_path])
                          content_with_source = append_source_section(enhanced_content, idea_text)
                          File.write(paths_result[:output_path], content_with_source)
                          debug_log('Appended SOURCE section to enhanced idea')
-                         
+
                          CaptureResult.new(true, paths_result[:output_path], nil,
-                                           @debug ? 'Enhancement completed with SOURCE' : nil)
-                       else
+                           @debug ? 'Enhancement completed with SOURCE' : nil)
+        else
                          # Fallback: save raw idea with error note
-                         debug_log('Enhancement failed, saving raw idea as fallback')
+          debug_log('Enhancement failed, saving raw idea as fallback')
                          save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
-                       end
+        end
 
         # Execute git-commit if requested and idea creation was successful
         if final_result.success? && @commit_after_capture
@@ -109,7 +109,7 @@ module CodingAgentTools
         end
 
         final_result
-      rescue StandardError => e
+      rescue => e
         debug_details = @debug ? e.backtrace.join("\n") : nil
         error_result("Unexpected error during idea capture: #{e.message}", debug_details)
       end
@@ -143,7 +143,7 @@ module CodingAgentTools
         File.write(input_path, idea_text.strip)
         debug_log("Saved raw idea to: #{input_path}")
         CaptureResult.new(true, nil, nil, nil)
-      rescue StandardError => e
+      rescue => e
         error_result("Failed to save raw idea: #{e.message}")
       end
 
@@ -181,7 +181,7 @@ module CodingAgentTools
         debug_log("Generated system prompt: #{system_path}")
 
         CaptureResult.new(true, nil, nil, nil)
-      rescue StandardError => e
+      rescue => e
         error_result("Failed to generate system prompt: #{e.message}")
       end
 
@@ -197,13 +197,13 @@ module CodingAgentTools
         # Check if file already exists and has enhanced content
         if File.exist?(output_path)
           existing_content = File.read(output_path).strip
-          
+
           # If file has substantial content that doesn't look like our fallback format,
           # it might be enhanced content that was written before security blocked further operations
-          if !existing_content.empty? && 
+          if !existing_content.empty? &&
              !existing_content.start_with?('# Raw Idea (Enhanced Version Failed)') &&
              existing_content.length > idea_text.length + 50 # Heuristic: enhanced content should be longer
-            
+
             debug_log("Output file already contains enhanced content, preserving it: #{output_path}")
             # Add SOURCE section to existing enhanced content
             content_with_source = append_source_section(existing_content, idea_text)
@@ -217,15 +217,15 @@ module CodingAgentTools
         fallback_content = "# Raw Idea (Enhanced Version Failed)\n\n"
         fallback_content += "**Enhancement Error:** #{error_message}\n\n"
         fallback_content += "## Original Idea\n\n#{idea_text.strip}"
-        
+
         # Add SOURCE section to fallback content too
         fallback_content_with_source = append_source_section(fallback_content, idea_text)
-        
+
         File.write(output_path, fallback_content_with_source)
         debug_log("Saved fallback idea with SOURCE section to: #{output_path}")
 
         CaptureResult.new(true, output_path, nil, 'Saved raw idea with SOURCE due to enhancement failure')
-      rescue StandardError => e
+      rescue => e
         error_result("Failed to save fallback idea: #{e.message}")
       end
 
@@ -244,10 +244,10 @@ module CodingAgentTools
       def append_source_section(content, raw_input)
         # Ensure content ends with newlines for proper separation
         formatted_content = content.rstrip + "\n\n"
-        
+
         # Add SOURCE section header
         formatted_content += "> SOURCE\n\n"
-        
+
         # Check if raw input needs truncation
         truncated_input = raw_input.strip
         if truncated_input.length > @max_input_size && !@big_user_input_allowed
@@ -255,19 +255,19 @@ module CodingAgentTools
           truncated_input += "\n\n[truncated at #{@max_input_size} characters]"
           debug_log("SOURCE section truncated at #{@max_input_size} characters")
         end
-        
+
         # Escape markdown code blocks if present in raw input
         # If raw input contains triple backticks, use quad backticks for SOURCE block
         backtick_count = 3
         while truncated_input.include?('`' * backtick_count)
           backtick_count += 1
         end
-        
+
         # Add raw input in code block
-        formatted_content += "#{'`' * backtick_count}text\n"
+        formatted_content += "#{"`" * backtick_count}text\n"
         formatted_content += truncated_input
-        formatted_content += "\n#{'`' * backtick_count}\n"
-        
+        formatted_content += "\n#{"`" * backtick_count}\n"
+
         formatted_content
       end
 
@@ -281,7 +281,7 @@ module CodingAgentTools
         begin
           execute_git_commit(file_path)
           CaptureResult.new(true, nil, nil, 'Git commit successful')
-        rescue StandardError => e
+        rescue => e
           CaptureResult.new(false, nil, e.message, nil)
         end
       end
