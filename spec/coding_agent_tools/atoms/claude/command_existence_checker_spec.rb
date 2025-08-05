@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::CommandExistenceChecker do
       it 'skips non-existent paths' do
         non_existent = temp_dir / 'non-existent'
         (custom_dir / 'commit.md').write('test')
-        
+
         result = described_class.find('commit', [non_existent, custom_dir])
         expect(result).to eq(custom_dir / 'commit.md')
       end
@@ -102,7 +102,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::CommandExistenceChecker do
 
       it 'returns all commands excluding README files' do
         result = described_class.find_all(search_paths)
-        
+
         expect(result.size).to eq(3)
         names = result.map { |cmd| cmd[:name] }
         expect(names).to contain_exactly('commit', 'create-adr', 'update-blueprint')
@@ -111,7 +111,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::CommandExistenceChecker do
       it 'includes path information' do
         result = described_class.find_all(search_paths)
         commit_cmd = result.find { |cmd| cmd[:name] == 'commit' }
-        
+
         expect(commit_cmd[:path]).to eq(custom_dir / 'commit.md')
       end
     end
@@ -124,7 +124,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::CommandExistenceChecker do
 
       it 'returns unique commands by name' do
         result = described_class.find_all(search_paths)
-        
+
         expect(result.size).to eq(1)
         expect(result.first[:name]).to eq('commit')
       end

@@ -1,41 +1,41 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require 'spec_helper'
 
 RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
   let(:formatter) { described_class.new }
   let(:formatter_no_color) { described_class.new(no_color: true) }
   let(:formatter_force_color) { described_class.new(force_color: true) }
 
-  describe ".format_commit" do
-    it "creates new instance and formats commit" do
+  describe '.format_commit' do
+    it 'creates new instance and formats commit' do
       commit = {
         type: :oneline,
-        display_line: "abc123 Initial commit"
+        display_line: 'abc123 Initial commit'
       }
 
       result = described_class.format_commit(commit)
       expect(result).to be_a(String)
-      expect(result).to include("abc123")
-      expect(result).to include("Initial commit")
+      expect(result).to include('abc123')
+      expect(result).to include('Initial commit')
     end
 
-    it "passes options to new instance" do
+    it 'passes options to new instance' do
       commit = {
         type: :oneline,
-        display_line: "abc123 Initial commit"
+        display_line: 'abc123 Initial commit'
       }
 
       result_with_color = described_class.format_commit(commit)
       result_no_color = described_class.format_commit(commit, no_color: true)
 
       expect(result_with_color).not_to eq(result_no_color)
-      expect(result_no_color).to eq("abc123 Initial commit")
+      expect(result_no_color).to eq('abc123 Initial commit')
     end
   end
 
-  describe ".should_use_color?" do
-    it "creates new instance and checks color usage" do
+  describe '.should_use_color?' do
+    it 'creates new instance and checks color usage' do
       result_default = described_class.should_use_color?
       result_no_color = described_class.should_use_color?(no_color: true)
 
@@ -44,83 +44,83 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
     end
   end
 
-  describe "#initialize" do
-    context "with default options" do
-      it "enables color by default" do
+  describe '#initialize' do
+    context 'with default options' do
+      it 'enables color by default' do
         formatter = described_class.new
         expect(formatter.should_use_color?).to be true
       end
     end
 
-    context "with no_color option" do
-      it "disables color when no_color is true" do
+    context 'with no_color option' do
+      it 'disables color when no_color is true' do
         formatter = described_class.new(no_color: true)
         expect(formatter.should_use_color?).to be false
       end
 
-      it "enables color when no_color is false" do
+      it 'enables color when no_color is false' do
         formatter = described_class.new(no_color: false)
         expect(formatter.should_use_color?).to be true
       end
     end
 
-    context "with force_color option" do
-      it "enables color when force_color is true" do
+    context 'with force_color option' do
+      it 'enables color when force_color is true' do
         formatter = described_class.new(force_color: true)
         expect(formatter.should_use_color?).to be true
       end
 
-      it "enables color when force_color is false" do
+      it 'enables color when force_color is false' do
         formatter = described_class.new(force_color: false)
         expect(formatter.should_use_color?).to be true
       end
     end
 
-    context "with environment variables" do
+    context 'with environment variables' do
       before do
-        @original_no_color = ENV["NO_COLOR"]
-        @original_force_color = ENV["FORCE_COLOR"]
+        @original_no_color = ENV['NO_COLOR']
+        @original_force_color = ENV['FORCE_COLOR']
       end
 
       after do
-        ENV["NO_COLOR"] = @original_no_color
-        ENV["FORCE_COLOR"] = @original_force_color
+        ENV['NO_COLOR'] = @original_no_color
+        ENV['FORCE_COLOR'] = @original_force_color
       end
 
-      it "disables color when NO_COLOR is set" do
-        ENV["NO_COLOR"] = "1"
+      it 'disables color when NO_COLOR is set' do
+        ENV['NO_COLOR'] = '1'
         formatter = described_class.new
         expect(formatter.should_use_color?).to be false
       end
 
-      it "enables color when FORCE_COLOR is set" do
-        ENV["NO_COLOR"] = nil
-        ENV["FORCE_COLOR"] = "1"
+      it 'enables color when FORCE_COLOR is set' do
+        ENV['NO_COLOR'] = nil
+        ENV['FORCE_COLOR'] = '1'
         formatter = described_class.new
         expect(formatter.should_use_color?).to be true
       end
 
-      it "prioritizes no_color option over environment variables" do
-        ENV["FORCE_COLOR"] = "1"
+      it 'prioritizes no_color option over environment variables' do
+        ENV['FORCE_COLOR'] = '1'
         formatter = described_class.new(no_color: true)
         expect(formatter.should_use_color?).to be false
       end
 
-      it "prioritizes NO_COLOR env var over FORCE_COLOR env var" do
-        ENV["NO_COLOR"] = "1"
-        ENV["FORCE_COLOR"] = "1"
+      it 'prioritizes NO_COLOR env var over FORCE_COLOR env var' do
+        ENV['NO_COLOR'] = '1'
+        ENV['FORCE_COLOR'] = '1'
         formatter = described_class.new
         expect(formatter.should_use_color?).to be false
       end
     end
   end
 
-  describe "#format_commit" do
-    context "with color disabled" do
-      it "returns original display_line for any commit type" do
+  describe '#format_commit' do
+    context 'with color disabled' do
+      it 'returns original display_line for any commit type' do
         oneline_commit = {
           type: :oneline,
-          display_line: "abc123 Initial commit"
+          display_line: 'abc123 Initial commit'
         }
 
         multiline_commit = {
@@ -128,16 +128,16 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
           display_line: "commit abc123\nAuthor: Test User\nDate: Mon Jan 1 12:00:00 2024\n\n    Initial commit"
         }
 
-        expect(formatter_no_color.format_commit(oneline_commit)).to eq("abc123 Initial commit")
+        expect(formatter_no_color.format_commit(oneline_commit)).to eq('abc123 Initial commit')
         expect(formatter_no_color.format_commit(multiline_commit)).to eq(multiline_commit[:display_line])
       end
     end
 
-    context "with oneline commit type" do
-      it "formats simple hash and message" do
+    context 'with oneline commit type' do
+      it 'formats simple hash and message' do
         commit = {
           type: :oneline,
-          display_line: "abc123 Initial commit"
+          display_line: 'abc123 Initial commit'
         }
 
         result = formatter.format_commit(commit)
@@ -145,10 +145,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37mInitial commit\033[0m") # White message
       end
 
-      it "handles commit with longer hash" do
+      it 'handles commit with longer hash' do
         commit = {
           type: :oneline,
-          display_line: "a1b2c3d4e5f6 Add new feature with tests"
+          display_line: 'a1b2c3d4e5f6 Add new feature with tests'
         }
 
         result = formatter.format_commit(commit)
@@ -156,10 +156,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37mAdd new feature with tests\033[0m")
       end
 
-      it "handles commit with complex message" do
+      it 'handles commit with complex message' do
         commit = {
           type: :oneline,
-          display_line: "abc123 feat(api): add user authentication (#123)"
+          display_line: 'abc123 feat(api): add user authentication (#123)'
         }
 
         result = formatter.format_commit(commit)
@@ -167,30 +167,30 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37mfeat(api): add user authentication (#123)\033[0m")
       end
 
-      it "handles malformed display line" do
+      it 'handles malformed display line' do
         commit = {
           type: :oneline,
-          display_line: "not-a-valid-format"
+          display_line: 'not-a-valid-format'
         }
 
         result = formatter.format_commit(commit)
         expect(result).to eq("\033[37mnot-a-valid-format\033[0m")
       end
 
-      it "handles empty display line" do
+      it 'handles empty display line' do
         commit = {
           type: :oneline,
-          display_line: ""
+          display_line: ''
         }
 
         result = formatter.format_commit(commit)
         expect(result).to eq("\033[37m\033[0m")
       end
 
-      it "handles display line with only hash" do
+      it 'handles display line with only hash' do
         commit = {
           type: :oneline,
-          display_line: "abc123"
+          display_line: 'abc123'
         }
 
         result = formatter.format_commit(commit)
@@ -198,7 +198,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "with multiline commit type" do
+    context 'with multiline commit type' do
       let(:multiline_commit) do
         {
           type: :multiline,
@@ -215,29 +215,29 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         }
       end
 
-      it "formats commit hash line" do
+      it 'formats commit hash line' do
         result = formatter.format_commit(multiline_commit)
         expect(result).to include("\033[1mcommit\033[0m \033[33ma1b2c3d4e5f67890abcdef1234567890abcdef12\033[0m")
       end
 
-      it "formats author line" do
+      it 'formats author line' do
         result = formatter.format_commit(multiline_commit)
         expect(result).to include("\033[1mAuthor:\033[0m \033[36mJohn Doe <john@example.com>\033[0m")
       end
 
-      it "formats date line" do
+      it 'formats date line' do
         result = formatter.format_commit(multiline_commit)
         expect(result).to include("\033[1mDate:\033[0m   \033[32mMon Jan 1 12:00:00 2024 +0000\033[0m")
       end
 
-      it "formats indented commit message lines" do
+      it 'formats indented commit message lines' do
         result = formatter.format_commit(multiline_commit)
         expect(result).to include("\033[37m    Initial commit\033[0m")
         expect(result).to include("\033[37m    This is the commit body with more details.\033[0m")
         expect(result).to include("\033[37m    It spans multiple lines.\033[0m")
       end
 
-      it "handles commit with minimal indentation" do
+      it 'handles commit with minimal indentation' do
         minimal_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -254,7 +254,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37m    Minimal commit\033[0m")
       end
 
-      it "handles commit with extra metadata lines" do
+      it 'handles commit with extra metadata lines' do
         extended_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -273,7 +273,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[1mAuthor:\033[0m \033[36mJane Smith <jane@example.com>\033[0m")
       end
 
-      it "handles empty commit message" do
+      it 'handles empty commit message' do
         empty_message_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -289,40 +289,40 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "with unknown commit type" do
-      it "returns original display_line" do
+    context 'with unknown commit type' do
+      it 'returns original display_line' do
         commit = {
           type: :unknown,
-          display_line: "some unknown format"
+          display_line: 'some unknown format'
         }
 
         result = formatter.format_commit(commit)
-        expect(result).to eq("some unknown format")
+        expect(result).to eq('some unknown format')
       end
 
-      it "handles nil commit type" do
+      it 'handles nil commit type' do
         commit = {
           type: nil,
-          display_line: "no type specified"
+          display_line: 'no type specified'
         }
 
         result = formatter.format_commit(commit)
-        expect(result).to eq("no type specified")
+        expect(result).to eq('no type specified')
       end
     end
 
-    context "with missing or malformed commit data" do
-      it "handles commit without display_line" do
-        commit = {type: :oneline}
+    context 'with missing or malformed commit data' do
+      it 'handles commit without display_line' do
+        commit = { type: :oneline }
 
         expect { formatter.format_commit(commit) }.not_to raise_error
       end
 
-      it "handles nil commit" do
+      it 'handles nil commit' do
         expect { formatter.format_commit(nil) }.to raise_error(NoMethodError)
       end
 
-      it "handles empty commit hash" do
+      it 'handles empty commit hash' do
         commit = {}
 
         expect { formatter.format_commit(commit) }.not_to raise_error
@@ -330,8 +330,8 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
     end
   end
 
-  describe "COLORS constant" do
-    it "defines all required color codes" do
+  describe 'COLORS constant' do
+    it 'defines all required color codes' do
       expected_colors = [
         :reset, :repo_name, :commit_hash, :author, :date,
         :commit_subject, :commit_body, :bold, :dim
@@ -344,20 +344,20 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    it "has valid ANSI escape sequences" do
+    it 'has valid ANSI escape sequences' do
       described_class::COLORS.each do |name, code|
         expect(code).to match(/\A\033\[\d+(;\d+)*m\z/), "#{name} should be valid ANSI escape sequence"
       end
     end
 
-    it "is frozen to prevent modification" do
+    it 'is frozen to prevent modification' do
       expect(described_class::COLORS).to be_frozen
     end
   end
 
-  describe "comprehensive edge cases and error handling" do
-    context "with malformed git log output" do
-      it "handles corrupted commit hash lines" do
+  describe 'comprehensive edge cases and error handling' do
+    context 'with malformed git log output' do
+      it 'handles corrupted commit hash lines' do
         malformed_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -374,7 +374,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37mcommit \033[0m")
       end
 
-      it "handles missing author information" do
+      it 'handles missing author information' do
         no_author_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -387,10 +387,10 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
 
         result = formatter.format_commit(no_author_commit)
         expect(result).to include("\033[1mcommit\033[0m \033[33mabc123\033[0m")
-        expect(result).not_to include("Author:")
+        expect(result).not_to include('Author:')
       end
 
-      it "handles malformed author lines" do
+      it 'handles malformed author lines' do
         malformed_author_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -407,8 +407,8 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[37mAuthor:\033[0m")
       end
 
-      it "handles very long commit messages" do
-        long_message = "Very long commit message " * 100
+      it 'handles very long commit messages' do
+        long_message = 'Very long commit message ' * 100
         long_commit = {
           type: :oneline,
           display_line: "abc123 #{long_message}"
@@ -420,19 +420,19 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "with special characters and encoding" do
-      it "handles Unicode characters in commit messages" do
+    context 'with special characters and encoding' do
+      it 'handles Unicode characters in commit messages' do
         unicode_commit = {
           type: :oneline,
-          display_line: "abc123 Add 🚀 emoji and 中文 characters"
+          display_line: 'abc123 Add 🚀 emoji and 中文 characters'
         }
 
         result = formatter.format_commit(unicode_commit)
-        expect(result).to include("🚀")
-        expect(result).to include("中文")
+        expect(result).to include('🚀')
+        expect(result).to include('中文')
       end
 
-      it "handles special characters in author names" do
+      it 'handles special characters in author names' do
         special_author_commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -445,22 +445,22 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         }
 
         result = formatter.format_commit(special_author_commit)
-        expect(result).to include("José María García")
+        expect(result).to include('José María García')
       end
 
-      it "handles newlines and control characters in commit data" do
+      it 'handles newlines and control characters in commit data' do
         newline_commit = {
           type: :oneline,
-          display_line: "abc123 Commit\\nwith\\nembedded\\nnewlines"
+          display_line: 'abc123 Commit\\nwith\\nembedded\\nnewlines'
         }
 
         result = formatter.format_commit(newline_commit)
-        expect(result).to include("\\n")
+        expect(result).to include('\\n')
       end
     end
 
-    context "with color edge cases" do
-      it "handles nested color codes safely" do
+    context 'with color edge cases' do
+      it 'handles nested color codes safely' do
         commit_with_colors = {
           type: :oneline,
           display_line: "abc123 Message with \033[31mexisting\033[0m colors"
@@ -471,15 +471,15 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result).to include("\033[33mabc123\033[0m")
       end
 
-      it "handles unknown color keys gracefully" do
+      it 'handles unknown color keys gracefully' do
         # Test the colorize method directly with invalid color
-        result = formatter.send(:colorize, "test text", :invalid_color)
-        expect(result).to eq("test text") # Should return text unchanged for invalid color
+        result = formatter.send(:colorize, 'test text', :invalid_color)
+        expect(result).to eq('test text') # Should return text unchanged for invalid color
       end
     end
 
-    context "with performance considerations" do
-      it "handles many commits efficiently" do
+    context 'with performance considerations' do
+      it 'handles many commits efficiently' do
         commits = 1000.times.map do |i|
           {
             type: :oneline,
@@ -495,7 +495,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(end_time - start_time).to be < 1.0 # Should be fast
       end
 
-      it "handles very large multiline commits efficiently" do
+      it 'handles very large multiline commits efficiently' do
         large_body = (1..100).map { |i| "    Line #{i} of the commit message" }.join("\n")
         large_commit = {
           type: :multiline,
@@ -512,17 +512,17 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         result = formatter.format_commit(large_commit)
         end_time = Time.now
 
-        expect(result).to include("Line 1 of")
-        expect(result).to include("Line 100 of")
+        expect(result).to include('Line 1 of')
+        expect(result).to include('Line 100 of')
         expect(end_time - start_time).to be < 0.1
       end
     end
 
-    context "with concurrent access" do
-      it "maintains thread safety during formatting" do
+    context 'with concurrent access' do
+      it 'maintains thread safety during formatting' do
         commit = {
           type: :oneline,
-          display_line: "abc123 Thread safety test"
+          display_line: 'abc123 Thread safety test'
         }
 
         threads = []
@@ -545,7 +545,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "with environment variable edge cases" do
+    context 'with environment variable edge cases' do
       before do
         @original_env = ENV.to_hash
       end
@@ -555,34 +555,34 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         ENV.update(@original_env)
       end
 
-      it "handles empty environment variables" do
-        ENV["NO_COLOR"] = ""
-        ENV["FORCE_COLOR"] = ""
+      it 'handles empty environment variables' do
+        ENV['NO_COLOR'] = ''
+        ENV['FORCE_COLOR'] = ''
 
         formatter = described_class.new
         # Empty string for NO_COLOR is still truthy in Ruby, so color is disabled
         expect(formatter.should_use_color?).to be false
       end
 
-      it "handles unusual environment variable values" do
-        ENV["NO_COLOR"] = "false" # String "false" is truthy
+      it 'handles unusual environment variable values' do
+        ENV['NO_COLOR'] = 'false' # String "false" is truthy
         formatter = described_class.new
         expect(formatter.should_use_color?).to be false
 
-        ENV["NO_COLOR"] = nil
-        ENV["FORCE_COLOR"] = "0" # String "0" is truthy
+        ENV['NO_COLOR'] = nil
+        ENV['FORCE_COLOR'] = '0' # String "0" is truthy
         formatter = described_class.new
         expect(formatter.should_use_color?).to be true
       end
     end
   end
 
-  describe "algorithm correctness verification" do
-    context "color code application" do
-      it "properly wraps text with color codes" do
+  describe 'algorithm correctness verification' do
+    context 'color code application' do
+      it 'properly wraps text with color codes' do
         commit = {
           type: :oneline,
-          display_line: "abc123 Test message"
+          display_line: 'abc123 Test message'
         }
 
         result = formatter.format_commit(commit)
@@ -593,7 +593,7 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         expect(result.scan(/\033\[0m/).length).to eq(2)  # Two resets
       end
 
-      it "applies correct colors to multiline elements" do
+      it 'applies correct colors to multiline elements' do
         commit = {
           type: :multiline,
           display_line: <<~COMMIT.chomp
@@ -618,17 +618,17 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "pattern matching accuracy" do
-      it "correctly identifies commit hash patterns" do
+    context 'pattern matching accuracy' do
+      it 'correctly identifies commit hash patterns' do
         test_cases = [
-          "abc123 Message",
-          "a1b2c3d4e5f6 Longer hash",
-          "1234567890abcdef Message with numbers",
-          "short Message"  # Edge case: very short hash
+          'abc123 Message',
+          'a1b2c3d4e5f6 Longer hash',
+          '1234567890abcdef Message with numbers',
+          'short Message'  # Edge case: very short hash
         ]
 
         test_cases.each do |display_line|
-          commit = {type: :oneline, display_line: display_line}
+          commit = { type: :oneline, display_line: display_line }
           result = formatter.format_commit(commit)
 
           # Should always contain yellow color for hash part
@@ -636,15 +636,15 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
         end
       end
 
-      it "correctly identifies multiline patterns" do
+      it 'correctly identifies multiline patterns' do
         patterns_to_test = [
-          ["commit abc123", "commit", "abc123"],
-          ["Author: John Doe", "Author:", "John Doe"],
-          ["Date:   Mon Jan 1 12:00:00 2024", "Date:", "Mon Jan 1 12:00:00 2024"]
+          ['commit abc123', 'commit', 'abc123'],
+          ['Author: John Doe', 'Author:', 'John Doe'],
+          ['Date:   Mon Jan 1 12:00:00 2024', 'Date:', 'Mon Jan 1 12:00:00 2024']
         ]
 
         patterns_to_test.each do |line, label, value|
-          commit = {type: :multiline, display_line: line}
+          commit = { type: :multiline, display_line: line }
           result = formatter.format_commit(commit)
 
           expect(result).to include(label) if label
@@ -653,12 +653,12 @@ RSpec.describe CodingAgentTools::Atoms::Git::LogColorFormatter do
       end
     end
 
-    context "output format consistency" do
-      it "maintains consistent formatting across similar commits" do
+    context 'output format consistency' do
+      it 'maintains consistent formatting across similar commits' do
         commits = [
-          {type: :oneline, display_line: "abc123 First commit"},
-          {type: :oneline, display_line: "def456 Second commit"},
-          {type: :oneline, display_line: "789abc Third commit"}
+          { type: :oneline, display_line: 'abc123 First commit' },
+          { type: :oneline, display_line: 'def456 Second commit' },
+          { type: :oneline, display_line: '789abc Third commit' }
         ]
 
         results = commits.map { |commit| formatter.format_commit(commit) }
