@@ -32,7 +32,7 @@
 - Moved 6 custom commands to _custom/: commit.md, draft-tasks.md, load-project-context.md, plan-tasks.md, review-tasks.md, work-on-tasks.md
 - Moved 26 generated commands to _generated/
 - All moves used git mv to preserve history
-- Migration report saved to dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Migration report saved to dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 
 ### Verification Steps
 - Checked directory structure with LS tool
@@ -62,5 +62,5 @@
 ## Additional Context
 
 - Task: dev-taskflow/current/v.0.6.0-unified-claude/tasks/v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
-- Migration report: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Migration report: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 - Related task for ClaudeCommandsInstaller update will handle remaining codebase references
