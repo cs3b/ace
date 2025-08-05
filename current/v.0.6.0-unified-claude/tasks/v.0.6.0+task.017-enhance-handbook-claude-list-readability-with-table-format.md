@@ -1,8 +1,8 @@
 ---
 id: v.0.6.0+task.017
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 3h
 dependencies: []
 ---
 
@@ -116,3 +116,167 @@ Improve the readability and usability of the `handbook claude list` command by i
 - Feedback item #4 from dev-taskflow/current/v.0.6.0-unified-claude/ideas/feedback-for-1-10.md
 - Related to feedback #5 about .claude/commands location (flattened structure)
 - Current implementation in dev-tools/lib/coding_agent_tools/organisms/claude_command_lister.rb
+
+## Technical Approach
+
+### Architecture Pattern
+- Use the ATOM architecture pattern with a clear separation of concerns
+- Enhance existing ClaudeCommandLister organism to support table formatting
+- Create new atom components for table rendering and column alignment
+- Leverage existing molecules for command scanning and status detection
+
+### Technology Stack
+- Ruby standard library for string formatting and padding
+- No external table formatting libraries needed (keep dependencies minimal)
+- ANSI color codes for status indicators (already in use)
+- Existing filesystem and path handling utilities
+
+### Implementation Strategy
+- Refactor output methods to support table format as primary display mode
+- Create reusable table rendering atom for potential future use
+- Maintain backward compatibility with JSON output format
+- Keep verbose mode for detailed information when needed
+
+## Tool Selection
+
+| Criteria | Custom Table Implementation | Terminal-table gem | TTY-table gem | Selected |
+|----------|----------------------------|-------------------|---------------|-----------|
+| Performance | Excellent | Good | Good | Custom |
+| Integration | Native | External dependency | External dependency | Custom |
+| Maintenance | Direct control | Community maintained | Community maintained | Custom |
+| Security | No external deps | Additional dep | Additional dep | Custom |
+| Learning Curve | None (standard Ruby) | Small | Small | Custom |
+
+**Selection Rationale:** Custom implementation selected to avoid adding dependencies for a simple table format. The table requirements are straightforward (4 columns, basic alignment) and can be efficiently implemented with Ruby's string formatting capabilities.
+
+## File Modifications
+
+### Create
+- lib/coding_agent_tools/atoms/table_renderer.rb
+  - Purpose: Generic table rendering atom for formatted text output
+  - Key components: Column alignment, width calculation, row formatting
+  - Dependencies: None (pure Ruby)
+
+### Modify
+- lib/coding_agent_tools/organisms/claude_command_lister.rb
+  - Changes: Refactor output_text method to use table format
+  - Impact: Changes default display format to table view
+  - Integration points: Uses new TableRenderer atom
+
+- spec/coding_agent_tools/organisms/claude_command_lister_spec.rb
+  - Changes: Update tests for new table format output
+  - Impact: Ensures table format works correctly
+  - Integration points: Tests table rendering behavior
+
+### Create Tests
+- spec/coding_agent_tools/atoms/table_renderer_spec.rb
+  - Purpose: Unit tests for table rendering atom
+  - Key components: Column alignment, width calculation, edge cases
+  - Dependencies: RSpec
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Terminal width constraints may affect table readability
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Implement intelligent column width calculation with minimum widths
+  - **Rollback:** Fall back to list format if terminal too narrow
+
+- **Risk:** Unicode characters (✓, ✗) may not display correctly on all terminals
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Already in use in current implementation, proven to work
+  - **Rollback:** Provide ASCII fallback option if needed
+
+### Integration Risks
+- **Risk:** Changes to output format may break existing scripts parsing the output
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Maintain JSON format option unchanged, document text format as human-readable only
+  - **Monitoring:** Check for any automation using the text output
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current command inventory structure and data flow
+  > TEST: Understanding Check
+  > Type: Pre-condition Check
+  > Assert: Command categories (custom, generated, installed) and their relationships are identified
+  > Command: ruby -e "require './lib/coding_agent_tools/organisms/claude_command_lister'; puts CodingAgentTools::Organisms::ClaudeCommandLister.new.send(:build_inventory).keys"
+
+* [ ] Design table column layout and width calculations
+  - Fixed columns: Installed (10 chars), Type (10 chars), Valid (7 chars), Command Name (variable)
+  - Calculate optimal widths based on terminal size
+  - Handle long command names with truncation if needed
+
+* [ ] Plan test scenarios for table rendering
+  - Empty inventory
+  - Single command type
+  - Mixed command types
+  - Long command names
+  - Terminal width edge cases
+
+### Execution Steps
+
+- [ ] Create TableRenderer atom with basic functionality
+  > TEST: TableRenderer Creation
+  > Type: File Creation
+  > Assert: TableRenderer atom exists with proper module structure
+  > Command: test -f lib/coding_agent_tools/atoms/table_renderer.rb && ruby -c lib/coding_agent_tools/atoms/table_renderer.rb
+
+- [ ] Implement table rendering logic in TableRenderer
+  - Column alignment (left, center, right)
+  - Width calculation and padding
+  - Header and separator generation
+  - Row formatting with proper spacing
+
+- [ ] Create comprehensive tests for TableRenderer
+  > TEST: TableRenderer Tests
+  > Type: Test Implementation
+  > Assert: All table rendering scenarios are covered
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/table_renderer_spec.rb
+
+- [ ] Refactor ClaudeCommandLister to detect installed vs source commands
+  - Check if command exists in .claude/commands (installed)
+  - Cross-reference with dev-handbook source locations
+  - Determine validation status (exists in dev-handbook)
+
+- [ ] Update ClaudeCommandLister#output_text to use table format
+  > TEST: Table Format Output
+  > Type: Integration Test
+  > Assert: Command list displays in table format
+  > Command: bundle exec handbook claude list | grep -E "Installed.*Type.*Valid.*Command"
+
+- [ ] Implement summary line with counts
+  - Count installed commands
+  - Count missing commands
+  - Display in format: "Summary: X commands installed, Y missing"
+
+- [ ] Update existing tests for new output format
+  > TEST: All Tests Pass
+  > Type: Test Suite
+  > Assert: All ClaudeCommandLister tests pass with new format
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/claude_command_lister_spec.rb
+
+- [ ] Add integration tests for table output
+  > TEST: Integration Tests
+  > Type: End-to-end Test
+  > Assert: handbook claude list produces expected table output
+  > Command: bundle exec rspec spec/integration/handbook_claude_list_spec.rb
+
+- [ ] Test with various terminal widths and command sets
+  > TEST: Terminal Compatibility
+  > Type: Manual Verification
+  > Assert: Table displays correctly in different terminal sizes
+  > Command: COLUMNS=80 bundle exec handbook claude list && COLUMNS=120 bundle exec handbook claude list
+
+## Acceptance Criteria
+
+- [ ] Users can view all command statuses in a single, compact table without scrolling
+- [ ] Table format reduces vertical space usage by at least 50% compared to current sectioned output
+- [ ] Command status information loads and displays within 200ms
+- [ ] JSON output format remains unchanged for automation compatibility
+- [ ] Table clearly shows installed status, command type, validation status, and command name
+- [ ] Summary line provides quick overview of installed vs missing commands
