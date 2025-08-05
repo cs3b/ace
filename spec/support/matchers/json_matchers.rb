@@ -41,11 +41,11 @@ RSpec::Matchers.define :have_json_structure do |expected_structure|
     structure_matches?(@actual_parsed, expected_structure)
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     "expected JSON structure to match #{expected_structure.inspect}, but got #{@actual_parsed.inspect}"
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     "expected JSON structure not to match #{expected_structure.inspect}, but it did"
   end
 
@@ -111,11 +111,11 @@ RSpec::Matchers.define :contain_sensitive_data do |*keys|
     @found_keys.any?
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     "expected to find sensitive keys #{@sensitive_keys.inspect}, but only found #{@found_keys.inspect}"
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     "expected not to find sensitive keys #{@sensitive_keys.inspect}, but found #{@found_keys.inspect}"
   end
 
@@ -127,7 +127,7 @@ RSpec::Matchers.define :contain_sensitive_data do |*keys|
       data.each do |key, value|
         current_path = path + [key.to_s]
         if @sensitive_keys.include?(key.to_s.downcase)
-          @found_keys << current_path.join(".")
+          @found_keys << current_path.join('.')
         end
         find_sensitive_keys(value, current_path) if value.is_a?(Hash) || value.is_a?(Array)
       end
@@ -154,8 +154,8 @@ end
 
 RSpec::Matchers.define :be_sanitized_json do |sensitive_keys = nil|
   match do |actual|
-    @sensitive_keys = sensitive_keys || %w[api_key password token secret]
-    @redact_value = "[REDACTED]"
+    @sensitive_keys = sensitive_keys || ['api_key', 'password', 'token', 'secret']
+    @redact_value = '[REDACTED]'
 
     json_data = if actual.is_a?(String)
       begin
@@ -171,12 +171,12 @@ RSpec::Matchers.define :be_sanitized_json do |sensitive_keys = nil|
     json_is_sanitized?(json_data)
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     "expected JSON to be sanitized (sensitive keys replaced with #{@redact_value}), but found unsanitized data"
   end
 
-  failure_message_when_negated do |actual|
-    "expected JSON not to be sanitized, but all sensitive data was redacted"
+  failure_message_when_negated do |_actual|
+    'expected JSON not to be sanitized, but all sensitive data was redacted'
   end
 
   private

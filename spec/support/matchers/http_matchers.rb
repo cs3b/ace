@@ -17,7 +17,7 @@ RSpec::Matchers.define :be_successful_http_response do
     end
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     "expected HTTP status not to be successful (2xx), but got #{@status}"
   end
 end
@@ -30,11 +30,11 @@ RSpec::Matchers.define :have_http_status do |expected_status|
     @actual_status == expected_status
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     "expected HTTP status to be #{expected_status}, but got #{@actual_status}"
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     "expected HTTP status not to be #{expected_status}, but it was"
   end
 end
@@ -76,7 +76,7 @@ RSpec::Matchers.define :have_http_header do |header_name, expected_value = nil|
     end
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     if expected_value.nil?
       "expected response not to have header '#{header_name}', but it was present"
     else
@@ -90,7 +90,7 @@ RSpec::Matchers.define :have_content_type do |expected_type|
     return false unless actual.respond_to?(:headers)
 
     @headers = actual.headers
-    content_type_header = @headers.find { |key, _| key.to_s.downcase == "content-type" }
+    content_type_header = @headers.find { |key, _| key.to_s.downcase == 'content-type' }
 
     return false unless content_type_header
 
@@ -98,15 +98,15 @@ RSpec::Matchers.define :have_content_type do |expected_type|
     @actual_content_type.to_s.include?(expected_type.to_s)
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     if @actual_content_type
       "expected Content-Type to include '#{expected_type}', but got '#{@actual_content_type}'"
     else
-      "expected response to have Content-Type header, but it was missing"
+      'expected response to have Content-Type header, but it was missing'
     end
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     "expected Content-Type not to include '#{expected_type}', but got '#{@actual_content_type}'"
   end
 end
@@ -117,11 +117,11 @@ RSpec::Matchers.define :have_json_response do
     return false unless actual.respond_to?(:headers) && actual.respond_to?(:body)
 
     @headers = actual.headers
-    content_type_header = @headers.find { |key, _| key.to_s.downcase == "content-type" }
+    content_type_header = @headers.find { |key, _| key.to_s.downcase == 'content-type' }
 
     if content_type_header
       @content_type = content_type_header.last
-      return false unless @content_type.to_s.include?("application/json")
+      return false unless @content_type.to_s.include?('application/json')
     end
 
     # Check if body is valid JSON
@@ -136,18 +136,18 @@ RSpec::Matchers.define :have_json_response do
     end
   end
 
-  failure_message do |actual|
-    if @content_type && !@content_type.include?("application/json")
+  failure_message do |_actual|
+    if @content_type && !@content_type.include?('application/json')
       "expected Content-Type to be 'application/json', but got '#{@content_type}'"
     elsif @body.nil? || @body.empty?
-      "expected response to have a body, but it was empty"
+      'expected response to have a body, but it was empty'
     else
-      "expected response body to be valid JSON, but it failed to parse"
+      'expected response body to be valid JSON, but it failed to parse'
     end
   end
 
-  failure_message_when_negated do |actual|
-    "expected response not to be JSON, but it was valid JSON with correct Content-Type"
+  failure_message_when_negated do |_actual|
+    'expected response not to be JSON, but it was valid JSON with correct Content-Type'
   end
 end
 
@@ -164,7 +164,7 @@ RSpec::Matchers.define :include_error_message do |expected_message = nil|
       @parsed_body = JSON.parse(@body)
 
       # Look for common error message fields
-      error_fields = %w[error message error_message msg detail details]
+      error_fields = ['error', 'message', 'error_message', 'msg', 'detail', 'details']
       @found_messages = []
 
       error_fields.each do |field|
@@ -174,8 +174,8 @@ RSpec::Matchers.define :include_error_message do |expected_message = nil|
       end
 
       # Also check nested error objects
-      if @parsed_body.key?("error") && @parsed_body["error"].is_a?(Hash)
-        nested_error = @parsed_body["error"]
+      if @parsed_body.key?('error') && @parsed_body['error'].is_a?(Hash)
+        nested_error = @parsed_body['error']
         error_fields.each do |field|
           if nested_error.key?(field)
             @found_messages << nested_error[field]
@@ -200,15 +200,15 @@ RSpec::Matchers.define :include_error_message do |expected_message = nil|
     end
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     if expected_message.nil?
-      "expected response to contain an error message, but none was found"
+      'expected response to contain an error message, but none was found'
     else
       "expected error message to include '#{expected_message}', but found messages: #{@found_messages.inspect}"
     end
   end
 
-  failure_message_when_negated do |actual|
+  failure_message_when_negated do |_actual|
     if expected_message.nil?
       "expected response not to contain error messages, but found: #{@found_messages.inspect}"
     else
@@ -225,11 +225,11 @@ RSpec::Matchers.define :be_rate_limited do
     @status == 429
   end
 
-  failure_message do |actual|
+  failure_message do |_actual|
     "expected HTTP status to be 429 (Too Many Requests), but got #{@status}"
   end
 
-  failure_message_when_negated do |actual|
-    "expected HTTP status not to be 429 (Too Many Requests), but it was"
+  failure_message_when_negated do |_actual|
+    'expected HTTP status not to be 429 (Too Many Requests), but it was'
   end
 end

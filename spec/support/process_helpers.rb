@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "open3"
-require "timeout"
-require "shellwords"
+require 'open3'
+require 'timeout'
+require 'shellwords'
 
 # Shared helpers for process execution in integration tests
 module ProcessHelpers
@@ -16,8 +16,8 @@ module ProcessHelpers
   # @param input [String] Input to send to stdin
   # @return [Array<String, String, Process::Status>] stdout, stderr, status
   def execute_command(command, env: {}, timeout: DEFAULT_TIMEOUT, input: nil)
-    stdout = ""
-    stderr = ""
+    stdout = ''
+    stderr = ''
     status = nil
 
     begin
@@ -56,7 +56,7 @@ module ProcessHelpers
   def execute_with_failure(command, env: {}, timeout: DEFAULT_TIMEOUT, expected_status: nil)
     stdout, stderr, status = execute_command(command, env: env, timeout: timeout)
 
-    expect(status).not_to be_success, "Expected command to fail, but it succeeded"
+    expect(status).not_to be_success, 'Expected command to fail, but it succeeded'
 
     if expected_status
       expect(status.exitstatus).to eq(expected_status),
@@ -85,24 +85,24 @@ module ProcessHelpers
   # @param base_env [Hash] Base environment variables
   # @return [Hash] Environment hash for subprocess
   def vcr_subprocess_env(cassette_name, base_env = {})
-    vcr_setup_path = File.expand_path("../vcr_setup.rb", __dir__)
+    vcr_setup_path = File.expand_path('../vcr_setup.rb', __dir__)
 
     # Include bundler environment to ensure subprocess has access to gems
     bundler_env = {
-      "BUNDLE_GEMFILE" => ENV["BUNDLE_GEMFILE"],
-      "BUNDLE_PATH" => ENV["BUNDLE_PATH"],
-      "BUNDLE_BIN_PATH" => ENV["BUNDLE_BIN_PATH"],
-      "RACK_ENV" => ENV["RACK_ENV"] || "test",
-      "RUBYOPT" => "-rbundler/setup -r#{Shellwords.escape(vcr_setup_path)}",
-      "VCR_CASSETTE_NAME" => cassette_name,
+      'BUNDLE_GEMFILE' => ENV['BUNDLE_GEMFILE'],
+      'BUNDLE_PATH' => ENV['BUNDLE_PATH'],
+      'BUNDLE_BIN_PATH' => ENV['BUNDLE_BIN_PATH'],
+      'RACK_ENV' => ENV['RACK_ENV'] || 'test',
+      'RUBYOPT' => "-rbundler/setup -r#{Shellwords.escape(vcr_setup_path)}",
+      'VCR_CASSETTE_NAME' => cassette_name,
       # Pass through VCR-related environment variables
-      "CI" => ENV["CI"],
-      "VCR_RECORD" => ENV["VCR_RECORD"],
-      "TEST_DEBUG" => ENV["TEST_DEBUG"],
+      'CI' => ENV['CI'],
+      'VCR_RECORD' => ENV['VCR_RECORD'],
+      'TEST_DEBUG' => ENV['TEST_DEBUG'],
       # Ensure proper encoding for Unicode handling in CI
-      "LANG" => ENV["LANG"] || "en_US.UTF-8",
-      "LC_ALL" => ENV["LC_ALL"] || "en_US.UTF-8",
-      "LC_CTYPE" => ENV["LC_CTYPE"] || "en_US.UTF-8"
+      'LANG' => ENV['LANG'] || 'en_US.UTF-8',
+      'LC_ALL' => ENV['LC_ALL'] || 'en_US.UTF-8',
+      'LC_CTYPE' => ENV['LC_CTYPE'] || 'en_US.UTF-8'
     }.compact # Remove nil values
 
     base_env.merge(bundler_env)
@@ -138,8 +138,8 @@ module ProcessHelpers
   # @param extension [String] File extension (with dot)
   # @param prefix [String] Filename prefix
   # @return [String] Path to the temporary file
-  def create_temp_file(content, extension: ".tmp", prefix: "test_")
-    require "tempfile"
+  def create_temp_file(content, extension: '.tmp', prefix: 'test_')
+    require 'tempfile'
 
     file = Tempfile.new([prefix, extension])
     file.write(content)
@@ -160,7 +160,7 @@ module ProcessHelpers
       file.unlink
     rescue => e
       # Ignore cleanup errors
-      warn "Failed to cleanup temp file: #{e.message}" if ENV["TEST_DEBUG"]
+      warn "Failed to cleanup temp file: #{e.message}" if ENV['TEST_DEBUG']
     end
 
     @temp_files.clear
@@ -203,19 +203,19 @@ module ProcessHelpers
   # Check if we're running in CI environment
   # @return [Boolean] true if running in CI
   def ci_environment?
-    !ENV["CI"].nil?
+    !ENV['CI'].nil?
   end
 
   # Get test timeout from environment or use default
   # @return [Integer] Timeout in seconds
   def test_timeout
-    env_with_default("TEST_TIMEOUT", DEFAULT_TIMEOUT.to_s).to_i
+    env_with_default('TEST_TIMEOUT', DEFAULT_TIMEOUT.to_s).to_i
   end
 
   # Check if debug mode is enabled
   # @return [Boolean] true if debug mode is enabled
   def debug_mode?
-    ENV["TEST_DEBUG"] == "true" || ENV["TEST_DEBUG"] == "1"
+    ENV['TEST_DEBUG'] == 'true' || ENV['TEST_DEBUG'] == '1'
   end
 
   # Print debug message if debug mode is enabled

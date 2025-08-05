@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-require "tmpdir"
-require "fileutils"
+require 'spec_helper'
+require 'tmpdir'
+require 'fileutils'
 
-RSpec.describe "Release Context Consistency", type: :integration do
+RSpec.describe 'Release Context Consistency', type: :integration do
   let(:temp_dir) { Dir.mktmpdir }
   let(:release_manager) { CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: temp_dir) }
 
@@ -13,89 +13,89 @@ RSpec.describe "Release Context Consistency", type: :integration do
   end
 
   def create_release_structure(releases_in_current)
-    current_path = File.join(temp_dir, "dev-taskflow", "current")
+    current_path = File.join(temp_dir, 'dev-taskflow', 'current')
     FileUtils.mkdir_p(current_path)
 
     releases_in_current.each do |release_name|
       release_path = File.join(current_path, release_name)
-      FileUtils.mkdir_p(File.join(release_path, "tasks"))
+      FileUtils.mkdir_p(File.join(release_path, 'tasks'))
       # Create a sample task file
-      File.write(File.join(release_path, "tasks", "#{release_name}+task.1-sample.md"), "# Sample task")
+      File.write(File.join(release_path, 'tasks', "#{release_name}+task.1-sample.md"), '# Sample task')
     end
   end
 
-  describe "single current release scenario" do
+  describe 'single current release scenario' do
     before do
-      create_release_structure(["v.0.3.0-migration"])
+      create_release_structure(['v.0.3.0-migration'])
     end
 
-    it "reports consistent release information" do
+    it 'reports consistent release information' do
       # Test release-manager current
       current_result = release_manager.current
       expect(current_result).to be_success
-      expect(current_result.data.name).to eq("v.0.3.0-migration")
+      expect(current_result.data.name).to eq('v.0.3.0-migration')
 
       # Test validation
       validation_result = release_manager.validate_release_context_consistency
       expect(validation_result).to be_success
-      expect(validation_result.data[:validation_status]).to eq("consistent")
+      expect(validation_result.data[:validation_status]).to eq('consistent')
     end
 
-    it "has consistent path references" do
+    it 'has consistent path references' do
       current_result = release_manager.current
-      expected_path = File.join(temp_dir, "dev-taskflow", "current", "v.0.3.0-migration")
+      expected_path = File.join(temp_dir, 'dev-taskflow', 'current', 'v.0.3.0-migration')
 
       expect(current_result.data.path).to eq(expected_path)
     end
   end
 
-  describe "multiple current releases scenario" do
+  describe 'multiple current releases scenario' do
     before do
-      create_release_structure(["v.0.1.0-aurora", "v.0.3.0-migration"])
+      create_release_structure(['v.0.1.0-aurora', 'v.0.3.0-migration'])
     end
 
-    it "detects inconsistency and warns about multiple releases" do
+    it 'detects inconsistency and warns about multiple releases' do
       validation_result = release_manager.validate_release_context_consistency
 
       expect(validation_result).not_to be_success
-      expect(validation_result.error_message).to include("Multiple releases in current directory")
-      expect(validation_result.error_message).to include("v.0.3.0-migration, v.0.1.0-aurora")
+      expect(validation_result.error_message).to include('Multiple releases in current directory')
+      expect(validation_result.error_message).to include('v.0.3.0-migration, v.0.1.0-aurora')
     end
 
-    it "still returns first release but logs warning" do
+    it 'still returns first release but logs warning' do
       # The system should still function but use the first release alphabetically
       current_result = release_manager.current
       expect(current_result).to be_success
 
       # The DirectoryNavigator should return the first alphabetically (v.0.3.0-migration comes before v.0.1.0-aurora lexicographically)
-      expect(current_result.data.name).to eq("v.0.3.0-migration")
+      expect(current_result.data.name).to eq('v.0.3.0-migration')
     end
   end
 
-  describe "empty current directory scenario" do
+  describe 'empty current directory scenario' do
     before do
-      FileUtils.mkdir_p(File.join(temp_dir, "dev-taskflow", "current"))
+      FileUtils.mkdir_p(File.join(temp_dir, 'dev-taskflow', 'current'))
     end
 
-    it "detects missing current release" do
+    it 'detects missing current release' do
       validation_result = release_manager.validate_release_context_consistency
 
       expect(validation_result).not_to be_success
-      expect(validation_result.error_message).to include("No current release directory found")
+      expect(validation_result.error_message).to include('No current release directory found')
     end
 
-    it "returns error for current command" do
+    it 'returns error for current command' do
       current_result = release_manager.current
       expect(current_result).not_to be_success
     end
   end
 
-  describe "integration with CLI commands" do
+  describe 'integration with CLI commands' do
     before do
-      create_release_structure(["v.0.3.0-migration"])
+      create_release_structure(['v.0.3.0-migration'])
     end
 
-    it "release-manager validate command works" do
+    it 'release-manager validate command works' do
       # Test that the validate command runs without errors
       # Note: This is a basic test - full CLI testing would require more setup
       validation_result = release_manager.validate_release_context_consistency
@@ -103,8 +103,8 @@ RSpec.describe "Release Context Consistency", type: :integration do
     end
   end
 
-  describe "edge cases" do
-    it "handles non-existent dev-taskflow directory" do
+  describe 'edge cases' do
+    it 'handles non-existent dev-taskflow directory' do
       empty_temp_dir = Dir.mktmpdir
       begin
         empty_release_manager = CodingAgentTools::Organisms::TaskflowManagement::ReleaseManager.new(base_path: empty_temp_dir)
@@ -116,28 +116,28 @@ RSpec.describe "Release Context Consistency", type: :integration do
       end
     end
 
-    it "handles corrupted release directory names" do
-      current_path = File.join(temp_dir, "dev-taskflow", "current")
+    it 'handles corrupted release directory names' do
+      current_path = File.join(temp_dir, 'dev-taskflow', 'current')
       FileUtils.mkdir_p(current_path)
 
       # Create directory with invalid name (no version pattern)
-      FileUtils.mkdir_p(File.join(current_path, "invalid-release-name"))
+      FileUtils.mkdir_p(File.join(current_path, 'invalid-release-name'))
 
       validation_result = release_manager.validate_release_context_consistency
       expect(validation_result).not_to be_success
     end
   end
 
-  describe "PathResolver fallback consistency" do
+  describe 'PathResolver fallback consistency' do
     let(:project_sandbox) { CodingAgentTools::Molecules::ProjectSandbox.new(temp_dir) }
     let(:config_loader) { CodingAgentTools::Molecules::TreeConfigLoader.new(temp_dir) }
     let(:path_resolver) { CodingAgentTools::Molecules::PathResolver.new(config_loader, project_sandbox) }
 
     before do
-      create_release_structure(["v.0.1.0-aurora"])
+      create_release_structure(['v.0.1.0-aurora'])
     end
 
-    it "PathResolver fallback detects same release as ReleaseManager" do
+    it 'PathResolver fallback detects same release as ReleaseManager' do
       # Test that when release-manager command fails, PathResolver fallback
       # detects the same release as ReleaseManager would
       current_result = release_manager.current
@@ -148,13 +148,13 @@ RSpec.describe "Release Context Consistency", type: :integration do
       expect(fallback_release).to eq(current_result.data.name)
     end
 
-    it "raises error when no current release exists instead of using hardcoded fallback" do
+    it 'raises error when no current release exists instead of using hardcoded fallback' do
       # Remove the release directory to simulate empty current
-      FileUtils.rm_rf(File.join(temp_dir, "dev-taskflow", "current", "v.0.1.0-aurora"))
+      FileUtils.rm_rf(File.join(temp_dir, 'dev-taskflow', 'current', 'v.0.1.0-aurora'))
 
-      expect {
+      expect do
         path_resolver.send(:detect_current_release_fallback)
-      }.to raise_error(/No current release directory found/)
+      end.to raise_error(/No current release directory found/)
     end
   end
 end

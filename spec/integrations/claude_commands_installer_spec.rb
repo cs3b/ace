@@ -27,10 +27,10 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
     end
 
     it 'initializes stats counter' do
-      expect(installer.stats).to eq({ 
-        created: 0, 
-        skipped: 0, 
-        updated: 0, 
+      expect(installer.stats).to eq({
+        created: 0,
+        skipped: 0,
+        updated: 0,
         errors: [],
         custom_commands: 0,
         generated_commands: 0,
@@ -57,14 +57,14 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       it 'creates command files from workflows' do
         result = nil
         expect { result = installer.run }.to output(/Creating command files/).to_stdout
-        
+
         expect(result).to be_a(CodingAgentTools::Integrations::ClaudeCommandsInstaller::Result)
         expect(result.success).to be true
         expect(result.exit_code).to eq(0)
-        
+
         command_file = File.join(test_dir, '.claude', 'commands', 'test-workflow.md')
         expect(File.exist?(command_file)).to be true
-        
+
         content = File.read(command_file)
         expect(content).to include('@dev-handbook/workflow-instructions/test-workflow.wf.md')
         expect(content).to include('@.claude/commands/commit.md')
@@ -74,10 +74,10 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       # it 'updates commands.json' do
       #   result = installer.run
       #   expect(result.success).to be true
-      #   
+      #
       #   json_file = File.join(test_dir, '.claude', 'commands', 'commands.json')
       #   expect(File.exist?(json_file)).to be true
-      #   
+      #
       #   commands = JSON.parse(File.read(json_file))
       #   expect(commands).to have_key('/test-workflow')
       #   expect(commands).to have_key('/another-workflow')
@@ -108,7 +108,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
         result = nil
         expect { result = installer.run }.to output(/Skipped: existing.md/).to_stdout
         expect(result.success).to be true
-        
+
         # Check that file wasn't overwritten
         content = File.read(File.join(test_dir, '.claude', 'commands', 'existing.md'))
         expect(content).to eq('# Existing command')
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       it 'copies custom commands' do
         expect { installer.run }.to output(/Copying commands/).to_stdout
-        
+
         custom_file = File.join(test_dir, '.claude', 'commands', 'custom-task.md')
         expect(File.exist?(custom_file)).to be true
         # Check that metadata was injected
@@ -163,20 +163,20 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       it 'uses custom template for commit workflow' do
         installer.run
-        
+
         commit_file = File.join(test_dir, '.claude', 'commands', 'commit.md')
         content = File.read(commit_file)
-        
+
         expect(content).to include('Follow the instructions exactly')
         expect(content).not_to include('@.claude/commands/commit.md')
       end
 
       it 'uses custom template for load-project-context workflow' do
         installer.run
-        
+
         context_file = File.join(test_dir, '.claude', 'commands', 'load-project-context.md')
         content = File.read(context_file)
-        
+
         expect(content).to include('Load all the context documents')
       end
     end
@@ -202,7 +202,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
         command_dir = File.join(test_dir, '.claude', 'commands')
         File.write(File.join(command_dir, 'readonly.md'), 'test')
         FileUtils.chmod(0444, File.join(command_dir, 'readonly.md'))
-        
+
         # Create corresponding workflow
         File.write(
           File.join(test_dir, 'dev-handbook', 'workflow-instructions', 'readonly.wf.md'),
@@ -233,7 +233,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
         installer_dry = described_class.new(test_dir, dry_run: true)
         result = nil
         expect { result = installer_dry.run }.to output(/DRY RUN/).to_stdout
-        
+
         command_file = File.join(test_dir, '.claude', 'commands', 'test.md')
         expect(File.exist?(command_file)).to be false
         expect(result.success).to be true

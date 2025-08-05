@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "stringio"
-require "dry/cli"
-require_relative "process_helpers"
+require 'stringio'
+require 'dry/cli'
+require_relative 'process_helpers'
 
 # CLI Helpers for integration tests
 # Provides methods to invoke CLI commands directly without subprocess overhead
@@ -59,13 +59,13 @@ module CliHelpers
 
       # Execute the command based on command name
       exit_code = case command_name
-      when "llm-query"
+      when 'llm-query'
         execute_llm_query_command(args)
-      when "task-manager"
+      when 'task-manager'
         execute_task_manager_command(args)
-      when "create-path"
+      when 'create-path'
         execute_create_path_command(args)
-      when "release-manager"
+      when 'release-manager'
         execute_release_manager_command(args)
       else
         # Fallback to subprocess for unknown commands
@@ -73,20 +73,20 @@ module CliHelpers
         # execute_gem_executable returns [stdout, stderr, status] Array
         # We need to wrap it in a CliResult for consistency
         stdout, stderr, status = execute_gem_executable(command_name, args, env: env)
-        
+
         # Special handling for handbook command - dry-cli outputs namespace help to stderr
         # but tests expect it in stdout for consistency with other commands
-        if command_name == "handbook" && args.first == "claude"
-          if args.length == 1 || args[1] == "--help"
+        if command_name == 'handbook' && args.first == 'claude'
+          if args.length == 1 || args[1] == '--help'
             # Namespace help - transform dry-cli output to match test expectations
             # Add the [SUBCOMMAND] line that tests expect
             help_output = stderr.sub(/^Commands:/, "Commands:\n  handbook claude [SUBCOMMAND]\n\nCommands:")
             return CliResult.new(
               stdout: help_output,
-              stderr: "",
+              stderr: '',
               exit_code: status.exitstatus
             )
-          elsif args.length > 1 && !%w[generate-commands integrate validate list].include?(args[1])
+          elsif args.length > 1 && !['generate-commands', 'integrate', 'validate', 'list'].include?(args[1])
             # Unknown subcommand
             return CliResult.new(
               stdout: stdout,
@@ -95,7 +95,7 @@ module CliHelpers
             )
           end
         end
-        
+
         return CliResult.new(
           stdout: stdout,
           stderr: stderr,
@@ -137,7 +137,7 @@ module CliHelpers
 
   # Execute llm-query command directly
   def execute_llm_query_command(args)
-    require_relative "../../lib/coding_agent_tools/cli/commands/llm/query"
+    require_relative '../../lib/coding_agent_tools/cli/commands/llm/query'
 
     # Parse arguments manually for dry-cli
     # This is a simplified parser - for complex cases, fall back to subprocess
@@ -146,7 +146,7 @@ module CliHelpers
       return 1
     end
 
-    if args.include?("--help") || args.include?("-h")
+    if args.include?('--help') || args.include?('-h')
       # Simulate help output
       $stdout.puts <<~HELP
         Query any LLM provider
@@ -179,7 +179,7 @@ module CliHelpers
     # Check for missing arguments
     if args.length < 2
       warn %(ERROR: "llm-query" was called with arguments #{args.inspect})
-      warn "Usage: llm-query PROVIDER_MODEL PROMPT [OPTIONS]"
+      warn 'Usage: llm-query PROVIDER_MODEL PROMPT [OPTIONS]'
       return 1
     end
 
@@ -187,8 +187,8 @@ module CliHelpers
     prompt = args[1]
 
     # Check for invalid provider
-    if provider_model == "invalid_provider"
-      warn "Error: Unknown provider: invalid_provider"
+    if provider_model == 'invalid_provider'
+      warn 'Error: Unknown provider: invalid_provider'
       return 1
     end
 
@@ -196,7 +196,7 @@ module CliHelpers
     options = parse_llm_query_options(args[2..])
 
     # Check for invalid format
-    if options[:format] && !%w[text json markdown].include?(options[:format])
+    if options[:format] && !['text', 'json', 'markdown'].include?(options[:format])
       warn "ERROR: Invalid format '#{options[:format]}'. Valid formats: text, json, markdown"
       return 1
     end
@@ -223,9 +223,9 @@ module CliHelpers
 
   # Execute create-path command directly
   def execute_create_path_command(args)
-    require_relative "../../lib/coding_agent_tools/cli/create_path_command"
+    require_relative '../../lib/coding_agent_tools/cli/create_path_command'
 
-    if args.include?("--help") || args.include?("-h")
+    if args.include?('--help') || args.include?('-h')
       # Simulate help output
       $stdout.puts <<~HELP
         Create files and directories from templates with path resolution
@@ -257,7 +257,7 @@ module CliHelpers
 
     # Parse arguments
     if args.empty?
-      puts "Error: TYPE argument is required"
+      puts 'Error: TYPE argument is required'
       puts "Usage: create-path TYPE --title 'Title' [OPTIONS]"
       return 1
     end
@@ -270,7 +270,7 @@ module CliHelpers
 
     # Validate title requirement
     unless options[:title]
-      puts "Error: Title required for path creation"
+      puts 'Error: Title required for path creation'
       puts "Usage: create-path TYPE --title 'Title' [OPTIONS]"
       return 1
     end
@@ -294,7 +294,7 @@ module CliHelpers
 
   # Execute task-manager command directly
   def execute_task_manager_command(args)
-    if args.empty? || (args.length == 1 && args.include?("--help"))
+    if args.empty? || (args.length == 1 && args.include?('--help'))
       # Simulate help output for task-manager
       $stdout.puts <<~HELP
         Commands:
@@ -311,13 +311,13 @@ module CliHelpers
     subcommand_args = args[1..]
 
     case subcommand
-    when "version"
-      require_relative "../../lib/coding_agent_tools/version"
+    when 'version'
+      require_relative '../../lib/coding_agent_tools/version'
       $stdout.puts "Task Manager #{CodingAgentTools::VERSION}"
       0
 
-    when "next"
-      if subcommand_args.include?("--help")
+    when 'next'
+      if subcommand_args.include?('--help')
         $stdout.puts <<~HELP
           Find the next actionable task to work on
 
@@ -331,29 +331,29 @@ module CliHelpers
         return 0
       end
 
-      require_relative "../../lib/coding_agent_tools/cli/commands/task/next"
+      require_relative '../../lib/coding_agent_tools/cli/commands/task/next'
       command = CodingAgentTools::Cli::Commands::Task::Next.new
 
       # Parse options
       options = parse_task_next_options(subcommand_args)
       command.call(**options)
 
-    when "generate-id"
-      require_relative "../../lib/coding_agent_tools/cli/commands/task/generate_id"
+    when 'generate-id'
+      require_relative '../../lib/coding_agent_tools/cli/commands/task/generate_id'
       command = CodingAgentTools::Cli::Commands::Task::GenerateId.new
 
       # Parse arguments for generate-id
       if subcommand_args.length < 1
-        warn "ERROR: release argument is required"
+        warn 'ERROR: release argument is required'
         return 1
       end
 
       options = parse_generate_id_options(subcommand_args)
       command.call(release: subcommand_args[0], **options)
 
-    when "invalid-command"
+    when 'invalid-command'
       # Invalid commands show help by default
-      execute_task_manager_command(["--help"])
+      execute_task_manager_command(['--help'])
       1
 
     else
@@ -371,28 +371,28 @@ module CliHelpers
       arg = args[i]
 
       case arg
-      when "--output", "-o"
+      when '--output', '-o'
         options[:output] = args[i + 1]
         i += 2
       when /^--output=(.+)$/
         options[:output] = $1
         i += 1
-      when "--format"
+      when '--format'
         options[:format] = args[i + 1]
         i += 2
       when /^--format=(.+)$/
         options[:format] = $1
         i += 1
-      when "--debug", "-d"
+      when '--debug', '-d'
         options[:debug] = true
         i += 1
-      when "--no-debug"
+      when '--no-debug'
         options[:debug] = false
         i += 1
-      when "--force", "-f"
+      when '--force', '-f'
         options[:force] = true
         i += 1
-      when "--no-force"
+      when '--no-force'
         options[:force] = false
         i += 1
       when /^--temperature=(.+)$/
@@ -418,18 +418,18 @@ module CliHelpers
       arg = args[i]
 
       case arg
-      when "--limit"
+      when '--limit'
         options[:limit] = args[i + 1].to_i
         i += 2
       when /^--limit=(.+)$/
         limit_value = $1.to_i
         if limit_value < 0
-          warn "Limit must be a positive integer"
+          warn 'Limit must be a positive integer'
           return {}
         end
         options[:limit] = limit_value
         i += 1
-      when "--debug", "-d"
+      when '--debug', '-d'
         options[:debug] = true
         i += 1
       else
@@ -449,10 +449,10 @@ module CliHelpers
       arg = args[i]
 
       case arg
-      when "--limit"
+      when '--limit'
         limit_value = args[i + 1].to_i
         if limit_value < 0
-          warn "Limit must be a positive integer"
+          warn 'Limit must be a positive integer'
           return {}
         end
         options[:limit] = limit_value
@@ -460,7 +460,7 @@ module CliHelpers
       when /^--limit=(.+)$/
         limit_value = $1.to_i
         if limit_value < 0
-          warn "Limit must be a positive integer"
+          warn 'Limit must be a positive integer'
           return {}
         end
         options[:limit] = limit_value
@@ -482,46 +482,46 @@ module CliHelpers
       arg = args[i]
 
       case arg
-      when "--title"
+      when '--title'
         options[:title] = args[i + 1]
         i += 2
       when /^--title=(.+)$/
         options[:title] = $1
         i += 1
-      when "--content"
+      when '--content'
         options[:content] = args[i + 1]
         i += 2
       when /^--content=(.+)$/
         options[:content] = $1
         i += 1
-      when "--template"
+      when '--template'
         options[:template] = args[i + 1]
         i += 2
       when /^--template=(.+)$/
         options[:template] = $1
         i += 1
-      when "--priority"
+      when '--priority'
         options[:priority] = args[i + 1]
         i += 2
       when /^--priority=(.+)$/
         options[:priority] = $1
         i += 1
-      when "--status"
+      when '--status'
         options[:status] = args[i + 1]
         i += 2
       when /^--status=(.+)$/
         options[:status] = $1
         i += 1
-      when "--debug", "-d"
+      when '--debug', '-d'
         options[:debug] = true
         i += 1
-      when "--no-debug"
+      when '--no-debug'
         options[:debug] = false
         i += 1
-      when "--force", "-f"
+      when '--force', '-f'
         options[:force] = true
         i += 1
-      when "--no-force"
+      when '--no-force'
         options[:force] = false
         i += 1
       else
@@ -534,7 +534,7 @@ module CliHelpers
 
   # Execute release-manager command directly
   def execute_release_manager_command(args)
-    if args.empty? || (args.include?("--help") || args.include?("-h"))
+    if args.empty? || (args.include?('--help') || args.include?('-h'))
       # Simulate help output for release-manager
       $stdout.puts <<~HELP
         Commands:
@@ -552,13 +552,13 @@ module CliHelpers
     subcommand_args = args[1..]
 
     case subcommand
-    when "version"
-      require_relative "../../lib/coding_agent_tools/version"
+    when 'version'
+      require_relative '../../lib/coding_agent_tools/version'
       $stdout.puts "Release Manager #{CodingAgentTools::VERSION}"
       0
 
-    when "current"
-      if subcommand_args.include?("--help")
+    when 'current'
+      if subcommand_args.include?('--help')
         $stdout.puts <<~HELP
           Get current release information
 
@@ -579,7 +579,7 @@ module CliHelpers
         return 0
       end
 
-      require_relative "../../lib/coding_agent_tools/cli/commands/release/current"
+      require_relative '../../lib/coding_agent_tools/cli/commands/release/current'
 
       # Parse options
       options = parse_release_current_options(subcommand_args)
@@ -610,16 +610,16 @@ module CliHelpers
       arg = args[i]
 
       case arg
-      when "--debug", "-d"
+      when '--debug', '-d'
         options[:debug] = true
         i += 1
-      when "--format"
+      when '--format'
         options[:format] = args[i + 1]
         i += 2
       when /^--format=(.+)$/
         options[:format] = $1
         i += 1
-      when "--path"
+      when '--path'
         options[:path] = args[i + 1]
         i += 2
       when /^--path=(.+)$/

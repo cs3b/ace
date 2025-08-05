@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-require_relative "../support/ansi_color_testing_helper"
+require 'spec_helper'
+require_relative '../support/ansi_color_testing_helper'
 
-RSpec.describe "ANSI Color Behavior Matrix" do
+RSpec.describe 'ANSI Color Behavior Matrix' do
   include AnsiColorTestingHelper::RSpecMatchers if defined?(AnsiColorTestingHelper::RSpecMatchers)
 
-  describe "StringIO behavior with ANSI codes" do
-    it "captures ANSI escape sequences as literal strings" do
+  describe 'StringIO behavior with ANSI codes' do
+    it 'captures ANSI escape sequences as literal strings' do
       output = AnsiColorTestingHelper.capture_output do
-        puts AnsiColorTestingHelper.red("Hello World")
+        puts AnsiColorTestingHelper.red('Hello World')
       end
 
       expect(output.stdout_content).to include("\033[31m")
@@ -18,8 +18,8 @@ RSpec.describe "ANSI Color Behavior Matrix" do
       expect(output.stdout_has_ansi?).to be true
     end
 
-    it "preserves all ANSI codes in captured output" do
-      colored_text = AnsiColorTestingHelper.colorize("Bold Red", :bold, :red)
+    it 'preserves all ANSI codes in captured output' do
+      colored_text = AnsiColorTestingHelper.colorize('Bold Red', :bold, :red)
 
       output = AnsiColorTestingHelper.capture_output do
         puts colored_text
@@ -33,16 +33,16 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Environment variable behavior" do
-    it "captures ANSI codes regardless of FORCE_COLOR setting with StringIO" do
+  describe 'Environment variable behavior' do
+    it 'captures ANSI codes regardless of FORCE_COLOR setting with StringIO' do
       # With FORCE_COLOR=1
       output_forced = AnsiColorTestingHelper.capture_with_color do
-        puts AnsiColorTestingHelper.green("Forced Color")
+        puts AnsiColorTestingHelper.green('Forced Color')
       end
 
       # Without FORCE_COLOR (default StringIO)
       output_default = AnsiColorTestingHelper.capture_output do
-        puts AnsiColorTestingHelper.green("Default")
+        puts AnsiColorTestingHelper.green('Default')
       end
 
       expect(output_forced.stdout_has_ansi?).to be true
@@ -51,21 +51,21 @@ RSpec.describe "ANSI Color Behavior Matrix" do
       expect(output_default.stdout_clean).to eq("Default\n")
     end
 
-    it "preserves FORCE_COLOR environment variable after testing" do
-      original_force_color = ENV["FORCE_COLOR"]
+    it 'preserves FORCE_COLOR environment variable after testing' do
+      original_force_color = ENV['FORCE_COLOR']
 
       AnsiColorTestingHelper.capture_with_color do
-        puts "test"
+        puts 'test'
       end
 
-      expect(ENV["FORCE_COLOR"]).to eq(original_force_color)
+      expect(ENV['FORCE_COLOR']).to eq(original_force_color)
     end
   end
 
-  describe "TTY simulation behavior" do
-    it "captures ANSI codes with TTY simulation" do
+  describe 'TTY simulation behavior' do
+    it 'captures ANSI codes with TTY simulation' do
       output = AnsiColorTestingHelper.capture_with_tty do
-        puts AnsiColorTestingHelper.blue("TTY Blue Text")
+        puts AnsiColorTestingHelper.blue('TTY Blue Text')
       end
 
       expect(output.stdout_has_ansi?).to be true
@@ -77,11 +77,11 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Behavior matrix comparison" do
-    let(:test_text) { "Test Message" }
+  describe 'Behavior matrix comparison' do
+    let(:test_text) { 'Test Message' }
     let(:colored_test) { AnsiColorTestingHelper.yellow(test_text) }
 
-    it "demonstrates consistent ANSI capture across all scenarios" do
+    it 'demonstrates consistent ANSI capture across all scenarios' do
       results = AnsiColorTestingHelper.test_behavior_matrix do
         puts colored_test
       end
@@ -102,9 +102,9 @@ RSpec.describe "ANSI Color Behavior Matrix" do
       expect(ansi_codes.first).to include("\033[0m")  # reset
     end
 
-    it "captures stderr ANSI codes correctly" do
+    it 'captures stderr ANSI codes correctly' do
       output = AnsiColorTestingHelper.capture_output do
-        warn AnsiColorTestingHelper.red("Error Message")
+        warn AnsiColorTestingHelper.red('Error Message')
       end
 
       expect(output.stderr_has_ansi?).to be true
@@ -113,24 +113,24 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Helper utility methods" do
-    it "correctly identifies ANSI codes" do
-      plain_text = "Hello World"
-      colored_text = AnsiColorTestingHelper.red("Hello World")
+  describe 'Helper utility methods' do
+    it 'correctly identifies ANSI codes' do
+      plain_text = 'Hello World'
+      colored_text = AnsiColorTestingHelper.red('Hello World')
 
       expect(AnsiColorTestingHelper.has_ansi_codes?(plain_text)).to be false
       expect(AnsiColorTestingHelper.has_ansi_codes?(colored_text)).to be true
     end
 
-    it "strips ANSI codes correctly" do
-      colored_text = AnsiColorTestingHelper.colorize("Multi", :bold, :green, :underline)
+    it 'strips ANSI codes correctly' do
+      colored_text = AnsiColorTestingHelper.colorize('Multi', :bold, :green, :underline)
       clean_text = AnsiColorTestingHelper.strip_ansi(colored_text)
 
-      expect(clean_text).to eq("Multi")
+      expect(clean_text).to eq('Multi')
       expect(AnsiColorTestingHelper.has_ansi_codes?(clean_text)).to be false
     end
 
-    it "extracts ANSI codes correctly" do
+    it 'extracts ANSI codes correctly' do
       text_with_codes = "\033[1m\033[32mBold Green\033[0m"
       codes = AnsiColorTestingHelper.extract_ansi_codes(text_with_codes)
 
@@ -138,8 +138,8 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Complex ANSI scenarios" do
-    it "handles nested and multiple color codes" do
+  describe 'Complex ANSI scenarios' do
+    it 'handles nested and multiple color codes' do
       complex_text = "#{AnsiColorTestingHelper.bold("Bold")} and #{AnsiColorTestingHelper.red("Red")} text"
 
       output = AnsiColorTestingHelper.capture_output do
@@ -155,7 +155,7 @@ RSpec.describe "ANSI Color Behavior Matrix" do
       expect(codes.count("\033[0m")).to eq(2)  # reset (2 times)
     end
 
-    it "handles background colors and combinations" do
+    it 'handles background colors and combinations' do
       bg_text = "\033[42m\033[31mRed on Green\033[0m"
 
       output = AnsiColorTestingHelper.capture_output do
@@ -170,35 +170,35 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Side-effect management" do
-    it "restores original stdout/stderr after capture" do
+  describe 'Side-effect management' do
+    it 'restores original stdout/stderr after capture' do
       original_stdout = $stdout
       original_stderr = $stderr
 
       AnsiColorTestingHelper.capture_output do
-        puts "test output"
+        puts 'test output'
       end
 
       expect($stdout).to be(original_stdout)
       expect($stderr).to be(original_stderr)
     end
 
-    it "handles exceptions during capture gracefully" do
+    it 'handles exceptions during capture gracefully' do
       original_stdout = $stdout
 
-      expect {
+      expect do
         AnsiColorTestingHelper.capture_output do
-          raise StandardError, "test error"
+          raise StandardError, 'test error'
         end
-      }.to raise_error(StandardError, "test error")
+      end.to raise_error(StandardError, 'test error')
 
       # stdout should still be restored
       expect($stdout).to be(original_stdout)
     end
   end
 
-  describe "Performance characteristics" do
-    it "captures large amounts of colored output efficiently" do
+  describe 'Performance characteristics' do
+    it 'captures large amounts of colored output efficiently' do
       large_text = (1..100).map { |i| AnsiColorTestingHelper.colorize("Line #{i}", :green) }.join("\n")
 
       start_time = Time.now
@@ -213,19 +213,19 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Integration with existing test patterns" do
-    it "works with RSpec output matchers if available" do
-      skip "RSpec matchers not available" unless defined?(AnsiColorTestingHelper::RSpecMatchers)
+  describe 'Integration with existing test patterns' do
+    it 'works with RSpec output matchers if available' do
+      skip 'RSpec matchers not available' unless defined?(AnsiColorTestingHelper::RSpecMatchers)
 
-      colored_output = AnsiColorTestingHelper.red("Test Output")
+      colored_output = AnsiColorTestingHelper.red('Test Output')
       expect(colored_output).to have_ansi_codes
-      expect(colored_output).to have_clean_text("Test Output")
+      expect(colored_output).to have_clean_text('Test Output')
     end
 
-    it "provides behavior summary for debugging" do
+    it 'provides behavior summary for debugging' do
       output = AnsiColorTestingHelper.capture_output do
-        puts AnsiColorTestingHelper.blue("Summary Test")
-        warn AnsiColorTestingHelper.red("Error")
+        puts AnsiColorTestingHelper.blue('Summary Test')
+        warn AnsiColorTestingHelper.red('Error')
       end
 
       summary = output.behavior_summary
@@ -237,8 +237,8 @@ RSpec.describe "ANSI Color Behavior Matrix" do
     end
   end
 
-  describe "Real-world CLI simulation scenarios" do
-    it "simulates typical CLI command output with colors" do
+  describe 'Real-world CLI simulation scenarios' do
+    it 'simulates typical CLI command output with colors' do
       # Simulate a CLI command that might output colored status messages
       output = AnsiColorTestingHelper.capture_output do
         puts "#{AnsiColorTestingHelper.green("✓")} Success: Operation completed"
@@ -249,21 +249,21 @@ RSpec.describe "ANSI Color Behavior Matrix" do
       end
 
       # Verify we can test both the visual markers and clean text
-      expect(output.stdout_clean).to include("✓ Success: Operation completed")
-      expect(output.stdout_clean).to include("! Warning: Minor issue detected")
-      expect(output.stdout_clean).to include("✗ Error: Critical failure")
-      expect(output.stderr_clean).to include("DEBUG: Detailed error information")
+      expect(output.stdout_clean).to include('✓ Success: Operation completed')
+      expect(output.stdout_clean).to include('! Warning: Minor issue detected')
+      expect(output.stdout_clean).to include('✗ Error: Critical failure')
+      expect(output.stderr_clean).to include('DEBUG: Detailed error information')
 
       # Verify colors are preserved for manual inspection if needed
       expect(output.stdout_has_ansi?).to be true
       expect(output.stderr_has_ansi?).to be true
     end
 
-    it "handles mixed plain and colored output" do
+    it 'handles mixed plain and colored output' do
       output = AnsiColorTestingHelper.capture_output do
-        puts "Plain text line"
-        puts AnsiColorTestingHelper.blue("Colored line")
-        puts "Another plain line"
+        puts 'Plain text line'
+        puts AnsiColorTestingHelper.blue('Colored line')
+        puts 'Another plain line'
       end
 
       expect(output.stdout_has_ansi?).to be true
