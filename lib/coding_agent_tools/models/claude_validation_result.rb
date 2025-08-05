@@ -61,9 +61,9 @@ module CodingAgentTools
         issues << "#{duplicates.size} duplicate" if duplicates.any?
 
         if issues.empty?
-          "All commands are valid and up to date"
+          'All commands are valid and up to date'
         else
-          "Summary: #{issues.join(', ')}"
+          "Summary: #{issues.join(", ")}"
         end
       end
     end

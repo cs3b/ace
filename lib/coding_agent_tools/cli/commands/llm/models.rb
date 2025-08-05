@@ -15,20 +15,20 @@ module CodingAgentTools
           desc 'List available AI models from various providers'
 
           argument :provider, type: :string, default: 'google',
-                              desc: 'Provider to list models for (google, lmstudio)'
+            desc: 'Provider to list models for (google, lmstudio)'
 
           option :filter, type: :string, aliases: ['f'],
-                          desc: 'Filter models by name (fuzzy search)'
+            desc: 'Filter models by name (fuzzy search)'
 
           option :format, type: :string, default: CodingAgentTools::Constants::CliConstants::FORMAT_TEXT,
-                          values: CodingAgentTools::Constants::CliConstants::VALID_FORMATS,
-                          desc: 'Output format (text or json)'
+            values: CodingAgentTools::Constants::CliConstants::VALID_FORMATS,
+            desc: 'Output format (text or json)'
 
           option :refresh, type: :boolean, default: false,
-                           desc: 'Refresh cache by fetching latest data from APIs'
+            desc: 'Refresh cache by fetching latest data from APIs'
 
           option :debug, type: :boolean, default: false, aliases: CodingAgentTools::Constants::CliConstants::DEBUG_OPTION_ALIASES,
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           example [
             'google',
@@ -48,7 +48,7 @@ module CodingAgentTools
             filtered_models = filter_models(models, options[:filter])
             output_models(filtered_models, options.merge(provider: provider))
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             exit(1)
           end
@@ -109,7 +109,7 @@ module CodingAgentTools
 
           # Check if provider is valid
           def valid_provider?(provider)
-            %w[google lmstudio openai anthropic mistral together_ai].include?(provider)
+            ['google', 'lmstudio', 'openai', 'anthropic', 'mistral', 'together_ai'].include?(provider)
           end
 
           # Get list of available models for the specified provider
@@ -139,7 +139,7 @@ module CodingAgentTools
             when 'together_ai'
               fetch_together_ai_models
             end
-          rescue StandardError => e
+          rescue => e
             # Fallback to hardcoded list if API fails
             warn "API failed for #{provider}: #{e.message}" if ENV['DEBUG_MODELS']
             fallback_models(provider)
@@ -551,7 +551,7 @@ module CodingAgentTools
               end
 
               puts
-              puts "Usage: #{usage_config['command']}"
+              puts "Usage: #{usage_config["command"]}"
             when 'lmstudio'
               usage_config = config['usage_instructions']['lm_studio']
               puts usage_config['header']
@@ -566,7 +566,7 @@ module CodingAgentTools
               end
 
               puts
-              puts "Usage: #{usage_config['command']}"
+              puts "Usage: #{usage_config["command"]}"
               puts
               puts usage_config['server_info']
             when 'openai'

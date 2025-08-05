@@ -58,7 +58,7 @@ module CodingAgentTools
 
         unless supported_provider?(normalized_provider)
           raise UnsupportedProviderError,
-                "Unsupported provider: #{provider}. Supported providers: #{supported_providers.join(', ')}"
+            "Unsupported provider: #{provider}. Supported providers: #{supported_providers.join(", ")}"
         end
 
         @config[normalized_provider]
@@ -116,7 +116,7 @@ module CodingAgentTools
         begin
           custom_config = YAML.safe_load_file(file_path)
           new(custom_config)
-        rescue StandardError => e
+        rescue => e
           raise InvalidConfigurationError, "Failed to load configuration from #{file_path}: #{e.message}"
         end
       end
@@ -173,7 +173,7 @@ module CodingAgentTools
         return if missing.empty?
 
         raise InvalidConfigurationError,
-              "Missing default models for required providers: #{missing.join(', ')}"
+          "Missing default models for required providers: #{missing.join(", ")}"
       end
     end
   end

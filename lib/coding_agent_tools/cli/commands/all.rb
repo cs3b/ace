@@ -11,17 +11,17 @@ module CodingAgentTools
       class All < Dry::CLI::Command
         desc 'List all available coding agent tools with descriptions and categories'
 
-        option :format, type: :string, values: %w[table json plain names], default: 'table',
-                        desc: 'Output format (table, json, plain, names)'
+        option :format, type: :string, values: ['table', 'json', 'plain', 'names'], default: 'table',
+          desc: 'Output format (table, json, plain, names)'
 
         option :category, type: :string,
-                          desc: 'Show tools from specific category only'
+          desc: 'Show tools from specific category only'
 
         option :no_descriptions, type: :boolean, default: false,
-                                 desc: 'Hide tool descriptions (faster output)'
+          desc: 'Hide tool descriptions (faster output)'
 
         option :no_categories, type: :boolean, default: false,
-                               desc: "Don't group tools by category"
+          desc: "Don't group tools by category"
 
         example [
           '',
@@ -81,7 +81,7 @@ module CodingAgentTools
         rescue CodingAgentTools::Error => e
           puts "Error: #{e.message}"
           1
-        rescue StandardError => e
+        rescue => e
           puts "Unexpected error: #{e.message}"
           puts 'Use --debug flag for more information' if respond_to?(:debug_enabled) && !debug_enabled
           1

@@ -15,10 +15,10 @@ module CodingAgentTools
             desc 'Extract and save project context'
 
             option :mode, type: :string, default: 'auto',
-                          desc: 'Context mode: auto, none, or custom file path'
+              desc: 'Context mode: auto, none, or custom file path'
 
             option :session_dir, type: :string, required: true,
-                                 desc: 'Session directory path'
+              desc: 'Session directory path'
 
             example [
               '--session_dir /path/to/session',
@@ -59,7 +59,7 @@ module CodingAgentTools
                   $stderr.write("Error: #{result[:error]}\n")
                   1
                 end
-              rescue StandardError => e
+              rescue => e
                 $stderr.write("Error: #{e.message}\n")
                 1
               end

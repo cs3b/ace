@@ -12,40 +12,40 @@ module CodingAgentTools
           desc 'Remove files from working tree and index with intelligent path grouping'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Override the up-to-date check'
+            desc: 'Override the up-to-date check'
 
           option :dry_run, type: :boolean, default: false, aliases: ['n'],
-                           desc: 'Show what would be removed without actually removing'
+            desc: 'Show what would be removed without actually removing'
 
           option :recursive, type: :boolean, default: false, aliases: ['r'],
-                             desc: 'Allow recursive removal of directories'
+            desc: 'Allow recursive removal of directories'
 
           option :cached, type: :boolean, default: false,
-                          desc: 'Remove from index only, keep working tree files'
+            desc: 'Remove from index only, keep working tree files'
 
           option :ignore_unmatch, type: :boolean, default: false,
-                                  desc: 'Exit with zero status even if no files matched'
+            desc: 'Exit with zero status even if no files matched'
 
           option :quiet, type: :boolean, default: false, aliases: ['q'],
-                         desc: 'Suppress output'
+            desc: 'Suppress output'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute remove operations concurrently across repositories'
+            desc: 'Execute remove operations concurrently across repositories'
 
           argument :files, type: :array, required: true,
-                           desc: 'Files or directories to remove'
+            desc: 'Files or directories to remove'
 
           example [
             'file.rb',
@@ -74,7 +74,7 @@ module CodingAgentTools
               display_rm_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

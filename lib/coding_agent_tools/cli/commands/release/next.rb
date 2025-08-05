@@ -13,10 +13,10 @@ module CodingAgentTools
           desc 'Find next available release in backlog'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
-          option :format, type: :string, default: 'text', values: %w[text json],
-                          desc: 'Output format (text or json)'
+          option :format, type: :string, default: 'text', values: ['text', 'json'],
+            desc: 'Output format (text or json)'
 
           example [
             '',
@@ -38,7 +38,7 @@ module CodingAgentTools
             end
 
             result.success? ? 0 : 1
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

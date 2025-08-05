@@ -12,37 +12,37 @@ module CodingAgentTools
           desc 'Pull changes from remote repositories concurrently'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :rebase, type: :boolean, default: false, aliases: ['r'],
-                          desc: 'Rebase instead of merge'
+            desc: 'Rebase instead of merge'
 
           option :ff_only, type: :boolean, default: false,
-                           desc: 'Only allow fast-forward merges'
+            desc: 'Only allow fast-forward merges'
 
           option :no_commit, type: :boolean, default: false,
-                             desc: "Don't commit automatic merge"
+            desc: "Don't commit automatic merge"
 
           option :strategy, type: :string,
-                            desc: 'Merge strategy to use'
+            desc: 'Merge strategy to use'
 
           option :concurrent, type: :boolean, default: true,
-                              desc: 'Execute pull operations concurrently (default: true)'
+            desc: 'Execute pull operations concurrently (default: true)'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           argument :remote, type: :string, required: false,
-                            desc: 'Remote name (default: origin)'
+            desc: 'Remote name (default: origin)'
 
           argument :branch, type: :string, required: false,
-                            desc: 'Branch name (default: current branch)'
+            desc: 'Branch name (default: current branch)'
 
           example [
             '',
@@ -71,7 +71,7 @@ module CodingAgentTools
               display_pull_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

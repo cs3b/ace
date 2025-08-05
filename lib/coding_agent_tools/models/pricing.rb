@@ -50,11 +50,11 @@ module CodingAgentTools
         end
 
         attr_reader :input_cost_per_token, :output_cost_per_token,
-                    :cache_creation_input_token_cost, :cache_read_input_token_cost,
-                    :max_tokens, :max_input_tokens, :max_output_tokens,
-                    :input_cost_per_pixel, :mode,
-                    :supports_function_calling, :supports_parallel_function_calling,
-                    :supports_vision
+          :cache_creation_input_token_cost, :cache_read_input_token_cost,
+          :max_tokens, :max_input_tokens, :max_output_tokens,
+          :input_cost_per_pixel, :mode,
+          :supports_function_calling, :supports_parallel_function_calling,
+          :supports_vision
 
         # Check if model supports caching
         # @return [Boolean] True if cache pricing is available
@@ -73,16 +73,16 @@ module CodingAgentTools
           output_cost = BigDecimal(output_tokens.to_s) * BigDecimal(output_cost_per_token.to_s)
 
           cache_creation_cost = if cache_creation_input_token_cost && cache_creation_tokens > 0
-                                  BigDecimal(cache_creation_tokens.to_s) * BigDecimal(cache_creation_input_token_cost.to_s)
-                                else
-                                  BigDecimal(0)
-                                end
+            BigDecimal(cache_creation_tokens.to_s) * BigDecimal(cache_creation_input_token_cost.to_s)
+          else
+            BigDecimal(0)
+          end
 
           cache_read_cost = if cache_read_input_token_cost && cache_read_tokens > 0
-                              BigDecimal(cache_read_tokens.to_s) * BigDecimal(cache_read_input_token_cost.to_s)
-                            else
-                              BigDecimal(0)
-                            end
+            BigDecimal(cache_read_tokens.to_s) * BigDecimal(cache_read_input_token_cost.to_s)
+          else
+            BigDecimal(0)
+          end
 
           total_cost = input_cost + output_cost + cache_creation_cost + cache_read_cost
 

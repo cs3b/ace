@@ -46,8 +46,8 @@ module CodingAgentTools
       end
 
       attr_reader :input_tokens, :output_tokens, :total_tokens, :took,
-                  :provider, :model, :timestamp, :finish_reason,
-                  :provider_specific, :safety_ratings, :cached_tokens
+        :provider, :model, :timestamp, :finish_reason,
+        :provider_specific, :safety_ratings, :cached_tokens
 
       # Convert to hash representation
       # @return [Hash] Hash representation of usage metadata

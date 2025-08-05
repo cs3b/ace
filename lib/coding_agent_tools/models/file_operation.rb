@@ -11,7 +11,7 @@ module CodingAgentTools
 
       # Operation types
       TYPES = [:copy, :create, :update, :skip].freeze
-      
+
       # Operation statuses
       STATUSES = [:pending, :completed, :failed, :skipped].freeze
 
@@ -106,7 +106,7 @@ module CodingAgentTools
       def validate_type(type)
         type = type.to_sym
         unless TYPES.include?(type)
-          raise ArgumentError, "Invalid operation type: #{type}. Must be one of: #{TYPES.join(', ')}"
+          raise ArgumentError, "Invalid operation type: #{type}. Must be one of: #{TYPES.join(", ")}"
         end
         type
       end
@@ -114,7 +114,7 @@ module CodingAgentTools
       def validate_status(status)
         status = status.to_sym
         unless STATUSES.include?(status)
-          raise ArgumentError, "Invalid operation status: #{status}. Must be one of: #{STATUSES.join(', ')}"
+          raise ArgumentError, "Invalid operation status: #{status}. Must be one of: #{STATUSES.join(", ")}"
         end
         status
       end

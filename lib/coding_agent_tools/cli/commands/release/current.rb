@@ -13,13 +13,13 @@ module CodingAgentTools
           desc 'Get current release information'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
-          option :format, type: :string, default: 'text', values: %w[text json],
-                          desc: 'Output format (text or json)'
+          option :format, type: :string, default: 'text', values: ['text', 'json'],
+            desc: 'Output format (text or json)'
 
           option :path, type: :string,
-                        desc: 'Resolve path within current release'
+            desc: 'Resolve path within current release'
 
           example [
             '',
@@ -49,7 +49,7 @@ module CodingAgentTools
             end
 
             result.success? ? 0 : 1
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -64,7 +64,7 @@ module CodingAgentTools
             else
               handle_path_text_result(resolved_path)
             end
-          rescue StandardError => e
+          rescue => e
             if format == 'json'
               handle_path_json_error(e, subpath)
             else

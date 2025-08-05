@@ -13,16 +13,16 @@ module CodingAgentTools
           desc 'Generate new task ID(s) for the current release'
 
           argument :version, required: false,
-                             desc: "Version string (e.g., 'v.0.3.0'). If not provided, detects from current release"
+            desc: "Version string (e.g., 'v.0.3.0'). If not provided, detects from current release"
 
           option :limit, type: :integer, default: 1,
-                         desc: 'Number of task IDs to generate (default: 1)'
+            desc: 'Number of task IDs to generate (default: 1)'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :release, type: :string,
-                           desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
+            desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
 
           example [
             '',
@@ -46,7 +46,7 @@ module CodingAgentTools
             next_task_number = find_next_task_number(release_version)
             generate_task_ids(release_version, next_task_number, limit)
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -154,12 +154,12 @@ module CodingAgentTools
 
           def generate_task_ids(version, start_number, count)
             if count == 1
-              puts "#{version}+task.#{start_number.to_s.rjust(3, '0')}"
+              puts "#{version}+task.#{start_number.to_s.rjust(3, "0")}"
             else
               puts "Generated #{count} task IDs:"
               count.times do |i|
                 task_number = start_number + i
-                puts "  #{version}+task.#{task_number.to_s.rjust(3, '0')}"
+                puts "  #{version}+task.#{task_number.to_s.rjust(3, "0")}"
               end
             end
           end

@@ -15,8 +15,8 @@ module CodingAgentTools
         def validate!
           raise ArgumentError, 'mode is required' if mode.nil? || mode.empty?
 
-          valid_modes = %w[auto none custom]
-          raise ArgumentError, "mode must be one of: #{valid_modes.join(', ')}" unless valid_modes.include?(mode)
+          valid_modes = ['auto', 'none', 'custom']
+          raise ArgumentError, "mode must be one of: #{valid_modes.join(", ")}" unless valid_modes.include?(mode)
 
           if mode == 'custom' && (documents.nil? || documents.empty?)
             raise ArgumentError, 'documents required for custom mode'
@@ -58,7 +58,7 @@ module CodingAgentTools
 
         # Standard document types for auto mode
         def self.auto_document_types
-          %w[blueprint vision architecture]
+          ['blueprint', 'vision', 'architecture']
         end
 
         # Check if using default auto documents

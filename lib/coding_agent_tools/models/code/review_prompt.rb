@@ -90,7 +90,7 @@ module CodingAgentTools
           else
             {}
           end
-        rescue StandardError
+        rescue
           {}
         end
       end

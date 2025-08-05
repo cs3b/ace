@@ -12,43 +12,43 @@ module CodingAgentTools
           desc 'Create, delete, list or verify tags across all repositories'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :annotate, type: :boolean, default: false, aliases: ['a'],
-                            desc: 'Make an unsigned, annotated tag object'
+            desc: 'Make an unsigned, annotated tag object'
 
           option :sign, type: :boolean, default: false, aliases: ['s'],
-                        desc: 'Make a GPG-signed tag'
+            desc: 'Make a GPG-signed tag'
 
           option :local_user, type: :string, aliases: ['u'],
-                              desc: 'Make a GPG-signed tag, using the given key'
+            desc: 'Make a GPG-signed tag, using the given key'
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Replace an existing tag with the given name'
+            desc: 'Replace an existing tag with the given name'
 
           option :delete, type: :boolean, default: false, aliases: ['d'],
-                          desc: 'Delete existing tags with the given names'
+            desc: 'Delete existing tags with the given names'
 
           option :verify, type: :boolean, default: false, aliases: ['v'],
-                          desc: 'Verify the GPG signature of the given tag names'
+            desc: 'Verify the GPG signature of the given tag names'
 
           option :list, type: :boolean, default: false, aliases: ['l'],
-                        desc: 'List tags'
+            desc: 'List tags'
 
           option :message, type: :string, aliases: ['m'],
-                           desc: 'Use the given tag message'
+            desc: 'Use the given tag message'
 
           option :file, type: :string, aliases: ['F'],
-                        desc: 'Take the tag message from the given file'
+            desc: 'Take the tag message from the given file'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           argument :tagname, required: false, desc: 'The name of the tag to create, delete, or describe'
           argument :commit, required: false, desc: 'The object that the new tag will refer to (defaults to HEAD)'
@@ -78,7 +78,7 @@ module CodingAgentTools
               display_errors(result[:errors], options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

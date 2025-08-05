@@ -13,21 +13,21 @@ module CodingAgentTools
           argument :paths, desc: 'Paths to lint', type: :array, required: false
 
           option :autofix,
-                 desc: 'Apply moderate-level automatic fixes',
-                 type: :boolean,
-                 default: false,
-                 aliases: ['a']
+            desc: 'Apply moderate-level automatic fixes',
+            type: :boolean,
+            default: false,
+            aliases: ['a']
 
           option :config,
-                 desc: 'Path to custom configuration file',
-                 type: :string,
-                 aliases: ['c']
+            desc: 'Path to custom configuration file',
+            type: :string,
+            aliases: ['c']
 
           option :dry_run,
-                 desc: 'Show what would be done without making changes',
-                 type: :boolean,
-                 default: false,
-                 aliases: ['n']
+            desc: 'Show what would be done without making changes',
+            type: :boolean,
+            default: false,
+            aliases: ['n']
 
           def call(paths: nil, **options)
             require_relative '../../../organisms/code_quality/language_runner_factory'
@@ -50,17 +50,17 @@ module CodingAgentTools
 
             # Run validation or autofix
             result = if options[:autofix] && !options[:dry_run]
-                       runner.autofix(paths: paths || ['.'])
-                     else
-                       runner.validate(paths: paths || ['.'])
-                     end
+              runner.autofix(paths: paths || ['.'])
+            else
+              runner.validate(paths: paths || ['.'])
+            end
 
             # Report results
             runner.report(result) if result
 
             # Exit with appropriate code
             exit(result && result[:success] ? 0 : 1)
-          rescue StandardError => e
+          rescue => e
             warn "Error: #{e.message}"
             exit 1
           end

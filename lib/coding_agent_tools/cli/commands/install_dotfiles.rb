@@ -12,13 +12,13 @@ module CodingAgentTools
         desc 'Install configuration files (.coding-agent/*.yml) in the current project'
 
         option :force, type: :boolean, default: false, aliases: ['f'],
-                       desc: 'Overwrite existing configuration files'
+          desc: 'Overwrite existing configuration files'
 
         option :dry_run, type: :boolean, default: false,
-                         desc: 'Show what would be copied without actually copying'
+          desc: 'Show what would be copied without actually copying'
 
         option :debug, type: :boolean, default: false, aliases: ['d'],
-                       desc: 'Enable debug output for verbose information'
+          desc: 'Enable debug output for verbose information'
 
         example [
           '',
@@ -106,7 +106,7 @@ module CodingAgentTools
           end
 
           0
-        rescue StandardError => e
+        rescue => e
           handle_error(e, options[:debug])
           1
         end

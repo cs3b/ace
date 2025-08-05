@@ -16,16 +16,16 @@ module CodingAgentTools
           argument :tasks, desc: 'List of task IDs or file paths to reschedule', type: :array
 
           option :add_next, type: :boolean, default: false, aliases: ['n'],
-                            desc: 'Add tasks before existing pending tasks'
+            desc: 'Add tasks before existing pending tasks'
 
           option :add_at_the_end, type: :boolean, default: false, aliases: ['e'],
-                                  desc: 'Add tasks after highest pending task number (default behavior)'
+            desc: 'Add tasks after highest pending task number (default behavior)'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :release, type: :string,
-                           desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
+            desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
 
           example [
             'v.0.3.0+task.001 v.0.3.0+task.002',
@@ -69,7 +69,7 @@ module CodingAgentTools
 
             puts "Successfully rescheduled #{tasks_to_reschedule.length} task(s)"
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -172,11 +172,11 @@ module CodingAgentTools
               # Check if sort already exists in frontmatter
               new_frontmatter = if /^sort:\s*\d+$/.match?(frontmatter)
                                   # Update existing sort value
-                                  frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
-                                else
+                frontmatter.gsub(/^sort:\s*\d+$/, "sort: #{sort_value}")
+              else
                                   # Add sort value to frontmatter
-                                  frontmatter + "\nsort: #{sort_value}"
-                                end
+                frontmatter + "\nsort: #{sort_value}"
+              end
 
               # Write updated content
               new_content = "---\n#{new_frontmatter}\n---\n#{body}"

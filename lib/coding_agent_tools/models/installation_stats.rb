@@ -6,8 +6,8 @@ module CodingAgentTools
     # This is a model - pure data carrier with no behavior
     class InstallationStats
       attr_accessor :created, :skipped, :updated, :errors,
-                    :custom_commands, :generated_commands, 
-                    :workflow_commands, :agents
+        :custom_commands, :generated_commands,
+        :workflow_commands, :agents
 
       def initialize(
         created: 0,

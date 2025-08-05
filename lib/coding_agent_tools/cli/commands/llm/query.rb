@@ -13,32 +13,32 @@ module CodingAgentTools
           desc 'Query any LLM provider'
 
           argument :provider_model, required: true,
-                                    desc: "Provider and model ('provider:model'), provider only ('provider'), or alias ('gflash')"
+            desc: "Provider and model ('provider:model'), provider only ('provider'), or alias ('gflash')"
 
           argument :prompt, required: true, desc: 'The prompt text or file path (auto-detected)'
 
           option :output, type: :string, aliases: ['o'],
-                          desc: 'Output file path (format inferred from extension)'
+            desc: 'Output file path (format inferred from extension)'
 
-          option :format, type: :string, values: %w[text json markdown],
-                          desc: 'Output format (overrides file extension inference)'
+          option :format, type: :string, values: ['text', 'json', 'markdown'],
+            desc: 'Output format (overrides file extension inference)'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :temperature, type: :float,
-                               desc: 'Temperature for generation (0.0-2.0)'
+            desc: 'Temperature for generation (0.0-2.0)'
 
           option :max_tokens, type: :integer,
-                              desc: 'Maximum output tokens'
+            desc: 'Maximum output tokens'
 
           option :system, type: :string,
-                          desc: 'System instruction/prompt (text or file path, auto-detected)'
+            desc: 'System instruction/prompt (text or file path, auto-detected)'
 
           option :timeout, type: :integer, desc: 'Request timeout in seconds'
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Force overwrite existing output files without confirmation'
+            desc: 'Force overwrite existing output files without confirmation'
 
           example [
             'google:gemini-2.5-flash "What is Ruby programming language?"',
@@ -59,8 +59,8 @@ module CodingAgentTools
 
             unless parse_result.valid?
               error_output("Error: #{parse_result.error}")
-              error_output("\nSupported providers: #{parser.supported_providers.join(', ')}")
-              error_output("Available aliases: #{parser.dynamic_aliases.keys.join(', ')}")
+              error_output("\nSupported providers: #{parser.supported_providers.join(", ")}")
+              error_output("Available aliases: #{parser.dynamic_aliases.keys.join(", ")}")
               error_output("\nExamples:")
               error_output('  llm-query google "What is Ruby?"')
               error_output('  llm-query gflash "Quick question"')
@@ -77,7 +77,7 @@ module CodingAgentTools
             # Execute the unified query logic
             execute_query(parse_result.provider, parse_result.model, prompt, options)
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end
@@ -115,7 +115,7 @@ module CodingAgentTools
             @file_handler.read_content(content, auto_detect: true)
           rescue CodingAgentTools::Error => e
             raise e # Re-raise specific CodingAgentTools errors directly
-          rescue StandardError => e # Catch other StandardErrors
+          rescue => e # Catch other StandardErrors
             new_error = CodingAgentTools::Error.new("Failed to process #{content_type}: #{e.message}")
             new_error.set_backtrace(e.backtrace)
             raise new_error
@@ -132,7 +132,7 @@ module CodingAgentTools
             generation_options = build_generation_options(provider, options, system_text)
 
             client.generate_text(prompt_text, **generation_options)
-          rescue StandardError => e
+          rescue => e
             new_error = CodingAgentTools::Error.new("Failed to query #{provider}: #{e.message}")
             new_error.set_backtrace(e.backtrace)
             raise new_error
@@ -159,11 +159,11 @@ module CodingAgentTools
             # Handle provider-specific temperature conversion
             if options[:temperature]
               generation_config[:temperature] = case provider
-                                                when 'anthropic', 'openai'
+              when 'anthropic', 'openai'
                                                   options[:temperature].to_f
                                                 else
                                                   options[:temperature]
-                                                end
+              end
             end
 
             # Handle provider-specific max_tokens naming

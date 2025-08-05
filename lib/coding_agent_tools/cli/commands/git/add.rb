@@ -12,34 +12,34 @@ module CodingAgentTools
           desc 'Add files to staging area with intelligent path grouping'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :all, type: :boolean, default: false, aliases: ['A'],
-                       desc: 'Add all changes (new, modified, deleted)'
+            desc: 'Add all changes (new, modified, deleted)'
 
           option :update, type: :boolean, default: false, aliases: ['u'],
-                          desc: 'Add only modified and deleted files'
+            desc: 'Add only modified and deleted files'
 
           option :patch, type: :boolean, default: false, aliases: ['p'],
-                         desc: 'Interactively choose hunks to add'
+            desc: 'Interactively choose hunks to add'
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Allow adding ignored files'
+            desc: 'Allow adding ignored files'
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute add operations concurrently across repositories'
+            desc: 'Execute add operations concurrently across repositories'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           argument :files, type: :array, required: true,
-                           desc: 'Files or directories to add'
+            desc: 'Files or directories to add'
 
           example [
             'file1.rb file2.rb',
@@ -67,7 +67,7 @@ module CodingAgentTools
               display_add_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

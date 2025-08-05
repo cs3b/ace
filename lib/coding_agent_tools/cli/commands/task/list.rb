@@ -17,22 +17,22 @@ module CodingAgentTools
           desc 'List all tasks in current release with dependency order'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :show_cycles, type: :boolean, default: false,
-                               desc: 'Show additional information about dependency cycles'
+            desc: 'Show additional information about dependency cycles'
 
           option :sort, type: :string,
-                        desc: "Sort criteria (e.g., 'priority:desc,id:asc' or 'implementation-order')"
+            desc: "Sort criteria (e.g., 'priority:desc,id:asc' or 'implementation-order')"
 
           option :filter, type: :array,
-                          desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
+            desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
 
           option :verbose, type: :boolean, default: false, aliases: ['v'],
-                           desc: 'Show detailed task information (old format)'
+            desc: 'Show detailed task information (old format)'
 
           option :release, type: :string,
-                           desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
+            desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
 
           example [
             '',
@@ -72,7 +72,7 @@ module CodingAgentTools
             # Apply sorting (default to implementation-order)
             sort_string = options[:sort] || CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.default_list_sort
             sort_result_hash = CodingAgentTools::Molecules::TaskflowManagement::TaskSortEngine.apply_sort_string(tasks,
-                                                                                                                 sort_string)
+              sort_string)
             unless sort_result_hash[:errors].empty?
               sort_result_hash[:errors].each { |error| error_output("Sort error: #{error}") }
               return 1
@@ -85,7 +85,7 @@ module CodingAgentTools
 
             handle_result(final_result, options, status_summary)
             0
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

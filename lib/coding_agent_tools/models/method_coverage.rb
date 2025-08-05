@@ -5,7 +5,7 @@ module CodingAgentTools
     # Represents coverage information for a single method
     class MethodCoverage
       attr_reader :name, :start_line, :end_line, :total_lines, :covered_lines, :coverage_percentage, :visibility,
-                  :uncovered_lines
+        :uncovered_lines
 
       def initialize(name:, start_line:, end_line:, total_lines:, covered_lines:, coverage_percentage:,
                      visibility: :public, uncovered_lines: [])

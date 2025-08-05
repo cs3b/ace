@@ -12,52 +12,52 @@ module CodingAgentTools
           desc 'Restore working tree files with intelligent path grouping'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :source, type: :string, aliases: ['s'],
-                          desc: 'Restore from a specific source tree (commit, branch, etc.)'
+            desc: 'Restore from a specific source tree (commit, branch, etc.)'
 
           option :staged, type: :boolean, default: false,
-                          desc: 'Restore the staging area'
+            desc: 'Restore the staging area'
 
           option :worktree, type: :boolean, default: false,
-                            desc: 'Restore the working tree (default behavior)'
+            desc: 'Restore the working tree (default behavior)'
 
           option :merge, type: :boolean, default: false, aliases: ['m'],
-                         desc: '3-way merge when restoring'
+            desc: '3-way merge when restoring'
 
           option :conflict, type: :string,
-                            desc: 'How to handle conflicts (merge, diff3, zdiff3)'
+            desc: 'How to handle conflicts (merge, diff3, zdiff3)'
 
           option :ours, type: :boolean, default: false,
-                        desc: "Use 'ours' version for unmerged paths"
+            desc: "Use 'ours' version for unmerged paths"
 
           option :theirs, type: :boolean, default: false,
-                          desc: "Use 'theirs' version for unmerged paths"
+            desc: "Use 'theirs' version for unmerged paths"
 
           option :patch, type: :boolean, default: false, aliases: ['p'],
-                         desc: 'Interactively select hunks to restore'
+            desc: 'Interactively select hunks to restore'
 
           option :quiet, type: :boolean, default: false, aliases: ['q'],
-                         desc: 'Suppress output'
+            desc: 'Suppress output'
 
           option :progress, type: :boolean, default: false,
-                            desc: 'Show progress status'
+            desc: 'Show progress status'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute restore operations concurrently across repositories'
+            desc: 'Execute restore operations concurrently across repositories'
 
           argument :pathspecs, type: :array, required: true,
-                               desc: 'Files or directories to restore'
+            desc: 'Files or directories to restore'
 
           example [
             'file.rb',
@@ -87,7 +87,7 @@ module CodingAgentTools
               display_restore_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

@@ -13,10 +13,10 @@ module CodingAgentTools
             desc 'Extract target content (diff or files)'
 
             option :target, type: :string, required: true,
-                            desc: 'Target specification'
+              desc: 'Target specification'
 
             option :session_dir, type: :string, required: true,
-                                 desc: 'Session directory path'
+              desc: 'Session directory path'
 
             example [
               '--target HEAD~1..HEAD --session_dir /path/to/session',
@@ -46,7 +46,7 @@ module CodingAgentTools
                   $stderr.write "Error: #{target.size_info[:error]}\n"
                   1
                 end
-              rescue StandardError => e
+              rescue => e
                 $stderr.write "Error: #{e.message}\n"
                 1
               end

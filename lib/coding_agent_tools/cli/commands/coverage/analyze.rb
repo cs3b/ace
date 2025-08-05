@@ -14,13 +14,13 @@ module CodingAgentTools
           argument :input_file, required: true, desc: 'Path to SimpleCov .resultset.json file'
 
           option :threshold, type: :string, default: 'auto',
-                             desc: "Coverage threshold: percentage (0-100) or 'auto' for adaptive detection"
+            desc: "Coverage threshold: percentage (0-100) or 'auto' for adaptive detection"
           option :output_dir, type: :string, default: './coverage_analysis', desc: 'Output directory for reports'
           option :format, type: :string, default: 'text,json', desc: 'Output formats (comma-separated: text,json,csv)'
           option :include_patterns, type: :string, default: '**/lib/**/*.rb',
-                                    desc: 'File patterns to include (comma-separated)'
+            desc: 'File patterns to include (comma-separated)'
           option :exclude_patterns, type: :string, default: '**/spec/**,**/test/**',
-                                    desc: 'File patterns to exclude (comma-separated)'
+            desc: 'File patterns to exclude (comma-separated)'
           option :detailed, type: :boolean, default: false, desc: 'Include method-level analysis'
           option :quick, type: :boolean, default: false, desc: 'Quick analysis mode (faster, less detailed)'
           option :focus, type: :string, desc: 'Focus on specific file patterns (comma-separated)'
@@ -28,7 +28,7 @@ module CodingAgentTools
           option :max_files, type: :integer, default: 20, desc: 'Maximum number of files to analyze in detail'
           option :comprehensive, type: :boolean, default: false, desc: 'Generate comprehensive report with all sections'
           option :recommend, type: :boolean, default: false,
-                             desc: 'Only analyze file and provide recommendations (no full analysis)'
+            desc: 'Only analyze file and provide recommendations (no full analysis)'
           option :compact, type: :boolean, default: true, desc: 'Use compact range format for uncovered lines (default)'
           option :verbose, type: :boolean, default: false, desc: 'Use verbose format with full uncovered line arrays'
 
@@ -65,7 +65,7 @@ module CodingAgentTools
               else
                 handle_full_analysis(workflow, input_file, workflow_options)
               end
-            rescue StandardError => e
+            rescue => e
               handle_error(e, input_file)
               exit(1)
             end
@@ -76,10 +76,10 @@ module CodingAgentTools
           def prepare_workflow_options(options)
             # Determine report format (verbose takes precedence over compact if both are specified)
             report_format = if options[:verbose]
-                              :verbose
-                            else
-                              :compact
-                            end
+              :verbose
+            else
+              :compact
+            end
 
             # Parse threshold option
             threshold_value, adaptive_mode = parse_threshold_option(options[:threshold])
@@ -146,7 +146,7 @@ module CodingAgentTools
 
           def handle_focused_analysis(workflow, input_file, focus_patterns, options)
             patterns = parse_comma_separated(focus_patterns)
-            puts "🎯 Executing focused analysis on: #{patterns.join(', ')}"
+            puts "🎯 Executing focused analysis on: #{patterns.join(", ")}"
             puts
 
             result = workflow.execute_focused_analysis(input_file, patterns, options)
@@ -171,7 +171,7 @@ module CodingAgentTools
           def display_validation_results(validation)
             puts '📋 File Validation Results:'
             puts '  Status: ✅ Valid SimpleCov file'
-            puts "  Frameworks: #{validation[:frameworks_detected].join(', ')}"
+            puts "  Frameworks: #{validation[:frameworks_detected].join(", ")}"
             puts "  Total files: #{validation[:total_files]}"
             puts "  Library files: #{validation[:lib_files]}"
             puts "  Test files: #{validation[:test_files]}"
@@ -183,14 +183,14 @@ module CodingAgentTools
             puts "  Suggested threshold: #{recommendations[:suggested_threshold]}%"
             puts "  Recommended approach: #{recommendations[:recommended_focus]}"
             puts "  Estimated time: #{recommendations[:estimated_analysis_time]}"
-            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(', ')}"
+            puts "  Suggested formats: #{recommendations[:suggested_output_formats].join(", ")}"
             puts
           end
 
           def display_workflow_suggestions(suggestions)
             puts '⚙️  Workflow Suggestions:'
-            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? '✅' : '❌'}"
-            puts "  Enable create-path: #{suggestions[:enable_create_path] ? '✅' : '❌'}"
+            puts "  Include method analysis: #{suggestions[:include_method_analysis] ? "✅" : "❌"}"
+            puts "  Enable create-path: #{suggestions[:enable_create_path] ? "✅" : "❌"}"
 
             if suggestions[:focus_patterns]
               puts '  Suggested focus patterns:'
@@ -225,7 +225,7 @@ module CodingAgentTools
             summary = result[:summary]
 
             puts '🎯 Focused Analysis Results:'
-            puts "  Focus patterns: #{focus_area.join(', ')}"
+            puts "  Focus patterns: #{focus_area.join(", ")}"
             puts "  Files found: #{summary[:files_found]}"
             puts "  Files under threshold: #{summary[:files_under_threshold]}"
             puts
@@ -277,7 +277,7 @@ module CodingAgentTools
               create_path = result[:create_path_results]
               puts '🔗 Create-Path Integration:'
               puts "  Output file: #{create_path[:output_file]}"
-              puts "  Action required: #{create_path[:action_required] ? '✅' : '❌'}"
+              puts "  Action required: #{create_path[:action_required] ? "✅" : "❌"}"
               puts "  Critical items: #{create_path[:critical_items_count]}"
               puts
             end

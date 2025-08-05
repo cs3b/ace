@@ -12,21 +12,21 @@ module CodingAgentTools
       desc 'Create files and directories with content from templates and metadata'
 
       argument :type,
-               desc: 'Type of creation (task-new, file, directory, docs-new, template) or delegation format (file:docs-new, file:reflection-new, directory:code-review-new)'
+        desc: 'Type of creation (task-new, file, directory, docs-new, template) or delegation format (file:docs-new, file:reflection-new, directory:code-review-new)'
 
       option :title, desc: 'Title for new path generation', required: true
       option :force, type: :boolean, default: false, aliases: ['f'],
-                     desc: 'Force overwrite existing files without confirmation'
+        desc: 'Force overwrite existing files without confirmation'
       option :content, type: :string, desc: 'Direct content for file creation'
       option :template, type: :string, desc: 'Custom template path (for template type)'
 
       # Metadata options that become template variables
-      option :priority, type: :string, values: %w[high medium low],
-                        desc: 'Priority level (for task creation)'
+      option :priority, type: :string, values: ['high', 'medium', 'low'],
+        desc: 'Priority level (for task creation)'
       option :estimate, type: :string, desc: "Time estimate (e.g., '4h', '2d')"
       option :dependencies, type: :string, desc: 'Comma-separated list of dependencies'
-      option :status, type: :string, values: %w[pending in-progress done blocked draft],
-                      desc: 'Initial status'
+      option :status, type: :string, values: ['pending', 'in-progress', 'done', 'blocked', 'draft'],
+        desc: 'Initial status'
 
       example [
         'task-new --title "implement-feature-x" --priority high --estimate 4h',
@@ -65,20 +65,20 @@ module CodingAgentTools
         if result[:success]
           puts result[:message]
           puts "Created: #{result[:path]}" if result[:path]
-          
+
           # Report dynamic flags that were added
           dynamic_flags = undefined_flags.reject { |k, _| k == :title }
           unless dynamic_flags.empty?
             flag_summary = dynamic_flags.map { |k, v| "#{k}=#{v}" }.join(', ')
             puts "Added metadata: #{flag_summary}"
           end
-          
+
           0
         else
           puts "Error: #{result[:error]}"
           1
         end
-      rescue StandardError => e
+      rescue => e
         puts "Error: #{e.message}"
         1
       end
@@ -90,22 +90,22 @@ module CodingAgentTools
       def parse_undefined_flags(argv)
         undefined_flags = {}
         defined_flag_names = get_defined_flag_names
-        
+
         i = 0
         while i < argv.length
           arg = argv[i]
-          
+
           # Check if this is a flag (starts with --)
           if arg.start_with?('--')
             flag_name = arg.sub(/^--/, '')
-            
+
             # Skip if this is a defined flag or if it's the command/type
-            if defined_flag_names.include?(flag_name) || 
-               %w[task-new file directory docs-new template].include?(arg)
+            if defined_flag_names.include?(flag_name) ||
+               ['task-new', 'file', 'directory', 'docs-new', 'template'].include?(arg)
               i += 1
               next
             end
-            
+
             # Look for the value (next argument that doesn't start with --)
             value = nil
             if i + 1 < argv.length && !argv[i + 1].start_with?('--')
@@ -116,7 +116,7 @@ module CodingAgentTools
               value = true
               i += 1
             end
-            
+
             # Validate flag name for security
             if validate_flag_name(flag_name)
               # Convert value to appropriate type and store
@@ -129,40 +129,40 @@ module CodingAgentTools
             i += 1
           end
         end
-        
+
         undefined_flags
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Error parsing undefined flags: #{e.message}"
         {}
       end
 
       # Get list of defined flag names for conflict detection
       def get_defined_flag_names
-        %w[title force content template priority estimate dependencies status]
+        ['title', 'force', 'content', 'template', 'priority', 'estimate', 'dependencies', 'status']
       end
 
       # Validate flag name for security and conflicts
       def validate_flag_name(flag_name)
         # Check for valid flag name pattern (letters, numbers, hyphens)
         return false unless flag_name.match?(/\A[a-z][a-z0-9\-]*\z/i)
-        
+
         # Check length limit
         return false if flag_name.length > 50
-        
+
         # Check for reserved names
-        reserved_names = %w[help version debug verbose quiet]
+        reserved_names = ['help', 'version', 'debug', 'verbose', 'quiet']
         return false if reserved_names.include?(flag_name)
-        
+
         true
       end
 
       # Convert flag value to appropriate YAML type
       def convert_flag_value(value)
         return value unless value.is_a?(String)
-        
+
         # Handle empty strings
         return '' if value.empty?
-        
+
         # Try boolean conversion first (but be more specific to avoid conflicts with numbers)
         case value.downcase
         when 'true', 'yes', 'on'
@@ -173,22 +173,22 @@ module CodingAgentTools
           # For '1' and '0', prefer integer interpretation unless explicitly boolean context
           return value.to_i
         end
-        
+
         # Try integer conversion
         if value.match?(/\A-?\d+\z/)
           return value.to_i
         end
-        
-        # Try float conversion  
+
+        # Try float conversion
         if value.match?(/\A-?\d+\.\d+\z/)
           return value.to_f
         end
-        
+
         # Handle arrays (comma-separated values)
         if value.include?(',')
           return value.split(',').map(&:strip)
         end
-        
+
         # Return as string (default)
         value
       end
@@ -301,7 +301,7 @@ module CodingAgentTools
         begin
           FileUtils.mkdir_p(validated_path)
           { success: true, message: 'Directory created successfully', path: validated_path }
-        rescue StandardError => e
+        rescue => e
           { success: false, error: "Failed to create directory: #{e.message}" }
         end
       end
@@ -324,7 +324,7 @@ module CodingAgentTools
         # Read template content
         begin
           template_content = File.read(template_path)
-        rescue StandardError => e
+        rescue => e
           return { success: false, error: "Failed to read template: #{e.message}" }
         end
 
@@ -442,7 +442,7 @@ module CodingAgentTools
         args = command_parts[1..]
 
         # Whitelist only safe commands (extend as needed)
-        safe_commands = %w[date echo pwd whoami hostname uname git task-manager]
+        safe_commands = ['date', 'echo', 'pwd', 'whoami', 'hostname', 'uname', 'git', 'task-manager']
         return 'unknown' unless safe_commands.include?(executable)
 
         begin
@@ -453,7 +453,7 @@ module CodingAgentTools
             # Log the error for debugging but return unknown for security
             'unknown'
           end
-        rescue StandardError
+        rescue
           # Command execution failed, return default
           'unknown'
         end
@@ -470,12 +470,12 @@ module CodingAgentTools
 
       def slugify(text)
         slug = text.to_s
-                   .downcase
-                   .gsub(/[^\w\s-]/, '')
-                   .gsub(/\s+/, '-')
-                   .squeeze('-')
-                   .strip
-                   .gsub(/^-|-$/, '')
+          .downcase
+          .gsub(/[^\w\s-]/, '')
+          .gsub(/\s+/, '-')
+          .squeeze('-')
+          .strip
+          .gsub(/^-|-$/, '')
 
         # Limit slug length to prevent filesystem filename length issues
         # Truncate at word boundaries to keep it readable
@@ -486,11 +486,11 @@ module CodingAgentTools
           last_hyphen = truncated.rindex('-')
 
           slug = if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
-                   truncated[0, last_hyphen]
-                 else
+            truncated[0, last_hyphen]
+          else
                    # Fallback: truncate and clean up
-                   truncated.gsub(/-+$/, '')
-                 end
+            truncated.gsub(/-+$/, '')
+          end
         end
 
         slug
@@ -501,7 +501,7 @@ module CodingAgentTools
         target_dir = File.dirname(target_path)
         begin
           FileUtils.mkdir_p(target_dir) unless File.exist?(target_dir)
-        rescue StandardError => e
+        rescue => e
           return { success: false, error: "Failed to create directory: #{e.message}" }
         end
 
@@ -517,7 +517,7 @@ module CodingAgentTools
           }
         rescue CodingAgentTools::Error => e
           { success: false, error: e.message }
-        rescue StandardError => e
+        rescue => e
           { success: false, error: "Failed to create file: #{e.message}" }
         end
       end
@@ -563,7 +563,7 @@ module CodingAgentTools
         else
           {}
         end
-      rescue StandardError => e
+      rescue => e
         puts "Warning: Failed to load create-path config: #{e.message}"
         {}
       end

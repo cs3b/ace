@@ -12,31 +12,31 @@ module CodingAgentTools
           desc 'Move or rename files/directories with intelligent path grouping'
 
           option :debug, type: :boolean, default: false, aliases: ['d'],
-                         desc: 'Enable debug output for verbose error information'
+            desc: 'Enable debug output for verbose error information'
 
           option :repository, type: :string, aliases: ['C'],
-                              desc: "Specify explicit repository context (e.g., 'dev-tools')"
+            desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :force, type: :boolean, default: false, aliases: ['f'],
-                         desc: 'Force move even if target exists'
+            desc: 'Force move even if target exists'
 
           option :dry_run, type: :boolean, default: false, aliases: ['n'],
-                           desc: 'Show what would be moved without actually moving'
+            desc: 'Show what would be moved without actually moving'
 
           option :verbose, type: :boolean, default: false, aliases: ['v'],
-                           desc: 'Show verbose output'
+            desc: 'Show verbose output'
 
           option :main_only, type: :boolean, default: false,
-                             desc: 'Process main repository only'
+            desc: 'Process main repository only'
 
           option :submodules_only, type: :boolean, default: false,
-                                   desc: 'Process submodules only'
+            desc: 'Process submodules only'
 
           option :concurrent, type: :boolean, default: false,
-                              desc: 'Execute move operations concurrently across repositories'
+            desc: 'Execute move operations concurrently across repositories'
 
           argument :source_and_destination, type: :array, required: true,
-                                            desc: 'Source files/directories and destination'
+            desc: 'Source files/directories and destination'
 
           example [
             'old_file.rb new_file.rb',
@@ -73,7 +73,7 @@ module CodingAgentTools
               display_mv_errors(result, options)
               1
             end
-          rescue StandardError => e
+          rescue => e
             handle_error(e, options[:debug])
             1
           end

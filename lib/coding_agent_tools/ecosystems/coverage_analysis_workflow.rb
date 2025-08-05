@@ -62,8 +62,8 @@ module CodingAgentTools
 
           # Step 6: Create-path integration if requested
           create_path_results = if workflow_options[:create_path_integration]
-                                  generate_create_path_output(input_file, analysis_result, workflow_options)
-                                end
+            generate_create_path_output(input_file, analysis_result, workflow_options)
+          end
 
           # Step 7: Generate workflow summary
           execution_summary = {
@@ -94,7 +94,7 @@ module CodingAgentTools
             create_path_results: create_path_results,
             execution_summary: execution_summary
           }
-        rescue StandardError => e
+        rescue => e
           handle_workflow_error(e, input_file, workflow_options)
         end
       end
@@ -105,9 +105,9 @@ module CodingAgentTools
       # @return [Hash] Quick analysis results
       def execute_quick_analysis(input_file, options = {})
         workflow_options = validate_and_prepare_options(options.merge(
-                                                          formats: [:text],
-                                                          detailed_analysis: false,
-                                                          max_files: 10
+          formats: [:text],
+          detailed_analysis: false,
+          max_files: 10
                                                         ))
 
         analysis_result = @analyzer.analyze_coverage(input_file, workflow_options)
@@ -226,7 +226,7 @@ module CodingAgentTools
 
       def prepare_output_directory(output_dir)
         FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
-      rescue StandardError => e
+      rescue => e
         raise "Failed to create output directory #{output_dir}: #{e.message}"
       end
 

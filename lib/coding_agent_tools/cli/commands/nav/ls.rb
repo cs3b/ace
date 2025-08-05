@@ -40,7 +40,7 @@ module CodingAgentTools
                 puts "Error executing ls command: #{ls_command}"
                 puts "Output: #{output}" unless output.strip.empty?
               end
-            rescue StandardError => e
+            rescue => e
               puts "Error: #{e.message}"
             end
           end
@@ -55,7 +55,7 @@ module CodingAgentTools
             flags << 'l' if options[:long]
             flags << 'a' if options[:all]
 
-            cmd_parts << "-#{flags.join('')}" unless flags.empty?
+            cmd_parts << "-#{flags.join("")}" unless flags.empty?
 
             # Add target directory (quoted for safety)
             cmd_parts << "'#{target_dir}'"

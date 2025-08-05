@@ -13,31 +13,31 @@ module CodingAgentTools
           desc 'Execute code review on specified target with configurable focus'
 
           argument :focus, required: true,
-                           desc: 'Review focus: code, tests, docs, or space-separated combination'
+            desc: 'Review focus: code, tests, docs, or space-separated combination'
 
           argument :target, required: true,
-                            desc: 'Review target: git range (v1.0..HEAD), file pattern (*.rb), or special (staged/unstaged/working)'
+            desc: 'Review target: git range (v1.0..HEAD), file pattern (*.rb), or special (staged/unstaged/working)'
 
           option :context, type: :string, default: 'auto',
-                           desc: 'Context mode: auto (default), none, or path to custom context file'
+            desc: 'Context mode: auto (default), none, or path to custom context file'
 
           option :base_path, type: :string,
-                             desc: 'Base path for session storage (default: current release)'
+            desc: 'Base path for session storage (default: current release)'
 
           option :dry_run, type: :boolean, default: false,
-                           desc: 'Show what would be done without creating session'
+            desc: 'Show what would be done without creating session'
 
           option :session, type: :string,
-                           desc: 'Resume existing session by ID'
+            desc: 'Resume existing session by ID'
 
           option :model, type: :string,
-                         desc: 'LLM model to use (e.g., google:gemini-2.5-pro)'
+            desc: 'LLM model to use (e.g., google:gemini-2.5-pro)'
 
           option :output, type: :string,
-                          desc: 'Output file for review report'
+            desc: 'Output file for review report'
 
           option :system_prompt, type: :string,
-                                 desc: 'Custom system prompt file path (overrides focus-based selection)'
+            desc: 'Custom system prompt file path (overrides focus-based selection)'
 
           example [
             'code HEAD~1..HEAD',
@@ -109,7 +109,7 @@ module CodingAgentTools
               error_output("Error: #{result[:error]}")
               1
             end
-          rescue StandardError => e
+          rescue => e
             error_output("Error: #{e.message}")
             error_output(e.backtrace.join("\n")) if ENV['DEBUG']
             1
@@ -118,7 +118,7 @@ module CodingAgentTools
           private
 
           def validate_focus(focus)
-            valid_options = %w[code tests docs]
+            valid_options = ['code', 'tests', 'docs']
             focus_parts = focus.split
 
             return false if focus_parts.empty?
@@ -130,7 +130,7 @@ module CodingAgentTools
             info_output('🔍 Dry run - Analyzing review configuration:')
 
             prep_result = review_manager.prepare_review(focus, target, options[:context] || 'auto',
-                                                        options[:system_prompt])
+              options[:system_prompt])
 
             info_output("\nTarget Analysis:")
             info_output("  Type: #{prep_result[:target_info][:type]}")
