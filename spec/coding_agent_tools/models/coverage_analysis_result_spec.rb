@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require 'spec_helper'
 
 RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
   let(:threshold) { 80.0 }
@@ -14,11 +14,11 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
       allow(method).to receive(:to_h) do |format: :compact|
         case format
         when :compact
-          {name: "method1"}
+          { name: 'method1' }
         when :verbose
-          {name: "method1", coverage_percentage: 50.0}
+          { name: 'method1', coverage_percentage: 50.0 }
         else
-          {name: "method1"}
+          { name: 'method1' }
         end
       end
     end
@@ -32,11 +32,11 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
       allow(method).to receive(:to_h) do |format: :compact|
         case format
         when :compact
-          {name: "method2"}
+          { name: 'method2' }
         when :verbose
-          {name: "method2", coverage_percentage: 90.0}
+          { name: 'method2', coverage_percentage: 90.0 }
         else
-          {name: "method2"}
+          { name: 'method2' }
         end
       end
     end
@@ -55,9 +55,9 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
         when :compact
           nil  # Returns nil for compact format if no methods need tests
         when :verbose
-          {file_path: "lib/file1.rb"}
+          { file_path: 'lib/file1.rb' }
         else
-          {file_path: "lib/file1.rb"}
+          { file_path: 'lib/file1.rb' }
         end
       end
     end
@@ -76,9 +76,9 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
         when :compact
           nil  # Returns nil for compact format if no methods need tests
         when :verbose
-          {file_path: "lib/file2.rb"}
+          { file_path: 'lib/file2.rb' }
         else
-          {file_path: "lib/file2.rb"}
+          { file_path: 'lib/file2.rb' }
         end
       end
     end
@@ -94,25 +94,25 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
     )
   end
 
-  describe "#initialize" do
-    it "sets all attributes correctly" do
+  describe '#initialize' do
+    it 'sets all attributes correctly' do
       expect(subject.files).to eq(files)
       expect(subject.threshold).to eq(threshold)
       expect(subject.analysis_timestamp).to eq(analysis_timestamp)
     end
 
-    it "defaults timestamp to current time" do
+    it 'defaults timestamp to current time' do
       result = described_class.new(files: files, threshold: threshold)
       expect(result.analysis_timestamp).to be_within(1).of(Time.now)
     end
   end
 
-  describe "#under_covered_files" do
-    it "returns files below threshold" do
+  describe '#under_covered_files' do
+    it 'returns files below threshold' do
       expect(subject.under_covered_files).to eq([file1])
     end
 
-    it "memoizes the result" do
+    it 'memoizes the result' do
       expect(files.first).to receive(:under_threshold?).once.and_return(true)
       expect(files.last).to receive(:under_threshold?).once.and_return(false)
 
@@ -120,12 +120,12 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
     end
   end
 
-  describe "#under_covered_methods" do
-    it "returns methods below threshold from all files" do
+  describe '#under_covered_methods' do
+    it 'returns methods below threshold from all files' do
       expect(subject.under_covered_methods).to eq([method1])
     end
 
-    it "memoizes the result" do
+    it 'memoizes the result' do
       expect(method1).to receive(:under_threshold?).once.and_return(true)
       expect(method2).to receive(:under_threshold?).once.and_return(false)
 
@@ -133,35 +133,35 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
     end
   end
 
-  describe "#total_files" do
-    it "returns total number of files" do
+  describe '#total_files' do
+    it 'returns total number of files' do
       expect(subject.total_files).to eq(2)
     end
   end
 
-  describe "#total_methods" do
-    it "returns total number of methods across all files" do
+  describe '#total_methods' do
+    it 'returns total number of methods across all files' do
       expect(subject.total_methods).to eq(2)
     end
   end
 
-  describe "#overall_coverage_percentage" do
-    it "calculates overall coverage percentage" do
+  describe '#overall_coverage_percentage' do
+    it 'calculates overall coverage percentage' do
       # (70 + 45) / (100 + 50) * 100 = 76.67%
       expect(subject.overall_coverage_percentage).to eq(76.67)
     end
 
-    context "when no executable lines" do
+    context 'when no executable lines' do
       let(:files) { [] }
 
-      it "returns 0.0" do
+      it 'returns 0.0' do
         expect(subject.overall_coverage_percentage).to eq(0.0)
       end
     end
   end
 
-  describe "#summary_stats" do
-    it "returns summary statistics" do
+  describe '#summary_stats' do
+    it 'returns summary statistics' do
       expected_stats = {
         total_files: 2,
         total_methods: 2,
@@ -169,24 +169,24 @@ RSpec.describe CodingAgentTools::Models::CoverageAnalysisResult do
         under_covered_methods_count: 1,
         overall_coverage_percentage: 76.67,
         threshold: 80.0,
-        analysis_timestamp: "2025-01-27T12:00:00+00:00"
+        analysis_timestamp: '2025-01-27T12:00:00+00:00'
       }
 
       expect(subject.summary_stats).to eq(expected_stats)
     end
   end
 
-  describe "#to_h" do
-    context "with compact format (default)" do
-      it "returns array of under-covered files only" do
+  describe '#to_h' do
+    context 'with compact format (default)' do
+      it 'returns array of under-covered files only' do
         # Since compact format returns only under-covered files that have methods needing tests
         # and our mock files return nil from to_h(format: :compact), expect empty array
         expect(subject.to_h).to eq([])
       end
     end
 
-    context "with verbose format" do
-      it "returns full hash representation" do
+    context 'with verbose format' do
+      it 'returns full hash representation' do
         expected_hash = {
           summary: subject.summary_stats,
           files: subject.files.map { |f| f.to_h(format: :verbose) },
