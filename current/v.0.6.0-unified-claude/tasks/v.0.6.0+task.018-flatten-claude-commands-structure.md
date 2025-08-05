@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.018
-status: pending
+status: in-progress
 priority: high
 estimate: 3h
 dependencies: []

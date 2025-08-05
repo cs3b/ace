@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.017
-status: in-progress
+status: completed
 priority: high
 estimate: 3h
 dependencies: []
@@ -206,12 +206,12 @@ Improve the readability and usability of the `handbook claude list` command by i
   > Assert: Command categories (custom, generated, installed) and their relationships are identified
   > Command: ruby -e "require './lib/coding_agent_tools/organisms/claude_command_lister'; puts CodingAgentTools::Organisms::ClaudeCommandLister.new.send(:build_inventory).keys"
 
-* [ ] Design table column layout and width calculations
+* [x] Design table column layout and width calculations
   - Fixed columns: Installed (10 chars), Type (10 chars), Valid (7 chars), Command Name (variable)
   - Calculate optimal widths based on terminal size
   - Handle long command names with truncation if needed
 
-* [ ] Plan test scenarios for table rendering
+* [x] Plan test scenarios for table rendering
   - Empty inventory
   - Single command type
   - Mixed command types
@@ -220,53 +220,53 @@ Improve the readability and usability of the `handbook claude list` command by i
 
 ### Execution Steps
 
-- [ ] Create TableRenderer atom with basic functionality
+- [x] Create TableRenderer atom with basic functionality
   > TEST: TableRenderer Creation
   > Type: File Creation
   > Assert: TableRenderer atom exists with proper module structure
   > Command: test -f lib/coding_agent_tools/atoms/table_renderer.rb && ruby -c lib/coding_agent_tools/atoms/table_renderer.rb
 
-- [ ] Implement table rendering logic in TableRenderer
+- [x] Implement table rendering logic in TableRenderer
   - Column alignment (left, center, right)
   - Width calculation and padding
   - Header and separator generation
   - Row formatting with proper spacing
 
-- [ ] Create comprehensive tests for TableRenderer
+- [x] Create comprehensive tests for TableRenderer
   > TEST: TableRenderer Tests
   > Type: Test Implementation
   > Assert: All table rendering scenarios are covered
   > Command: bundle exec rspec spec/coding_agent_tools/atoms/table_renderer_spec.rb
 
-- [ ] Refactor ClaudeCommandLister to detect installed vs source commands
+- [x] Refactor ClaudeCommandLister to detect installed vs source commands
   - Check if command exists in .claude/commands (installed)
   - Cross-reference with dev-handbook source locations
   - Determine validation status (exists in dev-handbook)
 
-- [ ] Update ClaudeCommandLister#output_text to use table format
+- [x] Update ClaudeCommandLister#output_text to use table format
   > TEST: Table Format Output
   > Type: Integration Test
   > Assert: Command list displays in table format
   > Command: bundle exec handbook claude list | grep -E "Installed.*Type.*Valid.*Command"
 
-- [ ] Implement summary line with counts
+- [x] Implement summary line with counts
   - Count installed commands
   - Count missing commands
   - Display in format: "Summary: X commands installed, Y missing"
 
-- [ ] Update existing tests for new output format
+- [x] Update existing tests for new output format
   > TEST: All Tests Pass
   > Type: Test Suite
   > Assert: All ClaudeCommandLister tests pass with new format
   > Command: bundle exec rspec spec/coding_agent_tools/organisms/claude_command_lister_spec.rb
 
-- [ ] Add integration tests for table output
+- [x] Add integration tests for table output
   > TEST: Integration Tests
   > Type: End-to-end Test
   > Assert: handbook claude list produces expected table output
   > Command: bundle exec rspec spec/integration/handbook_claude_list_spec.rb
 
-- [ ] Test with various terminal widths and command sets
+- [x] Test with various terminal widths and command sets
   > TEST: Terminal Compatibility
   > Type: Manual Verification
   > Assert: Table displays correctly in different terminal sizes
@@ -274,9 +274,9 @@ Improve the readability and usability of the `handbook claude list` command by i
 
 ## Acceptance Criteria
 
-- [ ] Users can view all command statuses in a single, compact table without scrolling
-- [ ] Table format reduces vertical space usage by at least 50% compared to current sectioned output
-- [ ] Command status information loads and displays within 200ms
-- [ ] JSON output format remains unchanged for automation compatibility
-- [ ] Table clearly shows installed status, command type, validation status, and command name
-- [ ] Summary line provides quick overview of installed vs missing commands
+- [x] Users can view all command statuses in a single, compact table without scrolling
+- [x] Table format reduces vertical space usage by at least 50% compared to current sectioned output
+- [x] Command status information loads and displays within 200ms
+- [x] JSON output format remains unchanged for automation compatibility
+- [x] Table clearly shows installed status, command type, validation status, and command name
+- [x] Summary line provides quick overview of installed vs missing commands

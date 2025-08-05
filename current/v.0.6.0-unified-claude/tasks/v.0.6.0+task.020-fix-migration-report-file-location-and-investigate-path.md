@@ -1,8 +1,8 @@
 ---
 id: v.0.6.0+task.020
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 1h
 dependencies: []
 ---
 
@@ -91,3 +91,102 @@ Fix the incorrect file placement logic that causes migration reports to be creat
 - Feedback item #7 from user input
 - Current file location: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
 - Expected location: dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+- Task that created the file: v.0.6.0+task.008-migrate-existing-commands-to-new-structure.md
+
+## Technical Approach
+
+### Root Cause Analysis
+- [ ] The migration task (v.0.6.0+task.008) explicitly specified the wrong path in its instructions
+- [ ] Line 46-47 of task.008 states: "Generate a migration report and save it to: dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
+- [ ] This should have been: "dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md"
+- [ ] The error was in the task specification, not in the execution
+
+### Directory Structure Understanding
+- [ ] `current/` directory contains active release work in progress
+- [ ] `releases/` directory is not used in the current project structure
+- [ ] `done/` directory contains completed releases after they are published
+- [ ] Documentation confirms that active work should be in `current/` directory
+
+## File Modifications
+
+### Move
+- dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md → dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+  - Purpose: Move migration report to correct location
+  - Method: Use git mv to preserve history
+
+### Delete
+- dev-taskflow/releases/ directory (if empty after move)
+  - Reason: This directory structure is not used in the current project
+  - Check: Verify no other files exist before deletion
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Verify the current state of both directories
+  > TEST: Directory State Check
+  > Type: Pre-condition Check
+  > Assert: releases/ directory exists with MIGRATION_REPORT.md, current/../docs/ exists
+  > Command: ls -la dev-taskflow/releases/v.0.6.0-unified-claude/docs/ && ls -la dev-taskflow/current/v.0.6.0-unified-claude/docs/
+
+* [ ] Check for any other files in the releases directory structure
+  > TEST: Releases Directory Contents
+  > Type: Pre-condition Check
+  > Assert: Only MIGRATION_REPORT.md exists in releases structure
+  > Command: find dev-taskflow/releases -type f | grep -v .DS_Store
+
+### Execution Steps
+
+- [ ] Move the migration report to the correct location
+  > TEST: File Move Verification
+  > Type: Action Validation
+  > Assert: File moved with git history preserved
+  > Command: git mv dev-taskflow/releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+
+- [ ] Verify the file is in the correct location
+  > TEST: File Location Verification
+  > Type: Action Validation
+  > Assert: MIGRATION_REPORT.md exists in current/../docs/
+  > Command: ls -la dev-taskflow/current/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md
+
+- [ ] Check if releases directory is now empty
+  > TEST: Empty Directory Check
+  > Type: Action Validation
+  > Assert: releases directory structure is empty
+  > Command: find dev-taskflow/releases -type f | grep -v .DS_Store | wc -l
+
+- [ ] Remove empty releases directory structure if confirmed empty
+  > TEST: Directory Removal
+  > Type: Action Validation
+  > Assert: releases directory removed cleanly
+  > Command: rm -rf dev-taskflow/releases
+
+- [ ] Update the reflection note from task.008 to correct the file location references
+  > TEST: Reflection Update
+  > Type: Action Validation
+  > Assert: Reflection note updated with correct paths
+  > Command: grep -n "releases/v.0.6.0-unified-claude/docs/MIGRATION_REPORT.md" dev-taskflow/current/v.0.6.0-unified-claude/reflections/20250805-014022-claude-commands-migration-task-008.md
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Git history might be lost if not using git mv
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Always use git mv for file movements
+  - **Rollback:** Can restore from git history
+
+### Integration Risks
+- **Risk:** Other processes might expect the file in releases location
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Searched codebase, no references to releases path found
+  - **Monitoring:** Check for any broken references after move
+
+## Lessons Learned
+
+### Prevention Strategy
+- [ ] Task specifications should be reviewed for correct path references
+- [ ] Consider adding validation to ensure files are created in appropriate directories
+- [ ] Document the purpose of each taskflow directory clearly
+- [ ] Add examples of correct file placement in task templates
