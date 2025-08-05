@@ -46,7 +46,7 @@ module CodingAgentTools
             FileUtils.mkdir_p(output_dir) unless File.directory?(output_dir)
 
             File.write(output_path, query_result.response)
-          rescue StandardError => e
+          rescue => e
             return Models::Result.failure("Could not write output file: #{e.message}")
           end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
 
           begin
             File.read(system_prompt_path, encoding: 'utf-8')
-          rescue StandardError => e
+          rescue => e
             Rails.logger.warn("Could not read system prompt: #{e.message}") if defined?(Rails)
             nil
           end
@@ -104,13 +104,13 @@ module CodingAgentTools
             content << "## Reflection #{index + 1}: #{File.basename(reflection_path)}"
             content << ''
             content << "**Source**: `#{reflection_path}`"
-            content << "**Modified**: #{File.mtime(reflection_path).strftime('%Y-%m-%d %H:%M:%S')}"
+            content << "**Modified**: #{File.mtime(reflection_path).strftime("%Y-%m-%d %H:%M:%S")}"
             content << ''
 
             begin
               reflection_content = File.read(reflection_path, encoding: 'utf-8')
               content << reflection_content
-            rescue StandardError => e
+            rescue => e
               content << "*Error reading reflection: #{e.message}*"
             end
 

@@ -51,12 +51,12 @@ module CodingAgentTools
       # @return [String] Rendered content
       def render_with_variables(template, variables = {})
         result = template.dup
-        
+
         variables.each do |key, value|
           placeholder = "%{#{key}}"
           result.gsub!(placeholder, value.to_s)
         end
-        
+
         result
       end
 
@@ -78,7 +78,7 @@ module CodingAgentTools
       # @return [Hash] Validation result
       def validate_template(template)
         placeholders = extract_placeholders(template)
-        
+
         {
           valid: true,
           placeholders: placeholders,
@@ -94,17 +94,17 @@ module CodingAgentTools
 
       def check_template_warnings(template)
         warnings = []
-        
+
         # Check for missing @ references
         if template !~ /@[\w\-\/]+/
-          warnings << "Template contains no @ references to files"
+          warnings << 'Template contains no @ references to files'
         end
-        
+
         # Check for very short templates
         if template.strip.lines.count < 2
-          warnings << "Template is very short, consider adding more guidance"
+          warnings << 'Template is very short, consider adding more guidance'
         end
-        
+
         warnings
       end
     end

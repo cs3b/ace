@@ -48,15 +48,15 @@ module CodingAgentTools
           autofix_enabled = config.dig('ruby', 'linters', 'standardrb', 'autofix')
 
           result = if autofix && autofix_enabled
-                     validator.autofix(resolved_paths)
-                   else
-                     validator.validate(resolved_paths)
-                   end
+            validator.autofix(resolved_paths)
+          else
+            validator.validate(resolved_paths)
+          end
 
           results[:linters][:standardrb] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:standardrb] = {
             success: false,
             error: e.message,
@@ -77,7 +77,7 @@ module CodingAgentTools
           results[:linters][:security] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:security] = {
             success: false,
             error: e.message,
@@ -97,7 +97,7 @@ module CodingAgentTools
           results[:linters][:cassettes] = result
           # Cassettes validator only warns, doesn't fail
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:cassettes] = {
             success: false,
             error: e.message,

@@ -91,7 +91,7 @@ module CodingAgentTools
         end
 
         private_class_method :extract_input_tokens, :extract_output_tokens,
-                             :extract_total_tokens, :extract_provider_specific, :extract_cached_tokens
+          :extract_total_tokens, :extract_provider_specific, :extract_cached_tokens
       end
     end
   end

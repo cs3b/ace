@@ -91,20 +91,20 @@ module CodingAgentTools
         # @return [Array<Hash>] Array of orphaned commands
         def find_orphaned_commands
           orphaned = []
-          
+
           # Get all workflows
           all_workflows = Atoms::Claude::WorkflowScanner.scan(@workflow_dir)
-          
+
           # Get all commands from .claude directory
           claude_dir = @project_root / '.claude' / 'commands'
           return orphaned unless claude_dir.exist?
 
           Dir.glob(File.join(claude_dir, '**', '*.md')).each do |cmd_path|
             cmd_name = File.basename(cmd_path, '.md')
-            
+
             # Skip special commands that handle multiple workflows
             next if multi_task_command?(cmd_name)
-            
+
             unless all_workflows.include?(cmd_name)
               orphaned << {
                 name: cmd_name,
@@ -121,7 +121,7 @@ module CodingAgentTools
         # @return [Hash] Validation result with :valid, :exists, :outdated
         def validate_single_workflow(workflow_name)
           workflow_path = @workflow_dir / "#{workflow_name}.wf.md"
-          
+
           unless workflow_path.exist?
             return { valid: false, exists: false, reason: 'Workflow not found' }
           end
@@ -162,7 +162,7 @@ module CodingAgentTools
 
         def multi_task_command?(name)
           # Commands that handle multiple tasks don't map 1:1 to workflows
-          %w[commit handbook-review load-project-context draft-tasks plan-tasks review-tasks work-on-tasks].include?(name)
+          ['commit', 'handbook-review', 'load-project-context', 'draft-tasks', 'plan-tasks', 'review-tasks', 'work-on-tasks'].include?(name)
         end
       end
     end

@@ -143,7 +143,7 @@ module CodingAgentTools
           return [] unless sorts&.is_a?(Array)
 
           errors = []
-          known_attributes = %w[id status dependencies title priority estimate sort implementation-order]
+          known_attributes = ['id', 'status', 'dependencies', 'title', 'priority', 'estimate', 'sort', 'implementation-order']
 
           sorts.each do |sort|
             unless known_attributes.include?(sort.attribute) || sort.attribute.match?(/^[a-zA-Z_][a-zA-Z0-9_]*$/)

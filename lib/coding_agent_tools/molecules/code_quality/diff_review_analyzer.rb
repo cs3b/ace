@@ -231,10 +231,10 @@ module CodingAgentTools
           lines = []
 
           lines << if changes[:status]
-                     "**Status:** #{changes[:status]}"
-                   else
-                     '**Status:** modified'
-                   end
+            "**Status:** #{changes[:status]}"
+          else
+            '**Status:** modified'
+          end
 
           lines << "**Lines added:** #{changes[:lines_added]}"
           lines << "**Lines removed:** #{changes[:lines_removed]}"

@@ -166,7 +166,7 @@ module CodingAgentTools
         sorted_reflections = all_reflections.sort_by { |file| -File.mtime(file).to_i }
 
         success_with_list(sorted_reflections)
-      rescue StandardError => e
+      rescue => e
         failure("Error finding reflection paths: #{e.message}")
       end
 
@@ -201,7 +201,7 @@ module CodingAgentTools
             system_path: system_path,
             output_path: output_path
           }
-        rescue StandardError => e
+        rescue => e
           failure("Error generating capture idea paths: #{e.message}")
         end
       end
@@ -225,7 +225,7 @@ module CodingAgentTools
           success(resolved_path)
         rescue SecurityError => e
           failure("Release-relative path resolution failed: #{e.message}")
-        rescue StandardError => e
+        rescue => e
           failure("Release-relative path resolution failed: #{e.message}")
         end
       end
@@ -288,7 +288,7 @@ module CodingAgentTools
           if prioritized[:alternatives].any?
             result[:alternative_message] =
               "\nOther scope combinations:\n  - #{corrected_scope}: #{prioritized[:alternatives].length} more match#{if prioritized[:alternatives].length > 1
-                                                                                                                       'es'
+                                                                                                                       "es"
                                                                                                                      end}"
           end
         end
@@ -343,7 +343,7 @@ module CodingAgentTools
         return failure(validation[:error]) unless validation[:success]
 
         success(validation[:path])
-      rescue StandardError => e
+      rescue => e
         failure("Path generation failed: #{e.message}")
       end
 
@@ -352,16 +352,16 @@ module CodingAgentTools
 
         variables.each do |var, source|
           value = case source
-                  when 'user_input'
+          when 'user_input'
                     slugify(title)
-                  when /^datetime:/
+          when /^datetime:/
                     Time.now.strftime(source.sub('datetime:', ''))
-                  when 'task_number'
+          when 'task_number'
                     extract_task_number_from_context
                   else
                     # Shell command
                     execute_command(source)
-                  end
+          end
 
           resolved = resolved.gsub("{#{var}}", value)
         end
@@ -411,7 +411,7 @@ module CodingAgentTools
               current_release = detect_current_release_fallback
               match = current_release.match(/^(v\.\d+\.\d+\.\d+)/)
               version = match ? match[1] : 'v.0.1.0'
-              "#{version}+task.#{rand(1000).to_s.rjust(3, '0')}"
+              "#{version}+task.#{rand(1000).to_s.rjust(3, "0")}"
             else
               'unknown'
             end
@@ -427,7 +427,7 @@ module CodingAgentTools
         require_relative '../atoms/taskflow_management/directory_navigator'
 
         result = CodingAgentTools::Atoms::TaskflowManagement::DirectoryNavigator
-                 .get_current_release_directory(base_path: @sandbox.project_root)
+          .get_current_release_directory(base_path: @sandbox.project_root)
 
         unless result && result[:path]
           raise 'No current release directory found. Cannot determine where to create tasks.'
@@ -437,7 +437,7 @@ module CodingAgentTools
 
       # If DirectoryNavigator can't find anything, there's no current release
       # This should cause an error rather than creating tasks in a non-existent release
-      rescue StandardError => e
+      rescue => e
         # Re-raise with more context - we should never silently fail to detect the release
         raise "Failed to detect current release: #{e.message}. " \
               'Ensure dev-taskflow/current/ contains exactly one release directory.'
@@ -480,7 +480,7 @@ module CodingAgentTools
           else
             nil # Fall back to simple slugify
           end
-        rescue StandardError
+        rescue
           # Silently fall back to simple slugify on any error
           nil
         end
@@ -488,11 +488,11 @@ module CodingAgentTools
 
       def slugify(text)
         slug = text.to_s
-                   .downcase
-                   .gsub(/[^\w\s-]/, '') # Remove non-word characters except spaces and hyphens
-                   .gsub(/\s+/, '-').squeeze('-') # Collapse multiple hyphens
-                   .strip                 # Remove leading/trailing whitespace
-                   .gsub(/^-|-$/, '')     # Remove leading/trailing hyphens
+          .downcase
+          .gsub(/[^\w\s-]/, '') # Remove non-word characters except spaces and hyphens
+          .gsub(/\s+/, '-').squeeze('-') # Collapse multiple hyphens
+          .strip                 # Remove leading/trailing whitespace
+          .gsub(/^-|-$/, '')     # Remove leading/trailing hyphens
 
         # Limit slug length to prevent filesystem filename length issues
         # Truncate at word boundaries to keep it readable
@@ -503,11 +503,11 @@ module CodingAgentTools
           last_hyphen = truncated.rindex('-')
 
           slug = if last_hyphen && last_hyphen > max_slug_length * 0.7 # Keep at least 70% of desired length
-                   truncated[0, last_hyphen]
-                 else
+            truncated[0, last_hyphen]
+          else
                    # Fallback: truncate and clean up
-                   truncated.gsub(/-+$/, '')
-                 end
+            truncated.gsub(/-+$/, '')
+          end
         end
 
         slug
@@ -605,23 +605,23 @@ module CodingAgentTools
 
           # Exact match gets highest priority
           score = if basename.downcase == pattern.downcase
-                    0
+            0
                   # Exact prefix match
-                  elsif basename.downcase.start_with?(pattern.downcase)
-                    1
+          elsif basename.downcase.start_with?(pattern.downcase)
+            1
                   # Contains pattern
-                  elsif basename.downcase.include?(pattern.downcase)
-                    2
+          elsif basename.downcase.include?(pattern.downcase)
+            2
                   # Directory contains pattern
-                  elsif relative_path.downcase.include?(pattern.downcase)
-                    3
-                  else
-                    4
-                  end
+          elsif relative_path.downcase.include?(pattern.downcase)
+            3
+          else
+            4
+          end
 
           [score, repo['priority'], basename.length, basename]
         end
-      rescue StandardError
+      rescue
         []
       end
 
@@ -699,7 +699,7 @@ module CodingAgentTools
 
         # If path starts with a known repository name
         first_part = path_parts.first
-        return first_part if %w[dev-tools dev-handbook dev-taskflow].include?(first_part)
+        return first_part if ['dev-tools', 'dev-handbook', 'dev-taskflow'].include?(first_part)
 
         nil
       end
@@ -744,7 +744,7 @@ module CodingAgentTools
 
         # Make relative to project root
         expanded_path.sub(@sandbox.project_root + '/', '')
-      rescue StandardError
+      rescue
         # If path expansion fails, clean it manually
         path.gsub(%r{^(\.\.?/)+}, '').split('/').reject(&:empty?).last || path
       end

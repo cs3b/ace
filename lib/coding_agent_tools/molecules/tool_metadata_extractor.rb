@@ -45,7 +45,7 @@ module CodingAgentTools
 
         # Fallback to generic description based on tool name
         generate_fallback_description(tool_name)
-      rescue StandardError => e
+      rescue => e
         # If all extraction methods fail, provide a generic description
         "CLI tool (description unavailable: #{e.message})"
       end
@@ -63,7 +63,7 @@ module CodingAgentTools
         parse_help_output(stdout, stderr, File.basename(tool_path))
       rescue Timeout::Error
         nil
-      rescue StandardError
+      rescue
         # Log error but don't fail - we'll try other methods
         nil
       end
@@ -139,17 +139,17 @@ module CodingAgentTools
         when /^git-(.+)/
           "Enhanced git #{::Regexp.last_match(1)} with additional functionality."
         when /^llm-(.+)/
-          "LLM integration tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+          "LLM integration tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when /^nav-(.+)/
-          "Navigation tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+          "Navigation tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when /^task-(.+)/
-          "Task management tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+          "Task management tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when /^code-(.+)/
-          "Code #{::Regexp.last_match(1).tr('-', ' ')} tool."
+          "Code #{::Regexp.last_match(1).tr("-", " ")} tool."
         when /^release-(.+)/
-          "Release management tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+          "Release management tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when /^reflection-(.+)/
-          "Reflection and analysis tool for #{::Regexp.last_match(1).tr('-', ' ')}."
+          "Reflection and analysis tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when 'handbook'
           'Development handbook access and management tool.'
         else

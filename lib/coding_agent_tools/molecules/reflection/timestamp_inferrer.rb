@@ -58,7 +58,7 @@ module CodingAgentTools
             content = File.read(file_path, encoding: 'utf-8')
             content_dates = extract_dates_from_content(content)
             dates.concat(content_dates)
-          rescue StandardError => e
+          rescue => e
             # If we can't read content, filename date is better than nothing
             Rails.logger.warn("Could not read content from #{file_path}: #{e.message}") if defined?(Rails)
           end

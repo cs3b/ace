@@ -17,15 +17,15 @@ module CodingAgentTools
       # @return [Pathname] Project root path
       def find(start_path: Dir.pwd)
         current = normalize_path(start_path)
-        
+
         # Traverse up the directory tree
         while current.parent != current
           claude_dir = current / '.claude' / 'commands'
           return current if claude_dir.directory?
-          
+
           current = current.parent
         end
-        
+
         # Fallback to start directory if .claude/commands doesn't exist
         normalize_path(start_path)
       end
@@ -36,16 +36,16 @@ module CodingAgentTools
       # @return [Pathname] Project root path
       def find_by_markers(start_path: Dir.pwd, markers: ['.claude/commands', '.git', 'Gemfile'])
         current = normalize_path(start_path)
-        
+
         while current.parent != current
           markers.each do |marker|
             marker_path = current / marker
             return current if marker_path.exist?
           end
-          
+
           current = current.parent
         end
-        
+
         # Fallback to start directory if no markers found
         normalize_path(start_path)
       end
@@ -55,10 +55,10 @@ module CodingAgentTools
       # @return [Boolean] true if valid project root
       def valid_project_root?(path)
         return false unless @path_sanitizer.safe?(path)
-        
+
         pathname = normalize_path(path)
         return false unless pathname.directory?
-        
+
         # Check for .claude/commands directory
         claude_commands = pathname / '.claude' / 'commands'
         claude_commands.directory?
@@ -69,11 +69,11 @@ module CodingAgentTools
       # @return [Pathname] Nearest existing parent directory
       def find_existing_parent(path)
         current = normalize_path(path)
-        
+
         until current.exist? || current.root?
           current = current.parent
         end
-        
+
         current.exist? ? current : Pathname.pwd
       end
 

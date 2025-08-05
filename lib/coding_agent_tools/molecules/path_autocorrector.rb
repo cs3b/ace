@@ -97,7 +97,7 @@ module CodingAgentTools
 
         # With common extensions if no extension provided
         unless File.extname(input_path) != ''
-          %w[.md .rb .yml .yaml .sh].each do |ext|
+          ['.md', '.rb', '.yml', '.yaml', '.sh'].each do |ext|
             paths << "#{input_path}#{ext}"
             paths << File.join(@sandbox.project_root, "#{input_path}#{ext}")
           end
@@ -115,7 +115,7 @@ module CodingAgentTools
           # With extensions
           next if File.extname(basename) != ''
 
-          %w[.md .rb .yml .yaml .sh].each do |ext|
+          ['.md', '.rb', '.yml', '.yaml', '.sh'].each do |ext|
             paths << File.join(dir_path, "#{basename}#{ext}")
           end
         end
@@ -166,7 +166,7 @@ module CodingAgentTools
         end
 
         candidates.sort_by { |path| [priority, File.basename(path)] }
-      rescue StandardError
+      rescue
         []
       end
 
@@ -278,7 +278,7 @@ module CodingAgentTools
         else
           failure("No selection made or FZF error: #{stderr}")
         end
-      rescue StandardError => e
+      rescue => e
         failure("FZF execution failed: #{e.message}")
       end
 

@@ -30,7 +30,7 @@ module CodingAgentTools
           title = extract_title_from_content(content)
 
           TaskData.new(id, status, dependencies, title, file_path, frontmatter, content)
-        rescue StandardError => e
+        rescue => e
           warn "Warning: Failed to parse task file #{file_path}: #{e.message}"
           nil
         end
@@ -52,7 +52,7 @@ module CodingAgentTools
           end
 
           LoadResult.new(tasks, errors, warnings)
-        rescue StandardError => e
+        rescue => e
           LoadResult.new([], ["Error scanning directory: #{e.message}"], [])
         end
 

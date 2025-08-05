@@ -11,7 +11,7 @@ module CodingAgentTools
         LogEntry = Struct.new(:repository, :timestamp, :sha, :author, :message, :raw_timestamp) do
           def formatted_timestamp(format: '%Y-%m-%d %H:%M')
             Time.at(timestamp).strftime(format)
-          rescue StandardError
+          rescue
             raw_timestamp || 'unknown'
           end
 
@@ -53,7 +53,7 @@ module CodingAgentTools
             )
             entries.concat(repo_entries)
             valid_repositories << repo_config
-          rescue StandardError => e
+          rescue => e
             errors << "Error getting log for #{repo_config[:label] || repo_config[:path]}: #{e.message}"
           end
 
@@ -90,7 +90,7 @@ module CodingAgentTools
 
             git_command = build_git_log_command(since_str, include_merges, max_commits)
             result = Atoms::TaskflowManagement::ShellCommandExecutor.execute(git_command, working_directory: path,
-                                                                                          timeout: 30)
+              timeout: 30)
 
             raise "Git command failed: #{result.stderr}" unless result.success?
 
@@ -98,7 +98,7 @@ module CodingAgentTools
           end
 
           def build_git_log_command(since_str, include_merges, max_commits)
-            cmd_parts = %w[git log]
+            cmd_parts = ['git', 'log']
             cmd_parts << "--since=#{since_str}"
             cmd_parts << '--no-merges' unless include_merges
             cmd_parts << "--max-count=#{max_commits}"

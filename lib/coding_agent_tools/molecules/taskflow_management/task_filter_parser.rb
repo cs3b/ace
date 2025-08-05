@@ -108,7 +108,7 @@ module CodingAgentTools
           return [] unless filters&.is_a?(Array)
 
           errors = []
-          known_attributes = %w[id status dependencies title priority estimate sort]
+          known_attributes = ['id', 'status', 'dependencies', 'title', 'priority', 'estimate', 'sort']
 
           filters.each do |filter|
             unless known_attributes.include?(filter.attribute) || filter.attribute.match?(/^[a-zA-Z_][a-zA-Z0-9_]*$/)

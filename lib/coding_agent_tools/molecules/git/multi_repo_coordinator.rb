@@ -29,7 +29,7 @@ module CodingAgentTools
           repositories_to_process.each do |repository|
             result = execute_for_repository(repository, command, options)
             results[repository[:name]] = result
-          rescue StandardError => e
+          rescue => e
             error_info = {
               repository: repository[:name],
               error: e,
@@ -79,7 +79,7 @@ module CodingAgentTools
 
           invalid_names = invalid_repos.map { |repo| repo[:name] }
           raise MultiRepoCoordinationError,
-                "Invalid repositories (not git repos or don't exist): #{invalid_names.join(', ')}"
+            "Invalid repositories (not git repos or don't exist): #{invalid_names.join(", ")}"
         end
 
         def execute_for_repository(repository, command, options)

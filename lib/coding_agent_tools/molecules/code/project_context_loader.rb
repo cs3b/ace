@@ -111,14 +111,14 @@ module CodingAgentTools
           result = @file_reader.read(path)
 
           documents = if result[:success]
-                        [{
-                          type: 'custom',
-                          path: path,
-                          content: result[:content]
-                        }]
-                      else
-                        []
-                      end
+            [{
+              type: 'custom',
+              path: path,
+              content: result[:content]
+            }]
+          else
+            []
+          end
 
           Models::Code::ReviewContext.new(
             mode: 'custom',

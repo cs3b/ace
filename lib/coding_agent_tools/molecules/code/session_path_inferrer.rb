@@ -141,14 +141,13 @@ module CodingAgentTools
           # Check for session-like files and patterns
           files = begin
             Dir.entries(directory)
-          rescue StandardError
+          rescue
             []
           end
 
           # Session indicator files
-          session_files = %w[
-            input.diff input.xml project_context.md combined_prompt.md
-            README.md session.log synthesis.meta
+          session_files = [
+            'input.diff', 'input.xml', 'project_context.md', 'combined_prompt.md', 'README.md', 'session.log', 'synthesis.meta'
           ]
 
           found_session_files = session_files.select { |f| files.include?(f) }
@@ -195,7 +194,7 @@ module CodingAgentTools
                 metadata[key.strip] = value.strip if key && value
               end
             end
-          rescue StandardError => e
+          rescue => e
             metadata[:parse_error] = e.message
           end
 

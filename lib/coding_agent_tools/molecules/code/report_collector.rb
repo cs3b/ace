@@ -106,7 +106,7 @@ module CodingAgentTools
           extension = File.extname(file_path).downcase
 
           # Must be a markdown file
-          return false unless %w[.md .markdown].include?(extension)
+          return false unless ['.md', '.markdown'].include?(extension)
 
           # Check filename patterns that indicate review reports
           review_patterns = [
@@ -169,7 +169,7 @@ module CodingAgentTools
           has_metadata = metadata_patterns.any? { |pattern| sample =~ pattern }
 
           has_headers || has_metadata
-        rescue StandardError
+        rescue
           # If we can't read the file for content check, assume it's not a review
           false
         end

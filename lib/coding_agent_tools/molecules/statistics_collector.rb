@@ -11,15 +11,15 @@ module CodingAgentTools
 
       def initialize(initial_stats: nil)
         @stats = case initial_stats
-                 when Models::InstallationStats
+        when Models::InstallationStats
                    initial_stats
-                 when Hash
+        when Hash
                    Models::InstallationStats.new(**initial_stats)
-                 when nil
+        when nil
                    Models::InstallationStats.new
                  else
-                   raise ArgumentError, "initial_stats must be InstallationStats, Hash, or nil"
-                 end
+                   raise ArgumentError, 'initial_stats must be InstallationStats, Hash, or nil'
+        end
       end
 
       # Record a file creation
@@ -60,7 +60,7 @@ module CodingAgentTools
         when :updated
           record_updated(file_type)
         when :failed
-          record_error(result[:error] || "Unknown error")
+          record_error(result[:error] || 'Unknown error')
         end
       end
 
@@ -87,8 +87,8 @@ module CodingAgentTools
         parts << "Updated: #{@stats.updated}" if @stats.updated > 0
         parts << "Skipped: #{@stats.skipped}" if @stats.skipped > 0
         parts << "Errors: #{@stats.errors.size}" if @stats.errors?
-        
-        parts.join(", ")
+
+        parts.join(', ')
       end
 
       # Check if installation was successful
@@ -106,7 +106,7 @@ module CodingAgentTools
       # @param other [StatisticsCollector] Other collector
       def merge!(other)
         other_stats = other.stats
-        
+
         @stats.created += other_stats.created
         @stats.skipped += other_stats.skipped
         @stats.updated += other_stats.updated

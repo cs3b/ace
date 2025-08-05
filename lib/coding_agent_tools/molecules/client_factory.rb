@@ -30,7 +30,7 @@ module CodingAgentTools
 
           if client_class.nil?
             raise UnknownProviderError, "Unknown provider '#{provider_name}'. " \
-                                       "Registered providers: #{registered_providers.join(', ')}"
+                                       "Registered providers: #{registered_providers.join(", ")}"
           end
 
           client_class.new(**options)

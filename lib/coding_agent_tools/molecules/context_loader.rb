@@ -34,7 +34,7 @@ module CodingAgentTools
               path: relative_path,
               content: content
             }
-          rescue StandardError => e
+          rescue => e
             failed_files << { path: relative_path, error: e.message }
           end
         end
@@ -53,7 +53,7 @@ module CodingAgentTools
         result[:failed_files] = failed_files unless failed_files.empty?
 
         result
-      rescue StandardError => e
+      rescue => e
         { success: false, error: "Context loading failed: #{e.message}" }
       end
 

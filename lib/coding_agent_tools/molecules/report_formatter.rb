@@ -98,10 +98,10 @@ module CodingAgentTools
           lines << 'Uncovered Areas:'
           uncovered_areas.each do |area|
             lines << if area[:start_line] == area[:end_line]
-                       "Line #{area[:start_line]}"
-                     else
-                       "Lines #{area[:start_line]}-#{area[:end_line]}"
-                     end
+              "Line #{area[:start_line]}"
+            else
+              "Lines #{area[:start_line]}-#{area[:end_line]}"
+            end
           end
           lines << ''
         end
@@ -151,8 +151,7 @@ module CodingAgentTools
       def format_csv_report(analysis_result)
         CSV.generate do |csv|
           # Header row
-          csv << %w[file_path coverage_percentage total_lines covered_lines uncovered_lines
-                    under_threshold]
+          csv << ['file_path', 'coverage_percentage', 'total_lines', 'covered_lines', 'uncovered_lines', 'under_threshold']
 
           # File data rows
           analysis_result.files.each do |file|
@@ -174,7 +173,7 @@ module CodingAgentTools
       def save_report(content, file_path)
         FileUtils.mkdir_p(File.dirname(file_path))
         File.write(file_path, content)
-      rescue StandardError => e
+      rescue => e
         raise SaveError, "Failed to save report to #{file_path}: #{e.message}"
       end
 
@@ -228,7 +227,7 @@ module CodingAgentTools
         format_symbol = format.is_a?(String) ? format.to_sym : format
 
         unless SUPPORTED_FORMATS.include?(format_symbol)
-          raise InvalidFormatError, "Unsupported format: #{format}. Supported formats: #{SUPPORTED_FORMATS.join(', ')}"
+          raise InvalidFormatError, "Unsupported format: #{format}. Supported formats: #{SUPPORTED_FORMATS.join(", ")}"
         end
 
         format_symbol
@@ -353,7 +352,7 @@ module CodingAgentTools
         under_covered_files = analysis_result.under_covered_files
 
         if under_covered_files.any?
-          recommendations << "#{under_covered_files.length} file#{under_covered_files.length == 1 ? '' : 's'} below #{analysis_result.threshold}% threshold requires attention"
+          recommendations << "#{under_covered_files.length} file#{under_covered_files.length == 1 ? "" : "s"} below #{analysis_result.threshold}% threshold requires attention"
 
           # Focus on worst file
           worst_file = under_covered_files.min_by(&:coverage_percentage)

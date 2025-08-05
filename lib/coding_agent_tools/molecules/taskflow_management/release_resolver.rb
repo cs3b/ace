@@ -40,7 +40,7 @@ module CodingAgentTools
           end
 
           ResolutionResult.new(nil, false, "Release '#{identifier}' not found using any supported format")
-        rescue StandardError => e
+        rescue => e
           ResolutionResult.new(nil, false, "Error resolving release '#{identifier}': #{e.message}")
         end
 
@@ -140,15 +140,15 @@ module CodingAgentTools
             matches.each do |match|
               release_name = File.basename(match)
               release_type = case match
-                             when %r{/current/}
+              when %r{/current/}
                                'current'
-                             when %r{/backlog/}
+              when %r{/backlog/}
                                'backlog'
-                             when %r{/done/}
+              when %r{/done/}
                                'done'
                              else
                                'unknown'
-                             end
+              end
               error_message += "  - #{release_name} (#{release_type})\n"
             end
             error_message += "\nExample: task-manager recent --release #{File.basename(matches.first)}"
@@ -161,7 +161,7 @@ module CodingAgentTools
         def self.resolve_by_codename(identifier, base_path)
           if identifier.include?('.') || identifier.include?('/')
             return ResolutionResult.new(nil, false,
-                                        'Not a codename')
+              'Not a codename')
           end
 
           matches = find_all_matching_releases(identifier, base_path, :codename)
@@ -188,15 +188,15 @@ module CodingAgentTools
 
           # Determine release type
           release_type = case release_path
-                         when %r{/current/}
+          when %r{/current/}
                            :current
-                         when %r{/backlog/}
+          when %r{/backlog/}
                            :backlog
-                         when %r{/done/}
+          when %r{/done/}
                            :done
                          else
                            :unknown
-                         end
+          end
 
           release_info = ReleasePathResolver::ReleaseInfo.new(
             release_path,
@@ -207,7 +207,7 @@ module CodingAgentTools
           )
 
           ResolutionResult.new(release_info, true, nil)
-        rescue StandardError => e
+        rescue => e
           ResolutionResult.new(nil, false, "Error processing directory: #{e.message}")
         end
       end

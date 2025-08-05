@@ -25,7 +25,7 @@ module CodingAgentTools
       # @return [Hash] Response data including status, headers, and body
       def json_request(method, url, **options)
         headers = build_headers(options[:headers], json: options.fetch(:json, true), method: method,
-                                                   body: options[:body])
+          body: options[:body])
         # Query parameters are now passed directly to execute_request,
         # which will pass them to HTTPClient, which in turn lets Faraday handle them.
         response = execute_request(method, url, query: options[:query], body: options[:body], headers: headers)
@@ -157,12 +157,12 @@ module CodingAgentTools
           # For compatibility, provide raw_body but optimize for common cases
           # Only re-encode if it's a reasonably sized response to avoid performance issues
           raw_body = if json && body_size_reasonable?(body)
-                       JSON.generate(ensure_proper_encoding(body))
-                     else
+            JSON.generate(ensure_proper_encoding(body))
+          else
                        # For very large responses, skip raw_body to avoid performance penalty
                        # This is a reasonable tradeoff for the edge case of huge JSON responses
-                       nil
-                     end
+            nil
+          end
         end
 
         result = {
@@ -194,13 +194,13 @@ module CodingAgentTools
         # Simple heuristic: if serialized size estimation is reasonable, allow re-encoding
         # For most API responses, this will be true. For huge responses, we skip raw_body.
         estimated_size = case body
-                         when Hash
+        when Hash
                            body.keys.size + body.values.flatten.size
-                         when Array
+        when Array
                            body.flatten.size
                          else
                            0
-                         end
+        end
         estimated_size < 10_000 # Reasonable limit for typical API responses
       end
 
@@ -220,7 +220,7 @@ module CodingAgentTools
           end
         when Hash
           obj.transform_keys { |k| ensure_proper_encoding(k) }
-             .transform_values { |v| ensure_proper_encoding(v) }
+            .transform_values { |v| ensure_proper_encoding(v) }
         when Array
           obj.map { |item| ensure_proper_encoding(item) }
         else

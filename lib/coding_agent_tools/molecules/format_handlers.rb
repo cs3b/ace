@@ -29,10 +29,10 @@ module CodingAgentTools
 
           if metadata[:provider]
             summary_parts << if metadata[:model]
-                               "Provider: #{metadata[:provider]} (#{metadata[:model]})"
-                             else
-                               "Provider: #{metadata[:provider]}"
-                             end
+              "Provider: #{metadata[:provider]} (#{metadata[:model]})"
+            else
+              "Provider: #{metadata[:provider]}"
+            end
           end
 
           summary_parts << "Execution time: #{metadata[:took]}s" if metadata[:took]
@@ -76,7 +76,7 @@ module CodingAgentTools
               breakdown << "cache read: $#{format_cost(cost_data[:cache_read])}"
             end
 
-            cost_parts << " (#{breakdown.join(', ')})" unless breakdown.empty?
+            cost_parts << " (#{breakdown.join(", ")})" unless breakdown.empty?
           end
 
           cost_parts.join
@@ -173,7 +173,7 @@ module CodingAgentTools
       # Get list of supported formats
       # @return [Array<String>] List of supported formats
       def self.supported_formats
-        %w[json markdown text]
+        ['json', 'markdown', 'text']
       end
     end
   end

@@ -170,7 +170,7 @@ module CodingAgentTools
           { content: content, error: nil }
         rescue Errno::ENOENT
           { content: nil, error: "Target file not found: #{file_path}" }
-        rescue StandardError => e
+        rescue => e
           { content: nil, error: "Failed to read target file #{file_path}: #{e.message}" }
         end
 

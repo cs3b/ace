@@ -22,7 +22,7 @@ module CodingAgentTools
           begin
             diff_command = build_diff_command(target_spec)
             result = @git_executor.execute(diff_command)
-          rescue StandardError => e
+          rescue => e
             return {
               content: nil,
               metadata: {},
@@ -80,7 +80,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               diff_file: nil,
               meta_file: nil,
@@ -95,7 +95,7 @@ module CodingAgentTools
         # @return [Boolean] true if target is git-based
         def git_diff_target?(target)
           return false if target.nil? || target.empty?
-          return true if %w[staged unstaged working].include?(target)
+          return true if ['staged', 'unstaged', 'working'].include?(target)
           return true if target.include?('..')
           return true if /^[a-f0-9]{7,40}$/.match?(target) # Git SHA
 

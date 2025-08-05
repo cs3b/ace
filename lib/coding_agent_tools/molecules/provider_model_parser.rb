@@ -142,7 +142,7 @@ module CodingAgentTools
           # Validate provider
           unless supported_providers.include?(provider)
             return create_error_result(input,
-                                       "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(', ')}")
+              "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
           end
 
           # Use default model for provider
@@ -159,7 +159,7 @@ module CodingAgentTools
           # Validate provider
           unless supported_providers.include?(provider)
             return create_error_result(input,
-                                       "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(', ')}")
+              "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
           end
 
           # Validate model is not empty
