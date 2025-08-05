@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.006
-status: pending
+status: done
 priority: high
 estimate: 4h
 dependencies: [v.0.6.0+task.002, v.0.6.0+task.004]
@@ -254,21 +254,21 @@ Provide a seamless installation experience that copies all Claude integration fi
 * [x] Study existing ClaudeCommandsInstaller implementation
   - **Completed**: Analyzed current implementation and patterns
   - **Finding**: Already has dry_run, verbose, Result struct pattern
-* [ ] Design backup rotation strategy
-  - Timestamp-based backup naming (existing pattern: `.backup.YYYYMMDD-HHMM`)
-  - Consider cleanup of old backups
-* [ ] Plan subdirectory handling for _custom and _generated
-  - Scan both subdirectories in source
-  - Flatten into target directories
-  - Handle name conflicts (skip or force)
-* [ ] Define metadata injection approach
-  - Read existing YAML front-matter if present
-  - Add/update last_modified timestamp
-  - Preserve other metadata fields
+* [x] Design backup rotation strategy
+  - **Completed**: Implemented timestamp-based backup naming (`.backup.YYYYMMDD-HHMM`)
+  - **Note**: Old backup cleanup left for future enhancement
+* [x] Plan subdirectory handling for _custom and _generated
+  - **Completed**: Scan both subdirectories in source
+  - **Completed**: Flatten into target directories
+  - **Completed**: Handle name conflicts (skip by default, force with --force)
+* [x] Define metadata injection approach
+  - **Completed**: Read existing YAML front-matter if present
+  - **Completed**: Add/update last_modified timestamp
+  - **Completed**: Preserve other metadata fields
 
 ### Execution Steps
 
-- [ ] Update integrate command class to support new options
+- [x] Update integrate command class to support new options
   ```ruby
   # lib/coding_agent_tools/cli/commands/handbook/claude/integrate.rb
   module CodingAgentTools
@@ -296,7 +296,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   end
   ```
 
-- [ ] Refactor ClaudeCommandsInstaller to support new requirements
+- [x] Refactor ClaudeCommandsInstaller to support new requirements
   ```ruby
   # lib/coding_agent_tools/integrations/claude_commands_installer.rb
   # Refactor existing class to add:
@@ -372,7 +372,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   > Assert: Correctly adds/updates YAML front-matter
   > Command: bundle exec rspec -e "injects metadata"
 
-- [ ] Implement enhanced source validation
+- [x] Implement enhanced source validation
   ```ruby
   def validate_source!
     source_base = project_root / 'dev-handbook' / '.integrations' / 'claude'
@@ -399,7 +399,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   > Assert: Validates required directories and exits on error
   > Command: bundle exec rspec -e "validates source structure"
 
-- [ ] Add backup option to existing installer
+- [x] Add backup option to existing installer
   ```ruby
   def create_backup
     target = project_root / '.claude'
@@ -417,7 +417,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   end
   ```
 
-- [ ] Update the run method to include new functionality
+- [x] Update the run method to include new functionality
   ```ruby
   def run
     puts "Installing Claude commands#{options[:dry_run] ? ' (DRY RUN)' : ''}..."
@@ -488,7 +488,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   > Assert: Installs commands, agents with metadata
   > Command: bundle exec rspec -e "performs full installation"
 
-- [ ] Add comprehensive test coverage
+- [x] Add comprehensive test coverage
   ```ruby
   # spec/coding_agent_tools/organisms/claude_installer_spec.rb
   RSpec.describe CodingAgentTools::Organisms::ClaudeInstaller do
@@ -508,7 +508,7 @@ Provide a seamless installation experience that copies all Claude integration fi
   end
   ```
 
-- [ ] Test idempotency
+- [x] Test idempotency
   > TEST: Idempotent Installation
   > Type: Integration Test
   > Assert: Multiple runs are safe
@@ -516,16 +516,16 @@ Provide a seamless installation experience that copies all Claude integration fi
 
 ## Acceptance Criteria
 
-- [ ] Copies all commands from both _custom and _generated directories
-- [ ] Flattens directory structure in .claude/commands/
-- [ ] Copies all agents to .claude/agents/
-- [ ] Adds last_modified timestamp to all copied files' YAML front-matter
-- [ ] Updates commands.json registry (for backward compatibility)
-- [ ] Creates backup when --backup flag is used
-- [ ] Respects --force flag for overwrites
-- [ ] Exits with error if source directories are missing
-- [ ] Provides clear installation summary with categorized counts
-- [ ] Maintains compatibility with existing ClaudeCommandsInstaller patterns
+- [x] Copies all commands from both _custom and _generated directories
+- [x] Flattens directory structure in .claude/commands/
+- [x] Copies all agents to .claude/agents/
+- [x] Adds last_modified timestamp to all copied files' YAML front-matter
+- [x] Updates commands.json registry (for backward compatibility)
+- [x] Creates backup when --backup flag is used
+- [x] Respects --force flag for overwrites
+- [x] Exits with error if source directories are missing
+- [x] Provides clear installation summary with categorized counts
+- [x] Maintains compatibility with existing ClaudeCommandsInstaller patterns
 
 ## Review Summary
 
