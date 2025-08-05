@@ -10,6 +10,8 @@ SimpleCov.start do
   add_filter "/.bundle/"
 
   add_group "Library", "lib"
+  add_group "Claude Commands", "lib/coding_agent_tools/cli/commands/handbook/claude"
+  add_group "Claude Organisms", "lib/coding_agent_tools/organisms/claude"
 
   # Set coverage thresholds but don't fail build for now
   # Will be increased as test coverage improves

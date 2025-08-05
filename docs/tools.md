@@ -18,7 +18,7 @@
 | `git-push` | Enhanced git push | `--force`, `--dry-run` |
 | `git-status` | Enhanced git status | `--verbose`, `--short` |
 | `git-tag` | Enhanced git tag | `[tagname]`, `--annotate`, `--delete`, `--list` |
-| `handbook` | Development handbook access | `sync-templates`, `claude-*` commands |
+| `handbook` | Development handbook access | `sync-templates`, `claude` subcommands |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
 | `nav-path` | Intelligent path navigation | `task`, `file` |
@@ -633,54 +633,66 @@ handbook --help  # Shows all commands including claude-* commands
 ```
 </details>
 
-### `handbook claude-*` – Claude Code integration commands   {#handbook-claude--claude-code-integration-commands}
+### `handbook claude` – Claude Code integration commands   {#handbook-claude--claude-code-integration-commands}
 
 <details><summary>Details</summary>
 
 ```bash
-handbook claude-[COMMAND] [OPTIONS]
+handbook claude [SUBCOMMAND] [OPTIONS]
 ```
 
-| Command | Purpose | Key Options |
+| Subcommand | Purpose | Key Options |
 |---------|---------|-------------|
-| `claude-generate-commands` | Generate missing Claude commands from workflow files | N/A |
-| `claude-update-registry` | Update commands.json registry with new commands | N/A |
-| `claude-integrate` | Install Claude Code commands to .claude/ directory | `--dry-run`, `--verbose` |
-| `claude-validate` | Validate Claude command coverage and consistency | N/A |
-| `claude-list` | List all Claude commands and their status | N/A |
+| `list` | List all Claude commands and their status | `--verbose`, `--type` |
+| `validate` | Validate command coverage and consistency | `--strict`, `--fix` |
+| `generate-commands` | Generate missing commands from workflows | `--dry-run`, `--force` |
+| `update-registry` | Update command registry JSON file | `--backup`, `--validate` |
+| `integrate` | Run complete integration workflow | `--force`, `--skip-validation` |
 
-**claude-integrate options:**
+**Common Options:**
 
 | Flag | Purpose | Default |
 |------|---------|---------|
-| `--dry-run` | Show what would be installed without modifying files | `false` |
-| `--verbose` | Show detailed installation information | `false` |
+| `--verbose` | Show detailed output | `false` |
+| `--dry-run` | Preview changes without modifying files | `false` |
+| `--force` | Force operation (overwrite/reinstall) | `false` |
 
 **Examples**
 ```bash
-# Show available handbook commands including Claude commands
-handbook --help
+# List all available commands
+handbook claude list
+handbook claude list --verbose
+handbook claude list --type agent
 
-# Install Claude commands (with preview)
-handbook claude-integrate --dry-run
+# Validate command coverage
+handbook claude validate
+handbook claude validate --strict
+handbook claude validate --fix
 
-# Install Claude commands
-handbook claude-integrate
+# Generate missing commands
+handbook claude generate-commands
+handbook claude generate-commands --dry-run
+handbook claude generate-commands --force
 
-# Install with verbose output
-handbook claude-integrate --verbose
+# Update command registry
+handbook claude update-registry
+handbook claude update-registry --backup
 
-# List all commands (when implemented)
-handbook claude-list
-
-# Validate command coverage (when implemented)
-handbook claude-validate
+# Run complete integration
+handbook claude integrate
+handbook claude integrate --force
+handbook claude integrate --skip-validation
 ```
 
 **Purpose:**
 The Claude namespace provides tools for integrating with Claude Code (claude.ai/code). It manages the installation and maintenance of command files that enable Claude to understand and execute project-specific workflows.
 
-**Note:** Currently, only the `integrate` subcommand is fully implemented. Other subcommands display placeholder messages indicating future functionality.
+**Features:**
+- Automatic command generation from workflow instructions
+- Smart categorization of custom vs generated commands
+- Coverage validation to ensure all workflows have commands
+- Registry management for tracking commands and agents
+- Dry-run support for safe testing of changes
 </details>
 
 ### `release-manager` – Release management tool   {#release-manager--release-management-tool}
