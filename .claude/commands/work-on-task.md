@@ -2,7 +2,7 @@
 description: Work On Task
 allowed-tools: Read, Write, TodoWrite, Bash
 argument-hint: "[task-id]"
-last_modified: '2025-08-05 19:20:58'
+last_modified: '2025-08-05 20:07:55'
 source: generated
 ---
 

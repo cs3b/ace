@@ -2,7 +2,7 @@
 description: Rebase Against
 allowed-tools: Bash, Read, Write
 argument-hint: "[branch-name]"
-last_modified: '2025-08-05 19:20:58'
+last_modified: '2025-08-05 20:07:55'
 source: generated
 ---
 

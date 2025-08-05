@@ -6,7 +6,7 @@ description: Expert feature research specialist for gap analysis and feature dis
   as .fr.md files.
 model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task
-last_modified: '2025-08-05 19:20:58'
+last_modified: '2025-08-05 20:07:55'
 source: dev-handbook
 type: agent
 ---
