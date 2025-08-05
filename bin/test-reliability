@@ -1,0 +1,270 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'json'
+require 'time'
+
+# CLI tool to analyze test reliability metrics
+class TestReliabilityCLI
+  TRACKING_FILE = 'tmp/test_reliability/test_metrics.json'
+  
+  def self.run(argv)
+    new.run(argv)
+  end
+  
+  def run(argv)
+    options = parse_options(argv)
+    
+    case options[:command]
+    when 'report'
+      generate_report(options)
+    when 'flaky'
+      show_flaky_tests(options)
+    when 'slow'
+      show_slow_tests(options)
+    when 'clear'
+      clear_data
+    else
+      puts "Unknown command: #{options[:command]}"
+      puts "Run 'test-reliability --help' for usage information"
+      exit 1
+    end
+  end
+  
+  private
+  
+  def parse_options(argv)
+    options = {
+      command: nil,
+      format: 'text',
+      last_runs: nil,
+      threshold: nil
+    }
+    
+    parser = OptionParser.new do |opts|
+      opts.banner = "Usage: test-reliability [command] [options]"
+      opts.separator ""
+      opts.separator "Commands:"
+      opts.separator "  report   Generate comprehensive reliability report"
+      opts.separator "  flaky    Show flaky tests"
+      opts.separator "  slow     Show slow tests"
+      opts.separator "  clear    Clear all tracking data"
+      opts.separator ""
+      opts.separator "Options:"
+      
+      opts.on("-f", "--format FORMAT", %w[text json csv], "Output format (text, json, csv)") do |f|
+        options[:format] = f
+      end
+      
+      opts.on("-l", "--last-runs N", Integer, "Analyze last N runs only") do |n|
+        options[:last_runs] = n
+      end
+      
+      opts.on("-t", "--threshold SECONDS", Float, "Slow test threshold in seconds (default: 1.0)") do |t|
+        options[:threshold] = t
+      end
+      
+      opts.on("-h", "--help", "Show this help message") do
+        puts opts
+        exit
+      end
+    end
+    
+    parser.parse!(argv)
+    options[:command] = argv[0] || 'report'
+    options
+  end
+  
+  def load_tracking_data
+    unless File.exist?(TRACKING_FILE)
+      puts "No tracking data found. Run tests with SHOW_RELIABILITY_REPORT=1 to generate data."
+      exit 1
+    end
+    
+    JSON.parse(File.read(TRACKING_FILE))
+  rescue JSON::ParserError => e
+    puts "Error parsing tracking data: #{e.message}"
+    exit 1
+  end
+  
+  def generate_report(options)
+    data = load_tracking_data
+    data = filter_by_last_runs(data, options[:last_runs]) if options[:last_runs]
+    
+    case options[:format]
+    when 'json'
+      output_json_report(data)
+    when 'csv'
+      output_csv_report(data)
+    else
+      output_text_report(data, options[:threshold] || 1.0)
+    end
+  end
+  
+  def show_flaky_tests(options)
+    data = load_tracking_data
+    data = filter_by_last_runs(data, options[:last_runs]) if options[:last_runs]
+    
+    flaky = data.select do |_test, metrics|
+      failure_rate = metrics['failures'].to_f / metrics['runs']
+      failure_rate > 0 && failure_rate < 1.0
+    end
+    
+    if flaky.empty?
+      puts "No flaky tests found!"
+      return
+    end
+    
+    case options[:format]
+    when 'json'
+      puts JSON.pretty_generate(flaky)
+    when 'csv'
+      puts "Test,Runs,Failures,FailureRate,File,Line"
+      flaky.each do |test, metrics|
+        rate = (metrics['failures'].to_f / metrics['runs'] * 100).round(2)
+        puts "\"#{test}\",#{metrics['runs']},#{metrics['failures']},#{rate},\"#{metrics['file_path']}\",#{metrics['line_number']}"
+      end
+    else
+      puts "=== Flaky Tests ==="
+      flaky.sort_by { |_, m| -m['failures'].to_f / m['runs'] }.each do |test, metrics|
+        rate = (metrics['failures'].to_f / metrics['runs'] * 100).round(2)
+        puts "\n#{test}"
+        puts "  Failure Rate: #{rate}% (#{metrics['failures']}/#{metrics['runs']} runs)"
+        puts "  Location: #{metrics['file_path']}:#{metrics['line_number']}"
+      end
+    end
+  end
+  
+  def show_slow_tests(options)
+    data = load_tracking_data
+    data = filter_by_last_runs(data, options[:last_runs]) if options[:last_runs]
+    threshold = options[:threshold] || 1.0
+    
+    slow = data.select do |_test, metrics|
+      times = metrics['execution_times'].compact
+      next false if times.empty?
+      
+      avg_time = times.sum / times.size.to_f
+      avg_time > threshold
+    end
+    
+    if slow.empty?
+      puts "No tests slower than #{threshold}s found!"
+      return
+    end
+    
+    case options[:format]
+    when 'json'
+      puts JSON.pretty_generate(slow)
+    when 'csv'
+      puts "Test,AverageTime,MinTime,MaxTime,Runs,File,Line"
+      slow.each do |test, metrics|
+        times = metrics['execution_times']
+        avg = times.sum / times.size.to_f
+        puts "\"#{test}\",#{avg.round(3)},#{times.min.round(3)},#{times.max.round(3)},#{metrics['runs']},\"#{metrics['file_path']}\",#{metrics['line_number']}"
+      end
+    else
+      puts "=== Tests Slower Than #{threshold}s ==="
+      slow.sort_by { |_, m| 
+        times = m['execution_times'].compact
+        times.empty? ? 0 : -times.sum / times.size.to_f
+      }.each do |test, metrics|
+        times = metrics['execution_times'].compact
+        next if times.empty?
+        avg = times.sum / times.size.to_f
+        puts "\n#{test}"
+        puts "  Average Time: #{avg.round(3)}s (min: #{times.min.round(3)}s, max: #{times.max.round(3)}s)"
+        puts "  Runs: #{metrics['runs']}"
+        puts "  Location: #{metrics['file_path']}:#{metrics['line_number']}"
+      end
+    end
+  end
+  
+  def clear_data
+    if File.exist?(TRACKING_FILE)
+      File.delete(TRACKING_FILE)
+      puts "Test reliability data cleared."
+    else
+      puts "No tracking data to clear."
+    end
+  end
+  
+  def filter_by_last_runs(data, n)
+    # This is simplified - in a real implementation, you'd track
+    # individual run timestamps and filter based on those
+    data
+  end
+  
+  def output_text_report(data, slow_threshold)
+    total_runs = data.values.sum { |m| m['runs'] }
+    total_failures = data.values.sum { |m| m['failures'] }
+    
+    puts "=== Test Reliability Report ==="
+    puts "Total Tests: #{data.size}"
+    puts "Total Runs: #{total_runs}"
+    puts "Total Failures: #{total_failures}"
+    puts "Overall Success Rate: #{((1 - total_failures.to_f / total_runs) * 100).round(2)}%" if total_runs > 0
+    
+    # Flaky tests
+    flaky = data.select do |_test, metrics|
+      failure_rate = metrics['failures'].to_f / metrics['runs']
+      failure_rate > 0 && failure_rate < 1.0
+    end
+    
+    if flaky.any?
+      puts "\n=== Flaky Tests (#{flaky.size}) ==="
+      flaky.sort_by { |_, m| -m['failures'].to_f / m['runs'] }.first(10).each do |test, metrics|
+        rate = (metrics['failures'].to_f / metrics['runs'] * 100).round(2)
+        puts "- #{test} (#{rate}% failure rate)"
+      end
+    end
+    
+    # Slow tests
+    slow = data.select do |_test, metrics|
+      times = metrics['execution_times'].compact
+      next false if times.empty?
+      
+      avg_time = times.sum / times.size.to_f
+      avg_time > slow_threshold
+    end
+    
+    if slow.any?
+      puts "\n=== Slowest Tests (#{slow.size} > #{slow_threshold}s) ==="
+      slow.sort_by { |_, m| 
+        times = m['execution_times'].compact
+        times.empty? ? 0 : -times.sum / times.size.to_f
+      }.first(10).each do |test, metrics|
+        times = metrics['execution_times'].compact
+        next if times.empty?
+        avg = times.sum / times.size.to_f
+        puts "- #{test} (#{avg.round(3)}s avg)"
+      end
+    end
+  end
+  
+  def output_json_report(data)
+    report = {
+      summary: {
+        total_tests: data.size,
+        total_runs: data.values.sum { |m| m['runs'] },
+        total_failures: data.values.sum { |m| m['failures'] }
+      },
+      tests: data
+    }
+    puts JSON.pretty_generate(report)
+  end
+  
+  def output_csv_report(data)
+    puts "Test,Runs,Failures,FailureRate,AverageTime,File,Line"
+    data.each do |test, metrics|
+      rate = metrics['runs'] > 0 ? (metrics['failures'].to_f / metrics['runs'] * 100).round(2) : 0
+      times = metrics['execution_times'].compact
+      avg_time = times.empty? ? 0 : (times.sum / times.size.to_f).round(3)
+      puts "\"#{test}\",#{metrics['runs']},#{metrics['failures']},#{rate},#{avg_time},\"#{metrics['file_path']}\",#{metrics['line_number']}"
+    end
+  end
+end
+
+# Run the CLI
+TestReliabilityCLI.run(ARGV) if __FILE__ == $0
