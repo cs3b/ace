@@ -1,7 +1,6 @@
 ---
 name: feature-research
 description: Expert feature research specialist for gap analysis and feature discovery. Use PROACTIVELY to identify missing features, analyze system capabilities, and create prioritized feature recommendations. Outputs research findings to dev-taskflow/backlog/ as .fr.md files.
-model: opus
 tools: Read, Grep, Glob, WebSearch, WebFetch, TodoWrite, Write, Task
 ---
 
