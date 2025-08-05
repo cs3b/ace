@@ -71,12 +71,12 @@ RSpec.describe "handbook claude commands" do
   end
 
   describe "handbook claude list" do
-    it "displays not implemented message" do
+    it "displays command overview" do
       output, status = Open3.capture2e("bundle", "exec", exe_path, "claude", "list")
       
       expect(status).to be_success
-      expect(output).to include("list: Not yet implemented")
-      expect(output).to include("available Claude commands")
+      expect(output).to include("Claude Commands Overview")
+      expect(output).to include("========================")
     end
   end
 
