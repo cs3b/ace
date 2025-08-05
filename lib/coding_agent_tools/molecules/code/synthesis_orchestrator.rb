@@ -87,7 +87,7 @@ module CodingAgentTools
               success: false
             )
           end
-        rescue StandardError => e
+        rescue => e
           SynthesisResult.new(
             error: "Synthesis orchestration failed: #{e.message}",
             success: false
@@ -127,7 +127,7 @@ module CodingAgentTools
             output_file: result.output_path,
             error: result.error
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: e.message
@@ -169,7 +169,7 @@ module CodingAgentTools
           return nil unless prompt_path && File.exist?(prompt_path)
 
           File.read(prompt_path, encoding: 'UTF-8').strip
-        rescue StandardError => e
+        rescue => e
           # Log error but continue without system prompt
           warn "Warning: Could not load system prompt from #{prompt_path}: #{e.message}" if @debug
           nil
@@ -211,7 +211,7 @@ module CodingAgentTools
             begin
               report_content = File.read(report_path, encoding: 'UTF-8').strip
               section_parts << report_content
-            rescue StandardError => e
+            rescue => e
               section_parts << "**Error reading report**: #{e.message}"
             end
 

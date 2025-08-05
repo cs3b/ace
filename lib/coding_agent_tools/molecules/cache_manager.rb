@@ -18,7 +18,7 @@ module CodingAgentTools
       MIGRATION_MARKER = '.migration_complete'
 
       # Default cache subdirectories
-      DEFAULT_CACHE_TYPES = %w[models http temp].freeze
+      DEFAULT_CACHE_TYPES = ['models', 'http', 'temp'].freeze
 
       attr_reader :xdg_resolver, :legacy_cache_path, :migration_completed
 
@@ -105,7 +105,7 @@ module CodingAgentTools
 
         begin
           YAML.load_file(file_path)
-        rescue StandardError => e
+        rescue => e
           # Handle corrupted cache files gracefully
           warn "Warning: Failed to read cache file #{file_path}: #{e.message}"
           nil
@@ -122,7 +122,7 @@ module CodingAgentTools
 
         File.delete(file_path)
         true
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Failed to delete cache file #{file_path}: #{e.message}"
         false
       end
@@ -139,7 +139,7 @@ module CodingAgentTools
         FileUtils.rm_rf(cache_dir)
         ensure_cache_structure
         true
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Failed to clear cache: #{e.message}"
         false
       end
@@ -164,7 +164,7 @@ module CodingAgentTools
           create_migration_marker
           @migration_completed = true
           true
-        rescue StandardError => e
+        rescue => e
           warn "Error: Cache migration failed: #{e.message}"
           false
         end

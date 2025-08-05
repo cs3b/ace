@@ -41,7 +41,7 @@ module CodingAgentTools
         merge_with_defaults(config)
       rescue Psych::SyntaxError => e
         raise Error, "Invalid YAML in tree configuration: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise Error, "Failed to load tree configuration: #{e.message}"
       end
 
@@ -94,7 +94,7 @@ module CodingAgentTools
         merged['contexts'] = DEFAULT_CONFIG['contexts'].merge(config['contexts']) if config['contexts']
 
         # Merge other sections
-        %w[default_depth global_excludes autocorrect repositories].each do |key|
+        ['default_depth', 'global_excludes', 'autocorrect', 'repositories'].each do |key|
           merged[key] = config[key] if config.key?(key)
         end
 

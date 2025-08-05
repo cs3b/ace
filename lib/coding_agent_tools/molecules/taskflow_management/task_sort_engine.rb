@@ -162,14 +162,14 @@ module CodingAgentTools
 
               # Handle nil values (put them last)
               comparison = if a_value.nil? && b_value.nil?
-                             0
-                           elsif a_value.nil?
-                             1
-                           elsif b_value.nil?
-                             -1
-                           else
-                             a_value <=> b_value
-                           end
+                0
+              elsif a_value.nil?
+                1
+              elsif b_value.nil?
+                -1
+              else
+                a_value <=> b_value
+              end
 
               # Apply direction
               comparison = -comparison if sort.descending?

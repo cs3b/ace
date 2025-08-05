@@ -51,7 +51,7 @@ module CodingAgentTools
 
         if key.nil? || key.strip.empty?
           raise KeyError,
-                "API key not found. Please set #{@env_key_name} environment variable or configure it via APICredentials.configure"
+            "API key not found. Please set #{@env_key_name} environment variable or configure it via APICredentials.configure"
         end
 
         key

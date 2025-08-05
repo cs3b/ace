@@ -110,7 +110,7 @@ module CodingAgentTools
         merge_with_defaults(config)
       rescue Psych::SyntaxError => e
         raise Error, "Invalid YAML in path configuration: #{e.message}"
-      rescue StandardError => e
+      rescue => e
         raise Error, "Failed to load path configuration: #{e.message}"
       end
 
@@ -165,10 +165,10 @@ module CodingAgentTools
 
         hash2.each do |key, value|
           result[key] = if result[key].is_a?(Hash) && value.is_a?(Hash)
-                          deep_merge(result[key], value)
-                        else
-                          value
-                        end
+            deep_merge(result[key], value)
+          else
+            value
+          end
         end
 
         result

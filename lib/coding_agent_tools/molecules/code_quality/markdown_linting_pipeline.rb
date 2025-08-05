@@ -62,7 +62,7 @@ module CodingAgentTools
           results[:linters][:task_metadata] = result
           results[:success] &&= result[:success]
           results[:total_issues] += (result[:errors] || []).size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:task_metadata] = {
             success: false,
             error: e.message
@@ -81,7 +81,7 @@ module CodingAgentTools
           results[:linters][:link_validation] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:link_validation] = {
             success: false,
             error: e.message
@@ -98,7 +98,7 @@ module CodingAgentTools
           results[:linters][:template_embedding] = result
           results[:success] &&= result[:success]
           results[:total_issues] += result[:findings].size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:template_embedding] = {
             success: false,
             error: e.message
@@ -114,8 +114,7 @@ module CodingAgentTools
           formatter_options = { dry_run: !autofix }
 
           # Pass through supported Kramdown options
-          %w[line_width hard_wrap auto_ids entity_output toc_levels smart_quotes gfm_quirks
-             syntax_highlighter].each do |option|
+          ['line_width', 'hard_wrap', 'auto_ids', 'entity_output', 'toc_levels', 'smart_quotes', 'gfm_quirks', 'syntax_highlighter'].each do |option|
             formatter_options[option.to_sym] = styleguide_config[option] if styleguide_config.key?(option)
           end
 
@@ -141,10 +140,10 @@ module CodingAgentTools
 
             # Make path relative to project root
             relative_path = if file.start_with?(path_resolver.project_root)
-                              file.sub("#{path_resolver.project_root}/", '')
-                            else
-                              file
-                            end
+              file.sub("#{path_resolver.project_root}/", '')
+            else
+              file
+            end
             findings << {
               file: relative_path,
               message: 'Formatting changes needed',
@@ -160,7 +159,7 @@ module CodingAgentTools
           }
 
           results[:total_issues] += findings.size
-        rescue StandardError => e
+        rescue => e
           results[:linters][:styleguide] = {
             success: false,
             error: e.message

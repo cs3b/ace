@@ -20,17 +20,17 @@ module CodingAgentTools
       def inject(content, metadata)
         # Convert metadata to hash if it's a CommandMetadata object
         metadata_hash = case metadata
-                        when Models::CommandMetadata
+        when Models::CommandMetadata
                           metadata.to_h
-                        when Hash
+        when Hash
                           metadata
                         else
-                          raise ArgumentError, "metadata must be Hash or CommandMetadata"
-                        end
+                          raise ArgumentError, 'metadata must be Hash or CommandMetadata'
+        end
 
         # Parse existing content
         result = @yaml_parser.parse(content)
-        
+
         if result.has_frontmatter?
           # Update existing frontmatter
           update_existing_frontmatter(result, metadata_hash)
@@ -78,7 +78,7 @@ module CodingAgentTools
       def update_existing_frontmatter(parse_result, new_metadata)
         # Merge existing and new metadata
         merged_metadata = (parse_result.frontmatter || {}).merge(new_metadata)
-        
+
         # Rebuild content with updated frontmatter
         frontmatter_yaml = YAML.dump(merged_metadata).sub(/^---\n/, '')
         "---\n#{frontmatter_yaml}---\n#{parse_result.content}"
@@ -87,7 +87,7 @@ module CodingAgentTools
       def add_new_frontmatter(content, metadata)
         # Create new frontmatter
         frontmatter_yaml = YAML.dump(metadata).sub(/^---\n/, '')
-        
+
         # Add to beginning of content
         "---\n#{frontmatter_yaml}---\n\n#{content}"
       end

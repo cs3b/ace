@@ -72,12 +72,12 @@ module CodingAgentTools
           begin
             json_string = Atoms::JSONFormatter.compact(response_data[:body])
             effective_body = Atoms::JSONFormatter.safe_parse(json_string, symbolize_names: true)
-          rescue StandardError
+          rescue
             # If conversion to JSON string fails (e.g., body contains non-serializable objects),
             # try a shallow symbolization as a fallback. This might not handle nested string keys.
             effective_body = response_data[:body].transform_keys do |k|
               k.is_a?(String) ? k.to_sym : k
-            rescue StandardError
+            rescue
               k
             end
           end

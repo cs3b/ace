@@ -63,10 +63,10 @@ module CodingAgentTools
 
             # Determine type
             type = if File.exist?(pattern) && !File.directory?(pattern)
-                     'single_file'
-                   else
-                     'file_pattern'
-                   end
+              'single_file'
+            else
+              'file_pattern'
+            end
 
             # Write metadata
             meta_content = <<~META
@@ -89,7 +89,7 @@ module CodingAgentTools
               success: true,
               error: nil
             }
-          rescue StandardError => e
+          rescue => e
             {
               xml_file: nil,
               meta_file: nil,

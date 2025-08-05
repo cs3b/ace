@@ -65,7 +65,7 @@ module CodingAgentTools
             documents.concat(extracted.documents)
             @errors.concat(extracted.errors)
             @warnings.concat(extracted.warnings)
-          rescue StandardError => e
+          rescue => e
             @errors << "Error parsing #{format_name} format: #{e.message}"
           end
 

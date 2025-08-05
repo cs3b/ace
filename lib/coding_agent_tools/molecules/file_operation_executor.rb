@@ -27,17 +27,17 @@ module CodingAgentTools
           case operation.type
           when :copy, :create, :update
             if would_overwrite?(operation) && !options[:force]
-              return skip_result(operation, "Would skip (already exists)")
+              return skip_result(operation, 'Would skip (already exists)')
             else
               return dry_run_success_result(operation, "Would #{operation.type}")
             end
           when :skip
-            return skip_result(operation, "Operation marked as skip")
+            return skip_result(operation, 'Operation marked as skip')
           else
             return error_result(operation, "Unknown operation type: #{operation.type}")
           end
         end
-        
+
         # Normal execution
         case operation.type
         when :copy
@@ -47,7 +47,7 @@ module CodingAgentTools
         when :update
           execute_update(operation, options)
         when :skip
-          skip_result(operation, "Operation marked as skip")
+          skip_result(operation, 'Operation marked as skip')
         else
           error_result(operation, "Unknown operation type: #{operation.type}")
         end
@@ -81,7 +81,7 @@ module CodingAgentTools
       def execute_copy(operation, options)
         # Check if target exists and handle accordingly
         if would_overwrite?(operation) && !options[:force]
-          return skip_result(operation, "Target exists (use force to overwrite)")
+          return skip_result(operation, 'Target exists (use force to overwrite)')
         end
 
         # Ensure target directory exists
@@ -100,11 +100,11 @@ module CodingAgentTools
           else
             content = operation.source.read
           end
-          
+
           # Write to target
           operation.target.write(content)
           success_result(operation, "Copied from #{operation.source_filename}")
-        rescue StandardError => e
+        rescue => e
           error_result(operation, "Copy failed: #{e.message}")
         end
       end
@@ -112,7 +112,7 @@ module CodingAgentTools
       def execute_create(operation, options)
         # Check if target exists
         if would_overwrite?(operation) && !options[:force]
-          return skip_result(operation, "Target exists (use force to overwrite)")
+          return skip_result(operation, 'Target exists (use force to overwrite)')
         end
 
         # Ensure target directory exists
@@ -121,10 +121,10 @@ module CodingAgentTools
 
         begin
           # For create operations, metadata should contain the content
-          content = operation.metadata&.[](:content) || ""
+          content = operation.metadata&.[](:content) || ''
           operation.target.write(content)
-          success_result(operation, "Created new file")
-        rescue StandardError => e
+          success_result(operation, 'Created new file')
+        rescue => e
           error_result(operation, "Create failed: #{e.message}")
         end
       end
@@ -138,16 +138,16 @@ module CodingAgentTools
         begin
           # Read existing content
           content = operation.target.read
-          
+
           # Apply updates from metadata
           if operation.metadata&.[](:updates)
             # This would apply specific updates in real implementation
           end
-          
+
           # Write updated content
           operation.target.write(content)
-          success_result(operation, "Updated existing file")
-        rescue StandardError => e
+          success_result(operation, 'Updated existing file')
+        rescue => e
           error_result(operation, "Update failed: #{e.message}")
         end
       end

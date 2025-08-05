@@ -49,19 +49,19 @@ module CodingAgentTools
 
         # Calculate cost if tracker is provided
         cost_calculation = if cost_tracker
-                             begin
-                               cost_tracker.calculate_cost_with_fallback(
-                                 model_id: model,
-                                 input_tokens: usage_metadata.input_tokens,
-                                 output_tokens: usage_metadata.output_tokens,
-                                 cache_creation_tokens: 0,
-                                 cache_read_tokens: usage_metadata.cached_tokens || 0
-                               )
-                             rescue StandardError
-                               # If cost calculation fails, continue without cost info
-                               nil
-                             end
-                           end
+          begin
+            cost_tracker.calculate_cost_with_fallback(
+              model_id: model,
+              input_tokens: usage_metadata.input_tokens,
+              output_tokens: usage_metadata.output_tokens,
+              cache_creation_tokens: 0,
+              cache_read_tokens: usage_metadata.cached_tokens || 0
+            )
+          rescue
+            # If cost calculation fails, continue without cost info
+            nil
+          end
+        end
 
         # Return enhanced metadata with cost information
         Models::UsageMetadataWithCost.from_usage_metadata(usage_metadata, cost_calculation)
@@ -239,9 +239,9 @@ module CodingAgentTools
 
       # Mark private class methods
       private_class_method :parse_usage_metadata, :build_normalized_metadata,
-                           :normalize_provider_name, :normalize_google_metadata, :normalize_lmstudio_metadata,
-                           :normalize_unknown_metadata, :extract_finish_reason,
-                           :calculate_total_tokens
+        :normalize_provider_name, :normalize_google_metadata, :normalize_lmstudio_metadata,
+        :normalize_unknown_metadata, :extract_finish_reason,
+        :calculate_total_tokens
     end
   end
 end

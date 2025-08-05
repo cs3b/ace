@@ -26,7 +26,7 @@ module CodingAgentTools
       # @return [Hash] Result with backup path and status
       def create_backup(source_path, options = {})
         source = normalize_path(source_path)
-        
+
         # Check if source exists
         unless source.exist?
           return {
@@ -61,7 +61,7 @@ module CodingAgentTools
       def list_backups(target_path)
         target = normalize_path(target_path)
         pattern = "#{target.basename}.backup.*"
-        
+
         target.parent.glob(pattern).select(&:directory?).sort
       end
 
@@ -74,7 +74,7 @@ module CodingAgentTools
       def clean_old_backups(target_path, keep_count: 3, **options)
         backups = list_backups(target_path)
         to_delete = []
-        
+
         if backups.size > keep_count
           # Keep the most recent backups
           to_delete = backups[0..-(keep_count + 1)]
@@ -92,12 +92,12 @@ module CodingAgentTools
         # Delete old backups
         deleted = []
         errors = []
-        
+
         to_delete.each do |backup|
           begin
             FileUtils.rm_rf(backup)
             deleted << backup
-          rescue StandardError => e
+          rescue => e
             errors << { path: backup, error: e.message }
           end
         end
@@ -136,16 +136,16 @@ module CodingAgentTools
         begin
           # Remove existing target if force is true
           FileUtils.rm_rf(target) if target.exist? && options[:force]
-          
+
           # Copy backup to target
           FileUtils.cp_r(backup, target)
-          
+
           {
             success: true,
             restored_from: backup,
             restored_to: target
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             error: "Failed to restore backup: #{e.message}"
@@ -167,7 +167,7 @@ module CodingAgentTools
             path: backup_path,
             message: "Backed up to: #{backup_path}"
           }
-        rescue StandardError => e
+        rescue => e
           {
             success: false,
             path: nil,

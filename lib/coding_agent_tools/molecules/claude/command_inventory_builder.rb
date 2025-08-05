@@ -49,7 +49,7 @@ module CodingAgentTools
           # Find and add missing commands
           known_names = (custom_commands + generated_commands).map { |c| c[:name] }
           missing_commands = find_missing_workflows(known_names)
-          
+
           missing_commands.each do |name|
             all_commands << {
               name: name,
@@ -131,8 +131,8 @@ module CodingAgentTools
             next unless path.exist?
 
             names += Dir.glob(File.join(path, '*.md'))
-                        .reject { |f| File.basename(f).downcase == 'readme.md' }
-                        .map { |f| File.basename(f, '.md') }
+              .reject { |f| File.basename(f).downcase == 'readme.md' }
+              .map { |f| File.basename(f, '.md') }
           end
 
           names.uniq
@@ -140,10 +140,10 @@ module CodingAgentTools
 
         def find_missing_workflows(known_command_names)
           workflow_dir = @project_root / 'dev-handbook' / 'workflow-instructions'
-          
+
           # Use WorkflowScanner atom to get all workflows
           all_workflows = Atoms::Claude::WorkflowScanner.scan(workflow_dir)
-          
+
           # Find workflows without commands
           missing = all_workflows - known_command_names
           missing.sort

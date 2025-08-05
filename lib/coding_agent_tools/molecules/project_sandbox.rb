@@ -64,10 +64,10 @@ module CodingAgentTools
 
       def resolve_project_root(root)
         path = if root
-                 File.expand_path(root)
-               else
-                 detect_project_root
-               end
+          File.expand_path(root)
+        else
+          detect_project_root
+        end
 
         # Normalize the path to handle symlinks consistently
         if File.exist?(path)
@@ -98,10 +98,10 @@ module CodingAgentTools
 
         # Handle case where path doesn't exist yet
         normalized_path_real = if !File.exist?(normalized_path)
-                                 normalized_path
-                               else
-                                 File.realpath(normalized_path)
-                               end
+          normalized_path
+        else
+          File.realpath(normalized_path)
+        end
 
         # Path must start with project root
         normalized_path_real.start_with?(project_root_real + '/') ||

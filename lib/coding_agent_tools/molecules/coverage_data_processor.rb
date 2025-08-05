@@ -144,11 +144,11 @@ module CodingAgentTools
           values = coverage_arrays.map { |arr| arr[index] if index < arr.length }.compact
 
           combined_lines[index] = if values.empty? || values.all?(&:nil?)
-                                    nil
-                                  else
+            nil
+          else
                                     # Sum non-nil values for combined execution count
-                                    values.map { |v| v || 0 }.sum
-                                  end
+            values.map { |v| v || 0 }.sum
+          end
         end
 
         combined_lines
@@ -168,9 +168,9 @@ module CodingAgentTools
 
       def extract_latest_timestamp(raw_data)
         timestamps = raw_data.values
-                             .select { |data| data.is_a?(Hash) && data['timestamp'] }
-                             .map { |data| data['timestamp'] }
-                             .compact
+          .select { |data| data.is_a?(Hash) && data['timestamp'] }
+          .map { |data| data['timestamp'] }
+          .compact
 
         timestamps.empty? ? Time.now.to_i : timestamps.max
       end

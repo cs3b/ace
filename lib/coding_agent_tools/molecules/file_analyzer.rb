@@ -20,11 +20,11 @@ module CodingAgentTools
 
         # Map method coverage if file exists and is readable
         methods = if File.exist?(file_path) && File.readable?(file_path)
-                    @method_mapper.map_file_coverage(file_path, lines_data)
-                  else
-                    warn "Warning: Cannot read source file #{file_path} for method analysis"
+          @method_mapper.map_file_coverage(file_path, lines_data)
+        else
+          warn "Warning: Cannot read source file #{file_path} for method analysis"
                     []
-                  end
+        end
 
         Models::CoverageResult.new(
           file_path: file_path,
@@ -77,10 +77,10 @@ module CodingAgentTools
 
         # Analyze methods if available
         method_analysis = if file_result.methods.any?
-                            analyze_file_methods(file_result.methods, threshold)
-                          else
-                            { message: 'No methods found or file could not be parsed' }
-                          end
+          analyze_file_methods(file_result.methods, threshold)
+        else
+          { message: 'No methods found or file could not be parsed' }
+        end
 
         # Analyze line-by-line coverage for uncovered areas
         uncovered_lines = find_uncovered_line_ranges(file_coverage_data[:lines_data])

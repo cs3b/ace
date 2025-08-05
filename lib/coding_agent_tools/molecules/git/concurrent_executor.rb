@@ -43,7 +43,7 @@ module CodingAgentTools
             begin
               main_result = execute_main_repository(main_commands)
               results['main'] = main_result
-            rescue StandardError => e
+            rescue => e
               errors << {
                 repository: 'main',
                 error: e,
@@ -91,7 +91,7 @@ module CodingAgentTools
             }
             errors << error_info
             results[future_info[:repo_name]] = { success: false, error: 'Timeout' }
-          rescue StandardError => e
+          rescue => e
             error_info = {
               repository: future_info[:repo_name],
               error: e,

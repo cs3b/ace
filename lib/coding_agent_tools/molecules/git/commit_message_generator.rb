@@ -98,14 +98,14 @@ module CodingAgentTools
           begin
             response = client.generate_text(user_prompt, **generation_options)
             clean_response(response[:text])
-          rescue StandardError => e
+          rescue => e
             error_message = "Failed to generate commit message using #{parse_result.provider}:#{parse_result.model}."
 
             error_message += if debug
-                               "\nError: #{e.class.name}: #{e.message}"
-                             else
-                               "\nRun with --debug for more details."
-                             end
+              "\nError: #{e.class.name}: #{e.message}"
+            else
+              "\nRun with --debug for more details."
+            end
 
             raise CommitMessageGenerationError, error_message
           end
@@ -114,13 +114,13 @@ module CodingAgentTools
         def ensure_providers_loaded
           # Manually load and register the most common providers
           # This ensures they're available even if the inherited hook doesn't work properly
-          providers_to_load = %w[
-            google_client
-            anthropic_client
-            openai_client
-            mistral_client
-            togetherai_client
-            lmstudio_client
+          providers_to_load = [
+            'google_client',
+            'anthropic_client',
+            'openai_client',
+            'mistral_client',
+            'togetherai_client',
+            'lmstudio_client'
           ]
 
           providers_to_load.each do |provider_file|
@@ -157,7 +157,7 @@ module CodingAgentTools
 
           # Remove markdown code block markers
           cleaned = response.gsub(/^```[a-zA-Z0-9_-]*\s*/, '')
-                            .gsub(/```\s*$/, '')
+            .gsub(/```\s*$/, '')
 
           # Trim whitespace and ensure single newline at end
           cleaned = cleaned.strip

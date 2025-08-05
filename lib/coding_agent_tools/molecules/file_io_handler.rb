@@ -112,16 +112,16 @@ module CodingAgentTools
         File.write(validated_path, content, encoding: 'UTF-8')
 
         @security_logger.log_event(:file_operation,
-                                   path: validated_path,
-                                   metadata: {
-                                     operation: 'write',
-                                     format: inferred_format,
-                                     size: content.bytesize,
-                                     forced: force
-                                   })
+          path: validated_path,
+          metadata: {
+            operation: 'write',
+            format: inferred_format,
+            size: content.bytesize,
+            forced: force
+          })
 
         inferred_format
-      rescue StandardError => e
+      rescue => e
         @security_logger.log_error(e, context: { operation: 'write', file_path: file_path })
         raise Error, "Failed to write file #{file_path}: #{e.message}"
       end
@@ -171,7 +171,7 @@ module CodingAgentTools
             existing_parent = existing_parent.dirname while !File.exist?(existing_parent) && existing_parent.to_s != '/'
             File.writable?(existing_parent)
           end
-        rescue StandardError
+        rescue
           false
         end
       end
@@ -199,22 +199,22 @@ module CodingAgentTools
         content = File.read(validated_path, encoding: 'UTF-8').strip
 
         @security_logger.log_event(:file_operation,
-                                   path: validated_path,
-                                   metadata: {
-                                     operation: 'read',
-                                     size: file_size
-                                   })
+          path: validated_path,
+          metadata: {
+            operation: 'read',
+            size: file_size
+          })
 
         content
       rescue Errno::EACCES
         @security_logger.log_error(StandardError.new('Permission denied'),
-                                   context: { operation: 'read', file_path: file_path })
+          context: { operation: 'read', file_path: file_path })
         raise Error, "Permission denied reading file: #{file_path}"
       rescue Errno::ENOENT
         @security_logger.log_error(StandardError.new('File not found'),
-                                   context: { operation: 'read', file_path: file_path })
+          context: { operation: 'read', file_path: file_path })
         raise Error, "File not found: #{file_path}"
-      rescue StandardError => e
+      rescue => e
         @security_logger.log_error(e, context: { operation: 'read', file_path: file_path })
         raise Error, "Error reading file #{file_path}: #{e.message}"
       end

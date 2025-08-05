@@ -25,10 +25,10 @@ module CodingAgentTools
 
           tasks_dir = Atoms::TaskflowManagement::DirectoryNavigator.find_tasks_directory(result[:path])
           release_info = ReleaseInfo.new(result[:path], result[:version], tasks_dir, File.basename(result[:path]),
-                                         :current)
+            :current)
 
           ResolutionResult.new(release_info, true, nil)
-        rescue StandardError => e
+        rescue => e
           ResolutionResult.new(nil, false, "Error resolving current release: #{e.message}")
         end
 
@@ -47,10 +47,10 @@ module CodingAgentTools
           tasks_dir = Atoms::TaskflowManagement::DirectoryNavigator.find_tasks_directory(result[:path])
           release_type = result[:path].include?('/current/') ? :current : :backlog
           release_info = ReleaseInfo.new(result[:path], result[:version], tasks_dir, File.basename(result[:path]),
-                                         release_type)
+            release_type)
 
           ResolutionResult.new(release_info, true, nil)
-        rescue StandardError => e
+        rescue => e
           ResolutionResult.new(nil, false, "Error finding release by version: #{e.message}")
         end
 

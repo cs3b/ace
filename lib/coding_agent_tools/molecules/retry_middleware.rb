@@ -58,7 +58,7 @@ module CodingAgentTools
 
           log_success(operation_name, attempt) if attempt > 1
           result
-        rescue StandardError => e
+        rescue => e
           if should_retry?(e, attempt)
             delay = calculate_delay(attempt)
             log_retry(operation_name, attempt, e, delay)
@@ -84,7 +84,7 @@ module CodingAgentTools
           notifications.register_event('retry_middleware.success.coding_agent_tools')
           notifications.register_event('retry_middleware.retry.coding_agent_tools')
           notifications.register_event('retry_middleware.failure.coding_agent_tools')
-        rescue StandardError
+        rescue
           # Silently ignore registration errors for already registered events
         end
       end

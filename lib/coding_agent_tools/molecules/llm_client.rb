@@ -44,7 +44,7 @@ module CodingAgentTools
 
             last_error = result[:error]
             debug_log("Attempt #{attempt + 1} failed: #{last_error}")
-          rescue StandardError => e
+          rescue => e
             last_error = e.message
             debug_log("Attempt #{attempt + 1} raised exception: #{last_error}")
           end
@@ -60,7 +60,7 @@ module CodingAgentTools
 
         # All retries failed
         LLMResult.new(false, nil,
-                      "LLM enhancement failed after #{MAX_RETRIES + 1} attempts. Last error: #{last_error}", retry_count)
+          "LLM enhancement failed after #{MAX_RETRIES + 1} attempts. Last error: #{last_error}", retry_count)
       end
 
       private
@@ -72,7 +72,7 @@ module CodingAgentTools
         return if Dir.exist?(File.dirname(output_path))
 
         raise ArgumentError,
-              "Output directory not found: #{File.dirname(output_path)}"
+          "Output directory not found: #{File.dirname(output_path)}"
       end
 
       def execute_llm_query(input_path, system_path, output_path)
@@ -83,10 +83,10 @@ module CodingAgentTools
           unless output_content.empty?
             # Read the input to compare content length (heuristic for enhancement)
             input_content = File.read(input_path).strip
-            
+
             # If output is significantly longer than input and doesn't look like a fallback,
             # consider it already successfully enhanced
-            if output_content.length > input_content.length + 50 && 
+            if output_content.length > input_content.length + 50 &&
                !output_content.start_with?('# Raw Idea (Enhanced Version Failed)')
               debug_log("Output file already contains enhanced content, skipping LLM query: #{output_path}")
               return { success: true }

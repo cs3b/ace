@@ -26,7 +26,7 @@ module CodingAgentTools
           task_id = Atoms::TaskflowManagement::TaskIdParser.generate_next_id(version, current_max: max_number)
 
           GenerationResult.new(task_id, version, next_number, true, nil)
-        rescue StandardError => e
+        rescue => e
           GenerationResult.new(nil, version, nil, false, "Error generating task ID: #{e.message}")
         end
 
@@ -51,10 +51,10 @@ module CodingAgentTools
             next unless task_id&.is_a?(String)
 
             if (version.nil? || Atoms::TaskflowManagement::TaskIdParser.belongs_to_version?(task_id,
-                                                                                            version)) && Atoms::TaskflowManagement::TaskIdParser.valid?(task_id)
+              version)) && Atoms::TaskflowManagement::TaskIdParser.valid?(task_id)
               task_ids << task_id
             end
-          rescue StandardError => e
+          rescue => e
             warn "Warning: Could not parse task file #{relative_path}: #{e.message}"
           end
 
@@ -76,7 +76,7 @@ module CodingAgentTools
 
             sequential_numbers = task_ids.map do |task_id|
               Atoms::TaskflowManagement::TaskIdParser.extract_sequential_number(task_id)
-            rescue StandardError
+            rescue
               0
             end
 

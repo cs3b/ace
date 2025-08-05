@@ -40,7 +40,7 @@ module CodingAgentTools
         setup_load_path
         require_dependencies
         execute_with_output_capture
-      rescue StandardError => e
+      rescue => e
         handle_error(e)
       ensure
         restore_streams
@@ -49,7 +49,7 @@ module CodingAgentTools
       private
 
       attr_reader :command_path, :registration_method, :executable_name,
-                  :original_stdout, :original_stderr
+        :original_stdout, :original_stderr
 
       # Sets up bundler if available and needed
       def setup_bundler
