@@ -21,7 +21,6 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "coding_agent_tools/cli/commands/handbook/sync_templates"
 require "coding_agent_tools/cli/commands/handbook/claude/generate_commands"
-require "coding_agent_tools/cli/commands/handbook/claude/update_registry"
 require "coding_agent_tools/cli/commands/handbook/claude/integrate"
 require "coding_agent_tools/cli/commands/handbook/claude/validate"
 require "coding_agent_tools/cli/commands/handbook/claude/list"

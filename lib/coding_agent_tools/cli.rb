@@ -162,7 +162,6 @@ module CodingAgentTools
 
         require_relative "cli/commands/handbook/sync_templates"
         require_relative "cli/commands/handbook/claude/generate_commands"
-        require_relative "cli/commands/handbook/claude/update_registry"
         require_relative "cli/commands/handbook/claude/integrate"
         require_relative "cli/commands/handbook/claude/validate"
         require_relative "cli/commands/handbook/claude/list"
@@ -172,7 +171,6 @@ module CodingAgentTools
           # Register claude commands as a proper subcommand namespace
           prefix.register "claude", aliases: [] do |claude|
             claude.register "generate-commands", Commands::Handbook::Claude::GenerateCommands
-            claude.register "update-registry", Commands::Handbook::Claude::UpdateRegistry
             claude.register "integrate", Commands::Handbook::Claude::Integrate
             claude.register "validate", Commands::Handbook::Claude::Validate
             claude.register "list", Commands::Handbook::Claude::List
