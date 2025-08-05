@@ -1,8 +1,8 @@
 ---
 id: v.0.6.0+task.019
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 3h
 dependencies: []
 ---
 
@@ -104,3 +104,150 @@ Restructure Claude integration documentation to provide a clear separation betwe
 - Feedback item #6 requesting documentation restructuring
 - Current Claude integration documentation structure
 - Existing handbook tool documentation patterns
+
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Follow existing documentation architecture patterns from dev-tools/docs/user/
+- [ ] Maintain consistency with unified command documentation style (e.g., llm-query.md)
+- [ ] Ensure clear separation between quickstart and reference documentation
+
+### Technology Stack
+- [ ] Markdown documentation with markdownlint compliance
+- [ ] Clear section headers and table of contents
+- [ ] Command examples with realistic use cases
+- [ ] Troubleshooting sections with common issues
+
+### Implementation Strategy
+- [ ] Create focused quickstart guide in dev-handbook/.integrations/claude/README.md
+- [ ] Create comprehensive reference documentation for each handbook claude subcommand
+- [ ] Establish clear cross-references between quickstart and detailed docs
+- [ ] Remove incorrect installation instructions (gem installation)
+
+## Tool Selection
+
+No external tools required - standard markdown documentation approach.
+
+## File Modifications
+
+### Create
+- dev-tools/docs/user/handbook-claude-list.md
+  - Purpose: Comprehensive documentation for `handbook claude list` subcommand
+  - Key components: Command syntax, options, examples, troubleshooting
+  - Dependencies: None
+
+- dev-tools/docs/user/handbook-claude-validate.md
+  - Purpose: Comprehensive documentation for `handbook claude validate` subcommand
+  - Key components: Validation rules, options, error messages, fixes
+  - Dependencies: None
+
+- dev-tools/docs/user/handbook-claude-generate-commands.md
+  - Purpose: Comprehensive documentation for `handbook claude generate-commands` subcommand
+  - Key components: Generation process, templates, customization options
+  - Dependencies: None
+
+- dev-tools/docs/user/handbook-claude-update-registry.md
+  - Purpose: Comprehensive documentation for `handbook claude update-registry` subcommand
+  - Key components: Registry format, update process, backup procedures
+  - Dependencies: None
+
+- dev-tools/docs/user/handbook-claude-integrate.md
+  - Purpose: Comprehensive documentation for `handbook claude integrate` subcommand
+  - Key components: Integration workflow, prerequisites, troubleshooting
+  - Dependencies: None
+
+### Modify
+- dev-handbook/.integrations/claude/README.md
+  - Changes: Transform into focused quickstart guide
+  - Impact: Clearer onboarding experience for new users
+  - Integration points: Cross-references to detailed docs in dev-tools
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Documentation becomes out of sync with actual command behavior
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Include validation steps in release process
+  - **Rollback:** Keep backup of original documentation
+
+### Integration Risks
+- **Risk:** Cross-references between repos become broken
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Use relative paths within repos, document full paths for cross-repo
+  - **Monitoring:** Regular link checking as part of CI
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze existing Claude integration command behavior
+  > TEST: Command Analysis Complete
+  > Type: Pre-condition Check
+  > Assert: All handbook claude subcommands are understood
+  > Command: handbook claude --help
+
+* [ ] Study existing user documentation patterns in dev-tools/docs/user/
+* [ ] Design consistent documentation structure for all subcommands
+* [ ] Plan cross-reference strategy between quickstart and detailed docs
+
+### Execution Steps
+
+- [ ] Step 1: Create comprehensive documentation for handbook claude list subcommand
+  > TEST: List Documentation Complete
+  > Type: Action Validation
+  > Assert: handbook-claude-list.md created with all sections
+  > Command: ls -la dev-tools/docs/user/handbook-claude-list.md
+
+- [ ] Step 2: Create comprehensive documentation for handbook claude validate subcommand
+  > TEST: Validate Documentation Complete
+  > Type: Action Validation
+  > Assert: handbook-claude-validate.md created with all sections
+  > Command: ls -la dev-tools/docs/user/handbook-claude-validate.md
+
+- [ ] Step 3: Create comprehensive documentation for handbook claude generate-commands subcommand
+  > TEST: Generate Commands Documentation Complete
+  > Type: Action Validation
+  > Assert: handbook-claude-generate-commands.md created with all sections
+  > Command: ls -la dev-tools/docs/user/handbook-claude-generate-commands.md
+
+- [ ] Step 4: Create comprehensive documentation for handbook claude update-registry subcommand
+  > TEST: Update Registry Documentation Complete
+  > Type: Action Validation
+  > Assert: handbook-claude-update-registry.md created with all sections
+  > Command: ls -la dev-tools/docs/user/handbook-claude-update-registry.md
+
+- [ ] Step 5: Create comprehensive documentation for handbook claude integrate subcommand
+  > TEST: Integrate Documentation Complete
+  > Type: Action Validation
+  > Assert: handbook-claude-integrate.md created with all sections
+  > Command: ls -la dev-tools/docs/user/handbook-claude-integrate.md
+
+- [ ] Step 6: Transform Claude README into focused quickstart guide
+  - Focus on immediate setup steps and first-time use
+  - Remove detailed command reference (move to individual docs)
+  - Add clear "Next Steps" section pointing to detailed docs
+  - Include maintenance workflow for regular updates
+  > TEST: Quickstart Guide Transformed
+  > Type: Action Validation
+  > Assert: README.md is focused quickstart with cross-references
+  > Command: grep -c "Quick Start" dev-handbook/.integrations/claude/README.md
+
+- [ ] Step 7: Update tools.md to reference new detailed documentation
+  > TEST: Tools Reference Updated
+  > Type: Action Validation
+  > Assert: tools.md includes links to new documentation
+  > Command: grep -c "handbook-claude" dev-tools/docs/tools.md
+
+- [ ] Step 8: Validate all cross-references work correctly
+  > TEST: Cross-References Valid
+  > Type: Action Validation
+  > Assert: All documentation links are valid
+  > Command: markdownlint dev-handbook/.integrations/claude/README.md dev-tools/docs/user/handbook-claude-*.md
+
+## Acceptance Criteria
+
+- [ ] AC 1: All specified deliverables created/modified.
+- [ ] AC 2: Key functionalities (if applicable) are working as described.
+- [ ] AC 3: All automated checks in the Implementation Plan pass.
