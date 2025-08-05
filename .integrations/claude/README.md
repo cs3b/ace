@@ -15,7 +15,7 @@ handbook claude validate
 
 ## Overview
 
-The handbook CLI provides a unified interface for managing Claude Code commands and agents, replacing the legacy `claude-integrate` script with a more robust, integrated solution.
+The handbook CLI provides a unified interface for managing Claude Code commands and agents, providing a robust, integrated solution for Claude Code integration.
 
 ## Features
 
@@ -273,10 +273,6 @@ See the [Developer Guide](../../../dev-tools/docs/development/claude-integration
 4. **Document Custom Commands**: Include clear descriptions and examples
 5. **Version Control**: Commit registry.json changes with command updates
 
-## Migration from Legacy System
-
-If you're migrating from the old `claude-integrate` script, see the [Migration Guide](MIGRATION.md) for detailed instructions.
-
 ## Support
 
 For issues or questions:
@@ -287,7 +283,6 @@ For issues or questions:
 
 ## Related Documentation
 
-- [Migration Guide](MIGRATION.md) - Migrating from the legacy system
 - [Command Structure](commands/README.md) - Detailed command organization
 - [Developer Guide](../../../dev-tools/docs/development/claude-integration.md) - For contributors
 - [Workflow Instructions](../../workflow-instructions/) - Source for generated commands
