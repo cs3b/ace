@@ -1,6 +1,6 @@
 ---
 description: Create Test Cases
-allowed-tools: Read, Write, Bash(bundle exec rspec), Grep
+allowed-tools: Read, Write, Bash, Grep
 ---
 
 read whole file and follow @dev-handbook/workflow-instructions/create-test-cases.wf.md

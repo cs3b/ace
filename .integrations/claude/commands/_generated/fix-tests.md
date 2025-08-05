@@ -1,6 +1,6 @@
 ---
 description: Fix Tests
-allowed-tools: Read, Write, Edit, Bash(bundle exec *), Grep
+allowed-tools: Read, Write, Edit, Bash, Grep
 model: sonnet
 ---
 

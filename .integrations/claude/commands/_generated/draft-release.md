@@ -1,6 +1,6 @@
 ---
 description: Draft Release
-allowed-tools: Read, Write, Bash(task-manager release *), Grep
+allowed-tools: Read, Write, Bash, Grep
 argument-hint: "[version]"
 ---
 

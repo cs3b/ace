@@ -1,6 +1,6 @@
 ---
 description: Rebase Against
-allowed-tools: Bash(git *), Read, Write
+allowed-tools: Bash, Read, Write
 argument-hint: "[branch-name]"
 ---
 

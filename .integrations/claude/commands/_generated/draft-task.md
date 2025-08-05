@@ -1,6 +1,6 @@
 ---
 description: Draft Task
-allowed-tools: Read, Write, TodoWrite, Bash(task-manager *)
+allowed-tools: Read, Write, TodoWrite, Bash
 ---
 
 read whole file and follow @dev-handbook/workflow-instructions/draft-task.wf.md

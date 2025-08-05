@@ -1,6 +1,6 @@
 ---
 description: Fix Linting Issue From
-allowed-tools: Read, Write, Edit, Bash(bundle exec *), Grep
+allowed-tools: Read, Write, Edit, Bash, Grep
 argument-hint: "[linter-output-file]"
 model: sonnet
 ---

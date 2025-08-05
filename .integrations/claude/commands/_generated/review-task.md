@@ -1,6 +1,6 @@
 ---
 description: Review Task
-allowed-tools: Read, Write, TodoWrite, Bash(task-manager *)
+allowed-tools: Read, Write, TodoWrite, Bash
 argument-hint: "[task-id]"
 ---
 
