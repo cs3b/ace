@@ -70,7 +70,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
         workflows_dir = test_root / 'dev-handbook' / 'workflow-instructions'
         File.write(workflows_dir / 'fix-linting-issue-from.wf.md', 'Workflow content')
         File.write(workflows_dir / 'rebase-against.wf.md', 'Workflow content')
-        
+
         # Create some installed commands but not for these workflows
         installed_dir = test_root / '.claude' / 'commands'
         File.write(installed_dir / 'commit.md', 'Installed command')
@@ -92,10 +92,10 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
         # Set up commands of each type
         custom_dir = test_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
         File.write(custom_dir / 'commit.md', 'Commit command')
-        
+
         generated_dir = test_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
         File.write(generated_dir / 'capture-idea.md', 'Capture idea command')
-        
+
         workflows_dir = test_root / 'dev-handbook' / 'workflow-instructions'
         File.write(workflows_dir / 'missing-workflow.wf.md', 'Workflow content')
       end
@@ -132,7 +132,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
       before do
         custom_dir = test_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
         File.write(custom_dir / 'commit.md', 'Commit command')
-        
+
         workflows_dir = test_root / 'dev-handbook' / 'workflow-instructions'
         File.write(workflows_dir / 'missing-workflow.wf.md', 'Workflow content')
       end
@@ -140,16 +140,16 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
       it 'outputs valid JSON' do
         output = capture_stdout { lister.list(format: 'json') }
         json = JSON.parse(output)
-        
+
         expect(json).to have_key('commands')
         expect(json).to have_key('summary')
-        
+
         expect(json['commands']).to be_an(Array)
         expect(json['commands'].first).to have_key('name')
         expect(json['commands'].first).to have_key('type')
         expect(json['commands'].first).to have_key('installed')
         expect(json['commands'].first).to have_key('valid')
-        
+
         expect(json['summary']).to have_key('installed')
         expect(json['summary']).to have_key('missing')
         expect(json['summary']).to have_key('total')
@@ -171,15 +171,15 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
         custom_dir = test_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
         File.write(custom_dir / 'commit.md', 'Commit command')
         File.write(custom_dir / 'draft-tasks.md', 'Draft tasks command')
-        
+
         generated_dir = test_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
         File.write(generated_dir / 'capture-idea.md', 'Capture idea command')
-        
+
         # Install some commands in subdirectories
         installed_custom = test_root / '.claude' / 'commands' / '_custom'
         FileUtils.mkdir_p(installed_custom)
         File.write(installed_custom / 'commit.md', 'Installed commit')
-        
+
         installed_generated = test_root / '.claude' / 'commands' / '_generated'
         FileUtils.mkdir_p(installed_generated)
         File.write(installed_generated / 'capture-idea.md', 'Installed capture-idea')
@@ -188,24 +188,24 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandLister do
       it 'shows installed status correctly' do
         output = capture_stdout { lister.list }
         lines = output.split("\n")
-        
+
         # Find the commit line - should show as installed
         commit_line = lines.find { |l| l.include?('commit') && l.include?('custom') }
         expect(commit_line).to include('✓')
-        
+
         # Find the draft-tasks line - should show as not installed
         draft_line = lines.find { |l| l.include?('draft-tasks') && l.include?('custom') }
         expect(draft_line).to include('✗')
-        
+
         # Check summary
         expect(output).to match(/Summary: 2 commands installed/)
       end
-      
+
       it 'detects only commands that exist in dev-handbook' do
         # Commands in root directory that don't exist in dev-handbook are ignored
         # because scan_installed_command_names only returns names, not validation status
         File.write(test_root / '.claude' / 'commands' / 'other-command.md', 'Other command')
-        
+
         output = capture_stdout { lister.list }
         # Still only 2 installed because other-command doesn't exist in dev-handbook
         expect(output).to match(/Summary: 2 commands installed/)

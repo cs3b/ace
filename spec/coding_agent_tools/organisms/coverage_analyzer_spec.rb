@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-require "tempfile"
-require "json"
+require 'spec_helper'
+require 'tempfile'
+require 'json'
 
 RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
   subject(:analyzer) { described_class.new }
@@ -27,10 +27,10 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     {
       total_files: 2,
       processed_files: 2,
-      frameworks: ["RSpec"],
-      timestamp: 1753640000,
+      frameworks: ['RSpec'],
+      timestamp: 1_753_640_000,
       file_coverage: {
-        "/test/lib/example.rb" => {
+        '/test/lib/example.rb' => {
           coverage_data: {
             total_lines: 10,
             covered_lines: 8,
@@ -39,11 +39,11 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
           lines_data: [nil, 1, 0, 1, nil, 1, 1, 0, 1, 1, nil],
           uncovered_details: {
             uncovered_lines: [3, 8],
-            uncovered_ranges: ["3", "8"],
+            uncovered_ranges: ['3', '8'],
             total_uncovered: 2
           }
         },
-        "/test/lib/another.rb" => {
+        '/test/lib/another.rb' => {
           coverage_data: {
             total_lines: 5,
             covered_lines: 2,
@@ -52,7 +52,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
           lines_data: [nil, 0, 0, 1, 1, nil],
           uncovered_details: {
             uncovered_lines: [2, 3],
-            uncovered_ranges: ["2-3"],
+            uncovered_ranges: ['2-3'],
             total_uncovered: 3
           }
         }
@@ -63,24 +63,24 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
   let(:sample_coverage_result) do
     instance_double(
       CodingAgentTools::Models::CoverageResult,
-      file_path: "/test/lib/example.rb",
+      file_path: '/test/lib/example.rb',
       total_lines: 10,
       covered_lines: 8,
       coverage_percentage: 80.0,
       methods: [],
-      uncovered_details: {uncovered_lines: [3, 8], uncovered_ranges: ["3", "8"], total_uncovered: 2}
+      uncovered_details: { uncovered_lines: [3, 8], uncovered_ranges: ['3', '8'], total_uncovered: 2 }
     )
   end
 
   let(:sample_coverage_result_low) do
     instance_double(
       CodingAgentTools::Models::CoverageResult,
-      file_path: "/test/lib/another.rb",
+      file_path: '/test/lib/another.rb',
       total_lines: 5,
       covered_lines: 2,
       coverage_percentage: 40.0,
       methods: [],
-      uncovered_details: {uncovered_lines: [2, 3], uncovered_ranges: ["2-3"], total_uncovered: 3}
+      uncovered_details: { uncovered_lines: [2, 3], uncovered_ranges: ['2-3'], total_uncovered: 3 }
     )
   end
 
@@ -97,28 +97,28 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
   # Sample SimpleCov data structures for testing extract_coverage_data
   let(:simplecov_new_format) do
     {
-      "RSpec" => {
-        "coverage" => {
-          "/test/lib/example.rb" => {
-            "lines" => [nil, 1, 0, 2, nil, 1]
+      'RSpec' => {
+        'coverage' => {
+          '/test/lib/example.rb' => {
+            'lines' => [nil, 1, 0, 2, nil, 1]
           },
-          "/test/lib/another.rb" => {
-            "lines" => [nil, 0, 1, 1]
+          '/test/lib/another.rb' => {
+            'lines' => [nil, 0, 1, 1]
           }
         },
-        "timestamp" => 1753640000
+        'timestamp' => 1_753_640_000
       }
     }
   end
 
   let(:simplecov_old_format) do
     {
-      "RSpec" => {
-        "coverage" => {
-          "/test/lib/example.rb" => [nil, 1, 0, 2, nil, 1],
-          "/test/lib/another.rb" => [nil, 0, 1, 1]
+      'RSpec' => {
+        'coverage' => {
+          '/test/lib/example.rb' => [nil, 1, 0, 2, nil, 1],
+          '/test/lib/another.rb' => [nil, 0, 1, 1]
         },
-        "timestamp" => 1753640000
+        'timestamp' => 1_753_640_000
       }
     }
   end
@@ -126,18 +126,18 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
   let(:processed_format) do
     {
       files: [
-        {coverage_percentage: 80.0},
-        {coverage_percentage: 40.0}
+        { coverage_percentage: 80.0 },
+        { coverage_percentage: 40.0 }
       ]
     }
   end
 
-  describe "#initialize" do
-    it "creates instance with default dependencies" do
+  describe '#initialize' do
+    it 'creates instance with default dependencies' do
       expect(analyzer).to be_a(described_class)
     end
 
-    it "accepts custom dependencies" do
+    it 'accepts custom dependencies' do
       custom_analyzer = described_class.new(
         data_processor: mock_data_processor,
         file_analyzer: mock_file_analyzer,
@@ -149,9 +149,9 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     end
   end
 
-  describe "#analyze_coverage" do
-    let(:file_path) { "/test/coverage/.resultset.json" }
-    let(:options) { {threshold: 85.0} }
+  describe '#analyze_coverage' do
+    let(:file_path) { '/test/coverage/.resultset.json' }
+    let(:options) { { threshold: 85.0 } }
 
     before do
       allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
@@ -159,8 +159,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       allow(mock_file_analyzer).to receive(:analyze_files).and_return([sample_coverage_result, sample_coverage_result_low])
     end
 
-    context "with fixed threshold" do
-      it "performs complete coverage analysis workflow" do
+    context 'with fixed threshold' do
+      it 'performs complete coverage analysis workflow' do
         result = analyzer_with_mocks.analyze_coverage(file_path, options)
 
         expect(mock_data_processor).to have_received(:process_file).with(file_path, anything)
@@ -173,15 +173,15 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         expect(result.adaptive_threshold_used?).to be false
       end
 
-      it "validates options before processing" do
+      it 'validates options before processing' do
         analyzer_with_mocks.analyze_coverage(file_path, options)
         expect(mock_threshold_validator).to have_received(:validate_threshold).with(85.0)
       end
 
-      it "passes correct options to file analyzer" do
+      it 'passes correct options to file analyzer' do
         custom_options = {
           threshold: 90.0,
-          sort_by: "uncovered_lines",
+          sort_by: 'uncovered_lines',
           detailed_analysis: true
         }
 
@@ -193,20 +193,20 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
           sample_processed_data,
           hash_including(
             threshold: 90.0,
-            sort_by: "uncovered_lines",
+            sort_by: 'uncovered_lines',
             detailed_analysis: true
           )
         )
       end
     end
 
-    context "with adaptive threshold" do
-      let(:adaptive_options) { {adaptive_threshold: true} }
+    context 'with adaptive threshold' do
+      let(:adaptive_options) { { adaptive_threshold: true } }
       let(:adaptive_result) do
         {
           optimal_threshold: 75.0,
-          reasoning: "Optimal threshold based on distribution",
-          statistics: {median: 60.0, mean: 65.0}
+          reasoning: 'Optimal threshold based on distribution',
+          statistics: { median: 60.0, mean: 65.0 }
         }
       end
 
@@ -215,7 +215,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         allow(mock_adaptive_calculator).to receive(:calculate_optimal_threshold).and_return(adaptive_result)
       end
 
-      it "uses adaptive threshold when requested" do
+      it 'uses adaptive threshold when requested' do
         result = analyzer_with_mocks.analyze_coverage(file_path, adaptive_options)
 
         expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold)
@@ -228,20 +228,20 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         expect(result.adaptive_threshold_result).to eq(adaptive_result)
       end
 
-      it "extracts coverage data for adaptive calculation" do
+      it 'extracts coverage data for adaptive calculation' do
         analyzer_with_mocks.analyze_coverage(file_path, adaptive_options)
 
         # The coverage data should be extracted from processed data and passed to the adaptive calculator
         expected_coverage_data = [
-          {coverage_percentage: 80.0},
-          {coverage_percentage: 40.0}
+          { coverage_percentage: 80.0 },
+          { coverage_percentage: 40.0 }
         ]
         expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with(expected_coverage_data)
       end
     end
 
-    context "with default options" do
-      it "uses sensible defaults" do
+    context 'with default options' do
+      it 'uses sensible defaults' do
         allow(mock_threshold_validator).to receive(:validate_threshold).with(85.0).and_return(85.0)
 
         analyzer_with_mocks.analyze_coverage(file_path)
@@ -250,7 +250,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
           sample_processed_data,
           hash_including(
             threshold: 85.0,
-            sort_by: "coverage",
+            sort_by: 'coverage',
             detailed_analysis: false
           )
         )
@@ -258,13 +258,13 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     end
   end
 
-  describe "#determine_final_threshold" do
-    let(:validated_options_fixed) { {threshold: 85.0, adaptive_threshold: false} }
-    let(:validated_options_adaptive) { {threshold: 85.0, adaptive_threshold: true} }
+  describe '#determine_final_threshold' do
+    let(:validated_options_fixed) { { threshold: 85.0, adaptive_threshold: false } }
+    let(:validated_options_adaptive) { { threshold: 85.0, adaptive_threshold: true } }
     let(:adaptive_result) do
       {
         optimal_threshold: 75.0,
-        reasoning: "Calculated based on distribution"
+        reasoning: 'Calculated based on distribution'
       }
     end
 
@@ -272,8 +272,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       allow(mock_adaptive_calculator).to receive(:calculate_optimal_threshold).and_return(adaptive_result)
     end
 
-    context "with fixed threshold" do
-      it "returns the provided threshold with no adaptive result" do
+    context 'with fixed threshold' do
+      it 'returns the provided threshold with no adaptive result' do
         threshold, adaptive_result_returned = analyzer_with_mocks.send(:determine_final_threshold, sample_processed_data, validated_options_fixed)
 
         expect(threshold).to eq(85.0)
@@ -281,8 +281,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with adaptive threshold" do
-      it "calculates and returns adaptive threshold with result" do
+    context 'with adaptive threshold' do
+      it 'calculates and returns adaptive threshold with result' do
         threshold, adaptive_result_returned = analyzer_with_mocks.send(:determine_final_threshold, sample_processed_data, validated_options_adaptive)
 
         expect(threshold).to eq(75.0)
@@ -290,33 +290,33 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold)
       end
 
-      it "extracts coverage data for adaptive calculation" do
+      it 'extracts coverage data for adaptive calculation' do
         analyzer_with_mocks.send(:determine_final_threshold, sample_processed_data, validated_options_adaptive)
 
         # The coverage data should be extracted from processed data and passed to the adaptive calculator
         expected_coverage_data = [
-          {coverage_percentage: 80.0},
-          {coverage_percentage: 40.0}
+          { coverage_percentage: 80.0 },
+          { coverage_percentage: 40.0 }
         ]
         expect(mock_adaptive_calculator).to have_received(:calculate_optimal_threshold).with(expected_coverage_data)
       end
     end
   end
 
-  describe "#extract_coverage_data" do
-    context "with processed format data" do
-      it "extracts coverage percentages from files array" do
+  describe '#extract_coverage_data' do
+    context 'with processed format data' do
+      it 'extracts coverage percentages from files array' do
         result = analyzer.send(:extract_coverage_data, processed_format)
 
         expect(result).to eq([
-          {coverage_percentage: 80.0},
-          {coverage_percentage: 40.0}
+          { coverage_percentage: 80.0 },
+          { coverage_percentage: 40.0 }
         ])
       end
     end
 
-    context "with SimpleCov new format (hash with lines key)" do
-      it "calculates coverage percentages from lines data" do
+    context 'with SimpleCov new format (hash with lines key)' do
+      it 'calculates coverage percentages from lines data' do
         result = analyzer.send(:extract_coverage_data, simplecov_new_format)
 
         # First file: [nil, 1, 0, 2, nil, 1] -> 4 executable, 3 covered = 75%
@@ -328,8 +328,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with SimpleCov old format (direct array)" do
-      it "calculates coverage percentages from direct array data" do
+    context 'with SimpleCov old format (direct array)' do
+      it 'calculates coverage percentages from direct array data' do
         result = analyzer.send(:extract_coverage_data, simplecov_old_format)
 
         expect(result).to be_an(Array)
@@ -339,24 +339,24 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with multiple test frameworks" do
+    context 'with multiple test frameworks' do
       let(:multi_framework_data) do
         {
-          "RSpec" => {
-            "coverage" => {
-              "/test/lib/example.rb" => {"lines" => [nil, 1, 0, 1, nil]}
+          'RSpec' => {
+            'coverage' => {
+              '/test/lib/example.rb' => { 'lines' => [nil, 1, 0, 1, nil] }
             }
           },
-          "MiniTest" => {
-            "coverage" => {
-              "/test/lib/example.rb" => {"lines" => [nil, 0, 1, 1, nil]},
-              "/test/lib/another.rb" => {"lines" => [nil, 1, 1]}
+          'MiniTest' => {
+            'coverage' => {
+              '/test/lib/example.rb' => { 'lines' => [nil, 0, 1, 1, nil] },
+              '/test/lib/another.rb' => { 'lines' => [nil, 1, 1] }
             }
           }
         }
       end
 
-      it "aggregates coverage from all frameworks" do
+      it 'aggregates coverage from all frameworks' do
         result = analyzer.send(:extract_coverage_data, multi_framework_data)
 
         # Should process all files from all frameworks (may have duplicates)
@@ -367,22 +367,22 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with empty or invalid data" do
-      it "returns empty array for nil data" do
+    context 'with empty or invalid data' do
+      it 'returns empty array for nil data' do
         result = analyzer.send(:extract_coverage_data, nil)
         expect(result).to eq([])
       end
 
-      it "returns empty array for empty hash" do
+      it 'returns empty array for empty hash' do
         result = analyzer.send(:extract_coverage_data, {})
         expect(result).to eq([])
       end
 
-      it "handles files with no executable lines" do
+      it 'handles files with no executable lines' do
         no_lines_data = {
-          "RSpec" => {
-            "coverage" => {
-              "/test/lib/empty.rb" => {"lines" => [nil, nil, nil]}
+          'RSpec' => {
+            'coverage' => {
+              '/test/lib/empty.rb' => { 'lines' => [nil, nil, nil] }
             }
           }
         }
@@ -391,12 +391,12 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         expect(result).to eq([])
       end
 
-      it "skips files with nil coverage data" do
+      it 'skips files with nil coverage data' do
         nil_coverage_data = {
-          "RSpec" => {
-            "coverage" => {
-              "/test/lib/valid.rb" => {"lines" => [nil, 1, 0, 1]},
-              "/test/lib/invalid.rb" => nil
+          'RSpec' => {
+            'coverage' => {
+              '/test/lib/valid.rb' => { 'lines' => [nil, 1, 0, 1] },
+              '/test/lib/invalid.rb' => nil
             }
           }
         }
@@ -406,40 +406,40 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with array format data" do
+    context 'with array format data' do
       let(:array_data) do
         [
-          {coverage_percentage: 90.0},
-          {coverage_percentage: 45.0}
+          { coverage_percentage: 90.0 },
+          { coverage_percentage: 45.0 }
         ]
       end
 
-      it "handles array format directly" do
+      it 'handles array format directly' do
         result = analyzer.send(:extract_coverage_data, array_data)
 
         expect(result).to eq([
-          {coverage_percentage: 90.0},
-          {coverage_percentage: 45.0}
+          { coverage_percentage: 90.0 },
+          { coverage_percentage: 45.0 }
         ])
       end
 
-      it "defaults missing coverage_percentage to 0" do
+      it 'defaults missing coverage_percentage to 0' do
         array_data_missing = [
-          {file: "example.rb"},
-          {coverage_percentage: 45.0}
+          { file: 'example.rb' },
+          { coverage_percentage: 45.0 }
         ]
 
         result = analyzer.send(:extract_coverage_data, array_data_missing)
 
         expect(result).to eq([
-          {coverage_percentage: 0.0},
-          {coverage_percentage: 45.0}
+          { coverage_percentage: 0.0 },
+          { coverage_percentage: 45.0 }
         ])
       end
     end
   end
 
-  describe "#calculate_median_coverage" do
+  describe '#calculate_median_coverage' do
     let(:files_odd) do
       [
         double(coverage_percentage: 90.0),
@@ -461,86 +461,86 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       [double(coverage_percentage: 75.0)]
     end
 
-    it "calculates median for odd number of files" do
+    it 'calculates median for odd number of files' do
       result = analyzer.send(:calculate_median_coverage, files_odd)
       expect(result).to eq(70.0)
     end
 
-    it "calculates median for even number of files" do
+    it 'calculates median for even number of files' do
       result = analyzer.send(:calculate_median_coverage, files_even)
       expect(result).to eq(50.0) # (60.0 + 40.0) / 2
     end
 
-    it "handles single file" do
+    it 'handles single file' do
       result = analyzer.send(:calculate_median_coverage, single_file)
       expect(result).to eq(75.0)
     end
 
-    it "handles empty file list" do
+    it 'handles empty file list' do
       result = analyzer.send(:calculate_median_coverage, [])
       expect(result).to be_nil
     end
   end
 
-  describe "#validate_options" do
+  describe '#validate_options' do
     before do
       allow(mock_threshold_validator).to receive(:validate_threshold).and_return(85.0)
     end
 
-    it "validates and sets default options" do
+    it 'validates and sets default options' do
       result = analyzer_with_mocks.send(:validate_options, {})
 
       expect(result).to include(
         threshold: 85.0,
         adaptive_threshold: false,
-        include_patterns: ["**/lib/**/*.rb"],
-        exclude_patterns: ["**/spec/**", "**/test/**"],
+        include_patterns: ['**/lib/**/*.rb'],
+        exclude_patterns: ['**/spec/**', '**/test/**'],
         detailed_analysis: false,
-        sort_by: "coverage"
+        sort_by: 'coverage'
       )
     end
 
-    it "validates custom threshold" do
-      analyzer_with_mocks.send(:validate_options, {threshold: 90.0})
+    it 'validates custom threshold' do
+      analyzer_with_mocks.send(:validate_options, { threshold: 90.0 })
       expect(mock_threshold_validator).to have_received(:validate_threshold).with(90.0)
     end
 
-    it "accepts valid sort_by options" do
-      %w[coverage uncovered_lines file_name].each do |sort_option|
-        result = analyzer_with_mocks.send(:validate_options, {sort_by: sort_option})
+    it 'accepts valid sort_by options' do
+      ['coverage', 'uncovered_lines', 'file_name'].each do |sort_option|
+        result = analyzer_with_mocks.send(:validate_options, { sort_by: sort_option })
         expect(result[:sort_by]).to eq(sort_option)
       end
     end
 
-    it "raises error for invalid sort_by option" do
-      expect {
-        analyzer_with_mocks.send(:validate_options, {sort_by: "invalid_option"})
-      }.to raise_error(ArgumentError, /Invalid sort_by option: invalid_option/)
+    it 'raises error for invalid sort_by option' do
+      expect do
+        analyzer_with_mocks.send(:validate_options, { sort_by: 'invalid_option' })
+      end.to raise_error(ArgumentError, /Invalid sort_by option: invalid_option/)
     end
 
-    it "preserves custom options" do
+    it 'preserves custom options' do
       custom_options = {
         threshold: 95.0,
         adaptive_threshold: true,
-        include_patterns: ["**/app/**"],
-        exclude_patterns: ["**/tmp/**"],
+        include_patterns: ['**/app/**'],
+        exclude_patterns: ['**/tmp/**'],
         detailed_analysis: true,
-        sort_by: "uncovered_lines"
+        sort_by: 'uncovered_lines'
       }
 
       result = analyzer_with_mocks.send(:validate_options, custom_options)
 
       expect(result).to include(
         adaptive_threshold: true,
-        include_patterns: ["**/app/**"],
-        exclude_patterns: ["**/tmp/**"],
+        include_patterns: ['**/app/**'],
+        exclude_patterns: ['**/tmp/**'],
         detailed_analysis: true,
-        sort_by: "uncovered_lines"
+        sort_by: 'uncovered_lines'
       )
     end
   end
 
-  describe "#prioritize_critical_files" do
+  describe '#prioritize_critical_files' do
     let(:under_covered_files) do
       [
         double(priority_score: 85.0),
@@ -555,7 +555,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       allow(mock_file_analyzer).to receive(:calculate_priority_score).and_return(85.0, 92.0, 78.0, 88.0)
     end
 
-    it "returns files sorted by priority score descending" do
+    it 'returns files sorted by priority score descending' do
       result = analyzer_with_mocks.prioritize_critical_files(sample_analysis_result, 10)
 
       # Should be sorted: 92.0, 88.0, 85.0, 78.0
@@ -567,7 +567,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       ])
     end
 
-    it "limits results to specified count" do
+    it 'limits results to specified count' do
       result = analyzer_with_mocks.prioritize_critical_files(sample_analysis_result, 2)
 
       expect(result.length).to eq(2)
@@ -577,13 +577,13 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       ])
     end
 
-    it "uses default limit of 10" do
+    it 'uses default limit of 10' do
       result = analyzer_with_mocks.prioritize_critical_files(sample_analysis_result)
 
       expect(result.length).to eq(4) # All files since we have less than 10
     end
 
-    it "calculates priority scores for each file" do
+    it 'calculates priority scores for each file' do
       analyzer_with_mocks.prioritize_critical_files(sample_analysis_result)
 
       under_covered_files.each do |file|
@@ -592,7 +592,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     end
   end
 
-  describe "#generate_statistics" do
+  describe '#generate_statistics' do
     let(:files) do
       [
         double(coverage_percentage: 90.0, total_lines: 100),
@@ -608,7 +608,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       ]
     end
 
-    let(:base_stats) { {total_files: 3, total_methods: 25} }
+    let(:base_stats) { { total_files: 3, total_methods: 25 } }
 
     before do
       allow(sample_analysis_result).to receive(:files).and_return(files)
@@ -617,13 +617,13 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       allow(mock_report_formatter).to receive(:generate_summary_stats).and_return(base_stats)
     end
 
-    it "includes base statistics from report formatter" do
+    it 'includes base statistics from report formatter' do
       result = analyzer_with_mocks.generate_statistics(sample_analysis_result)
 
       expect(result).to include(base_stats)
     end
 
-    it "calculates coverage trends" do
+    it 'calculates coverage trends' do
       result = analyzer_with_mocks.generate_statistics(sample_analysis_result)
 
       coverage_trends = result[:coverage_trends]
@@ -633,7 +633,7 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       expect(coverage_trends[:median_coverage]).to eq(70.0)
     end
 
-    it "calculates urgency metrics" do
+    it 'calculates urgency metrics' do
       result = analyzer_with_mocks.generate_statistics(sample_analysis_result)
 
       urgency_metrics = result[:urgency_metrics]
@@ -643,9 +643,9 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     end
   end
 
-  describe "integration with dependencies" do
-    context "with real dependencies" do
-      it "creates real instances by default" do
+  describe 'integration with dependencies' do
+    context 'with real dependencies' do
+      it 'creates real instances by default' do
         real_analyzer = described_class.new
 
         expect(real_analyzer.instance_variable_get(:@data_processor)).to be_a(CodingAgentTools::Molecules::CoverageDataProcessor)
@@ -657,51 +657,51 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
     end
   end
 
-  describe "error handling" do
-    context "when data processor fails" do
+  describe 'error handling' do
+    context 'when data processor fails' do
       before do
         allow(mock_threshold_validator).to receive(:validate_threshold).and_return(85.0)
-        allow(mock_data_processor).to receive(:process_file).and_raise(StandardError, "File not found")
+        allow(mock_data_processor).to receive(:process_file).and_raise(StandardError, 'File not found')
       end
 
-      it "propagates data processor errors" do
-        expect {
-          analyzer_with_mocks.analyze_coverage("/nonexistent.json")
-        }.to raise_error(StandardError, "File not found")
+      it 'propagates data processor errors' do
+        expect do
+          analyzer_with_mocks.analyze_coverage('/nonexistent.json')
+        end.to raise_error(StandardError, 'File not found')
       end
     end
 
-    context "when threshold validator fails" do
+    context 'when threshold validator fails' do
       before do
-        allow(mock_threshold_validator).to receive(:validate_threshold).and_raise(CodingAgentTools::Atoms::ThresholdValidator::ValidationError, "Invalid threshold")
+        allow(mock_threshold_validator).to receive(:validate_threshold).and_raise(CodingAgentTools::Atoms::ThresholdValidator::ValidationError, 'Invalid threshold')
       end
 
-      it "propagates validation errors" do
-        expect {
-          analyzer_with_mocks.analyze_coverage("/test.json", {threshold: -10})
-        }.to raise_error(CodingAgentTools::Atoms::ThresholdValidator::ValidationError, "Invalid threshold")
+      it 'propagates validation errors' do
+        expect do
+          analyzer_with_mocks.analyze_coverage('/test.json', { threshold: -10 })
+        end.to raise_error(CodingAgentTools::Atoms::ThresholdValidator::ValidationError, 'Invalid threshold')
       end
     end
 
-    context "when adaptive threshold calculator fails" do
-      let(:adaptive_options) { {adaptive_threshold: true} }
+    context 'when adaptive threshold calculator fails' do
+      let(:adaptive_options) { { adaptive_threshold: true } }
 
       before do
         allow(mock_threshold_validator).to receive(:validate_threshold).and_return(85.0)
         allow(mock_data_processor).to receive(:process_file).and_return(sample_processed_data)
-        allow(mock_adaptive_calculator).to receive(:calculate_optimal_threshold).and_raise(StandardError, "Calculation failed")
+        allow(mock_adaptive_calculator).to receive(:calculate_optimal_threshold).and_raise(StandardError, 'Calculation failed')
       end
 
-      it "propagates adaptive calculator errors" do
-        expect {
-          analyzer_with_mocks.analyze_coverage("/test.json", adaptive_options)
-        }.to raise_error(StandardError, "Calculation failed")
+      it 'propagates adaptive calculator errors' do
+        expect do
+          analyzer_with_mocks.analyze_coverage('/test.json', adaptive_options)
+        end.to raise_error(StandardError, 'Calculation failed')
       end
     end
   end
 
-  describe "edge cases" do
-    context "with empty coverage data" do
+  describe 'edge cases' do
+    context 'with empty coverage data' do
       let(:empty_processed_data) do
         {
           total_files: 0,
@@ -718,8 +718,8 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
         allow(mock_file_analyzer).to receive(:analyze_files).and_return([])
       end
 
-      it "handles empty coverage data gracefully" do
-        result = analyzer_with_mocks.analyze_coverage("/empty.json")
+      it 'handles empty coverage data gracefully' do
+        result = analyzer_with_mocks.analyze_coverage('/empty.json')
 
         expect(result).to be_a(CodingAgentTools::Models::CoverageAnalysisResult)
         expect(result.files).to eq([])
@@ -727,34 +727,34 @@ RSpec.describe CodingAgentTools::Organisms::CoverageAnalyzer do
       end
     end
 
-    context "with malformed SimpleCov data" do
+    context 'with malformed SimpleCov data' do
       let(:malformed_data) do
         {
-          "InvalidFramework" => {
-            "not_coverage" => "invalid_structure"
+          'InvalidFramework' => {
+            'not_coverage' => 'invalid_structure'
           }
         }
       end
 
-      it "extracts empty coverage data from malformed input" do
+      it 'extracts empty coverage data from malformed input' do
         result = analyzer.send(:extract_coverage_data, malformed_data)
         expect(result).to eq([])
       end
     end
 
-    context "with mixed valid and invalid files" do
+    context 'with mixed valid and invalid files' do
       let(:mixed_data) do
         {
-          "RSpec" => {
-            "coverage" => {
-              "/valid/file.rb" => {"lines" => [nil, 1, 0, 1]},
-              "/invalid/file.rb" => "not_an_array_or_hash"
+          'RSpec' => {
+            'coverage' => {
+              '/valid/file.rb' => { 'lines' => [nil, 1, 0, 1] },
+              '/invalid/file.rb' => 'not_an_array_or_hash'
             }
           }
         }
       end
 
-      it "processes valid files and skips invalid ones" do
+      it 'processes valid files and skips invalid ones' do
         result = analyzer.send(:extract_coverage_data, mixed_data)
         expect(result.length).to eq(1)
         expect(result[0][:coverage_percentage]).to be_within(0.1).of(66.67)
