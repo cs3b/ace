@@ -1,3 +1,6 @@
-Read the entire file: @dev-handbook/workflow-instructions/load-project-context.wf.md
+---
+last_modified: '2025-08-05 19:20:58'
+source: custom
+---
 
-Load all the context documents listed in the workflow.
+read whole file and follow @dev-handbook/workflow-instructions/load-project-context.wf.md

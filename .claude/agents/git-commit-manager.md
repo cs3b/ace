@@ -4,7 +4,7 @@ description: This agent should always be used when you need to commit files to g
   It handles intelligent file selection, validates changes, and ensures proper commits
   across all repositories and submodules.
 tools: Bash
-last_modified: '2025-08-05 19:04:19'
+last_modified: '2025-08-05 19:20:58'
 source: dev-handbook
 type: agent
 ---
