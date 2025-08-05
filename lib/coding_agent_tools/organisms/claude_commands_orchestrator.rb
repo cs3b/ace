@@ -146,9 +146,6 @@ module CodingAgentTools
 
         # Install agents
         install_agents(source_base / 'agents', target_base / 'agents')
-
-        # Generate workflow commands
-        generate_workflow_commands(target_base / 'commands')
       end
 
       def install_discovered_commands(commands, target_dir)
@@ -193,17 +190,6 @@ module CodingAgentTools
         update_stats_from_result(result, :agents)
       end
 
-      def generate_workflow_commands(target_dir)
-        workflow_files = @workflow_generator.scan_workflows(@project_root)
-        return if workflow_files.empty?
-
-        result = @workflow_generator.generate_commands(
-          workflow_files,
-          target_dir,
-          @options.to_h
-        )
-        update_stats_from_result(result, :workflow_commands)
-      end
 
       def update_stats_from_result(result, category = nil)
         return unless result[:stats]
