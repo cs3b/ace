@@ -52,20 +52,20 @@ module CodingAgentTools
           case workflow_name
           # Git operations
           when /^git-/, /commit/, /rebase/, /merge/
-            'Bash(git *), Read, Write'
+            'Bash, Read, Write'
           # Task management workflows
           when /^draft-task/, /^plan-task/, /^work-on-task/, /^review-task/, /^complete-task/
-            'Read, Write, TodoWrite, Bash(task-manager *)'
+            'Read, Write, TodoWrite, Bash'
           # Creation workflows
           when /^create-adr/, /^create-api-docs/, /^create-user-docs/, /^create-reflection-note/
             'Read, Write, Grep, Glob'
           when /^create-test-cases/
-            'Read, Write, Bash(bundle exec rspec), Grep'
+            'Read, Write, Bash, Grep'
           # Testing and fixing workflows
           when /^test-/, /^validate-/
             'Bash, Read, Grep'
           when /^fix-tests/, /^fix-linting-issue/
-            'Read, Write, Edit, Bash(bundle exec *), Grep'
+            'Read, Write, Edit, Bash, Grep'
           # Research and analysis workflows
           when /^research/, /analyze/
             'Read, Grep, Glob, WebSearch'
@@ -77,7 +77,7 @@ module CodingAgentTools
             'Read, LS'
           # Release workflows
           when /^draft-release/, /^release/
-            'Read, Write, Bash(task-manager release *), Grep'
+            'Read, Write, Bash, Grep'
           # Update workflows
           when /^update-blueprint/
             'Read, Write, Edit, Grep'
