@@ -14,7 +14,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           Some content
         CONTENT
-        
+
         expect(described_class.valid?(content)).to be true
       end
 
@@ -29,7 +29,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           More content
         CONTENT
-        
+
         expect(described_class.valid?(content)).to be true
       end
     end
@@ -44,7 +44,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           Content
         CONTENT
-        
+
         expect(described_class.valid?(content)).to be false
       end
 
@@ -56,7 +56,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           Content
         CONTENT
-        
+
         expect(described_class.valid?(content)).to be false
       end
 
@@ -68,7 +68,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           Content
         CONTENT
-        
+
         expect(described_class.valid?(content)).to be false
       end
     end
@@ -101,7 +101,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           
           Content
         CONTENT
-        
+
         result = described_class.parse(content)
         expect(result).to eq({
           'description' => 'Test command',
@@ -118,7 +118,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           invalid: yaml: syntax
           ---
         CONTENT
-        
+
         expect(described_class.parse(content)).to be_nil
       end
 
@@ -137,7 +137,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
           - item2
           ---
         CONTENT
-        
+
         expect(described_class.parse(content)).to be_nil
       end
     end
@@ -153,13 +153,13 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         
         Body content
       CONTENT
-      
+
       result = described_class.extract_frontmatter(content)
       expect(result).to eq("description: Test\nmodel: opus")
     end
 
     it 'returns nil for content without frontmatter' do
-      content = "Just regular content"
+      content = 'Just regular content'
       expect(described_class.extract_frontmatter(content)).to be_nil
     end
 
@@ -177,12 +177,12 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         
         Content
       CONTENT
-      
+
       expect(described_class.has_frontmatter?(content)).to be true
     end
 
     it 'returns false when no frontmatter' do
-      content = "Regular content without frontmatter"
+      content = 'Regular content without frontmatter'
       expect(described_class.has_frontmatter?(content)).to be false
     end
 
