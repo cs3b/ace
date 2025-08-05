@@ -279,4 +279,279 @@ RSpec.describe CodingAgentTools::Cli::Commands do
       expect { described_class.register_llm_commands }.to raise_error(LoadError, 'Cannot load file')
     end
   end
+
+  describe '.call' do
+    before do
+      # Reset all registration flags
+      %i[@llm_commands_registered @task_commands_registered @release_commands_registered
+         @dotfiles_commands_registered @code_commands_registered @code_lint_commands_registered
+         @code_review_prepare_commands_registered @nav_commands_registered @handbook_commands_registered
+         @reflection_commands_registered @git_commands_registered @create_path_commands_registered
+         @coverage_commands_registered @all_commands_registered].each do |flag|
+        described_class.instance_variable_set(flag, nil)
+      end
+    end
+
+    it 'registers all command groups when call is invoked' do
+      # Track which methods are called
+      calls = []
+      
+      allow(described_class).to receive(:register_llm_commands) { calls << :llm }
+      allow(described_class).to receive(:register_task_commands) { calls << :task }
+      allow(described_class).to receive(:register_release_commands) { calls << :release }
+      allow(described_class).to receive(:register_dotfiles_commands) { calls << :dotfiles }
+      allow(described_class).to receive(:register_code_commands) { calls << :code }
+      allow(described_class).to receive(:register_code_lint_commands) { calls << :code_lint }
+      allow(described_class).to receive(:register_code_review_prepare_commands) { calls << :code_review_prepare }
+      allow(described_class).to receive(:register_nav_commands) { calls << :nav }
+      allow(described_class).to receive(:register_handbook_commands) { calls << :handbook }
+      allow(described_class).to receive(:register_reflection_commands) { calls << :reflection }
+      allow(described_class).to receive(:register_git_commands) { calls << :git }
+      allow(described_class).to receive(:register_create_path_commands) { calls << :create_path }
+      allow(described_class).to receive(:register_coverage_commands) { calls << :coverage }
+      allow(described_class).to receive(:register_all_commands) { calls << :all }
+
+      # Allow the CLI processing to proceed (we're testing registration, not CLI behavior)
+      allow(described_class.singleton_class.superclass.instance_method(:call)).to receive(:bind_call)
+
+      described_class.call
+
+      # Verify all registrations were called
+      expect(calls).to eq([:llm, :task, :release, :dotfiles, :code, :code_lint, 
+                          :code_review_prepare, :nav, :handbook, :reflection, 
+                          :git, :create_path, :coverage, :all])
+    end
+
+    it 'only calls registration methods, then delegates to parent' do
+      # This tests that the overridden call method follows the expected pattern:
+      # 1. Register all commands
+      # 2. Call super (the parent implementation)
+      
+      # Count how many times each registration is called
+      registration_counts = Hash.new(0)
+      
+      %i[register_llm_commands register_task_commands register_release_commands
+         register_dotfiles_commands register_code_commands register_code_lint_commands
+         register_code_review_prepare_commands register_nav_commands register_handbook_commands
+         register_reflection_commands register_git_commands register_create_path_commands
+         register_coverage_commands register_all_commands].each do |method|
+        allow(described_class).to receive(method) { registration_counts[method] += 1 }
+      end
+
+      # We can't easily test super, but we can ensure our registrations happen
+      expect { described_class.call }.not_to raise_error
+      
+      # Each registration should be called exactly once
+      registration_counts.each do |method, count|
+        expect(count).to eq(1), "#{method} was called #{count} times, expected 1"
+      end
+    end
+  end
+
+  describe 'complete command registration details' do
+    describe '.register_git_commands' do
+      before do
+        described_class.instance_variable_set(:@git_commands_registered, nil)
+      end
+
+      it 'requires all 14 git command files' do
+        # Test the actual registration block
+        allow(described_class).to receive(:register).and_yield(double('prefix').tap do |prefix|
+          expect(prefix).to receive(:register).with('status', anything)
+          expect(prefix).to receive(:register).with('commit', anything)
+          expect(prefix).to receive(:register).with('add', anything)
+          expect(prefix).to receive(:register).with('push', anything)
+          expect(prefix).to receive(:register).with('pull', anything)
+          expect(prefix).to receive(:register).with('log', anything)
+          expect(prefix).to receive(:register).with('diff', anything)
+          expect(prefix).to receive(:register).with('fetch', anything)
+          expect(prefix).to receive(:register).with('checkout', anything)
+          expect(prefix).to receive(:register).with('switch', anything)
+          expect(prefix).to receive(:register).with('mv', anything)
+          expect(prefix).to receive(:register).with('rm', anything)
+          expect(prefix).to receive(:register).with('restore', anything)
+          expect(prefix).to receive(:register).with('tag', anything)
+        end)
+
+        described_class.register_git_commands
+      end
+    end
+
+    describe '.register_task_commands' do
+      before do
+        described_class.instance_variable_set(:@task_commands_registered, nil)
+      end
+
+      it 'registers task commands with all alias' do
+        allow(described_class).to receive(:register).and_yield(double('prefix').tap do |prefix|
+          expect(prefix).to receive(:register).with('next', anything)
+          expect(prefix).to receive(:register).with('recent', anything)
+          expect(prefix).to receive(:register).with('list', anything)
+          expect(prefix).to receive(:register).with('all', anything) # backwards compatibility alias
+          expect(prefix).to receive(:register).with('generate-id', anything)
+        end)
+
+        described_class.register_task_commands
+      end
+    end
+
+    describe '.register_code_commands' do
+      before do
+        described_class.instance_variable_set(:@code_commands_registered, nil)
+      end
+
+      it 'requires all code command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review_synthesize')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/lint')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_code_commands
+      end
+    end
+
+    describe '.register_code_lint_commands' do
+      before do
+        described_class.instance_variable_set(:@code_lint_commands_registered, nil)
+      end
+
+      it 'requires all code-lint command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/code_lint/all')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code_lint/ruby')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code_lint/markdown')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code_lint/docs_dependencies')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_code_lint_commands
+      end
+    end
+
+    describe '.register_code_review_prepare_commands' do
+      before do
+        described_class.instance_variable_set(:@code_review_prepare_commands_registered, nil)
+      end
+
+      it 'requires all code-review-prepare command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review_prepare/session_dir')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review_prepare/project_context')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review_prepare/project_target')
+        expect(described_class).to receive(:require_relative).with('cli/commands/code/review_prepare/prompt')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_code_review_prepare_commands
+      end
+    end
+
+    describe '.register_nav_commands' do
+      before do
+        described_class.instance_variable_set(:@nav_commands_registered, nil)
+      end
+
+      it 'requires all nav command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/nav')
+        expect(described_class).to receive(:require_relative).with('cli/commands/nav/path')
+        expect(described_class).to receive(:require_relative).with('cli/commands/nav/tree')
+        expect(described_class).to receive(:require_relative).with('cli/commands/nav/ls')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_nav_commands
+      end
+    end
+
+    describe '.register_handbook_commands' do
+      before do
+        described_class.instance_variable_set(:@handbook_commands_registered, nil)
+      end
+
+      it 'requires all handbook command files including claude subcommands' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/handbook/sync_templates')
+        expect(described_class).to receive(:require_relative).with('cli/commands/handbook/claude/generate_commands')
+        expect(described_class).to receive(:require_relative).with('cli/commands/handbook/claude/integrate')
+        expect(described_class).to receive(:require_relative).with('cli/commands/handbook/claude/validate')
+        expect(described_class).to receive(:require_relative).with('cli/commands/handbook/claude/list')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_handbook_commands
+      end
+
+      it 'registers claude as a proper subcommand namespace' do
+        allow(described_class).to receive(:require_relative)
+        
+        claude_prefix = double('claude_prefix')
+        expect(claude_prefix).to receive(:register).with('generate-commands', anything)
+        expect(claude_prefix).to receive(:register).with('integrate', anything)
+        expect(claude_prefix).to receive(:register).with('validate', anything)
+        expect(claude_prefix).to receive(:register).with('list', anything)
+
+        handbook_prefix = double('handbook_prefix')
+        expect(handbook_prefix).to receive(:register).with('sync-templates', anything)
+        expect(handbook_prefix).to receive(:register).with('claude', aliases: []).and_yield(claude_prefix)
+
+        allow(described_class).to receive(:register).and_yield(handbook_prefix)
+
+        described_class.register_handbook_commands
+      end
+    end
+
+    describe '.register_reflection_commands' do
+      before do
+        described_class.instance_variable_set(:@reflection_commands_registered, nil)
+      end
+
+      it 'requires reflection command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/reflection/synthesize')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_reflection_commands
+      end
+    end
+
+    describe '.register_create_path_commands' do
+      before do
+        described_class.instance_variable_set(:@create_path_commands_registered, nil)
+      end
+
+      it 'requires create-path command file' do
+        expect(described_class).to receive(:require_relative).with('cli/create_path_command')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_create_path_commands
+      end
+    end
+
+    describe '.register_coverage_commands' do
+      before do
+        described_class.instance_variable_set(:@coverage_commands_registered, nil)
+      end
+
+      it 'requires coverage command files' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/coverage/analyze')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_coverage_commands
+      end
+    end
+
+    describe '.register_all_commands' do
+      before do
+        described_class.instance_variable_set(:@all_commands_registered, nil)
+      end
+
+      it 'requires all command file' do
+        expect(described_class).to receive(:require_relative).with('cli/commands/all')
+
+        allow(described_class).to receive(:register)
+
+        described_class.register_all_commands
+      end
+    end
+  end
 end
