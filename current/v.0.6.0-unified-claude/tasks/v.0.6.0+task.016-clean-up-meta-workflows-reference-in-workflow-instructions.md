@@ -1,8 +1,8 @@
 ---
 id: v.0.6.0+task.016
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 1h
 dependencies: []
 ---
 
@@ -75,7 +75,108 @@ Clean up the workflow instructions README to remove inappropriate references to 
 - ❌ **Performance Optimization**: Not applicable to documentation
 - ❌ **Future Enhancements**: No new workflow creation or major restructuring
 
+## Technical Approach
+
+### Architecture Pattern
+- Documentation structure cleanup
+- Clear separation of concerns between development workflows and handbook maintenance workflows
+- Maintain existing navigation patterns while improving clarity
+
+### Technology Stack
+- Markdown documentation
+- No additional tools or libraries needed
+- Git for version control
+
+### Implementation Strategy
+- Identify and remove the misplaced Meta Workflows section from Individual Workflow Reference
+- Optionally create a clearly separated section for meta workflows if they should be documented
+- Ensure all cross-references are accurate and contextually appropriate
+- Maintain documentation consistency
+
+## File Modifications
+
+### Modify
+- dev-handbook/workflow-instructions/README.md
+  - Changes: Remove Meta Workflows subsection (lines 773-777) from Individual Workflow Reference section
+  - Impact: Clearer distinction between regular workflows and meta workflows
+  - Integration points: No impact on actual workflow functionality
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Removing useful reference information
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** The meta workflow can still be accessed through .meta/wfi directory
+  - **Rollback:** Simple git revert if needed
+
+### Integration Risks
+- **Risk:** Breaking existing documentation links
+  - **Probability:** Low  
+  - **Impact:** Medium
+  - **Mitigation:** Search for any references to the meta workflows section before removal
+  - **Monitoring:** Check for 404s or broken links after update
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze the current documentation structure to understand the full scope
+  > TEST: Documentation Analysis
+  > Type: Pre-condition Check
+  > Assert: All meta workflow references identified and their context understood
+  > Command: grep -n "meta workflow" README.md | wc -l
+
+* [ ] Search for any other references to meta workflows in the README
+  > TEST: Reference Search
+  > Type: Pre-condition Check  
+  > Assert: No other inappropriate meta workflow references found
+  > Command: grep -i "meta workflow" README.md
+
+* [ ] Determine if meta workflows should have their own dedicated section
+
+### Execution Steps
+
+- [ ] Remove the Meta Workflows subsection (lines 773-777) from the Individual Workflow Reference section
+  > TEST: Section Removal Verification
+  > Type: Action Validation
+  > Assert: Meta Workflows section no longer appears in Individual Workflow Reference
+  > Command: grep -A 5 "### Meta Workflows" README.md || echo "Section removed successfully"
+
+- [ ] Verify that Session Management section in the main workflow listing (lines 57-60) does not contain meta workflow references
+  > TEST: Session Management Verification  
+  > Type: Action Validation
+  > Assert: Session Management section contains only regular workflows
+  > Command: grep -A 5 "### 7. Session Management" README.md
+
+- [ ] Update the closing statement if needed to reflect the removal
+  > TEST: Document Consistency
+  > Type: Action Validation
+  > Assert: Document maintains consistent structure and messaging
+  > Command: tail -5 README.md
+
+- [ ] Review the entire document for consistency and completeness
+  > TEST: Final Document Review
+  > Type: Action Validation
+  > Assert: No broken references or inconsistencies
+  > Command: grep -c "\[.*\](\.\..*meta.*wfi.*\.md)" README.md
+
+## Acceptance Criteria
+
+- [ ] Meta workflows reference removed from Individual Workflow Reference section
+- [ ] All workflows are correctly categorized without meta workflows mixed into regular categories  
+- [ ] Document structure remains clear and navigation is intuitive
+- [ ] No broken links or references
+
+## Out of Scope
+
+- ❌ **Implementation Details**: No changes to actual workflow files
+- ❌ **Technology Decisions**: No changes to documentation tooling
+- ❌ **Performance Optimization**: Not applicable to documentation
+- ❌ **Future Enhancements**: No new workflow creation or major restructuring
+
 ## References
 
-- Current issue: dev-handbook/workflow-instructions/README.md incorrectly mentions meta workflows in the Session Management category
-- Context: Meta workflows and guides/templates/integrations are different species and should be clearly separated
+- Current issue: dev-handbook/workflow-instructions/README.md incorrectly mentions meta workflows in the Individual Workflow Reference section (lines 773-777)
+- Context: Meta workflows are for handbook maintenance and live in .meta/wfi/ directory
+- Meta workflows should be clearly separated from regular development workflows
