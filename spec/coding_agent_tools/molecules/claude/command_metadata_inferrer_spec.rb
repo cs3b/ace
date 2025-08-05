@@ -177,7 +177,7 @@ RSpec.describe CodingAgentTools::Molecules::Claude::CommandMetadataInferrer do
     context 'complete metadata' do
       it 'returns full metadata for complex workflow' do
         result = inferrer.infer('work-on-task')
-        
+
         expect(result).to eq({
           description: 'Work On Task',
           allowed_tools: 'Read, Write, TodoWrite, Bash(task-manager *)',
@@ -187,7 +187,7 @@ RSpec.describe CodingAgentTools::Molecules::Claude::CommandMetadataInferrer do
 
       it 'returns metadata without optional fields for simple workflow' do
         result = inferrer.infer('commit')
-        
+
         expect(result).to eq({
           description: 'Commit',
           allowed_tools: 'Bash(git *), Read, Write'

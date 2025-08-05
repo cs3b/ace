@@ -29,9 +29,9 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
     context 'with custom and generated commands' do
       before do
         # Create test files
-        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test-custom.md').write("# Custom Command")
-        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated' / 'test-generated.md').write("# Generated Command")
-        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'agents' / 'test-agent.md').write("# Test Agent")
+        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test-custom.md').write('# Custom Command')
+        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated' / 'test-generated.md').write('# Generated Command')
+        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'agents' / 'test-agent.md').write('# Test Agent')
       end
 
       it 'copies commands from both directories' do
@@ -59,8 +59,8 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       before do
         # Create existing file
-        (project_root / '.claude' / 'commands' / 'test-custom.md').write("Old content")
-        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test-custom.md').write("New content")
+        (project_root / '.claude' / 'commands' / 'test-custom.md').write('Old content')
+        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test-custom.md').write('New content')
       end
 
       it 'overwrites existing files' do
@@ -76,7 +76,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       before do
         # Create existing .claude directory with content
-        (project_root / '.claude' / 'commands' / 'existing.md').write("Existing file")
+        (project_root / '.claude' / 'commands' / 'existing.md').write('Existing file')
       end
 
       it 'creates backup of existing installation' do
@@ -91,7 +91,7 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
       let(:options) { { dry_run: true } }
 
       before do
-        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test.md').write("Test")
+        (project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom' / 'test.md').write('Test')
       end
 
       it 'does not create any files' do
