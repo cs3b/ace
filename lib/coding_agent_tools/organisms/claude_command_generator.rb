@@ -2,7 +2,11 @@
 
 require 'pathname'
 require 'fileutils'
-require 'yaml'
+require_relative '../atoms/claude/workflow_scanner'
+require_relative '../atoms/claude/command_existence_checker'
+require_relative '../atoms/claude/yaml_frontmatter_validator'
+require_relative '../molecules/claude/command_metadata_inferrer'
+require_relative '../molecules/command_template_renderer'
 
 module CodingAgentTools
   module Organisms
@@ -17,6 +21,10 @@ module CodingAgentTools
         @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands/_generated"
         @template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"
         @stats = { generated: 0, skipped: 0, errors: [] }
+        
+        # Initialize atoms and molecules
+        @metadata_inferrer = Molecules::Claude::CommandMetadataInferrer.new
+        @template_renderer = Molecules::CommandTemplateRenderer.new
       end
 
       def generate(options = {})
@@ -63,28 +71,18 @@ module CodingAgentTools
       end
 
       def find_workflows(specific = nil)
-        if specific
-          # Support glob patterns
-          if specific.include?('*')
-            Dir.glob(File.join(@workflow_dir, "#{specific}.wf.md")).map do |path|
-              File.basename(path, ".wf.md")
-            end
-          else
-            path = @workflow_dir / "#{specific}.wf.md"
-            return [] unless path.exist?
-            [specific]
-          end
-        else
-          Dir.glob(File.join(@workflow_dir, "*.wf.md")).map do |path|
-            File.basename(path, ".wf.md")
-          end
-        end
+        # Use WorkflowScanner atom for all workflow discovery
+        Atoms::Claude::WorkflowScanner.scan(@workflow_dir, specific)
       end
 
       def find_missing_commands(workflows, force = false)
         workflows.reject do |workflow|
-          custom_exists = (@custom_dir / "#{workflow}.md").exist?
-          generated_exists = (@generated_dir / "#{workflow}.md").exist?
+          # Use CommandExistenceChecker to check for commands
+          search_paths = [@custom_dir, @generated_dir]
+          
+          custom_exists = Atoms::Claude::CommandExistenceChecker.exists?(workflow, [@custom_dir])
+          generated_exists = Atoms::Claude::CommandExistenceChecker.exists?(workflow, [@generated_dir])
+          
           # Skip custom commands always, but allow regeneration of generated commands with force
           custom_exists || (generated_exists && !force)
         end
@@ -92,7 +90,9 @@ module CodingAgentTools
 
       def display_dry_run(missing, force = false)
         puts "Scanning workflow instructions..."
-        puts "Found #{Dir.glob(File.join(@workflow_dir, "*.wf.md")).size} workflow files"
+        # Use WorkflowScanner to count workflows
+        all_workflows = Atoms::Claude::WorkflowScanner.scan(@workflow_dir)
+        puts "Found #{all_workflows.size} workflow files"
         puts "Checking existing commands..."
         puts
         
@@ -119,14 +119,14 @@ module CodingAgentTools
 
       def generate_commands(workflows, force)
         puts "Scanning workflow instructions..."
-        all_workflows = Dir.glob(File.join(@workflow_dir, "*.wf.md"))
+        # Use WorkflowScanner to count all workflows
+        all_workflows = Atoms::Claude::WorkflowScanner.scan(@workflow_dir)
         puts "Found #{all_workflows.size} workflow files"
         puts "Checking existing commands..."
         puts
 
         # Count skipped workflows (those not in the workflows list due to existing commands)
-        total_workflows_checked = find_workflows.size
-        @stats[:skipped] = total_workflows_checked - workflows.size
+        @stats[:skipped] = all_workflows.size - workflows.size
 
         if workflows.empty?
           puts "All workflows have corresponding commands."
@@ -148,8 +148,8 @@ module CodingAgentTools
           begin
             content = render_template(template_content, workflow)
             
-            # Validate YAML front-matter
-            unless validate_yaml_frontmatter(content)
+            # Validate YAML front-matter using atom
+            unless Atoms::Claude::YamlFrontmatterValidator.valid?(content)
               puts "⚠ Warning: Invalid YAML front-matter for #{workflow}.md"
             end
             
@@ -177,7 +177,8 @@ module CodingAgentTools
       end
 
       def render_template(template_content, workflow_name)
-        metadata = infer_metadata(workflow_name)
+        # Use CommandMetadataInferrer molecule
+        metadata = @metadata_inferrer.infer(workflow_name)
         
         # Build YAML front-matter programmatically (safer than eval)
         yaml_lines = ["---"]
@@ -188,10 +189,9 @@ module CodingAgentTools
         yaml_lines << "---"
         yaml_lines << ""
         
-        # Add the workflow reference lines
-        yaml_lines << "read whole file and follow @dev-handbook/workflow-instructions/#{workflow_name}.wf.md"
-        yaml_lines << ""
-        yaml_lines << "read and run @.claude/commands/commit.md"
+        # Use CommandTemplateRenderer to generate body
+        body_content = @template_renderer.render(workflow_name)
+        yaml_lines << body_content
         
         yaml_lines.join("\n")
       end

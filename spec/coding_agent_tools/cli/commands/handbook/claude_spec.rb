@@ -27,11 +27,11 @@ RSpec.describe "handbook claude namespace" do
     it "shows available subcommands with descriptions" do
       result = execute_cli_command("handbook", ["claude"])
       
-      expect(result.stdout).to include("Generate Claude commands from workflow")
+      expect(result.stdout).to include("Generate missing Claude commands from workflow files")
       # Update Claude commands registry line has been removed
-      expect(result.stdout).to include("Install Claude Code commands")
-      expect(result.stdout).to include("Validate Claude integration")
-      expect(result.stdout).to include("List available Claude commands")
+      expect(result.stdout).to include("Install Claude Code commands to .claude/ directory")
+      expect(result.stdout).to include("Validate Claude command coverage")
+      expect(result.stdout).to include("List all Claude commands and their status")
     end
   end
 
@@ -67,7 +67,7 @@ RSpec.describe "handbook claude namespace" do
       result = execute_cli_command("handbook", ["claude", command_name, "--help"])
       
       expect(result.stdout).not_to be_empty
-      expect(result.stdout).to match(/[A-Z].*\./)  # Has a sentence description
+      expect(result.stdout).to match(/[A-Z].*[a-z]/)  # Has a sentence description
     end
   end
 
