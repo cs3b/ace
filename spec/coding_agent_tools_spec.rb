@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 
 RSpec.describe CodingAgentTools do
-  describe "::VERSION" do
-    it "has a version number" do
+  describe '::VERSION' do
+    it 'has a version number' do
       expect(CodingAgentTools::VERSION).not_to be nil
     end
 
-    it "follows semantic versioning format" do
+    it 'follows semantic versioning format' do
       expect(CodingAgentTools::VERSION).to match(/\A\d+\.\d+\.\d+.*\z/)
     end
 
-    it "is a string" do
+    it 'is a string' do
       expect(CodingAgentTools::VERSION).to be_a(String)
     end
   end
 
-  describe "module structure" do
-    it "defines the main module" do
-      expect(defined?(CodingAgentTools)).to eq("constant")
+  describe 'module structure' do
+    it 'defines the main module' do
+      expect(defined?(CodingAgentTools)).to eq('constant')
     end
 
-    it "is configured for autoloading core components" do
+    it 'is configured for autoloading core components' do
       # This test now primarily serves as a conceptual check that autoloading is intended.
       # The `autoload?` method is sensitive to whether a component has already been loaded
       # (e.g., by another spec file loaded alphabetically earlier by RSpec).
@@ -40,18 +40,18 @@ RSpec.describe CodingAgentTools do
     end
   end
 
-  describe "error handling" do
-    it "defines a base error class" do
+  describe 'error handling' do
+    it 'defines a base error class' do
       expect(CodingAgentTools::Error).to be < StandardError
     end
 
-    it "allows raising custom errors" do
-      expect { raise CodingAgentTools::Error, "test error" }.to raise_error(CodingAgentTools::Error, "test error")
+    it 'allows raising custom errors' do
+      expect { raise CodingAgentTools::Error, 'test error' }.to raise_error(CodingAgentTools::Error, 'test error')
     end
   end
 
-  describe "module constants" do
-    it "freezes the version constant" do
+  describe 'module constants' do
+    it 'freezes the version constant' do
       expect(CodingAgentTools::VERSION).to be_frozen
     end
   end

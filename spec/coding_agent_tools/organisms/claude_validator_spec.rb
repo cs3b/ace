@@ -58,7 +58,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with missing commands' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", "# Test workflow")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", '# Test workflow')
       end
 
       it 'detects missing commands' do
@@ -72,8 +72,8 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with outdated commands' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", "# Test workflow")
-        File.write("#{test_dir}/.claude/commands/test-workflow.md", "old content")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", '# Test workflow')
+        File.write("#{test_dir}/.claude/commands/test-workflow.md", 'old content')
       end
 
       it 'detects outdated commands' do
@@ -88,9 +88,9 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with duplicate commands' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", "# Test workflow")
-        File.write("#{test_dir}/dev-handbook/.integrations/claude/commands/_custom/test-workflow.md", "content")
-        File.write("#{test_dir}/.claude/commands/test-workflow.md", "content")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", '# Test workflow')
+        File.write("#{test_dir}/dev-handbook/.integrations/claude/commands/_custom/test-workflow.md", 'content')
+        File.write("#{test_dir}/.claude/commands/test-workflow.md", 'content')
       end
 
       it 'detects duplicate commands' do
@@ -108,7 +108,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with orphaned commands' do
       before do
-        File.write("#{test_dir}/.claude/commands/orphaned-command.md", "content")
+        File.write("#{test_dir}/.claude/commands/orphaned-command.md", 'content')
       end
 
       it 'detects orphaned commands' do
@@ -122,7 +122,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
       it 'ignores multi-task commands' do
         # Don't include the orphaned-command.md from the previous test
         FileUtils.rm_f("#{test_dir}/.claude/commands/orphaned-command.md")
-        File.write("#{test_dir}/.claude/commands/commit.md", "content")
+        File.write("#{test_dir}/.claude/commands/commit.md", 'content')
         result = validator.validate
 
         expect(result.data[:orphaned]).to be_empty
@@ -131,7 +131,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with valid commands' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", "# Test workflow")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", '# Test workflow')
         expected_content = <<~CONTENT
           read whole file and follow @dev-handbook/workflow-instructions/test-workflow.wf.md
 
@@ -150,8 +150,8 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with specific check option' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test1.wf.md", "# Test 1")
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test2.wf.md", "# Test 2")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test1.wf.md", '# Test 1')
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test2.wf.md", '# Test 2')
       end
 
       it 'runs only the specified check' do
@@ -169,7 +169,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with specific workflow option' do
       before do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", "# Test workflow")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/test-workflow.wf.md", '# Test workflow')
       end
 
       it 'validates only the specified workflow' do
@@ -185,7 +185,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
     context 'with custom command templates' do
       it 'uses custom template for commit command' do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/commit.wf.md", "# Commit workflow")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/commit.wf.md", '# Commit workflow')
         expected_content = <<~CONTENT
           Read the entire file: @dev-handbook/workflow-instructions/commit.wf.md
 
@@ -200,7 +200,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
       end
 
       it 'uses custom template for load-project-context command' do
-        File.write("#{test_dir}/dev-handbook/workflow-instructions/load-project-context.wf.md", "# Load context")
+        File.write("#{test_dir}/dev-handbook/workflow-instructions/load-project-context.wf.md", '# Load context')
         expected_content = <<~CONTENT
           Read the entire file: @dev-handbook/workflow-instructions/load-project-context.wf.md
 
@@ -222,7 +222,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
     end
 
     it 'returns true when missing commands exist' do
-      File.write("#{test_dir}/dev-handbook/workflow-instructions/test.wf.md", "# Test")
+      File.write("#{test_dir}/dev-handbook/workflow-instructions/test.wf.md", '# Test')
       validator.validate
       expect(validator.has_issues?).to be true
     end
@@ -271,8 +271,8 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
 
   describe 'content hash comparison' do
     it 'detects content changes using SHA256' do
-      File.write("#{test_dir}/dev-handbook/workflow-instructions/test.wf.md", "# Test")
-      
+      File.write("#{test_dir}/dev-handbook/workflow-instructions/test.wf.md", '# Test')
+
       # Write command with slightly different content (extra space)
       wrong_content = <<~CONTENT
         read whole file and follow @dev-handbook/workflow-instructions/test.wf.md 
@@ -280,9 +280,9 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeValidator do
         read and run @.claude/commands/commit.md
       CONTENT
       File.write("#{test_dir}/.claude/commands/test.md", wrong_content)
-      
+
       result = validator.validate
-      
+
       expect(result.data[:outdated].size).to eq(1)
       expect(result.data[:outdated].first[:reason]).to eq('Content hash mismatch')
     end
