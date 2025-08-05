@@ -71,8 +71,9 @@ module CodingAgentTools
         # Execute the operation
         result = @file_executor.execute(enhanced_operation, options)
 
-        # Record statistics
-        @stats_collector.record_operation(result, :command)
+        # Record statistics with the correct command type
+        command_type = map_source_type_to_stat_type(operation.metadata[:source_type])
+        @stats_collector.record_operation(result, command_type)
 
         result
       end
@@ -127,6 +128,19 @@ module CodingAgentTools
           'flat'
         else
           'unknown'
+        end
+      end
+
+      def map_source_type_to_stat_type(source_type)
+        case source_type
+        when 'custom'
+          :custom_command
+        when 'generated'
+          :generated_command
+        when 'flat'
+          :custom_command  # Treat flat structure as custom commands
+        else
+          :custom_command  # Default to custom for unknown types
         end
       end
 
