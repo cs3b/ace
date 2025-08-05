@@ -3,27 +3,80 @@
 require 'fileutils'
 require 'pathname'
 require 'yaml'
+require_relative '../organisms/claude_commands_orchestrator'
+require_relative '../models/installation_options'
+require_relative '../models/installation_result'
+require_relative '../molecules/project_root_finder'
+require_relative '../molecules/metadata_injector'
 
 module CodingAgentTools
   module Integrations
     # Installer for Claude Code commands from workflow instructions
+    # This class now serves as a thin wrapper around the ATOM-structured orchestrator
+    # maintaining backward compatibility while delegating to proper components
     class ClaudeCommandsInstaller
       attr_reader :project_root, :stats, :options
 
       def initialize(project_root = nil, options = {})
-        @project_root = Pathname.new(project_root || find_project_root)
-        @stats = { 
-          created: 0, 
-          skipped: 0, 
-          updated: 0, 
+        @project_root_param = project_root
+        @options_param = options
+        
+        # Build the orchestrator with all dependencies
+        @orchestrator = build_orchestrator
+        
+        # Initialize backward-compatible attributes
+        initialize_legacy_attributes(project_root, options)
+      end
+
+      def run
+        # Delegate to orchestrator
+        result = @orchestrator.run(@project_root_param, @options_param)
+        
+        # Update legacy attributes from result
+        update_legacy_attributes(result)
+        
+        # Convert to legacy Result format
+        convert_to_legacy_result(result)
+      end
+
+      # Result object for CLI integration
+      Result = Struct.new(:success, :exit_code, :stats, keyword_init: true)
+
+      # Legacy public methods for backward compatibility
+      def validate_source!
+        # This is now handled by the orchestrator
+        # Keeping method for backward compatibility
+      end
+
+      def inject_metadata(content, metadata)
+        # Delegate to metadata injector for backward compatibility
+        injector = Molecules::MetadataInjector.new
+        injector.inject(content, metadata)
+      end
+
+      private
+
+      def build_orchestrator
+        # Build complete dependency graph
+        Organisms::ClaudeCommandsOrchestrator.new
+      end
+
+      def initialize_legacy_attributes(project_root, options)
+        # Initialize attributes for backward compatibility
+        finder = Molecules::ProjectRootFinder.new
+        @project_root = Pathname.new(project_root || finder.find)
+        @stats = {
+          created: 0,
+          skipped: 0,
+          updated: 0,
           errors: [],
           custom_commands: 0,
           generated_commands: 0,
           workflow_commands: 0,
           agents: 0
         }
-        @options = { 
-          dry_run: false, 
+        @options = {
+          dry_run: false,
           verbose: false,
           backup: false,
           force: false,
@@ -31,48 +84,27 @@ module CodingAgentTools
         }.merge(options)
       end
 
-      def run
-        puts "Installing Claude commands#{options[:dry_run] ? ' (DRY RUN)' : ''}..."
-        puts "Project root: #{project_root}" if options[:verbose]
-        puts
-
-        # Validate source directories
-        validate_source!
-        
-        # Create backup if requested
-        create_backup if options[:backup]
-
-        # Ensure directories exist
-        ensure_directories_exist
-
-        # Copy commands from new structure (_custom and _generated)
-        copy_custom_commands
-        
-        # Copy agents
-        copy_agents
-
-        # Scan workflows and create generated commands (existing functionality)
-        workflow_files = scan_workflows
-        create_commands_from_workflows(workflow_files)
-
-        # Print summary
-        print_enhanced_summary
-        
-        # Return result object
-        Result.new(success: stats[:errors].empty?, exit_code: stats[:errors].empty? ? 0 : 1, stats: stats)
-      rescue StandardError => e
-        puts "Error: #{e.message}"
-        puts e.backtrace if ENV['DEBUG'] || options[:verbose]
-        stats[:errors] << e.message
-        Result.new(success: false, exit_code: 1, stats: stats)
+      def update_legacy_attributes(result)
+        # Update stats from result
+        if result.respond_to?(:stats) && result.stats
+          stats_hash = result.stats.to_h
+          @stats.merge!(stats_hash)
+        end
       end
 
-      # Result object for CLI integration
-      Result = Struct.new(:success, :exit_code, :stats, keyword_init: true)
+      def convert_to_legacy_result(result)
+        # Convert from Models::InstallationResult to legacy Result
+        Result.new(
+          success: result.success?,
+          exit_code: result.exit_code,
+          stats: @stats
+        )
+      end
 
-      private
-
+      # Legacy private methods kept for tests that might use them directly
       def validate_source!
+        # Now handled by orchestrator through SourceDirectoryValidator
+        # Keeping for backward compatibility
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
         
         # Check for various structures
@@ -101,7 +133,12 @@ module CodingAgentTools
         end
       end
 
+      # All the legacy private methods below are kept for backward compatibility
+      # They are no longer used by the main run method, which delegates to the orchestrator
+      # Some tests may still call these methods directly
+
       def create_backup
+        # Legacy method - now handled by BackupCreator molecule
         target = project_root / '.claude'
         return unless target.exist? && options[:backup]
         
@@ -117,6 +154,7 @@ module CodingAgentTools
       end
 
       def copy_agents
+        # Legacy method - now handled by AgentInstaller organism
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
         agents_dir = source_base / 'agents'
         target_dir = project_root / '.claude' / 'agents'
@@ -136,6 +174,7 @@ module CodingAgentTools
       end
 
       def copy_file_with_metadata(source, target, type = 'command')
+        # Legacy method - now handled by FileOperationExecutor molecule
         if target.exist? && !options[:force]
           puts "  ✗ Skipped: #{target.basename} (already exists)"
           stats[:skipped] += 1
@@ -160,30 +199,8 @@ module CodingAgentTools
         return :created
       end
 
-      def inject_metadata(content, metadata)
-        # Handle YAML front-matter injection/update
-        if content =~ /\A---\n(.*?)\n---\n/m
-          # Update existing front-matter
-          begin
-            yaml = YAML.safe_load($1) || {}
-            yaml.merge!(metadata)
-            new_frontmatter = YAML.dump(yaml).sub(/^---\n/, '')
-            content.sub(/\A---\n.*?\n---\n/m, "---\n#{new_frontmatter}---\n")
-          rescue => e
-            # If YAML parsing fails, just add the metadata as new fields
-            frontmatter_lines = $1.split("\n")
-            metadata.each do |key, value|
-              frontmatter_lines << "#{key}: #{value}"
-            end
-            "---\n#{frontmatter_lines.join("\n")}\n---\n" + content.sub(/\A---\n.*?\n---\n/m, '')
-          end
-        else
-          # Add new front-matter
-          "---\n#{YAML.dump(metadata).sub(/^---\n/, '')}---\n\n#{content}"
-        end
-      end
-
       def ensure_directory_exists(dir)
+        # Legacy method - now handled by DirectoryCreator atom
         unless dir.exist?
           if options[:dry_run]
             puts "Would create directory: #{dir}" if options[:verbose]
@@ -195,7 +212,7 @@ module CodingAgentTools
       end
 
       def find_project_root
-        # Look for .claude/commands directory to identify project root
+        # Legacy method - now handled by ProjectRootFinder molecule
         current = Pathname.pwd
         while current.parent != current
           return current if (current / '.claude' / 'commands').directory?
@@ -207,6 +224,7 @@ module CodingAgentTools
       end
 
       def ensure_directories_exist
+        # Legacy method - now handled by orchestrator
         commands_dir = project_root / '.claude' / 'commands'
         agents_dir = project_root / '.claude' / 'agents'
         
@@ -215,6 +233,7 @@ module CodingAgentTools
       end
 
       def copy_custom_commands
+        # Legacy method - now handled by CommandInstaller organism
         source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
         commands_dir = source_base / 'commands'
         custom_dir = source_base / 'commands' / '_custom'
@@ -269,6 +288,7 @@ module CodingAgentTools
       end
 
       def copy_command_file(file)
+        # Legacy method - now handled by FileOperationExecutor molecule
         target = project_root / '.claude' / 'commands' / file.basename
         if target.exist? && !options[:force]
           puts "  ✗ Skipped: #{file.basename} (already exists)"
@@ -286,6 +306,7 @@ module CodingAgentTools
       end
 
       def scan_workflows
+        # Legacy method - now handled by WorkflowCommandGenerator organism
         workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
         unless workflows_dir.exist?
           puts "Warning: Workflow instructions directory not found at #{workflows_dir}"
@@ -298,6 +319,7 @@ module CodingAgentTools
       end
 
       def create_commands_from_workflows(workflow_files)
+        # Legacy method - now handled by WorkflowCommandGenerator organism
         puts "Creating command files..."
         
         workflow_files.each do |workflow_file|
@@ -318,6 +340,7 @@ module CodingAgentTools
       end
 
       def create_command_file(workflow_file, command_file)
+        # Legacy method - now handled by CommandTemplateRenderer molecule
         workflow_name = workflow_file.basename.to_s.sub('.wf.md', '')
         
         # Check for custom template
@@ -342,8 +365,7 @@ module CodingAgentTools
       end
 
       def get_custom_template(workflow_name)
-        # Check if there's a custom template defined
-        # For now, we'll handle the special case for commit and load-project-context
+        # Legacy method - now handled by CommandTemplateRenderer molecule
         case workflow_name
         when 'commit'
           <<~CONTENT
@@ -362,8 +384,8 @@ module CodingAgentTools
         end
       end
 
-
       def print_enhanced_summary
+        # Legacy method - now handled by orchestrator
         puts "="*50
         puts "Installation complete:"
         puts "  Location: #{project_root / '.claude'}/"
