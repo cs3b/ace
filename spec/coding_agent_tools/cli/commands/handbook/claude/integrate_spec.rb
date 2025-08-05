@@ -19,7 +19,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate do
   describe "#call" do
     it "calls the ClaudeCommandsInstaller with default options" do
       expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
-        .to receive(:new).with(nil, dry_run: false, verbose: false)
+        .to receive(:new).with(nil, dry_run: false, verbose: false, backup: false, force: false, source: nil)
       expect(installer_mock).to receive(:run)
       
       subject.call
@@ -27,23 +27,44 @@ RSpec.describe CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate do
 
     it "passes dry_run option to installer" do
       expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
-        .to receive(:new).with(nil, dry_run: true, verbose: false)
+        .to receive(:new).with(nil, dry_run: true, verbose: false, backup: false, force: false, source: nil)
       
       subject.call(dry_run: true)
     end
 
     it "passes verbose option to installer" do
       expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
-        .to receive(:new).with(nil, dry_run: false, verbose: true)
+        .to receive(:new).with(nil, dry_run: false, verbose: true, backup: false, force: false, source: nil)
       
       subject.call(verbose: true)
     end
 
     it "passes both options to installer" do
       expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
-        .to receive(:new).with(nil, dry_run: true, verbose: true)
+        .to receive(:new).with(nil, dry_run: true, verbose: true, backup: false, force: false, source: nil)
       
       subject.call(dry_run: true, verbose: true)
+    end
+
+    it "passes backup option to installer" do
+      expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
+        .to receive(:new).with(nil, dry_run: false, verbose: false, backup: true, force: false, source: nil)
+      
+      subject.call(backup: true)
+    end
+
+    it "passes force option to installer" do
+      expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
+        .to receive(:new).with(nil, dry_run: false, verbose: false, backup: false, force: true, source: nil)
+      
+      subject.call(force: true)
+    end
+
+    it "passes source option to installer" do
+      expect(CodingAgentTools::Integrations::ClaudeCommandsInstaller)
+        .to receive(:new).with(nil, dry_run: false, verbose: false, backup: false, force: false, source: "/custom/path")
+      
+      subject.call(source: "/custom/path")
     end
 
     context "when installer returns non-zero exit code" do

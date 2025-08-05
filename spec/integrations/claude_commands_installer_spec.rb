@@ -27,7 +27,16 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
     end
 
     it 'initializes stats counter' do
-      expect(installer.stats).to eq({ created: 0, skipped: 0, updated: 0, errors: [] })
+      expect(installer.stats).to eq({ 
+        created: 0, 
+        skipped: 0, 
+        updated: 0, 
+        errors: [],
+        custom_commands: 0,
+        generated_commands: 0,
+        workflow_commands: 0,
+        agents: 0
+      })
     end
   end
 
@@ -75,8 +84,9 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       it 'reports correct statistics' do
         result = nil
-        expect { result = installer.run }.to output(/2 created/).to_stdout
+        expect { result = installer.run }.to output(/Commands: 2/).to_stdout
         expect(result.stats[:created]).to eq(2)
+        expect(result.stats[:workflow_commands]).to eq(2)
       end
     end
 
@@ -105,26 +115,30 @@ RSpec.describe CodingAgentTools::Integrations::ClaudeCommandsInstaller do
 
       it 'reports skipped files in statistics' do
         result = nil
-        expect { result = installer.run }.to output(/1 skipped/).to_stdout
+        expect { result = installer.run }.to output(/Skipped: existing.md/).to_stdout
         expect(result.stats[:skipped]).to eq(1)
       end
     end
 
     context 'with custom multi-task commands' do
       before do
-        # Create custom command
+        # Create custom command in new structure
+        FileUtils.mkdir_p(File.join(test_dir, 'dev-handbook', '.integrations', 'claude', 'commands', '_custom'))
         File.write(
-          File.join(test_dir, 'dev-handbook', '.integrations', 'claude', 'commands', 'custom-task.md'),
+          File.join(test_dir, 'dev-handbook', '.integrations', 'claude', 'commands', '_custom', 'custom-task.md'),
           '# Custom multi-task command'
         )
       end
 
       it 'copies custom commands' do
-        expect { installer.run }.to output(/Copying custom multi-task commands/).to_stdout
+        expect { installer.run }.to output(/Copying commands/).to_stdout
         
         custom_file = File.join(test_dir, '.claude', 'commands', 'custom-task.md')
         expect(File.exist?(custom_file)).to be true
-        expect(File.read(custom_file)).to eq('# Custom multi-task command')
+        # Check that metadata was injected
+        content = File.read(custom_file)
+        expect(content).to include('last_modified:')
+        expect(content).to include('# Custom multi-task command')
       end
     end
 

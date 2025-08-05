@@ -50,6 +50,10 @@ After installation (either globally or via Bundler in a project), the `coding_ag
   - **Interactive Confirmations**: Safe defaults with user prompts for file overwrites
   - **Credential Protection**: Automatic redaction of sensitive information from logs
   - **XDG Compliance**: Secure, standards-compliant file and cache management
+- **Claude Code Integration**: Unified CLI for managing Claude Code commands and agents
+  - **Command Generation**: Automatically create commands from workflow instructions
+  - **Coverage Validation**: Ensure all workflows have corresponding commands
+  - **Smart Organization**: Separate custom and generated commands
 - **LM Studio Integration**: Direct integration with local LM Studio models
 - **Git Automation**: Create repositories, generate commit messages with AI
 - **Task Management**: Navigate documentation-based task backlogs
