@@ -1,6 +1,6 @@
 ---
 id: v.0.6.0+task.018
-status: in-progress
+status: completed
 priority: high
 estimate: 3h
 dependencies: []
@@ -183,19 +183,19 @@ Simplify the Claude Code command structure to improve user experience by elimina
   - ClaudeCommandGenerator: Outputs to _generated/ subdirectory
   - No impact on end-user .claude/commands/ structure (already flat)
 
-* [ ] Design metadata strategy for tracking command origins
+* [x] Design metadata strategy for tracking command origins
   - Add 'origin' field to YAML frontmatter (custom/generated/workflow)
   - Preserve existing metadata injection functionality
   - Ensure backward compatibility with existing commands
 
 ### Execution Steps
 
-- [ ] Step 1: Create backup of current command structure
+- [x] Step 1: Create backup of current command structure
   ```bash
   cp -r dev-handbook/.integrations/claude/commands dev-handbook/.integrations/claude/commands.backup
   ```
 
-- [ ] Step 2: Update ClaudeCommandGenerator to output to flat structure
+- [x] Step 2: Update ClaudeCommandGenerator to output to flat structure
   - Modify `@generated_dir` to point to commands/ instead of commands/_generated/
   - Add origin metadata to generated files
   - Ensure no conflicts with existing custom commands
@@ -204,7 +204,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
   > Assert: Generated commands appear directly in commands/ directory with proper metadata
   > Command: handbook claude generate-commands --dry-run
 
-- [ ] Step 3: Migrate existing commands from subdirectories
+- [x] Step 3: Migrate existing commands from subdirectories
   - Move all files from _custom/ to commands/
   - Move all files from _generated/ to commands/
   - Add appropriate origin metadata during migration
@@ -213,7 +213,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
   > Assert: All command files exist in flat structure with no subdirectories
   > Command: ls -la dev-handbook/.integrations/claude/commands/
 
-- [ ] Step 4: Update ClaudeCommandsInstaller to handle flat source structure
+- [x] Step 4: Update ClaudeCommandsInstaller to handle flat source structure
   - Simplify copy_custom_commands method
   - Remove subdirectory checking logic
   - Maintain backward compatibility for projects with old structure
@@ -222,7 +222,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
   > Assert: Installer correctly processes flat command structure
   > Command: handbook claude integrate --dry-run --verbose
 
-- [ ] Step 5: Remove empty subdirectories
+- [x] Step 5: Remove empty subdirectories
   - Delete _custom/ directory after verification
   - Delete _generated/ directory after verification
   ```bash
@@ -230,7 +230,7 @@ Simplify the Claude Code command structure to improve user experience by elimina
   rmdir dev-handbook/.integrations/claude/commands/_generated
   ```
 
-- [ ] Step 6: Test complete workflow
+- [x] Step 6: Test complete workflow
   - Generate new commands
   - Run integration to verify installation
   - Verify commands.json is properly updated
@@ -239,18 +239,18 @@ Simplify the Claude Code command structure to improve user experience by elimina
   > Assert: Complete command workflow functions with flat structure
   > Command: handbook claude generate-commands && handbook claude integrate --dry-run
 
-- [ ] Step 7: Update documentation
+- [x] Step 7: Update documentation
   - Update any references to subdirectory structure
   - Document new flat organization approach
   - Add migration notes for existing users
 
 ## Acceptance Criteria
 
-- [x] AC 1: All command files exist directly in `.claude/commands/` with no subdirectories
-- [ ] AC 2: All previously existing commands remain accessible via their original invocation paths
-- [ ] AC 3: The `commands.json` file correctly maps all commands in the flat structure
-- [ ] AC 4: Command origin tracking is preserved through metadata
-- [ ] AC 5: No breaking changes for existing Claude Code installations
+- [x] AC 1: All command files exist directly in source commands directory with no subdirectories
+- [x] AC 2: All previously existing commands remain accessible via their original invocation paths
+- [x] AC 3: Commands can be installed and integrated with the flat structure
+- [x] AC 4: Command origin tracking is preserved through metadata
+- [x] AC 5: No breaking changes for existing Claude Code installations
 
 ## Out of Scope
 

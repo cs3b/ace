@@ -1,8 +1,8 @@
 ---
 id: v.0.6.0+task.022
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 6h
 dependencies: []
 ---
 
@@ -108,3 +108,327 @@ Refactor the existing `claude_commands_installer.rb` to follow ATOM architecture
 - Current implementation: dev-tools/lib/coding_agent_tools/integrations/claude_commands_installer.rb
 - ATOM architecture documentation: docs/architecture-tools.md
 - Feedback source: Development feedback item #8
+
+## Technical Approach
+
+### Architecture Pattern
+- [ ] Apply ATOM (Atoms, Molecules, Organisms) architecture pattern
+- [ ] Follow ADR-011 house rules for component classification
+- [ ] Ensure clear separation between data carriers (Models) and behavior (Molecules/Organisms)
+- [ ] Maintain explicit dependency injection for testability
+
+### Technology Stack
+- [ ] Ruby 3.2+ with standard library components
+- [ ] Existing dependencies: fileutils, pathname, yaml
+- [ ] Testing: RSpec for unit/integration tests
+- [ ] No new external dependencies required
+
+### Implementation Strategy
+
+#### Component Classification Analysis
+Based on the current monolithic implementation, the components will be classified as:
+
+**Models (Pure Data Carriers):**
+- `InstallationStats` - Track created/skipped/updated counts
+- `InstallationOptions` - Configuration options (dry_run, verbose, backup, force, source)
+- `InstallationResult` - Result object with success status and statistics
+- `CommandMetadata` - YAML frontmatter data structure
+- `FileOperation` - Represents a file copy/create/update operation
+
+**Atoms (Smallest Units):**
+- `YamlFrontmatterParser` - Parse/inject YAML frontmatter (already exists)
+- `DirectoryCreator` - Create directories with permissions (already exists)
+- `TimestampGenerator` - Generate formatted timestamps
+- `PathSanitizer` - Clean and validate file paths
+
+**Molecules (Focused Operations):**
+- `ProjectRootFinder` - Locate project root directory
+- `SourceDirectoryValidator` - Validate source directory structure
+- `BackupCreator` - Create timestamped backups of .claude directory
+- `MetadataInjector` - Add/update YAML frontmatter in files
+- `FileOperationExecutor` - Execute file copy/write operations
+- `CommandTemplateRenderer` - Generate command content from templates
+- `StatisticsCollector` - Aggregate installation statistics
+
+**Organisms (Business Logic):**
+- `CommandDiscoverer` - Find and categorize commands (custom/generated/workflow)
+- `CommandInstaller` - Orchestrate command installation process
+- `AgentInstaller` - Handle agent file installation
+- `WorkflowCommandGenerator` - Generate commands from workflow files
+- `ClaudeCommandsOrchestrator` - Main orchestration of all phases
+
+### Refactoring Approach
+1. Extract data structures first (Models)
+2. Identify and extract Atoms (pure functions/utilities)
+3. Build Molecules from existing logic blocks
+4. Create Organisms to orchestrate the workflow
+5. Replace monolithic class with thin CLI wrapper
+
+## File Modifications
+
+### Create
+- lib/coding_agent_tools/models/installation_stats.rb
+  - Purpose: Track installation statistics
+  - Key components: Counters for created/skipped/updated/errors
+  - Dependencies: None (pure data)
+
+- lib/coding_agent_tools/models/installation_options.rb
+  - Purpose: Configuration options data structure
+  - Key components: Option flags and paths
+  - Dependencies: None (pure data)
+
+- lib/coding_agent_tools/models/installation_result.rb
+  - Purpose: Result object for CLI integration
+  - Key components: Success status, exit code, statistics
+  - Dependencies: InstallationStats model
+
+- lib/coding_agent_tools/models/command_metadata.rb
+  - Purpose: YAML frontmatter data structure
+  - Key components: Metadata fields like last_modified
+  - Dependencies: None (pure data)
+
+- lib/coding_agent_tools/models/file_operation.rb
+  - Purpose: Represent file operations
+  - Key components: Source, target, type, metadata
+  - Dependencies: None (pure data)
+
+- lib/coding_agent_tools/atoms/timestamp_generator.rb
+  - Purpose: Generate formatted timestamps
+  - Key components: Time formatting logic
+  - Dependencies: None
+
+- lib/coding_agent_tools/atoms/path_sanitizer.rb
+  - Purpose: Clean and validate paths
+  - Key components: Path normalization
+  - Dependencies: None
+
+- lib/coding_agent_tools/molecules/project_root_finder.rb
+  - Purpose: Locate project root directory
+  - Key components: Directory traversal logic
+  - Dependencies: Atoms::PathSanitizer
+
+- lib/coding_agent_tools/molecules/source_directory_validator.rb
+  - Purpose: Validate source directory structure
+  - Key components: Directory structure checks
+  - Dependencies: Atoms::PathSanitizer
+
+- lib/coding_agent_tools/molecules/backup_creator.rb
+  - Purpose: Create timestamped backups
+  - Key components: Backup logic with timestamps
+  - Dependencies: Atoms::TimestampGenerator, Atoms::DirectoryCreator
+
+- lib/coding_agent_tools/molecules/metadata_injector.rb
+  - Purpose: Add/update YAML frontmatter
+  - Key components: YAML manipulation logic
+  - Dependencies: Atoms::YamlFrontmatterParser
+
+- lib/coding_agent_tools/molecules/file_operation_executor.rb
+  - Purpose: Execute file operations
+  - Key components: File copy/write logic
+  - Dependencies: Models::FileOperation, Atoms::DirectoryCreator
+
+- lib/coding_agent_tools/molecules/command_template_renderer.rb
+  - Purpose: Generate command content
+  - Key components: Template rendering logic
+  - Dependencies: None
+
+- lib/coding_agent_tools/molecules/statistics_collector.rb
+  - Purpose: Aggregate statistics
+  - Key components: Stats aggregation logic
+  - Dependencies: Models::InstallationStats
+
+- lib/coding_agent_tools/organisms/command_discoverer.rb
+  - Purpose: Find and categorize commands
+  - Key components: Discovery and categorization logic
+  - Dependencies: Molecules::SourceDirectoryValidator
+
+- lib/coding_agent_tools/organisms/command_installer.rb
+  - Purpose: Install commands with metadata
+  - Key components: Command installation orchestration
+  - Dependencies: Multiple molecules for file operations
+
+- lib/coding_agent_tools/organisms/agent_installer.rb
+  - Purpose: Install agent files
+  - Key components: Agent installation logic
+  - Dependencies: Molecules::FileOperationExecutor, Molecules::MetadataInjector
+
+- lib/coding_agent_tools/organisms/workflow_command_generator.rb
+  - Purpose: Generate commands from workflows
+  - Key components: Workflow scanning and generation
+  - Dependencies: Molecules::CommandTemplateRenderer
+
+- lib/coding_agent_tools/organisms/claude_commands_orchestrator.rb
+  - Purpose: Main installation orchestration
+  - Key components: Phase coordination and error handling
+  - Dependencies: All other organisms
+
+### Modify
+- lib/coding_agent_tools/integrations/claude_commands_installer.rb
+  - Changes: Refactor to thin wrapper delegating to organisms
+  - Impact: Maintains CLI interface, delegates to ATOM components
+  - Integration points: ClaudeCommandsOrchestrator organism
+
+- spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb
+  - Changes: Update to test through the new architecture
+  - Impact: Maintains integration test coverage
+  - Integration points: Test individual components and full workflow
+
+### Delete
+None - keeping the original class as a thin wrapper ensures backward compatibility
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Breaking existing CLI functionality
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Keep original class as wrapper, extensive integration testing
+  - **Rollback:** Git revert to previous version
+
+- **Risk:** Performance regression due to object creation overhead
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Benchmark before/after, optimize hot paths
+  - **Rollback:** Revert specific performance-critical components
+
+### Integration Risks
+- **Risk:** Incompatibility with existing test infrastructure
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Gradual refactoring, maintain test compatibility
+  - **Monitoring:** Run full test suite at each step
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze existing test coverage for claude_commands_installer
+  > TEST: Test Coverage Check
+  > Type: Pre-condition Check
+  > Assert: Existing test coverage is documented and gaps identified
+  > Command: bundle exec rspec spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb --format documentation
+
+* [ ] Map all existing methods to ATOM components
+* [ ] Design dependency injection strategy for testability
+* [ ] Plan incremental refactoring approach to minimize risk
+
+### Execution Steps
+
+- [ ] Step 1: Extract Models - Create pure data structures
+  - [ ] Create InstallationStats model
+  - [ ] Create InstallationOptions model
+  - [ ] Create InstallationResult model
+  - [ ] Create CommandMetadata model
+  - [ ] Create FileOperation model
+  > TEST: Model Creation Verification
+  > Type: Action Validation
+  > Assert: All model files exist and have proper structure
+  > Command: ls -la lib/coding_agent_tools/models/installation_*.rb
+
+- [ ] Step 2: Extract Atoms - Create smallest behavioral units
+  - [ ] Create TimestampGenerator atom
+  - [ ] Create PathSanitizer atom
+  > TEST: Atom Functionality Check
+  > Type: Unit Test Validation
+  > Assert: Atoms have no dependencies and pass unit tests
+  > Command: bundle exec rspec spec/coding_agent_tools/atoms/timestamp_generator_spec.rb spec/coding_agent_tools/atoms/path_sanitizer_spec.rb
+
+- [ ] Step 3: Build Molecules - Create focused operation handlers
+  - [ ] Create ProjectRootFinder molecule
+  - [ ] Create SourceDirectoryValidator molecule
+  - [ ] Create BackupCreator molecule
+  - [ ] Create MetadataInjector molecule
+  - [ ] Create FileOperationExecutor molecule
+  - [ ] Create CommandTemplateRenderer molecule
+  - [ ] Create StatisticsCollector molecule
+  > TEST: Molecule Integration Check
+  > Type: Integration Test
+  > Assert: Molecules properly compose atoms and models
+  > Command: bundle exec rspec spec/coding_agent_tools/molecules/*_spec.rb
+
+- [ ] Step 4: Create Organisms - Build business logic orchestrators
+  - [ ] Create CommandDiscoverer organism
+  - [ ] Create CommandInstaller organism
+  - [ ] Create AgentInstaller organism
+  - [ ] Create WorkflowCommandGenerator organism
+  - [ ] Create ClaudeCommandsOrchestrator organism
+  > TEST: Organism Functionality Verification
+  > Type: Integration Test
+  > Assert: Organisms properly orchestrate molecules and handle business logic
+  > Command: bundle exec rspec spec/coding_agent_tools/organisms/*_spec.rb
+
+- [ ] Step 5: Refactor original class to use ATOM components
+  - [ ] Replace initialization logic with component setup
+  - [ ] Delegate run method to ClaudeCommandsOrchestrator
+  - [ ] Maintain backward compatibility for all public methods
+  > TEST: Backward Compatibility Check
+  > Type: Integration Test
+  > Assert: Original functionality preserved through new architecture
+  > Command: bundle exec rspec spec/coding_agent_tools/integrations/claude_commands_installer_spec.rb
+
+- [ ] Step 6: Add comprehensive test coverage
+  - [ ] Unit tests for all new components
+  - [ ] Integration tests for complete workflow
+  - [ ] Performance benchmarks
+  > TEST: Full Test Suite Validation
+  > Type: Test Coverage Check
+  > Assert: All components have adequate test coverage
+  > Command: bundle exec rspec --format documentation --tag ~performance
+
+- [ ] Step 7: Update documentation
+  - [ ] Add component documentation
+  - [ ] Update architecture diagrams
+  - [ ] Document testing approach
+
+## Test Case Planning
+
+### Unit Test Scenarios
+
+**Models (Data Validation):**
+- InstallationStats initialization and attribute access
+- InstallationOptions with various configurations
+- CommandMetadata YAML serialization/deserialization
+
+**Atoms (Pure Functions):**
+- TimestampGenerator format variations
+- PathSanitizer with various input paths
+- Edge cases: nil, empty strings, special characters
+
+**Molecules (Focused Operations):**
+- ProjectRootFinder with different directory structures
+- SourceDirectoryValidator with valid/invalid structures
+- BackupCreator with existing/non-existing directories
+- MetadataInjector with various YAML formats
+
+### Integration Test Scenarios
+
+**Happy Path:**
+- Fresh installation with all source files present
+- Update installation with some existing files
+- Dry-run execution showing planned operations
+
+**Edge Cases:**
+- Missing source directories
+- Corrupted YAML frontmatter
+- Permission denied on target directory
+- Symbolic links in source directories
+
+**Error Conditions:**
+- No write permissions
+- Disk full during operation
+- Concurrent installation attempts
+
+### Performance Test Scenarios
+
+**Benchmark Tests:**
+- Installation time for 50+ workflow files
+- Memory usage during large installations
+- Comparison with original implementation
+
+## Acceptance Criteria
+
+- [ ] AC 1: All existing functionality preserved with ATOM architecture
+- [ ] AC 2: Clear separation of concerns across ATOM layers
+- [ ] AC 3: Comprehensive test coverage (>90%) for all components
+- [ ] AC 4: No performance regression (installation < 5 seconds)
+- [ ] AC 5: Improved maintainability with isolated, testable components
