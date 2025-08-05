@@ -16,7 +16,8 @@
 | `git-pull` | Enhanced git pull | `--rebase`, `--ff-only` |
 | `git-push` | Enhanced git push | `--force`, `--dry-run` |
 | `git-status` | Enhanced git status | `--verbose`, `--short` |
-| `handbook` | Development handbook access | `sync-templates` |
+| `handbook` | Development handbook access | `sync-templates`, `claude [subcommand]` |
+| `handbook claude` | Claude Code integration | `list`, `validate`, `generate-commands`, `integrate` |
 | `llm-query` | Unified LLM query interface | `--model`, `--output` |
 | `nav-ls` | Enhanced directory listing | `--long`, `--all` |
 | `nav-path` | Intelligent path navigation | `task`, `file` |
@@ -454,14 +455,32 @@ nav-tree --depth 3 docs/
 handbook [COMMAND]
 ```
 
-| Flag | Purpose | Default |
-|------|---------|---------|
+| Command | Purpose | Key Options |
+|---------|---------|-------------|
 | `sync-templates` | Sync template content | N/A |
+| `claude list` | List Claude commands | `--verbose`, `--type`, `--format` |
+| `claude validate` | Validate Claude setup | `--check`, `--strict`, `--workflow` |
+| `claude generate-commands` | Generate missing commands | `--dry-run`, `--force`, `--workflow` |
+| `claude integrate` | Install Claude commands | `--dry-run`, `--backup`, `--force` |
 
 **Examples**
 ```bash
+# Sync templates
 handbook sync-templates
+
+# Claude integration
+handbook claude integrate
+handbook claude list --verbose
+handbook claude validate --strict
 ```
+
+**Claude Subcommands Documentation:**
+- [`handbook claude list`](../dev-tools/docs/user/handbook-claude-list.md) - List available commands and their status
+- [`handbook claude validate`](../dev-tools/docs/user/handbook-claude-validate.md) - Validate command coverage
+- [`handbook claude generate-commands`](../dev-tools/docs/user/handbook-claude-generate-commands.md) - Generate missing commands
+- [`handbook claude integrate`](../dev-tools/docs/user/handbook-claude-integrate.md) - Complete integration workflow
+
+For Claude quick start, see [Claude Integration Guide](../dev-handbook/.integrations/claude/README.md).
 </details>
 
 ### `release-manager` – Release management tool   {#release-manager--release-management-tool}
