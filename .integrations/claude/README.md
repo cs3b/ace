@@ -1,288 +1,199 @@
-# Claude Code Integration
+# Claude Code Integration - Quick Start Guide
 
-The Coding Agent Workflow Toolkit provides unified CLI commands for managing Claude Code integration.
+Get started with Claude Code integration in 5 minutes using the Coding Agent Workflow Toolkit.
 
 ## Quick Start
 
 ```bash
-# Install Claude commands
-handbook claude integrate
+# 1. Ensure dev-tools is available (via git submodule)
+cd handbook-meta/dev-tools
+bundle install
 
-# Check status
-handbook claude list
-handbook claude validate
+# 2. Install Claude commands (one command does it all!)
+bundle exec handbook claude integrate
+
+# 3. Restart Claude Code to see new commands
 ```
 
-## Overview
+That's it! You now have 20+ AI workflow commands available in Claude Code.
 
-The handbook CLI provides a unified interface for managing Claude Code commands and agents, providing a robust, integrated solution for Claude Code integration.
+## What You Get
 
-## Features
+After integration, Claude Code will have access to:
 
-- **Automatic Command Generation**: Creates commands from workflow instructions
-- **Smart Categorization**: Separates custom and generated commands
-- **Coverage Validation**: Ensures all workflows have corresponding commands
-- **Agent Management**: Handles both commands and agent configurations
+- **Workflow Commands**: Execute any workflow instruction directly from Claude
+- **Smart Git Integration**: Enhanced commit messages and repository management  
+- **Task Management**: Create, plan, and execute development tasks
+- **Project Context**: Load and manage project documentation
 
-## Installation
+## First-Time Setup
 
 ### Prerequisites
 
 - Ruby 3.x or higher
 - Git installed and configured
-- Access to the handbook CLI (via dev-tools)
+- Claude Code installed
+- The handbook-meta repository cloned with submodules:
+  ```bash
+  git clone --recursive [repository-url]
+  # Or if already cloned:
+  git submodule update --init --recursive
+  ```
 
-### Setup Steps
+### Installation Steps
 
-1. **Install the dev-tools gem** (if not already installed):
+1. **Navigate to dev-tools directory**:
    ```bash
-   gem install dev-tools
+   cd handbook-meta/dev-tools
    ```
 
-2. **Run the integration command**:
+2. **Install dependencies**:
    ```bash
-   handbook claude integrate
+   bundle install
    ```
 
-   This will:
-   - Generate missing commands from workflow instructions
-   - Update the command registry
-   - Install commands and agents into Claude Code
-
-3. **Verify the installation**:
+3. **Run integration**:
    ```bash
-   handbook claude list --verbose
-   handbook claude validate
+   bundle exec handbook claude integrate
    ```
 
-## Command Reference
+4. **Restart Claude Code** to load the new commands
 
-### handbook claude list
+5. **Verify installation**:
+   ```bash
+   bundle exec handbook claude list
+   ```
 
-List all available Claude commands and their status.
+## Maintenance Workflow
 
-**Options:**
-- `--verbose`: Show detailed information including file paths
-- `--type [command|agent]`: Filter by type
-
-**Examples:**
-```bash
-# List all commands
-handbook claude list
-
-# Show detailed information
-handbook claude list --verbose
-
-# List only agents
-handbook claude list --type agent
-```
-
-### handbook claude validate
-
-Validate command coverage and check for issues.
-
-**Options:**
-- `--strict`: Fail on any validation warnings
-- `--fix`: Attempt to fix issues automatically
-
-**Examples:**
-```bash
-# Basic validation
-handbook claude validate
-
-# Strict validation for CI
-handbook claude validate --strict
-
-# Auto-fix issues
-handbook claude validate --fix
-```
-
-### handbook claude generate-commands
-
-Generate missing commands from workflow instructions.
-
-**Options:**
-- `--dry-run`: Preview changes without writing files
-- `--force`: Overwrite existing generated commands
-
-**Examples:**
-```bash
-# Preview what would be generated
-handbook claude generate-commands --dry-run
-
-# Generate missing commands
-handbook claude generate-commands
-
-# Regenerate all commands
-handbook claude generate-commands --force
-```
-
-### handbook claude update-registry
-
-Update the command registry JSON file.
-
-**Options:**
-- `--backup`: Create backup before updating
-- `--validate`: Validate JSON structure after update
-
-**Examples:**
-```bash
-# Update registry with backup
-handbook claude update-registry --backup
-
-# Update and validate
-handbook claude update-registry --validate
-```
-
-### handbook claude integrate
-
-Run the complete integration workflow.
-
-**Options:**
-- `--force`: Force reinstallation of all components
-- `--skip-validation`: Skip validation checks
-
-**Examples:**
-```bash
-# Standard integration
-handbook claude integrate
-
-# Force reinstall everything
-handbook claude integrate --force
-
-# Quick integration without validation
-handbook claude integrate --skip-validation
-```
-
-## Command Organization
-
-Commands are organized in two directories within `.integrations/claude/commands/`:
-
-### _custom/
-
-Hand-crafted commands with special behavior that cannot be auto-generated:
-
-- **commit.md**: Intelligent git commit with conventional commit support
-- **draft-tasks.md**: Multi-task creation from specifications
-- **load-project-context.md**: Load project documentation and context
-- **plan-tasks.md**: Task planning and breakdown
-- **review-tasks.md**: Task review and validation
-- **work-on-tasks.md**: Execute multiple tasks in sequence
-
-### _generated/
-
-Auto-generated commands from workflow instructions:
-
-- Standard workflow references with consistent format
-- Automatically updated when workflows change
-- Should not be manually edited
-
-## Common Workflows
-
-### First-time Setup
+Keep your Claude commands up to date as workflows evolve:
 
 ```bash
-# 1. Check what's available
-handbook claude list
+# Weekly maintenance routine
+cd handbook-meta/dev-tools
 
-# 2. Generate missing commands
-handbook claude generate-commands
+# 1. Check for issues
+bundle exec handbook claude validate
 
-# 3. Install everything
-handbook claude integrate
+# 2. Update if needed
+bundle exec handbook claude integrate
+
+# 3. Restart Claude Code
 ```
 
-### Regular Maintenance
+### After Workflow Changes
 
-After adding new workflow instructions:
+When you add or modify workflow instruction files:
 
 ```bash
-# Run the maintenance workflow
-handbook claude validate
-handbook claude generate-commands
-handbook claude integrate
+# 1. Validate coverage
+bundle exec handbook claude validate --check missing
+
+# 2. Re-integrate (generates missing commands automatically)
+bundle exec handbook claude integrate
+
+# 3. Restart Claude Code
 ```
 
-### Troubleshooting Installation
-
-If commands aren't appearing in Claude:
+### Regular Health Check
 
 ```bash
-# 1. Validate the setup
-handbook claude validate --strict
+# Monthly maintenance script
+#!/bin/bash
+cd handbook-meta/dev-tools
 
-# 2. Check Claude's command directory
-ls ~/.config/claude/commands/
+echo "Claude Integration Health Check"
+echo "==============================="
 
-# 3. Force reinstall
-handbook claude integrate --force
+# Check current status
+bundle exec handbook claude list | tail -n 1
+
+# Validate all checks
+bundle exec handbook claude validate
+
+# Check for outdated commands
+bundle exec handbook claude validate --check outdated
+
+echo "Health check complete!"
 ```
 
-## Configuration
+## Common Tasks
 
-### Environment Variables
+### Quick Status Check
 
-- `CLAUDE_COMMANDS_DIR`: Override default Claude commands directory
-- `HANDBOOK_DEBUG`: Enable debug output for troubleshooting
+```bash
+# See summary
+bundle exec handbook claude list | tail -n 1
+# Output: "Total: 21 commands available"
 
-### Configuration File
+# Check for issues
+bundle exec handbook claude validate
+```
 
-The integration uses `.integrations/claude/registry.json` to track commands and agents. This file is automatically maintained by the CLI.
+### Force Update Everything
 
-## Advanced Usage
+```bash
+# Complete refresh (with backup)
+bundle exec handbook claude integrate --force --backup
+```
 
-### Creating Custom Commands
+### Debug Integration Issues
 
-1. Create a new markdown file in `_custom/`
-2. Follow the command template structure
-3. Run `handbook claude update-registry` to register
-4. Run `handbook claude integrate` to install
+```bash
+# Verbose output
+bundle exec handbook claude integrate --verbose
 
-### Extending the Integration
+# With debug logging
+HANDBOOK_DEBUG=1 bundle exec handbook claude integrate
+```
 
-See the [Developer Guide](../../../dev-tools/docs/development/claude-integration.md) for information on:
-- Adding new subcommands
-- Customizing command generation
-- Extending validation rules
+## Next Steps
+
+For detailed documentation on specific features:
+
+- **[handbook claude list](../../../dev-tools/docs/user/handbook-claude-list.md)** - View and filter available commands
+- **[handbook claude validate](../../../dev-tools/docs/user/handbook-claude-validate.md)** - Validate command coverage and integrity
+- **[handbook claude generate-commands](../../../dev-tools/docs/user/handbook-claude-generate-commands.md)** - Generate commands from workflows
+- **[handbook claude integrate](../../../dev-tools/docs/user/handbook-claude-integrate.md)** - Complete integration reference
+
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Install everything | `bundle exec handbook claude integrate` |
+| Check status | `bundle exec handbook claude list` |
+| Validate setup | `bundle exec handbook claude validate` |
+| Update after changes | `bundle exec handbook claude integrate` |
+| Force reinstall | `bundle exec handbook claude integrate --force` |
 
 ## Troubleshooting
 
-### Commands Not Appearing
+### Commands not appearing in Claude?
 
-1. Verify Claude is installed and configured
-2. Check file permissions in Claude's config directory
-3. Run with debug output: `HANDBOOK_DEBUG=1 handbook claude integrate`
+1. **Restart Claude Code** (always required after installation)
+2. **Verify installation**: `ls ~/.config/claude/commands/`
+3. **Check permissions**: `ls -la ~/.config/claude/`
 
-### Validation Failures
+### Quick Fixes
 
-1. Review validation output for specific issues
-2. Check workflow instruction format
-3. Ensure all dependencies are installed
+```bash
+# Permission issues
+chmod -R 755 ~/.config/claude
 
-### Generation Issues
+# Installation issues
+bundle exec handbook claude integrate --verbose
 
-1. Verify workflow instructions follow the expected format
-2. Check for naming conflicts with custom commands
-3. Review generation output for errors
+# Missing commands
+bundle exec handbook claude validate --check missing
+bundle exec handbook claude integrate
+```
 
-## Best Practices
+### Need Help?
 
-1. **Regular Validation**: Run `handbook claude validate` before major changes
-2. **Backup Registry**: Use `--backup` when updating registry
-3. **Test Changes**: Use `--dry-run` to preview changes
-4. **Document Custom Commands**: Include clear descriptions and examples
-5. **Version Control**: Commit registry.json changes with command updates
+- Use `--help` with any command for options
+- Check the detailed guides linked in Next Steps
+- Enable debug mode: `HANDBOOK_DEBUG=1`
 
-## Support
+---
 
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review the [Developer Guide](../../../dev-tools/docs/development/claude-integration.md)
-3. Check existing GitHub issues
-4. Create a new issue with debug output
-
-## Related Documentation
-
-- [Command Structure](commands/README.md) - Detailed command organization
-- [Developer Guide](../../../dev-tools/docs/development/claude-integration.md) - For contributors
-- [Workflow Instructions](../../workflow-instructions/) - Source for generated commands
+*Remember: The handbook-meta repository uses git submodules. Always work from within the dev-tools directory and use `bundle exec` to run commands.*
