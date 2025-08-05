@@ -1,5 +1,4 @@
 ---
-origin: generated
 description: Capture Idea
 allowed-tools: Write, TodoWrite
 argument-hint: "[idea-description]"

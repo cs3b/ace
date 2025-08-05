@@ -1,5 +1,4 @@
 ---
-origin: generated
 description: Draft Release
 allowed-tools: Read, Write, Bash(task-manager release *), Grep
 argument-hint: "[version]"

@@ -1,5 +1,4 @@
 ---
-origin: generated
 description: Synthesize Reviews
 allowed-tools: Read, Write, Edit, Grep
 model: opus

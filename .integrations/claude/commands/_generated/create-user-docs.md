@@ -1,5 +1,4 @@
 ---
-origin: generated
 description: Create User Docs
 allowed-tools: Read, Write, Grep, Glob
 ---

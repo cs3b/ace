@@ -1,7 +1,3 @@
----
-origin: custom
-description: Draft Tasks
----
 # Draft Multiple Tasks from Ideas
 
 You are an AI assistant that automatically creates multiple draft tasks from idea files in sequence. This command processes a list of idea files and performs the complete draft task workflow for each one by expanding all workflow instructions inline.

@@ -1,5 +1,4 @@
 ---
-origin: generated
 description: Review Code
 allowed-tools: Read, Write, Edit, Grep
 ---
