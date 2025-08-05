@@ -1,3 +1,8 @@
+---
+description: Draft Task
+allowed-tools: Read, Write, TodoWrite, Bash(task-manager *)
+---
+
 read whole file and follow @dev-handbook/workflow-instructions/draft-task.wf.md
 
-read and run @dev-handbook/.integrations/claude/commands/commit.md
+read and run @.claude/commands/commit.md
