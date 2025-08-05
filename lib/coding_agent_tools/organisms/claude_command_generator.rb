@@ -15,7 +15,7 @@ module CodingAgentTools
         @workflow_dir = @project_root / "dev-handbook/workflow-instructions"
         @custom_dir = @project_root / "dev-handbook/.integrations/claude/commands/_custom"
         @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands/_generated"
-        @template_path = @project_root / "dev-handbook/.integrations/claude/command.template.md"
+        @template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"
         @stats = { generated: 0, skipped: 0, errors: [] }
       end
 

@@ -15,9 +15,10 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_custom"))
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/commands/_generated"))
     FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude"))
+    FileUtils.mkdir_p(File.join(tmpdir, "dev-handbook/.integrations/claude/templates"))
     
     # Create template file
-    template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/command.template.md")
+    template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/templates/command.md.tmpl")
     File.write(template_path, <<~TEMPLATE)
       ---
       description: \#{description}
@@ -149,7 +150,7 @@ RSpec.describe CodingAgentTools::Organisms::ClaudeCommandGenerator do
     context "error handling" do
       it "handles missing template gracefully" do
         # Remove template file
-        template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/command.template.md")
+        template_path = File.join(tmpdir, "dev-handbook/.integrations/claude/templates/command.md.tmpl")
         FileUtils.rm(template_path)
         
         result = generator.generate
