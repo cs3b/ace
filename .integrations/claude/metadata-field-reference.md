@@ -18,14 +18,16 @@ This field provides a human-readable description of what the command does. It sh
 ### `allowed-tools`
 **Type:** String (comma-separated list)  
 **Purpose:** Restricts which tools the command can use (security feature)  
-**Format:** `Tool(pattern), Tool2, Tool3(specific:command)`  
-**Example:** `allowed-tools: Bash(git *), Read, Write`
+**Format:** `Tool, Tool2, Tool3`  
+**Example:** `allowed-tools: Bash, Read, Write`
 
-This field limits which tools Claude can use when executing the command. It's a security feature that prevents commands from performing unintended operations. Common patterns:
-- `Bash(git *)` - Allow only git commands
+This field limits which tools Claude can use when executing the command. It's a security feature that prevents commands from performing unintended operations. Common tools:
+- `Bash` - Allow bash commands
 - `Read, Write` - Allow file reading and writing
-- `Bash(bundle exec *)` - Allow only bundler commands
+- `Edit` - Allow file editing
 - `TodoWrite` - Allow task list management
+- `Grep, Glob` - Allow file searching
+- `WebSearch, WebFetch` - Allow web operations
 
 ### `argument-hint`
 **Type:** String  
@@ -58,16 +60,16 @@ The Claude command generator automatically infers metadata based on workflow nam
 
 | Workflow Pattern | Allowed Tools |
 |------------------|---------------|
-| `git-*`, `*commit*`, `*rebase*`, `*merge*` | `Bash(git *), Read, Write` |
-| `*-task` (draft, plan, work-on, review, complete) | `Read, Write, TodoWrite, Bash(task-manager *)` |
+| `git-*`, `*commit*`, `*rebase*`, `*merge*` | `Bash, Read, Write` |
+| `*-task` (draft, plan, work-on, review, complete) | `Read, Write, TodoWrite, Bash` |
 | `create-adr`, `create-*-docs`, `create-reflection-note` | `Read, Write, Grep, Glob` |
-| `create-test-cases` | `Read, Write, Bash(bundle exec rspec), Grep` |
+| `create-test-cases` | `Read, Write, Bash, Grep` |
 | `test-*`, `validate-*` | `Bash, Read, Grep` |
-| `fix-tests`, `fix-linting-*` | `Read, Write, Edit, Bash(bundle exec *), Grep` |
+| `fix-tests`, `fix-linting-*` | `Read, Write, Edit, Bash, Grep` |
 | `*research*`, `*analyze*` | `Read, Grep, Glob, WebSearch` |
 | `synthesize-reflection-notes` | `Read, Write, Grep, TodoWrite` |
 | `load-project-context` | `Read, LS` |
-| `*release*` | `Read, Write, Bash(task-manager release *), Grep` |
+| `*release*` | `Read, Write, Bash, Grep` |
 | `update-blueprint` | `Read, Write, Edit, Grep` |
 | `capture-idea` | `Write, TodoWrite` |
 | Default (unmatched) | `Read, Write, Edit, Grep` |

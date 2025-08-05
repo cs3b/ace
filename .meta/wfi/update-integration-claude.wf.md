@@ -156,6 +156,18 @@ Review the summary to ensure:
 - Ensure @.claude/commands/commit.md reference exists
 - Test with simpler command first
 
+### Tool Specification Validation
+
+The integration process validates that all tool specifications follow Claude's requirements:
+- Tools must be simple names: `Bash`, `Read`, `Write`, `Edit`, `Grep`, `Glob`, `LS`, `TodoWrite`, `WebSearch`, `WebFetch`
+- Do NOT use parentheses notation like `Bash(command)` - this is invalid
+- Multiple tools are comma-separated: `Read, Write, Bash, Grep`
+
+Common corrections:
+- `Bash(git *)` → `Bash`
+- `Bash(bundle exec *)` → `Bash`
+- `Bash(task-manager *)` → `Bash`
+
 ### Diagnostic Commands
 
 ```bash
@@ -167,6 +179,9 @@ handbook claude validate --format json
 
 # Test specific workflow
 handbook claude generate-commands --workflow capture-idea
+
+# Check for invalid tool specifications
+grep -r "Bash(" dev-handbook/.integrations/claude/
 ```
 
 ## Verification Checklist
@@ -188,6 +203,7 @@ handbook claude generate-commands --workflow capture-idea
 - [ ] YAML front-matter validates correctly
 - [ ] Command descriptions are meaningful
 - [ ] Tool restrictions are appropriate
+- [ ] No invalid tool specifications with parentheses (e.g., no `Bash(command)`)
 - [ ] Model preferences are set where needed
 
 ## Success Criteria
