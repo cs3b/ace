@@ -14,7 +14,7 @@ module CodingAgentTools
         @project_root = Pathname.new(project_root || find_project_root)
         @workflow_dir = @project_root / "dev-handbook/workflow-instructions"
         @custom_dir = @project_root / "dev-handbook/.integrations/claude/commands/_custom"
-        @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands"
+        @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands/_generated"
         @template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"
         @stats = { generated: 0, skipped: 0, errors: [] }
       end
@@ -57,8 +57,9 @@ module CodingAgentTools
       end
 
       def ensure_directories_exist
-        # Only ensure the main commands directory exists
-        FileUtils.mkdir_p(@generated_dir) unless @generated_dir.exist?
+        [@custom_dir, @generated_dir].each do |dir|
+          FileUtils.mkdir_p(dir) unless dir.exist?
+        end
       end
 
       def find_workflows(specific = nil)
@@ -82,15 +83,10 @@ module CodingAgentTools
 
       def find_missing_commands(workflows, force = false)
         workflows.reject do |workflow|
-          # Check if command exists in custom directory (legacy)
           custom_exists = (@custom_dir / "#{workflow}.md").exist?
-          # Check if command exists in flat structure
-          command_exists = (@generated_dir / "#{workflow}.md").exist?
-          
-          # Skip if:
-          # 1. It's a custom command (in legacy _custom dir)
-          # 2. It exists in flat structure and we're not forcing regeneration
-          custom_exists || (command_exists && !force)
+          generated_exists = (@generated_dir / "#{workflow}.md").exist?
+          # Skip custom commands always, but allow regeneration of generated commands with force
+          custom_exists || (generated_exists && !force)
         end
       end
 
@@ -114,7 +110,7 @@ module CodingAgentTools
             puts "Would generate:"
           end
           missing.each do |workflow|
-            puts "  - #{workflow}.md"
+            puts "  - _generated/#{workflow}.md"
           end
         end
         
@@ -158,7 +154,7 @@ module CodingAgentTools
             end
             
             output_path.write(content)
-            puts "✓ Created: #{workflow}.md"
+            puts "✓ Created: _generated/#{workflow}.md"
             @stats[:generated] += 1
           rescue => e
             puts "✗ Error: #{workflow}.md - #{e.message}"
@@ -185,7 +181,6 @@ module CodingAgentTools
         
         # Build YAML front-matter programmatically (safer than eval)
         yaml_lines = ["---"]
-        yaml_lines << "origin: generated"
         yaml_lines << "description: #{metadata[:description]}"
         yaml_lines << "allowed-tools: #{metadata[:allowed_tools]}" if metadata[:allowed_tools]
         yaml_lines << "argument-hint: \"#{metadata[:argument_hint]}\"" if metadata[:argument_hint]
