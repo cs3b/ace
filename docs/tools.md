@@ -4,6 +4,7 @@
 
 | Tool | Purpose | Key Flags |
 |----------
+| **`search`** | **Unified intelligent search across repos** | **`--type`, `--fzf`, `--preset`** |
 | `coding-agent-tools all` | List all available tools | `--format`, `--category` |
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
@@ -26,6 +27,13 @@
 | `reflection-synthesize` | Reflection report generator | `--session`, `--focus` |
 | `release-manager` | Release management tool | `current`, `report` |
 | `task-manager` | Project task management | `--filter`, `--sort`, `--limit` |
+
+**🔍 Pro Tip**: Use `search` for all your searching needs! It intelligently determines whether you're looking for files or content, searches across all repositories, and supports interactive selection with `--fzf`. Examples:
+- `search "TODO"` - Find all TODO comments
+- `search "*.rb" --files` - Find Ruby files
+- `search "def.*initialize" --type content` - Find initialize methods
+- `search --preset todo` - Use built-in TODO preset
+- `search "pattern" --fzf` - Interactive result selection
 
 **💡 Pro Tip**: For file location, always use `nav-path file <filename>` instead of `find` or `ls` commands. It's intelligent, fast, and works with partial names (e.g., `nav-path file blueprint` finds `docs/blueprint.md`).
 
@@ -84,6 +92,103 @@
 {: .language-bash}
 
 ## Gem Executables   {#gem-executables}
+
+### `search` – Unified intelligent search across repositories   {#search--unified-intelligent-search-across-repositories}
+
+<details><summary>Details</summary>
+
+```bash
+search [OPTIONS] PATTERN
+```
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `-t, --type TYPE` | Search type (file, content, hybrid, auto) | `auto` |
+| `-f, --files` | Search for files only | `false` |
+| `-c, --content` | Search in file content only | `false` |
+| `-i, --case-insensitive` | Case insensitive search | `false` |
+| `-w, --whole-word` | Match whole words only | `false` |
+| `-U, --multiline` | Enable multiline matching | `false` |
+| `-A, --after NUM` | Show NUM lines after match | `0` |
+| `-B, --before NUM` | Show NUM lines before match | `0` |
+| `-C, --context NUM` | Show NUM lines of context | `0` |
+| `-r, --repository REPO` | Search in specific repository | All |
+| `-m, --main-only` | Search main repository only | `false` |
+| `-g, --glob PATTERN` | File glob pattern to include | None |
+| `-e, --exclude PATTERN` | Pattern to exclude | None |
+| `--since TIME` | Files modified since TIME | None |
+| `--before TIME` | Files modified before TIME | None |
+| `--staged` | Search staged files only | `false` |
+| `--tracked` | Search tracked files only | `false` |
+| `--changed` | Search changed files only | `false` |
+| `--json` | Output in JSON format | `false` |
+| `--yaml` | Output in YAML format | `false` |
+| `-l, --files-with-matches` | Only print filenames | `false` |
+| `--max-results NUM` | Limit number of results | None |
+| `--fzf` | Use fzf for interactive selection | `false` |
+| `-p, --preset NAME` | Use search preset | None |
+| `--list-presets` | List available presets | N/A |
+| `--list-repos` | List available repositories | N/A |
+
+**Examples**
+```bash
+# Basic content search
+search "TODO"
+
+# Find all Ruby files
+search "*.rb" --files
+
+# Search with regex in content
+search "def\s+initialize" --content
+
+# Interactive selection with fzf
+search "pattern" --fzf
+
+# Use built-in preset
+search --preset todo
+
+# Search in specific repository
+search "bug" --repository dev-tools
+
+# Find recently modified files
+search "*.md" --since "1 week ago"
+
+# Case-insensitive whole word search
+search "error" -i -w
+
+# Search staged files only
+search "console.log" --staged
+
+# Output results as JSON
+search "API" --json --max-results 10
+```
+
+**Built-in Presets**
+- `todo` - Find TODO, FIXME, HACK, XXX, NOTE comments
+- `ruby` - Find all Ruby files (*.rb)
+- `tests` - Find all test files (*_spec.rb)
+- `recent` - Find files modified in the last week
+- `git-changes` - Find changed files in git
+
+**Purpose:**
+The search tool provides unified, intelligent searching across all repositories in the meta-project. It uses DWIM (Do What I Mean) heuristics to automatically determine whether you're searching for files or content, leverages ripgrep and fd for blazing-fast performance, and supports interactive result selection with fzf.
+
+**Features:**
+- Automatic mode detection (file vs content search)
+- Multi-repository search with result aggregation
+- Git-aware scopes (staged, tracked, changed files)
+- Time-based file filtering
+- Interactive result selection with fzf
+- Configurable search presets
+- Multiple output formats (text, JSON, YAML)
+- Intelligent pattern analysis for optimal tool selection
+
+**Performance:**
+- Uses ripgrep for content search (extremely fast)
+- Uses fd for file search (faster than find)
+- Streams results for immediate feedback
+- Optimized for large codebases
+</details>
 
 ### `coding_agent_tools all` – List all available tools   {#coding_agent_tools_all--list-all-available-tools}
 

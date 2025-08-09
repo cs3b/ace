@@ -30,7 +30,12 @@ module CodingAgentTools
           merged_options = @options.merge(options)
           
           # Determine search mode using DWIM heuristics
-          mode = merged_options[:type] || @dwim.determine_mode(pattern)
+          mode = if merged_options[:type]
+                   merged_options[:type]
+                 else
+                   analysis = @dwim.analyze_search_intent(pattern, merged_options)
+                   analysis[:recommended_mode] || :content
+                 end
           
           # Get repositories to search
           repositories = get_repositories(merged_options)
