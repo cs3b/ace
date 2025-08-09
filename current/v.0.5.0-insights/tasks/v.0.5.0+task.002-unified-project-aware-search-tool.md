@@ -99,6 +99,29 @@ Provide developers and AI agents with a unified, intelligent search tool that el
 - ❌ **Performance Optimization**: Detailed threading models, memory management
 - ❌ **Future Enhancements**: Language server integration, Windows support
 
+## Code Review Findings
+
+After thorough review of the existing codebase, significant reusable components have been identified:
+
+### Reusable Components
+1. **Command Execution**: `ShellCommandExecutor` provides robust command execution with timeout, retries, and safety checks
+2. **File Operations**: Multiple existing atoms handle file scanning, pattern matching, and directory traversal
+3. **Multi-Repository**: `MultiRepoCoordinator` already implements cross-repository execution patterns
+4. **Output Formatting**: `FormatHandlers` provides extensible formatting infrastructure
+5. **Project Navigation**: `ProjectRootDetector` handles automatic root detection from any subdirectory
+
+### Components to Create
+- Minimal new atoms needed: only wrappers for ripgrep/fd that use existing executors
+- DWIM heuristics engine (new logic for intelligent mode selection)
+- Search-specific result formatting and aggregation
+- FZF integration (no existing implementation)
+
+### Key Implementation Insights
+- No need to create new command execution infrastructure
+- Can leverage existing error handling and result patterns
+- Multi-repository support requires minimal new code
+- Most complexity will be in DWIM heuristics and result aggregation
+
 ## Technical Approach
 
 ### Architecture Pattern
@@ -111,11 +134,18 @@ The search tool will follow the ATOM architecture pattern established in the dev
 ### Technology Stack
 - **External Tools**: ripgrep (content search), fd (file search), fzf (interactive selection), git (repository awareness)
 - **Ruby Process Management**: Open3 for safe command execution with streaming output
-- **Existing Components**: 
-  - MultiRepoCoordinator for multi-repository support
-  - ProjectRootDetector for automatic root detection
-  - JSONFormatter for structured output
-  - PathAutocorrector for intelligent path matching
+- **Existing Components to Reuse**: 
+  - `Atoms::TaskflowManagement::ShellCommandExecutor` - Safe command execution with timeout, retries, and output capture
+  - `Atoms::SystemCommandExecutor` - Simple command execution and availability checking
+  - `Atoms::ProjectRootDetector` - Automatic project root detection from any subdirectory
+  - `Atoms::DirectoryScanner` - Directory scanning with glob patterns and exclusions
+  - `Atoms::TaskflowManagement::FileSystemScanner` - File pattern matching and traversal
+  - `Atoms::JSONFormatter` - Structured JSON output formatting
+  - `Molecules::Git::MultiRepoCoordinator` - Multi-repository coordination across submodules
+  - `Molecules::Code::FilePatternExtractor` - Pattern matching and file extraction logic
+  - `Molecules::FormatHandlers` - Output formatting for different modes (text, json, etc.)
+  - `Atoms::Git::RepositoryScanner` - Repository discovery and enumeration
+  - `Atoms::Git::GitCommandExecutor` - Git command execution with repository context
 
 ### Implementation Strategy
 1. Wrap external tools (rg, fd) with Ruby atoms for consistent interface
@@ -123,6 +153,29 @@ The search tool will follow the ATOM architecture pattern established in the dev
 3. Leverage existing multi-repo infrastructure for seamless submodule support
 4. Stream results in real-time for responsive user experience
 5. Support both CLI and programmatic usage for AI agent integration
+
+### Implementation Patterns to Follow
+Based on review of existing codebase:
+1. **Command Execution**: Use `ShellCommandExecutor` for all external tool calls (ripgrep, fd, fzf)
+   - Provides timeout, retry, safe execution, and output capture
+   - Returns structured `CommandResult` with success status and duration
+2. **File Operations**: Reuse existing atoms for file system operations
+   - `DirectoryScanner` for local file enumeration
+   - `FileSystemScanner` for pattern-based file finding
+   - `ProjectRootDetector` for automatic root detection
+3. **Multi-Repository**: Use `MultiRepoCoordinator` patterns
+   - Filter repositories with options[:repository]
+   - Execute across repositories with proper error handling
+4. **Output Formatting**: Follow `FormatHandlers` pattern
+   - Separate formatters for text, JSON, and other output modes
+   - Include metadata (execution time, provider info) in structured output
+5. **Error Handling**: Follow existing patterns
+   - Return hash with `:success`, `:error`, `:output` keys
+   - Provide actionable error messages for missing dependencies
+6. **Testing**: Follow existing RSpec patterns
+   - Unit tests for atoms with minimal dependencies
+   - Integration tests for molecules and organisms
+   - Use VCR for external command recording where appropriate
 
 ## Tool Selection
 
@@ -137,25 +190,24 @@ The search tool will follow the ATOM architecture pattern established in the dev
 
 ## File Modifications
 
-### Create
+### Create (New Components Only)
 - dev-tools/lib/coding_agent_tools/atoms/search/
-  - ripgrep_executor.rb - Execute ripgrep with proper error handling
-  - fd_executor.rb - Execute fd for file searches
-  - git_search_executor.rb - Git-aware file enumeration
+  - ripgrep_executor.rb - Wrapper for ripgrep using ShellCommandExecutor
+  - fd_executor.rb - Wrapper for fd using ShellCommandExecutor
   - pattern_analyzer.rb - Analyze patterns for DWIM mode selection
-  - result_parser.rb - Parse search tool output into structured format
+  - result_parser.rb - Parse ripgrep/fd output into structured format
 
 - dev-tools/lib/coding_agent_tools/molecules/search/
   - dwim_heuristics_engine.rb - Intelligent mode selection based on pattern
-  - scope_enumerator.rb - Enumerate files based on git scopes
-  - result_formatter.rb - Format results for different output modes
-  - fzf_integrator.rb - Interactive selection with preview
-  - preset_manager.rb - Load and merge search presets
-  - time_filter.rb - Filter files by modification time
+  - git_scope_enumerator.rb - Enumerate files based on git scopes (staged, tracked, changed)
+  - search_result_formatter.rb - Format search results for different output modes
+  - fzf_integrator.rb - Interactive selection with preview using ShellCommandExecutor
+  - preset_manager.rb - Load and merge search presets from config
+  - time_filter.rb - Filter files by modification time using File.stat
 
 - dev-tools/lib/coding_agent_tools/organisms/search/
   - search_orchestrator.rb - Main search coordination logic
-  - multi_repo_searcher.rb - Coordinate searches across submodules
+  - unified_searcher.rb - Coordinate searches across repos using MultiRepoCoordinator
 
 - dev-tools/lib/coding_agent_tools/cli/commands/search.rb
   - Main CLI command implementation
@@ -223,14 +275,20 @@ The search tool will follow the ATOM architecture pattern established in the dev
 - **Risk:** External tool availability (ripgrep/fd not installed)
   - **Probability:** Medium
   - **Impact:** High
-  - **Mitigation:** Detect at startup, provide install instructions, consider bundling
-  - **Rollback:** Fall back to git grep or Ruby implementation
+  - **Mitigation:** Use SystemCommandExecutor.command_available? for detection, provide install instructions
+  - **Rollback:** Fall back to git grep or DirectoryScanner for basic functionality
 
 - **Risk:** Performance degradation on large repositories
   - **Probability:** Low
   - **Impact:** Medium
   - **Mitigation:** Use ripgrep's built-in optimizations, add --max-results flag
   - **Rollback:** Add performance tuning options
+
+- **Risk:** Streaming output support in ShellCommandExecutor
+  - **Probability:** Medium
+  - **Impact:** Medium
+  - **Mitigation:** ShellCommandExecutor currently buffers output; may need to enhance for real-time streaming
+  - **Rollback:** Use buffered output initially, add streaming in optimization phase
 
 ### Integration Risks
 - **Risk:** Breaking changes in external tool outputs
@@ -251,42 +309,42 @@ The search tool will follow the ATOM architecture pattern established in the dev
 ### Execution Steps
 
 #### Phase 1: Core Search Infrastructure
-- [ ] Create atoms for external tool execution
+- [ ] Create ripgrep and fd executor atoms using ShellCommandExecutor
   > TEST: Tool Execution
   > Type: Unit Test
-  > Assert: ripgrep and fd execute successfully with proper error handling
-  > Command: bin/test spec/atoms/search/
+  > Assert: ripgrep and fd execute successfully using existing ShellCommandExecutor
+  > Command: bin/test spec/atoms/search/ripgrep_executor_spec.rb spec/atoms/search/fd_executor_spec.rb
 
-- [ ] Implement pattern analyzer for DWIM mode selection
+- [ ] Implement pattern analyzer for DWIM mode selection (reuse FilePatternExtractor logic)
   > TEST: Pattern Analysis
   > Type: Unit Test
   > Assert: Patterns correctly identified as file/content/hybrid searches
   > Command: bin/test spec/atoms/search/pattern_analyzer_spec.rb
 
-- [ ] Build result parser for structured output
+- [ ] Build result parser for ripgrep/fd output formats
   > TEST: Result Parsing
   > Type: Unit Test
   > Assert: Tool outputs parsed into consistent internal format
   > Command: bin/test spec/atoms/search/result_parser_spec.rb
 
 #### Phase 2: Search Intelligence
-- [ ] Implement DWIM heuristics engine
+- [ ] Implement DWIM heuristics engine using pattern analysis
   > TEST: DWIM Mode Selection
   > Type: Integration Test
   > Assert: Search mode matches user intent 90%+ of the time
   > Command: bin/test spec/molecules/search/dwim_heuristics_engine_spec.rb
 
-- [ ] Create scope enumerator for git-aware filtering
+- [ ] Create git scope enumerator using GitCommandExecutor
   > TEST: Git Scope Enumeration
   > Type: Integration Test
-  > Assert: Correctly identifies tracked/staged/changed files
-  > Command: bin/test spec/molecules/search/scope_enumerator_spec.rb
+  > Assert: Correctly identifies tracked/staged/changed files using git commands
+  > Command: bin/test spec/molecules/search/git_scope_enumerator_spec.rb
 
-- [ ] Build result formatter for multiple output modes
+- [ ] Build search result formatter extending FormatHandlers patterns
   > TEST: Output Formatting
   > Type: Unit Test
   > Assert: All output modes (text, json, fzf) produce correct format
-  > Command: bin/test spec/molecules/search/result_formatter_spec.rb
+  > Command: bin/test spec/molecules/search/search_result_formatter_spec.rb
 
 #### Phase 3: Advanced Features
 - [ ] Implement fzf integration for interactive selection
@@ -308,16 +366,16 @@ The search tool will follow the ATOM architecture pattern established in the dev
   > Command: search --since "1 week ago" "pattern"
 
 #### Phase 4: Multi-Repository Support
-- [ ] Integrate with MultiRepoCoordinator
+- [ ] Create unified searcher using existing MultiRepoCoordinator
   > TEST: Multi-Repo Search
   > Type: Integration Test
-  > Assert: Search spans all submodules seamlessly
-  > Command: bin/test spec/organisms/search/multi_repo_searcher_spec.rb
+  > Assert: Search spans all submodules using MultiRepoCoordinator.execute_across_repositories
+  > Command: bin/test spec/organisms/search/unified_searcher_spec.rb
 
-- [ ] Implement repository-aware result aggregation
+- [ ] Implement repository-aware result aggregation with repo context
   > TEST: Result Aggregation
   > Type: Integration Test
-  > Assert: Results properly labeled with repository context
+  > Assert: Results properly labeled with repository name and path
   > Command: search --json "TODO" | jq '.results[].repository'
 
 #### Phase 5: CLI Integration
