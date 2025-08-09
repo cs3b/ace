@@ -121,6 +121,11 @@ After thorough review of the existing codebase, significant reusable components 
 - Can leverage existing error handling and result patterns
 - Multi-repository support requires minimal new code
 - Most complexity will be in DWIM heuristics and result aggregation
+- **Namespace isolation**: All search components under `search/` subdirectories ensures:
+  - Clear separation from existing functionality
+  - Easy identification of search-related code
+  - Potential for future extraction as separate gem
+  - No naming conflicts with existing components
 
 ## Technical Approach
 
@@ -129,7 +134,10 @@ The search tool will follow the ATOM architecture pattern established in the dev
 - **Atoms**: Low-level search executors (ripgrep wrapper, fd wrapper, git wrapper), pattern matchers, result parsers
 - **Molecules**: DWIM heuristics engine, scope enumerator, result formatter, fzf integrator
 - **Organisms**: Search orchestrator coordinating all search operations across repositories
+- **Models**: Pure data structures for search results, options, and presets
 - **CLI Command**: Main search command with comprehensive flag handling
+
+**Namespace Organization**: All search-specific components will be organized under the `search/` namespace at each ATOM layer to maintain clear separation of concerns and make the search functionality self-contained.
 
 ### Technology Stack
 - **External Tools**: ripgrep (content search), fd (file search), fzf (interactive selection), git (repository awareness)
@@ -190,12 +198,13 @@ Based on review of existing codebase:
 
 ## File Modifications
 
-### Create (New Components Only)
+### Create (New Components Only - All in Search Namespace)
 - dev-tools/lib/coding_agent_tools/atoms/search/
   - ripgrep_executor.rb - Wrapper for ripgrep using ShellCommandExecutor
   - fd_executor.rb - Wrapper for fd using ShellCommandExecutor
   - pattern_analyzer.rb - Analyze patterns for DWIM mode selection
   - result_parser.rb - Parse ripgrep/fd output into structured format
+  - tool_availability_checker.rb - Check for ripgrep/fd/fzf availability
 
 - dev-tools/lib/coding_agent_tools/molecules/search/
   - dwim_heuristics_engine.rb - Intelligent mode selection based on pattern
@@ -204,10 +213,17 @@ Based on review of existing codebase:
   - fzf_integrator.rb - Interactive selection with preview using ShellCommandExecutor
   - preset_manager.rb - Load and merge search presets from config
   - time_filter.rb - Filter files by modification time using File.stat
+  - result_aggregator.rb - Aggregate results across multiple repositories
+  - stream_processor.rb - Process streaming output from external tools
 
 - dev-tools/lib/coding_agent_tools/organisms/search/
   - search_orchestrator.rb - Main search coordination logic
   - unified_searcher.rb - Coordinate searches across repos using MultiRepoCoordinator
+
+- dev-tools/lib/coding_agent_tools/models/search/
+  - search_result.rb - Data model for search results
+  - search_options.rb - Data model for search configuration
+  - search_preset.rb - Data model for search presets
 
 - dev-tools/lib/coding_agent_tools/cli/commands/search.rb
   - Main CLI command implementation
@@ -216,13 +232,16 @@ Based on review of existing codebase:
   - Executable wrapper script
 
 - dev-tools/spec/coding_agent_tools/atoms/search/*_spec.rb
-  - Unit tests for all atoms
+  - Unit tests for all search atoms
 
 - dev-tools/spec/coding_agent_tools/molecules/search/*_spec.rb
-  - Unit tests for all molecules
+  - Unit tests for all search molecules
 
 - dev-tools/spec/coding_agent_tools/organisms/search/*_spec.rb
-  - Integration tests for orchestrator
+  - Integration tests for search orchestrator
+
+- dev-tools/spec/coding_agent_tools/models/search/*_spec.rb
+  - Unit tests for search models
 
 - dev-tools/spec/coding_agent_tools/cli/commands/search_spec.rb
   - CLI command tests
@@ -309,6 +328,18 @@ Based on review of existing codebase:
 ### Execution Steps
 
 #### Phase 1: Core Search Infrastructure
+- [ ] Create search namespace directories (atoms/search/, molecules/search/, organisms/search/, models/search/)
+  > TEST: Directory Structure
+  > Type: Manual verification
+  > Assert: All search namespaces created with proper .keep files
+  > Command: ls -la lib/coding_agent_tools/{atoms,molecules,organisms,models}/search/
+
+- [ ] Create tool availability checker atom
+  > TEST: Tool Detection
+  > Type: Unit Test
+  > Assert: Correctly detects ripgrep/fd/fzf availability using SystemCommandExecutor
+  > Command: bin/test spec/atoms/search/tool_availability_checker_spec.rb
+
 - [ ] Create ripgrep and fd executor atoms using ShellCommandExecutor
   > TEST: Tool Execution
   > Type: Unit Test
@@ -327,7 +358,13 @@ Based on review of existing codebase:
   > Assert: Tool outputs parsed into consistent internal format
   > Command: bin/test spec/atoms/search/result_parser_spec.rb
 
-#### Phase 2: Search Intelligence
+#### Phase 2: Search Intelligence & Data Models
+- [ ] Create search data models (SearchResult, SearchOptions, SearchPreset)
+  > TEST: Data Models
+  > Type: Unit Test
+  > Assert: Models properly encapsulate search data without behavior
+  > Command: bin/test spec/models/search/
+
 - [ ] Implement DWIM heuristics engine using pattern analysis
   > TEST: DWIM Mode Selection
   > Type: Integration Test
@@ -345,6 +382,12 @@ Based on review of existing codebase:
   > Type: Unit Test
   > Assert: All output modes (text, json, fzf) produce correct format
   > Command: bin/test spec/molecules/search/search_result_formatter_spec.rb
+
+- [ ] Implement result aggregator for multi-repo results
+  > TEST: Result Aggregation
+  > Type: Unit Test
+  > Assert: Properly combines and labels results from multiple repositories
+  > Command: bin/test spec/molecules/search/result_aggregator_spec.rb
 
 #### Phase 3: Advanced Features
 - [ ] Implement fzf integration for interactive selection
