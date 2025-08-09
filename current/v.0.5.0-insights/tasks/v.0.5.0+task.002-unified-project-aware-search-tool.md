@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.002
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 16h
 dependencies: []
 ---
 
@@ -99,8 +99,290 @@ Provide developers and AI agents with a unified, intelligent search tool that el
 - ❌ **Performance Optimization**: Detailed threading models, memory management
 - ❌ **Future Enhancements**: Language server integration, Windows support
 
+## Technical Approach
+
+### Architecture Pattern
+The search tool will follow the ATOM architecture pattern established in the dev-tools codebase:
+- **Atoms**: Low-level search executors (ripgrep wrapper, fd wrapper, git wrapper), pattern matchers, result parsers
+- **Molecules**: DWIM heuristics engine, scope enumerator, result formatter, fzf integrator
+- **Organisms**: Search orchestrator coordinating all search operations across repositories
+- **CLI Command**: Main search command with comprehensive flag handling
+
+### Technology Stack
+- **External Tools**: ripgrep (content search), fd (file search), fzf (interactive selection), git (repository awareness)
+- **Ruby Process Management**: Open3 for safe command execution with streaming output
+- **Existing Components**: 
+  - MultiRepoCoordinator for multi-repository support
+  - ProjectRootDetector for automatic root detection
+  - JSONFormatter for structured output
+  - PathAutocorrector for intelligent path matching
+
+### Implementation Strategy
+1. Wrap external tools (rg, fd) with Ruby atoms for consistent interface
+2. Build DWIM heuristics based on pattern analysis (glob patterns → file search, regex → content search)
+3. Leverage existing multi-repo infrastructure for seamless submodule support
+4. Stream results in real-time for responsive user experience
+5. Support both CLI and programmatic usage for AI agent integration
+
+## Tool Selection
+
+| Criteria | ripgrep + fd | Pure Ruby | git grep only | Selected |
+|----------|--------------|-----------|---------------|----------|
+| Performance | Excellent | Poor | Good | ripgrep + fd |
+| Features | Complete | Limited | Limited | ripgrep + fd |
+| Git Integration | Via flags | Manual | Native | ripgrep + fd |
+| Maintenance | External deps | Self-contained | Git only | ripgrep + fd |
+
+**Selection Rationale:** ripgrep and fd are industry-standard tools with exceptional performance and features. They're widely available and provide the best user experience.
+
+## File Modifications
+
+### Create
+- dev-tools/lib/coding_agent_tools/atoms/search/
+  - ripgrep_executor.rb - Execute ripgrep with proper error handling
+  - fd_executor.rb - Execute fd for file searches
+  - git_search_executor.rb - Git-aware file enumeration
+  - pattern_analyzer.rb - Analyze patterns for DWIM mode selection
+  - result_parser.rb - Parse search tool output into structured format
+
+- dev-tools/lib/coding_agent_tools/molecules/search/
+  - dwim_heuristics_engine.rb - Intelligent mode selection based on pattern
+  - scope_enumerator.rb - Enumerate files based on git scopes
+  - result_formatter.rb - Format results for different output modes
+  - fzf_integrator.rb - Interactive selection with preview
+  - preset_manager.rb - Load and merge search presets
+  - time_filter.rb - Filter files by modification time
+
+- dev-tools/lib/coding_agent_tools/organisms/search/
+  - search_orchestrator.rb - Main search coordination logic
+  - multi_repo_searcher.rb - Coordinate searches across submodules
+
+- dev-tools/lib/coding_agent_tools/cli/commands/search.rb
+  - Main CLI command implementation
+
+- dev-tools/exe/search
+  - Executable wrapper script
+
+- dev-tools/spec/coding_agent_tools/atoms/search/*_spec.rb
+  - Unit tests for all atoms
+
+- dev-tools/spec/coding_agent_tools/molecules/search/*_spec.rb
+  - Unit tests for all molecules
+
+- dev-tools/spec/coding_agent_tools/organisms/search/*_spec.rb
+  - Integration tests for orchestrator
+
+- dev-tools/spec/coding_agent_tools/cli/commands/search_spec.rb
+  - CLI command tests
+
+### Modify
+- dev-tools/lib/coding_agent_tools/cli.rb
+  - Register new search command
+  
+- dev-tools/lib/coding_agent_tools/organisms/tool_lister.rb
+  - Add search tool to categorization
+
+## Test Case Planning
+
+### Happy Path Scenarios
+- Search for file by name pattern: `search "*.rb"`
+- Search for content with regex: `search "def.*initialize"`
+- Search with context lines: `search -C 3 "TODO"`
+- Interactive selection: `search --fzf "class"`
+- JSON output for automation: `search --json "pattern"`
+
+### Edge Case Scenarios
+- Empty pattern → Show usage help
+- No matches found → Exit code 1 with clear message
+- Binary file handling → Skip with notification
+- Symlink cycles → Detect and handle gracefully
+- Large result sets → Respect --max-results limit
+- Unicode in patterns → Proper encoding handling
+
+### Error Condition Scenarios
+- Missing ripgrep/fd → Actionable install instructions
+- Invalid regex pattern → Clear error with correction hints
+- Permission denied on files → Continue search, note skipped files
+- Git repository errors → Fall back to non-git search
+
+### Integration Scenarios
+- Multi-repository search → Coordinate across all submodules
+- Git scope filtering → Correctly enumerate tracked/staged files
+- Time-based filtering → Accurate file selection
+- Editor integration → Proper formatting for VS Code, Vim
+
+### Performance Scenarios
+- Large repository (100k+ files) → Start streaming within 200ms
+- Deep directory trees → Efficient traversal
+- Network filesystems → Timeout handling
+- Concurrent searches → Resource management
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** External tool availability (ripgrep/fd not installed)
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Detect at startup, provide install instructions, consider bundling
+  - **Rollback:** Fall back to git grep or Ruby implementation
+
+- **Risk:** Performance degradation on large repositories
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Use ripgrep's built-in optimizations, add --max-results flag
+  - **Rollback:** Add performance tuning options
+
+### Integration Risks
+- **Risk:** Breaking changes in external tool outputs
+  - **Probability:** Low
+  - **Impact:** High
+  - **Mitigation:** Pin tool versions in documentation, comprehensive output parsing tests
+  - **Monitoring:** Version detection and compatibility warnings
+
+## Implementation Plan
+
+### Planning Steps
+* [x] Analyze ripgrep and fd command-line interfaces and output formats
+* [x] Research Ruby process management best practices for streaming output
+* [x] Design DWIM heuristics based on pattern analysis
+* [x] Plan integration with existing multi-repo infrastructure
+* [x] Define JSON output schema for structured results
+
+### Execution Steps
+
+#### Phase 1: Core Search Infrastructure
+- [ ] Create atoms for external tool execution
+  > TEST: Tool Execution
+  > Type: Unit Test
+  > Assert: ripgrep and fd execute successfully with proper error handling
+  > Command: bin/test spec/atoms/search/
+
+- [ ] Implement pattern analyzer for DWIM mode selection
+  > TEST: Pattern Analysis
+  > Type: Unit Test
+  > Assert: Patterns correctly identified as file/content/hybrid searches
+  > Command: bin/test spec/atoms/search/pattern_analyzer_spec.rb
+
+- [ ] Build result parser for structured output
+  > TEST: Result Parsing
+  > Type: Unit Test
+  > Assert: Tool outputs parsed into consistent internal format
+  > Command: bin/test spec/atoms/search/result_parser_spec.rb
+
+#### Phase 2: Search Intelligence
+- [ ] Implement DWIM heuristics engine
+  > TEST: DWIM Mode Selection
+  > Type: Integration Test
+  > Assert: Search mode matches user intent 90%+ of the time
+  > Command: bin/test spec/molecules/search/dwim_heuristics_engine_spec.rb
+
+- [ ] Create scope enumerator for git-aware filtering
+  > TEST: Git Scope Enumeration
+  > Type: Integration Test
+  > Assert: Correctly identifies tracked/staged/changed files
+  > Command: bin/test spec/molecules/search/scope_enumerator_spec.rb
+
+- [ ] Build result formatter for multiple output modes
+  > TEST: Output Formatting
+  > Type: Unit Test
+  > Assert: All output modes (text, json, fzf) produce correct format
+  > Command: bin/test spec/molecules/search/result_formatter_spec.rb
+
+#### Phase 3: Advanced Features
+- [ ] Implement fzf integration for interactive selection
+  > TEST: Interactive Mode
+  > Type: Manual Test
+  > Assert: fzf launches with preview and allows selection
+  > Command: search --fzf "test"
+
+- [ ] Add preset system for saved searches
+  > TEST: Preset Loading
+  > Type: Integration Test
+  > Assert: Presets load and merge with CLI flags correctly
+  > Command: bin/test spec/molecules/search/preset_manager_spec.rb
+
+- [ ] Create time-based file filtering
+  > TEST: Time Filtering
+  > Type: Integration Test
+  > Assert: Files filtered correctly by modification time
+  > Command: search --since "1 week ago" "pattern"
+
+#### Phase 4: Multi-Repository Support
+- [ ] Integrate with MultiRepoCoordinator
+  > TEST: Multi-Repo Search
+  > Type: Integration Test
+  > Assert: Search spans all submodules seamlessly
+  > Command: bin/test spec/organisms/search/multi_repo_searcher_spec.rb
+
+- [ ] Implement repository-aware result aggregation
+  > TEST: Result Aggregation
+  > Type: Integration Test
+  > Assert: Results properly labeled with repository context
+  > Command: search --json "TODO" | jq '.results[].repository'
+
+#### Phase 5: CLI Integration
+- [ ] Create main CLI command with comprehensive flags
+  > TEST: CLI Command
+  > Type: CLI Test
+  > Assert: All flags work as documented
+  > Command: bin/test spec/cli/commands/search_spec.rb
+
+- [ ] Add search command to tool registry
+  > TEST: Tool Discovery
+  > Type: Integration Test
+  > Assert: Search tool appears in tool listing
+  > Command: exe/coding_agent_tools all | grep search
+
+- [ ] Create executable wrapper
+  > TEST: Executable
+  > Type: Manual Test
+  > Assert: Search command available from command line
+  > Command: search --help
+
+#### Phase 6: Documentation and Testing
+- [ ] Write comprehensive unit tests for all components
+  > TEST: Test Coverage
+  > Type: Coverage Report
+  > Assert: 95%+ code coverage for search components
+  > Command: bin/test --coverage
+
+- [ ] Add integration tests for complex scenarios
+  > TEST: Integration Suite
+  > Type: Integration Test
+  > Assert: All user scenarios pass
+  > Command: bin/test spec/integration/search_scenarios_spec.rb
+
+- [ ] Create user documentation with examples
+  > TEST: Documentation
+  > Type: Manual Review
+  > Assert: Clear usage examples for all features
+  > Command: cat docs/user/search.md
+
+- [ ] Validate performance benchmarks
+  > TEST: Performance
+  > Type: Benchmark
+  > Assert: Startup ≤ 200ms, results begin streaming immediately
+  > Command: time search "pattern" | head -1
+
+## Acceptance Criteria
+- [x] Project Root Detection: Tool finds root from any subdirectory within 50ms
+- [ ] DWIM Accuracy: Mode selection matches user intent 90%+ of the time
+- [ ] Multi-Repository Support: Seamless search across submodules and nested repos
+- [ ] Editor Integration: --open flag works with VS Code, Vim, Sublime
+- [ ] Performance: Startup ≤ 200ms, results begin streaming immediately
+- [ ] Git Integration: Scopes correctly enumerate files across all repositories
+- [ ] JSON Schema: Output validates against documented schema
+- [ ] Preset System: User-defined presets merge correctly with CLI flags
+
+## Out of Scope
+- ❌ Windows-specific optimizations (focus on Unix-like systems initially)
+- ❌ Language-specific parsing (leave for future language server integration)
+- ❌ Custom ranking algorithms (use tool defaults initially)
+- ❌ Cloud storage search integration
+
 ## References
 
 - Source idea: dev-taskflow/backlog/ideas/20250809-1022-unified-project-aware-search-spec.md
 - Similar tools: ripgrep, fd, git grep, ack, ag
 - Integration examples: fzf.vim, telescope.nvim
+- ATOM Architecture: docs/architecture-tools.md
