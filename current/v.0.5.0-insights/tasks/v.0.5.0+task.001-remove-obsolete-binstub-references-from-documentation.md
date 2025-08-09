@@ -76,38 +76,59 @@ Remove all obsolete binstub references from documentation to ensure users have a
 
 ## Technical Approach
 
-### Audit Results
+### Audit Results (CORRECTED)
 
-Comprehensive search conducted across all repositories:
-- **dev-handbook/**: No binstub references found (already clean)
+Comprehensive search using ripgrep reveals **extensive binstub references still present**:
+- **dev-handbook/**: **200+ references found** requiring updates
 - **dev-tools/**: No binstub references found (already clean)
 - **docs/**: No binstub references found (already clean)
 - **dev-taskflow/**: Only historical references in done/ folders and idea files
 
 ### Current State Analysis
 
-The documentation has already been successfully cleaned of binstub references. The behavioral requirements are currently met:
-- All active documentation correctly uses dev-tools/exe/ or gem commands
-- No confusing binstub patterns in user-facing guides
-- Historical references appropriately isolated in archived folders
+**The documentation requires significant cleanup**. Found references include:
+- `bin/test`: 77 occurrences
+- `bin/lint`: 24 occurrences
+- `bin/tn`: 18 occurrences
+- `bin/tnid`: 14 occurrences
+- `bin/tr`, `bin/gc`, `bin/gs`, `bin/gl`, `bin/rc`: Multiple occurrences each
+
+See `dev-taskflow/current/v.0.5.0-insights/researches/binstub-audit-results.md` for complete audit.
 
 ## File Modifications
 
-### Verify Clean State
+### Files Requiring Updates
 
-No modifications needed - documentation is already compliant. The following locations were verified as clean:
-- docs/tools.md - Uses correct dev-tools/exe/ references
-- dev-handbook/**/*.md - No binstub patterns found
-- dev-tools/**/*.md - No binstub patterns found
+#### High Priority - Workflow Instructions (10 files)
+- dev-handbook/workflow-instructions/work-on-task.wf.md
+- dev-handbook/workflow-instructions/initialize-project-structure.wf.md
+- dev-handbook/workflow-instructions/fix-tests.wf.md
+- dev-handbook/workflow-instructions/rebase-against.wf.md
+- dev-handbook/workflow-instructions/save-session-context.wf.md
+- dev-handbook/workflow-instructions/plan-task.wf.md
+- dev-handbook/workflow-instructions/draft-release.wf.md
+- dev-handbook/workflow-instructions/publish-release.wf.md
+- dev-handbook/workflow-instructions/improve-code-coverage.wf.md
+- dev-handbook/workflow-instructions/update-blueprint.wf.md
 
-### Historical References (No Action Needed)
+#### Critical - AI Agent Guide (1 file)
+- dev-handbook/guides/ai-agent-integration.g.md (Lines 31, 34, 37, 40-41, 44-45, 67-68)
 
-Historical references exist in:
-- dev-taskflow/done/*/researches/*.md - Research documents about binstubs
-- dev-taskflow/done/*/ideas/*.md - Old ideas mentioning binstubs
-- dev-taskflow/backlog/ideas/*.md - Ideas about removing binstubs
+#### Important - Development Guides (7 files)
+- dev-handbook/guides/project-management.g.md
+- dev-handbook/guides/version-control-system-git.g.md
+- dev-handbook/guides/task-definition.g.md
+- dev-handbook/guides/embedded-testing-guide.g.md
+- dev-handbook/guides/testing.g.md
+- dev-handbook/guides/release-publish.g.md
+- dev-handbook/guides/testing/test-maintenance.md
 
-These are appropriately archived and do not affect active documentation.
+#### Templates (10+ files)
+- dev-handbook/templates/release-v.0.0.0/*.task.template.md (5 files)
+- dev-handbook/templates/project-docs/architecture.template.md
+- dev-handbook/templates/project-docs/blueprint.template.md
+- dev-handbook/templates/task-management/task.pending.template.md
+- dev-handbook/templates/binstubs/*.template.md
 
 ## Implementation Plan
 
@@ -117,41 +138,74 @@ These are appropriately archived and do not affect active documentation.
   > TEST: Comprehensive Search
   > Type: Pre-condition Check
   > Assert: All repositories searched for binstub patterns
-  > Command: grep -r "bin/tn\|bin/gc\|bin/tnid" . --include="*.md"
+  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint)" dev-handbook --type md
 
-* [x] **Current State Assessment**: Verified documentation already meets requirements
-  > TEST: Documentation Compliance
-  > Type: Validation Check
-  > Assert: No active binstub references in user-facing docs
-  > Command: grep -r "bin/[a-z]" dev-handbook dev-tools docs --include="*.md"
+* [x] **Current State Assessment**: Found 200+ references requiring updates
+  > TEST: Documentation Audit
+  > Type: Discovery Check
+  > Assert: All binstub references identified and documented
+  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" dev-handbook --type md -n -o | wc -l
 
 ### Execution Steps
 
-- [x] **Verification Complete**: Documentation confirmed as already compliant
-  > TEST: Final Validation
-  > Type: Acceptance Check
-  > Assert: All behavioral requirements already met
-  > Command: echo "Documentation verified clean - no changes needed"
+- [ ] **Update Critical AI Agent Guide**: Fix dev-handbook/guides/ai-agent-integration.g.md
+  > TEST: AI Guide Validation
+  > Type: Content Check
+  > Assert: No binstub references remain in AI agent guide
+  > Command: rg "bin/(tn|gc|tnid)" dev-handbook/guides/ai-agent-integration.g.md
+
+- [ ] **Update Workflow Instructions**: Fix all 10 workflow instruction files
+  > TEST: Workflow Validation
+  > Type: Content Check
+  > Assert: All workflows use dev-tools/exe/ commands
+  > Command: rg "bin/(tn|gc|tnid)" dev-handbook/workflow-instructions/
+
+- [ ] **Update Development Guides**: Fix 7 guide files
+  > TEST: Guide Validation
+  > Type: Content Check
+  > Assert: All guides reference correct tool paths
+  > Command: rg "bin/(tn|gc|tnid)" dev-handbook/guides/
+
+- [ ] **Update Templates**: Fix all template files
+  > TEST: Template Validation
+  > Type: Content Check
+  > Assert: Templates use correct tool references
+  > Command: rg "bin/(tn|gc|tnid)" dev-handbook/templates/
+
+- [ ] **Final Verification**: Confirm all references removed
+  > TEST: Complete Cleanup Validation
+  > Type: Final Check
+  > Assert: Zero binstub references in dev-handbook
+  > Command: rg "bin/(tn|gc|tnid|rc|tr|test|lint|gs|gl|tal)" dev-handbook --type md
 
 ## Risk Assessment
 
 ### Technical Risks
-- **Risk:** None identified - documentation already compliant
-  - **Probability:** N/A
-  - **Impact:** N/A
-  - **Mitigation:** Continue monitoring for regressions
+- **Risk:** Breaking existing workflows during mass replacement
+  - **Probability:** Medium
+  - **Impact:** High
+  - **Mitigation:** Careful review of each replacement, test workflows after changes
+  - **Rollback:** Git revert if issues discovered
+
+### Integration Risks
+- **Risk:** Inconsistent replacement patterns
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Use consistent replacement mapping table
+  - **Monitoring:** Run verification searches after each batch
 
 ## Acceptance Criteria
 
 ### Behavioral Requirement Fulfillment
-- [x] **User Experience Delivery**: Documentation provides accurate tool access guidance
-- [x] **Interface Contract Compliance**: All docs use dev-tools/exe/ or gem commands
-- [x] **System Behavior Validation**: No confusing binstub references found
+- [ ] **User Experience Delivery**: Documentation provides accurate tool access guidance
+- [ ] **Interface Contract Compliance**: All docs use dev-tools/exe/ or gem commands
+- [ ] **System Behavior Validation**: No confusing binstub references found
 
 ### Implementation Quality Assurance
 - [x] **Audit Complete**: Comprehensive search of all repositories performed
-- [x] **Verification Complete**: Documentation confirmed as already compliant
-- [x] **No Regressions**: Historical references appropriately isolated
+- [ ] **Updates Complete**: All identified files updated with correct references
+- [ ] **Final Verification**: Zero binstub references in active documentation
+- [ ] **No Regressions**: Test that workflows still function correctly
 
 ## Out of Scope
 
@@ -166,6 +220,21 @@ These are appropriately archived and do not affect active documentation.
 - Current tools documentation: docs/tools.md (verified clean)
 - Dev-tools documentation: dev-tools/docs/tools.md (verified clean)
 
-## Conclusion
+## Replacement Mapping Table
 
-This task has been completed through verification that the documentation is already in the desired state. All behavioral requirements are met, with no binstub references in active documentation. The task can be marked as complete with no further action required.
+| Old Reference | New Reference (when in submodule) | New Reference (gem installed) |
+|--------------|-----------------------------------|------------------------------|
+| `bin/tn` | `dev-tools/exe/task-manager next` | `task-manager next` |
+| `bin/tnid` | `dev-tools/exe/task-manager generate-id VERSION` | `task-manager generate-id VERSION` |
+| `bin/tal` | `dev-tools/exe/task-manager list` | `task-manager list` |
+| `bin/tr` | `dev-tools/exe/task-manager recent` | `task-manager recent` |
+| `bin/gc` | `dev-tools/exe/git-commit` | `git-commit` |
+| `bin/gs` | `dev-tools/exe/git-status` | `git-status` |
+| `bin/gl` | `dev-tools/exe/git-log` | `git-log` |
+| `bin/rc` | `dev-tools/exe/release-manager current` | `release-manager current` |
+| `bin/test` | *Project-specific test command* | *Project-specific* |
+| `bin/lint` | *Project-specific lint command* | *Project-specific* |
+
+## Updated Conclusion
+
+This task requires **significant implementation work**. The audit revealed 200+ binstub references across dev-handbook that need to be replaced with correct dev-tools executable paths. Priority should be given to the AI agent integration guide as it directly impacts AI agent operations.
