@@ -199,8 +199,10 @@ module CodingAgentTools
           apply_preset(@options[:preset])
         end
 
-        # Perform search
-        results = @unified_searcher.search(pattern, @options)
+        # Perform search (don't pass format to the searcher)
+        search_options = @options.dup
+        search_options.delete(:format)  # Remove format, handle it in CLI
+        results = @unified_searcher.search(pattern, search_options)
         
         # Handle interactive mode
         if @options[:interactive]
