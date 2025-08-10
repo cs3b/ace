@@ -78,8 +78,8 @@ module CodingAgentTools
           args << '--no-ignore' if options[:no_ignore]
           args << '--no-ignore-vcs' if options[:no_ignore_vcs]
 
-          # Type filtering
-          case options[:type]
+          # Type filtering (for fd file types, not search modes)
+          case options[:fd_type]
           when 'f', 'file'
             args << '--type=file'
           when 'd', 'directory'

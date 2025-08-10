@@ -100,9 +100,9 @@ module CodingAgentTools
           # Basic options
           args << '--color=never' unless options[:color]
           args << '--json' if options[:json_output]
-          args << '--line-number' if options[:line_numbers]
-          args << '--no-heading' if options[:no_heading]
-          args << '--with-filename' if options[:with_filename]
+          args << '--line-number' unless options[:no_line_numbers] # Default to showing line numbers
+          args << '--no-heading' unless options[:heading]
+          args << '--with-filename' unless options[:no_filename]
           args << '--count' if options[:count]
           args << '--files-with-matches' if options[:files_with_matches]
           args << '--invert-match' if options[:invert_match]
@@ -115,9 +115,9 @@ module CodingAgentTools
             args << "--after-context=#{options[:after_context]}" if options[:after_context]
           end
 
-          # File type filtering
-          if options[:type]
-            Array(options[:type]).each { |t| args << "--type=#{t}" }
+          # File type filtering (only for valid ripgrep file types)
+          if options[:file_type]
+            Array(options[:file_type]).each { |t| args << "--type=#{t}" }
           end
 
           # Glob patterns for file inclusion/exclusion
