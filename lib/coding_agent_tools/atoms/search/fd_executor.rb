@@ -22,13 +22,45 @@ module CodingAgentTools
           result = @executor.execute(command, timeout: options.fetch(:timeout, 120))
 
           {
-            success: result.success?,
-            stdout: result.stdout,
-            stderr: result.stderr,
-            exit_code: result.exit_code,
-            duration: result.duration,
+            success: result[:success],
+            stdout: result[:stdout],
+            stderr: result[:stderr],
+            exit_code: result[:exit_code],
+            duration: result[:duration],
             command: command
           }
+        end
+
+        # Check if fd is available
+        # @return [Boolean] True if fd is installed
+        def available?
+          result = @executor.execute("which fd", timeout: 5)
+          result[:success]
+        end
+
+        # Find files matching pattern
+        # @param pattern [String] File pattern
+        # @param options [Hash] Search options
+        # @return [Hash] Search results
+        def find_files(pattern, options = {})
+          return { success: false, error: "fd not available" } unless available?
+          
+          result = execute(pattern, options)
+          
+          if result[:success]
+            files = result[:stdout].split("\n").map(&:strip).reject(&:empty?)
+            {
+              success: true,
+              files: files,
+              count: files.size
+            }
+          else
+            {
+              success: false,
+              error: result[:stderr] || "Search failed",
+              exit_code: result[:exit_code]
+            }
+          end
         end
 
         # Build fd command with proper escaping

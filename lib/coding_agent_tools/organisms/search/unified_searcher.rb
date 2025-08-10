@@ -66,7 +66,7 @@ module CodingAgentTools
         # Get repository information
         # @return [Array<Hash>] Repository details
         def repositories
-          @coordinator.repositories.map do |repo|
+          @coordinator.available_repositories.map do |repo|
             {
               name: repo[:name],
               path: repo[:path],
@@ -80,18 +80,20 @@ module CodingAgentTools
 
         # Get repositories to search based on options
         def get_repositories(options)
+          repos = @coordinator.available_repositories
+          
           if options[:repository]
             # Filter to specific repository
-            @coordinator.repositories.select do |repo|
+            repos.select do |repo|
               repo[:name] == options[:repository] ||
               repo[:path] == options[:repository]
             end
           elsif options[:main_only]
             # Only search main repository
-            [@coordinator.main_repository].compact
+            repos.select { |repo| repo[:name] == 'main' || repo[:name] == 'handbook-meta' }
           else
             # Search all repositories
-            @coordinator.repositories
+            repos
           end
         end
 
@@ -116,11 +118,11 @@ module CodingAgentTools
           # Change to repository directory
           Dir.chdir(repo[:path]) do
             case mode
-            when :file
+            when :file, :files
               search_files_in_repo(pattern, options)
             when :content
               search_content_in_repo(pattern, options)
-            when :hybrid
+            when :hybrid, :both
               # Search both files and content
               {
                 files: search_files_in_repo(pattern, options),

@@ -24,13 +24,70 @@ module CodingAgentTools
           result = @executor.execute(command, timeout: options.fetch(:timeout, 120))
 
           {
-            success: result.success?,
-            stdout: result.stdout,
-            stderr: result.stderr,
-            exit_code: result.exit_code,
-            duration: result.duration,
+            success: result[:success],
+            stdout: result[:stdout],
+            stderr: result[:stderr],
+            exit_code: result[:exit_code],
+            duration: result[:duration],
             command: command
           }
+        end
+
+        # Check if ripgrep is available
+        # @return [Boolean] True if ripgrep is installed
+        def available?
+          result = @executor.execute("which rg", timeout: 5)
+          result[:success]
+        end
+
+        # Search for pattern in files
+        # @param pattern [String] Search pattern
+        # @param options [Hash] Search options
+        # @return [Hash] Search results
+        def search(pattern, options = {})
+          return { success: false, error: "ripgrep not available" } unless available?
+          
+          result = execute(pattern, options)
+          
+          if result[:success]
+            lines = result[:stdout].split("\n").map(&:strip).reject(&:empty?)
+            results = parse_ripgrep_output(lines)
+            {
+              success: true,
+              results: results,
+              count: results.size
+            }
+          else
+            {
+              success: false,
+              error: result[:stderr] || "Search failed",
+              exit_code: result[:exit_code]
+            }
+          end
+        end
+
+        # Parse ripgrep output into structured results
+        # @param lines [Array<String>] Output lines from ripgrep
+        # @return [Array<Hash>] Parsed results
+        def parse_ripgrep_output(lines)
+          lines.map do |line|
+            if match = line.match(/^([^:]+):(\d+):(.*)$/)
+              {
+                file: match[1],
+                line: match[2].to_i,
+                text: match[3].strip
+              }
+            elsif match = line.match(/^([^:]+):(\d+):(\d+):(.*)$/)
+              {
+                file: match[1],
+                line: match[2].to_i,
+                column: match[3].to_i,
+                text: match[4].strip
+              }
+            else
+              { text: line }
+            end
+          end
         end
 
         # Build ripgrep command with proper escaping
