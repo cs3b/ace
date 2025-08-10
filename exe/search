@@ -299,13 +299,21 @@ module CodingAgentTools
               output_single_result(result)
             end
           elsif repo_data[:results].is_a?(Hash)
-            if repo_data[:results][:files]
-              puts "  Files:"
-              repo_data[:results][:files].each { |f| puts "    #{f}" }
-            end
-            if repo_data[:results][:content]
-              puts "  Content:"
-              repo_data[:results][:content].each { |r| output_single_result(r) }
+            # Check if it's the search result format {success: bool, results: array}
+            if repo_data[:results][:results].is_a?(Array)
+              repo_data[:results][:results].each do |result|
+                output_single_result(result)
+              end
+            # Or if it's the hybrid format {files: array, content: array}
+            elsif repo_data[:results][:files] || repo_data[:results][:content]
+              if repo_data[:results][:files]
+                puts "  Files:"
+                repo_data[:results][:files].each { |f| puts "    #{f}" }
+              end
+              if repo_data[:results][:content]
+                puts "  Content:"
+                repo_data[:results][:content].each { |r| output_single_result(r) }
+              end
             end
           end
           
