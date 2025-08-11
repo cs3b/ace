@@ -23,7 +23,6 @@ module CodingAgentTools
           whole_word: false,
           multi_line: false,
           show_context: 0,
-          repositories: :all,
           interactive: false,
           preset: nil,
           since: nil,
@@ -44,8 +43,6 @@ module CodingAgentTools
         if pattern.nil? || pattern.empty?
           if @options[:list_presets]
             list_presets
-          elsif @options[:list_repos]
-            list_repositories
           else
             puts "Error: No search pattern provided"
             puts "Usage: search [options] PATTERN"
@@ -110,14 +107,7 @@ module CodingAgentTools
             @options[:show_context] = n
           end
 
-          # Repository options
-          opts.on("-r", "--repository REPO", "Search in specific repository") do |repo|
-            @options[:repository] = repo
-          end
-
-          opts.on("-m", "--main-only", "Search main repository only") do
-            @options[:main_only] = true
-          end
+          # Note: --repository and --main-only flags removed in unified search
 
           # File filtering options
           opts.on("-g", "--glob PATTERN", "File glob pattern to include") do |glob|
@@ -145,7 +135,7 @@ module CodingAgentTools
           end
 
           # Search root option
-          opts.on("--search-root PATH", "Root directory for search (default: project root)") do |path|
+          opts.on("--search-root PATH", "Override search root (default: auto-detected project root, use '.' for current dir)") do |path|
             @options[:search_root] = File.expand_path(path)
           end
 
@@ -201,10 +191,7 @@ module CodingAgentTools
             @options[:list_presets] = true
           end
 
-          # Information options
-          opts.on("--list-repos", "List available repositories") do
-            @options[:list_repos] = true
-          end
+          # Information options (--list-repos removed in unified search)
 
           opts.on("-h", "--help", "Show this help message") do
             puts opts
@@ -230,6 +217,17 @@ module CodingAgentTools
         # Perform search (don't pass format to the searcher)
         search_options = @options.dup
         search_options.delete(:format)  # Remove format, handle it in CLI
+        
+        # Map search_root to search_path for executor compatibility
+        # Special case: --search-root . means use current directory
+        if search_options[:search_root]
+          root = search_options.delete(:search_root)
+          # If user explicitly passes ".", use current working directory
+          # Otherwise use the provided path
+          search_options[:search_path] = (root == '.') ? Dir.pwd : root
+        end
+        # If no search_root specified, UnifiedSearcher will use project root by default
+        
         results = @unified_searcher.search(pattern, search_options)
         
         # Handle interactive mode
@@ -258,13 +256,6 @@ module CodingAgentTools
         end
       end
 
-      def list_repositories
-        puts "Available repositories:"
-        @unified_searcher.repositories.each do |repo|
-          status = repo[:status][:is_git] ? "(#{repo[:status][:branch]})" : "(not git)"
-          puts "  #{repo[:name]}: #{repo[:path]} #{status}"
-        end
-      end
 
       def handle_interactive_results(results)
         require_relative "../lib/coding_agent_tools/molecules/search/fzf_integrator"
@@ -276,14 +267,26 @@ module CodingAgentTools
           exit 1
         end
         
-        # Format results for fzf
+        # Format results for fzf - handle both flat and repository structures
         items = []
-        results[:repositories].each do |repo_name, repo_data|
-          repo_data[:results].each do |result|
+        if results[:results]
+          # New flat structure
+          results[:results].each do |result|
             if result[:line]
-              items << "#{repo_name}:#{result[:file]}:#{result[:line]}: #{result[:text]}"
+              items << "#{result[:file]}:#{result[:line]}: #{result[:text]}"
             else
-              items << "#{repo_name}:#{result}"
+              items << "#{result[:file] || result[:path] || result}"
+            end
+          end
+        elsif results[:repositories]
+          # Legacy repository structure
+          results[:repositories].each do |repo_name, repo_data|
+            repo_data[:results].each do |result|
+              if result[:line]
+                items << "#{repo_name}:#{result[:file]}:#{result[:line]}: #{result[:text]}"
+              else
+                items << "#{repo_name}:#{result}"
+              end
             end
           end
         end
@@ -351,15 +354,6 @@ module CodingAgentTools
         
         context_parts << "filters: [#{filters.join(', ')}]" if filters.any?
         
-        # Repository scope
-        if opts[:repository]
-          context_parts << "repo: #{opts[:repository]}"
-        elsif opts[:main_only]
-          context_parts << "repo: main"
-        else
-          context_parts << "repos: all"
-        end
-        
         context_line = "Search context: #{context_parts.join(' | ')}"
         
         if results[:total_results] == 0
@@ -369,51 +363,70 @@ module CodingAgentTools
         end
         
         puts context_line
-        puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories"
-        puts
         
-        results[:repositories].each do |repo_name, repo_data|
-          next if repo_data[:count] == 0
+        # Handle flat structure (unified search) vs legacy repository structure
+        if results[:results]
+          # New flat structure
+          puts "Found #{results[:total_results]} results"
+          puts
           
-          puts "#{repo_name}: (#{repo_data[:count]} results)"
+          results[:results].each do |result|
+            output_single_result(result)
+          end
+        elsif results[:repositories]
+          # Legacy repository structure
+          puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories"
+          puts
           
-          if repo_data[:results].is_a?(Array)
-            repo_data[:results].each do |result|
-              output_single_result(result)
-            end
-          elsif repo_data[:results].is_a?(Hash)
-            # Check if it's the search result format {success: bool, results: array}
-            if repo_data[:results][:results].is_a?(Array)
-              repo_data[:results][:results].each do |result|
+          results[:repositories].each do |repo_name, repo_data|
+            next if repo_data[:count] == 0
+            
+            puts "#{repo_name}: (#{repo_data[:count]} results)"
+            
+            if repo_data[:results].is_a?(Array)
+              repo_data[:results].each do |result|
                 output_single_result(result)
               end
-            # Or if it's the hybrid format {files: array, content: array}
-            elsif repo_data[:results][:files] || repo_data[:results][:content]
-              if repo_data[:results][:files]
-                puts "  Files:"
-                if repo_data[:results][:files].empty?
-                  puts "    (no matching files found)"
-                else
-                  repo_data[:results][:files].each { |f| puts "    #{f}" }
+            elsif repo_data[:results].is_a?(Hash)
+              # Check if it's the search result format {success: bool, results: array}
+              if repo_data[:results][:results].is_a?(Array)
+                repo_data[:results][:results].each do |result|
+                  output_single_result(result)
                 end
-              end
-              if repo_data[:results][:content]
-                puts "  Content:"
-                if repo_data[:results][:content].empty?
-                  puts "    (no matching content found)"
-                else
-                  repo_data[:results][:content].each { |r| output_single_result(r) }
+              # Or if it's the hybrid format {files: array, content: array}
+              elsif repo_data[:results][:files] || repo_data[:results][:content]
+                if repo_data[:results][:files]
+                  puts "  Files:"
+                  if repo_data[:results][:files].empty?
+                    puts "    (no matching files found)"
+                  else
+                    repo_data[:results][:files].each { |f| puts "    #{f}" }
+                  end
+                end
+                if repo_data[:results][:content]
+                  puts "  Content:"
+                  if repo_data[:results][:content].empty?
+                    puts "    (no matching content found)"
+                  else
+                    repo_data[:results][:content].each { |r| output_single_result(r) }
+                  end
                 end
               end
             end
+            
+            puts
           end
-          
-          puts
         end
       end
 
       def determine_search_mode(results)
-        # Check what type of results we have to determine search mode
+        # Handle flat structure (unified search)
+        if results[:results]
+          # For flat structure, determine based on result content
+          return :content # Default assumption for flat results
+        end
+        
+        # Handle legacy repository structure
         return :unknown if results[:repositories].nil? || results[:repositories].empty?
         
         has_files = false

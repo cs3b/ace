@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../../molecules/git/multi_repo_coordinator"
+require_relative "../../atoms/project_root_detector"
 require_relative "../../atoms/search/ripgrep_executor"
 require_relative "../../atoms/search/fd_executor"
 require_relative "../../molecules/search/dwim_heuristics_engine"
@@ -9,20 +9,20 @@ require_relative "result_aggregator"
 module CodingAgentTools
   module Organisms
     module Search
-      # Coordinates searches across multiple repositories
+      # Executes unified search across the entire project from project root
       class UnifiedSearcher
         # Initialize unified searcher
         # @param options [Hash] Configuration options
         def initialize(options = {})
           @options = options
-          @coordinator = Molecules::Git::MultiRepoCoordinator.new
+          @project_root = Atoms::ProjectRootDetector.find_project_root
           @ripgrep = Atoms::Search::RipgrepExecutor.new
           @fd = Atoms::Search::FdExecutor.new
           @dwim = Molecules::Search::DwimHeuristicsEngine.new
           @aggregator = ResultAggregator.new
         end
 
-        # Execute search across all repositories
+        # Execute unified search across the entire project from project root
         # @param pattern [String] Search pattern
         # @param options [Hash] Search options
         # @return [Hash] Aggregated search results
@@ -37,14 +37,37 @@ module CodingAgentTools
                    analysis[:recommended_mode] || :content
                  end
           
-          # Get repositories to search
-          repositories = get_repositories(merged_options)
-          
-          # Execute search across repositories
-          results = search_repositories(repositories, pattern, mode, merged_options)
-          
-          # Aggregate and format results (include search mode and pattern in options)
-          @aggregator.aggregate(results, merged_options.merge(search_mode: mode, pattern: pattern))
+          # Execute search directly (assumes we're already in project root or executors handle paths correctly)
+          results = case mode
+                   when :file, :files
+                     search_files(pattern, merged_options)
+                   when :content
+                     search_content_direct(pattern, merged_options)
+                   when :hybrid, :both
+                     {
+                       files: search_files(pattern, merged_options),
+                       content: search_content_direct(pattern, merged_options)
+                     }
+                   else
+                     { error: "Unknown search mode: #{mode}" }
+                   end
+        
+          # Format results for aggregator - simulate single repository structure
+          formatted_results = {
+            "project" => {
+              repository: { name: "project", path: @project_root },
+              results: results,
+              metadata: {
+                repository_name: "project",
+                repository_path: @project_root,
+                search_time: Time.now.iso8601,
+                result_count: count_results(results)
+              }
+            }
+          }
+        
+          # Aggregate and format results
+          @aggregator.aggregate(formatted_results, merged_options.merge(search_mode: mode, pattern: pattern))
         end
 
         # Search for files across repositories
@@ -63,107 +86,45 @@ module CodingAgentTools
           search(pattern, options.merge(type: :content))
         end
 
-        # Get repository information
+        # Get repository information (simplified - returns project info)
         # @return [Array<Hash>] Repository details
         def repositories
-          @coordinator.available_repositories.map do |repo|
-            {
-              name: repo[:name],
-              path: repo[:path],
-              type: repo[:type],
-              status: check_repository_status(repo[:path])
-            }
-          end
+          [{
+            name: "project",
+            path: @project_root,
+            type: "main",
+            status: check_repository_status(@project_root)
+          }]
         end
 
         private
 
-        # Get repositories to search based on options
-        def get_repositories(options)
-          repos = @coordinator.available_repositories
+        # Search for files using fd executor
+        def search_files(pattern, options)
+          # Use project root as default search path unless explicitly overridden
+          options_with_path = options.dup
+          options_with_path[:search_path] ||= @project_root
           
-          if options[:repository]
-            # Filter to specific repository
-            repos.select do |repo|
-              repo[:name] == options[:repository] ||
-              repo[:path] == options[:repository]
-            end
-          elsif options[:main_only]
-            # Only search main repository
-            repos.select { |repo| repo[:name] == 'main' || repo[:name] == 'handbook-meta' }
-          else
-            # Search all repositories
-            repos
-          end
-        end
-
-        # Search across multiple repositories
-        def search_repositories(repositories, pattern, mode, options)
-          results = {}
-          
-          repositories.each do |repo|
-            repo_results = search_single_repository(repo, pattern, mode, options)
-            results[repo[:name]] = {
-              repository: repo,
-              results: repo_results,
-              metadata: generate_metadata(repo, repo_results)
-            }
-          end
-          
-          results
-        end
-
-        # Search a single repository
-        def search_single_repository(repo, pattern, mode, options)
-          # Determine search root (default to project root if available)
-          search_root = options[:search_root] || @coordinator.instance_variable_get(:@project_root) || Dir.pwd
-          
-          # Adjust options to include repository path for searches
-          repo_options = options.dup
-          
-          # Set the search path - for main repo it's ".", for submodules it's their relative path
-          repo_options[:search_path] = (repo[:name] == 'main') ? '.' : repo[:path]
-          
-          # Execute search from the search root
-          Dir.chdir(search_root) do
-            case mode
-            when :file, :files
-              search_files_in_repo(pattern, repo_options)
-            when :content
-              search_content_in_repo(pattern, repo_options)
-            when :hybrid, :both
-              # Search both files and content
-              {
-                files: search_files_in_repo(pattern, repo_options),
-                content: search_content_in_repo(pattern, repo_options)
-              }
-            else
-              { error: "Unknown search mode: #{mode}" }
-            end
-          end
-        rescue => e
-          { error: "Search failed: #{e.message}" }
-        end
-
-        # Search for files in repository
-        def search_files_in_repo(pattern, options)
           if @fd.available?
-            @fd.find_files(pattern, options)
+            @fd.find_files(pattern, options_with_path)
           else
-            # Fallback to basic file search
-            fallback_file_search(pattern, options)
+            fallback_file_search(pattern, options_with_path)
           end
         end
 
-        # Search content in repository
-        def search_content_in_repo(pattern, options)
+        # Search content using ripgrep executor
+        def search_content_direct(pattern, options)
+          # Use project root as default search path unless explicitly overridden
+          options_with_path = options.dup
+          options_with_path[:search_path] ||= @project_root
+          
           if @ripgrep.available?
-            @ripgrep.search(pattern, options)
+            @ripgrep.search(pattern, options_with_path)
           else
-            # Fallback to git grep
-            fallback_content_search(pattern, options)
+            fallback_content_search(pattern, options_with_path)
           end
         end
+
 
         # Fallback file search without fd
         def fallback_file_search(pattern, options)
