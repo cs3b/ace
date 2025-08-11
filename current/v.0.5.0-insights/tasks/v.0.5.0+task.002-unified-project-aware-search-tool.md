@@ -3,7 +3,7 @@ id: v.0.5.0+task.002
 status: in-progress
 priority: high
 estimate: 16h
-dependencies: []
+dependencies: [v.0.5.0+task.006]
 needs_review: false
 ---
 
