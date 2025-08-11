@@ -15,6 +15,7 @@ require 'coding_agent_tools/cli' # Loads dry/cli and our command registry
 # CodingAgentTools::Cli::Commands.register_llm_commands  # Skip LLM for now due to dependency issues
 CodingAgentTools::Cli::Commands.register_dotfiles_commands
 CodingAgentTools::Cli::Commands.register_all_commands
+CodingAgentTools::Cli::Commands.register_search_commands
 
 begin
   Dry::CLI.new(CodingAgentTools::Cli::Commands).call

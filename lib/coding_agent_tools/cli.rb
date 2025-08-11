@@ -262,6 +262,16 @@ module CodingAgentTools
         @all_commands_registered = true
       end
 
+      def self.register_search_commands
+        return if @search_commands_registered
+
+        require_relative "cli/commands/search"
+
+        register "search", Commands::Search
+
+        @search_commands_registered = true
+      end
+
       # Ensure commands are registered when CLI is used
       def self.call(*args)
         register_llm_commands
@@ -278,6 +288,7 @@ module CodingAgentTools
         register_create_path_commands
         register_coverage_commands
         register_all_commands
+        register_search_commands
         super
       end
     end
