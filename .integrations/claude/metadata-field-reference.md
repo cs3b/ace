@@ -38,15 +38,15 @@ This field limits which tools Claude can use when executing the command. It's a 
 This field provides hints about what arguments the command expects. The square brackets indicate placeholder names that help users understand what to provide.
 
 ### `model`
-**Type:** String (enum: sonnet, opus, haiku)  
+**Type:** String (model identifier)  
 **Purpose:** Forces specific model for this command  
 **Default:** User's selected model  
-**Example:** `model: opus`
+**Example:** `model: claude-4-1-sonnet-latest`
 
 This field allows commands to request a specific Claude model. Use cases:
-- `opus` - For complex analysis or synthesis tasks
-- `sonnet` - For quick iterations and fixes
-- `haiku` - For simple, fast operations
+- `claude-4-1-opus-latest` - For complex analysis or synthesis tasks
+- `claude-4-1-sonnet-latest` - For quick iterations and fixes
+- `claude-3-5-haiku-latest` - For simple, fast operations
 
 ## Metadata Inference Rules
 
