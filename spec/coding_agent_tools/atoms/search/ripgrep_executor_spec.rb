@@ -2,20 +2,16 @@
 
 require "spec_helper"
 require "coding_agent_tools/atoms/search/ripgrep_executor"
+require "coding_agent_tools/atoms/taskflow_management/shell_command_executor"
 
 RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
   let(:executor) { described_class.new }
-  let(:mock_shell_executor) { instance_double("ShellCommandExecutor") }
-
-  before do
-    allow(CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor)
-      .to receive(:new).and_return(mock_shell_executor)
-  end
+  let(:mock_shell_executor) { CodingAgentTools::Atoms::TaskflowManagement::ShellCommandExecutor }
 
   describe "#available?" do
     it "returns true when ripgrep is installed" do
       allow(mock_shell_executor).to receive(:execute)
-        .with("which rg")
+        .with("which rg", timeout: 5)
         .and_return({success: true})
 
       expect(executor.available?).to be true
@@ -23,7 +19,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
 
     it "returns false when ripgrep is not installed" do
       allow(mock_shell_executor).to receive(:execute)
-        .with("which rg")
+        .with("which rg", timeout: 5)
         .and_return({success: false})
 
       expect(executor.available?).to be false
@@ -33,16 +29,20 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
   describe "#search" do
     context "when ripgrep is available" do
       before do
-        allow(executor).to receive(:available?).and_return(true)
+        allow(mock_shell_executor).to receive(:execute)
+          .with("which rg", timeout: 5)
+          .and_return({success: true})
       end
 
       it "executes basic search" do
         allow(mock_shell_executor).to receive(:execute)
-          .with(/^rg.*"test_pattern"/, anything)
+          .with(/^rg.*test_pattern/, timeout: 120)
           .and_return({
             success: true,
-            output: "file.rb:1:test_pattern found\n",
-            exit_code: 0
+            stdout: "file.rb:1:test_pattern found\n",
+            stderr: "",
+            exit_code: 0,
+            duration: 0.1
           })
 
         result = executor.search("test_pattern")
@@ -59,32 +59,40 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
 
       it "handles case-insensitive search" do
         allow(mock_shell_executor).to receive(:execute)
-          .with(/^rg.*-i.*"pattern"/, anything)
+          .with(/^rg.*--ignore-case.*pattern/, timeout: 120)
           .and_return({
             success: true,
-            output: "",
-            exit_code: 0
+            stdout: "",
+            stderr: "",
+            exit_code: 0,
+            duration: 0.1
           })
 
-        executor.search("pattern", case_insensitive: true)
+        result = executor.search("pattern", ignore_case: true)
+        expect(result[:success]).to be true
       end
 
       it "handles file type filtering" do
         allow(mock_shell_executor).to receive(:execute)
-          .with(/^rg.*--type ruby.*"pattern"/, anything)
+          .with(/^rg.*--type=ruby.*pattern/, timeout: 120)
           .and_return({
             success: true,
-            output: "",
-            exit_code: 0
+            stdout: "",
+            stderr: "",
+            exit_code: 0,
+            duration: 0.1
           })
 
-        executor.search("pattern", file_type: "ruby")
+        result = executor.search("pattern", file_type: "ruby")
+        expect(result[:success]).to be true
       end
     end
 
     context "when ripgrep is not available" do
       before do
-        allow(executor).to receive(:available?).and_return(false)
+        allow(mock_shell_executor).to receive(:execute)
+          .with("which rg", timeout: 5)
+          .and_return({success: false})
       end
 
       it "returns error response" do
@@ -105,17 +113,17 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
     end
 
     it "adds case-insensitive flag" do
-      command = executor.send(:build_ripgrep_command, "pattern", case_insensitive: true)
+      command = executor.send(:build_ripgrep_command, "pattern", ignore_case: true)
 
-      expect(command).to include("-i")
+      expect(command).to include("--ignore-case")
     end
 
     it "adds context lines" do
       command = executor.send(:build_ripgrep_command, "pattern",
         after_context: 2, before_context: 1)
 
-      expect(command).to include("-A 2")
-      expect(command).to include("-B 1")
+      expect(command).to include("--after-context=2")
+      expect(command).to include("--before-context=1")
     end
   end
 end

@@ -6,8 +6,9 @@ require "fileutils"
 # Tracks test execution times and failure patterns
 # to identify flaky tests and performance issues
 module TestReliabilityTracker
+  TRACKING_DIR = "tmp/test_reliability"
+  
   class << self
-    TRACKING_DIR = "tmp/test_reliability"
     TRACKING_FILE = File.join(TRACKING_DIR, "test_metrics.json")
     FLAKY_THRESHOLD = 0.2 # 20% failure rate indicates flaky test
     SLOW_TEST_THRESHOLD = 1.0 # Tests taking longer than 1 second are considered slow
@@ -156,6 +157,7 @@ if defined?(RSpec)
         puts "\n\n#{report}" if ENV["SHOW_RELIABILITY_REPORT"]
 
         # Save report to file
+        FileUtils.mkdir_p(TestReliabilityTracker::TRACKING_DIR)
         report_file = File.join(TestReliabilityTracker::TRACKING_DIR, "last_run_report.txt")
         File.write(report_file, report)
       end
