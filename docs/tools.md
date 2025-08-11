@@ -4,7 +4,7 @@
 
 | Tool | Purpose | Key Flags |
 |----------
-| **`search`** | **Unified intelligent search across repos** | **`--type`, `--fzf`, `--preset`** |
+| **`search`** | **Unified intelligent search across project** | **`--type`, `--fzf`, `--preset`** |
 | `coding-agent-tools all` | List all available tools | `--format`, `--category` |
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
@@ -28,7 +28,7 @@
 | `release-manager` | Release management tool | `current`, `report` |
 | `task-manager` | Project task management | `--filter`, `--sort`, `--limit` |
 
-**🔍 Pro Tip**: Use `search` for all your searching needs! It intelligently determines whether you're looking for files or content, searches across all repositories, and supports interactive selection with `--fzf`. Examples:
+**🔍 Pro Tip**: Use `search` for all your searching needs! It intelligently determines whether you're looking for files or content, searches across the entire project, and supports interactive selection with `--fzf`. Examples:
 - `search "TODO"` - Find all TODO comments
 - `search "*.rb" --files` - Find Ruby files
 - `search "def.*initialize" --type content` - Find initialize methods
@@ -93,7 +93,7 @@
 
 ## Gem Executables   {#gem-executables}
 
-### `search` – Unified intelligent search across repositories   {#search--unified-intelligent-search-across-repositories}
+### `search` – Unified intelligent search across project   {#search--unified-intelligent-search-across-project}
 
 <details><summary>Details</summary>
 
@@ -112,8 +112,6 @@ search [OPTIONS] PATTERN
 | `-A, --after NUM` | Show NUM lines after match | `0` |
 | `-B, --before NUM` | Show NUM lines before match | `0` |
 | `-C, --context NUM` | Show NUM lines of context | `0` |
-| `-r, --repository REPO` | Search in specific repository | All |
-| `-m, --main-only` | Search main repository only | `false` |
 | `-g, --glob PATTERN` | File glob pattern to include | None |
 | `-e, --exclude PATTERN` | Pattern to exclude | None |
 | `--since TIME` | Files modified since TIME | None |
@@ -128,7 +126,6 @@ search [OPTIONS] PATTERN
 | `--fzf` | Use fzf for interactive selection | `false` |
 | `-p, --preset NAME` | Use search preset | None |
 | `--list-presets` | List available presets | N/A |
-| `--list-repos` | List available repositories | N/A |
 
 **Examples**
 ```bash
@@ -147,8 +144,8 @@ search "pattern" --fzf
 # Use built-in preset
 search --preset todo
 
-# Search in specific repository
-search "bug" --repository dev-tools
+# Search with path filtering
+search "bug" --include "**/*.rb"
 
 # Find recently modified files
 search "*.md" --since "1 week ago"
@@ -171,17 +168,18 @@ search "API" --json --max-results 10
 - `git-changes` - Find changed files in git
 
 **Purpose:**
-The search tool provides unified, intelligent searching across all repositories in the meta-project. It uses DWIM (Do What I Mean) heuristics to automatically determine whether you're searching for files or content, leverages ripgrep and fd for blazing-fast performance, and supports interactive result selection with fzf.
+The search tool provides unified, intelligent searching across your entire project. It uses DWIM (Do What I Mean) heuristics to automatically determine whether you're searching for files or content, leverages ripgrep and fd for blazing-fast performance, and supports interactive result selection with fzf. Perfect for single-project workflows with streamlined, path-based results.
 
 **Features:**
 - Automatic mode detection (file vs content search)
-- Multi-repository search with result aggregation
+- Streamlined, path-based output for single-project workflows
 - Git-aware scopes (staged, tracked, changed files)
 - Time-based file filtering
 - Interactive result selection with fzf
 - Configurable search presets
 - Multiple output formats (text, JSON, YAML)
 - Intelligent pattern analysis for optimal tool selection
+- Simplified architecture focused on speed and usability
 
 **Performance:**
 - Uses ripgrep for content search (extremely fast)
