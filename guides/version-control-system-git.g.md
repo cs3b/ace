@@ -19,13 +19,13 @@ This project uses a multi-repository architecture with **4 Git repositories**:
 
 ```bash
 # Status across all repositories
-bin/gs
+git-status
 
 # Recent activity across all repositories
-bin/gl
+git-log
 
 # Coordinated commit with intention-based messages
-bin/gc -i "intention description"
+git-commit -i "intention description"
 
 # Coordinated push across all repositories
 bin/gp
@@ -366,7 +366,7 @@ git commit -m "chore(submodule): update dev-handbook reference"
 
 ```bash
 # Check status across all repos
-bin/gs
+git-status
 
 # Make related changes in multiple repos
 cd dev-handbook
@@ -767,7 +767,7 @@ git for-each-ref --format="%(refname) %(taggerdate) %(taggername)" refs/tags
 
 ### Multi-Repository Coordination
 
-1. **Use project scripts**: Leverage `bin/gc`, `bin/gs`, `bin/gl` for coordination
+1. **Use project scripts**: Leverage `git-commit`, `git-status`, `git-log` for coordination
 2. **Coordinate related changes**: Update submodules and main repo together
 3. **Test across repositories**: Ensure changes work across the full system
 4. **Document cross-repo changes**: Explain relationships in commit messages
@@ -784,9 +784,9 @@ git for-each-ref --format="%(refname) %(taggerdate) %(taggername)" refs/tags
 
 ### Project-Specific Commands
 
-- `bin/gc -i "intention"` - Multi-repository commit with contextual messages
-- `bin/gs` - Status check across all repositories
-- `bin/gl` - Unified log view across repositories
+- `git-commit -i "intention"` - Multi-repository commit with contextual messages
+- `git-status` - Status check across all repositories
+- `git-log` - Unified log view across repositories
 - `bin/gp` - Coordinated push to all repositories
 - `bin/gpull` - Coordinated pull from all repositories
 
