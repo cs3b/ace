@@ -9,6 +9,7 @@ module CodingAgentTools
         def initialize
           @total_count = 0
           @repository_counts = {}
+          @project_root = nil
         end
 
         # Aggregate results from multiple repositories
@@ -18,37 +19,67 @@ module CodingAgentTools
         def aggregate(results, options = {})
           reset_counts
           
-          aggregated = {
-            total_results: 0,
-            repositories: {},
-            summary: {},
-            metadata: generate_metadata(options)
-          }
+          # Check if this is unified search (single repository)
+          unified_search = results.size == 1 && results.keys.first == "project"
           
-          # Process each repository's results
-          results.each do |repo_name, repo_data|
-            processed = process_repository_results(repo_name, repo_data, options)
+          if unified_search
+            # Simplified flat structure for unified search
+            repo_data = results["project"]
+            processed = process_repository_results("project", repo_data, options)
             
             # Apply path filtering if specified
             if options[:include_paths] || options[:exclude_paths]
               processed = filter_results_by_path(processed, options)
             end
             
-            aggregated[:repositories][repo_name] = processed
-            aggregated[:total_results] += processed[:count]
-            @repository_counts[repo_name] = processed[:count]
+            # Apply result limits if specified
+            if options[:max_results]
+              processed[:results] = limit_results(processed[:results], options[:max_results])
+              processed[:count] = count_results(processed[:results])
+            end
+            
+            # Return flat structure
+            {
+              total_results: processed[:count],
+              results: extract_flat_results(processed[:results]),
+              metadata: generate_metadata(options).merge(
+                search_mode: options[:search_mode],
+                pattern: options[:pattern]
+              )
+            }
+          else
+            # Original multi-repository structure for backward compatibility
+            aggregated = {
+              total_results: 0,
+              repositories: {},
+              summary: {},
+              metadata: generate_metadata(options)
+            }
+            
+            # Process each repository's results
+            results.each do |repo_name, repo_data|
+              processed = process_repository_results(repo_name, repo_data, options)
+              
+              # Apply path filtering if specified
+              if options[:include_paths] || options[:exclude_paths]
+                processed = filter_results_by_path(processed, options)
+              end
+              
+              aggregated[:repositories][repo_name] = processed
+              aggregated[:total_results] += processed[:count]
+              @repository_counts[repo_name] = processed[:count]
+            end
+            
+            # Add summary information
+            aggregated[:summary] = generate_summary(aggregated)
+            
+            # Apply result limits if specified
+            if options[:max_results]
+              aggregated = apply_result_limit(aggregated, options[:max_results])
+            end
+            
+            format_output(aggregated, options[:format] || :hash)
           end
-          
-          # Add summary information
-          aggregated[:summary] = generate_summary(aggregated)
-          
-          # Apply result limits if specified
-          if options[:max_results]
-            aggregated = apply_result_limit(aggregated, options[:max_results])
-          end
-          
-          # Format output based on requested format
-          format_output(aggregated, options[:format] || :hash)
         end
 
         # Merge results from multiple searches
@@ -118,13 +149,16 @@ module CodingAgentTools
           
           filtered = repo_data.dup
           
+          # Get repository path from repo_data structure
+          repo_path = repo_data[:repository]&.[](:path) || repo_data[:path]
+          
           # Handle different result formats
           if filtered[:results].is_a?(Hash) && filtered[:results][:results].is_a?(Array)
             # Format: {success: bool, results: [...]}
             filtered[:results] = filtered[:results].dup
             filtered[:results][:results] = filter_result_array_by_path(
               filtered[:results][:results], 
-              repo_data[:path],
+              repo_path,
               options
             )
             # Update count
@@ -134,14 +168,14 @@ module CodingAgentTools
             filtered[:results] = filtered[:results].dup
             filtered[:results][:files] = filter_file_array_by_path(
               filtered[:results][:files],
-              repo_data[:path],
+              repo_path,
               options
             )
           elsif filtered[:results].is_a?(Array)
             # Direct array of results
             filtered[:results] = filter_result_array_by_path(
               filtered[:results],
-              repo_data[:path],
+              repo_path,
               options
             )
           end
@@ -155,13 +189,29 @@ module CodingAgentTools
         def filter_result_array_by_path(results, repo_path, options)
           return results unless results.is_a?(Array)
           
+          # Get project root once for efficiency
+          @project_root ||= CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+          
           results.select do |result|
             file_path = result[:file] || result[:path] || result.to_s
             next true if file_path.empty?
             
-            # Normalize path - paths are now relative to project root
-            # Remove leading ./ if present
-            normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
+            # Convert absolute path to relative if it starts with project root
+            normalized_path = if file_path.start_with?('/')
+              if file_path.start_with?(@project_root)
+                # Remove project root and leading slash
+                file_path.sub(@project_root + '/', '')
+              else
+                # Keep absolute path if outside project
+                file_path
+              end
+            elsif file_path.start_with?('./')
+              # Remove leading ./
+              file_path[2..-1]
+            else
+              # Already relative
+              file_path
+            end
             
             # Apply include filters
             if options[:include_paths] && !options[:include_paths].empty?
@@ -181,10 +231,26 @@ module CodingAgentTools
         def filter_file_array_by_path(files, repo_path, options)
           return files unless files.is_a?(Array)
           
+          # Get project root once for efficiency
+          @project_root ||= CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+          
           files.select do |file|
-            # Normalize path - paths are now relative to project root
-            # Remove leading ./ if present
-            normalized_path = file.start_with?('./') ? file[2..-1] : file
+            # Convert absolute path to relative if it starts with project root
+            normalized_path = if file.start_with?('/')
+              if file.start_with?(@project_root)
+                # Remove project root and leading slash
+                file.sub(@project_root + '/', '')
+              else
+                # Keep absolute path if outside project
+                file
+              end
+            elsif file.start_with?('./')
+              # Remove leading ./
+              file[2..-1]
+            else
+              # Already relative
+              file
+            end
             
             # Apply include filters
             if options[:include_paths] && !options[:include_paths].empty?
@@ -460,6 +526,69 @@ module CodingAgentTools
             "  #{result[:file]}:#{result[:line]}: #{result[:text]}"
           else
             "  #{result[:file] || result[:path] || result}"
+          end
+        end
+
+        # Limit results for unified search
+        def limit_results(results, limit)
+          case results
+          when Array
+            results.first(limit)
+          when Hash
+            if results[:results] && results[:results].is_a?(Array)
+              results_copy = results.dup
+              results_copy[:results] = results[:results].first(limit)
+              results_copy
+            else
+              results
+            end
+          else
+            results
+          end
+        end
+
+        # Extract flat results from various result formats
+        def extract_flat_results(results)
+          case results
+          when Array
+            results
+          when Hash
+            if results[:results] && results[:results].is_a?(Array)
+              results[:results]
+            elsif results[:files] && results[:content]
+              # Handle hybrid results
+              [].tap do |flat|
+                files = results[:files]
+                content = results[:content]
+                
+                # Handle files (might be Hash with :files key or direct Array)
+                if files.is_a?(Hash) && files[:files]
+                  flat.concat(files[:files] || [])
+                elsif files.is_a?(Array)
+                  flat.concat(files)
+                end
+                
+                # Handle content (might be Hash with :results key or direct Array)
+                if content.is_a?(Hash) && content[:results]
+                  flat.concat(content[:results] || [])
+                elsif content.is_a?(Array)
+                  flat.concat(content)
+                end
+              end
+            elsif results[:files]
+              files = results[:files]
+              if files.is_a?(Hash) && files[:files]
+                files[:files] || []
+              elsif files.is_a?(Array)
+                files
+              else
+                []
+              end
+            else
+              []
+            end
+          else
+            []
           end
         end
       end
