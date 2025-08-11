@@ -394,7 +394,7 @@ task-manager next --limit 5
 ## Related Tools
 
 - **coding_agent_tools task**: Full CLI interface with additional options
-- **bin/tn**: Project-specific task navigation script
-- **bin/tal**: Project-specific task listing script
+- **task-manager next**: Get next task based on priority and dependencies
+- **task-manager list**: List all tasks with filtering options
 
 The task-manager provides a focused, user-friendly interface to the underlying task management system, making it easy to stay organized and productive in your development workflow.
