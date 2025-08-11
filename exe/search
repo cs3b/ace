@@ -281,12 +281,25 @@ module CodingAgentTools
       end
 
       def output_text_results(results)
+        # Determine and display search mode
+        search_mode = determine_search_mode(results)
+        mode_text = case search_mode
+                    when :files
+                      "(searching for files)"
+                    when :content
+                      "(searching in content)"
+                    when :hybrid, :both
+                      "(searching for files and content)"
+                    else
+                      ""
+                    end
+        
         if results[:total_results] == 0
-          puts "No results found"
+          puts "No results found #{mode_text}"
           return
         end
         
-        puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories"
+        puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories #{mode_text}"
         puts
         
         results[:repositories].each do |repo_name, repo_data|
@@ -308,11 +321,19 @@ module CodingAgentTools
             elsif repo_data[:results][:files] || repo_data[:results][:content]
               if repo_data[:results][:files]
                 puts "  Files:"
-                repo_data[:results][:files].each { |f| puts "    #{f}" }
+                if repo_data[:results][:files].empty?
+                  puts "    (no matching files found)"
+                else
+                  repo_data[:results][:files].each { |f| puts "    #{f}" }
+                end
               end
               if repo_data[:results][:content]
                 puts "  Content:"
-                repo_data[:results][:content].each { |r| output_single_result(r) }
+                if repo_data[:results][:content].empty?
+                  puts "    (no matching content found)"
+                else
+                  repo_data[:results][:content].each { |r| output_single_result(r) }
+                end
               end
             end
           end
@@ -321,6 +342,35 @@ module CodingAgentTools
         end
       end
 
+      def determine_search_mode(results)
+        # Check what type of results we have to determine search mode
+        return :unknown if results[:repositories].nil? || results[:repositories].empty?
+        
+        has_files = false
+        has_content = false
+        
+        results[:repositories].each do |_, repo_data|
+          next unless repo_data[:results].is_a?(Hash)
+          
+          if repo_data[:results][:files]
+            has_files = true
+          end
+          if repo_data[:results][:content] || repo_data[:results][:results]
+            has_content = true
+          end
+        end
+        
+        if has_files && has_content
+          :hybrid
+        elsif has_files
+          :files
+        elsif has_content
+          :content
+        else
+          :unknown
+        end
+      end
+      
       def output_single_result(result)
         if @options[:files_only]
           puts "  #{result[:file] || result[:path] || result}"

@@ -141,12 +141,23 @@ module CodingAgentTools
           when Array
             results.size
           when Hash
-            if results[:files] && results[:content]
+            if results[:results].is_a?(Array)
+              # Handle {success: bool, results: [...], count: n} format
+              results[:results].size
+            elsif results[:files] && results[:content]
+              # Handle hybrid format
               (results[:files] || []).size + (results[:content] || []).size
+            elsif results[:files]
+              # Handle files-only format
+              (results[:files] || []).size
+            elsif results[:count].is_a?(Integer)
+              # If count is explicitly provided, use it
+              results[:count]
             elsif results[:error]
               0
             else
-              results.values.flatten.size
+              # Fallback - count array values only
+              results.values.select { |v| v.is_a?(Array) }.flatten.size
             end
           else
             0
