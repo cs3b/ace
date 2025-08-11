@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/json_formatter'
+require_relative "../atoms/json_formatter"
 
 module CodingAgentTools
   module Molecules
@@ -9,14 +9,14 @@ module CodingAgentTools
     class APIResponseParser
       # Common API error status codes
       ERROR_STATUS_CODES = {
-        400 => 'Bad Request',
-        401 => 'Unauthorized',
-        403 => 'Forbidden',
-        404 => 'Not Found',
-        429 => 'Too Many Requests',
-        500 => 'Internal Server Error',
-        502 => 'Bad Gateway',
-        503 => 'Service Unavailable'
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        429 => "Too Many Requests",
+        500 => "Internal Server Error",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable"
       }.freeze
 
       # Parse a raw API response
@@ -61,7 +61,7 @@ module CodingAgentTools
 
         error = {
           status: response_data[:status],
-          message: ERROR_STATUS_CODES[response_data[:status]] || 'Unknown Error'
+          message: ERROR_STATUS_CODES[response_data[:status]] || "Unknown Error"
         }
 
         # Try to extract error details from response body
@@ -120,10 +120,10 @@ module CodingAgentTools
         headers = response_data[:headers] || {}
 
         {
-          limit: headers['x-ratelimit-limit'] || headers['ratelimit-limit'],
-          remaining: headers['x-ratelimit-remaining'] || headers['ratelimit-remaining'],
-          reset: headers['x-ratelimit-reset'] || headers['ratelimit-reset'],
-          retry_after: headers['retry-after']
+          limit: headers["x-ratelimit-limit"] || headers["ratelimit-limit"],
+          remaining: headers["x-ratelimit-remaining"] || headers["ratelimit-remaining"],
+          reset: headers["x-ratelimit-reset"] || headers["ratelimit-reset"],
+          retry_after: headers["retry-after"]
         }.compact
       end
 

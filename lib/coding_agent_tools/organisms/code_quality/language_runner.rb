@@ -13,16 +13,16 @@ module CodingAgentTools
           @language = language
         end
 
-        def validate(paths: ['.'], **options)
-          raise NotImplementedError, 'Subclasses must implement validate method'
+        def validate(paths: ["."], **options)
+          raise NotImplementedError, "Subclasses must implement validate method"
         end
 
-        def autofix(paths: ['.'], **options)
-          raise NotImplementedError, 'Subclasses must implement autofix method'
+        def autofix(paths: ["."], **options)
+          raise NotImplementedError, "Subclasses must implement autofix method"
         end
 
         def report(results)
-          raise NotImplementedError, 'Subclasses must implement report method'
+          raise NotImplementedError, "Subclasses must implement report method"
         end
 
         protected
@@ -32,7 +32,7 @@ module CodingAgentTools
         end
 
         def language_enabled?
-          language_config['enabled'] == true
+          language_config["enabled"] == true
         end
       end
     end

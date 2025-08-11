@@ -6,10 +6,10 @@ module CodingAgentTools
     # This is an atom - it has no dependencies on other parts of this gem
     class TimestampGenerator
       # Default timestamp format for backups
-      DEFAULT_FORMAT = '%Y%m%d-%H%M'
+      DEFAULT_FORMAT = "%Y%m%d-%H%M"
 
       # ISO 8601 format for metadata
-      ISO_FORMAT = '%Y-%m-%d %H:%M:%S'
+      ISO_FORMAT = "%Y-%m-%d %H:%M:%S"
 
       # Generate a timestamp string
       # @param time [Time] The time to format (default: current time)
@@ -37,7 +37,7 @@ module CodingAgentTools
       # @param time [Time] The time to format (default: current time)
       # @return [String] Timestamp safe for use in filenames
       def self.filename_timestamp(time: Time.now)
-        generate(time: time, format: '%Y%m%d_%H%M%S')
+        generate(time: time, format: "%Y%m%d_%H%M%S")
       end
 
       # Parse a timestamp string back to Time object

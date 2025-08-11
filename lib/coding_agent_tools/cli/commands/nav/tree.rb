@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
+require "dry/cli"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Nav
         class Tree < Dry::CLI::Command
-          desc 'Configuration-driven directory tree with filtering and autocorrection'
+          desc "Configuration-driven directory tree with filtering and autocorrection"
 
-          argument :path, desc: 'Directory path to show tree for (uses autocorrection if not found locally)'
-          option :context, desc: 'Tree context (default, dev, tasks, full)'
-          option :depth, type: :integer, desc: 'Maximum tree depth'
-          option :autocorrect, type: :boolean, default: true, desc: 'Enable path autocorrection suggestions'
+          argument :path, desc: "Directory path to show tree for (uses autocorrection if not found locally)"
+          option :context, desc: "Tree context (default, dev, tasks, full)"
+          option :depth, type: :integer, desc: "Maximum tree depth"
+          option :autocorrect, type: :boolean, default: true, desc: "Enable path autocorrection suggestions"
 
           def call(path: nil, **options)
             # Initialize components
@@ -26,11 +26,11 @@ module CodingAgentTools
             return unless target_dir
 
             # Determine context
-            context = options[:context] || 'default'
-            context_config = config.dig('contexts', context) || config.dig('contexts', 'default') || {}
+            context = options[:context] || "default"
+            context_config = config.dig("contexts", context) || config.dig("contexts", "default") || {}
 
             # Determine depth
-            depth = options[:depth] || context_config['max_depth'] || config['default_depth'] || 3
+            depth = options[:depth] || context_config["max_depth"] || config["default_depth"] || 3
 
             # Build tree command
             excludes = build_exclude_patterns(config, context_config)
@@ -59,13 +59,13 @@ module CodingAgentTools
             excludes = []
 
             # Add global excludes
-            excludes.concat(config['global_excludes'] || [])
+            excludes.concat(config["global_excludes"] || [])
 
             # Add context-specific excludes
-            excludes.concat(context_config['excludes'] || [])
+            excludes.concat(context_config["excludes"] || [])
 
             # Add repository-specific excludes
-            repo_excludes = config.dig('repositories', 'specific_excludes') || {}
+            repo_excludes = config.dig("repositories", "specific_excludes") || {}
             repo_excludes.each do |_repo, patterns|
               excludes.concat(patterns)
             end
@@ -74,22 +74,22 @@ module CodingAgentTools
           end
 
           def build_tree_command(target_dir, depth, excludes)
-            cmd_parts = ['tree', '-L', depth.to_s]
+            cmd_parts = ["tree", "-L", depth.to_s]
 
             # Add exclude patterns
             excludes.each do |pattern|
-              cmd_parts << '-I' << "'#{pattern}'"
+              cmd_parts << "-I" << "'#{pattern}'"
             end
 
             # Add target directory (quoted for safety)
             cmd_parts << "'#{target_dir}'"
 
-            cmd_parts.join(' ')
+            cmd_parts.join(" ")
           end
 
           def resolve_target_directory(path, autocorrect)
             # If no path provided, use current directory
-            return '.' unless path
+            return "." unless path
 
             # Check if path exists locally first
             return path if Dir.exist?(path)
@@ -101,7 +101,7 @@ module CodingAgentTools
             end
 
             # Check if input uses scoped pattern syntax (scope:pattern)
-            if path.include?(':')
+            if path.include?(":")
               result = @path_resolver.resolve_scoped_pattern(path)
 
               if result[:success]
@@ -185,12 +185,12 @@ module CodingAgentTools
           end
 
           def show_autocorrection_info(config)
-            return unless config.dig('autocorrect', 'enabled')
+            return unless config.dig("autocorrect", "enabled")
 
-            puts ''
-            puts '💡 Path Autocorrection Available:'
+            puts ""
+            puts "💡 Path Autocorrection Available:"
             puts "   Use 'nav path file PATTERN' to find and autocorrect file paths"
-            puts '   Example: nav path file README'
+            puts "   Example: nav path file README"
           end
         end
       end

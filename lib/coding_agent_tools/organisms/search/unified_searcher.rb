@@ -28,34 +28,34 @@ module CodingAgentTools
         # @return [Hash] Aggregated search results
         def search(pattern, options = {})
           merged_options = @options.merge(options)
-          
+
           # Determine search mode using DWIM heuristics
           mode = if merged_options[:type] && merged_options[:type] != :auto
-                   merged_options[:type]
-                 else
-                   analysis = @dwim.analyze_search_intent(pattern, merged_options)
-                   analysis[:recommended_mode] || :content
-                 end
-          
+            merged_options[:type]
+          else
+            analysis = @dwim.analyze_search_intent(pattern, merged_options)
+            analysis[:recommended_mode] || :content
+          end
+
           # Execute search directly (assumes we're already in project root or executors handle paths correctly)
           results = case mode
-                   when :file, :files
-                     search_files(pattern, merged_options)
-                   when :content
-                     search_content_direct(pattern, merged_options)
-                   when :hybrid, :both
-                     {
-                       files: search_files(pattern, merged_options),
-                       content: search_content_direct(pattern, merged_options)
-                     }
-                   else
-                     { error: "Unknown search mode: #{mode}" }
-                   end
-        
+          when :file, :files
+            search_files(pattern, merged_options)
+          when :content
+            search_content_direct(pattern, merged_options)
+          when :hybrid, :both
+            {
+              files: search_files(pattern, merged_options),
+              content: search_content_direct(pattern, merged_options)
+            }
+          else
+            {error: "Unknown search mode: #{mode}"}
+          end
+
           # Format results for aggregator - simulate single repository structure
           formatted_results = {
             "project" => {
-              repository: { name: "project", path: @project_root },
+              repository: {name: "project", path: @project_root},
               results: results,
               metadata: {
                 repository_name: "project",
@@ -65,7 +65,7 @@ module CodingAgentTools
               }
             }
           }
-        
+
           # Aggregate and format results
           @aggregator.aggregate(formatted_results, merged_options.merge(search_mode: mode, pattern: pattern))
         end
@@ -104,7 +104,7 @@ module CodingAgentTools
           # Use project root as default search path unless explicitly overridden
           options_with_path = options.dup
           options_with_path[:search_path] ||= @project_root
-          
+
           if @fd.available?
             @fd.find_files(pattern, options_with_path)
           else
@@ -117,14 +117,13 @@ module CodingAgentTools
           # Use project root as default search path unless explicitly overridden
           options_with_path = options.dup
           options_with_path[:search_path] ||= @project_root
-          
+
           if @ripgrep.available?
             @ripgrep.search(pattern, options_with_path)
           else
             fallback_content_search(pattern, options_with_path)
           end
         end
-
 
         # Fallback file search without fd
         def fallback_file_search(pattern, options)
@@ -168,7 +167,7 @@ module CodingAgentTools
             end
           end
         rescue
-          { error: "Unable to check status" }
+          {error: "Unable to check status"}
         end
 
         # Generate metadata for repository results
@@ -200,7 +199,7 @@ module CodingAgentTools
         # Parse git grep output
         def parse_git_grep_output(output)
           output.lines.map do |line|
-            if match = line.match(/^([^:]+):(\d+):(.*)$/)
+            if (match = line.match(/^([^:]+):(\d+):(.*)$/))
               {
                 file: match[1],
                 line: match[2].to_i,
@@ -213,7 +212,7 @@ module CodingAgentTools
         # Parse grep output
         def parse_grep_output(output)
           output.lines.map do |line|
-            if match = line.match(/^([^:]+):(\d+):(.*)$/)
+            if (match = line.match(/^([^:]+):(\d+):(.*)$/))
               {
                 file: match[1].sub(/^\.\//, ""),
                 line: match[2].to_i,

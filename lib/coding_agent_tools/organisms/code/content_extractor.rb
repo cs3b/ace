@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../molecules/code/git_diff_extractor'
-require_relative '../../molecules/code/file_pattern_extractor'
-require_relative '../../models/code/review_target'
+require_relative "../../molecules/code/git_diff_extractor"
+require_relative "../../molecules/code/file_pattern_extractor"
+require_relative "../../models/code/review_target"
 
 module CodingAgentTools
   module Organisms
@@ -35,12 +35,12 @@ module CodingAgentTools
         # @return [Hash] {success: Boolean, error: String}
         def save_content(target, session_dir)
           case target.type
-          when 'git_diff'
+          when "git_diff"
             save_git_diff(target, session_dir)
-          when 'single_file', 'file_pattern'
+          when "single_file", "file_pattern"
             save_file_content(target, session_dir)
           else
-            { success: false, error: "Unknown target type: #{target.type}" }
+            {success: false, error: "Unknown target type: #{target.type}"}
           end
         end
 
@@ -52,16 +52,16 @@ module CodingAgentTools
           target = extract_content(target_spec)
 
           # Save if extraction was successful
-          if target.type != 'error'
+          if target.type != "error"
             save_result = save_content(target, session_dir)
             unless save_result[:success]
               # Update target with save error
               target = Models::Code::ReviewTarget.new(
-                type: 'error',
+                type: "error",
                 target_spec: target_spec,
                 resolved_paths: [],
-                content_type: 'none',
-                size_info: { error: save_result[:error] }
+                content_type: "none",
+                size_info: {error: save_result[:error]}
               )
             end
           end
@@ -79,10 +79,10 @@ module CodingAgentTools
 
           if result[:success]
             Models::Code::ReviewTarget.new(
-              type: 'git_diff',
+              type: "git_diff",
               target_spec: target,
               resolved_paths: [], # Git diffs don't have file paths
-              content_type: 'diff',
+              content_type: "diff",
               size_info: {
                 lines: result[:metadata][:line_count],
                 words: result[:metadata][:word_count],
@@ -93,11 +93,11 @@ module CodingAgentTools
             )
           else
             Models::Code::ReviewTarget.new(
-              type: 'error',
+              type: "error",
               target_spec: target,
               resolved_paths: [],
-              content_type: 'none',
-              size_info: { error: result[:error] }
+              content_type: "none",
+              size_info: {error: result[:error]}
             )
           end
         end
@@ -110,10 +110,10 @@ module CodingAgentTools
 
           if result[:success]
             Models::Code::ReviewTarget.new(
-              type: 'single_file',
+              type: "single_file",
               target_spec: target,
               resolved_paths: result[:file_list],
-              content_type: 'xml',
+              content_type: "xml",
               size_info: {
                 files: 1,
                 lines: count_lines_in_file(target)
@@ -121,11 +121,11 @@ module CodingAgentTools
             )
           else
             Models::Code::ReviewTarget.new(
-              type: 'error',
+              type: "error",
               target_spec: target,
               resolved_paths: [],
-              content_type: 'none',
-              size_info: { error: result[:error] }
+              content_type: "none",
+              size_info: {error: result[:error]}
             )
           end
         end
@@ -138,10 +138,10 @@ module CodingAgentTools
 
           if result[:success]
             Models::Code::ReviewTarget.new(
-              type: 'file_pattern',
+              type: "file_pattern",
               target_spec: target,
               resolved_paths: result[:file_list],
-              content_type: 'xml',
+              content_type: "xml",
               size_info: {
                 files: result[:file_list].count,
                 lines: count_total_lines(result[:file_list])
@@ -149,11 +149,11 @@ module CodingAgentTools
             )
           else
             Models::Code::ReviewTarget.new(
-              type: 'error',
+              type: "error",
               target_spec: target,
               resolved_paths: [],
-              content_type: 'none',
-              size_info: { error: result[:error] }
+              content_type: "none",
+              size_info: {error: result[:error]}
             )
           end
         end

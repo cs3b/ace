@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/taskflow_management/task_manager'
-require_relative '../../../atoms/project_root_detector'
-require_relative '../../../molecules/taskflow_management/unified_task_formatter'
-require_relative '../../../molecules/taskflow_management/task_status_summary'
+require "dry/cli"
+require_relative "../../../organisms/taskflow_management/task_manager"
+require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/unified_task_formatter"
+require_relative "../../../molecules/taskflow_management/task_status_summary"
 
 module CodingAgentTools
   module Cli
@@ -12,34 +12,34 @@ module CodingAgentTools
       module Task
         # Recent command for finding recently modified tasks
         class Recent < Dry::CLI::Command
-          desc 'Find recently modified tasks'
+          desc "Find recently modified tasks"
 
           option :last, type: :string,
             desc: "Time period to search (e.g., '2.days', '1.week', '3.hours'). Default: 1.day when no --limit specified"
 
           option :limit, type: :integer, default: 10,
-            desc: 'Maximum number of tasks to return (default: 10)'
+            desc: "Maximum number of tasks to return (default: 10)"
 
           option :verbose, type: :boolean, default: false,
-            desc: 'Show detailed task information'
+            desc: "Show detailed task information"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
           option :release, type: :string,
-            desc: 'Release to work with (version, codename, fullname, or path). Note: Recent command searches across all releases by default.'
+            desc: "Release to work with (version, codename, fullname, or path). Note: Recent command searches across all releases by default."
 
           example [
-            '',
-            '--last 2.days',
-            '--last 1.week --limit 5',
-            '--limit 3',
-            '--debug'
+            "",
+            "--last 2.days",
+            "--last 1.week --limit 5",
+            "--limit 3",
+            "--debug"
           ]
 
           def call(**options)
             # Check if user explicitly provided --limit (not just default)
-            explicit_limit = ARGV.any? { |arg| arg.start_with?('--limit') }
+            explicit_limit = ARGV.any? { |arg| arg.start_with?("--limit") }
 
             limit = validate_limit(options[:limit]) if options[:limit]
             limit ||= options[:limit] || 10
@@ -53,7 +53,7 @@ module CodingAgentTools
             elsif explicit_limit
               nil # No time filter when --limit explicitly specified
             else
-              parse_time_period('1.day') # Default behavior
+              parse_time_period("1.day") # Default behavior
             end
 
             # Use ProjectRootDetector for reliable path resolution
@@ -70,7 +70,7 @@ module CodingAgentTools
 
             result = task_manager.find_recent_tasks(
               since_seconds: since_seconds,
-              statuses: ['done', 'in-progress', 'pending', 'blocked'],
+              statuses: ["done", "in-progress", "pending", "blocked"],
               release_path: options[:release]
             )
 
@@ -115,7 +115,7 @@ module CodingAgentTools
 
             if result.tasks.empty?
               puts status_summary.formatted_text if status_summary
-              puts 'No recent tasks found'
+              puts "No recent tasks found"
               return
             end
 
@@ -126,10 +126,10 @@ module CodingAgentTools
             puts status_summary.formatted_text if status_summary
 
             puts "Recent Tasks (#{limited_tasks.size}/#{result.count} shown):"
-            puts '=' * 50
+            puts "=" * 50
 
             limited_tasks.each_with_index do |task, index|
-              puts '' if index > 0 && options[:verbose] # Add blank line between tasks in verbose mode
+              puts "" if index > 0 && options[:verbose] # Add blank line between tasks in verbose mode
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
                 task,
                 verbose: options[:verbose],
@@ -146,7 +146,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

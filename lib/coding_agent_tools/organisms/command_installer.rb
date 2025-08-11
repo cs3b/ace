@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../molecules/file_operation_executor'
-require_relative '../molecules/metadata_injector'
-require_relative '../molecules/statistics_collector'
-require_relative '../models/file_operation'
-require_relative '../models/command_metadata'
-require_relative '../atoms/timestamp_generator'
+require "pathname"
+require_relative "../molecules/file_operation_executor"
+require_relative "../molecules/metadata_injector"
+require_relative "../molecules/statistics_collector"
+require_relative "../models/file_operation"
+require_relative "../models/command_metadata"
+require_relative "../atoms/timestamp_generator"
 
 module CodingAgentTools
   module Organisms
@@ -29,7 +29,7 @@ module CodingAgentTools
       # @param options [Hash] Installation options
       # @return [Hash] Installation result
       def install_commands(source_files, target_dir, options = {})
-        puts 'Copying commands:' if options[:verbose]
+        puts "Copying commands:" if options[:verbose]
 
         operations = prepare_operations(source_files, target_dir, options)
         results = []
@@ -61,7 +61,7 @@ module CodingAgentTools
           return {
             status: :skipped,
             operation: operation,
-            message: 'Already exists'
+            message: "Already exists"
           }
         end
 
@@ -120,24 +120,24 @@ module CodingAgentTools
         parent_dir = file_path.parent.basename.to_s
 
         case parent_dir
-        when '_custom'
-          'custom'
-        when '_generated'
-          'generated'
-        when 'commands'
-          'flat'
+        when "_custom"
+          "custom"
+        when "_generated"
+          "generated"
+        when "commands"
+          "flat"
         else
-          'unknown'
+          "unknown"
         end
       end
 
       def map_source_type_to_stat_type(source_type)
         case source_type
-        when 'custom'
+        when "custom"
           :custom_command
-        when 'generated'
+        when "generated"
           :generated_command
-        when 'flat'
+        when "flat"
           :custom_command  # Treat flat structure as custom commands
         else
           :custom_command  # Default to custom for unknown types

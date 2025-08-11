@@ -60,15 +60,15 @@ module CodingAgentTools
           if fixed_count > 0
             summary[:total_fixed] += fixed_count
             summary[:fixes_applied] << {
-              type: 'ruby_standardrb',
+              type: "ruby_standardrb",
               count: fixed_count,
-              message: 'Applied StandardRB formatting fixes'
+              message: "Applied StandardRB formatting fixes"
             }
           else
             summary[:total_failed] += 1
             summary[:failures] << {
-              type: 'ruby_standardrb',
-              error: 'No correctable issues found to fix'
+              type: "ruby_standardrb",
+              error: "No correctable issues found to fix"
             }
           end
         end
@@ -83,9 +83,9 @@ module CodingAgentTools
 
           summary[:total_fixed] += fixed_count
           summary[:fixes_applied] << {
-            type: 'markdown_formatting',
+            type: "markdown_formatting",
             count: fixed_count,
-            message: 'Applied Kramdown formatting to markdown files'
+            message: "Applied Kramdown formatting to markdown files"
           }
         end
 

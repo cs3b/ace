@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../cost_tracker'
+require "dry/cli"
+require_relative "../../../cost_tracker"
 
 module CodingAgentTools
   module Cli
@@ -10,35 +10,35 @@ module CodingAgentTools
         # Query command for interacting with any LLM provider
         # This consolidates all provider-specific logic into one command
         class Query < Dry::CLI::Command
-          desc 'Query any LLM provider'
+          desc "Query any LLM provider"
 
           argument :provider_model, required: true,
             desc: "Provider and model ('provider:model'), provider only ('provider'), or alias ('gflash')"
 
-          argument :prompt, required: true, desc: 'The prompt text or file path (auto-detected)'
+          argument :prompt, required: true, desc: "The prompt text or file path (auto-detected)"
 
-          option :output, type: :string, aliases: ['o'],
-            desc: 'Output file path (format inferred from extension)'
+          option :output, type: :string, aliases: ["o"],
+            desc: "Output file path (format inferred from extension)"
 
-          option :format, type: :string, values: ['text', 'json', 'markdown'],
-            desc: 'Output format (overrides file extension inference)'
+          option :format, type: :string, values: ["text", "json", "markdown"],
+            desc: "Output format (overrides file extension inference)"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
           option :temperature, type: :float,
-            desc: 'Temperature for generation (0.0-2.0)'
+            desc: "Temperature for generation (0.0-2.0)"
 
           option :max_tokens, type: :integer,
-            desc: 'Maximum output tokens'
+            desc: "Maximum output tokens"
 
           option :system, type: :string,
-            desc: 'System instruction/prompt (text or file path, auto-detected)'
+            desc: "System instruction/prompt (text or file path, auto-detected)"
 
-          option :timeout, type: :integer, desc: 'Request timeout in seconds'
+          option :timeout, type: :integer, desc: "Request timeout in seconds"
 
-          option :force, type: :boolean, default: false, aliases: ['f'],
-            desc: 'Force overwrite existing output files without confirmation'
+          option :force, type: :boolean, default: false, aliases: ["f"],
+            desc: "Force overwrite existing output files without confirmation"
 
           example [
             'google:gemini-2.5-flash "What is Ruby programming language?"',
@@ -48,8 +48,8 @@ module CodingAgentTools
             'gflash "Quick question about Ruby" # alias for google:gemini-2.5-flash',
             'csonet "Explain AI" # alias for anthropic:claude-4-0-sonnet-latest',
             'o4mini "Code review" # alias for openai:gpt-4o-mini',
-            'lmstudio prompt.txt --output response.json',
-            'mistral prompt.txt --system system.md --output response.md'
+            "lmstudio prompt.txt --output response.json",
+            "mistral prompt.txt --system system.md --output response.md"
           ]
 
           def call(provider_model:, prompt:, **options)
@@ -70,7 +70,7 @@ module CodingAgentTools
 
             # Validate prompt argument
             if prompt.nil? || prompt.strip.empty?
-              error_output('Error: Prompt is required')
+              error_output("Error: Prompt is required")
               return 1
             end
 
@@ -92,7 +92,7 @@ module CodingAgentTools
             validate_output_path(options[:output], options[:force]) if options[:output]
 
             # Process the prompt and system instruction
-            prompt_text = process_content(prompt, 'prompt')
+            prompt_text = process_content(prompt, "prompt")
             system_text = process_system_instruction(options[:system]) if options[:system]
 
             # Track execution time
@@ -124,7 +124,7 @@ module CodingAgentTools
           def process_system_instruction(system_content)
             return nil if system_content.nil? || system_content.strip.empty?
 
-            process_content(system_content, 'system instruction')
+            process_content(system_content, "system instruction")
           end
 
           def query_provider(provider, model, prompt_text, system_text, options)
@@ -139,7 +139,7 @@ module CodingAgentTools
           end
 
           def build_client(provider, model, options)
-            client_options = { model: model }
+            client_options = {model: model}
             client_options[:timeout] = options[:timeout] if options[:timeout]
 
             Molecules::ClientFactory.build(provider, client_options)
@@ -159,17 +159,17 @@ module CodingAgentTools
             # Handle provider-specific temperature conversion
             if options[:temperature]
               generation_config[:temperature] = case provider
-              when 'anthropic', 'openai'
-                                                  options[:temperature].to_f
-                                                else
-                                                  options[:temperature]
+              when "anthropic", "openai"
+                options[:temperature].to_f
+              else
+                options[:temperature]
               end
             end
 
             # Handle provider-specific max_tokens naming
             if options[:max_tokens]
               case provider
-              when 'google'
+              when "google"
                 generation_config[:maxOutputTokens] = options[:max_tokens]
               else
                 generation_config[:max_tokens] = options[:max_tokens]
@@ -223,7 +223,7 @@ module CodingAgentTools
           end
 
           def output_to_stdout(response, options)
-            format = options[:format] || 'text'
+            format = options[:format] || "text"
             handler = Molecules::FormatHandlers.get_handler(format)
 
             formatted_content = handler.format(response)
@@ -235,14 +235,14 @@ module CodingAgentTools
 
           def generate_usage_summary(usage_metadata)
             lines = []
-            lines << 'Token Usage:'
+            lines << "Token Usage:"
             lines << "  Input: #{usage_metadata.input_tokens.to_s.rjust(8)} tokens"
             lines << "  Output: #{usage_metadata.output_tokens.to_s.rjust(7)} tokens"
 
             lines << "  Cached: #{usage_metadata.cached_tokens.to_s.rjust(7)} tokens" if usage_metadata.cached?
 
             if usage_metadata.has_cost_info?
-              lines << ''
+              lines << ""
               lines << usage_metadata.cost_summary
             end
 
@@ -264,7 +264,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

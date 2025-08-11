@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../system_command_executor'
+require_relative "../system_command_executor"
 
 module CodingAgentTools
   module Atoms
@@ -43,13 +43,13 @@ module CodingAgentTools
         # @return [String] Installation instructions
         def install_instruction(tool)
           case tool
-          when 'rg', 'ripgrep'
+          when "rg", "ripgrep"
             install_ripgrep_instruction
-          when 'fd'
+          when "fd"
             install_fd_instruction
-          when 'fzf'
+          when "fzf"
             install_fzf_instruction
-          when 'git'
+          when "git"
             install_git_instruction
           else
             "Tool '#{tool}' is not recognized. Please install manually."

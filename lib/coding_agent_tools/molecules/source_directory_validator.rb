@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../atoms/path_sanitizer'
+require "pathname"
+require_relative "../atoms/path_sanitizer"
 
 module CodingAgentTools
   module Molecules
@@ -55,7 +55,7 @@ module CodingAgentTools
         return [] unless dir_path.exist? && dir_path.directory?
 
         # Find all .md files except README.md
-        dir_path.glob('*.md').reject { |f| f.basename.to_s.downcase == 'readme.md' }
+        dir_path.glob("*.md").reject { |f| f.basename.to_s.downcase == "readme.md" }
       end
 
       # Get source structure type
@@ -81,9 +81,9 @@ module CodingAgentTools
       end
 
       def check_commands_directory(base_path, result)
-        commands_dir = base_path / 'commands'
-        custom_dir = commands_dir / '_custom'
-        generated_dir = commands_dir / '_generated'
+        commands_dir = base_path / "commands"
+        custom_dir = commands_dir / "_custom"
+        generated_dir = commands_dir / "_generated"
 
         # Check main commands directory
         if commands_dir.exist?
@@ -101,7 +101,7 @@ module CodingAgentTools
       end
 
       def check_agents_directory(base_path, result)
-        agents_dir = base_path / 'agents'
+        agents_dir = base_path / "agents"
         result[:agents_exist] = agents_dir.exist? && agents_dir.directory?
 
         unless result[:agents_exist]
@@ -114,10 +114,10 @@ module CodingAgentTools
         has_commands = result[:has_flat_commands] || result[:has_subdirs]
 
         if !result[:commands_exist] && !result[:custom_exist] && !result[:generated_exist]
-          result[:errors] << 'No command directories found'
+          result[:errors] << "No command directories found"
           result[:valid] = false
         elsif result[:commands_exist] && !has_commands
-          result[:errors] << 'Commands directory exists but contains no command files'
+          result[:errors] << "Commands directory exists but contains no command files"
           result[:valid] = false
         else
           result[:valid] = has_commands

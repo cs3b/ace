@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
   subject { described_class.new }
 
-  let(:file_path) { '/test/lib/example.rb' }
+  let(:file_path) { "/test/lib/example.rb" }
 
   let(:file_coverage_data) do
     {
@@ -15,25 +15,25 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
         coverage_percentage: 60.0
       },
       lines_data: [nil, 1, 0, 1, nil, 0, 1, nil, 1, 1, 0],
-      frameworks: ['RSpec']
+      frameworks: ["RSpec"]
     }
   end
 
   let(:sample_methods) do
     [
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: 'covered_method', coverage_percentage: 100.0, total_lines: 3, to_h: { name: 'covered_method' },
+        name: "covered_method", coverage_percentage: 100.0, total_lines: 3, to_h: {name: "covered_method"},
         under_threshold?: false),
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: 'uncovered_method', coverage_percentage: 0.0, total_lines: 5, to_h: { name: 'uncovered_method' },
+        name: "uncovered_method", coverage_percentage: 0.0, total_lines: 5, to_h: {name: "uncovered_method"},
         under_threshold?: true),
       instance_double(CodingAgentTools::Models::MethodCoverage,
-        name: 'partial_method', coverage_percentage: 50.0, total_lines: 4, to_h: { name: 'partial_method' },
+        name: "partial_method", coverage_percentage: 50.0, total_lines: 4, to_h: {name: "partial_method"},
         under_threshold?: true)
     ]
   end
 
-  describe '#analyze_file' do
+  describe "#analyze_file" do
     before do
       # Mock the method mapper to return sample methods
       allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
@@ -44,7 +44,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       allow(File).to receive(:readable?).with(file_path).and_return(true)
     end
 
-    it 'creates a complete coverage result' do
+    it "creates a complete coverage result" do
       result = subject.analyze_file(file_path, file_coverage_data)
 
       expect(result).to be_a(CodingAgentTools::Models::CoverageResult)
@@ -55,12 +55,12 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       expect(result.methods).to eq(sample_methods)
     end
 
-    context 'when file is not readable' do
+    context "when file is not readable" do
       before do
         allow(File).to receive(:exist?).with(file_path).and_return(false)
       end
 
-      it 'handles missing files gracefully' do
+      it "handles missing files gracefully" do
         expect do
           result = subject.analyze_file(file_path, file_coverage_data)
           expect(result.methods).to eq([])
@@ -69,19 +69,19 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
     end
   end
 
-  describe '#analyze_files' do
+  describe "#analyze_files" do
     let(:processed_data) do
       {
         file_coverage: {
-          '/test/lib/low_coverage.rb' => {
-            coverage_data: { total_lines: 20, covered_lines: 10, coverage_percentage: 50.0 },
+          "/test/lib/low_coverage.rb" => {
+            coverage_data: {total_lines: 20, covered_lines: 10, coverage_percentage: 50.0},
             lines_data: Array.new(20, 1),
-            frameworks: ['RSpec']
+            frameworks: ["RSpec"]
           },
-          '/test/lib/high_coverage.rb' => {
-            coverage_data: { total_lines: 15, covered_lines: 14, coverage_percentage: 93.3 },
+          "/test/lib/high_coverage.rb" => {
+            coverage_data: {total_lines: 15, covered_lines: 14, coverage_percentage: 93.3},
             lines_data: Array.new(15, 1),
-            frameworks: ['RSpec']
+            frameworks: ["RSpec"]
           }
         }
       }
@@ -94,7 +94,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       allow(File).to receive(:readable?).and_return(true)
     end
 
-    it 'analyzes multiple files and prioritizes under-covered ones' do
+    it "analyzes multiple files and prioritizes under-covered ones" do
       results = subject.analyze_files(processed_data, threshold: 80.0)
 
       expect(results.length).to eq(2)
@@ -104,14 +104,14 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       expect(results.last.coverage_percentage).to eq(93.3)   # high_coverage.rb
     end
 
-    it 'sorts files by specified criteria' do
-      results = subject.analyze_files(processed_data, sort_by: 'coverage')
+    it "sorts files by specified criteria" do
+      results = subject.analyze_files(processed_data, sort_by: "coverage")
 
       expect(results.first.coverage_percentage).to eq(50.0)  # lowest first
       expect(results.last.coverage_percentage).to eq(93.3)
     end
 
-    it 'filters for methods_only when requested' do
+    it "filters for methods_only when requested" do
       allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
         .to receive(:map_file_coverage).and_return([], sample_methods)
 
@@ -121,7 +121,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
     end
   end
 
-  describe '#detailed_file_analysis' do
+  describe "#detailed_file_analysis" do
     before do
       allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
         .to receive(:map_file_coverage).and_return(sample_methods)
@@ -129,7 +129,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       allow(File).to receive(:readable?).with(file_path).and_return(true)
     end
 
-    it 'provides comprehensive file analysis' do
+    it "provides comprehensive file analysis" do
       result = subject.detailed_file_analysis(file_path, file_coverage_data, threshold: 80.0)
 
       expect(result).to have_key(:file_info)
@@ -140,10 +140,10 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
 
       expect(result[:file_info][:under_threshold]).to be true
       expect(result[:method_analysis][:total_methods]).to eq(3)
-      expect(result[:frameworks]).to eq(['RSpec'])
+      expect(result[:frameworks]).to eq(["RSpec"])
     end
 
-    it 'analyzes uncovered line ranges' do
+    it "analyzes uncovered line ranges" do
       result = subject.detailed_file_analysis(file_path, file_coverage_data)
 
       uncovered_areas = result[:uncovered_areas]
@@ -153,21 +153,21 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       expect(uncovered_areas.first).to have_key(:end_line)
     end
 
-    context 'when file has no methods' do
+    context "when file has no methods" do
       before do
         allow_any_instance_of(CodingAgentTools::Molecules::MethodCoverageMapper)
           .to receive(:map_file_coverage).and_return([])
       end
 
-      it 'provides fallback message for method analysis' do
+      it "provides fallback message for method analysis" do
         result = subject.detailed_file_analysis(file_path, file_coverage_data)
 
-        expect(result[:method_analysis]).to eq({ message: 'No methods found or file could not be parsed' })
+        expect(result[:method_analysis]).to eq({message: "No methods found or file could not be parsed"})
       end
     end
   end
 
-  describe '#calculate_priority_score' do
+  describe "#calculate_priority_score" do
     let(:file_result) do
       instance_double(CodingAgentTools::Models::CoverageResult,
         under_threshold?: true,
@@ -189,7 +189,7 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
       allow(sample_methods[2]).to receive(:under_threshold?).and_return(true)
     end
 
-    it 'calculates priority score based on coverage gaps and method analysis' do
+    it "calculates priority score based on coverage gaps and method analysis" do
       score = subject.calculate_priority_score(file_result, 80.0)
 
       expect(score).to be > 0
@@ -197,32 +197,32 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
     end
   end
 
-  describe 'private methods' do
-    describe '#find_uncovered_line_ranges' do
+  describe "private methods" do
+    describe "#find_uncovered_line_ranges" do
       let(:lines_with_gaps) { [nil, 1, 0, 0, 1, nil, 0, 1, 0, 0, 0] }
 
-      it 'identifies ranges of uncovered lines' do
+      it "identifies ranges of uncovered lines" do
         ranges = subject.send(:find_uncovered_line_ranges, lines_with_gaps)
 
         expect(ranges.length).to eq(3)
-        expect(ranges[0]).to eq({ start_line: 3, end_line: 4 })    # Lines 3-4
-        expect(ranges[1]).to eq({ start_line: 7, end_line: 7 })    # Line 7
-        expect(ranges[2]).to eq({ start_line: 9, end_line: 11 })   # Lines 9-11
+        expect(ranges[0]).to eq({start_line: 3, end_line: 4})    # Lines 3-4
+        expect(ranges[1]).to eq({start_line: 7, end_line: 7})    # Line 7
+        expect(ranges[2]).to eq({start_line: 9, end_line: 11})   # Lines 9-11
       end
 
-      it 'handles nil and empty input' do
+      it "handles nil and empty input" do
         expect(subject.send(:find_uncovered_line_ranges, nil)).to eq([])
         expect(subject.send(:find_uncovered_line_ranges, [])).to eq([])
       end
     end
 
-    describe '#sort_file_results' do
+    describe "#sort_file_results" do
       let(:file_results) do
         [
           instance_double(CodingAgentTools::Models::CoverageResult,
-            coverage_percentage: 80.0, uncovered_lines_count: 5, relative_path: 'b.rb'),
+            coverage_percentage: 80.0, uncovered_lines_count: 5, relative_path: "b.rb"),
           instance_double(CodingAgentTools::Models::CoverageResult,
-            coverage_percentage: 60.0, uncovered_lines_count: 10, relative_path: 'a.rb')
+            coverage_percentage: 60.0, uncovered_lines_count: 10, relative_path: "a.rb")
         ]
       end
 
@@ -232,28 +232,28 @@ RSpec.describe CodingAgentTools::Molecules::FileAnalyzer do
         allow(subject).to receive(:calculate_priority_score).with(file_results[1], 85.0).and_return(20)
       end
 
-      it 'sorts by coverage percentage' do
-        sorted = subject.send(:sort_file_results, file_results, 'coverage')
+      it "sorts by coverage percentage" do
+        sorted = subject.send(:sort_file_results, file_results, "coverage")
         expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
       end
 
-      it 'sorts by uncovered lines count' do
-        sorted = subject.send(:sort_file_results, file_results, 'uncovered_lines')
+      it "sorts by uncovered lines count" do
+        sorted = subject.send(:sort_file_results, file_results, "uncovered_lines")
         expect(sorted.first.uncovered_lines_count).to eq(10)  # most uncovered first
       end
 
-      it 'sorts by file name' do
-        sorted = subject.send(:sort_file_results, file_results, 'file_name')
-        expect(sorted.first.relative_path).to eq('a.rb')  # alphabetical
+      it "sorts by file name" do
+        sorted = subject.send(:sort_file_results, file_results, "file_name")
+        expect(sorted.first.relative_path).to eq("a.rb")  # alphabetical
       end
 
-      it 'sorts by priority score' do
-        sorted = subject.send(:sort_file_results, file_results, 'priority')
+      it "sorts by priority score" do
+        sorted = subject.send(:sort_file_results, file_results, "priority")
         expect(sorted.first.uncovered_lines_count).to eq(10)  # highest priority first
       end
 
-      it 'defaults to coverage sorting for unknown sort criteria' do
-        sorted = subject.send(:sort_file_results, file_results, 'unknown')
+      it "defaults to coverage sorting for unknown sort criteria" do
+        sorted = subject.send(:sort_file_results, file_results, "unknown")
         expect(sorted.first.coverage_percentage).to eq(60.0)  # lowest first
       end
     end

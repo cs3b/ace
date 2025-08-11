@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'open3'
-require 'timeout'
-require 'shellwords'
+require "open3"
+require "timeout"
+require "shellwords"
 
 module CodingAgentTools
   module Atoms
@@ -37,7 +37,7 @@ module CodingAgentTools
         # @raise [ArgumentError] If command is invalid
         # @raise [SecurityError] If command fails security validation
         def self.execute(command, timeout: DEFAULT_TIMEOUT, working_directory: nil, environment: {},
-                         capture_output: true)
+          capture_output: true)
           validate_command(command)
           validate_timeout(timeout)
           validate_working_directory(working_directory) if working_directory
@@ -60,7 +60,7 @@ module CodingAgentTools
             end
           rescue => e
             duration = Time.now - start_time
-            CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
+            CommandResult.new(false, "", "Execution error: #{e.message}", -1, duration)
           end
         end
 
@@ -111,11 +111,11 @@ module CodingAgentTools
         # @param arguments [Array<String>] Arguments to append
         # @return [String] Complete command with escaped arguments
         def self.build_command(base_command, arguments = [])
-          raise ArgumentError, 'base_command cannot be nil or empty' if base_command.nil? || base_command.empty?
-          raise ArgumentError, 'arguments must be an array' unless arguments.is_a?(Array)
+          raise ArgumentError, "base_command cannot be nil or empty" if base_command.nil? || base_command.empty?
+          raise ArgumentError, "arguments must be an array" unless arguments.is_a?(Array)
 
           escaped_args = arguments.map { |arg| Shellwords.escape(arg.to_s) }
-          ([base_command] + escaped_args).join(' ')
+          ([base_command] + escaped_args).join(" ")
         end
 
         # Execute command with retries
@@ -145,7 +145,7 @@ module CodingAgentTools
           # Check if we're running in a test environment
           # @return [Boolean] True if in test environment
           def test_environment?
-            ENV['CI'] || defined?(RSpec) || ENV['RAILS_ENV'] == 'test' || ENV['RACK_ENV'] == 'test'
+            ENV["CI"] || defined?(RSpec) || ENV["RAILS_ENV"] == "test" || ENV["RACK_ENV"] == "test"
           end
 
           # Validate command string
@@ -153,40 +153,40 @@ module CodingAgentTools
           # @raise [ArgumentError] If command is invalid
           # @raise [SecurityError] If command fails security checks
           def validate_command(command)
-            raise ArgumentError, 'command must be a string' unless command.is_a?(String)
-            raise ArgumentError, 'command cannot be nil or empty' if command.nil? || command.empty?
-            raise SecurityError, 'command failed security validation' unless safe_command?(command)
+            raise ArgumentError, "command must be a string" unless command.is_a?(String)
+            raise ArgumentError, "command cannot be nil or empty" if command.nil? || command.empty?
+            raise SecurityError, "command failed security validation" unless safe_command?(command)
           end
 
           # Validate timeout parameter
           # @param timeout [Integer] Timeout value
           # @raise [ArgumentError] If timeout is invalid
           def validate_timeout(timeout)
-            raise ArgumentError, 'timeout must be a positive integer' unless timeout.is_a?(Integer) && timeout > 0
-            raise ArgumentError, 'timeout too large (max 3600 seconds)' if timeout > 3600
+            raise ArgumentError, "timeout must be a positive integer" unless timeout.is_a?(Integer) && timeout > 0
+            raise ArgumentError, "timeout too large (max 3600 seconds)" if timeout > 3600
           end
 
           # Validate working directory
           # @param directory [String] Directory path
           # @raise [ArgumentError] If directory is invalid
           def validate_working_directory(directory)
-            raise ArgumentError, 'working_directory must be a string' unless directory.is_a?(String)
-            raise ArgumentError, 'working_directory cannot be empty' if directory.empty?
-            raise SecurityError, 'working_directory failed security validation' unless safe_directory_path?(directory)
+            raise ArgumentError, "working_directory must be a string" unless directory.is_a?(String)
+            raise ArgumentError, "working_directory cannot be empty" if directory.empty?
+            raise SecurityError, "working_directory failed security validation" unless safe_directory_path?(directory)
           end
 
           # Validate environment variables
           # @param environment [Hash] Environment variables
           # @raise [ArgumentError] If environment is invalid
           def validate_environment(environment)
-            raise ArgumentError, 'environment must be a hash' unless environment.is_a?(Hash)
+            raise ArgumentError, "environment must be a hash" unless environment.is_a?(Hash)
 
             environment.each do |key, value|
-              raise ArgumentError, 'environment key must be a string' unless key.is_a?(String)
-              raise ArgumentError, 'environment value must be a string' unless value.is_a?(String)
-              raise ArgumentError, 'environment key cannot be empty' if key.empty?
-              raise SecurityError, 'environment key contains invalid characters' if key.match?(/[\x00-\x1f\x7f=]/)
-              raise SecurityError, 'environment value contains null bytes' if value.include?("\0")
+              raise ArgumentError, "environment key must be a string" unless key.is_a?(String)
+              raise ArgumentError, "environment value must be a string" unless value.is_a?(String)
+              raise ArgumentError, "environment key cannot be empty" if key.empty?
+              raise SecurityError, "environment key contains invalid characters" if key.match?(/[\x00-\x1f\x7f=]/)
+              raise SecurityError, "environment value contains null bytes" if value.include?("\0")
             end
           end
 
@@ -198,8 +198,8 @@ module CodingAgentTools
           # @param start_time [Time] Start time for duration calculation
           # @return [CommandResult] Execution result
           def execute_with_capture(command, env, options, timeout, start_time)
-            stdout_str = ''
-            stderr_str = ''
+            stdout_str = ""
+            stderr_str = ""
             exit_code = nil
 
             begin
@@ -216,10 +216,10 @@ module CodingAgentTools
               end
             rescue Timeout::Error
               duration = Time.now - start_time
-              return CommandResult.new(false, '', "Command timed out after #{timeout} seconds", -1, duration)
+              return CommandResult.new(false, "", "Command timed out after #{timeout} seconds", -1, duration)
             rescue => e
               duration = Time.now - start_time
-              return CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
+              return CommandResult.new(false, "", "Execution error: #{e.message}", -1, duration)
             end
 
             duration = Time.now - start_time
@@ -243,15 +243,15 @@ module CodingAgentTools
               end
             rescue Timeout::Error
               duration = Time.now - start_time
-              return CommandResult.new(false, '', "Command timed out after #{timeout} seconds", -1, duration)
+              return CommandResult.new(false, "", "Command timed out after #{timeout} seconds", -1, duration)
             rescue => e
               duration = Time.now - start_time
-              return CommandResult.new(false, '', "Execution error: #{e.message}", -1, duration)
+              return CommandResult.new(false, "", "Execution error: #{e.message}", -1, duration)
             end
 
             duration = Time.now - start_time
             success = exit_code == 0
-            CommandResult.new(success, '', '', exit_code, duration)
+            CommandResult.new(success, "", "", exit_code, duration)
           end
 
           # Check if directory path is safe
@@ -262,8 +262,8 @@ module CodingAgentTools
             return false unless path.is_a?(String)
             return false if path.include?("\0")
             return false if path.match?(/[\x00-\x1f\x7f]/)
-            return false if path.include?('../')
-            return false if path.include?('..\\')
+            return false if path.include?("../")
+            return false if path.include?("..\\")
             return false if path.length > 4096
 
             true

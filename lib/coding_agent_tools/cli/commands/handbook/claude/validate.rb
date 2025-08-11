@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../../organisms/claude_validator'
+require "dry/cli"
+require_relative "../../../../organisms/claude_validator"
 
 module CodingAgentTools
   module Cli
@@ -9,25 +9,25 @@ module CodingAgentTools
       module Handbook
         module Claude
           class Validate < Dry::CLI::Command
-            desc 'Validate Claude command coverage'
+            desc "Validate Claude command coverage"
 
-            option :check, type: :string, desc: 'Specific check to run (missing, outdated, duplicates)'
-            option :strict, type: :boolean, default: false, desc: 'Exit with code 1 if issues found'
-            option :workflow, type: :string, desc: 'Validate specific workflow'
-            option :format, type: :string, default: 'text', values: ['text', 'json'], desc: 'Output format'
+            option :check, type: :string, desc: "Specific check to run (missing, outdated, duplicates)"
+            option :strict, type: :boolean, default: false, desc: "Exit with code 1 if issues found"
+            option :workflow, type: :string, desc: "Validate specific workflow"
+            option :format, type: :string, default: "text", values: ["text", "json"], desc: "Output format"
 
             example [
-              '',
-              '--check missing',
-              '--workflow draft-task',
-              '--strict --format json'
+              "",
+              "--check missing",
+              "--workflow draft-task",
+              "--strict --format json"
             ]
 
             def call(**options)
               validator = CodingAgentTools::Organisms::ClaudeValidator.new
               result = validator.validate(options)
 
-              puts result.to_s
+              puts result
 
               exit_code = if options[:strict] && !result.success
                 1
@@ -38,7 +38,7 @@ module CodingAgentTools
               exit(exit_code)
             rescue => e
               warn "Error: #{e.message}"
-              warn e.backtrace if ENV['DEBUG']
+              warn e.backtrace if ENV["DEBUG"]
               exit(1)
             end
           end

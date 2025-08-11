@@ -6,7 +6,7 @@ require "tempfile"
 require "yaml"
 
 RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
-  let(:temp_config) { Tempfile.new(['search-presets', '.yml']) }
+  let(:temp_config) { Tempfile.new(["search-presets", ".yml"]) }
   let(:manager) { described_class.new(config_paths: [temp_config.path]) }
 
   after do
@@ -27,9 +27,9 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
         }
       }
       File.write(temp_config.path, YAML.dump(config))
-      
+
       manager = described_class.new(config_paths: [temp_config.path])
-      
+
       expect(manager.exists?("custom_preset")).to be true
       expect(manager.get("custom_preset")).to eq(config["custom_preset"])
     end
@@ -38,7 +38,7 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
   describe "#get" do
     it "returns preset by name" do
       preset = manager.get("todo")
-      
+
       expect(preset).to include("pattern", "type")
       expect(preset["pattern"]).to include("TODO")
     end
@@ -49,7 +49,7 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
 
     it "accepts symbol names" do
       preset = manager.get(:ruby)
-      
+
       expect(preset).to include("glob", "type")
     end
   end
@@ -57,7 +57,7 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
   describe "#list" do
     it "returns sorted list of preset names" do
       presets = manager.list
-      
+
       expect(presets).to be_an(Array)
       expect(presets).to eq(presets.sort)
       expect(presets).to include("todo", "ruby")
@@ -77,21 +77,21 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
 
   describe "#merge_with_options" do
     it "merges preset with options" do
-      result = manager.merge_with_options("ruby", { max_results: 100 })
-      
-      expect(result).to include("glob" => "*.rb", "type" => "file", max_results: 100)
+      result = manager.merge_with_options("ruby", {max_results: 100})
+
+      expect(result).to include("glob" => "*.rb", "type" => "file", :max_results => 100)
     end
 
     it "gives precedence to options over preset" do
-      result = manager.merge_with_options("ruby", { type: "content" })
-      
+      result = manager.merge_with_options("ruby", {type: "content"})
+
       expect(result[:type]).to eq("content")
     end
 
     it "returns options if preset doesn't exist" do
-      options = { pattern: "test" }
+      options = {pattern: "test"}
       result = manager.merge_with_options("non_existent", options)
-      
+
       expect(result).to eq(options)
     end
   end
@@ -106,19 +106,19 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
         "SEARCH_TERM" => "TODO",
         "PROJECT_ROOT" => "/home/user/project"
       }
-      
+
       result = manager.apply_variables(preset, variables)
-      
+
       expect(result["pattern"]).to eq("TODO")
       expect(result["path"]).to eq("/home/user/project/src")
     end
 
     it "substitutes environment variables" do
       ENV["TEST_VAR"] = "test_value"
-      preset = { "pattern" => "${ENV:TEST_VAR}" }
-      
+      preset = {"pattern" => "${ENV:TEST_VAR}"}
+
       result = manager.apply_variables(preset, {})
-      
+
       expect(result["pattern"]).to eq("test_value")
     ensure
       ENV.delete("TEST_VAR")
@@ -127,36 +127,36 @@ RSpec.describe CodingAgentTools::Molecules::Search::PresetManager do
 
   describe "#save" do
     it "saves new preset to file" do
-      config = { "pattern" => "test", "type" => "content" }
-      
+      config = {"pattern" => "test", "type" => "content"}
+
       result = manager.save("new_preset", config, path: temp_config.path)
-      
+
       expect(result).to be true
       expect(manager.exists?("new_preset")).to be true
       expect(manager.get("new_preset")).to eq(config)
     end
 
     it "updates existing preset" do
-      manager.save("existing", { "pattern" => "old" }, path: temp_config.path)
-      manager.save("existing", { "pattern" => "new" }, path: temp_config.path)
-      
+      manager.save("existing", {"pattern" => "old"}, path: temp_config.path)
+      manager.save("existing", {"pattern" => "new"}, path: temp_config.path)
+
       expect(manager.get("existing")["pattern"]).to eq("new")
     end
   end
 
   describe "#delete" do
     it "deletes preset from file" do
-      manager.save("to_delete", { "pattern" => "test" }, path: temp_config.path)
-      
+      manager.save("to_delete", {"pattern" => "test"}, path: temp_config.path)
+
       result = manager.delete("to_delete", path: temp_config.path)
-      
+
       expect(result).to be true
       expect(manager.exists?("to_delete")).to be false
     end
 
     it "returns false if preset doesn't exist" do
       result = manager.delete("non_existent", path: temp_config.path)
-      
+
       expect(result).to be false
     end
   end

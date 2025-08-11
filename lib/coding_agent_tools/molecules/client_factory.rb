@@ -65,7 +65,7 @@ module CodingAgentTools
           aliases = client_class.dynamic_aliases || {} if client_class.respond_to?(:dynamic_aliases)
 
           # Notify ProviderModelParser about the new provider
-          require_relative 'provider_model_parser'
+          require_relative "provider_model_parser"
           ProviderModelParser.register_provider(provider_name, aliases)
         end
       end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Atoms
@@ -52,22 +52,22 @@ module CodingAgentTools
           # Try to use ProjectRootDetector if it's available
           if defined?(::CodingAgentTools::Atoms::ProjectRootDetector)
             root = ::CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-            puts "[PathResolver] Project root detected via ProjectRootDetector: #{root}" if ENV['DEBUG']
+            puts "[PathResolver] Project root detected via ProjectRootDetector: #{root}" if ENV["DEBUG"]
             return root
           end
 
           # Try to load it explicitly for code_quality context
           begin
-            require_relative '../project_root_detector'
+            require_relative "../project_root_detector"
             root = ::CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-            puts "[PathResolver] Project root detected after require: #{root}" if ENV['DEBUG']
+            puts "[PathResolver] Project root detected after require: #{root}" if ENV["DEBUG"]
             return root
           rescue LoadError, StandardError => e
-            puts "[PathResolver] Could not load ProjectRootDetector: #{e.message}" if ENV['DEBUG']
+            puts "[PathResolver] Could not load ProjectRootDetector: #{e.message}" if ENV["DEBUG"]
           end
 
           # Fallback to manual detection
-          markers = ['.git', 'Gemfile', '.coding-agent', 'coding_agent_tools.gemspec']
+          markers = [".git", "Gemfile", ".coding-agent", "coding_agent_tools.gemspec"]
 
           current = Pathname.pwd
           until current.root?

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Atoms
@@ -9,7 +9,7 @@ module CodingAgentTools
       # Extracted from dev-tools/bin/lint-cassettes
       class CassettesValidator
         DEFAULT_THRESHOLD = 50 * 1024 # 50KB in bytes
-        CASSETTES_DIR = 'spec/cassettes'
+        CASSETTES_DIR = "spec/cassettes"
 
         attr_reader :threshold, :cassettes_dir
 
@@ -43,7 +43,7 @@ module CodingAgentTools
         end
 
         def find_large_cassettes
-          cassette_files = Dir.glob(cassettes_dir.join('**', '*.{json,yml}'))
+          cassette_files = Dir.glob(cassettes_dir.join("**", "*.{json,yml}"))
 
           large_files = []
 

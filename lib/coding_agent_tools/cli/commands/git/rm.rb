@@ -1,60 +1,60 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Rm < Dry::CLI::Command
-          desc 'Remove files from working tree and index with intelligent path grouping'
+          desc "Remove files from working tree and index with intelligent path grouping"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :force, type: :boolean, default: false, aliases: ['f'],
-            desc: 'Override the up-to-date check'
+          option :force, type: :boolean, default: false, aliases: ["f"],
+            desc: "Override the up-to-date check"
 
-          option :dry_run, type: :boolean, default: false, aliases: ['n'],
-            desc: 'Show what would be removed without actually removing'
+          option :dry_run, type: :boolean, default: false, aliases: ["n"],
+            desc: "Show what would be removed without actually removing"
 
-          option :recursive, type: :boolean, default: false, aliases: ['r'],
-            desc: 'Allow recursive removal of directories'
+          option :recursive, type: :boolean, default: false, aliases: ["r"],
+            desc: "Allow recursive removal of directories"
 
           option :cached, type: :boolean, default: false,
-            desc: 'Remove from index only, keep working tree files'
+            desc: "Remove from index only, keep working tree files"
 
           option :ignore_unmatch, type: :boolean, default: false,
-            desc: 'Exit with zero status even if no files matched'
+            desc: "Exit with zero status even if no files matched"
 
-          option :quiet, type: :boolean, default: false, aliases: ['q'],
-            desc: 'Suppress output'
+          option :quiet, type: :boolean, default: false, aliases: ["q"],
+            desc: "Suppress output"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
           option :concurrent, type: :boolean, default: false,
-            desc: 'Execute remove operations concurrently across repositories'
+            desc: "Execute remove operations concurrently across repositories"
 
           argument :files, type: :array, required: true,
-            desc: 'Files or directories to remove'
+            desc: "Files or directories to remove"
 
           example [
-            'file.rb',
-            '--recursive old_directory/',
-            '--cached staged_file.rb',
-            '--force modified_file.rb',
-            '--dry-run lib/old_module.rb',
-            'dev-handbook/obsolete.md dev-tools/lib/deprecated.rb',
-            '--concurrent --recursive test_dirs/'
+            "file.rb",
+            "--recursive old_directory/",
+            "--cached staged_file.rb",
+            "--force modified_file.rb",
+            "--dry-run lib/old_module.rb",
+            "dev-handbook/obsolete.md dev-tools/lib/deprecated.rb",
+            "--concurrent --recursive test_dirs/"
           ]
 
           def call(files:, **options)
@@ -122,7 +122,7 @@ module CodingAgentTools
 
             return unless result[:repositories_processed]
 
-            repos_list = result[:repositories_processed].join(', ')
+            repos_list = result[:repositories_processed].join(", ")
             puts "Remove operations completed across repositories: #{repos_list}"
           end
 
@@ -138,7 +138,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Remove completed successfully"
               end
             else
-              error_message = result[:error] || result[:stderr] || 'Remove operation failed'
+              error_message = result[:error] || result[:stderr] || "Remove operation failed"
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -165,7 +165,7 @@ module CodingAgentTools
                 end
               end
 
-              error_output('Use --debug flag for more information') unless options[:debug]
+              error_output("Use --debug flag for more information") unless options[:debug]
             end
 
             # Show any partial successes
@@ -174,7 +174,7 @@ module CodingAgentTools
             successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
             return unless successful_repos.any?
 
-            successful_names = successful_repos.keys.join(', ')
+            successful_names = successful_repos.keys.join(", ")
             puts "Partial success: Remove completed in repositories: #{successful_names}"
           end
 
@@ -185,7 +185,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

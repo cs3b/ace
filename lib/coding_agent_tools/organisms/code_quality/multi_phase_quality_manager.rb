@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/code_quality/configuration_loader'
-require_relative '../../atoms/code_quality/path_resolver'
-require_relative 'language_runner_factory'
-require_relative '../../molecules/code_quality/autofix_orchestrator'
-require_relative '../../molecules/code_quality/error_file_generator'
-require_relative '../../molecules/code_quality/diff_review_analyzer'
+require_relative "../../atoms/code_quality/configuration_loader"
+require_relative "../../atoms/code_quality/path_resolver"
+require_relative "language_runner_factory"
+require_relative "../../molecules/code_quality/autofix_orchestrator"
+require_relative "../../molecules/code_quality/error_file_generator"
+require_relative "../../molecules/code_quality/diff_review_analyzer"
 
 module CodingAgentTools
   module Organisms
@@ -28,8 +28,8 @@ module CodingAgentTools
           result[:valid]
         end
 
-        def run(target: 'all', paths: ['.'], autofix: false, review_diff: false, show_details: false)
-          puts '🔍 Starting Code Quality Validation'
+        def run(target: "all", paths: ["."], autofix: false, review_diff: false, show_details: false)
+          puts "🔍 Starting Code Quality Validation"
 
           # Phase 1: Detection & Validation
           phase1_results = run_phase1(target, paths, autofix, show_details)
@@ -67,9 +67,9 @@ module CodingAgentTools
           before_snapshot = diff_analyzer.create_snapshot if autofix
 
           # Run Ruby linters
-          if ['ruby', 'all'].include?(target)
+          if ["ruby", "all"].include?(target)
             ruby_runner = LanguageRunnerFactory.create_runner(
-              'ruby',
+              "ruby",
               config: @config,
               path_resolver: @path_resolver
             )
@@ -82,9 +82,9 @@ module CodingAgentTools
           end
 
           # Run Markdown linters
-          if ['markdown', 'all'].include?(target)
+          if ["markdown", "all"].include?(target)
             markdown_runner = LanguageRunnerFactory.create_runner(
-              'markdown',
+              "markdown",
               config: @config,
               path_resolver: @path_resolver
             )
@@ -124,7 +124,7 @@ module CodingAgentTools
 
           # Re-validate after fixes
           if results[:autofix_summary][:total_fixed] > 0
-            puts '  ↻ Re-validating after fixes...' unless @dry_run
+            puts "  ↻ Re-validating after fixes..." unless @dry_run
             revalidation = run_phase1(target, paths, false, false)
             results[:revalidation] = autofix_orchestrator.validate_fixes(
               phase1_results,
@@ -133,10 +133,10 @@ module CodingAgentTools
           end
 
           # Generate error distribution files
-          if @config.dig('error_distribution', 'enabled')
+          if @config.dig("error_distribution", "enabled")
             error_generator = Molecules::CodeQuality::ErrorFileGenerator.new(
               output_dir: @path_resolver.project_root,
-              max_files: @config.dig('error_distribution', 'max_files') || 4
+              max_files: @config.dig("error_distribution", "max_files") || 4
             )
 
             # Clean up old error files first
@@ -163,7 +163,7 @@ module CodingAgentTools
             }
 
             # Write review to file
-            review_path = File.join(@path_resolver.project_root, '.lint-diff-review.md')
+            review_path = File.join(@path_resolver.project_root, ".lint-diff-review.md")
             File.write(review_path, results[:diff_review][:review])
             puts "  📝 Diff review written to: #{review_path}" unless @dry_run
           end
@@ -193,8 +193,8 @@ module CodingAgentTools
             results[:agent_metadata] = {
               total_errors: phase2_results.dig(:error_distribution, :total_errors),
               error_files: results[:error_files].size,
-              workflow_instruction: 'dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md',
-              parallel_agents: @config.dig('error_distribution', 'max_files') || 4
+              workflow_instruction: "dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md",
+              parallel_agents: @config.dig("error_distribution", "max_files") || 4
             }
           end
 
@@ -259,7 +259,7 @@ module CodingAgentTools
             total_issues += results[:markdown][:total_issues]
           end
 
-          status = results[:success] ? '✅ PASSED' : '❌ FAILED'
+          status = results[:success] ? "✅ PASSED" : "❌ FAILED"
           puts "  • Overall status: #{status}"
 
           return unless total_issues > 0 && !@dry_run
@@ -284,11 +284,11 @@ module CodingAgentTools
           puts "\n  Phase 3 Summary:"
 
           if results[:agent_ready]
-            puts '  • Agent coordination: READY'
+            puts "  • Agent coordination: READY"
             puts "  • Error files: #{results[:error_files].size}"
             puts "  • Parallel agents supported: #{results[:agent_metadata][:parallel_agents]}"
           else
-            puts '  • Agent coordination: NOT NEEDED (no errors to process)'
+            puts "  • Agent coordination: NOT NEEDED (no errors to process)"
           end
         end
 
@@ -330,7 +330,7 @@ module CodingAgentTools
           when :standardrb
             relative_file = make_path_relative(finding[:file])
             location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
-            severity = finding[:severity] == 'error' ? '❌' : '⚠️'
+            severity = (finding[:severity] == "error") ? "❌" : "⚠️"
             puts "    #{severity} #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             puts "    ⚠️  Security: #{finding}"
@@ -339,9 +339,9 @@ module CodingAgentTools
             puts "    ⚠️  #{relative_path} - #{finding[:size_formatted]} (threshold exceeded)"
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
-              file = finding[:file] || 'unknown'
-              relative_file = file != 'unknown' ? make_path_relative(file) : file
-              message = finding[:message] || finding[:template] || finding[:link] || 'issue'
+              file = finding[:file] || "unknown"
+              relative_file = (file != "unknown") ? make_path_relative(file) : file
+              message = finding[:message] || finding[:template] || finding[:link] || "issue"
               puts "    ❌ #{relative_file} - #{message}"
             else
               puts "    ❌ #{finding}"
@@ -352,10 +352,10 @@ module CodingAgentTools
         end
 
         def write_detailed_report(results, target)
-          report_path = File.join(@path_resolver.project_root, '.lint-report.md')
+          report_path = File.join(@path_resolver.project_root, ".lint-report.md")
 
-          File.open(report_path, 'w') do |f|
-            f.puts '# Code Quality Report'
+          File.open(report_path, "w") do |f|
+            f.puts "# Code Quality Report"
             f.puts "\n**Generated**: #{Time.now.strftime("%Y-%m-%d %H:%M:%S")}"
             f.puts "**Target**: #{target}"
             f.puts "\n## Summary"
@@ -386,14 +386,14 @@ module CodingAgentTools
                   f.puts "\n### #{linter_name.to_s.upcase} (ERROR)"
                   f.puts "\n```"
                   f.puts "❌ #{linter_result[:error]}"
-                  f.puts '```'
+                  f.puts "```"
                 elsif linter_result[:findings] && !linter_result[:findings].empty?
                   f.puts "\n### #{linter_name.to_s.upcase}"
                   f.puts "\n```"
                   linter_result[:findings].each do |finding|
                     f.puts format_finding_for_report(finding, linter_name)
                   end
-                  f.puts '```'
+                  f.puts "```"
                 else
                   # Show successful linters with no findings
                   f.puts "\n### #{linter_name.to_s.upcase}"
@@ -411,14 +411,14 @@ module CodingAgentTools
                   linter_result[:findings].each do |finding|
                     f.puts format_finding_for_report(finding, linter_name)
                   end
-                  f.puts '```'
+                  f.puts "```"
                 elsif linter_result[:errors] && !linter_result[:errors].empty?
                   f.puts "\n### #{linter_name.to_s.upcase} ERRORS"
                   f.puts "\n```"
                   linter_result[:errors].each do |error|
                     f.puts "❌ #{error}"
                   end
-                  f.puts '```'
+                  f.puts "```"
                 else
                   # Show successful linters with no findings
                   f.puts "\n### #{linter_name.to_s.upcase}"
@@ -429,9 +429,9 @@ module CodingAgentTools
 
             f.puts "\n## Next Steps"
             f.puts "\n1. Review the issues listed above"
-            f.puts '2. Run `code-lint --autofix` to apply automatic fixes'
-            f.puts '3. Manually fix remaining issues'
-            f.puts '4. Re-run `code-lint` to verify all issues are resolved'
+            f.puts "2. Run `code-lint --autofix` to apply automatic fixes"
+            f.puts "3. Manually fix remaining issues"
+            f.puts "4. Re-run `code-lint` to verify all issues are resolved"
           end
         end
 
@@ -441,7 +441,7 @@ module CodingAgentTools
             # Make path relative to project root
             relative_file = make_path_relative(finding[:file])
             location = "#{relative_file}:#{finding[:line]}:#{finding[:column]}"
-            severity = finding[:severity] == 'error' ? 'ERROR' : 'WARNING'
+            severity = (finding[:severity] == "error") ? "ERROR" : "WARNING"
             "#{severity}: #{location} - #{finding[:message]} (#{finding[:cop]})"
           when :security
             "Security Issue: #{finding}"
@@ -450,9 +450,9 @@ module CodingAgentTools
             "Cassette Issue: #{relative_path} - #{finding[:size_formatted]} (threshold exceeded)"
           when :task_metadata, :link_validation, :template_embedding
             if finding.is_a?(Hash)
-              file = finding[:file] || 'unknown'
-              relative_file = file != 'unknown' ? make_path_relative(file) : file
-              message = finding[:message] || finding[:template] || finding[:link] || 'issue'
+              file = finding[:file] || "unknown"
+              relative_file = (file != "unknown") ? make_path_relative(file) : file
+              message = finding[:message] || finding[:template] || finding[:link] || "issue"
               "#{relative_file} - #{message}"
             else
               finding.to_s
@@ -466,7 +466,7 @@ module CodingAgentTools
           return path unless path && File.absolute_path?(path)
 
           project_root = @path_resolver.project_root
-          path.start_with?(project_root) ? path.sub("#{project_root}/", '') : path
+          path.start_with?(project_root) ? path.sub("#{project_root}/", "") : path
         end
       end
     end

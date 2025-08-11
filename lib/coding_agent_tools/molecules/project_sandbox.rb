@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../atoms/project_root_detector'
+require "pathname"
+require_relative "../atoms/project_root_detector"
 
 module CodingAgentTools
   module Molecules
@@ -15,8 +15,8 @@ module CodingAgentTools
       end
 
       def validate_path(path)
-        return failure('Path cannot be nil') if path.nil?
-        return failure('Path cannot be empty') if path.to_s.strip.empty?
+        return failure("Path cannot be nil") if path.nil?
+        return failure("Path cannot be empty") if path.to_s.strip.empty?
 
         normalized_path = normalize_path(path)
 
@@ -104,13 +104,13 @@ module CodingAgentTools
         end
 
         # Path must start with project root
-        normalized_path_real.start_with?(project_root_real + '/') ||
+        normalized_path_real.start_with?(project_root_real + "/") ||
           normalized_path_real == project_root_real
       end
 
       def matches_forbidden_pattern?(path)
         project_root_real = File.realpath(@project_root)
-        relative_path = path.sub(project_root_real + '/', '')
+        relative_path = path.sub(project_root_real + "/", "")
 
         @forbidden_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
@@ -119,7 +119,7 @@ module CodingAgentTools
 
       def matches_allowed_pattern?(path)
         project_root_real = File.realpath(@project_root)
-        relative_path = path.sub(project_root_real + '/', '')
+        relative_path = path.sub(project_root_real + "/", "")
 
         @allowed_patterns.any? do |pattern|
           File.fnmatch?(pattern, relative_path, File::FNM_PATHNAME | File::FNM_DOTMATCH)
@@ -128,44 +128,44 @@ module CodingAgentTools
 
       def default_allowed_patterns
         [
-          '**/*.md',
-          '**/*.rb',
-          '**/*.yml',
-          '**/*.yaml',
-          '**/*.sh',
-          'bin/*',
-          'dev-tools/**/*',
-          'dev-taskflow/**/*',
-          'dev-handbook/**/*',
-          '.coding-agent/**/*'
+          "**/*.md",
+          "**/*.rb",
+          "**/*.yml",
+          "**/*.yaml",
+          "**/*.sh",
+          "bin/*",
+          "dev-tools/**/*",
+          "dev-taskflow/**/*",
+          "dev-handbook/**/*",
+          ".coding-agent/**/*"
         ]
       end
 
       def permissive_allowed_patterns
-        ['**/*']
+        ["**/*"]
       end
 
       def default_forbidden_patterns
         [
-          '**/.git/**',              # Git internals (version control)
-          '**/node_modules/**',      # NPM dependencies
-          '**/coverage/**',          # Test coverage files
-          '**/tmp/**',               # Temporary files
-          '**/*.log',                # Log files
-          '**/.DS_Store',            # macOS system files
-          '**/Gemfile.lock',         # Ruby dependency lock files
-          '**/package-lock.json',    # Node.js dependency lock files
-          '**/.*',                   # All other dot files and dot directories
-          '.*'                       # Top-level dot files
+          "**/.git/**",              # Git internals (version control)
+          "**/node_modules/**",      # NPM dependencies
+          "**/coverage/**",          # Test coverage files
+          "**/tmp/**",               # Temporary files
+          "**/*.log",                # Log files
+          "**/.DS_Store",            # macOS system files
+          "**/Gemfile.lock",         # Ruby dependency lock files
+          "**/package-lock.json",    # Node.js dependency lock files
+          "**/.*",                   # All other dot files and dot directories
+          ".*"                       # Top-level dot files
         ]
       end
 
       def success(path)
-        { success: true, path: path }
+        {success: true, path: path}
       end
 
       def failure(error)
-        { success: false, error: error }
+        {success: false, error: error}
       end
     end
   end

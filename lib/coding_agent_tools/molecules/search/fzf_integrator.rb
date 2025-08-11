@@ -31,9 +31,9 @@ module CodingAgentTools
 
           input = items.join("\n")
           fzf_cmd = build_fzf_command(prompt, preview_cmd)
-          
+
           result = @executor.execute(fzf_cmd, stdin: input)
-          
+
           if result[:success]
             selected = result[:output].strip.split("\n")
             {
@@ -68,7 +68,7 @@ module CodingAgentTools
           items = results.map do |r|
             "#{r[:file]}:#{r[:line]}:#{r[:column]}: #{r[:text]}"
           end
-          
+
           preview_cmd = build_search_preview_command
           select_interactive(items, prompt: prompt, preview_cmd: preview_cmd)
         end
@@ -78,24 +78,24 @@ module CodingAgentTools
         # Build fzf command with options
         def build_fzf_command(prompt, preview_cmd)
           cmd_parts = ["fzf"]
-          
+
           # Add standard options
           cmd_parts << "--multi" if @options[:multi]
           cmd_parts << "--reverse" if @options[:reverse] != false
-          cmd_parts << "--height=#{@options[:height] || '50%'}"
+          cmd_parts << "--height=#{@options[:height] || "50%"}"
           cmd_parts << "--prompt='#{prompt}> '"
-          
+
           # Add preview if specified
           if preview_cmd
             cmd_parts << "--preview='#{preview_cmd}'"
-            cmd_parts << "--preview-window=#{@options[:preview_window] || 'right:50%'}"
+            cmd_parts << "--preview-window=#{@options[:preview_window] || "right:50%"}"
           end
-          
+
           # Add custom options
           if @options[:fzf_options]
             cmd_parts << @options[:fzf_options]
           end
-          
+
           cmd_parts.join(" ")
         end
 

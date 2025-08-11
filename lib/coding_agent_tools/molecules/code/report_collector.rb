@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Molecules
@@ -30,13 +30,13 @@ module CodingAgentTools
         # @param report_paths [Array<String>] Array of file paths or glob patterns
         # @return [CollectionResult] Result containing validated reports or error
         def collect_reports(report_paths)
-          return CollectionResult.new(error: 'No report paths provided') if report_paths.nil? || report_paths.empty?
+          return CollectionResult.new(error: "No report paths provided") if report_paths.nil? || report_paths.empty?
 
           # Expand glob patterns and validate files
           expanded_reports = []
 
           report_paths.each do |path|
-            if path.include?('*') || path.include?('?') || path.include?('[')
+            if path.include?("*") || path.include?("?") || path.include?("[")
               # Handle glob patterns
               glob_matches = Dir.glob(path)
               return CollectionResult.new(error: "No files found matching pattern: #{path}") if glob_matches.empty?
@@ -58,10 +58,10 @@ module CodingAgentTools
           # Filter for review report files
           review_reports = filter_review_reports(expanded_reports)
 
-          return CollectionResult.new(error: 'No valid review report files found') if review_reports.empty?
+          return CollectionResult.new(error: "No valid review report files found") if review_reports.empty?
 
           if review_reports.length < 2
-            return CollectionResult.new(error: 'At least 2 review reports are required for synthesis')
+            return CollectionResult.new(error: "At least 2 review reports are required for synthesis")
           end
 
           CollectionResult.new(reports: review_reports)
@@ -106,7 +106,7 @@ module CodingAgentTools
           extension = File.extname(file_path).downcase
 
           # Must be a markdown file
-          return false unless ['.md', '.markdown'].include?(extension)
+          return false unless [".md", ".markdown"].include?(extension)
 
           # Check filename patterns that indicate review reports
           review_patterns = [
@@ -140,7 +140,7 @@ module CodingAgentTools
         # @return [Boolean] True if content indicates review report
         def review_content_indicators?(file_path)
           # Read first 2KB to check for review content markers
-          sample = File.read(file_path, 2048, encoding: 'UTF-8')
+          sample = File.read(file_path, 2048, encoding: "UTF-8")
 
           # Look for common review report section headers
           review_headers = [

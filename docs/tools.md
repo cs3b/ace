@@ -4,7 +4,7 @@
 
 | Tool | Purpose | Key Flags |
 |----------
-| **`search`** | **Unified intelligent search across project** | **`--type`, `--fzf`, `--preset`** |
+| **`search`** | **Unified intelligent search across project** | **`--type`, `--preset`** |
 | `coding-agent-tools all` | List all available tools | `--format`, `--category` |
 | `code-review` | Interactive code review tool | `--interactive`, `--batch` |
 | `code-review-prepare` | Review preparation tool | `--context`, `--diff-only` |
@@ -86,7 +86,7 @@
 
     # Initial setup (run from dev-tools/ directory)
     cd dev-tools && bundle install
-    
+
     # Load Ruby console with gem loaded (run from dev-tools/ directory)
     cd dev-tools && bundle exec irb -r ./lib/coding_agent_tools
 {: .language-bash}
@@ -187,6 +187,143 @@ The search tool provides unified, intelligent searching across your entire proje
 - Streams results for immediate feedback
 - Optimized for large codebases
 </details>
+
+## Glob Pattern Guide   {#glob-pattern-guide}
+
+The `search` tool's `--glob` flag uses glob patterns for file filtering. Understanding these patterns is crucial for effective searching and avoiding common confusion.
+
+### Basic Pattern Syntax
+
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `*` | Matches any characters except path separators | `*.rb` matches `file.rb`, `test.rb` |
+| `**` | Matches any characters including path separators (recursive) | `**/*.rb` matches `lib/file.rb`, `spec/test/file.rb` |
+| `?` | Matches exactly one character | `file?.rb` matches `file1.rb`, `filea.rb` |
+| `[abc]` | Matches any character inside brackets | `file[123].rb` matches `file1.rb`, `file2.rb` |
+| `{a,b}` | Matches any of the comma-separated alternatives | `*.{rb,py}` matches `file.rb`, `script.py` |
+
+### Directory vs File Matching Behavior
+
+**Critical difference between `**` and `**/*` patterns:**
+
+```bash
+# Matches both directories AND files at any depth under spec/
+search --glob "spec/**" --files
+
+# Matches ONLY files (not directories) at any depth under spec/  
+search --glob "spec/**/*" --files
+
+# Matches files directly in spec/ directory (one level only)
+search --glob "spec/*" --files
+
+# Matches only directories with trailing slash
+search --glob "spec/*/" --files
+```
+
+This distinction is the most common source of confusion when using glob patterns.
+
+### Common Use Cases and Recommended Patterns
+
+#### Language-Specific File Searches
+```bash
+# Find all Ruby files
+search --glob "**/*.rb" --files
+
+# Find all JavaScript/TypeScript files  
+search --glob "**/*.{js,ts,jsx,tsx}" --files
+
+# Find all configuration files
+search --glob "**/*.{yml,yaml,json,toml}" --files
+```
+
+#### Directory-Specific Searches
+```bash
+# Find files only in src directory and subdirectories
+search --glob "src/**/*" --files
+
+# Find test files in any test directory
+search --glob "**/test/**/*.rb" --files
+search --glob "**/spec/**/*_spec.rb" --files
+
+# Find documentation files
+search --glob "**/{docs,doc}/**/*.md" --files
+```
+
+#### Mixed Pattern Examples
+```bash
+# Find Ruby files but exclude test files
+search --glob "**/*.rb" --exclude "**/test/**" --files
+
+# Find recent configuration changes
+search --glob "**/*.{yml,json}" --since "1 week ago" --files
+
+# Find files with specific naming patterns
+search --glob "**/*{_test,_spec,.test,.spec}.{rb,py,js}" --files
+```
+
+### Troubleshooting Common Pattern Issues
+
+#### Problem: Pattern not matching expected files
+
+**Issue**: `search --glob "spec/**" --files` returns directories, not files  
+**Solution**: Use `spec/**/*` to match files only
+
+**Issue**: Pattern seems correct but no results  
+**Solutions**:
+- Check if files actually exist: `search --glob "**/*" --files | head`
+- Verify case sensitivity: add `--case-insensitive` flag
+- Test simpler pattern first: `search --glob "*" --files`
+
+#### Problem: Too many or too few results  
+
+**Issue**: `search --glob "**/*"` returns thousands of files  
+**Solutions**:
+- Add file extension filter: `**/*.rb`
+- Exclude large directories: `--exclude "node_modules/**"`
+- Limit to specific directories: `src/**/*`
+
+**Issue**: Pattern matches more than intended  
+**Solutions**:
+- Use more specific extensions: `**/*.spec.rb` instead of `**/*spec*`  
+- Add exclusion patterns: `--exclude "vendor/**"`
+- Combine with content search to filter further
+
+### Pattern Performance Considerations
+
+**Fast patterns** (use these when possible):
+- `*.rb` - Single directory, specific extension
+- `src/**/*.rb` - Specific root directory with extension
+- `**/*.{rb,py}` - Specific extensions only
+
+**Slower patterns** (use sparingly):
+- `**/*` - Matches everything recursively
+- `**/test*/**/*` - Complex nested matching
+- `**/{a,b,c}/**/*` - Multiple alternative directories
+
+**Performance Tips:**
+1. **Be specific**: Use file extensions when you know them
+2. **Limit scope**: Start with specific directories (`src/`, `lib/`)
+3. **Use exclusions**: Filter out large directories like `node_modules/`
+4. **Combine patterns**: Use `{ext1,ext2}` instead of multiple searches
+
+### Advanced Pattern Examples
+
+```bash
+# Find all hidden config files
+search --glob "**/.*" --files
+
+# Find files modified today with specific extensions
+search --glob "**/*.{rb,py,js}" --since "today" --files
+
+# Find test files with complex naming patterns  
+search --glob "**/*{_test,_spec,.test,.spec}.{rb,py,js}" --files
+
+# Find documentation but exclude generated docs
+search --glob "**/doc/**/*.md" --exclude "**/doc/generated/**" --files
+
+# Find configuration files in standard locations
+search --glob "**/{config,conf,settings}/**/*.{yml,yaml,json}" --files
+```
 
 ### `coding_agent_tools all` – List all available tools   {#coding_agent_tools_all--list-all-available-tools}
 
@@ -844,15 +981,15 @@ release-manager report --format detailed
     # Find next task and navigate
     task-manager next
     nav-path task 42
-    
+
     # Locate files intelligently (instead of find/ls)
     nav-path file config        # Find configuration files
     nav-path file blueprint     # Find docs/blueprint.md
     nav-path file README        # Find README files
-    
+
     # Query AI for implementation guidance
     llm-query google "How to implement feature X?"
-    
+
     # Generate new task when needed
     task-manager create --title "Implement feature X"
 {: .language-bash}
@@ -862,7 +999,7 @@ release-manager report --format detailed
     # Sync documentation and review code
     handbook sync-templates
     code-review --interactive
-    
+
     # Track recent work and generate reflection
     task-manager recent
     reflection-synthesize --session current
@@ -888,4 +1025,3 @@ release-manager report --format detailed
 
 *For the most up-to-date information, run individual tools with `--help`
 flag.*
-

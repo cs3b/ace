@@ -14,8 +14,8 @@ module CodingAgentTools
         # @param variables [Hash] Variable definitions with defaults
         # @param created_at [Time] Creation timestamp
         # @param updated_at [Time] Last update timestamp
-        def initialize(name:, description: '', options: {}, variables: {}, 
-                      created_at: Time.now, updated_at: Time.now)
+        def initialize(name:, description: "", options: {}, variables: {},
+          created_at: Time.now, updated_at: Time.now)
           @name = name
           @description = description
           @options = options
@@ -31,10 +31,10 @@ module CodingAgentTools
         def apply_to(base_options, variable_values = {})
           # Merge variable defaults with provided values
           resolved_vars = @variables.merge(variable_values)
-          
+
           # Substitute variables in options
           resolved_options = substitute_variables(@options, resolved_vars)
-          
+
           # Merge with base options
           base_options.merge(resolved_options)
         end
@@ -68,12 +68,12 @@ module CodingAgentTools
         # @return [Hash] YAML-friendly hash
         def to_yaml_h
           {
-            'name' => @name,
-            'description' => @description,
-            'options' => stringify_keys(@options),
-            'variables' => stringify_keys(@variables),
-            'created_at' => @created_at.iso8601,
-            'updated_at' => @updated_at.iso8601
+            "name" => @name,
+            "description" => @description,
+            "options" => stringify_keys(@options),
+            "variables" => stringify_keys(@variables),
+            "created_at" => @created_at.iso8601,
+            "updated_at" => @updated_at.iso8601
           }
         end
 
@@ -82,12 +82,12 @@ module CodingAgentTools
         # @return [SearchPreset] New preset instance
         def self.from_h(hash)
           new(
-            name: hash[:name] || hash['name'],
-            description: hash[:description] || hash['description'] || '',
-            options: hash[:options] || hash['options'] || {},
-            variables: hash[:variables] || hash['variables'] || {},
-            created_at: parse_time(hash[:created_at] || hash['created_at']) || Time.now,
-            updated_at: parse_time(hash[:updated_at] || hash['updated_at']) || Time.now
+            name: hash[:name] || hash["name"],
+            description: hash[:description] || hash["description"] || "",
+            options: hash[:options] || hash["options"] || {},
+            variables: hash[:variables] || hash["variables"] || {},
+            created_at: parse_time(hash[:created_at] || hash["created_at"]) || Time.now,
+            updated_at: parse_time(hash[:updated_at] || hash["updated_at"]) || Time.now
           )
         end
 
@@ -96,12 +96,12 @@ module CodingAgentTools
         # @return [SearchPreset] New preset instance
         def self.from_yaml_h(yaml_hash)
           new(
-            name: yaml_hash['name'],
-            description: yaml_hash['description'] || '',
-            options: symbolize_keys(yaml_hash['options'] || {}),
-            variables: symbolize_keys(yaml_hash['variables'] || {}),
-            created_at: parse_time(yaml_hash['created_at']) || Time.now,
-            updated_at: parse_time(yaml_hash['updated_at']) || Time.now
+            name: yaml_hash["name"],
+            description: yaml_hash["description"] || "",
+            options: symbolize_keys(yaml_hash["options"] || {}),
+            variables: symbolize_keys(yaml_hash["variables"] || {}),
+            created_at: parse_time(yaml_hash["created_at"]) || Time.now,
+            updated_at: parse_time(yaml_hash["updated_at"]) || Time.now
           )
         end
 
@@ -109,19 +109,19 @@ module CodingAgentTools
         # @return [Array<String>] Array of validation errors
         def validate
           errors = []
-          
-          errors << 'Name cannot be empty' if @name.nil? || @name.strip.empty?
-          errors << 'Name must be alphanumeric with underscores/hyphens' unless valid_name?
-          errors << 'Options must be a hash' unless @options.is_a?(Hash)
-          errors << 'Variables must be a hash' unless @variables.is_a?(Hash)
-          
+
+          errors << "Name cannot be empty" if @name.nil? || @name.strip.empty?
+          errors << "Name must be alphanumeric with underscores/hyphens" unless valid_name?
+          errors << "Options must be a hash" unless @options.is_a?(Hash)
+          errors << "Variables must be a hash" unless @variables.is_a?(Hash)
+
           # Validate variable names
           @variables.each_key do |var_name|
             unless var_name.is_a?(String) || var_name.is_a?(Symbol)
               errors << "Variable name #{var_name} must be string or symbol"
             end
           end
-          
+
           errors
         end
 
@@ -137,7 +137,7 @@ module CodingAgentTools
         def update(updates)
           new_attributes = to_h.merge(updates)
           new_attributes[:updated_at] = Time.now
-          
+
           self.class.new(**new_attributes)
         end
 
@@ -172,13 +172,13 @@ module CodingAgentTools
         # @return [String] String with variables substituted
         def substitute_string_variables(str, variables)
           result = str.dup
-          
+
           variables.each do |var_name, value|
             # Support both ${var} and $var syntax
             result.gsub!(/\$\{#{var_name}\}/, value.to_s)
             result.gsub!(/\$#{var_name}\b/, value.to_s)
           end
-          
+
           result
         end
 
@@ -205,8 +205,6 @@ module CodingAgentTools
             time_str
           when String
             Time.parse(time_str)
-          else
-            nil
           end
         rescue ArgumentError
           nil

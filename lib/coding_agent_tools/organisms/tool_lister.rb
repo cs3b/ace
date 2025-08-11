@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/directory_scanner'
-require_relative '../molecules/tool_metadata_extractor'
-require_relative '../molecules/tool_categorizer'
-require_relative '../atoms/yaml_reader'
+require_relative "../atoms/directory_scanner"
+require_relative "../molecules/tool_metadata_extractor"
+require_relative "../molecules/tool_categorizer"
+require_relative "../atoms/yaml_reader"
 
 module CodingAgentTools
   module Organisms
@@ -17,10 +17,10 @@ module CodingAgentTools
     # - Format tool listings for display
     class ToolLister
       DEFAULT_BLACKLIST = [
-        'coding_agent_tools', # Main wrapper command
-        '*-dev',              # Development tools
-        '*-debug',            # Debug utilities
-        'test-*'              # Test utilities
+        "coding_agent_tools", # Main wrapper command
+        "*-dev",              # Development tools
+        "*-debug",            # Debug utilities
+        "test-*"              # Test utilities
       ].freeze
 
       attr_reader :exe_directory, :blacklist
@@ -54,7 +54,7 @@ module CodingAgentTools
         if categorized
           categorize_tools(filtered_tools)
         else
-          { tools: filtered_tools, total: filtered_tools.length }
+          {tools: filtered_tools, total: filtered_tools.length}
         end
       end
 
@@ -74,16 +74,16 @@ module CodingAgentTools
         # Look for tools.yml in XDG-compliant locations
         possible_paths = [
           # Project-specific .coding-agent directory (current working directory)
-          File.join(Dir.pwd, '.coding-agent', 'tools.yml'),
+          File.join(Dir.pwd, ".coding-agent", "tools.yml"),
           # Project root .coding-agent directory (go up from dev-tools if we're in it)
-          File.join(Dir.pwd, '..', '.coding-agent', 'tools.yml'),
+          File.join(Dir.pwd, "..", ".coding-agent", "tools.yml"),
           # Explicit handbook-meta root .coding-agent directory
-          File.expand_path('../../../.coding-agent/tools.yml', __dir__),
+          File.expand_path("../../../.coding-agent/tools.yml", __dir__),
           # XDG_CONFIG_HOME or ~/.config fallback
-          File.join(ENV.fetch('XDG_CONFIG_HOME', File.join(Dir.home, '.config')), 'coding-agent-tools', 'tools.yml'),
+          File.join(ENV.fetch("XDG_CONFIG_HOME", File.join(Dir.home, ".config")), "coding-agent-tools", "tools.yml"),
           # Legacy project root location (for backward compatibility)
-          File.join(Dir.pwd, 'tools.yml'),
-          File.join(Dir.pwd, '..', 'tools.yml')
+          File.join(Dir.pwd, "tools.yml"),
+          File.join(Dir.pwd, "..", "tools.yml")
         ]
 
         possible_paths.each do |path|
@@ -98,7 +98,7 @@ module CodingAgentTools
 
         begin
           config = CodingAgentTools::Atoms::YamlReader.read_file(@config_path)
-          blacklist = config.dig('blacklist') || config.dig(:blacklist)
+          blacklist = config.dig("blacklist") || config.dig(:blacklist)
 
           if blacklist.is_a?(Array)
             blacklist
@@ -116,16 +116,16 @@ module CodingAgentTools
         lib_dir = File.dirname(__FILE__)
 
         # Navigate up from lib/coding_agent_tools/organisms to the gem root
-        gem_root = File.expand_path('../../../..', lib_dir)
-        exe_dir = File.join(gem_root, 'exe')
+        gem_root = File.expand_path("../../../..", lib_dir)
+        exe_dir = File.join(gem_root, "exe")
 
         return exe_dir if File.directory?(exe_dir)
 
         # Fallback: look for exe directory in common locations
         possible_paths = [
-          File.join(File.dirname(__FILE__), '../../../exe'),
-          File.expand_path('exe', Dir.pwd),
-          File.expand_path('../exe', Dir.pwd)
+          File.join(File.dirname(__FILE__), "../../../exe"),
+          File.expand_path("exe", Dir.pwd),
+          File.expand_path("../exe", Dir.pwd)
         ]
 
         possible_paths.each do |path|
@@ -133,7 +133,7 @@ module CodingAgentTools
         end
 
         # Final fallback - use current directory exe
-        File.join(Dir.pwd, 'exe')
+        File.join(Dir.pwd, "exe")
       end
 
       def scan_tools
@@ -143,8 +143,8 @@ module CodingAgentTools
 
         CodingAgentTools::Atoms::DirectoryScanner.scan_files(
           exe_directory,
-          pattern: '*',
-          exclude_patterns: ['.*', '*.tmp', '*.bak']
+          pattern: "*",
+          exclude_patterns: [".*", "*.tmp", "*.bak"]
         )
       end
 
@@ -172,9 +172,9 @@ module CodingAgentTools
 
         tools.reject do |tool|
           blacklist.any? do |pattern|
-            if pattern.include?('*')
+            if pattern.include?("*")
               # Convert shell glob pattern to regex
-              regex_pattern = pattern.gsub('*', '.*')
+              regex_pattern = pattern.gsub("*", ".*")
               tool[:name].match?(/^#{regex_pattern}$/)
             else
               tool[:name] == pattern

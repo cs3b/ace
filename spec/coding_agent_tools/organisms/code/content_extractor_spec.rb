@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'tmpdir'
-require 'fileutils'
-require 'coding_agent_tools/organisms/code/content_extractor'
+require "spec_helper"
+require "tmpdir"
+require "fileutils"
+require "coding_agent_tools/organisms/code/content_extractor"
 
 RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
   let(:content_extractor) { described_class.new }
-  let(:temp_dir) { Dir.mktmpdir('content_extractor_test') }
-  let(:test_file_path) { File.join(temp_dir, 'test_file.rb') }
+  let(:temp_dir) { Dir.mktmpdir("content_extractor_test") }
+  let(:test_file_path) { File.join(temp_dir, "test_file.rb") }
   let(:test_file_content) { "# Test Ruby file\nclass TestClass\nend\n" }
 
   before do
@@ -27,16 +27,16 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
     safe_directory_cleanup(temp_dir)
   end
 
-  describe '#initialize' do
-    it 'initializes with diff and file extractors' do
+  describe "#initialize" do
+    it "initializes with diff and file extractors" do
       expect(content_extractor.instance_variable_get(:@diff_extractor)).to eq(@mock_diff_extractor)
       expect(content_extractor.instance_variable_get(:@file_extractor)).to eq(@mock_file_extractor)
     end
   end
 
-  describe '#extract_content' do
-    context 'when target is a git diff' do
-      let(:git_diff_target) { 'HEAD~1..HEAD' }
+  describe "#extract_content" do
+    context "when target is a git diff" do
+      let(:git_diff_target) { "HEAD~1..HEAD" }
       let(:diff_result) do
         {
           success: true,
@@ -55,36 +55,36 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
         allow(@mock_diff_extractor).to receive(:extract_diff).with(git_diff_target).and_return(diff_result)
       end
 
-      it 'extracts git diff content and returns proper ReviewTarget' do
+      it "extracts git diff content and returns proper ReviewTarget" do
         result = content_extractor.extract_content(git_diff_target)
 
         expect(result).to be_a(CodingAgentTools::Models::Code::ReviewTarget)
-        expect(result.type).to eq('git_diff')
+        expect(result.type).to eq("git_diff")
         expect(result.target_spec).to eq(git_diff_target)
-        expect(result.content_type).to eq('diff')
+        expect(result.content_type).to eq("diff")
         expect(result.size_info[:lines]).to eq(50)
         expect(result.size_info[:files]).to eq(3)
         expect(result.size_info[:additions]).to eq(25)
         expect(result.size_info[:deletions]).to eq(5)
       end
 
-      context 'when git diff extraction fails' do
-        let(:error_result) { { success: false, error: 'Git command failed' } }
+      context "when git diff extraction fails" do
+        let(:error_result) { {success: false, error: "Git command failed"} }
 
         before do
           allow(@mock_diff_extractor).to receive(:extract_diff).with(git_diff_target).and_return(error_result)
         end
 
-        it 'returns error ReviewTarget' do
+        it "returns error ReviewTarget" do
           result = content_extractor.extract_content(git_diff_target)
 
-          expect(result.type).to eq('error')
-          expect(result.size_info[:error]).to eq('Git command failed')
+          expect(result.type).to eq("error")
+          expect(result.size_info[:error]).to eq("Git command failed")
         end
       end
     end
 
-    context 'when target is a single file' do
+    context "when target is a single file" do
       let(:file_result) do
         {
           success: true,
@@ -97,36 +97,36 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
         allow(@mock_file_extractor).to receive(:extract_files).with(test_file_path).and_return(file_result)
       end
 
-      it 'extracts single file content and returns proper ReviewTarget' do
+      it "extracts single file content and returns proper ReviewTarget" do
         result = content_extractor.extract_content(test_file_path)
 
         expect(result).to be_a(CodingAgentTools::Models::Code::ReviewTarget)
-        expect(result.type).to eq('single_file')
+        expect(result.type).to eq("single_file")
         expect(result.target_spec).to eq(test_file_path)
-        expect(result.content_type).to eq('xml')
+        expect(result.content_type).to eq("xml")
         expect(result.resolved_paths).to eq([test_file_path])
         expect(result.size_info[:files]).to eq(1)
         expect(result.size_info[:lines]).to eq(3) # Based on test file content
       end
 
-      context 'when single file extraction fails' do
-        let(:error_result) { { success: false, error: 'File not found' } }
+      context "when single file extraction fails" do
+        let(:error_result) { {success: false, error: "File not found"} }
 
         before do
           allow(@mock_file_extractor).to receive(:extract_files).with(test_file_path).and_return(error_result)
         end
 
-        it 'returns error ReviewTarget' do
+        it "returns error ReviewTarget" do
           result = content_extractor.extract_content(test_file_path)
 
-          expect(result.type).to eq('error')
-          expect(result.size_info[:error]).to eq('File not found')
+          expect(result.type).to eq("error")
+          expect(result.size_info[:error]).to eq("File not found")
         end
       end
     end
 
-    context 'when target is a file pattern' do
-      let(:pattern_target) { '*.rb' }
+    context "when target is a file pattern" do
+      let(:pattern_target) { "*.rb" }
       let(:pattern_result) do
         {
           success: true,
@@ -140,13 +140,13 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
         allow(@mock_file_extractor).to receive(:extract_files).with(pattern_target).and_return(pattern_result)
       end
 
-      it 'extracts pattern-based content and returns proper ReviewTarget' do
+      it "extracts pattern-based content and returns proper ReviewTarget" do
         result = content_extractor.extract_content(pattern_target)
 
         expect(result).to be_a(CodingAgentTools::Models::Code::ReviewTarget)
-        expect(result.type).to eq('file_pattern')
+        expect(result.type).to eq("file_pattern")
         expect(result.target_spec).to eq(pattern_target)
-        expect(result.content_type).to eq('xml')
+        expect(result.content_type).to eq("xml")
         expect(result.resolved_paths).to eq(pattern_result[:file_list])
         expect(result.size_info[:files]).to eq(2)
         expect(result.size_info[:lines]).to eq(6) # Sum of both files
@@ -154,46 +154,46 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
     end
   end
 
-  describe '#save_content' do
-    let(:session_dir) { File.join(temp_dir, 'session') }
+  describe "#save_content" do
+    let(:session_dir) { File.join(temp_dir, "session") }
 
     before do
       FileUtils.mkdir_p(session_dir)
     end
 
-    context 'with git_diff target' do
+    context "with git_diff target" do
       let(:git_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'git_diff',
-          target_spec: 'HEAD~1..HEAD',
+          type: "git_diff",
+          target_spec: "HEAD~1..HEAD",
           resolved_paths: [],
-          content_type: 'diff',
+          content_type: "diff",
           size_info: {}
         )
       end
 
-      it 'delegates to diff extractor' do
-        save_result = { success: true, error: nil }
-        expect(@mock_diff_extractor).to receive(:extract_and_save).with('HEAD~1..HEAD', session_dir).and_return(save_result)
+      it "delegates to diff extractor" do
+        save_result = {success: true, error: nil}
+        expect(@mock_diff_extractor).to receive(:extract_and_save).with("HEAD~1..HEAD", session_dir).and_return(save_result)
 
         result = content_extractor.save_content(git_target, session_dir)
         expect(result).to eq(save_result)
       end
     end
 
-    context 'with file targets' do
+    context "with file targets" do
       let(:file_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'single_file',
+          type: "single_file",
           target_spec: test_file_path,
           resolved_paths: [test_file_path],
-          content_type: 'xml',
+          content_type: "xml",
           size_info: {}
         )
       end
 
-      it 'delegates to file extractor' do
-        save_result = { success: true, error: nil }
+      it "delegates to file extractor" do
+        save_result = {success: true, error: nil}
         expect(@mock_file_extractor).to receive(:extract_and_save).with(test_file_path, session_dir).and_return(save_result)
 
         result = content_extractor.save_content(file_target, session_dir)
@@ -201,90 +201,90 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
       end
     end
 
-    context 'with unknown target type' do
+    context "with unknown target type" do
       let(:unknown_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'unknown',
-          target_spec: 'test',
+          type: "unknown",
+          target_spec: "test",
           resolved_paths: [],
-          content_type: 'none',
+          content_type: "none",
           size_info: {}
         )
       end
 
-      it 'returns error for unknown type' do
+      it "returns error for unknown type" do
         result = content_extractor.save_content(unknown_target, session_dir)
 
         expect(result[:success]).to be(false)
-        expect(result[:error]).to eq('Unknown target type: unknown')
+        expect(result[:error]).to eq("Unknown target type: unknown")
       end
     end
   end
 
-  describe '#extract_and_save' do
-    let(:session_dir) { File.join(temp_dir, 'session') }
+  describe "#extract_and_save" do
+    let(:session_dir) { File.join(temp_dir, "session") }
 
     before do
       FileUtils.mkdir_p(session_dir)
     end
 
-    context 'when extraction succeeds and save succeeds' do
+    context "when extraction succeeds and save succeeds" do
       let(:successful_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'single_file',
+          type: "single_file",
           target_spec: test_file_path,
           resolved_paths: [test_file_path],
-          content_type: 'xml',
-          size_info: { files: 1, lines: 3 }
+          content_type: "xml",
+          size_info: {files: 1, lines: 3}
         )
       end
 
       before do
         allow(content_extractor).to receive(:extract_content).with(test_file_path).and_return(successful_target)
-        allow(content_extractor).to receive(:save_content).with(successful_target, session_dir).and_return({ success: true, error: nil })
+        allow(content_extractor).to receive(:save_content).with(successful_target, session_dir).and_return({success: true, error: nil})
       end
 
-      it 'returns the successful target' do
+      it "returns the successful target" do
         result = content_extractor.extract_and_save(test_file_path, session_dir)
 
         expect(result).to eq(successful_target)
-        expect(result.type).to eq('single_file')
+        expect(result.type).to eq("single_file")
       end
     end
 
-    context 'when extraction succeeds but save fails' do
+    context "when extraction succeeds but save fails" do
       let(:successful_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'single_file',
+          type: "single_file",
           target_spec: test_file_path,
           resolved_paths: [test_file_path],
-          content_type: 'xml',
-          size_info: { files: 1, lines: 3 }
+          content_type: "xml",
+          size_info: {files: 1, lines: 3}
         )
       end
 
       before do
         allow(content_extractor).to receive(:extract_content).with(test_file_path).and_return(successful_target)
-        allow(content_extractor).to receive(:save_content).with(successful_target, session_dir).and_return({ success: false, error: 'Save failed' })
+        allow(content_extractor).to receive(:save_content).with(successful_target, session_dir).and_return({success: false, error: "Save failed"})
       end
 
-      it 'returns error target with save error' do
+      it "returns error target with save error" do
         result = content_extractor.extract_and_save(test_file_path, session_dir)
 
-        expect(result.type).to eq('error')
+        expect(result.type).to eq("error")
         expect(result.target_spec).to eq(test_file_path)
-        expect(result.size_info[:error]).to eq('Save failed')
+        expect(result.size_info[:error]).to eq("Save failed")
       end
     end
 
-    context 'when extraction fails' do
+    context "when extraction fails" do
       let(:error_target) do
         CodingAgentTools::Models::Code::ReviewTarget.new(
-          type: 'error',
+          type: "error",
           target_spec: test_file_path,
           resolved_paths: [],
-          content_type: 'none',
-          size_info: { error: 'Extraction failed' }
+          content_type: "none",
+          size_info: {error: "Extraction failed"}
         )
       end
 
@@ -292,7 +292,7 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
         allow(content_extractor).to receive(:extract_content).with(test_file_path).and_return(error_target)
       end
 
-      it 'returns the error target without attempting save' do
+      it "returns the error target without attempting save" do
         expect(content_extractor).not_to receive(:save_content)
 
         result = content_extractor.extract_and_save(test_file_path, session_dir)
@@ -301,27 +301,27 @@ RSpec.describe CodingAgentTools::Organisms::Code::ContentExtractor do
     end
   end
 
-  describe 'private methods' do
-    describe '#count_lines_in_file' do
-      it 'counts lines correctly' do
+  describe "private methods" do
+    describe "#count_lines_in_file" do
+      it "counts lines correctly" do
         line_count = content_extractor.send(:count_lines_in_file, test_file_path)
         expect(line_count).to eq(3)
       end
 
-      it 'returns 0 for non-existent file' do
-        line_count = content_extractor.send(:count_lines_in_file, '/non/existent/file')
+      it "returns 0 for non-existent file" do
+        line_count = content_extractor.send(:count_lines_in_file, "/non/existent/file")
         expect(line_count).to eq(0)
       end
     end
 
-    describe '#count_total_lines' do
-      let(:another_file) { File.join(temp_dir, 'another.rb') }
+    describe "#count_total_lines" do
+      let(:another_file) { File.join(temp_dir, "another.rb") }
 
       before do
         File.write(another_file, "# Line 1\n# Line 2\n")
       end
 
-      it 'sums lines across multiple files' do
+      it "sums lines across multiple files" do
         total_lines = content_extractor.send(:count_total_lines, [test_file_path, another_file])
         expect(total_lines).to eq(5) # 3 + 2
       end

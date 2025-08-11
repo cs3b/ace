@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Atoms
@@ -16,20 +16,19 @@ module CodingAgentTools
           return [] unless workflow_dir.exist? && workflow_dir.directory?
 
           glob_pattern = if pattern
-                           # Support glob patterns
-            if pattern.include?('*')
-              File.join(workflow_dir, "#{pattern}.wf.md")
+            # Support glob patterns
+            if pattern.include?("*")
             else
               # Single workflow name
-              File.join(workflow_dir, "#{pattern}.wf.md")
             end
+            File.join(workflow_dir, "#{pattern}.wf.md")
           else
-                           # All workflows
-            File.join(workflow_dir, '*.wf.md')
+            # All workflows
+            File.join(workflow_dir, "*.wf.md")
           end
 
           # If pattern is specific and file doesn't exist, return empty
-          if pattern && !pattern.include?('*')
+          if pattern && !pattern.include?("*")
             path = workflow_dir / "#{pattern}.wf.md"
             return [] unless path.exist?
             return [pattern]
@@ -37,7 +36,7 @@ module CodingAgentTools
 
           # Scan for matching files
           Dir.glob(glob_pattern).map do |path|
-            File.basename(path, '.wf.md')
+            File.basename(path, ".wf.md")
           end.sort
         end
       end

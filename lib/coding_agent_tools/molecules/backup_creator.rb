@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'pathname'
-require_relative '../atoms/timestamp_generator'
-require_relative '../atoms/code/directory_creator'
+require "fileutils"
+require "pathname"
+require_relative "../atoms/timestamp_generator"
+require_relative "../atoms/code/directory_creator"
 
 module CodingAgentTools
   module Molecules
@@ -38,7 +38,7 @@ module CodingAgentTools
 
         # Generate backup path
         timestamp = @timestamp_generator.backup_timestamp
-        suffix = options[:suffix] ? ".#{options[:suffix]}" : ''
+        suffix = options[:suffix] ? ".#{options[:suffix]}" : ""
         backup_path = source.parent / "#{source.basename}.backup.#{timestamp}#{suffix}"
 
         # Handle dry run
@@ -94,12 +94,10 @@ module CodingAgentTools
         errors = []
 
         to_delete.each do |backup|
-          begin
-            FileUtils.rm_rf(backup)
-            deleted << backup
-          rescue => e
-            errors << { path: backup, error: e.message }
-          end
+          FileUtils.rm_rf(backup)
+          deleted << backup
+        rescue => e
+          errors << {path: backup, error: e.message}
         end
 
         {
@@ -160,20 +158,18 @@ module CodingAgentTools
       end
 
       def perform_backup(source, backup_path)
-        begin
-          FileUtils.cp_r(source, backup_path)
-          {
-            success: true,
-            path: backup_path,
-            message: "Backed up to: #{backup_path}"
-          }
-        rescue => e
-          {
-            success: false,
-            path: nil,
-            error: "Failed to create backup: #{e.message}"
-          }
-        end
+        FileUtils.cp_r(source, backup_path)
+        {
+          success: true,
+          path: backup_path,
+          message: "Backed up to: #{backup_path}"
+        }
+      rescue => e
+        {
+          success: false,
+          path: nil,
+          error: "Failed to create backup: #{e.message}"
+        }
       end
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'fileutils'
+require "fileutils"
 
 module CodingAgentTools
   module Atoms
@@ -86,8 +86,8 @@ module CodingAgentTools
         # @param prefix [String] directory name prefix
         # @param tmpdir [String] parent directory for temp dir (default: system temp)
         # @return [Hash] {path: String, success: Boolean, error: String}
-        def create_temp(prefix = 'review', tmpdir = nil)
-          require 'tmpdir'
+        def create_temp(prefix = "review", tmpdir = nil)
+          require "tmpdir"
 
           begin
             temp_path = Dir.mktmpdir(prefix, tmpdir)
@@ -111,9 +111,9 @@ module CodingAgentTools
         # @param path [String] directory path
         # @raise [ArgumentError] if path is invalid
         def validate_path(path)
-          raise ArgumentError, 'Path cannot be nil' if path.nil?
-          raise ArgumentError, 'Path cannot be empty' if path.empty?
-          raise ArgumentError, 'Path must be a string' unless path.is_a?(String)
+          raise ArgumentError, "Path cannot be nil" if path.nil?
+          raise ArgumentError, "Path cannot be empty" if path.empty?
+          raise ArgumentError, "Path must be a string" unless path.is_a?(String)
         end
       end
     end

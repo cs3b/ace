@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Molecules
@@ -40,8 +40,8 @@ module CodingAgentTools
 
           # Try different session detection strategies
           session_info = detect_session_directory(current_dir) ||
-                         detect_taskflow_session(current_dir) ||
-                         detect_generic_session(current_dir)
+            detect_taskflow_session(current_dir) ||
+            detect_generic_session(current_dir)
 
           session_info || InferenceResult.new
         end
@@ -50,15 +50,15 @@ module CodingAgentTools
         # @param report_paths [Array<String>] Array of report file paths
         # @return [String] Inferred output path for synthesis
         def infer_output_path(report_paths)
-          return '/inferred/path.md' if report_paths.empty?
+          return "/inferred/path.md" if report_paths.empty?
 
           # Try to infer from the first report
           inference_result = infer_session_path(report_paths.first)
 
           if inference_result.has_session?
-            File.join(inference_result.session_directory, 'cr-report.md')
+            File.join(inference_result.session_directory, "cr-report.md")
           else
-            'cr-report.md'
+            "cr-report.md"
           end
         end
 
@@ -68,7 +68,7 @@ module CodingAgentTools
         # @param directory [String] Directory to check
         # @return [InferenceResult, nil] Session information if found
         def detect_session_directory(directory)
-          session_meta_path = File.join(directory, 'session.meta')
+          session_meta_path = File.join(directory, "session.meta")
 
           return nil unless File.exist?(session_meta_path)
 
@@ -78,7 +78,7 @@ module CodingAgentTools
 
           InferenceResult.new(
             session_directory: directory,
-            session_type: 'explicit_session',
+            session_type: "explicit_session",
             session_id: session_id,
             metadata: metadata
           )
@@ -92,21 +92,21 @@ module CodingAgentTools
           path_parts = directory.split(File::SEPARATOR)
 
           # Find code_review index
-          code_review_index = path_parts.rindex('code_review')
+          code_review_index = path_parts.rindex("code_review")
           return nil unless code_review_index
 
           # Check if it's in a taskflow structure
           if code_review_index >= 2 &&
-             path_parts[code_review_index - 2] == 'dev-taskflow' &&
-             path_parts[code_review_index - 1] == 'current'
+              path_parts[code_review_index - 2] == "dev-taskflow" &&
+              path_parts[code_review_index - 1] == "current"
 
             session_id = path_parts[code_review_index + 1] if path_parts[code_review_index + 1]
 
             InferenceResult.new(
               session_directory: directory,
-              session_type: 'taskflow_session',
+              session_type: "taskflow_session",
               session_id: session_id,
-              metadata: { 'taskflow_pattern' => true }
+              metadata: {"taskflow_pattern" => true}
             )
           end
         end
@@ -124,7 +124,7 @@ module CodingAgentTools
 
           InferenceResult.new(
             session_directory: directory,
-            session_type: 'inferred_session',
+            session_type: "inferred_session",
             session_id: session_id,
             metadata: session_indicators
           )
@@ -134,7 +134,7 @@ module CodingAgentTools
         # @param directory [String] Directory to check
         # @return [Hash] Session indicators found
         def check_session_indicators(directory)
-          indicators = { is_session: false }
+          indicators = {is_session: false}
 
           return indicators unless File.directory?(directory)
 
@@ -147,7 +147,7 @@ module CodingAgentTools
 
           # Session indicator files
           session_files = [
-            'input.diff', 'input.xml', 'project_context.md', 'combined_prompt.md', 'README.md', 'session.log', 'synthesis.meta'
+            "input.diff", "input.xml", "project_context.md", "combined_prompt.md", "README.md", "session.log", "synthesis.meta"
           ]
 
           found_session_files = session_files.select { |f| files.include?(f) }
@@ -182,15 +182,15 @@ module CodingAgentTools
           metadata = {}
 
           begin
-            content = File.read(meta_path, encoding: 'UTF-8')
+            content = File.read(meta_path, encoding: "UTF-8")
 
             # Parse simple key: value pairs
             content.each_line do |line|
               line = line.strip
-              next if line.empty? || line.start_with?('#')
+              next if line.empty? || line.start_with?("#")
 
-              if line.include?(':')
-                key, value = line.split(':', 2)
+              if line.include?(":")
+                key, value = line.split(":", 2)
                 metadata[key.strip] = value.strip if key && value
               end
             end
@@ -216,7 +216,7 @@ module CodingAgentTools
             dir_name
           else
             # Use last component of path as session ID
-            dir_name unless dir_name == '.'
+            dir_name unless dir_name == "."
           end
         end
       end

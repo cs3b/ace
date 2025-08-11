@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'shellwords'
-require_relative '../../atoms/git/path_resolver'
-require_relative '../../atoms/git/repository_scanner'
-require_relative '../../atoms/project_root_detector'
+require "shellwords"
+require_relative "../../atoms/git/path_resolver"
+require_relative "../../atoms/git/repository_scanner"
+require_relative "../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Molecules

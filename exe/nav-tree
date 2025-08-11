@@ -22,13 +22,13 @@
 #   --no-autocorrect Disable path autocorrection
 
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path('../../lib', __FILE__)
+lib_path = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require 'coding_agent_tools/molecules/executable_wrapper'
+require "coding_agent_tools/molecules/executable_wrapper"
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ['nav', 'tree'],
+  command_path: ["nav", "tree"],
   registration_method: :register_nav_commands,
-  executable_name: 'nav-tree'
+  executable_name: "nav-tree"
 ).call

@@ -7,9 +7,9 @@ module CodingAgentTools
       # This is a model - pure data structure with no behavior
       class SearchOptions
         attr_reader :pattern, :mode, :paths, :context_lines, :max_results,
-                    :file_types, :exclude_patterns, :git_scope, :time_filter,
-                    :case_sensitive, :multiline, :json_output, :interactive_mode,
-                    :editor_open, :repositories, :preset_name
+          :file_types, :exclude_patterns, :git_scope, :time_filter,
+          :case_sensitive, :multiline, :json_output, :interactive_mode,
+          :editor_open, :repositories, :preset_name
 
         # @param pattern [String] Search pattern
         # @param mode [Symbol] Search mode (:files, :content, :both)
@@ -27,11 +27,11 @@ module CodingAgentTools
         # @param editor_open [Boolean] Open results in editor
         # @param repositories [Array<String>, nil] Specific repositories to search
         # @param preset_name [String, nil] Name of preset to use
-        def initialize(pattern:, mode: :content, paths: ['.'], context_lines: 2,
-                      max_results: nil, file_types: [], exclude_patterns: [],
-                      git_scope: nil, time_filter: nil, case_sensitive: false,
-                      multiline: false, json_output: false, interactive_mode: false,
-                      editor_open: false, repositories: nil, preset_name: nil)
+        def initialize(pattern:, mode: :content, paths: ["."], context_lines: 2,
+          max_results: nil, file_types: [], exclude_patterns: [],
+          git_scope: nil, time_filter: nil, case_sensitive: false,
+          multiline: false, json_output: false, interactive_mode: false,
+          editor_open: false, repositories: nil, preset_name: nil)
           @pattern = pattern
           @mode = mode
           @paths = paths
@@ -110,7 +110,7 @@ module CodingAgentTools
         # @return [Hash] Options for fd
         def fd_options
           options = {
-            type: 'file',
+            type: "file",
             absolute_path: false,
             follow_symlinks: false,
             include_hidden: false
@@ -153,7 +153,7 @@ module CodingAgentTools
         def merge(other)
           other_hash = other.is_a?(Hash) ? other : other.to_h
           merged_hash = to_h.merge(other_hash)
-          
+
           self.class.new(**merged_hash)
         end
 
@@ -163,37 +163,33 @@ module CodingAgentTools
         def self.from_cli_args(args)
           # Determine search mode
           mode = if args[:files_only] || args[:name_only]
-                   :files
-                 elsif args[:content_only]
-                   :content  
-                 else
-                   :both
-                 end
+            :files
+          elsif args[:content_only]
+            :content
+          else
+            :both
+          end
 
           # Parse git scope
           git_scope = if args[:tracked]
-                        :tracked
-                      elsif args[:staged]
-                        :staged
-                      elsif args[:changed]
-                        :changed
-                      else
-                        nil
-                      end
+            :tracked
+          elsif args[:staged]
+            :staged
+          elsif args[:changed]
+            :changed
+          end
 
           # Parse time filter
           time_filter = if args[:since]
-                          { since: parse_time_string(args[:since]) }
-                        elsif args[:until]
-                          { until: parse_time_string(args[:until]) }
-                        else
-                          nil
-                        end
+            {since: parse_time_string(args[:since])}
+          elsif args[:until]
+            {until: parse_time_string(args[:until])}
+          end
 
           new(
-            pattern: args[:pattern] || '',
+            pattern: args[:pattern] || "",
             mode: mode,
-            paths: args[:paths] || ['.'],
+            paths: args[:paths] || ["."],
             context_lines: args[:context] || 2,
             max_results: args[:max_results],
             file_types: args[:type] ? Array(args[:type]) : [],
@@ -215,14 +211,14 @@ module CodingAgentTools
         def validate
           errors = []
 
-          errors << 'Pattern cannot be empty' if @pattern.nil? || @pattern.strip.empty?
-          errors << 'Mode must be :files, :content, or :both' unless [:files, :content, :both].include?(@mode)
-          errors << 'Context lines must be non-negative' if @context_lines&.negative?
-          errors << 'Max results must be positive' if @max_results&.negative?
-          errors << 'Paths cannot be empty' if @paths.empty?
+          errors << "Pattern cannot be empty" if @pattern.nil? || @pattern.strip.empty?
+          errors << "Mode must be :files, :content, or :both" unless [:files, :content, :both].include?(@mode)
+          errors << "Context lines must be non-negative" if @context_lines&.negative?
+          errors << "Max results must be positive" if @max_results&.negative?
+          errors << "Paths cannot be empty" if @paths.empty?
 
           if @git_scope && ![:tracked, :staged, :changed].include?(@git_scope)
-            errors << 'Git scope must be :tracked, :staged, or :changed'
+            errors << "Git scope must be :tracked, :staged, or :changed"
           end
 
           errors
@@ -240,8 +236,8 @@ module CodingAgentTools
         # @param time_str [String] Time string (e.g., "1 week ago", "2023-01-01")
         # @return [Time, nil] Parsed time or nil if invalid
         def self.parse_time_string(time_str)
-          require 'time'
-          
+          require "time"
+
           # Try parsing as absolute time first
           begin
             return Time.parse(time_str)
@@ -261,8 +257,6 @@ module CodingAgentTools
             Time.now - ($1.to_i * 60 * 60)
           when /(\d+)\s*minutes?\s*ago/i
             Time.now - ($1.to_i * 60)
-          else
-            nil
           end
         end
       end

@@ -24,10 +24,10 @@ module CodingAgentTools
       # Convert to hash for YAML serialization
       def to_h
         hash = {}
-        hash['last_modified'] = last_modified if last_modified
-        hash['source'] = source if source
-        hash['auto_generated'] = auto_generated if auto_generated
-        hash['version'] = version if version
+        hash["last_modified"] = last_modified if last_modified
+        hash["source"] = source if source
+        hash["auto_generated"] = auto_generated if auto_generated
+        hash["version"] = version if version
 
         # Add any custom fields
         custom_fields.each do |key, value|
@@ -43,14 +43,14 @@ module CodingAgentTools
 
         # Extract known fields
         known_fields = {
-          last_modified: hash['last_modified'],
-          source: hash['source'],
-          auto_generated: hash['auto_generated'],
-          version: hash['version']
+          last_modified: hash["last_modified"],
+          source: hash["source"],
+          auto_generated: hash["auto_generated"],
+          version: hash["version"]
         }
 
         # Collect remaining fields as custom
-        custom = hash.reject { |k, _| ['last_modified', 'source', 'auto_generated', 'version'].include?(k) }
+        custom = hash.except("last_modified", "source", "auto_generated", "version")
 
         new(**known_fields, **custom)
       end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'parser/current'
+require "parser/current"
 
 module CodingAgentTools
   module Atoms
@@ -48,7 +48,7 @@ module CodingAgentTools
       # @param source_name [String] Name for error reporting (usually file path)
       # @return [Array<MethodDefinition>] Method definitions with line ranges
       # @raise [ParseError] If content cannot be parsed
-      def parse_content(content, source_name = '<string>')
+      def parse_content(content, source_name = "<string>")
         ast = parse_ast(content, source_name)
         extract_methods(ast)
       end

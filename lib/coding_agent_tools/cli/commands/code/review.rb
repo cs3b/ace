@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/code/review_manager'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/code/review_manager"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -10,49 +10,49 @@ module CodingAgentTools
       module Code
         # Review command for code review workflow
         class Review < Dry::CLI::Command
-          desc 'Execute code review on specified target with configurable focus'
+          desc "Execute code review on specified target with configurable focus"
 
           argument :focus, required: true,
-            desc: 'Review focus: code, tests, docs, or space-separated combination'
+            desc: "Review focus: code, tests, docs, or space-separated combination"
 
           argument :target, required: true,
-            desc: 'Review target: git range (v1.0..HEAD), file pattern (*.rb), or special (staged/unstaged/working)'
+            desc: "Review target: git range (v1.0..HEAD), file pattern (*.rb), or special (staged/unstaged/working)"
 
-          option :context, type: :string, default: 'auto',
-            desc: 'Context mode: auto (default), none, or path to custom context file'
+          option :context, type: :string, default: "auto",
+            desc: "Context mode: auto (default), none, or path to custom context file"
 
           option :base_path, type: :string,
-            desc: 'Base path for session storage (default: current release)'
+            desc: "Base path for session storage (default: current release)"
 
           option :dry_run, type: :boolean, default: false,
-            desc: 'Show what would be done without creating session'
+            desc: "Show what would be done without creating session"
 
           option :session, type: :string,
-            desc: 'Resume existing session by ID'
+            desc: "Resume existing session by ID"
 
           option :model, type: :string,
-            desc: 'LLM model to use (e.g., google:gemini-2.5-pro)'
+            desc: "LLM model to use (e.g., google:gemini-2.5-pro)"
 
           option :output, type: :string,
-            desc: 'Output file for review report'
+            desc: "Output file for review report"
 
           option :system_prompt, type: :string,
-            desc: 'Custom system prompt file path (overrides focus-based selection)'
+            desc: "Custom system prompt file path (overrides focus-based selection)"
 
           example [
-            'code HEAD~1..HEAD',
+            "code HEAD~1..HEAD",
             "tests 'spec/**/*.rb' --context none",
-            'docs staged --context docs/project-overview.md',
+            "docs staged --context docs/project-overview.md",
             "'code tests' v0.2.0..v0.3.0",
-            'code --session review-20240106-143052',
-            'code HEAD~1..HEAD --system-prompt custom-review.md'
+            "code --session review-20240106-143052",
+            "code HEAD~1..HEAD --system-prompt custom-review.md"
           ]
 
           def call(focus:, target:, **options)
             # Validate focus
             valid_focus = validate_focus(focus)
             unless valid_focus
-              error_output('Error: Invalid focus. Must be one or more of: code, tests, docs')
+              error_output("Error: Invalid focus. Must be one or more of: code, tests, docs")
               return 1
             end
 
@@ -84,7 +84,7 @@ module CodingAgentTools
             result = review_manager.create_review_session(
               focus,
               target,
-              options[:context] || 'auto',
+              options[:context] || "auto",
               options[:base_path],
               options[:system_prompt]
             )
@@ -111,14 +111,14 @@ module CodingAgentTools
             end
           rescue => e
             error_output("Error: #{e.message}")
-            error_output(e.backtrace.join("\n")) if ENV['DEBUG']
+            error_output(e.backtrace.join("\n")) if ENV["DEBUG"]
             1
           end
 
           private
 
           def validate_focus(focus)
-            valid_options = ['code', 'tests', 'docs']
+            valid_options = ["code", "tests", "docs"]
             focus_parts = focus.split
 
             return false if focus_parts.empty?
@@ -127,9 +127,9 @@ module CodingAgentTools
           end
 
           def dry_run_review(review_manager, focus, target, options)
-            info_output('🔍 Dry run - Analyzing review configuration:')
+            info_output("🔍 Dry run - Analyzing review configuration:")
 
-            prep_result = review_manager.prepare_review(focus, target, options[:context] || 'auto',
+            prep_result = review_manager.prepare_review(focus, target, options[:context] || "auto",
               options[:system_prompt])
 
             info_output("\nTarget Analysis:")
@@ -138,12 +138,12 @@ module CodingAgentTools
 
             info_output("\nContext Availability:")
             if prep_result[:context_info][:available]
-              info_output('  ✅ Project context available')
+              info_output("  ✅ Project context available")
               prep_result[:context_info][:found].each do |doc|
                 info_output("    - #{doc[:type]}: #{doc[:path]}")
               end
             else
-              info_output('  ❌ No project context found')
+              info_output("  ❌ No project context found")
             end
 
             system_prompt_info = options[:system_prompt] ? "#{prep_result[:system_prompt]} (custom)" : prep_result[:system_prompt]
@@ -159,7 +159,7 @@ module CodingAgentTools
 
           def resume_session(_session_id, _options)
             # Implementation for session resume
-            error_output('Session resume not yet implemented')
+            error_output("Session resume not yet implemented")
             1
           end
 
@@ -181,7 +181,7 @@ module CodingAgentTools
             result = review_manager.execute_review(session)
 
             if result[:success]
-              success_output('✅ Review completed successfully')
+              success_output("✅ Review completed successfully")
               if output_file
                 # Save to specified file
                 info_output("📄 Report saved to: #{output_file}")

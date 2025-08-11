@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../models/installation_options'
-require_relative '../models/installation_stats'
-require_relative '../models/installation_result'
-require_relative '../molecules/project_root_finder'
-require_relative '../molecules/source_directory_validator'
-require_relative '../molecules/backup_creator'
-require_relative '../molecules/statistics_collector'
-require_relative '../atoms/code/directory_creator'
-require_relative 'command_discoverer'
-require_relative 'command_installer'
-require_relative 'agent_installer'
-require_relative 'workflow_command_generator'
+require "pathname"
+require_relative "../models/installation_options"
+require_relative "../models/installation_stats"
+require_relative "../models/installation_result"
+require_relative "../molecules/project_root_finder"
+require_relative "../molecules/source_directory_validator"
+require_relative "../molecules/backup_creator"
+require_relative "../molecules/statistics_collector"
+require_relative "../atoms/code/directory_creator"
+require_relative "command_discoverer"
+require_relative "command_installer"
+require_relative "agent_installer"
+require_relative "workflow_command_generator"
 
 module CodingAgentTools
   module Organisms
@@ -49,11 +49,11 @@ module CodingAgentTools
         # Convert options to model if needed
         @options = case options
         when Models::InstallationOptions
-                     options
+          options
         when Hash
-                     Models::InstallationOptions.from_hash(options)
-                   else
-                     Models::InstallationOptions.new
+          Models::InstallationOptions.from_hash(options)
+        else
+          Models::InstallationOptions.new
         end
 
         # Find project root
@@ -105,14 +105,14 @@ module CodingAgentTools
         if @options.custom_source?
           Pathname.new(@options.source)
         else
-          @project_root / 'dev-handbook' / '.integrations' / 'claude'
+          @project_root / "dev-handbook" / ".integrations" / "claude"
         end
       end
 
       def create_backup_if_requested
         return unless @options.backup?
 
-        target = @project_root / '.claude'
+        target = @project_root / ".claude"
         result = @backup_creator.create_backup(target, dry_run: @options.dry_run?)
 
         if result[:success]
@@ -123,8 +123,8 @@ module CodingAgentTools
       end
 
       def ensure_target_directories_exist
-        commands_dir = @project_root / '.claude' / 'commands'
-        agents_dir = @project_root / '.claude' / 'agents'
+        commands_dir = @project_root / ".claude" / "commands"
+        agents_dir = @project_root / ".claude" / "agents"
 
         [commands_dir, agents_dir].each do |dir|
           result = @directory_creator.create_if_not_exists(dir.to_s)
@@ -136,16 +136,16 @@ module CodingAgentTools
 
       def install_all_components
         source_base = determine_source_base
-        target_base = @project_root / '.claude'
+        target_base = @project_root / ".claude"
 
         # Discover all components
         discovery = @command_discoverer.discover(source_base)
 
         # Install commands based on structure
-        install_discovered_commands(discovery[:commands], target_base / 'commands')
+        install_discovered_commands(discovery[:commands], target_base / "commands")
 
         # Install agents
-        install_agents(source_base / 'agents', target_base / 'agents')
+        install_agents(source_base / "agents", target_base / "agents")
       end
 
       def install_discovered_commands(commands, target_dir)
@@ -190,7 +190,6 @@ module CodingAgentTools
         update_stats_from_result(result, :agents)
       end
 
-
       def update_stats_from_result(result, category = nil)
         return unless result[:stats]
 
@@ -203,8 +202,8 @@ module CodingAgentTools
       def print_summary
         stats = @stats_collector.stats
 
-        puts '='*50
-        puts 'Installation complete:'
+        puts "=" * 50
+        puts "Installation complete:"
         puts "  Location: #{@project_root / ".claude"}/"
         puts "  Commands: #{stats.total_commands}"
         puts "  Agents: #{stats.agents}"
@@ -216,11 +215,11 @@ module CodingAgentTools
 
         if stats.errors?
           puts
-          puts 'Errors encountered:'
+          puts "Errors encountered:"
           stats.errors.each { |error| puts "  - #{error}" }
         end
 
-        puts '='*50
+        puts "=" * 50
       end
 
       def create_result
@@ -234,7 +233,7 @@ module CodingAgentTools
 
       def handle_error(error)
         puts "Error: #{error.message}"
-        puts error.backtrace if ENV['DEBUG'] || @options&.verbose?
+        puts error.backtrace if ENV["DEBUG"] || @options&.verbose?
         @stats_collector.record_error(error.message)
         Models::InstallationResult.failure(@stats_collector.stats)
       end

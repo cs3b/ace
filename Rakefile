@@ -1,50 +1,50 @@
 # frozen_string_literal: true
 
-require 'bundler/gem_tasks'
-require 'rspec/core/rake_task'
+require "bundler/gem_tasks"
+require "rspec/core/rake_task"
 
 RSpec::Core::RakeTask.new(:spec)
 
-require 'standard/rake'
+require "standard/rake"
 
 # Define additional development tasks
-desc 'Run tests with coverage reporting'
+desc "Run tests with coverage reporting"
 task :test do
-  sh 'bin/test'
+  sh "bin/test"
 end
 
-desc 'Run linter (StandardRB)'
+desc "Run linter (StandardRB)"
 task :lint do
-  sh 'bin/lint'
+  sh "bin/lint"
 end
 
-desc 'Build the gem'
+desc "Build the gem"
 task :build_gem do
-  sh 'bin/build'
+  sh "bin/build"
 end
 
-desc 'Run all quality checks (test, lint)'
+desc "Run all quality checks (test, lint)"
 task quality: [:test, :lint]
 
-desc 'Clean up generated files'
+desc "Clean up generated files"
 task :clean do
-  sh 'rm -rf coverage/'
-  sh 'rm -f *.gem'
-  sh 'rm -rf pkg/'
-  sh 'rm -rf tmp/'
+  sh "rm -rf coverage/"
+  sh "rm -f *.gem"
+  sh "rm -rf pkg/"
+  sh "rm -rf tmp/"
 end
 
 # Coverage tasks for parallel test execution
 namespace :coverage do
-  desc 'Merge parallel coverage reports'
+  desc "Merge parallel coverage reports"
   task :merge do
-    require 'simplecov'
+    require "simplecov"
 
     # Find all parallel coverage result files
-    coverage_files = Dir['coverage/.resultset*.json']
+    coverage_files = Dir["coverage/.resultset*.json"]
 
     if coverage_files.empty?
-      puts 'No parallel coverage files found to merge'
+      puts "No parallel coverage files found to merge"
       next
     end
 
@@ -58,60 +58,60 @@ namespace :coverage do
       ])
 
       # Apply same filters as in spec_helper
-      add_filter '/spec/'
-      add_filter '/vendor/'
-      add_filter '/.bundle/'
-      add_group 'Library', 'lib'
-      track_files 'lib/**/*.rb'
+      add_filter "/spec/"
+      add_filter "/vendor/"
+      add_filter "/.bundle/"
+      add_group "Library", "lib"
+      track_files "lib/**/*.rb"
     end
 
-    puts '✓ Merged coverage report generated in coverage/index.html'
+    puts "✓ Merged coverage report generated in coverage/index.html"
   end
 
-  desc 'Clean coverage reports'
+  desc "Clean coverage reports"
   task :clean do
-    sh 'rm -rf coverage/'
-    puts '✓ Coverage reports cleaned'
+    sh "rm -rf coverage/"
+    puts "✓ Coverage reports cleaned"
   end
 end
 
-desc 'Setup development environment'
+desc "Setup development environment"
 task :setup do
-  sh 'bundle install'
-  puts 'Development environment ready!'
+  sh "bundle install"
+  puts "Development environment ready!"
 end
 
-desc 'Display project status and recent activity'
+desc "Display project status and recent activity"
 task :status do
-  puts '=== Coding Agent Tools - Project Status ==='
+  puts "=== Coding Agent Tools - Project Status ==="
   puts
 
   # Show current version
-  require_relative 'lib/coding_agent_tools/version'
+  require_relative "lib/coding_agent_tools/version"
   puts "Version: #{CodingAgentTools::VERSION}"
 
   # Show git status
   puts
-  puts 'Git Status:'
+  puts "Git Status:"
   begin
-    sh 'git status --porcelain'
+    sh "git status --porcelain"
   rescue
-    puts '  (git not available)'
+    puts "  (git not available)"
   end
 
   # Show recent commits
   puts
-  puts 'Recent Commits:'
+  puts "Recent Commits:"
   begin
-    sh 'git log --oneline -5'
+    sh "git log --oneline -5"
   rescue
-    puts '  (git not available)'
+    puts "  (git not available)"
   end
 
   # Show test status
   puts
-  puts 'Running quick test check...'
-  system('bundle exec rspec --format progress') ? puts('✓ Tests passing') : puts('✗ Tests failing')
+  puts "Running quick test check..."
+  system("bundle exec rspec --format progress") ? puts("✓ Tests passing") : puts("✗ Tests failing")
 end
 
 task default: %i[quality]

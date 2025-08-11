@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/taskflow_management/directory_navigator'
-require_relative '../../molecules/taskflow_management/release_path_resolver'
+require_relative "../../atoms/taskflow_management/directory_navigator"
+require_relative "../../molecules/taskflow_management/release_path_resolver"
 
 module CodingAgentTools
   module Organisms
@@ -38,7 +38,7 @@ module CodingAgentTools
 
         # Initialize ReleaseManager
         # @param base_path [String] Base path for release resolution
-        def initialize(base_path: '.')
+        def initialize(base_path: ".")
           @base_path = base_path
           @directory_navigator = Atoms::TaskflowManagement::DirectoryNavigator
           @release_resolver = Molecules::TaskflowManagement::ReleasePathResolver
@@ -64,7 +64,7 @@ module CodingAgentTools
         def next
           # Since backlog doesn't contain versioned releases based on our analysis,
           # we'll implement a placeholder that can be enhanced when backlog structure changes
-          backlog_path = File.join(@base_path, 'dev-taskflow/backlog')
+          backlog_path = File.join(@base_path, "dev-taskflow/backlog")
 
           unless File.exist?(backlog_path) && File.directory?(backlog_path)
             return ManagerResult.new(nil, false, "Backlog directory not found: #{backlog_path}")
@@ -74,7 +74,7 @@ module CodingAgentTools
           potential_release_paths = find_potential_releases_in_backlog(backlog_path)
 
           if potential_release_paths.empty?
-            return ManagerResult.new(nil, true, 'No versioned releases found in backlog')
+            return ManagerResult.new(nil, true, "No versioned releases found in backlog")
           end
 
           # Convert paths to release info objects first
@@ -110,7 +110,7 @@ module CodingAgentTools
         # @param release_info [ReleaseInfo] Release information object
         # @return [ManagerResult] Result containing generated task ID or error
         def generate_id_for_release(release_info)
-          return ManagerResult.new(nil, false, 'Release info is required') unless release_info
+          return ManagerResult.new(nil, false, "Release info is required") unless release_info
 
           release_version = release_info.version
           next_task_number = find_next_task_number(release_version, release_info.path)
@@ -137,11 +137,11 @@ module CodingAgentTools
 
           # Create release directory path
           release_name = "#{next_version}-#{final_codename}"
-          release_path = File.join(@base_path, 'dev-taskflow', 'backlog', release_name)
+          release_path = File.join(@base_path, "dev-taskflow", "backlog", release_name)
 
           # Create directory structure
           Dir.mkdir(release_path) unless File.exist?(release_path)
-          Dir.mkdir(File.join(release_path, 'tasks')) unless File.exist?(File.join(release_path, 'tasks'))
+          Dir.mkdir(File.join(release_path, "tasks")) unless File.exist?(File.join(release_path, "tasks"))
 
           # Create basic release info file
           create_release_info_file(release_path, next_version, final_codename)
@@ -163,13 +163,13 @@ module CodingAgentTools
           all_releases = []
 
           # Scan done releases
-          all_releases.concat(scan_releases_in_directory('done', :done))
+          all_releases.concat(scan_releases_in_directory("done", :done))
 
           # Scan current releases
-          all_releases.concat(scan_releases_in_directory('current', :current))
+          all_releases.concat(scan_releases_in_directory("current", :current))
 
           # Scan backlog releases
-          all_releases.concat(scan_releases_in_directory('backlog', :backlog))
+          all_releases.concat(scan_releases_in_directory("backlog", :backlog))
 
           # Sort by version (semantic version comparison)
           sorted_releases = sort_releases_by_version(all_releases)
@@ -185,7 +185,7 @@ module CodingAgentTools
         # @return [String] Absolute path to the resolved directory
         # @raise [StandardError] If no current release exists or path validation fails
         def resolve_path(subpath, create_if_missing: false)
-          raise ArgumentError, 'subpath cannot be nil or empty' if subpath.nil? || subpath.to_s.empty?
+          raise ArgumentError, "subpath cannot be nil or empty" if subpath.nil? || subpath.to_s.empty?
 
           # Get current release
           current_result = current
@@ -218,17 +218,17 @@ module CodingAgentTools
           current_release = current_result.data
 
           # Validate that there's exactly one release in current directory
-          current_path = File.join(@base_path, 'dev-taskflow/current')
+          current_path = File.join(@base_path, "dev-taskflow/current")
           if File.exist?(current_path) && File.directory?(current_path)
             subdirs = Dir.entries(current_path).select do |entry|
-              next false if ['.', '..'].include?(entry)
+              next false if [".", ".."].include?(entry)
 
               File.directory?(File.join(current_path, entry))
             end
 
             case subdirs.size
             when 0
-              return ManagerResult.new(nil, false, 'No current release found - current directory is empty')
+              return ManagerResult.new(nil, false, "No current release found - current directory is empty")
             when 1
               # This is the expected state
               detected_name = subdirs.first
@@ -246,10 +246,10 @@ module CodingAgentTools
           validation_info = {
             current_release: current_release.name,
             path: current_release.path,
-            validation_status: 'consistent'
+            validation_status: "consistent"
           }
 
-          ManagerResult.new(validation_info, true, 'Release context validation passed')
+          ManagerResult.new(validation_info, true, "Release context validation passed")
         rescue => e
           ManagerResult.new(nil, false, "Error validating release context: #{e.message}")
         end
@@ -290,19 +290,19 @@ module CodingAgentTools
         def count_tasks_in_release(path)
           return 0 unless File.exist?(path) && File.directory?(path)
 
-          tasks_dir = File.join(path, 'tasks')
+          tasks_dir = File.join(path, "tasks")
           return 0 unless File.exist?(tasks_dir) && File.directory?(tasks_dir)
 
-          Dir.glob(File.join(tasks_dir, '*.md')).count
+          Dir.glob(File.join(tasks_dir, "*.md")).count
         end
 
         # Determine release status based on task completion
         def determine_release_status(_path, type)
-          return 'archived' if type == :done
-          return 'active' if type == :current
-          return 'planned' if type == :backlog
+          return "archived" if type == :done
+          return "active" if type == :current
+          return "planned" if type == :backlog
 
-          'unknown'
+          "unknown"
         end
 
         # Find potential releases in backlog directory
@@ -310,7 +310,7 @@ module CodingAgentTools
           potential_releases = []
 
           Dir.entries(backlog_path).each do |entry|
-            next if entry.start_with?('.')
+            next if entry.start_with?(".")
 
             entry_path = File.join(backlog_path, entry)
             next unless File.directory?(entry_path)
@@ -325,12 +325,12 @@ module CodingAgentTools
         # Scan releases in a specific directory
         def scan_releases_in_directory(directory_name, type)
           releases = []
-          base_dir = File.join(@base_path, 'dev-taskflow', directory_name)
+          base_dir = File.join(@base_path, "dev-taskflow", directory_name)
 
           return releases unless File.exist?(base_dir) && File.directory?(base_dir)
 
           Dir.entries(base_dir).each do |entry|
-            next if entry.start_with?('.')
+            next if entry.start_with?(".")
 
             entry_path = File.join(base_dir, entry)
             next unless File.directory?(entry_path)
@@ -373,7 +373,7 @@ module CodingAgentTools
 
           # Use llm-query with system prompt for cleaner generation
           system_prompt = "return only with one word codename, we already have #{existing_codenames.join(", ")}"
-          user_prompt = 'give one word codename for release'
+          user_prompt = "give one word codename for release"
 
           # Use shell escaping to handle quotes properly
           escaped_user_prompt = user_prompt.gsub('"', '\\"')
@@ -385,12 +385,12 @@ module CodingAgentTools
           result = `#{cmd} 2>/dev/null`.strip
 
           # Fallback if LLM fails
-          if result.empty? || result.downcase.include?('error')
+          if result.empty? || result.downcase.include?("error")
             generate_fallback_codename(existing_codenames)
           else
             # Extract only the first line (the actual codename) and clean it up
             first_line = result.split("\n").first.to_s.strip
-            clean_codename = first_line.gsub(/[^a-zA-Z0-9-]/, '').downcase
+            clean_codename = first_line.gsub(/[^a-zA-Z0-9-]/, "").downcase
             clean_codename.empty? ? generate_fallback_codename(existing_codenames) : clean_codename
           end
         end
@@ -411,7 +411,7 @@ module CodingAgentTools
 
         # Generate fallback codename if LLM fails
         def generate_fallback_codename(existing_codenames)
-          timestamp = Time.now.strftime('%Y%m%d%H%M')
+          timestamp = Time.now.strftime("%Y%m%d%H%M")
           codename = "release-#{timestamp}"
 
           # Ensure uniqueness
@@ -444,12 +444,12 @@ module CodingAgentTools
             Add any release-specific notes here.
           INFO
 
-          File.write(File.join(release_path, 'README.md'), info_content)
+          File.write(File.join(release_path, "README.md"), info_content)
         end
 
         # Find latest version from all releases
         def find_latest_version(releases)
-          return 'v.0.0.0' if releases.empty? # Changed from v.0.1.0 to v.0.0.0
+          return "v.0.0.0" if releases.empty? # Changed from v.0.1.0 to v.0.0.0
 
           # Filter to only semantic versions (ignore non-versioned releases like "ideas", "future-considerations")
           semantic_releases = releases.select do |release|
@@ -457,7 +457,7 @@ module CodingAgentTools
             version_name.match?(/^v\.\d+\.\d+\.\d+/)
           end
 
-          return 'v.0.0.0' if semantic_releases.empty?
+          return "v.0.0.0" if semantic_releases.empty?
 
           # Get the highest semantic version
           latest_release = semantic_releases.max_by do |release|
@@ -475,13 +475,13 @@ module CodingAgentTools
             patch = match[3].to_i
             "v.#{major}.#{minor + 1}.#{patch}"
           else
-            'v.0.1.0' # Default fallback
+            "v.0.1.0" # Default fallback
           end
         end
 
         # Find next task number for a version by scanning existing tasks
         def find_next_task_number(version, release_path)
-          tasks_dir = File.join(release_path, 'tasks')
+          tasks_dir = File.join(release_path, "tasks")
           return 1 unless File.exist?(tasks_dir) && File.directory?(tasks_dir)
 
           # Find all task files for this version
@@ -489,7 +489,7 @@ module CodingAgentTools
 
           # Extract task numbers from filenames
           task_numbers = task_files.map do |file|
-            filename = File.basename(file, '.md')
+            filename = File.basename(file, ".md")
             match = filename.match(/#{Regexp.escape(version)}\+task\.(\d+)/)
             match ? match[1].to_i : 0
           end

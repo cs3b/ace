@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../molecules/source_directory_validator'
+require "pathname"
+require_relative "../molecules/source_directory_validator"
 
 module CodingAgentTools
   module Organisms
@@ -63,11 +63,11 @@ module CodingAgentTools
       # @return [Array<Pathname>] List of agent files
       def discover_agents(source_base)
         base_path = normalize_path(source_base)
-        agents_dir = base_path / 'agents'
+        agents_dir = base_path / "agents"
 
         return [] unless agents_dir.exist? && agents_dir.directory?
 
-        agents_dir.glob('*.md').sort
+        agents_dir.glob("*.md").sort
       end
 
       # Get command category for a file
@@ -78,12 +78,12 @@ module CodingAgentTools
         parent_dir = file_path.parent.basename.to_s
 
         case parent_dir
-        when '_custom'
+        when "_custom"
           :custom
-        when '_generated'
+        when "_generated"
           :generated
-        when 'commands'
-          source_structure == :flat ? :flat : :unknown
+        when "commands"
+          (source_structure == :flat) ? :flat : :unknown
         else
           :unknown
         end
@@ -96,7 +96,7 @@ module CodingAgentTools
       end
 
       def discover_flat_commands(base_path, commands)
-        commands_dir = base_path / 'commands'
+        commands_dir = base_path / "commands"
         return unless commands_dir.exist?
 
         command_files = @source_validator.find_command_files(commands_dir)
@@ -104,16 +104,16 @@ module CodingAgentTools
       end
 
       def discover_subdir_commands(base_path, commands)
-        commands_dir = base_path / 'commands'
+        commands_dir = base_path / "commands"
 
         # Check custom commands
-        custom_dir = commands_dir / '_custom'
+        custom_dir = commands_dir / "_custom"
         if custom_dir.exist?
           commands[:custom] = @source_validator.find_command_files(custom_dir)
         end
 
         # Check generated commands
-        generated_dir = commands_dir / '_generated'
+        generated_dir = commands_dir / "_generated"
         if generated_dir.exist?
           commands[:generated] = @source_validator.find_command_files(generated_dir)
         end
@@ -122,10 +122,10 @@ module CodingAgentTools
       def discover_workflow_commands(base_path, commands)
         # Look for workflow files in parent directories
         parent = base_path.parent
-        workflows_dir = parent.parent / 'workflow-instructions'
+        workflows_dir = parent.parent / "workflow-instructions"
 
         if workflows_dir.exist?
-          workflow_files = workflows_dir.glob('*.wf.md').sort
+          workflow_files = workflows_dir.glob("*.wf.md").sort
           commands[:workflow] = workflow_files
         end
       end

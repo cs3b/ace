@@ -63,10 +63,10 @@ module CodingAgentTools
           return false if options[:no_color]
 
           # Environment variable NO_COLOR takes precedence
-          return false if ENV['NO_COLOR']
+          return false if ENV["NO_COLOR"]
 
           # FORCE_COLOR environment variable or --force-color option enables color
-          return true if ENV['FORCE_COLOR'] || options[:force_color]
+          return true if ENV["FORCE_COLOR"] || options[:force_color]
 
           # Since --force-color is now default true, we'll use colors by default
           # unless explicitly disabled
@@ -80,20 +80,20 @@ module CodingAgentTools
           output_text = status_output.downcase
 
           # Check for conflict markers
-          return :conflict if output_text.include?('both modified') || output_text.include?('merge conflict')
+          return :conflict if output_text.include?("both modified") || output_text.include?("merge conflict")
 
           # Check for any changes (modified, added, deleted, renamed, etc.)
-          if output_text.include?('modified:') ||
-             output_text.include?('deleted:') ||
-             output_text.include?('new file:') ||
-             output_text.include?('renamed:') ||
-             output_text.include?('changes not staged') ||
-             output_text.include?('changes to be committed')
+          if output_text.include?("modified:") ||
+              output_text.include?("deleted:") ||
+              output_text.include?("new file:") ||
+              output_text.include?("renamed:") ||
+              output_text.include?("changes not staged") ||
+              output_text.include?("changes to be committed")
             return :changes
           end
 
           # Check for untracked files
-          return :untracked if output_text.include?('untracked files:')
+          return :untracked if output_text.include?("untracked files:")
 
           # If it has content but doesn't match patterns, treat as changes
           :changes

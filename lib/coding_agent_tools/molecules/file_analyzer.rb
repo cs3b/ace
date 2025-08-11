@@ -23,7 +23,7 @@ module CodingAgentTools
           @method_mapper.map_file_coverage(file_path, lines_data)
         else
           warn "Warning: Cannot read source file #{file_path} for method analysis"
-                    []
+          []
         end
 
         Models::CoverageResult.new(
@@ -45,7 +45,7 @@ module CodingAgentTools
       # @return [Array<Models::CoverageResult>] Analyzed files
       def analyze_files(processed_data, options = {})
         threshold = options[:threshold] || 85.0
-        sort_by = options[:sort_by] || 'coverage'
+        sort_by = options[:sort_by] || "coverage"
         methods_only = options[:methods_only] || false
 
         file_results = processed_data[:file_coverage].map do |file_path, file_data|
@@ -79,7 +79,7 @@ module CodingAgentTools
         method_analysis = if file_result.methods.any?
           analyze_file_methods(file_result.methods, threshold)
         else
-          { message: 'No methods found or file could not be parsed' }
+          {message: "No methods found or file could not be parsed"}
         end
 
         # Analyze line-by-line coverage for uncovered areas
@@ -161,7 +161,7 @@ module CodingAgentTools
             if current_range
               current_range[:end_line] = line_number
             else
-              current_range = { start_line: line_number, end_line: line_number }
+              current_range = {start_line: line_number, end_line: line_number}
             end
           elsif current_range
             # End of uncovered range
@@ -178,13 +178,13 @@ module CodingAgentTools
 
       def sort_file_results(file_results, sort_by)
         case sort_by.to_s.downcase
-        when 'coverage'
+        when "coverage"
           file_results.sort_by(&:coverage_percentage)
-        when 'uncovered_lines'
+        when "uncovered_lines"
           file_results.sort_by { |result| -result.uncovered_lines_count }
-        when 'file_name'
+        when "file_name"
           file_results.sort_by(&:relative_path)
-        when 'priority'
+        when "priority"
           file_results.sort_by { |result| -calculate_priority_score(result, 85.0) }
         else
           file_results.sort_by(&:coverage_percentage)

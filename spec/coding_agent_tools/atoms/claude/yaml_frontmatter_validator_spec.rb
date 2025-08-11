@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
+require "spec_helper"
 
 RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
-  describe '.valid?' do
-    context 'with valid YAML frontmatter' do
-      it 'returns true for simple YAML' do
+  describe ".valid?" do
+    context "with valid YAML frontmatter" do
+      it "returns true for simple YAML" do
         content = <<~CONTENT
           ---
           description: Test command
@@ -18,7 +18,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         expect(described_class.valid?(content)).to be true
       end
 
-      it 'returns true for complex YAML' do
+      it "returns true for complex YAML" do
         content = <<~CONTENT
           ---
           description: Complex command
@@ -34,8 +34,8 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
       end
     end
 
-    context 'with invalid YAML frontmatter' do
-      it 'returns false for malformed YAML' do
+    context "with invalid YAML frontmatter" do
+      it "returns false for malformed YAML" do
         content = <<~CONTENT
           ---
           description: Missing colon
@@ -48,7 +48,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         expect(described_class.valid?(content)).to be false
       end
 
-      it 'returns false for missing closing marker' do
+      it "returns false for missing closing marker" do
         content = <<~CONTENT
           ---
           description: No closing marker
@@ -60,7 +60,7 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         expect(described_class.valid?(content)).to be false
       end
 
-      it 'returns false for missing opening marker' do
+      it "returns false for missing opening marker" do
         content = <<~CONTENT
           description: No opening marker
           allowed-tools: Read
@@ -73,25 +73,25 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
       end
     end
 
-    context 'with edge cases' do
-      it 'returns false for nil content' do
+    context "with edge cases" do
+      it "returns false for nil content" do
         expect(described_class.valid?(nil)).to be false
       end
 
-      it 'returns false for empty content' do
-        expect(described_class.valid?('')).to be false
+      it "returns false for empty content" do
+        expect(described_class.valid?("")).to be false
       end
 
-      it 'returns false for content without frontmatter' do
+      it "returns false for content without frontmatter" do
         content = "Just some regular content\nwithout frontmatter"
         expect(described_class.valid?(content)).to be false
       end
     end
   end
 
-  describe '.parse' do
-    context 'with valid YAML frontmatter' do
-      it 'returns parsed hash' do
+  describe ".parse" do
+    context "with valid YAML frontmatter" do
+      it "returns parsed hash" do
         content = <<~CONTENT
           ---
           description: Test command
@@ -104,15 +104,15 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
 
         result = described_class.parse(content)
         expect(result).to eq({
-          'description' => 'Test command',
-          'allowed-tools' => 'Read, Write',
-          'model' => 'sonnet'
+          "description" => "Test command",
+          "allowed-tools" => "Read, Write",
+          "model" => "sonnet"
         })
       end
     end
 
-    context 'with invalid content' do
-      it 'returns nil for malformed YAML' do
+    context "with invalid content" do
+      it "returns nil for malformed YAML" do
         content = <<~CONTENT
           ---
           invalid: yaml: syntax
@@ -122,15 +122,15 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
         expect(described_class.parse(content)).to be_nil
       end
 
-      it 'returns nil for nil content' do
+      it "returns nil for nil content" do
         expect(described_class.parse(nil)).to be_nil
       end
 
-      it 'returns nil for empty content' do
-        expect(described_class.parse('')).to be_nil
+      it "returns nil for empty content" do
+        expect(described_class.parse("")).to be_nil
       end
 
-      it 'returns nil for non-hash YAML' do
+      it "returns nil for non-hash YAML" do
         content = <<~CONTENT
           ---
           - item1
@@ -143,8 +143,8 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
     end
   end
 
-  describe '.extract_frontmatter' do
-    it 'extracts frontmatter content without markers' do
+  describe ".extract_frontmatter" do
+    it "extracts frontmatter content without markers" do
       content = <<~CONTENT
         ---
         description: Test
@@ -158,18 +158,18 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
       expect(result).to eq("description: Test\nmodel: opus")
     end
 
-    it 'returns nil for content without frontmatter' do
-      content = 'Just regular content'
+    it "returns nil for content without frontmatter" do
+      content = "Just regular content"
       expect(described_class.extract_frontmatter(content)).to be_nil
     end
 
-    it 'returns nil for nil content' do
+    it "returns nil for nil content" do
       expect(described_class.extract_frontmatter(nil)).to be_nil
     end
   end
 
-  describe '.has_frontmatter?' do
-    it 'returns true when frontmatter exists' do
+  describe ".has_frontmatter?" do
+    it "returns true when frontmatter exists" do
       content = <<~CONTENT
         ---
         key: value
@@ -181,17 +181,17 @@ RSpec.describe CodingAgentTools::Atoms::Claude::YamlFrontmatterValidator do
       expect(described_class.has_frontmatter?(content)).to be true
     end
 
-    it 'returns false when no frontmatter' do
-      content = 'Regular content without frontmatter'
+    it "returns false when no frontmatter" do
+      content = "Regular content without frontmatter"
       expect(described_class.has_frontmatter?(content)).to be false
     end
 
-    it 'returns false for nil content' do
+    it "returns false for nil content" do
       expect(described_class.has_frontmatter?(nil)).to be false
     end
 
-    it 'returns false for empty content' do
-      expect(described_class.has_frontmatter?('')).to be false
+    it "returns false for empty content" do
+      expect(described_class.has_frontmatter?("")).to be false
     end
   end
 end

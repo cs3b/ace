@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/taskflow_management/shell_command_executor'
+require_relative "../../atoms/taskflow_management/shell_command_executor"
 
 module CodingAgentTools
   module Molecules
@@ -9,22 +9,22 @@ module CodingAgentTools
       class GitLogFormatter
         # Git log entry structure
         LogEntry = Struct.new(:repository, :timestamp, :sha, :author, :message, :raw_timestamp) do
-          def formatted_timestamp(format: '%Y-%m-%d %H:%M')
+          def formatted_timestamp(format: "%Y-%m-%d %H:%M")
             Time.at(timestamp).strftime(format)
           rescue
-            raw_timestamp || 'unknown'
+            raw_timestamp || "unknown"
           end
 
           def short_sha(length: 7)
-            return 'unknown' if sha.nil? || sha.empty?
+            return "unknown" if sha.nil? || sha.empty?
 
             sha[0, [length, sha.length].min]
           end
 
           def single_line_message
-            return '' if message.nil?
+            return "" if message.nil?
 
-            message.split("\n").first&.strip || ''
+            message.split("\n").first&.strip || ""
           end
         end
 
@@ -63,7 +63,7 @@ module CodingAgentTools
 
         # Format log entries for display
         def self.format_log_output(log_result, format: :compact, show_repository: true)
-          return 'No commits found.' if log_result.empty?
+          return "No commits found." if log_result.empty?
 
           output = []
 
@@ -75,7 +75,7 @@ module CodingAgentTools
           when :oneline
             format_oneline_output(log_result, output, show_repository)
           else
-            raise ArgumentError, 'Unknown format: ' + format.to_s
+            raise ArgumentError, "Unknown format: " + format.to_s
           end
 
           output.join("\n")
@@ -98,19 +98,19 @@ module CodingAgentTools
           end
 
           def build_git_log_command(since_str, include_merges, max_commits)
-            cmd_parts = ['git', 'log']
+            cmd_parts = ["git", "log"]
             cmd_parts << "--since=#{since_str}"
-            cmd_parts << '--no-merges' unless include_merges
+            cmd_parts << "--no-merges" unless include_merges
             cmd_parts << "--max-count=#{max_commits}"
-            cmd_parts << '--pretty=format:%ct|%h|%an|%B<<END>>'
-            cmd_parts.join(' ')
+            cmd_parts << "--pretty=format:%ct|%h|%an|%B<<END>>"
+            cmd_parts.join(" ")
           end
 
           def parse_git_log_output(output, repository_label)
             entries = []
             return entries if output.nil? || output.strip.empty?
 
-            commit_blocks = output.split('<<END>>')
+            commit_blocks = output.split("<<END>>")
 
             commit_blocks.each do |block|
               next if block.strip.empty?
@@ -119,7 +119,7 @@ module CodingAgentTools
               next if lines.empty?
 
               header_line = lines.first.strip
-              header_parts = header_line.split('|', 3)
+              header_parts = header_line.split("|", 3)
               next if header_parts.length < 3
 
               timestamp_str, sha, author = header_parts
@@ -137,7 +137,7 @@ module CodingAgentTools
           def normalize_time_string(time_input)
             case time_input
             when Time
-              time_input.strftime('%Y-%m-%dT%H:%M:%S')
+              time_input.strftime("%Y-%m-%dT%H:%M:%S")
             when String
               time_input
             else
@@ -147,18 +147,18 @@ module CodingAgentTools
 
           def format_compact_output(log_result, output, show_repository)
             log_result.entries.each do |entry|
-              repo_prefix = show_repository ? "[#{entry.repository}] " : ''
+              repo_prefix = show_repository ? "[#{entry.repository}] " : ""
               output << "#{repo_prefix}#{entry.formatted_timestamp} #{entry.short_sha} #{entry.author}:"
               output << entry.single_line_message.to_s
-              output << '---'
+              output << "---"
             end
           end
 
           def format_detailed_output(log_result, output, show_repository)
             log_result.entries.each do |entry|
-              repo_prefix = show_repository ? "[#{entry.repository}] " : ''
+              repo_prefix = show_repository ? "[#{entry.repository}] " : ""
               output << "#{repo_prefix}#{entry.formatted_timestamp} #{entry.sha} #{entry.author}:"
-              output << ''
+              output << ""
 
               if entry.message && !entry.message.empty?
                 entry.message.split("\n").each do |line|
@@ -166,14 +166,14 @@ module CodingAgentTools
                 end
               end
 
-              output << ''
-              output << '=' * 70
+              output << ""
+              output << "=" * 70
             end
           end
 
           def format_oneline_output(log_result, output, show_repository)
             log_result.entries.each do |entry|
-              repo_prefix = show_repository ? "[#{entry.repository}] " : ''
+              repo_prefix = show_repository ? "[#{entry.repository}] " : ""
               output << "#{repo_prefix}#{entry.short_sha} #{entry.single_line_message}"
             end
           end

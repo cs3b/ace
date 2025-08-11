@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'set'
+require "set"
 
 module CodingAgentTools::Molecules
   # Molecule for detecting circular dependencies in documentation

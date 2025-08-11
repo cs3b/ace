@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'json'
-require 'pathname'
-require 'time'
-require_relative '../atoms/project_root_detector'
-require_relative '../atoms/table_renderer'
+require "json"
+require "pathname"
+require "time"
+require_relative "../atoms/project_root_detector"
+require_relative "../atoms/table_renderer"
 
 module CodingAgentTools
   module Organisms
@@ -20,12 +20,12 @@ module CodingAgentTools
         inventory = build_inventory
 
         # Filter by type if specified
-        if options[:type] && options[:type] != 'all'
+        if options[:type] && options[:type] != "all"
           inventory = filter_inventory(inventory, options[:type])
         end
 
         case options[:format]
-        when 'json'
+        when "json"
           output_json(inventory, options)
         else
           output_text(inventory, options)
@@ -68,7 +68,7 @@ module CodingAgentTools
         missing_commands.each do |name|
           all_commands << {
             name: name,
-            type: 'missing',
+            type: "missing",
             installed: false,
             valid: false
           }
@@ -82,60 +82,60 @@ module CodingAgentTools
       end
 
       def scan_custom_commands
-        dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
+        dir = project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_custom"
         return [] unless dir.exist?
 
-        Dir.glob(File.join(dir, '*.md')).map do |path|
-          build_command_info(path, 'custom')
+        Dir.glob(File.join(dir, "*.md")).map do |path|
+          build_command_info(path, "custom")
         end.sort_by { |cmd| cmd[:name] }
       end
 
       def scan_generated_commands
-        dir = project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
+        dir = project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_generated"
         return [] unless dir.exist?
 
-        Dir.glob(File.join(dir, '*.md')).map do |path|
-          build_command_info(path, 'generated')
+        Dir.glob(File.join(dir, "*.md")).map do |path|
+          build_command_info(path, "generated")
         end.sort_by { |cmd| cmd[:name] }
       end
 
       def scan_installed_command_names
-        dir = project_root / '.claude' / 'commands'
+        dir = project_root / ".claude" / "commands"
         return [] unless dir.exist?
 
         # Check both subdirectories and root directory
-        custom_dir = dir / '_custom'
-        generated_dir = dir / '_generated'
+        custom_dir = dir / "_custom"
+        generated_dir = dir / "_generated"
 
         names = []
 
         # Scan custom commands
         if custom_dir.exist?
-          names += Dir.glob(File.join(custom_dir, '*.md'))
-            .map { |path| File.basename(path, '.md') }
+          names += Dir.glob(File.join(custom_dir, "*.md"))
+            .map { |path| File.basename(path, ".md") }
         end
 
         # Scan generated commands
         if generated_dir.exist?
-          names += Dir.glob(File.join(generated_dir, '*.md'))
-            .map { |path| File.basename(path, '.md') }
+          names += Dir.glob(File.join(generated_dir, "*.md"))
+            .map { |path| File.basename(path, ".md") }
         end
 
         # Also check root directory for flat structure
-        names += Dir.glob(File.join(dir, '*.md'))
-          .reject { |f| File.basename(f) == 'README.md' }
-          .map { |path| File.basename(path, '.md') }
+        names += Dir.glob(File.join(dir, "*.md"))
+          .reject { |f| File.basename(f) == "README.md" }
+          .map { |path| File.basename(path, ".md") }
 
         names.uniq
       end
 
       def find_missing_workflows(known_commands)
-        workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
+        workflows_dir = project_root / "dev-handbook" / "workflow-instructions"
         return [] unless workflows_dir.exist?
 
         # Get workflow names
-        workflow_names = Dir.glob(File.join(workflows_dir, '*.wf.md')).map do |path|
-          File.basename(path, '.wf.md')
+        workflow_names = Dir.glob(File.join(workflows_dir, "*.wf.md")).map do |path|
+          File.basename(path, ".wf.md")
         end
 
         # Get known command names (custom + generated)
@@ -151,7 +151,7 @@ module CodingAgentTools
         stat = File.stat(path)
 
         {
-          name: pathname.basename('.md').to_s,
+          name: pathname.basename(".md").to_s,
           path: pathname.relative_path_from(project_root).to_s,
           type: type,
           size: stat.size,
@@ -162,12 +162,12 @@ module CodingAgentTools
 
       def filter_inventory(inventory, type)
         filtered_commands = case type
-        when 'custom'
-          inventory[:commands].select { |cmd| cmd[:type] == 'custom' }
-        when 'generated'
-          inventory[:commands].select { |cmd| cmd[:type] == 'generated' }
-        when 'missing'
-          inventory[:commands].select { |cmd| cmd[:type] == 'missing' }
+        when "custom"
+          inventory[:commands].select { |cmd| cmd[:type] == "custom" }
+        when "generated"
+          inventory[:commands].select { |cmd| cmd[:type] == "generated" }
+        when "missing"
+          inventory[:commands].select { |cmd| cmd[:type] == "missing" }
         else
           inventory[:commands]
         end
@@ -181,23 +181,23 @@ module CodingAgentTools
 
       def output_json(inventory, _options)
         output = {
-          'commands' => inventory[:commands].map do |cmd|
+          "commands" => inventory[:commands].map do |cmd|
             {
-              'name' => cmd[:name],
-              'installed' => cmd[:installed],
-              'type' => cmd[:type],
-              'valid' => cmd[:valid]
+              "name" => cmd[:name],
+              "installed" => cmd[:installed],
+              "type" => cmd[:type],
+              "valid" => cmd[:valid]
             }.tap do |h|
               # Add optional fields if present
-              h['path'] = cmd[:path] if cmd[:path]
-              h['modified'] = cmd[:modified_iso] if cmd[:modified_iso]
-              h['size'] = cmd[:size] if cmd[:size]
+              h["path"] = cmd[:path] if cmd[:path]
+              h["modified"] = cmd[:modified_iso] if cmd[:modified_iso]
+              h["size"] = cmd[:size] if cmd[:size]
             end
           end,
-          'summary' => {
-            'installed' => inventory[:installed_count],
-            'missing' => inventory[:missing_count],
-            'total' => inventory[:commands].length
+          "summary" => {
+            "installed" => inventory[:installed_count],
+            "missing" => inventory[:missing_count],
+            "total" => inventory[:commands].length
           }
         }
 
@@ -205,8 +205,8 @@ module CodingAgentTools
       end
 
       def output_text(inventory, options)
-        puts 'Claude Commands Overview'
-        puts '========================'
+        puts "Claude Commands Overview"
+        puts "========================"
         puts
 
         if options[:verbose]
@@ -221,10 +221,10 @@ module CodingAgentTools
       def output_table(inventory, options)
         # Define columns
         columns = [
-          { name: 'Installed', width: 10, align: :center },
-          { name: 'Type', width: 10, align: :left },
-          { name: 'Valid', width: 8, align: :center },
-          { name: 'Command Name', align: :left }
+          {name: "Installed", width: 10, align: :center},
+          {name: "Type", width: 10, align: :left},
+          {name: "Valid", width: 8, align: :center},
+          {name: "Command Name", align: :left}
         ]
 
         # Create table renderer
@@ -232,8 +232,8 @@ module CodingAgentTools
 
         # Add rows
         inventory[:commands].each do |cmd|
-          installed_mark = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
-          valid_mark = cmd[:valid] ? colorize('✓', :green) : colorize('✗', :red)
+          installed_mark = cmd[:installed] ? colorize("✓", :green) : colorize("✗", :red)
+          valid_mark = cmd[:valid] ? colorize("✓", :green) : colorize("✗", :red)
 
           table.add_row([
             installed_mark,
@@ -260,10 +260,10 @@ module CodingAgentTools
         by_type = inventory[:commands].group_by { |cmd| cmd[:type] }
 
         # Display custom commands
-        if by_type['custom'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'custom')
+        if by_type["custom"] && (options[:type].nil? || options[:type] == "all" || options[:type] == "custom")
           puts "Custom Commands (#{by_type["custom"].length}):"
-          by_type['custom'].each do |cmd|
-            status = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
+          by_type["custom"].each do |cmd|
+            status = cmd[:installed] ? colorize("✓", :green) : colorize("✗", :red)
             puts "  #{status} #{cmd[:name]}"
             if cmd[:path]
               puts "    Path: #{cmd[:path]}"
@@ -275,10 +275,10 @@ module CodingAgentTools
         end
 
         # Display generated commands
-        if by_type['generated'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'generated')
+        if by_type["generated"] && (options[:type].nil? || options[:type] == "all" || options[:type] == "generated")
           puts "Generated Commands (#{by_type["generated"].length}):"
-          by_type['generated'].each do |cmd|
-            status = cmd[:installed] ? colorize('✓', :green) : colorize('✗', :red)
+          by_type["generated"].each do |cmd|
+            status = cmd[:installed] ? colorize("✓", :green) : colorize("✗", :red)
             puts "  #{status} #{cmd[:name]}"
             if cmd[:path]
               puts "    Path: #{cmd[:path]}"
@@ -290,16 +290,16 @@ module CodingAgentTools
         end
 
         # Display missing commands
-        if by_type['missing'] && (options[:type].nil? || options[:type] == 'all' || options[:type] == 'missing')
+        if by_type["missing"] && (options[:type].nil? || options[:type] == "all" || options[:type] == "missing")
           puts "Missing Commands (#{by_type["missing"].length}):"
-          by_type['missing'].each do |cmd|
+          by_type["missing"].each do |cmd|
             puts "  #{colorize("✗", :red)} #{cmd[:name]}"
           end
           puts
         end
 
         # Display summary
-        if options[:type].nil? || options[:type] == 'all'
+        if options[:type].nil? || options[:type] == "all"
           total = inventory[:commands].length
           installed = inventory[:installed_count]
           missing = inventory[:missing_count]

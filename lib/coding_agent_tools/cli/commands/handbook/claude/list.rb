@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../../organisms/claude_command_lister'
+require "dry/cli"
+require_relative "../../../../organisms/claude_command_lister"
 
 module CodingAgentTools
   module Cli
@@ -9,11 +9,11 @@ module CodingAgentTools
       module Handbook
         module Claude
           class List < Dry::CLI::Command
-            desc 'List all Claude commands and their status'
+            desc "List all Claude commands and their status"
 
-            option :verbose, type: :boolean, default: false, desc: 'Show detailed information'
-            option :type, type: :string, values: ['custom', 'generated', 'missing', 'all'], default: 'all', desc: 'Filter by type'
-            option :format, type: :string, values: ['text', 'json'], default: 'text', desc: 'Output format'
+            option :verbose, type: :boolean, default: false, desc: "Show detailed information"
+            option :type, type: :string, values: ["custom", "generated", "missing", "all"], default: "all", desc: "Filter by type"
+            option :format, type: :string, values: ["text", "json"], default: "text", desc: "Output format"
 
             def call(**options)
               lister = CodingAgentTools::Organisms::ClaudeCommandLister.new

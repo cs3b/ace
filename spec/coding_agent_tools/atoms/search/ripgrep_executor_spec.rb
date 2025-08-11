@@ -16,16 +16,16 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
     it "returns true when ripgrep is installed" do
       allow(mock_shell_executor).to receive(:execute)
         .with("which rg")
-        .and_return({ success: true })
-      
+        .and_return({success: true})
+
       expect(executor.available?).to be true
     end
 
     it "returns false when ripgrep is not installed" do
       allow(mock_shell_executor).to receive(:execute)
         .with("which rg")
-        .and_return({ success: false })
-      
+        .and_return({success: false})
+
       expect(executor.available?).to be false
     end
   end
@@ -44,9 +44,9 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
             output: "file.rb:1:test_pattern found\n",
             exit_code: 0
           })
-        
+
         result = executor.search("test_pattern")
-        
+
         expect(result[:success]).to be true
         expect(result[:results]).to include(
           hash_including(
@@ -65,7 +65,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
             output: "",
             exit_code: 0
           })
-        
+
         executor.search("pattern", case_insensitive: true)
       end
 
@@ -77,7 +77,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
             output: "",
             exit_code: 0
           })
-        
+
         executor.search("pattern", file_type: "ruby")
       end
     end
@@ -89,7 +89,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
 
       it "returns error response" do
         result = executor.search("pattern")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("ripgrep not available")
       end
@@ -99,21 +99,21 @@ RSpec.describe CodingAgentTools::Atoms::Search::RipgrepExecutor do
   describe "#build_command" do
     it "builds basic command" do
       command = executor.send(:build_ripgrep_command, "pattern", {})
-      
+
       expect(command).to include("rg")
       expect(command).to include("pattern")
     end
 
     it "adds case-insensitive flag" do
       command = executor.send(:build_ripgrep_command, "pattern", case_insensitive: true)
-      
+
       expect(command).to include("-i")
     end
 
     it "adds context lines" do
-      command = executor.send(:build_ripgrep_command, "pattern", 
-                              after_context: 2, before_context: 1)
-      
+      command = executor.send(:build_ripgrep_command, "pattern",
+        after_context: 2, before_context: 1)
+
       expect(command).to include("-A 2")
       expect(command).to include("-B 1")
     end

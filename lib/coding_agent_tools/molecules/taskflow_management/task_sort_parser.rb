@@ -17,7 +17,7 @@ module CodingAgentTools
           end
 
           def implementation_order?
-            attribute == 'implementation-order'
+            attribute == "implementation-order"
           end
 
           def get_sort_value(task_data)
@@ -28,13 +28,13 @@ module CodingAgentTools
 
             # Handle special attributes
             case attribute
-            when 'id'
+            when "id"
               # For task IDs, extract sequential number for better sorting
               parse_task_sequential_number(attribute_value)
-            when 'status'
+            when "status"
               # Map status to priority for sorting
               status_priority(attribute_value)
-            when 'priority'
+            when "priority"
               # Map priority to numeric value
               priority_value(attribute_value)
             else
@@ -67,19 +67,19 @@ module CodingAgentTools
 
           def status_priority(status)
             case status&.downcase
-            when 'in-progress' then 0
-            when 'pending' then 1
-            when 'blocked' then 2
-            when 'done' then 3
+            when "in-progress" then 0
+            when "pending" then 1
+            when "blocked" then 2
+            when "done" then 3
             else 4
             end
           end
 
           def priority_value(priority)
             case priority&.downcase
-            when 'high' then 0
-            when 'medium' then 1
-            when 'low' then 2
+            when "high" then 0
+            when "medium" then 1
+            when "low" then 2
             else 3
             end
           end
@@ -92,12 +92,12 @@ module CodingAgentTools
           return nil unless sort_string&.is_a?(String)
 
           # Handle special case for implementation-order
-          if sort_string.strip == 'implementation-order'
-            return SortCriteria.new('implementation-order', :asc, sort_string)
+          if sort_string.strip == "implementation-order"
+            return SortCriteria.new("implementation-order", :asc, sort_string)
           end
 
           # Split on colon
-          parts = sort_string.split(':', 2)
+          parts = sort_string.split(":", 2)
           attribute = parts[0]&.strip
           direction_str = parts[1]&.strip
 
@@ -107,9 +107,9 @@ module CodingAgentTools
           direction = :asc
           if direction_str && !direction_str.empty?
             case direction_str.downcase
-            when 'asc', 'ascending'
+            when "asc", "ascending"
               direction = :asc
-            when 'desc', 'descending'
+            when "desc", "descending"
               direction = :desc
             else
               return nil # Invalid direction
@@ -126,7 +126,7 @@ module CodingAgentTools
           return [] unless sort_string&.is_a?(String)
 
           sorts = []
-          sort_parts = sort_string.split(',')
+          sort_parts = sort_string.split(",")
 
           sort_parts.each do |part|
             parsed = parse_sort(part.strip)
@@ -143,7 +143,7 @@ module CodingAgentTools
           return [] unless sorts&.is_a?(Array)
 
           errors = []
-          known_attributes = ['id', 'status', 'dependencies', 'title', 'priority', 'estimate', 'sort', 'implementation-order']
+          known_attributes = ["id", "status", "dependencies", "title", "priority", "estimate", "sort", "implementation-order"]
 
           sorts.each do |sort|
             unless known_attributes.include?(sort.attribute) || sort.attribute.match?(/^[a-zA-Z_][a-zA-Z0-9_]*$/)

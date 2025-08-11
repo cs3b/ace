@@ -15,14 +15,14 @@ module CodingAgentTools
       ) do
         # Validate required fields
         def validate!
-          raise ArgumentError, 'type is required' if type.nil? || type.empty?
-          raise ArgumentError, 'target_spec is required' if target_spec.nil? || target_spec.empty?
-          raise ArgumentError, 'content_type is required' if content_type.nil? || content_type.empty?
+          raise ArgumentError, "type is required" if type.nil? || type.empty?
+          raise ArgumentError, "target_spec is required" if target_spec.nil? || target_spec.empty?
+          raise ArgumentError, "content_type is required" if content_type.nil? || content_type.empty?
 
-          valid_types = ['git_diff', 'file_pattern', 'single_file']
+          valid_types = ["git_diff", "file_pattern", "single_file"]
           raise ArgumentError, "type must be one of: #{valid_types.join(", ")}" unless valid_types.include?(type)
 
-          valid_content_types = ['diff', 'xml']
+          valid_content_types = ["diff", "xml"]
           unless valid_content_types.include?(content_type)
             raise ArgumentError,
               "content_type must be one of: #{valid_content_types.join(", ")}"
@@ -33,12 +33,12 @@ module CodingAgentTools
 
         # Check if target is git-based
         def git_based?
-          type == 'git_diff'
+          type == "git_diff"
         end
 
         # Check if target is file-based
         def file_based?
-          ['file_pattern', 'single_file'].include?(type)
+          ["file_pattern", "single_file"].include?(type)
         end
 
         # Get file count
@@ -64,7 +64,7 @@ module CodingAgentTools
 
         # Special target keywords
         def self.special_keywords
-          ['staged', 'unstaged', 'working']
+          ["staged", "unstaged", "working"]
         end
 
         # Check if target is a special keyword

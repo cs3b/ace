@@ -1,76 +1,76 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Switch < Dry::CLI::Command
-          desc 'Switch branches across all repositories'
+          desc "Switch branches across all repositories"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :quiet, type: :boolean, default: false, aliases: ['q'],
-            desc: 'Quiet operation, suppress feedback messages'
+          option :quiet, type: :boolean, default: false, aliases: ["q"],
+            desc: "Quiet operation, suppress feedback messages"
 
-          option :force, type: :boolean, default: false, aliases: ['f'],
-            desc: 'Force switch, throw away local changes'
+          option :force, type: :boolean, default: false, aliases: ["f"],
+            desc: "Force switch, throw away local changes"
 
-          option :merge, type: :boolean, default: false, aliases: ['m'],
-            desc: '3-way merge between current branch, working tree, and new branch'
+          option :merge, type: :boolean, default: false, aliases: ["m"],
+            desc: "3-way merge between current branch, working tree, and new branch"
 
           option :detach, type: :boolean, default: false,
-            desc: 'Switch to a commit for inspection and discardable experiments'
+            desc: "Switch to a commit for inspection and discardable experiments"
 
-          option :create, type: :string, aliases: ['c'],
-            desc: 'Create a new branch and switch to it'
+          option :create, type: :string, aliases: ["c"],
+            desc: "Create a new branch and switch to it"
 
-          option :force_create, type: :string, aliases: ['C'],
-            desc: 'Create/reset and switch to a branch'
+          option :force_create, type: :string, aliases: ["C"],
+            desc: "Create/reset and switch to a branch"
 
           option :orphan, type: :string,
-            desc: 'Create a new orphan branch and switch to it'
+            desc: "Create a new orphan branch and switch to it"
 
           option :guess, type: :boolean, default: true,
-            desc: 'Try to find a tracking branch (default: true)'
+            desc: "Try to find a tracking branch (default: true)"
 
           option :no_guess, type: :boolean, default: false,
-            desc: 'Do not try to find a tracking branch'
+            desc: "Do not try to find a tracking branch"
 
-          option :track, type: :boolean, default: false, aliases: ['t'],
-            desc: 'Set up tracking relationship'
+          option :track, type: :boolean, default: false, aliases: ["t"],
+            desc: "Set up tracking relationship"
 
           option :no_track, type: :boolean, default: false,
-            desc: 'Do not set up tracking relationship'
+            desc: "Do not set up tracking relationship"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
           option :concurrent, type: :boolean, default: false,
-            desc: 'Execute switch operations concurrently across repositories'
+            desc: "Execute switch operations concurrently across repositories"
 
           argument :branch, type: :string, required: false,
-            desc: 'Branch name to switch to'
+            desc: "Branch name to switch to"
 
           example [
-            'main',
-            'feature-branch',
-            '--create new-feature',
-            '--force-create hotfix main',
-            '--detach HEAD~1',
-            '--orphan empty-branch',
-            '--no-guess feature-branch',
-            '--track origin/feature'
+            "main",
+            "feature-branch",
+            "--create new-feature",
+            "--force-create hotfix main",
+            "--detach HEAD~1",
+            "--orphan empty-branch",
+            "--no-guess feature-branch",
+            "--track origin/feature"
           ]
 
           def call(branch: nil, **options)
@@ -141,7 +141,7 @@ module CodingAgentTools
 
             return unless result[:repositories_processed]
 
-            repos_list = result[:repositories_processed].join(', ')
+            repos_list = result[:repositories_processed].join(", ")
             puts "Switch completed across repositories: #{repos_list}" unless options[:quiet]
           end
 
@@ -157,7 +157,7 @@ module CodingAgentTools
                 puts "[#{repo_name}] Switch completed successfully"
               end
             else
-              error_message = result[:error] || result[:stderr] || 'Switch operation failed'
+              error_message = result[:error] || result[:stderr] || "Switch operation failed"
               error_output("[#{repo_name}] #{error_message}")
             end
           end
@@ -184,7 +184,7 @@ module CodingAgentTools
                 end
               end
 
-              error_output('Use --debug flag for more information') unless options[:debug]
+              error_output("Use --debug flag for more information") unless options[:debug]
             end
 
             # Show any partial successes
@@ -193,7 +193,7 @@ module CodingAgentTools
             successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
             return unless successful_repos.any?
 
-            successful_names = successful_repos.keys.join(', ')
+            successful_names = successful_repos.keys.join(", ")
             puts "Partial success: Switch completed in repositories: #{successful_names}"
           end
 
@@ -204,7 +204,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

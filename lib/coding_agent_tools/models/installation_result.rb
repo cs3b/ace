@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'installation_stats'
+require_relative "installation_stats"
 
 module CodingAgentTools
   module Models
@@ -14,12 +14,12 @@ module CodingAgentTools
         @exit_code = exit_code
         @stats = case stats
         when InstallationStats
-                   stats
+          stats
         when Hash
-                   # Support hash for backward compatibility
-                   InstallationStats.new(**stats)
-                 else
-                   raise ArgumentError, 'stats must be InstallationStats or Hash'
+          # Support hash for backward compatibility
+          InstallationStats.new(**stats)
+        else
+          raise ArgumentError, "stats must be InstallationStats or Hash"
         end
       end
 

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../molecules/taskflow_management/task_file_loader'
-require_relative '../../molecules/taskflow_management/task_dependency_checker'
-require_relative '../../molecules/taskflow_management/release_path_resolver'
-require_relative '../../molecules/taskflow_management/release_resolver'
-require_relative '../../atoms/taskflow_management/directory_navigator'
-require 'set'
+require_relative "../../molecules/taskflow_management/task_file_loader"
+require_relative "../../molecules/taskflow_management/task_dependency_checker"
+require_relative "../../molecules/taskflow_management/release_path_resolver"
+require_relative "../../molecules/taskflow_management/release_resolver"
+require_relative "../../atoms/taskflow_management/directory_navigator"
+require "set"
 
 module CodingAgentTools
   module Organisms
@@ -50,7 +50,7 @@ module CodingAgentTools
 
         # Initialize TaskManager
         # @param base_path [String] Base path for task resolution
-        def initialize(base_path: '.')
+        def initialize(base_path: ".")
           @base_path = base_path
           @release_resolver = Molecules::TaskflowManagement::ReleasePathResolver
           @file_loader = Molecules::TaskflowManagement::TaskFileLoader
@@ -74,7 +74,7 @@ module CodingAgentTools
           if next_task
             NextTaskResult.new(next_task, true, nil)
           else
-            NextTaskResult.new(nil, true, 'No actionable tasks found')
+            NextTaskResult.new(nil, true, "No actionable tasks found")
           end
         rescue => e
           NextTaskResult.new(nil, false, "Error finding next task: #{e.message}")
@@ -85,7 +85,7 @@ module CodingAgentTools
         # @param statuses [Array<String>] Statuses to filter by (default: ['done', 'in-progress'])
         # @param release_path [String, nil] Optional specific release path
         # @return [RecentTasksResult] Result with recent tasks
-        def find_recent_tasks(since_seconds: 86_400, statuses: ['done', 'in-progress'], release_path: nil)
+        def find_recent_tasks(since_seconds: 86_400, statuses: ["done", "in-progress"], release_path: nil)
           since_time = since_seconds ? Time.now - since_seconds : nil
           all_tasks = []
 
@@ -112,15 +112,15 @@ module CodingAgentTools
           else
             # Search in both current and done directories (original behavior)
             search_paths = [
-              File.join(@base_path, 'dev-taskflow/current'),
-              File.join(@base_path, 'dev-taskflow/done')
+              File.join(@base_path, "dev-taskflow/current"),
+              File.join(@base_path, "dev-taskflow/done")
             ]
 
             search_paths.each do |base_dir|
               next unless File.exist?(base_dir) && File.directory?(base_dir)
 
               # Find all task files recursively
-              task_files = Dir.glob(File.join(base_dir, '**/tasks/*.md'))
+              task_files = Dir.glob(File.join(base_dir, "**/tasks/*.md"))
 
               task_files.each do |file_path|
                 # Check modification time (skip if no time filter)
@@ -196,9 +196,9 @@ module CodingAgentTools
           result = Molecules::TaskflowManagement::ReleaseResolver.resolve_release(release_path, base_path: @base_path)
 
           if result.success?
-            { success: true, info: result.release_info, error: nil }
+            {success: true, info: result.release_info, error: nil}
           else
-            { success: false, info: nil, error: result.error_message }
+            {success: false, info: nil, error: result.error_message}
           end
         end
 
@@ -207,17 +207,17 @@ module CodingAgentTools
           tasks_dir = if release_info.respond_to?(:tasks_directory)
             release_info.tasks_directory
           else
-            File.join(release_info[:path] || release_info.path, 'tasks')
+            File.join(release_info[:path] || release_info.path, "tasks")
           end
 
-          return { success: false, error: "Tasks directory not found: #{tasks_dir}" } unless File.exist?(tasks_dir)
+          return {success: false, error: "Tasks directory not found: #{tasks_dir}"} unless File.exist?(tasks_dir)
 
           load_result = @file_loader.load_tasks_from_directory(tasks_dir)
 
           if load_result.tasks.empty?
-            { success: false, error: "No tasks found in #{tasks_dir}" }
+            {success: false, error: "No tasks found in #{tasks_dir}"}
           else
-            { success: true, tasks: load_result.tasks, error: nil }
+            {success: true, tasks: load_result.tasks, error: nil}
           end
         end
 
@@ -229,7 +229,7 @@ module CodingAgentTools
 
           # Find actionable candidates (not done, all deps met)
           candidates = tasks.select do |task|
-            next false if task.status == 'done'
+            next false if task.status == "done"
 
             # Check if all dependencies are met
             dependency_result = @dependency_checker.check_task_dependencies(task.id, task_map)
@@ -239,9 +239,9 @@ module CodingAgentTools
           # Sort candidates by priority logic
           sorted_candidates = candidates.sort_by do |task|
             status_priority = case task.status&.downcase
-            when 'in-progress' then 0
-            when 'pending' then 1
-                              else 2
+            when "in-progress" then 0
+            when "pending" then 1
+            else 2
             end
 
             task_sequential_num = parse_task_sequential_number(task.id)
@@ -331,7 +331,7 @@ module CodingAgentTools
           when Array
             task.dependencies.map(&:to_s)
           when String
-            task.dependencies.split(',').map(&:strip)
+            task.dependencies.split(",").map(&:strip)
           else
             []
           end

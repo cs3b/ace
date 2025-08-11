@@ -5,14 +5,14 @@ module ClaudeTestHelpers
   # Sets up a temporary test environment for Claude commands
   # Creates necessary directory structure and returns the temp directory path
   def setup_claude_test_environment
-    @temp_dir = Dir.mktmpdir('claude_test')
-    @handbook_dir = File.join(@temp_dir, 'dev-handbook')
-    @claude_dir = File.join(@handbook_dir, '.integrations/claude')
-    @workflow_dir = File.join(@handbook_dir, 'workflow-instructions')
+    @temp_dir = Dir.mktmpdir("claude_test")
+    @handbook_dir = File.join(@temp_dir, "dev-handbook")
+    @claude_dir = File.join(@handbook_dir, ".integrations/claude")
+    @workflow_dir = File.join(@handbook_dir, "workflow-instructions")
 
     FileUtils.mkdir_p(@claude_dir)
     FileUtils.mkdir_p(@workflow_dir)
-    FileUtils.mkdir_p(File.join(@claude_dir, 'commands'))
+    FileUtils.mkdir_p(File.join(@claude_dir, "commands"))
 
     @temp_dir
   end
@@ -29,13 +29,13 @@ module ClaudeTestHelpers
   # @return [Object] Result of the command execution
   def execute_claude_command(command_name, options = {})
     command_class = case command_name
-    when 'generate-commands'
+    when "generate-commands"
       CodingAgentTools::Cli::Commands::Handbook::Claude::GenerateCommands
-    when 'validate'
+    when "validate"
       CodingAgentTools::Cli::Commands::Handbook::Claude::Validate
-    when 'integrate'
+    when "integrate"
       CodingAgentTools::Cli::Commands::Handbook::Claude::Integrate
-    when 'list'
+    when "list"
       CodingAgentTools::Cli::Commands::Handbook::Claude::List
     else
       raise ArgumentError, "Unknown Claude command: #{command_name}"
@@ -49,7 +49,7 @@ module ClaudeTestHelpers
   # @param content [String, nil] Optional workflow content
   def create_sample_workflow(name, content = nil)
     content ||= <<~MARKDOWN
-      # #{name.capitalize.gsub("-", " ")} Workflow
+      # #{name.capitalize.tr("-", " ")} Workflow
 
       ## Goal
       Test workflow for #{name}
@@ -83,7 +83,7 @@ module ClaudeTestHelpers
       workflow-instructions/#{workflow_name}.wf.md
     MARKDOWN
 
-    command_file = File.join(@claude_dir, 'commands', "#{workflow_name}.md")
+    command_file = File.join(@claude_dir, "commands", "#{workflow_name}.md")
     FileUtils.mkdir_p(File.dirname(command_file))
     File.write(command_file, content)
   end
@@ -94,7 +94,7 @@ module ClaudeTestHelpers
   # Helper to verify command generation
   # @param workflow_name [String] The workflow name to check
   def expect_command_generated(workflow_name)
-    command_file = File.join(@claude_dir, 'commands', "#{workflow_name}.md")
+    command_file = File.join(@claude_dir, "commands", "#{workflow_name}.md")
     expect(File.exist?(command_file)).to be true
   end
 

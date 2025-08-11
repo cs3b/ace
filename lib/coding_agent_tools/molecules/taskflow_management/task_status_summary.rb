@@ -17,7 +17,7 @@ module CodingAgentTools
         # @param tasks [Array<TaskData>] Collection of task data objects
         # @return [StatusSummary] Summary with counts and formatted text
         def self.generate_summary(tasks)
-          return StatusSummary.new({}, 0, 'Status: No tasks found') if tasks.nil? || tasks.empty?
+          return StatusSummary.new({}, 0, "Status: No tasks found") if tasks.nil? || tasks.empty?
 
           # Count tasks by status
           status_counts = Hash.new(0)
@@ -34,10 +34,10 @@ module CodingAgentTools
 
         private_class_method def self.normalize_status(status)
           # Handle nil/empty status values gracefully
-          return 'unknown' if status.nil? || status.to_s.strip.empty?
+          return "unknown" if status.nil? || status.to_s.strip.empty?
 
           # Normalize status to consistent format
-          status.to_s.strip.downcase.gsub(/[^a-z0-9_-]/, '_')
+          status.to_s.strip.downcase.gsub(/[^a-z0-9_-]/, "_")
         end
 
         private_class_method def self.format_summary(status_counts, total_count)
@@ -51,7 +51,7 @@ module CodingAgentTools
           end
 
           # Join with commas and add total
-          status_text = status_parts.join(', ')
+          status_text = status_parts.join(", ")
           "Status: #{status_text} (#{total_count} total)"
         end
       end

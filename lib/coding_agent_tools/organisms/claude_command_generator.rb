@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'fileutils'
-require_relative '../atoms/claude/workflow_scanner'
-require_relative '../atoms/claude/command_existence_checker'
-require_relative '../atoms/claude/yaml_frontmatter_validator'
-require_relative '../molecules/claude/command_metadata_inferrer'
-require_relative '../molecules/command_template_renderer'
+require "pathname"
+require "fileutils"
+require_relative "../atoms/claude/workflow_scanner"
+require_relative "../atoms/claude/command_existence_checker"
+require_relative "../atoms/claude/yaml_frontmatter_validator"
+require_relative "../molecules/claude/command_metadata_inferrer"
+require_relative "../molecules/command_template_renderer"
 
 module CodingAgentTools
   module Organisms
@@ -16,11 +16,11 @@ module CodingAgentTools
 
       def initialize(project_root = nil)
         @project_root = Pathname.new(project_root || find_project_root)
-        @workflow_dir = @project_root / 'dev-handbook/workflow-instructions'
-        @custom_dir = @project_root / 'dev-handbook/.integrations/claude/commands/_custom'
-        @generated_dir = @project_root / 'dev-handbook/.integrations/claude/commands/_generated'
-        @template_path = @project_root / 'dev-handbook/.integrations/claude/templates/command.md.tmpl'
-        @stats = { generated: 0, skipped: 0, errors: [] }
+        @workflow_dir = @project_root / "dev-handbook/workflow-instructions"
+        @custom_dir = @project_root / "dev-handbook/.integrations/claude/commands/_custom"
+        @generated_dir = @project_root / "dev-handbook/.integrations/claude/commands/_generated"
+        @template_path = @project_root / "dev-handbook/.integrations/claude/templates/command.md.tmpl"
+        @stats = {generated: 0, skipped: 0, errors: []}
 
         # Initialize atoms and molecules
         @metadata_inferrer = Molecules::Claude::CommandMetadataInferrer.new
@@ -54,11 +54,11 @@ module CodingAgentTools
         current = Pathname.pwd
         while current.parent != current
           # Check if we're in a submodule that has dev-handbook as a sibling
-          if (current.parent / 'dev-handbook').directory?
+          if (current.parent / "dev-handbook").directory?
             return current.parent
           end
           # Check if dev-handbook is a direct subdirectory
-          return current if (current / 'dev-handbook').directory?
+          return current if (current / "dev-handbook").directory?
           current = current.parent
         end
         Pathname.pwd
@@ -78,7 +78,7 @@ module CodingAgentTools
       def find_missing_commands(workflows, force = false)
         workflows.reject do |workflow|
           # Use CommandExistenceChecker to check for commands
-          search_paths = [@custom_dir, @generated_dir]
+          [@custom_dir, @generated_dir]
 
           custom_exists = Atoms::Claude::CommandExistenceChecker.exists?(workflow, [@custom_dir])
           generated_exists = Atoms::Claude::CommandExistenceChecker.exists?(workflow, [@generated_dir])
@@ -89,25 +89,25 @@ module CodingAgentTools
       end
 
       def display_dry_run(missing, force = false)
-        puts 'Scanning workflow instructions...'
+        puts "Scanning workflow instructions..."
         # Use WorkflowScanner to count workflows
         all_workflows = Atoms::Claude::WorkflowScanner.scan(@workflow_dir)
         puts "Found #{all_workflows.size} workflow files"
-        puts 'Checking existing commands...'
+        puts "Checking existing commands..."
         puts
 
         if missing.empty?
-          puts 'All workflows have corresponding commands.'
+          puts "All workflows have corresponding commands."
         else
-          puts 'Missing commands for:'
+          puts "Missing commands for:"
           missing.each do |workflow|
             puts "  - #{workflow}.wf.md"
           end
           puts
           if force
-            puts 'Would regenerate (--force):'
+            puts "Would regenerate (--force):"
           else
-            puts 'Would generate:'
+            puts "Would generate:"
           end
           missing.each do |workflow|
             puts "  - _generated/#{workflow}.md"
@@ -118,27 +118,27 @@ module CodingAgentTools
       end
 
       def generate_commands(workflows, force)
-        puts 'Scanning workflow instructions...'
+        puts "Scanning workflow instructions..."
         # Use WorkflowScanner to count all workflows
         all_workflows = Atoms::Claude::WorkflowScanner.scan(@workflow_dir)
         puts "Found #{all_workflows.size} workflow files"
-        puts 'Checking existing commands...'
+        puts "Checking existing commands..."
         puts
 
         # Count skipped workflows (those not in the workflows list due to existing commands)
         @stats[:skipped] = all_workflows.size - workflows.size
 
         if workflows.empty?
-          puts 'All workflows have corresponding commands.'
+          puts "All workflows have corresponding commands."
           return
         end
 
-        puts 'Missing commands for:'
+        puts "Missing commands for:"
         workflows.each do |workflow|
           puts "  - #{workflow}.wf.md"
         end
         puts
-        puts 'Generating commands...'
+        puts "Generating commands..."
 
         template_content = load_template
 
@@ -181,13 +181,13 @@ module CodingAgentTools
         metadata = @metadata_inferrer.infer(workflow_name)
 
         # Build YAML front-matter programmatically (safer than eval)
-        yaml_lines = ['---']
+        yaml_lines = ["---"]
         yaml_lines << "description: #{metadata[:description]}"
         yaml_lines << "allowed-tools: #{metadata[:allowed_tools]}" if metadata[:allowed_tools]
         yaml_lines << "argument-hint: \"#{metadata[:argument_hint]}\"" if metadata[:argument_hint]
         yaml_lines << "model: #{metadata[:model]}" if metadata[:model]
-        yaml_lines << '---'
-        yaml_lines << ''
+        yaml_lines << "---"
+        yaml_lines << ""
 
         # Use CommandTemplateRenderer to generate body
         body_content = @template_renderer.render(workflow_name)
@@ -200,76 +200,76 @@ module CodingAgentTools
         metadata = {}
 
         # Generate description from workflow name - more sophisticated
-        description = workflow.gsub('-', ' ')
-        description = description.split.map(&:capitalize).join(' ')
+        description = workflow.tr("-", " ")
+        description = description.split.map(&:capitalize).join(" ")
         # Special case handling for common abbreviations
-        description.gsub!(/\bApi\b/, 'API')
-        description.gsub!(/\bAdr\b/, 'ADR')
+        description.gsub!(/\bApi\b/, "API")
+        description.gsub!(/\bAdr\b/, "ADR")
         metadata[:description] = description
 
         # Comprehensive allowed-tools inference based on workflow type
-        case workflow
+        metadata[:allowed_tools] = case workflow
         # Git operations
         when /^git-/, /commit/, /rebase/, /merge/
-          metadata[:allowed_tools] = 'Bash(git *), Read, Write'
+          "Bash(git *), Read, Write"
         # Task management workflows
         when /^draft-task/, /^plan-task/, /^work-on-task/, /^review-task/, /^complete-task/
-          metadata[:allowed_tools] = 'Read, Write, TodoWrite, Bash(task-manager *)'
+          "Read, Write, TodoWrite, Bash(task-manager *)"
         # Creation workflows
         when /^create-adr/, /^create-api-docs/, /^create-user-docs/, /^create-reflection-note/
-          metadata[:allowed_tools] = 'Read, Write, Grep, Glob'
+          "Read, Write, Grep, Glob"
         when /^create-test-cases/
-          metadata[:allowed_tools] = 'Read, Write, Bash(bundle exec rspec), Grep'
+          "Read, Write, Bash(bundle exec rspec), Grep"
         # Testing and fixing workflows
         when /^test-/, /^validate-/
-          metadata[:allowed_tools] = 'Bash, Read, Grep'
+          "Bash, Read, Grep"
         when /^fix-tests/, /^fix-linting-issue/
-          metadata[:allowed_tools] = 'Read, Write, Edit, Bash(bundle exec *), Grep'
+          "Read, Write, Edit, Bash(bundle exec *), Grep"
         # Research and analysis workflows
         when /^research/, /analyze/
-          metadata[:allowed_tools] = 'Read, Grep, Glob, WebSearch'
+          "Read, Grep, Glob, WebSearch"
         # Synthesis workflows
         when /^synthesize-reflection-notes/
-          metadata[:allowed_tools] = 'Read, Write, Grep, TodoWrite'
+          "Read, Write, Grep, TodoWrite"
         # Project context loading
         when /^load-project-context/
-          metadata[:allowed_tools] = 'Read, LS'
+          "Read, LS"
         # Release workflows
         when /^draft-release/, /^release/
-          metadata[:allowed_tools] = 'Read, Write, Bash(task-manager release *), Grep'
+          "Read, Write, Bash(task-manager release *), Grep"
         # Update workflows
         when /^update-blueprint/
-          metadata[:allowed_tools] = 'Read, Write, Edit, Grep'
+          "Read, Write, Edit, Grep"
         # Capture workflows
         when /^capture-idea/
-          metadata[:allowed_tools] = 'Write, TodoWrite'
+          "Write, TodoWrite"
         # Default fallback for any uncategorized workflows
         else
-          metadata[:allowed_tools] = 'Read, Write, Edit, Grep'
+          "Read, Write, Edit, Grep"
         end
 
         # Add argument hints for parameterized workflows
         case workflow
         when /work-on-task/, /review-task/, /plan-task/, /complete-task/
-          metadata[:argument_hint] = '[task-id]'
+          metadata[:argument_hint] = "[task-id]"
         when /rebase-against/, /merge-from/
-          metadata[:argument_hint] = '[branch-name]'
+          metadata[:argument_hint] = "[branch-name]"
         when /fix-linting-issue-from/
-          metadata[:argument_hint] = '[linter-output-file]'
+          metadata[:argument_hint] = "[linter-output-file]"
         when /draft-release/, /release/
-          metadata[:argument_hint] = '[version]'
+          metadata[:argument_hint] = "[version]"
         when /capture-idea/
-          metadata[:argument_hint] = '[idea-description]'
+          metadata[:argument_hint] = "[idea-description]"
         when /create-adr/
-          metadata[:argument_hint] = '[decision-title]'
+          metadata[:argument_hint] = "[decision-title]"
         end
 
         # Select model for complex workflows
         case workflow
         when /analyze/, /synthesize/, /research/
-          metadata[:model] = 'opus'
+          metadata[:model] = "opus"
         when /fix-tests/, /fix-linting/
-          metadata[:model] = 'sonnet'  # Fast iteration for fixes
+          metadata[:model] = "sonnet"  # Fast iteration for fixes
         end
 
         metadata

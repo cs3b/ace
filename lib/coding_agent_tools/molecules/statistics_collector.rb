@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../models/installation_stats'
+require_relative "../models/installation_stats"
 
 module CodingAgentTools
   module Molecules
@@ -12,13 +12,13 @@ module CodingAgentTools
       def initialize(initial_stats: nil)
         @stats = case initial_stats
         when Models::InstallationStats
-                   initial_stats
+          initial_stats
         when Hash
-                   Models::InstallationStats.new(**initial_stats)
+          Models::InstallationStats.new(**initial_stats)
         when nil
-                   Models::InstallationStats.new
-                 else
-                   raise ArgumentError, 'initial_stats must be InstallationStats, Hash, or nil'
+          Models::InstallationStats.new
+        else
+          raise ArgumentError, "initial_stats must be InstallationStats, Hash, or nil"
         end
       end
 
@@ -60,7 +60,7 @@ module CodingAgentTools
         when :updated
           record_updated(file_type)
         when :failed
-          record_error(result[:error] || 'Unknown error')
+          record_error(result[:error] || "Unknown error")
         end
       end
 
@@ -88,7 +88,7 @@ module CodingAgentTools
         parts << "Skipped: #{@stats.skipped}" if @stats.skipped > 0
         parts << "Errors: #{@stats.errors.size}" if @stats.errors?
 
-        parts.join(', ')
+        parts.join(", ")
       end
 
       # Check if installation was successful

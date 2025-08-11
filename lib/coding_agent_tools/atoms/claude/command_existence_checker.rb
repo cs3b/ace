@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Atoms
@@ -44,13 +44,13 @@ module CodingAgentTools
           search_paths.each do |path|
             next unless path.is_a?(Pathname) && path.exist? && path.directory?
 
-            Dir.glob(File.join(path, '*.md')).each do |file_path|
+            Dir.glob(File.join(path, "*.md")).each do |file_path|
               pathname = Pathname.new(file_path)
               # Skip README files
-              next if pathname.basename.to_s.downcase == 'readme.md'
+              next if pathname.basename.to_s.downcase == "readme.md"
 
               commands << {
-                name: pathname.basename('.md').to_s,
+                name: pathname.basename(".md").to_s,
                 path: pathname
               }
             end

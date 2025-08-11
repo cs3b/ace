@@ -6,8 +6,8 @@ module CodingAgentTools
       # SearchResult represents a single search result item
       # This is a model - pure data structure with no behavior
       class SearchResult
-        attr_reader :type, :path, :line_number, :content, :column, 
-                    :match_start, :match_end, :submatches, :metadata
+        attr_reader :type, :path, :line_number, :content, :column,
+          :match_start, :match_end, :submatches, :metadata
 
         # @param type [Symbol] Type of result (:file, :match, :directory)
         # @param path [String] File or directory path
@@ -19,7 +19,7 @@ module CodingAgentTools
         # @param submatches [Array, nil] Array of submatch information
         # @param metadata [Hash] Additional metadata (size, modified_time, etc.)
         def initialize(type:, path:, line_number: nil, content: nil, column: nil,
-                      match_start: nil, match_end: nil, submatches: nil, metadata: {})
+          match_start: nil, match_end: nil, submatches: nil, metadata: {})
           @type = type
           @path = path
           @line_number = line_number
@@ -65,7 +65,7 @@ module CodingAgentTools
         # @return [String] File extension without the dot
         def extension
           ext = File.extname(@path)
-          ext.empty? ? '' : ext[1..-1]
+          ext.empty? ? "" : ext[1..]
         end
 
         # Get repository name from metadata
@@ -111,7 +111,7 @@ module CodingAgentTools
         # Convert to JSON representation
         # @return [String] JSON string representation
         def to_json(*args)
-          require 'json'
+          require "json"
           to_h.to_json(*args)
         end
 
@@ -174,7 +174,7 @@ module CodingAgentTools
           [@type, @path, @line_number, @content, @column, @match_start, @match_end].hash
         end
 
-        alias eql? ==
+        alias_method :eql?, :==
       end
     end
   end

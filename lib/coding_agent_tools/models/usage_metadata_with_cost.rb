@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'usage_metadata'
-require_relative 'pricing'
+require_relative "usage_metadata"
+require_relative "pricing"
 
 module CodingAgentTools
   module Models
@@ -120,10 +120,10 @@ module CodingAgentTools
       # Format cost summary for display
       # @return [String] Human-readable cost summary
       def cost_summary
-        return 'Cost: N/A' unless has_cost_info?
+        return "Cost: N/A" unless has_cost_info?
 
         lines = []
-        lines << 'Cost Summary:'
+        lines << "Cost Summary:"
         lines << "  Input: #{cost_calculation.format_cost(cost_calculation.input_cost)}"
         lines << "  Output: #{cost_calculation.format_cost(cost_calculation.output_cost)}"
 

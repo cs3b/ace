@@ -1,56 +1,56 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Status < Dry::CLI::Command
-          desc 'Show status across all repositories with clear prefixes'
+          desc "Show status across all repositories with clear prefixes"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :porcelain, type: :boolean, default: false,
-            desc: 'Give the output in porcelain format'
+            desc: "Give the output in porcelain format"
 
-          option :short, type: :boolean, default: false, aliases: ['s'],
-            desc: 'Give the output in short format'
+          option :short, type: :boolean, default: false, aliases: ["s"],
+            desc: "Give the output in short format"
 
-          option :verbose, type: :boolean, default: false, aliases: ['v'],
-            desc: 'Show detailed status information'
+          option :verbose, type: :boolean, default: false, aliases: ["v"],
+            desc: "Show detailed status information"
 
-          option :untracked_files, type: :string, default: 'normal',
-            desc: 'Show untracked files (no|normal|all)'
+          option :untracked_files, type: :string, default: "normal",
+            desc: "Show untracked files (no|normal|all)"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
           option :no_color, type: :boolean, default: false,
-            desc: 'Disable colored output'
+            desc: "Disable colored output"
 
           option :force_color, type: :boolean, default: true,
-            desc: 'Force colored output even when not on TTY (default: true)'
+            desc: "Force colored output even when not on TTY (default: true)"
 
           example [
-            '',
-            '--short',
-            '--verbose',
-            '--porcelain',
-            '--repository dev-tools',
-            '--main-only',
-            '--submodules-only',
-            '--no-color',
-            '--force-color'
+            "",
+            "--short",
+            "--verbose",
+            "--porcelain",
+            "--repository dev-tools",
+            "--main-only",
+            "--submodules-only",
+            "--no-color",
+            "--force-color"
           ]
 
           def call(**options)
@@ -89,7 +89,7 @@ module CodingAgentTools
             status_opts[:porcelain] = options[:porcelain] if options[:porcelain]
             status_opts[:short] = options[:short] if options[:short]
             status_opts[:verbose] = options[:verbose] if options[:verbose]
-            status_opts[:untracked_files] = options[:untracked_files] if options[:untracked_files] != 'normal'
+            status_opts[:untracked_files] = options[:untracked_files] if options[:untracked_files] != "normal"
 
             # Color options
             status_opts[:no_color] = options[:no_color] if options[:no_color]
@@ -112,7 +112,7 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               output.lines.each do |line|
                 next if line.strip.empty?
 
@@ -125,14 +125,14 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               if output.strip.empty?
                 puts "[#{repo_name}] Clean working directory"
               else
                 puts "[#{repo_name}] Status:"
                 output.lines.each { |line| puts "  #{line.rstrip}" }
               end
-              puts '' # Add spacing between repositories
+              puts "" # Add spacing between repositories
             end
           end
 
@@ -153,7 +153,7 @@ module CodingAgentTools
 
             return if options[:debug]
 
-            error_output('Use --debug flag for more information')
+            error_output("Use --debug flag for more information")
           end
 
           def handle_error(error, debug_enabled)
@@ -163,7 +163,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

@@ -1,47 +1,47 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Fetch < Dry::CLI::Command
-          desc 'Fetch changes from remote repositories'
+          desc "Fetch changes from remote repositories"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :all, type: :boolean, default: false,
-            desc: 'Fetch all remotes'
+            desc: "Fetch all remotes"
 
           option :prune, type: :boolean, default: false,
-            desc: 'Remove remote-tracking references that no longer exist on remote'
+            desc: "Remove remote-tracking references that no longer exist on remote"
 
           option :tags, type: :boolean, default: false,
-            desc: 'Fetch tags'
+            desc: "Fetch tags"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
           argument :remote, type: :string, required: false,
-            desc: 'Remote name to fetch from (optional)'
+            desc: "Remote name to fetch from (optional)"
 
           example [
-            '',
-            '--all',
-            '--prune',
-            '--tags',
-            'origin',
-            '--repository dev-tools'
+            "",
+            "--all",
+            "--prune",
+            "--tags",
+            "origin",
+            "--repository dev-tools"
           ]
 
           def call(remote: nil, **options)
@@ -91,7 +91,7 @@ module CodingAgentTools
             result[:results]&.each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               if output.strip.empty?
                 puts "[#{repo_name}] Fetch completed (no new changes)"
               else
@@ -102,7 +102,7 @@ module CodingAgentTools
 
             return unless result[:repositories_processed]
 
-            repos_list = result[:repositories_processed].join(', ')
+            repos_list = result[:repositories_processed].join(", ")
             puts "Fetch completed across repositories: #{repos_list}"
           end
 
@@ -122,7 +122,7 @@ module CodingAgentTools
                 end
               end
 
-              error_output('Use --debug flag for more information') unless options[:debug]
+              error_output("Use --debug flag for more information") unless options[:debug]
             end
 
             # Show any partial successes
@@ -131,7 +131,7 @@ module CodingAgentTools
             successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
             return unless successful_repos.any?
 
-            successful_names = successful_repos.keys.join(', ')
+            successful_names = successful_repos.keys.join(", ")
             puts "Partial success: Fetch completed in repositories: #{successful_names}"
           end
 
@@ -142,7 +142,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/taskflow_management/release_manager'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/taskflow_management/release_manager"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -10,22 +10,22 @@ module CodingAgentTools
       module Release
         # GenerateId command for creating next release directory with codename
         class GenerateId < Dry::CLI::Command
-          desc 'Create next release directory with codename'
+          desc "Create next release directory with codename"
 
           option :codename, type: :string,
             desc: "Codename for the release (e.g., 'whisty'). If not provided, generates unique codename using LLM"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :format, type: :string, default: 'text', values: ['text', 'json'],
-            desc: 'Output format (text or json)'
+          option :format, type: :string, default: "text", values: ["text", "json"],
+            desc: "Output format (text or json)"
 
           example [
-            '',
-            '--codename whisty',
-            '--format json',
-            '--debug'
+            "",
+            "--codename whisty",
+            "--format json",
+            "--debug"
           ]
 
           def call(**options)
@@ -44,7 +44,7 @@ module CodingAgentTools
           private
 
           def handle_result(result, options)
-            if options[:format] == 'json'
+            if options[:format] == "json"
               handle_json_result(result)
             else
               handle_text_result(result)
@@ -65,7 +65,7 @@ module CodingAgentTools
           end
 
           def handle_json_result(result)
-            require 'json'
+            require "json"
 
             output = if result.success?
               {
@@ -91,7 +91,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

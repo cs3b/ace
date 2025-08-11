@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/code/file_content_reader'
-require_relative '../../atoms/yaml_reader'
-require_relative '../../models/code/review_prompt'
-require 'yaml'
-require 'time'
-require 'stringio'
+require_relative "../../atoms/code/file_content_reader"
+require_relative "../../atoms/yaml_reader"
+require_relative "../../models/code/review_prompt"
+require "yaml"
+require "time"
+require "stringio"
 
 module CodingAgentTools
   module Molecules
@@ -60,7 +60,7 @@ module CodingAgentTools
         # @param session_dir [String] session directory path
         # @return [Hash] {prompt_file: String, success: Boolean, error: String}
         def save_prompt(prompt, session_dir)
-          prompt_file = File.join(session_dir, 'prompt.md')
+          prompt_file = File.join(session_dir, "prompt.md")
 
           begin
             File.write(prompt_file, prompt.combined_content)
@@ -90,15 +90,15 @@ module CodingAgentTools
           primary_focus = focus.split.first
 
           case primary_focus
-          when 'code'
-            'dev-handbook/templates/review-code/system.prompt.md'
-          when 'tests'
-            'dev-handbook/templates/review-test/system.prompt.md'
-          when 'docs'
-            'dev-handbook/templates/review-docs/system.prompt.md'
+          when "code"
+            "dev-handbook/templates/review-code/system.prompt.md"
+          when "tests"
+            "dev-handbook/templates/review-test/system.prompt.md"
+          when "docs"
+            "dev-handbook/templates/review-docs/system.prompt.md"
           else
             # Default to code review template
-            'dev-handbook/templates/review-code/system.prompt.md'
+            "dev-handbook/templates/review-code/system.prompt.md"
           end
         end
 
@@ -125,52 +125,52 @@ module CodingAgentTools
         # @return [String] combined content
         def build_combined_content(session:, target_content:, context:, focus_areas:)
           # Determine content type
-          content_type = target_content.start_with?('<?xml') ? 'file' : 'diff'
+          content_type = target_content.start_with?("<?xml") ? "file" : "diff"
 
           # Build YAML frontmatter
           frontmatter = {
-            'generated' => Time.now.iso8601,
-            'target' => session.target,
-            'focus' => session.focus,
-            'context' => context.mode,
-            'type' => 'review-prompt'
+            "generated" => Time.now.iso8601,
+            "target" => session.target,
+            "focus" => session.focus,
+            "context" => context.mode,
+            "type" => "review-prompt"
           }
 
           content = StringIO.new
-          content.puts '---'
+          content.puts "---"
           content.puts frontmatter.to_yaml.lines[1..].join
-          content.puts '---'
+          content.puts "---"
           content.puts
-          content.puts '<review-prompt>'
+          content.puts "<review-prompt>"
 
           # Add project context
           if context.loaded?
             content.puts "\n  <project-context>"
             context.documents.each do |doc|
               content.puts "    <document type=\"#{doc[:type]}\">"
-              content.puts '      <![CDATA['
+              content.puts "      <![CDATA["
               content.puts doc[:content]
-              content.puts '      ]]>'
-              content.puts '    </document>'
+              content.puts "      ]]>"
+              content.puts "    </document>"
             end
-            content.puts '  </project-context>'
+            content.puts "  </project-context>"
           end
 
           # Add review target
           content.puts "\n  <review-target type=\"#{content_type}\">"
-          content.puts '    <![CDATA['
+          content.puts "    <![CDATA["
           content.puts target_content
-          content.puts '    ]]>'
-          content.puts '  </review-target>'
+          content.puts "    ]]>"
+          content.puts "  </review-target>"
 
           # Add focus areas
           content.puts "\n  <focus-areas type=\"#{session.focus}\">"
           focus_areas.each do |area|
             content.puts "    <area>#{area}</area>"
           end
-          content.puts '  </focus-areas>'
+          content.puts "  </focus-areas>"
 
-          content.puts '</review-prompt>'
+          content.puts "</review-prompt>"
 
           content.string
         end

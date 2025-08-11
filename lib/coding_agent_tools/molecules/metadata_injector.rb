@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'yaml'
-require_relative '../atoms/taskflow_management/yaml_frontmatter_parser'
-require_relative '../models/command_metadata'
+require "yaml"
+require_relative "../atoms/taskflow_management/yaml_frontmatter_parser"
+require_relative "../models/command_metadata"
 
 module CodingAgentTools
   module Molecules
@@ -21,11 +21,11 @@ module CodingAgentTools
         # Convert metadata to hash if it's a CommandMetadata object
         metadata_hash = case metadata
         when Models::CommandMetadata
-                          metadata.to_h
+          metadata.to_h
         when Hash
-                          metadata
-                        else
-                          raise ArgumentError, 'metadata must be Hash or CommandMetadata'
+          metadata
+        else
+          raise ArgumentError, "metadata must be Hash or CommandMetadata"
         end
 
         # Parse existing content
@@ -80,13 +80,13 @@ module CodingAgentTools
         merged_metadata = (parse_result.frontmatter || {}).merge(new_metadata)
 
         # Rebuild content with updated frontmatter
-        frontmatter_yaml = YAML.dump(merged_metadata).sub(/^---\n/, '')
+        frontmatter_yaml = YAML.dump(merged_metadata).sub(/^---\n/, "")
         "---\n#{frontmatter_yaml}---\n#{parse_result.content}"
       end
 
       def add_new_frontmatter(content, metadata)
         # Create new frontmatter
-        frontmatter_yaml = YAML.dump(metadata).sub(/^---\n/, '')
+        frontmatter_yaml = YAML.dump(metadata).sub(/^---\n/, "")
 
         # Add to beginning of content
         "---\n#{frontmatter_yaml}---\n\n#{content}"

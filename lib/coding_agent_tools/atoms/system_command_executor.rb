@@ -10,16 +10,16 @@ module CodingAgentTools
       # @param timeout [Integer] Timeout in seconds (default: 120)
       # @return [Hash] Result with success status, output, and error
       def execute(command, timeout: 120)
-        return { success: false, error: 'Command cannot be nil' } if command.nil?
-        return { success: false, error: 'Command cannot be empty' } if command.strip.empty?
+        return {success: false, error: "Command cannot be nil"} if command.nil?
+        return {success: false, error: "Command cannot be empty"} if command.strip.empty?
 
         begin
           # Use Open3 for better process control
-          require 'open3'
-          require 'timeout'
+          require "open3"
+          require "timeout"
 
-          output = ''
-          error_output = ''
+          output = ""
+          error_output = ""
           exit_status = nil
 
           Timeout.timeout(timeout) do
@@ -35,17 +35,17 @@ module CodingAgentTools
           end
 
           if exit_status == 0
-            { success: true, output: output, error: nil }
+            {success: true, output: output, error: nil}
           else
             error_msg = error_output.empty? ? "Command failed (exit code: #{exit_status})" : error_output
-            { success: false, output: output, error: error_msg }
+            {success: false, output: output, error: error_msg}
           end
         rescue Timeout::Error
-          { success: false, error: "Command timed out after #{timeout} seconds" }
+          {success: false, error: "Command timed out after #{timeout} seconds"}
         rescue Errno::ENOENT => e
-          { success: false, error: "Command not found: #{e.message}" }
+          {success: false, error: "Command not found: #{e.message}"}
         rescue => e
-          { success: false, error: "Command execution failed: #{e.message}" }
+          {success: false, error: "Command execution failed: #{e.message}"}
         end
       end
 

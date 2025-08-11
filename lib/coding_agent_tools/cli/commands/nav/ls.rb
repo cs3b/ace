@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
+require "dry/cli"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Nav
         class Ls < Dry::CLI::Command
-          desc 'Intelligent directory listing with path autocorrection'
+          desc "Intelligent directory listing with path autocorrection"
 
-          argument :path, desc: 'Directory path to list (uses autocorrection if not found locally)'
-          option :long, type: :boolean, default: false, desc: 'Use long format (ls -l)'
-          option :all, type: :boolean, default: false, desc: 'Show hidden files (ls -a)'
-          option :autocorrect, type: :boolean, default: true, desc: 'Enable path autocorrection'
+          argument :path, desc: "Directory path to list (uses autocorrection if not found locally)"
+          option :long, type: :boolean, default: false, desc: "Use long format (ls -l)"
+          option :all, type: :boolean, default: false, desc: "Show hidden files (ls -a)"
+          option :autocorrect, type: :boolean, default: true, desc: "Enable path autocorrection"
 
           def call(path: nil, **options)
             # Initialize components
@@ -48,24 +48,24 @@ module CodingAgentTools
           private
 
           def build_ls_command(target_dir, options)
-            cmd_parts = ['ls']
+            cmd_parts = ["ls"]
 
             # Add flags based on options
             flags = []
-            flags << 'l' if options[:long]
-            flags << 'a' if options[:all]
+            flags << "l" if options[:long]
+            flags << "a" if options[:all]
 
             cmd_parts << "-#{flags.join("")}" unless flags.empty?
 
             # Add target directory (quoted for safety)
             cmd_parts << "'#{target_dir}'"
 
-            cmd_parts.join(' ')
+            cmd_parts.join(" ")
           end
 
           def resolve_target_directory(path, autocorrect)
             # If no path provided, use current directory
-            return '.' unless path
+            return "." unless path
 
             # Check if path exists locally first
             return path if Dir.exist?(path)
@@ -77,7 +77,7 @@ module CodingAgentTools
             end
 
             # Check if input uses scoped pattern syntax (scope:pattern)
-            if path.include?(':')
+            if path.include?(":")
               result = @path_resolver.resolve_scoped_pattern(path)
 
               if result[:success]

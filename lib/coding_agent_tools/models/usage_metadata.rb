@@ -76,25 +76,25 @@ module CodingAgentTools
       # Check if metadata indicates successful completion
       # @return [Boolean] True if request completed successfully
       def successful?
-        finish_reason == 'stop'
+        finish_reason == "stop"
       end
 
       # Check if request was truncated due to length limits
       # @return [Boolean] True if truncated due to length
       def truncated?
-        finish_reason == 'length'
+        finish_reason == "length"
       end
 
       # Check if request had errors
       # @return [Boolean] True if request failed
       def error?
-        finish_reason == 'error'
+        finish_reason == "error"
       end
 
       # Check if request was cancelled
       # @return [Boolean] True if request was cancelled
       def cancelled?
-        finish_reason == 'cancelled'
+        finish_reason == "cancelled"
       end
 
       # Calculate tokens per second rate

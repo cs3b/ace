@@ -1,68 +1,68 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Log < Dry::CLI::Command
-          desc 'Show commit logs across repositories with repository names per commit'
+          desc "Show commit logs across repositories with repository names per commit"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
           option :oneline, type: :boolean, default: false,
-            desc: 'Show commits in oneline format'
+            desc: "Show commits in oneline format"
 
           option :graph, type: :boolean, default: false,
-            desc: 'Show commit graph'
+            desc: "Show commit graph"
 
           option :since, type: :string,
             desc: "Show commits since date (e.g., '2 weeks ago')"
 
           option :until, type: :string,
-            desc: 'Show commits until date'
+            desc: "Show commits until date"
 
           option :author, type: :string,
-            desc: 'Show commits by specific author'
+            desc: "Show commits by specific author"
 
           option :grep, type: :string,
-            desc: 'Search commit messages'
+            desc: "Search commit messages"
 
-          option :max_count, type: :integer, aliases: ['n'],
-            desc: 'Maximum number of commits to show'
+          option :max_count, type: :integer, aliases: ["n"],
+            desc: "Maximum number of commits to show"
 
           option :separated, type: :boolean, default: false,
-            desc: 'Show commits grouped by repository (default: show repository with each commit)'
+            desc: "Show commits grouped by repository (default: show repository with each commit)"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
           option :no_color, type: :boolean, default: false,
-            desc: 'Disable colored output'
+            desc: "Disable colored output"
 
           option :force_color, type: :boolean, default: true,
-            desc: 'Force colored output even when not on TTY (default: true)'
+            desc: "Force colored output even when not on TTY (default: true)"
 
           example [
-            '',
-            '--oneline -n 10',
+            "",
+            "--oneline -n 10",
             "--graph --since '1 week ago'",
             "--author 'John Doe'",
             "--grep 'fix bug'",
-            '--separated',
-            '--repository dev-tools',
-            '--no-color',
-            '--force-color'
+            "--separated",
+            "--repository dev-tools",
+            "--no-color",
+            "--force-color"
           ]
 
           def call(**options)
@@ -138,11 +138,11 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               output.lines.each do |line|
                 next if line.strip.empty?
 
-                all_commits << { repo: repo_name, line: line.rstrip }
+                all_commits << {repo: repo_name, line: line.rstrip}
               end
             end
 
@@ -156,12 +156,12 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               next if output.strip.empty?
 
               puts "[#{repo_name}] Recent commits:"
               output.lines.each { |line| puts "  #{line.rstrip}" }
-              puts '' # Add spacing between repositories
+              puts "" # Add spacing between repositories
             end
           end
 
@@ -181,7 +181,7 @@ module CodingAgentTools
                 end
               end
 
-              error_output('Use --debug flag for more information') unless options[:debug]
+              error_output("Use --debug flag for more information") unless options[:debug]
             end
 
             # Show any partial successes
@@ -190,7 +190,7 @@ module CodingAgentTools
             successful_repos = result[:results].select { |_, repo_result| repo_result[:success] }
             return unless successful_repos.any?
 
-            successful_names = successful_repos.keys.join(', ')
+            successful_names = successful_repos.keys.join(", ")
             puts "Partial success: Log shown for repositories: #{successful_names}"
           end
 
@@ -201,7 +201,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

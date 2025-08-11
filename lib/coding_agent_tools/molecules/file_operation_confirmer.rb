@@ -33,19 +33,19 @@ module CodingAgentTools
         if force
           @security_logger.log_event(:overwrite_confirmed,
             path: file_path,
-            metadata: { forced: true, reason: 'Force flag provided' })
-          return ConfirmationResult.new(true, 'Force flag provided', true)
+            metadata: {forced: true, reason: "Force flag provided"})
+          return ConfirmationResult.new(true, "Force flag provided", true)
         end
 
         # Check if file exists
-        return ConfirmationResult.new(true, 'File does not exist', true) unless File.exist?(file_path)
+        return ConfirmationResult.new(true, "File does not exist", true) unless File.exist?(file_path)
 
         # In non-interactive environments, deny by default for safety
         unless interactive_environment?
           @security_logger.log_event(:overwrite_denied,
             path: file_path,
-            metadata: { reason: 'Non-interactive environment', auto_decision: true })
-          return ConfirmationResult.new(false, 'Non-interactive environment (use --force to override)', true)
+            metadata: {reason: "Non-interactive environment", auto_decision: true})
+          return ConfirmationResult.new(false, "Non-interactive environment (use --force to override)", true)
         end
 
         # Interactive confirmation
@@ -54,11 +54,11 @@ module CodingAgentTools
         if result.confirmed?
           @security_logger.log_event(:overwrite_confirmed,
             path: file_path,
-            metadata: { interactive: true, reason: result.reason })
+            metadata: {interactive: true, reason: result.reason})
         else
           @security_logger.log_event(:overwrite_denied,
             path: file_path,
-            metadata: { interactive: true, reason: result.reason })
+            metadata: {interactive: true, reason: result.reason})
         end
 
         result
@@ -69,28 +69,28 @@ module CodingAgentTools
       def interactive_environment?
         # Allow environment override for development scenarios
         # This is useful for AI coding environments like Claude Code
-        if ENV['CODING_AGENT_TOOLS_FORCE_INTERACTIVE']
-          debug_log('Environment override: FORCE_INTERACTIVE enabled')
-          return ENV['CODING_AGENT_TOOLS_FORCE_INTERACTIVE'] == 'true'
+        if ENV["CODING_AGENT_TOOLS_FORCE_INTERACTIVE"]
+          debug_log("Environment override: FORCE_INTERACTIVE enabled")
+          return ENV["CODING_AGENT_TOOLS_FORCE_INTERACTIVE"] == "true"
         end
 
         # Check for common CI environment indicators first
         ci_indicators = [
-          'CI',
-          'CONTINUOUS_INTEGRATION',
-          'GITHUB_ACTIONS',
-          'GITLAB_CI',
-          'TRAVIS',
-          'CIRCLECI',
-          'JENKINS_URL',
-          'BUILDKITE',
-          'DRONE'
+          "CI",
+          "CONTINUOUS_INTEGRATION",
+          "GITHUB_ACTIONS",
+          "GITLAB_CI",
+          "TRAVIS",
+          "CIRCLECI",
+          "JENKINS_URL",
+          "BUILDKITE",
+          "DRONE"
         ]
 
         # If any CI indicator is set, we're definitely in CI
         ci_detected = ci_indicators.any? { |var| ENV[var] }
         if ci_detected
-          debug_log('CI environment detected, treating as non-interactive')
+          debug_log("CI environment detected, treating as non-interactive")
           return false
         end
 
@@ -101,16 +101,16 @@ module CodingAgentTools
         # but are still interactive (like Claude Code), be more permissive
         if !has_tty
           # Check for known development environment indicators
-          if ENV['TERM'] || ENV['CLAUDE_CODE'] || ENV['VSCODE_PID']
-            debug_log('Development environment detected without TTY, treating as interactive')
+          if ENV["TERM"] || ENV["CLAUDE_CODE"] || ENV["VSCODE_PID"]
+            debug_log("Development environment detected without TTY, treating as interactive")
             return true
           end
 
-          debug_log('No TTY and no development environment indicators, treating as non-interactive')
+          debug_log("No TTY and no development environment indicators, treating as non-interactive")
           return false
         end
 
-        debug_log('TTY detected and no CI environment, treating as interactive')
+        debug_log("TTY detected and no CI environment, treating as interactive")
         true
       end
 
@@ -119,7 +119,7 @@ module CodingAgentTools
       # Create default security logger
       # @return [SecurityLogger] Default logger instance
       def create_default_logger
-        require_relative '../atoms/security_logger'
+        require_relative "../atoms/security_logger"
         Atoms::SecurityLogger.new
       end
 
@@ -144,17 +144,17 @@ module CodingAgentTools
           end
 
           case response
-          when 'y', 'yes'
-            ConfirmationResult.new(true, 'User confirmed', false)
-          when 'n', 'no', '', nil
-            ConfirmationResult.new(false, 'User declined', false)
+          when "y", "yes"
+            ConfirmationResult.new(true, "User confirmed", false)
+          when "n", "no", "", nil
+            ConfirmationResult.new(false, "User declined", false)
           else
             # Invalid response, treat as decline for safety
-            ConfirmationResult.new(false, 'Invalid response (treated as decline)', false)
+            ConfirmationResult.new(false, "Invalid response (treated as decline)", false)
           end
         rescue => e
           # If anything goes wrong with the prompt, err on the side of caution
-          @security_logger.log_error(e, context: { operation: 'user_prompt', file_path: file_path })
+          @security_logger.log_error(e, context: {operation: "user_prompt", file_path: file_path})
           ConfirmationResult.new(false, "Prompt error (#{e.class.name})", true)
         end
       end
@@ -163,7 +163,7 @@ module CodingAgentTools
       # @param message [String] Debug message to log
       def debug_log(message)
         # Only log if debug environment variable is set
-        puts "Debug: #{message}" if ENV['CODING_AGENT_TOOLS_DEBUG']
+        puts "Debug: #{message}" if ENV["CODING_AGENT_TOOLS_DEBUG"]
       end
     end
   end

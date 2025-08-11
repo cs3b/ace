@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
+require "dry/cli"
 
 module CodingAgentTools
   module Cli

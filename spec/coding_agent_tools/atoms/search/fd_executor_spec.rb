@@ -16,16 +16,16 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
     it "returns true when fd is installed" do
       allow(mock_shell_executor).to receive(:execute)
         .with("which fd")
-        .and_return({ success: true })
-      
+        .and_return({success: true})
+
       expect(executor.available?).to be true
     end
 
     it "returns false when fd is not installed" do
       allow(mock_shell_executor).to receive(:execute)
         .with("which fd")
-        .and_return({ success: false })
-      
+        .and_return({success: false})
+
       expect(executor.available?).to be false
     end
   end
@@ -44,9 +44,9 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
             output: "lib/file1.rb\nlib/file2.rb\n",
             exit_code: 0
           })
-        
+
         result = executor.find_files("*.rb")
-        
+
         expect(result[:success]).to be true
         expect(result[:files]).to contain_exactly("lib/file1.rb", "lib/file2.rb")
       end
@@ -59,7 +59,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
             output: "",
             exit_code: 0
           })
-        
+
         executor.find_files("pattern", case_insensitive: true)
       end
 
@@ -71,7 +71,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
             output: "",
             exit_code: 0
           })
-        
+
         executor.find_files("pattern", hidden: true)
       end
 
@@ -83,7 +83,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
             output: "",
             exit_code: 0
           })
-        
+
         executor.find_files("pattern", max_depth: 3)
       end
     end
@@ -95,7 +95,7 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
 
       it "returns error response" do
         result = executor.find_files("pattern")
-        
+
         expect(result[:success]).to be false
         expect(result[:error]).to include("fd not available")
       end
@@ -105,20 +105,20 @@ RSpec.describe CodingAgentTools::Atoms::Search::FdExecutor do
   describe "#build_fd_command" do
     it "builds basic command" do
       command = executor.send(:build_fd_command, "*.rb", {})
-      
+
       expect(command).to include("fd")
       expect(command).to include("*.rb")
     end
 
     it "adds file type flag" do
       command = executor.send(:build_fd_command, "pattern", type: "file")
-      
+
       expect(command).to include("--type file")
     end
 
     it "adds extension filter" do
       command = executor.send(:build_fd_command, "pattern", extension: "rb")
-      
+
       expect(command).to include("--extension rb")
     end
   end

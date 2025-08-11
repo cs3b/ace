@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'stringio'
-require 'tempfile'
+require "spec_helper"
+require "stringio"
+require "tempfile"
 
 RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
   let(:security_logger) { instance_double(CodingAgentTools::Atoms::SecurityLogger) }
@@ -21,37 +21,37 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
     allow(security_logger).to receive(:log_error)
   end
 
-  describe '#initialize' do
-    it 'creates instance with default logger when none provided' do
+  describe "#initialize" do
+    it "creates instance with default logger when none provided" do
       confirmer = described_class.new
       expect(confirmer.security_logger).to be_a(CodingAgentTools::Atoms::SecurityLogger)
     end
 
-    it 'uses provided security logger' do
+    it "uses provided security logger" do
       expect(confirmer.security_logger).to eq(security_logger)
     end
   end
 
-  describe '#confirm_overwrite' do
-    let(:test_file) { Tempfile.new('test') }
+  describe "#confirm_overwrite" do
+    let(:test_file) { Tempfile.new("test") }
 
     after do
       test_file.close
       test_file.unlink
     end
 
-    context 'with force flag' do
-      it 'auto-confirms when force is true' do
+    context "with force flag" do
+      it "auto-confirms when force is true" do
         result = confirmer.confirm_overwrite(test_file.path, force: true)
 
         expect(result.confirmed?).to be true
         expect(result.auto_decision?).to be true
-        expect(result.reason).to eq('Force flag provided')
+        expect(result.reason).to eq("Force flag provided")
 
         expect(security_logger).to have_received(:log_event).with(:overwrite_confirmed, anything)
       end
 
-      it 'logs forced overwrite with metadata' do
+      it "logs forced overwrite with metadata" do
         confirmer.confirm_overwrite(test_file.path, force: true)
 
         expect(security_logger).to have_received(:log_event).with(
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
     end
 
-    context 'with non-existent file' do
+    context "with non-existent file" do
       it "auto-confirms when file doesn't exist" do
         non_existent_file = "/tmp/does_not_exist_#{Time.now.to_i}.txt"
 
@@ -69,27 +69,27 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
 
         expect(result.confirmed?).to be true
         expect(result.auto_decision?).to be true
-        expect(result.reason).to eq('File does not exist')
+        expect(result.reason).to eq("File does not exist")
       end
     end
 
-    context 'in non-interactive environment' do
+    context "in non-interactive environment" do
       before do
         # Mock non-interactive environment
         allow(confirmer).to receive(:interactive_environment?).and_return(false)
       end
 
-      it 'denies overwrite by default' do
+      it "denies overwrite by default" do
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
         expect(result.auto_decision?).to be true
-        expect(result.reason).to include('Non-interactive environment')
+        expect(result.reason).to include("Non-interactive environment")
 
         expect(security_logger).to have_received(:log_event).with(:overwrite_denied, anything)
       end
 
-      it 'logs denial with auto-decision metadata' do
+      it "logs denial with auto-decision metadata" do
         confirmer.confirm_overwrite(test_file.path)
 
         expect(security_logger).to have_received(:log_event).with(
@@ -99,7 +99,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
     end
 
-    context 'in interactive environment' do
+    context "in interactive environment" do
       before do
         # Mock interactive environment
         allow(confirmer).to receive(:interactive_environment?).and_return(true)
@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
 
         expect(result.confirmed?).to be true
         expect(result.auto_decision?).to be false
-        expect(result.reason).to eq('User confirmed')
+        expect(result.reason).to eq("User confirmed")
 
         expect(security_logger).to have_received(:log_event).with(:overwrite_confirmed, anything)
       end
@@ -125,7 +125,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.confirmed?).to be true
-        expect(result.reason).to eq('User confirmed')
+        expect(result.reason).to eq("User confirmed")
       end
 
       it "denies when user responds with 'n'" do
@@ -135,7 +135,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
-        expect(result.reason).to eq('User declined')
+        expect(result.reason).to eq("User declined")
 
         expect(security_logger).to have_received(:log_event).with(:overwrite_denied, anything)
       end
@@ -147,30 +147,30 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
-        expect(result.reason).to eq('User declined')
+        expect(result.reason).to eq("User declined")
       end
 
-      it 'denies when user responds with empty string' do
+      it "denies when user responds with empty string" do
         input_io.string = "\n"
         input_io.rewind
 
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
-        expect(result.reason).to eq('User declined')
+        expect(result.reason).to eq("User declined")
       end
 
-      it 'denies when user responds with invalid input' do
+      it "denies when user responds with invalid input" do
         input_io.string = "maybe\n"
         input_io.rewind
 
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
-        expect(result.reason).to eq('Invalid response (treated as decline)')
+        expect(result.reason).to eq("Invalid response (treated as decline)")
       end
 
-      it 'displays appropriate prompt' do
+      it "displays appropriate prompt" do
         input_io.string = "n\n"
         input_io.rewind
 
@@ -178,31 +178,31 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
 
         output_io.rewind
         prompt = output_io.read
-        expect(prompt).to include('already exists')
-        expect(prompt).to include('Overwrite?')
-        expect(prompt).to include('[y/N]')
+        expect(prompt).to include("already exists")
+        expect(prompt).to include("Overwrite?")
+        expect(prompt).to include("[y/N]")
       end
 
-      it 'handles prompt errors gracefully' do
+      it "handles prompt errors gracefully" do
         # Simulate an error during input reading
-        allow(input_io).to receive(:gets).and_raise(StandardError.new('Input error'))
+        allow(input_io).to receive(:gets).and_raise(StandardError.new("Input error"))
 
         result = confirmer.confirm_overwrite(test_file.path)
 
         expect(result.denied?).to be true
         expect(result.auto_decision?).to be true
-        expect(result.reason).to include('Prompt error')
+        expect(result.reason).to include("Prompt error")
 
         expect(security_logger).to have_received(:log_error)
       end
     end
 
-    context 'interactive confirmation metadata' do
+    context "interactive confirmation metadata" do
       before do
         allow(confirmer).to receive(:interactive_environment?).and_return(true)
       end
 
-      it 'logs confirmation with interactive metadata' do
+      it "logs confirmation with interactive metadata" do
         input_io.string = "y\n"
         input_io.rewind
 
@@ -214,7 +214,7 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         )
       end
 
-      it 'logs denial with interactive metadata' do
+      it "logs denial with interactive metadata" do
         input_io.string = "n\n"
         input_io.rewind
 
@@ -228,16 +228,16 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
     end
   end
 
-  describe '#interactive_environment?' do
+  describe "#interactive_environment?" do
     let(:real_confirmer) { described_class.new(security_logger: security_logger) }
 
-    context 'with TTY' do
+    context "with TTY" do
       before do
         allow($stdin).to receive(:tty?).and_return(true)
         allow($stdout).to receive(:tty?).and_return(true)
       end
 
-      it 'returns true when no CI environment detected' do
+      it "returns true when no CI environment detected" do
         # Mock all ENV access
         allow(ENV).to receive(:[]).and_return(nil)
         allow($stdin).to receive(:tty?).and_return(true)
@@ -246,26 +246,26 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
         expect(real_confirmer.interactive_environment?).to be true
       end
 
-      it 'returns false when CI environment detected' do
+      it "returns false when CI environment detected" do
         # Mock all ENV access, with CI set to true
         allow(ENV).to receive(:[]) do |key|
-          key == 'CI' ? 'true' : nil
+          (key == "CI") ? "true" : nil
         end
 
         expect(real_confirmer.interactive_environment?).to be false
       end
 
-      it 'detects various CI environments' do
+      it "detects various CI environments" do
         ci_environments = {
-          'CI' => 'true',
-          'CONTINUOUS_INTEGRATION' => 'true',
-          'GITHUB_ACTIONS' => 'true',
-          'GITLAB_CI' => 'true',
-          'TRAVIS' => 'true',
-          'CIRCLECI' => 'true',
-          'JENKINS_URL' => 'http://jenkins.example.com',
-          'BUILDKITE' => 'true',
-          'DRONE' => 'true'
+          "CI" => "true",
+          "CONTINUOUS_INTEGRATION" => "true",
+          "GITHUB_ACTIONS" => "true",
+          "GITLAB_CI" => "true",
+          "TRAVIS" => "true",
+          "CIRCLECI" => "true",
+          "JENKINS_URL" => "http://jenkins.example.com",
+          "BUILDKITE" => "true",
+          "DRONE" => "true"
         }
 
         ci_environments.each do |env_var, value|
@@ -279,26 +279,26 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
       end
     end
 
-    context 'without TTY' do
+    context "without TTY" do
       before do
         allow($stdin).to receive(:tty?).and_return(false)
         allow($stdout).to receive(:tty?).and_return(false)
       end
 
-      it 'returns false when not in TTY' do
+      it "returns false when not in TTY" do
         expect(real_confirmer.interactive_environment?).to be false
       end
     end
 
-    context 'with partial TTY' do
-      it 'returns false when only stdin is TTY' do
+    context "with partial TTY" do
+      it "returns false when only stdin is TTY" do
         allow($stdin).to receive(:tty?).and_return(true)
         allow($stdout).to receive(:tty?).and_return(false)
 
         expect(real_confirmer.interactive_environment?).to be false
       end
 
-      it 'returns false when only stdout is TTY' do
+      it "returns false when only stdout is TTY" do
         allow($stdin).to receive(:tty?).and_return(false)
         allow($stdout).to receive(:tty?).and_return(true)
 
@@ -307,13 +307,13 @@ RSpec.describe CodingAgentTools::Molecules::FileOperationConfirmer do
     end
   end
 
-  describe 'ConfirmationResult' do
-    it 'provides convenience methods' do
-      confirmed_result = described_class::ConfirmationResult.new(true, 'reason', false)
+  describe "ConfirmationResult" do
+    it "provides convenience methods" do
+      confirmed_result = described_class::ConfirmationResult.new(true, "reason", false)
       expect(confirmed_result.confirmed?).to be true
       expect(confirmed_result.denied?).to be false
 
-      denied_result = described_class::ConfirmationResult.new(false, 'reason', true)
+      denied_result = described_class::ConfirmationResult.new(false, "reason", true)
       expect(denied_result.confirmed?).to be false
       expect(denied_result.denied?).to be true
       expect(denied_result.auto_decision?).to be true

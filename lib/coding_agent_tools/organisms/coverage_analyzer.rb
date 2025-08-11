@@ -127,7 +127,7 @@ module CodingAgentTools
         # Calculate priority scores for each file
         scored_files = under_covered.map do |file|
           priority_score = @file_analyzer.calculate_priority_score(file, analysis_result.threshold)
-          { file: file, priority_score: priority_score }
+          {file: file, priority_score: priority_score}
         end
 
         # Sort by priority score (descending) and take the top files
@@ -159,9 +159,9 @@ module CodingAgentTools
             needs_attention_count: under_covered_files.count do |f|
               f.coverage_percentage >= 50.0 && f.coverage_percentage < analysis_result.threshold
             end,
-            large_uncovered_files: under_covered_files.select do |f|
+            large_uncovered_files: under_covered_files.count do |f|
               f.total_lines > 100 && f.coverage_percentage < 70.0
-            end.length
+            end
           }
         )
       end
@@ -172,14 +172,14 @@ module CodingAgentTools
         validated = {
           threshold: @threshold_validator.validate_threshold(options[:threshold] || 85.0),
           adaptive_threshold: options[:adaptive_threshold] || false,
-          include_patterns: options[:include_patterns] || ['**/lib/**/*.rb'],
-          exclude_patterns: options[:exclude_patterns] || ['**/spec/**', '**/test/**'],
+          include_patterns: options[:include_patterns] || ["**/lib/**/*.rb"],
+          exclude_patterns: options[:exclude_patterns] || ["**/spec/**", "**/test/**"],
           detailed_analysis: options[:detailed_analysis] || false,
-          sort_by: options[:sort_by] || 'coverage'
+          sort_by: options[:sort_by] || "coverage"
         }
 
         # Validate sort_by option
-        valid_sort_options = ['coverage', 'uncovered_lines', 'file_name']
+        valid_sort_options = ["coverage", "uncovered_lines", "file_name"]
         unless valid_sort_options.include?(validated[:sort_by])
           raise ArgumentError,
             "Invalid sort_by option: #{validated[:sort_by]}. Valid options: #{valid_sort_options.join(", ")}"
@@ -210,35 +210,35 @@ module CodingAgentTools
         # Handle direct array input (test cases)
         if processed_data.is_a?(Array)
           return processed_data.map do |file|
-            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+            {coverage_percentage: file[:coverage_percentage] || 0.0}
           end
         end
 
         return [] unless processed_data.is_a?(Hash)
 
         # First priority: Use processed data from the main CoverageDataProcessor pipeline
-        if processed_data[:file_coverage] && processed_data[:file_coverage].is_a?(Hash)
+        if processed_data[:file_coverage]&.is_a?(Hash)
           processed_data[:file_coverage].map do |_file_path, file_data|
             coverage_percentage = file_data.dig(:coverage_data, :coverage_percentage) || 0.0
-            { coverage_percentage: coverage_percentage }
+            {coverage_percentage: coverage_percentage}
           end
         # Second priority: Already transformed data structures
-        elsif processed_data[:files] && processed_data[:files].is_a?(Array)
+        elsif processed_data[:files]&.is_a?(Array)
           processed_data[:files].map do |file|
-            { coverage_percentage: file[:coverage_percentage] || 0.0 }
+            {coverage_percentage: file[:coverage_percentage] || 0.0}
           end
         # Fallback: Raw SimpleCov data (for backward compatibility and tests)
-        elsif processed_data.key?('RSpec') || processed_data.key?('Unit Tests') || processed_data.key?('Unknown Test Framework')
+        elsif processed_data.key?("RSpec") || processed_data.key?("Unit Tests") || processed_data.key?("Unknown Test Framework")
           all_files = []
           processed_data.each do |_key, test_data|
-            next unless test_data.is_a?(Hash) && test_data['coverage']
+            next unless test_data.is_a?(Hash) && test_data["coverage"]
 
-            test_data['coverage'].each do |_file_path, file_coverage_data|
+            test_data["coverage"].each do |_file_path, file_coverage_data|
               next if file_coverage_data.nil?
 
               # Handle both old format (direct array) and new format (hash with "lines" key)
-              line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data['lines']
-                file_coverage_data['lines']
+              line_data = if file_coverage_data.is_a?(Hash) && file_coverage_data["lines"]
+                file_coverage_data["lines"]
               elsif file_coverage_data.is_a?(Array)
                 file_coverage_data
               else
@@ -252,7 +252,7 @@ module CodingAgentTools
               next if coverage_result[:total_lines] == 0
 
               coverage_percentage = coverage_result[:coverage_percentage]
-              all_files << { coverage_percentage: coverage_percentage }
+              all_files << {coverage_percentage: coverage_percentage}
             end
           end
           all_files
