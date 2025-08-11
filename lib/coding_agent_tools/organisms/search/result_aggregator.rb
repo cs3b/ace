@@ -199,6 +199,7 @@ module CodingAgentTools
           {
             aggregated_at: Time.now.iso8601,
             options: options.slice(:type, :format, :max_results),
+            search_mode: options[:search_mode],
             version: "1.0"
           }
         end
