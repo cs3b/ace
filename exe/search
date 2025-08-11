@@ -110,6 +110,10 @@ module CodingAgentTools
             @options[:multi_line] = true
           end
 
+          opts.on("--hidden", "Include hidden files and directories in search") do
+            @options[:hidden] = true
+          end
+
           # Context options
           opts.on("-A", "--after NUM", Integer, "Show NUM lines after match") do |n|
             @options[:after_context] = n

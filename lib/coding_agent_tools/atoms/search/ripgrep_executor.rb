@@ -106,6 +106,7 @@ module CodingAgentTools
           args << "--count" if options[:count]
           args << "--files-with-matches" if options[:files_with_matches]
           args << "--invert-match" if options[:invert_match]
+          args << "--hidden" if options[:hidden]
 
           # Context options
           if options[:context]

@@ -74,7 +74,7 @@ module CodingAgentTools
           args << "--color=never" unless options[:color]
           args << "--absolute-path" if options[:absolute_path]
           args << "--follow" if options[:follow_symlinks]
-          args << "--hidden" if options[:include_hidden]
+          args << "--hidden" if options[:include_hidden] || options[:hidden]
           args << "--no-ignore" if options[:no_ignore]
           args << "--no-ignore-vcs" if options[:no_ignore_vcs]
 
