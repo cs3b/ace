@@ -159,23 +159,18 @@ module CodingAgentTools
             file_path = result[:file] || result[:path] || result.to_s
             next true if file_path.empty?
             
-            # Normalize path (remove leading ./ and add repo path if needed)
-            full_path = if file_path.start_with?('./')
-                         File.join(repo_path, file_path[2..-1])
-                       elsif file_path.start_with?('/')
-                         file_path
-                       else
-                         File.join(repo_path, file_path)
-                       end
+            # Normalize path - paths are now relative to project root
+            # Remove leading ./ if present
+            normalized_path = file_path.start_with?('./') ? file_path[2..-1] : file_path
             
             # Apply include filters
             if options[:include_paths] && !options[:include_paths].empty?
-              next false unless path_matches_any?(full_path, options[:include_paths])
+              next false unless path_matches_any?(normalized_path, options[:include_paths])
             end
             
             # Apply exclude filters  
             if options[:exclude_paths] && !options[:exclude_paths].empty?
-              next false if path_matches_any?(full_path, options[:exclude_paths])
+              next false if path_matches_any?(normalized_path, options[:exclude_paths])
             end
             
             true
@@ -187,23 +182,18 @@ module CodingAgentTools
           return files unless files.is_a?(Array)
           
           files.select do |file|
-            # Normalize path
-            full_path = if file.start_with?('./')
-                         File.join(repo_path, file[2..-1])
-                       elsif file.start_with?('/')
-                         file
-                       else
-                         File.join(repo_path, file)
-                       end
+            # Normalize path - paths are now relative to project root
+            # Remove leading ./ if present
+            normalized_path = file.start_with?('./') ? file[2..-1] : file
             
             # Apply include filters
             if options[:include_paths] && !options[:include_paths].empty?
-              next false unless path_matches_any?(full_path, options[:include_paths])
+              next false unless path_matches_any?(normalized_path, options[:include_paths])
             end
             
             # Apply exclude filters
             if options[:exclude_paths] && !options[:exclude_paths].empty?
-              next false if path_matches_any?(full_path, options[:exclude_paths])
+              next false if path_matches_any?(normalized_path, options[:exclude_paths])
             end
             
             true

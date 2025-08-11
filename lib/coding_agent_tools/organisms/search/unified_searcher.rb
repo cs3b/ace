@@ -115,18 +115,27 @@ module CodingAgentTools
 
         # Search a single repository
         def search_single_repository(repo, pattern, mode, options)
-          # Change to repository directory
-          Dir.chdir(repo[:path]) do
+          # Determine search root (default to project root if available)
+          search_root = options[:search_root] || @coordinator.instance_variable_get(:@project_root) || Dir.pwd
+          
+          # Adjust options to include repository path for searches
+          repo_options = options.dup
+          
+          # Set the search path - for main repo it's ".", for submodules it's their relative path
+          repo_options[:search_path] = (repo[:name] == 'main') ? '.' : repo[:path]
+          
+          # Execute search from the search root
+          Dir.chdir(search_root) do
             case mode
             when :file, :files
-              search_files_in_repo(pattern, options)
+              search_files_in_repo(pattern, repo_options)
             when :content
-              search_content_in_repo(pattern, options)
+              search_content_in_repo(pattern, repo_options)
             when :hybrid, :both
               # Search both files and content
               {
-                files: search_files_in_repo(pattern, options),
-                content: search_content_in_repo(pattern, options)
+                files: search_files_in_repo(pattern, repo_options),
+                content: search_content_in_repo(pattern, repo_options)
               }
             else
               { error: "Unknown search mode: #{mode}" }

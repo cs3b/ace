@@ -116,8 +116,14 @@ module CodingAgentTools
             Array(options[:exclude]).each { |pattern| args << "--exclude=#{pattern}" }
           end
 
-          # Search paths (default to current directory if not specified)
-          paths = options[:paths] || ['.']
+          # Search paths - use search_path if provided, otherwise paths, otherwise current directory
+          paths = if options[:search_path]
+                    [options[:search_path]]
+                  elsif options[:paths]
+                    options[:paths]
+                  else
+                    ['.']
+                  end
 
           # Build the complete command
           command_parts = args
