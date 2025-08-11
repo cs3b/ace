@@ -281,10 +281,10 @@ module CodingAgentTools
       end
 
       def output_text_results(results)
-        # Determine and display search mode
-        search_mode = determine_search_mode(results)
+        # Get search mode from metadata or determine from results
+        search_mode = results.dig(:metadata, :search_mode) || determine_search_mode(results)
         mode_text = case search_mode
-                    when :files
+                    when :files, :file
                       "(searching for files)"
                     when :content
                       "(searching in content)"

@@ -30,7 +30,7 @@ module CodingAgentTools
           merged_options = @options.merge(options)
           
           # Determine search mode using DWIM heuristics
-          mode = if merged_options[:type]
+          mode = if merged_options[:type] && merged_options[:type] != :auto
                    merged_options[:type]
                  else
                    analysis = @dwim.analyze_search_intent(pattern, merged_options)
@@ -43,8 +43,8 @@ module CodingAgentTools
           # Execute search across repositories
           results = search_repositories(repositories, pattern, mode, merged_options)
           
-          # Aggregate and format results
-          @aggregator.aggregate(results, merged_options)
+          # Aggregate and format results (include search mode in options)
+          @aggregator.aggregate(results, merged_options.merge(search_mode: mode))
         end
 
         # Search for files across repositories
