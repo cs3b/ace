@@ -9,6 +9,12 @@ module CodingAgentTools
   module CLI
     class SearchCommand
       def initialize
+        # Default exclusions for archived/done tasks
+        default_excludes = [
+          "dev-taskflow/current/*/tasks/x/*",
+          "dev-taskflow/done/**/*"
+        ]
+        
         @options = {
           type: nil,
           format: :text,
@@ -25,7 +31,7 @@ module CodingAgentTools
           scope: nil,
           glob: nil,
           include_paths: [],
-          exclude_paths: []
+          exclude_paths: default_excludes
         }
         
         @unified_searcher = Organisms::Search::UnifiedSearcher.new
@@ -123,9 +129,19 @@ module CodingAgentTools
             @options[:include_paths].concat(paths.split(',').map(&:strip))
           end
 
-          opts.on("-e", "--exclude PATHS", "Exclude paths/globs (comma-separated)") do |paths|
-            @options[:exclude_paths] ||= []
-            @options[:exclude_paths].concat(paths.split(',').map(&:strip))
+          opts.on("-e", "--exclude PATHS", "Exclude paths/globs (comma-separated, use 'none' to clear defaults)") do |paths|
+            if paths.downcase == 'none'
+              # Clear all exclusions including defaults
+              @options[:exclude_paths] = []
+            else
+              # Add to existing exclusions
+              @options[:exclude_paths] ||= []
+              @options[:exclude_paths].concat(paths.split(',').map(&:strip))
+            end
+          end
+          
+          opts.on("--include-archived", "Include archived/done tasks (overrides default exclusions)") do
+            @options[:exclude_paths] = []
           end
 
           opts.on("--since TIME", "Files modified since TIME") do |time|
