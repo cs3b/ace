@@ -43,10 +43,10 @@ module CodingAgentTools
           example [
             'google:gemini-2.5-flash "What is Ruby programming language?"',
             'google "What is Ruby?" # uses default model',
-            'anthropic:claude-4-0-sonnet-latest "Explain quantum computing" --format json',
+            'anthropic:claude-sonnet-4-20250514 "Explain quantum computing" --format json',
             'openai:gpt-4o "Hello world" --temperature 0.5',
             'gflash "Quick question about Ruby" # alias for google:gemini-2.5-flash',
-            'csonet "Explain AI" # alias for anthropic:claude-4-0-sonnet-latest',
+            'csonet "Explain AI" # alias for anthropic:claude-sonnet-4-20250514',
             'o4mini "Code review" # alias for openai:gpt-4o-mini',
             "lmstudio prompt.txt --output response.json",
             "mistral prompt.txt --system system.md --output response.md"
@@ -64,7 +64,7 @@ module CodingAgentTools
               error_output("\nExamples:")
               error_output('  llm-query google "What is Ruby?"')
               error_output('  llm-query gflash "Quick question"')
-              error_output('  llm-query anthropic:claude-4-0-sonnet-latest "Explain AI"')
+              error_output('  llm-query anthropic:claude-sonnet-4-20250514 "Explain AI"')
               return 1
             end
 

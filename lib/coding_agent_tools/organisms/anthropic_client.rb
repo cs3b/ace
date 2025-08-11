@@ -33,8 +33,8 @@ module CodingAgentTools
       # @return [Hash] Mapping of aliases to provider:model combinations
       def self.dynamic_aliases
         {
-          "csonet" => "anthropic:claude-4-0-sonnet-latest",
-          "copus" => "anthropic:claude-4-0-opus-latest"
+          "csonet" => "anthropic:claude-sonnet-4-20250514",
+          "copus" => "anthropic:claude-opus-4-20250514"
         }
       end
 

@@ -102,7 +102,7 @@ coding_agent_tools project release_context
   - Usage: `exe/llm-query provider:model "prompt or file path" [--output FILE] [--format json|markdown|text] [--temperature TEMP] [--max-tokens TOKENS] [--system "system prompt or file path"] [--force] [--debug]`
   - Examples:
     - `exe/llm-query google:gemini-2.5-flash "What is Ruby?"`
-    - `exe/llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output response.json`
+    - `exe/llm-query anthropic:claude-sonnet-4-20250514 prompt.txt --output response.json`
     - `exe/llm-query openai:gpt-4o "Question" --system system.md --output result.md`
     - `exe/llm-query lmstudio "Explain SOLID principles"`
     - `exe/llm-query gflash "Quick question"` (using alias for google:gemini-2.5-flash)

@@ -39,7 +39,7 @@ module CodingAgentTools
 
           example [
             "cr-report-claude-opus.md cr-report-gpt4.md",
-            "cr-report-*.md --model anthropic:claude-4-0-sonnet-latest",
+            "cr-report-*.md --model anthropic:claude-sonnet-4-20250514",
             "cr-report-*.md --output final-synthesis.md",
             "cr-report-*.md --force"
           ]

@@ -70,10 +70,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::Code::ReviewSynthesize do
       end
 
       it "uses custom model when specified" do
-        command.call(reports: [report1, report2], model: "anthropic:claude-4-0-sonnet-latest")
+        command.call(reports: [report1, report2], model: "anthropic:claude-sonnet-4-20250514")
 
         expect(mock_synthesis_orchestrator).to have_received(:synthesize).with(
-          hash_including(model: "anthropic:claude-4-0-sonnet-latest")
+          hash_including(model: "anthropic:claude-sonnet-4-20250514")
         )
       end
 

@@ -171,7 +171,7 @@ module CliHelpers
         Examples:
           llm-query google:gemini-2.5-flash "What is Ruby programming language?"
           llm-query google "What is Ruby?" # uses default model
-          llm-query anthropic:claude-4-0-sonnet-latest "Explain quantum computing" --format json
+          llm-query anthropic:claude-sonnet-4-20250514 "Explain quantum computing" --format json
       HELP
       return 0
     end
