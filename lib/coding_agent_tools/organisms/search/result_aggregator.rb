@@ -28,6 +28,12 @@ module CodingAgentTools
           # Process each repository's results
           results.each do |repo_name, repo_data|
             processed = process_repository_results(repo_name, repo_data, options)
+            
+            # Apply path filtering if specified
+            if options[:include_paths] || options[:exclude_paths]
+              processed = filter_results_by_path(processed, options)
+            end
+            
             aggregated[:repositories][repo_name] = processed
             aggregated[:total_results] += processed[:count]
             @repository_counts[repo_name] = processed[:count]
@@ -105,6 +111,117 @@ module CodingAgentTools
         end
 
         private
+
+        # Filter results by path includes/excludes
+        def filter_results_by_path(repo_data, options)
+          return repo_data unless repo_data[:results]
+          
+          filtered = repo_data.dup
+          
+          # Handle different result formats
+          if filtered[:results].is_a?(Hash) && filtered[:results][:results].is_a?(Array)
+            # Format: {success: bool, results: [...]}
+            filtered[:results] = filtered[:results].dup
+            filtered[:results][:results] = filter_result_array_by_path(
+              filtered[:results][:results], 
+              repo_data[:path],
+              options
+            )
+            # Update count
+            filtered[:results][:count] = filtered[:results][:results].size
+          elsif filtered[:results].is_a?(Hash) && filtered[:results][:files]
+            # Format: {files: [...]}
+            filtered[:results] = filtered[:results].dup
+            filtered[:results][:files] = filter_file_array_by_path(
+              filtered[:results][:files],
+              repo_data[:path],
+              options
+            )
+          elsif filtered[:results].is_a?(Array)
+            # Direct array of results
+            filtered[:results] = filter_result_array_by_path(
+              filtered[:results],
+              repo_data[:path],
+              options
+            )
+          end
+          
+          # Recalculate count
+          filtered[:count] = count_results(filtered[:results])
+          filtered
+        end
+        
+        # Filter array of results by path
+        def filter_result_array_by_path(results, repo_path, options)
+          return results unless results.is_a?(Array)
+          
+          results.select do |result|
+            file_path = result[:file] || result[:path] || result.to_s
+            next true if file_path.empty?
+            
+            # Normalize path (remove leading ./ and add repo path if needed)
+            full_path = if file_path.start_with?('./')
+                         File.join(repo_path, file_path[2..-1])
+                       elsif file_path.start_with?('/')
+                         file_path
+                       else
+                         File.join(repo_path, file_path)
+                       end
+            
+            # Apply include filters
+            if options[:include_paths] && !options[:include_paths].empty?
+              next false unless path_matches_any?(full_path, options[:include_paths])
+            end
+            
+            # Apply exclude filters  
+            if options[:exclude_paths] && !options[:exclude_paths].empty?
+              next false if path_matches_any?(full_path, options[:exclude_paths])
+            end
+            
+            true
+          end
+        end
+        
+        # Filter array of file paths
+        def filter_file_array_by_path(files, repo_path, options)
+          return files unless files.is_a?(Array)
+          
+          files.select do |file|
+            # Normalize path
+            full_path = if file.start_with?('./')
+                         File.join(repo_path, file[2..-1])
+                       elsif file.start_with?('/')
+                         file
+                       else
+                         File.join(repo_path, file)
+                       end
+            
+            # Apply include filters
+            if options[:include_paths] && !options[:include_paths].empty?
+              next false unless path_matches_any?(full_path, options[:include_paths])
+            end
+            
+            # Apply exclude filters
+            if options[:exclude_paths] && !options[:exclude_paths].empty?
+              next false if path_matches_any?(full_path, options[:exclude_paths])
+            end
+            
+            true
+          end
+        end
+        
+        # Check if path matches any of the patterns
+        def path_matches_any?(path, patterns)
+          patterns.any? do |pattern|
+            # Handle glob patterns
+            if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+              File.fnmatch(pattern, path, File::FNM_PATHNAME)
+            else
+              # Handle directory prefixes (e.g., "dev-taskflow/done" matches "dev-taskflow/done/file.txt")
+              path.start_with?(pattern) || path.include?("/#{pattern}/")
+            end
+          end
+        end
 
         # Reset internal counters
         def reset_counts
@@ -198,8 +315,11 @@ module CodingAgentTools
         def generate_metadata(options)
           {
             aggregated_at: Time.now.iso8601,
-            options: options.slice(:type, :format, :max_results),
+            options: options.slice(:type, :format, :max_results, :glob, :since, :before, 
+                                   :scope, :case_insensitive, :whole_word, :include_paths, 
+                                   :exclude_paths, :repository, :main_only),
             search_mode: options[:search_mode],
+            pattern: options[:pattern],
             version: "1.0"
           }
         end
