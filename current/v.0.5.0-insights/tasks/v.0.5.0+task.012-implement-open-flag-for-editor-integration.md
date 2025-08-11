@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.012
-status: pending
+status: completed
 priority: medium
 estimate: 4h
 dependencies: ["v.0.5.0+task.006"]
@@ -61,14 +61,14 @@ search "pattern" --open --line
 
 ### Success Criteria
 
-- [ ] Implement --open flag in search CLI
-- [ ] Support common editors (VS Code, Vim, Emacs, Sublime, etc.)
-- [ ] Allow configuration of preferred editor
-- [ ] Handle multiple search results appropriately
-- [ ] Add documentation for the feature
-- [ ] Include line number positioning when possible
-- [ ] Provide graceful error handling for editor launch failures
-- [ ] Support editor-specific command line arguments
+- [x] Implement --open flag in search CLI
+- [x] Support common editors (VS Code, Vim, Emacs, Sublime, etc.)
+- [x] Allow configuration of preferred editor
+- [x] Handle multiple search results appropriately
+- [x] Add documentation for the feature
+- [x] Include line number positioning when possible
+- [x] Provide graceful error handling for editor launch failures
+- [x] Support editor-specific command line arguments
 
 ## Technical Details
 
