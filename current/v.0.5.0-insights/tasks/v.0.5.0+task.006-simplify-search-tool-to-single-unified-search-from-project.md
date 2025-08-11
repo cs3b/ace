@@ -1,8 +1,8 @@
 ---
 id: v.0.5.0+task.006
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 3h
 dependencies: [v.0.5.0+task.005]
 ---
 
@@ -108,3 +108,201 @@ Simplify the search tool implementation and user experience by eliminating dupli
 - Previous implementation discussion and analysis
 - Current multi-repository search issues (duplicates)
 - User feedback on search tool behavior
+
+## Technical Approach
+
+### Architecture Pattern
+- Simplify from multi-repository coordinator pattern to single search execution
+- Remove repository iteration and aggregation complexity
+- Maintain existing executor pattern (ripgrep/fd) for actual search
+- Keep DWIM heuristics for search mode detection
+
+### Technology Stack
+- Continue using ripgrep for content search (already proven)
+- Continue using fd for file search (already integrated)
+- Remove MultiRepoCoordinator dependency
+- Simplify ResultAggregator to basic formatter
+- Maintain existing ShellCommandExecutor for command execution
+
+### Implementation Strategy
+- Incremental refactoring to minimize risk
+- Preserve existing CLI interface where possible
+- Keep default exclusions functionality
+- Maintain backward compatibility for critical options
+
+## File Modifications
+
+### Modify
+- `lib/coding_agent_tools/organisms/search/unified_searcher.rb`
+  - Changes: Remove multi-repository logic, simplify to single search
+  - Impact: Core search execution simplified
+  - Integration points: Direct executor calls without repository iteration
+
+- `lib/coding_agent_tools/organisms/search/result_aggregator.rb`
+  - Changes: Simplify from multi-repo aggregation to single result formatting
+  - Impact: Simpler result processing
+  - Integration points: Format results from single search
+
+- `lib/coding_agent_tools/atoms/search/ripgrep_executor.rb`
+  - Changes: Remove search_path complexity, search from current directory
+  - Impact: Simpler command building
+  - Integration points: Direct search execution
+
+- `lib/coding_agent_tools/atoms/search/fd_executor.rb`
+  - Changes: Remove search_path complexity, search from current directory
+  - Impact: Simpler command building
+  - Integration points: Direct search execution
+
+- `exe/search`
+  - Changes: Update help text, possibly deprecate --repository option
+  - Impact: User-facing interface changes
+  - Integration points: CLI option handling
+
+### Delete
+- None required - refactoring existing files
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Breaking existing scripts that use --repository flag
+  - **Probability:** Medium
+  - **Impact:** Low
+  - **Mitigation:** Keep flag but make it no-op with deprecation warning
+  - **Rollback:** Restore multi-repo logic if needed
+
+- **Risk:** Performance regression for large codebases
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Single process should be faster, but monitor
+  - **Rollback:** Revert to multi-repo if performance degrades
+
+### Integration Risks
+- **Risk:** Path filtering behaves differently
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Extensive testing of include/exclude patterns
+  - **Monitoring:** Test with existing exclude patterns
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Analyze current multi-repository flow in detail
+  - Review how repositories are discovered and iterated
+  - Understand aggregation logic for results
+  - Document current result structure
+
+* [ ] Research ripgrep/fd direct usage patterns
+  - Verify command options for project-wide search
+  - Test performance with large result sets
+  - Confirm path filtering works as expected
+
+* [ ] Design simplified result structure
+  - Plan new result format without repository grouping
+  - Ensure backward compatibility for result parsing
+  - Define clear output format
+
+### Execution Steps
+
+- [ ] Step 1: Simplify UnifiedSearcher initialization
+  - Remove `@coordinator = Molecules::Git::MultiRepoCoordinator.new`
+  - Keep executors and DWIM heuristics
+  - Remove `@aggregator` or simplify its role
+  > TEST: Verify initialization
+  > Type: Unit test
+  > Assert: UnifiedSearcher initializes without MultiRepoCoordinator
+  > Command: `rspec spec/lib/coding_agent_tools/organisms/search/unified_searcher_spec.rb`
+
+- [ ] Step 2: Refactor main search method
+  - Remove `get_repositories` call
+  - Remove `search_repositories` iteration
+  - Call executors directly with pattern and options
+  - Simplify result handling
+  > TEST: Basic search functionality
+  > Type: Integration test
+  > Assert: Search returns results without duplicates
+  > Command: `./exe/search "TODO" | grep -c "TODO"`
+
+- [ ] Step 3: Update search execution logic
+  - Remove `search_single_repository` method
+  - Remove `Dir.chdir` logic
+  - Execute search from current directory (project root)
+  - Ensure paths in results are relative to project root
+  > TEST: Path correctness
+  > Type: Integration test
+  > Assert: Results show correct relative paths
+  > Command: `./exe/search "task" --include dev-taskflow | head -5`
+
+- [ ] Step 4: Simplify ripgrep executor
+  - Remove `search_path` option handling
+  - Always search from current directory
+  - Keep existing option handling for filters
+  > TEST: Ripgrep execution
+  > Type: Unit test
+  > Assert: Ripgrep command built correctly
+  > Command: `ruby -e "require_relative 'lib/coding_agent_tools'; puts CodingAgentTools::Atoms::Search::RipgrepExecutor.new.build_ripgrep_command('test')"`
+
+- [ ] Step 5: Simplify fd executor
+  - Remove `search_path` option handling
+  - Always search from current directory
+  - Keep existing option handling for filters
+  > TEST: Fd execution
+  > Type: Unit test
+  > Assert: Fd command built correctly
+  > Command: `ruby -e "require_relative 'lib/coding_agent_tools'; puts CodingAgentTools::Atoms::Search::FdExecutor.new.build_fd_command('*.rb')"`
+
+- [ ] Step 6: Update result aggregator
+  - Remove repository-based aggregation logic
+  - Simplify to basic result formatting
+  - Maintain count tracking
+  - Remove duplicate filtering (no longer needed)
+  > TEST: Result formatting
+  > Type: Integration test
+  > Assert: Results formatted correctly without repository grouping
+  > Command: `./exe/search "TODO" --json | jq '.total_results'`
+
+- [ ] Step 7: Test path filtering
+  - Verify --include works for directory targeting
+  - Verify --exclude continues to work
+  - Test combination of include and exclude
+  > TEST: Include filtering
+  > Type: Integration test
+  > Assert: Include filter limits results to specified paths
+  > Command: `./exe/search "task" --include dev-tools | grep -v "dev-taskflow"`
+
+- [ ] Step 8: Update CLI interface
+  - Update help text to reflect single search
+  - Consider deprecating --repository option
+  - Ensure backward compatibility where needed
+  > TEST: CLI compatibility
+  > Type: Integration test
+  > Assert: Existing CLI options still work
+  > Command: `./exe/search "test" --exclude "spec/**/*"`
+
+- [ ] Step 9: Performance validation
+  - Compare search times before and after
+  - Test with large result sets
+  - Verify memory usage is acceptable
+  > TEST: Performance comparison
+  > Type: Performance test
+  > Assert: Single search is faster than multi-repo
+  > Command: `time ./exe/search "TODO" > /dev/null`
+
+- [ ] Step 10: Update documentation
+  - Update search tool documentation
+  - Document migration from multi-repo to single search
+  - Update examples in help text
+  > TEST: Documentation completeness
+  > Type: Manual review
+  > Assert: All documentation reflects new behavior
+  > Command: `./exe/search --help | grep -i "repository"`
+
+## Acceptance Criteria
+
+- [ ] Search executes as single process from project root
+- [ ] No duplicate results in any search scenario
+- [ ] Path filtering with --include/--exclude works correctly
+- [ ] Performance improved (measurable via timing)
+- [ ] Existing exclude patterns continue to work
+- [ ] Results show clear paths relative to project root
+- [ ] All tests pass successfully
