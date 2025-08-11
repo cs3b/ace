@@ -1,7 +1,7 @@
 ---
 description: Fix Tests
 allowed-tools: Read, Write, Edit, Bash, Grep, Task, TodoWrite, MultiEdit
-model: claude-4-1-sonnet-latest
+model: claude-sonnet-4-20250514
 last_modified: '2025-08-11 22:45:00'
 source: custom
 ---
