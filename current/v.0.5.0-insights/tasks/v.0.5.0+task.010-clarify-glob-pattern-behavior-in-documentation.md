@@ -1,6 +1,6 @@
 ---
 id: v.0.5.0+task.010
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: ["v.0.5.0+task.006"]
@@ -55,13 +55,13 @@ spec/**/*.rb
 
 ### Success Criteria
 
-- [ ] Add clear examples of glob pattern behavior to docs/tools.md
-- [ ] Include explanation of trailing slash vs asterisk behavior
-- [ ] Provide common use case examples with recommended patterns
-- [ ] Add troubleshooting section for glob patterns
-- [ ] Document the difference between `**` and `**/*` patterns
-- [ ] Include examples for file type filtering patterns
-- [ ] Add section on pattern performance considerations
+- [x] Add clear examples of glob pattern behavior to docs/tools.md
+- [x] Include explanation of trailing slash vs asterisk behavior
+- [x] Provide common use case examples with recommended patterns
+- [x] Add troubleshooting section for glob patterns
+- [x] Document the difference between `**` and `**/*` patterns
+- [x] Include examples for file type filtering patterns
+- [x] Add section on pattern performance considerations
 
 ## Technical Details
 
