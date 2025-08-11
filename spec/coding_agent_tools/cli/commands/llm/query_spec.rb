@@ -70,10 +70,10 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
       end
 
       it "queries anthropic provider correctly" do
-        expect(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).with(model: "claude-4-0-sonnet-latest")
+        expect(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).with(model: "claude-sonnet-4-20250514")
         expect(mock_anthropic_client).to receive(:generate_text).with("test prompt")
 
-        command.call(provider_model: "anthropic:claude-4-0-sonnet-latest", prompt: "test prompt")
+        command.call(provider_model: "anthropic:claude-sonnet-4-20250514", prompt: "test prompt")
       end
 
       it "queries openai provider correctly" do
@@ -163,8 +163,8 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
         command.call(provider_model: "gpro", prompt: "test prompt")
       end
 
-      it "resolves csonet alias to anthropic:claude-4-0-sonnet-latest" do
-        expect(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).with(model: "claude-4-0-sonnet-latest")
+      it "resolves csonet alias to anthropic:claude-sonnet-4-20250514" do
+        expect(CodingAgentTools::Organisms::AnthropicClient).to receive(:new).with(model: "claude-sonnet-4-20250514")
 
         command.call(provider_model: "csonet", prompt: "test prompt")
       end
@@ -195,7 +195,7 @@ RSpec.describe CodingAgentTools::Cli::Commands::LLM::Query do
           generation_config: {temperature: 0.7}
         )
 
-        command.call(provider_model: "anthropic:claude-4-0-sonnet-latest", prompt: "test prompt", temperature: 0.7)
+        command.call(provider_model: "anthropic:claude-sonnet-4-20250514", prompt: "test prompt", temperature: 0.7)
       end
 
       it "passes temperature option with provider-specific conversion for openai" do

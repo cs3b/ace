@@ -11,7 +11,7 @@
 #
 # Examples:
 #   code-review-synthesize cr-report-claude-opus.md cr-report-gpt4.md
-#   code-review-synthesize cr-report-*.md --model anthropic:claude-4-0-sonnet-latest
+#   code-review-synthesize cr-report-*.md --model anthropic:claude-sonnet-4-20250514
 #   code-review-synthesize cr-report-*.md --output final-synthesis.md
 #   code-review-synthesize cr-report-*.md --force
 #

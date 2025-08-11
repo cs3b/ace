@@ -47,7 +47,7 @@ module CodingAgentTools
             "--archived",
             "# Synthesize specific files",
             "reflection-2024-01-15.md reflection-2024-01-20.md",
-            "reflection-*.md --model anthropic:claude-4-0-sonnet-latest",
+            "reflection-*.md --model anthropic:claude-sonnet-4-20250514",
             "reflection-*.md --output team-learning-synthesis.md --archived"
           ]
 

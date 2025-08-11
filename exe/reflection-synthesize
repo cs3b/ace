@@ -11,7 +11,7 @@
 #
 # Examples:
 #   reflection-synthesize reflection-2024-01-15.md reflection-2024-01-20.md
-#   reflection-synthesize reflection-*.md --model anthropic:claude-4-0-sonnet-latest
+#   reflection-synthesize reflection-*.md --model anthropic:claude-sonnet-4-20250514
 #   reflection-synthesize reflection-*.md --output team-learning-synthesis.md
 #   reflection-synthesize reflection-*.md --force
 #

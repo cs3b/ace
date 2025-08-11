@@ -42,7 +42,7 @@ llm-query <provider>:<model> "<prompt>" [OPTIONS]
 llm-query google:gemini-2.5-flash "What is Ruby programming?"
 
 # Anthropic Claude
-llm-query anthropic:claude-4-0-sonnet-latest "Explain quantum computing"
+llm-query anthropic:claude-sonnet-4-20250514 "Explain quantum computing"
 
 # OpenAI GPT
 llm-query openai:gpt-4o "Write a Ruby script"
@@ -87,7 +87,7 @@ export ANTHROPIC_API_KEY="your-api-key-here"
 ```
 
 **Available Models:**
-- `claude-4-0-sonnet-latest` (default) - Most intelligent Claude
+- `claude-sonnet-4-20250514` (default) - Most intelligent Claude
 - `claude-4-0-opus-latest` - Most powerful Claude
 - `claude-3-5-sonnet-20241022` - Balanced performance
 - `claude-3-5-haiku-20241022` - Fast and cost-effective
@@ -160,7 +160,7 @@ export TOGETHER_API_KEY="your-api-key-here"
 llm-query google:gemini-2.5-flash "What is Ruby programming language?"
 
 # Multi-word prompts (use quotes)
-llm-query anthropic:claude-4-0-sonnet-latest "Explain the difference between Ruby and Python"
+llm-query anthropic:claude-sonnet-4-20250514 "Explain the difference between Ruby and Python"
 ```
 
 ### File Prompts
@@ -187,7 +187,7 @@ llm-query openai "Generate code"
 ```bash
 # Common model aliases
 llm-query gflash "Fast response"     # google:gemini-2.5-flash
-llm-query csonet "Complex analysis" # anthropic:claude-4-0-sonnet-latest
+llm-query csonet "Complex analysis" # anthropic:claude-sonnet-4-20250514
 llm-query o4mini "Quick task"       # openai:gpt-4o-mini
 ```
 
@@ -200,7 +200,7 @@ llm-query o4mini "Quick task"       # openai:gpt-4o-mini
 llm-query google:gemini-2.5-flash "List programming languages" --format json
 
 # Markdown output
-llm-query anthropic:claude-4-0-sonnet-latest "Write a tutorial" --format markdown
+llm-query anthropic:claude-sonnet-4-20250514 "Write a tutorial" --format markdown
 
 # Plain text (default)
 llm-query openai:gpt-4o "Explain AI" --format text
@@ -216,7 +216,7 @@ llm-query google:gemini-2.5-flash "Write documentation" --output docs.md
 llm-query openai:gpt-4o "Generate data" --output data.json --format json
 
 # Multiple files
-llm-query anthropic:claude-4-0-sonnet-latest prompt.txt --output analysis.md
+llm-query anthropic:claude-sonnet-4-20250514 prompt.txt --output analysis.md
 
 # Force overwrite existing files (bypass confirmation prompts)
 llm-query google:gemini-2.5-flash "Update content" --output existing.md --force
@@ -246,13 +246,13 @@ When using `--output`, the tool includes built-in protection against accidental 
 **Examples:**
 ```bash
 # Interactive mode - will prompt if file exists
-llm-query anthropic:claude-4-0-sonnet-latest "Analysis" --output results.md
+llm-query anthropic:claude-sonnet-4-20250514 "Analysis" --output results.md
 
 # Automation-friendly - bypasses prompts
 llm-query openai:gpt-4o "Automated report" --output daily-report.txt --force
 
 # Script usage with force flag
-for model in gemini-2.5-flash claude-4-0-sonnet-latest gpt-4o; do
+for model in gemini-2.5-flash claude-sonnet-4-20250514 gpt-4o; do
     llm-query "$model" "Compare features" --output "comparison-$model.md" --force
 done
 ```
@@ -267,7 +267,7 @@ llm-query google:gemini-2.5-flash "Write code" --system "You are a senior Ruby d
 llm-query openai:gpt-4o "Review code" --system instructions.md
 
 # Provider-specific personas
-llm-query anthropic:claude-4-0-sonnet-latest "Analyze data" --system "You are a data scientist with expertise in statistics"
+llm-query anthropic:claude-sonnet-4-20250514 "Analyze data" --system "You are a data scientist with expertise in statistics"
 ```
 
 ### Generation Parameters
@@ -278,7 +278,7 @@ llm-query google:gemini-2.5-flash "Write a poem" --temperature 0.9  # More creat
 llm-query openai:gpt-4o "Summarize facts" --temperature 0.1        # More focused
 
 # Max tokens (output length control)
-llm-query anthropic:claude-4-0-sonnet-latest "Brief summary" --max-tokens 100
+llm-query anthropic:claude-sonnet-4-20250514 "Brief summary" --max-tokens 100
 
 # Timeout (request timeout)
 llm-query together_ai:meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo "Complex task" --timeout 60
@@ -294,7 +294,7 @@ llm-query google:gemini-2.5-flash "Test prompt" --debug
 llm-query openai:gpt-4o prompt.txt --output result.md --debug
 
 # Debug with forced overwrite
-llm-query anthropic:claude-4-0-sonnet-latest "Debug test" --output debug.log --force --debug
+llm-query anthropic:claude-sonnet-4-20250514 "Debug test" --output debug.log --force --debug
 ```
 
 ## Provider-Specific Information
@@ -321,7 +321,7 @@ llm-query google:gemini-2.5-pro "Complex analysis" --temperature 0.3
 
 ```bash
 # Long document analysis
-llm-query anthropic:claude-4-0-sonnet-latest large_document.txt --max-tokens 4000
+llm-query anthropic:claude-sonnet-4-20250514 large_document.txt --max-tokens 4000
 
 # Safety-critical tasks
 llm-query anthropic:claude-4-0-opus-latest "Review code for security" --temperature 0.2
@@ -400,7 +400,7 @@ llm-query openai:gpt-4o-mini "Simple question"
 
 # Quality-optimized
 llm-query google:gemini-2.5-pro "Complex analysis"
-llm-query anthropic:claude-4-0-sonnet-latest "Detailed review"
+llm-query anthropic:claude-sonnet-4-20250514 "Detailed review"
 llm-query openai:gpt-4o "Advanced reasoning"
 
 # Cost-optimized
@@ -445,7 +445,7 @@ echo $GOOGLE_API_KEY
 llm-query google:gemini-2.5-flash "test" --debug
 
 # Use different provider as fallback
-llm-query anthropic:claude-4-0-sonnet-latest "backup query"
+llm-query anthropic:claude-sonnet-4-20250514 "backup query"
 ```
 
 ## Best Practices
@@ -454,7 +454,7 @@ llm-query anthropic:claude-4-0-sonnet-latest "backup query"
 
 1. **Speed vs Quality Trade-off:**
    - Fast: `gemini-2.5-flash`, `claude-3-5-haiku`, `gpt-4o-mini`
-   - Balanced: `gemini-2.5-pro`, `claude-4-0-sonnet-latest`, `gpt-4o`
+   - Balanced: `gemini-2.5-pro`, `claude-sonnet-4-20250514`, `gpt-4o`
    - Maximum Quality: `claude-4-0-opus-latest`, `o3`
 
 2. **Cost Optimization:**
@@ -474,7 +474,7 @@ llm-query anthropic:claude-4-0-sonnet-latest "backup query"
 llm-query google:gemini-2.5-flash "What is the capital of France?" --temperature 0.1
 
 # Balanced tasks (medium temperature)
-llm-query anthropic:claude-4-0-sonnet-latest "Explain machine learning" --temperature 0.7
+llm-query anthropic:claude-sonnet-4-20250514 "Explain machine learning" --temperature 0.7
 
 # Creative tasks (high temperature)
 llm-query openai:gpt-4o "Write a creative story" --temperature 1.2
@@ -487,7 +487,7 @@ llm-query openai:gpt-4o "Write a creative story" --temperature 1.2
 llm-query google:gemini-2.5-flash "Review code" --system "You are a senior software engineer specializing in Ruby. Focus on best practices, potential bugs, and performance issues."
 
 # Provide context
-llm-query anthropic:claude-4-0-sonnet-latest "Analyze data" --system "You are analyzing e-commerce data for a retail company. Focus on actionable insights for increasing sales."
+llm-query anthropic:claude-sonnet-4-20250514 "Analyze data" --system "You are analyzing e-commerce data for a retail company. Focus on actionable insights for increasing sales."
 
 # Set output format expectations
 llm-query openai:gpt-4o "Generate report" --system "Provide your response in markdown format with clear headings and bullet points."
@@ -503,7 +503,7 @@ env | grep API_KEY
 
 # Test specific provider
 llm-query google:gemini-2.5-flash "test" --debug
-llm-query anthropic:claude-4-0-sonnet-latest "test" --debug
+llm-query anthropic:claude-sonnet-4-20250514 "test" --debug
 
 # Verify LM Studio connection
 curl http://localhost:1234/v1/models
@@ -520,7 +520,7 @@ llm-query anthropic:claude-3-5-haiku-20241022 "fast response"
 llm-query openai:gpt-4o "brief answer" --max-tokens 100
 
 # Increase timeout for complex tasks
-llm-query anthropic:claude-4-0-sonnet-latest "complex analysis" --timeout 120
+llm-query anthropic:claude-sonnet-4-20250514 "complex analysis" --timeout 120
 ```
 
 ### Output Issues
@@ -533,7 +533,7 @@ llm-query google:gemini-2.5-flash "data" --format json
 llm-query openai:gpt-4o "content" --output /tmp/test.md --force
 
 # Debug output processing
-llm-query anthropic:claude-4-0-sonnet-latest "test" --output result.txt --debug
+llm-query anthropic:claude-sonnet-4-20250514 "test" --output result.txt --debug
 
 # Bypass overwrite prompts for testing
 llm-query google:gemini-2.5-flash "test content" --output test-output.txt --force
@@ -547,7 +547,7 @@ llm-query google:gemini-2.5-flash "test content" --output test-output.txt --forc
 
 if llm-query google:gemini-2.5-flash "$1" --output response.md --force 2>/dev/null; then
     echo "Google query successful"
-elif llm-query anthropic:claude-4-0-sonnet-latest "$1" --output response.md --force 2>/dev/null; then
+elif llm-query anthropic:claude-sonnet-4-20250514 "$1" --output response.md --force 2>/dev/null; then
     echo "Fallback to Anthropic successful"
 elif llm-query openai:gpt-4o "$1" --output response.md --force 2>/dev/null; then
     echo "Fallback to OpenAI successful"
@@ -564,7 +564,7 @@ The following legacy commands are replaced by the unified syntax:
 | Old Command | New Unified Command |
 |-------------|-------------------|
 | `llm-google-query "prompt"` | `llm-query google:gemini-2.5-flash "prompt"` |
-| `llm-anthropic-query "prompt"` | `llm-query anthropic:claude-4-0-sonnet-latest "prompt"` |
+| `llm-anthropic-query "prompt"` | `llm-query anthropic:claude-sonnet-4-20250514 "prompt"` |
 | `llm-openai-query "prompt"` | `llm-query openai:gpt-4o "prompt"` |
 | `llm-mistral-query "prompt"` | `llm-query mistral:mistral-large "prompt"` |
 | `llm-lmstudio-query "prompt"` | `llm-query lmstudio "prompt"` |

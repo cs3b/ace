@@ -25,11 +25,11 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
       end
 
       it "parses anthropic provider correctly" do
-        result = parser.parse("anthropic:claude-4-0-sonnet-latest")
+        result = parser.parse("anthropic:claude-sonnet-4-20250514")
 
         expect(result).to be_valid
         expect(result.provider).to eq("anthropic")
-        expect(result.model).to eq("claude-4-0-sonnet-latest")
+        expect(result.model).to eq("claude-sonnet-4-20250514")
       end
 
       it "parses openai provider correctly" do
@@ -112,7 +112,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
 
         expect(result).to be_valid
         expect(result.provider).to eq("anthropic")
-        expect(result.model).to eq("claude-4-0-sonnet-latest")
+        expect(result.model).to eq("claude-sonnet-4-20250514")
       end
 
       it "resolves copus alias" do
@@ -367,7 +367,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
       expect(aliases).to include(
         "gflash" => "google:gemini-2.5-flash",
         "gpro" => "google:gemini-2.5-pro",
-        "csonet" => "anthropic:claude-4-0-sonnet-latest",
+        "csonet" => "anthropic:claude-sonnet-4-20250514",
         "copus" => "anthropic:claude-4-0-opus-latest",
         "o4mini" => "openai:gpt-4o-mini",
         "o3" => "openai:o3"
@@ -417,7 +417,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderModelParser do
     it "resolves known aliases" do
       expect(parser.resolve_alias("gflash")).to eq("google:gemini-2.5-flash")
       expect(parser.resolve_alias("gpro")).to eq("google:gemini-2.5-pro")
-      expect(parser.resolve_alias("csonet")).to eq("anthropic:claude-4-0-sonnet-latest")
+      expect(parser.resolve_alias("csonet")).to eq("anthropic:claude-sonnet-4-20250514")
       expect(parser.resolve_alias("copus")).to eq("anthropic:claude-4-0-opus-latest")
       expect(parser.resolve_alias("o4mini")).to eq("openai:gpt-4o-mini")
       expect(parser.resolve_alias("o3")).to eq("openai:o3")
