@@ -99,7 +99,7 @@ This document consolidates 68+ development insights gathered from real-world exp
 
 - **Command structure**: `bin/context --files <file1,file2> --cmds "<cmd1,cmd2>"`
 - **Purpose**: Universal context loading for any workflow that needs files + command outputs
-- **Example usage**: `bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"`
+- **Example usage**: `bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "task-manager next"`
 - **Benefits**:
   - **Immediate value**: Solves 80% of context loading with 20% of complexity
   - **Universal**: Works for any workflow needing files + commands
@@ -148,16 +148,16 @@ bin/context --files <file1,file2,file3> --cmds "<cmd1,cmd2>" [options]
 
 ```bash
 # Load project context for work-on-task workflow
-bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"
+bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "task-manager next"
 
 # Load task context with git status
-bin/context --files current/task-42.md --cmds "bin/tn,git status"
+bin/context --files current/task-42.md --cmds "task-manager next,git status"
 
 # Load guides with test results
 bin/context --files dev-handbook/guides/testing.md --cmds "bin/test,bin/lint"
 
 # Load release context
-bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
+bin/context --files docs/blueprint.md --cmds "release-manager current,task-manager recent"
 ```
 
 **Output Format:**
@@ -169,7 +169,7 @@ bin/context --files docs/blueprint.md --cmds "bin/rc,bin/tr"
 === FILE: docs/architecture.md ===
 [file content]
 
-=== COMMAND: bin/tn ===
+=== COMMAND: task-manager next ===
 [command output]
 
 === COMMAND: git status ===
@@ -203,10 +203,10 @@ Replace current multi-step patterns like:
 Read docs/what-do-we-build.md
 Read docs/architecture.md
 Read docs/blueprint.md
-Bash bin/tn
+Bash task-manager next
 
 # After (single call)
-bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "bin/tn"
+bin/context --files docs/what-do-we-build.md,docs/architecture.md,docs/blueprint.md --cmds "task-manager next"
 ```
 
 **Truncation Handling Examples:**
@@ -356,7 +356,7 @@ project-context cache-status             # Show cache statistics
 - **Item 25**: Tasks should list required guides/files to read before starting
 - **Item 27**: Add created_at and updated_at metadata to tasks
 - **Item 44**: Task names should be prefixed with task numbers for sorting
-- **Item 54**: `bin/tn --next=5` to create multiple tasks upfront
+- **Item 54**: `task-manager next --next=5` to create multiple tasks upfront
 - **Item 55**: Comprehensive task metadata structure with ID, status, priority, dependencies
 - **Item 58**: Organize tasks into d/ (done) and x/ (skipped) folders for clarity
 - **Item 61**: Tasks should have clear assignee and label structure
@@ -366,7 +366,7 @@ project-context cache-status             # Show cache statistics
 
 1. **Standardize Task Metadata**: Implement the YAML frontmatter structure from item 55
 2. **Improve Directory Structure**: Add d/ and x/ folders for better task organization
-3. **Batch Task Creation**: Implement `bin/tn --next=5` for efficient task creation
+3. **Batch Task Creation**: Implement `task-manager next --next=5` for efficient task creation
 4. **Task Context System**: Pre-define required reading for each task type
 5. **Status Clarity**: Clearly define and document task status lifecycle
 
@@ -425,7 +425,7 @@ project-context cache-status             # Show cache statistics
 - **Item 64**: Implement `bin/lint --fix` for automated fixes
 - **Item 115**: Secure handling of API keys and secrets
 - **Item 147**: Batch processing tools with context cache
-- **Item 160**: Enhanced `bin/tn` with multiple task creation
+- **Item 160**: Enhanced `task-manager next` with multiple task creation
 - **Item 200**: Fish shell fuzzy search autocompletion for tools
 - **Item 219**: File-specific linting with automatic fixes
 

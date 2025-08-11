@@ -26,7 +26,7 @@
 
 Update the development handbook's guides for the CLI tools to reflect current practices, specifically by removing references to binstubs, emphasizing the use of `dev-tools` for tool distribution, and integrating established best practices from the `dev-tools` library into the guides.
 
-(also remove any mentions of old system, eg.; bin/gc bin/tn bin/tnid - also from dev-tools)
+(also remove any mentions of old binstub system, eg.; bin/gc bin/tn bin/tnid - replace with new commands like git-commit, task-manager next, task-manager generate-id)
 
 
 ## Problem It Solves
