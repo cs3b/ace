@@ -14,7 +14,7 @@ module CodingAgentTools
       # @param line_numbers [Array<Integer>] Array of line numbers (sorted or unsorted)
       # @return [String] Compact range string (e.g., "11..13,22,23,25..28")
       def format_compact_ranges(line_numbers)
-        return '' if line_numbers.nil? || line_numbers.empty?
+        return "" if line_numbers.nil? || line_numbers.empty?
 
         # Sort and remove duplicates
         sorted_lines = line_numbers.uniq.sort
@@ -26,7 +26,7 @@ module CodingAgentTools
         formatted_ranges = ranges.map { |range| format_single_range(range) }
 
         # Join with commas
-        formatted_ranges.join(',')
+        formatted_ranges.join(",")
       end
 
       # Expands a compact range string back into an array of line numbers
@@ -38,16 +38,16 @@ module CodingAgentTools
         line_numbers = []
 
         # Split by commas to get individual ranges/numbers
-        parts = compact_string.split(',').map(&:strip)
+        parts = compact_string.split(",").map(&:strip)
 
         parts.each do |part|
-          if part.include?('..')
+          if part.include?("..")
             # Handle range (e.g., "11..13")
-            start_num, end_num = part.split('..').map(&:to_i)
+            start_num, end_num = part.split("..").map(&:to_i)
             line_numbers.concat((start_num..end_num).to_a)
-          elsif part.include?('-')
+          elsif part.include?("-")
             # Handle alternative range format (e.g., "25-28")
-            start_num, end_num = part.split('-').map(&:to_i)
+            start_num, end_num = part.split("-").map(&:to_i)
             line_numbers.concat((start_num..end_num).to_a)
           else
             # Handle single number (e.g., "22")
@@ -62,20 +62,20 @@ module CodingAgentTools
       # @param compact_string [String] Compact range string to validate
       # @return [Hash] validation result: { valid: Boolean, errors: Array }
       def validate_compact_format(compact_string)
-        return { valid: true, errors: [] } if compact_string.nil? || compact_string.strip.empty?
+        return {valid: true, errors: []} if compact_string.nil? || compact_string.strip.empty?
 
         errors = []
 
         # Basic format validation
         unless compact_string.match?(/\A[\d,.\-\s]+\z/)
-          errors << 'Contains invalid characters (only digits, commas, dots, and hyphens allowed)'
+          errors << "Contains invalid characters (only digits, commas, dots, and hyphens allowed)"
         end
 
         # Check for malformed ranges
-        parts = compact_string.split(',').map(&:strip)
+        parts = compact_string.split(",").map(&:strip)
         parts.each_with_index do |part, index|
-          if part.include?('..')
-            range_parts = part.split('..')
+          if part.include?("..")
+            range_parts = part.split("..")
             if range_parts.length != 2
               errors << "Malformed range at position #{index + 1}: '#{part}'"
             elsif range_parts.any? { |p| !p.match?(/\A\d+\z/) }
@@ -83,8 +83,8 @@ module CodingAgentTools
             elsif range_parts[0].to_i > range_parts[1].to_i
               errors << "Invalid range order at position #{index + 1}: '#{part}' (start > end)"
             end
-          elsif part.include?('-')
-            range_parts = part.split('-')
+          elsif part.include?("-")
+            range_parts = part.split("-")
             if range_parts.length != 2
               errors << "Malformed range at position #{index + 1}: '#{part}'"
             elsif range_parts.any? { |p| !p.match?(/\A\d+\z/) }
@@ -113,17 +113,17 @@ module CodingAgentTools
         compact_string ||= format_compact_ranges(original_array)
 
         # Calculate sizes in characters (rough approximation)
-        original_size = original_array.join(',').length
+        original_size = original_array.join(",").length
         compact_size = compact_string.length
 
-        compression_ratio = original_size > 0 ? (compact_size.to_f / original_size * 100).round(2) : 0.0
+        compression_ratio = (original_size > 0) ? (compact_size.to_f / original_size * 100).round(2) : 0.0
 
         {
           original_size: original_size,
           compact_size: compact_size,
           compression_ratio: compression_ratio,
           space_saved: original_size - compact_size,
-          space_saved_percentage: original_size > 0 ? ((original_size - compact_size).to_f / original_size * 100).round(2) : 0.0
+          space_saved_percentage: (original_size > 0) ? ((original_size - compact_size).to_f / original_size * 100).round(2) : 0.0
         }
       end
 
@@ -136,20 +136,20 @@ module CodingAgentTools
         current_start = sorted_numbers.first
         current_end = sorted_numbers.first
 
-        sorted_numbers[1..-1].each do |number|
+        sorted_numbers[1..].each do |number|
           if number == current_end + 1
             # Consecutive number, extend the current range
             current_end = number
           else
             # Gap found, save current range and start a new one
-            ranges << { start: current_start, end: current_end }
+            ranges << {start: current_start, end: current_end}
             current_start = number
             current_end = number
           end
         end
 
         # Add the final range
-        ranges << { start: current_start, end: current_end }
+        ranges << {start: current_start, end: current_end}
         ranges
       end
 

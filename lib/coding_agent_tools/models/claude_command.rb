@@ -17,15 +17,15 @@ module CodingAgentTools
     ) do
       # Optional: Add convenience methods for data access
       def missing?
-        type == 'missing'
+        type == "missing"
       end
 
       def custom?
-        type == 'custom'
+        type == "custom"
       end
 
       def generated?
-        type == 'generated'
+        type == "generated"
       end
 
       def to_h

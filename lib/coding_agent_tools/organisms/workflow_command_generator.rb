@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../molecules/command_template_renderer'
-require_relative '../molecules/file_operation_executor'
-require_relative '../molecules/statistics_collector'
-require_relative '../models/file_operation'
+require "pathname"
+require_relative "../molecules/command_template_renderer"
+require_relative "../molecules/file_operation_executor"
+require_relative "../molecules/statistics_collector"
+require_relative "../models/file_operation"
 
 module CodingAgentTools
   module Organisms
@@ -27,7 +27,7 @@ module CodingAgentTools
       # @param options [Hash] Generation options
       # @return [Hash] Generation result
       def generate_commands(workflow_files, target_dir, options = {})
-        puts 'Creating command files...' if options[:verbose]
+        puts "Creating command files..." if options[:verbose]
 
         operations = prepare_operations(workflow_files, target_dir)
         results = []
@@ -60,7 +60,7 @@ module CodingAgentTools
           return {
             status: :skipped,
             operation: operation,
-            message: 'Already exists'
+            message: "Already exists"
           }
         end
 
@@ -86,14 +86,14 @@ module CodingAgentTools
       # @param project_root [Pathname] Project root directory
       # @return [Array<Pathname>] Found workflow files
       def scan_workflows(project_root)
-        workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
+        workflows_dir = project_root / "dev-handbook" / "workflow-instructions"
 
         unless workflows_dir.exist?
           puts "Warning: Workflow instructions directory not found at #{workflows_dir}"
           return []
         end
 
-        workflows = workflows_dir.glob('*.wf.md').sort
+        workflows = workflows_dir.glob("*.wf.md").sort
         puts "Found #{workflows.length} workflow files"
         workflows
       end
@@ -102,7 +102,7 @@ module CodingAgentTools
 
       def prepare_operations(workflow_files, target_dir)
         workflow_files.map do |workflow_file|
-          command_name = workflow_file.basename.to_s.sub('.wf.md', '')
+          command_name = workflow_file.basename.to_s.sub(".wf.md", "")
           target_file = target_dir / "#{command_name}.md"
 
           Models::FileOperation.new(
@@ -110,7 +110,7 @@ module CodingAgentTools
             target: target_file,
             type: :create,
             metadata: {
-              source_type: 'workflow',
+              source_type: "workflow",
               workflow_name: command_name
             }
           )
@@ -118,7 +118,7 @@ module CodingAgentTools
       end
 
       def extract_workflow_name(workflow_path)
-        workflow_path.basename.to_s.sub('.wf.md', '')
+        workflow_path.basename.to_s.sub(".wf.md", "")
       end
 
       def print_result(operation, result, options)

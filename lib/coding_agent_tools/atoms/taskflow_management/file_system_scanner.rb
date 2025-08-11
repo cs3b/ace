@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'find'
+require "pathname"
+require "find"
 
 module CodingAgentTools
   module Atoms
@@ -18,11 +18,11 @@ module CodingAgentTools
         # @return [Array<String>] Array of matching file paths
         # @raise [ArgumentError] If base_path is invalid
         # @raise [SecurityError] If path validation fails
-        def self.scan_directory(base_path, patterns: ['*'], recursive: false, max_depth: 10, max_files: 1000)
-          raise ArgumentError, 'base_path cannot be nil or empty' if base_path.nil? || base_path.empty?
-          raise ArgumentError, 'patterns must be an array' unless patterns.is_a?(Array)
-          raise ArgumentError, 'max_depth must be positive' if max_depth <= 0
-          raise ArgumentError, 'max_files must be positive' if max_files <= 0
+        def self.scan_directory(base_path, patterns: ["*"], recursive: false, max_depth: 10, max_files: 1000)
+          raise ArgumentError, "base_path cannot be nil or empty" if base_path.nil? || base_path.empty?
+          raise ArgumentError, "patterns must be an array" unless patterns.is_a?(Array)
+          raise ArgumentError, "max_depth must be positive" if max_depth <= 0
+          raise ArgumentError, "max_files must be positive" if max_files <= 0
 
           # Basic path validation
           validate_path_safety(base_path)
@@ -50,7 +50,7 @@ module CodingAgentTools
         # @param max_depth [Integer] Maximum recursion depth (default: 10)
         # @return [Array<String>] Array of matching file paths
         def self.find_files_by_name(base_path, filename, recursive: true, max_depth: 10)
-          raise ArgumentError, 'filename cannot be nil or empty' if filename.nil? || filename.empty?
+          raise ArgumentError, "filename cannot be nil or empty" if filename.nil? || filename.empty?
 
           scan_directory(base_path, patterns: [filename], recursive: recursive, max_depth: max_depth)
         end
@@ -62,10 +62,10 @@ module CodingAgentTools
         # @param max_depth [Integer] Maximum recursion depth (default: 10)
         # @return [Array<String>] Array of matching file paths
         def self.find_files_by_extension(base_path, extension, recursive: true, max_depth: 10)
-          raise ArgumentError, 'extension cannot be nil or empty' if extension.nil? || extension.empty?
+          raise ArgumentError, "extension cannot be nil or empty" if extension.nil? || extension.empty?
 
           # Normalize extension (ensure it starts with a dot)
-          ext = extension.start_with?('.') ? extension : ".#{extension}"
+          ext = extension.start_with?(".") ? extension : ".#{extension}"
           pattern = "*#{ext}"
 
           scan_directory(base_path, patterns: [pattern], recursive: recursive, max_depth: max_depth)
@@ -80,8 +80,8 @@ module CodingAgentTools
           return false if path.match?(/[\x00-\x1f\x7f]/)
 
           # Check for obvious traversal attempts
-          return false if path.include?('../')
-          return false if path.include?('..\\')
+          return false if path.include?("../")
+          return false if path.include?("..\\")
 
           true
         end
@@ -94,8 +94,8 @@ module CodingAgentTools
         # @param max_files [Integer] Maximum number of files to return (default: 1000)
         # @return [Hash] {files: Array<String>, success: Boolean, error: String}
         def self.find_files_with_pattern(base_path, pattern, recursive: true, max_depth: 10, max_files: 1000)
-          raise ArgumentError, 'base_path cannot be nil or empty' if base_path.nil? || base_path.empty?
-          raise ArgumentError, 'pattern cannot be nil or empty' if pattern.nil? || pattern.empty?
+          raise ArgumentError, "base_path cannot be nil or empty" if base_path.nil? || base_path.empty?
+          raise ArgumentError, "pattern cannot be nil or empty" if pattern.nil? || pattern.empty?
 
           # Basic path validation
           validate_path_safety(base_path)
@@ -113,7 +113,7 @@ module CodingAgentTools
           end
 
           # Determine if pattern is a directory path or glob pattern
-          if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+          if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
             # Handle as glob pattern
             find_files_by_glob_pattern(abs_base_path, pattern, recursive, max_depth, max_files)
           else
@@ -139,7 +139,7 @@ module CodingAgentTools
         # @param max_depth [Integer] Maximum depth to scan (default: 5)
         # @return [Hash] Statistics about the directory
         def self.directory_stats(base_path, max_depth: 5)
-          raise ArgumentError, 'base_path cannot be nil or empty' if base_path.nil? || base_path.empty?
+          raise ArgumentError, "base_path cannot be nil or empty" if base_path.nil? || base_path.empty?
 
           validate_path_safety(base_path)
 
@@ -190,7 +190,7 @@ module CodingAgentTools
 
               # Check depth
               relative_path = Pathname.new(path).relative_path_from(Pathname.new(base_path))
-              depth = relative_path.to_s.count('/')
+              depth = relative_path.to_s.count("/")
 
               if depth > max_depth
                 Find.prune if File.directory?(path)
@@ -222,7 +222,7 @@ module CodingAgentTools
               break if matching_files.length >= max_files
 
               # Skip . and .. and directories
-              next if ['.', '..'].include?(entry)
+              next if [".", ".."].include?(entry)
 
               full_path = File.join(base_path, entry)
               next if File.directory?(full_path)
@@ -309,7 +309,7 @@ module CodingAgentTools
             end
 
             # Use existing scan_directory method to find all files
-            patterns = ['*'] # Match all files
+            patterns = ["*"] # Match all files
             matching_files = scan_directory(target_path, patterns: patterns, recursive: recursive,
               max_depth: max_depth, max_files: max_files)
 
@@ -340,7 +340,7 @@ module CodingAgentTools
 
             files.select do |file|
               relative_path = Pathname.new(file).relative_path_from(Pathname.new(base_path))
-              depth = relative_path.to_s.count('/')
+              depth = relative_path.to_s.count("/")
               depth <= max_depth
             end
           end
@@ -356,7 +356,7 @@ module CodingAgentTools
             return if current_depth >= max_depth
 
             Dir.entries(path).each do |entry|
-              next if ['.', '..'].include?(entry)
+              next if [".", ".."].include?(entry)
 
               full_path = File.join(path, entry)
 
@@ -376,7 +376,7 @@ module CodingAgentTools
 
                   # Track file extension
                   ext = File.extname(entry).downcase
-                  ext = '[no extension]' if ext.empty?
+                  ext = "[no extension]" if ext.empty?
                   stats[:file_types][ext] += 1
                 end
               rescue Errno::ENOENT, Errno::EACCES

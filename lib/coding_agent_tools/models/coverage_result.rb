@@ -7,13 +7,13 @@ module CodingAgentTools
       attr_reader :file_path, :total_lines, :covered_lines, :coverage_percentage, :methods, :uncovered_details
 
       def initialize(file_path:, total_lines:, covered_lines:, coverage_percentage:, methods: [],
-                     uncovered_details: nil)
+        uncovered_details: nil)
         @file_path = file_path
         @total_lines = total_lines
         @covered_lines = covered_lines
         @coverage_percentage = coverage_percentage
         @methods = methods
-        @uncovered_details = uncovered_details || { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 }
+        @uncovered_details = uncovered_details || {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0}
       end
 
       def under_threshold?(threshold)
@@ -25,7 +25,7 @@ module CodingAgentTools
       end
 
       def relative_path
-        @relative_path ||= file_path.gsub(%r{^.*/lib/}, 'lib/')
+        @relative_path ||= file_path.gsub(%r{^.*/lib/}, "lib/")
       end
 
       def uncovered_lines

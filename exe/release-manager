@@ -6,38 +6,38 @@
 
 # Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path('../../lib', __FILE__)
+lib_path = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require 'coding_agent_tools/cli/commands/release/current'
-require 'coding_agent_tools/cli/commands/release/next'
-require 'coding_agent_tools/cli/commands/release/all'
-require 'coding_agent_tools/cli/commands/release/generate_id'
-require 'coding_agent_tools/cli/commands/release/validate'
-require 'dry/cli'
+require "coding_agent_tools/cli/commands/release/current"
+require "coding_agent_tools/cli/commands/release/next"
+require "coding_agent_tools/cli/commands/release/all"
+require "coding_agent_tools/cli/commands/release/generate_id"
+require "coding_agent_tools/cli/commands/release/validate"
+require "dry/cli"
 
 module ReleaseManagerCli
   module Commands
     extend Dry::CLI::Registry
 
     # Register release commands directly under the root
-    register 'current', CodingAgentTools::Cli::Commands::Release::Current
-    register 'next', CodingAgentTools::Cli::Commands::Release::Next
-    register 'all', CodingAgentTools::Cli::Commands::Release::All
-    register 'create-release-dir', CodingAgentTools::Cli::Commands::Release::GenerateId
-    register 'validate', CodingAgentTools::Cli::Commands::Release::Validate
+    register "current", CodingAgentTools::Cli::Commands::Release::Current
+    register "next", CodingAgentTools::Cli::Commands::Release::Next
+    register "all", CodingAgentTools::Cli::Commands::Release::All
+    register "create-release-dir", CodingAgentTools::Cli::Commands::Release::GenerateId
+    register "validate", CodingAgentTools::Cli::Commands::Release::Validate
 
     # Version command
     class Version < Dry::CLI::Command
-      desc 'Print version'
+      desc "Print version"
 
       def call(*)
-        require 'coding_agent_tools/version'
+        require "coding_agent_tools/version"
         puts "Release Manager #{CodingAgentTools::VERSION}"
       end
     end
 
-    register 'version', Version, aliases: ['v', '-v', '--version']
+    register "version", Version, aliases: ["v", "-v", "--version"]
   end
 end
 
@@ -48,6 +48,6 @@ rescue Dry::CLI::Error => e
   exit 1
 rescue => e
   warn "An unexpected error occurred: #{e.message}"
-  warn e.backtrace.join("\n") if ENV['DEBUG']
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
   exit 1
 end

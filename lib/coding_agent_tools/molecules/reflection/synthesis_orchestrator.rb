@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'ostruct'
-require 'fileutils'
-require_relative '../../models/result'
-require_relative '../../organisms/prompt_processor'
+require "ostruct"
+require "fileutils"
+require_relative "../../models/result"
+require_relative "../../organisms/prompt_processor"
 
 module CodingAgentTools
   module Molecules
@@ -15,7 +15,7 @@ module CodingAgentTools
         end
 
         def synthesize_reflections(reflections:, timestamp_info:, model:, output_path:, format:, system_prompt_path:,
-                                   force:, debug:)
+          force:, debug:)
           start_time = Time.now
 
           # Check if output file exists and handle overwrite
@@ -75,7 +75,7 @@ module CodingAgentTools
           return nil unless File.exist?(system_prompt_path)
 
           begin
-            File.read(system_prompt_path, encoding: 'utf-8')
+            File.read(system_prompt_path, encoding: "utf-8")
           rescue => e
             Rails.logger.warn("Could not read system prompt: #{e.message}") if defined?(Rails)
             nil
@@ -86,8 +86,8 @@ module CodingAgentTools
           content = []
 
           # Add synthesis context
-          content << '# Reflection Notes for Synthesis'
-          content << ''
+          content << "# Reflection Notes for Synthesis"
+          content << ""
 
           if timestamp_info.valid?
             content << "**Analysis Period**: #{timestamp_info.from_date} to #{timestamp_info.to_date}"
@@ -95,28 +95,28 @@ module CodingAgentTools
           end
           content << "**Total Reflections**: #{reflections.length}"
 
-          content << ''
-          content << '---'
-          content << ''
+          content << ""
+          content << "---"
+          content << ""
 
           # Add each reflection with proper headers
           reflections.each_with_index do |reflection_path, index|
             content << "## Reflection #{index + 1}: #{File.basename(reflection_path)}"
-            content << ''
+            content << ""
             content << "**Source**: `#{reflection_path}`"
             content << "**Modified**: #{File.mtime(reflection_path).strftime("%Y-%m-%d %H:%M:%S")}"
-            content << ''
+            content << ""
 
             begin
-              reflection_content = File.read(reflection_path, encoding: 'utf-8')
+              reflection_content = File.read(reflection_path, encoding: "utf-8")
               content << reflection_content
             rescue => e
               content << "*Error reading reflection: #{e.message}*"
             end
 
-            content << ''
-            content << '---'
-            content << ''
+            content << ""
+            content << "---"
+            content << ""
           end
 
           content.join("\n")

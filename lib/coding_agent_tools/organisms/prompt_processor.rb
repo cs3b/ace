@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/json_formatter'
+require_relative "../atoms/json_formatter"
 
 module CodingAgentTools
   module Organisms
@@ -46,7 +46,7 @@ module CodingAgentTools
       # @param roles [Array<String>] Array of roles (user/assistant)
       # @return [Array<Hash>] Conversation structure
       def build_conversation(prompts, roles = nil)
-        roles ||= prompts.map.with_index { |_, i| i.even? ? 'user' : 'assistant' }
+        roles ||= prompts.map.with_index { |_, i| i.even? ? "user" : "assistant" }
 
         prompts.zip(roles).map do |prompt, role|
           {
@@ -60,7 +60,7 @@ module CodingAgentTools
       # @param file_path [String] Path to JSON file
       # @param prompt_key [String] Key to extract prompts from
       # @return [Array<String>, String] Extracted prompt(s)
-      def extract_from_json(file_path, prompt_key = 'prompt')
+      def extract_from_json(file_path, prompt_key = "prompt")
         content = read_file(file_path)
         data = Atoms::JSONFormatter.safe_parse(content)
 
@@ -100,7 +100,7 @@ module CodingAgentTools
       # @return [String] Validated prompt
       def validate(prompt, max_length: nil)
         # Check if prompt is empty
-        raise Error, 'Prompt cannot be empty' if prompt.nil? || prompt.strip.empty?
+        raise Error, "Prompt cannot be empty" if prompt.nil? || prompt.strip.empty?
 
         # Check length if specified
         if max_length && prompt.length > max_length
@@ -172,7 +172,7 @@ module CodingAgentTools
         content = read_file(file_path)
 
         # Auto-detect and validate JSON files
-        if file_path.downcase.end_with?('.json')
+        if file_path.downcase.end_with?(".json")
           data = Atoms::JSONFormatter.safe_parse(content)
           raise Error, "Invalid JSON in file: #{file_path}" unless data
         end
@@ -184,7 +184,7 @@ module CodingAgentTools
       # @param file_path [String] Path to file
       # @return [String] File contents
       def read_file(file_path)
-        File.read(file_path, encoding: 'UTF-8').strip
+        File.read(file_path, encoding: "UTF-8").strip
       rescue Errno::EACCES => e
         new_error = Error.new("Permission denied reading file: #{file_path}")
         new_error.set_backtrace(e.backtrace)
@@ -203,7 +203,7 @@ module CodingAgentTools
       # @param prompt [String] Prompt to validate
       # @return [String] Validated prompt
       def validate_prompt_string(prompt)
-        raise Error, 'Prompt cannot be empty' if prompt.nil? || prompt.strip.empty?
+        raise Error, "Prompt cannot be empty" if prompt.nil? || prompt.strip.empty?
 
         prompt.strip
       end

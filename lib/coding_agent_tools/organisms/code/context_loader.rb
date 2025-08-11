@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../molecules/code/project_context_loader'
-require_relative '../../molecules/file_io_handler'
-require 'yaml'
+require_relative "../../molecules/code/project_context_loader"
+require_relative "../../molecules/file_io_handler"
+require "yaml"
 
 module CodingAgentTools
   module Organisms
@@ -22,9 +22,9 @@ module CodingAgentTools
         def load_context(mode, session)
           # Handle special case where mode is a file path
           custom_path = nil
-          if mode != 'auto' && mode != 'none' && File.exist?(mode)
+          if mode != "auto" && mode != "none" && File.exist?(mode)
             custom_path = mode
-            mode = 'custom'
+            mode = "custom"
           end
 
           # Load context
@@ -41,21 +41,21 @@ module CodingAgentTools
         # @param session_dir [String] session directory path
         # @return [Hash] {success: Boolean, error: String}
         def save_context(context, session_dir)
-          return { success: true, error: nil } unless context.loaded?
+          return {success: true, error: nil} unless context.loaded?
 
-          context_file = File.join(session_dir, 'context.yaml')
+          context_file = File.join(session_dir, "context.yaml")
 
           begin
             # Prepare context data for saving
             context_data = {
-              'mode' => context.mode,
-              'loaded_at' => context.loaded_at.iso8601,
-              'document_count' => context.document_count,
-              'documents' => context.documents.map do |doc|
+              "mode" => context.mode,
+              "loaded_at" => context.loaded_at.iso8601,
+              "document_count" => context.document_count,
+              "documents" => context.documents.map do |doc|
                 {
-                  'type' => doc[:type],
-                  'path' => doc[:path],
-                  'size' => doc[:content].size
+                  "type" => doc[:type],
+                  "path" => doc[:path],
+                  "size" => doc[:content].size
                 }
               end
             }
@@ -69,9 +69,9 @@ module CodingAgentTools
               File.write(doc_file, doc[:content])
             end
 
-            { success: true, error: nil }
+            {success: true, error: nil}
           rescue => e
-            { success: false, error: "Failed to save context: #{e.message}" }
+            {success: false, error: "Failed to save context: #{e.message}"}
           end
         end
 
@@ -85,14 +85,14 @@ module CodingAgentTools
         # @param context [Models::Code::ReviewContext] context
         # @return [String] human-readable summary
         def get_context_summary(context)
-          return 'No context loaded (mode: none)' unless context.loaded?
+          return "No context loaded (mode: none)" unless context.loaded?
 
           lines = ["Project Context (mode: #{context.mode}):"]
 
           if context.using_auto_defaults?
-            lines << '  Using standard project documents'
-          elsif context.mode == 'custom'
-            lines << '  Using custom context file'
+            lines << "  Using standard project documents"
+          elsif context.mode == "custom"
+            lines << "  Using custom context file"
           end
 
           lines << "  Documents loaded: #{context.document_count}"
@@ -111,7 +111,7 @@ module CodingAgentTools
         # @param context [Models::Code::ReviewContext] loaded context
         # @param session [Models::Code::ReviewSession] review session
         def log_context_loading(context, session)
-          log_file = File.join(session.directory_path, 'session.log')
+          log_file = File.join(session.directory_path, "session.log")
 
           log_entry = <<~LOG
             [#{Time.now.iso8601}] Context Loading
@@ -122,7 +122,7 @@ module CodingAgentTools
 
           LOG
 
-          File.open(log_file, 'a') { |f| f.write(log_entry) }
+          File.open(log_file, "a") { |f| f.write(log_entry) }
         rescue
           # Ignore logging errors
         end

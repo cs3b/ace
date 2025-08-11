@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'fileutils'
-require 'tmpdir'
+require "pathname"
+require "fileutils"
+require "tmpdir"
 
 module CodingAgentTools
   module Molecules
@@ -20,12 +20,12 @@ module CodingAgentTools
       DEFAULT_CONFIG = {
         # Allow current directory and common temporary directories by default
         allowed_base_paths: [
-          '.',                           # Current directory and subdirectories
-          '/tmp',                        # Unix/Linux temporary directory
-          '/var/tmp',                    # Unix/Linux alternative temporary directory
-          '/var/folders',                # macOS system temporary directories
-          '/private/tmp',                # macOS private temporary directory
-          '/private/var/tmp'             # macOS private alternative temporary directory
+          ".",                           # Current directory and subdirectories
+          "/tmp",                        # Unix/Linux temporary directory
+          "/var/tmp",                    # Unix/Linux alternative temporary directory
+          "/var/folders",                # macOS system temporary directories
+          "/private/tmp",                # macOS private temporary directory
+          "/private/var/tmp"             # macOS private alternative temporary directory
         ],
 
         # Deny system directories and common sensitive paths
@@ -88,7 +88,7 @@ module CodingAgentTools
       # @option context [Boolean] :allow_create Whether to allow creating new files
       # @return [ValidationResult] Validation result
       def validate_path(path, context = {})
-        return invalid_result(:empty_path, 'Path cannot be empty') if path.nil? || path.empty?
+        return invalid_result(:empty_path, "Path cannot be empty") if path.nil? || path.empty?
 
         # Basic path checks
         basic_check = perform_basic_checks(path)
@@ -115,7 +115,7 @@ module CodingAgentTools
         # Log successful validation
         @security_logger.log_event(:file_operation,
           path: normalized_path,
-          metadata: { operation: context[:operation] || 'unknown', validated: true })
+          metadata: {operation: context[:operation] || "unknown", validated: true})
 
         ValidationResult.new(true, normalized_path, nil, nil)
       rescue => e
@@ -140,7 +140,7 @@ module CodingAgentTools
         temp_dirs = []
 
         # Check common environment variables for temporary directories
-        ['TMPDIR', 'TMP', 'TEMP'].each do |env_var|
+        ["TMPDIR", "TMP", "TEMP"].each do |env_var|
           temp_path = ENV[env_var]
           next unless temp_path && !temp_path.empty? && File.directory?(temp_path)
 
@@ -166,20 +166,20 @@ module CodingAgentTools
       # Discover project root using ProjectRootDetector
       # @return [String, nil] Project root path or nil if not detectable
       def discover_project_root
-        require_relative '../atoms/project_root_detector'
+        require_relative "../atoms/project_root_detector"
         Atoms::ProjectRootDetector.find_project_root
       rescue => e
         # Log the error but don't fail initialization
         @security_logger&.log_event(:project_root_detection_failed,
           reason: e.message,
-          metadata: { fallback_to_current_dir: true })
+          metadata: {fallback_to_current_dir: true})
         nil
       end
 
       # Create default security logger
       # @return [SecurityLogger] Default logger instance
       def create_default_logger
-        require_relative '../atoms/security_logger'
+        require_relative "../atoms/security_logger"
         Atoms::SecurityLogger.new
       end
 
@@ -200,23 +200,23 @@ module CodingAgentTools
           @security_logger.log_event(:invalid_path,
             path: path,
             reason: "Path too long: #{path.length} characters")
-          return invalid_result(:path_too_long, 'Path exceeds maximum length')
+          return invalid_result(:path_too_long, "Path exceeds maximum length")
         end
 
         # Check for null bytes (security risk)
         if path.include?("\0")
           @security_logger.log_event(:path_traversal_attempt,
             path: path,
-            reason: 'Null byte in path')
-          return invalid_result(:null_byte, 'Path contains null byte')
+            reason: "Null byte in path")
+          return invalid_result(:null_byte, "Path contains null byte")
         end
 
         # Check for invalid characters that could be used for attacks
         if path.match?(/[\x00-\x1f\x7f]/)
           @security_logger.log_event(:invalid_path,
             path: path,
-            reason: 'Control characters in path')
-          return invalid_result(:invalid_characters, 'Path contains invalid characters')
+            reason: "Control characters in path")
+          return invalid_result(:invalid_characters, "Path contains invalid characters")
         end
 
         ValidationResult.new(true, path, nil, nil)
@@ -236,7 +236,7 @@ module CodingAgentTools
           @security_logger.log_event(:invalid_path,
             path: path,
             reason: "Path depth too deep: #{components.length}")
-          return invalid_result(:path_too_deep, 'Path exceeds maximum depth')
+          return invalid_result(:path_too_deep, "Path exceeds maximum depth")
         end
 
         # Resolve to absolute path if it exists, otherwise keep relative
@@ -257,7 +257,7 @@ module CodingAgentTools
         @security_logger.log_event(:invalid_path,
           path: path,
           reason: "Invalid path format: #{e.message}")
-        invalid_result(:invalid_format, 'Invalid path format')
+        invalid_result(:invalid_format, "Invalid path format")
       end
 
       # Check path against denied patterns
@@ -270,7 +270,7 @@ module CodingAgentTools
           @security_logger.log_event(:denied_access,
             path: normalized_path,
             reason: "Matches denied pattern: #{pattern.source}")
-          return invalid_result(:denied_pattern, 'Path matches denied pattern')
+          return invalid_result(:denied_pattern, "Path matches denied pattern")
         end
 
         ValidationResult.new(true, normalized_path, nil, nil)
@@ -299,8 +299,8 @@ module CodingAgentTools
         unless allowed
           @security_logger.log_event(:denied_access,
             path: normalized_path,
-            reason: 'Outside allowed base paths')
-          return invalid_result(:outside_allowed_paths, 'Path is outside allowed directories')
+            reason: "Outside allowed base paths")
+          return invalid_result(:outside_allowed_paths, "Path is outside allowed directories")
         end
 
         ValidationResult.new(true, normalized_path, nil, nil)
@@ -313,12 +313,12 @@ module CodingAgentTools
       def check_path_traversal(original_path, normalized_path)
         # Check for classic path traversal patterns
         traversal_patterns = [
-          '../',
-          '..\\',
-          '..%2f',
-          '..%5c',
-          '%2e%2e%2f',
-          '%2e%2e%5c'
+          "../",
+          "..\\",
+          "..%2f",
+          "..%5c",
+          "%2e%2e%2f",
+          "%2e%2e%5c"
         ]
 
         traversal_patterns.each do |pattern|
@@ -327,18 +327,18 @@ module CodingAgentTools
           @security_logger.log_event(:path_traversal_attempt,
             path: original_path,
             reason: "Contains traversal pattern: #{pattern}")
-          return invalid_result(:path_traversal, 'Path contains directory traversal pattern')
+          return invalid_result(:path_traversal, "Path contains directory traversal pattern")
         end
 
         # Additional check: if normalized path goes above the current directory
         # and we're working with a relative path that had ../ components
-        if original_path.include?('..') && normalized_path.start_with?('/')
+        if original_path.include?("..") && normalized_path.start_with?("/")
           current_dir = Dir.pwd
           unless normalized_path.start_with?(current_dir)
             @security_logger.log_event(:path_traversal_attempt,
               path: original_path,
-              reason: 'Relative path escapes current directory')
-            return invalid_result(:path_traversal, 'Path attempts to escape current directory')
+              reason: "Relative path escapes current directory")
+            return invalid_result(:path_traversal, "Path attempts to escape current directory")
           end
         end
 

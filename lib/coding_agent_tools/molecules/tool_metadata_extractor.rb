@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'open3'
-require 'timeout'
+require "open3"
+require "timeout"
 
 module CodingAgentTools
   module Molecules
@@ -13,7 +13,7 @@ module CodingAgentTools
     # - Handle various help output formats
     # - Provide fallback descriptions for tools without help
     class ToolMetadataExtractor
-      HELP_FLAGS = ['--help', '-h', 'help'].freeze
+      HELP_FLAGS = ["--help", "-h", "help"].freeze
       TIMEOUT_SECONDS = 5
 
       def initialize
@@ -102,7 +102,7 @@ module CodingAgentTools
           next unless usage_found
           next if line.empty?
           next if /^(options?|arguments?|examples?|commands?):/i.match?(line)
-          next if line.start_with?('-') # Skip option lines
+          next if line.start_with?("-") # Skip option lines
 
           # This looks like a description line
           return line if line.length > 10 && line.match?(/[a-z]/)
@@ -112,9 +112,9 @@ module CodingAgentTools
         lines.each do |line|
           next if line.length < 10
           next if line.match?(/^[-\w]+:/) # Skip section headers
-          next if line.start_with?('-') # Skip options
+          next if line.start_with?("-") # Skip options
 
-          return line if line.match?(/^[A-Z][^:]*[a-z]/) && line.include?(' ')
+          return line if line.match?(/^[A-Z][^:]*[a-z]/) && line.include?(" ")
         end
 
         nil
@@ -122,10 +122,10 @@ module CodingAgentTools
 
       def clean_description(description)
         # Remove quotes and clean up whitespace
-        cleaned = description.gsub(/^["']|["']$/, '').strip
+        cleaned = description.gsub(/^["']|["']$/, "").strip
 
         # Ensure it ends with a period if it doesn't already have punctuation
-        cleaned += '.' unless cleaned.match?(/[.!?]$/)
+        cleaned += "." unless cleaned.match?(/[.!?]$/)
 
         # Capitalize first letter
         cleaned[0] = cleaned[0].upcase if cleaned.length > 0
@@ -150,10 +150,10 @@ module CodingAgentTools
           "Release management tool for #{::Regexp.last_match(1).tr("-", " ")}."
         when /^reflection-(.+)/
           "Reflection and analysis tool for #{::Regexp.last_match(1).tr("-", " ")}."
-        when 'handbook'
-          'Development handbook access and management tool.'
+        when "handbook"
+          "Development handbook access and management tool."
         else
-          'Development automation tool.'
+          "Development automation tool."
         end
       end
     end

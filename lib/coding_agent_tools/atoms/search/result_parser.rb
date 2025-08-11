@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 
 module CodingAgentTools
   module Atoms
@@ -33,7 +33,7 @@ module CodingAgentTools
           return [] if output.nil? || output.empty?
 
           lines = output.lines.map(&:strip).reject(&:empty?)
-          
+
           lines.map do |line|
             {
               type: :file,
@@ -41,7 +41,7 @@ module CodingAgentTools
               absolute_path: options[:absolute_path] ? line : File.expand_path(line),
               basename: File.basename(line),
               dirname: File.dirname(line),
-              extension: File.extname(line)[1..-1] || '', # Remove the leading dot
+              extension: File.extname(line)[1..] || "", # Remove the leading dot
               size: nil, # fd doesn't provide size by default
               modified_time: nil
             }
@@ -53,18 +53,18 @@ module CodingAgentTools
         # @return [Array<Hash>] Parsed results
         def self.parse_ripgrep_json(output)
           results = []
-          
+
           output.lines.each do |line|
             line = line.strip
             next if line.empty?
-            
+
             begin
               json_obj = JSON.parse(line)
-              
-              case json_obj['type']
-              when 'match'
+
+              case json_obj["type"]
+              when "match"
                 results << parse_ripgrep_match(json_obj)
-              when 'summary'
+              when "summary"
                 # Summary object contains stats about the search
                 # We can add this information to metadata if needed
                 next
@@ -75,7 +75,7 @@ module CodingAgentTools
               next
             end
           end
-          
+
           results
         end
 
@@ -84,21 +84,20 @@ module CodingAgentTools
         # @return [Array<Hash>] Parsed results
         def self.parse_ripgrep_text(output)
           results = []
-          current_file = nil
-          
+
           output.lines.each do |line|
             line = line.chomp
             next if line.empty?
-            
+
             # Check if this is a file path line (when using --with-filename)
             if line.match?(/^[^:]+:\d+:/)
               # Format: file:line:content or file:line:column:content
-              parts = line.split(':', 3)
+              parts = line.split(":", 3)
               if parts.length >= 3
                 file_path = parts[0]
                 line_number = parts[1].to_i
                 content = parts[2]
-                
+
                 results << {
                   type: :match,
                   path: file_path,
@@ -111,13 +110,13 @@ module CodingAgentTools
               end
             elsif line.match?(/^[^:]+:\d+:\d+:/)
               # Format with column: file:line:column:content
-              parts = line.split(':', 4)
+              parts = line.split(":", 4)
               if parts.length >= 4
                 file_path = parts[0]
                 line_number = parts[1].to_i
                 column = parts[2].to_i
                 content = parts[3]
-                
+
                 results << {
                   type: :match,
                   path: file_path,
@@ -137,7 +136,7 @@ module CodingAgentTools
               }
             end
           end
-          
+
           results
         end
 
@@ -167,9 +166,9 @@ module CodingAgentTools
         # @return [Array<Hash>] Filtered results
         def self.filter_by_extension(results, extensions)
           return results if extensions.empty?
-          
+
           results.select do |result|
-            file_ext = File.extname(result[:path])[1..-1] || ''
+            file_ext = File.extname(result[:path])[1..] || ""
             extensions.include?(file_ext)
           end
         end
@@ -180,7 +179,7 @@ module CodingAgentTools
         def self.add_file_metadata(results)
           results.map do |result|
             path = result[:path]
-            
+
             if File.exist?(path)
               stat = File.stat(path)
               result.merge(
@@ -201,17 +200,17 @@ module CodingAgentTools
         end
 
         private_class_method def self.parse_ripgrep_match(json_obj)
-          data = json_obj['data']
-          path = data['path']['text']
-          lines = data['lines']
-          
+          data = json_obj["data"]
+          path = data["path"]["text"]
+          lines = data["lines"]
+
           # Handle potential multiple lines in the match
-          line_text = lines['text']
-          line_number = lines['line_number']
-          
+          line_text = lines["text"]
+          line_number = lines["line_number"]
+
           # Extract submatch information if available
-          submatches = data['submatches'] || []
-          
+          submatches = data["submatches"] || []
+
           {
             type: :match,
             path: path,
@@ -219,9 +218,9 @@ module CodingAgentTools
             content: line_text,
             submatches: submatches.map do |submatch|
               {
-                match_text: submatch['match']['text'],
-                start: submatch['start'],
-                end: submatch['end']
+                match_text: submatch["match"]["text"],
+                start: submatch["start"],
+                end: submatch["end"]
               }
             end
           }

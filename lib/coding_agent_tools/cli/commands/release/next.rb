@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/taskflow_management/release_manager'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/taskflow_management/release_manager"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
@@ -10,18 +10,18 @@ module CodingAgentTools
       module Release
         # Next command for finding next available release in backlog
         class Next < Dry::CLI::Command
-          desc 'Find next available release in backlog'
+          desc "Find next available release in backlog"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :format, type: :string, default: 'text', values: ['text', 'json'],
-            desc: 'Output format (text or json)'
+          option :format, type: :string, default: "text", values: ["text", "json"],
+            desc: "Output format (text or json)"
 
           example [
-            '',
-            '--format json',
-            '--debug'
+            "",
+            "--format json",
+            "--debug"
           ]
 
           def call(**options)
@@ -31,7 +31,7 @@ module CodingAgentTools
 
             result = release_manager.next
 
-            if options[:format] == 'json'
+            if options[:format] == "json"
               handle_json_result(result)
             else
               handle_text_result(result)
@@ -52,13 +52,13 @@ module CodingAgentTools
             end
 
             if result.data.nil?
-              puts result.error_message || 'No next release available'
+              puts result.error_message || "No next release available"
               return
             end
 
             release = result.data
-            puts 'Next Release Available:'
-            puts '=' * 30
+            puts "Next Release Available:"
+            puts "=" * 30
             puts "  Name:      #{release.name}"
             puts "  Version:   #{release.version}"
             puts "  Path:      #{release.path}"
@@ -73,7 +73,7 @@ module CodingAgentTools
           end
 
           def handle_json_result(result)
-            require 'json'
+            require "json"
 
             if result.success?
               if result.data
@@ -95,7 +95,7 @@ module CodingAgentTools
                 output = {
                   success: true,
                   data: nil,
-                  message: result.error_message || 'No next release available'
+                  message: result.error_message || "No next release available"
                 }
               end
             else
@@ -109,7 +109,7 @@ module CodingAgentTools
           end
 
           def format_time(time)
-            time.strftime('%Y-%m-%d %H:%M:%S')
+            time.strftime("%Y-%m-%d %H:%M:%S")
           end
 
           def handle_error(error, debug_enabled)
@@ -119,7 +119,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

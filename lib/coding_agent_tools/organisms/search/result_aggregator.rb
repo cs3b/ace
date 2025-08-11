@@ -18,26 +18,26 @@ module CodingAgentTools
         # @return [Hash] Aggregated results
         def aggregate(results, options = {})
           reset_counts
-          
+
           # Check if this is unified search (single repository)
           unified_search = results.size == 1 && results.keys.first == "project"
-          
+
           if unified_search
             # Simplified flat structure for unified search
             repo_data = results["project"]
             processed = process_repository_results("project", repo_data, options)
-            
+
             # Apply path filtering if specified
             if options[:include_paths] || options[:exclude_paths]
               processed = filter_results_by_path(processed, options)
             end
-            
+
             # Apply result limits if specified
             if options[:max_results]
               processed[:results] = limit_results(processed[:results], options[:max_results])
               processed[:count] = count_results(processed[:results])
             end
-            
+
             # Return flat structure
             {
               total_results: processed[:count],
@@ -55,29 +55,29 @@ module CodingAgentTools
               summary: {},
               metadata: generate_metadata(options)
             }
-            
+
             # Process each repository's results
             results.each do |repo_name, repo_data|
               processed = process_repository_results(repo_name, repo_data, options)
-              
+
               # Apply path filtering if specified
               if options[:include_paths] || options[:exclude_paths]
                 processed = filter_results_by_path(processed, options)
               end
-              
+
               aggregated[:repositories][repo_name] = processed
               aggregated[:total_results] += processed[:count]
               @repository_counts[repo_name] = processed[:count]
             end
-            
+
             # Add summary information
             aggregated[:summary] = generate_summary(aggregated)
-            
+
             # Apply result limits if specified
             if options[:max_results]
               aggregated = apply_result_limit(aggregated, options[:max_results])
             end
-            
+
             format_output(aggregated, options[:format] || :hash)
           end
         end
@@ -90,34 +90,32 @@ module CodingAgentTools
             total_results: 0,
             repositories: {},
             summary: {},
-            metadata: { merged_at: Time.now.iso8601 }
+            metadata: {merged_at: Time.now.iso8601}
           }
-          
+
           result_sets.each do |results|
             next unless results.is_a?(Hash)
-            
+
             # Merge repository results
-            if results[:repositories]
-              results[:repositories].each do |repo_name, repo_data|
-                if merged[:repositories][repo_name]
-                  # Merge with existing repository results
-                  merged[:repositories][repo_name] = merge_repository_results(
-                    merged[:repositories][repo_name],
-                    repo_data
-                  )
-                else
-                  merged[:repositories][repo_name] = repo_data
-                end
+            results[:repositories]&.each do |repo_name, repo_data|
+              merged[:repositories][repo_name] = if merged[:repositories][repo_name]
+                # Merge with existing repository results
+                merge_repository_results(
+                  merged[:repositories][repo_name],
+                  repo_data
+                )
+              else
+                repo_data
               end
             end
-            
+
             # Update total count
             merged[:total_results] += results[:total_results] || 0
           end
-          
+
           # Regenerate summary
           merged[:summary] = generate_summary(merged)
-          
+
           merged
         end
 
@@ -127,7 +125,7 @@ module CodingAgentTools
         # @return [Hash] Sorted results
         def sort_results(results, sort_by = :relevance)
           sorted = results.dup
-          
+
           sorted[:repositories].each do |repo_name, repo_data|
             if repo_data[:results].is_a?(Array)
               repo_data[:results] = sort_result_array(repo_data[:results], sort_by)
@@ -137,7 +135,7 @@ module CodingAgentTools
               repo_data[:results][:content] = sort_result_array(repo_data[:results][:content], sort_by) if repo_data[:results][:content]
             end
           end
-          
+
           sorted
         end
 
@@ -146,18 +144,18 @@ module CodingAgentTools
         # Filter results by path includes/excludes
         def filter_results_by_path(repo_data, options)
           return repo_data unless repo_data[:results]
-          
+
           filtered = repo_data.dup
-          
+
           # Get repository path from repo_data structure
           repo_path = repo_data[:repository]&.[](:path) || repo_data[:path]
-          
+
           # Handle different result formats
           if filtered[:results].is_a?(Hash) && filtered[:results][:results].is_a?(Array)
             # Format: {success: bool, results: [...]}
             filtered[:results] = filtered[:results].dup
             filtered[:results][:results] = filter_result_array_by_path(
-              filtered[:results][:results], 
+              filtered[:results][:results],
               repo_path,
               options
             )
@@ -179,98 +177,98 @@ module CodingAgentTools
               options
             )
           end
-          
+
           # Recalculate count
           filtered[:count] = count_results(filtered[:results])
           filtered
         end
-        
+
         # Filter array of results by path
         def filter_result_array_by_path(results, repo_path, options)
           return results unless results.is_a?(Array)
-          
+
           # Get project root once for efficiency
           @project_root ||= CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-          
+
           results.select do |result|
             file_path = result[:file] || result[:path] || result.to_s
             next true if file_path.empty?
-            
+
             # Convert absolute path to relative if it starts with project root
-            normalized_path = if file_path.start_with?('/')
+            normalized_path = if file_path.start_with?("/")
               if file_path.start_with?(@project_root)
                 # Remove project root and leading slash
-                file_path.sub(@project_root + '/', '')
+                file_path.sub(@project_root + "/", "")
               else
                 # Keep absolute path if outside project
                 file_path
               end
-            elsif file_path.start_with?('./')
+            elsif file_path.start_with?("./")
               # Remove leading ./
-              file_path[2..-1]
+              file_path[2..]
             else
               # Already relative
               file_path
             end
-            
+
             # Apply include filters
             if options[:include_paths] && !options[:include_paths].empty?
               next false unless path_matches_any?(normalized_path, options[:include_paths])
             end
-            
-            # Apply exclude filters  
-            if options[:exclude_paths] && !options[:exclude_paths].empty?
-              next false if path_matches_any?(normalized_path, options[:exclude_paths])
-            end
-            
-            true
-          end
-        end
-        
-        # Filter array of file paths
-        def filter_file_array_by_path(files, repo_path, options)
-          return files unless files.is_a?(Array)
-          
-          # Get project root once for efficiency
-          @project_root ||= CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
-          
-          files.select do |file|
-            # Convert absolute path to relative if it starts with project root
-            normalized_path = if file.start_with?('/')
-              if file.start_with?(@project_root)
-                # Remove project root and leading slash
-                file.sub(@project_root + '/', '')
-              else
-                # Keep absolute path if outside project
-                file
-              end
-            elsif file.start_with?('./')
-              # Remove leading ./
-              file[2..-1]
-            else
-              # Already relative
-              file
-            end
-            
-            # Apply include filters
-            if options[:include_paths] && !options[:include_paths].empty?
-              next false unless path_matches_any?(normalized_path, options[:include_paths])
-            end
-            
+
             # Apply exclude filters
             if options[:exclude_paths] && !options[:exclude_paths].empty?
               next false if path_matches_any?(normalized_path, options[:exclude_paths])
             end
-            
+
             true
           end
         end
-        
+
+        # Filter array of file paths
+        def filter_file_array_by_path(files, repo_path, options)
+          return files unless files.is_a?(Array)
+
+          # Get project root once for efficiency
+          @project_root ||= CodingAgentTools::Atoms::ProjectRootDetector.find_project_root
+
+          files.select do |file|
+            # Convert absolute path to relative if it starts with project root
+            normalized_path = if file.start_with?("/")
+              if file.start_with?(@project_root)
+                # Remove project root and leading slash
+                file.sub(@project_root + "/", "")
+              else
+                # Keep absolute path if outside project
+                file
+              end
+            elsif file.start_with?("./")
+              # Remove leading ./
+              file[2..]
+            else
+              # Already relative
+              file
+            end
+
+            # Apply include filters
+            if options[:include_paths] && !options[:include_paths].empty?
+              next false unless path_matches_any?(normalized_path, options[:include_paths])
+            end
+
+            # Apply exclude filters
+            if options[:exclude_paths] && !options[:exclude_paths].empty?
+              next false if path_matches_any?(normalized_path, options[:exclude_paths])
+            end
+
+            true
+          end
+        end
+
         # Check if path matches any of the patterns
         def path_matches_any?(path, patterns)
           patterns.any? do |pattern|
             # Handle glob patterns
-            if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+            if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
               File.fnmatch(pattern, path, File::FNM_PATHNAME)
             else
               # Handle directory prefixes (e.g., "dev-taskflow/done" matches "dev-taskflow/done/file.txt")
@@ -288,7 +286,7 @@ module CodingAgentTools
         # Process results from a single repository
         def process_repository_results(repo_name, repo_data, options)
           results = repo_data[:results]
-          
+
           processed = {
             name: repo_name,
             path: repo_data[:repository][:path],
@@ -296,15 +294,15 @@ module CodingAgentTools
             results: results,
             metadata: repo_data[:metadata] || {}
           }
-          
+
           # Count results
           processed[:count] = count_results(results)
-          
+
           # Add repository label to each result
           if options[:label_results]
             processed[:results] = label_results(results, repo_name)
           end
-          
+
           processed
         end
 
@@ -371,9 +369,9 @@ module CodingAgentTools
         def generate_metadata(options)
           {
             aggregated_at: Time.now.iso8601,
-            options: options.slice(:type, :format, :max_results, :glob, :since, :before, 
-                                   :scope, :case_insensitive, :whole_word, :include_paths, 
-                                   :exclude_paths, :repository, :main_only),
+            options: options.slice(:type, :format, :max_results, :glob, :since, :before,
+              :scope, :case_insensitive, :whole_word, :include_paths,
+              :exclude_paths, :repository, :main_only),
             search_mode: options[:search_mode],
             pattern: options[:pattern],
             version: "1.0"
@@ -384,7 +382,7 @@ module CodingAgentTools
         def apply_result_limit(aggregated, max_results)
           limited = aggregated.dup
           remaining = max_results
-          
+
           limited[:repositories].each do |repo_name, repo_data|
             if remaining <= 0
               repo_data[:results] = []
@@ -398,10 +396,10 @@ module CodingAgentTools
               remaining -= repo_data[:count]
             end
           end
-          
+
           # Update total count
           limited[:total_results] = [aggregated[:total_results], max_results].min
-          
+
           limited
         end
 
@@ -430,7 +428,7 @@ module CodingAgentTools
         # Merge two repository result sets
         def merge_repository_results(existing, new_data)
           merged = existing.dup
-          
+
           if existing[:results].is_a?(Array) && new_data[:results].is_a?(Array)
             merged[:results] = (existing[:results] + new_data[:results]).uniq
           elsif existing[:results].is_a?(Hash) && new_data[:results].is_a?(Hash)
@@ -445,7 +443,7 @@ module CodingAgentTools
               end
             end
           end
-          
+
           merged[:count] = count_results(merged[:results])
           merged
         end
@@ -453,7 +451,7 @@ module CodingAgentTools
         # Sort result array by criteria
         def sort_result_array(results, sort_by)
           return results unless results.is_a?(Array)
-          
+
           case sort_by
           when :path
             results.sort_by { |r| r[:file] || r[:path] || "" }
@@ -485,16 +483,16 @@ module CodingAgentTools
         # Format results as text
         def format_as_text(aggregated)
           lines = []
-          
+
           lines << "Search Results: #{aggregated[:total_results]} total"
           lines << ""
-          
+
           aggregated[:repositories].each do |repo_name, repo_data|
             next if repo_data[:count] == 0
-            
+
             lines << "Repository: #{repo_name} (#{repo_data[:count]} results)"
             lines << "-" * 40
-            
+
             if repo_data[:results].is_a?(Array)
               repo_data[:results].each do |result|
                 lines << format_result_line(result)
@@ -513,10 +511,10 @@ module CodingAgentTools
                 end
               end
             end
-            
+
             lines << ""
           end
-          
+
           lines.join("\n")
         end
 
@@ -535,7 +533,7 @@ module CodingAgentTools
           when Array
             results.first(limit)
           when Hash
-            if results[:results] && results[:results].is_a?(Array)
+            if results[:results]&.is_a?(Array)
               results_copy = results.dup
               results_copy[:results] = results[:results].first(limit)
               results_copy
@@ -553,21 +551,21 @@ module CodingAgentTools
           when Array
             results
           when Hash
-            if results[:results] && results[:results].is_a?(Array)
+            if results[:results]&.is_a?(Array)
               results[:results]
             elsif results[:files] && results[:content]
               # Handle hybrid results
               [].tap do |flat|
                 files = results[:files]
                 content = results[:content]
-                
+
                 # Handle files (might be Hash with :files key or direct Array)
                 if files.is_a?(Hash) && files[:files]
                   flat.concat(files[:files] || [])
                 elsif files.is_a?(Array)
                   flat.concat(files)
                 end
-                
+
                 # Handle content (might be Hash with :results key or direct Array)
                 if content.is_a?(Hash) && content[:results]
                   flat.concat(content[:results] || [])

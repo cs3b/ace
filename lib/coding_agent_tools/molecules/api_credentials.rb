@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/env_reader'
+require_relative "../atoms/env_reader"
 
 module CodingAgentTools
   module Molecules
@@ -41,7 +41,7 @@ module CodingAgentTools
       # @return [String] The API key
       # @raise [KeyError] If no API key is found or env_key_name not set
       def api_key
-        raise KeyError, 'env_key_name not set. Please provide it during initialization.' if @env_key_name.nil?
+        raise KeyError, "env_key_name not set. Please provide it during initialization." if @env_key_name.nil?
 
         # First check singleton configuration
         return self.class.config[@env_key_name] if self.class.config[@env_key_name]
@@ -88,7 +88,7 @@ module CodingAgentTools
 
         # Filter to API-related variables
         env_vars.select do |key, _|
-          key.include?('API') || key.include?('KEY') || key.include?('TOKEN')
+          key.include?("API") || key.include?("KEY") || key.include?("TOKEN")
         end
       end
 
@@ -107,7 +107,7 @@ module CodingAgentTools
 
         loop do
           # Construct and normalize the potential .env file path
-          env_path = File.expand_path(File.join(current_dir, '.env'))
+          env_path = File.expand_path(File.join(current_dir, ".env"))
           return env_path if File.exist?(env_path)
 
           # Get the parent directory and normalize it

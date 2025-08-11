@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'pathname'
-require 'yaml'
-require_relative '../organisms/claude_commands_orchestrator'
-require_relative '../models/installation_options'
-require_relative '../models/installation_result'
-require_relative '../molecules/project_root_finder'
-require_relative '../molecules/metadata_injector'
+require "fileutils"
+require "pathname"
+require "yaml"
+require_relative "../organisms/claude_commands_orchestrator"
+require_relative "../models/installation_options"
+require_relative "../models/installation_result"
+require_relative "../molecules/project_root_finder"
+require_relative "../molecules/metadata_injector"
 
 module CodingAgentTools
   module Integrations
@@ -110,10 +110,10 @@ module CodingAgentTools
 
       def create_backup
         # Legacy method - now handled by BackupCreator molecule
-        target = project_root / '.claude'
+        target = project_root / ".claude"
         return unless target.exist? && options[:backup]
 
-        timestamp = Time.now.strftime('%Y%m%d-%H%M')
+        timestamp = Time.now.strftime("%Y%m%d-%H%M")
         backup_path = project_root / ".claude.backup.#{timestamp}"
 
         if options[:dry_run]
@@ -126,25 +126,25 @@ module CodingAgentTools
 
       def copy_agents
         # Legacy method - now handled by AgentInstaller organism
-        source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
-        agents_dir = source_base / 'agents'
-        target_dir = project_root / '.claude' / 'agents'
+        source_base = options[:source] ? Pathname.new(options[:source]) : project_root / "dev-handbook" / ".integrations" / "claude"
+        agents_dir = source_base / "agents"
+        target_dir = project_root / ".claude" / "agents"
 
         return unless agents_dir.exist?
 
         ensure_directory_exists(target_dir)
 
-        puts 'Copying agents...'
+        puts "Copying agents..."
         agent_count = 0
-        agents_dir.glob('*.md').each do |file|
-          result = copy_file_with_metadata(file, target_dir / file.basename, 'agent')
+        agents_dir.glob("*.md").each do |file|
+          result = copy_file_with_metadata(file, target_dir / file.basename, "agent")
           agent_count += 1 if result == :created
         end
         puts "  ✓ Copied #{agent_count} agents"
         puts
       end
 
-      def copy_file_with_metadata(source, target, type = 'command')
+      def copy_file_with_metadata(source, target, type = "command")
         # Legacy method - now handled by FileOperationExecutor molecule
         if target.exist? && !options[:force]
           puts "  ✗ Skipped: #{target.basename} (already exists)"
@@ -156,7 +156,7 @@ module CodingAgentTools
 
         # Add or update metadata
         content = inject_metadata(content, {
-          'last_modified' => Time.now.strftime('%Y-%m-%d %H:%M:%S')
+          "last_modified" => Time.now.strftime("%Y-%m-%d %H:%M:%S")
         })
 
         if options[:dry_run]
@@ -166,8 +166,8 @@ module CodingAgentTools
           puts "  ✓ Created: #{target.basename}"
         end
         stats[:created] += 1
-        stats[:agents] += 1 if type == 'agent'
-        return :created
+        stats[:agents] += 1 if type == "agent"
+        :created
       end
 
       def ensure_directory_exists(dir)
@@ -186,7 +186,7 @@ module CodingAgentTools
         # Legacy method - now handled by ProjectRootFinder molecule
         current = Pathname.pwd
         while current.parent != current
-          return current if (current / '.claude' / 'commands').directory?
+          return current if (current / ".claude" / "commands").directory?
           current = current.parent
         end
 
@@ -196,8 +196,8 @@ module CodingAgentTools
 
       def ensure_directories_exist
         # Legacy method - now handled by orchestrator
-        commands_dir = project_root / '.claude' / 'commands'
-        agents_dir = project_root / '.claude' / 'agents'
+        commands_dir = project_root / ".claude" / "commands"
+        agents_dir = project_root / ".claude" / "agents"
 
         ensure_directory_exists(commands_dir)
         ensure_directory_exists(agents_dir)
@@ -205,24 +205,24 @@ module CodingAgentTools
 
       def copy_custom_commands
         # Legacy method - now handled by CommandInstaller organism
-        source_base = options[:source] ? Pathname.new(options[:source]) : project_root / 'dev-handbook' / '.integrations' / 'claude'
-        commands_dir = source_base / 'commands'
-        custom_dir = source_base / 'commands' / '_custom'
-        generated_dir = source_base / 'commands' / '_generated'
-        target_dir = project_root / '.claude' / 'commands'
+        source_base = options[:source] ? Pathname.new(options[:source]) : project_root / "dev-handbook" / ".integrations" / "claude"
+        commands_dir = source_base / "commands"
+        custom_dir = source_base / "commands" / "_custom"
+        generated_dir = source_base / "commands" / "_generated"
+        target_dir = project_root / ".claude" / "commands"
 
         # Check if we have a flat structure (new) or subdirectory structure (legacy)
-        has_flat_structure = commands_dir.glob('*.md').reject { |f| f.basename.to_s == 'README.md' }.any?
+        has_flat_structure = commands_dir.glob("*.md").reject { |f| f.basename.to_s == "README.md" }.any?
         has_subdirs = custom_dir.exist? || generated_dir.exist?
 
-        puts 'Copying commands:'
+        puts "Copying commands:"
         total_count = 0
 
         if has_flat_structure
           # Copy from flat structure
-          commands_dir.glob('*.md').each do |file|
-            next if file.basename.to_s == 'README.md'
-            result = copy_file_with_metadata(file, target_dir / file.basename, 'command')
+          commands_dir.glob("*.md").each do |file|
+            next if file.basename.to_s == "README.md"
+            result = copy_file_with_metadata(file, target_dir / file.basename, "command")
             total_count += 1 if result == :created
           end
           puts "  ✓ Copied #{total_count} commands from flat structure"
@@ -233,8 +233,8 @@ module CodingAgentTools
 
           # Copy custom commands
           if custom_dir.exist?
-            custom_dir.glob('*.md').each do |file|
-              result = copy_file_with_metadata(file, target_dir / file.basename, 'custom_command')
+            custom_dir.glob("*.md").each do |file|
+              result = copy_file_with_metadata(file, target_dir / file.basename, "custom_command")
               custom_count += 1 if result == :created
             end
             stats[:custom_commands] = custom_count
@@ -242,8 +242,8 @@ module CodingAgentTools
 
           # Copy generated commands
           if generated_dir.exist?
-            generated_dir.glob('*.md').each do |file|
-              result = copy_file_with_metadata(file, target_dir / file.basename, 'generated_command')
+            generated_dir.glob("*.md").each do |file|
+              result = copy_file_with_metadata(file, target_dir / file.basename, "generated_command")
               generated_count += 1 if result == :created
             end
             stats[:generated_commands] = generated_count
@@ -260,7 +260,7 @@ module CodingAgentTools
 
       def copy_command_file(file)
         # Legacy method - now handled by FileOperationExecutor molecule
-        target = project_root / '.claude' / 'commands' / file.basename
+        target = project_root / ".claude" / "commands" / file.basename
         if target.exist? && !options[:force]
           puts "  ✗ Skipped: #{file.basename} (already exists)"
           stats[:skipped] += 1
@@ -278,24 +278,24 @@ module CodingAgentTools
 
       def scan_workflows
         # Legacy method - now handled by WorkflowCommandGenerator organism
-        workflows_dir = project_root / 'dev-handbook' / 'workflow-instructions'
+        workflows_dir = project_root / "dev-handbook" / "workflow-instructions"
         unless workflows_dir.exist?
           puts "Warning: Workflow instructions directory not found at #{workflows_dir}"
           return []
         end
 
-        workflows = workflows_dir.glob('*.wf.md').sort
+        workflows = workflows_dir.glob("*.wf.md").sort
         puts "Found #{workflows.length} workflow files"
         workflows
       end
 
       def create_commands_from_workflows(workflow_files)
         # Legacy method - now handled by WorkflowCommandGenerator organism
-        puts 'Creating command files...'
+        puts "Creating command files..."
 
         workflow_files.each do |workflow_file|
-          command_name = workflow_file.basename.to_s.sub('.wf.md', '')
-          command_file = project_root / '.claude' / 'commands' / "#{command_name}.md"
+          command_name = workflow_file.basename.to_s.sub(".wf.md", "")
+          command_file = project_root / ".claude" / "commands" / "#{command_name}.md"
 
           if command_file.exist?
             puts "  ✗ Skipped: #{command_name}.md (already exists)"
@@ -312,7 +312,7 @@ module CodingAgentTools
 
       def create_command_file(workflow_file, command_file)
         # Legacy method - now handled by CommandTemplateRenderer molecule
-        workflow_name = workflow_file.basename.to_s.sub('.wf.md', '')
+        workflow_name = workflow_file.basename.to_s.sub(".wf.md", "")
 
         # Check for custom template
         custom_content = get_custom_template(workflow_name)
@@ -338,27 +338,25 @@ module CodingAgentTools
       def get_custom_template(workflow_name)
         # Legacy method - now handled by CommandTemplateRenderer molecule
         case workflow_name
-        when 'commit'
+        when "commit"
           <<~CONTENT
             Read the entire file: @dev-handbook/workflow-instructions/commit.wf.md
 
             Follow the instructions exactly, including creating the git commit with the specific format shown.
           CONTENT
-        when 'load-project-context'
+        when "load-project-context"
           <<~CONTENT
             Read the entire file: @dev-handbook/workflow-instructions/load-project-context.wf.md
 
             Load all the context documents listed in the workflow.
           CONTENT
-        else
-          nil
         end
       end
 
       def print_enhanced_summary
         # Legacy method - now handled by orchestrator
-        puts '='*50
-        puts 'Installation complete:'
+        puts "=" * 50
+        puts "Installation complete:"
         puts "  Location: #{project_root / ".claude"}/"
         puts "  Commands: #{stats[:custom_commands] + stats[:generated_commands] + stats[:workflow_commands]}"
         puts "  Agents: #{stats[:agents]}"
@@ -370,11 +368,11 @@ module CodingAgentTools
 
         if stats[:errors].any?
           puts
-          puts 'Errors encountered:'
+          puts "Errors encountered:"
           stats[:errors].each { |error| puts "  - #{error}" }
         end
 
-        puts '='*50
+        puts "=" * 50
       end
     end
   end

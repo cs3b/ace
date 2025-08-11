@@ -3,40 +3,40 @@
 # Shared examples for testing path traversal attack prevention
 # Usage: include_examples "path traversal attack prevention", validator_instance
 
-RSpec.shared_examples 'path traversal attack prevention' do |validator|
+RSpec.shared_examples "path traversal attack prevention" do |validator|
   # Classic directory traversal attack vectors
   let(:attack_vectors) do
     [
       # Basic directory traversal
-      '../../../etc/passwd',
+      "../../../etc/passwd",
       '..\\..\\..\\windows\\system32\\config\\sam',
 
       # Encoded attacks
-      '..%2f..%2f..%2fetc%2fpasswd',
-      '..%5c..%5c..%5cwindows%5csystem32%5cconfig%5csam',
-      '%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd',
-      '%2e%2e%5c%2e%2e%5c%2e%2e%5cwindows%5csystem32',
+      "..%2f..%2f..%2fetc%2fpasswd",
+      "..%5c..%5c..%5cwindows%5csystem32%5cconfig%5csam",
+      "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+      "%2e%2e%5c%2e%2e%5c%2e%2e%5cwindows%5csystem32",
 
       # Double encoding
-      '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc%252fpasswd',
+      "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc%252fpasswd",
 
       # Unicode variants
       "\u002e\u002e\u002f\u002e\u002e\u002f\u002e\u002e\u002fetc\u002fpasswd",
 
       # Mixed with valid path components
-      'uploads/../../../etc/passwd',
-      'files/../../etc/shadow',
-      'documents/../../var/log/auth.log',
+      "uploads/../../../etc/passwd",
+      "files/../../etc/shadow",
+      "documents/../../var/log/auth.log",
 
       # Absolute paths to sensitive files
-      '/etc/passwd',
-      '/etc/shadow',
-      '/var/log/auth.log',
-      '/proc/version',
-      '/sys/devices',
-      '/dev/null',
-      '/root/.ssh/id_rsa',
-      '/root/.bash_history',
+      "/etc/passwd",
+      "/etc/shadow",
+      "/var/log/auth.log",
+      "/proc/version",
+      "/sys/devices",
+      "/dev/null",
+      "/root/.ssh/id_rsa",
+      "/root/.bash_history",
 
       # Windows specific
       'c:\\windows\\system32\\config\\sam',
@@ -44,29 +44,29 @@ RSpec.shared_examples 'path traversal attack prevention' do |validator|
       'c:\\boot.ini',
 
       # Home directory attacks
-      '~/.ssh/id_rsa',
-      '~/.aws/credentials',
-      '~/.bash_history',
+      "~/.ssh/id_rsa",
+      "~/.aws/credentials",
+      "~/.bash_history",
 
       # Git repository access
-      '.git/config',
-      '.git/HEAD',
-      '../.git/config',
-      '../../.git/hooks/pre-commit',
+      ".git/config",
+      ".git/HEAD",
+      "../.git/config",
+      "../../.git/hooks/pre-commit",
 
       # Other sensitive files
-      '.env',
-      '.aws/credentials',
-      '.ssh/config',
-      '.gem/credentials',
+      ".env",
+      ".aws/credentials",
+      ".ssh/config",
+      ".gem/credentials",
 
       # Long traversal sequences
-      ('../' * 20) + 'etc/passwd',
-      ('../' * 50) + 'var/log/messages'
+      ("../" * 20) + "etc/passwd",
+      ("../" * 50) + "var/log/messages"
     ]
   end
 
-  it 'blocks all common path traversal attack vectors' do
+  it "blocks all common path traversal attack vectors" do
     attack_vectors.each do |attack_path|
       result = validator.validate_path(attack_path)
 
@@ -79,7 +79,7 @@ RSpec.shared_examples 'path traversal attack prevention' do |validator|
     end
   end
 
-  it 'provides meaningful error messages for blocked attacks' do
+  it "provides meaningful error messages for blocked attacks" do
     attack_vectors.first(5).each do |attack_path|
       result = validator.validate_path(attack_path)
 
@@ -89,7 +89,7 @@ RSpec.shared_examples 'path traversal attack prevention' do |validator|
     end
   end
 
-  it 'logs security events for attack attempts' do
+  it "logs security events for attack attempts" do
     # This example assumes the validator has a security logger
     # Skip if no logger is available
     next unless validator.respond_to?(:security_logger)
@@ -108,37 +108,37 @@ RSpec.shared_examples 'path traversal attack prevention' do |validator|
 end
 
 # Shared examples for testing safe path acceptance
-RSpec.shared_examples 'safe path acceptance' do |validator|
+RSpec.shared_examples "safe path acceptance" do |validator|
   let(:safe_paths) do
     [
       # Relative paths within current directory
-      'output.txt',
-      'results/data.json',
-      'documents/report.md',
-      './file.txt',
-      'subdir/nested/file.txt',
+      "output.txt",
+      "results/data.json",
+      "documents/report.md",
+      "./file.txt",
+      "subdir/nested/file.txt",
 
       # Files with various extensions
-      'data.csv',
-      'config.yaml',
-      'script.rb',
-      'image.png',
-      'document.pdf',
+      "data.csv",
+      "config.yaml",
+      "script.rb",
+      "image.png",
+      "document.pdf",
 
       # Paths with special characters (but safe)
-      'file-with-dashes.txt',
-      'file_with_underscores.txt',
-      'file.with.dots.txt',
-      'file (with spaces).txt',
-      'file123.txt',
+      "file-with-dashes.txt",
+      "file_with_underscores.txt",
+      "file.with.dots.txt",
+      "file (with spaces).txt",
+      "file123.txt",
 
       # Current directory reference
-      '.',
-      './'
+      ".",
+      "./"
     ]
   end
 
-  it 'allows safe relative paths' do
+  it "allows safe relative paths" do
     safe_paths.each do |safe_path|
       result = validator.validate_path(safe_path)
 
@@ -147,7 +147,7 @@ RSpec.shared_examples 'safe path acceptance' do |validator|
     end
   end
 
-  it 'provides sanitized paths for safe inputs' do
+  it "provides sanitized paths for safe inputs" do
     safe_paths.each do |safe_path|
       result = validator.validate_path(safe_path)
 
@@ -160,18 +160,18 @@ RSpec.shared_examples 'safe path acceptance' do |validator|
 end
 
 # Shared examples for testing path normalization
-RSpec.shared_examples 'path normalization' do |validator|
+RSpec.shared_examples "path normalization" do |validator|
   let(:normalization_cases) do
     [
       # Input path -> Expected normalized result pattern
-      ['./file.txt', 'file.txt'],
-      ['subdir/./file.txt', /subdir\/file\.txt/],
-      ['dir//file.txt', /dir\/file\.txt/],
-      ['  ./file.txt  ', 'file.txt']  # whitespace trimming
+      ["./file.txt", "file.txt"],
+      ["subdir/./file.txt", /subdir\/file\.txt/],
+      ["dir//file.txt", /dir\/file\.txt/],
+      ["  ./file.txt  ", "file.txt"]  # whitespace trimming
     ]
   end
 
-  it 'normalizes paths correctly' do
+  it "normalizes paths correctly" do
     normalization_cases.each do |input_path, expected_pattern|
       result = validator.validate_path(input_path)
 

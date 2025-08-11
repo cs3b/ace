@@ -4,8 +4,8 @@ module CodingAgentTools
   module Atoms
     # Renders tabular data in a formatted text table
     class TableRenderer
-      DEFAULT_COLUMN_SEPARATOR = ' | '
-      DEFAULT_HEADER_SEPARATOR = '-'
+      DEFAULT_COLUMN_SEPARATOR = " | "
+      DEFAULT_HEADER_SEPARATOR = "-"
 
       attr_reader :columns, :rows, :options
 
@@ -45,7 +45,7 @@ module CodingAgentTools
 
       def terminal_width
         # Try to get terminal width, default to 80
-        ENV['COLUMNS']&.to_i || 80
+        ENV["COLUMNS"]&.to_i || 80
       end
 
       def calculate_column_widths
@@ -60,7 +60,7 @@ module CodingAgentTools
 
             # Check all row values
             @rows.each do |row|
-              value = row[i]&.to_s || ''
+              value = row[i]&.to_s || ""
               max_content_width = [max_content_width, value.length].max
             end
 
@@ -80,19 +80,19 @@ module CodingAgentTools
         parts = @columns.map do |col|
           @options[:header_separator] * col[:actual_width]
         end
-        parts.join(@options[:separator].gsub(' ', @options[:header_separator]))
+        parts.join(@options[:separator].gsub(" ", @options[:header_separator]))
       end
 
       def render_row(row)
         values = @columns.map.with_index do |col, i|
-          value = row[i]&.to_s || ''
+          value = row[i]&.to_s || ""
           align_text(value, col[:actual_width], col[:align] || :left)
         end
         values.join(@options[:separator])
       end
 
       def align_text(text, width, alignment)
-        truncated = text.length > width ? text[0...width-1] + '…' : text
+        truncated = (text.length > width) ? text[0...width - 1] + "…" : text
 
         case alignment
         when :right

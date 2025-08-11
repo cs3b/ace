@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/taskflow_management/directory_navigator'
+require_relative "../../atoms/taskflow_management/directory_navigator"
 
 module CodingAgentTools
   module Molecules
@@ -18,10 +18,10 @@ module CodingAgentTools
         end
 
         # Get current release information
-        def self.get_current_release(base_path: '.')
+        def self.get_current_release(base_path: ".")
           result = Atoms::TaskflowManagement::DirectoryNavigator.get_current_release_directory(base_path: base_path)
 
-          return ResolutionResult.new(nil, false, 'No current release directory found') if result.nil?
+          return ResolutionResult.new(nil, false, "No current release directory found") if result.nil?
 
           tasks_dir = Atoms::TaskflowManagement::DirectoryNavigator.find_tasks_directory(result[:path])
           release_info = ReleaseInfo.new(result[:path], result[:version], tasks_dir, File.basename(result[:path]),
@@ -33,10 +33,10 @@ module CodingAgentTools
         end
 
         # Find release by version
-        def self.find_release_by_version(version, base_path: '.', search_current: true, search_backlog: true)
+        def self.find_release_by_version(version, base_path: ".", search_current: true, search_backlog: true)
           search_paths = []
-          search_paths << File.join(base_path, 'dev-taskflow/current') if search_current
-          search_paths << File.join(base_path, 'dev-taskflow/backlog') if search_backlog
+          search_paths << File.join(base_path, "dev-taskflow/current") if search_current
+          search_paths << File.join(base_path, "dev-taskflow/backlog") if search_backlog
 
           result = Atoms::TaskflowManagement::DirectoryNavigator.find_release_directory(
             version, search_paths: search_paths, base_path: base_path
@@ -45,7 +45,7 @@ module CodingAgentTools
           return ResolutionResult.new(nil, false, "Release directory for version '#{version}' not found") if result.nil?
 
           tasks_dir = Atoms::TaskflowManagement::DirectoryNavigator.find_tasks_directory(result[:path])
-          release_type = result[:path].include?('/current/') ? :current : :backlog
+          release_type = result[:path].include?("/current/") ? :current : :backlog
           release_info = ReleaseInfo.new(result[:path], result[:version], tasks_dir, File.basename(result[:path]),
             release_type)
 
@@ -55,7 +55,7 @@ module CodingAgentTools
         end
 
         # Get current tasks directory
-        def self.get_current_tasks_directory(base_path: '.')
+        def self.get_current_tasks_directory(base_path: ".")
           result = get_current_release(base_path: base_path)
           return nil unless result.success?
 

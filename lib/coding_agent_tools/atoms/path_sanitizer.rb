@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'pathname'
+require "pathname"
 
 module CodingAgentTools
   module Atoms
@@ -33,28 +33,28 @@ module CodingAgentTools
       # @param path [String, Pathname] Path to sanitize
       # @return [String] Sanitized path
       def self.sanitize(path)
-        return '' if path.nil?
+        return "" if path.nil?
 
         path_str = path.to_s
 
         # Remove null bytes and control characters
-        sanitized = path_str.gsub(/[\x00-\x1f\x7f]/, '')
+        sanitized = path_str.gsub(/[\x00-\x1f\x7f]/, "")
 
         # Remove parent directory references
-        sanitized = sanitized.gsub(/\.\.\//, '')
+        sanitized = sanitized.gsub("../", "")
 
         # Remove home directory references
-        sanitized = sanitized.gsub(/~\//, '')
+        sanitized = sanitized.gsub("~/", "")
 
         # Remove environment variables
-        sanitized = sanitized.gsub(/\$[A-Z_]+/, '')
-        sanitized = sanitized.gsub(/%[A-Z_]+%/, '')
+        sanitized = sanitized.gsub(/\$[A-Z_]+/, "")
+        sanitized = sanitized.gsub(/%[A-Z_]+%/, "")
 
         # Normalize path separators
-        sanitized = sanitized.gsub(/[\\\/]+/, '/')
+        sanitized = sanitized.gsub(/[\\\/]+/, "/")
 
         # Remove leading/trailing slashes and whitespace
-        sanitized.strip.gsub(/^\/+|\/+$/, '')
+        sanitized.strip.gsub(/^\/+|\/+$/, "")
       end
 
       # Normalize a path to a consistent format
@@ -62,7 +62,7 @@ module CodingAgentTools
       # @param base [String, Pathname] Base directory for relative paths
       # @return [Pathname] Normalized path
       def self.normalize(path, base: nil)
-        return Pathname.new('') if path.nil? || path.to_s.empty?
+        return Pathname.new("") if path.nil? || path.to_s.empty?
 
         pathname = path.is_a?(Pathname) ? path : Pathname.new(path.to_s)
 
@@ -112,7 +112,7 @@ module CodingAgentTools
         sanitized_parts = clean_parts.map { |part| sanitize(part) }
 
         # Join with single separator
-        sanitized_parts.join('/')
+        sanitized_parts.join("/")
       end
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/system_command_executor'
+require_relative "../atoms/system_command_executor"
 
 module CodingAgentTools
   module Molecules
@@ -18,7 +18,7 @@ module CodingAgentTools
       MAX_RETRIES = 3
       RETRY_DELAYS = [1, 3, 9].freeze # Exponential backoff
 
-      def initialize(model: 'google:gemini-2.5-flash-lite', debug: false)
+      def initialize(model: "google:gemini-2.5-flash-lite", debug: false)
         @model = model
         @debug = debug
         @command_executor = Atoms::SystemCommandExecutor.new
@@ -87,21 +87,21 @@ module CodingAgentTools
             # If output is significantly longer than input and doesn't look like a fallback,
             # consider it already successfully enhanced
             if output_content.length > input_content.length + 50 &&
-               !output_content.start_with?('# Raw Idea (Enhanced Version Failed)')
+                !output_content.start_with?("# Raw Idea (Enhanced Version Failed)")
               debug_log("Output file already contains enhanced content, skipping LLM query: #{output_path}")
-              return { success: true }
+              return {success: true}
             end
           end
         end
 
         # Build llm-query command
         command = [
-          'llm-query',
+          "llm-query",
           @model,
           shell_escape(input_path),
-          '--system', shell_escape(system_path),
-          '--output', shell_escape(output_path)
-        ].join(' ')
+          "--system", shell_escape(system_path),
+          "--output", shell_escape(output_path)
+        ].join(" ")
 
         debug_log("Executing: #{command}")
 
@@ -112,14 +112,14 @@ module CodingAgentTools
           # Verify output file has content
           output_content = File.read(output_path).strip
           if output_content.empty?
-            { success: false, error: 'LLM produced empty output' }
+            {success: false, error: "LLM produced empty output"}
           else
             debug_log("LLM enhancement successful, output written to: #{output_path}")
-            { success: true }
+            {success: true}
           end
         else
-          error_msg = result[:error] || 'Unknown error during LLM query'
-          { success: false, error: error_msg }
+          error_msg = result[:error] || "Unknown error during LLM query"
+          {success: false, error: error_msg}
         end
       end
 

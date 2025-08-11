@@ -8,10 +8,10 @@ module CodingAgentTools
       class PatternAnalyzer
         # Pattern types for DWIM mode selection
         PATTERN_TYPES = {
-          file_glob: 'file_glob',       # *.rb, **/*.js, src/**/*.ts
-          content_regex: 'content_regex', # def.*initialize, class\s+\w+
-          hybrid: 'hybrid',             # Could be either file or content
-          literal: 'literal'            # Plain text search
+          file_glob: "file_glob",       # *.rb, **/*.js, src/**/*.ts
+          content_regex: "content_regex", # def.*initialize, class\s+\w+
+          hybrid: "hybrid",             # Could be either file or content
+          literal: "literal"            # Plain text search
         }.freeze
 
         # File glob indicators
@@ -29,7 +29,7 @@ module CodingAgentTools
           /[|+*?{}()\[\]\\]/,          # Regex metacharacters
           /def\s+\w+/,                 # Method definitions
           /class\s+\w+/,               # Class definitions
-          /function\s+\w+/,            # Function definitions  
+          /function\s+\w+/,            # Function definitions
           /import\s+/,                 # Import statements
           /require\s+/,                # Require statements
           /\b(TODO|FIXME|BUG|HACK)\b/, # Code annotations
@@ -50,8 +50,8 @@ module CodingAgentTools
         # @param pattern [String] Pattern to analyze
         # @return [Hash] Analysis result with type and confidence
         def self.analyze_pattern(pattern)
-          return { type: :invalid, confidence: 0.0, reason: 'Pattern is nil' } if pattern.nil?
-          return { type: :invalid, confidence: 0.0, reason: 'Pattern is empty' } if pattern.empty?
+          return {type: :invalid, confidence: 0.0, reason: "Pattern is nil"} if pattern.nil?
+          return {type: :invalid, confidence: 0.0, reason: "Pattern is empty"} if pattern.empty?
 
           # Clean the pattern for analysis
           clean_pattern = pattern.strip
@@ -61,8 +61,8 @@ module CodingAgentTools
             return {
               type: :file_glob,
               confidence: calculate_file_glob_confidence(clean_pattern),
-              reason: 'Contains file glob patterns',
-              suggested_tool: 'fd'
+              reason: "Contains file glob patterns",
+              suggested_tool: "fd"
             }
           end
 
@@ -71,8 +71,8 @@ module CodingAgentTools
             return {
               type: :content_regex,
               confidence: calculate_content_regex_confidence(clean_pattern),
-              reason: 'Contains regex metacharacters or code patterns',
-              suggested_tool: 'rg'
+              reason: "Contains regex metacharacters or code patterns",
+              suggested_tool: "rg"
             }
           end
 
@@ -81,8 +81,8 @@ module CodingAgentTools
             return {
               type: :literal,
               confidence: calculate_literal_confidence(clean_pattern),
-              reason: 'Simple literal text pattern',
-              suggested_tool: 'rg'
+              reason: "Simple literal text pattern",
+              suggested_tool: "rg"
             }
           end
 
@@ -90,8 +90,8 @@ module CodingAgentTools
           {
             type: :hybrid,
             confidence: 0.5,
-            reason: 'Pattern could match files or content',
-            suggested_tool: 'both'
+            reason: "Pattern could match files or content",
+            suggested_tool: "both"
           }
         end
 
@@ -103,7 +103,7 @@ module CodingAgentTools
         end
 
         # Check if pattern looks like content regex
-        # @param pattern [String] Pattern to check  
+        # @param pattern [String] Pattern to check
         # @return [Boolean] True if pattern appears to be content regex
         def self.content_regex_pattern?(pattern)
           CONTENT_REGEX_PATTERNS.any? { |regex| pattern.match?(regex) }
@@ -144,55 +144,55 @@ module CodingAgentTools
         # @return [Array<String>] List of file extensions found
         def self.extract_extensions(pattern)
           extensions = []
-          
+
           # Match patterns like *.rb, **/*.js, etc.
           extension_matches = pattern.scan(/\*+\.(\w+)/)
           extensions.concat(extension_matches.flatten)
-          
+
           # Match explicit .ext at the end
           if pattern.match?(/\.(\w+)$/)
             extension_match = pattern.match(/\.(\w+)$/)
             extensions << extension_match[1]
           end
-          
+
           extensions.uniq
         end
 
         private_class_method def self.calculate_file_glob_confidence(pattern)
           confidence = 0.5 # Base confidence
-          
+
           # Increase confidence for clear glob patterns
-          confidence += 0.3 if pattern.include?('*')
+          confidence += 0.3 if pattern.include?("*")
           confidence += 0.2 if pattern.match?(/\.\w+$/)
-          confidence += 0.1 if pattern.include?('/')
-          
+          confidence += 0.1 if pattern.include?("/")
+
           [confidence, 1.0].min
         end
 
         private_class_method def self.calculate_content_regex_confidence(pattern)
           confidence = 0.5 # Base confidence
-          
+
           # Count regex metacharacters
           metachar_count = pattern.scan(/[|+*?{}()\[\]\\]/).length
           confidence += metachar_count * 0.1
-          
+
           # Increase confidence for code-specific patterns
           confidence += 0.2 if pattern.match?(/\b(def|class|function|import|require)\s+/)
           confidence += 0.1 if pattern.match?(/^\^|\$$/)
-          
+
           [confidence, 1.0].min
         end
 
         private_class_method def self.calculate_literal_confidence(pattern)
           confidence = 0.6 # Base confidence for literal patterns
-          
+
           # Simple words get higher confidence
           confidence += 0.2 if pattern.match?(/^\w+$/)
           confidence += 0.1 if pattern.length < 20
-          
+
           # Quoted strings are very likely literal
           confidence += 0.3 if pattern.match?(/^["'][^"']*["']$/)
-          
+
           [confidence, 1.0].min
         end
       end

@@ -1,27 +1,27 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'coding_agent_tools/molecules/provider_usage_parsers/openai_usage_parser'
+require "spec_helper"
+require "coding_agent_tools/molecules/provider_usage_parsers/openai_usage_parser"
 
 RSpec.describe CodingAgentTools::Molecules::ProviderUsageParsers::OpenaiUsageParser do
-  describe '.parse' do
+  describe ".parse" do
     let(:openai_response) do
       {
-        id: 'test-id',
-        object: 'chat.completion',
+        id: "test-id",
+        object: "chat.completion",
         created: 1_750_780_428,
-        model: 'gpt-4o-mini-2024-07-18',
+        model: "gpt-4o-mini-2024-07-18",
         choices: [
           {
             index: 0,
             message: {
-              role: 'assistant',
-              content: 'Hello! How can I assist you today?',
+              role: "assistant",
+              content: "Hello! How can I assist you today?",
               refusal: nil,
               annotations: []
             },
             logprobs: nil,
-            finish_reason: 'stop'
+            finish_reason: "stop"
           }
         ],
         usage_metadata: {
@@ -39,12 +39,12 @@ RSpec.describe CodingAgentTools::Molecules::ProviderUsageParsers::OpenaiUsagePar
             rejected_prediction_tokens: 0
           }
         },
-        service_tier: 'default',
-        system_fingerprint: 'fp_34a54ae93c'
+        service_tier: "default",
+        system_fingerprint: "fp_34a54ae93c"
       }
     end
 
-    it 'extracts usage information from OpenAI response' do
+    it "extracts usage information from OpenAI response" do
       result = described_class.parse(openai_response)
 
       expect(result).to include(
@@ -54,7 +54,7 @@ RSpec.describe CodingAgentTools::Molecules::ProviderUsageParsers::OpenaiUsagePar
       )
     end
 
-    it 'extracts cached tokens when available' do
+    it "extracts cached tokens when available" do
       response_with_cache = {
         usage_metadata: {
           prompt_tokens: 9,
@@ -71,12 +71,12 @@ RSpec.describe CodingAgentTools::Molecules::ProviderUsageParsers::OpenaiUsagePar
       expect(result[:cached_tokens]).to eq(5)
     end
 
-    it 'extracts provider-specific metadata' do
+    it "extracts provider-specific metadata" do
       result = described_class.parse(openai_response)
 
       expect(result[:provider_specific]).to include(
-        service_tier: 'default',
-        system_fingerprint: 'fp_34a54ae93c',
+        service_tier: "default",
+        system_fingerprint: "fp_34a54ae93c",
         choice_index: 0
       )
     end

@@ -58,10 +58,10 @@ module CodingAgentTools
           return false if options[:no_color]
 
           # Environment variable NO_COLOR takes precedence
-          return false if ENV['NO_COLOR']
+          return false if ENV["NO_COLOR"]
 
           # FORCE_COLOR environment variable or --force-color option enables color
-          return true if ENV['FORCE_COLOR'] || options[:force_color]
+          return true if ENV["FORCE_COLOR"] || options[:force_color]
 
           # Since --force-color is now default true, we'll use colors by default
           # unless explicitly disabled

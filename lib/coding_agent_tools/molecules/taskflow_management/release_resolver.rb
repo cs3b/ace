@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/taskflow_management/directory_navigator'
-require_relative 'release_path_resolver'
+require_relative "../../atoms/taskflow_management/directory_navigator"
+require_relative "release_path_resolver"
 
 module CodingAgentTools
   module Molecules
@@ -20,7 +20,7 @@ module CodingAgentTools
         # @param identifier [String] Release identifier (version/codename/fullname/path)
         # @param base_path [String] Base path for resolution
         # @return [ResolutionResult] Resolution result with release info
-        def self.resolve_release(identifier, base_path: '.')
+        def self.resolve_release(identifier, base_path: ".")
           return resolve_current_release(base_path: base_path) if identifier.nil? || identifier.strip.empty?
 
           # Try different resolution strategies in order
@@ -36,7 +36,7 @@ module CodingAgentTools
             # Return successful results immediately
             return result if result.success?
             # Also return informative errors that should not be masked by subsequent strategies
-            return result if result.error_message&.include?('Multiple releases found')
+            return result if result.error_message&.include?("Multiple releases found")
           end
 
           ResolutionResult.new(nil, false, "Release '#{identifier}' not found using any supported format")
@@ -45,14 +45,14 @@ module CodingAgentTools
         end
 
         # Get current release (backward compatibility)
-        def self.resolve_current_release(base_path: '.')
+        def self.resolve_current_release(base_path: ".")
           ReleasePathResolver.get_current_release(base_path: base_path)
         end
 
         # Resolve by direct path (e.g., "dev-taskflow/current/v.0.3.0-workflows")
         def self.resolve_by_path(identifier, base_path)
           # Check if identifier looks like a path
-          return ResolutionResult.new(nil, false, 'Not a path') unless identifier.include?('/')
+          return ResolutionResult.new(nil, false, "Not a path") unless identifier.include?("/")
 
           # Try as absolute path first
           full_path = File.expand_path(identifier, base_path)
@@ -62,17 +62,17 @@ module CodingAgentTools
           relative_path = File.join(base_path, identifier)
           return resolve_directory_path(relative_path) if File.exist?(relative_path) && File.directory?(relative_path)
 
-          ResolutionResult.new(nil, false, 'Path not found')
+          ResolutionResult.new(nil, false, "Path not found")
         end
 
         # Resolve by fullname (e.g., "v.0.3.0-workflows")
         def self.resolve_by_fullname(identifier, base_path)
-          return ResolutionResult.new(nil, false, 'Not a fullname') if identifier.include?('/')
+          return ResolutionResult.new(nil, false, "Not a fullname") if identifier.include?("/")
 
           search_paths = [
-            File.join(base_path, 'dev-taskflow/current'),
-            File.join(base_path, 'dev-taskflow/backlog'),
-            File.join(base_path, 'dev-taskflow/done')
+            File.join(base_path, "dev-taskflow/current"),
+            File.join(base_path, "dev-taskflow/backlog"),
+            File.join(base_path, "dev-taskflow/done")
           ]
 
           search_paths.each do |search_path|
@@ -84,12 +84,12 @@ module CodingAgentTools
             return resolve_directory_path(release_path)
           end
 
-          ResolutionResult.new(nil, false, 'Fullname not found')
+          ResolutionResult.new(nil, false, "Fullname not found")
         end
 
         # Resolve by version (e.g., "v.0.3.0")
         def self.resolve_by_version(identifier, base_path)
-          return ResolutionResult.new(nil, false, 'Not a version') unless identifier.match?(/^v\.\d+\.\d+\.\d+$/)
+          return ResolutionResult.new(nil, false, "Not a version") unless identifier.match?(/^v\.\d+\.\d+\.\d+$/)
 
           matches = find_all_matching_releases(identifier, base_path, :version)
           handle_multiple_matches(matches, identifier)
@@ -100,15 +100,15 @@ module CodingAgentTools
           matches = []
 
           search_paths = [
-            File.join(base_path, 'dev-taskflow/current'),
-            File.join(base_path, 'dev-taskflow/backlog'),
-            File.join(base_path, 'dev-taskflow/done')
+            File.join(base_path, "dev-taskflow/current"),
+            File.join(base_path, "dev-taskflow/backlog"),
+            File.join(base_path, "dev-taskflow/done")
           ]
 
           search_paths.each do |search_path|
             next unless File.exist?(search_path) && File.directory?(search_path)
 
-            Dir.glob(File.join(search_path, '*')).each do |release_path|
+            Dir.glob(File.join(search_path, "*")).each do |release_path|
               next unless File.directory?(release_path)
 
               release_name = File.basename(release_path)
@@ -141,13 +141,13 @@ module CodingAgentTools
               release_name = File.basename(match)
               release_type = case match
               when %r{/current/}
-                               'current'
+                "current"
               when %r{/backlog/}
-                               'backlog'
+                "backlog"
               when %r{/done/}
-                               'done'
-                             else
-                               'unknown'
+                "done"
+              else
+                "unknown"
               end
               error_message += "  - #{release_name} (#{release_type})\n"
             end
@@ -159,9 +159,9 @@ module CodingAgentTools
 
         # Resolve by codename (e.g., "workflows")
         def self.resolve_by_codename(identifier, base_path)
-          if identifier.include?('.') || identifier.include?('/')
+          if identifier.include?(".") || identifier.include?("/")
             return ResolutionResult.new(nil, false,
-              'Not a codename')
+              "Not a codename")
           end
 
           matches = find_all_matching_releases(identifier, base_path, :codename)
@@ -170,7 +170,7 @@ module CodingAgentTools
 
         # Resolve a specific directory path to release info
         def self.resolve_directory_path(release_path)
-          return ResolutionResult.new(nil, false, 'Directory does not exist') unless File.exist?(release_path)
+          return ResolutionResult.new(nil, false, "Directory does not exist") unless File.exist?(release_path)
 
           release_name = File.basename(release_path)
 
@@ -189,13 +189,13 @@ module CodingAgentTools
           # Determine release type
           release_type = case release_path
           when %r{/current/}
-                           :current
+            :current
           when %r{/backlog/}
-                           :backlog
+            :backlog
           when %r{/done/}
-                           :done
-                         else
-                           :unknown
+            :done
+          else
+            :unknown
           end
 
           release_info = ReleasePathResolver::ReleaseInfo.new(

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'faraday'
+require "faraday"
 
 module CodingAgentTools
   module Molecules
@@ -46,7 +46,7 @@ module CodingAgentTools
       # @yield Block to execute with retry logic
       # @return [Object] Result of the block execution
       # @raise [StandardError] The last error if all retries are exhausted
-      def execute(operation_name: 'HTTP request')
+      def execute(operation_name: "HTTP request")
         attempt = 1
 
         begin
@@ -80,10 +80,10 @@ module CodingAgentTools
 
         # Guard against duplicate event registration across multiple instances
         begin
-          notifications.register_event('retry_middleware.attempt.coding_agent_tools')
-          notifications.register_event('retry_middleware.success.coding_agent_tools')
-          notifications.register_event('retry_middleware.retry.coding_agent_tools')
-          notifications.register_event('retry_middleware.failure.coding_agent_tools')
+          notifications.register_event("retry_middleware.attempt.coding_agent_tools")
+          notifications.register_event("retry_middleware.success.coding_agent_tools")
+          notifications.register_event("retry_middleware.retry.coding_agent_tools")
+          notifications.register_event("retry_middleware.failure.coding_agent_tools")
         rescue
           # Silently ignore registration errors for already registered events
         end
@@ -138,7 +138,7 @@ module CodingAgentTools
         return unless attempt == 1
 
         CodingAgentTools::Notifications.publish(
-          'retry_middleware.attempt.coding_agent_tools',
+          "retry_middleware.attempt.coding_agent_tools",
           operation: operation_name,
           attempt: attempt,
           message: "Starting #{operation_name}"
@@ -150,7 +150,7 @@ module CodingAgentTools
       # @param final_attempt [Integer] Final successful attempt number
       def log_success(operation_name, final_attempt)
         CodingAgentTools::Notifications.publish(
-          'retry_middleware.success.coding_agent_tools',
+          "retry_middleware.success.coding_agent_tools",
           operation: operation_name,
           attempts: final_attempt,
           message: "#{operation_name} succeeded after #{final_attempt} attempts"
@@ -164,7 +164,7 @@ module CodingAgentTools
       # @param delay [Float] Delay before next attempt
       def log_retry(operation_name, attempt, error, delay)
         CodingAgentTools::Notifications.publish(
-          'retry_middleware.retry.coding_agent_tools',
+          "retry_middleware.retry.coding_agent_tools",
           operation: operation_name,
           attempt: attempt,
           max_attempts: @max_attempts,
@@ -181,7 +181,7 @@ module CodingAgentTools
       # @param error [StandardError] The final error
       def log_failure(operation_name, final_attempt, error)
         CodingAgentTools::Notifications.publish(
-          'retry_middleware.failure.coding_agent_tools',
+          "retry_middleware.failure.coding_agent_tools",
           operation: operation_name,
           attempts: final_attempt,
           error: error.class.name,

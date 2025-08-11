@@ -14,12 +14,12 @@ module CodingAgentTools
 
       # Custom templates for specific workflows
       CUSTOM_TEMPLATES = {
-        'commit' => <<~TEMPLATE,
+        "commit" => <<~TEMPLATE,
           Read the entire file: @dev-handbook/workflow-instructions/commit.wf.md
 
           Follow the instructions exactly, including creating the git commit with the specific format shown.
         TEMPLATE
-        'load-project-context' => <<~TEMPLATE
+        "load-project-context" => <<~TEMPLATE
           Read the entire file: @dev-handbook/workflow-instructions/load-project-context.wf.md
 
           Load all the context documents listed in the workflow.
@@ -42,7 +42,7 @@ module CodingAgentTools
 
         # Use default template with filename substitution
         filename = workflow_filename || "#{workflow_name}.wf.md"
-        DEFAULT_TEMPLATE % { filename: filename }
+        DEFAULT_TEMPLATE % {filename: filename}
       end
 
       # Render with variable substitution
@@ -96,13 +96,13 @@ module CodingAgentTools
         warnings = []
 
         # Check for missing @ references
-        if template !~ /@[\w\-\/]+/
-          warnings << 'Template contains no @ references to files'
+        if !/@[\w\-\/]+/.match?(template)
+          warnings << "Template contains no @ references to files"
         end
 
         # Check for very short templates
         if template.strip.lines.count < 2
-          warnings << 'Template is very short, consider adding more guidance'
+          warnings << "Template is very short, consider adding more guidance"
         end
 
         warnings

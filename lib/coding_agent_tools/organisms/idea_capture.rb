@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../molecules/context_loader'
-require_relative '../molecules/idea_enhancer'
-require_relative '../molecules/path_resolver'
-require_relative '../molecules/llm_client'
-require 'fileutils'
+require_relative "../molecules/context_loader"
+require_relative "../molecules/idea_enhancer"
+require_relative "../molecules/path_resolver"
+require_relative "../molecules/llm_client"
+require "fileutils"
 
 module CodingAgentTools
   module Organisms
@@ -29,8 +29,8 @@ module CodingAgentTools
       # @param debug [Boolean] Enable debug output
       # @param big_user_input_allowed [Boolean] Allow large inputs
       # @param commit_after_capture [Boolean] Automatically commit generated idea files
-      def initialize(model: 'google:gemini-2.5-flash-lite', debug: false, big_user_input_allowed: false,
-                     commit_after_capture: false)
+      def initialize(model: "google:gemini-2.5-flash-lite", debug: false, big_user_input_allowed: false,
+        commit_after_capture: false)
         @model = model
         @debug = debug
         @big_user_input_allowed = big_user_input_allowed
@@ -48,7 +48,7 @@ module CodingAgentTools
       # @param idea_text [String] Raw idea text
       # @return [CaptureResult] Result with success status and output path
       def capture_idea(idea_text)
-        debug_log('Starting idea capture process')
+        debug_log("Starting idea capture process")
 
         # Validate input
         validation_result = validate_input(idea_text)
@@ -76,26 +76,26 @@ module CodingAgentTools
         enhancement_result = enhance_idea_with_llm(paths_result)
 
         final_result = if enhancement_result.success?
-          debug_log('Idea enhancement completed successfully')
-                         # Read the enhanced content and append SOURCE section
-                         enhanced_content = File.read(paths_result[:output_path])
-                         content_with_source = append_source_section(enhanced_content, idea_text)
-                         File.write(paths_result[:output_path], content_with_source)
-                         debug_log('Appended SOURCE section to enhanced idea')
+          debug_log("Idea enhancement completed successfully")
+          # Read the enhanced content and append SOURCE section
+          enhanced_content = File.read(paths_result[:output_path])
+          content_with_source = append_source_section(enhanced_content, idea_text)
+          File.write(paths_result[:output_path], content_with_source)
+          debug_log("Appended SOURCE section to enhanced idea")
 
-                         CaptureResult.new(true, paths_result[:output_path], nil,
-                           @debug ? 'Enhancement completed with SOURCE' : nil)
+          CaptureResult.new(true, paths_result[:output_path], nil,
+            @debug ? "Enhancement completed with SOURCE" : nil)
         else
-                         # Fallback: save raw idea with error note
-          debug_log('Enhancement failed, saving raw idea as fallback')
-                         save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
+          # Fallback: save raw idea with error note
+          debug_log("Enhancement failed, saving raw idea as fallback")
+          save_fallback_idea(idea_text, paths_result[:output_path], enhancement_result.error_message)
         end
 
         # Execute git-commit if requested and idea creation was successful
         if final_result.success? && @commit_after_capture
           commit_result = handle_git_commit(final_result.output_path)
           if commit_result.success?
-            debug_log('Git commit completed successfully')
+            debug_log("Git commit completed successfully")
           else
             # Idea creation succeeded but commit failed - still return success but include commit error
             debug_log("Git commit failed: #{commit_result.error_message}")
@@ -117,11 +117,11 @@ module CodingAgentTools
       private
 
       def validate_input(idea_text)
-        return error_result('Idea text cannot be nil') if idea_text.nil?
+        return error_result("Idea text cannot be nil") if idea_text.nil?
 
         cleaned_text = idea_text.strip
-        return error_result('Idea text cannot be empty') if cleaned_text.empty?
-        return error_result('Idea text must be at least 5 characters') if cleaned_text.length < 5
+        return error_result("Idea text cannot be empty") if cleaned_text.empty?
+        return error_result("Idea text must be at least 5 characters") if cleaned_text.length < 5
 
         # Check size limits
         word_count = cleaned_text.split.length
@@ -154,8 +154,8 @@ module CodingAgentTools
       def generate_system_prompt(context_result, system_path)
         # Load system prompt template
         # Get project root by going up from dev-tools/lib/coding_agent_tools/organisms/
-        project_root = File.expand_path('../../../..', __dir__)
-        template_path = File.join(project_root, 'dev-handbook/templates/idea-manager/system.prompt.md')
+        project_root = File.expand_path("../../../..", __dir__)
+        template_path = File.join(project_root, "dev-handbook/templates/idea-manager/system.prompt.md")
 
         return error_result("System prompt template not found: #{template_path}") unless File.exist?(template_path)
 
@@ -168,7 +168,7 @@ module CodingAgentTools
         end
 
         # Embed idea template
-        idea_template_path = File.join(project_root, 'dev-handbook/templates/idea-manager/idea.template.md')
+        idea_template_path = File.join(project_root, "dev-handbook/templates/idea-manager/idea.template.md")
         if File.exist?(idea_template_path)
           idea_template = File.read(idea_template_path)
           system_prompt += "\n\n## Template Format\n\nUse this exact template format:\n\n```markdown\n"
@@ -201,15 +201,15 @@ module CodingAgentTools
           # If file has substantial content that doesn't look like our fallback format,
           # it might be enhanced content that was written before security blocked further operations
           if !existing_content.empty? &&
-             !existing_content.start_with?('# Raw Idea (Enhanced Version Failed)') &&
-             existing_content.length > idea_text.length + 50 # Heuristic: enhanced content should be longer
+              !existing_content.start_with?("# Raw Idea (Enhanced Version Failed)") &&
+              existing_content.length > idea_text.length + 50 # Heuristic: enhanced content should be longer
 
             debug_log("Output file already contains enhanced content, preserving it: #{output_path}")
             # Add SOURCE section to existing enhanced content
             content_with_source = append_source_section(existing_content, idea_text)
             File.write(output_path, content_with_source)
-            debug_log('Appended SOURCE section to existing enhanced content')
-            return CaptureResult.new(true, output_path, nil, 'Enhanced content preserved with SOURCE despite security error')
+            debug_log("Appended SOURCE section to existing enhanced content")
+            return CaptureResult.new(true, output_path, nil, "Enhanced content preserved with SOURCE despite security error")
           end
         end
 
@@ -224,7 +224,7 @@ module CodingAgentTools
         File.write(output_path, fallback_content_with_source)
         debug_log("Saved fallback idea with SOURCE section to: #{output_path}")
 
-        CaptureResult.new(true, output_path, nil, 'Saved raw idea with SOURCE due to enhancement failure')
+        CaptureResult.new(true, output_path, nil, "Saved raw idea with SOURCE due to enhancement failure")
       rescue => e
         error_result("Failed to save fallback idea: #{e.message}")
       end
@@ -259,7 +259,7 @@ module CodingAgentTools
         # Escape markdown code blocks if present in raw input
         # If raw input contains triple backticks, use quad backticks for SOURCE block
         backtick_count = 3
-        while truncated_input.include?('`' * backtick_count)
+        while truncated_input.include?("`" * backtick_count)
           backtick_count += 1
         end
 
@@ -274,13 +274,13 @@ module CodingAgentTools
       def handle_git_commit(file_path)
         # Skip git commit in test environments
         if test_environment?
-          debug_log('Skipping git commit in test environment')
-          return CaptureResult.new(true, nil, nil, 'Skipped commit (test environment)')
+          debug_log("Skipping git commit in test environment")
+          return CaptureResult.new(true, nil, nil, "Skipped commit (test environment)")
         end
 
         begin
           execute_git_commit(file_path)
-          CaptureResult.new(true, nil, nil, 'Git commit successful')
+          CaptureResult.new(true, nil, nil, "Git commit successful")
         rescue => e
           CaptureResult.new(false, nil, e.message, nil)
         end
@@ -288,12 +288,12 @@ module CodingAgentTools
 
       def execute_git_commit(file_path)
         # Path to git-commit executable relative to this file
-        git_commit_path = File.expand_path('../../../exe/git-commit', __dir__)
+        git_commit_path = File.expand_path("../../../exe/git-commit", __dir__)
 
         raise StandardError, "git-commit executable not found at #{git_commit_path}" unless File.exist?(git_commit_path)
 
         # Execute git-commit with intention and file path
-        success = system(git_commit_path, file_path, '--intention', 'capture idea')
+        success = system(git_commit_path, file_path, "--intention", "capture idea")
 
         return if success
 
@@ -306,7 +306,7 @@ module CodingAgentTools
 
       def test_environment?
         # Check for common test environment indicators
-        !!(ENV['CI'] || ENV['TEST'] || ENV['RSPEC_RUN'] || defined?(RSpec))
+        !!(ENV["CI"] || ENV["TEST"] || ENV["RSPEC_RUN"] || defined?(RSpec))
       end
     end
   end

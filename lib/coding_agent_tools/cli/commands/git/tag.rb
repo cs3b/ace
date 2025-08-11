@@ -1,64 +1,64 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/git/git_orchestrator'
-require_relative '../../../atoms/project_root_detector'
+require "dry/cli"
+require_relative "../../../organisms/git/git_orchestrator"
+require_relative "../../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Cli
     module Commands
       module Git
         class Tag < Dry::CLI::Command
-          desc 'Create, delete, list or verify tags across all repositories'
+          desc "Create, delete, list or verify tags across all repositories"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
-          option :repository, type: :string, aliases: ['C'],
+          option :repository, type: :string, aliases: ["C"],
             desc: "Specify explicit repository context (e.g., 'dev-tools')"
 
-          option :annotate, type: :boolean, default: false, aliases: ['a'],
-            desc: 'Make an unsigned, annotated tag object'
+          option :annotate, type: :boolean, default: false, aliases: ["a"],
+            desc: "Make an unsigned, annotated tag object"
 
-          option :sign, type: :boolean, default: false, aliases: ['s'],
-            desc: 'Make a GPG-signed tag'
+          option :sign, type: :boolean, default: false, aliases: ["s"],
+            desc: "Make a GPG-signed tag"
 
-          option :local_user, type: :string, aliases: ['u'],
-            desc: 'Make a GPG-signed tag, using the given key'
+          option :local_user, type: :string, aliases: ["u"],
+            desc: "Make a GPG-signed tag, using the given key"
 
-          option :force, type: :boolean, default: false, aliases: ['f'],
-            desc: 'Replace an existing tag with the given name'
+          option :force, type: :boolean, default: false, aliases: ["f"],
+            desc: "Replace an existing tag with the given name"
 
-          option :delete, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Delete existing tags with the given names'
+          option :delete, type: :boolean, default: false, aliases: ["d"],
+            desc: "Delete existing tags with the given names"
 
-          option :verify, type: :boolean, default: false, aliases: ['v'],
-            desc: 'Verify the GPG signature of the given tag names'
+          option :verify, type: :boolean, default: false, aliases: ["v"],
+            desc: "Verify the GPG signature of the given tag names"
 
-          option :list, type: :boolean, default: false, aliases: ['l'],
-            desc: 'List tags'
+          option :list, type: :boolean, default: false, aliases: ["l"],
+            desc: "List tags"
 
-          option :message, type: :string, aliases: ['m'],
-            desc: 'Use the given tag message'
+          option :message, type: :string, aliases: ["m"],
+            desc: "Use the given tag message"
 
-          option :file, type: :string, aliases: ['F'],
-            desc: 'Take the tag message from the given file'
+          option :file, type: :string, aliases: ["F"],
+            desc: "Take the tag message from the given file"
 
           option :main_only, type: :boolean, default: false,
-            desc: 'Process main repository only'
+            desc: "Process main repository only"
 
           option :submodules_only, type: :boolean, default: false,
-            desc: 'Process submodules only'
+            desc: "Process submodules only"
 
-          argument :tagname, required: false, desc: 'The name of the tag to create, delete, or describe'
-          argument :commit, required: false, desc: 'The object that the new tag will refer to (defaults to HEAD)'
+          argument :tagname, required: false, desc: "The name of the tag to create, delete, or describe"
+          argument :commit, required: false, desc: "The object that the new tag will refer to (defaults to HEAD)"
 
           example [
-            'v1.2.3',
+            "v1.2.3",
             "-a v1.2.3 -m 'Release version 1.2.3'",
-            '-d v1.2.3',
-            '-l',
-            '-f v1.2.3'
+            "-d v1.2.3",
+            "-l",
+            "-f v1.2.3"
           ]
 
           def call(tagname: nil, commit: nil, **options)
@@ -119,14 +119,14 @@ module CodingAgentTools
             result[:results].each do |repo_name, repo_result|
               next unless repo_result[:success]
 
-              output = repo_result[:stdout] || ''
+              output = repo_result[:stdout] || ""
               if output.strip.empty?
                 puts "[#{repo_name}] Clean working directory"
               else
                 puts "[#{repo_name}] Output:"
                 output.lines.each { |line| puts "  #{line.rstrip}" }
               end
-              puts '' # Add spacing between repositories
+              puts "" # Add spacing between repositories
             end
           end
 
@@ -147,7 +147,7 @@ module CodingAgentTools
 
             return if options[:debug]
 
-            error_output('Use --debug flag for more information')
+            error_output("Use --debug flag for more information")
           end
 
           def handle_error(error, debug_enabled)
@@ -157,7 +157,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

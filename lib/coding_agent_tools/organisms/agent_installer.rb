@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../molecules/file_operation_executor'
-require_relative '../molecules/metadata_injector'
-require_relative '../molecules/statistics_collector'
-require_relative '../models/file_operation'
-require_relative '../models/command_metadata'
-require_relative '../atoms/timestamp_generator'
+require "pathname"
+require_relative "../molecules/file_operation_executor"
+require_relative "../molecules/metadata_injector"
+require_relative "../molecules/statistics_collector"
+require_relative "../models/file_operation"
+require_relative "../models/command_metadata"
+require_relative "../atoms/timestamp_generator"
 
 module CodingAgentTools
   module Organisms
@@ -35,21 +35,21 @@ module CodingAgentTools
         unless source_path.exist?
           return {
             success: true,
-            message: 'No agents directory found',
+            message: "No agents directory found",
             stats: @stats_collector.stats
           }
         end
 
-        puts 'Copying agents...' if options[:verbose]
+        puts "Copying agents..." if options[:verbose]
 
         # Find agent files
-        agent_files = source_path.glob('*.md').sort
+        agent_files = source_path.glob("*.md").sort
 
         if agent_files.empty?
-          puts '  No agent files found' if options[:verbose]
+          puts "  No agent files found" if options[:verbose]
           return {
             success: true,
-            message: 'No agent files to install',
+            message: "No agent files to install",
             stats: @stats_collector.stats
           }
         end
@@ -58,7 +58,7 @@ module CodingAgentTools
         ensure_result = @file_executor.ensure_target_directory(
           Models::FileOperation.new(
             source: source_path,
-            target: target_path / 'dummy',
+            target: target_path / "dummy",
             type: :create
           )
         )
@@ -106,7 +106,7 @@ module CodingAgentTools
           source: source_file,
           target: target_dir / source_file.basename,
           type: :copy,
-          metadata: { type: :agent }
+          metadata: {type: :agent}
         )
       end
 
@@ -118,7 +118,7 @@ module CodingAgentTools
           return {
             status: :skipped,
             operation: operation,
-            message: 'Already exists'
+            message: "Already exists"
           }
         end
 
@@ -145,8 +145,8 @@ module CodingAgentTools
         # Create agent-specific metadata
         metadata = Models::CommandMetadata.new(
           last_modified: Atoms::TimestampGenerator.iso_timestamp,
-          type: 'agent',
-          source: 'dev-handbook'
+          type: "agent",
+          source: "dev-handbook"
         )
 
         # Inject metadata

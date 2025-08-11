@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/code/file_content_reader'
-require_relative '../../atoms/taskflow_management/file_system_scanner'
-require 'rexml/document'
+require_relative "../../atoms/code/file_content_reader"
+require_relative "../../atoms/taskflow_management/file_system_scanner"
+require "rexml/document"
 
 module CodingAgentTools
   module Molecules
@@ -55,17 +55,17 @@ module CodingAgentTools
           return result unless result[:success]
 
           # Save XML file
-          xml_file = File.join(session_dir, 'input.xml')
-          meta_file = File.join(session_dir, 'input.meta')
+          xml_file = File.join(session_dir, "input.xml")
+          meta_file = File.join(session_dir, "input.meta")
 
           begin
             File.write(xml_file, result[:xml_content])
 
             # Determine type
             type = if File.exist?(pattern) && !File.directory?(pattern)
-              'single_file'
+              "single_file"
             else
-              'file_pattern'
+              "file_pattern"
             end
 
             # Write metadata
@@ -76,7 +76,7 @@ module CodingAgentTools
             META
 
             # Add size info for single file
-            if type == 'single_file' && result[:file_list].count == 1
+            if type == "single_file" && result[:file_list].count == 1
               lines = File.readlines(result[:file_list].first).count
               meta_content += "size: #{lines} lines\n"
             end
@@ -130,11 +130,11 @@ module CodingAgentTools
         # @return [Array<String>] matching file paths
         def find_matching_files(pattern)
           # Use glob for patterns with wildcards
-          if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+          if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
             Dir.glob(pattern).select { |f| File.file?(f) }
           else
             # Use file system scanner for directory traversal
-            result = @file_scanner.find_files_with_pattern('.', pattern)
+            result = @file_scanner.find_files_with_pattern(".", pattern)
             result[:files] || []
           end
         end
@@ -144,15 +144,15 @@ module CodingAgentTools
         # @return [String] XML content
         def build_xml_content(files)
           doc = REXML::Document.new
-          doc.add_element('documents')
+          doc.add_element("documents")
           root = doc.root
 
           files.each do |file_path|
             result = @file_reader.read(file_path)
             next unless result[:success]
 
-            document = root.add_element('document')
-            document.add_attribute('path', file_path)
+            document = root.add_element("document")
+            document.add_attribute("path", file_path)
 
             # Use CDATA for file content
             cdata = REXML::CData.new(result[:content])

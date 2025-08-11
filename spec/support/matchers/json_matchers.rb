@@ -127,7 +127,7 @@ RSpec::Matchers.define :contain_sensitive_data do |*keys|
       data.each do |key, value|
         current_path = path + [key.to_s]
         if @sensitive_keys.include?(key.to_s.downcase)
-          @found_keys << current_path.join('.')
+          @found_keys << current_path.join(".")
         end
         find_sensitive_keys(value, current_path) if value.is_a?(Hash) || value.is_a?(Array)
       end
@@ -154,8 +154,8 @@ end
 
 RSpec::Matchers.define :be_sanitized_json do |sensitive_keys = nil|
   match do |actual|
-    @sensitive_keys = sensitive_keys || ['api_key', 'password', 'token', 'secret']
-    @redact_value = '[REDACTED]'
+    @sensitive_keys = sensitive_keys || ["api_key", "password", "token", "secret"]
+    @redact_value = "[REDACTED]"
 
     json_data = if actual.is_a?(String)
       begin
@@ -176,7 +176,7 @@ RSpec::Matchers.define :be_sanitized_json do |sensitive_keys = nil|
   end
 
   failure_message_when_negated do |_actual|
-    'expected JSON not to be sanitized, but all sensitive data was redacted'
+    "expected JSON not to be sanitized, but all sensitive data was redacted"
   end
 
   private

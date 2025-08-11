@@ -20,7 +20,7 @@ module CodingAgentTools
           @template_dirs = options[:template_dirs] || default_template_dirs
         end
 
-        def validate(paths = ['.'])
+        def validate(paths = ["."])
           md_files = collect_markdown_files(paths)
           findings = []
 
@@ -39,17 +39,17 @@ module CodingAgentTools
 
         def default_template_dirs
           [
-            'dev-handbook/.meta/tpl',
-            'templates',
-            '_includes'
+            "dev-handbook/.meta/tpl",
+            "templates",
+            "_includes"
           ]
         end
 
         def collect_markdown_files(paths)
           paths.flat_map do |p|
             if File.directory?(p)
-              Dir.glob(File.join(p, '**', '*.md'))
-            elsif File.exist?(p) && p.end_with?('.md')
+              Dir.glob(File.join(p, "**", "*.md"))
+            elsif File.exist?(p) && p.end_with?(".md")
               [p]
             else
               []
@@ -63,7 +63,7 @@ module CodingAgentTools
 
           content.each_line.with_index do |line, idx|
             # Skip code blocks
-            if line.strip.start_with?('```', '~~~')
+            if line.strip.start_with?("```", "~~~")
               in_code_block = !in_code_block
               next
             end

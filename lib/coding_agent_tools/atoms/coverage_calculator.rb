@@ -74,7 +74,7 @@ module CodingAgentTools
           combined_lines[index] = if values.empty? || values.all?(&:nil?)
             nil
           else
-                                    # Sum non-nil values, treat nil as 0 for combination
+            # Sum non-nil values, treat nil as 0 for combination
             values.map { |v| v || 0 }.sum
           end
         end
@@ -86,7 +86,7 @@ module CodingAgentTools
       # @param lines [Array] SimpleCov lines array (null, 0, or positive integers)
       # @return [Hash] uncovered line details: { uncovered_lines, uncovered_ranges, total_uncovered }
       def extract_uncovered_lines(lines)
-        return { uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0 } if lines.nil? || lines.empty?
+        return {uncovered_lines: [], uncovered_ranges: [], total_uncovered: 0} if lines.nil? || lines.empty?
 
         uncovered_lines = []
 
@@ -121,7 +121,7 @@ module CodingAgentTools
           line_details << {
             line_number: line_number,
             coverage_count: coverage,
-            status: coverage > 0 ? :covered : :uncovered
+            status: (coverage > 0) ? :covered : :uncovered
           }
         end
 
@@ -159,20 +159,20 @@ module CodingAgentTools
         current_start = line_numbers.first
         current_end = line_numbers.first
 
-        line_numbers[1..-1].each do |line_num|
+        line_numbers[1..].each do |line_num|
           if line_num == current_end + 1
             # Consecutive line, extend the current range
             current_end = line_num
           else
             # Gap found, save current range and start a new one
-            ranges << { start_line: current_start, end_line: current_end }
+            ranges << {start_line: current_start, end_line: current_end}
             current_start = line_num
             current_end = line_num
           end
         end
 
         # Add the final range
-        ranges << { start_line: current_start, end_line: current_end }
+        ranges << {start_line: current_start, end_line: current_end}
         ranges
       end
     end

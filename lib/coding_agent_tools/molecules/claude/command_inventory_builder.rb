@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require 'time'
-require_relative '../../atoms/claude/command_existence_checker'
-require_relative '../../atoms/claude/workflow_scanner'
+require "pathname"
+require "time"
+require_relative "../../atoms/claude/command_existence_checker"
+require_relative "../../atoms/claude/workflow_scanner"
 
 module CodingAgentTools
   module Molecules
@@ -53,14 +53,14 @@ module CodingAgentTools
           missing_commands.each do |name|
             all_commands << {
               name: name,
-              type: 'missing',
+              type: "missing",
               installed: false,
               valid: false
             }
           end
 
           # Filter by type if requested
-          if options[:type] && options[:type] != 'all'
+          if options[:type] && options[:type] != "all"
             all_commands = filter_by_type(all_commands, options[:type])
           end
 
@@ -68,8 +68,8 @@ module CodingAgentTools
             commands: all_commands.sort_by { |cmd| cmd[:name] },
             installed_count: all_commands.count { |cmd| cmd[:installed] },
             missing_count: all_commands.count { |cmd| !cmd[:valid] },
-            custom_count: all_commands.count { |cmd| cmd[:type] == 'custom' },
-            generated_count: all_commands.count { |cmd| cmd[:type] == 'generated' }
+            custom_count: all_commands.count { |cmd| cmd[:type] == "custom" },
+            generated_count: all_commands.count { |cmd| cmd[:type] == "generated" }
           }
         end
 
@@ -77,30 +77,30 @@ module CodingAgentTools
         # @return [Array<Pathname>] Array of paths to search for commands
         def command_search_paths
           [
-            @project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom',
-            @project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated',
-            @project_root / '.claude' / 'commands' / '_custom',
-            @project_root / '.claude' / 'commands' / '_generated',
-            @project_root / '.claude' / 'commands' # Flat structure
+            @project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_custom",
+            @project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_generated",
+            @project_root / ".claude" / "commands" / "_custom",
+            @project_root / ".claude" / "commands" / "_generated",
+            @project_root / ".claude" / "commands" # Flat structure
           ]
         end
 
         private
 
         def scan_custom_commands
-          dir = @project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_custom'
-          scan_directory(dir, 'custom')
+          dir = @project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_custom"
+          scan_directory(dir, "custom")
         end
 
         def scan_generated_commands
-          dir = @project_root / 'dev-handbook' / '.integrations' / 'claude' / 'commands' / '_generated'
-          scan_directory(dir, 'generated')
+          dir = @project_root / "dev-handbook" / ".integrations" / "claude" / "commands" / "_generated"
+          scan_directory(dir, "generated")
         end
 
         def scan_directory(dir, type)
           return [] unless dir.exist?
 
-          Dir.glob(File.join(dir, '*.md')).map do |path|
+          Dir.glob(File.join(dir, "*.md")).map do |path|
             build_command_info(path, type)
           end.sort_by { |cmd| cmd[:name] }
         end
@@ -110,7 +110,7 @@ module CodingAgentTools
           stat = File.stat(path)
 
           {
-            name: pathname.basename('.md').to_s,
+            name: pathname.basename(".md").to_s,
             path: pathname.relative_path_from(@project_root).to_s,
             type: type,
             size: stat.size,
@@ -122,24 +122,24 @@ module CodingAgentTools
         def scan_installed_command_names
           names = []
           installed_paths = [
-            @project_root / '.claude' / 'commands' / '_custom',
-            @project_root / '.claude' / 'commands' / '_generated',
-            @project_root / '.claude' / 'commands'
+            @project_root / ".claude" / "commands" / "_custom",
+            @project_root / ".claude" / "commands" / "_generated",
+            @project_root / ".claude" / "commands"
           ]
 
           installed_paths.each do |path|
             next unless path.exist?
 
-            names += Dir.glob(File.join(path, '*.md'))
-              .reject { |f| File.basename(f).downcase == 'readme.md' }
-              .map { |f| File.basename(f, '.md') }
+            names += Dir.glob(File.join(path, "*.md"))
+              .reject { |f| File.basename(f).downcase == "readme.md" }
+              .map { |f| File.basename(f, ".md") }
           end
 
           names.uniq
         end
 
         def find_missing_workflows(known_command_names)
-          workflow_dir = @project_root / 'dev-handbook' / 'workflow-instructions'
+          workflow_dir = @project_root / "dev-handbook" / "workflow-instructions"
 
           # Use WorkflowScanner atom to get all workflows
           all_workflows = Atoms::Claude::WorkflowScanner.scan(workflow_dir)
@@ -151,12 +151,12 @@ module CodingAgentTools
 
         def filter_by_type(commands, type)
           case type
-          when 'custom'
-            commands.select { |cmd| cmd[:type] == 'custom' }
-          when 'generated'
-            commands.select { |cmd| cmd[:type] == 'generated' }
-          when 'missing'
-            commands.select { |cmd| cmd[:type] == 'missing' }
+          when "custom"
+            commands.select { |cmd| cmd[:type] == "custom" }
+          when "generated"
+            commands.select { |cmd| cmd[:type] == "generated" }
+          when "missing"
+            commands.select { |cmd| cmd[:type] == "missing" }
           else
             commands
           end

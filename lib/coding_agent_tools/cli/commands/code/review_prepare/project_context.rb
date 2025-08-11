@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../../organisms/code/context_loader'
-require_relative '../../../../models/code/review_session'
-require 'time'
+require "dry/cli"
+require_relative "../../../../organisms/code/context_loader"
+require_relative "../../../../models/code/review_session"
+require "time"
 
 module CodingAgentTools
   module Cli
@@ -12,18 +12,18 @@ module CodingAgentTools
         module ReviewPrepare
           # ProjectContext sub-command
           class ProjectContext < Dry::CLI::Command
-            desc 'Extract and save project context'
+            desc "Extract and save project context"
 
-            option :mode, type: :string, default: 'auto',
-              desc: 'Context mode: auto, none, or custom file path'
+            option :mode, type: :string, default: "auto",
+              desc: "Context mode: auto, none, or custom file path"
 
             option :session_dir, type: :string, required: true,
-              desc: 'Session directory path'
+              desc: "Session directory path"
 
             example [
-              '--session_dir /path/to/session',
-              '--mode none --session_dir /path/to/session',
-              '--mode /docs/context.md --session_dir /path/to/session'
+              "--session_dir /path/to/session",
+              "--mode none --session_dir /path/to/session",
+              "--mode /docs/context.md --session_dir /path/to/session"
             ]
 
             def call(**options)
@@ -31,19 +31,19 @@ module CodingAgentTools
 
               begin
                 # Check for required options (Dry::CLI doesn't validate for direct method calls)
-                raise ArgumentError, 'session_dir is required' unless options[:session_dir]
+                raise ArgumentError, "session_dir is required" unless options[:session_dir]
 
                 # Apply default values that Dry::CLI doesn't apply for direct method calls
-                mode = options[:mode] || 'auto'
+                mode = options[:mode] || "auto"
 
                 # Create minimal session for context loading
                 session = CodingAgentTools::Models::Code::ReviewSession.new(
-                  session_id: 'temp',
+                  session_id: "temp",
                   session_name: File.basename(options[:session_dir]),
                   timestamp: Time.now.iso8601,
                   directory_path: options[:session_dir],
-                  focus: 'unknown',
-                  target: 'unknown',
+                  focus: "unknown",
+                  target: "unknown",
                   context_mode: mode
                 )
 

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'tmpdir'
-require 'fileutils'
+require "spec_helper"
+require "tmpdir"
+require "fileutils"
 
 RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
   let(:temp_dir) { Dir.mktmpdir }
@@ -11,29 +11,29 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
     safe_directory_cleanup(temp_dir)
   end
 
-  describe '#initialize' do
-    it 'uses default task directories' do
+  describe "#initialize" do
+    it "uses default task directories" do
       validator = described_class.new
-      expect(validator.task_dirs).to include('dev-taskflow/current', 'dev-taskflow/backlog')
+      expect(validator.task_dirs).to include("dev-taskflow/current", "dev-taskflow/backlog")
     end
 
-    it 'accepts custom task directories' do
-      custom_dirs = ['custom/tasks', 'other/tasks']
+    it "accepts custom task directories" do
+      custom_dirs = ["custom/tasks", "other/tasks"]
       validator = described_class.new(task_dirs: custom_dirs)
       expect(validator.task_dirs).to eq(custom_dirs)
     end
 
-    it 'accepts project root' do
-      validator = described_class.new(project_root: '/project/root')
-      expect(validator.project_root).to eq('/project/root')
+    it "accepts project root" do
+      validator = described_class.new(project_root: "/project/root")
+      expect(validator.project_root).to eq("/project/root")
     end
   end
 
-  describe '#validate' do
+  describe "#validate" do
     let(:validator) { described_class.new(task_dirs: [temp_dir]) }
 
-    context 'with no task files' do
-      it 'returns successful validation with empty results' do
+    context "with no task files" do
+      it "returns successful validation with empty results" do
         result = validator.validate
 
         expect(result[:success]).to be true
@@ -42,16 +42,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with valid task files' do
+    context "with valid task files" do
       before do
-        create_task_file('valid_task.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Valid Task')
+        create_task_file("valid_task.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Valid Task")
       end
 
-      it 'validates successfully' do
+      it "validates successfully" do
         result = validator.validate
 
         expect(result[:success]).to be true
@@ -59,40 +59,40 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with specific paths validation' do
-      let(:specific_file) { File.join(temp_dir, 'specific.md') }
+    context "with specific paths validation" do
+      let(:specific_file) { File.join(temp_dir, "specific.md") }
 
       before do
-        create_task_file('specific.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Specific Task')
+        create_task_file("specific.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Specific Task")
       end
 
-      it 'validates only specified paths' do
+      it "validates only specified paths" do
         result = validator.validate([specific_file])
 
         expect(result[:success]).to be true
         expect(result[:errors]).to be_empty
       end
 
-      it 'handles directory paths' do
+      it "handles directory paths" do
         result = validator.validate([temp_dir])
 
         expect(result[:success]).to be true
         expect(result[:errors]).to be_empty
       end
 
-      it 'ignores non-markdown files in directories' do
-        File.write(File.join(temp_dir, 'readme.txt'), 'not markdown')
+      it "ignores non-markdown files in directories" do
+        File.write(File.join(temp_dir, "readme.txt"), "not markdown")
         result = validator.validate([temp_dir])
 
         expect(result[:success]).to be true
         expect(result[:errors]).to be_empty
       end
 
-      it 'handles individual markdown files' do
+      it "handles individual markdown files" do
         result = validator.validate([specific_file])
 
         expect(result[:success]).to be true
@@ -100,12 +100,12 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with missing frontmatter' do
+    context "with missing frontmatter" do
       before do
-        File.write(File.join(temp_dir, 'no_frontmatter.md'), '# Task without frontmatter')
+        File.write(File.join(temp_dir, "no_frontmatter.md"), "# Task without frontmatter")
       end
 
-      it 'reports malformed frontmatter error' do
+      it "reports malformed frontmatter error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -113,7 +113,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with malformed frontmatter' do
+    context "with malformed frontmatter" do
       before do
         content = <<~CONTENT
           not frontmatter
@@ -122,10 +122,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
           ---
           # Task
         CONTENT
-        File.write(File.join(temp_dir, 'malformed.md'), content)
+        File.write(File.join(temp_dir, "malformed.md"), content)
       end
 
-      it 'reports malformed frontmatter error' do
+      it "reports malformed frontmatter error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -133,7 +133,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with invalid YAML' do
+    context "with invalid YAML" do
       before do
         content = <<~CONTENT
           ---
@@ -142,10 +142,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
           ---
           # Task
         CONTENT
-        File.write(File.join(temp_dir, 'invalid_yaml.md'), content)
+        File.write(File.join(temp_dir, "invalid_yaml.md"), content)
       end
 
-      it 'reports YAML syntax error' do
+      it "reports YAML syntax error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -153,7 +153,7 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with non-hash frontmatter' do
+    context "with non-hash frontmatter" do
       before do
         content = <<~CONTENT
           ---
@@ -162,10 +162,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
           ---
           # Task
         CONTENT
-        File.write(File.join(temp_dir, 'array_frontmatter.md'), content)
+        File.write(File.join(temp_dir, "array_frontmatter.md"), content)
       end
 
-      it 'reports non-hash frontmatter error' do
+      it "reports non-hash frontmatter error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -173,15 +173,15 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with missing required fields' do
+    context "with missing required fields" do
       before do
-        create_task_file('missing_fields.md', {
-          'id' => 'v.0.1.0+task.1'
+        create_task_file("missing_fields.md", {
+          "id" => "v.0.1.0+task.1"
           # Missing status and priority
-        }, '# Task')
+        }, "# Task")
       end
 
-      it 'reports missing required fields' do
+      it "reports missing required fields" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -190,16 +190,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with invalid ID format' do
+    context "with invalid ID format" do
       before do
-        create_task_file('invalid_id.md', {
-          'id' => 'invalid-id-format',
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("invalid_id.md", {
+          "id" => "invalid-id-format",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Task")
       end
 
-      it 'reports invalid ID format' do
+      it "reports invalid ID format" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -207,36 +207,36 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with non-string ID' do
+    context "with non-string ID" do
       before do
-        create_task_file('numeric_id.md', {
-          'id' => 123,
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("numeric_id.md", {
+          "id" => 123,
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Task")
       end
 
-      it 'reports non-string ID error' do
+      it "reports non-string ID error" do
         result = validator.validate
 
         expect(result[:success]).to be false
         expect(result[:errors]).to include(match(/ID must be a string/))
       end
 
-      context 'in backlog directory' do
-        let(:backlog_dir) { File.join(temp_dir, 'backlog') }
+      context "in backlog directory" do
+        let(:backlog_dir) { File.join(temp_dir, "backlog") }
         let(:validator) { described_class.new(task_dirs: [backlog_dir]) }
 
         before do
           FileUtils.mkdir_p(backlog_dir)
-          create_task_file('backlog/numeric_id.md', {
-            'id' => 123,
-            'status' => 'pending',
-            'priority' => 'high'
-          }, '# Task')
+          create_task_file("backlog/numeric_id.md", {
+            "id" => 123,
+            "status" => "pending",
+            "priority" => "high"
+          }, "# Task")
         end
 
-        it 'allows numeric IDs in backlog' do
+        it "allows numeric IDs in backlog" do
           result = validator.validate
 
           expect(result[:success]).to be true
@@ -244,16 +244,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with invalid status' do
+    context "with invalid status" do
       before do
-        create_task_file('invalid_status.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'invalid-status',
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("invalid_status.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "invalid-status",
+          "priority" => "high"
+        }, "# Task")
       end
 
-      it 'reports invalid status' do
+      it "reports invalid status" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -261,16 +261,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with non-string status' do
+    context "with non-string status" do
       before do
-        create_task_file('numeric_status.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 1,
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("numeric_status.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => 1,
+          "priority" => "high"
+        }, "# Task")
       end
 
-      it 'reports non-string status error' do
+      it "reports non-string status error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -278,14 +278,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with valid statuses' do
+    context "with valid statuses" do
       described_class::VALID_STATUSES.each do |status|
         it "accepts valid status: #{status}" do
           create_task_file("status_#{status}.md", {
-            'id' => 'v.0.1.0+task.1',
-            'status' => status,
-            'priority' => 'high'
-          }, '# Task')
+            "id" => "v.0.1.0+task.1",
+            "status" => status,
+            "priority" => "high"
+          }, "# Task")
 
           result = validator.validate
 
@@ -294,16 +294,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with invalid priority' do
+    context "with invalid priority" do
       before do
-        create_task_file('invalid_priority.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'invalid-priority'
-        }, '# Task')
+        create_task_file("invalid_priority.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "invalid-priority"
+        }, "# Task")
       end
 
-      it 'reports invalid priority' do
+      it "reports invalid priority" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -311,16 +311,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with non-string priority' do
+    context "with non-string priority" do
       before do
-        create_task_file('numeric_priority.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 3
-        }, '# Task')
+        create_task_file("numeric_priority.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => 3
+        }, "# Task")
       end
 
-      it 'reports non-string priority error' do
+      it "reports non-string priority error" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -328,14 +328,14 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with valid priorities' do
+    context "with valid priorities" do
       described_class::VALID_PRIORITIES.each do |priority|
         it "accepts valid priority: #{priority}" do
           create_task_file("priority_#{priority}.md", {
-            'id' => 'v.0.1.0+task.1',
-            'status' => 'pending',
-            'priority' => priority
-          }, '# Task')
+            "id" => "v.0.1.0+task.1",
+            "status" => "pending",
+            "priority" => priority
+          }, "# Task")
 
           result = validator.validate
 
@@ -344,16 +344,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with estimate validation' do
-      context 'with valid estimates' do
-        ['1h', '2.5h', '3d', '1w', '5sp', '10pt', '2wk', '1mo'].each do |estimate|
+    context "with estimate validation" do
+      context "with valid estimates" do
+        ["1h", "2.5h", "3d", "1w", "5sp", "10pt", "2wk", "1mo"].each do |estimate|
           it "accepts valid estimate: #{estimate}" do
             create_task_file("estimate_#{estimate.tr(".", "_")}.md", {
-              'id' => 'v.0.1.0+task.1',
-              'status' => 'pending',
-              'priority' => 'high',
-              'estimate' => estimate
-            }, '# Task')
+              "id" => "v.0.1.0+task.1",
+              "status" => "pending",
+              "priority" => "high",
+              "estimate" => estimate
+            }, "# Task")
 
             result = validator.validate
 
@@ -362,15 +362,15 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
         end
       end
 
-      context 'with invalid estimates' do
-        ['1hour', '2days', 'invalid', '1x'].each do |estimate|
+      context "with invalid estimates" do
+        ["1hour", "2days", "invalid", "1x"].each do |estimate|
           it "rejects invalid estimate: #{estimate}" do
             create_task_file("bad_estimate_#{estimate}.md", {
-              'id' => 'v.0.1.0+task.1',
-              'status' => 'pending',
-              'priority' => 'high',
-              'estimate' => estimate
-            }, '# Task')
+              "id" => "v.0.1.0+task.1",
+              "status" => "pending",
+              "priority" => "high",
+              "estimate" => estimate
+            }, "# Task")
 
             result = validator.validate
 
@@ -381,53 +381,53 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with dependencies validation' do
-      it 'accepts array dependencies' do
-        create_task_file('with_deps.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high',
-          'dependencies' => ['v.0.1.0+task.2', 'v.0.1.0+task.3']
-        }, '# Task')
+    context "with dependencies validation" do
+      it "accepts array dependencies" do
+        create_task_file("with_deps.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high",
+          "dependencies" => ["v.0.1.0+task.2", "v.0.1.0+task.3"]
+        }, "# Task")
 
         result = validator.validate
 
         expect(result[:success]).to be true
       end
 
-      it 'accepts empty array dependencies' do
-        create_task_file('empty_deps.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high',
-          'dependencies' => []
-        }, '# Task')
+      it "accepts empty array dependencies" do
+        create_task_file("empty_deps.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high",
+          "dependencies" => []
+        }, "# Task")
 
         result = validator.validate
 
         expect(result[:success]).to be true
       end
 
-      it 'accepts null dependencies' do
-        create_task_file('null_deps.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high',
-          'dependencies' => nil
-        }, '# Task')
+      it "accepts null dependencies" do
+        create_task_file("null_deps.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high",
+          "dependencies" => nil
+        }, "# Task")
 
         result = validator.validate
 
         expect(result[:success]).to be true
       end
 
-      it 'rejects non-array dependencies' do
-        create_task_file('string_deps.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high',
-          'dependencies' => 'v.0.1.0+task.2'
-        }, '# Task')
+      it "rejects non-array dependencies" do
+        create_task_file("string_deps.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high",
+          "dependencies" => "v.0.1.0+task.2"
+        }, "# Task")
 
         result = validator.validate
 
@@ -436,16 +436,16 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with missing H1 title' do
+    context "with missing H1 title" do
       before do
-        create_task_file('no_h1.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
+        create_task_file("no_h1.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
         }, "## H2 Title\n\nNo H1 here.")
       end
 
-      it 'reports missing H1 title' do
+      it "reports missing H1 title" do
         result = validator.validate
 
         expect(result[:success]).to be false
@@ -453,90 +453,90 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with valid H1 title' do
+    context "with valid H1 title" do
       before do
-        create_task_file('with_h1.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
+        create_task_file("with_h1.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
         }, "# Valid H1 Title\n\nContent here.")
       end
 
-      it 'validates successfully' do
+      it "validates successfully" do
         result = validator.validate
 
         expect(result[:success]).to be true
       end
     end
 
-    context 'with path resolution' do
+    context "with path resolution" do
       let(:project_root) { temp_dir }
       let(:validator) { described_class.new(task_dirs: [temp_dir], project_root: project_root) }
 
       before do
-        create_task_file('path_test.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'invalid-status',
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("path_test.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "invalid-status",
+          "priority" => "high"
+        }, "# Task")
       end
 
-      it 'shows relative paths in error messages' do
+      it "shows relative paths in error messages" do
         result = validator.validate
 
         expect(result[:success]).to be false
         expect(result[:errors].first).not_to include(temp_dir)
-        expect(result[:errors].first).to include('path_test.md')
+        expect(result[:errors].first).to include("path_test.md")
       end
     end
 
-    context 'with file read errors' do
+    context "with file read errors" do
       before do
-        create_task_file('read_error.md', {
-          'id' => 'v.0.1.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Task')
+        create_task_file("read_error.md", {
+          "id" => "v.0.1.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Task")
 
         allow(File).to receive(:read).with(anything).and_call_original
-        allow(File).to receive(:read).with(File.join(temp_dir, 'read_error.md')).and_raise(IOError, 'Read failed')
+        allow(File).to receive(:read).with(File.join(temp_dir, "read_error.md")).and_raise(IOError, "Read failed")
       end
 
-      it 'handles file read errors gracefully' do
+      it "handles file read errors gracefully" do
         expect { validator.validate }.not_to raise_error
       end
     end
   end
 
-  describe 'draft status support' do
+  describe "draft status support" do
     let(:validator) { described_class.new(task_dirs: [temp_dir]) }
 
-    context 'with draft status' do
+    context "with draft status" do
       before do
-        create_task_file('draft_task.md', {
-          'id' => 'v.0.4.0+task.7',
-          'status' => 'draft',
-          'priority' => 'medium'
-        }, '# Add Draft Status Support')
+        create_task_file("draft_task.md", {
+          "id" => "v.0.4.0+task.7",
+          "status" => "draft",
+          "priority" => "medium"
+        }, "# Add Draft Status Support")
       end
 
-      it 'accepts draft as a valid status' do
+      it "accepts draft as a valid status" do
         result = validator.validate
 
         expect(result[:success]).to be true
         expect(result[:errors]).to be_empty
       end
 
-      it 'includes draft in VALID_STATUSES constant' do
-        expect(described_class::VALID_STATUSES).to include('draft')
+      it "includes draft in VALID_STATUSES constant" do
+        expect(described_class::VALID_STATUSES).to include("draft")
       end
 
-      it 'validates draft status case-insensitively' do
-        create_task_file('draft_case.md', {
-          'id' => 'v.0.4.0+task.8',
-          'status' => 'DRAFT',
-          'priority' => 'medium'
-        }, '# Draft Case Test')
+      it "validates draft status case-insensitively" do
+        create_task_file("draft_case.md", {
+          "id" => "v.0.4.0+task.8",
+          "status" => "DRAFT",
+          "priority" => "medium"
+        }, "# Draft Case Test")
 
         result = validator.validate
 
@@ -545,28 +545,28 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'with mixed statuses including draft' do
+    context "with mixed statuses including draft" do
       before do
-        create_task_file('pending_task.md', {
-          'id' => 'v.0.4.0+task.1',
-          'status' => 'pending',
-          'priority' => 'high'
-        }, '# Pending Task')
+        create_task_file("pending_task.md", {
+          "id" => "v.0.4.0+task.1",
+          "status" => "pending",
+          "priority" => "high"
+        }, "# Pending Task")
 
-        create_task_file('draft_task.md', {
-          'id' => 'v.0.4.0+task.2',
-          'status' => 'draft',
-          'priority' => 'medium'
-        }, '# Draft Task')
+        create_task_file("draft_task.md", {
+          "id" => "v.0.4.0+task.2",
+          "status" => "draft",
+          "priority" => "medium"
+        }, "# Draft Task")
 
-        create_task_file('in_progress_task.md', {
-          'id' => 'v.0.4.0+task.3',
-          'status' => 'in-progress',
-          'priority' => 'high'
-        }, '# In Progress Task')
+        create_task_file("in_progress_task.md", {
+          "id" => "v.0.4.0+task.3",
+          "status" => "in-progress",
+          "priority" => "high"
+        }, "# In Progress Task")
       end
 
-      it 'validates all tasks with different statuses including draft' do
+      it "validates all tasks with different statuses including draft" do
         result = validator.validate
 
         expect(result[:success]).to be true
@@ -574,20 +574,20 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    context 'backward compatibility' do
-      it 'maintains all existing valid statuses' do
-        expected_statuses = ['pending', 'in-progress', 'done', 'blocked', 'icebox', 'on-hold', 'draft']
+    context "backward compatibility" do
+      it "maintains all existing valid statuses" do
+        expected_statuses = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold", "draft"]
         expect(described_class::VALID_STATUSES).to match_array(expected_statuses)
       end
 
-      it 'does not break existing validation for non-draft statuses' do
-        existing_statuses = ['pending', 'in-progress', 'done', 'blocked', 'icebox', 'on-hold']
+      it "does not break existing validation for non-draft statuses" do
+        existing_statuses = ["pending", "in-progress", "done", "blocked", "icebox", "on-hold"]
 
         existing_statuses.each do |status|
           create_task_file("existing_#{status}.md", {
-            'id' => "v.0.4.0+task.#{rand(100)}",
-            'status' => status,
-            'priority' => 'medium'
+            "id" => "v.0.4.0+task.#{rand(100)}",
+            "status" => status,
+            "priority" => "medium"
           }, "# #{status.capitalize} Task")
         end
 
@@ -599,10 +599,10 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
     end
   end
 
-  describe 'constants validation' do
-    it 'has valid ID regex pattern' do
-      valid_ids = ['v.0.1.0+task.1', 'v.10.20.30+task.999']
-      invalid_ids = ['v0.1.0+task.1', 'v.0.1+task.1', 'task.1', 'v.0.1.0task.1']
+  describe "constants validation" do
+    it "has valid ID regex pattern" do
+      valid_ids = ["v.0.1.0+task.1", "v.10.20.30+task.999"]
+      invalid_ids = ["v0.1.0+task.1", "v.0.1+task.1", "task.1", "v.0.1.0task.1"]
 
       valid_ids.each do |id|
         expect(id).to match(described_class::VALID_ID_REGEX)
@@ -613,9 +613,9 @@ RSpec.describe CodingAgentTools::Atoms::CodeQuality::TaskMetadataValidator do
       end
     end
 
-    it 'has valid estimate regex pattern' do
-      valid_estimates = ['1h', '2.5h', '3d', '1w', '5sp', '10pt', '2wk', '1mo', '0.1H', '15D']
-      invalid_estimates = ['1hour', '2days', 'invalid', '1x', 'h1', '.5h']
+    it "has valid estimate regex pattern" do
+      valid_estimates = ["1h", "2.5h", "3d", "1w", "5sp", "10pt", "2wk", "1mo", "0.1H", "15D"]
+      invalid_estimates = ["1hour", "2days", "invalid", "1x", "h1", ".5h"]
 
       valid_estimates.each do |estimate|
         expect(estimate).to match(described_class::ESTIMATE_REGEX)

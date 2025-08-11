@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'base_chat_completion_client'
-require 'addressable/uri'
+require_relative "base_chat_completion_client"
+require "addressable/uri"
 
 module CodingAgentTools
   module Organisms
@@ -9,10 +9,10 @@ module CodingAgentTools
     # This is an organism - it orchestrates molecules to achieve business goals
     class TogetheraiClient < BaseChatCompletionClient
       # Together AI API base URL
-      API_BASE_URL = 'https://api.together.xyz/v1'
+      API_BASE_URL = "https://api.together.xyz/v1"
 
       # Default environment variable name for Together AI API key
-      DEFAULT_API_KEY_ENV = 'TOGETHER_API_KEY'
+      DEFAULT_API_KEY_ENV = "TOGETHER_API_KEY"
 
       # Default generation config
       DEFAULT_GENERATION_CONFIG = {
@@ -23,7 +23,7 @@ module CodingAgentTools
       # Explicit provider name declaration
       # @return [String] The provider name for this client
       def self.provider_name
-        'together_ai'
+        "together_ai"
       end
 
       # Dynamic aliases for this provider
@@ -49,7 +49,7 @@ module CodingAgentTools
 
       # Override list_models to handle Together AI's unique response format and filtering
       def list_models
-        url = build_api_url('models')
+        url = build_api_url("models")
         request_options = build_request_options({})
         parsed = get_json_request(url, **request_options)
 
@@ -59,8 +59,8 @@ module CodingAgentTools
           # Filter to only include chat/instruct models
           models_array.select do |model|
             model_id = model[:id] || model[:name]
-            model_id && (model_id.include?('instruct') || model_id.include?('chat') ||
-                        model_id.include?('Instruct') || model_id.include?('Chat'))
+            model_id && (model_id.include?("instruct") || model_id.include?("chat") ||
+                        model_id.include?("Instruct") || model_id.include?("Chat"))
           end
         else
           handle_error_response(parsed)
@@ -85,7 +85,7 @@ module CodingAgentTools
           id: @model,
           name: @model,
           created: Time.now.to_i,
-          owned_by: 'together'
+          owned_by: "together"
         }
       end
 
@@ -98,7 +98,7 @@ module CodingAgentTools
         url_obj = Addressable::URI.parse(@base_url)
 
         # Use File.join-style logic to avoid double slashes
-        base_path = url_obj.path.end_with?('/') ? url_obj.path.chomp('/') : url_obj.path
+        base_path = url_obj.path.end_with?("/") ? url_obj.path.chomp("/") : url_obj.path
         url_obj.path = "#{base_path}/#{endpoint}"
 
         url_obj.to_s
@@ -108,8 +108,8 @@ module CodingAgentTools
       # @return [Hash] Authentication headers
       def auth_headers
         {
-          'Authorization' => "Bearer #{@api_key}",
-          'Content-Type' => 'application/json'
+          "Authorization" => "Bearer #{@api_key}",
+          "Content-Type" => "application/json"
         }
       end
 
@@ -123,14 +123,14 @@ module CodingAgentTools
         # Add system message if provided
         if options[:system_instruction]
           messages << {
-            role: 'system',
+            role: "system",
             content: options[:system_instruction]
           }
         end
 
         # Add user message
         messages << {
-          role: 'user',
+          role: "user",
           content: prompt
         }
 
@@ -153,7 +153,7 @@ module CodingAgentTools
         # 1. Verify parsed_response[:data] is a Hash
         data = parsed_response[:data]
         unless data.is_a?(Hash)
-          raise Error, 'Failed to extract generated text: Response data is not a Hash, cannot find choices.'
+          raise Error, "Failed to extract generated text: Response data is not a Hash, cannot find choices."
         end
 
         # 2. Verify data[:choices] is a non-empty Array
@@ -166,7 +166,7 @@ module CodingAgentTools
         # 3. Verify the first choice data[:choices][0] is a Hash
         choice = choices_field[0]
         unless choice.is_a?(Hash)
-          raise Error, 'Failed to extract generated text: No valid first choice found in response.'
+          raise Error, "Failed to extract generated text: No valid first choice found in response."
         end
 
         # 4. Verify choice[:message] is a Hash
@@ -181,7 +181,7 @@ module CodingAgentTools
         end
 
         text_content = message_field[:content]
-        raise Error, 'Failed to extract generated text: message content is nil.' if text_content.nil?
+        raise Error, "Failed to extract generated text: message content is nil." if text_content.nil?
 
         {
           text: text_content,
@@ -204,7 +204,7 @@ module CodingAgentTools
         elsif error_message
           error_message
         else
-          'An unspecified error occurred.'
+          "An unspecified error occurred."
         end
       end
     end

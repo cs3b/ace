@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative 'session_manager'
-require_relative 'content_extractor'
-require_relative 'context_loader'
-require_relative 'prompt_builder'
-require 'fileutils'
+require_relative "session_manager"
+require_relative "content_extractor"
+require_relative "context_loader"
+require_relative "prompt_builder"
+require "fileutils"
 
 module CodingAgentTools
   module Organisms
@@ -28,7 +28,7 @@ module CodingAgentTools
         # @param base_path [String] base path for sessions
         # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] {session: ReviewSession, success: Boolean, error: String}
-        def create_review_session(focus, target, context = 'auto', base_path = nil, system_prompt_override = nil)
+        def create_review_session(focus, target, context = "auto", base_path = nil, system_prompt_override = nil)
           # Create session
           session = @session_manager.create_session(
             focus: focus,
@@ -40,7 +40,7 @@ module CodingAgentTools
           # Extract and save content
           target_model = @content_extractor.extract_and_save(target, session.directory_path)
 
-          raise "Failed to extract target content: #{target_model.size_info[:error]}" if target_model.type == 'error'
+          raise "Failed to extract target content: #{target_model.size_info[:error]}" if target_model.type == "error"
 
           # Load and save context
           context_model = @context_loader.load_context(context, session)
@@ -77,7 +77,7 @@ module CodingAgentTools
           {
             reports: [],
             success: false,
-            error: 'LLM integration not yet implemented'
+            error: "LLM integration not yet implemented"
           }
         end
 
@@ -92,9 +92,9 @@ module CodingAgentTools
           # Write execution summary
           write_execution_summary(session, reports)
 
-          { success: true, error: nil }
+          {success: true, error: nil}
         rescue => e
-          { success: false, error: e.message }
+          {success: false, error: e.message}
         end
 
         # Prepare review components without creating session
@@ -103,7 +103,7 @@ module CodingAgentTools
         # @param context [String] context mode
         # @param system_prompt_override [String] optional custom system prompt file path
         # @return [Hash] preparation results
-        def prepare_review(focus, target, _context = 'auto', system_prompt_override = nil)
+        def prepare_review(focus, target, _context = "auto", system_prompt_override = nil)
           {
             target_info: analyze_target(target),
             context_info: @context_loader.check_availability,
@@ -121,11 +121,11 @@ module CodingAgentTools
         # @return [Hash] target analysis
         def analyze_target(target)
           if @content_extractor.instance_variable_get(:@diff_extractor).git_diff_target?(target)
-            { type: 'git_diff', format: 'diff' }
+            {type: "git_diff", format: "diff"}
           elsif File.exist?(target) && !File.directory?(target)
-            { type: 'single_file', format: 'xml', path: target }
+            {type: "single_file", format: "xml", path: target}
           else
-            { type: 'file_pattern', format: 'xml', pattern: target }
+            {type: "file_pattern", format: "xml", pattern: target}
           end
         end
 
@@ -135,7 +135,7 @@ module CodingAgentTools
         # @param context [Models::Code::ReviewContext] context
         # @param prompt [Models::Code::ReviewPrompt] prompt
         def write_session_summary(session, target, context, prompt)
-          summary_path = File.join(session.directory_path, 'session-summary.md')
+          summary_path = File.join(session.directory_path, "session-summary.md")
 
           summary = <<~SUMMARY
             # Code Review Session Summary
@@ -186,10 +186,10 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] session
         # @param reports [Array<Hash>] review reports
         def update_session_index(session, reports)
-          index_path = File.join(session.directory_path, 'README.md')
+          index_path = File.join(session.directory_path, "README.md")
 
           # Read existing content
-          existing = File.exist?(index_path) ? File.read(index_path) : ''
+          existing = File.exist?(index_path) ? File.read(index_path) : ""
 
           # Add reports section
           reports_section = <<~REPORTS
@@ -203,11 +203,11 @@ module CodingAgentTools
           end
 
           # Update content
-          updated = if existing.include?('## Review Reports')
-                      # Replace existing section
+          updated = if existing.include?("## Review Reports")
+            # Replace existing section
             existing.sub(/## Review Reports.*?(?=##|\z)/m, reports_section)
           else
-                      # Append new section
+            # Append new section
             existing + "\n" + reports_section
           end
 
@@ -218,7 +218,7 @@ module CodingAgentTools
         # @param session [Models::Code::ReviewSession] session
         # @param reports [Array<Hash>] review reports
         def write_execution_summary(session, reports)
-          summary_path = File.join(session.directory_path, 'execution.summary')
+          summary_path = File.join(session.directory_path, "execution.summary")
 
           summary = <<~SUMMARY
             Session: #{session.session_name}

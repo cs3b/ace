@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../../organisms/code/prompt_builder'
-require_relative '../../../../models/code/review_session'
-require_relative '../../../../models/code/review_target'
-require_relative '../../../../models/code/review_context'
-require 'time'
+require "dry/cli"
+require_relative "../../../../organisms/code/prompt_builder"
+require_relative "../../../../models/code/review_session"
+require_relative "../../../../models/code/review_target"
+require_relative "../../../../models/code/review_context"
+require "time"
 
 module CodingAgentTools
   module Cli
@@ -14,26 +14,26 @@ module CodingAgentTools
         module ReviewPrepare
           # Prompt sub-command
           class Prompt < Dry::CLI::Command
-            desc 'Build combined review prompt'
+            desc "Build combined review prompt"
 
             option :session_dir, type: :string, required: true,
-              desc: 'Session directory path'
+              desc: "Session directory path"
 
             option :focus, type: :string, required: true,
-              desc: 'Review focus for prompt building'
+              desc: "Review focus for prompt building"
 
             option :output, type: :string,
-              desc: 'Output file for prompt (default: prompt.md in session)'
+              desc: "Output file for prompt (default: prompt.md in session)"
 
             example [
-              '--session_dir /path/to/session --focus code',
+              "--session_dir /path/to/session --focus code",
               "--session_dir /path/to/session --focus 'code tests' --output review.md"
             ]
 
             def call(**options)
               # Check for required options (Dry::CLI doesn't validate for direct method calls)
-              raise ArgumentError, 'session_dir is required' unless options[:session_dir]
-              raise ArgumentError, 'focus is required' unless options[:focus]
+              raise ArgumentError, "session_dir is required" unless options[:session_dir]
+              raise ArgumentError, "focus is required" unless options[:focus]
 
               prompt_builder = CodingAgentTools::Organisms::Code::PromptBuilder.new
 
@@ -49,7 +49,7 @@ module CodingAgentTools
                 prompt = prompt_builder.build_review_prompt(session, target, context)
 
                 # Save to custom output if specified, otherwise default location
-                output_path = options[:output] || File.join(options[:session_dir], 'prompt.md')
+                output_path = options[:output] || File.join(options[:session_dir], "prompt.md")
                 File.write(output_path, prompt.combined_content)
                 puts "✅ Prompt saved to: #{output_path}"
 
@@ -66,43 +66,43 @@ module CodingAgentTools
 
             def load_session_from_dir(dir, focus)
               CodingAgentTools::Models::Code::ReviewSession.new(
-                session_id: 'prepare',
+                session_id: "prepare",
                 session_name: File.basename(dir),
                 timestamp: Time.now.iso8601,
                 directory_path: dir,
                 focus: focus,
-                target: 'unknown',
-                context_mode: 'auto'
+                target: "unknown",
+                context_mode: "auto"
               )
             end
 
             def detect_target_from_session(dir)
               # Check for input files
-              if File.exist?(File.join(dir, 'input.diff'))
+              if File.exist?(File.join(dir, "input.diff"))
                 CodingAgentTools::Models::Code::ReviewTarget.new(
-                  type: 'git_diff',
-                  target_spec: 'unknown',
+                  type: "git_diff",
+                  target_spec: "unknown",
                   resolved_paths: [],
-                  content_type: 'diff',
+                  content_type: "diff",
                   size_info: {}
                 )
-              elsif File.exist?(File.join(dir, 'input.xml'))
+              elsif File.exist?(File.join(dir, "input.xml"))
                 CodingAgentTools::Models::Code::ReviewTarget.new(
-                  type: 'file_pattern',
-                  target_spec: 'unknown',
+                  type: "file_pattern",
+                  target_spec: "unknown",
                   resolved_paths: [],
-                  content_type: 'xml',
+                  content_type: "xml",
                   size_info: {}
                 )
               else
-                raise 'No input files found in session directory'
+                raise "No input files found in session directory"
               end
             end
 
             def detect_context_from_session(_dir)
               # Simple context detection
               CodingAgentTools::Models::Code::ReviewContext.new(
-                mode: 'auto',
+                mode: "auto",
                 documents: [],
                 loaded_at: Time.now
               )

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../project_root_detector'
+require "pathname"
+require_relative "../project_root_detector"
 
 module CodingAgentTools
   module Atoms
@@ -74,7 +74,7 @@ module CodingAgentTools
           return unless path.nil? || path.strip.empty?
 
           raise PathResolutionError.new(
-            'Path cannot be nil or empty',
+            "Path cannot be nil or empty",
             path: path,
             reason: :invalid_input
           )
@@ -126,9 +126,9 @@ module CodingAgentTools
           project_resolved_normalized = File.exist?(project_resolved) ? File.realpath(project_resolved) : File.expand_path(project_resolved)
 
           current_in_project = current_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
-                               current_resolved_normalized == project_root_normalized
+            current_resolved_normalized == project_root_normalized
           project_in_project = project_resolved_normalized.start_with?(project_root_normalized + File::SEPARATOR) ||
-                               project_resolved_normalized == project_root_normalized
+            project_resolved_normalized == project_root_normalized
 
           # If both are in project, check which one actually exists or makes more sense
           if current_in_project && project_in_project
@@ -140,14 +140,14 @@ module CodingAgentTools
               project_resolved
             elsif File.exist?(current_resolved) && File.exist?(project_resolved)
               # Both files exist - use heuristics to decide
-              if path.start_with?('.')
+              if path.start_with?(".")
                 # Dot-prefixed paths likely belong to main repository
                 project_resolved
               else
                 # Regular files in submodule directory - prefer local
                 current_resolved
               end
-            elsif path.start_with?('.')
+            elsif path.start_with?(".")
               # Neither exists, but we need to make a decision based on path characteristics
               # Dot-prefixed paths likely belong to main repo
               project_resolved
@@ -185,11 +185,11 @@ module CodingAgentTools
             matching_repo
           else
             # Default to main repository if no specific match found
-            main_repo = repositories.find { |repo| repo[:name] == 'main' }
+            main_repo = repositories.find { |repo| repo[:name] == "main" }
 
             unless main_repo
               raise PathResolutionError.new(
-                'No repository found for path and no main repository available',
+                "No repository found for path and no main repository available",
                 path: absolute_path,
                 reason: :no_repository_match
               )

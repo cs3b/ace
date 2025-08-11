@@ -10,21 +10,21 @@
 # processes.
 
 # Ensure Bundler is available inside the subprocess (mirrors old behaviour)
-if ENV['BUNDLE_GEMFILE'] && !defined?(Bundler)
-  require 'bundler/setup'
+if ENV["BUNDLE_GEMFILE"] && !defined?(Bundler)
+  require "bundler/setup"
 end
 
 # Load the shared VCR configuration (brings in `vcr`, `webmock/rspec`, matchers,
 # filters, RSpec hooks, and recording-mode logic).
-require File.expand_path('support/vcr.rb', __dir__)
+require File.expand_path("support/vcr.rb", __dir__)
 
 # `spec/support/vcr.rb` enables WebMock inside an RSpec `before(:suite)` hook,
 # which does **not** run in a plain Ruby subprocess. We therefore enable it
 # explicitly here to ensure HTTP interception is active.
-require 'webmock'
+require "webmock"
 
 # Skip WebMock in Ruby 3.4.2+ due to VCR compatibility issues
-if RUBY_VERSION >= '3.4.0'
+if RUBY_VERSION >= "3.4.0"
   WebMock.disable!
 else
   WebMock.enable!
@@ -32,7 +32,7 @@ end
 
 # If the parent process provided a cassette name, insert it automatically so the
 # subprocess records/replays under the same cassette.
-if ENV['VCR_CASSETTE_NAME'] && !VCR.current_cassette
-  VCR.insert_cassette(ENV['VCR_CASSETTE_NAME'])
+if ENV["VCR_CASSETTE_NAME"] && !VCR.current_cassette
+  VCR.insert_cassette(ENV["VCR_CASSETTE_NAME"])
   at_exit { VCR.eject_cassette if VCR.current_cassette }
 end

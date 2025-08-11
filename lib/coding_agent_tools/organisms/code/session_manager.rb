@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative '../../molecules/code/session_directory_builder'
-require_relative '../../molecules/file_io_handler'
-require_relative '../../atoms/code/file_content_reader'
-require 'fileutils'
-require 'tmpdir'
-require 'time'
+require_relative "../../molecules/code/session_directory_builder"
+require_relative "../../molecules/file_io_handler"
+require_relative "../../atoms/code/file_content_reader"
+require "fileutils"
+require "tmpdir"
+require "time"
 
 module CodingAgentTools
   module Organisms
@@ -27,9 +27,9 @@ module CodingAgentTools
         # @option params [String] :base_path base path for sessions
         # @return [Models::Code::ReviewSession] created session
         def create_session(params)
-          focus = params[:focus] || raise(ArgumentError, 'focus is required')
-          target = params[:target] || raise(ArgumentError, 'target is required')
-          context_mode = params[:context_mode] || 'auto'
+          focus = params[:focus] || raise(ArgumentError, "focus is required")
+          target = params[:target] || raise(ArgumentError, "target is required")
+          context_mode = params[:context_mode] || "auto"
           base_path = params[:base_path] || default_base_path
 
           # Build session with full parameters
@@ -58,7 +58,7 @@ module CodingAgentTools
           return nil unless session_dir
 
           # Load metadata
-          metadata_path = File.join(session_dir, 'session.meta')
+          metadata_path = File.join(session_dir, "session.meta")
           return nil unless File.exist?(metadata_path)
 
           # Parse metadata
@@ -86,10 +86,10 @@ module CodingAgentTools
           sessions = []
 
           # Find all session directories
-          Dir.glob(File.join(base_path, '*-*-*')).each do |dir|
+          Dir.glob(File.join(base_path, "*-*-*")).each do |dir|
             next unless File.directory?(dir)
 
-            metadata_path = File.join(dir, 'session.meta')
+            metadata_path = File.join(dir, "session.meta")
             next unless File.exist?(metadata_path)
 
             metadata = parse_session_metadata(metadata_path)
@@ -134,17 +134,17 @@ module CodingAgentTools
         # @return [String] default base path
         def default_base_path
           current_release = find_current_release
-          File.join(current_release, 'code_review')
+          File.join(current_release, "code_review")
         end
 
         # Find current release directory
         # @return [String] current release path
         def find_current_release
           # Look for current release in taskflow
-          current_dir = 'dev-taskflow/current'
+          current_dir = "dev-taskflow/current"
           if File.exist?(current_dir) && File.directory?(current_dir)
             # Find the release directory
-            release_dirs = Dir.glob(File.join(current_dir, 'v.*'))
+            release_dirs = Dir.glob(File.join(current_dir, "v.*"))
             release_dirs.first || current_dir
           else
             # Fallback to temp directory
@@ -208,7 +208,7 @@ module CodingAgentTools
             Use the code-review command to execute the review.
           README
 
-          readme_path = File.join(session.directory_path, 'README.md')
+          readme_path = File.join(session.directory_path, "README.md")
           File.write(readme_path, readme_content)
         end
       end

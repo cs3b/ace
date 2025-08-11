@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'ruby_runner'
-require_relative 'markdown_runner'
+require_relative "ruby_runner"
+require_relative "markdown_runner"
 
 module CodingAgentTools
   module Organisms
@@ -11,9 +11,9 @@ module CodingAgentTools
         class << self
           def create_runner(language, config:, path_resolver:)
             case language.to_s.downcase
-            when 'ruby'
+            when "ruby"
               RubyRunner.new(config: config, path_resolver: path_resolver)
-            when 'markdown'
+            when "markdown"
               MarkdownRunner.new(config: config, path_resolver: path_resolver)
             else
               raise ArgumentError, "Unsupported language: #{language}"
@@ -28,7 +28,7 @@ module CodingAgentTools
           end
 
           def supported_languages
-            ['ruby', 'markdown']
+            ["ruby", "markdown"]
           end
 
           def language_supported?(language)

@@ -36,14 +36,14 @@ module CodingAgentTools
 
         def generate_description(workflow_name)
           # Generate description from workflow name - more sophisticated
-          description = workflow_name.gsub('-', ' ')
-          description = description.split.map(&:capitalize).join(' ')
+          description = workflow_name.tr("-", " ")
+          description = description.split.map(&:capitalize).join(" ")
 
           # Special case handling for common abbreviations
-          description.gsub!(/\bApi\b/, 'API')
-          description.gsub!(/\bAdr\b/, 'ADR')
-          description.gsub!(/\bLlm\b/, 'LLM')
-          description.gsub!(/\bAi\b/, 'AI')
+          description.gsub!(/\bApi\b/, "API")
+          description.gsub!(/\bAdr\b/, "ADR")
+          description.gsub!(/\bLlm\b/, "LLM")
+          description.gsub!(/\bAi\b/, "AI")
 
           description
         end
@@ -52,71 +52,67 @@ module CodingAgentTools
           case workflow_name
           # Git operations
           when /^git-/, /commit/, /rebase/, /merge/
-            'Bash, Read, Write'
+            "Bash, Read, Write"
           # Task management workflows
           when /^draft-task/, /^plan-task/, /^work-on-task/, /^review-task/, /^complete-task/
-            'Read, Write, TodoWrite, Bash'
+            "Read, Write, TodoWrite, Bash"
           # Creation workflows
           when /^create-adr/, /^create-api-docs/, /^create-user-docs/, /^create-reflection-note/
-            'Read, Write, Grep, Glob'
+            "Read, Write, Grep, Glob"
           when /^create-test-cases/
-            'Read, Write, Bash, Grep'
+            "Read, Write, Bash, Grep"
           # Testing and fixing workflows
           when /^test-/, /^validate-/
-            'Bash, Read, Grep'
+            "Bash, Read, Grep"
           when /^fix-tests/, /^fix-linting-issue/
-            'Read, Write, Edit, Bash, Grep'
+            "Read, Write, Edit, Bash, Grep"
           # Research and analysis workflows
           when /^research/, /analyze/
-            'Read, Grep, Glob, WebSearch'
+            "Read, Grep, Glob, WebSearch"
           # Synthesis workflows
           when /^synthesize-reflection-notes/
-            'Read, Write, Grep, TodoWrite'
+            "Read, Write, Grep, TodoWrite"
           # Project context loading
           when /^load-project-context/
-            'Read, LS'
+            "Read, LS"
           # Release workflows
           when /^draft-release/, /^release/
-            'Read, Write, Bash, Grep'
+            "Read, Write, Bash, Grep"
           # Update workflows
           when /^update-blueprint/
-            'Read, Write, Edit, Grep'
+            "Read, Write, Edit, Grep"
           # Capture workflows
           when /^capture-idea/
-            'Write, TodoWrite'
+            "Write, TodoWrite"
           # Default fallback for any uncategorized workflows
           else
-            'Read, Write, Edit, Grep'
+            "Read, Write, Edit, Grep"
           end
         end
 
         def infer_argument_hint(workflow_name)
           case workflow_name
           when /work-on-task/, /review-task/, /plan-task/, /complete-task/
-            '[task-id]'
+            "[task-id]"
           when /rebase-against/, /merge-from/
-            '[branch-name]'
+            "[branch-name]"
           when /fix-linting-issue-from/
-            '[linter-output-file]'
+            "[linter-output-file]"
           when /draft-release/, /release/
-            '[version]'
+            "[version]"
           when /capture-idea/
-            '[idea-description]'
+            "[idea-description]"
           when /create-adr/
-            '[decision-title]'
-          else
-            nil
+            "[decision-title]"
           end
         end
 
         def infer_model(workflow_name)
           case workflow_name
           when /analyze/, /synthesize/, /research/
-            'opus'
+            "opus"
           when /fix-tests/, /fix-linting/
-            'sonnet' # Fast iteration for fixes
-          else
-            nil
+            "sonnet" # Fast iteration for fixes
           end
         end
       end

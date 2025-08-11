@@ -68,7 +68,7 @@ module AnsiColorTestingHelper
 
   # Strip ANSI codes from text
   def self.strip_ansi(text)
-    text.gsub(ANSI_REGEX, '')
+    text.gsub(ANSI_REGEX, "")
   end
 
   # Extract only ANSI codes from text
@@ -112,15 +112,15 @@ module AnsiColorTestingHelper
 
     # Capture with forced color (FORCE_COLOR=1)
     def capture_with_forced_color(&block)
-      original_force_color = ENV['FORCE_COLOR']
-      ENV['FORCE_COLOR'] = '1'
+      original_force_color = ENV["FORCE_COLOR"]
+      ENV["FORCE_COLOR"] = "1"
 
       capture_with_stringio(&block)
     ensure
       if original_force_color
-        ENV['FORCE_COLOR'] = original_force_color
+        ENV["FORCE_COLOR"] = original_force_color
       else
-        ENV.delete('FORCE_COLOR')
+        ENV.delete("FORCE_COLOR")
       end
     end
 
@@ -261,9 +261,9 @@ module AnsiColorTestingHelper
 
         failure_message do
           messages = []
-          messages << 'expected output to contain ANSI codes' unless @has_ansi
+          messages << "expected output to contain ANSI codes" unless @has_ansi
           messages << "expected clean text to be #{expected_clean_text.inspect}, but got #{@actual_clean.inspect}" if @actual_clean != expected_clean_text
-          messages.join(' and ')
+          messages.join(" and ")
         end
       end
     end
@@ -321,8 +321,8 @@ module AnsiColorTestingHelper
 
     def self.should_use_color?(options = {})
       # Example color detection logic for CLI apps
-      return false if ENV['NO_COLOR']
-      return true if ENV['FORCE_COLOR'] || options[:force_color]
+      return false if ENV["NO_COLOR"]
+      return true if ENV["FORCE_COLOR"] || options[:force_color]
       return options[:tty] if options.key?(:tty)
       $stdout.tty?
     end

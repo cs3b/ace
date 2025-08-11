@@ -32,7 +32,7 @@ module CodingAgentTools
 
         # Assign error files to agents
         def assign_error_files(error_files)
-          return { success: false, error: 'No agents registered' } if @agent_registry.empty?
+          return {success: false, error: "No agents registered"} if @agent_registry.empty?
 
           assignments = {}
           available_agents = @agent_registry.keys
@@ -94,7 +94,7 @@ module CodingAgentTools
             recommended_agents: calculate_optimal_agents(error_files.size),
             estimated_time: estimate_processing_time(error_files),
             parallelization_strategy: determine_strategy(error_files),
-            workflow_instruction: 'dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md'
+            workflow_instruction: "dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md"
           }
         end
 
@@ -104,19 +104,19 @@ module CodingAgentTools
             file: error_file,
             instructions: [
               "1. Read the error file: #{error_file}",
-              '2. For each error listed:',
-              '   - Navigate to the source file',
-              '   - Understand the context',
-              '   - Apply the appropriate fix',
+              "2. For each error listed:",
+              "   - Navigate to the source file",
+              "   - Understand the context",
+              "   - Apply the appropriate fix",
               "   - Validate the fix doesn't break anything",
-              '3. Run targeted linting on fixed files',
-              '4. Report completion status'
+              "3. Run targeted linting on fixed files",
+              "4. Report completion status"
             ],
             guidelines: [
-              'Fix only issues listed in your assigned file',
-              'Do not modify files assigned to other agents',
-              'Preserve code functionality',
-              'Follow project coding standards'
+              "Fix only issues listed in your assigned file",
+              "Do not modify files assigned to other agents",
+              "Preserve code functionality",
+              "Follow project coding standards"
             ]
           }
         end

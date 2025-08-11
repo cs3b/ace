@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'faraday'
+require "faraday"
 
 module CodingAgentTools
   module Middlewares
@@ -49,7 +49,7 @@ module CodingAgentTools
       def initialize(app, notifications_instance:, event_namespace: :http_client)
         super(app)
         if notifications_instance.nil? || !notifications_instance.respond_to?(:publish)
-          raise ArgumentError, 'notifications_instance must be a Dry::Monitor::Notifications compatible object'
+          raise ArgumentError, "notifications_instance must be a Dry::Monitor::Notifications compatible object"
         end
 
         @notifications = notifications_instance

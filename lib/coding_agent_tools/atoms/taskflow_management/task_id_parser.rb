@@ -16,8 +16,8 @@ module CodingAgentTools
         # @return [Hash] Hash with :version and :sequential_number keys
         # @raise [ArgumentError] If task_id is invalid
         def self.parse(task_id)
-          raise ArgumentError, 'task_id must be a string' unless task_id.is_a?(String)
-          raise ArgumentError, 'task_id cannot be nil or empty' if task_id.nil? || task_id.empty?
+          raise ArgumentError, "task_id must be a string" unless task_id.is_a?(String)
+          raise ArgumentError, "task_id cannot be nil or empty" if task_id.nil? || task_id.empty?
 
           match = task_id.match(TASK_ID_REGEX)
           raise ArgumentError, "Invalid task ID format: #{task_id}. Expected format: v.X.Y.Z+task.N" unless match
@@ -72,11 +72,11 @@ module CodingAgentTools
 
           unless current_max.is_a?(Integer) && current_max >= 0
             raise ArgumentError,
-              'current_max must be a non-negative integer'
+              "current_max must be a non-negative integer"
           end
 
           next_number = current_max + 1
-          formatted_number = next_number.to_s.rjust(2, '0')
+          formatted_number = next_number.to_s.rjust(2, "0")
           "#{version}+task.#{formatted_number}"
         end
 
@@ -112,8 +112,8 @@ module CodingAgentTools
           return 0 if version_a == version_b
 
           # Extract numeric parts
-          parts_a = version_a.gsub(/^v\./, '').split('.').map(&:to_i)
-          parts_b = version_b.gsub(/^v\./, '').split('.').map(&:to_i)
+          parts_a = version_a.gsub(/^v\./, "").split(".").map(&:to_i)
+          parts_b = version_b.gsub(/^v\./, "").split(".").map(&:to_i)
 
           # Compare each part
           [parts_a.length, parts_b.length].max.times do |i|
@@ -149,11 +149,11 @@ module CodingAgentTools
 
           unless sequential_number.is_a?(Integer) && sequential_number > 0
             raise ArgumentError,
-              'sequential_number must be a positive integer'
+              "sequential_number must be a positive integer"
           end
 
           formatted_number = if zero_pad
-            sequential_number.to_s.rjust(2, '0')
+            sequential_number.to_s.rjust(2, "0")
           else
             sequential_number.to_s
           end

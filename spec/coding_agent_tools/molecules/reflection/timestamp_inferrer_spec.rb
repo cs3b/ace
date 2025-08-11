@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
-require 'tempfile'
-require 'tmpdir'
-require 'date'
+require "spec_helper"
+require "tempfile"
+require "tmpdir"
+require "date"
 
 RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
   let(:inferrer) { described_class.new }
@@ -13,20 +13,20 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
     FileUtils.rm_rf(temp_dir)
   end
 
-  describe '#infer_timestamp_range' do
-    context 'when no reflection files provided' do
-      it 'returns failure with empty array' do
+  describe "#infer_timestamp_range" do
+    context "when no reflection files provided" do
+      it "returns failure with empty array" do
         result = inferrer.infer_timestamp_range([])
 
         expect(result).to be_failure
-        expect(result.error).to include('No dates found in reflection files')
+        expect(result.error).to include("No dates found in reflection files")
       end
     end
 
-    context 'when files contain valid dates' do
-      let(:file1) { File.join(temp_dir, '20250101-120000-reflection.md') }
-      let(:file2) { File.join(temp_dir, '20250115-143000-reflection.md') }
-      let(:file3) { File.join(temp_dir, '20250110-reflection.md') }
+    context "when files contain valid dates" do
+      let(:file1) { File.join(temp_dir, "20250101-120000-reflection.md") }
+      let(:file2) { File.join(temp_dir, "20250115-143000-reflection.md") }
+      let(:file3) { File.join(temp_dir, "20250110-reflection.md") }
 
       before do
         File.write(file1, <<~CONTENT)
@@ -51,7 +51,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         CONTENT
       end
 
-      it 'returns success with correct date range' do
+      it "returns success with correct date range" do
         result = inferrer.infer_timestamp_range([file1, file2, file3])
 
         expect(result).to be_success
@@ -61,7 +61,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:total_dates]).to be >= 3
       end
 
-      it 'handles files with multiple dates correctly' do
+      it "handles files with multiple dates correctly" do
         File.write(file1, <<~CONTENT)
           # Reflection with multiple dates
           **Date**: 2025-01-01
@@ -78,9 +78,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    context 'when files have dates only in filenames' do
-      let(:file1) { File.join(temp_dir, '2025-01-05-team-reflection.md') }
-      let(:file2) { File.join(temp_dir, 'reflection-20250110.md') }
+    context "when files have dates only in filenames" do
+      let(:file1) { File.join(temp_dir, "2025-01-05-team-reflection.md") }
+      let(:file2) { File.join(temp_dir, "reflection-20250110.md") }
 
       before do
         File.write(file1, <<~CONTENT)
@@ -96,7 +96,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         CONTENT
       end
 
-      it 'extracts dates from filenames successfully' do
+      it "extracts dates from filenames successfully" do
         result = inferrer.infer_timestamp_range([file1, file2])
 
         expect(result).to be_success
@@ -106,9 +106,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    context 'when files have mixed date formats' do
-      let(:file1) { File.join(temp_dir, '20250101-reflection.md') }
-      let(:file2) { File.join(temp_dir, 'general-reflection.md') }
+    context "when files have mixed date formats" do
+      let(:file1) { File.join(temp_dir, "20250101-reflection.md") }
+      let(:file2) { File.join(temp_dir, "general-reflection.md") }
 
       before do
         File.write(file1, <<~CONTENT)
@@ -126,7 +126,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         CONTENT
       end
 
-      it 'handles mixed date sources correctly' do
+      it "handles mixed date sources correctly" do
         result = inferrer.infer_timestamp_range([file1, file2])
 
         expect(result).to be_success
@@ -136,9 +136,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    context 'when files contain no recognizable dates' do
-      let(:file1) { File.join(temp_dir, 'reflection-general.md') }
-      let(:file2) { File.join(temp_dir, 'notes.md') }
+    context "when files contain no recognizable dates" do
+      let(:file1) { File.join(temp_dir, "reflection-general.md") }
+      let(:file2) { File.join(temp_dir, "notes.md") }
 
       before do
         File.write(file1, <<~CONTENT)
@@ -154,17 +154,17 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         CONTENT
       end
 
-      it 'returns failure when no dates found' do
+      it "returns failure when no dates found" do
         result = inferrer.infer_timestamp_range([file1, file2])
 
         expect(result).to be_failure
-        expect(result.error).to include('No dates found in reflection files')
+        expect(result.error).to include("No dates found in reflection files")
       end
     end
 
-    context 'when files are unreadable' do
-      let(:readable_file) { File.join(temp_dir, '20250101-readable.md') }
-      let(:unreadable_file) { File.join(temp_dir, '20250102-unreadable.md') }
+    context "when files are unreadable" do
+      let(:readable_file) { File.join(temp_dir, "20250101-readable.md") }
+      let(:unreadable_file) { File.join(temp_dir, "20250102-unreadable.md") }
 
       before do
         File.write(readable_file, "# Reflection\n**Date**: 2025-01-01")
@@ -176,7 +176,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         File.chmod(0o644, unreadable_file) # Restore for cleanup
       end
 
-      it 'uses filename dates when content is unreadable' do
+      it "uses filename dates when content is unreadable" do
         result = inferrer.infer_timestamp_range([readable_file, unreadable_file])
 
         expect(result).to be_success
@@ -185,8 +185,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    context 'when single file provided' do
-      let(:single_file) { File.join(temp_dir, '20250301-single.md') }
+    context "when single file provided" do
+      let(:single_file) { File.join(temp_dir, "20250301-single.md") }
 
       before do
         File.write(single_file, <<~CONTENT)
@@ -197,7 +197,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         CONTENT
       end
 
-      it 'handles single file correctly' do
+      it "handles single file correctly" do
         result = inferrer.infer_timestamp_range([single_file])
 
         expect(result).to be_success
@@ -208,31 +208,31 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
     end
   end
 
-  describe 'date extraction patterns' do
-    let(:test_file) { File.join(temp_dir, 'test-file.md') }
+  describe "date extraction patterns" do
+    let(:test_file) { File.join(temp_dir, "test-file.md") }
 
-    describe 'filename pattern recognition' do
-      it 'recognizes YYYY-MM-DD format' do
-        filename_file = File.join(temp_dir, '2025-01-15-reflection.md')
-        File.write(filename_file, '# Test')
-
-        result = inferrer.infer_timestamp_range([filename_file])
-        expect(result).to be_success
-        expect(result.data[:from_date]).to eq(Date.new(2025, 1, 15))
-      end
-
-      it 'recognizes YYYYMMDD format' do
-        filename_file = File.join(temp_dir, '20250115-reflection.md')
-        File.write(filename_file, '# Test')
+    describe "filename pattern recognition" do
+      it "recognizes YYYY-MM-DD format" do
+        filename_file = File.join(temp_dir, "2025-01-15-reflection.md")
+        File.write(filename_file, "# Test")
 
         result = inferrer.infer_timestamp_range([filename_file])
         expect(result).to be_success
         expect(result.data[:from_date]).to eq(Date.new(2025, 1, 15))
       end
 
-      it 'recognizes YYYYMMDD without separators' do
-        filename_file = File.join(temp_dir, 'reflection-20250115.md')
-        File.write(filename_file, '# Test')
+      it "recognizes YYYYMMDD format" do
+        filename_file = File.join(temp_dir, "20250115-reflection.md")
+        File.write(filename_file, "# Test")
+
+        result = inferrer.infer_timestamp_range([filename_file])
+        expect(result).to be_success
+        expect(result.data[:from_date]).to eq(Date.new(2025, 1, 15))
+      end
+
+      it "recognizes YYYYMMDD without separators" do
+        filename_file = File.join(temp_dir, "reflection-20250115.md")
+        File.write(filename_file, "# Test")
 
         result = inferrer.infer_timestamp_range([filename_file])
         expect(result).to be_success
@@ -240,8 +240,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'content pattern recognition' do
-      it 'recognizes **Date**: pattern' do
+    describe "content pattern recognition" do
+      it "recognizes **Date**: pattern" do
         File.write(test_file, <<~CONTENT)
           # Test Reflection
           **Date**: 2025-02-10
@@ -254,7 +254,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:from_date]).to eq(Date.new(2025, 2, 10))
       end
 
-      it 'recognizes Date: pattern' do
+      it "recognizes Date: pattern" do
         File.write(test_file, <<~CONTENT)
           # Test Reflection
           Date: 2025-02-11
@@ -267,7 +267,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:from_date]).to eq(Date.new(2025, 2, 11))
       end
 
-      it 'recognizes header with dates' do
+      it "recognizes header with dates" do
         File.write(test_file, <<~CONTENT)
           # Daily Reflection 2025-02-12
           ## Content
@@ -279,7 +279,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:from_date]).to eq(Date.new(2025, 2, 12))
       end
 
-      it 'recognizes case variations' do
+      it "recognizes case variations" do
         File.write(test_file, <<~CONTENT)
           # Test Reflection
           **date**: 2025-02-13
@@ -294,11 +294,11 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
     end
   end
 
-  describe 'edge cases and validation' do
-    let(:test_file) { File.join(temp_dir, 'edge-case.md') }
+  describe "edge cases and validation" do
+    let(:test_file) { File.join(temp_dir, "edge-case.md") }
 
-    describe 'date validation' do
-      it 'rejects invalid dates' do
+    describe "date validation" do
+      it "rejects invalid dates" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2025-13-40  # Invalid month and day
@@ -309,7 +309,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result).to be_failure
       end
 
-      it 'rejects dates outside reasonable range' do
+      it "rejects dates outside reasonable range" do
         File.write(test_file, <<~CONTENT)
           # Test  
           **Date**: 1999-01-01  # Too old
@@ -320,7 +320,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result).to be_failure
       end
 
-      it 'rejects dates too far in future' do
+      it "rejects dates too far in future" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2031-01-01  # Too far in future
@@ -331,7 +331,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result).to be_failure
       end
 
-      it 'accepts edge case valid dates' do
+      it "accepts edge case valid dates" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2000-01-01  # Minimum year
@@ -343,7 +343,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:from_date]).to eq(Date.new(2000, 1, 1))
       end
 
-      it 'accepts leap year dates' do
+      it "accepts leap year dates" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2024-02-29  # Leap year
@@ -356,8 +356,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'duplicate date handling' do
-      it 'handles duplicate dates correctly' do
+    describe "duplicate date handling" do
+      it "handles duplicate dates correctly" do
         File.write(test_file, <<~CONTENT)
           # Test Reflection  
           **Date**: 2025-03-15
@@ -372,22 +372,22 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'malformed content handling' do
-      it 'handles empty files gracefully' do
-        File.write(test_file, '')
+    describe "malformed content handling" do
+      it "handles empty files gracefully" do
+        File.write(test_file, "")
 
         result = inferrer.infer_timestamp_range([test_file])
         expect(result).to be_failure
       end
 
-      it 'handles files with only whitespace' do
+      it "handles files with only whitespace" do
         File.write(test_file, "   \n\n  \t  \n")
 
         result = inferrer.infer_timestamp_range([test_file])
         expect(result).to be_failure
       end
 
-      it 'handles binary files gracefully' do
+      it "handles binary files gracefully" do
         # Write some binary content
         File.binwrite(test_file, "\x00\x01\x02\x03")
 
@@ -396,9 +396,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'unicode and encoding' do
-      it 'handles unicode content correctly' do
-        File.write(test_file, <<~CONTENT, encoding: 'utf-8')
+    describe "unicode and encoding" do
+      it "handles unicode content correctly" do
+        File.write(test_file, <<~CONTENT, encoding: "utf-8")
           # Reflection with émojis 📝
           **Date**: 2025-04-01
           ## What Went Well ✅
@@ -411,8 +411,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'multiple patterns in single line' do
-      it 'extracts first date when multiple dates in single line' do
+    describe "multiple patterns in single line" do
+      it "extracts first date when multiple dates in single line" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2025-05-01 and reference to 2025-05-15
@@ -427,7 +427,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
         expect(result.data[:total_dates]).to eq(1)
       end
 
-      it 'extracts dates from different lines' do
+      it "extracts dates from different lines" do
         File.write(test_file, <<~CONTENT)
           # Test
           **Date**: 2025-05-01
@@ -443,8 +443,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    describe 'partial date matches' do
-      it 'ignores incomplete date patterns' do
+    describe "partial date matches" do
+      it "ignores incomplete date patterns" do
         File.write(test_file, <<~CONTENT)
           # Test
           Year 2025 and month 01 but no complete date
@@ -460,10 +460,10 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
     end
   end
 
-  describe 'file system edge cases' do
-    context 'when non-existent files provided' do
-      it 'handles missing files gracefully' do
-        missing_file = File.join(temp_dir, 'missing.md')
+  describe "file system edge cases" do
+    context "when non-existent files provided" do
+      it "handles missing files gracefully" do
+        missing_file = File.join(temp_dir, "missing.md")
 
         # Should not raise an error, but use empty content
         result = inferrer.infer_timestamp_range([missing_file])
@@ -471,9 +471,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       end
     end
 
-    context 'when symlinks provided' do
-      let(:target_file) { File.join(temp_dir, 'target.md') }
-      let(:symlink_file) { File.join(temp_dir, 'symlink.md') }
+    context "when symlinks provided" do
+      let(:target_file) { File.join(temp_dir, "target.md") }
+      let(:symlink_file) { File.join(temp_dir, "symlink.md") }
 
       before do
         File.write(target_file, "# Test\n**Date**: 2025-07-01")
@@ -481,14 +481,14 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
           begin
             File.symlink(target_file, symlink_file)
           rescue NotImplementedError
-            skip 'Symlinks not supported'
+            skip "Symlinks not supported"
           end
         else
-          skip 'Symlinks not available'
+          skip "Symlinks not available"
         end
       end
 
-      it 'follows symlinks correctly' do
+      it "follows symlinks correctly" do
         result = inferrer.infer_timestamp_range([symlink_file])
         expect(result).to be_success
         expect(result.data[:from_date]).to eq(Date.new(2025, 7, 1))
@@ -496,8 +496,8 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
     end
   end
 
-  describe 'performance considerations' do
-    it 'handles large number of files efficiently' do
+  describe "performance considerations" do
+    it "handles large number of files efficiently" do
       # Create many small files
       files = []
       50.times do |i|
@@ -514,9 +514,9 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::TimestampInferrer do
       expect(end_time - start_time).to be < 5.0 # Should complete within 5 seconds
     end
 
-    it 'handles files with large content efficiently' do
+    it "handles files with large content efficiently" do
       large_content = "# Large Reflection\n**Date**: 2025-08-01\n" + ("Content line\n" * 10_000)
-      large_file = File.join(temp_dir, 'large.md')
+      large_file = File.join(temp_dir, "large.md")
       File.write(large_file, large_content)
 
       start_time = Time.now

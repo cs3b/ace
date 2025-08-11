@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../../organisms/code/content_extractor'
+require "dry/cli"
+require_relative "../../../../organisms/code/content_extractor"
 
 module CodingAgentTools
   module Cli
@@ -10,24 +10,24 @@ module CodingAgentTools
         module ReviewPrepare
           # ProjectTarget sub-command
           class ProjectTarget < Dry::CLI::Command
-            desc 'Extract target content (diff or files)'
+            desc "Extract target content (diff or files)"
 
             option :target, type: :string, required: true,
-              desc: 'Target specification'
+              desc: "Target specification"
 
             option :session_dir, type: :string, required: true,
-              desc: 'Session directory path'
+              desc: "Session directory path"
 
             example [
-              '--target HEAD~1..HEAD --session_dir /path/to/session',
+              "--target HEAD~1..HEAD --session_dir /path/to/session",
               "--target 'lib/**/*.rb' --session_dir /path/to/session",
-              '--target staged --session_dir /path/to/session'
+              "--target staged --session_dir /path/to/session"
             ]
 
             def call(**options)
               # Check for required options (Dry::CLI doesn't validate for direct method calls)
-              raise ArgumentError, 'target is required' unless options[:target]
-              raise ArgumentError, 'session_dir is required' unless options[:session_dir]
+              raise ArgumentError, "target is required" unless options[:target]
+              raise ArgumentError, "session_dir is required" unless options[:session_dir]
 
               content_extractor = CodingAgentTools::Organisms::Code::ContentExtractor.new
 
@@ -37,7 +37,7 @@ module CodingAgentTools
                   options[:session_dir]
                 )
 
-                if target.type != 'error'
+                if target.type != "error"
                   puts "✅ Extracted target: #{target.type}"
                   puts "📄 Content type: #{target.content_type}"
                   puts "📊 Files: #{target.file_count}, Lines: #{target.line_count}"

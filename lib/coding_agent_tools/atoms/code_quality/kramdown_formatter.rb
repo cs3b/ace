@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'kramdown'
-require 'kramdown-parser-gfm'
+require "kramdown"
+require "kramdown-parser-gfm"
 
 module CodingAgentTools
   module Atoms
@@ -13,12 +13,12 @@ module CodingAgentTools
 
         def initialize(options = {})
           @options = {
-            input: 'GFM',           # GitHub Flavored Markdown
+            input: "GFM",           # GitHub Flavored Markdown
             hard_wrap: false,
             auto_ids: true,         # Enable auto IDs by default
             entity_output: :as_char,
-            toc_levels: '1..6',
-            smart_quotes: ['rsquo', 'rsquo', 'rdquo', 'rdquo'],
+            toc_levels: "1..6",
+            smart_quotes: ["rsquo", "rsquo", "rdquo", "rdquo"],
             gfm_quirks: [:paragraph_end],  # Preserve GFM paragraph handling
             syntax_highlighter: nil        # Disable syntax highlighting to preserve code blocks
           }.merge(options)
@@ -108,20 +108,20 @@ module CodingAgentTools
           )
 
           # Remove task-list class marker
-          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, '')
+          kramdown_output = kramdown_output.gsub(/^\{: \.task-list\}\n/m, "")
 
           # Convert indented code blocks back to fenced code blocks
           kramdown_output = kramdown_output.gsub(/^    (.+?)$\n^\{: \.language-(\w+)\}$/m) do |match|
             language = ::Regexp.last_match(2)
-            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, '') }
+            code_lines = match.split("\n")[0..-2].map { |line| line.sub(/^    /, "") }
             "```#{language}\n#{code_lines.join("\n")}\n```"
           end
 
           # Clean up remaining language markers
-          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, '')
+          kramdown_output = kramdown_output.gsub(/^\{: \.language-(\w+)\}$/m, "")
 
           # Clean up header ID attributes if auto_ids was disabled
-          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, '')
+          kramdown_output = kramdown_output.gsub(/ +\{#[\w-]+\}$/m, "")
 
           kramdown_output.strip
         end

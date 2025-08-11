@@ -10,7 +10,7 @@ module CodingAgentTools
         # @param response [Hash] The raw API response
         # @return [Hash] Extracted usage information
         def self.parse(response)
-          usage_metadata = response[:usage_metadata] || response['usage_metadata'] || {}
+          usage_metadata = response[:usage_metadata] || response["usage_metadata"] || {}
 
           {
             input_tokens: extract_input_tokens(usage_metadata),
@@ -25,14 +25,14 @@ module CodingAgentTools
         # @param usage [Hash] Usage metadata section
         # @return [Integer] Number of input tokens
         def self.extract_input_tokens(usage)
-          usage[:prompt_tokens] || usage['prompt_tokens'] || 0
+          usage[:prompt_tokens] || usage["prompt_tokens"] || 0
         end
 
         # Extract output/completion tokens from LM Studio usage metadata
         # @param usage [Hash] Usage metadata section
         # @return [Integer] Number of output tokens
         def self.extract_output_tokens(usage)
-          usage[:completion_tokens] || usage['completion_tokens'] || 0
+          usage[:completion_tokens] || usage["completion_tokens"] || 0
         end
 
         # Extract total tokens (LM Studio provides this, but we can calculate if missing)
@@ -40,7 +40,7 @@ module CodingAgentTools
         # @return [Integer] Total token count
         def self.extract_total_tokens(usage)
           # Use provided total if available, otherwise calculate
-          provided_total = usage[:total_tokens] || usage['total_tokens']
+          provided_total = usage[:total_tokens] || usage["total_tokens"]
           return provided_total if provided_total
 
           input_tokens = extract_input_tokens(usage)
@@ -56,26 +56,26 @@ module CodingAgentTools
           specific_data = {}
 
           # Include system fingerprint if available
-          fingerprint = response[:system_fingerprint] || response['system_fingerprint']
+          fingerprint = response[:system_fingerprint] || response["system_fingerprint"]
           specific_data[:system_fingerprint] = fingerprint if fingerprint
 
           # Include model-specific stats if available
-          stats = response[:stats] || response['stats']
+          stats = response[:stats] || response["stats"]
           specific_data[:stats] = stats if stats && !stats.empty?
 
           # Include choice-level metadata
-          first_choice = response.dig(:choices, 0) || response.dig('choices', 0)
+          first_choice = response.dig(:choices, 0) || response.dig("choices", 0)
           if first_choice
             # Log probabilities
-            logprobs = first_choice[:logprobs] || first_choice['logprobs']
+            logprobs = first_choice[:logprobs] || first_choice["logprobs"]
             specific_data[:logprobs] = logprobs if logprobs
 
             # Seed used for generation
-            seed = first_choice[:seed] || first_choice['seed']
+            seed = first_choice[:seed] || first_choice["seed"]
             specific_data[:seed] = seed if seed
 
             # Index
-            index = first_choice[:index] || first_choice['index']
+            index = first_choice[:index] || first_choice["index"]
             specific_data[:choice_index] = index if index
           end
 
@@ -86,7 +86,7 @@ module CodingAgentTools
         # @param usage [Hash] Usage metadata section
         # @return [Integer, nil] Number of cached tokens
         def self.extract_cached_tokens(usage)
-          usage[:cached_tokens] || usage['cached_tokens']
+          usage[:cached_tokens] || usage["cached_tokens"]
         end
 
         private_class_method :extract_input_tokens, :extract_output_tokens,

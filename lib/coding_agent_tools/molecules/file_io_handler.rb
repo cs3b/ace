@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'fileutils'
-require 'pathname'
+require "fileutils"
+require "pathname"
 
 module CodingAgentTools
   module Molecules
@@ -10,11 +10,11 @@ module CodingAgentTools
     class FileIoHandler
       # File extensions that indicate different output formats
       FORMAT_EXTENSIONS = {
-        '.json' => 'json',
-        '.md' => 'markdown',
-        '.markdown' => 'markdown',
-        '.txt' => 'text',
-        '.text' => 'text'
+        ".json" => "json",
+        ".md" => "markdown",
+        ".markdown" => "markdown",
+        ".txt" => "text",
+        ".text" => "text"
       }.freeze
 
       # Maximum file size to read (10MB)
@@ -109,12 +109,12 @@ module CodingAgentTools
         FileUtils.mkdir_p(dir_path) unless File.directory?(dir_path)
 
         # Write content to file
-        File.write(validated_path, content, encoding: 'UTF-8')
+        File.write(validated_path, content, encoding: "UTF-8")
 
         @security_logger.log_event(:file_operation,
           path: validated_path,
           metadata: {
-            operation: 'write',
+            operation: "write",
             format: inferred_format,
             size: content.bytesize,
             forced: force
@@ -122,7 +122,7 @@ module CodingAgentTools
 
         inferred_format
       rescue => e
-        @security_logger.log_error(e, context: { operation: 'write', file_path: file_path })
+        @security_logger.log_error(e, context: {operation: "write", file_path: file_path})
         raise Error, "Failed to write file #{file_path}: #{e.message}"
       end
 
@@ -130,10 +130,10 @@ module CodingAgentTools
       # @param file_path [String] Path to check for extension
       # @return [String] Inferred format (json, markdown, text)
       def infer_format_from_path(file_path)
-        return 'text' if file_path.nil? || file_path.strip.empty?
+        return "text" if file_path.nil? || file_path.strip.empty?
 
         extension = File.extname(file_path.strip).downcase
-        FORMAT_EXTENSIONS.fetch(extension, 'text')
+        FORMAT_EXTENSIONS.fetch(extension, "text")
       end
 
       # Check if path has supported format extension
@@ -168,7 +168,7 @@ module CodingAgentTools
           else
             # Check if parent directories are writable for creation
             existing_parent = dir_path
-            existing_parent = existing_parent.dirname while !File.exist?(existing_parent) && existing_parent.to_s != '/'
+            existing_parent = existing_parent.dirname while !File.exist?(existing_parent) && existing_parent.to_s != "/"
             File.writable?(existing_parent)
           end
         rescue
@@ -196,26 +196,26 @@ module CodingAgentTools
         file_size = File.size(validated_path)
         raise Error, "File too large: #{file_size} bytes (max: #{@max_file_size})" if file_size > @max_file_size
 
-        content = File.read(validated_path, encoding: 'UTF-8').strip
+        content = File.read(validated_path, encoding: "UTF-8").strip
 
         @security_logger.log_event(:file_operation,
           path: validated_path,
           metadata: {
-            operation: 'read',
+            operation: "read",
             size: file_size
           })
 
         content
       rescue Errno::EACCES
-        @security_logger.log_error(StandardError.new('Permission denied'),
-          context: { operation: 'read', file_path: file_path })
+        @security_logger.log_error(StandardError.new("Permission denied"),
+          context: {operation: "read", file_path: file_path})
         raise Error, "Permission denied reading file: #{file_path}"
       rescue Errno::ENOENT
-        @security_logger.log_error(StandardError.new('File not found'),
-          context: { operation: 'read', file_path: file_path })
+        @security_logger.log_error(StandardError.new("File not found"),
+          context: {operation: "read", file_path: file_path})
         raise Error, "File not found: #{file_path}"
       rescue => e
-        @security_logger.log_error(e, context: { operation: 'read', file_path: file_path })
+        @security_logger.log_error(e, context: {operation: "read", file_path: file_path})
         raise Error, "Error reading file #{file_path}: #{e.message}"
       end
 
@@ -224,7 +224,7 @@ module CodingAgentTools
       # @return [String] Validated content
       # @raise [Error] If content is empty
       def validate_inline_content(content)
-        raise Error, 'Content cannot be empty' if content.nil? || content.strip.empty?
+        raise Error, "Content cannot be empty" if content.nil? || content.strip.empty?
 
         content.strip
       end
@@ -232,21 +232,21 @@ module CodingAgentTools
       # Create security logger instance
       # @return [SecurityLogger] Security logger
       def create_security_logger
-        require_relative '../atoms/security_logger'
+        require_relative "../atoms/security_logger"
         Atoms::SecurityLogger.new
       end
 
       # Create secure path validator instance
       # @return [SecurePathValidator] Path validator
       def create_path_validator
-        require_relative 'secure_path_validator'
+        require_relative "secure_path_validator"
         SecurePathValidator.new
       end
 
       # Create file operation confirmer instance
       # @return [FileOperationConfirmer] Operation confirmer
       def create_operation_confirmer
-        require_relative 'file_operation_confirmer'
+        require_relative "file_operation_confirmer"
         FileOperationConfirmer.new
       end
     end

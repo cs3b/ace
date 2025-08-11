@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'base_client'
+require_relative "base_client"
 
 module CodingAgentTools
   module Organisms
@@ -10,7 +10,7 @@ module CodingAgentTools
       def initialize(api_key: nil, model: nil, **options)
         # Prevent direct instantiation of abstract base class
         if instance_of?(BaseChatCompletionClient)
-          raise NotImplementedError, 'BaseChatCompletionClient is abstract and cannot be instantiated directly'
+          raise NotImplementedError, "BaseChatCompletionClient is abstract and cannot be instantiated directly"
         end
 
         super
@@ -43,7 +43,7 @@ module CodingAgentTools
       # @yieldparam chunk [String] Text chunk
       # @return [String] Complete generated text
       def generate_text_stream(prompt, **options)
-        raise NotImplementedError, 'Streaming responses not yet implemented'
+        raise NotImplementedError, "Streaming responses not yet implemented"
       end
 
       # Count tokens in a text
@@ -54,20 +54,20 @@ module CodingAgentTools
           perform_token_counting(text)
         else
           provider_display_name = case provider_name
-          when 'openai'
-                                    'OpenAI'
-          when 'anthropic'
-                                    'Anthropic'
-          when 'google'
-                                    'Google'
-          when 'mistral'
-                                    'Mistral'
-          when 'together_ai', 'togetherai'
-                                    'Together AI'
-          when 'lmstudio', 'lm_studio'
-                                    'LM Studio'
-                                  else
-                                    provider_name.capitalize
+          when "openai"
+            "OpenAI"
+          when "anthropic"
+            "Anthropic"
+          when "google"
+            "Google"
+          when "mistral"
+            "Mistral"
+          when "together_ai", "togetherai"
+            "Together AI"
+          when "lmstudio", "lm_studio"
+            "LM Studio"
+          else
+            provider_name.capitalize
           end
 
           raise NotImplementedError, "Token counting not directly supported by #{provider_display_name} API"
@@ -116,7 +116,7 @@ module CodingAgentTools
       # @param text [String] Text to count tokens for
       # @return [Hash] Token count information
       def perform_token_counting(text)
-        raise NotImplementedError, 'Subclasses must implement perform_token_counting if they support it'
+        raise NotImplementedError, "Subclasses must implement perform_token_counting if they support it"
       end
 
       # Fetch individual model information
@@ -153,7 +153,7 @@ module CodingAgentTools
         {
           id: @model,
           name: @model,
-          object: 'model',
+          object: "model",
           created: Time.now.to_i
         }
       end
@@ -168,7 +168,7 @@ module CodingAgentTools
       # Build URL for models list endpoint
       # @return [String] Models list URL
       def build_models_url
-        build_api_url('models')
+        build_api_url("models")
       end
 
       # Build URL for individual model info
@@ -197,7 +197,7 @@ module CodingAgentTools
       # Get the generation endpoint name
       # @return [String] Endpoint name
       def generation_endpoint
-        'chat/completions'
+        "chat/completions"
       end
 
       # Extract models list from parsed response
@@ -214,13 +214,13 @@ module CodingAgentTools
       # @param endpoint [String] API endpoint
       # @return [String] Complete URL
       def build_api_url(endpoint)
-        raise NotImplementedError, 'Subclasses must implement build_api_url'
+        raise NotImplementedError, "Subclasses must implement build_api_url"
       end
 
       # Build authentication headers
       # @return [Hash] Authentication headers
       def auth_headers
-        raise NotImplementedError, 'Subclasses must implement auth_headers if needed'
+        raise NotImplementedError, "Subclasses must implement auth_headers if needed"
       end
 
       # Build generation payload
@@ -228,14 +228,14 @@ module CodingAgentTools
       # @param options [Hash] Options
       # @return [Hash] Request payload
       def build_generation_payload(prompt, options)
-        raise NotImplementedError, 'Subclasses must implement build_generation_payload'
+        raise NotImplementedError, "Subclasses must implement build_generation_payload"
       end
 
       # Extract generated text from response
       # @param parsed_response [Hash] Parsed API response
       # @return [Hash] Extracted text and metadata
       def extract_generated_text(parsed_response)
-        raise NotImplementedError, 'Subclasses must implement extract_generated_text'
+        raise NotImplementedError, "Subclasses must implement extract_generated_text"
       end
     end
   end

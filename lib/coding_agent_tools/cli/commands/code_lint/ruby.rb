@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
+require "dry/cli"
 
 module CodingAgentTools
   module Cli
@@ -8,31 +8,31 @@ module CodingAgentTools
       module CodeLint
         # CLI command for Ruby-specific code quality validation and linting
         class Ruby < Dry::CLI::Command
-          desc 'Run code quality validation and linting on Ruby files'
+          desc "Run code quality validation and linting on Ruby files"
 
-          argument :paths, desc: 'Paths to lint', type: :array, required: false
+          argument :paths, desc: "Paths to lint", type: :array, required: false
 
           option :autofix,
-            desc: 'Apply moderate-level automatic fixes',
+            desc: "Apply moderate-level automatic fixes",
             type: :boolean,
             default: false,
-            aliases: ['a']
+            aliases: ["a"]
 
           option :config,
-            desc: 'Path to custom configuration file',
+            desc: "Path to custom configuration file",
             type: :string,
-            aliases: ['c']
+            aliases: ["c"]
 
           option :dry_run,
-            desc: 'Show what would be done without making changes',
+            desc: "Show what would be done without making changes",
             type: :boolean,
             default: false,
-            aliases: ['n']
+            aliases: ["n"]
 
           def call(paths: nil, **options)
-            require_relative '../../../organisms/code_quality/language_runner_factory'
-            require_relative '../../../atoms/code_quality/configuration_loader'
-            require_relative '../../../atoms/code_quality/path_resolver'
+            require_relative "../../../organisms/code_quality/language_runner_factory"
+            require_relative "../../../atoms/code_quality/configuration_loader"
+            require_relative "../../../atoms/code_quality/path_resolver"
 
             # Load configuration
             config_loader = Atoms::CodeQuality::ConfigurationLoader.new(
@@ -43,23 +43,23 @@ module CodingAgentTools
 
             # Create Ruby runner
             runner = Organisms::CodeQuality::LanguageRunnerFactory.create_runner(
-              'ruby',
+              "ruby",
               config: config,
               path_resolver: path_resolver
             )
 
             # Run validation or autofix
             result = if options[:autofix] && !options[:dry_run]
-              runner.autofix(paths: paths || ['.'])
+              runner.autofix(paths: paths || ["."])
             else
-              runner.validate(paths: paths || ['.'])
+              runner.validate(paths: paths || ["."])
             end
 
             # Report results
             runner.report(result) if result
 
             # Exit with appropriate code
-            exit(result && result[:success] ? 0 : 1)
+            exit((result && result[:success]) ? 0 : 1)
           rescue => e
             warn "Error: #{e.message}"
             exit 1

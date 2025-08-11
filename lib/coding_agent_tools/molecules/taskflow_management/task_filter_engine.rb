@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'task_filter_parser'
+require_relative "task_filter_parser"
 
 module CodingAgentTools
   module Molecules
@@ -26,26 +26,26 @@ module CodingAgentTools
         # @param filter_strings [Array<String>] Array of filter strings to parse and apply
         # @return [Hash] Hash with :tasks and :errors keys
         def self.apply_filter_strings(tasks, filter_strings)
-          return { tasks: tasks, errors: [] } if !filter_strings || filter_strings.empty?
+          return {tasks: tasks, errors: []} if !filter_strings || filter_strings.empty?
 
           # Parse filters
           filters = TaskFilterParser.parse_filters(filter_strings)
 
           # Validate filters
           errors = TaskFilterParser.validate_filters(filters)
-          return { tasks: [], errors: errors } unless errors.empty?
+          return {tasks: [], errors: errors} unless errors.empty?
 
           # Apply filters
           filtered_tasks = apply_filters(tasks, filters)
 
-          { tasks: filtered_tasks, errors: [] }
+          {tasks: filtered_tasks, errors: []}
         end
 
         # Get default filters for next command (pending and in-progress tasks)
         # @return [Array<String>] Default filter strings for next command
         def self.default_next_filters
           # Use a special OR filter syntax for status
-          ['status:pending|in-progress']
+          ["status:pending|in-progress"]
         end
 
         # Check if filters would return any actionable tasks

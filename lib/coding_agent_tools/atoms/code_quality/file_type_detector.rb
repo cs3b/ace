@@ -8,15 +8,15 @@ module CodingAgentTools
         # Default file patterns for supported languages
         DEFAULT_PATTERNS = {
           ruby: [
-            '*.rb',
-            '*.gemspec',
-            'Gemfile',
-            'Rakefile',
-            'exe/*'
+            "*.rb",
+            "*.gemspec",
+            "Gemfile",
+            "Rakefile",
+            "exe/*"
           ].freeze,
           markdown: [
-            '*.md',
-            '*.markdown'
+            "*.md",
+            "*.markdown"
           ].freeze
         }.freeze
 

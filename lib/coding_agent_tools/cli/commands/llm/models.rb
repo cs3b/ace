@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require 'yaml'
-require 'fileutils'
-require_relative '../../../models/default_model_config'
-require_relative '../../../molecules/cache_manager'
+require "dry/cli"
+require "yaml"
+require "fileutils"
+require_relative "../../../models/default_model_config"
+require_relative "../../../molecules/cache_manager"
 
 module CodingAgentTools
   module Cli
@@ -12,33 +12,33 @@ module CodingAgentTools
       module LLM
         # Models command for listing available AI models from various providers
         class Models < Dry::CLI::Command
-          desc 'List available AI models from various providers'
+          desc "List available AI models from various providers"
 
-          argument :provider, type: :string, default: 'google',
-            desc: 'Provider to list models for (google, lmstudio)'
+          argument :provider, type: :string, default: "google",
+            desc: "Provider to list models for (google, lmstudio)"
 
-          option :filter, type: :string, aliases: ['f'],
-            desc: 'Filter models by name (fuzzy search)'
+          option :filter, type: :string, aliases: ["f"],
+            desc: "Filter models by name (fuzzy search)"
 
           option :format, type: :string, default: CodingAgentTools::Constants::CliConstants::FORMAT_TEXT,
             values: CodingAgentTools::Constants::CliConstants::VALID_FORMATS,
-            desc: 'Output format (text or json)'
+            desc: "Output format (text or json)"
 
           option :refresh, type: :boolean, default: false,
-            desc: 'Refresh cache by fetching latest data from APIs'
+            desc: "Refresh cache by fetching latest data from APIs"
 
           option :debug, type: :boolean, default: false, aliases: CodingAgentTools::Constants::CliConstants::DEBUG_OPTION_ALIASES,
-            desc: 'Enable debug output for verbose error information'
+            desc: "Enable debug output for verbose error information"
 
           example [
-            'google',
-            'lmstudio',
-            'google --filter flash',
-            'lmstudio --filter mistral --format json',
-            'google --refresh'
+            "google",
+            "lmstudio",
+            "google --filter flash",
+            "lmstudio --filter mistral --format json",
+            "google --refresh"
           ]
 
-          def call(provider: 'google', **options)
+          def call(provider: "google", **options)
             unless valid_provider?(provider)
               warn "Error: Invalid provider '#{provider}'. Valid providers are: google, lmstudio, openai, anthropic, mistral, together_ai"
               exit(1)
@@ -73,7 +73,7 @@ module CodingAgentTools
           # @param options [Hash] Command options
           def output_models(models, options)
             case options[:format]
-            when 'json'
+            when "json"
               output_json_models(models, **options)
             else
               output_text_models(models, **options)
@@ -90,7 +90,7 @@ module CodingAgentTools
               error.backtrace&.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 
@@ -109,7 +109,7 @@ module CodingAgentTools
 
           # Check if provider is valid
           def valid_provider?(provider)
-            ['google', 'lmstudio', 'openai', 'anthropic', 'mistral', 'together_ai'].include?(provider)
+            ["google", "lmstudio", "openai", "anthropic", "mistral", "together_ai"].include?(provider)
           end
 
           # Get list of available models for the specified provider
@@ -126,22 +126,22 @@ module CodingAgentTools
           # Fetch models from API based on provider
           def fetch_models_from_api(provider)
             case provider
-            when 'google'
+            when "google"
               fetch_google_models
-            when 'lmstudio'
+            when "lmstudio"
               fetch_lmstudio_models
-            when 'openai'
+            when "openai"
               fetch_openai_models
-            when 'anthropic'
+            when "anthropic"
               fetch_anthropic_models
-            when 'mistral'
+            when "mistral"
               fetch_mistral_models
-            when 'together_ai'
+            when "together_ai"
               fetch_together_ai_models
             end
           rescue => e
             # Fallback to hardcoded list if API fails
-            warn "API failed for #{provider}: #{e.message}" if ENV['DEBUG_MODELS']
+            warn "API failed for #{provider}: #{e.message}" if ENV["DEBUG_MODELS"]
             fallback_models(provider)
           end
 
@@ -156,9 +156,9 @@ module CodingAgentTools
             end
 
             # Convert API response to our model structure
-            default_model_id = default_config.default_model_for('google')
+            default_model_id = default_config.default_model_for("google")
             generate_models.map do |model|
-              model_id = model[:name].sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, '')
+              model_id = model[:name].sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
 
               # Extract context size and max output tokens from model metadata
               context_size = extract_google_context_size(model)
@@ -167,7 +167,7 @@ module CodingAgentTools
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_model_name(model[:name]),
-                description: model[:description] || 'Google model',
+                description: model[:description] || "Google model",
                 default: model_id == default_model_id,
                 context_size: context_size,
                 max_output_tokens: max_output_tokens
@@ -180,7 +180,7 @@ module CodingAgentTools
             client = Organisms::LmstudioClient.new
             models_response = client.list_models
 
-            default_model_id = default_config.default_model_for('lmstudio')
+            default_model_id = default_config.default_model_for("lmstudio")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
@@ -192,7 +192,7 @@ module CodingAgentTools
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_lmstudio_model_name(model_id),
-                description: 'LM Studio model',
+                description: "LM Studio model",
                 default: model_id == default_model_id,
                 context_size: context_size,
                 max_output_tokens: max_output_tokens
@@ -207,17 +207,17 @@ module CodingAgentTools
 
             # Filter to only include chat/completion models
             chat_models = models_response.select do |model|
-              model[:id].include?('gpt') || model[:id].include?('o1')
+              model[:id].include?("gpt") || model[:id].include?("o1")
             end
 
-            default_model_id = default_config.default_model_for('openai')
+            default_model_id = default_config.default_model_for("openai")
             # Convert API response to our model structure
             chat_models.map do |model|
               model_id = model[:id]
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_openai_model_name(model_id),
-                description: 'OpenAI model',
+                description: "OpenAI model",
                 default: model_id == default_model_id
               )
             end.sort_by(&:id)
@@ -228,14 +228,14 @@ module CodingAgentTools
             client = Organisms::AnthropicClient.new
             models_response = client.list_models
 
-            default_model_id = default_config.default_model_for('anthropic')
+            default_model_id = default_config.default_model_for("anthropic")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_anthropic_model_name(model_id),
-                description: model[:description] || 'Anthropic Claude model',
+                description: model[:description] || "Anthropic Claude model",
                 default: model_id == default_model_id
               )
             end.sort_by(&:id)
@@ -246,14 +246,14 @@ module CodingAgentTools
             client = Organisms::MistralClient.new
             models_response = client.list_models
 
-            default_model_id = default_config.default_model_for('mistral')
+            default_model_id = default_config.default_model_for("mistral")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id]
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_mistral_model_name(model_id),
-                description: model[:description] || 'Mistral AI model',
+                description: model[:description] || "Mistral AI model",
                 default: model_id == default_model_id
               )
             end.sort_by(&:id)
@@ -265,16 +265,16 @@ module CodingAgentTools
             models_response = client.list_models
 
             # If no models returned, raise an error to trigger fallback
-            raise 'No models returned from API' if models_response.empty?
+            raise "No models returned from API" if models_response.empty?
 
-            default_model_id = default_config.default_model_for('together_ai')
+            default_model_id = default_config.default_model_for("together_ai")
             # Convert API response to our model structure
             models_response.map do |model|
               model_id = model[:id] || model[:name]
               CodingAgentTools::Models::LlmModelInfo.new(
                 id: model_id,
                 name: format_together_ai_model_name(model_id),
-                description: model[:description] || 'Together AI model',
+                description: model[:description] || "Together AI model",
                 default: model_id == default_model_id
               )
             end.sort_by(&:id)
@@ -282,24 +282,24 @@ module CodingAgentTools
 
           # Format Google model name for display
           def format_model_name(model_name)
-            name = model_name.sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, '')
+            name = model_name.sub(CodingAgentTools::Constants::CliConstants::MODELS_PREFIX, "")
 
             # Convert kebab-case to title case
-            words = name.split('-').map do |word|
+            words = name.split("-").map do |word|
               CodingAgentTools::Constants::CliConstants::MODEL_NAME_MAPPINGS[word] || word.capitalize
             end
 
-            words.join(' ')
+            words.join(" ")
           end
 
           # Format LM Studio model name for display
           def format_lmstudio_model_name(model_id)
             # Extract the model name part after the last slash
-            name_part = model_id.split('/').last
+            name_part = model_id.split("/").last
 
             # Convert to title case
             words = name_part.split(/[-_]/).map(&:capitalize)
-            words.join(' ')
+            words.join(" ")
           end
 
           # Format OpenAI model name for display
@@ -307,19 +307,19 @@ module CodingAgentTools
             # Handle common OpenAI model naming patterns
             case model_id
             when /^gpt-4o/
-              'GPT-4 Omni'
+              "GPT-4 Omni"
             when /^gpt-4-turbo/
-              'GPT-4 Turbo'
+              "GPT-4 Turbo"
             when /^gpt-4/
-              'GPT-4'
+              "GPT-4"
             when /^gpt-3.5-turbo/
-              'GPT-3.5 Turbo'
+              "GPT-3.5 Turbo"
             when /^o1-preview/
-              'O1 Preview'
+              "O1 Preview"
             when /^o1-mini/
-              'O1 Mini'
+              "O1 Mini"
             else
-              model_id.split('-').map(&:capitalize).join(' ')
+              model_id.split("-").map(&:capitalize).join(" ")
             end
           end
 
@@ -328,17 +328,17 @@ module CodingAgentTools
             # Handle Anthropic model naming patterns
             case model_id
             when /^claude-3-5-sonnet/
-              'Claude 3.5 Sonnet'
+              "Claude 3.5 Sonnet"
             when /^claude-3-5-haiku/
-              'Claude 3.5 Haiku'
+              "Claude 3.5 Haiku"
             when /^claude-3-opus/
-              'Claude 3 Opus'
+              "Claude 3 Opus"
             when /^claude-3-sonnet/
-              'Claude 3 Sonnet'
+              "Claude 3 Sonnet"
             when /^claude-3-haiku/
-              'Claude 3 Haiku'
+              "Claude 3 Haiku"
             else
-              model_id.split('-').map(&:capitalize).join(' ')
+              model_id.split("-").map(&:capitalize).join(" ")
             end
           end
 
@@ -347,19 +347,19 @@ module CodingAgentTools
             # Handle Mistral AI model naming patterns
             case model_id
             when /^mistral-large/
-              'Mistral Large'
+              "Mistral Large"
             when /^mistral-medium/
-              'Mistral Medium'
+              "Mistral Medium"
             when /^mistral-small/
-              'Mistral Small'
+              "Mistral Small"
             when /^mistral-tiny/
-              'Mistral Tiny'
+              "Mistral Tiny"
             when /^mistral-8x7b/
-              'Mistral 8x7B'
+              "Mistral 8x7B"
             when /^mistral-8x22b/
-              'Mistral 8x22B'
+              "Mistral 8x22B"
             else
-              model_id.split('-').map(&:capitalize).join(' ')
+              model_id.split("-").map(&:capitalize).join(" ")
             end
           end
 
@@ -368,113 +368,113 @@ module CodingAgentTools
             # Handle Together AI model naming patterns
             case model_id
             when /meta-llama.*3.*70[Bb]/
-              'Llama 3.1 70B'
+              "Llama 3.1 70B"
             when /meta-llama.*3.*8[Bb]/
-              'Llama 3.1 8B'
+              "Llama 3.1 8B"
             when /mistralai.*[Mm]istral.*8x7[Bb]/
-              'Mistral 8x7B'
+              "Mistral 8x7B"
             when /mistralai.*[Mm]istral.*8x22[Bb]/
-              'Mistral 8x22B'
+              "Mistral 8x22B"
             when /deepseek/i
-              'DeepSeek Coder'
+              "DeepSeek Coder"
             when /qwen/i
-              model_id.split('/').last.split('-').map(&:capitalize).join(' ')
+              model_id.split("/").last.split("-").map(&:capitalize).join(" ")
             else
-              model_id.split('/').last.split('-').map(&:capitalize).join(' ')
+              model_id.split("/").last.split("-").map(&:capitalize).join(" ")
             end
           end
 
           # Fallback models if API call fails
           def fallback_models(provider)
-            config_path = File.expand_path('../../../../../config/fallback_models.yaml', __dir__)
-            warn "Loading fallback models from: #{config_path}" if ENV['DEBUG_MODELS']
-            warn "File exists: #{File.exist?(config_path)}" if ENV['DEBUG_MODELS']
+            config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
+            warn "Loading fallback models from: #{config_path}" if ENV["DEBUG_MODELS"]
+            warn "File exists: #{File.exist?(config_path)}" if ENV["DEBUG_MODELS"]
             config = YAML.load_file(config_path)
 
             case provider
-            when 'google'
-              default_model_id = default_config.default_model_for('google')
-              google_config = config['google']
+            when "google"
+              default_model_id = default_config.default_model_for("google")
+              google_config = config["google"]
 
-              google_config['models'].map do |model_data|
+              google_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
-            when 'lmstudio'
-              default_model_id = default_config.default_model_for('lmstudio')
-              lms_config = config['lm_studio']
+            when "lmstudio"
+              default_model_id = default_config.default_model_for("lmstudio")
+              lms_config = config["lm_studio"]
 
-              lms_config['models'].map do |model_data|
+              lms_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
-            when 'openai'
-              default_model_id = default_config.default_model_for('openai')
-              openai_config = config['openai']
+            when "openai"
+              default_model_id = default_config.default_model_for("openai")
+              openai_config = config["openai"]
 
-              openai_config['models'].map do |model_data|
+              openai_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
-            when 'anthropic'
-              default_model_id = default_config.default_model_for('anthropic')
-              anthropic_config = config['anthropic']
+            when "anthropic"
+              default_model_id = default_config.default_model_for("anthropic")
+              anthropic_config = config["anthropic"]
 
-              anthropic_config['models'].map do |model_data|
+              anthropic_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
-            when 'mistral'
-              default_model_id = default_config.default_model_for('mistral')
-              mistral_config = config['mistral']
+            when "mistral"
+              default_model_id = default_config.default_model_for("mistral")
+              mistral_config = config["mistral"]
 
-              mistral_config['models'].map do |model_data|
+              mistral_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
-            when 'together_ai'
-              default_model_id = default_config.default_model_for('together_ai')
-              together_ai_config = config['together_ai']
-              warn "together_ai_config: #{together_ai_config.inspect}" if ENV['DEBUG_MODELS']
+            when "together_ai"
+              default_model_id = default_config.default_model_for("together_ai")
+              together_ai_config = config["together_ai"]
+              warn "together_ai_config: #{together_ai_config.inspect}" if ENV["DEBUG_MODELS"]
 
-              together_ai_config['models'].map do |model_data|
+              together_ai_config["models"].map do |model_data|
                 CodingAgentTools::Models::LlmModelInfo.new(
-                  id: model_data['id'],
-                  name: model_data['name'],
-                  description: model_data['description'],
-                  default: model_data['id'] == default_model_id,
-                  context_size: model_data['context_size'],
-                  max_output_tokens: model_data['max_output_tokens']
+                  id: model_data["id"],
+                  name: model_data["name"],
+                  description: model_data["description"],
+                  default: model_data["id"] == default_model_id,
+                  context_size: model_data["context_size"],
+                  max_output_tokens: model_data["max_output_tokens"]
                 )
               end
             end
@@ -495,16 +495,16 @@ module CodingAgentTools
 
           def cache_models(provider, models)
             cache_data = {
-              'cached_at' => Time.now.iso8601,
-              'provider' => provider,
-              'models' => models.map do |model|
+              "cached_at" => Time.now.iso8601,
+              "provider" => provider,
+              "models" => models.map do |model|
                 {
-                  'id' => model.id,
-                  'name' => model.name,
-                  'description' => model.description,
-                  'default' => model.default?,
-                  'context_size' => model.context_size,
-                  'max_output_tokens' => model.max_output_tokens
+                  "id" => model.id,
+                  "name" => model.name,
+                  "description" => model.description,
+                  "default" => model.default?,
+                  "context_size" => model.context_size,
+                  "max_output_tokens" => model.max_output_tokens
                 }
               end
             }
@@ -516,33 +516,33 @@ module CodingAgentTools
             cache_data = cache_manager.read_cache(cache_file_name(provider))
             return fallback_models(provider) if cache_data.nil?
 
-            cache_data['models'].map do |model_data|
+            cache_data["models"].map do |model_data|
               CodingAgentTools::Models::LlmModelInfo.new(
-                id: model_data['id'],
-                name: model_data['name'],
-                description: model_data['description'],
-                default: model_data['default'],
-                context_size: model_data['context_size'],
-                max_output_tokens: model_data['max_output_tokens']
+                id: model_data["id"],
+                name: model_data["name"],
+                description: model_data["description"],
+                default: model_data["default"],
+                context_size: model_data["context_size"],
+                max_output_tokens: model_data["max_output_tokens"]
               )
             end
           end
 
           # Output models as formatted text
           def output_text_models(models, **options)
-            provider = options[:provider] || 'google'
+            provider = options[:provider] || "google"
             if models.empty?
               puts CodingAgentTools::Constants::CliConstants::NO_MODELS_FOUND_MESSAGE
               return
             end
 
-            config_path = File.expand_path('../../../../../config/fallback_models.yaml', __dir__)
+            config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
             config = YAML.load_file(config_path)
 
             case provider
-            when 'google'
-              usage_config = config['usage_instructions']['google']
-              puts usage_config['header']
+            when "google"
+              usage_config = config["usage_instructions"]["google"]
+              puts usage_config["header"]
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
               models.each do |model|
@@ -552,12 +552,12 @@ module CodingAgentTools
 
               puts
               puts "Usage: #{usage_config["command"]}"
-            when 'lmstudio'
-              usage_config = config['usage_instructions']['lm_studio']
-              puts usage_config['header']
+            when "lmstudio"
+              usage_config = config["usage_instructions"]["lm_studio"]
+              puts usage_config["header"]
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
               puts
-              puts usage_config['note']
+              puts usage_config["note"]
               puts
 
               models.each do |model|
@@ -568,9 +568,9 @@ module CodingAgentTools
               puts
               puts "Usage: #{usage_config["command"]}"
               puts
-              puts usage_config['server_info']
-            when 'openai'
-              puts 'Available OpenAI Models'
+              puts usage_config["server_info"]
+            when "openai"
+              puts "Available OpenAI Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
               models.each do |model|
@@ -580,8 +580,8 @@ module CodingAgentTools
 
               puts
               puts 'Usage: llm-openai-query "Your prompt here" --model MODEL_ID'
-            when 'anthropic'
-              puts 'Available Anthropic Models'
+            when "anthropic"
+              puts "Available Anthropic Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
               models.each do |model|
@@ -591,8 +591,8 @@ module CodingAgentTools
 
               puts
               puts 'Usage: llm-anthropic-query "Your prompt here" --model MODEL_ID'
-            when 'mistral'
-              puts 'Available Mistral AI Models'
+            when "mistral"
+              puts "Available Mistral AI Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
               models.each do |model|
@@ -602,8 +602,8 @@ module CodingAgentTools
 
               puts
               puts 'Usage: llm-mistral-query "Your prompt here" --model MODEL_ID'
-            when 'together_ai'
-              puts 'Available Together AI Models'
+            when "together_ai"
+              puts "Available Together AI Models"
               puts CodingAgentTools::Constants::CliConstants::SEPARATOR_LINE
 
               models.each do |model|
@@ -618,8 +618,8 @@ module CodingAgentTools
 
           # Output models as JSON
           def output_json_models(models, **options)
-            provider = options[:provider] || 'google'
-            config_path = File.expand_path('../../../../../config/fallback_models.yaml', __dir__)
+            provider = options[:provider] || "google"
+            config_path = File.expand_path("../../../../../config/fallback_models.yaml", __dir__)
             config = YAML.load_file(config_path)
 
             default_model = models.find(&:default?)
@@ -630,20 +630,20 @@ module CodingAgentTools
             }
 
             case provider
-            when 'google'
-              output[:default_model] = default_model&.id || default_config.default_model_for('google')
-            when 'lmstudio'
-              usage_config = config['usage_instructions']['lm_studio']
-              output[:default_model] = default_model&.id || default_config.default_model_for('lmstudio')
-              output[:server_url] = usage_config['server_url']
-            when 'openai'
-              output[:default_model] = default_model&.id || default_config.default_model_for('openai')
-            when 'anthropic'
-              output[:default_model] = default_model&.id || default_config.default_model_for('anthropic')
-            when 'mistral'
-              output[:default_model] = default_model&.id || default_config.default_model_for('mistral')
-            when 'together_ai'
-              output[:default_model] = default_model&.id || default_config.default_model_for('together_ai')
+            when "google"
+              output[:default_model] = default_model&.id || default_config.default_model_for("google")
+            when "lmstudio"
+              usage_config = config["usage_instructions"]["lm_studio"]
+              output[:default_model] = default_model&.id || default_config.default_model_for("lmstudio")
+              output[:server_url] = usage_config["server_url"]
+            when "openai"
+              output[:default_model] = default_model&.id || default_config.default_model_for("openai")
+            when "anthropic"
+              output[:default_model] = default_model&.id || default_config.default_model_for("anthropic")
+            when "mistral"
+              output[:default_model] = default_model&.id || default_config.default_model_for("mistral")
+            when "together_ai"
+              output[:default_model] = default_model&.id || default_config.default_model_for("together_ai")
             end
 
             puts JSON.pretty_generate(output)
@@ -660,7 +660,7 @@ module CodingAgentTools
             return input_limit if input_limit&.positive?
 
             # Fallback to known values for common models
-            model_name = model[:name] || ''
+            model_name = model[:name] || ""
             case model_name
             when /gemini-2\.0-flash-exp/
               1_048_576  # 1M tokens
@@ -688,7 +688,7 @@ module CodingAgentTools
             return output_limit if output_limit&.positive?
 
             # Fallback to known values for common models
-            model_name = model[:name] || ''
+            model_name = model[:name] || ""
             case model_name
             when /gemini-2\.0-flash/
               8_192   # 8K tokens
@@ -712,7 +712,7 @@ module CodingAgentTools
             return context_length if context_length&.positive?
 
             # Fallback based on model name patterns
-            model_id = model[:id] || ''
+            model_id = model[:id] || ""
             case model_id
             when /llama.*3.*70b/i
               131_072  # 128K tokens

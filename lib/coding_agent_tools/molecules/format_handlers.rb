@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'yaml'
+require "yaml"
 
 module CodingAgentTools
   module Molecules
@@ -14,7 +14,7 @@ module CodingAgentTools
         # @param options [Hash] Additional formatting options
         # @return [String] Formatted output
         def format(response, **options)
-          raise NotImplementedError, 'Subclasses must implement #format'
+          raise NotImplementedError, "Subclasses must implement #format"
         end
 
         # Generate summary for stdout when writing to file
@@ -86,9 +86,9 @@ module CodingAgentTools
         # @param cost [Float, Numeric] Cost value
         # @return [String] Formatted cost string
         def format_cost(cost)
-          return '0.000000' if cost.nil? || cost.zero?
+          return "0.000000" if cost.nil? || cost.zero?
 
-          sprintf('%.6f', cost)
+          sprintf("%.6f", cost)
         end
 
         protected
@@ -99,7 +99,7 @@ module CodingAgentTools
         def validate_response(response)
           return if response.is_a?(Hash) && response[:text]
 
-          raise Error, 'Invalid response format: missing :text field'
+          raise Error, "Invalid response format: missing :text field"
         end
       end
 
@@ -159,11 +159,11 @@ module CodingAgentTools
       # @return [Base] Format handler instance
       def self.get_handler(format)
         case format.to_s.downcase
-        when 'json'
+        when "json"
           JSON.new
-        when 'markdown', 'md'
+        when "markdown", "md"
           Markdown.new
-        when 'text', 'txt'
+        when "text", "txt"
           Text.new
         else
           raise Error, "Unsupported format: #{format}"
@@ -173,7 +173,7 @@ module CodingAgentTools
       # Get list of supported formats
       # @return [Array<String>] List of supported formats
       def self.supported_formats
-        ['json', 'markdown', 'text']
+        ["json", "markdown", "text"]
       end
     end
   end

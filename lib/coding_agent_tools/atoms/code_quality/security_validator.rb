@@ -28,26 +28,26 @@ module CodingAgentTools
         private
 
         def ensure_gitleaks_available!
-          return if system('which gitleaks > /dev/null 2>&1')
+          return if system("which gitleaks > /dev/null 2>&1")
 
           raise "Gitleaks is not installed. Please install it first.\n" \
-            '  Install with: brew install gitleaks (macOS) or see https://github.com/gitleaks/gitleaks#installing'
+            "  Install with: brew install gitleaks (macOS) or see https://github.com/gitleaks/gitleaks#installing"
         end
 
         def build_command
-          cmd = ['gitleaks', 'detect']
+          cmd = ["gitleaks", "detect"]
 
-          cmd << '--verbose' if options[:verbose]
-          cmd << '--no-git' unless options[:git_history]
+          cmd << "--verbose" if options[:verbose]
+          cmd << "--no-git" unless options[:git_history]
 
           # Add config file if exists
-          cmd << '--config' << '.gitleaks.toml' if File.exist?('.gitleaks.toml')
+          cmd << "--config" << ".gitleaks.toml" if File.exist?(".gitleaks.toml")
 
-          cmd.join(' ')
+          cmd.join(" ")
         end
 
         def execute_command(command)
-          require 'open3'
+          require "open3"
 
           stdout, stderr, status = Open3.capture3(command)
           output = stdout + stderr

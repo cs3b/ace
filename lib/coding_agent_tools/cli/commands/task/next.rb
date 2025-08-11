@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
-require_relative '../../../organisms/taskflow_management/task_manager'
-require_relative '../../../atoms/project_root_detector'
-require_relative '../../../molecules/taskflow_management/task_sort_engine'
-require_relative '../../../molecules/taskflow_management/task_filter_engine'
-require_relative '../../../molecules/taskflow_management/unified_task_formatter'
-require_relative '../../../molecules/taskflow_management/task_status_summary'
+require "dry/cli"
+require_relative "../../../organisms/taskflow_management/task_manager"
+require_relative "../../../atoms/project_root_detector"
+require_relative "../../../molecules/taskflow_management/task_sort_engine"
+require_relative "../../../molecules/taskflow_management/task_filter_engine"
+require_relative "../../../molecules/taskflow_management/unified_task_formatter"
+require_relative "../../../molecules/taskflow_management/task_status_summary"
 
 module CodingAgentTools
   module Cli
@@ -14,13 +14,13 @@ module CodingAgentTools
       module Task
         # Next command for finding the next actionable task
         class Next < Dry::CLI::Command
-          desc 'Find the next actionable task to work on'
+          desc "Find the next actionable task to work on"
 
           option :limit, type: :integer, default: 1,
-            desc: 'Maximum number of tasks to return (default: 1)'
+            desc: "Maximum number of tasks to return (default: 1)"
 
-          option :debug, type: :boolean, default: false, aliases: ['d'],
-            desc: 'Enable debug output for verbose error information'
+          option :debug, type: :boolean, default: false, aliases: ["d"],
+            desc: "Enable debug output for verbose error information"
 
           option :sort, type: :string,
             desc: "Sort criteria (e.g., 'priority:desc,id:asc' or 'implementation-order')"
@@ -28,19 +28,19 @@ module CodingAgentTools
           option :filter, type: :array,
             desc: "Filter criteria (e.g., 'status:pending' or 'priority:!low')"
 
-          option :verbose, type: :boolean, default: false, aliases: ['v'],
-            desc: 'Show detailed task information (old format)'
+          option :verbose, type: :boolean, default: false, aliases: ["v"],
+            desc: "Show detailed task information (old format)"
 
           option :release, type: :string,
-            desc: 'Release to work with (version, codename, fullname, or path). Defaults to current release.'
+            desc: "Release to work with (version, codename, fullname, or path). Defaults to current release."
 
           example [
-            '',
-            '--limit 3',
-            '--debug',
-            '--sort priority:desc,id:asc',
-            '--filter status:pending --filter priority:high',
-            '--sort implementation-order'
+            "",
+            "--limit 3",
+            "--debug",
+            "--sort priority:desc,id:asc",
+            "--filter status:pending --filter priority:high",
+            "--sort implementation-order"
           ]
 
           def call(**options)
@@ -85,7 +85,7 @@ module CodingAgentTools
 
             if final_result.sorted_tasks.empty?
               puts status_summary.formatted_text
-              puts 'No actionable tasks found'
+              puts "No actionable tasks found"
               return 0
             end
 
@@ -96,19 +96,19 @@ module CodingAgentTools
             puts status_summary.formatted_text
 
             if limit == 1
-              puts 'Next Task:'
+              puts "Next Task:"
             else
               puts "Next Tasks (#{limited_tasks.size} shown):"
             end
-            puts '=' * 50
+            puts "=" * 50
 
             limited_tasks.each_with_index do |task, index|
-              puts '' if index > 0 && options[:verbose] # Add blank line between tasks only in verbose mode
+              puts "" if index > 0 && options[:verbose] # Add blank line between tasks only in verbose mode
               Molecules::TaskflowManagement::UnifiedTaskFormatter.format_task(
                 task,
                 verbose: options[:verbose],
-                task_number: (limit > 1 ? index + 1 : nil),
-                total_tasks: (limit > 1 ? limited_tasks.size : nil),
+                task_number: ((limit > 1) ? index + 1 : nil),
+                total_tasks: ((limit > 1) ? limited_tasks.size : nil),
                 show_time: true,
                 show_path: !options[:verbose] # Show path in compact mode
               )
@@ -135,7 +135,7 @@ module CodingAgentTools
               error.backtrace.each { |line| error_output("  #{line}") }
             else
               error_output("Error: #{error.message}")
-              error_output('Use --debug flag for more information')
+              error_output("Use --debug flag for more information")
             end
           end
 

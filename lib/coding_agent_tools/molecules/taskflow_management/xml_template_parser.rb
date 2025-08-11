@@ -178,7 +178,7 @@ module CodingAgentTools
               end
 
               # Add warning for legacy format usage
-              warnings << 'Legacy <templates> format detected, consider migrating to <documents> format'
+              warnings << "Legacy <templates> format detected, consider migrating to <documents> format"
             end
 
             FormatResult.new(documents, errors, warnings)

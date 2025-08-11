@@ -23,13 +23,13 @@
 #   - Unified analysis with learning consolidation and improvement recommendations
 
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path('../../lib', __FILE__)
+lib_path = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require 'coding_agent_tools/molecules/executable_wrapper'
+require "coding_agent_tools/molecules/executable_wrapper"
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ['reflection', 'synthesize'],
+  command_path: ["reflection", "synthesize"],
   registration_method: :register_reflection_commands,
-  executable_name: 'reflection-synthesize'
+  executable_name: "reflection-synthesize"
 ).call

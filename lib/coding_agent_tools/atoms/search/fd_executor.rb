@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../taskflow_management/shell_command_executor'
-require 'shellwords'
+require_relative "../taskflow_management/shell_command_executor"
+require "shellwords"
 
 module CodingAgentTools
   module Atoms
@@ -43,10 +43,10 @@ module CodingAgentTools
         # @param options [Hash] Search options
         # @return [Hash] Search results
         def find_files(pattern, options = {})
-          return { success: false, error: "fd not available" } unless available?
-          
+          return {success: false, error: "fd not available"} unless available?
+
           result = execute(pattern, options)
-          
+
           if result[:success]
             files = result[:stdout].split("\n").map(&:strip).reject(&:empty?)
             {
@@ -68,28 +68,28 @@ module CodingAgentTools
         # @param options [Hash] Search options
         # @return [String] Complete fd command
         def build_fd_command(pattern = nil, options = {})
-          args = ['fd']
+          args = ["fd"]
 
           # Basic options
-          args << '--color=never' unless options[:color]
-          args << '--absolute-path' if options[:absolute_path]
-          args << '--follow' if options[:follow_symlinks]
-          args << '--hidden' if options[:include_hidden]
-          args << '--no-ignore' if options[:no_ignore]
-          args << '--no-ignore-vcs' if options[:no_ignore_vcs]
+          args << "--color=never" unless options[:color]
+          args << "--absolute-path" if options[:absolute_path]
+          args << "--follow" if options[:follow_symlinks]
+          args << "--hidden" if options[:include_hidden]
+          args << "--no-ignore" if options[:no_ignore]
+          args << "--no-ignore-vcs" if options[:no_ignore_vcs]
 
           # Type filtering (for fd file types, not search modes)
           case options[:fd_type]
-          when 'f', 'file'
-            args << '--type=file'
-          when 'd', 'directory'
-            args << '--type=directory'
-          when 'l', 'symlink'
-            args << '--type=symlink'
-          when 's', 'socket'
-            args << '--type=socket'
-          when 'p', 'pipe'
-            args << '--type=pipe'
+          when "f", "file"
+            args << "--type=file"
+          when "d", "directory"
+            args << "--type=directory"
+          when "l", "symlink"
+            args << "--type=symlink"
+          when "s", "socket"
+            args << "--type=socket"
+          when "p", "pipe"
+            args << "--type=pipe"
           end
 
           # Extension filtering
@@ -105,8 +105,8 @@ module CodingAgentTools
           args << "--min-depth=#{options[:min_depth]}" if options[:min_depth]
 
           # Case sensitivity
-          args << '--ignore-case' if options[:ignore_case]
-          args << '--case-sensitive' if options[:case_sensitive]
+          args << "--ignore-case" if options[:ignore_case]
+          args << "--case-sensitive" if options[:case_sensitive]
 
           # Max results
           args << "--max-results=#{options[:max_results]}" if options[:max_results]
@@ -118,35 +118,28 @@ module CodingAgentTools
 
           # Search paths - use search_path if provided, otherwise paths, otherwise current directory
           paths = if options[:search_path]
-                    [options[:search_path]]
-                  elsif options[:paths]
-                    options[:paths]
-                  else
-                    ['.']
-                  end
+            [options[:search_path]]
+          elsif options[:paths]
+            options[:paths]
+          else
+            ["."]
+          end
 
           # Build the complete command
           command_parts = args
-          
+
           # Add pattern with appropriate flag
           if pattern
             # Check if pattern looks like a glob
-            if pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
-              command_parts << '--glob'
+            if pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
+              command_parts << "--glob"
             end
             command_parts << Shellwords.escape(pattern)
           end
-          
-          command_parts.concat(paths.map { |p| Shellwords.escape(p) })
-          
-          command_parts.join(' ')
-        end
 
-        # Check if fd is available
-        # @return [Boolean] True if fd is available
-        def available?
-          result = @executor.execute('which fd', timeout: 5)
-          result.success?
+          command_parts.concat(paths.map { |p| Shellwords.escape(p) })
+
+          command_parts.join(" ")
         end
 
         # Get fd version
@@ -154,7 +147,7 @@ module CodingAgentTools
         def version
           return nil unless available?
 
-          result = @executor.execute('fd --version', timeout: 10)
+          result = @executor.execute("fd --version", timeout: 10)
           if result.success?
             # Extract version from output like "fd 8.4.0"
             version_match = result.stdout.match(/fd ([\d.]+)/)
@@ -174,7 +167,7 @@ module CodingAgentTools
         # @param options [Hash] Additional search options
         # @return [Hash] Command result
         def find_by_extension(extension, options = {})
-          execute(nil, options.merge(extension: extension, type: 'file'))
+          execute(nil, options.merge(extension: extension, type: "file"))
         end
 
         # Search for directories matching pattern
@@ -182,7 +175,7 @@ module CodingAgentTools
         # @param options [Hash] Additional search options
         # @return [Hash] Command result
         def find_directories(pattern, options = {})
-          execute(pattern, options.merge(type: 'directory'))
+          execute(pattern, options.merge(type: "directory"))
         end
       end
     end

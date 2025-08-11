@@ -5,52 +5,52 @@
 # This provides a focused entry point for task operations
 
 # Ensure we use the correct Gemfile regardless of current directory
-gem_gemfile_path = File.expand_path('../../Gemfile', __FILE__)
-ENV['BUNDLE_GEMFILE'] = gem_gemfile_path if File.exist?(gem_gemfile_path)
+gem_gemfile_path = File.expand_path("../../Gemfile", __FILE__)
+ENV["BUNDLE_GEMFILE"] = gem_gemfile_path if File.exist?(gem_gemfile_path)
 
 begin
-  require 'bundler/setup'
+  require "bundler/setup"
 rescue LoadError
   # Continue without bundler if not available
 end
 
 # Set up load paths for development if necessary
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path('../../lib', __FILE__)
+lib_path = File.expand_path("../../lib", __FILE__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require 'coding_agent_tools/cli/commands/task/next'
-require 'coding_agent_tools/cli/commands/task/recent'
-require 'coding_agent_tools/cli/commands/task/list'
-require 'coding_agent_tools/cli/commands/task/generate_id'
-require 'coding_agent_tools/cli/commands/task/reschedule'
-require 'coding_agent_tools/cli/commands/task/create'
-require 'dry/cli'
+require "coding_agent_tools/cli/commands/task/next"
+require "coding_agent_tools/cli/commands/task/recent"
+require "coding_agent_tools/cli/commands/task/list"
+require "coding_agent_tools/cli/commands/task/generate_id"
+require "coding_agent_tools/cli/commands/task/reschedule"
+require "coding_agent_tools/cli/commands/task/create"
+require "dry/cli"
 
 module TaskManagerCli
   module Commands
     extend Dry::CLI::Registry
 
     # Register task commands directly under the root
-    register 'next', CodingAgentTools::Cli::Commands::Task::Next
-    register 'recent', CodingAgentTools::Cli::Commands::Task::Recent
-    register 'list', CodingAgentTools::Cli::Commands::Task::List
-    register 'all', CodingAgentTools::Cli::Commands::Task::List  # Backwards compatibility alias
-    register 'generate-id', CodingAgentTools::Cli::Commands::Task::GenerateId
-    register 'reschedule', CodingAgentTools::Cli::Commands::Task::Reschedule
-    register 'create', CodingAgentTools::Cli::Commands::Task::Create
+    register "next", CodingAgentTools::Cli::Commands::Task::Next
+    register "recent", CodingAgentTools::Cli::Commands::Task::Recent
+    register "list", CodingAgentTools::Cli::Commands::Task::List
+    register "all", CodingAgentTools::Cli::Commands::Task::List  # Backwards compatibility alias
+    register "generate-id", CodingAgentTools::Cli::Commands::Task::GenerateId
+    register "reschedule", CodingAgentTools::Cli::Commands::Task::Reschedule
+    register "create", CodingAgentTools::Cli::Commands::Task::Create
 
     # Version command
     class Version < Dry::CLI::Command
-      desc 'Print version'
+      desc "Print version"
 
       def call(*)
-        require 'coding_agent_tools/version'
+        require "coding_agent_tools/version"
         puts "Task Manager #{CodingAgentTools::VERSION}"
       end
     end
 
-    register 'version', Version, aliases: ['v', '-v', '--version']
+    register "version", Version, aliases: ["v", "-v", "--version"]
   end
 end
 
@@ -61,6 +61,6 @@ rescue Dry::CLI::Error => e
   exit 1
 rescue => e
   warn "An unexpected error occurred: #{e.message}"
-  warn e.backtrace.join("\n") if ENV['DEBUG']
+  warn e.backtrace.join("\n") if ENV["DEBUG"]
   exit 1
 end

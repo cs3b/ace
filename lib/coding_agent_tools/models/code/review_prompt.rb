@@ -15,10 +15,10 @@ module CodingAgentTools
       ) do
         # Validate required fields
         def validate!
-          raise ArgumentError, 'session_id is required' if session_id.nil? || session_id.empty?
-          raise ArgumentError, 'focus_areas is required' if focus_areas.nil? || focus_areas.empty?
-          raise ArgumentError, 'system_prompt_path is required' if system_prompt_path.nil? || system_prompt_path.empty?
-          raise ArgumentError, 'combined_content is required' if combined_content.nil? || combined_content.empty?
+          raise ArgumentError, "session_id is required" if session_id.nil? || session_id.empty?
+          raise ArgumentError, "focus_areas is required" if focus_areas.nil? || focus_areas.empty?
+          raise ArgumentError, "system_prompt_path is required" if system_prompt_path.nil? || system_prompt_path.empty?
+          raise ArgumentError, "combined_content is required" if combined_content.nil? || combined_content.empty?
 
           true
         end
@@ -48,20 +48,20 @@ module CodingAgentTools
         # Standard focus area mappings
         def self.focus_area_descriptions
           {
-            'code' => [
-              'Code quality, architecture, security, performance',
-              'Architecture compliance (see docs/architecture.md)',
-              'Ruby best practices and conventions'
+            "code" => [
+              "Code quality, architecture, security, performance",
+              "Architecture compliance (see docs/architecture.md)",
+              "Ruby best practices and conventions"
             ],
-            'tests' => [
-              'Test coverage, quality, maintainability',
-              'RSpec best practices',
-              'Test architecture and organization'
+            "tests" => [
+              "Test coverage, quality, maintainability",
+              "RSpec best practices",
+              "Test architecture and organization"
             ],
-            'docs' => [
-              'Documentation gaps, updates, cross-references',
-              'Architecture documentation alignment',
-              'User experience and clarity'
+            "docs" => [
+              "Documentation gaps, updates, cross-references",
+              "Architecture documentation alignment",
+              "User experience and clarity"
             ]
           }
         end
@@ -85,7 +85,7 @@ module CodingAgentTools
           return {} unless combined_content
 
           if combined_content =~ /\A---\n(.*?)\n---\n/m
-            require 'yaml'
+            require "yaml"
             YAML.safe_load(::Regexp.last_match(1)) || {}
           else
             {}

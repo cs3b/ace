@@ -2,13 +2,13 @@
 # frozen_string_literal: true
 
 # Use absolute path resolution to support execution from any directory
-lib_path = File.expand_path('../lib', __dir__)
+lib_path = File.expand_path("../lib", __dir__)
 $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
-require 'coding_agent_tools/molecules/executable_wrapper'
+require "coding_agent_tools/molecules/executable_wrapper"
 
 CodingAgentTools::Molecules::ExecutableWrapper.new(
-  command_path: ['git', 'log'],
+  command_path: ["git", "log"],
   registration_method: :register_git_commands,
-  executable_name: 'git-log'
+  executable_name: "git-log"
 ).call

@@ -8,7 +8,7 @@ module CodingAgentTools
         :uncovered_lines
 
       def initialize(name:, start_line:, end_line:, total_lines:, covered_lines:, coverage_percentage:,
-                     visibility: :public, uncovered_lines: [])
+        visibility: :public, uncovered_lines: [])
         @name = name
         @start_line = start_line
         @end_line = end_line

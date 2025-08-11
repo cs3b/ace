@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 
 module CodingAgentTools
   module Atoms
@@ -53,9 +53,9 @@ module CodingAgentTools
         file_paths = []
 
         data.each do |_framework_name, framework_data|
-          next unless framework_data.is_a?(Hash) && framework_data['coverage']
+          next unless framework_data.is_a?(Hash) && framework_data["coverage"]
 
-          file_paths.concat(framework_data['coverage'].keys)
+          file_paths.concat(framework_data["coverage"].keys)
         end
 
         file_paths.uniq
@@ -83,26 +83,26 @@ module CodingAgentTools
       def validate_framework_data(framework_name, framework_data)
         raise InvalidFileError, "Framework '#{framework_name}' data must be a hash" unless framework_data.is_a?(Hash)
 
-        unless framework_data.key?('coverage')
+        unless framework_data.key?("coverage")
           raise InvalidFileError, "Framework '#{framework_name}' missing 'coverage' key"
         end
 
-        unless framework_data['coverage'].is_a?(Hash)
+        unless framework_data["coverage"].is_a?(Hash)
           raise InvalidFileError, "Framework '#{framework_name}' coverage must be a hash"
         end
 
-        validate_coverage_data(framework_name, framework_data['coverage'])
+        validate_coverage_data(framework_name, framework_data["coverage"])
       end
 
       def validate_coverage_data(framework_name, coverage_data)
         coverage_data.each do |file_path, file_data|
           next unless file_data.is_a?(Hash)
 
-          unless file_data.key?('lines')
+          unless file_data.key?("lines")
             raise InvalidFileError, "File '#{file_path}' in '#{framework_name}' missing 'lines' key"
           end
 
-          raise InvalidFileError, "File '#{file_path}' lines must be an array" unless file_data['lines'].is_a?(Array)
+          raise InvalidFileError, "File '#{file_path}' lines must be an array" unless file_data["lines"].is_a?(Array)
         end
       end
     end

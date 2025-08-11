@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../../atoms/git/repository_scanner'
-require_relative '../../atoms/git/git_command_executor'
-require_relative '../../atoms/project_root_detector'
+require_relative "../../atoms/git/repository_scanner"
+require_relative "../../atoms/git/git_command_executor"
+require_relative "../../atoms/project_root_detector"
 
 module CodingAgentTools
   module Molecules
@@ -36,7 +36,7 @@ module CodingAgentTools
               message: e.message
             }
             errors << error_info
-            results[repository[:name]] = { success: false, error: e.message }
+            results[repository[:name]] = {success: false, error: e.message}
           end
 
           {
@@ -63,9 +63,9 @@ module CodingAgentTools
 
             [specific_repo]
           elsif options[:main_only]
-            repositories.select { |repo| repo[:name] == 'main' }
+            repositories.select { |repo| repo[:name] == "main" }
           elsif options[:submodules_only]
-            repositories.select { |repo| repo[:name] != 'main' }
+            repositories.select { |repo| repo[:name] != "main" }
           else
             # Default: all repositories
             repositories
@@ -83,7 +83,7 @@ module CodingAgentTools
         end
 
         def execute_for_repository(repository, command, options)
-          repository_path = repository[:name] == 'main' ? nil : repository[:path]
+          repository_path = (repository[:name] == "main") ? nil : repository[:path]
 
           # Build the command with any repository-specific modifications
           final_command = build_repository_command(command, repository, options)

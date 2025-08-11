@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'faraday'
+require "faraday"
 # require "json" # No longer needed for direct use here, Faraday's :json middleware handles it.
-require_relative '../middlewares/faraday_dry_monitor_logger' # Ensure middleware is loaded and registered
-require_relative '../molecules/retry_middleware' # Retry middleware for resilient HTTP operations
+require_relative "../middlewares/faraday_dry_monitor_logger" # Ensure middleware is loaded and registered
+require_relative "../molecules/retry_middleware" # Retry middleware for resilient HTTP operations
 
 module CodingAgentTools
   module Atoms
@@ -105,7 +105,7 @@ module CodingAgentTools
           # Middleware to automatically parse JSON response bodies.
           # It will parse bodies with 'Content-Type' matching /\bjson$/.
           # Using symbolize_names: true for consistency with previous manual parsing.
-          faraday.response :json, parser_options: { symbolize_names: true }
+          faraday.response :json, parser_options: {symbolize_names: true}
 
           # Standard Faraday adapter
           faraday.adapter Faraday.default_adapter

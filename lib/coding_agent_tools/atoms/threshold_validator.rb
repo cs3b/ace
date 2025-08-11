@@ -15,7 +15,7 @@ module CodingAgentTools
       # @return [Float] Validated threshold as float
       # @raise [ValidationError] If threshold is invalid
       def validate_threshold(threshold)
-        raise ValidationError, 'Threshold cannot be nil' if threshold.nil?
+        raise ValidationError, "Threshold cannot be nil" if threshold.nil?
 
         numeric_threshold = convert_to_numeric(threshold)
         validate_range(numeric_threshold)
@@ -35,7 +35,7 @@ module CodingAgentTools
         return pattern if pattern.empty?
 
         # Basic validation - no path traversal attempts
-        raise ValidationError, 'File pattern cannot contain path traversal sequences (../)' if pattern.include?('../')
+        raise ValidationError, "File pattern cannot contain path traversal sequences (../)" if pattern.include?("../")
 
         pattern.strip
       end
@@ -45,7 +45,7 @@ module CodingAgentTools
       # @return [String] Validated format
       # @raise [ValidationError] If format is invalid
       def validate_format(format)
-        valid_formats = ['text', 'json', 'csv']
+        valid_formats = ["text", "json", "csv"]
 
         raise ValidationError, "Format must be a string, got #{format.class}" unless format.is_a?(String)
 
@@ -63,13 +63,13 @@ module CodingAgentTools
       # @return [String] Validated mode
       # @raise [ValidationError] If mode is invalid
       def validate_analysis_mode(mode)
-        return 'both' if mode.nil?
+        return "both" if mode.nil?
 
         raise ValidationError, "Analysis mode must be a string, got #{mode.class}" unless mode.is_a?(String)
 
-        return 'both' if mode.empty?
+        return "both" if mode.empty?
 
-        valid_modes = ['files', 'methods', 'both']
+        valid_modes = ["files", "methods", "both"]
 
         normalized_mode = mode.strip.downcase
 
@@ -96,7 +96,7 @@ module CodingAgentTools
       end
 
       def validate_range(threshold)
-        return if threshold >= 0 && threshold <= 100
+        return if threshold.between?(0, 100)
 
         raise ValidationError, "Threshold must be between 0 and 100, got #{threshold}"
       end

@@ -37,18 +37,18 @@ module CodingAgentTools
         def filter_files(files, since: nil, before: nil)
           since_time = parse_time_expression(since) if since
           before_time = parse_time_expression(before) if before
-          
+
           files.select do |file|
             next false unless File.exist?(file)
-            
+
             mtime = File.mtime(file)
-            
+
             # Check since constraint
             next false if since_time && mtime < since_time
-            
+
             # Check before constraint
             next false if before_time && mtime > before_time
-            
+
             true
           end
         end
@@ -59,22 +59,22 @@ module CodingAgentTools
         def parse_time_expression(expression)
           return expression if expression.is_a?(Time)
           return nil unless expression.is_a?(String)
-          
+
           # Try to parse as absolute time
           begin
             return Time.parse(expression)
           rescue ArgumentError
             # Not a parseable time, try patterns
           end
-          
+
           # Try relative time patterns
           TIME_PATTERNS.each do |pattern, type|
             match = expression.match(pattern)
             next unless match
-            
+
             return calculate_relative_time(type, match[1]&.to_i)
           end
-          
+
           nil
         end
 
@@ -84,7 +84,7 @@ module CodingAgentTools
         # @return [Array<String>] Command-line arguments for fd
         def generate_fd_args(since: nil, before: nil)
           args = []
-          
+
           if since
             since_time = parse_time_expression(since)
             if since_time
@@ -93,7 +93,7 @@ module CodingAgentTools
               args << "--changed-within" << duration
             end
           end
-          
+
           if before
             before_time = parse_time_expression(before)
             if before_time
@@ -102,7 +102,7 @@ module CodingAgentTools
               args << "--changed-before" << duration
             end
           end
-          
+
           args
         end
 
@@ -111,10 +111,10 @@ module CodingAgentTools
         # @return [Hash] File time information
         def file_time_info(file)
           return {} unless File.exist?(file)
-          
+
           stat = File.stat(file)
           mtime = stat.mtime
-          
+
           {
             path: file,
             modified: mtime,
@@ -154,18 +154,16 @@ module CodingAgentTools
           when :this_month
             Time.new(@now.year, @now.month, 1)
           when :last_month
-            last_month = @now.month == 1 ? 12 : @now.month - 1
-            last_year = @now.month == 1 ? @now.year - 1 : @now.year
+            last_month = (@now.month == 1) ? 12 : @now.month - 1
+            last_year = (@now.month == 1) ? @now.year - 1 : @now.year
             Time.new(last_year, last_month, 1)
-          else
-            nil
           end
         end
 
         # Format duration for fd command
         def format_duration_for_fd(seconds)
           seconds = seconds.to_i
-          
+
           if seconds < 60
             "#{seconds}s"
           elsif seconds < 3600
@@ -182,7 +180,7 @@ module CodingAgentTools
         # Format relative time for display
         def format_relative_time(time)
           diff = (@now - time).to_i
-          
+
           case diff
           when 0..59
             "#{diff} seconds ago"

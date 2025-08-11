@@ -18,12 +18,12 @@ module CodingAgentTools
     class DefaultModelConfig
       # Default model mappings for all supported providers
       DEFAULT_MODELS = {
-        'google' => 'gemini-2.0-flash-lite',
-        'anthropic' => 'claude-3-5-haiku-20241022',
-        'openai' => 'gpt-4o-mini',
-        'mistral' => 'open-mistral-nemo',
-        'together_ai' => 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo',
-        'lmstudio' => 'mistralai/devstral-small-2505'
+        "google" => "gemini-2.0-flash-lite",
+        "anthropic" => "claude-3-5-haiku-20241022",
+        "openai" => "gpt-4o-mini",
+        "mistral" => "open-mistral-nemo",
+        "together_ai" => "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+        "lmstudio" => "mistralai/devstral-small-2505"
       }.freeze
 
       # List of all supported providers
@@ -42,7 +42,7 @@ module CodingAgentTools
       def initialize(custom_config = {})
         # Validate input type before attempting merge
         normalized_config = custom_config || {}
-        raise InvalidConfigurationError, 'Configuration must be a hash' unless normalized_config.is_a?(Hash)
+        raise InvalidConfigurationError, "Configuration must be a hash" unless normalized_config.is_a?(Hash)
 
         @config = DEFAULT_MODELS.merge(normalized_config)
         validate_configuration!
@@ -109,7 +109,7 @@ module CodingAgentTools
       # @return [DefaultModelConfig] New instance with loaded configuration
       # @raise [InvalidConfigurationError] If file cannot be loaded or is invalid
       def self.load_from_file(file_path)
-        require 'yaml'
+        require "yaml"
 
         raise InvalidConfigurationError, "Configuration file not found: #{file_path}" unless File.exist?(file_path)
 
@@ -135,18 +135,18 @@ module CodingAgentTools
       # @param provider [String] Raw provider name
       # @return [String] Normalized provider name
       def normalize_provider(provider)
-        return '' if provider.nil?
+        return "" if provider.nil?
 
         normalized = provider.to_s.strip.downcase
 
         # Handle common aliases
         case normalized
-        when 'lms', 'lm_studio'
-          'lmstudio'
-        when 'openai', 'open_ai'
-          'openai'
-        when 'together', 'together_ai'
-          'together_ai'
+        when "lms", "lm_studio"
+          "lmstudio"
+        when "openai", "open_ai"
+          "openai"
+        when "together", "together_ai"
+          "together_ai"
         else
           normalized
         end
@@ -160,7 +160,7 @@ module CodingAgentTools
 
         @config.each do |provider, model|
           if provider.nil? || provider.to_s.strip.empty?
-            raise InvalidConfigurationError, 'Provider name cannot be nil or empty'
+            raise InvalidConfigurationError, "Provider name cannot be nil or empty"
           end
 
           if model.nil? || model.to_s.strip.empty?

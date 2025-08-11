@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'pathname'
-require_relative '../atoms/path_sanitizer'
+require "pathname"
+require_relative "../atoms/path_sanitizer"
 
 module CodingAgentTools
   module Molecules
@@ -20,7 +20,7 @@ module CodingAgentTools
 
         # Traverse up the directory tree
         while current.parent != current
-          claude_dir = current / '.claude' / 'commands'
+          claude_dir = current / ".claude" / "commands"
           return current if claude_dir.directory?
 
           current = current.parent
@@ -34,7 +34,7 @@ module CodingAgentTools
       # @param start_path [String, Pathname] Starting directory
       # @param markers [Array<String>] Directory/file markers to search for
       # @return [Pathname] Project root path
-      def find_by_markers(start_path: Dir.pwd, markers: ['.claude/commands', '.git', 'Gemfile'])
+      def find_by_markers(start_path: Dir.pwd, markers: [".claude/commands", ".git", "Gemfile"])
         current = normalize_path(start_path)
 
         while current.parent != current
@@ -60,7 +60,7 @@ module CodingAgentTools
         return false unless pathname.directory?
 
         # Check for .claude/commands directory
-        claude_commands = pathname / '.claude' / 'commands'
+        claude_commands = pathname / ".claude" / "commands"
         claude_commands.directory?
       end
 

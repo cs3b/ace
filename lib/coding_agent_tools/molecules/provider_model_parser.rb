@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative '../models/default_model_config'
-require_relative 'client_factory'
+require_relative "../models/default_model_config"
+require_relative "client_factory"
 
 module CodingAgentTools
   module Molecules
@@ -63,14 +63,14 @@ module CodingAgentTools
         return if @providers_loaded
 
         # Dynamically discover client files in the organisms directory
-        organisms_path = File.expand_path('../organisms', __dir__)
-        client_files = Dir.glob(File.join(organisms_path, '*_client.rb'))
+        organisms_path = File.expand_path("../organisms", __dir__)
+        client_files = Dir.glob(File.join(organisms_path, "*_client.rb"))
 
         client_files.each do |file|
-          filename = File.basename(file, '.rb')
+          filename = File.basename(file, ".rb")
 
           # Skip base classes and abstract classes
-          next if filename.start_with?('base_')
+          next if filename.start_with?("base_")
 
           # Convert filename to class name with proper acronym handling
           class_name = filename_to_class_name(filename)
@@ -95,7 +95,7 @@ module CodingAgentTools
             Molecules::ClientFactory.register(provider_key, client_class)
           rescue NameError => e
             # Class doesn't exist or can't be loaded - log warning in debug mode but don't fail
-            warn "Warning: Could not load client class #{class_name}: #{e.message}" if ENV['DEBUG']
+            warn "Warning: Could not load client class #{class_name}: #{e.message}" if ENV["DEBUG"]
           end
         end
 
@@ -122,7 +122,7 @@ module CodingAgentTools
       # @param input [String] The provider:model string or alias to parse
       # @return [ParseResult] The parsed result with provider, model, and validation info
       def parse(input)
-        return create_error_result(input, 'Input cannot be nil or empty') if input.nil? || input.strip.empty?
+        return create_error_result(input, "Input cannot be nil or empty") if input.nil? || input.strip.empty?
 
         # Ensure all provider client classes are loaded for registration
         ensure_providers_loaded
@@ -133,7 +133,7 @@ module CodingAgentTools
         input = dynamic_aliases[input.strip] if dynamic_aliases.key?(input.strip)
 
         # Parse provider:model syntax or provider-only
-        parts = input.strip.split(':', 2)
+        parts = input.strip.split(":", 2)
 
         if parts.length == 1
           # Provider-only syntax, use default model
@@ -163,7 +163,7 @@ module CodingAgentTools
           end
 
           # Validate model is not empty
-          return create_error_result(input, 'Model name cannot be empty') if model.empty?
+          return create_error_result(input, "Model name cannot be empty") if model.empty?
 
           # Create successful result
           ParseResult.new(provider, model, true, nil, original_input)
@@ -248,7 +248,7 @@ module CodingAgentTools
       # @return [String] The class name
       def filename_to_class_name(filename)
         # Simple algorithmic transformation - no special cases needed
-        filename.split('_').map(&:capitalize).join
+        filename.split("_").map(&:capitalize).join
       end
 
       # Creates an error result for invalid input

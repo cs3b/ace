@@ -32,7 +32,7 @@ module CodingAgentTools
       # @param lines_data [Array] SimpleCov lines array
       # @param source_name [String] Name for error reporting
       # @return [Array<Models::MethodCoverage>] Method coverage objects
-      def map_content_coverage(source_content, lines_data, source_name = '<string>')
+      def map_content_coverage(source_content, lines_data, source_name = "<string>")
         return [] if lines_data.nil? || lines_data.empty?
 
         begin

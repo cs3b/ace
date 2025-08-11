@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 
 module CodingAgentTools
   module Atoms
@@ -12,7 +12,7 @@ module CodingAgentTools
       # @param indent [String] Indentation string (default: "  ")
       # @return [String] Pretty-formatted JSON string
       # @raise [JSON::ParserError] If string input cannot be parsed as JSON
-      def self.pretty_print(data, indent: '  ')
+      def self.pretty_print(data, indent: "  ")
         data = JSON.parse(data) if data.is_a?(String)
         JSON.pretty_generate(ensure_proper_encoding(data), indent: indent)
       end
@@ -21,7 +21,7 @@ module CodingAgentTools
       # @param data [Hash, Array, String] Data to format (String will be parsed first)
       # @param indent [String] Indentation string (default: "  ")
       # @return [String] Pretty-formatted JSON string
-      def self.pretty_format(data, indent: '  ')
+      def self.pretty_format(data, indent: "  ")
         pretty_print(data, indent: indent)
       end
 
@@ -65,7 +65,7 @@ module CodingAgentTools
       def self.extract_path(data, path)
         return nil if data.nil? || path.nil?
 
-        path.split('.').reduce(data) do |current, key|
+        path.split(".").reduce(data) do |current, key|
           case current
           when Hash
             current[key] || current[key.to_sym]
@@ -81,7 +81,7 @@ module CodingAgentTools
       # @param sensitive_keys [Array<String, Symbol>] Keys to redact
       # @param redact_value [String] Value to replace sensitive data with
       # @return [Hash, Array] Sanitized data
-      def self.sanitize(data, sensitive_keys: ['api_key', 'token', 'password', 'secret'], redact_value: '[REDACTED]')
+      def self.sanitize(data, sensitive_keys: ["api_key", "token", "password", "secret"], redact_value: "[REDACTED]")
         current_data = data
         if data.is_a?(String)
           begin

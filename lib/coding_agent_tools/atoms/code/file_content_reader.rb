@@ -109,9 +109,9 @@ module CodingAgentTools
         # @param path [String] file path
         # @raise [ArgumentError] if path is invalid
         def validate_path(path)
-          raise ArgumentError, 'Path cannot be nil' if path.nil?
-          raise ArgumentError, 'Path must be a string' unless path.is_a?(String)
-          raise ArgumentError, 'Path cannot be empty' if path.empty?
+          raise ArgumentError, "Path cannot be nil" if path.nil?
+          raise ArgumentError, "Path must be a string" unless path.is_a?(String)
+          raise ArgumentError, "Path cannot be empty" if path.empty?
         end
       end
     end

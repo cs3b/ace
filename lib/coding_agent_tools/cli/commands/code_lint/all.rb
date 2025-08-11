@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'dry/cli'
+require "dry/cli"
 
 module CodingAgentTools
   module Cli
@@ -9,40 +9,40 @@ module CodingAgentTools
         # CLI command for general code quality validation and linting
         # Moved from original Code::Lint to support subcommand structure
         class All < Dry::CLI::Command
-          desc 'Run code quality validation and linting on all supported file types'
+          desc "Run code quality validation and linting on all supported file types"
 
-          argument :paths, desc: 'Paths to lint', type: :array, required: false
+          argument :paths, desc: "Paths to lint", type: :array, required: false
 
           option :autofix,
-            desc: 'Apply moderate-level automatic fixes',
+            desc: "Apply moderate-level automatic fixes",
             type: :boolean,
             default: false,
-            aliases: ['a']
+            aliases: ["a"]
 
           option :config,
-            desc: 'Path to custom configuration file',
+            desc: "Path to custom configuration file",
             type: :string,
-            aliases: ['c']
+            aliases: ["c"]
 
           option :dry_run,
-            desc: 'Show what would be done without making changes',
+            desc: "Show what would be done without making changes",
             type: :boolean,
             default: false,
-            aliases: ['n']
+            aliases: ["n"]
 
           option :review_diff,
-            desc: 'Review all changes made during autofix',
+            desc: "Review all changes made during autofix",
             type: :boolean,
             default: false,
-            aliases: ['r']
+            aliases: ["r"]
 
           option :validate_config,
-            desc: 'Validate configuration file and exit',
+            desc: "Validate configuration file and exit",
             type: :boolean,
             default: false
 
-          def call(target: 'all', paths: nil, **options)
-            require_relative '../../../organisms/code_quality/multi_phase_quality_manager'
+          def call(target: "all", paths: nil, **options)
+            require_relative "../../../organisms/code_quality/multi_phase_quality_manager"
 
             manager = Organisms::CodeQuality::MultiPhaseQualityManager.new(
               config_path: options[:config],
@@ -51,17 +51,17 @@ module CodingAgentTools
 
             if options[:validate_config]
               if manager.validate_configuration
-                puts 'Configuration is valid'
+                puts "Configuration is valid"
                 exit 0
               else
-                puts 'Configuration is invalid'
+                puts "Configuration is invalid"
                 exit 1
               end
             end
 
             result = manager.run(
               target: target,
-              paths: paths || ['.'],
+              paths: paths || ["."],
               autofix: options[:autofix],
               review_diff: options[:review_diff],
               show_details: true
