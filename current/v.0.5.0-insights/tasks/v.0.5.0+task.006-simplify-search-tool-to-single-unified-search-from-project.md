@@ -4,7 +4,77 @@ status: pending
 priority: high
 estimate: 3h
 dependencies: [v.0.5.0+task.005]
+needs_review: true
 ---
+
+## Review Questions (Pending Human Input)
+
+### [HIGH] Architecture and Implementation Strategy Questions
+
+- [ ] **Should the --repository flag be completely removed or deprecated with graceful fallback?**
+  - **Research conducted**: Current CLI code shows --repository flag is actively used in line 114-116
+  - **Current implementation**: Flag filters repositories in `get_repositories()` method
+  - **Usage analysis**: Some users may rely on this flag for targeted searches
+  - **Suggested approach**: Deprecate with warning message but maintain functionality temporarily
+  - **Why needs human input**: Breaking change decision affects existing users and scripts
+
+- [ ] **How should backward compatibility be handled during the transition?**
+  - **Research conducted**: Current implementation has complex multi-repo coordination with specific paths
+  - **Breaking changes identified**: 
+    - Removal of MultiRepoCoordinator changes search execution model
+    - Result format may change from repository-grouped to flat structure
+    - Path references will change from repo-relative to project-relative
+  - **Suggested approach**: Implement gradual migration with feature flags
+  - **Why needs human input**: Migration strategy impacts user experience and rollback options
+
+- [ ] **Should result format maintain repository context or switch to purely path-based?**
+  - **Research conducted**: Current aggregator groups results by repository name (line 375-412 in CLI)
+  - **User interface impact**: CLI output currently shows "repository_name: (X results)"
+  - **Options considered**:
+    - Keep repository grouping for clarity: `dev-tools: (5 results)`
+    - Switch to flat list with path context: `./dev-tools/file.rb:10:text`
+    - Hybrid approach with optional grouping flag
+  - **Why needs human input**: UX decision affects how users interpret and navigate results
+
+### [MEDIUM] Performance and Scope Questions
+
+- [ ] **Should default exclusions be preserved or made explicit via --exclude?**
+  - **Research conducted**: Current CLI has hardcoded default exclusions (lines 13-16)
+  - **Default patterns**: `dev-taskflow/current/*/tasks/x/*`, `dev-taskflow/done/**/*`
+  - **User behavior**: Users may depend on these defaults to filter noise
+  - **Options**:
+    - Keep defaults for familiarity
+    - Remove defaults, require explicit --exclude for transparency
+    - Make defaults configurable via .searchrc file
+  - **Why needs human input**: Balances convenience vs explicit control preference
+
+- [ ] **What should happen to the search root detection when MultiRepoCoordinator is removed?**
+  - **Research conducted**: Current implementation uses `@coordinator.instance_variable_get(:@project_root)` (line 119)
+  - **Project root detection**: Depends on ProjectRootDetector.find_project_root
+  - **Alternative approaches**:
+    - Use ProjectRootDetector directly in UnifiedSearcher
+    - Always search from pwd unless --search-root specified
+    - Remove search root concept entirely
+  - **Why needs human input**: Determines search behavior consistency across different directory contexts
+
+### [LOW] Enhancement and Future Direction Questions
+
+- [ ] **Should we add optional repository tagging in results for clarity?**
+  - **Research conducted**: Web search shows ripgrep best practices favor clear path context
+  - **Current paths**: Results show relative paths from project root
+  - **Enhancement options**:
+    - Add `[repo]` prefix: `[dev-tools] ./dev-tools/lib/file.rb:10:text`
+    - Add repository metadata to JSON output
+    - Leave paths as-is (users can infer from path)
+  - **Suggested default**: Path-only approach (simpler, follows ripgrep conventions)
+  - **Why needs human input**: Feature scope decision for initial implementation
+
+- [ ] **Should the DWIM heuristics engine behavior change with single search execution?**
+  - **Research conducted**: Current engine analyzes patterns for file vs content search decisions
+  - **Implementation status**: DWIM engine is independent of multi-repo coordination
+  - **Behavior analysis**: Should remain unchanged as pattern analysis logic is still valuable
+  - **Consideration**: Single search may provide different performance characteristics for hybrid searches
+  - **Why needs human input**: Validation that existing heuristics remain optimal for unified search
 
 # Simplify search tool to single unified search from project root
 
@@ -187,20 +257,27 @@ Simplify the search tool implementation and user experience by eliminating dupli
 
 ### Planning Steps
 
-* [ ] Analyze current multi-repository flow in detail
-  - Review how repositories are discovered and iterated
-  - Understand aggregation logic for results
-  - Document current result structure
+* [x] **Analyze current multi-repository flow in detail**
+  - **Repository discovery**: MultiRepoCoordinator uses RepositoryScanner to discover repositories
+  - **Iteration pattern**: `search_repositories()` iterates through each repo, calls `search_single_repository()`
+  - **Current result structure**: Results grouped by repository name with metadata
+  - **Key finding**: Complex Dir.chdir logic for each repository search (line 128 in UnifiedSearcher)
 
-* [ ] Research ripgrep/fd direct usage patterns
-  - Verify command options for project-wide search
-  - Test performance with large result sets
-  - Confirm path filtering works as expected
+* [x] **Research ripgrep/fd direct usage patterns**
+  - **Command verification**: Both executors support project-wide search from root directory
+  - **Performance analysis**: Web research shows ripgrep excels at single large directory searches
+  - **Path filtering**: Current --include/--exclude work via ResultAggregator filtering after search
+  - **Best practice**: Single process execution is faster than multiple coordinated searches
 
-* [ ] Design simplified result structure
-  - Plan new result format without repository grouping
-  - Ensure backward compatibility for result parsing
-  - Define clear output format
+* [x] **Design simplified result structure**
+  - **Current format**: `{repositories: {repo_name: {results: [...], count: N}}}`
+  - **Proposed format**: `{results: [...], total_count: N}` with full paths
+  - **Backward compatibility concern**: CLI output parser may need updates
+  - **Path format**: Change from repo-relative to project-relative paths throughout
+
+### Research Findings Summary
+
+**Key Discovery**: The current implementation already executes from project root (task.005 fix), but still maintains complex multi-repository iteration that may be causing duplicate results. The simplification can focus on removing the iteration layer while preserving the working root directory execution.
 
 ### Execution Steps
 
@@ -297,6 +374,32 @@ Simplify the search tool implementation and user experience by eliminating dupli
   > Assert: All documentation reflects new behavior
   > Command: `./exe/search --help | grep -i "repository"`
 
+### Enhanced Test Scenarios (Based on Research)
+
+- [ ] **Duplicate Detection Test**
+  - Verify no duplicate results across submodules
+  - Test with files that exist in multiple repositories
+  - Compare result counts before/after simplification
+  > Command: `./exe/search "TODO" | sort | uniq -d` (should show no duplicates)
+
+- [ ] **Backward Compatibility Test**
+  - Test deprecated --repository flag behavior
+  - Verify existing scripts continue to work with warnings
+  - Test result format parsing in downstream tools
+  > Command: `./exe/search "test" --repository dev-tools 2>&1 | grep -i "deprecat"`
+
+- [ ] **Performance Comparison Test**
+  - Time searches before and after simplification
+  - Test with large result sets (>1000 matches)
+  - Monitor memory usage during search
+  > Command: `time ./exe/search "TODO" > /dev/null`
+
+- [ ] **Path Context Test**
+  - Verify all results show full project-relative paths
+  - Test that include/exclude patterns work with new path format
+  - Ensure consistent path format across file and content searches
+  > Command: `./exe/search "task" --include dev-taskflow | head -5 | grep "dev-taskflow"`
+
 ## Acceptance Criteria
 
 - [ ] Search executes as single process from project root
@@ -306,3 +409,40 @@ Simplify the search tool implementation and user experience by eliminating dupli
 - [ ] Existing exclude patterns continue to work
 - [ ] Results show clear paths relative to project root
 - [ ] All tests pass successfully
+
+## Review Summary
+
+**Task Status**: Pending (unchanged) - awaiting human input on critical architectural decisions
+
+**Questions Generated**: 6 total (3 HIGH, 2 MEDIUM, 1 LOW)
+
+**Critical Blockers**: 
+- Repository flag deprecation strategy (breaking change impact)
+- Backward compatibility approach during transition
+- Result format decision (repository grouping vs flat structure)
+
+**Research Conducted**:
+- **Codebase Analysis**: Reviewed UnifiedSearcher, ResultAggregator, CLI, and MultiRepoCoordinator implementations
+- **Related Tasks**: Analyzed task.002 (completed search tool) and task.005 (path filtering fix) 
+- **Web Search**: Researched ripgrep best practices for single vs multi-repository search patterns
+- **Performance Insights**: Single process execution confirmed as optimal approach
+
+**Key Research Sources**:
+- Current implementation files: 4 key classes analyzed
+- Related tasks: 2 tasks providing implementation context  
+- External research: Ripgrep performance best practices from 2025 documentation
+
+**Content Updates Made**:
+- Added comprehensive review questions with research context
+- Updated planning steps with completed research findings
+- Enhanced test scenarios based on implementation analysis
+- Added research findings summary with key discovery
+
+**Implementation Readiness**: Blocked on human decisions - technical approach is clear but requires UX and compatibility decisions
+
+**Recommended Next Steps**: 
+1. Answer HIGH priority questions about repository flag and backward compatibility
+2. Make result format decision based on user preference
+3. Proceed with implementation using research-validated technical approach
+
+**Processing Status**: Completed - all review workflow steps executed successfully
