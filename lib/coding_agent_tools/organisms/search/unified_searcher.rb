@@ -43,8 +43,8 @@ module CodingAgentTools
           # Execute search across repositories
           results = search_repositories(repositories, pattern, mode, merged_options)
           
-          # Aggregate and format results (include search mode in options)
-          @aggregator.aggregate(results, merged_options.merge(search_mode: mode))
+          # Aggregate and format results (include search mode and pattern in options)
+          @aggregator.aggregate(results, merged_options.merge(search_mode: mode, pattern: pattern))
         end
 
         # Search for files across repositories

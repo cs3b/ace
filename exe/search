@@ -24,7 +24,8 @@ module CodingAgentTools
           before: nil,
           scope: nil,
           glob: nil,
-          exclude: []
+          include_paths: [],
+          exclude_paths: []
         }
         
         @unified_searcher = Organisms::Search::UnifiedSearcher.new
@@ -117,8 +118,14 @@ module CodingAgentTools
             @options[:glob] = glob
           end
 
-          opts.on("-e", "--exclude PATTERN", "Pattern to exclude") do |pattern|
-            @options[:exclude] << pattern
+          opts.on("--include PATHS", "Include only these paths/globs (comma-separated)") do |paths|
+            @options[:include_paths] ||= []
+            @options[:include_paths].concat(paths.split(',').map(&:strip))
+          end
+
+          opts.on("-e", "--exclude PATHS", "Exclude paths/globs (comma-separated)") do |paths|
+            @options[:exclude_paths] ||= []
+            @options[:exclude_paths].concat(paths.split(',').map(&:strip))
           end
 
           opts.on("--since TIME", "Files modified since TIME") do |time|
@@ -283,23 +290,65 @@ module CodingAgentTools
       def output_text_results(results)
         # Get search mode from metadata or determine from results
         search_mode = results.dig(:metadata, :search_mode) || determine_search_mode(results)
-        mode_text = case search_mode
-                    when :files, :file
-                      "(searching for files)"
-                    when :content
-                      "(searching in content)"
-                    when :hybrid, :both
-                      "(searching for files and content)"
-                    else
-                      ""
-                    end
+        
+        # Build search context information
+        context_parts = []
+        
+        # Search mode
+        case search_mode
+        when :files, :file
+          context_parts << "mode: files"
+        when :content
+          context_parts << "mode: content"
+        when :hybrid, :both
+          context_parts << "mode: files+content"
+        end
+        
+        # Pattern (from metadata if available)
+        if results.dig(:metadata, :pattern)
+          context_parts << "pattern: \"#{results[:metadata][:pattern]}\""
+        end
+        
+        # Active filters
+        filters = []
+        opts = results.dig(:metadata, :options) || @options
+        
+        filters << "glob: #{opts[:glob]}" if opts[:glob]
+        filters << "since: #{opts[:since]}" if opts[:since]
+        filters << "before: #{opts[:before]}" if opts[:before]
+        filters << "scope: #{opts[:scope]}" if opts[:scope]
+        filters << "case-insensitive" if opts[:case_insensitive]
+        filters << "whole-word" if opts[:whole_word]
+        
+        if opts[:include_paths] && !opts[:include_paths].empty?
+          filters << "include: #{opts[:include_paths].join(',')}"
+        end
+        
+        if opts[:exclude_paths] && !opts[:exclude_paths].empty?
+          filters << "exclude: #{opts[:exclude_paths].join(',')}"
+        end
+        
+        context_parts << "filters: [#{filters.join(', ')}]" if filters.any?
+        
+        # Repository scope
+        if opts[:repository]
+          context_parts << "repo: #{opts[:repository]}"
+        elsif opts[:main_only]
+          context_parts << "repo: main"
+        else
+          context_parts << "repos: all"
+        end
+        
+        context_line = "Search context: #{context_parts.join(' | ')}"
         
         if results[:total_results] == 0
-          puts "No results found #{mode_text}"
+          puts context_line
+          puts "No results found"
           return
         end
         
-        puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories #{mode_text}"
+        puts context_line
+        puts "Found #{results[:total_results]} results across #{results[:repositories].size} repositories"
         puts
         
         results[:repositories].each do |repo_name, repo_data|
