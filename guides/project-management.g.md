@@ -127,7 +127,7 @@ Where:
 
 > specific release, starting from 1 (e.g., `+task.1`, `+task.12`).
 
-**Important:** While this section describes the *format* of the Task ID, the actual generation of a new, unique, and correctly sequenced task ID **must** be done using the `bin/tnid` script. This script ensures the correct sequential number is used for the current release. Always run `bin/tnid` from the project root to obtain the ID for a new task.
+**Important:** While this section describes the *format* of the Task ID, the actual generation of a new, unique, and correctly sequenced task ID **must** be done using the `task-manager generate-id` command. This command ensures the correct sequential number is used for the current release. Always run `task-manager generate-id VERSION` from the project root to obtain the ID for a new task.
 
 **Rationale:**
 
@@ -182,22 +182,22 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
 
 #### Tooling for Task Progression
 
-- **`bin/tn` (`get-next-task`)**: Identifies the next actionable task in the current release (by default, or a
+- **`task-manager next`**: Identifies the next actionable task in the current release (by default, or a
   specified release). This tool considers task dependencies, prioritizes `in-progress` tasks over `pending` ones,
   and sorts tasks numerically by their sequential ID number (e.g., `+task.2` before `+task.10`).
-- **`bin/tnid` (`get-next-task-id`)**: Generates the next available full task ID (e.g., `v.X.Y.Z+task.N+1`) for a
+- **`task-manager generate-id VERSION`**: Generates the next available full task ID (e.g., `v.X.Y.Z+task.N+1`) for a
   specified release (or the current release by default). This helps in creating new task files with correctly
   formatted and unique IDs.
-- **`bin/tal` (`get-all-tasks`)**: Lists all tasks within a specified release (or the current release by default).
+- **`task-manager list`**: Lists all tasks within a specified release (or the current release by default).
   Tasks are topologically sorted based on their dependencies, and then secondarily by their task ID\'s sequential
   number. The output for each task includes its ID, status, title, and dependencies. The \"next actionable task\"
-  (as would be identified by `bin/tn`) is highlighted in the list.
-- **`bin/rc` (`get-current-release-path`)**: Determines the appropriate directory for storing newly created
+  (as would be identified by `task-manager next`) is highlighted in the list.
+- **`release-manager current`**: Determines the appropriate directory for storing newly created
   tasks and returns version information. Returns the path to the current release directory (e.g.,
   `dev-taskflow/current/v.X.Y.Z-codename`) and version string (e.g., `v.X.Y.Z`) when a current release exists,
   or the backlog tasks path (`dev-handbook/backlog/tasks`) and empty version when no current release is detected.
   This tool is essential for automated task creation workflows.
-- **`bin/lint`**: Includes a task metadata linter (`dev-handbook/tools/lint-task-metadata`) that validates task
+- **`# Run project-specific lint command`**: Includes a task metadata linter (`dev-handbook/tools/lint-task-metadata`) that validates task
   files in `dev-taskflow/backlog` and `dev-taskflow/current` for correct ID format, required fields (status,
   priority), valid values, and other conventions.
 

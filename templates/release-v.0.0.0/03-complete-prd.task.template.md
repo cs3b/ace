@@ -1,5 +1,5 @@
 ---
-id: TEMPLATE-task.3 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.3 # TEMPLATE - Replace with actual task ID using task-manager generate-id
 status: pending
 priority: high
 estimate: 3h
@@ -10,7 +10,7 @@ dependencies: [TEMPLATE-task.2]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager generate-id v.0.0.0`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -97,7 +97,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
   > TEST: Documentation Alignment
   > Type: Post-condition Check
   > Assert: PRD aligns with what-do-we-build.md and architecture.md
-  > Command: bin/test --check-prd-alignment PRD.md dev-taskflow/what-do-we-build.md dev-taskflow/architecture.md
+  > Command: # Run project-specific test command --check-prd-alignment PRD.md dev-taskflow/what-do-we-build.md dev-taskflow/architecture.md
 - [ ] Finalize PRD with version control and approval tracking
   > TEST: PRD Finalization
   > Type: Post-condition Check

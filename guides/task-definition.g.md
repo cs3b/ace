@@ -43,7 +43,7 @@ guides
 
 | Section | Purpose | Key Questions |
 |---------|---------|---------------|
-| **Front‑matter** | Helps tooling & humans filter | id (use `bin/tnid` to generate), status, priority, estimate, dependencies |
+| **Front‑matter** | Helps tooling & humans filter | id (use `task-manager generate-id VERSION` to generate), status, priority, estimate, dependencies |
 | **Objective / Problem** | *Why* are we doing this? | What pain are we fixing? |
 | **Directory Audit (0)** | Source‑of‑truth for scope | Did we include the current tree? |
 | **Scope of Work** | *What* to touch | Which guides/folders? |
@@ -61,7 +61,7 @@ guides
 A re-usable Markdown template for tasks is available at:
 [`dev-handbook/templates/task-management/task.draft.template.md`](../templates/task-management/task.draft.template.md)
 
-This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `bin/tnid` to generate the task ID.
+This template includes all the standard sections discussed in "Anatomy of a Great Task". You should copy this template and fill it out for each new task. Remember to use `task-manager generate-id VERSION` to generate the task ID.
 
 ### Planning vs. Execution Steps
 
@@ -73,8 +73,8 @@ The template's Implementation Plan section is divided into two subsections to su
 
 This distinction supports workflow separation where review/planning phases focus on Planning Steps, while implementation phases focus on Execution Steps. Both sections can include embedded tests as guardrails.
 
-> **Tip: Generating Task IDs with `bin/tnid`**
-> Always use the `bin/tnid` command (run from the project root)
+> **Tip: Generating Task IDs with `task-manager generate-id`**
+> Always use the `task-manager generate-id VERSION` command (run from the project root)
 > to generate the task ID for the `id` field in the front-matter.
 > This script ensures the ID is unique, correctly formatted, and uses the next sequential
 > number for the current release, as per the conventions in
@@ -106,7 +106,7 @@ For straightforward tasks that don't require research or design, you can skip Pl
   > TEST: API Connection Check
   >   Type: Action Validation
   >   Assert: The new API endpoint responds with status 200
-  >   Command: bin/test --check-api-connection
+  >   Command: # Run project-specific test command --check-api-connection
 - [ ] Update documentation with the new endpoint URL
 ```
 
@@ -122,7 +122,7 @@ For complex tasks requiring analysis or design decisions, include both sections:
   > TEST: Pattern Analysis Complete
   >   Type: Pre-condition Check
   >   Assert: Current auth patterns are documented and understood
-  >   Command: bin/test --check-analysis-exists auth-patterns.md
+  >   Command: # Run project-specific test command --check-analysis-exists auth-patterns.md
 * [ ] Design new OAuth integration approach considering security requirements
 * [ ] Plan database schema changes needed for user sessions
 
@@ -132,7 +132,7 @@ For complex tasks requiring analysis or design decisions, include both sections:
   > TEST: Schema Migration
   >   Type: Action Validation
   >   Assert: Database migration runs successfully
-  >   Command: bin/test --check-migration-success
+  >   Command: # Run project-specific test command --check-migration-success
 - [ ] Update user authentication flow
 - [ ] Add comprehensive tests for OAuth integration
 ```

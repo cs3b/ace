@@ -1,5 +1,5 @@
 ---
-id: TEMPLATE-task.1 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.1 # TEMPLATE - Replace with actual task ID using task-manager generate-id
 status: pending
 priority: high
 estimate: 1h
@@ -10,7 +10,7 @@ dependencies: []
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager generate-id v.0.0.0`)
 2. Remove this template note section
 3. Customize content for specific project needs
 
@@ -73,7 +73,7 @@ Initialize the foundational documentation structure for the project using the do
   > TEST: Bin Scripts Setup
   > Type: Action Validation
   > Assert: Essential bin scripts copied and executable
-  > Command: test -x bin/tn && test -x bin/tr && test -x bin/tree
+  > Command: test -x task-manager next && test -x task-manager recent && test -x bin/tree
 
 ## Acceptance Criteria
 

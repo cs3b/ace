@@ -1,5 +1,5 @@
 ---
-id: TEMPLATE-task.5 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.5 # TEMPLATE - Replace with actual task ID using task-manager generate-id
 status: pending
 priority: medium
 estimate: 0.5h
@@ -10,7 +10,7 @@ dependencies: [TEMPLATE-task.4]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager generate-id v.0.0.0`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs
@@ -51,7 +51,7 @@ Archive the completed v.0.0.0 bootstrap release by moving it from dev-taskflow/c
   > TEST: Task Completion Verification
   > Type: Pre-condition Check
   > Assert: All tasks in v.0.0.0 release are marked as done
-  > Command: bin/tr v.0.0.0 | grep -v "done" | wc -l | grep -q "^0$"
+  > Command: task-manager recent v.0.0.0 | grep -v "done" | wc -l | grep -q "^0$"
 - [ ] Confirm all acceptance criteria for v.0.0.0 release are met
   > TEST: Acceptance Criteria Check
   > Type: Pre-condition Check
@@ -108,5 +108,5 @@ Archive the completed v.0.0.0 bootstrap release by moving it from dev-taskflow/c
 - dev-taskflow/current/v.0.0.0-bootstrap/ (source directory)
 - dev-taskflow/done/ (target directory)
 - dev-taskflow/roadmap.md (roadmap update target)
-- bin/tr (task tracking utility)
+- task-manager recent (task tracking utility)
 - dev-handbook/guides/project-management.g.md

@@ -106,20 +106,20 @@ The `bin/` directory provides convenient wrappers for project automation and dev
 
 - **bin/run** — Start the development server or main application
 - **bin/build** — Build the project for production deployment
-- **bin/test** — Run the complete test suite
-- **bin/lint** — Run code quality checks and linting
+- **# Run project-specific test command** — Run the complete test suite
+- **# Run project-specific lint command** — Run code quality checks and linting
 
 ### Project Management Scripts
 
-- **bin/tn** — Find the next actionable task in the current release
-- **bin/tr** — Summarize recently updated or completed tasks
-- **bin/gc** — Commit changes across the project and submodules
-- **bin/gl** — Show recent git commits across all repositories
+- **task-manager next** — Find the next actionable task in the current release
+- **task-manager recent** — Summarize recently updated or completed tasks
+- **git-commit** — Commit changes across the project and submodules
+- **git-log** — Show recent git commits across all repositories
 
 ### Utility Scripts
 
-- **bin/tree** — Display the project directory structure
-- **bin/rc** — Get current release path and version information
+- **task-manager recentee** — Display the project directory structure
+- **release-manager current** — Get current release path and version information
 
 <!-- Add project-specific scripts -->
 

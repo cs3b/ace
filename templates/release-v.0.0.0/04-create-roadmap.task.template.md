@@ -1,5 +1,5 @@
 ---
-id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using bin/tnid
+id: TEMPLATE-task.4 # TEMPLATE - Replace with actual task ID using task-manager generate-id
 status: pending
 priority: high
 estimate: 2h
@@ -10,7 +10,7 @@ dependencies: [TEMPLATE-task.3]
 
 **TEMPLATE NOTE:** This is a template task file. When copying to an actual project:
 
-1. Replace "TEMPLATE" with actual project-specific task ID (use `bin/tnid v.0.0.0`)
+1. Replace "TEMPLATE" with actual project-specific task ID (use `task-manager generate-id v.0.0.0`)
 2. Replace dependency IDs with actual task IDs
 3. Remove this template note section
 4. Customize content for specific project needs

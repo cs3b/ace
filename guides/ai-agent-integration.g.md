@@ -28,21 +28,21 @@ patterns, context management, error handling, and best practices derived from ex
 
 ```bash
 # Find next task to work on
-bin/tn
+task-manager next
 
 # Review recent tasks
-bin/tr
+task-manager recent
 
 # Get current release context
-bin/rc
+release-manager current
 
 # Run tests and validation
-bin/test
-bin/lint
+# Note: test and lint commands are project-specific
+# Check your project's package.json, Gemfile, or Makefile
 
 # Multi-repository operations
-bin/gs     # git status across all repos
-bin/gc -i "intention"  # coordinated commits
+git-status     # git status across all repos
+git-commit -i "intention"  # coordinated commits
 ```
 
 ### Initial Setup
@@ -64,8 +64,9 @@ bin/gc -i "intention"  # coordinated commits
 3. **Validate Environment**
 
    ```bash
-   bin/test
-   bin/lint
+   # Run project-specific test and lint commands
+   # Examples: npm test, bundle exec rspec, pytest
+   # Check package.json, Gemfile, or Makefile for exact commands
    ```
 
 ## Command Wrapper Patterns
@@ -105,7 +106,7 @@ bin/gc -i "intention"  # coordinated commits
   > TEST: Feature Validation
   > Type: Action Validation
   > Assert: Tests pass
-  > Command: bin/test
+  > Command: # Run project-specific test command
 ```
 
 ### @review-code Pattern
@@ -165,13 +166,13 @@ bin/gc -i "intention"  # coordinated commits
 
 ```bash
 # Intention-based commits across all repos
-bin/gc -i "implement feature X"
+git-commit -i "implement feature X"
 
 # Status across all repositories
-bin/gs
+git-status
 
 # Logs across all repositories
-bin/gl
+git-log
 ```
 
 ## Context Management
@@ -375,7 +376,7 @@ grep -r "search-pattern" .
 handbook sync-templates --dry-run
 
 # Check compliance
-bin/lint
+# Run project-specific lint command
 ```
 
 ### 4. Context Token Management
@@ -493,9 +494,9 @@ echo $API_KEY
 
 ```bash
 # Project health check
-bin/test
-bin/lint
-bin/gs
+# Run project-specific test command
+# Run project-specific lint command
+git-status
 
 # File system validation
 find . -name "*.md" -type f | head -10
@@ -511,14 +512,14 @@ git submodule status
 
 ```bash
 # 1. Find next task
-bin/tn
+task-manager next
 
 # 2. Follow work-on-task workflow
 @work-on-task dev-taskflow/current/v.0.3.0-workflows/tasks/task-file.md
 
 # 3. Validate completion
-bin/test
-bin/lint
+# Run project-specific test command
+# Run project-specific lint command
 ```
 
 ### Example 2: Multi-File Analysis
@@ -546,16 +547,16 @@ EOF
 
 ```bash
 # 1. Detect error
-if ! bin/test; then
+if ! # Run project-specific test command; then
     echo "Tests failed"
     
     # 2. Diagnose issue
-    bin/lint
+    # Run project-specific lint command
     git status
     
     # 3. Fix and retry
     # ... fix issues ...
-    bin/test
+    # Run project-specific test command
 fi
 ```
 
@@ -563,13 +564,13 @@ fi
 
 ```bash
 # 1. Check status across repos
-bin/gs
+git-status
 
 # 2. Coordinated commit
-bin/gc -i "implement feature X"
+git-commit -i "implement feature X"
 
 # 3. Verify changes
-bin/gl
+git-log
 ```
 
 ## Advanced Patterns
@@ -585,7 +586,7 @@ bin/gl
 handbook sync-templates --verbose
 
 # Conventional commit patterns
-bin/gc -i "feat: add new feature"
+git-commit -i "feat: add new feature"
 ```
 
 ### Context Preservation

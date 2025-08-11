@@ -46,7 +46,7 @@ This project follows a documentation-first approach with these primary directori
 To see the complete filtered directory structure, run:
 
 ```bash
-bin/tree
+task-manager recentee
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -111,7 +111,7 @@ This section lists files, directories, or glob patterns that the agent should ig
 bin/run
 
 # Run tests
-bin/test
+# Run project-specific test command
 
 # Build for production
 bin/build
@@ -119,7 +119,7 @@ bin/build
 
 ### Common Workflows
 
-- **New Feature**: Use `bin/tn` to find next task, follow task workflow
+- **New Feature**: Use `task-manager next` to find next task, follow task workflow
 - **Bug Fix**: Create task in backlog, prioritize, implement
 - **Documentation**: Update relevant files in `dev-taskflow/`
 
