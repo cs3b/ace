@@ -21,7 +21,7 @@ llm-query PROVIDER_MODEL PROMPT [OPTIONS]
 llm-query google:gemini-2.5-flash "What is Ruby programming language?"
 
 # With system prompt and output
-llm-query anthropic:claude-4-0-sonnet-latest "Review this code" \
+llm-query anthropic:claude-sonnet-4-20250514 "Review this code" \
   --system system.md \
   --output review.md \
   --timeout 300
@@ -84,7 +84,7 @@ llm-query google:gemini-2.5-pro "Explain quantum computing" \
   --system "You are a physics professor. Be precise and educational."
 
 # System prompt from file
-llm-query anthropic:claude-4-0-sonnet-latest "Review this code" \
+llm-query anthropic:claude-sonnet-4-20250514 "Review this code" \
   --system dev-handbook/templates/review-code/system.prompt.md
 ```
 
@@ -150,7 +150,7 @@ Control randomness/creativity in responses.
 
 ```bash
 # Deterministic code review
-llm-query anthropic:claude-4-0-sonnet-latest "Review code" --temperature 0.2
+llm-query anthropic:claude-sonnet-4-20250514 "Review code" --temperature 0.2
 
 # Creative writing
 llm-query google:gemini-2.5-pro "Write a story" --temperature 1.2
@@ -193,7 +193,7 @@ Set request timeout in seconds.
 
 ```bash
 # Extended timeout for large documents
-llm-query anthropic:claude-4-0-sonnet-latest "$(cat large-doc.md)" \
+llm-query anthropic:claude-sonnet-4-20250514 "$(cat large-doc.md)" \
   --timeout 500 \
   --output analysis.md
 
@@ -244,7 +244,7 @@ Force overwrite existing output files without confirmation.
 
 ```bash
 # Automation-friendly
-llm-query anthropic:claude-4-0-sonnet-latest "Update analysis" \
+llm-query anthropic:claude-sonnet-4-20250514 "Update analysis" \
   --output existing-report.md \
   --force
 
@@ -293,12 +293,12 @@ llm-query gflash "Fast response needed"
 **API Key:** `ANTHROPIC_API_KEY` environment variable
 **Aliases:**
 
-- `csonet` → `anthropic:claude-4-0-sonnet-latest`
+- `csonet` → `anthropic:claude-sonnet-4-20250514`
 - `copus` → `anthropic:claude-4-0-opus-latest`
 
 **Available Models:**
 
-- `claude-4-0-sonnet-latest` - Balanced performance
+- `claude-sonnet-4-20250514` - Balanced performance
 - `claude-4-0-opus-latest` - Highest capability
 
 **Capabilities:**
@@ -311,7 +311,7 @@ llm-query gflash "Fast response needed"
 
 ```bash
 # High-quality analysis
-llm-query anthropic:claude-4-0-sonnet-latest "Analyze this code"
+llm-query anthropic:claude-sonnet-4-20250514 "Analyze this code"
 
 # Using alias for convenience
 llm-query csonet "Complex reasoning task"
@@ -360,7 +360,7 @@ llm-query gflash "What is the capital of France?"
 **Use Case:** Structured analysis with context
 
 ```bash
-llm-query anthropic:claude-4-0-sonnet-latest "$(cat document.md)" \
+llm-query anthropic:claude-sonnet-4-20250514 "$(cat document.md)" \
   --system "You are a technical reviewer. Focus on accuracy and clarity." \
   --output review.md
 ```
@@ -460,7 +460,7 @@ llm-query gpro "Generate report" > report.md
 
 ```bash
 # Large documents need extended timeouts
-llm-query anthropic:claude-4-0-sonnet-latest "$(cat large-handbook.md)" \
+llm-query anthropic:claude-sonnet-4-20250514 "$(cat large-handbook.md)" \
   --timeout 500 \
   --output analysis.md
 
@@ -472,7 +472,7 @@ llm-query gflash "Simple question" --timeout 30
 
 **Choose providers based on task requirements:**
 
-- **Analysis/Reasoning:** `anthropic:claude-4-0-sonnet-latest`
+- **Analysis/Reasoning:** `anthropic:claude-sonnet-4-20250514`
 - **Fast responses:** `google:gemini-2.5-flash`
 - **Creative writing:** `google:gemini-2.5-pro`
 - **General purpose:** `openai:gpt-4o`

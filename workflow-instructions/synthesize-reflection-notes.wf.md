@@ -110,7 +110,7 @@ reflection-synthesize --archived
 reflection-synthesize reflection-auth-issues.md reflection-cli-improvements.md --archived
 
 # Use different model for analysis
-reflection-synthesize --model anthropic:claude-4-0-sonnet-latest --archived
+reflection-synthesize --model anthropic:claude-sonnet-4-20250514 --archived
 
 # Preview what would be synthesized without execution
 reflection-synthesize --dry-run

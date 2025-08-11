@@ -41,12 +41,30 @@ This field provides hints about what arguments the command expects. The square b
 **Type:** String (model identifier)  
 **Purpose:** Forces specific model for this command  
 **Default:** User's selected model  
-**Example:** `model: claude-4-1-sonnet-latest`
+**Example:** `model: claude-sonnet-4-20250514`
 
-This field allows commands to request a specific Claude model. Use cases:
-- `claude-4-1-opus-latest` - For complex analysis or synthesis tasks
-- `claude-4-1-sonnet-latest` - For quick iterations and fixes
-- `claude-3-5-haiku-latest` - For simple, fast operations
+This field allows commands to request a specific Claude model.
+
+**Available Models by Family:**
+
+**Opus Models (Complex Analysis):**
+- `claude-opus-4-1-20250805` - Claude Opus 4.1 (latest, most capable)
+- `claude-opus-4-20250514` - Claude Opus 4
+
+**Sonnet Models (Balanced Performance):**
+- `claude-sonnet-4-20250514` - Claude Sonnet 4 (latest)
+- `claude-3-7-sonnet-20250219` - Claude Sonnet 3.7
+- `claude-3-5-sonnet-20241022` - Claude Sonnet 3.5 (New)
+- `claude-3-5-sonnet-20240620` - Claude Sonnet 3.5 (Old)
+
+**Haiku Models (Fast Operations):**
+- `claude-3-5-haiku-20241022` - Claude Haiku 3.5 (latest)
+- `claude-3-haiku-20240307` - Claude Haiku 3
+
+**Recommended Usage:**
+- Complex analysis/synthesis: `claude-opus-4-1-20250805`
+- Quick iterations and fixes: `claude-sonnet-4-20250514`
+- Simple, fast operations: `claude-3-5-haiku-20241022`
 
 ## Metadata Inference Rules
 

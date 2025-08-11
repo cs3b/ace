@@ -33,7 +33,7 @@ code-review-synthesize <report1> <report2> [report3...] [options]
 code-review-synthesize cr-report-claude-opus.md cr-report-gpt4.md
 
 # Synthesis with custom model
-code-review-synthesize cr-report-*.md --model anthropic:claude-4-0-sonnet-latest
+code-review-synthesize cr-report-*.md --model anthropic:claude-sonnet-4-20250514
 
 # Synthesis with custom output location
 code-review-synthesize cr-report-*.md --output final-synthesis.md
@@ -142,7 +142,7 @@ code-review-synthesize \
 code-review-synthesize cr-report-*.md --model google:gemini-2.5-pro
 
 # High-quality analysis
-code-review-synthesize cr-report-*.md --model anthropic:claude-4-0-sonnet-latest
+code-review-synthesize cr-report-*.md --model anthropic:claude-sonnet-4-20250514
 
 # Fast processing
 code-review-synthesize cr-report-*.md --model google:gemini-2.5-flash
@@ -196,7 +196,7 @@ The tool handles common issues:
 |----------|------------------|------|---------|
 | Quick synthesis | `google:gemini-2.5-flash` | Lowest | Good |
 | Standard synthesis | `google:gemini-2.5-pro` | Low | High |
-| Critical analysis | `anthropic:claude-4-0-sonnet-latest` | Higher | Highest |
+| Critical analysis | `anthropic:claude-sonnet-4-20250514` | Higher | Highest |
 | Experimental | `openai:gpt-4o` | Moderate | High |
 
 ### Dry Run for Planning
