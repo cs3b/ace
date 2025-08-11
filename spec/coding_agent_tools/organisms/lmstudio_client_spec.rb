@@ -38,6 +38,7 @@ RSpec.describe CodingAgentTools::Organisms::LmstudioClient do
 
     it "initializes without credentials" do
       # Clear any environment variables that might interfere
+      allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("LM_STUDIO_API_KEY").and_return(nil)
 
       client = described_class.new
@@ -50,6 +51,7 @@ RSpec.describe CodingAgentTools::Organisms::LmstudioClient do
     end
 
     it "accepts API key via environment variable" do
+      allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("LM_STUDIO_API_KEY").and_return("env-key")
 
       client = described_class.new
@@ -57,6 +59,7 @@ RSpec.describe CodingAgentTools::Organisms::LmstudioClient do
     end
 
     it "prefers options API key over environment variable" do
+      allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("LM_STUDIO_API_KEY").and_return("env-key")
 
       client = described_class.new(api_key: "option-key")
@@ -65,6 +68,7 @@ RSpec.describe CodingAgentTools::Organisms::LmstudioClient do
 
     context "no credentials", :no_credentials do
       before do
+        allow(ENV).to receive(:[]).and_call_original
         allow(ENV).to receive(:[]).with("LM_STUDIO_API_KEY").and_return(nil)
       end
 

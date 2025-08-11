@@ -427,6 +427,7 @@ RSpec.describe CodingAgentTools::Molecules::Reflection::SynthesisOrchestrator do
 
     context "when File.write raises an exception" do
       before do
+        allow(File).to receive(:write).and_call_original
         allow(File).to receive(:write).with(output_path, anything).and_raise(IOError, "Disk full")
       end
 
