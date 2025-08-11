@@ -64,16 +64,16 @@ Rebase all repositories (main repository and submodules) against their respectiv
    **Run Tests in Repositories with Test Capabilities:**
    ```bash
    # Check for test scripts and run if available
-   if [ -f "bin/test" ]; then
+   if [ -f "# Run project-specific test command" ]; then
        echo "Running pre-rebase tests..."
-       bin/test
+       # Run project-specific test command
    fi
    
    # For submodules with tests (example: dev-tools)
    cd dev-tools
-   if [ -f "bin/test" ]; then
+   if [ -f "# Run project-specific test command" ]; then
        echo "Running pre-rebase tests in dev-tools..."
-       bin/test
+       # Run project-specific test command
    fi
    cd ..
    ```
@@ -207,9 +207,9 @@ Rebase all repositories (main repository and submodules) against their respectiv
    ```bash
    # Test main functionality in primary submodule
    cd dev-tools
-   if [ -f "bin/test" ]; then
+   if [ -f "# Run project-specific test command" ]; then
        echo "Running post-rebase tests..."
-       bin/test
+       # Run project-specific test command
    fi
    cd ..
    ```

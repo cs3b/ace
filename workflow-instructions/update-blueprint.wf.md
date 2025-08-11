@@ -301,7 +301,7 @@ This section lists files, directories, or glob patterns that the agent should ig
 bin/run
 
 # Run tests
-bin/test
+# Run project-specific test command
 
 # Build for production
 bin/build

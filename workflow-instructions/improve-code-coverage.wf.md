@@ -26,7 +26,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 1. **Generate Coverage Analysis Report**
    * Ensure tests have been run to generate coverage data:
      ```bash
-     cd dev-tools && bin/test spec/
+     cd dev-tools && # Run project-specific test command spec/
      ```
    * Delete old coverage analysis report:
      ```bash
@@ -147,7 +147,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 **Missing Coverage Data:**
 * Symptom: No `.resultset.json` file found
 * Solution: Run test suite first to generate coverage data
-* Command: `cd dev-tools && bin/test`
+* Command: `cd dev-tools && # Run project-specific test command`
 
 **Coverage Tool Errors:**
 * Symptom: coverage-analyze command fails
@@ -182,7 +182,7 @@ If analysis fails or produces unclear results:
 
 ```bash
 # Generate comprehensive coverage analysis
-cd dev-tools && bin/test
+cd dev-tools && # Run project-specific test command
 coverage-analyze coverage/.resultset.json --comprehensive --detailed
 
 # Create test improvement task for a specific component

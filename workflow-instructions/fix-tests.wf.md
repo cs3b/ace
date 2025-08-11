@@ -53,26 +53,26 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 
 ```bash
 # Find and work on next failing test
-bin/test --next-failure
+# Run project-specific test command --next-failure
 ```
 
 **Test discovery commands:**
 
 ```bash
 # Quick test status check
-bin/test --status
+# Run project-specific test command --status
 
 # List all failing tests
-bin/test --list-failures
+# Run project-specific test command --list-failures
 
 # Run specific test file
-bin/test path/to/test_file.rb
+# Run project-specific test command path/to/test_file.rb
 
 # Run with detailed output
-bin/test --verbose
+# Run project-specific test command --verbose
 
 # Run only failing tests
-bin/test --only-failures
+# Run project-specific test command --only-failures
 ```
 
 ## Primary Fix Process: Iterative Approach
@@ -84,7 +84,7 @@ bin/test --only-failures
 1. **Identify Next Failure:**
 
    ```bash
-   bin/test --next-failure
+   # Run project-specific test command --next-failure
    ```
 
 2. **Investigate Root Cause:**
@@ -101,20 +101,20 @@ bin/test --only-failures
 
    ```bash
    # Run the specific test
-   bin/test path/to/fixed_test.rb
+   # Run project-specific test command path/to/fixed_test.rb
    
    # Run related tests
-   bin/test --related path/to/fixed_test.rb
+   # Run project-specific test command --related path/to/fixed_test.rb
    ```
 
 5. **Loop Back:**
-   - Return to step 1 until `bin/test --next-failure` returns no errors
+   - Return to step 1 until `# Run project-specific test command --next-failure` returns no errors
 
 **Final Verification:**
 
 ```bash
 # Run full test suite
-bin/test
+# Run project-specific test command
 ```
 
 ## Quick Troubleshooting Decision Tree
@@ -123,7 +123,7 @@ bin/test
 
 - **Syntax Error** → Fix code syntax immediately
 - **Missing Method/Class** → Check if file moved or renamed
-- **Database Error** → Run `bin/test --setup-db` or equivalent
+- **Database Error** → Run `# Run project-specific test command --setup-db` or equivalent
 - **Timeout** → Check for infinite loops or increase timeout
 - **Permission Error** → Check file permissions and dependencies
 - **Network Error** → Mock external services or check connectivity
@@ -209,7 +209,7 @@ bin/test
 
 **Time-saving techniques:**
 
-- Use `bin/test --next-failure` for systematic progress
+- Use `# Run project-specific test command --next-failure` for systematic progress
 - Run specific test files instead of full suite during development
 - Use test-specific debugging tools (`--verbose`, `--backtrace`)
 - Fix root causes instead of individual symptoms
@@ -317,10 +317,10 @@ class TestUserService:
 find . -name "*test*" -type f -exec sed -i 's/old_method/new_method/g' {} \;
 
 # Fix common RSpec deprecations
-bin/test --fix-deprecations
+# Run project-specific test command --fix-deprecations
 
 # Update factory references
-bin/test --update-factories
+# Run project-specific test command --update-factories
 ```
 
 **Common Automated Fixes:**
@@ -336,10 +336,10 @@ bin/test --update-factories
 
 **Response Process:**
 
-1. Run `bin/test --next-failure` to identify first failing test
+1. Run `# Run project-specific test command --next-failure` to identify first failing test
 2. Investigate root cause and implement fix
-3. Continue with `bin/test --next-failure` until no more failures
-4. Run full test suite `bin/test` to verify all tests pass
+3. Continue with `# Run project-specific test command --next-failure` until no more failures
+4. Run full test suite `# Run project-specific test command` to verify all tests pass
 
 ---
 

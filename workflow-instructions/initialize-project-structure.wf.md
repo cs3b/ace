@@ -54,7 +54,7 @@ AI-assisted development workflow in a new or existing project.
     - **Make Scripts Executable**:
         - For all scripts newly created in `bin/`, make them executable: `chmod +x bin/*`.
     - **Guidance on Binstubs**:
-        - All scripts (`bin/test`, `bin/lint`, `bin/build`, and `bin/run`) are general placeholders that need to be tailored with project-specific commands based on the technology stack.
+        - All scripts (`# Run project-specific test command`, `# Run project-specific lint command`, `bin/build`, and `bin/run`) are general placeholders that need to be tailored with project-specific commands based on the technology stack.
         - Task management commands (`tn`, `tr`, `tree`) are available through the dev-tools if needed but are not automatically added to project bin/.
 
 4. **Setup v.0.0.0 Bootstrap Release Tracking**:
@@ -722,20 +722,20 @@ The `bin/` directory provides convenient wrappers for project automation and dev
 
 - **bin/run** — Start the development server or main application
 - **bin/build** — Build the project for production deployment
-- **bin/test** — Run the complete test suite
-- **bin/lint** — Run code quality checks and linting
+- **# Run project-specific test command** — Run the complete test suite
+- **# Run project-specific lint command** — Run code quality checks and linting
 
 ### Project Management Scripts
 
-- **bin/tn** — Find the next actionable task in the current release
-- **bin/tr** — Summarize recently updated or completed tasks
-- **bin/gc** — Commit changes across the project and submodules
-- **bin/gl** — Show recent git commits across all repositories
+- **task-manager next** — Find the next actionable task in the current release
+- **task-manager recent** — Summarize recently updated or completed tasks
+- **git-commit** — Commit changes across the project and submodules
+- **git-log** — Show recent git commits across all repositories
 
 ### Utility Scripts
 
-- **bin/tree** — Display the project directory structure
-- **bin/rc** — Get current release path and version information
+- **task-manager recentee** — Display the project directory structure
+- **release-manager current** — Get current release path and version information
 
 <!-- Add project-specific scripts -->
 
@@ -960,7 +960,7 @@ This project follows a documentation-first approach with these primary directori
 To see the complete filtered directory structure, run:
 
 ```bash
-bin/tree
+task-manager recentee
 ```
 
 This will show all project files while filtering out temporary files, session logs, and other non-essential directories.
@@ -1025,7 +1025,7 @@ This section lists files, directories, or glob patterns that the agent should ig
 bin/run
 
 # Run tests
-bin/test
+# Run project-specific test command
 
 # Build for production
 bin/build
@@ -1033,7 +1033,7 @@ bin/build
 
 ### Common Workflows
 
-- **New Feature**: Use `bin/tn` to find next task, follow task workflow
+- **New Feature**: Use `task-manager next` to find next task, follow task workflow
 - **Bug Fix**: Create task in backlog, prioritize, implement
 - **Documentation**: Update relevant files in `dev-taskflow/`
 
@@ -1074,7 +1074,7 @@ bin/build
 
 ### Binstub Templates
 
-#### bin/test
+#### # Run project-specific test command
 
 <documents>
 <template path="dev-handbook/templates/binstubs/test.template.md">
@@ -1105,8 +1105,8 @@ bin/build
 set -e
 cd "$(dirname "$0")"/.. # Ensure execution from project root
 
-echo "INFO: Running 'bin/test' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/test' script."
+echo "INFO: Running '# Run project-specific test command' from project root: $(pwd)"
+echo "INFO: This is a placeholder '# Run project-specific test command' script."
 echo "INFO: Please update it to run your project's specific test suite."
 echo "INFO: For example: 'npm test', 'bundle exec rspec', 'cargo test', etc."
 
@@ -1114,17 +1114,17 @@ echo "INFO: For example: 'npm test', 'bundle exec rspec', 'cargo test', etc."
 # Example: npm test -- "$@"
 # Example: bundle exec rspec "$@"
 
-echo "INFO: No test command configured in bin/test."
+echo "INFO: No test command configured in # Run project-specific test command."
 exit 0 # Succeed by default for placeholder, or change to 'exit 1' to indicate not configured.
 </template>
 </documents>
 
-#### bin/lint
+#### # Run project-specific lint command
 
 <documents>
 <template path="dev-handbook/templates/binstubs/lint.template.md">
 #!/bin/sh
-# Placeholder for project linting script (bin/lint)
+# Placeholder for project linting script (# Run project-specific lint command)
 # This script should be adapted during project initialization or by developers
 # to execute the project's specific linting command(s).
 #
@@ -1144,8 +1144,8 @@ exit 0 # Succeed by default for placeholder, or change to 'exit 1' to indicate n
 set -e
 cd "$(dirname "$0")"/.. # Ensure execution from project root
 
-echo "INFO: Running 'bin/lint' from project root: $(pwd)"
-echo "INFO: This is a placeholder 'bin/lint' script."
+echo "INFO: Running '# Run project-specific lint command' from project root: $(pwd)"
+echo "INFO: This is a placeholder '# Run project-specific lint command' script."
 echo "INFO: Please update it to run your project's specific linting command(s)."
 echo "INFO: For example: 'npm run lint', 'bundle exec rubocop', 'ruff check .', etc."
 echo "INFO: This script can also call tools like linters for documentation (e.g., Markdown)."
@@ -1430,7 +1430,7 @@ Initialize the foundational documentation structure for the project using the do
   > TEST: Bin Scripts Setup
   > Type: Action Validation
   > Assert: Essential bin scripts copied and executable
-  > Command: test -x bin/tn && test -x bin/tr && test -x bin/tree
+  > Command: test -x task-manager next && test -x task-manager recent && test -x task-manager recentee
 
 ## Acceptance Criteria
 
@@ -1544,7 +1544,7 @@ Enhance and complete the core documentation files generated during project struc
   > TEST: Documentation Consistency
   > Type: Post-condition Check
   > Assert: All core documentation files are consistent and reference each other appropriately
-  > Command: bin/test --check-doc-consistency dev-taskflow/
+  > Command: # Run project-specific test command --check-doc-consistency dev-taskflow/
 
 ## Acceptance Criteria
 
@@ -1675,7 +1675,7 @@ Complete the Product Requirements Document (PRD) with comprehensive project requ
   > TEST: Documentation Alignment
   > Type: Post-condition Check
   > Assert: PRD aligns with what-do-we-build.md and architecture.md
-  > Command: bin/test --check-prd-alignment PRD.md dev-taskflow/what-do-we-build.md dev-taskflow/architecture.md
+  > Command: # Run project-specific test command --check-prd-alignment PRD.md dev-taskflow/what-do-we-build.md dev-taskflow/architecture.md
 - [ ] Finalize PRD with version control and approval tracking
   > TEST: PRD Finalization
   > Type: Post-condition Check

@@ -95,7 +95,7 @@ Capture a compact summary of the current session (what was done, next steps, key
    
    # 3. Check current state
    git status
-   bin/test --only-failures
+   # Run project-specific test command --only-failures
    
    # 4. Resume where left off
    # - Complete the error handling in oauth_handler.rb:45
@@ -298,8 +298,8 @@ docs/feature-guide.md
 
 ```bash
 # Useful commands to resume work
-bin/test spec/feature_spec.rb
-bin/lint
+# Run project-specific test command spec/feature_spec.rb
+# Run project-specific lint command
 git status
 ```
 

@@ -101,7 +101,7 @@ For experienced users, here's the condensed workflow:
        > TEST: Pre-condition Check
        > Type: Pre-condition Check
        > Assert: What needs to be verified
-       > Command: bin/test --check-something
+       > Command: # Run project-specific test command --check-something
      ```
 
    **For Execution Steps (`- [ ]`):**
@@ -114,7 +114,7 @@ For experienced users, here's the condensed workflow:
        > TEST: Action Validation
        > Type: Action Validation
        > Assert: Expected outcome
-       > Command: bin/test --verify-result
+       > Command: # Run project-specific test command --verify-result
      ```
 
    **Test Execution:**
@@ -184,10 +184,10 @@ For experienced users, here's the condensed workflow:
 
      ```bash
      # Run project tests
-     bin/test
+     # Run project-specific test command
 
      # Run linting
-     bin/lint
+     # Run project-specific lint command
 
      # Build if applicable
      bin/build
@@ -288,7 +288,7 @@ When working with temporary files:
 
 **Symptoms:**
 
-* `bin/test` returns non-zero exit code
+* `# Run project-specific test command` returns non-zero exit code
 * Embedded test commands fail
 * Quality checks (lint, format) fail
 
@@ -298,8 +298,8 @@ When working with temporary files:
 
    ```bash
    # Run tests with enhanced reporting
-   bin/test --verbose
-   bin/lint
+   # Run project-specific test command --verbose
+   # Run project-specific lint command
    ```
 
 2. For embedded test failures:
@@ -307,7 +307,7 @@ When working with temporary files:
    * Verify expected vs actual state
    * Check if test command exists and is valid
 3. For quality failures:
-   * Fix lint/formatting issues: `bin/lint --fix`
+   * Fix lint/formatting issues: `# Run project-specific lint command --fix`
    * Address code style violations
    * Update tests if requirements changed
 4. If tests are flaky, retry once before escalating
@@ -319,7 +319,7 @@ When working with temporary files:
 
 **Prevention:**
 
-* Run `bin/test` before starting task to establish baseline
+* Run `# Run project-specific test command` before starting task to establish baseline
 * Understand test requirements and coverage expectations
 * Make small, incremental changes with test validation
 
@@ -461,7 +461,7 @@ When working with temporary files:
 
 **Symptoms:**
 
-* `bin/test --check-something` commands don't exist
+* `# Run project-specific test command --check-something` commands don't exist
 * Embedded test commands are aspirational/invalid
 * Project-specific tools not working
 
@@ -470,8 +470,8 @@ When working with temporary files:
 1. Check if test command exists and is valid:
 
    ```bash
-   ls -la bin/test
-   bin/test --help
+   ls -la # Run project-specific test command
+   # Run project-specific test command --help
    ```
 
 2. For non-existent commands:

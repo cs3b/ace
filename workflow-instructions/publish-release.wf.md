@@ -61,8 +61,8 @@ Execute the final deployment and archival phase of project releases, transitioni
    - Address any build failures before proceeding
 
 4. **Run Final Quality Checks:**
-   - Execute all tests: `bin/test`
-   - Run code quality checks: `bin/lint`
+   - Execute all tests: `# Run project-specific test command`
+   - Run code quality checks: `# Run project-specific lint command`
    - Verify no critical issues remain unresolved
 
 ### 2. Version Finalization

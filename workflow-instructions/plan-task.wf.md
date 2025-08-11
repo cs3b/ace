@@ -287,7 +287,7 @@ Create a detailed implementation plan for a task that already has a validated be
        > TEST: Action Validation
        > Type: Action Validation
        > Assert: Expected outcome
-       > Command: bin/test --verify-result
+       > Command: # Run project-specific test command --verify-result
      ```
 
 9. **Task Status Promotion:**
@@ -520,7 +520,7 @@ Why are we doing this?
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: Key components and their relationships are identified
-  > Command: bin/test --check-analysis-complete
+  > Command: # Run project-specific test command --check-analysis-complete
 - [ ] Research best practices and design approach
 - [ ] Plan detailed implementation strategy
 
@@ -533,7 +533,7 @@ Why are we doing this?
   > TEST: Verify Action 2 Outcome
   > Type: Action Validation
   > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: bin/test --check-something path/to/relevant_artifact_from_step_2
+  > Command: # Run project-specific test command --check-something path/to/relevant_artifact_from_step_2
 - [ ] ... Add more implementation steps as needed.
 
 ## Acceptance Criteria
