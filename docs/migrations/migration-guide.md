@@ -29,9 +29,9 @@ The migration follows this hierarchy:
 #### Old Primitive Approach
 ```bash
 # Multiple commands with manual coordination
-bin/tal                    # List tasks
-bin/tn                     # Get next task
-bin/tnid v.0.3.0          # Generate task ID
+task-manager list          # List tasks
+task-manager next          # Get next task
+task-manager generate-id v.0.3.0  # Generate task ID
 ```
 
 #### New Higher-Order Approach
@@ -47,10 +47,10 @@ task-manager recent       # Show recent tasks
 #### Old Primitive Approach
 ```bash
 # Multi-step manual process
-output=$(bin/rc)                           # Get release context
+output=$(release-manager current)          # Get release context
 task_dir=$(echo "$output" | sed -n '1p')   # Parse directory
 version=$(echo "$output" | sed -n '2p')    # Parse version
-task_id=$(bin/tnid $version)              # Generate ID
+task_id=$(task-manager generate-id $version)  # Generate ID
 # Manual path construction and file creation
 ```
 
@@ -122,7 +122,7 @@ The following documentation has been updated to use higher-order tools:
 ### Key Workflow Changes
 
 #### Task Creation Workflow
-- **Before**: Manual `bin/rc` + `bin/tnid` + path construction
+- **Before**: Manual `release-manager current` + `task-manager generate-id` + path construction
 - **After**: Single `task-manager create` command
 - **Benefit**: Atomic operation, no manual coordination needed
 
@@ -173,7 +173,7 @@ Higher-order tools provide better error handling:
 
 ### For Workflow Instructions
 
-- [ ] Replace `bin/rc` + `bin/tnid` with `task-manager create`
+- [ ] Replace manual ID generation with `task-manager create`
 - [ ] Replace manual file searching with `nav-path file`
 - [ ] Replace manual session setup with `create-path file:reflection-new`
 - [ ] Update task management commands to use `task-manager`
@@ -193,11 +193,11 @@ Higher-order tools provide better error handling:
 
 The following commands are deprecated in favor of higher-order alternatives:
 
-- `bin/tn` → `task-manager next`
-- `bin/tr` → `task-manager recent`
-- `bin/tal` → `task-manager list`
-- `bin/tnid` → `task-manager generate-id`
-- `bin/rc` → Used internally by `nav-path` commands
+- Old binstub commands → `task-manager next`
+- Old binstub commands → `task-manager recent`
+- Old binstub commands → `task-manager list`
+- Old binstub commands → `task-manager generate-id`
+- Old binstub commands → Used internally by `nav-path` commands
 
 ### Transition Period
 

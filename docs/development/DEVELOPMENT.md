@@ -267,19 +267,19 @@ bin/console
 
 ### Project Management Commands
 
-#### `bin/tn` (Task Next)
+#### `task-manager next`
 **Purpose**: Get the next task to work on
 ```bash
-bin/tn
+task-manager next
 ```
 - Shows the next pending task
 - Displays task dependencies
 - Helps prioritize development work
 
-#### `bin/tal` (Task All List)
+#### task-manager list
 **Purpose**: List all available tasks
 ```bash
-bin/tal
+task-manager list
 ```
 - Shows complete task backlog
 - Displays task status and priorities
@@ -287,25 +287,25 @@ bin/tal
 
 ### Git Workflow Commands
 
-#### `bin/gc` (Git Commit)
+#### git-commit
 **Purpose**: Enhanced git commit with AI-generated messages
 ```bash
-bin/gc -i "intention of the changes"
+git-commit -i "intention of the changes"
 ```
 - Generates descriptive commit messages
 - Follows conventional commit format
 - Integrates with project workflow
 
-#### `bin/gl` (Git Log)
+#### git-log
 **Purpose**: Enhanced git log display
 ```bash
-bin/gl
+git-log
 ```
 - Shows formatted commit history
 - Provides better visualization
 - Helps track project progress
 
-#### `bin/cr` (Code Review Prompt Generator)
+#### code-review
 **Purpose**: Generates comprehensive code review prompts from git diff
 ```bash
 # Generate a prompt for the current changes
@@ -795,9 +795,9 @@ git commit
 git push origin feature/name
 
 # Project management
-bin/tn        # Next task
-bin/tal       # All tasks
-bin/gc -i "intention"  # AI commit
+task-manager next      # Next task
+task-manager list      # All tasks
+git-commit -i "intention"  # AI commit
 ```
 
 Happy coding! 🚀
