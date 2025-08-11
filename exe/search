@@ -144,6 +144,11 @@ module CodingAgentTools
             @options[:exclude_paths] = []
           end
 
+          # Search root option
+          opts.on("--search-root PATH", "Root directory for search (default: project root)") do |path|
+            @options[:search_root] = File.expand_path(path)
+          end
+
           opts.on("--since TIME", "Files modified since TIME") do |time|
             @options[:since] = time
           end
